@@ -1,0 +1,202 @@
+/*
+Lightweight Automated Planning Toolkit
+Copyright (C) 2012
+Miquel Ramirez <miquel.ramirez@rmit.edu.au>
+Nir Lipovetzky <nirlipo@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef __APTK__CORE_STATE__
+#define __APTK__CORE_STATE__
+
+#include <iostream>
+#include <cstdlib>
+#include <memory>
+#include <map>
+#include <vector>
+
+#include <symbol_extensions.hxx>
+#include <core_types.hxx>
+#include "core_effect.hxx"
+
+
+namespace aptk { namespace core {
+
+class ParametrizedAction;
+class BoundAction;
+class Changeset;
+class SymbolTable;
+
+
+class CoreState
+{
+	friend class StateManager;
+	
+protected:
+	/**
+	 * A vector associating symbol IDs to their current extensional value in the state.
+	 */
+	typedef std::map<SymbolIdx, std::shared_ptr<SymbolExtension>> SymbolExtensionMap;
+	typedef std::vector<std::shared_ptr<SymbolExtension>> SymbolExtensionList;
+	SymbolExtensionList _symbols;
+	
+	//! _copied[i] tells whether the symbol extension pointer 'i' has been deep-copied and thus 
+	//! is amenable to modifications.
+	std::vector<bool> _copied;
+	
+	std::size_t _hash;
+
+	//! deep-copies the extension with given symbol index, and marks it appropriately.
+	void copyExtension(const SymbolIdx idx) {
+		if (!_copied[idx]) { // TODO - Note that this might not be thread-safe.
+			_symbols[idx] = std::shared_ptr<SymbolExtension>(_symbols[idx]->clone());
+			_copied[idx] = true;
+		}
+	}
+
+protected:
+	//! This constructor need only be used by the friend class StateManager,
+	//! since it construct "incomplete" states that need to be finished.
+	CoreState(unsigned numSymbols) :
+		_symbols(numSymbols), _copied(numSymbols, false)
+	{};
+	
+public:
+	CoreState() {};
+	~CoreState() {}
+
+	//! Construct a state specifying all the predicates and functions - this should indeed be the only way,
+	//! although ATM we are forced to leave the no-arguments constructor in order to be able
+	//! to set a Problem's initial state after construction
+	//! TODO - We might want to perform type checking here against the predicate and function signatures.
+	//! TODO - We might also want to ensure here that all symbol extensions have been defined. This won't be expensive, 
+	//! as it will be done only when we create the initial state.
+	CoreState(SymbolExtensionMap symbols) :
+		_symbols(symbols.size()), _copied(symbols.size(), false)
+	{
+		for (auto s:symbols) { // Transform the map into a vector with appropriate indexes.
+			_symbols[s.first] = s.second;
+		}
+		updateHash();
+	};
+	
+	/**
+	 * Copy constructor - deep-copies the state's symbol current extensions.
+	 */
+	CoreState(const CoreState& state) :
+		_symbols(state._symbols), _copied(_symbols.size(), false), _hash(state._hash) 
+	{}
+	
+	//! A constructor that receives a changeset and construct a state that is equal to the received
+	//! state plus the changes in the changeset.
+	CoreState(const CoreState& state, const Changeset& changeset) :
+		_symbols(state._symbols), _copied(_symbols.size(), false), _hash(state._hash) {
+		applyChangeset(changeset);
+	}
+	
+	// TODO TODO TODO - This is currently not exception-safe
+	CoreState& operator=(const CoreState &rhs) {
+		if (this == &rhs) return *this;
+		_symbols = rhs._symbols;
+		_copied.clear();
+		_copied.resize(_symbols.size(), false);
+		_hash = rhs._hash;
+		return *this;
+	}
+	
+	//! The overloaded equality operator compares the actual extensions, not the pointers.
+	bool operator==(const CoreState &rhs) const {
+		if (_hash != rhs._hash) return false;
+		if (_symbols.size() != rhs._symbols.size()) return false;
+		
+		for (unsigned i = 0; i < _symbols.size(); ++i) {
+			// As a micro-optimization, we first check that the extension pointers be different: in case they are equal
+			// we can spare one expensive value comparison.
+			if (_symbols[i] == rhs._symbols[i] ) continue;
+			if (*_symbols[i] != *(rhs._symbols[i]) ) return false;
+		}
+		return true;
+	}
+	
+	bool operator!=(const CoreState &rhs) const { return !(this->operator==(rhs));}
+
+public:
+	const std::shared_ptr<const SymbolExtension> getExtension(const SymbolIdx idx) const { return _symbols.at(idx); }
+	
+	bool contains(const Effect& fact) const {
+		return getExtension(fact._symbolIdx)->in(fact._point, fact._value);
+	}
+	
+protected:
+	//! Non-const version, for internal use only
+	const std::shared_ptr<SymbolExtension> _getExtension(const SymbolIdx idx) { return _symbols.at(idx); }
+	
+	//! Applies the given changeset into the current state.
+	void applyChangeset(const Changeset& changeset);
+	
+	void updateHash() { _hash = computeHash(); }
+	
+	std::size_t computeHash() const;
+	
+public:
+	friend std::ostream& operator<<(std::ostream &os, const CoreState&  state) { return state.print(os); }
+	
+	//! Prints a representation of the state to the given stream.
+	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os, const SymbolTable& st) const;
+	
+	std::size_t hash() const { return _hash; }
+	
+	//! Required by Boost.Functional/Hash
+	friend std::size_t hash_value(CoreState const& s) { return s.computeHash(); }
+	
+};
+
+typedef std::shared_ptr<CoreState> CoreStatePtr;
+
+class StateManager {
+public:
+	/**
+	* Relax any given state.
+	*/	
+	static CoreStatePtr relax(const CoreState& s) {
+		unsigned size = s._symbols.size();
+		CoreState* s1 = new CoreState(size);
+		
+		// We copy all the extension pointers, relaxing the functional extensions and leaving the predicate extensions the same.
+		for(unsigned i = 0; i < size; ++i) {
+			const std::shared_ptr<SymbolExtension>& extensionPtr = s._symbols[i];
+			const auto p = dynamic_cast<const FunctionExtension *>(extensionPtr.get());
+			
+			// This is ugly, but so far works. TODO - We might consider refactoring the CoreState implementation to avoid this.
+			if (p) { // The extension is a FunctionExtension
+				s1->_symbols[i] = std::shared_ptr<FunctionExtension>(new FunctionExtension(*p, true));
+			} else { // We must have a predicate!
+				const auto p = dynamic_cast<const PredicateExtension *>(extensionPtr.get());
+				s1->_symbols[i] = std::shared_ptr<PredicateExtension>(new PredicateExtension(*p, true));
+			}
+			
+			s1->_copied[i] = true;
+		}
+		
+		s1->updateHash();
+		return CoreStatePtr(s1);		
+	}
+};
+
+} } // namespaces
+
+#endif
+

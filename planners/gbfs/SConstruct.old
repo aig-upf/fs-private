@@ -1,0 +1,71 @@
+# call, e.g., like this:
+#   scons install problem=../pddl/generated/grid/strips_grid_y_1/
+
+import os
+from os.path import expanduser
+
+
+def process_arguments(environment):
+	""" Process the command-line arguments and generate the adequate actions on the scons environment """
+	predicative = 'predstate' in ARGUMENTS and int(ARGUMENTS['predstate']) != 0
+	lib_name = 'aptk-core-predicative' if predicative else 'aptk-core'
+	environment.aptk_lib_name = lib_name
+	if predicative:
+		environment.Append( CCFLAGS = [ '-DPREDSTATE' ] )
+
+	if int(ARGUMENTS.get('debug', 0)) == 1 :
+		environment.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
+	else:
+		environment.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
+		
+	try:
+		problem = ARGUMENTS['problem']
+	except:
+		raise RuntimeError("Must provide the problem against which to link the engine executable")
+	
+	
+	return environment, os.path.abspath(problem)
+
+env = Environment()
+env, problem_dir = process_arguments(env)
+
+env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++0x' ] )  # Flags common to all options
+
+
+BASE = os.path.abspath('./../../../')  # The LWAPTK base path
+def make_abs(path):
+    return BASE + '/' + path
+
+# Rebuild the core library if needed. Alternatively: http://stackoverflow.com/questions/11571577/scons-libraries-and-sub-libraries
+SConscript([make_abs('interfaces/core/SConscript')], exports='env')
+
+include_paths = map(make_abs, ['include', 'interfaces/agnostic', 'interfaces/core'])  + [problem_dir]
+lib_paths = map(make_abs, ['interfaces/core'])
+
+
+# If we have a local dir on the home directory, use it.
+local_lib = expanduser("~") + '/local/lib'
+local_inc = expanduser("~") + '/local/include'
+if os.path.exists(local_lib):
+    lib_paths.append(local_lib)
+if os.path.exists(local_inc):
+    include_paths.append(local_inc)
+    
+env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
+
+libs = ['boost_program_options', env.aptk_lib_name]
+	
+cxx_sources = Glob('main.cxx')
+src_objs = [ env.Object(s) for s in cxx_sources ]
+
+# We add the source code of the generated PDDL problem file
+src_objs += [ env.Object(s) for s in Glob(problem_dir + '/*.cxx') ]
+
+env.Append( LIBS=libs)
+env.Append( LIBPATH=[ os.path.abspath(p) for p in lib_paths ] )
+
+solver = env.Program( 'solver.bin', src_objs )
+
+# Move ("install") the executable file into the generated directory
+#env.Install(problem_dir, solver)  
+env.Alias('install', env.Install(problem_dir, solver))

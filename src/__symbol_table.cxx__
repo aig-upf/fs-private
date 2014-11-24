@@ -1,0 +1,9 @@
+
+
+#include "symbol_table.hxx"
+
+namespace aptk { namespace core {
+	
+	const TypeIdx SymbolTable::NO_TYPE = std::numeric_limits<unsigned int>::max();
+	
+} } // namespaces

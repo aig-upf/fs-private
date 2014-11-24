@@ -1,0 +1,190 @@
+/*
+Lightweight Automated Planning Toolkit
+Copyright (C) 2012
+Miquel Ramirez <miquel.ramirez@rmit.edu.au>
+Nir Lipovetzky <nirlipo@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef __APTK__CORE_SYMBOL_EXTENSION__
+#define __APTK__CORE_SYMBOL_EXTENSION__
+
+#include <core_types.hxx>
+#include <types.hxx>
+#include <symbol_table.hxx>
+
+#include <set>
+#include <boost/functional/hash.hpp>
+
+// TODO - Use a template-based strategy to allow for n-ary symbols? Is that possible at all?
+// i.e. unaryPredicate, binaryPredicate, etc. would be defined as Predicate<1>, Predicate<2>, much in the same way as an n-ary tuple does, 
+// or tge boost libraries do sometimes.
+namespace aptk { namespace core {
+  
+typedef std::vector<ObjectIdx> DomainCrossProductIndex;
+typedef std::set<ObjectIdx> ObjectSet;
+// typedef std::shared_ptr<ObjectSet> ObjectSetPtr;
+
+/**
+ * An abstract, generic extension which can be either a predicate or a function.
+ */
+class SymbolExtension {
+public:
+	
+	SymbolExtension(bool relaxed = false)
+	: _relaxed(relaxed), mapping()
+	{}
+	
+	//! Copy-constructor changing the relaxed property
+	SymbolExtension(const SymbolExtension& ext, bool relaxed)
+	: _relaxed(relaxed), mapping(ext.mapping)
+	{}
+	
+	
+	//! It is _fundamental_ to keep this destructor virtual, as we're using this class hierarchy polimorphically
+	virtual ~SymbolExtension() {}
+	
+	/**
+		* Return a clone of the current object; to be overriden by the subclasses.
+		* Note that this is necessary to be able to deep-copy a CoreState object,
+		* which contains "abstract" SymbolExtension pointers to derived objects.
+		*/
+	virtual SymbolExtension* clone() const = 0;
+	
+	virtual bool operator==(const SymbolExtension& rhs) const = 0;
+	virtual bool operator!=(const SymbolExtension& rhs) { return !this->operator==(rhs); }
+	
+	//! Prints a representation of the function to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const SymbolExtension&  symbol) { return symbol.print(os); }
+	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os, const SymbolTable& st) const;
+
+	
+	
+	virtual void set(const DomainCrossProductIndex&  tuple, ObjectIdx value) = 0;
+	virtual const ObjectSet& getAll(const DomainCrossProductIndex&  tuple) const = 0;
+
+	//! Required by Boost.Functional/Hash
+	virtual std::size_t hash() const {return boost::hash_range(mapping.begin(), mapping.end());}
+	
+	bool in(const DomainCrossProductIndex&  tuple, ObjectIdx value) const {
+		return getAll(tuple).count(value) > 0;
+	}
+	
+protected:
+	bool _relaxed;
+	std::map<DomainCrossProductIndex, ObjectSet> mapping;	
+};
+
+
+/**
+* A predicate extension is made up of a number of tuples of object ID's,
+* each tuple being one of the tuples of the predicate underlying relation.
+* It is implemented as a vector of vectors, the inner vector having the same
+* dimension as the predicate arity.
+*/  
+class PredicateExtension : public SymbolExtension
+{
+public:
+	
+	static const ObjectSet OBJECTSET_TRUE;
+	static const ObjectSet OBJECTSET_FALSE;
+
+	//! Copy-constructor changing the relaxed property
+	PredicateExtension(const PredicateExtension& ext, bool relaxed)
+	: SymbolExtension(ext, relaxed) 
+	{}
+	
+	PredicateExtension()
+	: SymbolExtension(false) 
+	{}
+	
+	virtual bool operator==(const SymbolExtension& rhs) const {
+		const PredicateExtension* p = dynamic_cast< const PredicateExtension* >( &rhs );
+		return p && mapping == p->mapping;
+	}
+	
+	virtual PredicateExtension* clone() const { return(new PredicateExtension(*this)); };
+	
+	void set(const DomainCrossProductIndex&  tuple, ObjectIdx value) {
+		ObjectSet& set = mapping[tuple];
+		if (_relaxed) { 
+			if (value && set.size()==0) { // We still didn't have any value --> assume it was a false predicate, and insert it accordingly.
+				set.insert((unsigned) false);
+			}
+		} else {  // If this is NOT a relaxed extension, we only allow one value in the objectSet.
+			set.clear();
+		}
+		
+		set.insert(value);
+	}
+	
+	const ObjectSet& getAll(const DomainCrossProductIndex&  tuple) const {
+		const auto& elems = mapping.find(tuple);
+		if (elems == mapping.end()) { // We still didn't have any value --> assume it was a false predicate.
+			return OBJECTSET_FALSE;
+		}
+		return elems->second;
+	}
+};
+
+
+/**
+	* A function extension defines extensionally a function, 
+	* mapping object IDs (of the function domain type) to object IDs
+	* (of the function codomain type).
+	* TODO: could add optional type checking, etc.
+	*/
+class FunctionExtension : public SymbolExtension
+{
+public:
+	
+	//! Copy-constructor changing the relaxed property
+	FunctionExtension(const FunctionExtension& ext, bool relaxed)
+	: SymbolExtension(ext, relaxed) 
+	{}
+	
+	FunctionExtension()
+	: SymbolExtension(false) 
+	{}
+	
+	virtual bool operator==(const SymbolExtension& rhs) const {
+		const FunctionExtension* p = dynamic_cast< const FunctionExtension * >( &rhs );
+		return p && mapping == p->mapping;
+	}
+
+	virtual FunctionExtension* clone() const { return new FunctionExtension(*this); };
+	
+	void set(const DomainCrossProductIndex&  tuple, ObjectIdx value) {
+		ObjectSet& set = mapping[tuple];
+		if (!_relaxed) { // If this is NOT a relaxed extension, we only allow one value in the objectSet.
+			set.clear();
+		}
+		set.insert(value);
+	}
+
+	const ObjectSet& getAll(const DomainCrossProductIndex&  tuple) const {
+		return mapping.at(tuple); // TODO - Check for undefined-ness and throw exception
+	}
+};
+
+
+//! These are necessary for Boost.Functional/Hash to know how to hash pointers.
+std::size_t hash_value(const std::shared_ptr<SymbolExtension>& ext);
+
+} } // namespaces
+
+#endif
+

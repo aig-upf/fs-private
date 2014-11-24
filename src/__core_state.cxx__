@@ -1,0 +1,67 @@
+/*
+Lightweight Automated Planning Toolkit
+Copyright (C) 2012
+Miquel Ramirez <miquel.ramirez@rmit.edu.au>
+Nir Lipovetzky <nirlipo@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <iostream>
+#include <cassert>
+#include <boost/functional/hash.hpp>
+
+#include "core_state.hxx"
+#include <core_parametrized_action.hxx>
+#include <core_effect.hxx>
+#include <core_changeset.hxx>
+#include <symbol_table.hxx>
+
+namespace aptk { namespace core {
+	
+
+//! Applies the given changeset into the current state.
+void CoreState::applyChangeset(const Changeset& changeset) {
+	for (auto elem:changeset.getEffects()) {
+		const auto& effect = elem.first;
+		copyExtension(effect._symbolIdx);
+		_getExtension(effect._symbolIdx)->set(effect._point, effect._value);
+	}
+	updateHash(); // Important to update the hash value after all the changes have been applied!
+}
+
+std::size_t CoreState::computeHash() const { return boost::hash_range(_symbols.begin(), _symbols.end()); }
+
+
+std::ostream& CoreState::print(std::ostream& os) const {
+	os << "State[(" << _symbols.size() << " symbols): ";
+	for (unsigned i = 0; i < _symbols.size(); ++i) {
+		os << i << ":" << *(_symbols.at(i)) << ",";
+	}
+	os << "]";
+	return os;
+}
+
+std::ostream& CoreState::print(std::ostream& os, const SymbolTable& st) const {
+	os << "State[";
+	for (unsigned i = 0; i < _symbols.size(); ++i) {
+		os << st.getSymbolName(i) << ":";
+		_symbols.at(i)->print(os, st);
+		os << ",";
+	}	
+	os << "]";
+	return os;
+}
+
+} } // namespaces

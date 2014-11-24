@@ -1,0 +1,205 @@
+/*
+Lightweight Automated Planning Toolkit
+Copyright (C) 2012
+Miquel Ramirez <miquel.ramirez@rmit.edu.au>
+Nir Lipovetzky <nirlipo@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef __APTK_CORE_SYMBOL_TABLE__
+#define __APTK_CORE_SYMBOL_TABLE__
+
+#include <cassert>
+
+#include <string>
+#include <map>
+#include <iosfwd>
+#include <core_types.hxx>
+
+#include <limits>
+
+
+namespace aptk { namespace core {
+	
+	// A map of entity names to entity IDs.
+	typedef std::unordered_map<std::string, unsigned> NameMap;
+	
+	// A map of entity IDs to entity names.
+	typedef std::vector<std::string> IndexMap;
+	
+	// A map of type IDs to object IDs.
+	typedef std::vector<std::vector<ObjectIdx>> TypeMap;
+	
+	// A "global" signature useful for both predicates and functions
+	typedef std::pair<ActionSignature, TypeIdx> Signature;
+	
+	/**
+	 * A SymbolTable manages all the book-keeping information about the IDs problem symbol,
+	 * including the IDs of constants, objects and types.
+	 */
+	class SymbolTable
+	{
+	public:
+		
+		static const TypeIdx NO_TYPE;
+
+		SymbolTable() :
+			type_name_to_id(), id_to_type_name(),
+			object_name_to_id(), id_to_object_name(),
+			type_to_objects(),
+			_parent_types(),
+			_action_ids(),
+			_symbol_names()
+		{}
+		
+		~SymbolTable() {}
+		
+		
+		/**
+		 * Declare a new data type.
+		 */
+		TypeIdx add_type( const std::string& type_name, TypeIdx parent_type) {
+
+			if (type_name_to_id.count(type_name)) {
+				throw DuplicateTypeException(); // TODO - Refine this with more info.
+			}
+			
+			TypeIdx id = id_to_type_name.size(); // Assign the last available int, starting from 0.
+			id_to_type_name.push_back(type_name);
+			type_name_to_id[type_name] = id;
+			
+			type_to_objects.push_back({}); // Initially the type will have no object assigned
+			
+			_parent_types.push_back(parent_type); // Keep track of the ID of the parent type
+			
+			return id;
+		}
+		
+		/**
+		 * Add a new object of a given type.
+		 */
+		ObjectIdx add_object(const std::string& name, TypeIdx type) {
+			
+			if (object_name_to_id.count(name) > 0) {
+				throw DuplicateObjectException(); // TODO - Refine this with more info.
+			}
+			
+			ObjectIdx id = id_to_object_name.size(); // Assign the last available int, starting from 0.
+			id_to_object_name.push_back(name);
+			object_name_to_id[name] = id;
+			
+			// Update the type_to_objects information - the new object needs to be listed under any of its
+			// type or predecessor types list.
+			for (TypeIdx currentType = type; currentType != 0; currentType = _parent_types[currentType]) {
+				type_to_objects[currentType].push_back(id);
+			}
+			type_to_objects[0].push_back(id);
+			
+			return id;
+		}
+		
+		
+		// TODO - check that the signature types are defined.
+		SymbolIdx add_function(const std::string& name, const ActionSignature& params, const TypeIdx codomain) {
+			// Check the symbol is not defined yet
+			if (_symbol_ids.count(name) > 0) {
+				throw DuplicateSymbolException(); // TODO - Refine this with more info.
+			}			
+			
+			SymbolIdx id = _symbol_names.size(); // Assign the last available int, starting from 0.
+			_symbol_ids[name] = id;
+			_symbol_names.push_back(name);
+			_symbol_signatures.push_back(Signature(params, codomain));
+			
+			
+			return id;
+		}
+		
+		// give functions and predicates NON-overlapping IDs, just in case.
+		SymbolIdx add_predicate(const std::string& name, const ActionSignature&  params) {
+			// Check the symbol is not defined yet
+			if (_symbol_ids.count(name) > 0) {
+				throw DuplicateSymbolException(); // TODO - Refine this with more info.
+			}			
+			
+			SymbolIdx id = _symbol_names.size(); // Assign the last available int, starting from 0.
+			_symbol_ids[name] = id;
+			_symbol_names.push_back(name);
+			_symbol_signatures.push_back(Signature(params, NO_TYPE));
+			
+			return id;
+		}
+
+		
+		SymbolIdx getSymbolId(const std::string& name) const {
+			return  _symbol_ids.at(name);
+		}
+		
+		SymbolIdx get_predicate_id(const std::string& name) const {
+			SymbolIdx id = _symbol_ids.at(name);
+			assert(_symbol_signatures[id].second == NO_TYPE);
+			return id;
+		}
+		
+		SymbolIdx get_function_id(const std::string& name) const {
+			SymbolIdx id = _symbol_ids.at(name);
+			assert(_symbol_signatures[id].second != NO_TYPE);
+			return id;
+		}
+		
+		const std::string& getSymbolName(const SymbolIdx symbolIdx) const {
+			return _symbol_names[symbolIdx];
+		}
+		
+		/**
+		 * Returns the ID of the object with the given name,
+		 * or 0 otherwise.
+		 * TODO - Wrap the out_of_range exception thrown when the object does not exists in a custom exception
+		 */
+		ObjectIdx get_object_id(const std::string& object_name) const { return object_name_to_id.at(object_name); }
+		const std::string& getObjectName(const ObjectIdx objIdx) const { return id_to_object_name.at(objIdx); }
+		
+		size_t get_num_objects() const { return id_to_object_name.size(); }
+		size_t get_num_symbols() const { return _symbol_names.size(); }
+
+	protected:
+		NameMap object_name_to_id;
+		IndexMap id_to_object_name;
+		
+		/**
+		 * `type_to_objects` maps type IDs to lists of object IDs that belong to that type,
+		 * considering inheritance.
+		 */
+		TypeMap type_to_objects;
+		
+		//! Map to the ID of the parent type.
+		std::vector<TypeIdx> _parent_types;
+		
+		/**
+		 * All symbol declarations (predicates and functions alike)
+		 * get stored in the same vector, so that they do not share IDs.
+		 * The std::tuple associated to the implicit positional ID stores the signature
+		 * plus, in the case of functions, the return valu.
+		 * 
+		 * Thus, predicates get stored with a NO_TYPE value. This could be moved to a BOOLEAN value in the future?
+		 */
+		std::vector<Signature> _symbol_signatures;
+		NameMap _symbol_ids;
+		IndexMap _symbol_names;
+	  };
+
+} } // namespaces
+
+#endif

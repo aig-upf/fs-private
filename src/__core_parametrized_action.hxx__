@@ -1,0 +1,142 @@
+/*
+Lightweight Automated Planning Toolkit
+Copyright (C) 2012
+Miquel Ramirez <miquel.ramirez@rmit.edu.au>
+Nir Lipovetzky <nirlipo@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef __APTK_CORE_PARAMETRIZED_ACTION__
+#define __APTK_CORE_PARAMETRIZED_ACTION__
+
+#include <iosfwd>
+#include <limits>
+#include <memory>
+#include <vector>
+
+#include <core_types.hxx>
+#include <symbol_table.hxx>
+#include <core_state.hxx>
+
+#include <core_effect.hxx>
+
+namespace aptk { namespace core {
+
+// Forward declarations
+class ParametrizedAction; class BoundAction; class Changeset;
+
+typedef std::shared_ptr<const ParametrizedAction> cActionPtr;
+typedef std::vector<cActionPtr> ActionList;
+typedef std::shared_ptr<const BoundAction> cBoundActionPtr;
+typedef std::vector<cBoundActionPtr> BoundActionList;
+
+
+/**
+ * A possibly parameterized (i.e. non-grounded, non-bound) action.
+ */
+class ParametrizedAction
+{
+public:
+	static const ActionIdx INVALID_ACTION = std::numeric_limits<unsigned int>::max();
+	
+	ParametrizedAction(const std::string& name, const ActionSignature& signature) : // TODO Could use std::move for better performance here.
+		_name(name),
+		_signature(signature)
+	{};
+	
+	virtual ~ParametrizedAction() {};
+	
+	//! Returns the name of the action.
+	virtual const std::string& get_name() const { return _name; }
+	
+	/**
+	 * Returns the signature of the action, i.e a vector v of types,
+	 * where v[i] denotes the type of the i-th parameter.
+	 */
+	virtual const ActionSignature& get_signature() const { return _signature; }
+	
+	/**
+	 * Returns false iff the parametrized action can never be applicable for the given binding, i.e. regardless of the state.
+	 * This can happen e.g. if we have an irreflexive parametrized action (think on a "move-to-block" action in blocksworld:
+	 * move-to-block(b1, b1) will never be applicable).
+	 * This will be used at action-binding time to discard some bindings, and can be automatically derived e.g. from PDDL if the precondition
+	 * component makes reference only to the action parameters.
+	 * By default, no binding is ruled out as unfeasible, but this can be overriden in concrete subclasses.
+	 */
+	virtual bool isFeasible(const ParameterBinding& binding) const { return true; }
+	
+	
+	/**
+	 * 
+	 */
+	virtual void computeChangeset(const CoreState& s0, const ParameterBinding& binding, Changeset& changeset) const = 0;
+
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const ParametrizedAction&  action) { return action.print(os); }
+	virtual std::ostream& print(std::ostream& os) const;
+
+
+	virtual unsigned getNumApplicabilityProcedures() const = 0;
+	virtual bool isApplicabilityProcedureSatisfied(unsigned procedureIdx, const ProcedurePoint& point) const = 0;
+	virtual void getApplicabilityProcedureRelevantVariables(unsigned procedureIdx, ProcedureSignature& signature, const ParameterBinding& binding) const = 0;
+	
+protected:
+	const std::string _name;
+	const ActionSignature _signature;
+};
+
+/**
+ * A bound action is the conjunction of an action with a parameter binding.
+ * Mostly a convenience wrapper class.
+ */
+class BoundAction
+{
+public:
+	static const BoundActionIdx INVALID_ACTION = std::numeric_limits<unsigned int>::max();
+	
+	BoundAction(const cActionPtr& action, ParameterBinding&& binding)
+		: _action(action), _binding(binding) {}
+		
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const BoundAction&  boundAction) { return boundAction.print(os); }
+	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os, const SymbolTable& st) const;
+	
+	std::string get_name() const { return _action->get_name(); }
+	
+	void computeChangeset(const CoreState& state, Changeset& changeset) const  { 
+		_action->computeChangeset(state, _binding, changeset); 
+	}
+	
+	void getApplicabilityProcedureRelevantVariables(unsigned procedureIdx, ProcedureSignature& signature) const {
+		_action->getApplicabilityProcedureRelevantVariables(procedureIdx, signature, _binding); 
+	}
+	
+	//! Direct proxy method
+	bool isApplicabilityProcedureSatisfied(unsigned procedureIdx, const ProcedurePoint& point) const {
+		return _action->isApplicabilityProcedureSatisfied(procedureIdx, point);
+	}	
+
+// protected:
+	const cActionPtr _action;
+	const ParameterBinding _binding;
+};
+
+
+	
+} } // namespaces
+
+#endif
