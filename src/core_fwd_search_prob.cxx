@@ -41,13 +41,13 @@ State* FwdSearchProblem::init() const {
 
 bool FwdSearchProblem::goal( const State& s ) const { return task.isGoal(s); }
 
-// bool FwdSearchProblem::is_applicable( const State& s, BoundActionIdx idx ) const {
+// bool FwdSearchProblem::is_applicable( const State& s, ActionIdx idx ) const {
 // 	return task.getAction(idx)->applicable(s);
 // }
 
 // THIS FUNCTION IS CURRENTLY NOT USED IN THE ENGINE, AND IT'S NOT STRAIGHT-FORWARD TO IMPLEMENT, SINCE IT
 // WAS DESIGNED FOR GROUNDED ACTIONS, WHICH I AM TRYING TO AVOID. THUS WE'LL LEFT IT UNIMPLEMENTED.
-// void FwdSearchProblem::applicable_set( const State& s, std::vector<BoundActionIdx>& app_set ) const {
+// void FwdSearchProblem::applicable_set( const State& s, std::vector<ActionIdx>& app_set ) const {
 // 	throw NonImplementedException(); 
 // 	// m_task->applicable_actions( s, app_set ); 
 // }

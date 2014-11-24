@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_PROBLEM_INFO_HXX__
-#define __APTK_CORE_PROBLEM_INFO_HXX__
+#pragma once
 
 #include <string>
 #include <vector>
@@ -31,15 +30,15 @@ public:
 	}
 	~ProblemInfo() {}
 	
-	const std::string& getActionName(BoundActionIdx index) const {
+	const std::string& getActionName(ActionIdx index) const {
 		return actionNames.at(index);
 	}
 	
-	const std::string& getVariableName(StateVariableIdx index) const {
+	const std::string& getVariableName(VariableIdx index) const {
 		return variableNames.at(index);
 	}
 	
-	const ObjectType getVariableType(StateVariableIdx index) const {
+	const ObjectType getVariableType(VariableIdx index) const {
 		return variableTypes.at(index);
 	}	
 	
@@ -47,7 +46,7 @@ public:
 		return variableNames.size();
 	}
 	
-	const std::string getObjectName(StateVariableIdx varIdx, ObjectIdx objIdx) const {
+	const std::string getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const {
 		if (getVariableType(varIdx) == ObjectType::OBJECT) return getCustomObjectName(objIdx);
 		else if (getVariableType(varIdx) == ObjectType::INT) return std::to_string(objIdx);
 		else if (getVariableType(varIdx) == ObjectType::BOOL) return std::string((objIdx ? "true" : "false"));
@@ -132,5 +131,3 @@ protected:
 	  
 	  
 } } // namespaces
-
-#endif

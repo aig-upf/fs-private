@@ -60,10 +60,10 @@ public:
 	
 	
 	//! Mainly for testing / debugging purposes. Highly non-optimized!
-	std::vector<std::vector<int>> getCurrentDomains() {
-		std::vector<std::vector<int>> domains;
+	std::vector<ObjectIdxVector> getCurrentDomains() {
+		std::vector<ObjectIdxVector> domains;
 		for (auto d:doms) {
-			domains.push_back(std::vector<int>(d->cbegin(), d->cend()));
+			domains.push_back(ObjectIdxVector(d->cbegin(), d->cend()));
 		}
 		return domains;
 	}
@@ -75,24 +75,15 @@ protected:
 		doms.clear();
 		doms.reserve(domains.size());
 		
-		
 		for (unsigned i = 0; i < _variables.size(); ++i) {
 			VariableIdx index = _variables[i];
-			
-			auto& d = domains[index];
-			assert(d.size() > 0); // Sanity check.
-			// TODO - HACK
-			// We currently need this as the bounds consistency algorithm that we use inverts the positive
-			// integers to negative integers on its second phase
-			// Note that this will lead to overflow problems if we are using a very large number of objects, which shouldn't happen.
-			IntDomainSetVector* casted_domain_set = reinterpret_cast<IntDomainSetVector*>(&d);
-			doms.push_back(casted_domain_set);
+			doms.push_back(&(domains[index]));
 		}
 	}
 	
 	//! Invert a domain, e.g. from D = {3, 4, 7} to D = {-7, -4, -3}
-	IntDomainSetVector invertDomain(const IntDomainSetVector& domain) {
-		IntDomainSetVector inverted;
+	DomainSetVector invertDomain(const DomainSetVector& domain) {
+		DomainSetVector inverted;
 		for (auto it = domain.crbegin(); it != domain.crend(); ++it) {
 			inverted.insert(inverted.end(), -1 * (*it));
 		}
@@ -137,7 +128,7 @@ protected:
 			if (min[j] >= a) {
 				// post x[j] >= b + 1
 				const unsigned var = sorted_vars[j];
-				IntDomainSetVector new_domain;
+				DomainSetVector new_domain;
 				for (int val:(*doms[var])) {
 					if (val >= b+1) {
 						new_domain.insert(new_domain.cend(), val);

@@ -15,7 +15,7 @@ class SumConstraint : public Constraint
 {
 protected:
 	//! the variable domains themselves
-	ULightDomainSet doms;
+	LightDomainSet doms;
 	
 	//! 
 	DomainSetVector* sum_domain;

@@ -71,7 +71,7 @@ public:
 		return possibleValues.find(fact._value) != possibleValues.end();		
 	}
 	
-	const ObjectSet& getValues(const StateVariableIdx& variable) const {
+	const ObjectSet& getValues(const VariableIdx& variable) const {
 		return _values.at(variable);
 	}
 	

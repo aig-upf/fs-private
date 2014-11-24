@@ -22,7 +22,7 @@ protected:
 	std::set<Fact> processed;
 	std::queue<const FactSet*> pending;
 
-	std::vector<std::set<BoundActionIdx>> perLayerSupporters;
+	std::vector<std::set<ActionIdx>> perLayerSupporters;
 	
 	unsigned numLayers;
 	
@@ -64,7 +64,7 @@ public:
 		}
 
 		// A check - curently it makes no difference, the plan sizes are always equal
-// 		std::set<BoundActionIdx> uniquifiedPlan(plan.begin(), plan.end());
+// 		std::set<ActionIdx> uniquifiedPlan(plan.begin(), plan.end());
 // 		if (plan.size() != uniquifiedPlan.size()) {
 // 			std::cout << "RP heuristic deviation of " << plan.size() - uniquifiedPlan.size() << std::endl;
 // 		}

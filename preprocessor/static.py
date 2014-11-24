@@ -68,9 +68,9 @@ class StaticProcedure(object):
 class Arity0Map(DataElement):
     def get_tpl(self, name):
         return dict(
-            declaration='static const unsigned {name};',
-            accessor='static unsigned {accessor}() {{ return {name}; }}',
-            initialization='const unsigned Ext::{name} = {val};',
+            declaration='static const ObjectIdx {name};',
+            accessor='static ObjectIdx {accessor}() {{ return {name}; }}',
+            initialization='const ObjectIdx Ext::{name} = {val};',
         )[name]
 
     def __init__(self, name):
@@ -88,9 +88,9 @@ class Arity0Map(DataElement):
 class UnaryMap(DataElement):
     def get_tpl(self, name):
         return dict(
-            declaration='static const std::map<ObjectIdx, unsigned> {name};',
-            accessor='static unsigned {accessor}(ObjectIdx x) {{ return {name}.at(x); }}',
-            initialization='const std::map<ObjectIdx, unsigned> Ext::{name} = {{\n\t{elems}\n}};',
+            declaration='static const std::map<ObjectIdx, ObjectIdx> {name};',
+            accessor='static ObjectIdx {accessor}(ObjectIdx x) {{ return {name}.at(x); }}',
+            initialization='const std::map<ObjectIdx, ObjectIdx> Ext::{name} = {{\n\t{elems}\n}};',
         )[name]
 
     def __init__(self, name):
@@ -110,9 +110,9 @@ class UnaryMap(DataElement):
 class BinaryMap(UnaryMap):
     def get_tpl(self, name):
         return dict(
-            declaration='static const std::map<std::pair<ObjectIdx, ObjectIdx>, unsigned> {name};',
-            accessor='static unsigned {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
-            initialization='const std::map<std::pair<ObjectIdx, ObjectIdx>, unsigned> Ext::{name} = {{\n\t{elems}\n}};',
+            declaration='static const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
+            accessor='static ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
+            initialization='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> Ext::{name} = {{\n\t{elems}\n}};',
         )[name]
 
 

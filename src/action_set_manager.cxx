@@ -87,9 +87,9 @@ bool RelaxedActionSetManager::isMonadicProcedureApplicable(JustifiedApplicableEn
 }
 
 // TODO - THIS IS RATHER EXPENSIVE
-std::vector<VariableIdxVector> RelaxedActionSetManager::extractPoint(const JustifiedApplicableEntity& justified, const VariableIdxVector& variables) const {
+std::vector<ObjectIdxVector> RelaxedActionSetManager::extractPoint(const JustifiedApplicableEntity& justified, const VariableIdxVector& variables) const {
 	// `values[i]` will contain all possible values in the given state for the variable with index `variables[i]`
-	std::vector<VariableIdxVector> values;
+	std::vector<ObjectIdxVector> values;
 	
 	const auto& map = justified.getBinding().getMap();
 	

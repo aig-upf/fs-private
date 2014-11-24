@@ -18,8 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __APTK_CORE_CHANGESET__
-#define __APTK_CORE_CHANGESET__
+#pragma once
 
 #include <core_types.hxx>
 #include <actions.hxx>
@@ -39,17 +38,17 @@ class Changeset
 {
 protected:
 	//! The action that is currently modifying the changeset.
-	BoundActionIdx _activeActionIdx;
+	ActionIdx _activeActionIdx;
 	
 	/**
 	 * A map mapping effects to one of the actions that achieves them, arbitrarily chosen (currently, it just
 	 * happens to be the first action we find that achieves the effect).
 	 */
-	typedef std::map<Fact, std::pair<BoundActionIdx, FactSetPtr>> FactMap;
+	typedef std::map<Fact, std::pair<ActionIdx, FactSetPtr>> FactMap;
 	FactMap _effects;
 	
 	//! Maps actions to their causes in a particular layer.
-	std::unordered_map<BoundActionIdx, JustifiedAction::ptr> _causes;
+	std::unordered_map<ActionIdx, JustifiedAction::ptr> _causes;
 	
 	RelaxedState::ptr _referenceState;
 
@@ -90,12 +89,12 @@ public:
 	 * or CoreAction::INVALID_ACTION otherwise.
 	 * Returns also any extra causes for the fact.
 	 */
-	std::pair<BoundActionIdx, FactSetPtr> getAchieverAndCauses(const Fact& fact) {
+	std::pair<ActionIdx, FactSetPtr> getAchieverAndCauses(const Fact& fact) {
 		auto it = _effects.find(fact);
 		return (it != _effects.end()) ? it->second : std::make_pair(CoreAction::INVALID_ACTION, nullptr);
 	}
 	
-	const FactSet& getCauses(const BoundActionIdx& actionIdx) const { return _causes.at(actionIdx)->getCauses(); }
+	const FactSet& getCauses(const ActionIdx& actionIdx) const { return _causes.at(actionIdx)->getCauses(); }
 	
 	std::ostream& printCauses(std::ostream& os) const {
 		os << "Changeset causes for:";
@@ -127,7 +126,7 @@ public:
 	
 	unsigned size() const { return _effects.size(); }
 	
-	void setJustifiedAction(const BoundActionIdx activeActionIdx, JustifiedAction::ptr action) {
+	void setJustifiedAction(const ActionIdx activeActionIdx, JustifiedAction::ptr action) {
 		assert(!_causes.count(activeActionIdx));
 		_activeActionIdx = activeActionIdx;
 		_causes[_activeActionIdx] = action;
@@ -151,5 +150,3 @@ typedef std::shared_ptr<Changeset> ChangesetPtr;
 
 
 } } // namespaces
-
-#endif

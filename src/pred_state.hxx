@@ -110,7 +110,7 @@ public:
 		return getValues(fact._variable).count(fact._value) > 0;
 	}
 	
-	const ObjectSet& getValues(const StateVariableIdx& variable) const {
+	const ObjectSet& getValues(const VariableIdx& variable) const {
 		uint8_t current = _values.at(variable);
 		if (current == VAL_TRUE) return VEC_TRUE;
 		if (current == VAL_FALSE) return VEC_FALSE;

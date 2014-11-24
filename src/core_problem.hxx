@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_PROBLEM__
-#define __APTK_CORE_PROBLEM__
+# pragma once
 
 #include <iosfwd>
 
@@ -30,7 +29,7 @@ public:
 	
 	//! Modify the problem (grounded) actions
 	void addAction(const CoreAction::cptr& action) { _actions.push_back(action); }
-	const CoreAction::cptr& getAction(BoundActionIdx idx) const { return _actions.at(idx); }
+	const CoreAction::cptr& getAction(ActionIdx idx) const { return _actions.at(idx); }
 	unsigned getNumActions() const { return _actions.size(); }	
 	
 
@@ -96,4 +95,3 @@ protected:
 	  
 } } // namespaces
 
-#endif

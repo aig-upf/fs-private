@@ -18,8 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __APTK__CORE_STATE__
-#define __APTK__CORE_STATE__
+#pragma once
 
 #include <iostream>
 #include <cstdlib>
@@ -197,6 +196,3 @@ public:
 };
 
 } } // namespaces
-
-#endif
-

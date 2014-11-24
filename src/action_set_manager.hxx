@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_ACTION_SET_MANAGER_HXX__
-#define __APTK_CORE_ACTION_SET_MANAGER_HXX__
+#pragma once
 
 #include <cassert>
 #include <iosfwd>
@@ -116,7 +115,7 @@ protected:
 	bool isProcedureApplicable(JustifiedApplicableEntity& justified, unsigned procedureIdx) const;
 	bool isMonadicProcedureApplicable(JustifiedApplicableEntity& justified, unsigned procedureIdx) const;
 	
-	std::vector<VariableIdxVector> extractPoint(const JustifiedApplicableEntity& justified, const VariableIdxVector& variables) const;
+	std::vector<ObjectIdxVector> extractPoint(const JustifiedApplicableEntity& justified, const VariableIdxVector& variables) const;
 	std::vector<ObjectIdx>& extractMonadicPoint(JustifiedApplicableEntity& justified, VariableIdx variable) const;
 	
 	void computeProcedureChangeset(unsigned procedureIdx, const JustifiedAction& justified, Changeset& changeset) const;
@@ -126,5 +125,3 @@ protected:
 };
 
 } } // namespaces
-
-#endif

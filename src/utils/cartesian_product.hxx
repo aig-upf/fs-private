@@ -1,6 +1,5 @@
 
-#ifndef __APTK__CORE_CARTESIAN_PRODUCT_H__
-#define __APTK__CORE_CARTESIAN_PRODUCT_H__
+#pragma once
 
 #include <vector>
 #include <ostream>
@@ -10,8 +9,8 @@ namespace aptk { namespace core {
 
 	class CartesianProductIterator {
 	public:
-		typedef std::vector<std::vector<unsigned>> ValueSet;
-		typedef std::vector<unsigned> Point;
+		typedef std::vector<std::vector<int>> ValueSet;
+		typedef std::vector<int> Point;
 		
 	protected:
 		const ValueSet& _values;
@@ -74,6 +73,3 @@ namespace aptk { namespace core {
 
 
 } } // namespaces
-
-#endif
-

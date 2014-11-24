@@ -1,6 +1,6 @@
 
-$actionName(const VariableIdxVector& binding,
-            const VariableIdxVector& derived,
+$actionName(const ObjectIdxVector& binding,
+            const ObjectIdxVector& derived,
             const std::vector<VariableIdxVector>& appRelevantVars,
 			const std::vector<VariableIdxVector>& effRelevantVars,
 			const std::vector<VariableIdxVector>& effAffectedVars) :

@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_SOLVERS_PDDL_PROBLEM_GENERATOR__
-#define __APTK_CORE_SOLVERS_PDDL_PROBLEM_GENERATOR__
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -14,5 +13,3 @@ namespace aptk { namespace core { namespace solver {
 void generate(const std::string& data_dir, aptk::core::Problem& prob, bool constrained);
 	
 } } } // namespaces
-
-#endif

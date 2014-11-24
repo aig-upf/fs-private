@@ -1,7 +1,5 @@
 
-
-#ifndef __APTK_CORE_APPLICABLE_ACTION_SET_HXX__
-#define __APTK_CORE_APPLICABLE_ACTION_SET_HXX__
+#pragma once
 
 #include <iosfwd>
 #include <core_types.hxx>
@@ -73,7 +71,7 @@ public:
 		}
 		const Iterator operator++(int) {Iterator tmp(*this); operator++(); return tmp;}
 
-		std::pair<BoundActionIdx, JustifiedAction::ptr> operator*() const { return std::make_pair(_currentIdx, _currentJustified); }
+		std::pair<ActionIdx, JustifiedAction::ptr> operator*() const { return std::make_pair(_currentIdx, _currentJustified); }
 		
 		bool operator==(const Iterator &other) const { return _currentIdx == other._currentIdx; }
 		bool operator!=(const Iterator &other) const { return !(this->operator==(other)); }
@@ -84,5 +82,3 @@ public:
 };
 
 } } // namespaces
-
-#endif

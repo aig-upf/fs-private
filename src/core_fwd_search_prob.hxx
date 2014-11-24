@@ -18,8 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __APTK_CORE_FWD_SEARCH_PROB__
-#define __APTK_CORE_FWD_SEARCH_PROB__
+#pragma once
 
 #include <aptk/search_prob.hxx>
 #include <core_problem.hxx>
@@ -51,9 +50,9 @@ class FwdSearchProblem : public Search_Problem<State> {
 		
 		virtual bool     goal( const State& s ) const;
 		
-// 		virtual bool     is_applicable( const aptk::core::State& s, aptk::core::BoundActionIdx idx ) const;
+// 		virtual bool     is_applicable( const aptk::core::State& s, aptk::core::ActionIdx idx ) const;
 		
-// 		virtual void     applicable_set( const aptk::core::State& s, std::vector< aptk::core::BoundActionIdx >& app_set ) const;	
+// 		virtual void     applicable_set( const aptk::core::State& s, std::vector< aptk::core::ActionIdx >& app_set ) const;	
 		
 		virtual float    cost( const State& s, Action_Idx a ) const;
 		
@@ -71,5 +70,3 @@ class FwdSearchProblem : public Search_Problem<State> {
 };
 
 } } // namespaces
-
-#endif

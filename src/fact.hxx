@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_FACT_HXX__
-#define __APTK_CORE_FACT_HXX__
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -10,21 +9,9 @@
 #include <core_types.hxx>
 
 namespace aptk { namespace core {
-	
-// typedef std::vector<ObjectIdx> Point;
-typedef unsigned StateVariableIdx;
-typedef std::vector<StateVariableIdx> ProcedureSignature;
-typedef std::vector<ObjectIdx> ProcedurePoint;
 
-#ifdef PREDSTATE
-	class PredicativeState;
-	typedef PredicativeState State;
-#else
-	class GenericState;
-	typedef GenericState State;
-#endif 
-
-
+class GenericState;
+typedef GenericState State;
 
 
 class Formula {
@@ -45,12 +32,12 @@ public:
 	typedef std::shared_ptr<const Fact> cptr;
 	
 	//! The affected state variable
-	StateVariableIdx _variable; 
+	VariableIdx _variable; 
 	
 	//! The new value.
 	ObjectIdx  _value;
 	
-	Fact(const StateVariableIdx variable, const ObjectIdx value) :
+	Fact(const VariableIdx variable, const ObjectIdx value) :
 		_variable(variable),
 		_value(value)
 	{};
@@ -80,7 +67,7 @@ class NegatedFact : public Fact
 public:
 	typedef std::shared_ptr<const NegatedFact> cptr;
 	
-	NegatedFact(const StateVariableIdx variable, const ObjectIdx value) :
+	NegatedFact(const VariableIdx variable, const ObjectIdx value) :
 		Fact(variable, value)
 	{};
 	
@@ -158,5 +145,3 @@ protected:
 
 
 } } // namespaces
-
-#endif

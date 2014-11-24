@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_VARIABLE_CACHE_HXX__
-#define __APTK_CORE_VARIABLE_CACHE_HXX__
+#pragma once
 
 #include <iostream>
 #include <cstdlib>
@@ -54,6 +53,3 @@ public:
 };
 
 } } // namespaces
-
-#endif
-

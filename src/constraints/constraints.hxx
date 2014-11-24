@@ -11,10 +11,8 @@ namespace aptk { namespace core {
 
 //! A DomainSet maps variables indexes to an array with all the possible values for that variable.
 typedef boost::container::flat_set<ObjectIdx> DomainSetVector;
-typedef boost::container::flat_set<int> IntDomainSetVector;
 typedef std::map<unsigned, DomainSetVector> DomainSet;
-typedef std::vector<DomainSetVector*> ULightDomainSet;
-typedef std::vector<IntDomainSetVector*> LightDomainSet;
+typedef std::vector<DomainSetVector*> LightDomainSet;
 
 	
 /**

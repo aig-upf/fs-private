@@ -1,13 +1,11 @@
 
-#ifndef __APTK__CORE_UTILS_H__
-#define __APTK__CORE_UTILS_H__
+#pragma once
 
 #include <vector>
 #include <ostream>
 
 #include <core_problem.hxx>
 #include <core_types.hxx>
-#include <types.hxx>
 #include <problem_info.hxx>
 
 
@@ -86,6 +84,3 @@ protected:
 
 
 } } // namespaces
-
-#endif
-

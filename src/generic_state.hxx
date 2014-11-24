@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_GENERIC_STATE_HXX__
-#define __APTK_CORE_GENERIC_STATE_HXX__
+#pragma once
 
 #include <iostream>
 #include <cstdlib>
@@ -85,7 +84,7 @@ public:
 		return getValue(fact._variable) == fact._value;
 	}
 	
-	const ObjectIdx& getValue(const StateVariableIdx& variable) const {
+	const ObjectIdx& getValue(const VariableIdx& variable) const {
 		return _values.at(variable);
 	}	
 	
@@ -113,6 +112,3 @@ public:
 };
 
 } } // namespaces
-
-#endif
-

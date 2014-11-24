@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_ACTION_MANAGER_HXX__
-#define __APTK_CORE_ACTION_MANAGER_HXX__
+#pragma once
 
 #include <cassert>
 #include <iosfwd>
@@ -87,5 +86,3 @@ public:
 };
 
 } } // namespaces
-
-#endif

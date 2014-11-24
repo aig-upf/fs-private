@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_EXAMPLES_COMPONENTS__
-#define __APTK_CORE_EXAMPLES_COMPONENTS__
+#pragma once
 
 #include <cassert>
 #include <cstring>
@@ -52,5 +51,3 @@ $method_factories
 
 
 } } } // namespaces
-
-#endif

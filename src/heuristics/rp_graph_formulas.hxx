@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_RELAXED_PLAN_GRAPH__
-#define __APTK_CORE_RELAXED_PLAN_GRAPH__
+#pragma once
 
 #include <vector>
 #include <algorithm>
@@ -25,7 +24,7 @@ protected:
 	std::set<NegatedFact> processedNFacts;
 	
 	std::queue<Formula::cptr> pending;
-	std::vector<std::set<BoundActionIdx>> perLayerSupporters;
+	std::vector<std::set<ActionIdx>> perLayerSupporters;
 	
 	unsigned numLayers;
 	
@@ -54,7 +53,7 @@ public:
 		}
 
 		// A check - curently it makes no difference, the plan sizes are always equal
-// 		std::set<BoundActionIdx> uniquifiedPlan(plan.begin(), plan.end());
+// 		std::set<ActionIdx> uniquifiedPlan(plan.begin(), plan.end());
 // 		if (plan.size() != uniquifiedPlan.size()) {
 // 			std::cout << "RP heuristic deviation of " << plan.size() - uniquifiedPlan.size() << std::endl;
 // 		}
@@ -113,7 +112,7 @@ public:
 		// We simply look for the first changeset containing the fact and process its achievers.
 		for (unsigned i = 0; i < numLayers; ++i) {
 			const ChangesetPtr changeset = _changesets[i];
-			BoundActionIdx achieverActionIdx = changeset->getAchiever(*fact);
+			ActionIdx achieverActionIdx = changeset->getAchiever(*fact);
 			
 			if (achieverActionIdx != CoreAction::INVALID_ACTION) { 
 				perLayerSupporters[i].insert(achieverActionIdx);
@@ -161,7 +160,7 @@ public:
 			if (!found) assert(false); // To disable the "variable 'found' set but not used" warning
 			
 			Fact positive(fact->_variable, unequalValue);
-			BoundActionIdx achieverActionIdx = changeset->getAchiever(positive);
+			ActionIdx achieverActionIdx = changeset->getAchiever(positive);
 			assert(achieverActionIdx != CoreAction::INVALID_ACTION); // The achiever must necessarily be in the same layer.
 			
 			perLayerSupporters[i].insert(achieverActionIdx);
@@ -196,20 +195,4 @@ protected:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 } } // namespaces
-
-#endif

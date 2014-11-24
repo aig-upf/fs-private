@@ -19,8 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-#ifndef __APTK_CORE_H_NULL__
-#define __APTK_CORE_H_NULL__
+#pragma once
 
 #include <aptk/heuristic.hxx>
 #include <state.hxx>
@@ -46,5 +45,3 @@ public:
 };
 
 } } // namespaces
-
-#endif

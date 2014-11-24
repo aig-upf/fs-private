@@ -9,6 +9,7 @@
 #include <memory>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <state.hxx>
 #include <core_problem.hxx>
@@ -71,12 +72,6 @@ public:
 		while (std::getline(in, line)) {
 			// std::cout << line << std::endl;
 			std::vector<std::string> strs;
-			VariableIdxVector binding;
-			VariableIdxVector derived;
-			std::vector<VariableIdxVector> appRelevantVars;
-			std::vector<VariableIdxVector> effRelevantVars;
-			std::vector<VariableIdxVector> effAffectedVars;
-			
 			boost::split(strs, line, boost::is_any_of("#"));
 			
 			// strs contains 7 elements: 
@@ -88,16 +83,16 @@ public:
             // # (5) effect relevant vars
             // # (6) effect affected vars
 			assert(strs.size()==7);
-
+			
+			
 			// We ignore the grounded name for the moment being.
 			const std::string& actionClassname = strs[1];
-			parseIntList(strs[2], binding);
-			parseIntList(strs[3], derived);
-			parseIntDoubleList(strs[4], appRelevantVars);
-			parseIntDoubleList(strs[5], effRelevantVars);
-			parseIntDoubleList(strs[6], effAffectedVars);
-			// PlainConjunctiveFact::cptr applicabilityFormula = parseFactList(strs[3]);
-			
+			ObjectIdxVector binding = parseNumberList<int>(strs[2]);
+			ObjectIdxVector derived = parseNumberList<int>(strs[3]);
+			std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(strs[4]);
+			std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(strs[5]);
+			std::vector<VariableIdxVector> effAffectedVars = parseDoubleNumberList<unsigned>(strs[6]);
+
 			auto aptr = actionFactory(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars);
 			problem.addAction(aptr);
 		}
@@ -117,10 +112,7 @@ public:
 		// Parse the goal relevant variables - we simply have one line with the variables indexes.
 		std::getline(in, line);
 		
-		std::vector<VariableIdxVector> appRelevantVars;
-		parseIntDoubleList(line, appRelevantVars);
-		// PlainConjunctiveFact::cptr applicabilityFormula = parseFactList(line);
-		
+		std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(line);
 		problem.setGoalEvaluator(goalFactory(appRelevantVars));
 	}
 	
@@ -144,8 +136,8 @@ public:
 
 			// We ignore the grounded name for the moment being.
 			const std::string& name = strs[1];
-			VariableIdxVector variables;
-			parseIntList(strs[2], variables);
+			VariableIdxVector variables = parseNumberList<unsigned>(strs[2]);
+			
 			
 			problem.registerConstraint(ConstraintFactory::create(name, variables));
 		}
@@ -153,31 +145,35 @@ public:
 
 	
 protected:
-	static void parseIntList(const std::string& input, std::vector<unsigned>& output, const std::string sep = ",") {
-		if (input == "") return;
+	template<typename T>
+	static std::vector<T> parseNumberList(const std::string& input, const std::string sep = ",") {
+		if (input == "") return std::vector<T>();
+		
+		std::vector<T> output;
 		
 		std::vector<std::string> strs;
 		boost::split(strs, input, boost::is_any_of(sep));
 
 		for(const auto& str:strs) {
-			output.push_back(std::stoi(str));
+			output.push_back(boost::lexical_cast<T>(str));
 		}
+		return output;
 	}
 	
-	static void parseIntDoubleList(const std::string& input, std::vector<std::vector<unsigned>>& output, const std::string sep = "/") {
+	template<typename T>
+	static std::vector<std::vector<T>> parseDoubleNumberList(const std::string& input, const std::string sep = "/") {
+		std::vector<std::vector<T>> output;
 		std::vector<std::string> strs;
 		boost::split(strs, input, boost::is_any_of(sep));
 		
 		if (strs.size() == 0) {
-			output.push_back(std::vector<unsigned>());
+			output.push_back(std::vector<T>());
 		} else {
 			for(const auto& str:strs) {
-				std::vector<unsigned> v;
-				parseIntList(str, v);
-				output.push_back(v);
-			}	
+				output.push_back(parseNumberList<T>(str));
+			}
 		}
-		
+		return output;
 	}
 	
 	//! We currently only parse Plain Conjunctions, i.e. conjunctions of either facts or negated facts.
