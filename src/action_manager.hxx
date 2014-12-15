@@ -7,21 +7,20 @@
 #include <core_changeset.hxx>
 #include <core_types.hxx>
 #include <fact.hxx>
-#include <variable_cache.hxx>
 #include <state.hxx>
 #include <core_problem.hxx>
 
 namespace aptk { namespace core {
 	
 /**
+ * Some helper methods.
+ * TODO - This should all be refactored into the existing Relaxed and NonRelaxed managers.
  */
 class ActionManager
 {
 public:
 	
-	/**
-	 * Returns true iff the given plan is valid AND leads to a goal state, when applied to state s0.
-	 */
+	//! Returns true iff the given plan is valid AND leads to a goal state, when applied to state s0.
 	template <typename StateType>
 	static bool checkPlanSuccessful(const Problem& problem, const ActionPlan& plan, const StateType& s0) {
 		auto endState = applyPlan(problem, plan, s0);
@@ -48,20 +47,21 @@ public:
 	 * Returns a null State:ptr if the action is not applicable.
 	 */
 	static RelaxedState::ptr applyAction(const CoreAction::cptr& action, const RelaxedState::ptr& s0) {
-		RelaxedActionSetManager manager(*s0);
-		JustifiedAction justified(*action);
+		RelaxedActionSetManager manager(Problem::getCurrentProblem()->getConstraints());
+		DomainSet projection = manager.projectValues(*s0, *action);
+		auto res = manager.isApplicable(*action, projection);
 		
-		if (!manager.isApplicable(justified)) {
+		if (!res.first) {
 			return RelaxedState::ptr();
 		}
 		
 		Changeset changeset;
-		manager.computeChangeset(justified, changeset);
+		manager.computeChangeset(*action, projection, changeset);
 		return std::make_shared<RelaxedState>(*s0, changeset); // Copy everything into the new state and apply the changeset
 	}
 	
 	static State::ptr applyAction(const CoreAction::cptr& action, const State::ptr& s0) {
-		SimpleActionSetManager manager(*s0);
+		SimpleActionSetManager manager(*s0, Problem::getCurrentProblem()->getConstraints());
 		
 		if (!manager.isApplicable(*action)) {
 			return State::ptr();
@@ -70,19 +70,8 @@ public:
 		Changeset changeset;
 		manager.computeChangeset(*action, changeset);
 		return std::make_shared<State>(*s0, changeset); // Copy everything into the new state and apply the changeset
-	}	
-	
-// 	//! Returns true iff the given formula is satisfiable in the (possibly relaxed) given state.
-// 	template <class S>
-// 	static bool checkFormulaSatisfiable(const PlainConjunctiveFact& formula, const S& state);
-// 
-// 	//!Returns true iff the given fact is true in the (possibly relaxed) given state.
-// 	template <class S>
-// 	static bool checkFormulaSatisfiable(const Fact& fact, const S& state);
-// 
-// 	//! Returns true iff the given negated fact is satisfiable in the (possibly relaxed) given state.
-// 	static bool checkFormulaSatisfiable(const NegatedFact& fact, const State& state);
-// 	static bool checkFormulaSatisfiable(const NegatedFact& fact, const RelaxedState& state);
+	}
+
 };
 
 } } // namespaces

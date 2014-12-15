@@ -12,6 +12,7 @@
 #include <heuristics/hmax.hxx>
 #include <state.hxx>
 #include <utils/utils.hxx>
+#include <utils/printers.hxx>
 #include <problem_info.hxx>
 
 #include <generator.hxx>  // This will dinamically point to the right generated file
@@ -91,9 +92,9 @@ float do_search( Search_Engine& engine, const ProblemInfo::cptr& problemInfo, fl
 // 	while ( engine.find_solution( cost, plan ) ) {
 		assert(checkPlanCorrect(plan));
 		out << "\n\nPlan found with cost: " << cost << std::endl;
-		Utils::printPlan(plan, problemInfo, out);
+		Printers::printPlan(plan, problemInfo, out);
 		if (!found) {
-			Utils::printPlan(plan, problemInfo, first_plan);
+			Printers::printPlan(plan, problemInfo, first_plan);
 			found = true;
 		}
 		
@@ -159,6 +160,7 @@ void reportProblemStats(const Problem& problem) {
 	}
 	
 	std::cout << "Number of state constraints: " << problem.getConstraints().size() << std::endl;
+	std::cout << "Number of goal constraints: " << problem.getGoalConstraints().size() << std::endl;
 	
 // 	reportActionsInfo(problem);
 }

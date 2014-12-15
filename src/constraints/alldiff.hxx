@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <set>
 #include <constraints/constraints.hxx>
 
 namespace aptk { namespace core {
@@ -141,33 +142,8 @@ protected:
 		}
 		return output;
 	}
-	
-	Output insert(unsigned i) {
-		Output output = Output::Unpruned;
-		u[i] = min[i];
-		for (unsigned j = 0; j < i; ++j) {
-			if (min[j] < min[i]) {
-				++u[j];
-				if (u[j] > max[i]) return Output::Failure;
-				if (u[j] == max[i]) {
-					if (incrMin(min[j], max[i], i) == Output::Pruned) {
-						output = Output::Pruned;
-					}
-				}
-			} else {
-				++u[i];
-			}
-		}
-		if (u[i] > max[i]) return Output::Failure;
-		if (u[i] == max[i]) {
-			if (incrMin(min[i], max[i], i) == Output::Pruned) {
-				output = Output::Pruned;
-			}
-		}
-		return output;
-	}
 
-	Output insert2(unsigned i) {
+	Output insert(unsigned i) {
 		Output output = Output::Unpruned;
 		u[i] = min[i];
 		int bestMin = std::numeric_limits<int>::max();
@@ -206,13 +182,32 @@ protected:
 		updateBounds();
 		
 		for (unsigned i = 0; i < num_variables; ++i) {
-			Output tmp = insert2(i);
+			Output tmp = insert(i);
 			if (tmp == Output::Failure) return tmp;
 			if (tmp == Output::Pruned) output = tmp;
 		}
  		
 		return output;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+public:
+	
+	bool isSatisfied(const ObjectIdxVector& values) const {
+		std::set<ObjectIdx> distinct;
+		for (ObjectIdx val:values) {
+			auto res = distinct.insert(val);
+			if (!res.second) return false; // We found a duplicate
+		}
+		return true;
+	}
+	
 };
 
 

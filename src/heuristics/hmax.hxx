@@ -16,7 +16,7 @@ public:
 	virtual ~HMaxHeuristic() {}
 	
 	//! The hmax heuristic only cares about the size of the RP graph.
-	float computeHeuristic(const State& seed, const RelaxedState::ptr& s1, const std::vector<ChangesetPtr>& changesets) {
+	float computeHeuristic(const State& seed, const RelaxedState::ptr& s1, const std::vector<Changeset::ptr>& changesets) {
 		return (this->_goal_manager).isGoal(seed, *s1) ? changesets.size() : -1;
 	}
 };

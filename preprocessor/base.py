@@ -143,11 +143,29 @@ class StaticRoutine(object):
                 computed.append(binding[p.symbol])
             elif isinstance(p, StaticFunctionalExpression):
                 routine = StaticRoutine(p.symbol, p.args)
+                assert False
 
         return tuple(computed)
 
 
-class StaticRelationalRoutine(StaticRoutine):
+class StaticFunctionalRoutine(StaticRoutine):
+    def execute(self, static, binding):
+        """ Executes the static routine extracting the relevant parameters from a parameter binding. """
+        # params = [binding[param] for param in self.parameters]
+        # return self.routine(*params)
+        assert all(isinstance(a, ParameterExpression) for a in self.parameters)
+        args = tuple(binding[a.symbol] for a in self.parameters)
+        data = static[self.routine].elems
+        return data[args] if args in data else None
+
+
+class StaticPredicativeRoutine(StaticRoutine):
+    def __init__(self, routine, negated, parameters):
+        super().__init__(routine, parameters)
+        self.negated = negated
+
+
+class StaticRelationalRoutine(StaticPredicativeRoutine):
 
     def execute(self, static, binding):
         """ Executes the static routine extracting the relevant parameters from a parameter binding. """
@@ -157,7 +175,7 @@ class StaticRelationalRoutine(StaticRoutine):
         args = self.compute_parameters(self.parameters, static, binding)
         assert self.routine == "="  # So far we only support this type of operation
         assert len(args) == 2
-        return args[0] == args[1]
+        return args[0] != args[1] if self.negated else args[0] == args[1]
 
     def compute_parameters(self, parameters, static, binding):
         computed = []
@@ -171,21 +189,10 @@ class StaticRelationalRoutine(StaticRoutine):
         return tuple(computed)
 
 
-class StaticFunctionalRoutine(StaticRoutine):
-
-    def execute(self, static, binding):
-        """ Executes the static routine extracting the relevant parameters from a parameter binding. """
-        # params = [binding[param] for param in self.parameters]
-        # return self.routine(*params)
-        assert all(isinstance(a, ParameterExpression) for a in self.parameters)
-        args = tuple(binding[a.symbol] for a in self.parameters)
-        data = static[self.routine].elems
-        return data[args] if args in data else None
-
-class DefinedRoutine(StaticRoutine):
+class DefinedRoutine(StaticPredicativeRoutine):
     def __init__(self, expression):
         self.expression = expression
-        super().__init__(None, None)
+        super().__init__(None, expression.negated, None)
 
     def execute(self, static, binding):
         """ Executes the static routine extracting the relevant parameters from a parameter binding. """
@@ -385,7 +392,7 @@ class ProblemDomain(object):
 
 
 class ProblemInstance(object):
-    def __init__(self, name, domain, objects, init, goal, static_data, constraints):
+    def __init__(self, name, domain, objects, init, goal, static_data, constraints, gconstraints):
         self.name = name
         self.domain = domain
         self.objects = objects
@@ -393,6 +400,7 @@ class ProblemInstance(object):
         self.goal = goal
         self.static_data = static_data
         self.constraints = constraints
+        self.gconstraints = gconstraints
 
     def get_complete_name(self):
         return self.domain.name + '/' + self.name

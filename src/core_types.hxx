@@ -2,8 +2,11 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
+
 #include <vector>
+#include <map>
+#include <unordered_map>
+#include <boost/container/flat_set.hpp>
 
 #include <exception>
 
@@ -35,6 +38,11 @@ namespace aptk  { namespace core {
 	typedef std::vector<ObjectIdx> ObjectIdxVector;
 	typedef ObjectIdxVector ProcedurePoint;
 	
+	//! A DomainSet maps variables indexes to an array with all the possible values for that variable.
+	typedef boost::container::flat_set<ObjectIdx> DomainSetVector;
+	typedef std::map<unsigned, DomainSetVector> DomainSet;
+	typedef std::vector<DomainSetVector*> LightDomainSet;
+	
 } } // namespaces
 
 /**
@@ -48,5 +56,7 @@ namespace aptk  { namespace core {
 	
 	struct NonExistingTypeException : std::exception {};
 	struct NonImplementedException : std::exception {};
+	
+	struct InvalidConstraintException : std::exception {};
 	
 } } // namespaces

@@ -5,7 +5,7 @@
 #include <iosfwd>
 #include <actions.hxx>
 #include <core_types.hxx>
-#include <constraints/constraints.hxx>
+#include <constraints/problem_constraints.hxx>
 
 namespace aptk { namespace core {
 
@@ -21,14 +21,14 @@ protected:
 	
 	const ApplicableEntity& _goal;
 	
-	const std::vector<Constraint::cptr>& _constraints;
+	const ProblemConstraint::vctr& _constraints;
 	
 public:
 	//! An arc is a pair <procedure_id, variable_id>
 	typedef std::pair<unsigned, VariableIdx> Arc;
 	typedef boost::container::flat_set<Arc> ArcSet;
 	
-	CSPSolver(const ApplicableEntity& goal, const std::vector<Constraint::cptr>& constraints)
+	CSPSolver(const ApplicableEntity& goal, const ProblemConstraint::vctr& constraints)
 		: _goal(goal), _constraints(constraints) {}
 	
 	//! In the preprocessing phase we handle unary constraints and create the list of arcs to be processed by the AC3 algorithm

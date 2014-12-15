@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <state.hxx>
 #include <fact.hxx>
 
+#include <boost/container/flat_set.hpp>
+
 namespace aptk { namespace core {
 
 class Changeset;
@@ -44,7 +46,13 @@ public:
 	
 	ApplicableEntity(const std::vector<VariableIdxVector>& appRelevantVars) :
 		_appRelevantVars(appRelevantVars)
-	{};	
+	{
+		for(const VariableIdxVector& procRelVars:_appRelevantVars) {
+			for(VariableIdx var:procRelVars) {
+				_allRelevantVars.insert(var);
+			}
+		}
+	};
 	
 	//! Keep it virtual!
 	virtual ~ApplicableEntity() {};
@@ -58,9 +66,9 @@ public:
 		return _appRelevantVars[procedureIdx];
 	};
 	
-// 	virtual PlainConjunctiveFact::cptr getApplicabilityFormula() const {
-// 		return _applicabilityFormula;
-// 	};
+	const boost::container::flat_set<VariableIdx>& getAllRelevantVariables() const {
+		return _allRelevantVars;
+	}
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ApplicableEntity&  entity) { return entity.print(os); }
@@ -76,7 +84,10 @@ protected:
 	
 	//! One VariableIdxVector per each applicability procedure, containing the indexes of those state variables 
 	//! relevant to that procedure.
-	const std::vector<VariableIdxVector> _appRelevantVars;	
+	const std::vector<VariableIdxVector> _appRelevantVars;
+	
+	//! The indexes of _all_ the state variables relevant to at least one of the effect or applicability procedures of the action.
+	boost::container::flat_set<VariableIdx> _allRelevantVars;		
 };
 
 /**
@@ -102,6 +113,13 @@ public:
 	{
 		// Both vectors must have the same size, which is equal to the number of effect procedures.
 		assert(_effAffectedVars.size() == _effAffectedVars.size());
+		
+		// We cache all the relevant variables for performance reasons - these will be added to the applicability ones.
+		for(const VariableIdxVector& procRelVars:_effRelevantVars) {
+			for(VariableIdx var:procRelVars) {
+				_allRelevantVars.insert(var);
+			}
+		}
 	};
 	
 	//! Keep it virtual!
@@ -132,6 +150,7 @@ public:
 	friend std::ostream& operator<<(std::ostream &os, const CoreAction&  action) { return action.print(os); }
 	virtual std::ostream& print(std::ostream& os) const;
 // 	virtual std::ostream& print(std::ostream& os, const SymbolTable& st) const;
+	
 
 protected:
 	//! The indexes of the action binding, if any.

@@ -7,11 +7,12 @@
 #include <actions.hxx>
 #include <state.hxx>
 #include <problem_info.hxx>
-#include <applicable_action_set.hxx>
 #include <constraints/constraints.hxx>
+#include <simple_applicable_action_set.hxx>
+#include <simple_action_set_manager.hxx>
+#include <relaxed_action_set_manager.hxx>
 
 namespace aptk { namespace core {
-
 
 class Problem
 {
@@ -30,38 +31,31 @@ public:
 	//! Modify the problem (grounded) actions
 	void addAction(const CoreAction::cptr& action) { _actions.push_back(action); }
 	const CoreAction::cptr& getAction(ActionIdx idx) const { return _actions.at(idx); }
-	unsigned getNumActions() const { return _actions.size(); }	
-	
+	unsigned getNumActions() const { return _actions.size(); }
+	const ActionList& getAllActions() const { return _actions; }
 
-	ApplicableActionSet<SimpleActionSetManager> computeBoundApplicableActions(const State& s) const {
-		return ApplicableActionSet<SimpleActionSetManager>(SimpleActionSetManager(s), _actions);
-	}
-	
-	ApplicableActionSet<RelaxedActionSetManager> computeBoundApplicableActions(const State* s0, const RelaxedState& s) const { 
-		return ApplicableActionSet<RelaxedActionSetManager>(RelaxedActionSetManager(s0, s), _actions);
+	SimpleApplicableActionSet getApplicableActions(const State& s) const {
+		return SimpleApplicableActionSet(SimpleActionSetManager(s, getConstraints()), _actions);
 	}
 	
 	bool isGoal(const State& s) const { 
-		SimpleActionSetManager manager(s);
+		SimpleActionSetManager manager(s, getConstraints());
 		return manager.isApplicable(*getGoalEvaluator());
 	}
 	
-	bool isGoal(const RelaxedState& s) const { 
-		RelaxedActionSetManager manager(s);
-		JustifiedApplicableEntity justified(*getGoalEvaluator());
-		return manager.isApplicable(justified);
+	bool isGoal(const RelaxedState& s) const { // TODO TODO TODO REFACTOR OUT OF HERE
+		RelaxedActionSetManager manager(getConstraints());
+		// We compute the projection of the current relaxed state to the variables relevant to the action
+		DomainSet projection = manager.projectValues(s, *getGoalEvaluator());
+		auto res = manager.isApplicable(*getGoalEvaluator(), projection);
+		return res.first;
 	}
 	
-	void registerConstraint(const Constraint::cptr constraint) { _constraints.push_back(constraint);}
-	const std::vector<Constraint::cptr>& getConstraints() const { return _constraints; }
-	
-	//! Prints a representation of the predicate to the given stream.
-	std::ostream& print(std::ostream& os) const {
-		os << "Problem[NOT IMPLEMENTED YET]";
-		return os;
-	}
-	
-	friend std::ostream& operator<<(std::ostream &os, const Problem&  problem) {  return problem.print(os); }
+	void registerConstraint(const ProblemConstraint::cptr constraint) { _constraints.push_back(constraint);}
+	const ProblemConstraint::vctr& getConstraints() const { return _constraints; }
+	void registerGoalConstraint(const ProblemConstraint::cptr constraint) { _gconstraints.push_back(constraint);}
+	const ProblemConstraint::vctr& getGoalConstraints() const { return _gconstraints; }
+
 	
 	//! Getter/setter for the associated ProblemInfo object.
 	void setProblemInfo(const ProblemInfo::cptr& problemInfo) { _problemInfo = problemInfo; }
@@ -85,7 +79,8 @@ protected:
 	
 	ProblemInfo::cptr _problemInfo;
 	
-	std::vector<Constraint::cptr> _constraints;
+	ProblemConstraint::vctr _constraints;
+	ProblemConstraint::vctr _gconstraints;
 	
 	static const Problem* _instance;
 };

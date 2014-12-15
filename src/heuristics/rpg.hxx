@@ -13,14 +13,18 @@
 
 namespace aptk { namespace core {
 
+/**
+ * A proper Relaxed Planning Graph. This class is used to perform the plan extraction from
+ * an already existing set of changesets that do actually represent the RPG.
+ */
 class RPGraph {
 protected:
 	const Problem& _problem;
 	const State& _seed;
-	const std::vector<ChangesetPtr>& _changesets;
+	const std::vector<Changeset::ptr>& _changesets;
 	
 	std::set<Fact> processed;
-	std::queue<const FactSet*> pending;
+	std::queue<FactSetPtr> pending;
 
 	std::vector<std::set<ActionIdx>> perLayerSupporters;
 	
@@ -33,7 +37,7 @@ public:
  	 * @param changesets An (ordered) stack of changesets representing the planning graph
 	 *                  (top element represents last layer).
 	 */
-	RPGraph(const Problem& problem, const State& seed, const std::vector<ChangesetPtr>& changesets) :
+	RPGraph(const Problem& problem, const State& seed, const std::vector<Changeset::ptr>& changesets) :
 		_problem(problem), _seed(seed), _changesets(changesets),
 		processed(),
 		pending(),
@@ -48,12 +52,12 @@ public:
 	 * 
 	 * @param causes The facts that allowed the planning graph to reach a goal state.
 	 */
-	float computeRelaxedPlanCost(const FactSet& causes) {
+	float computeRelaxedPlanCost(FactSetPtr causes) {
 		
-		pending.push(&causes);
+		pending.push(causes);
 		
 		while (!pending.empty()) {
-			const FactSet* pendingCauses = pending.front(); pending.pop();
+			FactSetPtr pendingCauses = pending.front(); pending.pop();
 			processCauses(pendingCauses);
 		}
 		
@@ -76,29 +80,28 @@ public:
 		return (float) plan.size();
 	}
 	
-	
-	void processCauses(const FactSet* causes) {
+	//! A set of atoms is processed by processing each of the atoms one by one
+	void processCauses(const FactSetPtr causes) {
 		for(auto fact:*causes) {
 			processCauses(fact);
 		}
 	}
 	
-	
+	//! Process a single atom by seeking its supports left-to-right in the RPG and enqueuing them to be further processed
 	void processCauses(const Fact& fact) {
 		if (_seed.contains(fact)) return; // The fact was already on the seed state, thus has empty support.
 		if (processed.find(fact) != processed.end()) return; // The fact has already been justfied
 		
 		// We simply look for the first changeset containing the fact and process its achievers.
 		for (unsigned i = 0; i < numLayers; ++i) {
-			const ChangesetPtr changeset = _changesets[i];
+			const Changeset::ptr changeset = _changesets[i];
 			const auto achieverAndCauses = changeset->getAchieverAndCauses(fact);
 			ActionIdx achiever = achieverAndCauses.first;
 			
 			if (achiever != CoreAction::INVALID_ACTION) { 
 				perLayerSupporters[i].insert(achiever);
-				const FactSet& actionCauses = changeset->getCauses(achiever);
-				pending.push(&actionCauses); // push the action causes
-				pending.push(achieverAndCauses.second.get()); // and push the specific fact extra causes
+				pending.push(changeset->getCauses(achiever)); // push the action causes themselves
+				pending.push(achieverAndCauses.second); // and push the specific extra causes that were relevant to turn the fact true.
 				processed.insert(fact);
 				return;
 			}

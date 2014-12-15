@@ -93,11 +93,11 @@ def check_state_complete(instance, state):
                                         .format(symbol.name, str(e)))
 
 
-def create_problem_instance(name, task, domain, objects, init, goal, static_data, constraints):
+def create_problem_instance(name, task, domain, objects, init, goal, static_data, constraints, gconstraints):
     """
 
     """
-    instance = ProblemInstance(name, domain, objects, init, goal, static_data, constraints)
+    instance = ProblemInstance(name, domain, objects, init, goal, static_data, constraints, gconstraints)
 
     instance.type_map, instance.object_type = process_types(instance)
 

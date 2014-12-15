@@ -35,17 +35,23 @@ class Translator(object):
                 elements.append(base.ObjectType(t.name, t.basetype_name))
         return elements
 
-    def get_state_constraints(self):
+    def process_constraints(self, constraints):
         processed = []
         allowed = dict(sum=Sum, alldiff=Alldiff)
-        for c in self.task.constraints:
-            if not c.name in allowed:
+        for c in constraints:
+            if c.name not in allowed:
                 raise RuntimeError("Unsupported constrain type: '{}'".format(c.name))
             constraint_class = allowed[c.name]
             variables = [base.Variable(arg[0], arg[1:]) for arg in c.args]
             processed.append(constraint_class(variables))
 
         return processed
+
+    def get_goal_constraints(self):
+        return self.process_constraints(self.task.gconstraints)
+
+    def get_state_constraints(self):
+        return self.process_constraints(self.task.constraints)
 
     def get_symbols(self):
         elements = []

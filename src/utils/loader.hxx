@@ -119,7 +119,7 @@ public:
 	/**
 	 * Loads a set of state constraints.
 	 */
-	static void loadConstraints(const std::string& filename, Problem& problem) {
+	static void loadConstraints(const std::string& filename, Problem& problem, bool goal) {
 		std::string line;
 		std::ifstream in(filename);
 		
@@ -138,11 +138,13 @@ public:
 			const std::string& name = strs[1];
 			VariableIdxVector variables = parseNumberList<unsigned>(strs[2]);
 			
-			
-			problem.registerConstraint(ConstraintFactory::create(name, variables));
+			if (goal) {
+				problem.registerGoalConstraint(ConstraintFactory::create(name, variables));
+			} else {
+				problem.registerConstraint(ConstraintFactory::create(name, variables));
+			}
 		}
-	} 
-
+	}
 	
 protected:
 	template<typename T>

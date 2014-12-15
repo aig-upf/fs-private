@@ -121,8 +121,10 @@ def create_instance(name, translator, domain):
     translator.process_initial_state()
     init = translator.get_initial_state()
     data = translator.get_static_data()
-    constraints = translator.get_state_constraints()
-    return taskgen.create_problem_instance(name, translator.task, domain, objects, init, goal, data, constraints)
+    sconstraints = translator.get_state_constraints()
+    gconstraints = translator.get_goal_constraints()
+    return taskgen.create_problem_instance(name, translator.task, domain, objects, init, goal, data, sconstraints,
+                                           gconstraints)
 
 
 def extract_names(instance, domain_filename):
@@ -317,14 +319,17 @@ class Generator(object):
             idx=self.index.variables.get_index(fact.var),
             val=self.get_value_idx(fact.value))
 
-    def dump_constraints_data(self):
-        """ Saves the data related to state constraints """
+    def serialize_constraints(self, constraints):
         serialized = []
-        for constraint in self.task.constraints:
+        for constraint in constraints:
             variable_idxs = self.gen_vector([self.index.variables.get_index(var) for var in constraint.args])
             serialized.append('#'.join([str(constraint), constraint.name, variable_idxs]))
+        return serialized
 
-        self.dump_data('constraints', serialized)
+    def dump_constraints_data(self):
+        """ Saves the data related to state and goal constraints """
+        self.dump_data('constraints', self.serialize_constraints(self.task.constraints))
+        self.dump_data('goal-constraints', self.serialize_constraints(self.task.gconstraints))
 
     def dump_init_data(self):
         """

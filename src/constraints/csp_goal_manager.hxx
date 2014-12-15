@@ -7,7 +7,6 @@
 #include <core_changeset.hxx>
 #include <core_types.hxx>
 #include <fact.hxx>
-#include <variable_cache.hxx>
 #include <core_problem.hxx>
 #include <constraints/constraints.hxx>
 #include <constraints/csp_solver.hxx>
@@ -21,14 +20,18 @@ namespace aptk { namespace core {
 class CSPGoalManager
 {
 protected:
-	const std::vector<Constraint::cptr>& _constraints;
+	//! The goal constraints of the problem
+	const ProblemConstraint::vctr& _gconstraints;
+	
+	//! The goal applicability entity
 	const ApplicableEntity& _goal;
+	
 	CSPSolver _solver;
 	
 	
 public:
-	CSPGoalManager(const ApplicableEntity& goal, const std::vector<Constraint::cptr>& constraints) 
-	: _constraints(constraints), _goal(goal), _solver(_goal, _constraints)
+	CSPGoalManager(const ApplicableEntity& goal, const ProblemConstraint::vctr& gconstraints) 
+	: _gconstraints(gconstraints), _goal(goal), _solver(_goal, _gconstraints)
 	
 	{}
 	
@@ -40,7 +43,7 @@ public:
 	
 	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
 	//! Besides, return the causes of the goal to be later processed by the RPG heuristic backchaining procedure.
-	bool isGoal(const State& seed, const RelaxedState& state, FactSet& causes) const {
+	bool isGoal(const State& seed, const RelaxedState& state, FactSetPtr causes) const {
 		
 		DomainSet domains;
 		if (!checkGoal(seed, state, domains)) {
@@ -58,7 +61,7 @@ protected:
 	//! 
 	bool checkGoal(const State& seed, const RelaxedState& state, DomainSet& domains) const {
 		// Extract all the relevant variable domains - including those of state constraints, which we'll use for goal checking.
-		extractDomains(state, _constraints, domains);
+		extractDomains(state, _gconstraints, domains);
  		// std::cout << "Domains BEFORE pruning:" << std::endl; CSPSolver::printDomains(domains);
 		Constraint::Output o = _solver.enforce_consistency(domains);
 		return o != Constraint::Output::Failure && _solver.check_consistency(domains);
@@ -66,7 +69,7 @@ protected:
 	
 public:
 	//! Extracts the domains of all the variables relevant to determine if a RPG layer is a goal.
-	void extractDomains(const RelaxedState& state, const std::vector<Constraint::cptr>& constraints, DomainSet& domains) const {
+	void extractDomains(const RelaxedState& state, const ProblemConstraint::vctr& constraints, DomainSet& domains) const {
 		
 		// Extract first the variables relevant for the goal procedures.
 		for (unsigned proc = 0; proc < _goal.getNumApplicabilityProcedures(); ++proc) {
@@ -76,7 +79,7 @@ public:
 		}
 		
 		// And then extract the variables relevant for the state constraints.
-		for (Constraint::cptr constraint:constraints) {
+		for (const ProblemConstraint::cptr constraint:constraints) {
 			for (VariableIdx variable:constraint->getScope()) {
 				extractDomain(state, variable, domains);
 			}
@@ -98,7 +101,7 @@ public:
 	
 	//! Extract the supporters of the goal from the pruned domains and add them to the set of goal causes.
 	//! If any pruned domain is empty, return false, as it means we have an inconsistency.
-	void extractGoalCauses(const State& seed, DomainSet& domains, FactSet& causes, std::vector<bool>& set, unsigned num_set) const {
+	void extractGoalCauses(const State& seed, DomainSet& domains, FactSetPtr causes, std::vector<bool>& set, unsigned num_set) const {
 		
 		// 0. Base case
 		if (num_set == domains.size()) return;
@@ -124,7 +127,7 @@ public:
 		ObjectIdx selected_value = seed.getValue(selected_var);
 		if (selected_dom->find(selected_value) == selected_dom->end()) {
 			selected_value = *(selected_dom->cbegin()); // We simply select an arbitrary value.
-			causes.insert(Fact(selected_var, selected_value)); // We only insert the fact if it wasn't true on the seed state.
+			causes->insert(Fact(selected_var, selected_value)); // We only insert the fact if it wasn't true on the seed state.
 		}
 		set[selected_var] = true; // Tag the variable as already selected
 		
@@ -146,7 +149,7 @@ public:
 		}
 	}
 
-	void extractGoalCausesArbitrarily(const State& seed, const DomainSet& domains, FactSet& causes, std::vector<bool>& set) const {
+	void extractGoalCausesArbitrarily(const State& seed, const DomainSet& domains, FactSetPtr causes, std::vector<bool>& set) const {
 		for (const auto& domain:domains) {
 			VariableIdx variable = domain.first;
 			
@@ -156,7 +159,7 @@ public:
 			ObjectIdx seed_value = seed.getValue(variable);
 			if (domain.second.find(seed_value) == domain.second.end()) {  // If the original value makes the situation a goal, then we don't need to add anything for this variable.
 				ObjectIdx value = *(domain.second.cbegin());
-				causes.insert(Fact(variable, value)); // Otherwise we simply select an arbitrary value.
+				causes->insert(Fact(variable, value)); // Otherwise we simply select an arbitrary value.
 			}
 		}
 	}
@@ -175,7 +178,7 @@ public:
 
 
 	
-	static void reportGoalFound(const RelaxedState& state, const DomainSet& domains, const FactSet& causes) {
+	static void reportGoalFound(const RelaxedState& state, const DomainSet& domains, const FactSetPtr causes) {
 		std::cout << std::endl << "GOAL FOUND!  RPG  layer:" << std::endl << std::endl;
 		std::cout  << state;
 		std::cout << std::endl << "PRUNED DOMAINS: " << std::endl;
@@ -183,7 +186,7 @@ public:
 		
 		std::cout << std::endl << "EXTRACTED CAUSES:" << std::endl;
 		const auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();
-		for (const auto& cause:causes) {
+		for (const auto& cause:*causes) {
 			std::cout << problemInfo->getVariableName(cause._variable) << " = ";
 			std::cout << problemInfo->getObjectName(cause._variable, cause._value) << std::endl;
 		}

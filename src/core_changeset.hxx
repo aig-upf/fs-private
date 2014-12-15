@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <actions.hxx>
 #include <fact.hxx>
 #include <state.hxx>
-#include "justified_action.hxx"
 
 #include <map>
 #include <cassert>
@@ -32,7 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace aptk { namespace core {
 
 /**
- * A changeset is merely a set of effects.
+ * A changeset contains book-keeping information concerning the actions that support
+ * the achievement of atoms in the Relaxed Planning Graph. This currently includes both
+ * the atoms that make an action applicable (in a certain RPG layer) and the "extra"
+ * atoms that make a particular effect reachable, i.e. those related to the relevant
+ * variables of the effect procedure that achieves the effect.
  */
 class Changeset
 {
@@ -41,18 +44,24 @@ protected:
 	ActionIdx _activeActionIdx;
 	
 	/**
-	 * A map mapping effects to one of the actions that achieves them, arbitrarily chosen (currently, it just
-	 * happens to be the first action we find that achieves the effect).
+	 * A map mapping every atom reached in the RPG layer represented by this changeset to a pair <a, b>, where:
+	 *  - `a` is one of the actions that achieves the atom, arbitrarily chosen
+	 *  - `b` contains a number of "extra" causes, i.e. atoms that are necessary for the achievement of the first atom
+	 *    because they relate to the relevant variables of the effect procedure that achieves it.
 	 */
-	typedef std::map<Fact, std::pair<ActionIdx, FactSetPtr>> FactMap;
-	FactMap _effects;
+	std::map<Fact, std::pair<ActionIdx, FactSetPtr>> _effects;
 	
-	//! Maps actions to their causes in a particular layer.
-	std::unordered_map<ActionIdx, JustifiedAction::ptr> _causes;
-	
+	/**
+	 * A map mapping every action applicable in this layer to the supports of the action, i.e. the atoms that make it applicable.
+	 */	
+	std::unordered_map<ActionIdx, FactSetPtr> _causes;
+
+	//! We keep a pointer to the previous RPG layer to ensure that we only add novel atoms.
 	RelaxedState::ptr _referenceState;
 
 public:
+	typedef std::shared_ptr<Changeset> ptr;
+	
 	Changeset() : 
 		_activeActionIdx(),
 		_effects(),
@@ -76,10 +85,7 @@ public:
 		
 		// Note that this might overwrite a previous action - so far, we do not care which action
 		// remains as the achiever, as long as there is at least one. This might leave some room for improvement.
-// 		if (_effects.count(fact) == 0) {
-// 			_effects.insert({fact, _activeActionIdx});
-			_effects[fact] = std::make_pair(_activeActionIdx, extraCauses);
-// 		}
+		_effects[fact] = std::make_pair(_activeActionIdx, extraCauses);
 	}
 	
 	virtual void add(const Fact& fact) { add(fact, nullptr); }
@@ -94,13 +100,35 @@ public:
 		return (it != _effects.end()) ? it->second : std::make_pair(CoreAction::INVALID_ACTION, nullptr);
 	}
 	
-	const FactSet& getCauses(const ActionIdx& actionIdx) const { return _causes.at(actionIdx)->getCauses(); }
+	FactSetPtr getCauses(const ActionIdx& actionIdx) const { return _causes.at(actionIdx); }
+	
+	unsigned size() const { return _effects.size(); }
+	
+	//! Sets the action that will be considered the support for the atoms added in subsequent calls to the "add" method
+	void setCurrentAction(const ActionIdx activeActionIdx, FactSetPtr causes) {
+		assert(!_causes.count(activeActionIdx));
+		_activeActionIdx = activeActionIdx;
+		_causes[_activeActionIdx] = causes;
+	}	
+	
+	const std::map<Fact, std::pair<ActionIdx, FactSetPtr>>& getEffects() const {
+		return _effects;
+	}
+	
+	friend std::ostream& operator<<(std::ostream &os, const Changeset&  cs) { return cs.print(os); }
+	
+	//! Prints a representation of the state to the given stream.
+	std::ostream& print(std::ostream& os) const {
+		printEffects(os);
+		printCauses(os);
+		return os;
+	}
 	
 	std::ostream& printCauses(std::ostream& os) const {
 		os << "Changeset causes for:";
 		for (const auto& x:_causes) {
 			os << " #" << x.first  << ": {";
-			printFactSet(x.second->getCauses(), os);
+			printFactSet(*(x.second), os);
 			os << "}";
 		}
 		os << std::endl;
@@ -122,31 +150,8 @@ public:
 		}
 		os << std::endl;
 		return os;
-	}
-	
-	unsigned size() const { return _effects.size(); }
-	
-	void setJustifiedAction(const ActionIdx activeActionIdx, JustifiedAction::ptr action) {
-		assert(!_causes.count(activeActionIdx));
-		_activeActionIdx = activeActionIdx;
-		_causes[_activeActionIdx] = action;
 	}	
-	
-	const FactMap& getEffects() const {
-		return _effects;
-	}
-	
-	friend std::ostream& operator<<(std::ostream &os, const Changeset&  cs) { return cs.print(os); }
-	
-	//! Prints a representation of the state to the given stream.
-	std::ostream& print(std::ostream& os) const {
-		printEffects(os);
-		printCauses(os);
-		return os;
-	}
 };
-
-typedef std::shared_ptr<Changeset> ChangesetPtr;
 
 
 } } // namespaces

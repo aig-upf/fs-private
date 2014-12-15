@@ -56,9 +56,10 @@ class ActionCompiler(object):
             if isinstance(exp, DefinedExpression):
                 procedure = base.StaticAppProcedure(base.DefinedRoutine(exp))
             elif isinstance(exp, RelationalExpression):
-                procedure = base.StaticAppProcedure(base.StaticRelationalRoutine(exp.symbol, exp.arguments))
+                procedure = base.StaticAppProcedure(base.StaticRelationalRoutine(exp.symbol, exp.negated, exp.arguments))
             elif isinstance(exp, StaticPredicativeExpression):
-                procedure = base.StaticAppProcedure(base.StaticRoutine(exp.symbol, exp.arguments))
+                procedure = base.StaticAppProcedure(
+                    base.StaticPredicativeRoutine(exp.symbol, exp.negated, exp.arguments))
             else:
                 raise RuntimeError("Unknown type of expression '{}'".format(exp))
 

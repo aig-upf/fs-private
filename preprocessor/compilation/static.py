@@ -25,7 +25,7 @@ def compile_init_data(task):
     data = {s: dict() if s in task.function_names else set() for s in task.all_symbols}
 
     def check_symbol(s, point):
-            if not s in data:
+            if s not in data:
                 raise ParseException("Unknown symbol: '{}'".format(s))
             if point in data[s]:
                 raise ParseException("Duplicate initialization: '{}'".format(elem))

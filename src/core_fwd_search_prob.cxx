@@ -60,17 +60,17 @@ float	FwdSearchProblem::cost( const State& s, Action_Idx a ) const {
 
 State* FwdSearchProblem::next( const State& s, Action_Idx actionIdx ) const {
 	Changeset changeset;
-	SimpleActionSetManager manager(s);
+	SimpleActionSetManager manager(s, task.getConstraints());
 	manager.computeChangeset(*task.getAction(actionIdx), changeset);
 	return new State(s, changeset); // Copy everything into the new state and apply the changeset
 } 
 
 void FwdSearchProblem::print( std::ostream& os ) const {
-	os << "FwdSearchProblem[" << task << "]";
+	os << "[NON-IMPLEMENTED]";
 }
 
 FwdSearchProblem::CoreApplicableActionSet FwdSearchProblem::applicable_actions(const State& s) const {
-	return task.computeBoundApplicableActions(s);
+	return task.getApplicableActions(s);
 }
 		
 } } // namespaces

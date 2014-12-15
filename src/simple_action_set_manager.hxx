@@ -7,8 +7,9 @@
 #include <core_changeset.hxx>
 #include <core_types.hxx>
 #include <fact.hxx>
-#include <variable_cache.hxx>
-#include <justified_action.hxx>
+#include <constraints/problem_constraints.hxx>
+#include <utils/utils.hxx>
+
 
 namespace aptk { namespace core {
 
@@ -20,19 +21,45 @@ namespace aptk { namespace core {
 class SimpleActionSetManager
 {
 public:
-	SimpleActionSetManager(const State& state): 
-		_state(state) {}
+	SimpleActionSetManager(const State& state, const ProblemConstraint::vctr& constraints)
+		: _state(state), _constraints(constraints) {}
 		
-	SimpleActionSetManager(const SimpleActionSetManager& other): 
-		_state(other._state) {}
+	SimpleActionSetManager(const SimpleActionSetManager& other)
+		: _state(other._state), _constraints(other._constraints) {}
 	
-	bool isApplicable(const ApplicableEntity& entity) const {
+	//! Return true iff the preconditions of the applicable entity hold.
+	bool checkPreconditionsHold(const ApplicableEntity& entity) const {
 		for (unsigned idx = 0; idx < entity.getNumApplicabilityProcedures(); ++idx) {
 			if (!isProcedureApplicable(entity, idx)) return false;
 		}
 		return true;
 	}
-	bool isApplicable(const JustifiedApplicableEntity& entity) const { return isApplicable(entity.getEntity()); }
+	
+	//! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
+	bool isApplicable(const CoreAction& action) const {
+		if (!checkPreconditionsHold(action)) return false;
+		
+		if (_constraints.size() == 0) { // If we have no constraints, we can spare the cost of creating the new state.
+			Changeset changeset;
+			computeChangeset(action, changeset);
+			State s1(_state, changeset);
+			return checkStateConstraintsHold(s1);
+		}
+		return true;
+	}
+	
+	//! For a simple applicable entity (i.e. it will be a goal), we only check if the preconditions hold.
+	// TODO - Refactor into goal manager
+	bool isApplicable(const ApplicableEntity& entity) const {
+		return checkPreconditionsHold(entity);
+	}
+	
+	bool checkStateConstraintsHold(const State& s) const {
+		for (ProblemConstraint::cptr ctr:_constraints) {
+			if (!ctr->isSatisfied(s)) return false;
+		}
+		return true;
+	}
 	
 	void computeChangeset(const CoreAction& action, Changeset& changeset) const {
 		assert(isApplicable(action));
@@ -61,67 +88,23 @@ public:
 protected:
 	//! The state
 	const State& _state;
+	
+	const ProblemConstraint::vctr& _constraints;
 
 	//!
 	bool isProcedureApplicable(const ApplicableEntity& entity, unsigned procedureIdx) const {
 		const VariableIdxVector& relevant = entity.getApplicabilityRelevantVars(procedureIdx);
 		assert(relevant.size() != 0); // Static applicability procedure that should have been detected in compilation time
-		ProcedurePoint point = extractPoint(relevant);
+		ObjectIdxVector point = Utils::extractVariables(_state, relevant);
 		return entity.isApplicable(procedureIdx, point);
 	}
 	
 	//!
 	void computeProcedureChangeset(unsigned procedureIdx, const CoreAction& action, Changeset& changeset) const {
 		const VariableIdxVector& relevant = action.getEffectRelevantVars(procedureIdx);
-		ProcedurePoint point = extractPoint(relevant);
+		ObjectIdxVector point = Utils::extractVariables(_state, relevant);
 		computeProcedurePointChangeset(procedureIdx, action, point, changeset);
 	}
-	
-	//!
-	ProcedurePoint extractPoint(const VariableIdxVector& variables) const {
-		ProcedurePoint values;
-		for (auto& idx:variables) {
-			values.push_back(_state.getValue(idx));
-		}
-		return values;
-	}
-};
-
-
-/**
- */
-class RelaxedActionSetManager
-{
-protected:
-	//! The original state.
-	const State* _originalState;
-
-	//! The state
-	const RelaxedState& _state;
-
-public:
-	RelaxedActionSetManager(const RelaxedState& state) : _originalState(NULL), _state(state) {}
-	RelaxedActionSetManager(const State* originalState, const RelaxedState& state) : _originalState(originalState), _state(state) {}
-	
-	RelaxedActionSetManager(const RelaxedActionSetManager& other) : _originalState(other._originalState), _state(other._state) {}
-	
-	//!
-	bool isApplicable(JustifiedApplicableEntity& justified) const;
-	
-	//!
-	void computeChangeset(const JustifiedAction& justified, Changeset& changeset) const;
-	
-protected:
-	bool isProcedureApplicable(JustifiedApplicableEntity& justified, unsigned procedureIdx) const;
-	bool isMonadicProcedureApplicable(JustifiedApplicableEntity& justified, unsigned procedureIdx) const;
-	
-	std::vector<ObjectIdxVector> extractPoint(const JustifiedApplicableEntity& justified, const VariableIdxVector& variables) const;
-	std::vector<ObjectIdx>& extractMonadicPoint(JustifiedApplicableEntity& justified, VariableIdx variable) const;
-	
-	void computeProcedureChangeset(unsigned procedureIdx, const JustifiedAction& justified, Changeset& changeset) const;
-	void computeProcedurePointChangeset(unsigned procedureIdx, const JustifiedAction& justified, 
-										const VariableIdxVector& relevant, const ProcedurePoint& point, Changeset& changeset) const;
-	void computeMonadicProcedureChangeset(unsigned procedureIdx, const JustifiedAction& justified, Changeset& changeset) const;
 };
 
 } } // namespaces

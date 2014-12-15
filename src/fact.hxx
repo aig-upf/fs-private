@@ -59,6 +59,7 @@ bool operator< (const Fact& lhs, const Fact& rhs);
 typedef std::vector<Fact> FactVector;
 typedef boost::container::flat_set<Fact> FactSet;
 typedef std::shared_ptr<boost::container::flat_set<Fact>> FactSetPtr;
+typedef std::shared_ptr<const boost::container::flat_set<Fact>> FactSetcPtr;
 
 
 

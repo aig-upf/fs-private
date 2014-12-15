@@ -9,12 +9,6 @@
 
 namespace aptk { namespace core {
 
-//! A DomainSet maps variables indexes to an array with all the possible values for that variable.
-typedef boost::container::flat_set<ObjectIdx> DomainSetVector;
-typedef std::map<unsigned, DomainSetVector> DomainSet;
-typedef std::vector<DomainSetVector*> LightDomainSet;
-
-	
 /**
  * A simple class representing an implicit CSP constraint of some type coupled with a custom propagator.
  */
@@ -42,6 +36,9 @@ public:
 	const VariableIdxVector& getScope() { return _variables; }
 	
 	virtual Output enforce_consistency(DomainSet& domains) = 0;
+	
+	//!! Return true iff the given values satisfy the constraint.
+	virtual bool isSatisfied(const ObjectIdxVector& values) const = 0;
 };
 
 } } // namespaces

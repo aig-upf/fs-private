@@ -25,12 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <state.hxx>
 #include <actions.hxx>
 #include <core_changeset.hxx>
-#include <applicable_action_set.hxx>
+#include <simple_applicable_action_set.hxx>
 
 namespace aptk { namespace core {
 
 /**
- *
  * 
  * NOTE: OF THE THREE POSSIBLE WAYS TO ITERATE THROUGH APPLICABLE ACTIONS
  * (NAMELY: (1) FwdSearchProblem::is_applicable, (2) FwdSearchProblem::applicable_set AND (3) Fwd_Search_Problem::Action_Iterator
@@ -39,7 +38,7 @@ namespace aptk { namespace core {
 class FwdSearchProblem : public Search_Problem<State> {
 	public:
 		
-		typedef aptk::core::ApplicableActionSet<aptk::core::SimpleActionSetManager> CoreApplicableActionSet; // To be referenced from consumers of the FwdSearchProblem class.
+		typedef aptk::core::SimpleApplicableActionSet CoreApplicableActionSet; // To be referenced from consumers of the FwdSearchProblem class.
 
 		FwdSearchProblem( const Problem& );
 		virtual ~FwdSearchProblem();

@@ -101,6 +101,15 @@ protected:
 		sum_domain = &(domains[sum_idx]);
 	}
 
+	
+public:
+	
+	bool isSatisfied(const ObjectIdxVector&  values) const {
+		assert(values.size() > 1);
+		int sum_result = values.back();
+		int total_sum  = std::accumulate(values.begin(), values.end(), 0) - sum_result;
+		return sum_result == total_sum;
+	}
 };
 
 

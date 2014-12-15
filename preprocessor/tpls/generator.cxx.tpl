@@ -15,9 +15,10 @@ void generate(const std::string& data_dir, aptk::core::Problem& problem, bool co
 	/* Define the initial state */
 	problem.setInitialState(StateLoader::loadStateFromFile(data_dir + "/init.data"));
 
-	/* Load the state constraints */
+	/* Load the state and (conditionally) goal constraints */
+	StateLoader::loadConstraints(data_dir + "/constraints.data", problem, false);
 	if (constrained) {
-	    StateLoader::loadConstraints(data_dir + "/constraints.data", problem);
+	    StateLoader::loadConstraints(data_dir + "/goal-constraints.data", problem, true);
     }
 
 	/* Define the goal evaluator */
