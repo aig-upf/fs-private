@@ -13,15 +13,26 @@ vars.Add(BoolVariable('debug', 'Whether this is a debug build', 'no'))
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LWAPTKDEV', ''), PathVariable.PathIsDir))
 vars.Add(PathVariable('fs0', 'Path where the FS0 library is installed', os.getenv('FS0_PATH', ''), PathVariable.PathIsDir))
 
-env = Environment(variables=vars, ENV=os.environ)
+def which(program):
+	""" Helper function emulating unix 'which' command """
+	for path in os.environ["PATH"].split(os.pathsep):
+		path = path.strip('"')
+		exe_file = os.path.join(path, program)
+		if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
+			return exe_file
+	return None
+
+env = Environment(variables=vars, ENV=os.environ, CXX='clang' if which('clang') else 'g++')
 
 env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++0x' ] )  # Flags common to all options
-if int(ARGUMENTS.get('debug', 0)) == 1 :
+if env['debug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
 	fs0_libname = 'fs0-debug'
+	exe_name = 'solver-debug.bin'
 else:
 	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
 	fs0_libname = 'fs0'
+	exe_name = 'solver.bin'
 
 
 include_paths = [env['lapkt'] + '/include',
@@ -44,4 +55,4 @@ src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both t
 env.Append(LIBS=['boost_program_options', fs0_libname])
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
 
-env.Program( 'solver.bin', src_objs )
+env.Program( exe_name, src_objs )

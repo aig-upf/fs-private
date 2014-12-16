@@ -1,5 +1,4 @@
 
-
 import os
 
 # read variables from the cache, a user's custom.py file or command line arguments
@@ -9,7 +8,16 @@ vars.Add(BoolVariable('debug', 'Debug build', 'no'))
 default_lapkt_path = os.getenv('LWAPTKDEV', '')
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', default_lapkt_path, PathVariable.PathIsDir))
 
-env = Environment(variables=vars, ENV=os.environ, CXX='clang')
+def which(program):
+	""" Helper function emulating unix 'which' command """
+	for path in os.environ["PATH"].split(os.pathsep):
+		path = path.strip('"')
+		exe_file = os.path.join(path, program)
+		if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
+			return exe_file
+	return None
+
+env = Environment(variables=vars, ENV=os.environ, CXX='clang' if which('clang') else 'g++')
 
 build_dirname = 'build/debug' if env['debug'] else 'build/prod'
 env.VariantDir(build_dirname, '.')
@@ -19,11 +27,11 @@ Help(vars.GenerateHelpText(env))
 env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++0x' ])  # Flags common to all options
 
 if env['debug']:
-    env.Append(CCFLAGS = ['-g', '-DDEBUG' ])
-    lib_name = 'fs0-debug'
+	env.Append(CCFLAGS = ['-g', '-DDEBUG' ])
+	lib_name = 'fs0-debug'
 else:
-    env.Append(CCFLAGS = ['-Ofast', '-DNDEBUG' ])
-    lib_name = 'fs0'
+	env.Append(CCFLAGS = ['-Ofast', '-DNDEBUG' ])
+	lib_name = 'fs0'
 
 
 src_files =  [str(f) for f in Glob('src/*.cxx')]
@@ -36,3 +44,5 @@ static_lib = env.Library('lib/' + lib_name, build_files)
 
 #Default([static_lib, shared_lib])
 Default([static_lib])
+
+
