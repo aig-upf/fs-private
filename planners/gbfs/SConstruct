@@ -25,6 +25,8 @@ def which(program):
 env = Environment(variables=vars, ENV=os.environ, CXX='clang' if which('clang') else 'g++')
 
 env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++0x' ] )  # Flags common to all options
+env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
+
 if env['debug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
 	fs0_libname = 'fs0-debug'
@@ -55,4 +57,4 @@ src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both t
 env.Append(LIBS=['boost_program_options', fs0_libname])
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
 
-env.Program( exe_name, src_objs )
+env.Program( 'solver.bin', src_objs )
