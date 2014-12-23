@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <iosfwd>
 #include <actions.hxx>
 #include <core_changeset.hxx>

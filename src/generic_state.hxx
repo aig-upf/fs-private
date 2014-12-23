@@ -84,9 +84,9 @@ public:
 		return getValue(fact._variable) == fact._value;
 	}
 	
-	const ObjectIdx& getValue(const VariableIdx& variable) const {
+	ObjectIdx getValue(const VariableIdx& variable) const {
 		return _values.at(variable);
-	}	
+	}
 	
 protected:
 	//! Applies the given changeset into the current state.

@@ -1,5 +1,4 @@
 
-
 #include <action_manager.hxx>
 #include <relaxed_action_set_manager.hxx>
 #include <actions.hxx>
@@ -46,7 +45,7 @@ bool RelaxedActionSetManager::isProcedureApplicable(const ApplicableEntity& enti
 	// Check first if the original value is applicable. This is slightly inefficient, but ensures that if the original values
 	// make an action applicable, we won't waste time tracing the causes of other values that might make it applicable as well.
 	if (seed) {
-		const auto& value = seed->getValue(variable);
+		const ObjectIdx value = seed->getValue(variable);
 		auto originalPoint = { value };
 		if (entity.isApplicable(procedureIdx, originalPoint)) {
 			causes->insert(Fact(variable, value));

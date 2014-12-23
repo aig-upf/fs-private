@@ -39,7 +39,7 @@ public:
 	bool isApplicable(const CoreAction& action) const {
 		if (!checkPreconditionsHold(action)) return false;
 		
-		if (_constraints.size() == 0) { // If we have no constraints, we can spare the cost of creating the new state.
+		if (_constraints.size() != 0) { // If we have no constraints, we can spare the cost of creating the new state.
 			Changeset changeset;
 			computeChangeset(action, changeset);
 			State s1(_state, changeset);
@@ -62,8 +62,6 @@ public:
 	}
 	
 	void computeChangeset(const CoreAction& action, Changeset& changeset) const {
-		assert(isApplicable(action));
-		
 		for (unsigned idx = 0; idx < action.getNumEffectProcedures(); ++idx) {
 			computeProcedureChangeset(idx, action, changeset);
 		}
