@@ -34,7 +34,11 @@ else:
 	lib_name = 'fs0'
 
 
-src_files =  [str(f) for f in Glob('src/*.cxx')]
+source_dirs = ['src', 'src/constraints', 'src/utils', 'src/heuristics']
+src_files = []
+for d in source_dirs:
+	src_files += [str(f) for f in Glob(d + '/*.cxx')]
+           
 build_files = [build_dirname + '/' + src for src in src_files]
 
 env.Append(CPPPATH = ['src', env['lapkt'] + '/include'])

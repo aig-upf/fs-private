@@ -15,27 +15,26 @@ namespace aptk { namespace core {
 class Constraint
 {
 protected:
-	//! The constraint variables.
-	const VariableIdxVector _variables;
-	
 	//! The number of variables of the constraint, cached for performance reasons.
-	const unsigned num_variables;
+	const unsigned _arity;
 	
 public:
 	typedef std::shared_ptr<Constraint> cptr;
 	
 	enum class Output {Failure, Pruned, Unpruned};
 	
-	Constraint(const VariableIdxVector& variables) :
-		_variables(variables),
-		num_variables(variables.size())
-	{}
+	Constraint(unsigned arity) :
+		_arity(arity)
+	{
+		assert(_arity > 0);
+	}
 	
 	virtual ~Constraint() {}
 	
-	const VariableIdxVector& getScope() { return _variables; }
+	unsigned getArity() const { return _arity; }
 	
-	virtual Output enforce_consistency(DomainSet& domains) = 0;
+	//! Filter (in-place) the given domains to remove inconsistent values.
+	virtual Output filter(const DomainVector& domains) = 0;
 	
 	//!! Return true iff the given values satisfy the constraint.
 	virtual bool isSatisfied(const ObjectIdxVector& values) const = 0;

@@ -116,7 +116,7 @@ protected:
 	 * in the delete-free relaxation of the problem.
 	 */
 	bool _checkRPisCorrect(const State& s0, ActionPlan& relaxedPlan) {
-		return ActionManager::checkPlanSuccessful(_problem, relaxedPlan, *(RelaxedState::relax(s0)));
+		return ActionManager::checkRelaxedPlanSuccessful(_problem, relaxedPlan, s0);
 	}
 
 };

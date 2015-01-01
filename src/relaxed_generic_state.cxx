@@ -32,7 +32,7 @@ namespace aptk { namespace core {
 	
 
 //! Applies the given changeset into the current state.
-void RelaxedGenericState::applyChangeset(const Changeset& changeset) {
+void RelaxedGenericState::accumulate(const Changeset& changeset) {
 	for (const auto& elem:changeset.getEffects()) { 
 		set(elem.first);
 	}
@@ -45,13 +45,12 @@ std::ostream& RelaxedGenericState::print(std::ostream& os) const {
 std::ostream& RelaxedGenericState::print(std::ostream& os, const Problem& problem) const {
 	auto problemInfo = problem.getProblemInfo();
 	os << "RelaxedGenericState[";
-	for (unsigned i = 0; i < _values.size(); ++i) { // Iterate through all the sets
-		const auto& vals = _values.at(i);
-// 		if (vals.size() == 0) continue;
-		assert(vals.size() != 0);
+	for (unsigned i = 0; i < _domains.size(); ++i) { // Iterate through all the sets
+		const DomainPtr& vals = _domains.at(i);
+		assert(vals->size() != 0);
 		
 		os << problemInfo->getVariableName(i) << "={";
-		for (const auto& objIdx:vals) { // Iterate through the set elements.
+		for (const auto& objIdx:*vals) { // Iterate through the set elements.
 			os << problemInfo->getObjectName(i, objIdx) << ",";
 		}
 		os << "}, ";

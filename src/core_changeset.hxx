@@ -57,7 +57,7 @@ protected:
 	std::unordered_map<ActionIdx, FactSetPtr> _causes;
 
 	//! We keep a pointer to the previous RPG layer to ensure that we only add novel atoms.
-	RelaxedState::ptr _referenceState;
+	const RelaxedState* _referenceState;
 
 public:
 	typedef std::shared_ptr<Changeset> ptr;
@@ -69,7 +69,7 @@ public:
 		_referenceState()
 	{};
 	
-	Changeset(const RelaxedState::ptr& referenceState) : 
+	Changeset(const RelaxedState* referenceState) : 
 		_activeActionIdx(),
 		_effects(),
 		_causes(),

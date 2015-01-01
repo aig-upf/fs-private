@@ -14,6 +14,7 @@
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
 #include <problem_info.hxx>
+#include <action_manager.hxx>
 
 #include <generator.hxx>  // This will dinamically point to the right generated file
 
@@ -168,29 +169,21 @@ void reportProblemStats(const Problem& problem) {
 
 
 int main( int argc, char** argv ) {
-	if (argc < 4 || argc > 5) {
-		std::cerr << "Wrong number of parameters\nUsage: " << argv[0] << " timeout data_dir out_dir [--constrained]" << std::endl;
+	if (argc != 4) {
+		std::cerr << "Wrong number of parameters\nUsage: " << argv[0] << " timeout data_dir out_dir" << std::endl;
 		return -1;
 	}
 	
 	float timeout =  atof(argv[1]);
 	std::string data_dir(argv[2]);
 	std::string out_dir(argv[3]);
-	bool constrained = false;
-	if (argc == 5) {
-		 if (std::string(argv[4]) != "--constrained") {
-			 std::cerr << "Wrong number of parameters\nUsage: " << argv[0] << " timeout data_dir out_dir [constrained]" << std::endl;
-			 return -1;
-		}
-		constrained = true;
-	}
 	
 	ProblemInfo::cptr problemInfo(new ProblemInfo(data_dir));
 	
 	// Instantiate the problem
 	std::cout << "Generating the problem... " << std::endl;
 	Problem problem;
-	aptk::core::solver::generate(data_dir, problem, constrained);
+	aptk::core::solver::generate(data_dir, problem);
 	aptk::core::FwdSearchProblem search_prob(problem);
 	std::cout << "Done. " << std::endl;
 	

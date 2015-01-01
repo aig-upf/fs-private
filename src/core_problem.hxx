@@ -10,7 +10,7 @@
 #include <constraints/constraints.hxx>
 #include <simple_applicable_action_set.hxx>
 #include <simple_action_set_manager.hxx>
-#include <relaxed_action_set_manager.hxx>
+#include <constraints/problem_manager.hxx>
 
 namespace aptk { namespace core {
 
@@ -24,10 +24,6 @@ public:
 	void setInitialState(const State::cptr& state) { _initialState = state; }
 	const State::cptr getInitialState() const { return _initialState; }
 	
-	//! Modify the problem goal evaluation routine
-	void setGoalEvaluator(const ApplicableEntity::cptr& goal_evaluator) { _goal_evaluator = goal_evaluator; }
-	ApplicableEntity::cptr getGoalEvaluator() const { return _goal_evaluator; }
-	
 	//! Modify the problem (grounded) actions
 	void addAction(const CoreAction::cptr& action) { _actions.push_back(action); }
 	const CoreAction::cptr& getAction(ActionIdx idx) const { return _actions.at(idx); }
@@ -38,18 +34,8 @@ public:
 		return SimpleApplicableActionSet(SimpleActionSetManager(s, getConstraints()), _actions);
 	}
 	
-	bool isGoal(const State& s) const { 
-		SimpleActionSetManager manager(s, getConstraints());
-		return manager.isApplicable(*getGoalEvaluator());
-	}
-	
-	bool isGoal(const RelaxedState& s) const { // TODO TODO TODO REFACTOR OUT OF HERE
-		RelaxedActionSetManager manager(getConstraints());
-		// We compute the projection of the current relaxed state to the variables relevant to the action
-		DomainSet projection = manager.projectValues(s, *getGoalEvaluator());
-		auto res = manager.isApplicable(*getGoalEvaluator(), projection);
-		return res.first;
-	}
+	bool isGoal(const State& s) const { return ctrManager->isGoal(s); }
+
 	
 	void registerConstraint(const ProblemConstraint::cptr constraint) { _constraints.push_back(constraint);}
 	const ProblemConstraint::vctr& getConstraints() const { return _constraints; }
@@ -69,11 +55,17 @@ public:
 		assert(_instance);
 		return _instance;
 	}
+	
+	void createConstraintManager() {
+		ctrManager = std::make_shared<PlanningConstraintManager>(_gconstraints, _constraints);
+	}
+	
+	PlanningConstraintManager::cptr getConstraintManager() const { return ctrManager; }
 
 protected:
 	State::cptr _initialState;
 	
-	ApplicableEntity::cptr _goal_evaluator;
+	PlanningConstraintManager::cptr ctrManager;
 	
 	ActionList _actions;
 	

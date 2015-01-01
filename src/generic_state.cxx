@@ -31,7 +31,7 @@ namespace aptk { namespace core {
 	
 
 //! Applies the given changeset into the current state.
-void GenericState::applyChangeset(const Changeset& changeset) {
+void GenericState::accumulate(const Changeset& changeset) {
 	for (const auto& elem:changeset.getEffects()) { 
 		const auto& fact = elem.first;
 		set(fact);

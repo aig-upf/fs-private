@@ -36,9 +36,9 @@ public:
 	{}
 	
 	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
-	bool isGoal(const State& seed, const RelaxedState& state) const {
+	bool isGoal(const RelaxedState& state) const {
 		DomainSet domains;
-		return checkGoal(seed, state, domains);
+		return checkGoal(state, domains);
 	}
 	
 	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
@@ -46,7 +46,7 @@ public:
 	bool isGoal(const State& seed, const RelaxedState& state, FactSetPtr causes) const {
 		
 		DomainSet domains;
-		if (!checkGoal(seed, state, domains)) {
+		if (!checkGoal(state, domains)) {
 			return false;
 		}
 		
@@ -59,7 +59,7 @@ public:
 	
 protected:
 	//! 
-	bool checkGoal(const State& seed, const RelaxedState& state, DomainSet& domains) const {
+	bool checkGoal(const RelaxedState& state, DomainSet& domains) const {
 		// Extract all the relevant variable domains - including those of state constraints, which we'll use for goal checking.
 		extractDomains(state, _gconstraints, domains);
  		// std::cout << "Domains BEFORE pruning:" << std::endl; CSPSolver::printDomains(domains);
@@ -95,7 +95,7 @@ public:
 			assert(value_set.size() != 0); // No domain should be empty
 			
 			// Use the lower bound as a hint for better performance
-			domains.insert(lb, std::make_pair(variable, DomainSetVector(value_set.cbegin(), value_set.cend())));
+			domains.insert(lb, std::make_pair(variable, Domain(value_set.cbegin(), value_set.cend())));
 		}
 	}
 	
@@ -108,7 +108,7 @@ public:
 		
 		VariableIdx selected_var = 0;
 		unsigned min_domain_size = std::numeric_limits<unsigned>::max();
-		DomainSetVector* selected_dom = NULL;
+		Domain* selected_dom = NULL;
 		
 		// 1. Select the variable with smallest domain that has not yet been set a value.
 		for (auto& domain:domains) {

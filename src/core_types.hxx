@@ -37,11 +37,17 @@ namespace aptk  { namespace core {
 	typedef std::vector<VariableIdx> VariableIdxVector;
 	typedef std::vector<ObjectIdx> ObjectIdxVector;
 	typedef ObjectIdxVector ProcedurePoint;
+
+
+	//! A domain is a set of values (of a state variable)
+	typedef boost::container::flat_set<ObjectIdx> Domain;
+	typedef std::shared_ptr<Domain> DomainPtr;
 	
-	//! A DomainSet maps variables indexes to an array with all the possible values for that variable.
-	typedef boost::container::flat_set<ObjectIdx> DomainSetVector;
-	typedef std::map<unsigned, DomainSetVector> DomainSet;
-	typedef std::vector<DomainSetVector*> LightDomainSet;
+	//! A vector of domains.
+	typedef std::vector<DomainPtr> DomainVector;
+	
+	//! A map mapping state variable indexes to their possible domains.
+	typedef std::map<VariableIdx, DomainPtr> DomainMap;
 	
 } } // namespaces
 

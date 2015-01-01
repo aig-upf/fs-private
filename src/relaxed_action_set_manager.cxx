@@ -7,18 +7,9 @@
 
 
 namespace aptk { namespace core {
-	
-DomainSet RelaxedActionSetManager::projectValues(const RelaxedState& state, const ApplicableEntity& action) const {
-	DomainSet projection;
-	for (VariableIdx var:action.getAllRelevantVariables()) {
-		const auto& all = state.getValues(var);
-		projection.insert(std::make_pair(var, DomainSetVector(all.cbegin(), all.cend()))); // This is expensive, but unfortunately sets are not indexed :-(
-	}
-	return projection;
-}
 
-// bool RelaxedActionSetManager::isApplicable(JustifiedApplicableEntity& justified) const {
-std::pair<bool, FactSetPtr> RelaxedActionSetManager::isApplicable(const ApplicableEntity& entity, DomainSet& domains) const {
+
+std::pair<bool, FactSetPtr> RelaxedActionSetManager::isApplicable(const ApplicableEntity& entity, const DomainMap& domains) const {
 	FactSetPtr causes = std::make_shared<FactSet>();
 	for (unsigned idx = 0; idx < entity.getNumApplicabilityProcedures(); ++idx) {
 		if (!isProcedureApplicable(entity, domains, idx, causes)) {
@@ -28,7 +19,7 @@ std::pair<bool, FactSetPtr> RelaxedActionSetManager::isApplicable(const Applicab
 	return std::make_pair(true, causes);
 }
 
-bool RelaxedActionSetManager::isProcedureApplicable(const ApplicableEntity& entity, DomainSet& domains, unsigned procedureIdx, FactSetPtr causes) const {
+bool RelaxedActionSetManager::isProcedureApplicable(const ApplicableEntity& entity, const DomainMap& domains, unsigned procedureIdx, FactSetPtr causes) const {
 	
 	const VariableIdxVector& relevant = entity.getApplicabilityRelevantVars(procedureIdx);
 	
@@ -53,8 +44,8 @@ bool RelaxedActionSetManager::isProcedureApplicable(const ApplicableEntity& enti
 		}
 	}
 	
-	auto& values = domains.at(variable);
-	DomainSetVector newProjection;
+	Domain& values = *(domains.at(variable));
+	Domain new_domain;
 	
 	for (auto& value:values) {
 		if (entity.isApplicable(procedureIdx, ProcedurePoint({value}))) {
@@ -62,37 +53,29 @@ bool RelaxedActionSetManager::isProcedureApplicable(const ApplicableEntity& enti
 				causes->insert(Fact(variable, value));
 				cause_found = true;
 			}
-			newProjection.insert(newProjection.end(), value); // We'll insert the element at the end, since we're iterating in order.
+			new_domain.insert(new_domain.end(), value); // We'll insert the element at the end, since we're iterating in order.
 		}
 	}
 	
-	values = newProjection; // Update the values with those that satisfy the unary constraint.
+	values = new_domain; // Update the values with those that satisfy the unary constraint.
 	return cause_found;
 }
 
-LightDomainSet RelaxedActionSetManager::extractPoint(DomainSet& domains, const VariableIdxVector& variables) const {
-	// `values[i]` will contain all possible values in the given state for the variable with index `variables[i]`
-	LightDomainSet values;
-	for (auto index:variables) {
-		values.push_back(&(domains[index]));
-	}
-	return values;
-}
 
-void RelaxedActionSetManager::computeChangeset(const CoreAction& action, const DomainSet& domains, Changeset& changeset) const {
+void RelaxedActionSetManager::computeChangeset(const CoreAction& action, const DomainMap& domains, Changeset& changeset) const {
 	for (unsigned idx = 0; idx < action.getNumEffectProcedures(); ++idx) {
 		computeProcedureChangeset(idx, action, domains, changeset);
 	}
 }
 
-void RelaxedActionSetManager::computeProcedureChangeset(unsigned procedureIdx, const CoreAction& action, const DomainSet& domains, Changeset& changeset) const {
+void RelaxedActionSetManager::computeProcedureChangeset(unsigned procedureIdx, const CoreAction& action, const DomainMap& domains, Changeset& changeset) const {
 	const VariableIdxVector& relevant = action.getEffectRelevantVars(procedureIdx);
 	
 	if(relevant.size() == 0) {  // No need to pass any point.
 		computeProcedurePointChangeset(procedureIdx, action, relevant, {}, changeset);
 	}	else if(relevant.size() == 1) {  // micro-optimization
-		for (ObjectIdx val:domains.at(relevant[0])) { // Add to the changeset for every allowed value of the relevant variable
-			computeProcedurePointChangeset(procedureIdx, action, relevant, ProcedurePoint({val}), changeset);
+		for (ObjectIdx val:*(domains.at(relevant[0]))) { // Add to the changeset for every allowed value of the relevant variable
+			computeProcedurePointChangeset(procedureIdx, action, relevant, {val}, changeset);
 		}
 	} else { // The general, n-ary case. We need to iterate over the cartesian product of the allowed values for the relevant variables.
 		throw std::runtime_error("Action effect procedures of arity > 1 are currently unsupported");

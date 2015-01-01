@@ -1,9 +1,6 @@
 
 #pragma once
 
-#include <state.hxx>
-#include <core_problem.hxx>
-#include <constraints/csp_goal_manager.hxx>
 #include <heuristics/relaxed_plan.hxx>
 
 namespace aptk { namespace core {
@@ -16,8 +13,11 @@ public:
 	virtual ~HMaxHeuristic() {}
 	
 	//! The hmax heuristic only cares about the size of the RP graph.
-	float computeHeuristic(const State& seed, const RelaxedState::ptr& s1, const std::vector<Changeset::ptr>& changesets) {
-		return (this->_goal_manager).isGoal(seed, *s1) ? changesets.size() : -1;
+	float computeHeuristic(const State& seed, const RelaxedState& state, const std::vector<Changeset::ptr>& changesets) {
+		if (this->_problem.getConstraintManager()->isGoal(state)) {
+			return changesets.size();
+		}
+		return -1;
 	}
 };
 

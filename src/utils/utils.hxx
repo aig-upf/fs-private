@@ -5,6 +5,8 @@
 #include <ostream>
 
 #include <core_types.hxx>
+#include <state.hxx>
+#include <actions.hxx>
 
 namespace aptk { namespace core {
 	
@@ -21,19 +23,7 @@ public:
 		ProcedurePoint tmp;
 		_iterateCartesianProduct(values, callback, tmp, 0);
 	}
-	
-	//! Returns a vector with the values of the given variables in the given state.
-	static ObjectIdxVector extractVariables(const State& s, const VariableIdxVector& variables) {
-		ObjectIdxVector values;
-		values.reserve(variables.size());
-		for (VariableIdx idx:variables) {
-			values.push_back(s.getValue(idx));
-		}
-		return values;
-	}	
-	
-	
-	
+
 protected:
 	template <typename IteratorCallback>
 	static void _iterateCartesianProduct(const ValueSet& values, IteratorCallback callback, ProcedurePoint& current, unsigned idx) {

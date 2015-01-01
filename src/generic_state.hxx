@@ -58,7 +58,7 @@ public:
 	//! state plus the changes in the changeset.
 	GenericState(const GenericState& state, const Changeset& changeset) :
 		_values(state._values), _hash(state._hash) {
-		applyChangeset(changeset);
+		accumulate(changeset);
 	}
 	
 	//! Assignment operator
@@ -90,7 +90,7 @@ public:
 	
 protected:
 	//! Applies the given changeset into the current state.
-	void applyChangeset(const Changeset& changeset);
+	void accumulate(const Changeset& changeset);
 	
 	void updateHash() { _hash = computeHash(); }
 	

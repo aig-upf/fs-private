@@ -8,7 +8,7 @@
 #include <core_types.hxx>
 #include <fact.hxx>
 #include <constraints/problem_constraints.hxx>
-#include <utils/utils.hxx>
+#include <utils/projections.hxx>
 
 
 namespace aptk { namespace core {
@@ -46,12 +46,6 @@ public:
 			return checkStateConstraintsHold(s1);
 		}
 		return true;
-	}
-	
-	//! For a simple applicable entity (i.e. it will be a goal), we only check if the preconditions hold.
-	// TODO - Refactor into goal manager
-	bool isApplicable(const ApplicableEntity& entity) const {
-		return checkPreconditionsHold(entity);
 	}
 	
 	bool checkStateConstraintsHold(const State& s) const {
@@ -93,14 +87,14 @@ protected:
 	bool isProcedureApplicable(const ApplicableEntity& entity, unsigned procedureIdx) const {
 		const VariableIdxVector& relevant = entity.getApplicabilityRelevantVars(procedureIdx);
 		assert(relevant.size() != 0); // Static applicability procedure that should have been detected in compilation time
-		ObjectIdxVector point = Utils::extractVariables(_state, relevant);
+		ObjectIdxVector point = Projections::project(_state, relevant);
 		return entity.isApplicable(procedureIdx, point);
 	}
 	
 	//!
 	void computeProcedureChangeset(unsigned procedureIdx, const CoreAction& action, Changeset& changeset) const {
 		const VariableIdxVector& relevant = action.getEffectRelevantVars(procedureIdx);
-		ObjectIdxVector point = Utils::extractVariables(_state, relevant);
+		ObjectIdxVector point = Projections::project(_state, relevant);
 		computeProcedurePointChangeset(procedureIdx, action, point, changeset);
 	}
 };

@@ -57,4 +57,4 @@ src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both t
 env.Append(LIBS=['boost_program_options', fs0_libname])
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
 
-env.Program( 'solver.bin', src_objs )
+env.Program(exe_name, src_objs )

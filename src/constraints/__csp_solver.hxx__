@@ -53,8 +53,8 @@ public:
 	void filter_unary_constraint(unsigned procedureIdx, DomainSet& domains) const {
 		// We simply iterate through the domain values, checking them one by one and discarding them if not applicable
 		VariableIdx relevant = _goal.getApplicabilityRelevantVars(procedureIdx)[0];
-		DomainSetVector new_domain;
-		const DomainSetVector& old_domain = domains[relevant];
+		Domain new_domain;
+		const Domain& old_domain = domains[relevant];
 		for (ObjectIdx obj:old_domain) {
 			if (_goal.isApplicable(procedureIdx, {obj})) {
 				new_domain.insert(new_domain.cend(), obj); // We will insert on the end of the container, as it is already sorted.
@@ -75,7 +75,7 @@ public:
 			const VariableIdxVector& rel = _goal.getApplicabilityRelevantVars(procedure);
 			
 			// 3. Arc-reduce the procedure `procedure` with respect to the variable X 
-			DomainSetVector new_domain;
+			Domain new_domain;
 			
 			
 			// This is a bit hacky, but performant
@@ -111,6 +111,8 @@ public:
 				for (unsigned proc_prime = 0; proc_prime < _goal.getNumApplicabilityProcedures(); ++proc_prime) {
 					if (procedure == proc_prime) continue;
 					const VariableIdxVector& rel = _goal.getApplicabilityRelevantVars(proc_prime);
+					
+					if (rel.size() != 2) continue;
 					
 					// Let Z be the relevant variable that is not X
 					unsigned Z = 0;
@@ -157,7 +159,7 @@ public:
 		Constraint::Output o = Constraint::Output::Unpruned;
 		ArcSet worklist(tmp.begin(), tmp.end());
 		
-// 		printArcSet(worklist);
+		// printArcSet(worklist);
 		
 		// First apply both types of filtering
 		o = filter_binary_constraints(domains, worklist);
@@ -177,33 +179,6 @@ public:
 		return o;
 	}
 	
-// 	void enforce_consistency(DomainSet& domains) {
-// 		std::vector<Arc> tmp;
-// 		preprocess(domains, tmp);
-// 		ArcSet worklist(tmp.begin(), tmp.end());
-// 		
-// 		// Meaning "need to apply binary filter", and "global filter", respectively.
-// 		bool filter_binary = true, filter_global = true;
-// 
-// 		// Apply both types of filtering successively until a fixpoint is reached.
-// 		do {
-// 			// If binary filtering prunes any value, we need to apply global filtering again
-// 			if (filter_binary) {
-// 				if (filter_binary_constraints(domains, worklist)) {
-// 					filter_global = true;
-// 				}
-// 				filter_binary = false;
-// 			}
-// 			
-// 			// If global filtering prunes any value, we need to apply binary filtering again
-// 			if (filter_global) {
-// 				if (filter_global_constraints(domains)) {
-// 					filter_binary = true;
-// 				}
-// 				filter_global = false;
-// 			}
-// 		} while (filter_binary || filter_global);
-// 	}
 
 	void printArcSet(const ArcSet& arcs) const {
 		const auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();

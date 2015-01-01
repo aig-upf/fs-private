@@ -3,10 +3,9 @@
 
 #include <memory>
 #include <string>
+#include <actions.hxx>
 #include <constraints/problem_constraints.hxx>
-#include <constraints/constraints.hxx>
-#include <constraints/alldiff.hxx>
-#include <constraints/sum.hxx>
+
 
 namespace aptk { namespace core {
 
@@ -16,15 +15,11 @@ namespace aptk { namespace core {
 class ConstraintFactory
 {
 public:
-	static const ProblemConstraint::cptr create(const std::string& name, const VariableIdxVector& variables) {
-		if (name == "alldiff") {
-			return std::make_shared<ProblemConstraint>(new AlldiffConstraint(variables), variables);
-		} else if (name == "sum") {
-			return std::make_shared<ProblemConstraint>(new SumConstraint(variables), variables);
-		} else {
-			throw std::runtime_error("Unknown constraint name: " + name);
-		}
-	}
+	//! Instantiates a constraint of the class corresponding to the given name and with the given scope
+	static const ProblemConstraint::cptr create(const std::string& name, const VariableIdxVector& scope);
+	
+	//! Instantiates a constraint of the class corresponding to the given name and with the given scope
+	static const ProblemConstraint::cptr createExternalConstraint(ApplicableEntity::cptr entity, unsigned procedureIdx);
 };
 
 

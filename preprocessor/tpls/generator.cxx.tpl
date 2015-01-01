@@ -7,7 +7,7 @@ namespace aptk { namespace core { namespace solver {
 
 using aptk::core::utils::StateLoader;
 
-void generate(const std::string& data_dir, aptk::core::Problem& problem, bool constrained) {
+void generate(const std::string& data_dir, aptk::core::Problem& problem) {
 
 	/* Define the actions */
 	StateLoader::loadGroundedActions(data_dir + "/actions.data", ComponentFactory::instantiateAction, problem);
@@ -15,15 +15,14 @@ void generate(const std::string& data_dir, aptk::core::Problem& problem, bool co
 	/* Define the initial state */
 	problem.setInitialState(StateLoader::loadStateFromFile(data_dir + "/init.data"));
 
-	/* Load the state and (conditionally) goal constraints */
+	/* Load the state and goal constraints */
 	StateLoader::loadConstraints(data_dir + "/constraints.data", problem, false);
-	if (constrained) {
-	    StateLoader::loadConstraints(data_dir + "/goal-constraints.data", problem, true);
-    }
+	StateLoader::loadConstraints(data_dir + "/goal-constraints.data", problem, true);
 
-	/* Define the goal evaluator */
-	StateLoader::loadGoalEvaluator(data_dir + "/goal.data", ComponentFactory::instantiateGoal, problem);
+	/* Generate goal constraints from the goal evaluator */
+	StateLoader::generateGoalConstraints(data_dir + "/goal.data", ComponentFactory::instantiateGoal, problem);
 	
+	problem.createConstraintManager();
 }
 
 } } } // namespaces

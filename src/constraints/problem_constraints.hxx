@@ -3,8 +3,7 @@
 
 #include <core_types.hxx>
 #include <state.hxx>
-#include <utils/utils.hxx>
-#include "constraints.hxx"
+#include <constraints/constraints.hxx>
 
 namespace aptk { namespace core {
 
@@ -18,31 +17,34 @@ protected:
 	Constraint* ctr;
 	
 	//! The state variables that make up the scope of the constraint.
-	const VariableIdxVector scope;
+	const VariableIdxVector _scope;
+	
+	//!
+	DomainVector current_projection;
 	
 public:
 	typedef std::shared_ptr<ProblemConstraint> cptr; // TODO : Put the const back
 	typedef std::vector<ProblemConstraint::cptr> vctr;
 	
-	ProblemConstraint(Constraint* constraint, const VariableIdxVector& variables) 
-		: ctr(constraint), scope(variables) {}
+	ProblemConstraint(Constraint* constraint, const VariableIdxVector& variables);
 	
-	~ProblemConstraint() {
-		delete ctr;
-	}
+	virtual ~ProblemConstraint();
 	
-// 	const VariableIdxVector& getScope() { return scope; }
-	const VariableIdxVector& getScope() { return ctr->getScope(); }
+	inline const VariableIdxVector& getScope() const { return _scope; }
+	
+	inline unsigned getArity() const { return _scope.size(); }
 	
 	//! Returns true iff the current constraint is satisfied in the given state.
-	bool isSatisfied(const State& s) const {
-		return ctr->isSatisfied(Utils::extractVariables(s, scope));
-	}
+	virtual bool isSatisfied(const State& s) const;
+
+	//! Filters from the set of currently loaded projections
+	virtual Constraint::Output filter(unsigned variable = std::numeric_limits<unsigned>::max());
 	
-	// TODO - Refactor
-	virtual Constraint::Output enforce_consistency(DomainSet& domains) {
-		return ctr->enforce_consistency(domains);
-	}
+	//! Filters from a new set of domains.
+	virtual Constraint::Output filter(const DomainMap& domains);
+	
+	//! Loads (i.e. caches a pointer of) the domain projections of the given state
+	virtual void loadDomains(const DomainMap& domains);
 };
 
 } } // namespaces
