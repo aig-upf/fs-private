@@ -31,7 +31,7 @@ protected:
 public:
 	AlldiffConstraint(unsigned arity);
 	
-	~AlldiffConstraint() {}
+	virtual ~AlldiffConstraint() {}
 	
 	bool isSatisfied(const ObjectIdxVector& values) const;
 

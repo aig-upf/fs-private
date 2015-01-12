@@ -17,7 +17,7 @@ public:
 	
 	SumConstraint(unsigned arity);
 	
-	 ~SumConstraint() {}
+	virtual ~SumConstraint() {}
 	
 	bool isSatisfied(const ObjectIdxVector&  values) const;
 	

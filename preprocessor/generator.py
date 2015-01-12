@@ -207,7 +207,6 @@ class Generator(object):
         self.preprocess_task()
         self.grounder.ground(self.index)
         self.process_elements()
-        self._generate_generator_code()
         self._generate_components_code(dirname)
 
         self.dump_variable_data()
@@ -226,11 +225,6 @@ class Generator(object):
     def process_elements(self):
         self.action_code = {act.name: ccode.process_action(act) for act in self.task.actions}
         self.goal_code = ccode.process_goal(self.task.goal, self.index)
-
-    def _generate_generator_code(self):
-        # (No actual substitutions at the moment:)
-        self.save_translation('generator.hxx', tplManager.get('generator.hxx').substitute())
-        self.save_translation('generator.cxx', tplManager.get('generator.cxx').substitute())
 
     def _generate_components_code(self, dirname):
         # components.hxx:

@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fact.hxx>
 #include <state.hxx>
 
+#include <unordered_map>
 #include <map>
 #include <cassert>
 

@@ -4,16 +4,16 @@
 #include <cassert>
 #include <cstring>
 #include <stdexcept>
+#include <unordered_set>
+#include <unordered_map>
 
 #include <state.hxx>
 #include <actions.hxx>
 #include <core_types.hxx>
 #include <core_changeset.hxx>
 #include <fact.hxx>
-#include <unordered_set>
-#include <unordered_map>
-
-
+#include <core_problem.hxx>
+#include <utils/loader.hxx>
 
 using namespace aptk::core;
 
@@ -49,5 +49,7 @@ $goal_evaluator_definition
 /*********************************************/
 $method_factories
 
+/* Generate the whole planning problem */
+void generate(const std::string& data_dir, aptk::core::Problem& problem);
 
 } } } // namespaces

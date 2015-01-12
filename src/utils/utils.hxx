@@ -23,6 +23,13 @@ public:
 		ProcedurePoint tmp;
 		_iterateCartesianProduct(values, callback, tmp, 0);
 	}
+	
+	template <typename T>
+	static std::vector<T> merge(const std::vector<T>& vector1, const std::vector<T>& vector2) {
+		std::vector<T> result(vector1);
+		result.insert(result.end(), vector2.begin(), vector2.end());
+		return result;
+	}
 
 protected:
 	template <typename IteratorCallback>

@@ -11,8 +11,25 @@
 
 namespace aptk { namespace core { namespace utils {
 
+void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory, GoalFactoryType goalFactory, Problem& problem) {
+	/* Define the actions */
+	loadGroundedActions(dir + "/actions.data", actionFactory, problem);
 
-const State::cptr StateLoader::loadStateFromFile(const std::string& filename) {
+	/* Define the initial state */
+	problem.setInitialState(loadStateFromFile(dir + "/init.data"));
+
+	/* Load the state and goal constraints */
+	loadConstraints(dir + "/constraints.data", problem, false);
+	loadConstraints(dir + "/goal-constraints.data", problem, true);
+
+	/* Generate goal constraints from the goal evaluator */
+	generateGoalConstraints(dir + "/goal.data", goalFactory, problem);
+	
+	problem.createConstraintManager();		
+}
+	
+	
+const State::cptr Loader::loadStateFromFile(const std::string& filename) {
 	FactVector facts;
 	std::string str;
 	std::ifstream in(filename);
@@ -35,18 +52,7 @@ const State::cptr StateLoader::loadStateFromFile(const std::string& filename) {
 	return std::make_shared<State>(numFacts, facts);
 }
 
-void StateLoader::loadGroundedActions(
-	const std::string& filename, 
-	std::function<CoreAction::cptr (
-		const std::string&,
-		const ObjectIdxVector&,
-		const ObjectIdxVector&,
-		const std::vector<VariableIdxVector>&,
-		const std::vector<VariableIdxVector>&,
-		const std::vector<VariableIdxVector>&
-		)> actionFactory,
-	Problem& problem)
-{
+void Loader::loadGroundedActions(const std::string& filename, ActionFactoryType actionFactory, Problem& problem) {
 	std::string line;
 	std::ifstream in(filename);
 	
@@ -80,11 +86,7 @@ void StateLoader::loadGroundedActions(
 	}
 }
 
-void StateLoader::generateGoalConstraints(
-	const std::string& filename, 
-	std::function<ApplicableEntity::cptr (const std::vector<VariableIdxVector>&)> goalFactory,
-	Problem& problem)
-{
+void Loader::generateGoalConstraints(const std::string& filename, GoalFactoryType goalFactory, Problem& problem) {
 	std::string line;
 	std::ifstream in(filename);
 	
@@ -100,7 +102,7 @@ void StateLoader::generateGoalConstraints(
 	}
 }
 
-void StateLoader::loadConstraints(const std::string& filename, Problem& problem, bool goal) {
+void Loader::loadConstraints(const std::string& filename, Problem& problem, bool goal) {
 	std::string line;
 	std::ifstream in(filename);
 	
@@ -129,7 +131,7 @@ void StateLoader::loadConstraints(const std::string& filename, Problem& problem,
 }
 
 template<typename T>
-std::vector<T> StateLoader::parseNumberList(const std::string& input, const std::string sep) {
+std::vector<T> Loader::parseNumberList(const std::string& input, const std::string sep) {
 	if (input == "") return std::vector<T>();
 	
 	std::vector<T> output;
@@ -144,7 +146,7 @@ std::vector<T> StateLoader::parseNumberList(const std::string& input, const std:
 }
 
 template<typename T>
-std::vector<std::vector<T>> StateLoader::parseDoubleNumberList(const std::string& input, const std::string sep) {
+std::vector<std::vector<T>> Loader::parseDoubleNumberList(const std::string& input, const std::string sep) {
 	std::vector<std::vector<T>> output;
 	std::vector<std::string> strs;
 	boost::split(strs, input, boost::is_any_of(sep));

@@ -18,7 +18,10 @@ class Problem
 {
 public:
 	Problem() {}
-	~Problem() {} 
+	~Problem() {
+		for (ProblemConstraint::cptr ctr:_constraints) delete ctr;
+		for (ProblemConstraint::cptr ctr:_gconstraints) delete ctr;
+	} 
 
 	//! Modify the problem initial state
 	void setInitialState(const State::cptr& state) { _initialState = state; }
@@ -71,6 +74,7 @@ protected:
 	
 	ProblemInfo::cptr _problemInfo;
 	
+	//! Vectors of pointers to the different problem constraints. This class owns the pointers.
 	ProblemConstraint::vctr _constraints;
 	ProblemConstraint::vctr _gconstraints;
 	

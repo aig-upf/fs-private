@@ -5,7 +5,7 @@
 
 #include <vector>
 #include <map>
-#include <unordered_map>
+#include <set>
 #include <boost/container/flat_set.hpp>
 
 #include <exception>
@@ -40,7 +40,8 @@ namespace aptk  { namespace core {
 
 
 	//! A domain is a set of values (of a state variable)
-	typedef boost::container::flat_set<ObjectIdx> Domain;
+ 	// typedef boost::container::flat_set<ObjectIdx> Domain;
+ 	typedef std::set<ObjectIdx> Domain;
 	typedef std::shared_ptr<Domain> DomainPtr;
 	
 	//! A vector of domains.

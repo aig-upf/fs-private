@@ -16,16 +16,17 @@ class ConstraintManager
 {
 protected:
 	//! An arc is a pair with a procedure and the index of the relevant variable (either 0 or 1)
-	typedef std::pair<ProblemConstraint*, unsigned> Arc;
-	typedef boost::container::flat_set<Arc> ArcSet;
+	typedef std::pair<ProblemConstraint::cptr, unsigned> Arc;
+ 	// typedef boost::container::flat_set<Arc> ArcSet;
+	typedef std::set<Arc> ArcSet;
 	
-	typedef std::vector<ProblemConstraint*> PConstraintPtrVct;
+	typedef std::vector<ProblemConstraint::cptr> PConstraintPtrVct;
 	
 	//! State constraints
-	const ProblemConstraint::vctr& sconstraints;
+	ProblemConstraint::vctr sconstraints;
 	
 	//! Goal constraints
-	const ProblemConstraint::vctr& gconstraints;
+	ProblemConstraint::vctr gconstraints;
 	
 	//! The worklists necessary for the AC3 algorithm: State constraints and goal constraints
 	ArcSet SCWorklist;
@@ -79,6 +80,7 @@ public:
 	
 	//!
 	void loadConstraintDomains(const DomainMap& domains, const PConstraintPtrVct& constraints) const;
+	void emptyConstraintDomains(const PConstraintPtrVct& constraints) const;
 	
 	Constraint::Output filter_global_constraints(const PConstraintPtrVct& constraints) const;
 

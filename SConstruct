@@ -4,6 +4,8 @@ import os
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Debug build', 'no'))
+vars.Add(BoolVariable('fdebug', 'Debug FS0', 'no'))
+
 
 default_lapkt_path = os.getenv('LWAPTKDEV', '')
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', default_lapkt_path, PathVariable.PathIsDir))
@@ -28,6 +30,8 @@ env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++0x' ])  # Flags common to a
 
 if env['debug']:
 	env.Append(CCFLAGS = ['-g', '-DDEBUG' ])
+	if env['fdebug']:
+		env.Append(CCFLAGS = ['-DFS0_DEBUG'])
 	lib_name = 'fs0-debug'
 else:
 	env.Append(CCFLAGS = ['-Ofast', '-DNDEBUG' ])

@@ -1,15 +1,17 @@
 
 
 #include <constraints/manager.hxx>
+#include <utils/utils.hxx>
 
 namespace aptk { namespace core {
 
+//! Note that we use both types of constraints as goal constraints
 ConstraintManager::ConstraintManager(const ProblemConstraint::vctr& goalConstraints, const ProblemConstraint::vctr& stateConstraints)
-	: sconstraints(stateConstraints), gconstraints(goalConstraints)
+	: sconstraints(stateConstraints), gconstraints(Utils::merge(goalConstraints, stateConstraints))
 {
 	initialize();
 }
-	
+
 //! Precompute some of the structures that we'll need later on.
 void ConstraintManager::initialize() {
 	// Index the different constraints by arity
@@ -36,18 +38,18 @@ void ConstraintManager::indexConstraintsByArity(const ProblemConstraint::vctr& c
 	for (const ProblemConstraint::cptr ctr:constraints) {
 		unsigned arity = ctr->getArity();
 		if (arity == 1) {
-			unary.push_back(ctr.get());
+			unary.push_back(ctr);
 		} else if (arity == 2) {
-			binary.push_back(ctr.get());
+			binary.push_back(ctr);
 		} else {
-			n_ary.push_back(ctr.get());
+			n_ary.push_back(ctr);
 		}
 	}
 }
 
 //! Initializes a worklist. `constraints` is expected to have only binary constraints.
 void ConstraintManager::initializeAC3Worklist(const PConstraintPtrVct& constraints, ArcSet& worklist) {
-	for (ProblemConstraint* ctr:constraints) {
+	for (ProblemConstraint::cptr ctr:constraints) {
 		assert(ctr->getArity() == 2);
 		worklist.insert(std::make_pair(ctr, 0));
 		worklist.insert(std::make_pair(ctr, 1));
@@ -57,7 +59,7 @@ void ConstraintManager::initializeAC3Worklist(const PConstraintPtrVct& constrain
 Constraint::Output ConstraintManager::unaryFiltering(const DomainMap& domains, const PConstraintPtrVct& constraints) const {
 	Constraint::Output output = Constraint::Output::Unpruned;
 	
-	for (ProblemConstraint* ctr:constraints) {
+	for (ProblemConstraint::cptr ctr:constraints) {
 		assert(ctr->getArity() == 1);
 		Constraint::Output o = ctr->filter(domains);
 		if (o == Constraint::Output::Pruned) {
@@ -75,10 +77,9 @@ Constraint::Output ConstraintManager::filter(const DomainMap& domains,
 						const PConstraintPtrVct& n_ary,
 						const ArcSet& AC3Worklist
 ) const {
-	
-	Constraint::Output o = unaryFiltering(domains, unary);
-	if (o == Constraint::Output::Failure) return o;
-	
+	Constraint::Output result = unaryFiltering(domains, unary);
+	if (result == Constraint::Output::Failure) return result;
+
 	ArcSet worklist(AC3Worklist);  // Copy the state constraint worklist
 	// printArcSet(worklist);
 	
@@ -87,25 +88,46 @@ Constraint::Output ConstraintManager::filter(const DomainMap& domains,
 	loadConstraintDomains(domains, n_ary);
 	
 	// First apply both types of filtering
-	o = filter_binary_constraints(binary, worklist);
-	if (o == Constraint::Output::Failure) return o;
-	
-	o = filter_global_constraints(n_ary);
-	if (o == Constraint::Output::Failure) return o;
-	
-	// Now, keep pruning until we reach a fixpoint.
-	while (o == Constraint::Output::Pruned) {
-		o = filter_binary_constraints(binary, worklist);
-		
-		if (o == Constraint::Output::Pruned) {
-			o = filter_global_constraints(n_ary);
-		}
+	Constraint::Output b_result = filter_binary_constraints(binary, worklist);
+	if (b_result == Constraint::Output::Failure) {
+		// Empty the non-unary constraints
+		emptyConstraintDomains(binary);
+		emptyConstraintDomains(n_ary);
+		return b_result;
 	}
-	return o;
+	
+	Constraint::Output g_result = filter_global_constraints(n_ary);
+	if (g_result == Constraint::Output::Failure) {
+		// Empty the non-unary constraints
+		emptyConstraintDomains(binary);
+		emptyConstraintDomains(n_ary);
+		return g_result;
+	}
+	
+	// The global result won't be affected: if it was "Pruned", it'll continue to be prune regardless of what happens inside the loop.
+	if (b_result == Constraint::Output::Pruned || g_result == Constraint::Output::Pruned) result = Constraint::Output::Pruned;
+		
+	// Keep pruning until we reach a fixpoint.
+	while (b_result == Constraint::Output::Pruned && g_result == Constraint::Output::Pruned) {
+		// Each type of pruning (global or binary) needs only be performed
+		// if the other type of pruning actually modified some domain.
+		b_result = filter_binary_constraints(binary, worklist);
+		if (b_result == Constraint::Output::Pruned) g_result = filter_global_constraints(n_ary);
+	}
+
+	// Empty the non-unary constraints
+	emptyConstraintDomains(binary);
+	emptyConstraintDomains(n_ary);
+	
+	return result;
 }
 
 Constraint::Output ConstraintManager::filterWithStateConstraints(const DomainMap& domains) const {
 	if (sconstraints.empty()) return Constraint::Output::Unpruned;
+ 	// std::cout << "Num. binary constraints: " << s_binary_contraints.size() << std::endl;
+ 	// std::cout << "Num. unary constraints: " << s_unary_contraints.size() << std::endl;
+ 	// std::cout << "Num. n-ary constraints: " << s_n_ary_contraints.size() << std::endl;
+ 	// std::cout << "Worklist size: " << SCWorklist.size() << std::endl;
 	return filter(domains, s_unary_contraints, s_binary_contraints, s_n_ary_contraints, SCWorklist);
 }
 
@@ -115,18 +137,24 @@ Constraint::Output ConstraintManager::filterWithGoalConstraints(const DomainMap&
 	return filter(domains, g_unary_contraints, g_binary_contraints, g_n_ary_contraints, GCWorklist);
 }
 
+void ConstraintManager::emptyConstraintDomains(const PConstraintPtrVct& constraints) const {
+	for (ProblemConstraint::cptr constraint:constraints) {
+		constraint->emptyDomains();
+	}
+}
+
 void ConstraintManager::loadConstraintDomains(const DomainMap& domains, const PConstraintPtrVct& constraints) const {
-	for (ProblemConstraint* constraint:constraints) {
+	for (ProblemConstraint::cptr constraint:constraints) {
 		constraint->loadDomains(domains);
 	}
 }
 
 Constraint::Output ConstraintManager::filter_global_constraints(const PConstraintPtrVct& constraints) const {
 	Constraint::Output output = Constraint::Output::Unpruned;
-	for (ProblemConstraint* constraint:constraints) {
+	for (ProblemConstraint::cptr constraint:constraints) {
 		Constraint::Output o = constraint->filter();
 		if (o == Constraint::Output::Failure) return o;
-		if (o == Constraint::Output::Pruned) output = o;
+		else if (o == Constraint::Output::Pruned) output = o;
 	}
 	return output;
 }
@@ -140,7 +168,7 @@ Constraint::Output ConstraintManager::filter_binary_constraints(const PConstrain
 	// 1. Analyse pending arcs until the worklist is empty
 	while (!worklist.empty()) {
 		Arc a = select(worklist);
-		ProblemConstraint* constraint = a.first;
+		ProblemConstraint::cptr constraint = a.first;
 		unsigned variable = a.second;  // The index 0 or 1 of the relevant variable.
 		assert(variable == 0 || variable == 1);
 
@@ -153,7 +181,7 @@ Constraint::Output ConstraintManager::filter_binary_constraints(const PConstrain
 		if (o == Constraint::Output::Pruned) {
 			result = Constraint::Output::Pruned;
 			VariableIdx pruned = constraint->getScope()[variable];  // This is the index of the state variable whose domain we have pruned
-			for (ProblemConstraint* ctr:constraints) {
+			for (ProblemConstraint::cptr ctr:constraints) {
 				if (ctr == constraint) continue;  // No need to reinsert the same constraint we just used.
 				
 				// Only if the constraint has overlapping scope, we insert in the worklist the constraint paired with _the other_ variable, to be analysed later.
@@ -189,7 +217,8 @@ bool ConstraintManager::checkConsistency(const DomainMap& domains) const {
 //! and remove it from the worklist
 ConstraintManager::Arc ConstraintManager::select(ArcSet& worklist) const {
 	assert(!worklist.empty());
-	const auto& it = worklist.end() - 1;
+	auto it = worklist.end();
+	--it;
 	auto elem = *(it);
 	worklist.erase(it);
 	return elem;

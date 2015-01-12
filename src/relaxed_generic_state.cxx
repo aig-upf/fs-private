@@ -31,6 +31,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace aptk { namespace core {
 	
 
+RelaxedGenericState::~RelaxedGenericState() {
+	assert(checkPointerOwnershipIsCorrect());
+}
+
+bool RelaxedGenericState::checkPointerOwnershipIsCorrect() {
+	for (DomainPtr& domain:_domains) {
+		if (domain.use_count() != 1)) return false;
+	}
+	return true;
+}
+
 //! Applies the given changeset into the current state.
 void RelaxedGenericState::accumulate(const Changeset& changeset) {
 	for (const auto& elem:changeset.getEffects()) { 

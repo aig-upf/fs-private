@@ -22,23 +22,16 @@ protected:
 	DomainVector _domains;
 	
 private:
-	//! Private Assignment operator
-	// TODO - This is probably not exception-safe
-	RelaxedGenericState& operator=(const RelaxedGenericState &rhs) {
-		if (this == &rhs) return *this;
-		_domains = rhs._domains;
-		return *this;
-	}
-	
-	
-	bool operator==(const RelaxedGenericState &rhs) const { return _domains == rhs._domains; }
-	bool operator!=(const RelaxedGenericState &rhs) const { return !(this->operator==(rhs));}	
+	//! Private assignment and comparison operators
+	RelaxedGenericState& operator=(const RelaxedGenericState &rhs);
+// 	bool operator==(const RelaxedGenericState &rhs) const { return _domains == rhs._domains; }
+// 	bool operator!=(const RelaxedGenericState &rhs) const { return !(this->operator==(rhs));}
 
 public:
 	typedef std::shared_ptr<RelaxedGenericState> ptr;
 	typedef std::shared_ptr<const RelaxedGenericState> cptr;
 
-	virtual ~RelaxedGenericState() {}
+	virtual ~RelaxedGenericState();
 
 	//! Copy constructor - performs a deep copy of the domains
 	RelaxedGenericState(const RelaxedGenericState& state) {
@@ -88,13 +81,16 @@ public:
 	//! Applies the given changeset into the current state.
 	void accumulate(const Changeset& changeset);
 	
-public:
 	friend std::ostream& operator<<(std::ostream &os, const RelaxedGenericState&  state) { return state.print(os); }
 	
 	//! Prints a representation of the state to the given stream.
 	std::ostream& print(std::ostream& os) const;
 	std::ostream& printAll(std::ostream& os) const;
 	std::ostream& print(std::ostream& os, const Problem& problem) const;
+
+protected:
+	//! Small helper for debugging purposes
+	bool checkPointerOwnershipIsCorrect() const;
 };
 
 } } // namespaces

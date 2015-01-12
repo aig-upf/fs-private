@@ -16,7 +16,7 @@
 #include <problem_info.hxx>
 #include <action_manager.hxx>
 
-#include <generator.hxx>  // This will dinamically point to the right generated file
+#include <components.hxx>  // This will dinamically point to the right generated file
 
 using	aptk::Action;
 
@@ -181,15 +181,15 @@ int main( int argc, char** argv ) {
 	ProblemInfo::cptr problemInfo(new ProblemInfo(data_dir));
 	
 	// Instantiate the problem
-	std::cout << "Generating the problem... " << std::endl;
+	std::cout << "Generating the problem... ";
 	Problem problem;
 	aptk::core::solver::generate(data_dir, problem);
 	aptk::core::FwdSearchProblem search_prob(problem);
-	std::cout << "Done. " << std::endl;
 	
 	problem.setProblemInfo(problemInfo);
 	Problem::setCurrentProblem(problem);
-	
+
+	std::cout << "Done!" << std::endl;
 	reportProblemStats(problem);
 	
 	// Instantiate the engine

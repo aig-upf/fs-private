@@ -23,7 +23,8 @@ protected:
 	DomainVector current_projection;
 	
 public:
-	typedef std::shared_ptr<ProblemConstraint> cptr; // TODO : Put the const back
+ 	// typedef std::shared_ptr<ProblemConstraint> cptr;
+	typedef ProblemConstraint* cptr;
 	typedef std::vector<ProblemConstraint::cptr> vctr;
 	
 	ProblemConstraint(Constraint* constraint, const VariableIdxVector& variables);
@@ -45,6 +46,9 @@ public:
 	
 	//! Loads (i.e. caches a pointer of) the domain projections of the given state
 	virtual void loadDomains(const DomainMap& domains);
+	
+	//! Empties the domain cache
+	virtual void emptyDomains() { current_projection.clear(); }
 };
 
 } } // namespaces
