@@ -35,9 +35,9 @@ RelaxedGenericState::~RelaxedGenericState() {
 	assert(checkPointerOwnershipIsCorrect());
 }
 
-bool RelaxedGenericState::checkPointerOwnershipIsCorrect() {
-	for (DomainPtr& domain:_domains) {
-		if (domain.use_count() != 1)) return false;
+bool RelaxedGenericState::checkPointerOwnershipIsCorrect() const {
+	for (const DomainPtr& domain:_domains) {
+		if (domain.use_count() != 1) return false;
 	}
 	return true;
 }
