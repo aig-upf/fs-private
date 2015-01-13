@@ -11,8 +11,8 @@ import re
 def normalize(name):
     slug = unicodedata.normalize('NFKD', name)
     slug = slug.encode('ascii', 'ignore').lower()
-    slug = re.sub(r'[^a-z0-9]+', '-', slug.decode()).strip('-')
-    slug = re.sub(r'[-]+', '-', slug)
+    slug = re.sub(r'[^a-z0-9]+', '_', slug.decode()).strip('-')
+    slug = re.sub(r'[-]+', '_', slug)
     return slug
 
 
