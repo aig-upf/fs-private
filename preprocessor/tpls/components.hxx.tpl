@@ -10,7 +10,7 @@
 #include <state.hxx>
 #include <actions.hxx>
 #include <core_types.hxx>
-#include <core_changeset.hxx>
+#include <heuristics/changeset.hxx>
 #include <fact.hxx>
 #include <core_problem.hxx>
 #include <utils/loader.hxx>

@@ -1,22 +1,3 @@
-/*
-Lightweight Automated Planning Toolkit
-Copyright (C) 2012
-Miquel Ramirez <miquel.ramirez@rmit.edu.au>
-Nir Lipovetzky <nirlipo@gmail.com>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #include <core_fwd_search_prob.hxx>
 #include <algorithm>
@@ -59,10 +40,10 @@ float	FwdSearchProblem::cost( const State& s, Action_Idx a ) const {
 }
 
 State* FwdSearchProblem::next( const State& s, Action_Idx actionIdx ) const {
-	Changeset changeset;
+	FactSet atoms;
 	SimpleActionSetManager manager(s, task.getConstraints());
-	manager.computeChangeset(*task.getAction(actionIdx), changeset);
-	return new State(s, changeset); // Copy everything into the new state and apply the changeset
+	manager.computeChangeset(*task.getAction(actionIdx), atoms);
+	return new State(s, atoms); // Copy everything into the new state and apply the changeset
 } 
 
 void FwdSearchProblem::print( std::ostream& os ) const {

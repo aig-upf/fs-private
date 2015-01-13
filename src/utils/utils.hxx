@@ -6,7 +6,6 @@
 
 #include <core_types.hxx>
 #include <state.hxx>
-#include <actions.hxx>
 
 namespace aptk { namespace core {
 	
@@ -30,6 +29,25 @@ public:
 		result.insert(result.end(), vector2.begin(), vector2.end());
 		return result;
 	}
+	
+	//! Flattens a container of containers
+	template <typename T>
+	static std::vector<T> flatten(const std::vector<std::vector<T>>& vector) {
+		std::vector<T> result;
+		for(const std::vector<T>& sub:vector) {
+			for(T var:sub) {
+				result.push_back(var);
+			}
+		}
+		return result;
+	}	
+	
+	//! "Uniquifies" the given vector.
+	template <typename T>
+	static std::vector<T> unique(const std::vector<T>& vector) {
+		boost::container::flat_set<T> unique(vector.cbegin(), vector.cend());
+		return std::vector<T>(unique.cbegin(), unique.cend());
+	}	
 
 protected:
 	template <typename IteratorCallback>

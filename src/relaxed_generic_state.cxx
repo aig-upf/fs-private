@@ -1,22 +1,3 @@
-/*
-Lightweight Automated Planning Toolkit
-Copyright (C) 2012
-Miquel Ramirez <miquel.ramirez@rmit.edu.au>
-Nir Lipovetzky <nirlipo@gmail.com>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #include <iostream>
 #include <cassert>
@@ -24,7 +5,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "generic_state.hxx"
 #include "relaxed_generic_state.hxx"
 #include <actions.hxx>
-#include <core_changeset.hxx>
+#include <heuristics/changeset.hxx>
 #include <core_problem.hxx>
 #include <problem_info.hxx>
 
@@ -44,8 +25,8 @@ bool RelaxedGenericState::checkPointerOwnershipIsCorrect() const {
 
 //! Applies the given changeset into the current state.
 void RelaxedGenericState::accumulate(const Changeset& changeset) {
-	for (const auto& elem:changeset.getEffects()) { 
-		set(elem.first);
+	for (const auto& elem:changeset.getEffects()) {
+		set(std::get<0>(elem));
 	}
 }
 

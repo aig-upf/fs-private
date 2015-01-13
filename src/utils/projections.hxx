@@ -38,6 +38,10 @@ public:
 	 */
 	static DomainVector project(const DomainMap& domains, const VariableIdxVector& scope);
 	
+	
+	//! Deep-copies a domain map
+	static DomainMap clone(const DomainMap& domains);
+	
 	//! Helper to print sets of domains
 	static void printDomains(const DomainMap& domains);
 };

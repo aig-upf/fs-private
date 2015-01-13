@@ -47,9 +47,6 @@ protected:
 	//! The action that is currently modifying the changeset.
 	ActionIdx _activeActionIdx;
 	
-	//! The number of non-seed support atoms for the active action.
-	int _activeActionNonSeedSupportAtoms;
-	
 	/**
 	 * A map mapping every atom reached in the RPG layer represented by this changeset to a pair <a, b, c>, where:
 	 *  - `a` is one of the actions that achieves the atom, arbitrarily chosen
@@ -57,14 +54,14 @@ protected:
 	 *    because they relate to the relevant variables of the effect procedure that achieves it.
 	 * - `c` is the total number of non-seed supporters of the atom, including the "extra" supporters.
 	 */
-	typedef std::tuple<ActionIdx, Fact::vctr, unsigned> FactData;
+	typedef std::pair<ActionIdx, Fact::vctrp> FactData;
 	typedef std::map<Fact, FactData> EffectMap;
 	EffectMap _effects;
 	
 	/**
 	 * A map mapping every action applicable in this layer to the supports of the action, i.e. the atoms that make it applicable.
 	 */	
-	std::unordered_map<ActionIdx, Fact::vctr> _causes;
+	std::unordered_map<ActionIdx, Fact::vctrp> _causes;
 
 	//! We keep a pointer to the previous RPG layer to ensure that we only add novel atoms.
 	const RelaxedState& _referenceState;
@@ -78,7 +75,6 @@ public:
 	Changeset(const State& seed, const RelaxedState& referenceState) : 
 		_seed(seed),
 		_activeActionIdx(),
-		_activeActionNonSeedSupportAtoms(-1),
 		_effects(),
 		_causes(),
 		_referenceState(referenceState)
@@ -88,6 +84,9 @@ public:
 	
 	virtual void add(const Fact& fact, const FactSetPtr extraCauses);
 	virtual void add(const Fact& fact) { add(fact, nullptr); }
+	
+	void updateEffectMap(const Fact& fact, const Fact::vctrp extra);
+	void updateEffectMapSimple(const Fact& fact, const Fact::vctrp extra);
 	
 	/**
 	 * Returns the achiever action of the given effect, if it is on the changeset,
@@ -99,15 +98,14 @@ public:
 		return (it == _effects.end()) ? INVALID_ACHIEVER : it->second;
 	}
 	
-	Fact::vctr const * getCauses(const ActionIdx& actionIdx) const { return &(_causes.at(actionIdx)); }
+	Fact::vctrp getCauses(const ActionIdx& actionIdx) const { return _causes.at(actionIdx); }
 	
 	unsigned size() const { return _effects.size(); }
 	
 	//! Sets the action that will be considered the support for the atoms added in subsequent calls to the "add" method
-	void setCurrentAction(const ActionIdx activeActionIdx, Fact::vctr&& causes) {
+	void setCurrentAction(const ActionIdx activeActionIdx, Fact::vctrp causes) {
 		assert(!_causes.count(activeActionIdx));
 		_activeActionIdx = activeActionIdx;
-		_activeActionNonSeedSupportAtoms = causes.size();
 		_causes.insert(std::make_pair(_activeActionIdx, causes));
 	}
 	
@@ -133,8 +131,8 @@ public:
 		return os;
 	}
 	
-	void printFactSet(const Fact::vctr& vector, std::ostream& os) const {
-		for (const auto& fact:vector) {
+	void printFactSet(const Fact::vctrp vector, std::ostream& os) const {
+		for (const auto& fact:*vector) {
 			os << fact << ", ";
 		}
 	}

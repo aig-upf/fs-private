@@ -13,7 +13,7 @@
 
 namespace aptk { namespace core {
 
-class Problem; class Changeset;
+class Problem;
 
 class GenericState
 {
@@ -37,7 +37,7 @@ public:
 	//! TODO - We might want to perform type checking here against the predicate and function signatures.
 	//! TODO - We might also want to ensure here that all symbol extensions have been defined. This won't be expensive, 
 	//! as it will be done only when we create the initial state.
-	GenericState(unsigned numFacts, const FactVector& facts) :
+	GenericState(unsigned numFacts, const Fact::vctr& facts) :
 		_values(numFacts)
 	{
 		// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
@@ -54,11 +54,11 @@ public:
 		_values(state._values), _hash(state._hash)
 	{}
 	
-	//! A constructor that receives a changeset and constructs a state that is equal to the received
-	//! state plus the changes in the changeset.
-	GenericState(const GenericState& state, const Changeset& changeset) :
+	//! A constructor that receives a number of atoms and constructs a state that is equal to the received
+	//! state plus the new atoms.
+	GenericState(const GenericState& state, const FactSet& atoms) :
 		_values(state._values), _hash(state._hash) {
-		accumulate(changeset);
+		accumulate(atoms);
 	}
 	
 	//! Assignment operator
@@ -89,8 +89,8 @@ public:
 	}
 	
 protected:
-	//! Applies the given changeset into the current state.
-	void accumulate(const Changeset& changeset);
+	//! "Applies" the given atoms into the current state.
+	void accumulate(const FactSet& atoms);
 	
 	void updateHash() { _hash = computeHash(); }
 	

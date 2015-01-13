@@ -30,7 +30,7 @@ void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory
 	
 	
 const State::cptr Loader::loadStateFromFile(const std::string& filename) {
-	FactVector facts;
+	Fact::vctr facts;
 	std::string str;
 	std::ifstream in(filename);
 	

@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 #include <actions.hxx>
-#include <core_changeset.hxx>
+#include <heuristics/changeset.hxx>
 #include <core_types.hxx>
 #include <fact.hxx>
 #include <constraints/constraints.hxx>

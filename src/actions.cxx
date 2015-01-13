@@ -1,31 +1,49 @@
-/*
-Lightweight Automated Planning Toolkit
-Copyright (C) 2012
-Miquel Ramirez <miquel.ramirez@rmit.edu.au>
-Nir Lipovetzky <nirlipo@gmail.com>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #include <actions.hxx>
 #include <core_problem.hxx>
 #include <problem_info.hxx>
 #include <limits>
+#include <utils/utils.hxx>
+
 
 namespace aptk { namespace core {
+
+
+//! Note that the only relevant variables for applicable entities are the variables relevant to the different applicability procedures
+ApplicableEntity::ApplicableEntity(const std::vector<VariableIdxVector>& appRelevantVars) :
+	_appRelevantVars(appRelevantVars), _allRelevantVars(Utils::unique(Utils::flatten(appRelevantVars)))
+{};
+
+ApplicableEntity::ApplicableEntity(const std::vector<VariableIdxVector>& appRelevantVars, VariableIdxVector&& allRelevantVars) :
+	_appRelevantVars(appRelevantVars), _allRelevantVars(allRelevantVars)
+{};
+
+
+std::ostream& ApplicableEntity::print(std::ostream& os) const {
+	// TODO
+	os << "ApplicableEntity[...]";
+	return os;
+}
+
 	
 const ActionIdx CoreAction::INVALID_ACTION = std::numeric_limits<unsigned int>::max();
+	
+//! Note that the relevant variables for actions are the variables relevant to the applicability procedures
+//! plus those relevant to the effect procedures
+CoreAction::CoreAction(const ObjectIdxVector& binding,
+			const ObjectIdxVector& derived,
+			const std::vector<VariableIdxVector>& appRelevantVars,
+			const std::vector<VariableIdxVector>& effRelevantVars,
+			const std::vector<VariableIdxVector>& effAffectedVars
+) : ApplicableEntity(appRelevantVars, Utils::unique(Utils::merge(Utils::flatten(appRelevantVars), Utils::flatten(effRelevantVars)))),
+	_binding(binding),
+	_derived(derived),
+	_effRelevantVars(effRelevantVars),
+	_effAffectedVars(effAffectedVars)
+{
+	// Both vectors must have the same size, which is equal to the number of effect procedures.
+	assert(_effRelevantVars.size() == _effAffectedVars.size());
+};
 	
 std::ostream& CoreAction::print(std::ostream& os) const {
 	auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();

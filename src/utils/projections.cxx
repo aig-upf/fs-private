@@ -46,15 +46,23 @@ DomainVector Projections::project(const DomainMap& domains, const VariableIdxVec
 	return projection;
 }
 
-void Projections::printDomains(const DomainMap& domains) {
-		const auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();
- 	 	for (const auto& domain:domains) {
-			std::cout << problemInfo->getVariableName(domain.first) << "={";
-			for (auto objIdx:*(domain.second)) {
-				std::cout << problemInfo->getObjectName(domain.first, objIdx) << ",";
-			}
- 	 		std::cout << "}" << std::endl;
-		}
+DomainMap Projections::clone(const DomainMap& domains) {
+	DomainMap clone;
+	for (const auto& domain:domains) {
+		clone.insert(std::make_pair(domain.first, std::make_shared<Domain>(*(domain.second))));
 	}
+	return clone;
+}
+
+void Projections::printDomains(const DomainMap& domains) {
+	const auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();
+	for (const auto& domain:domains) {
+		std::cout << problemInfo->getVariableName(domain.first) << "={";
+		for (auto objIdx:*(domain.second)) {
+			std::cout << problemInfo->getObjectName(domain.first, objIdx) << ",";
+		}
+		std::cout << "}" << std::endl;
+	}
+}
 
 } } // namespaces

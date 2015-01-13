@@ -4,7 +4,6 @@
 #include <cassert>
 #include <iosfwd>
 #include <actions.hxx>
-#include <core_changeset.hxx>
 #include <core_types.hxx>
 #include <fact.hxx>
 #include <constraints/problem_constraints.hxx>
@@ -40,9 +39,9 @@ public:
 		if (!checkPreconditionsHold(action)) return false;
 		
 		if (_constraints.size() != 0) { // If we have no constraints, we can spare the cost of creating the new state.
-			Changeset changeset;
-			computeChangeset(action, changeset);
-			State s1(_state, changeset);
+			FactSet atoms;
+			computeChangeset(action, atoms);
+			State s1(_state, atoms);
 			return checkStateConstraintsHold(s1);
 		}
 		return true;
@@ -55,14 +54,14 @@ public:
 		return true;
 	}
 	
-	void computeChangeset(const CoreAction& action, Changeset& changeset) const {
+	void computeChangeset(const CoreAction& action, FactSet& atoms) const {
 		for (unsigned idx = 0; idx < action.getNumEffectProcedures(); ++idx) {
-			computeProcedureChangeset(idx, action, changeset);
+			computeProcedureChangeset(idx, action, atoms);
 		}
 	}
 	
 	//!
-	static void computeProcedurePointChangeset(unsigned procedureIdx, const CoreAction& action, const ProcedurePoint& point, Changeset& changeset) {
+	static void computeProcedurePointChangeset(unsigned procedureIdx, const CoreAction& action, const ProcedurePoint& point, FactSet& atoms) {
 		const VariableIdxVector& affectedVars = action.getEffectAffectedVars(procedureIdx);
 		ProcedurePoint affectedValues(affectedVars.size());
 		// TODO - WHAT HAPPENS IF THE POINT WAS ACTUALLY NOT AFFECTED BY THE PROCEDURE??
@@ -71,9 +70,9 @@ public:
 		// TODO - OR A VECTOR OF PAIRS <AFFECTED_IDX, NEW_VALUE>
 		action.applyEffectProcedure(procedureIdx, point, affectedValues);
 		
-		// Zip the new values for the affected variables into new facts and add them into the changeset.
+		// Zip the new values for the affected variables into new facts and add them into the list of atoms.
 		for (unsigned i = 0; i < affectedVars.size(); ++i) {
-			changeset.add(Fact(affectedVars[i], affectedValues[i]));
+			atoms.insert(Fact(affectedVars[i], affectedValues[i]));
 		}
 	}
 	
@@ -92,10 +91,10 @@ protected:
 	}
 	
 	//!
-	void computeProcedureChangeset(unsigned procedureIdx, const CoreAction& action, Changeset& changeset) const {
+	void computeProcedureChangeset(unsigned procedureIdx, const CoreAction& action, FactSet& atoms) const {
 		const VariableIdxVector& relevant = action.getEffectRelevantVars(procedureIdx);
 		ObjectIdxVector point = Projections::project(_state, relevant);
-		computeProcedurePointChangeset(procedureIdx, action, point, changeset);
+		computeProcedurePointChangeset(procedureIdx, action, point, atoms);
 	}
 };
 

@@ -7,10 +7,12 @@
 #include <aptk/heuristic.hxx>
 #include <state.hxx>
 #include <core_problem.hxx>
-#include <core_changeset.hxx>
+#include <heuristics/changeset.hxx>
 
 
 namespace aptk { namespace core {
+
+class RPGraph;
 
 template < typename SearchModel >
 class RelaxedPlanHeuristic : public Heuristic<State> {
@@ -26,7 +28,7 @@ public:
 	//! The computation of the heuristic value. Returns -1 if the RPG layer encoded in the relaxed state is not a goal,
 	//! otherwise returns h_{FF}.
 	//! To be subclassed in other RPG-based heuristics such as h_max
-	virtual float computeHeuristic(const State& seed, const RelaxedState& state, const std::vector<Changeset::ptr>& changesets);
+	virtual float computeHeuristic(RPGraph& rpg, const State& seed, const RelaxedState& state, const Changeset::vptr& changesets);
 	
 	//! A helper to print information about the RPG changesets.
 	void print_changesets(const std::vector<Changeset::ptr>& changesets);

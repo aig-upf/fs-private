@@ -30,7 +30,7 @@ public:
 	
 	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
 	//! Besides, return the causes of the goal to be later processed by the RPG heuristic backchaining procedure.
-	bool isGoal(const State& seed, const RelaxedState& state, FactSetPtr causes) const;
+	bool isGoal(const State& seed, const RelaxedState& state, Fact::vctrp causes) const;
 	
 	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
 	bool isGoal(const RelaxedState& state) const;
@@ -41,7 +41,7 @@ protected:
 	
 	//! Extract the supporters of the goal from the pruned domains and add them to the set of goal causes.
 	//! If any pruned domain is empty, return false, as it means we have an inconsistency.
-	void extractGoalCauses(const State& seed, const DomainMap& domains, FactSetPtr causes, std::vector<bool>& set, unsigned num_set) const;
+	void extractGoalCauses(const State& seed, const DomainMap& domains, const DomainMap& clone, FactSetPtr causes, std::vector<bool>& set, unsigned num_set) const;
 
 	void extractGoalCausesArbitrarily(const State& seed, const DomainMap& domains, FactSetPtr causes, std::vector<bool>& set) const;
 };

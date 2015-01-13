@@ -24,9 +24,10 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	RelaxedState relaxed(seed);
 	RelaxedActionSetManager manager(&seed, stateConstraints);
 	
-	std::vector<Changeset::ptr> changesets;
-	
 	if (_problem.isGoal(seed)) return 0; // The seed state is a goal
+	
+	std::vector<Changeset::ptr> changesets;
+	RPGraph rpg = RPGraph(_problem, seed, changesets);
 	
 	#ifdef FS0_DEBUG
 	std::cout << std::endl << "RP Graph computation from seed state: " << std::endl << seed << std::endl << "****************************************" << std::endl;;
@@ -35,7 +36,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the changeset is empty),
 	// or we get to a goal graph layer.
 	while(true) {
-		Changeset::ptr changeset = std::make_shared<Changeset>(&relaxed);
+		Changeset::ptr changeset = std::make_shared<Changeset>(seed, relaxed);
 		
 		for (unsigned idx = 0; idx < actions.size(); ++idx) {
 			auto& action = *actions[idx];
@@ -48,16 +49,16 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 			std::pair<bool, FactSetPtr> res = manager.isApplicable(action, projection);
 			if (res.first) { // If the action is applicable in the current RPG layer...
 				// ...we accumulate the effects on the changeset with all new reachable effects.
-				changeset->setCurrentAction(idx, res.second);  // We record the applicability causes
+				changeset->setCurrentAction(idx, rpg.pruneSeedSupporters(res.second));  // We record the applicability causes
 				manager.computeChangeset(action, projection, *changeset);
 			}
 		}
 		
 		
 		#ifdef FS0_DEBUG
-		std::cout << "Changeset size: " << changeset->size() << std::endl;
+		std::cout << std::endl << "Changeset size: " << changeset->size() << std::endl;
+		// std::cout << "Changeset: " << *changeset << std::endl;
 		// print_changesets(changesets);
-		// changeset->printEffects(std::cout);
 		#endif
 		
 		// If there is no novel fact in the changeset, we reached a fixpoint, thus there is no solution.
@@ -75,19 +76,23 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		if (o == Constraint::Output::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 		
 		#ifdef FS0_DEBUG
-		std::cout << std::endl << "New RPG Layer: " << relaxed << std::endl; // std::cout << "Changeset: " << *changeset << std::endl << std::endl;
+		std::cout << "New RPG Layer: " << relaxed << std::endl; // std::cout << "Changeset: " << *changeset << std::endl << std::endl;
 		#endif
 		
-		float h = computeHeuristic(seed, relaxed, changesets);
-		if (h > -1) return h;
+		float h = computeHeuristic(rpg, seed, relaxed, changesets);
+		if (h > -1) {
+			#ifdef FS0_DEBUG
+			std::cout << "All changesets: " <<  std::endl; print_changesets(changesets);
+			#endif
+			return h;
+		}
 	}
 }
 
 template <typename T>
-float RelaxedPlanHeuristic<T>::computeHeuristic(const State& seed, const RelaxedState& state, const std::vector<Changeset::ptr>& changesets) {
-	FactSetPtr causes = std::make_shared<FactSet>();
+float RelaxedPlanHeuristic<T>::computeHeuristic(RPGraph& rpg, const State& seed, const RelaxedState& state, const Changeset::vptr& changesets) {
+	Fact::vctrp causes = std::make_shared<Fact::vctr>();
 	if (_problem.getConstraintManager()->isGoal(seed, state, causes)) {
-		RPGraph rpg = RPGraph(_problem, seed, changesets);
 		auto cost = rpg.computeRelaxedPlanCost(causes);
 		return cost;
 	} else {
