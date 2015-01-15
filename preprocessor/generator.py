@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os
 import subprocess
 import sys
@@ -25,6 +26,10 @@ def parse_arguments():
     parser.add_argument('--set', required=True, help="The name of the benchmark set.")
     parser.add_argument('--instance', required=True, help="The problem instance filename.")
     parser.add_argument('--translator', required=False, help="The directory containing the problem translation code.")
+    parser.add_argument('--base', default="../generated",
+                        help="The base directory where the compiled planner will be left.")
+    parser.add_argument('--out', help="The final directory (without any added subdirectories)"
+                                      " where the compiled planner will be left.")
     parser.add_argument('--debug', action='store_true', help="Flag to compile in debug mode.")
 
     args = parser.parse_args()
@@ -146,20 +151,21 @@ def main():
     domain = create_domain(domain_name, translator)
     instance = create_instance(instance_name, translator, domain)
     instance = TaskPreprocessor(instance).do()
-    translate_pddl(instance=instance, setname=args.set, debug=args.debug, dirname=args.instance_dir)
+    _, trans_dir = translate_pddl(instance, args)
+    move_files_around(args.instance_dir, args.instance, domain_filename, trans_dir)
 
 
-def translate_pddl(instance, setname, debug, dirname):
+def translate_pddl(instance, args):
     """
     """
-    print("Parsing problem instance {}...".format(instance))
+    print("Parsing problem instance {}...".format(instance.name))
 
     domain = instance.domain
     translation_dir = domain.name + '/' + instance.name
 
     print("Translating and compiling problem instance {}...".format(instance.name))
 
-    inst_name, translation_dir = translate_and_compile(instance, setname, dirname, translation_dir, debug)
+    inst_name, translation_dir = translate_and_compile(instance, translation_dir, args)
     return inst_name, translation_dir
 
 
@@ -184,15 +190,33 @@ def compile_translation(translation_dir, debug=False, predstate=False):
         raise RuntimeError('Error compiling problem at {0}'.format(translation_dir))
 
 
-def translate_and_compile(instance, setname, dirname, translation_dir=None, debug=False):
-    gen = Generator(instance, setname, translation_dir)
-    translation_dir = gen.translate(dirname)
-    compile_translation(translation_dir, debug, gen.task.domain.is_predicative())
+def translate_and_compile(instance, translation_dir, args):
+    gen = Generator(instance, args, translation_dir)
+    translation_dir = gen.translate(args.instance_dir)
+    compile_translation(translation_dir, args.debug, gen.task.domain.is_predicative())
     return gen.get_normalized_task_name(), translation_dir
 
 
+def move_files_around(base_dir, instance, domain, target_dir):
+    """ Moves the domain and instance description files plus additional data files to the translation directory """
+    definition_dir = target_dir + '/definition'
+    data_dir = target_dir + '/data'
+
+    # Copy the domain and instance file to the subfolder "definition" on the destination dir
+    util.mkdirp(definition_dir)
+    shutil.copy(instance, definition_dir)
+    shutil.copy(domain, definition_dir)
+
+    # Copy, if they exist, all data files
+    origin_data_dir = base_dir + '/data'
+    if os.path.isdir(origin_data_dir):
+        for filename in glob.glob(os.path.join(origin_data_dir, '*')):
+            if os.path.isfile(filename):
+                shutil.copy(filename, data_dir)
+
+
 class Generator(object):
-    def __init__(self, instance, setname, translation_dir=None):
+    def __init__(self, instance, args, translation_dir=None):
         self.task = instance
         self.index = CompilationIndex(instance)
         self.grounder = Grounder(instance, self.index)
@@ -201,7 +225,7 @@ class Generator(object):
         self.symbol_init = []
         self.goal_code = None
         self.action_code = {}
-        self.init_filenames(setname, translation_dir)
+        self.init_filenames(args, translation_dir)
 
     def translate(self, dirname):
         self.preprocess_task()
@@ -254,13 +278,14 @@ class Generator(object):
     def get_normalized_domain_name(self):
         return util.normalize(self.task.domain.name)
 
-    def init_filenames(self, setname, translation_dir=None):
+    def init_filenames(self, args, translation_dir=None):
         if translation_dir is None:
             dir_end = self.get_normalized_domain_name() + '/' + self.get_normalized_task_name() + '/'
         else:
             dir_end = translation_dir
 
-        self.out_dir = os.path.abspath('../generated/' + setname + '/' + dir_end)
+        o_dir = args.out if args.out is not None else (args.base + '/' + args.set + '/' + dir_end)
+        self.out_dir = os.path.abspath(o_dir)
 
         if not os.path.isdir(self.out_dir):
             os.makedirs(self.out_dir)
