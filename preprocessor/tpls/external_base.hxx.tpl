@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include <utils/serializer.hxx>
+
 namespace aptk { namespace core { namespace solver {
 
 /*********************************************/
@@ -17,7 +19,10 @@ protected:
     ${data_declarations}
 
 public:
-    void bootstrap() {}
+    ExternalBase(const std::string& data_dir)
+        : ${data_initialization}
+    {}
+
 
     ${data_accessors}
 };

@@ -1,5 +1,6 @@
 
 #include <string>
+#include <fstream>
 #include <utils/serializer.hxx>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -13,7 +14,8 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::UnaryMap
 	return os;
 }
 
-Serializer::UnaryMap Serializer::deserializeUnaryMap(std::istream& is) {
+Serializer::UnaryMap Serializer::deserializeUnaryMap(const std::string& filename) {
+	std::ifstream is(filename);
 	UnaryMap map;
 	std::string line;
 	while (std::getline(is, line)) {
@@ -31,7 +33,8 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::BinaryMa
 	return os;
 }
 
-Serializer::BinaryMap Serializer::deserializeBinaryMap(std::istream& is) {
+Serializer::BinaryMap Serializer::deserializeBinaryMap(const std::string& filename) {
+	std::ifstream is(filename);
 	BinaryMap map;
 	std::string line;
 	while (std::getline(is, line)) {
@@ -50,7 +53,8 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::UnarySet
 	return os;
 }
 
-Serializer::UnarySet Serializer::deserializeUnarySet(std::istream& is) {
+Serializer::UnarySet Serializer::deserializeUnarySet(const std::string& filename) {
+	std::ifstream is(filename);
 	UnarySet set;
 	std::string line;
 	while (std::getline(is, line)) {
@@ -69,7 +73,8 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::BinarySe
 	return os;
 }
 
-Serializer::BinarySet Serializer::deserializeBinarySet(std::istream& is) {
+Serializer::BinarySet Serializer::deserializeBinarySet(const std::string& filename) {
+	std::ifstream is(filename);
 	BinarySet set;
 	std::string line;
 	while (std::getline(is, line)) {
@@ -79,9 +84,6 @@ Serializer::BinarySet Serializer::deserializeBinarySet(std::istream& is) {
 	}
 	return set;
 }
-
-
-
 
 
 std::vector<int> Serializer::deserializeLine(const std::string& line) {

@@ -270,13 +270,33 @@ class Generator(object):
         # external_base.hxx:
         self.save_translation('external_base.hxx', tplManager.get('external_base.hxx').substitute(
             data_declarations=self.process_data_code('get_declaration'),
-            data_accessors=self.process_data_code('get_accessor')
+            data_accessors=self.process_data_code('get_accessor'),
+            data_initialization=self.get_external_data_initializer_list()
         ))
+
+        self.serialize_external_data()
 
     def process_data_code(self, method):
         processed = [getattr(elem, method)(self.index.objects.obj_to_idx) for elem in self.task.static_data.values()
                      if isinstance(elem, DataElement)]
         return '\n\t'.join(processed)
+
+    def get_external_data_initializer_list(self):
+        elems = []
+        for elem in self.task.static_data.values():
+            if isinstance(elem, DataElement):
+                elems.append(elem.initializer_list())
+            else:
+                raise RuntimeError('What')
+        return ', '.join(elems)
+
+    def serialize_external_data(self):
+        for elem in self.task.static_data.values():
+            if isinstance(elem, DataElement):
+                serialized = elem.serialize_data(self.index.objects.obj_to_idx)
+                self.dump_data(elem.name, serialized)
+            else:
+                raise RuntimeError('What')
 
     def get_normalized_task_name(self):
         return util.normalize(self.task.name)

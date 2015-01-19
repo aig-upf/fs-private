@@ -1,5 +1,6 @@
 """
-
+    This module contains a number of classes and routines to handle the static (external) data, including its
+    declaration and serialization.
 """
 
 
@@ -24,13 +25,11 @@ class StaticData(object):
         self.initializations = []
 
 
-# DEPRECATED
-# class Tuple(object):
-#     def __init__(self, obj1, obj2):
-#         self.data = (obj1, obj2)
-#
-#     def get_init(self, symbols):
-#         return '{' + ', '.join(str(symbols[e]) for e in self.data) + '}'
+def serialize_tuple(t, symbols):
+    """  A small helper to serialize a whole tuple with the help of a symbol table """
+    t = (t,) if not isinstance(t, (list, tuple)) else t
+    symbol_id = lambda x: x if isinstance(x, int) else symbols[x]
+    return ','.join(str(symbol_id(e)) for e in t)
 
 
 class DataElement:
@@ -38,26 +37,24 @@ class DataElement:
         self.name = name
         self.accessor = 'get_' + name
 
-    def initialization_string(self, t, symbols):
-        t = (t,) if not isinstance(t, (list, tuple)) else t
-        symbol_id = lambda x: x if isinstance(x, int) else symbols[x]
-        inner = ', '.join(str(symbol_id(e)) for e in t)
-        return '{' + inner + '}' if len(t) > 1 else inner
-
     def get_tpl(self, name):
-        raise RuntimeError("Method must be subclassed")
-
-    def get_elements(self, name):
         raise RuntimeError("Method must be subclassed")
 
     def get_accessor(self, symbols):
         return self.get_tpl('accessor').format(**self.__dict__)
 
     def get_declaration(self, symbols):
-        return self.get_tpl('declaration').format(name=self.name, elems=self.get_elements(symbols))
+        return self.get_tpl('declaration').format(name=self.name)
 
-    # def get_initialization(self, symbols):
-    #     return self.get_tpl('initialization').format(name=self.name, elems=self.get_elements(symbols))
+    def serialize_data(self, symbols):
+        raise RuntimeError("Method must be subclassed")
+
+    def deserializer(self):
+        raise RuntimeError("needs to be subclassed")
+
+    def initializer_list(self):
+        return '{name}(Serializer::{deserializer}(data_dir + "/{name}.data"))'.format(name=self.name,
+                                                                                      deserializer=self.deserializer())
 
 
 class StaticProcedure(object):
@@ -68,9 +65,8 @@ class StaticProcedure(object):
 class Arity0Map(DataElement):
     def get_tpl(self, name):
         return dict(
-            declaration='const ObjectIdx {name} = {val};',
+            declaration='const ObjectIdx {name};',
             accessor='ObjectIdx {accessor}() {{ return {name}; }}',
-            # initialization='const ObjectIdx Ext::i().{name} = {val};',
         )[name]
 
     def __init__(self, name):
@@ -84,16 +80,15 @@ class Arity0Map(DataElement):
     def get_declaration(self, symbols):
         return self.get_tpl('declaration').format(name=self.name, val=self.elems[()])
 
-    # def get_initialization(self, symbols):
-    #     return self.get_tpl('initialization').format(name=self.name, val=self.elems[()])
+    def serialize_data(self, symbols):
+        return [str(self.elems[()])]  # We simply print the only element
 
 
 class UnaryMap(DataElement):
     def get_tpl(self, name):
         return dict(
-            declaration='const std::map<ObjectIdx, ObjectIdx> {name} = {{\n\t{elems}\n}};',
+            declaration='const std::map<ObjectIdx, ObjectIdx> {name};',
             accessor='ObjectIdx {accessor}(ObjectIdx x) {{ return {name}.at(x); }}',
-            # initialization='const std::map<ObjectIdx, ObjectIdx> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
 
     def __init__(self, name):
@@ -103,28 +98,29 @@ class UnaryMap(DataElement):
     def add(self, elem, value):
         self.elems[elem] = value
 
-    def get_elements(self, symbols):
-        return ', '.join(self.get_element(k, v, symbols) for k, v in self.elems.items())
+    def serialize_data(self, symbols):
+        return [serialize_tuple(k + (v,), symbols) for k, v in self.elems.items()]
 
-    def get_element(self, k, v, symbols):
-        return '{' + self.initialization_string(k, symbols) + ', ' + self.initialization_string(v, symbols) + '}'
+    def deserializer(self):
+            return 'deserializeUnaryMap'
 
 
 class BinaryMap(UnaryMap):
     def get_tpl(self, name):
         return dict(
-            declaration='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> {name} = {{\n\t{elems}\n}};',
+            declaration='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
             accessor='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
-            # initialization='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
+
+    def deserializer(self):
+            return 'deserializeBinaryMap'
 
 
 class UnarySet(DataElement):
     def get_tpl(self, name):
         return dict(
-            declaration='const std::set<ObjectIdx> {name} = {{\n\t{elems}\n}};',
+            declaration='const std::set<ObjectIdx> {name};',
             accessor='bool {accessor}(ObjectIdx x) {{ return {name}.find(x) != {name}.end(); }}',
-            # initialization='const std::set<ObjectIdx> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
 
     def __init__(self, name):
@@ -134,26 +130,31 @@ class UnarySet(DataElement):
     def add(self, elem):
         self.elems.add(elem)
 
-    def get_elements(self, symbols):
-        return ', '.join(self.get_element(elem, symbols) for elem in self.elems)
+    def serialize_data(self, symbols):
+        return [serialize_tuple(elem, symbols) for elem in self.elems]
 
-    def get_element(self, elem, symbols):
-        return self.initialization_string(elem, symbols)
+    def deserializer(self):
+            return 'deserializeUnarySet'
 
 
 class BinarySet(UnarySet):
     def get_tpl(self, name):
         return dict(
-            declaration='const std::set<std::pair<ObjectIdx, ObjectIdx>> {name} = {{\n\t{elems}\n}};',
+            declaration='const std::set<std::pair<ObjectIdx, ObjectIdx>> {name};',
             accessor='bool {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.find({{x,y}}) != {name}.end(); }}',
-            # initialization='const std::set<std::pair<ObjectIdx, ObjectIdx>> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
+
+    def deserializer(self):
+            return 'deserializeBinarySet'
 
 
 class Arity3Set(BinarySet):
     def get_tpl(self, name):
         return dict(
-            declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> {name} = {{\n\t{elems}\n}};',
+            declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> {name};',
             accessor='bool {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.find({{x,y,z}}) != {name}.end(); }}',
-            # initialization='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
+
+    def deserializer(self):
+                return 'deserializeArity3Set'
+

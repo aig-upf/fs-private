@@ -16,22 +16,18 @@ public:
 	typedef std::set<std::pair<int, int>> BinarySet;
 	
 	
-	//! (de) serialize a unary map
+	//! Map (de)serialization
 	static std::ostream& serialize(std::ostream& os, const UnaryMap& map);
-	static UnaryMap deserializeUnaryMap(std::istream& is);
-	
-	//! (de) serialize a binary map
 	static std::ostream& serialize(std::ostream& os, const BinaryMap& map);
-	static BinaryMap deserializeBinaryMap(std::istream& is);
+	static UnaryMap deserializeUnaryMap(const std::string& filename);
+	static BinaryMap deserializeBinaryMap(const std::string& filename);
 	
 	
-	//! (de) serialize a unary map
+	//! Set (de)serialization
 	static std::ostream& serialize(std::ostream& os, const UnarySet& set);
-	static UnarySet deserializeUnarySet(std::istream& is);
-	
-	//! (de) serialize a binary map
 	static std::ostream& serialize(std::ostream& os, const BinarySet& set);
-	static BinarySet deserializeBinarySet(std::istream& is);
+	static UnarySet deserializeUnarySet(const std::string& filename);
+	static BinarySet deserializeBinarySet(const std::string& filename);
 	
 protected:
 	static std::vector<int> deserializeLine(const std::string& line);
