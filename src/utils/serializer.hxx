@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <functional>
 
 namespace aptk { namespace core {
 	
@@ -28,6 +29,18 @@ public:
 	static std::ostream& serialize(std::ostream& os, const BinarySet& set);
 	static UnarySet deserializeUnarySet(const std::string& filename);
 	static BinarySet deserializeBinarySet(const std::string& filename);
+	
+	typedef std::function<void (const std::vector<int>&)> DataInserter;
+	static void deserialize(const std::string& filename, DataInserter& inserter);
+	
+	//! Boost (de)serialization
+	template <typename T>
+	static void BoostDeserialize(const std::string& filename, T& data);
+	
+	template <typename T>
+	static void BoostSerialize(const std::string& filename, const T& data);
+	
+	static BinaryMap bDeserializeBinaryMap(const std::string& filename);
 	
 protected:
 	static std::vector<int> deserializeLine(const std::string& line);
