@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include <fs0_types.hxx>
 #include <utils/serializer.hxx>
 
 using namespace fs0;
