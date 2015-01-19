@@ -4,7 +4,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 ProblemInfo::ProblemInfo(const std::string& data_dir) {
 	loadActionIndex(data_dir + "/action-index.data");
@@ -80,4 +80,4 @@ void ProblemInfo::loadObjectIndex(const std::string& filename) {
 	}
 }
 	
-} } // namespaces
+} // namespaces

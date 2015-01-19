@@ -5,7 +5,7 @@
 #include <ostream>
 #include <cassert>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 	class CartesianProductIterator {
 	public:
@@ -72,4 +72,4 @@ namespace aptk { namespace core {
 	
 
 
-} } // namespaces
+} // namespaces

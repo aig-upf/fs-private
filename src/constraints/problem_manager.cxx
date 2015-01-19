@@ -1,10 +1,10 @@
 
 
 #include <constraints/problem_manager.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 #include <utils/projections.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 PlanningConstraintManager::PlanningConstraintManager(const ProblemConstraint::vctr& goalConstraints, const ProblemConstraint::vctr& stateConstraints)
 	: manager(goalConstraints, stateConstraints)
@@ -105,5 +105,5 @@ void PlanningConstraintManager::extractGoalCausesArbitrarily(const State& seed, 
 	}
 }
 
-} } // namespaces
+} // namespaces
 

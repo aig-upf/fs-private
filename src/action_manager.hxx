@@ -2,11 +2,11 @@
 #pragma once
 
 #include <actions.hxx>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <state.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 	
 /**
  * Some helper methods.
@@ -34,4 +34,4 @@ public:
 	static bool applyRelaxedAction(const CoreAction& action, const State& seed, RelaxedState& s);
 };
 
-} } // namespaces
+} // namespaces

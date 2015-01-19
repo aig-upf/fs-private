@@ -4,7 +4,7 @@
 #include <constraints/problem_constraints.hxx>
 #include <actions.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * A constraint defined through an external procedure, i.e. a semantic attachment.
@@ -32,5 +32,5 @@ public:
 	bool isSatisfied(const State& s) const;
 };
 
-} } // namespaces
+} // namespaces
 

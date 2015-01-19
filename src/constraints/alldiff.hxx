@@ -6,7 +6,7 @@
 #include <set>
 #include <constraints/constraints.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 /**
@@ -62,5 +62,5 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces
 

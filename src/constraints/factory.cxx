@@ -7,7 +7,7 @@
 #include <constraints/external_unary_constraint.hxx>
 #include <constraints/external_binary_constraint.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 const ProblemConstraint::cptr ConstraintFactory::create(const std::string& name, const VariableIdxVector& scope) {
 	Constraint* constraint;
@@ -34,5 +34,5 @@ const ProblemConstraint::cptr ConstraintFactory::createExternalConstraint(Applic
 	return constraint;
 }
 
-} } // namespaces
+} // namespaces
 

@@ -3,7 +3,7 @@
 
 #include <heuristics/relaxed_plan.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 template <typename Model>
 class HMaxHeuristic : public RelaxedPlanHeuristic<Model> {
@@ -21,4 +21,4 @@ public:
 	}
 };
 
-} } // namespaces
+} // namespaces

@@ -7,11 +7,11 @@
 #include <set>
 #include <vector>
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <fact.hxx>
 #include <generic_state.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 class GenericState; class Problem; class Changeset;
 
@@ -93,5 +93,5 @@ protected:
 	bool checkPointerOwnershipIsCorrect() const;
 };
 
-} } // namespaces
+} // namespaces
 

@@ -8,10 +8,10 @@
 #include <vector>
 #include <boost/functional/hash.hpp>
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <fact.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 class Problem;
 
@@ -111,4 +111,4 @@ public:
 	// friend std::size_t hash_value(PredicativeState const& s) { return s.computeHash(); }
 };
 
-} } // namespaces
+} // namespaces

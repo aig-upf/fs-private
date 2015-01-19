@@ -4,13 +4,13 @@
 #include <cassert>
 #include <iosfwd>
 #include <actions.hxx>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <fact.hxx>
 #include <constraints/problem_constraints.hxx>
 #include <utils/projections.hxx>
 
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 /**
@@ -98,4 +98,4 @@ protected:
 	}
 };
 
-} } // namespaces
+} // namespaces

@@ -3,7 +3,7 @@
 #include <constraints/manager.hxx>
 #include <utils/utils.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 //! Note that we use both types of constraints as goal constraints
 ConstraintManager::ConstraintManager(const ProblemConstraint::vctr& goalConstraints, const ProblemConstraint::vctr& stateConstraints)
@@ -234,5 +234,5 @@ VariableIdxVector ConstraintManager::indexRelevantVariables(ProblemConstraint::v
 }
 
 
-} } // namespaces
+} // namespaces
 

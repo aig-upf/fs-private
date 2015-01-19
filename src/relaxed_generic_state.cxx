@@ -6,10 +6,10 @@
 #include "relaxed_generic_state.hxx"
 #include <actions.hxx>
 #include <heuristics/changeset.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 #include <problem_info.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 	
 
 RelaxedGenericState::~RelaxedGenericState() {
@@ -51,4 +51,4 @@ std::ostream& RelaxedGenericState::print(std::ostream& os, const Problem& proble
 	return os;
 }
 
-} } // namespaces
+} // namespaces

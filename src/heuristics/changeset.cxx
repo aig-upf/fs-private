@@ -2,7 +2,7 @@
 #include <heuristics/changeset.hxx>
 #include <heuristics/rpg.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 	
 const Changeset::FactData Changeset::INVALID_ACHIEVER = std::pair<ActionIdx, Fact::vctrp>(CoreAction::INVALID_ACTION, std::make_shared<Fact::vctr>());
 
@@ -33,4 +33,4 @@ void Changeset::updateEffectMapSimple(const Fact& fact, const Fact::vctrp extra)
 	_effects[fact] = { _activeActionIdx, extra };
 }
 
-} } // namespaces
+} // namespaces

@@ -23,13 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unordered_map>
 #include <map>
 #include <cassert>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <actions.hxx>
 #include <fact.hxx>
 #include <state.hxx>
 
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * A changeset contains book-keeping information concerning the actions that support
@@ -150,4 +150,4 @@ public:
 };
 
 
-} } // namespaces
+} // namespaces

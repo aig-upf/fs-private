@@ -9,7 +9,7 @@
 
 #include <utils/serializer.hxx>
 
-namespace aptk { namespace core { namespace solver {
+using namespace fs0;
 
 /*********************************************/
 /* The static data                           */
@@ -27,5 +27,3 @@ public:
     ${data_accessors}
 };
 
-
-} } } // namespaces

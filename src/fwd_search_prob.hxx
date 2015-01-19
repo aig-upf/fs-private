@@ -2,13 +2,13 @@
 #pragma once
 
 #include <aptk/search_prob.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 #include <state.hxx>
 #include <actions.hxx>
 #include <heuristics/changeset.hxx>
 #include <simple_applicable_action_set.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * 
@@ -16,10 +16,10 @@ namespace aptk { namespace core {
  * (NAMELY: (1) FwdSearchProblem::is_applicable, (2) FwdSearchProblem::applicable_set AND (3) Fwd_Search_Problem::Action_Iterator
  * ONLY (3) IS CURRENTLY USED BY THE SEARCH ENGINE.
  */
-class FwdSearchProblem : public Search_Problem<State> {
+class FwdSearchProblem : public aptk::Search_Problem<State> {
 	public:
 		
-		typedef aptk::core::SimpleApplicableActionSet CoreApplicableActionSet; // To be referenced from consumers of the FwdSearchProblem class.
+		typedef SimpleApplicableActionSet CoreApplicableActionSet; // To be referenced from consumers of the FwdSearchProblem class.
 
 		FwdSearchProblem( const Problem& );
 		virtual ~FwdSearchProblem();
@@ -34,9 +34,9 @@ class FwdSearchProblem : public Search_Problem<State> {
 		
 // 		virtual void     applicable_set( const aptk::core::State& s, std::vector< aptk::core::ActionIdx >& app_set ) const;	
 		
-		virtual float    cost( const State& s, Action_Idx a ) const;
+		virtual float    cost( const State& s, aptk::Action_Idx a ) const;
 		
-		virtual State*   next( const State& s, Action_Idx a ) const;
+		virtual State*   next( const State& s, aptk::Action_Idx a ) const;
 		
 		virtual void     print( std::ostream& os ) const;
 		
@@ -49,4 +49,4 @@ class FwdSearchProblem : public Search_Problem<State> {
 		const Problem& task;
 };
 
-} } // namespaces
+} // namespaces

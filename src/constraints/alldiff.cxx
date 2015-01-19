@@ -2,7 +2,7 @@
 
 #include <constraints/alldiff.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 AlldiffConstraint::AlldiffConstraint(unsigned arity) 
@@ -145,5 +145,5 @@ Constraint::Output AlldiffConstraint::bounds_consistency(const DomainVector& dom
 	return output;
 }
 
-} } // namespaces
+} // namespaces
 

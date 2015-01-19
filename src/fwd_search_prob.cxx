@@ -1,9 +1,9 @@
 
-#include <core_fwd_search_prob.hxx>
+#include <fwd_search_prob.hxx>
 #include <algorithm>
 #include <action_manager.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 FwdSearchProblem::FwdSearchProblem( const Problem& p )
 	: task( p )
@@ -33,13 +33,13 @@ bool FwdSearchProblem::goal( const State& s ) const { return task.isGoal(s); }
 // 	// m_task->applicable_actions( s, app_set ); 
 // }
 
-float	FwdSearchProblem::cost( const State& s, Action_Idx a ) const {
+float	FwdSearchProblem::cost( const State& s, aptk::Action_Idx a ) const {
 // 	const Action& act = *(task.actions().at(a));
 // 	return act.cost();
   return 1.0; // TODO - Implement
 }
 
-State* FwdSearchProblem::next( const State& s, Action_Idx actionIdx ) const {
+State* FwdSearchProblem::next( const State& s, aptk::Action_Idx actionIdx ) const {
 	FactSet atoms;
 	SimpleActionSetManager manager(s, task.getConstraints());
 	manager.computeChangeset(*task.getAction(actionIdx), atoms);
@@ -54,5 +54,5 @@ FwdSearchProblem::CoreApplicableActionSet FwdSearchProblem::applicable_actions(c
 	return task.getApplicableActions(s);
 }
 		
-} } // namespaces
+} // namespaces
 

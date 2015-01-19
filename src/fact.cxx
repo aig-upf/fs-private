@@ -1,10 +1,10 @@
 
 #include <fact.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 
 #include <state.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 	
 std::ostream& Fact::print(std::ostream& os) const {
@@ -42,4 +42,4 @@ std::ostream& PlainAggregatedFact::print(std::ostream& os) const {
 // 	return ActionManager::checkFormulaSatisfiable(*this, state);
 // }
 
-} } // namespaces
+} // namespaces

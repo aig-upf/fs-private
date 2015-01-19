@@ -5,10 +5,10 @@
 #include <relaxed_generic_state.hxx>
 
 	
-namespace aptk { namespace core {
+namespace fs0 {
 
 typedef GenericState State;
 typedef RelaxedGenericState RelaxedState;
 
-} } // namespaces
+} // namespaces
 

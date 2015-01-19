@@ -3,7 +3,7 @@
 #include <constraints/external_unary_constraint.hxx>
 #include <utils/projections.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 ExternalUnaryConstraint::ExternalUnaryConstraint(ApplicableEntity::cptr entity, unsigned procedure_idx) :
 	ExternalConstraint(entity, procedure_idx)
@@ -32,5 +32,5 @@ Constraint::Output ExternalUnaryConstraint::filter(const DomainMap& domains) {
 	return (domain.size() == 0) ? Constraint::Output::Failure : output;
 }
 
-} } // namespaces
+} // namespaces
 

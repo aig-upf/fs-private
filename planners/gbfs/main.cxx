@@ -1,13 +1,13 @@
 #include <iostream>
 #include <fstream>
 
-#include <core_fwd_search_prob.hxx>
+#include <fwd_search_prob.hxx>
 
 #include <aptk/open_list.hxx>
 #include <aptk/at_gbfs.hxx>
 #include <aptk/at_wbfs.hxx>
 
-#include <heuristics/core_h_null.hxx>
+#include <heuristics/null_heuristic.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <heuristics/hmax.hxx>
 #include <state.hxx>
@@ -24,8 +24,10 @@ using 	aptk::search::Open_List;
 using	aptk::search::Node_Comparer;
 using	aptk::search::bfs::Node;
 
+using namespace fs0;
+
 // MRJ: We start defining the type of nodes for our planner
-typedef Node< aptk::core::State > Search_Node;
+typedef Node< fs0::State > Search_Node;
 
 // MRJ: Then we define the type of the tie-breaking algorithm
 // for the open list we are going to use
@@ -37,32 +39,30 @@ typedef aptk::search::Node_Comparer_GBFS< Search_Node > GBFS_Comparer;
 typedef		Open_List< GBFS_Comparer, Search_Node >		BFS_Open_List;
 
 
-using namespace aptk::core;
-// TODO - Wrap in namespace
 
 
 // MRJ: Now we define the heuristics
 // typedef		aptk::agnostic::H1_Heuristic<aptk::agnostic::Fwd_Search_Problem, aptk::agnostic::H_Add_Evaluation_Function>	H_Add_Fwd;
 // typedef		Relaxed_Plan_Heuristic< aptk::agnostic::Fwd_Search_Problem, H_Add_Fwd >		H_Add_Rp_Fwd;
-typedef		aptk::core::Null_Heuristic<aptk::core::FwdSearchProblem> NullHeuristic;
-typedef		aptk::core::RelaxedPlanHeuristic<aptk::core::FwdSearchProblem> RelaxedHeuristic;
-typedef		aptk::core::HMaxHeuristic<aptk::core::FwdSearchProblem> RelaxedMaxHeuristic;
+typedef		NullHeuristic<FwdSearchProblem> NHeuristic;
+typedef		RelaxedPlanHeuristic<FwdSearchProblem> RelaxedHeuristic;
+typedef		HMaxHeuristic<FwdSearchProblem> RelaxedMaxHeuristic;
 
 
 // MRJ: Now we're ready to define the BFS algorithm we're going to use
 // typedef		AT_BFS_SQ_SH< Fwd_Search_Problem, RelaxedHeuristic, BFS_Open_List >		Anytime_BFS_H_Add_Rp_Fwd;
-typedef		aptk::search::bfs::AT_BFS_SQ_SH< aptk::core::FwdSearchProblem, NullHeuristic, BFS_Open_List > NullHeuristicSearchEngine;
-typedef		aptk::search::bfs::AT_WBFS_SQ_SH< aptk::core::FwdSearchProblem, NullHeuristic, BFS_Open_List >	WeightedSearchEngine;
+typedef		aptk::search::bfs::AT_BFS_SQ_SH< FwdSearchProblem, NHeuristic, BFS_Open_List > NullHeuristicSearchEngine;
+typedef		aptk::search::bfs::AT_WBFS_SQ_SH< FwdSearchProblem, NHeuristic, BFS_Open_List >	WeightedSearchEngine;
 
 
 typedef std::vector<int> Plan;
 
 
 bool checkPlanCorrect(const Plan& plan) {
-	auto problem = aptk::core::Problem::getCurrentProblem();
+	auto problem = Problem::getCurrentProblem();
 	std::vector<unsigned> p;
 	for (const auto& elem:plan) p.push_back((unsigned) elem);
-	return aptk::core::ActionManager::checkPlanSuccessful(*problem, p, *(problem->getInitialState()));
+	return ActionManager::checkPlanSuccessful(*problem, p, *(problem->getInitialState()));
 }
 
 template <typename Search_Engine>
@@ -132,8 +132,8 @@ float do_search( Search_Engine& engine, const ProblemInfo::cptr& problemInfo, fl
 void instantiate_seach_engine_and_run(const FwdSearchProblem& search_prob, const ProblemInfo::cptr& problemInfo, float timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
-	aptk::search::bfs::AT_GBFS_SQ_SH< aptk::core::FwdSearchProblem, RelaxedHeuristic, BFS_Open_List > rp_bfs_engine( search_prob );
-// 	aptk::search::bfs::AT_GBFS_SQ_SH< aptk::core::FwdSearchProblem, RelaxedMaxHeuristic, BFS_Open_List > rp_bfs_engine( search_prob );
+	aptk::search::bfs::AT_GBFS_SQ_SH< FwdSearchProblem, RelaxedHeuristic, BFS_Open_List > rp_bfs_engine( search_prob );
+// 	aptk::search::bfs::AT_GBFS_SQ_SH< FwdSearchProblem, RelaxedMaxHeuristic, BFS_Open_List > rp_bfs_engine( search_prob );
 	timer = do_search(rp_bfs_engine, problemInfo, timeout, out_dir);
 	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }
@@ -183,8 +183,8 @@ int main( int argc, char** argv ) {
 	// Instantiate the problem
 	std::cout << "Generating the problem... ";
 	Problem problem;
-	aptk::core::solver::generate(data_dir, problem);
-	aptk::core::FwdSearchProblem search_prob(problem);
+	generate(data_dir, problem);
+	FwdSearchProblem search_prob(problem);
 	
 	problem.setProblemInfo(problemInfo);
 	Problem::setCurrentProblem(problem);

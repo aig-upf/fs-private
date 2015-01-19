@@ -13,7 +13,7 @@
 /**
  * Custom datatypes and typedefs.
  */
-namespace aptk  { namespace core {
+namespace fs0 {
 	
 	// A unique identifier for any of the domain actions.
 	typedef unsigned ActionIdx;
@@ -50,13 +50,9 @@ namespace aptk  { namespace core {
 	//! A map mapping state variable indexes to their possible domains.
 	typedef std::map<VariableIdx, DomainPtr> DomainMap;
 	
-} } // namespaces
-
-/**
- * Custom exceptions
- */
-namespace aptk  { namespace core {
-	
+	/**
+	 * Custom exceptions
+	 */
 	struct DuplicateObjectException : std::exception {};
 	struct DuplicateTypeException   : std::exception {};
 	struct DuplicateSymbolException : std::exception {};
@@ -66,4 +62,4 @@ namespace aptk  { namespace core {
 	
 	struct InvalidConstraintException : std::exception {};
 	
-} } // namespaces
+} // namespaces

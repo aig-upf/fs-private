@@ -1,12 +1,12 @@
 
 #include <actions.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 #include <problem_info.hxx>
 #include <limits>
 #include <utils/utils.hxx>
 
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 //! Note that the only relevant variables for applicable entities are the variables relevant to the different applicability procedures
@@ -56,4 +56,4 @@ std::ostream& CoreAction::print(std::ostream& os) const {
 	return os;
 }
 
-} } // namespaces
+} // namespaces

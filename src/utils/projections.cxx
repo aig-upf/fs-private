@@ -2,9 +2,9 @@
 #include <cassert>
 #include <utils/projections.hxx>
 #include <actions.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 ObjectIdxVector Projections::project(const State& s, const VariableIdxVector& scope) {
 	ObjectIdxVector values;
@@ -65,4 +65,4 @@ void Projections::printDomains(const DomainMap& domains) {
 	}
 }
 
-} } // namespaces
+} // namespaces

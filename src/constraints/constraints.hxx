@@ -5,9 +5,9 @@
 #include <map>
 #include <boost/container/flat_set.hpp>
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * A simple class representing an implicit CSP constraint of some type coupled with a custom propagator.
@@ -40,5 +40,5 @@ public:
 	virtual bool isSatisfied(const ObjectIdxVector& values) const = 0;
 };
 
-} } // namespaces
+} // namespaces
 

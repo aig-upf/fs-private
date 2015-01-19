@@ -6,7 +6,7 @@
 
 #include <problem_info.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 class Problem;
 
@@ -17,4 +17,4 @@ public:
 };
 
 
-} } // namespaces
+} // namespaces

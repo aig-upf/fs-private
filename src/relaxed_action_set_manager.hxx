@@ -4,12 +4,12 @@
 #include <iosfwd>
 #include <actions.hxx>
 #include <heuristics/changeset.hxx>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <fact.hxx>
 #include <constraints/constraints.hxx>
 #include <utils/utils.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * An action manager operating on a delete-free relaxation of the problem.
@@ -47,4 +47,4 @@ protected:
 										const VariableIdxVector& relevant, const ProcedurePoint& point, Changeset& changeset) const;
 };
 
-} } // namespaces
+} // namespaces

@@ -6,13 +6,13 @@
 #include <queue>
 
 #include <state.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 #include <heuristics/changeset.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
 #include <action_manager.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * A proper Relaxed Planning Graph. This class is used to perform the plan extraction from
@@ -141,4 +141,4 @@ protected:
 
 
 
-} } // namespaces
+} // namespaces

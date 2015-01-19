@@ -6,7 +6,7 @@
 #include <fact.hxx>
 
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 std::pair<bool, FactSetPtr> RelaxedActionSetManager::isApplicable(const ApplicableEntity& entity, const DomainMap& domains) const {
@@ -115,4 +115,4 @@ void RelaxedActionSetManager::computeProcedurePointChangeset(unsigned procedureI
 
 
 
-} } // namespaces
+} // namespaces

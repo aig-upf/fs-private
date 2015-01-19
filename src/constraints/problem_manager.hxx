@@ -3,12 +3,12 @@
 
 #include <cassert>
 #include <iosfwd>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <fact.hxx>
 #include <constraints/constraints.hxx>
 #include <constraints/manager.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * 
@@ -46,5 +46,5 @@ protected:
 	void extractGoalCausesArbitrarily(const State& seed, const DomainMap& domains, FactSetPtr causes, std::vector<bool>& set) const;
 };
 
-} } // namespaces
+} // namespaces
 

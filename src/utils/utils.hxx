@@ -4,10 +4,10 @@
 #include <vector>
 #include <ostream>
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <state.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 	
 class Utils {
 public:
@@ -69,4 +69,4 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces

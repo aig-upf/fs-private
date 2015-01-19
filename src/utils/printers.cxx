@@ -2,10 +2,10 @@
 #include <cassert>
 #include <memory>
 #include <utils/printers.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 #include <problem_info.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 void Printers::printPlan(const ActionPlan& plan, const Problem& problem, std::ostream& out) {
 	auto problemInfo = problem.getProblemInfo();
@@ -20,4 +20,4 @@ void Printers::printPlan(const std::vector<int>& plan, const ProblemInfo::cptr& 
 	}
 }
 
-} } // namespaces
+} // namespaces

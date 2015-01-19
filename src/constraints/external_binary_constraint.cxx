@@ -2,7 +2,7 @@
 
 #include <constraints/external_binary_constraint.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 ExternalBinaryConstraint::ExternalBinaryConstraint(ApplicableEntity::cptr entity, unsigned procedure_idx) :
 	ExternalConstraint(entity, procedure_idx)
@@ -55,5 +55,5 @@ Constraint::Output ExternalBinaryConstraint::filter(unsigned variable) {
 	return output;
 }
 
-} } // namespaces
+} // namespaces
 

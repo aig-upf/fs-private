@@ -6,9 +6,9 @@
 #include <boost/container/flat_set.hpp>
 #include <boost/concept_check.hpp>
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 class GenericState;
 typedef GenericState State;
@@ -146,4 +146,4 @@ protected:
 
 
 
-} } // namespaces
+} // namespaces

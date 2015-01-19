@@ -3,10 +3,10 @@
 
 #include <cassert>
 #include <iosfwd>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <constraints/problem_constraints.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 /**
@@ -113,5 +113,5 @@ protected:
 
 
 
-} } // namespaces
+} // namespaces
 

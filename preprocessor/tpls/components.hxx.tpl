@@ -9,16 +9,13 @@
 
 #include <state.hxx>
 #include <actions.hxx>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <heuristics/changeset.hxx>
 #include <fact.hxx>
-#include <core_problem.hxx>
-#include <utils/loader.hxx>
+#include <problem.hxx>
 #include "external.hxx"
 
-using namespace aptk::core;
-
-namespace aptk { namespace core { namespace solver {
+using namespace fs0;
 
 extern std::unique_ptr<External> external;
 
@@ -39,6 +36,4 @@ $goal_evaluator_definition
 $method_factories
 
 /* Generate the whole planning problem */
-void generate(const std::string& data_dir, aptk::core::Problem& problem);
-
-} } } // namespaces
+void generate(const std::string& data_dir, Problem& problem);

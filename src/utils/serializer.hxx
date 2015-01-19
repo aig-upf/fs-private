@@ -7,7 +7,7 @@
 #include <map>
 #include <functional>
 
-namespace aptk { namespace core {
+namespace fs0 {
 	
 class Serializer {
 public:
@@ -47,4 +47,4 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces

@@ -5,11 +5,11 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <core_problem.hxx>
+#include <problem.hxx>
 #include <utils/loader.hxx>
 #include <constraints/factory.hxx>
 
-namespace aptk { namespace core { namespace utils {
+namespace fs0 {
 
 void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory, GoalFactoryType goalFactory, Problem& problem) {
 	/* Define the actions */
@@ -160,4 +160,4 @@ std::vector<std::vector<T>> Loader::parseDoubleNumberList(const std::string& inp
 	}
 	return output;
 }
-} } } // namespaces
+} // namespaces

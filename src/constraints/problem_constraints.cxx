@@ -3,7 +3,7 @@
 #include <constraints/problem_constraints.hxx>
 #include <utils/projections.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 ProblemConstraint::ProblemConstraint(Constraint* constraint, const VariableIdxVector& variables) 
 	: ctr(constraint), _scope(variables) {}
@@ -34,5 +34,5 @@ void ProblemConstraint::loadDomains(const DomainMap& domains) {
 	current_projection = Projections::project(domains, _scope);
 }
 
-} } // namespaces
+} // namespaces
 

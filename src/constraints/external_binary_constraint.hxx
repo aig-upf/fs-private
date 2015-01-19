@@ -3,9 +3,9 @@
 
 #include <constraints/external_constraint.hxx>
 #include <actions.hxx>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * A binary, externally-defined constraint.
@@ -25,5 +25,5 @@ public:
 	Constraint::Output filter(unsigned variable = std::numeric_limits<unsigned>::max());
 };
 
-} } // namespaces
+} // namespaces
 

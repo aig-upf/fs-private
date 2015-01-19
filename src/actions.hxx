@@ -25,11 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <vector>
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <state.hxx>
 #include <fact.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 class Changeset;
 
@@ -126,4 +126,4 @@ protected:
 
 typedef std::vector<CoreAction::cptr> ActionList;
 
-} } // namespaces
+} // namespaces

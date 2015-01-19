@@ -2,12 +2,12 @@
 #pragma once
 
 #include <iosfwd>
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <actions.hxx>
 #include <state.hxx>
 #include <simple_action_set_manager.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 /**
@@ -69,4 +69,4 @@ public:
 };
 
 
-} } // namespaces
+} // namespaces

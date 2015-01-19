@@ -21,10 +21,12 @@ class Alldiff(Constraint):
     def __init__(self, args):
         super().__init__("alldiff", args)
 
-    def getArgumentTypes(self, arguments):
-        return
-
 
 class Sum(Constraint):
     def __init__(self, args):
         super().__init__("sum", args)
+
+
+class External(Constraint):
+    def __init__(self, name, args):
+        super().__init__(name, args)

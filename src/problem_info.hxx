@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
   * A ProblemInfo instance holds all the relevant information about the problem, including the names and types of state variables, problem objects, etc.
@@ -69,4 +69,4 @@ protected:
 	  
 	  
 	  
-} } // namespaces
+} // namespaces

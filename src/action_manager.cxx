@@ -7,7 +7,7 @@
 #include <relaxed_action_set_manager.hxx>
 #include <utils/projections.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 bool ActionManager::checkPlanSuccessful(const Problem& problem, const ActionPlan& plan, const State& s0) {
@@ -67,5 +67,5 @@ bool ActionManager::applyRelaxedAction(const CoreAction& action, const State& se
 }
 
 
-} } // namespaces
+} // namespaces
 

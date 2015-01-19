@@ -10,7 +10,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 	
 template <typename T>
@@ -117,4 +117,4 @@ std::vector<int> Serializer::deserializeLine(const std::string& line) {
 	return result;
 }
 
-} } // namespaces
+} // namespaces

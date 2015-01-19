@@ -3,7 +3,7 @@
 
 #include <iosfwd>
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <actions.hxx>
 #include <state.hxx>
 #include <problem_info.hxx>
@@ -12,7 +12,7 @@
 #include <simple_action_set_manager.hxx>
 #include <constraints/problem_manager.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 class Problem
 {
@@ -84,5 +84,5 @@ protected:
 	  
 	  
 	  
-} } // namespaces
+} // namespaces
 

@@ -7,7 +7,7 @@
 #include <constraints/problem_constraints.hxx>
 
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * Constraint instantiation routines.
@@ -25,5 +25,5 @@ public:
 };
 
 
-} } // namespaces
+} // namespaces
 

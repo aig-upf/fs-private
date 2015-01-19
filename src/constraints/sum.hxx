@@ -5,7 +5,7 @@
 #include <vector>
 #include <constraints/constraints.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 /**
@@ -25,5 +25,5 @@ public:
 };
 
 
-} } // namespaces
+} // namespaces
 

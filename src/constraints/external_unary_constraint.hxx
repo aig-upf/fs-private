@@ -4,7 +4,7 @@
 #include <constraints/external_constraint.hxx>
 #include <actions.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * A unary, externally-defined constraint.
@@ -22,5 +22,5 @@ public:
 	virtual Constraint::Output filter(const DomainMap& domains);
 };
 
-} } // namespaces
+} // namespaces
 

@@ -4,10 +4,10 @@
 
 #include "generic_state.hxx"
 #include <actions.hxx>
-#include <core_problem.hxx>
+#include <problem.hxx>
 #include <problem_info.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 	
 
 //! Applies the given changeset into the current state.
@@ -33,4 +33,4 @@ std::ostream& GenericState::print(std::ostream& os, const Problem& problem) cons
 	return os;
 }
 
-} } // namespaces
+} // namespaces

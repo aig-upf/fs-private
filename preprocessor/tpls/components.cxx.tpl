@@ -1,16 +1,12 @@
 
 #include "components.hxx"
-
-
-namespace aptk { namespace core { namespace solver {
+#include <utils/loader.hxx>
 
 std::unique_ptr<External> external;
 
 $action_code
 
-void generate(const std::string& data_dir, aptk::core::Problem& problem) {
+void generate(const std::string& data_dir, Problem& problem) {
 	external = std::unique_ptr<External>(new External(data_dir));
-	utils::Loader::loadProblem(data_dir, ComponentFactory::instantiateAction, ComponentFactory::instantiateGoal, problem);
+	Loader::loadProblem(data_dir, ComponentFactory::instantiateAction, ComponentFactory::instantiateGoal, problem);
 }
-
-} } } // namespaces

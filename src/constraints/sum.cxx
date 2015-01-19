@@ -2,7 +2,7 @@
 
 #include <constraints/sum.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 
 SumConstraint::SumConstraint(unsigned arity) 
@@ -67,5 +67,5 @@ Constraint::Output SumConstraint::filter(const DomainVector& domains) {
 	return output;
 }
 
-} } // namespaces
+} // namespaces
 

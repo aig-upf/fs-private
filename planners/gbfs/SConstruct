@@ -37,10 +37,11 @@ else:
 	exe_name = 'solver.bin'
 
 
-include_paths = [env['lapkt'] + '/include',
+include_paths = ['.',
+				 env['fs0'] + '/src',
+				 env['lapkt'] + '/include',
                  env['lapkt'] + '/interfaces/agnostic',
-                 env['fs0'] + '/src',
-                 '.']
+                ]
 
 lib_paths = [env['fs0'] + '/lib']
 

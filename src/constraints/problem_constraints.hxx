@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include <core_types.hxx>
+#include <fs0_types.hxx>
 #include <state.hxx>
 #include <constraints/constraints.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 /**
  * 
@@ -51,5 +51,5 @@ public:
 	virtual void emptyDomains() { current_projection.clear(); }
 };
 
-} } // namespaces
+} // namespaces
 

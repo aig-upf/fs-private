@@ -12,7 +12,7 @@ from compilation.actions import ActionCompiler
 from compilation.exceptions import ParseException
 from compilation.helper import is_external
 from static import StaticProcedure, instantiate_function, instantiate_predicate
-from constraints import Sum, Alldiff
+from constraints import Sum, Alldiff, External
 
 
 class Translator(object):
@@ -37,13 +37,18 @@ class Translator(object):
 
     def process_constraints(self, constraints):
         processed = []
-        allowed = dict(sum=Sum, alldiff=Alldiff)
+        supported = dict(sum=Sum, alldiff=Alldiff)
         for c in constraints:
-            if c.name not in allowed:
-                raise RuntimeError("Unsupported constrain type: '{}'".format(c.name))
-            constraint_class = allowed[c.name]
             variables = [base.Variable(arg[0], arg[1:]) for arg in c.args]
-            processed.append(constraint_class(variables))
+
+            if is_external(c.name):
+                constraint_class = External
+                processed.append(constraint_class(c.name, variables))
+            elif c.name in supported:
+                constraint_class = supported[c.name]
+                processed.append(constraint_class(variables))
+            else:
+                raise RuntimeError("Unsupported constrain type: '{}'".format(c.name))
 
         return processed
 
@@ -99,10 +104,10 @@ class Translator(object):
 
     def init_data_structures(self):
         init, static = {}, {}
-        for f in self.task.functions:
+        for f in (f for f in self.task.functions if not is_external(f.name)):
             var = init if f.name in self.task.fluent_symbols else static
             var[f.name] = instantiate_function(f.name, len(f.arguments))
-        for p in self.task.predicates:
+        for p in (p for p in self.task.predicates if not is_external(p.name)):
             var = init if p.name in self.task.fluent_symbols else static
             var[p.name] = instantiate_predicate(p.name, len(p.arguments))
         return init, static

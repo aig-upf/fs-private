@@ -1,12 +1,12 @@
 
-#include <core_fwd_search_prob.hxx>
+#include <fwd_search_prob.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <utils/projections.hxx>
 #include <action_manager.hxx>
 #include <relaxed_action_set_manager.hxx>
 #include <heuristics/rpg.hxx>
 
-namespace aptk { namespace core {
+namespace fs0 {
 
 template <typename T>
 RelaxedPlanHeuristic<T>::RelaxedPlanHeuristic( const T& problem ) :
@@ -111,5 +111,5 @@ void RelaxedPlanHeuristic<T>::print_changesets(const std::vector<Changeset::ptr>
 // explicit instantiations
 template class RelaxedPlanHeuristic<FwdSearchProblem>;
 
-} } // namespaces
+} // namespaces
 
