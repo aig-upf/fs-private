@@ -54,10 +54,10 @@ class DataElement:
         return self.get_tpl('accessor').format(**self.__dict__)
 
     def get_declaration(self, symbols):
-        return self.get_tpl('declaration').format(**self.__dict__)
+        return self.get_tpl('declaration').format(name=self.name, elems=self.get_elements(symbols))
 
-    def get_initialization(self, symbols):
-        return self.get_tpl('initialization').format(name=self.name, elems=self.get_elements(symbols))
+    # def get_initialization(self, symbols):
+    #     return self.get_tpl('initialization').format(name=self.name, elems=self.get_elements(symbols))
 
 
 class StaticProcedure(object):
@@ -68,9 +68,9 @@ class StaticProcedure(object):
 class Arity0Map(DataElement):
     def get_tpl(self, name):
         return dict(
-            declaration='static const ObjectIdx {name};',
-            accessor='static ObjectIdx {accessor}() {{ return {name}; }}',
-            initialization='const ObjectIdx Ext::{name} = {val};',
+            declaration='const ObjectIdx {name} = {val};',
+            accessor='ObjectIdx {accessor}() {{ return {name}; }}',
+            # initialization='const ObjectIdx Ext::i().{name} = {val};',
         )[name]
 
     def __init__(self, name):
@@ -81,16 +81,19 @@ class Arity0Map(DataElement):
         assert len(elem) == 0
         self.elems[elem] = value
 
-    def get_initialization(self, symbols):
-        return self.get_tpl('initialization').format(name=self.name, val=self.elems[()])
+    def get_declaration(self, symbols):
+        return self.get_tpl('declaration').format(name=self.name, val=self.elems[()])
+
+    # def get_initialization(self, symbols):
+    #     return self.get_tpl('initialization').format(name=self.name, val=self.elems[()])
 
 
 class UnaryMap(DataElement):
     def get_tpl(self, name):
         return dict(
-            declaration='static const std::map<ObjectIdx, ObjectIdx> {name};',
-            accessor='static ObjectIdx {accessor}(ObjectIdx x) {{ return {name}.at(x); }}',
-            initialization='const std::map<ObjectIdx, ObjectIdx> Ext::{name} = {{\n\t{elems}\n}};',
+            declaration='const std::map<ObjectIdx, ObjectIdx> {name} = {{\n\t{elems}\n}};',
+            accessor='ObjectIdx {accessor}(ObjectIdx x) {{ return {name}.at(x); }}',
+            # initialization='const std::map<ObjectIdx, ObjectIdx> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
 
     def __init__(self, name):
@@ -110,18 +113,18 @@ class UnaryMap(DataElement):
 class BinaryMap(UnaryMap):
     def get_tpl(self, name):
         return dict(
-            declaration='static const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
-            accessor='static ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
-            initialization='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> Ext::{name} = {{\n\t{elems}\n}};',
+            declaration='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> {name} = {{\n\t{elems}\n}};',
+            accessor='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
+            # initialization='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
 
 
 class UnarySet(DataElement):
     def get_tpl(self, name):
         return dict(
-            declaration='static const std::set<ObjectIdx> {name};',
-            accessor='static bool {accessor}(ObjectIdx x) {{ return {name}.find(x) != {name}.end(); }}',
-            initialization='const std::set<ObjectIdx> Ext::{name} = {{\n\t{elems}\n}};',
+            declaration='const std::set<ObjectIdx> {name} = {{\n\t{elems}\n}};',
+            accessor='bool {accessor}(ObjectIdx x) {{ return {name}.find(x) != {name}.end(); }}',
+            # initialization='const std::set<ObjectIdx> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
 
     def __init__(self, name):
@@ -141,16 +144,16 @@ class UnarySet(DataElement):
 class BinarySet(UnarySet):
     def get_tpl(self, name):
         return dict(
-            declaration='static const std::set<std::pair<ObjectIdx, ObjectIdx>> {name};',
-            accessor='static bool {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.find({{x,y}}) != {name}.end(); }}',
-            initialization='const std::set<std::pair<ObjectIdx, ObjectIdx>> Ext::{name} = {{\n\t{elems}\n}};',
+            declaration='const std::set<std::pair<ObjectIdx, ObjectIdx>> {name} = {{\n\t{elems}\n}};',
+            accessor='bool {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.find({{x,y}}) != {name}.end(); }}',
+            # initialization='const std::set<std::pair<ObjectIdx, ObjectIdx>> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]
 
 
 class Arity3Set(BinarySet):
     def get_tpl(self, name):
         return dict(
-            declaration='static const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> {name};',
-            accessor='static bool {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.find({{x,y,z}}) != {name}.end(); }}',
-            initialization='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> Ext::{name} = {{\n\t{elems}\n}};',
+            declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> {name} = {{\n\t{elems}\n}};',
+            accessor='bool {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.find({{x,y,z}}) != {name}.end(); }}',
+            # initialization='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> Ext::i().{name} = {{\n\t{elems}\n}};',
         )[name]

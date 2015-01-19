@@ -26,10 +26,11 @@ def parse_arguments():
     parser.add_argument('--set', required=True, help="The name of the benchmark set.")
     parser.add_argument('--instance', required=True, help="The problem instance filename.")
     parser.add_argument('--translator', required=False, help="The directory containing the problem translation code.")
-    parser.add_argument('--base', default="../generated",
-                        help="The base directory where the compiled planner will be left.")
-    parser.add_argument('--out', help="The final directory (without any added subdirectories)"
-                                      " where the compiled planner will be left.")
+    parser.add_argument('--output_base', default="../generated",
+                        help="The base for the output directory where the compiled planner will be left. "
+                             "Additional subdirectories will be created with the name of the domain and the instance")
+    parser.add_argument('--output', help="The final directory (without any added subdirectories)"
+                                         " where the compiled planner will be left.")
     parser.add_argument('--debug', action='store_true', help="Flag to compile in debug mode.")
 
     args = parser.parse_args()
@@ -140,19 +141,18 @@ def extract_names(instance, domain_filename):
 
 def main():
     args = parse_arguments()
-    domain_filename = pddl.pddl_file.extract_domain_name(args.instance)
-    task = parse_pddl_task(domain_filename, args.instance)
+    args.domain_filename = pddl.pddl_file.extract_domain_name(args.instance)
+    task = parse_pddl_task(args.domain_filename, args.instance)
 
     classify_symbols(task)
     task.index = CompilationIndex(task)
 
     translator = import_translator(args, task)
-    instance_name, domain_name = extract_names(args.instance, domain_filename)
+    instance_name, domain_name = extract_names(args.instance, args.domain_filename)
     domain = create_domain(domain_name, translator)
     instance = create_instance(instance_name, translator, domain)
     instance = TaskPreprocessor(instance).do()
     _, trans_dir = translate_pddl(instance, args)
-    move_files_around(args.instance_dir, args.instance, domain_filename, trans_dir)
 
 
 def translate_pddl(instance, args):
@@ -193,6 +193,7 @@ def compile_translation(translation_dir, debug=False, predstate=False):
 def translate_and_compile(instance, translation_dir, args):
     gen = Generator(instance, args, translation_dir)
     translation_dir = gen.translate(args.instance_dir)
+    move_files_around(args.instance_dir, args.instance, args.domain_filename, translation_dir)
     compile_translation(translation_dir, args.debug, gen.task.domain.is_predicative())
     return gen.get_normalized_task_name(), translation_dir
 
@@ -206,6 +207,9 @@ def move_files_around(base_dir, instance, domain, target_dir):
     util.mkdirp(definition_dir)
     shutil.copy(instance, definition_dir)
     shutil.copy(domain, definition_dir)
+
+    # The ad-hoc external definitions file
+    shutil.copy(base_dir + '/external.hxx', target_dir)
 
     # Copy, if they exist, all data files
     origin_data_dir = base_dir + '/data'
@@ -256,15 +260,17 @@ class Generator(object):
             action_definitions=self.get_action_definitions(),
             method_factories=self.get_method_factories(),
             goal_evaluator_definition=self.get_goal_evaluator(),
-            data_declarations=self.process_data_code('get_declaration'),
-            data_accessors=self.process_data_code('get_accessor'),
-            external_methods=self.load_external_methods(dirname)
         ))
 
         # components.cxx:
         self.save_translation('components.cxx', tplManager.get('components.cxx').substitute(
             action_code=self.get_actions_cxx_code(),
-            data_initializations=self.process_data_code('get_initialization')
+        ))
+
+        # external_base.hxx:
+        self.save_translation('external_base.hxx', tplManager.get('external_base.hxx').substitute(
+            data_declarations=self.process_data_code('get_declaration'),
+            data_accessors=self.process_data_code('get_accessor')
         ))
 
     def process_data_code(self, method):
@@ -284,7 +290,7 @@ class Generator(object):
         else:
             dir_end = translation_dir
 
-        o_dir = args.out if args.out is not None else (args.base + '/' + args.set + '/' + dir_end)
+        o_dir = args.output if args.output is not None else (args.output_base + '/' + args.set + '/' + dir_end)
         self.out_dir = os.path.abspath(o_dir)
 
         if not os.path.isdir(self.out_dir):
@@ -473,12 +479,6 @@ class Generator(object):
             # bool variables also need to be treated specially
             value = base.bool_string(value) if isinstance(value, bool) else value
             return self.index.objects[value]
-
-    def load_external_methods(self, dirname):
-        """ Loads externally defined procedures from file ext.hxx """
-        c = util.load_file_safely(dirname + '/ext.hxx')
-        return '' if c is None else c
-
 
 if __name__ == "__main__":
     main()

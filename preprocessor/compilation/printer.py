@@ -45,9 +45,9 @@ class CppPrinter(object):
     def print_code(self, symbol, params, negated=False):
         """ Helper """
         neg = "! " if negated else ""
-        paramstr = ', '.join(params)
+        paramstr = ', '.join(str(p) for p in params)
         if is_external(symbol):
             name = symbol[1:]
         else:
             name = 'get_' + symbol
-        return "{neg}Ext::{name}({params})".format(neg=neg, name=name, params=paramstr)
+        return "{neg}external->{name}({params})".format(neg=neg, name=name, params=paramstr)

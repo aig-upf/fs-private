@@ -14,24 +14,13 @@
 #include <fact.hxx>
 #include <core_problem.hxx>
 #include <utils/loader.hxx>
+#include "external.hxx"
 
 using namespace aptk::core;
 
 namespace aptk { namespace core { namespace solver {
 
-
-/*********************************************/
-/* The static data                           */
-/*********************************************/
-class Ext {
-protected:
-    ${data_declarations}
-
-public:
-    ${data_accessors}
-
-    ${external_methods}
-};
+extern std::unique_ptr<External> external;
 
 /*********************************************/
 /* The actions                               */

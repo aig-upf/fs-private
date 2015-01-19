@@ -4,7 +4,7 @@
 
 namespace aptk { namespace core { namespace solver {
 
-${data_initializations}
+std::unique_ptr<External> external = std::unique_ptr<External>(new External());
 
 $action_code
 
