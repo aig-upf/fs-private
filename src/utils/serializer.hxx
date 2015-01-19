@@ -44,7 +44,6 @@ public:
 	
 protected:
 	static std::vector<int> deserializeLine(const std::string& line);
-	
 };
 
 
