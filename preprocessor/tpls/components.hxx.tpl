@@ -29,6 +29,7 @@ $action_definitions
 /*********************************************/
 $goal_evaluator_definition
 
+${goal_constraints}
 
 /*********************************************/
 /* Method factories                          */

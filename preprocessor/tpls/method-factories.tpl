@@ -18,9 +18,15 @@ public:
         return CoreAction::cptr(aptr);
     }
 
-    static ApplicableEntity::cptr instantiateGoal(const std::vector<VariableIdxVector>& appRelevantVars) {
-        ApplicableEntity* gptr = new GoalEvaluator(appRelevantVars);
-        return ApplicableEntity::cptr(gptr);
+//    static ApplicableEntity::cptr instantiateGoal(const std::vector<VariableIdxVector>& appRelevantVars) {
+//        ApplicableEntity* gptr = new GoalEvaluator(appRelevantVars);
+//        return ApplicableEntity::cptr(gptr);
+//    }
+
+    static ScopedConstraint::vcptr instantiateGoal(const std::vector<VariableIdxVector>& appRelevantVars) {
+		return {
+		    ${goal_constraint_instantiations}
+		};
     }
 
 };

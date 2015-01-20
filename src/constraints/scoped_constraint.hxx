@@ -74,11 +74,11 @@ public:
 	
 	virtual ~UnaryExternalScopedConstraint() {};
 	
-	//! This gets proxied to the vector-less version
-	bool isSatisfied(const ObjectIdxVector& values) const;
+	//! TODO - This should get proxied to the vector-less version
+	bool isSatisfied(const ObjectIdxVector& values) const = 0;
 	
 	//! To be overriden by the concrete constraint class.
-	virtual bool isSatisfied(ObjectIdx value) const = 0;
+// 	virtual bool isSatisfied(ObjectIdx value) const = 0;
 
 	//! Filters from a new set of domains.
 	virtual Constraint::Output filter(const DomainMap& domains) const;

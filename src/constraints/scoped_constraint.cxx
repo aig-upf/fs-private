@@ -14,10 +14,10 @@ ExternalScopedConstraint::ExternalScopedConstraint(const VariableIdxVector& scop
 UnaryExternalScopedConstraint::UnaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
 	ExternalScopedConstraint(scope, parameters) {}
 
-bool UnaryExternalScopedConstraint::isSatisfied(const ObjectIdxVector& values) const {
-	assert(values.size()==1);
-	return this->isSatisfied(values[0]);
-}
+// bool UnaryExternalScopedConstraint::isSatisfied(const ObjectIdxVector& values) const {
+// 	assert(values.size()==1);
+// 	return this->isSatisfied(values[0]);
+// }
 
 //! Filters from a new set of domains.
 Constraint::Output UnaryExternalScopedConstraint::filter(const DomainMap& domains) const {
@@ -30,7 +30,7 @@ Constraint::Output UnaryExternalScopedConstraint::filter(const DomainMap& domain
 	Constraint::Output output = Constraint::Output::Unpruned;
 	
 	for (ObjectIdx value:domain) {
-		if (this->isSatisfied(value)) {
+		if (this->isSatisfied({value})) {
 			new_domain.insert(new_domain.cend(), value); // We will insert on the end of the container, as it is already sorted.
 		} else {
 			output = Constraint::Output::Pruned; // Mark the result as "pruned", but keep iterating to prune more values

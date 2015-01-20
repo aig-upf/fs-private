@@ -259,6 +259,7 @@ class Generator(object):
         self.save_translation('components.hxx', tplManager.get('components.hxx').substitute(
             action_definitions=self.get_action_definitions(),
             method_factories=self.get_method_factories(),
+            goal_constraints=self.get_goal_constraints(),
             goal_evaluator_definition=self.get_goal_evaluator(),
         ))
 
@@ -335,7 +336,8 @@ class Generator(object):
     def get_method_factories(self):
         lines = (self.get_action_factory_line(a) for a in self.task.actions)
         return tplManager.get('method-factories').substitute(
-            lines='\n\t\t'.join(lines)
+            lines='\n\t\t'.join(lines),
+            goal_constraint_instantiations='\n\t\t\t'.join(self.goal_code.constraint_instantiations)
         )
 
     def get_action_factory_line(self, action):
@@ -456,6 +458,9 @@ class Generator(object):
         return tplManager.get('goal').substitute(
             applicability_code_switch=self.goal_code.applicability_code_switch
         )
+
+    def get_goal_constraints(self):
+        return '\n\n'.join(self.goal_code.applicability_constraints)
 
     def _get_all_symbol_declarations(self):
         return '\n\t'.join(self.symbol_decl)

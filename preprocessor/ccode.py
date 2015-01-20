@@ -139,6 +139,7 @@ class ApplicableObject(object):
         # Applicability procedures
         blocks = self.get_procedures_code(self.procedures)
         self.applicability_code_switch = generate_switch_code('procedureIdx', blocks)
+        self.applicability_constraints, self.constraint_instantiations = generate_constraint_code(blocks)
 
 
 class ActionCode(ApplicableObject):
@@ -178,6 +179,21 @@ def generate_switch_code(switchvar, code_blocks, default=''):
         cases=cases,
         default=default
     )
+
+
+def generate_constraint_code(blocks):
+    classes, instantiations = [], []
+    for i, code in enumerate(blocks, 0):
+        classname = 'GoalConstraint{}'.format(i)
+        classes.append(tplManager.get('constraint').substitute(
+            classname=classname,
+            code='\n\t\t'.join(code)
+        ))
+        instantiations.append(tplManager.get('constraint_instantiation').substitute(
+            classname=classname,
+            i=i
+        ))
+    return classes, instantiations
 
 
 def generate_switch_case_code(num, code):

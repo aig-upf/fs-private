@@ -20,7 +20,9 @@ _base = dict(
     satisfaction_check='return point[0] == ${value}; ${comment}',  # So far only arity-one checks
     action_name_init='const std::string $actionName::name_ = "${name}";',
     action_signature_init='const ActionSignature $actionName::signature_ = ${signature};',
-    action_factory_line='else if(classname == "${actionName}")\n\t\t\taptr = new ${actionName}(binding, derived, appRelevantVars, effRelevantVars, effAffectedVars);'
+    action_factory_line='else if(classname == "${actionName}")\n\t\t\taptr = new ${actionName}(binding, derived, appRelevantVars, effRelevantVars, effAffectedVars);',
+
+    constraint_instantiation='new ${classname}(appRelevantVars[${i}], {})'
 )
 
 
