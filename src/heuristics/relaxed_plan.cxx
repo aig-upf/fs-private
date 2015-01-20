@@ -18,7 +18,7 @@ RelaxedPlanHeuristic<T>::RelaxedPlanHeuristic( const T& problem ) :
 template <typename T>
 float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	
-	const ActionList& actions = _problem.getAllActions();
+	const Action::vcptr& actions = _problem.getAllActions();
 	
 	RelaxedState relaxed(seed);
 	RelaxedActionSetManager manager(&seed, _problem.getConstraints());

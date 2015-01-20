@@ -19,7 +19,7 @@ class Loader
 public:
 	
 	//! The type of an action factory
-	typedef std::function<CoreAction::cptr (
+	typedef std::function<Action::cptr (
 			const std::string&,
 			const ObjectIdxVector&,
 			const ObjectIdxVector&,

@@ -10,7 +10,7 @@
 
 namespace fs0 {
 
-class ApplicableEntity;
+class Action;
 
 class Projections {
 public:
@@ -18,7 +18,7 @@ public:
 	static ObjectIdxVector project(const State& s, const VariableIdxVector& scope);
 
 	//! Helper function to project a relaxed state to all of the variables relevant to a given applicable entity.
-	static DomainMap projectToActionVariables(RelaxedState& state, const ApplicableEntity& action);
+	static DomainMap projectToActionVariables(RelaxedState& state, const Action& action);
 	
 	/**
 	 * Returns the projection of the domains of a relaxed state into a subset of variables.

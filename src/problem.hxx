@@ -12,6 +12,7 @@
 #include <simple_action_set_manager.hxx>
 #include <constraints/problem_manager.hxx>
 #include "constraints/scoped_constraint.hxx"
+#include "app_entity.hxx"
 
 namespace fs0 {
 
@@ -29,10 +30,10 @@ public:
 	const State::cptr getInitialState() const { return _initialState; }
 	
 	//! Modify the problem (grounded) actions
-	void addAction(const CoreAction::cptr& action) { _actions.push_back(action); }
-	const CoreAction::cptr& getAction(ActionIdx idx) const { return _actions.at(idx); }
+	void addAction(const Action::cptr& action) { _actions.push_back(action); }
+	const Action::cptr& getAction(ActionIdx idx) const { return _actions.at(idx); }
 	unsigned getNumActions() const { return _actions.size(); }
-	const ActionList& getAllActions() const { return _actions; }
+	const Action::vcptr& getAllActions() const { return _actions; }
 
 	SimpleApplicableActionSet getApplicableActions(const State& s) const {
 		return SimpleApplicableActionSet(SimpleActionSetManager(s, getConstraints()), _actions);
@@ -71,7 +72,7 @@ protected:
 	
 	PlanningConstraintManager::cptr ctrManager;
 	
-	ActionList _actions;
+	Action::vcptr _actions;
 	
 	ProblemInfo::cptr _problemInfo;
 	

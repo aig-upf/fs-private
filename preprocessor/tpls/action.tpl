@@ -8,8 +8,8 @@ protected:
 public:
     $constructor
 
-    virtual const std::string& getName() const { return name_; }
-    virtual const ActionSignature& getSignature() const { return signature_; }
+    const std::string& getName() const { return name_; }
+    const ActionSignature& getSignature() const { return signature_; }
 
     virtual bool isApplicable(unsigned procedureIdx, const ProcedurePoint& relevant) const {
 		$applicability_code_switch

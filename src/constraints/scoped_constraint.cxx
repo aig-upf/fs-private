@@ -8,7 +8,7 @@ ScopedConstraint::ScopedConstraint(const VariableIdxVector& scope) :
 	_scope(scope), projection() {}
 	
 ExternalScopedConstraint::ExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	ScopedConstraint(scope), _parameters(parameters) {}
+	ScopedConstraint(scope), _binding(parameters) {}
 		
 		
 UnaryExternalScopedConstraint::UnaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :

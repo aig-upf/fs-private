@@ -1,7 +1,7 @@
 
 #include <cassert>
 #include <utils/projections.hxx>
-#include <actions.hxx>
+#include <app_entity.hxx>
 #include <problem.hxx>
 
 namespace fs0 {
@@ -15,7 +15,7 @@ ObjectIdxVector Projections::project(const State& s, const VariableIdxVector& sc
 	return values;
 }
 
-DomainMap Projections::projectToActionVariables(RelaxedState& state, const ApplicableEntity& action) {
+DomainMap Projections::projectToActionVariables(RelaxedState& state, const Action& action) {
 	return projectCopy(state, action.getAllRelevantVariables());
 }
 

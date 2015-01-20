@@ -4,7 +4,7 @@
 
 namespace fs0 {
 	
-const Changeset::FactData Changeset::INVALID_ACHIEVER = std::pair<ActionIdx, Fact::vctrp>(CoreAction::INVALID_ACTION, std::make_shared<Fact::vctr>());
+const Changeset::FactData Changeset::INVALID_ACHIEVER = std::pair<ActionIdx, Fact::vctrp>(Action::INVALID, std::make_shared<Fact::vctr>());
 
 void Changeset::add(const Fact& fact, const FactSetPtr extraCauses) {
 	if (_referenceState.contains(fact)) { // We want to ensure that the fact is novel.

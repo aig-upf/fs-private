@@ -118,7 +118,7 @@ protected:
 			const auto achieverAndCauses = changeset->getAchieverAndCauses(fact);
 			ActionIdx achiever = std::get<0>(achieverAndCauses);
 			
-			if (achiever != CoreAction::INVALID_ACTION) { 
+			if (achiever != Action::INVALID) { 
 				perLayerSupporters[i].insert(achiever);
 				pending.push(changeset->getCauses(achiever)); // push the action causes themselves
  				pending.push(std::get<1>(achieverAndCauses)); // and push the specific extra causes that were relevant to turn the fact true.

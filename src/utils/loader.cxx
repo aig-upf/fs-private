@@ -82,8 +82,7 @@ void Loader::loadGroundedActions(const std::string& filename, ActionFactoryType 
 		std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(strs[5]);
 		std::vector<VariableIdxVector> effAffectedVars = parseDoubleNumberList<unsigned>(strs[6]);
 
-		auto aptr = actionFactory(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars);
-		problem.addAction(aptr);
+		problem.addAction(actionFactory(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars));
 	}
 }
 

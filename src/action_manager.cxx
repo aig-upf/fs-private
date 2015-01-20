@@ -25,7 +25,7 @@ State::ptr ActionManager::applyPlan(const Problem& problem, const ActionPlan& pl
 	return s;
 }	
 
-State::ptr ActionManager::applyAction(const CoreAction::cptr& action, const State::ptr& s0) {
+State::ptr ActionManager::applyAction(const Action::cptr& action, const State::ptr& s0) {
 	SimpleActionSetManager manager(*s0, Problem::getCurrentProblem()->getConstraints());
 	
 	if (!manager.isApplicable(*action)) {
@@ -53,7 +53,7 @@ bool ActionManager::applyRelaxedPlan(const Problem& problem, const ActionPlan& p
 	return true;
 }
 
-bool ActionManager::applyRelaxedAction(const CoreAction& action, const State& seed, RelaxedState& s) {
+bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, RelaxedState& s) {
 	RelaxedActionSetManager manager(Problem::getCurrentProblem()->getConstraints());
 	DomainMap projection = Projections::projectToActionVariables(s, action);
 	auto res = manager.isApplicable(action, projection);

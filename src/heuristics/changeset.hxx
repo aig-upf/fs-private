@@ -5,7 +5,6 @@
 #include <map>
 #include <cassert>
 #include <fs0_types.hxx>
-#include <actions.hxx>
 #include <fact.hxx>
 #include <state.hxx>
 
@@ -71,7 +70,7 @@ public:
 	
 	/**
 	 * Returns the achiever action of the given effect, if it is on the changeset,
-	 * or CoreAction::INVALID_ACTION otherwise.
+	 * or INVALID_ACHIEVER otherwise.
 	 * Returns also any extra causes for the fact.
 	 */
 	const FactData& getAchieverAndCauses(const Fact& fact) {
@@ -79,7 +78,7 @@ public:
 		return (it == _effects.end()) ? INVALID_ACHIEVER : it->second;
 	}
 	
-	Fact::vctrp getCauses(const ActionIdx& actionIdx) const { return _causes.at(actionIdx); }
+	Fact::vctrp getCauses(ActionIdx actionIdx) const { return _causes.at(actionIdx); }
 	
 	unsigned size() const { return _effects.size(); }
 	

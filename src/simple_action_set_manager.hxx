@@ -3,11 +3,11 @@
 
 #include <cassert>
 #include <iosfwd>
-#include <actions.hxx>
 #include <fs0_types.hxx>
 #include <fact.hxx>
 #include <constraints/scoped_constraint.hxx>
 #include <utils/projections.hxx>
+#include <app_entity.hxx>
 
 
 namespace fs0 {
@@ -27,15 +27,16 @@ public:
 		: _state(other._state), _constraints(other._constraints) {}
 	
 	//! Return true iff the preconditions of the applicable entity hold.
-	bool checkPreconditionsHold(const ApplicableEntity& entity) const {
-		for (unsigned idx = 0; idx < entity.getNumApplicabilityProcedures(); ++idx) {
-			if (!isProcedureApplicable(entity, idx)) return false;
+	bool checkPreconditionsHold(const Action& action) const {
+		for (const ScopedConstraint::cptr constraint:action.getConstraints()) {
+			if (!constraint->isSatisfied(_state))
+				return false;
 		}
 		return true;
 	}
 	
 	//! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
-	bool isApplicable(const CoreAction& action) const {
+	bool isApplicable(const Action& action) const {
 		if (!checkPreconditionsHold(action)) return false;
 		
 		if (_constraints.size() != 0) { // If we have no constraints, we can spare the cost of creating the new state.
@@ -54,25 +55,9 @@ public:
 		return true;
 	}
 	
-	void computeChangeset(const CoreAction& action, FactSet& atoms) const {
-		for (unsigned idx = 0; idx < action.getNumEffectProcedures(); ++idx) {
-			computeProcedureChangeset(idx, action, atoms);
-		}
-	}
-	
-	//!
-	static void computeProcedurePointChangeset(unsigned procedureIdx, const CoreAction& action, const ProcedurePoint& point, FactSet& atoms) {
-		const VariableIdxVector& affectedVars = action.getEffectAffectedVars(procedureIdx);
-		ProcedurePoint affectedValues(affectedVars.size());
-		// TODO - WHAT HAPPENS IF THE POINT WAS ACTUALLY NOT AFFECTED BY THE PROCEDURE??
-		// TODO - WE'LL BE UNDERSTANDING THAT THE VALUE BECAME 0, WHILE ACTUALLY NOONE TOUCHED IT.
-		// TODO - SOMETHING LIKE A MAP MIGHT HELP SOLVING IT, BUT IT'LL BE MORE EXPENSIVE.
-		// TODO - OR A VECTOR OF PAIRS <AFFECTED_IDX, NEW_VALUE>
-		action.applyEffectProcedure(procedureIdx, point, affectedValues);
-		
-		// Zip the new values for the affected variables into new facts and add them into the list of atoms.
-		for (unsigned i = 0; i < affectedVars.size(); ++i) {
-			atoms.insert(Fact(affectedVars[i], affectedValues[i]));
+	void computeChangeset(const Action& action, FactSet& atoms) const {
+		for (const ScopedEffect::cptr effect:action.getEffects()) {
+			atoms.insert(effect->apply(_state)); // TODO - Note that this won't work for conditional effects where an action might have no effect at all
 		}
 	}
 	
@@ -80,22 +65,8 @@ protected:
 	//! The state
 	const State& _state;
 	
+	//! The state constraints
 	const ScopedConstraint::vcptr& _constraints;
-
-	//!
-	bool isProcedureApplicable(const ApplicableEntity& entity, unsigned procedureIdx) const {
-		const VariableIdxVector& relevant = entity.getApplicabilityRelevantVars(procedureIdx);
-		assert(relevant.size() != 0); // Static applicability procedure that should have been detected in compilation time
-		ObjectIdxVector point = Projections::project(_state, relevant);
-		return entity.isApplicable(procedureIdx, point);
-	}
-	
-	//!
-	void computeProcedureChangeset(unsigned procedureIdx, const CoreAction& action, FactSet& atoms) const {
-		const VariableIdxVector& relevant = action.getEffectRelevantVars(procedureIdx);
-		ObjectIdxVector point = Projections::project(_state, relevant);
-		computeProcedurePointChangeset(procedureIdx, action, point, atoms);
-	}
 };
 
 } // namespaces

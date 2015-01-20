@@ -50,14 +50,14 @@ public:
 	}
 	
 	//! Empties the domain cache
-	void emptyDomains() { projection.clear(); }	
+	void emptyDomains() { projection.clear(); }
 };
 
 class ExternalScopedConstraint : public ScopedConstraint
 {
 protected:
-	//! The state variables that make up the scope of the constraint.
-	const std::vector<int> _parameters;
+	//! A vector of arbitrary parameters
+	const std::vector<int> _binding;
 	
 public:
 	ExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);

@@ -3,7 +3,6 @@
 
 #include <iosfwd>
 #include <fs0_types.hxx>
-#include <actions.hxx>
 #include <state.hxx>
 #include <simple_action_set_manager.hxx>
 
@@ -17,10 +16,10 @@ class SimpleApplicableActionSet {
 protected:
 	const SimpleActionSetManager _actionManager;
 	
-	const ActionList& _actions;
+	const Action::vcptr& _actions;
 	
 public:
-	SimpleApplicableActionSet(const SimpleActionSetManager& actionManager, const ActionList& actions) :
+	SimpleApplicableActionSet(const SimpleActionSetManager& actionManager, const Action::vcptr& actions) :
 		_actionManager(actionManager), _actions(actions)
 	{}
 	
@@ -28,7 +27,7 @@ public:
 		friend class SimpleApplicableActionSet;
 		
 	protected:
-		Iterator(const ActionList& actions, const SimpleActionSetManager& actionManager, unsigned currentIdx) :
+		Iterator(const Action::vcptr& actions, const SimpleActionSetManager& actionManager, unsigned currentIdx) :
 			_actions(actions),
 			_actionManager(actionManager),
 			_currentIdx(currentIdx)
@@ -36,7 +35,7 @@ public:
 			advance();
 		}
 
-		const ActionList& _actions;
+		const Action::vcptr& _actions;
 		
 		const SimpleActionSetManager _actionManager;
 		

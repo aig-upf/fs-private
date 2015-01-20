@@ -2,12 +2,11 @@
 #pragma once
 
 #include <iosfwd>
-#include <actions.hxx>
+#include <app_entity.hxx>
 #include <heuristics/changeset.hxx>
 #include <fs0_types.hxx>
 #include <fact.hxx>
-#include "constraints/scoped_constraint.hxx"
-#include <utils/utils.hxx>
+#include <constraints/scoped_constraint.hxx>
 
 namespace fs0 {
 
@@ -34,17 +33,15 @@ public:
 		: seed(other.seed), _constraints(other._constraints)  {}
 	
 	//!
-	std::pair<bool, FactSetPtr> isApplicable(const ApplicableEntity& entity, const DomainMap& domains) const;
+	std::pair<bool, FactSetPtr> isApplicable(const Action& action, const DomainMap& domains) const;
 	
 	//!
-	void computeChangeset(const CoreAction& action, const DomainMap& domains, Changeset& changeset) const;
+	void computeChangeset(const Action& action, const DomainMap& domains, Changeset& changeset) const;
 	
 protected:
-	bool isProcedureApplicable(const ApplicableEntity& entity, const DomainMap& domains, unsigned procedureIdx, FactSetPtr causes) const;
+	bool isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, FactSetPtr causes) const;
 	
-	void computeProcedureChangeset(unsigned procedureIdx, const CoreAction& action, const DomainMap& domains, Changeset& changeset) const;
-	void computeProcedurePointChangeset(unsigned procedureIdx, const CoreAction& action,
-										const VariableIdxVector& relevant, const ProcedurePoint& point, Changeset& changeset) const;
+	void computeProcedurePointChangeset(const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const;
 };
 
 } // namespaces
