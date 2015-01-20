@@ -6,7 +6,7 @@
 namespace fs0 {
 
 //! Note that we use both types of constraints as goal constraints
-ConstraintManager::ConstraintManager(const ProblemConstraint::vctr& goalConstraints, const ProblemConstraint::vctr& stateConstraints)
+ConstraintManager::ConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints)
 	: sconstraints(stateConstraints), gconstraints(Utils::merge(goalConstraints, stateConstraints))
 {
 	initialize();
@@ -30,12 +30,12 @@ const VariableIdxVector& ConstraintManager::getStateConstraintRelevantVariables(
 const VariableIdxVector& ConstraintManager::getGoalConstraintRelevantVariables() const { return g_relevant; }
 
 //! Indexes pointers to the constraints in three different vectors: unary, binary and n-ary constraints.
-void ConstraintManager::indexConstraintsByArity(const ProblemConstraint::vctr& constraints,
+void ConstraintManager::indexConstraintsByArity(const ScopedConstraint::vcptr& constraints,
 								PConstraintPtrVct& unary,
 								PConstraintPtrVct& binary,
 								PConstraintPtrVct& n_ary
 							) {
-	for (const ProblemConstraint::cptr ctr:constraints) {
+	for (const ScopedConstraint::cptr ctr:constraints) {
 		unsigned arity = ctr->getArity();
 		if (arity == 1) {
 			unary.push_back(ctr);
@@ -49,7 +49,7 @@ void ConstraintManager::indexConstraintsByArity(const ProblemConstraint::vctr& c
 
 //! Initializes a worklist. `constraints` is expected to have only binary constraints.
 void ConstraintManager::initializeAC3Worklist(const PConstraintPtrVct& constraints, ArcSet& worklist) {
-	for (ProblemConstraint::cptr ctr:constraints) {
+	for (ScopedConstraint::cptr ctr:constraints) {
 		assert(ctr->getArity() == 2);
 		worklist.insert(std::make_pair(ctr, 0));
 		worklist.insert(std::make_pair(ctr, 1));
@@ -59,7 +59,7 @@ void ConstraintManager::initializeAC3Worklist(const PConstraintPtrVct& constrain
 Constraint::Output ConstraintManager::unaryFiltering(const DomainMap& domains, const PConstraintPtrVct& constraints) const {
 	Constraint::Output output = Constraint::Output::Unpruned;
 	
-	for (ProblemConstraint::cptr ctr:constraints) {
+	for (ScopedConstraint::cptr ctr:constraints) {
 		assert(ctr->getArity() == 1);
 		Constraint::Output o = ctr->filter(domains);
 		if (o == Constraint::Output::Pruned) {
@@ -138,20 +138,20 @@ Constraint::Output ConstraintManager::filterWithGoalConstraints(const DomainMap&
 }
 
 void ConstraintManager::emptyConstraintDomains(const PConstraintPtrVct& constraints) const {
-	for (ProblemConstraint::cptr constraint:constraints) {
+	for (ScopedConstraint::cptr constraint:constraints) {
 		constraint->emptyDomains();
 	}
 }
 
 void ConstraintManager::loadConstraintDomains(const DomainMap& domains, const PConstraintPtrVct& constraints) const {
-	for (ProblemConstraint::cptr constraint:constraints) {
+	for (ScopedConstraint::cptr constraint:constraints) {
 		constraint->loadDomains(domains);
 	}
 }
 
 Constraint::Output ConstraintManager::filter_global_constraints(const PConstraintPtrVct& constraints) const {
 	Constraint::Output output = Constraint::Output::Unpruned;
-	for (ProblemConstraint::cptr constraint:constraints) {
+	for (ScopedConstraint::cptr constraint:constraints) {
 		Constraint::Output o = constraint->filter();
 		if (o == Constraint::Output::Failure) return o;
 		else if (o == Constraint::Output::Pruned) output = o;
@@ -168,7 +168,7 @@ Constraint::Output ConstraintManager::filter_binary_constraints(const PConstrain
 	// 1. Analyse pending arcs until the worklist is empty
 	while (!worklist.empty()) {
 		Arc a = select(worklist);
-		ProblemConstraint::cptr constraint = a.first;
+		ScopedConstraint::cptr constraint = a.first;
 		unsigned variable = a.second;  // The index 0 or 1 of the relevant variable.
 		assert(variable == 0 || variable == 1);
 
@@ -181,7 +181,7 @@ Constraint::Output ConstraintManager::filter_binary_constraints(const PConstrain
 		if (o == Constraint::Output::Pruned) {
 			result = Constraint::Output::Pruned;
 			VariableIdx pruned = constraint->getScope()[variable];  // This is the index of the state variable whose domain we have pruned
-			for (ProblemConstraint::cptr ctr:constraints) {
+			for (ScopedConstraint::cptr ctr:constraints) {
 				if (ctr == constraint) continue;  // No need to reinsert the same constraint we just used.
 				
 				// Only if the constraint has overlapping scope, we insert in the worklist the constraint paired with _the other_ variable, to be analysed later.
@@ -199,7 +199,7 @@ Constraint::Output ConstraintManager::filter_binary_constraints(const PConstrain
 }
 
 bool ConstraintManager::checkGoalConstraintsSatisfied(const State& s) const {
-	for (ProblemConstraint::cptr constraint:gconstraints) {
+	for (ScopedConstraint::cptr constraint:gconstraints) {
 		if (!constraint->isSatisfied(s)) return false;
 	}
 	return true;
@@ -223,9 +223,9 @@ ConstraintManager::Arc ConstraintManager::select(ArcSet& worklist) const {
 	worklist.erase(it);
 	return elem;
 }
-VariableIdxVector ConstraintManager::indexRelevantVariables(ProblemConstraint::vctr constraints) {
+VariableIdxVector ConstraintManager::indexRelevantVariables(PConstraintPtrVct& constraints) {
 	boost::container::flat_set<VariableIdx> relevant;
-	for (const ProblemConstraint::cptr constraint:constraints) {
+	for (const ScopedConstraint::cptr constraint:constraints) {
 		for (VariableIdx variable:constraint->getScope()) {
 			relevant.insert(variable);
 		}

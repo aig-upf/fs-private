@@ -5,6 +5,7 @@
 #include <iosfwd>
 #include <fs0_types.hxx>
 #include <constraints/problem_constraints.hxx>
+#include "scoped_constraint.hxx"
 
 namespace fs0 {
 
@@ -16,17 +17,17 @@ class ConstraintManager
 {
 protected:
 	//! An arc is a pair with a procedure and the index of the relevant variable (either 0 or 1)
-	typedef std::pair<ProblemConstraint::cptr, unsigned> Arc;
+	typedef std::pair<ScopedConstraint::cptr, unsigned> Arc;
  	// typedef boost::container::flat_set<Arc> ArcSet;
 	typedef std::set<Arc> ArcSet;
 	
-	typedef std::vector<ProblemConstraint::cptr> PConstraintPtrVct;
+	typedef ScopedConstraint::vcptr PConstraintPtrVct;
 	
 	//! State constraints
-	ProblemConstraint::vctr sconstraints;
+	ScopedConstraint::vcptr sconstraints;
 	
 	//! Goal constraints
-	ProblemConstraint::vctr gconstraints;
+	ScopedConstraint::vcptr gconstraints;
 	
 	//! The worklists necessary for the AC3 algorithm: State constraints and goal constraints
 	ArcSet SCWorklist;
@@ -46,7 +47,7 @@ protected:
 
 public:
 	
-	ConstraintManager(const ProblemConstraint::vctr& goalConstraints, const ProblemConstraint::vctr& stateConstraints);
+	ConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
 	
 	//! Precompute some of the structures that we'll need later on.
 	void initialize();
@@ -55,7 +56,7 @@ public:
 	const VariableIdxVector& getGoalConstraintRelevantVariables() const;
 	
 	//! Indexes pointers to the constraints in three different vectors: unary, binary and n-ary constraints.
-	void indexConstraintsByArity(const ProblemConstraint::vctr& constraints,
+	void indexConstraintsByArity(const ScopedConstraint::vcptr& constraints,
 								 PConstraintPtrVct& unary,
 							     PConstraintPtrVct& binary,
 								 PConstraintPtrVct& n_ary
@@ -108,7 +109,7 @@ protected:
 	Arc select(ArcSet& worklist) const;
 
 	//
-	VariableIdxVector indexRelevantVariables(ProblemConstraint::vctr constraints);
+	VariableIdxVector indexRelevantVariables(PConstraintPtrVct& constraints);
 };
 
 

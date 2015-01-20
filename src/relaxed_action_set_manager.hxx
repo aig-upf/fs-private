@@ -6,7 +6,7 @@
 #include <heuristics/changeset.hxx>
 #include <fs0_types.hxx>
 #include <fact.hxx>
-#include <constraints/constraints.hxx>
+#include "constraints/scoped_constraint.hxx"
 #include <utils/utils.hxx>
 
 namespace fs0 {
@@ -21,13 +21,13 @@ protected:
 	const State* seed;
 
 	//! The state constraints
-	const ProblemConstraint::vctr& _constraints;
+	const ScopedConstraint::vcptr& _constraints;
 
 public:
-	RelaxedActionSetManager(const ProblemConstraint::vctr& constraints)
+	RelaxedActionSetManager(const ScopedConstraint::vcptr& constraints)
 		: RelaxedActionSetManager(NULL, constraints) {}
 	
-	RelaxedActionSetManager(const State* originalState, const ProblemConstraint::vctr& constraints)
+	RelaxedActionSetManager(const State* originalState, const ScopedConstraint::vcptr& constraints)
 		: seed(originalState), _constraints(constraints) {}
 
 	RelaxedActionSetManager(const RelaxedActionSetManager& other)

@@ -6,7 +6,7 @@
 
 namespace fs0 {
 
-PlanningConstraintManager::PlanningConstraintManager(const ProblemConstraint::vctr& goalConstraints, const ProblemConstraint::vctr& stateConstraints)
+PlanningConstraintManager::PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints)
 	: manager(goalConstraints, stateConstraints)
 {}
 

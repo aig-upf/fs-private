@@ -8,6 +8,7 @@
 #include <problem.hxx>
 #include <utils/loader.hxx>
 #include <constraints/factory.hxx>
+#include <app_entity.hxx>
 
 namespace fs0 {
 
@@ -94,11 +95,10 @@ void Loader::generateGoalConstraints(const std::string& filename, GoalFactoryTyp
 	std::getline(in, line);
 	
 	std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(line);
-	ApplicableEntity::cptr goal_evaluator = goalFactory(appRelevantVars);
+	ScopedConstraint::vcptr goal_constraints = goalFactory(appRelevantVars);
 	
-	// For the moment being, we transform the procedures into equivalent external constraint representations.
-	for (unsigned proc = 0; proc < goal_evaluator->getNumApplicabilityProcedures(); ++proc) {
-		problem.registerGoalConstraint(ConstraintFactory::createExternalConstraint(goal_evaluator, proc));
+	for (const auto& ctr:goal_constraints) {
+		problem.registerGoalConstraint(ctr);
 	}
 }
 
@@ -122,11 +122,13 @@ void Loader::loadConstraints(const std::string& filename, Problem& problem, bool
 		VariableIdxVector variables = parseNumberList<unsigned>(strs[2]);
 		
 		ProblemConstraint::cptr constraint = ConstraintFactory::create(name, variables);
-		if (goal) {
-			problem.registerGoalConstraint(constraint);
-		} else {
-			problem.registerConstraint(constraint);
-		}
+		throw std::runtime_error("UNFINISHED");
+		// TODO - REACTIVATE WITH THE NEW SCOPED CONSTRAINT LOGIC
+// 		if (goal) {
+// 			problem.registerGoalConstraint(constraint);
+// 		} else {
+// 			problem.registerConstraint(constraint);
+// 		}
 	}
 }
 

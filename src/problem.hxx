@@ -11,6 +11,7 @@
 #include <simple_applicable_action_set.hxx>
 #include <simple_action_set_manager.hxx>
 #include <constraints/problem_manager.hxx>
+#include "constraints/scoped_constraint.hxx"
 
 namespace fs0 {
 
@@ -19,8 +20,8 @@ class Problem
 public:
 	Problem() {}
 	~Problem() {
-		for (ProblemConstraint::cptr ctr:_constraints) delete ctr;
-		for (ProblemConstraint::cptr ctr:_gconstraints) delete ctr;
+		for (const auto& ctr:_constraints) delete ctr;
+		for (const auto& ctr:_gconstraints) delete ctr;
 	} 
 
 	//! Modify the problem initial state
@@ -40,10 +41,10 @@ public:
 	bool isGoal(const State& s) const { return ctrManager->isGoal(s); }
 
 	
-	void registerConstraint(const ProblemConstraint::cptr constraint) { _constraints.push_back(constraint);}
-	const ProblemConstraint::vctr& getConstraints() const { return _constraints; }
-	void registerGoalConstraint(const ProblemConstraint::cptr constraint) { _gconstraints.push_back(constraint);}
-	const ProblemConstraint::vctr& getGoalConstraints() const { return _gconstraints; }
+	void registerConstraint(const ScopedConstraint::cptr constraint) { _constraints.push_back(constraint);}
+	const ScopedConstraint::vcptr& getConstraints() const { return _constraints; }
+	void registerGoalConstraint(ScopedConstraint::cptr constraint) { _gconstraints.push_back(constraint);}
+	const ScopedConstraint::vcptr& getGoalConstraints() const { return _gconstraints; }
 
 	
 	//! Getter/setter for the associated ProblemInfo object.
@@ -75,8 +76,8 @@ protected:
 	ProblemInfo::cptr _problemInfo;
 	
 	//! Vectors of pointers to the different problem constraints. This class owns the pointers.
-	ProblemConstraint::vctr _constraints;
-	ProblemConstraint::vctr _gconstraints;
+	ScopedConstraint::vcptr _constraints;
+	ScopedConstraint::vcptr _gconstraints;
 	
 	static const Problem* _instance;
 };

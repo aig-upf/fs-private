@@ -28,7 +28,7 @@ public:
 			const std::vector<VariableIdxVector>&
 			)> ActionFactoryType;
 	
-	typedef std::function<ApplicableEntity::cptr (const std::vector<VariableIdxVector>&)> GoalFactoryType;
+	typedef std::function<ScopedConstraint::vcptr (const std::vector<VariableIdxVector>&)> GoalFactoryType;
 	
 	
 	/**

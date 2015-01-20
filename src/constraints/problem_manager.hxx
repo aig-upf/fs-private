@@ -7,6 +7,7 @@
 #include <fact.hxx>
 #include <constraints/constraints.hxx>
 #include <constraints/manager.hxx>
+#include "scoped_constraint.hxx"
 
 namespace fs0 {
 
@@ -20,7 +21,7 @@ public:
 	
 	const ConstraintManager manager;
 	
-	PlanningConstraintManager(const ProblemConstraint::vctr& goalConstraints, const ProblemConstraint::vctr& stateConstraints);
+	PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
 	Constraint::Output pruneUsingStateConstraints(RelaxedState& state) const;

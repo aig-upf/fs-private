@@ -6,7 +6,7 @@
 #include <actions.hxx>
 #include <fs0_types.hxx>
 #include <fact.hxx>
-#include <constraints/problem_constraints.hxx>
+#include <constraints/scoped_constraint.hxx>
 #include <utils/projections.hxx>
 
 
@@ -20,7 +20,7 @@ namespace fs0 {
 class SimpleActionSetManager
 {
 public:
-	SimpleActionSetManager(const State& state, const ProblemConstraint::vctr& constraints)
+	SimpleActionSetManager(const State& state, const ScopedConstraint::vcptr& constraints)
 		: _state(state), _constraints(constraints) {}
 		
 	SimpleActionSetManager(const SimpleActionSetManager& other)
@@ -48,7 +48,7 @@ public:
 	}
 	
 	bool checkStateConstraintsHold(const State& s) const {
-		for (ProblemConstraint::cptr ctr:_constraints) {
+		for (ScopedConstraint::cptr ctr:_constraints) {
 			if (!ctr->isSatisfied(s)) return false;
 		}
 		return true;
@@ -80,7 +80,7 @@ protected:
 	//! The state
 	const State& _state;
 	
-	const ProblemConstraint::vctr& _constraints;
+	const ScopedConstraint::vcptr& _constraints;
 
 	//!
 	bool isProcedureApplicable(const ApplicableEntity& entity, unsigned procedureIdx) const {
