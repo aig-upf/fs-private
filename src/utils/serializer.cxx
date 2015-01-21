@@ -49,7 +49,14 @@ void Serializer::deserialize(const std::string& filename, DataInserter& inserter
 		inserter(deserializeLine(line));
 	}
 }
-	
+
+int Serializer::deserialize0AryElement(const std::string& filename) {
+	int data;
+	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 1); data = elems[0]; };
+	deserialize(filename, inserter);
+	return data;
+}
+
 std::ostream& Serializer::serialize(std::ostream& os, const Serializer::UnaryMap& map) {
 	for (const auto& it:map) {
 		os << it.first << "," << it.second << std::endl;

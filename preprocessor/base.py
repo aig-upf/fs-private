@@ -101,8 +101,11 @@ class AppProcedure(object):
         self.code = code
 
     def get_annotated_code(self, symbol_map):
-        comment = '// '
-        return [comment + self.name, comment + self.comment, self.templatize_code(symbol_map)]
+        res = ['// ' + self.name]
+        if self.comment:
+            res.append('// ' + self.comment)
+        res.append(self.templatize_code(symbol_map))
+        return res
 
     def templatize_code(self, symbol_map):
         return self.code.tpl(symbol_map) if isinstance(self.code, Code) else self.code

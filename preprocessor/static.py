@@ -5,7 +5,7 @@
 
 
 def instantiate_function(name, arity):
-    classes = {0: Arity0Map, 1: UnaryMap, 2: BinaryMap}
+    classes = {0: Arity0Element, 1: UnaryMap, 2: BinaryMap}
     if arity not in classes:
         raise RuntimeError("Currently only up to arity-2 functions are supported")
     return (classes[arity])(name)
@@ -33,6 +33,8 @@ def serialize_tuple(t, symbols):
 
 
 class DataElement:
+    DESERIALIZER = None
+
     def __init__(self, name):
         self.name = name
         self.accessor = 'get_' + name
@@ -49,12 +51,10 @@ class DataElement:
     def serialize_data(self, symbols):
         raise RuntimeError("Method must be subclassed")
 
-    def deserializer(self):
-        raise RuntimeError("needs to be subclassed")
-
     def initializer_list(self):
-        return '{name}(Serializer::{deserializer}(data_dir + "/{name}.data"))'.format(name=self.name,
-                                                                                      deserializer=self.deserializer())
+        assert self.DESERIALIZER is not None
+        tpl = '{name}(Serializer::{deserializer}(data_dir + "/{name}.data"))'
+        return tpl.format(name=self.name, deserializer=self.DESERIALIZER)
 
 
 class StaticProcedure(object):
@@ -62,7 +62,9 @@ class StaticProcedure(object):
         self.name = name
 
 
-class Arity0Map(DataElement):
+class Arity0Element(DataElement):
+    DESERIALIZER = 'deserialize0AryElement'
+
     def get_tpl(self, name):
         return dict(
             declaration='const ObjectIdx {name};',
@@ -85,6 +87,8 @@ class Arity0Map(DataElement):
 
 
 class UnaryMap(DataElement):
+    DESERIALIZER = 'deserializeUnaryMap'
+
     def get_tpl(self, name):
         return dict(
             declaration='const std::map<ObjectIdx, ObjectIdx> {name};',
@@ -101,22 +105,20 @@ class UnaryMap(DataElement):
     def serialize_data(self, symbols):
         return [serialize_tuple(k + (v,), symbols) for k, v in self.elems.items()]
 
-    def deserializer(self):
-            return 'deserializeUnaryMap'
-
 
 class BinaryMap(UnaryMap):
+    DESERIALIZER = 'deserializeBinaryMap'
+
     def get_tpl(self, name):
         return dict(
             declaration='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
             accessor='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
         )[name]
 
-    def deserializer(self):
-            return 'deserializeBinaryMap'
-
 
 class UnarySet(DataElement):
+    DESERIALIZER = 'deserializeUnarySet'
+
     def get_tpl(self, name):
         return dict(
             declaration='const std::set<ObjectIdx> {name};',
@@ -133,28 +135,23 @@ class UnarySet(DataElement):
     def serialize_data(self, symbols):
         return [serialize_tuple(elem, symbols) for elem in self.elems]
 
-    def deserializer(self):
-            return 'deserializeUnarySet'
-
 
 class BinarySet(UnarySet):
+    DESERIALIZER = 'deserializeBinarySet'
+
     def get_tpl(self, name):
         return dict(
             declaration='const std::set<std::pair<ObjectIdx, ObjectIdx>> {name};',
             accessor='bool {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.find({{x,y}}) != {name}.end(); }}',
         )[name]
 
-    def deserializer(self):
-            return 'deserializeBinarySet'
-
 
 class Arity3Set(BinarySet):
+    DESERIALIZER = 'deserializeArity3Set'
+
     def get_tpl(self, name):
         return dict(
             declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> {name};',
             accessor='bool {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.find({{x,y,z}}) != {name}.end(); }}',
         )[name]
-
-    def deserializer(self):
-                return 'deserializeArity3Set'
 

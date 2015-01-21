@@ -81,3 +81,8 @@ def load_file_safely(filename):
     with open(filename, 'r') as f:
         c = f.read()
     return c
+
+
+def save_file(name, content):
+    with open(name, "w") as f:
+        f.write(content)

@@ -208,8 +208,12 @@ def move_files_around(base_dir, instance, domain, target_dir):
     shutil.copy(instance, definition_dir)
     shutil.copy(domain, definition_dir)
 
-    # The ad-hoc external definitions file
-    shutil.copy(base_dir + '/external.hxx', target_dir)
+    # The ad-hoc external definitions file - if it does not exist, we use the default.
+    if os.path.isfile(base_dir + '/external.hxx'):
+        shutil.copy(base_dir + '/external.hxx', target_dir)
+    else:
+        default = tplManager.get('external_default.hxx').substitute()  # No substitutions for the default template
+        util.save_file(target_dir + '/external.hxx', default)
 
     # Copy, if they exist, all data files
     origin_data_dir = base_dir + '/data'
@@ -335,7 +339,7 @@ class Generator(object):
     def get_method_factories(self):
         return tplManager.get('method-factories').substitute(
             lines='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
-            goal_constraint_instantiations='\n\t\t\t'.join(self.goal_code.constraint_instantiations)
+            goal_constraint_instantiations=',\n\t\t\t'.join(self.goal_code.constraint_instantiations)
         )
 
     def get_action_factory_line(self, action_code):

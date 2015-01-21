@@ -17,6 +17,9 @@ public:
 	typedef std::set<std::pair<int, int>> BinarySet;
 	
 	
+	//! For the sake of completeness
+	static int deserialize0AryElement(const std::string& filename);
+	
 	//! Map (de)serialization
 	static std::ostream& serialize(std::ostream& os, const UnaryMap& map);
 	static std::ostream& serialize(std::ostream& os, const BinaryMap& map);

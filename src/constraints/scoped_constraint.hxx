@@ -56,7 +56,7 @@ public:
 class ExternalScopedConstraint : public ScopedConstraint
 {
 protected:
-	//! A vector of arbitrary parameters
+	//! A vector of arbitrary parameters of the constraint
 	const std::vector<int> _binding;
 	
 public:
