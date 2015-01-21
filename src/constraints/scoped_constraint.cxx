@@ -40,5 +40,53 @@ Constraint::Output UnaryExternalScopedConstraint::filter(const DomainMap& domain
 	return (domain.size() == 0) ? Constraint::Output::Failure : output;		
 };
 
+BinaryExternalScopedConstraint::BinaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+	ExternalScopedConstraint(scope, parameters) {}
+
+
+//! This actually arc-reduces the constraint with respect to the relevant variable given by the index
+Constraint::Output BinaryExternalScopedConstraint::filter(unsigned variable) {
+	assert(projection.size() == 2);
+	assert(variable == 0 || variable == 1);
+	
+	unsigned other = (variable == 0) ? 1 : 0;
+	
+	Domain& domain = *(projection[variable]);
+	Domain& other_domain = *(projection[other]);		
+	Domain new_domain;
+	
+	Constraint::Output output = Constraint::Output::Unpruned;
+	
+	// A small helper to create the point having the values in the right order.
+	auto make_point = [&variable](ObjectIdx x, ObjectIdx z) -> ProcedurePoint {
+		if (variable == 0) {
+			return {x, z};
+		} else {
+			return {z, x};
+		}
+	};
+	
+	for (ObjectIdx x:domain) {
+		for (ObjectIdx z:other_domain) {
+			if (this->isSatisfied(make_point(x, z))) {
+				new_domain.insert(new_domain.cend(), x); // We will insert on the end of the container, as it is already sorted.
+				break; // x is an arc-consistent value, so we can break the inner loop and continue to check the next possible value.
+			}
+		}
+	}
+	
+	if (new_domain.size() == 0) return Constraint::Output::Failure;
+	
+	if (new_domain.size() != domain.size()) {
+		domain = new_domain; // Update the domain by using the assignment operator.
+		output = Constraint::Output::Pruned;
+	}
+	
+	return output;
+	
+}
+
+
+
 } // namespaces
 

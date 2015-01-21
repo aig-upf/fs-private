@@ -133,15 +133,13 @@ class ApplicableObject(object):
         self.constraint_instantiations = None
 
     def get_procedures_code(self, procedure_list, symbol_map={}):
-        return [proc.get_annotated_code(symbol_map) for proc in procedure_list]
+        return [proc.process_component(symbol_map) for proc in procedure_list]
 
     def process_applicability(self):
         # Applicability procedures
         blocks = self.get_procedures_code(self.procedures)
-        self.applicability_code_switch = generate_switch_code('procedureIdx', blocks)
         self.applicability_constraints, self.constraint_instantiations = generate_constraint_code(
-            self.get_entity_name('constraint'), blocks,
-            'UnaryExternalScopedConstraint', 'constraint', 'constraint_instantiation')
+            self.get_entity_name('constraint'), blocks, 'constraint', 'constraint_instantiation')
 
     def get_entity_name(self, postfix=''):
         raise RuntimeError("Must be subclassed")
@@ -162,11 +160,8 @@ class ActionCode(ApplicableObject):
 
     def process_effect_procedures(self):
         blocks = self.get_procedures_code(self.effect_procedures, self.action.parameter_map)
-        self.effect_code_switch = generate_switch_code('procedureIdx', blocks,
-                                                       default='throw std::runtime_error("Wrong procedure index");')
-
         self.effect_components, self.effect_instantiations = generate_constraint_code(
-            self.get_entity_name('effect'), blocks, 'ScopedEffect', 'effect', 'effect_instantiation')
+            self.get_entity_name('effect'), blocks, 'effect', 'effect_instantiation')
 
     def get_entity_name(self, postfix=''):
             return util.normalize_action_name(self.action.name) + (util.to_camelcase(postfix) if postfix else '')
@@ -186,32 +181,17 @@ class GoalCode(ApplicableObject):
         return 'Goal' + (util.to_camelcase(postfix) if postfix else '')
 
 
-def generate_switch_code(switchvar, code_blocks, default=''):
-    blocks = [generate_switch_case_code(i, block) for i, block in enumerate(code_blocks)]
-    cases = '\t\t\t' + '\n\t\t\t'.join(blocks)
-    return tplManager.get('switch_code').substitute(
-        switchvar=switchvar,
-        cases=cases,
-        default=default
-    )
-
-
-def generate_constraint_code(name, blocks, parent, tpl, instantiation_tpl):
+def generate_constraint_code(name, blocks, tpl, instantiation_tpl):
     classes, instantiations = [], []
-    for i, code in enumerate(blocks, 0):
+    for i, component in enumerate(blocks, 0):
         classname = '{}{}'.format(name, i)
         classes.append(tplManager.get(tpl).substitute(
             classname=classname,
-            parent=parent,
-            code='\n\t\t'.join(code)
+            parent=component.get_baseclass(),
+            code='\n\t\t'.join(component.code)
         ))
         instantiations.append(tplManager.get(instantiation_tpl).substitute(
             classname=classname,
             i=i
         ))
     return classes, instantiations
-
-
-def generate_switch_case_code(num, code):
-    indented_code = '\t\t\t\t' + '\n\t\t\t\t'.join(code)
-    return tplManager.get('switch_case_code').substitute(i=num, code=indented_code)

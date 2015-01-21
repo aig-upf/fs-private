@@ -33,15 +33,17 @@ public:
 	//! Returns true iff the current constraint is satisfied in the given state.
 	virtual bool isSatisfied(const ObjectIdxVector& values) const = 0;
 	virtual bool isSatisfied(const State& s) const {
-		return this->isSatisfied(Projections::project(s, _scope));		
+		return this->isSatisfied(Projections::project(s, _scope));
 	}
 
 	//! Filters from a new set of domains.
-	virtual Constraint::Output filter(const DomainMap& domains) const = 0;
+	virtual Constraint::Output filter(const DomainMap& domains) const  {
+		throw std::runtime_error("This type of constraint does not support on-the-fly filtering");
+	}
 	
 	//! Filters from the set of currently loaded projections
 	virtual Constraint::Output filter(unsigned variable = std::numeric_limits<unsigned>::max()) {
-		throw std::runtime_error("Revise this version of the filter method");
+		throw std::runtime_error("This type of constraint does not support pre-loaded filtering");
 	}
 	
 	//! Loads (i.e. caches a pointer of) the domain projections of the given state
@@ -84,6 +86,17 @@ public:
 	virtual Constraint::Output filter(const DomainMap& domains) const;
 };
 
+
+class BinaryExternalScopedConstraint : public ExternalScopedConstraint
+{
+public:
+	BinaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	
+	virtual ~BinaryExternalScopedConstraint() {};
+	
+	//! Filters from the set of currently loaded projections
+	virtual Constraint::Output filter(unsigned variable = std::numeric_limits<unsigned>::max());
+};
 
 } // namespaces
 

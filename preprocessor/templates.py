@@ -12,9 +12,6 @@ _base = dict(
     basic_conditional_effect='if ($op1 $op $op2) { ${effect} }',
     signature_empty_check='assert(signature.size() == 0);',
     signature_construction='signature.push_back(${state_var});',
-    switch_case_code='case ${i}:\n${code}\n\t\t\tbreak;',
-    switch_code='switch(${switchvar}) {\n${cases}\n\t\tdefault:\n\t\t\t${default}\n\t\t\tbreak;\n\t\t}',
-    # state_var_init='StateVariable(${ext}, ${point})',
     fact_init='Fact(_affectedVars[${var_idx}], ${value})',
     changeset_addition='changeset.add($fact);',
     satisfaction_check='return point[0] == ${value}; ${comment}',  # So far only arity-one checks

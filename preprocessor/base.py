@@ -94,24 +94,28 @@ class Parameter(object):
 
 
 class AppProcedure(object):
+    TYPE = 'CONSTRAINT'
+
     def __init__(self, name, variables, code, comment=""):
         self.name = name
         self.comment = comment
         self.variables = variables
         self.code = code
 
-    def get_annotated_code(self, symbol_map):
-        res = ['// ' + self.name]
-        if self.comment:
-            res.append('// ' + self.comment)
-        res.append(self.templatize_code(symbol_map))
-        return res
+    def process_component(self, symbol_map):
+        code = self.get_comments() + [self.templatize_code(symbol_map)]
+        return ProcessedComponent(code, self.TYPE, len(self.variables))
+
+    def get_comments(self):
+        return ['// ' + self.name] + (['// ' + self.comment] if self.comment else [])
 
     def templatize_code(self, symbol_map):
         return self.code.tpl(symbol_map) if isinstance(self.code, Code) else self.code
 
 
 class EffProcedure(AppProcedure):
+    TYPE = 'EFFECT'
+
     def __init__(self, name, relevant_variables, affected_variables, code, comment=""):
         super().__init__(name, relevant_variables, code, comment)
         if len(affected_variables) != 1:
@@ -537,13 +541,17 @@ class NumericExpression(Expression):
     pass
 
 
+class ProcessedComponent(object):
+    """ A processed component contains the relevant code and information for a processed constraint / effect """
+    def __init__(self, code, _type, arity):
+        assert isinstance(code, list)
+        self.code = code
+        self._type = _type
+        self.arity = arity
 
-
-
-
-
-
-
-
-
-
+    def get_baseclass(self):
+        if self._type == 'EFFECT':
+            return 'ScopedEffect'
+        else:
+            classnames = {1: 'UnaryExternalScopedConstraint', 2: 'BinaryExternalScopedConstraint'}
+            return classnames[self.arity]
