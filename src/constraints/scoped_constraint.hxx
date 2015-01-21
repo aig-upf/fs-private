@@ -3,7 +3,6 @@
 
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <constraints/constraints.hxx>
 #include <utils/projections.hxx>
 
 namespace fs0 {
@@ -18,6 +17,9 @@ protected:
 	DomainVector projection;
 	
 public:
+	//! The possible results of the filtering process
+	enum class Output {Failure, Pruned, Unpruned};
+	
 // 	typedef ScopedConstraint const * cptr;
 	typedef ScopedConstraint* cptr;
 	typedef std::vector<ScopedConstraint::cptr> vcptr;
@@ -37,14 +39,19 @@ public:
 	}
 
 	//! Filters from a new set of domains.
-	virtual Constraint::Output filter(const DomainMap& domains) const  {
+	virtual Output filter(const DomainMap& domains) const  {
 		throw std::runtime_error("This type of constraint does not support on-the-fly filtering");
 	}
 	
-	//! Filters from the set of currently loaded projections
-	virtual Constraint::Output filter(unsigned variable = std::numeric_limits<unsigned>::max()) {
-		throw std::runtime_error("This type of constraint does not support pre-loaded filtering");
+	//! Arc-reduces the given variable with respect to the set of currently loaded projections - works only for binary constraints
+	virtual Output filter(unsigned variable) {
+		throw std::runtime_error("This type of constraint does not support arc-reduction");
 	}
+	
+	//! Filters from the set of currently loaded projections - intended for custom and built-in constraints
+	virtual Output filter() {
+		throw std::runtime_error("This type of constraint does not support pre-loaded filtering");
+	}	
 	
 	//! Loads (i.e. caches a pointer of) the domain projections of the given state
 	void loadDomains(const DomainMap& domains) {
@@ -83,7 +90,7 @@ public:
 // 	virtual bool isSatisfied(ObjectIdx value) const = 0;
 
 	//! Filters from a new set of domains.
-	virtual Constraint::Output filter(const DomainMap& domains) const;
+	virtual Output filter(const DomainMap& domains) const;
 };
 
 
@@ -94,8 +101,7 @@ public:
 	
 	virtual ~BinaryExternalScopedConstraint() {};
 	
-	//! Filters from the set of currently loaded projections
-	virtual Constraint::Output filter(unsigned variable = std::numeric_limits<unsigned>::max());
+	virtual Output filter(unsigned variable);
 };
 
 } // namespaces

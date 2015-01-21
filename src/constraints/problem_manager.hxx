@@ -5,9 +5,7 @@
 #include <iosfwd>
 #include <fs0_types.hxx>
 #include <fact.hxx>
-#include <constraints/constraints.hxx>
 #include <constraints/manager.hxx>
-#include "scoped_constraint.hxx"
 
 namespace fs0 {
 
@@ -24,7 +22,7 @@ public:
 	PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
-	Constraint::Output pruneUsingStateConstraints(RelaxedState& state) const;
+	ScopedConstraint::Output pruneUsingStateConstraints(RelaxedState& state) const;
 	
 	//! Goal checking for non-relaxed states.
 	inline bool isGoal(const State& s) const { return manager.checkGoalConstraintsSatisfied(s); }

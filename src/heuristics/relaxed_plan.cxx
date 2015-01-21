@@ -69,10 +69,10 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		relaxed.accumulate(*changeset);
 		
 		// Prune using state constraints
-		Constraint::Output o = _problem.getConstraintManager()->pruneUsingStateConstraints(relaxed);
-// 		std::cout << "State Constraint pruning output: " <<  static_cast<std::underlying_type<Constraint::Output>::type>(o) << std::endl;
-		if (o == Constraint::Output::Failure) return std::numeric_limits<float>::infinity();
-		if (o == Constraint::Output::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
+		ScopedConstraint::Output o = _problem.getConstraintManager()->pruneUsingStateConstraints(relaxed);
+// 		std::cout << "State Constraint pruning output: " <<  static_cast<std::underlying_type<ScopedConstraint::Output>::type>(o) << std::endl;
+		if (o == ScopedConstraint::Output::Failure) return std::numeric_limits<float>::infinity();
+		if (o == ScopedConstraint::Output::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 		
 		#ifdef FS0_DEBUG
 		std::cout << "New RPG Layer: " << relaxed << std::endl; // std::cout << "Changeset: " << *changeset << std::endl << std::endl;

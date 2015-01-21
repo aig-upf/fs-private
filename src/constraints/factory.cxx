@@ -1,28 +1,23 @@
 
 
 #include <constraints/factory.hxx>
-#include <constraints/constraints.hxx>
-#include <constraints/alldiff.hxx>
-#include <constraints/sum.hxx>
-#include <constraints/external_unary_constraint.hxx>
-#include <constraints/external_binary_constraint.hxx>
+#include <constraints/scoped_alldiff_constraint.hxx>
+#include <constraints/scoped_sum_constraint.hxx>
 
 namespace fs0 {
 
-const ProblemConstraint::cptr ConstraintFactory::create(const std::string& name, const VariableIdxVector& scope) {
-	Constraint* constraint;
+const ScopedConstraint::cptr ConstraintFactory::create(const std::string& name, const VariableIdxVector& scope) {
 	if (name == "alldiff") {
-		constraint = new AlldiffConstraint(scope.size());
+		return new ScopedAlldiffConstraint(scope);
 	} else if (name == "sum") {
-		constraint = new SumConstraint(scope.size());
+		return new ScopedSumConstraint(scope);
 	} else {
 		throw std::runtime_error("Unknown constraint name: " + name);
 	}
-	return new ProblemConstraint(constraint, scope);
 }
 
-const ProblemConstraint::cptr ConstraintFactory::createExternalConstraint(ApplicableEntity::cptr entity, unsigned procedureIdx) {
-	ProblemConstraint::cptr constraint = nullptr;
+/*
+const ScopedConstraint::cptr ConstraintFactory::createExternalConstraint(ApplicableEntity::cptr entity, unsigned procedureIdx) {
 	const VariableIdxVector& relevant = entity->getApplicabilityRelevantVars(procedureIdx);
 	if (relevant.size() == 1) {
 		constraint = new ExternalUnaryConstraint(entity, procedureIdx);
@@ -33,6 +28,6 @@ const ProblemConstraint::cptr ConstraintFactory::createExternalConstraint(Applic
 	}
 	return constraint;
 }
-
+*/
 } // namespaces
 

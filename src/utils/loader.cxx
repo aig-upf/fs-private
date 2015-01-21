@@ -120,14 +120,12 @@ void Loader::loadConstraints(const std::string& filename, Problem& problem, bool
 		const std::string& name = strs[1];
 		VariableIdxVector variables = parseNumberList<unsigned>(strs[2]);
 		
-		ProblemConstraint::cptr constraint = ConstraintFactory::create(name, variables);
-		throw std::runtime_error("UNFINISHED");
-		// TODO - REACTIVATE WITH THE NEW SCOPED CONSTRAINT LOGIC
-// 		if (goal) {
-// 			problem.registerGoalConstraint(constraint);
-// 		} else {
-// 			problem.registerConstraint(constraint);
-// 		}
+		ScopedConstraint::cptr constraint = ConstraintFactory::create(name, variables);
+		if (goal) {
+			problem.registerGoalConstraint(constraint);
+		} else {
+			problem.registerConstraint(constraint);
+		}
 	}
 }
 

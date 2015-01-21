@@ -345,8 +345,8 @@ class Generator(object):
     def get_action_factory_line(self, action_code):
         return tplManager.get('action-instantiation').substitute(
             classname=action_code.get_entity_name(),
-            constraint_list=',\n'.join(action_code.constraint_instantiations),
-            effect_list=',\n'.join(action_code.effect_instantiations),
+            constraint_list=',\n\t\t\t\t'.join(action_code.constraint_instantiations),
+            effect_list=',\n\t\t\t\t'.join(action_code.effect_instantiations),
         )
 
     def get_action_definitions(self):
@@ -451,11 +451,6 @@ class Generator(object):
         assert isinstance(self.task.goal, base.Goal)
         goal_rel_vars, _ = self.serialize_variables_data(self.task.goal.applicability_procedures)
         self.dump_data('goal', goal_rel_vars)
-
-    def get_goal_evaluator(self):
-        return tplManager.get('goal').substitute(
-            applicability_code_switch=self.goal_code.applicability_code_switch
-        )
 
     def generate_component_class_definitions(self):
         # The constraints of each of the actions

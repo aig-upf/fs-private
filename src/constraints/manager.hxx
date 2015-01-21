@@ -4,8 +4,7 @@
 #include <cassert>
 #include <iosfwd>
 #include <fs0_types.hxx>
-#include <constraints/problem_constraints.hxx>
-#include "scoped_constraint.hxx"
+#include <constraints/scoped_constraint.hxx>
 
 namespace fs0 {
 
@@ -65,28 +64,28 @@ public:
 	//! Initializes a worklist. `constraints` is expected to have only binary constraints.
 	void initializeAC3Worklist(const PConstraintPtrVct& constraints, ArcSet& worklist);
 	
-	Constraint::Output unaryFiltering(const DomainMap& domains, const PConstraintPtrVct& constraints) const;
+	ScopedConstraint::Output unaryFiltering(const DomainMap& domains, const PConstraintPtrVct& constraints) const;
 	
-	Constraint::Output filter(const DomainMap& domains, 
+	ScopedConstraint::Output filter(const DomainMap& domains, 
 							const PConstraintPtrVct& unary, 
 							const PConstraintPtrVct& binary,
 							const PConstraintPtrVct& n_ary,
 							const ArcSet& AC3Worklist
 	) const;
 
-	Constraint::Output filterWithStateConstraints(const DomainMap& domains) const;
+	ScopedConstraint::Output filterWithStateConstraints(const DomainMap& domains) const;
 	
 	//! Prunes the domains of the given state
-	Constraint::Output filterWithGoalConstraints(const DomainMap& domains) const;
+	ScopedConstraint::Output filterWithGoalConstraints(const DomainMap& domains) const;
 	
 	//!
 	void loadConstraintDomains(const DomainMap& domains, const PConstraintPtrVct& constraints) const;
 	void emptyConstraintDomains(const PConstraintPtrVct& constraints) const;
 	
-	Constraint::Output filter_global_constraints(const PConstraintPtrVct& constraints) const;
+	ScopedConstraint::Output filter_global_constraints(const PConstraintPtrVct& constraints) const;
 
 	//! AC3 filtering
-	Constraint::Output filter_binary_constraints(const PConstraintPtrVct& constraints, ArcSet& worklist) const;
+	ScopedConstraint::Output filter_binary_constraints(const PConstraintPtrVct& constraints, ArcSet& worklist) const;
 	
 /*
 	void printArcSet(const ArcSet& arcs) const {

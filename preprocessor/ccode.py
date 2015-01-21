@@ -128,7 +128,6 @@ class Procedure(object):
 class ApplicableObject(object):
     def __init__(self, procedures):
         self.procedures = procedures
-        self.applicability_code_switch = None
         self.applicability_constraints = None
         self.constraint_instantiations = None
 
@@ -150,7 +149,6 @@ class ActionCode(ApplicableObject):
         super(ActionCode, self).__init__(action.applicability_procedures)
         self.action = action
         self.effect_procedures = action.effect_procedures
-        self.effect_code_switch = None
         self.effect_components = None
         self.effect_instantiations = None
 

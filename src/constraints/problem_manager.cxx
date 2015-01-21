@@ -10,7 +10,7 @@ PlanningConstraintManager::PlanningConstraintManager(const ScopedConstraint::vcp
 	: manager(goalConstraints, stateConstraints)
 {}
 
-Constraint::Output PlanningConstraintManager::pruneUsingStateConstraints(RelaxedState& state) const {
+ScopedConstraint::Output PlanningConstraintManager::pruneUsingStateConstraints(RelaxedState& state) const {
 	DomainMap relevant_domains = Projections::project(state, manager.getStateConstraintRelevantVariables());  // This does NOT copy the domains
 	return manager.filterWithStateConstraints(relevant_domains);
 }
@@ -38,8 +38,8 @@ bool PlanningConstraintManager::isGoal(const RelaxedState& state) const {
 }
 
 bool PlanningConstraintManager::checkGoal(const DomainMap& domains) const {
-	Constraint::Output o = manager.filterWithGoalConstraints(domains);
-	return o != Constraint::Output::Failure && manager.checkConsistency(domains);
+	ScopedConstraint::Output o = manager.filterWithGoalConstraints(domains);
+	return o != ScopedConstraint::Output::Failure && manager.checkConsistency(domains);
 }
 	
 void PlanningConstraintManager::extractGoalCauses(const State& seed, const DomainMap& domains, const DomainMap& clone, FactSetPtr causes, std::vector<bool>& set, unsigned num_set) const {
@@ -79,8 +79,8 @@ void PlanningConstraintManager::extractGoalCauses(const State& seed, const Domai
 	selected_dom->insert(selected_value);
 	
 	// 4.2 Apply the constraints again
-	Constraint::Output o = manager.filterWithGoalConstraints(domains);
-	if (o == Constraint::Output::Failure || !manager.checkConsistency(domains)) {
+	ScopedConstraint::Output o = manager.filterWithGoalConstraints(domains);
+	if (o == ScopedConstraint::Output::Failure || !manager.checkConsistency(domains)) {
 		// If the selection made the domains inconsistent, instead of backtracking we simply
 		// select arbitrary domains from the original domain set.
 		extractGoalCausesArbitrarily(seed, clone, causes, set);

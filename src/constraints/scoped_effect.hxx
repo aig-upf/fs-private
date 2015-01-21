@@ -3,7 +3,6 @@
 
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <constraints/constraints.hxx>
 #include <utils/projections.hxx>
 
 namespace fs0 {
