@@ -82,8 +82,7 @@ class ActionCompiler(object):
             relevant = []  # Predicative effects cannot have nested relevant variables
 
         assert len(affected) == 1
-        lhs_code = "affected[0]"
-        code = assignment_code(lhs_code, rhs_code)
+        code = "return {};".format(rhs_code)
         return base.EffProcedure(str(expression), relevant, affected, code)
 
 

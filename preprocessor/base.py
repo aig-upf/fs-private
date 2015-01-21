@@ -111,6 +111,8 @@ class AppProcedure(object):
 class EffProcedure(AppProcedure):
     def __init__(self, name, relevant_variables, affected_variables, code, comment=""):
         super().__init__(name, relevant_variables, code, comment)
+        if len(affected_variables) != 1:
+            raise RuntimeError("Currently only effects that affect one single variable are accepted")
         self.affected_variables = affected_variables
 
 

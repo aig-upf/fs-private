@@ -259,8 +259,7 @@ class Generator(object):
         self.save_translation('components.hxx', tplManager.get('components.hxx').substitute(
             action_definitions=self.get_action_definitions(),
             method_factories=self.get_method_factories(),
-            goal_constraints=self.get_goal_constraints(),
-            goal_evaluator_definition=self.get_goal_evaluator(),
+            component_classes=self.generate_component_class_definitions(),
         ))
 
         # components.cxx:
@@ -334,29 +333,24 @@ class Generator(object):
         return '\n'.join(elems)
 
     def get_method_factories(self):
-        lines = (self.get_action_factory_line(a) for a in self.task.actions)
         return tplManager.get('method-factories').substitute(
-            lines='\n\t\t'.join(lines),
+            lines='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
             goal_constraint_instantiations='\n\t\t\t'.join(self.goal_code.constraint_instantiations)
         )
 
-    def get_action_factory_line(self, action):
-        return tplManager.get('action_factory_line').substitute(
-            actionName=util.normalize_action_name(action.name),
+    def get_action_factory_line(self, action_code):
+        return tplManager.get('action-instantiation').substitute(
+            classname=action_code.get_entity_name(),
+            constraint_list=',\n'.join(action_code.constraint_instantiations),
+            effect_list=',\n'.join(action_code.effect_instantiations),
         )
 
     def get_action_definitions(self):
         elems = []
-        tpl = tplManager.get('action')
 
         for action in self.task.actions:
-            action_code = self.action_code[action.name]
-
-            elems.append(tpl.substitute(
-                actionName=util.normalize_action_name(action.name),
-                constructor=self._get_action_constructor(action),
-                applicability_code_switch=action_code.applicability_code_switch,
-                effect_code_switch=action_code.effect_code_switch,
+            elems.append(tplManager.get('action').substitute(
+                classname=util.normalize_action_name(action.name),
             ))
 
         return '\n'.join(elems)
@@ -459,17 +453,19 @@ class Generator(object):
             applicability_code_switch=self.goal_code.applicability_code_switch
         )
 
-    def get_goal_constraints(self):
-        return '\n\n'.join(self.goal_code.applicability_constraints)
+    def generate_component_class_definitions(self):
+        # The constraints of each of the actions
+        all_definitions = ['\n\n'.join(action.applicability_constraints) for action in self.action_code.values()]
+
+        # The effects of the actions
+        all_definitions += ['\n\n'.join(action.effect_components) for action in self.action_code.values()]
+
+        # The constraints of the goal
+        all_definitions.append('\n\n'.join(self.goal_code.applicability_constraints))
+        return '\n\n'.join(all_definitions)
 
     def _get_all_symbol_declarations(self):
         return '\n\t'.join(self.symbol_decl)
-
-    @staticmethod
-    def _get_action_constructor(action):
-        return tplManager.get('action-constructor').substitute(
-            actionName=util.normalize_action_name(action.name),  # The normalized name
-        )
 
     def _get_action_signature(self, action):
         types = [str(self.index.types[p.typename]) for p in action.parameters]

@@ -128,9 +128,9 @@ class Procedure(object):
 class ApplicableObject(object):
     def __init__(self, procedures):
         self.procedures = procedures
-    #
-    # def translate_object(self, obj):
-    #     return obj
+        self.applicability_code_switch = None
+        self.applicability_constraints = None
+        self.constraint_instantiations = None
 
     def get_procedures_code(self, procedure_list, symbol_map={}):
         return [proc.get_annotated_code(symbol_map) for proc in procedure_list]
@@ -139,7 +139,12 @@ class ApplicableObject(object):
         # Applicability procedures
         blocks = self.get_procedures_code(self.procedures)
         self.applicability_code_switch = generate_switch_code('procedureIdx', blocks)
-        self.applicability_constraints, self.constraint_instantiations = generate_constraint_code(blocks)
+        self.applicability_constraints, self.constraint_instantiations = generate_constraint_code(
+            self.get_entity_name('constraint'), blocks,
+            'UnaryExternalScopedConstraint', 'constraint', 'constraint_instantiation')
+
+    def get_entity_name(self, postfix=''):
+        raise RuntimeError("Must be subclassed")
 
 
 class ActionCode(ApplicableObject):
@@ -147,6 +152,9 @@ class ActionCode(ApplicableObject):
         super(ActionCode, self).__init__(action.applicability_procedures)
         self.action = action
         self.effect_procedures = action.effect_procedures
+        self.effect_code_switch = None
+        self.effect_components = None
+        self.effect_instantiations = None
 
     def process(self):
         self.process_applicability()
@@ -157,6 +165,12 @@ class ActionCode(ApplicableObject):
         self.effect_code_switch = generate_switch_code('procedureIdx', blocks,
                                                        default='throw std::runtime_error("Wrong procedure index");')
 
+        self.effect_components, self.effect_instantiations = generate_constraint_code(
+            self.get_entity_name('effect'), blocks, 'ScopedEffect', 'effect', 'effect_instantiation')
+
+    def get_entity_name(self, postfix=''):
+            return util.normalize_action_name(self.action.name) + (util.to_camelcase(postfix) if postfix else '')
+
 
 class GoalCode(ApplicableObject):
     def __init__(self, goal, index):
@@ -166,9 +180,10 @@ class GoalCode(ApplicableObject):
 
     def process(self):
         self.process_applicability()
-    #
-    # def translate_object(self, obj):
-    #     return self.index.objects[obj]
+
+    def get_entity_name(self, postfix=''):
+        # There is only one goal, so we can safely name it "goal"
+        return 'Goal' + (util.to_camelcase(postfix) if postfix else '')
 
 
 def generate_switch_code(switchvar, code_blocks, default=''):
@@ -181,15 +196,16 @@ def generate_switch_code(switchvar, code_blocks, default=''):
     )
 
 
-def generate_constraint_code(blocks):
+def generate_constraint_code(name, blocks, parent, tpl, instantiation_tpl):
     classes, instantiations = [], []
     for i, code in enumerate(blocks, 0):
-        classname = 'GoalConstraint{}'.format(i)
-        classes.append(tplManager.get('constraint').substitute(
+        classname = '{}{}'.format(name, i)
+        classes.append(tplManager.get(tpl).substitute(
             classname=classname,
+            parent=parent,
             code='\n\t\t'.join(code)
         ))
-        instantiations.append(tplManager.get('constraint_instantiation').substitute(
+        instantiations.append(tplManager.get(instantiation_tpl).substitute(
             classname=classname,
             i=i
         ))

@@ -2,7 +2,7 @@
 
 class ComponentFactory {
 public:
-    static CoreAction::cptr instantiateAction(
+    static Action::cptr instantiateAction(
         const std::string& classname,
 		const ObjectIdxVector& binding,
 		const ObjectIdxVector& derived,
@@ -10,23 +10,18 @@ public:
         const std::vector<VariableIdxVector>& effRelevantVars,
         const std::vector<VariableIdxVector>& effAffectedVars
     ) {
-        CoreAction* aptr;
+        Action* aptr = nullptr;
         if (false) {}
         ${lines}
         else throw std::runtime_error("Unknown action name.");
 
-        return CoreAction::cptr(aptr);
+        return Action::cptr(aptr);
     }
 
-//    static ApplicableEntity::cptr instantiateGoal(const std::vector<VariableIdxVector>& appRelevantVars) {
-//        ApplicableEntity* gptr = new GoalEvaluator(appRelevantVars);
-//        return ApplicableEntity::cptr(gptr);
-//    }
-
     static ScopedConstraint::vcptr instantiateGoal(const std::vector<VariableIdxVector>& appRelevantVars) {
+    const ObjectIdxVector binding;  // The goal has empty binding
 		return {
 		    ${goal_constraint_instantiations}
 		};
     }
-
 };

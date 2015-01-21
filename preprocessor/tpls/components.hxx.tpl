@@ -25,11 +25,9 @@ extern std::unique_ptr<External> external;
 $action_definitions
 
 /*********************************************/
-/* The goal evaluator                        */
+/* Constraint and Effect components          */
 /*********************************************/
-$goal_evaluator_definition
-
-${goal_constraints}
+${component_classes}
 
 /*********************************************/
 /* Method factories                          */
