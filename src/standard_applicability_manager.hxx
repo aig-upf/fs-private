@@ -14,17 +14,16 @@ namespace fs0 {
 
 
 /**
- * A simple manager that only checks applicability for non-relaxed states.
- * This means that we can get rid of causal data structures, etc.
+ * A simple manager that only checks applicability of actions in a non-relaxed setting.
  */
-class SimpleActionSetManager
+class StandardApplicabilityManager
 {
 public:
-	SimpleActionSetManager(const State& state, const ScopedConstraint::vcptr& constraints)
-		: _state(state), _constraints(constraints) {}
+	StandardApplicabilityManager(const State& state, const ScopedConstraint::vcptr& constraints)
+		: _state(state), stateConstraints(constraints) {}
 		
-	SimpleActionSetManager(const SimpleActionSetManager& other)
-		: _state(other._state), _constraints(other._constraints) {}
+	StandardApplicabilityManager(const StandardApplicabilityManager& other)
+		: _state(other._state), stateConstraints(other.stateConstraints) {}
 	
 	//! Return true iff the preconditions of the applicable entity hold.
 	bool checkPreconditionsHold(const Action& action) const {
@@ -39,7 +38,7 @@ public:
 	bool isApplicable(const Action& action) const {
 		if (!checkPreconditionsHold(action)) return false;
 		
-		if (_constraints.size() != 0) { // If we have no constraints, we can spare the cost of creating the new state.
+		if (stateConstraints.size() != 0) { // If we have no constraints, we can spare the cost of creating the new state.
 			FactSet atoms;
 			computeChangeset(action, atoms);
 			State s1(_state, atoms);
@@ -49,7 +48,7 @@ public:
 	}
 	
 	bool checkStateConstraintsHold(const State& s) const {
-		for (ScopedConstraint::cptr ctr:_constraints) {
+		for (ScopedConstraint::cptr ctr:stateConstraints) {
 			if (!ctr->isSatisfied(s)) return false;
 		}
 		return true;
@@ -66,7 +65,7 @@ protected:
 	const State& _state;
 	
 	//! The state constraints
-	const ScopedConstraint::vcptr& _constraints;
+	const ScopedConstraint::vcptr& stateConstraints;
 };
 
 } // namespaces

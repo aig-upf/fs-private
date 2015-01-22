@@ -72,26 +72,26 @@ public:
 	void emptyDomains() { projection.clear(); }
 };
 
-class ExternalScopedConstraint : public ScopedConstraint
+class ParametrizedScopedConstraint : public ScopedConstraint
 {
 protected:
 	//! A vector of arbitrary parameters of the constraint
 	const std::vector<int> _binding;
 	
 public:
-	ExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	ParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
-	virtual ~ExternalScopedConstraint() {}
+	virtual ~ParametrizedScopedConstraint() {}
 	
 	virtual bool isSatisfied(const ObjectIdxVector& values) const = 0;
 };
 
-class UnaryExternalScopedConstraint : public ExternalScopedConstraint
+class UnaryParametrizedScopedConstraint : public ParametrizedScopedConstraint
 {
 public:
-	UnaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	UnaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
-	virtual ~UnaryExternalScopedConstraint() {};
+	virtual ~UnaryParametrizedScopedConstraint() {};
 	
 	virtual Filtering filteringType() { return Filtering::Unary; };
 	
@@ -106,12 +106,12 @@ public:
 };
 
 
-class BinaryExternalScopedConstraint : public ExternalScopedConstraint
+class BinaryParametrizedScopedConstraint : public ParametrizedScopedConstraint
 {
 public:
-	BinaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	BinaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
-	virtual ~BinaryExternalScopedConstraint() {};
+	virtual ~BinaryParametrizedScopedConstraint() {};
 	
 	virtual Filtering filteringType() { return Filtering::ArcReduction; };
 	

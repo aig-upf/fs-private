@@ -18,16 +18,9 @@ std::pair<bool, FactSetPtr> RelaxedApplicabilityManager::isApplicable(const Acti
 }
 
 bool RelaxedApplicabilityManager::isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const {
+	// Note that because we are using this type of applicability manager, we know for sure that the constraint must be a UnaryConstraint.
 	
 	const VariableIdxVector& relevant = constraint->getScope();
-	
-	if(relevant.size() > 1) {
-		// For the generic, n-ary case, we should move to a more sophisticated CSP manager.
-		throw std::runtime_error("Action applicability procedures of arity > 1 are currently unsupported");
-	} else if (relevant.size() == 0) {
-		throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
-	}
-	
 	VariableIdx variable = relevant[0];
 	bool cause_found = false;
 	
@@ -56,6 +49,37 @@ bool RelaxedApplicabilityManager::isProcedureApplicable(const ScopedConstraint::
 	return cause_found;
 }
 
+
+RelaxedApplicabilityManager* RelaxedApplicabilityManager::createApplicabilityManager(const Action::vcptr& actions) {
+	
+	bool need_complex_applicability_manager = false;
+	
+	// We first analyse the type of actions preconditions
+	for (const Action::cptr& action:actions) {
+		for (const ScopedConstraint::cptr constraint:action->getConstraints()) {
+			unsigned arity = constraint->getArity();
+			if (arity == 0) {
+				throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
+			}
+			
+			if(arity == 1) {
+				if (!dynamic_cast<UnaryParametrizedScopedConstraint*>(constraint) || constraint->filteringType() != ScopedConstraint::Filtering::Unary) {
+					throw std::runtime_error("Cannot handle this type of unary constraint in action preconditions.");
+				}
+			} else {
+				need_complex_applicability_manager = true;
+			}
+		}
+	}
+	
+	// And now instantiate the appropriate applicability manager
+	if (!need_complex_applicability_manager) {
+		// We now for sure that all action constraints are unary and can be safely casted to UnaryParametrizedScopedConstraint during the relaxed plan computation
+		return new RelaxedApplicabilityManager();
+	} else {
+		assert(0); // TODO
+	}
+}
 
 
 } // namespaces

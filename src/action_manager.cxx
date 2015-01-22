@@ -27,7 +27,7 @@ State::ptr ActionManager::applyPlan(const Problem& problem, const ActionPlan& pl
 }	
 
 State::ptr ActionManager::applyAction(const Action::cptr& action, const State::ptr& s0) {
-	SimpleActionSetManager manager(*s0, Problem::getCurrentProblem()->getConstraints());
+	StandardApplicabilityManager manager(*s0, Problem::getCurrentProblem()->getConstraints());
 	
 	if (!manager.isApplicable(*action)) {
 		return State::ptr();

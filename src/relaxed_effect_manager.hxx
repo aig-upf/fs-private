@@ -15,15 +15,10 @@ namespace fs0 {
  */
 class RelaxedEffectManager
 {
-protected:
-	//! The state constraints
-	const ScopedConstraint::vcptr& _constraints;
-
 public:
 	typedef std::unique_ptr<const RelaxedEffectManager> ucptr;
 	
-	RelaxedEffectManager(const ScopedConstraint::vcptr& constraints)
-		: _constraints(constraints) {}
+	RelaxedEffectManager() {}
 
 	//!
 	void computeChangeset(const Action& action, const DomainMap& domains, Changeset& changeset) const;

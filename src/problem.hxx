@@ -7,7 +7,7 @@
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <simple_applicable_action_set.hxx>
-#include <simple_action_set_manager.hxx>
+#include <standard_applicability_manager.hxx>
 #include <constraints/problem_manager.hxx>
 #include "constraints/scoped_constraint.hxx"
 #include <actions.hxx>
@@ -33,7 +33,7 @@ public:
 	const Action::vcptr& getAllActions() const { return _actions; }
 
 	SimpleApplicableActionSet getApplicableActions(const State& s) const {
-		return SimpleApplicableActionSet(SimpleActionSetManager(s, getConstraints()), _actions);
+		return SimpleApplicableActionSet(StandardApplicabilityManager(s, getConstraints()), _actions);
 	}
 	
 	bool isGoal(const State& s) const { return ctrManager->isGoal(s); }
@@ -61,7 +61,7 @@ public:
 	
 	PlanningConstraintManager::cptr getConstraintManager() const { return ctrManager; }
 	
-	const RelaxedApplicabilityManager& getRelaxedApplicabilityManager() const { return appManager; }
+	const RelaxedApplicabilityManager& getRelaxedApplicabilityManager() const { assert(appManager); return *appManager; }
 	const RelaxedEffectManager& getRelaxedEffectManager() const { return effManager; }
 
 protected:
@@ -77,7 +77,7 @@ protected:
 	ScopedConstraint::vcptr stateConstraints;
 	ScopedConstraint::vcptr goalConstraints;
 	
-	const RelaxedApplicabilityManager appManager;
+	RelaxedApplicabilityManager const * appManager;
 	const RelaxedEffectManager effManager;
 	
 	static const Problem* _instance;

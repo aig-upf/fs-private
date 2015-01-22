@@ -4,7 +4,7 @@
 #include <iosfwd>
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <simple_action_set_manager.hxx>
+#include <standard_applicability_manager.hxx>
 
 namespace fs0 {
 
@@ -14,12 +14,12 @@ namespace fs0 {
  */
 class SimpleApplicableActionSet {
 protected:
-	const SimpleActionSetManager _actionManager;
+	const StandardApplicabilityManager _actionManager;
 	
 	const Action::vcptr& _actions;
 	
 public:
-	SimpleApplicableActionSet(const SimpleActionSetManager& actionManager, const Action::vcptr& actions) :
+	SimpleApplicableActionSet(const StandardApplicabilityManager& actionManager, const Action::vcptr& actions) :
 		_actionManager(actionManager), _actions(actions)
 	{}
 	
@@ -27,7 +27,7 @@ public:
 		friend class SimpleApplicableActionSet;
 		
 	protected:
-		Iterator(const Action::vcptr& actions, const SimpleActionSetManager& actionManager, unsigned currentIdx) :
+		Iterator(const Action::vcptr& actions, const StandardApplicabilityManager& actionManager, unsigned currentIdx) :
 			_actions(actions),
 			_actionManager(actionManager),
 			_currentIdx(currentIdx)
@@ -37,7 +37,7 @@ public:
 
 		const Action::vcptr& _actions;
 		
-		const SimpleActionSetManager _actionManager;
+		const StandardApplicabilityManager _actionManager;
 		
 		unsigned _currentIdx;
 		

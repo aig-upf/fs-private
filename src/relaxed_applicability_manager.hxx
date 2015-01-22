@@ -11,17 +11,15 @@
 namespace fs0 {
 
 /**
- * An action manager operating on a delete-free relaxation of the problem.
+ * An applicability manager operating on a delete-free relaxation of the problem.
+ * Determines the applicability of actions disregarding state constraints.
  */
 class RelaxedApplicabilityManager
 {
-protected:
-	//! The state constraints
-	const ScopedConstraint::vcptr& _constraints;
-
 public:
-	RelaxedApplicabilityManager(const ScopedConstraint::vcptr& constraints)
-		: _constraints(constraints) {}
+	static RelaxedApplicabilityManager* createApplicabilityManager(const Action::vcptr& actions);
+	
+	RelaxedApplicabilityManager() {}
 
 	//!
 	std::pair<bool, FactSetPtr> isApplicable(const Action& action, const State& seed, const DomainMap& domains) const;

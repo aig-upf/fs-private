@@ -563,7 +563,7 @@ class ProcessedComponent(object):
         if self._type == 'EFFECT':
             return 'ScopedEffect'
         else:
-            classnames = {1: 'UnaryExternalScopedConstraint', 2: 'BinaryExternalScopedConstraint'}
+            classnames = {1: 'UnaryParametrizedScopedConstraint', 2: 'BinaryParametrizedScopedConstraint'}
             return classnames[self.arity]
 
     def get_instantiation_tpl(self):

@@ -7,20 +7,20 @@ namespace fs0 {
 ScopedConstraint::ScopedConstraint(const VariableIdxVector& scope) :
 	_scope(scope), projection() {}
 	
-ExternalScopedConstraint::ExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+ParametrizedScopedConstraint::ParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
 	ScopedConstraint(scope), _binding(parameters) {}
 		
 		
-UnaryExternalScopedConstraint::UnaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	ExternalScopedConstraint(scope, parameters) {}
+UnaryParametrizedScopedConstraint::UnaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+	ParametrizedScopedConstraint(scope, parameters) {}
 
-// bool UnaryExternalScopedConstraint::isSatisfied(const ObjectIdxVector& values) const {
+// bool UnaryParametrizedScopedConstraint::isSatisfied(const ObjectIdxVector& values) const {
 // 	assert(values.size()==1);
 // 	return this->isSatisfied(values[0]);
 // }
 
 //! Filters from a new set of domains.
-ScopedConstraint::Output UnaryExternalScopedConstraint::filter(const DomainMap& domains) const {
+ScopedConstraint::Output UnaryParametrizedScopedConstraint::filter(const DomainMap& domains) const {
 	DomainVector projection = Projections::project(domains, _scope);
 	assert(projection.size() == 1);
 	
@@ -40,12 +40,12 @@ ScopedConstraint::Output UnaryExternalScopedConstraint::filter(const DomainMap& 
 	return (domain.size() == 0) ? Output::Failure : output;		
 };
 
-BinaryExternalScopedConstraint::BinaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	ExternalScopedConstraint(scope, parameters) {}
+BinaryParametrizedScopedConstraint::BinaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+	ParametrizedScopedConstraint(scope, parameters) {}
 
 
 //! This actually arc-reduces the constraint with respect to the relevant variable given by the index
-ScopedConstraint::Output BinaryExternalScopedConstraint::filter(unsigned variable) {
+ScopedConstraint::Output BinaryParametrizedScopedConstraint::filter(unsigned variable) {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
 	
