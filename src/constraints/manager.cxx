@@ -36,10 +36,10 @@ void ConstraintManager::indexConstraintsByArity(const ScopedConstraint::vcptr& c
 								PConstraintPtrVct& n_ary
 							) {
 	for (const ScopedConstraint::cptr ctr:constraints) {
-		unsigned arity = ctr->getArity();
-		if (arity == 1) {
+		ScopedConstraint::Filtering filtering = ctr->filteringType();
+		if (filtering == ScopedConstraint::Filtering::Unary) {
 			unary.push_back(ctr);
-		} else if (arity == 2) {
+		} else if (filtering == ScopedConstraint::Filtering::ArcReduction) {
 			binary.push_back(ctr);
 		} else {
 			n_ary.push_back(ctr);

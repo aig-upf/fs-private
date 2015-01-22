@@ -20,6 +20,14 @@ public:
 	//! The possible results of the filtering process
 	enum class Output {Failure, Pruned, Unpruned};
 	
+	/**
+	 * The type of filtering offered by a particular constraint class.
+	 *   - Unary: unary constraints filter directly the domain.
+	 *   - ArcReduction: Binary constraints arc-reduce their domains wrt one of the two variables of their scope. This is used in the AC3 algorithm.
+	 *   - Custom: Other types of constraints might apply any other filtering to ensure some type of local consistency.
+	 */
+	enum class Filtering {Unary, ArcReduction, Custom};
+	
 // 	typedef ScopedConstraint const * cptr;
 	typedef ScopedConstraint* cptr;
 	typedef std::vector<ScopedConstraint::cptr> vcptr;
@@ -27,6 +35,8 @@ public:
 	ScopedConstraint(const VariableIdxVector& scope);
 	
 	virtual ~ScopedConstraint() {}
+	
+	virtual Filtering filteringType() = 0;
 	
 	inline const VariableIdxVector& getScope() const { return _scope; }
 	
@@ -83,6 +93,8 @@ public:
 	
 	virtual ~UnaryExternalScopedConstraint() {};
 	
+	virtual Filtering filteringType() { return Filtering::Unary; };
+	
 	//! TODO - This should get proxied to the vector-less version
 	bool isSatisfied(const ObjectIdxVector& values) const = 0;
 	
@@ -100,6 +112,8 @@ public:
 	BinaryExternalScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
 	virtual ~BinaryExternalScopedConstraint() {};
+	
+	virtual Filtering filteringType() { return Filtering::ArcReduction; };
 	
 	virtual Output filter(unsigned variable);
 };

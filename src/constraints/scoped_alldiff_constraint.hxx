@@ -37,6 +37,8 @@ public:
 	
 	virtual ~ScopedAlldiffConstraint() {}
 	
+	virtual Filtering filteringType() { return Filtering::Custom; };
+	
 	bool isSatisfied(const ObjectIdxVector& values) const;
 
 	//! Filters from the set of currently loaded projections

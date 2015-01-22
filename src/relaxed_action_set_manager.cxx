@@ -67,7 +67,7 @@ void RelaxedActionSetManager::computeChangeset(const Action& action, const Domai
 		
 		
 		if(relevant.size() == 0) {  // No need to pass any point.
-			changeset.add(Fact(effect->getAffected(), effect->apply({})));
+			changeset.add(Fact(effect->getAffected(), effect->apply({})), std::make_shared<FactSet>());
 		}
 		else if(relevant.size() == 1) {  // micro-optimization
 			for (ObjectIdx val:*(domains.at(relevant[0]))) { // Add to the changeset for every allowed value of the relevant variable

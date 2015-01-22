@@ -63,7 +63,6 @@ public:
 	~Changeset() {};
 	
 	virtual void add(const Fact& fact, const FactSetPtr extraCauses);
-	virtual void add(const Fact& fact) { add(fact, nullptr); }
 	
 	void updateEffectMap(const Fact& fact, const Fact::vctrp extra);
 	void updateEffectMapSimple(const Fact& fact, const Fact::vctrp extra);
