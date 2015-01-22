@@ -7,16 +7,21 @@ from pddl import Atom, NegatedAtom
 
 from base import ParameterExpression, NumericExpression, ObjectExpression, DefinedExpression, RelationalExpression, \
     ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression, \
-    PredicativeExpression
+    PredicativeExpression, ConstraintExpression
 from compilation.exceptions import ParseException
 from compilation.helper import is_int
 
 
 BASE_SYMBOLS = ("=", "!=", "+", "-", ">", "<", ">=", "<=")
+BUILTIN_CONSTRAINTS = ("sum_constraint", "alldiff_constraint")
 
 
 def is_basic_symbol(symbol):
     return symbol in BASE_SYMBOLS or symbol == "@defined"
+
+
+def is_constraint_expression(symbol):
+    return symbol in BUILTIN_CONSTRAINTS
 
 
 class Parser(object):
@@ -56,6 +61,10 @@ class Parser(object):
         assert len(exp.args) == 1
         return DefinedExpression(exp.negated, self.process_functional_expression(exp.args[0]))
 
+    def process_constraint_expression(self, exp):
+        """ Process a constraint expression such as sum(x,y,z). """
+        return ConstraintExpression(exp.predicate, self.process_argument_list(exp.args))
+
     def process_relational_operator(self, exp):
         """ Process a relational operator such as =, <=, ... """
         return RelationalExpression(exp.predicate, exp.negated, self.process_argument_list(exp.args))
@@ -85,6 +94,9 @@ class Parser(object):
         elif is_basic_symbol(exp.predicate):  # A relational operator
             return self.process_relational_operator(exp)
 
+        elif is_constraint_expression(exp.predicate):  # A relational operator
+            return self.process_constraint_expression(exp)
+
         else:  # A "standard" predicate
             c = StaticPredicativeExpression if self.is_static(exp.predicate) else PredicativeExpression
             processed = c(exp.predicate, exp.negated, self.process_argument_list(exp.args))
@@ -96,5 +108,5 @@ class Parser(object):
         return [self.process_expression(arg) for arg in args]
 
     def check_declared(self, symbol):
-        if not is_basic_symbol(symbol) and not symbol in self.all:
+        if not is_basic_symbol(symbol) and not is_constraint_expression(symbol) and symbol not in self.all:
             raise ParseException("Undeclared symbol '{}'".format(symbol))

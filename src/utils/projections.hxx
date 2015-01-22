@@ -44,6 +44,7 @@ public:
 	
 	//! Helper to print sets of domains
 	static void printDomains(const DomainMap& domains);
+	static void printDomains(const DomainVector& domains);
 };
 
 

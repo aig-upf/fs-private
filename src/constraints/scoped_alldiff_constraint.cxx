@@ -5,6 +5,9 @@
 namespace fs0 {
 
 
+ScopedAlldiffConstraint::ScopedAlldiffConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) 
+	: ScopedAlldiffConstraint(scope) {}
+
 ScopedAlldiffConstraint::ScopedAlldiffConstraint(const VariableIdxVector& scope) 
 	: ScopedConstraint(scope), _arity(scope.size()), min(_arity), max(_arity), sorted_vars(_arity), u(_arity)
 {}

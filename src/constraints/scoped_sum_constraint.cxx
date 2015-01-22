@@ -5,6 +5,9 @@
 namespace fs0 {
 
 
+ScopedSumConstraint::ScopedSumConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+	ScopedSumConstraint(scope) {}
+	
 ScopedSumConstraint::ScopedSumConstraint(const VariableIdxVector& scope)
 	: ScopedConstraint(scope)
 {

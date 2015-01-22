@@ -64,8 +64,11 @@ class ActionCompiler(object):
                 raise RuntimeError("Unknown type of expression '{}'".format(exp))
 
         else:
-            code = finish_bool_code(CppPrinter(index).print(exp))
-            procedure = base.AppProcedure(str(exp), relevant, code)
+            if isinstance(exp, base.ConstraintExpression):
+                procedure = base.AppProcedure(exp.symbol, relevant, '', comment=str(exp), builtin=True)
+            else:
+                code = finish_bool_code(CppPrinter(index).print(exp))
+                procedure = base.AppProcedure(str(exp), relevant, code)
 
         return procedure
 

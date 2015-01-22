@@ -374,7 +374,8 @@ class Generator(object):
     def dump_constraints_data(self):
         """ Saves the data related to state and goal constraints """
         self.dump_data('constraints', self.serialize_constraints(self.task.constraints))
-        self.dump_data('goal-constraints', self.serialize_constraints(self.task.gconstraints))
+        # This is not needed anymore, as we include the global constraints into the regular goal expression
+        # self.dump_data('goal-constraints', self.serialize_constraints(self.task.gconstraints))
 
     def dump_init_data(self):
         """

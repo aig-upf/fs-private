@@ -33,6 +33,7 @@ protected:
 
 public:
 	ScopedAlldiffConstraint(const VariableIdxVector& scope);
+	ScopedAlldiffConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
 	virtual ~ScopedAlldiffConstraint() {}
 	

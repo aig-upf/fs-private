@@ -20,8 +20,7 @@ void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory
 	problem.setInitialState(loadStateFromFile(dir + "/init.data"));
 
 	/* Load the state and goal constraints */
-	loadConstraints(dir + "/constraints.data", problem, false);
-	loadConstraints(dir + "/goal-constraints.data", problem, true);
+	loadConstraints(dir + "/constraints.data", problem);
 
 	/* Generate goal constraints from the goal evaluator */
 	generateGoalConstraints(dir + "/goal.data", goalFactory, problem);
@@ -101,7 +100,7 @@ void Loader::generateGoalConstraints(const std::string& filename, GoalFactoryTyp
 	}
 }
 
-void Loader::loadConstraints(const std::string& filename, Problem& problem, bool goal) {
+void Loader::loadConstraints(const std::string& filename, Problem& problem) {
 	std::string line;
 	std::ifstream in(filename);
 	
@@ -121,11 +120,7 @@ void Loader::loadConstraints(const std::string& filename, Problem& problem, bool
 		VariableIdxVector variables = parseNumberList<unsigned>(strs[2]);
 		
 		ScopedConstraint::cptr constraint = ConstraintFactory::create(name, variables);
-		if (goal) {
-			problem.registerGoalConstraint(constraint);
-		} else {
-			problem.registerConstraint(constraint);
-		}
+		problem.registerConstraint(constraint);
 	}
 }
 

@@ -96,15 +96,18 @@ class Parameter(object):
 class AppProcedure(object):
     TYPE = 'CONSTRAINT'
 
-    def __init__(self, name, variables, code, comment=""):
+    def __init__(self, name, variables, code, comment="", builtin=False):
         self.name = name
         self.comment = comment
         self.variables = variables
         self.code = code
+        self.builtin = builtin
 
     def process_component(self, symbol_map):
-        code = self.get_comments() + [self.templatize_code(symbol_map)]
-        return ProcessedComponent(code, self.TYPE, len(self.variables))
+        code = []
+        if not self.builtin:
+            code = self.get_comments() + [self.templatize_code(symbol_map)]
+        return ProcessedComponent(self.name, code, self.TYPE, self.builtin, len(self.variables))
 
     def get_comments(self):
         return ['// ' + self.name] + (['// ' + self.comment] if self.comment else [])
@@ -501,6 +504,11 @@ class StaticPredicativeExpression(PredicativeExpression):
         return self._compute_static_relevant_variables(relevant)
 
 
+class ConstraintExpression(StaticPredicativeExpression):
+    def __init__(self, symbol, arguments):
+        super().__init__(symbol, False, arguments)
+
+
 class RelationalExpression(StaticPredicativeExpression):
     def __init__(self, symbol, negated, arguments):
         assert len(arguments) == 2
@@ -543,10 +551,12 @@ class NumericExpression(Expression):
 
 class ProcessedComponent(object):
     """ A processed component contains the relevant code and information for a processed constraint / effect """
-    def __init__(self, code, _type, arity):
+    def __init__(self, name, code, _type, builtin, arity):
         assert isinstance(code, list)
+        self.name = name
         self.code = code
         self._type = _type
+        self.builtin = builtin
         self.arity = arity
 
     def get_baseclass(self):
@@ -555,3 +565,11 @@ class ProcessedComponent(object):
         else:
             classnames = {1: 'UnaryExternalScopedConstraint', 2: 'BinaryExternalScopedConstraint'}
             return classnames[self.arity]
+
+    def get_instantiation_tpl(self):
+        if self._type == 'EFFECT':
+            return 'effect_instantiation'
+        elif self._type == 'CONSTRAINT':
+            return 'constraint_instantiation'
+        else:
+            raise RuntimeError("Unknown component type")

@@ -16,6 +16,7 @@ class ScopedSumConstraint : public ScopedConstraint
 public:
 	
 	ScopedSumConstraint(const VariableIdxVector& scope);
+	ScopedSumConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
 	virtual ~ScopedSumConstraint() {}
 	

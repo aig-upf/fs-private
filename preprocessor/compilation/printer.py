@@ -3,7 +3,8 @@
 """
 from compilation.helper import is_external
 from base import StaticFunctionalExpression, StaticPredicativeExpression, RelationalExpression, \
-    ArithmeticExpression, ParameterExpression, VariableExpression, ObjectExpression, NumericExpression
+    ArithmeticExpression, ParameterExpression, VariableExpression, ObjectExpression, NumericExpression, \
+    ConstraintExpression
 
 
 class CppPrinter(object):
@@ -19,6 +20,8 @@ class CppPrinter(object):
             symbol = '==' if exp.symbol == '=' else exp.symbol
             lhs, rhs = self.print_parameters(exp)
             return "{}({} {} {})".format(neg, lhs, symbol, rhs)
+        elif isinstance(exp, ConstraintExpression):
+            return ''  # Constraint expressions need no code
         elif isinstance(exp, ArithmeticExpression):
             lhs, rhs = self.print_parameters(exp)
             return "{} {} {}".format(lhs, exp.symbol, rhs)

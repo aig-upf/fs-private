@@ -138,7 +138,7 @@ class ApplicableObject(object):
         # Applicability procedures
         blocks = self.get_procedures_code(self.procedures)
         self.applicability_constraints, self.constraint_instantiations = generate_constraint_code(
-            self.get_entity_name('constraint'), blocks, 'constraint', 'constraint_instantiation')
+            self.get_entity_name('constraint'), blocks, 'constraint')
 
     def get_entity_name(self, postfix=''):
         raise RuntimeError("Must be subclassed")
@@ -159,7 +159,7 @@ class ActionCode(ApplicableObject):
     def process_effect_procedures(self):
         blocks = self.get_procedures_code(self.effect_procedures, self.action.parameter_map)
         self.effect_components, self.effect_instantiations = generate_constraint_code(
-            self.get_entity_name('effect'), blocks, 'effect', 'effect_instantiation')
+            self.get_entity_name('effect'), blocks, 'effect')
 
     def get_entity_name(self, postfix=''):
             return util.normalize_action_name(self.action.name) + (util.to_camelcase(postfix) if postfix else '')
@@ -179,17 +179,28 @@ class GoalCode(ApplicableObject):
         return 'Goal' + (util.to_camelcase(postfix) if postfix else '')
 
 
-def generate_constraint_code(name, blocks, tpl, instantiation_tpl):
+def generate_constraint_code(name, blocks, tpl):
     classes, instantiations = [], []
     for i, component in enumerate(blocks, 0):
-        classname = '{}{}'.format(name, i)
-        classes.append(tplManager.get(tpl).substitute(
-            classname=classname,
-            parent=component.get_baseclass(),
-            code='\n\t\t'.join(component.code)
-        ))
+        classname = get_component_classname(component, name, i)
+
+        if not component.builtin:
+            classes.append(tplManager.get(tpl).substitute(
+                classname=classname,
+                parent=component.get_baseclass(),
+                code='\n\t\t'.join(component.code)
+            ))
+
+        instantiation_tpl = component.get_instantiation_tpl()
         instantiations.append(tplManager.get(instantiation_tpl).substitute(
             classname=classname,
             i=i
         ))
     return classes, instantiations
+
+
+def get_component_classname(component, name, i):
+    builtin_classnames = {"sum_constraint": "ScopedSumConstraint", "alldiff_constraint": "ScopedAlldiffConstraint"}
+    if component.builtin:
+        return builtin_classnames[component.name]
+    return '{}{}'.format(name, i)

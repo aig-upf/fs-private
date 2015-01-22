@@ -50,10 +50,8 @@ public:
 	
 	static void generateGoalConstraints(const std::string& filename, GoalFactoryType goalFactory, Problem& problem);
 	
-	/**
-	 * Loads a set of state constraints.
-	 */
-	static void loadConstraints(const std::string& filename, Problem& problem, bool goal);
+	//! Loads a set of state constraints from the given file
+	static void loadConstraints(const std::string& filename, Problem& problem);
 	
 protected:
 	template<typename T>

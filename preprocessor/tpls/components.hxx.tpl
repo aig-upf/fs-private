@@ -14,6 +14,7 @@
 #include <fact.hxx>
 #include <problem.hxx>
 #include "external.hxx"
+#include <constraints/all.hxx>
 
 using namespace fs0;
 
