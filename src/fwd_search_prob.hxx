@@ -4,8 +4,6 @@
 #include <aptk/search_prob.hxx>
 #include <problem.hxx>
 #include <state.hxx>
-#include <actions.hxx>
-#include <heuristics/changeset.hxx>
 #include <simple_applicable_action_set.hxx>
 
 namespace fs0 {

@@ -2,9 +2,7 @@
 #include <iostream>
 #include <cassert>
 
-#include "generic_state.hxx"
-#include "relaxed_generic_state.hxx"
-#include <actions.hxx>
+#include <relaxed_generic_state.hxx>
 #include <heuristics/changeset.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>

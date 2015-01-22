@@ -9,7 +9,6 @@
 
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <actions.hxx>
 
 namespace fs0 {
 class Problem;

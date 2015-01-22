@@ -4,14 +4,13 @@
 #include <iosfwd>
 
 #include <fs0_types.hxx>
-#include <actions.hxx>
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <simple_applicable_action_set.hxx>
 #include <simple_action_set_manager.hxx>
 #include <constraints/problem_manager.hxx>
 #include "constraints/scoped_constraint.hxx"
-#include "app_entity.hxx"
+#include <app_entity.hxx>
 
 namespace fs0 {
 

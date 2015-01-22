@@ -3,7 +3,6 @@
 #include <cassert>
 
 #include "generic_state.hxx"
-#include <actions.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
 
