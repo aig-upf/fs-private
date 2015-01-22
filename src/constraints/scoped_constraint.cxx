@@ -37,7 +37,7 @@ ScopedConstraint::Output UnaryParametrizedScopedConstraint::filter(const DomainM
 		}
 	}
 	domain = new_domain;  // Update the domain with the new values using the assignment operator
-	return (domain.size() == 0) ? Output::Failure : output;		
+	return (domain.size() == 0) ? Output::Failure : output;
 };
 
 BinaryParametrizedScopedConstraint::BinaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
@@ -58,12 +58,9 @@ ScopedConstraint::Output BinaryParametrizedScopedConstraint::filter(unsigned var
 	Output output = Output::Unpruned;
 	
 	// A small helper to create the point having the values in the right order.
-	auto make_point = [&variable](ObjectIdx x, ObjectIdx z) -> ProcedurePoint {
-		if (variable == 0) {
-			return {x, z};
-		} else {
-			return {z, x};
-		}
+	auto make_point = [&variable](ObjectIdx x, ObjectIdx z) -> ObjectIdxVector {
+		if (variable == 0) return {x, z};
+		else return {z, x};
 	};
 	
 	for (ObjectIdx x:domain) {

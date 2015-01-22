@@ -17,7 +17,7 @@ public:
 	//! Projects a non-relaxed state into a subset of relevant values, which returns.
 	static ObjectIdxVector project(const State& s, const VariableIdxVector& scope);
 
-	//! Helper function to project a relaxed state to all of the variables relevant to a given applicable entity.
+	//! Helper function to copy-project a relaxed state to all of the variables relevant to a given applicable entity.
 	static DomainMap projectToActionVariables(RelaxedState& state, const Action& action);
 	
 	/**

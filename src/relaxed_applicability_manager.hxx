@@ -20,12 +20,24 @@ public:
 	static RelaxedApplicabilityManager* createApplicabilityManager(const Action::vcptr& actions);
 	
 	RelaxedApplicabilityManager() {}
+	virtual ~RelaxedApplicabilityManager() {}
 
 	//!
-	std::pair<bool, FactSetPtr> isApplicable(const Action& action, const State& seed, const DomainMap& domains) const;
+	virtual std::pair<bool, FactSetPtr> isApplicable(const Action& action, const State& seed, const DomainMap& domains) const;
 	
 protected:
-	bool isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const;
+	virtual bool isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const;
+};
+
+
+class CompleteApplicabilityManager : public RelaxedApplicabilityManager
+{
+public:
+	CompleteApplicabilityManager() : RelaxedApplicabilityManager() {}
+	virtual ~CompleteApplicabilityManager() {}
+	
+protected:
+	virtual bool isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const;
 };
 
 } // namespaces

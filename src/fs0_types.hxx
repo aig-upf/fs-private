@@ -36,7 +36,6 @@ namespace fs0 {
 
 	typedef std::vector<VariableIdx> VariableIdxVector;
 	typedef std::vector<ObjectIdx> ObjectIdxVector;
-	typedef ObjectIdxVector ProcedurePoint;
 
 
 	//! A domain is a set of values (of a state variable)

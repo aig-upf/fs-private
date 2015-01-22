@@ -19,7 +19,7 @@ public:
 		const ValueSet& values,
 		IteratorCallback callback
 	) {
-		ProcedurePoint tmp;
+		ObjectIdxVector tmp;
 		_iterateCartesianProduct(values, callback, tmp, 0);
 	}
 	
@@ -51,7 +51,7 @@ public:
 
 protected:
 	template <typename IteratorCallback>
-	static void _iterateCartesianProduct(const ValueSet& values, IteratorCallback callback, ProcedurePoint& current, unsigned idx) {
+	static void _iterateCartesianProduct(const ValueSet& values, IteratorCallback callback, ObjectIdxVector& current, unsigned idx) {
 		// base case: we have generated a full element of the cartesian product
 		if (idx == values.size() - 1) {
 			callback(current);
