@@ -9,7 +9,7 @@ namespace fs0 {
 
 // Note that we use both types of constraints as goal constraints
 PlanningConstraintManager::PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints)
-	: stateConstraintsManager(stateConstraints), goalConstraintsManager(Utils::merge(goalConstraints, stateConstraints))
+	: allGoalConstraints(Utils::merge(goalConstraints, stateConstraints)), stateConstraintsManager(stateConstraints), goalConstraintsManager(allGoalConstraints)
 {}
 
 ScopedConstraint::Output PlanningConstraintManager::pruneUsingStateConstraints(RelaxedState& state) const {

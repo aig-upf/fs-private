@@ -42,7 +42,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 			auto& action = *actions[idx];
 			
 			// We compute the projection of the current relaxed state to the variables relevant to the action
-			// Note that this clones the actual domains...
+			// Note that this _clones_ the actual domains, since we want to modify them.
 			DomainMap projection = Projections::projectToActionVariables(relaxed, action);
 			
 			// ... and this prunes them with the unary constraints represented by each procedure.

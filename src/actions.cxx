@@ -4,6 +4,7 @@
 #include <problem_info.hxx>
 #include <limits>
 #include <utils/utils.hxx>
+#include <constraints/constraint_manager.hxx>
 
 
 namespace fs0 {
@@ -11,8 +12,14 @@ namespace fs0 {
 const ActionIdx Action::INVALID = std::numeric_limits<unsigned int>::max();
 
 Action::Action(const ObjectIdxVector& binding, const ScopedConstraint::vcptr& constraints, const ScopedEffect::vcptr& effects) :
-	_binding(binding), _constraints(constraints), _effects(effects), _allRelevantVars(extractRelevantVariables())
+	_binding(binding), _constraints(constraints), _effects(effects), _allRelevantVars(extractRelevantVariables()), constraintManager(nullptr)
 {};
+
+Action::~Action() {
+	for (const ScopedConstraint* pointer:_constraints) delete pointer;
+	for (const ScopedEffect* pointer:_effects) delete pointer;
+	if (constraintManager) delete constraintManager;
+};
 
 VariableIdxVector Action::extractRelevantVariables() {
 	boost::container::flat_set<unsigned> unique;
@@ -27,11 +34,6 @@ VariableIdxVector Action::extractRelevantVariables() {
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 
-Action::~Action() {
-	for (const ScopedConstraint* constraint:_constraints) delete constraint;
-	for (const ScopedEffect* effect:_effects) delete effect;
-};
-
 std::ostream& Action::print(std::ostream& os) const {
 	auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();
 	os << getName() << "(";
@@ -40,6 +42,10 @@ std::ostream& Action::print(std::ostream& os) const {
 	}
 	os << ")";
 	return os;
+}
+
+void Action::constructConstraintManager() {
+	constraintManager = new ConstraintManager(_constraints);
 }
 
 } // namespaces

@@ -5,9 +5,7 @@
 
 namespace fs0 {
 
-	
-RelaxedApplicabilityManager* RelaxedApplicabilityManager::createApplicabilityManager(const Action::vcptr& actions) {
-	
+bool RelaxedApplicabilityManager::checkCompleteApplicabilityManagerNeeded(const Action::vcptr& actions) {
 	bool need_complex_applicability_manager = false;
 	
 	// We first analyse the type of actions preconditions
@@ -27,17 +25,22 @@ RelaxedApplicabilityManager* RelaxedApplicabilityManager::createApplicabilityMan
 			}
 		}
 	}
+	return need_complex_applicability_manager;
+}
+
+RelaxedApplicabilityManager* RelaxedApplicabilityManager::createApplicabilityManager(const Action::vcptr& actions) {
 	
-	// And now instantiate the appropriate applicability manager
-	if (!need_complex_applicability_manager) {
-		// We now for sure that all action constraints are unary and can be safely casted to UnaryParametrizedScopedConstraint during the relaxed plan computation
-		return new RelaxedApplicabilityManager();
+	if (checkCompleteApplicabilityManagerNeeded(actions)) {
+		// Construct a constraint manager for every action.
+		for (const Action::cptr& action:actions) action->constructConstraintManager();
+		return new GenericApplicabilityManager();
 	} else {
-		return new CompleteApplicabilityManager();
+		// We now for sure that all action constraints are unary and can be safely casted to UnaryParametrizedScopedConstraint during the relaxed plan computation
+		return new UnaryApplicabilityManager();		
 	}
 }
 
-std::pair<bool, FactSetPtr> RelaxedApplicabilityManager::isApplicable(const Action& action, const State& seed, const DomainMap& domains) const {
+std::pair<bool, FactSetPtr> UnaryApplicabilityManager::isApplicable(const Action& action, const State& seed, const DomainMap& domains) const {
 	FactSetPtr causes = std::make_shared<FactSet>();
 	
 	for (const ScopedConstraint::cptr constraint:action.getConstraints()) {
@@ -49,7 +52,7 @@ std::pair<bool, FactSetPtr> RelaxedApplicabilityManager::isApplicable(const Acti
 	return std::make_pair(true, causes);
 }
 
-bool RelaxedApplicabilityManager::isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const {
+bool UnaryApplicabilityManager::isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const {
 	// Note that because we are using this type of applicability manager, we know for sure that the constraint must be a UnaryConstraint.
 	
 	// TODO - Optimize taking into account that the constraint is unary
@@ -83,10 +86,29 @@ bool RelaxedApplicabilityManager::isProcedureApplicable(const ScopedConstraint::
 	return cause_found;
 }
 
-bool CompleteApplicabilityManager::isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const {
-	// Note that because we are using this type of applicability manager, we know for sure that some constraint will have arity > 1
-	throw std::runtime_error("Hasn't been implemented yet");
-	return true;
+
+std::pair<bool, FactSetPtr> GenericApplicabilityManager::isApplicable(const Action& action, const State& seed, const DomainMap& domains) const {
+	FactSetPtr causes = std::make_shared<FactSet>();
+	ConstraintManager* manager = action.getConstraintManager();
+	ScopedConstraint::Output o = manager->filter(domains);
+	
+	if(o == ScopedConstraint::Output::Failure || !ConstraintManager::checkConsistency(domains)) {
+		return std::make_pair(false, nullptr);
+	}
+	
+	// The CSP is _not_ inconsistent. To build the cause of applicability of the action,
+	// we pick arbitrary values among the remaining consistent values.
+	// We favor the seed value, if it is among them.
+	for (const auto& domain:domains) {
+		VariableIdx variable = domain.first;
+		
+		ObjectIdx seed_value = seed.getValue(variable);
+		if (domain.second->find(seed_value) == domain.second->end()) {  // If the original value makes the situation a goal, then we don't need to add anything for this variable.
+			ObjectIdx value = *(domain.second->cbegin());
+			causes->insert(Fact(variable, value)); // Otherwise we simply select an arbitrary value.
+		}
+	}
+	return std::make_pair(true, causes);
 }
 
 } // namespaces

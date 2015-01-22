@@ -14,7 +14,7 @@
 
 namespace fs0 {
 
-class Changeset;
+class ConstraintManager;
 
 class Action
 {
@@ -32,11 +32,14 @@ protected:
 	//! The indexes of _all_ the state variables relevant to at least one of the effect or applicability procedures of the action.
 	const VariableIdxVector _allRelevantVars;
 	
+	//! Optionally, each action might have an associated constraint manager that handles its precondition constraints.
+	ConstraintManager* constraintManager;
+	
 public:
 	static const ActionIdx INVALID;
 	
 	// typedef std::shared_ptr<const Action> cptr;
-	typedef Action const * cptr;
+	typedef Action* cptr;
 	typedef std::vector<Action::cptr> vcptr;
 	
 	Action(const ObjectIdxVector& binding, const ScopedConstraint::vcptr& constraints, const ScopedEffect::vcptr& effects);
@@ -60,6 +63,9 @@ public:
 	inline const ScopedConstraint::vcptr getConstraints() const { return _constraints; }
 	
 	inline const ScopedEffect::vcptr getEffects() const { return _effects; }
+	
+	void constructConstraintManager();
+	ConstraintManager* getConstraintManager() const { return constraintManager; };
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Action&  entity) { return entity.print(os); }

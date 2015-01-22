@@ -198,7 +198,8 @@ ConstraintManager::Arc ConstraintManager::select(ArcSet& worklist) const {
 	worklist.erase(it);
 	return elem;
 }
-VariableIdxVector ConstraintManager::indexRelevantVariables(ScopedConstraint::vcptr& constraints) {
+
+VariableIdxVector ConstraintManager::indexRelevantVariables(const ScopedConstraint::vcptr& constraints) {
 	boost::container::flat_set<VariableIdx> relevant;
 	for (const ScopedConstraint::cptr constraint:constraints) {
 		for (VariableIdx variable:constraint->getScope()) {
@@ -207,7 +208,6 @@ VariableIdxVector ConstraintManager::indexRelevantVariables(ScopedConstraint::vc
 	}
 	return VariableIdxVector(relevant.begin(), relevant.end());
 }
-
 
 } // namespaces
 

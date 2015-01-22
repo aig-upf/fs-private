@@ -17,6 +17,10 @@ class PlanningConstraintManager
 public:
 	typedef std::shared_ptr<const PlanningConstraintManager> cptr;
 	
+	//! We store here all the constraints that we want to take into account when determining if a relaxed state is a goal:
+	//! This includes both the explicit goal constraints plus the state constraints.
+	const ScopedConstraint::vcptr allGoalConstraints;
+	
 	const ConstraintManager stateConstraintsManager;
 	const ConstraintManager goalConstraintsManager;
 	

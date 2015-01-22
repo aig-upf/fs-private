@@ -22,7 +22,9 @@ protected:
 	
 	
 	//! The set of constraints that we manage
-	ScopedConstraint::vcptr _constraints;
+	//! This will be a reference to either the vector of constraints stored in the Problem object
+	//! or to the vector of constraints stored in some action.
+	const ScopedConstraint::vcptr& _constraints;
 	
 	//! The worklists necessary for the AC3 algorithm: State constraints and goal constraints
 	ArcSet AC3Worklist;
@@ -68,7 +70,7 @@ protected:
 	Arc select(ArcSet& worklist) const;
 
 	//! Helper to index all the variables that are relevant to any of the given constraints
-	static VariableIdxVector indexRelevantVariables(ScopedConstraint::vcptr& constraints);
+	static VariableIdxVector indexRelevantVariables(const ScopedConstraint::vcptr& constraints);
 	
 	//! Simply filter out the domains that do not satisfy each of the unary constraints
 	ScopedConstraint::Output unaryFiltering(const DomainMap& domains) const;
