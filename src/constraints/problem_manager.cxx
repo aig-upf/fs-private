@@ -3,29 +3,31 @@
 #include <constraints/problem_manager.hxx>
 #include <problem.hxx>
 #include <utils/projections.hxx>
+#include <utils/utils.hxx>
 
 namespace fs0 {
 
+// Note that we use both types of constraints as goal constraints
 PlanningConstraintManager::PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints)
-	: manager(goalConstraints, stateConstraints)
+	: stateConstraintsManager(stateConstraints), goalConstraintsManager(Utils::merge(goalConstraints, stateConstraints))
 {}
 
 ScopedConstraint::Output PlanningConstraintManager::pruneUsingStateConstraints(RelaxedState& state) const {
-	DomainMap relevant_domains = Projections::project(state, manager.getStateConstraintRelevantVariables());  // This does NOT copy the domains
-	return manager.filterWithStateConstraints(relevant_domains);
+	DomainMap domains = Projections::project(state, stateConstraintsManager.getAllRelevantVariables());  // This does NOT copy the domains
+	return stateConstraintsManager.filter(domains);
 }
 
 bool PlanningConstraintManager::isGoal(const State& seed, const RelaxedState& state, Fact::vctrp causes) const {
-	DomainMap relevant_domains = Projections::projectCopy(state, manager.getGoalConstraintRelevantVariables());  // This makes a copy of the domain.
-	if (!checkGoal(relevant_domains)) return false;
+	DomainMap domains = Projections::projectCopy(state, goalConstraintsManager.getAllRelevantVariables());  // This makes a copy of the domain.
+	if (!checkGoal(domains)) return false;
 	
-	unsigned numVariables = Problem::getCurrentProblem()->getProblemInfo()->getNumVariables();
+	unsigned numVariables = Problem::getCurrentProblem()->getProblemInfo()->getNumVariables(); // The total number of state variables
 	std::vector<bool> set(numVariables, false); // Variables that have been already set.
 	
-	DomainMap clone = Projections::clone(relevant_domains);  // We'll need a deep copy
+	DomainMap clone = Projections::clone(domains);  // We need a deep copy
 
 	FactSetPtr fs = std::make_shared<FactSet>();
-	extractGoalCauses(seed, relevant_domains, clone, fs, set, 0);
+	extractGoalCauses(seed, domains, clone, fs, set, 0);
 	assert(causes->empty());
 	causes->insert(causes->end(), fs->begin(), fs->end());
 	// reportGoalFound(state, domains, causes);
@@ -33,13 +35,13 @@ bool PlanningConstraintManager::isGoal(const State& seed, const RelaxedState& st
 }
 
 bool PlanningConstraintManager::isGoal(const RelaxedState& state) const {
-	DomainMap relevant_domains = Projections::projectCopy(state, manager.getGoalConstraintRelevantVariables());  // This makes a copy of the domain.
-	return checkGoal(relevant_domains);
+	DomainMap domains = Projections::projectCopy(state, goalConstraintsManager.getAllRelevantVariables());  // This makes a copy of the domain.
+	return checkGoal(domains);
 }
 
 bool PlanningConstraintManager::checkGoal(const DomainMap& domains) const {
-	ScopedConstraint::Output o = manager.filterWithGoalConstraints(domains);
-	return o != ScopedConstraint::Output::Failure && manager.checkConsistency(domains);
+	ScopedConstraint::Output o = goalConstraintsManager.filter(domains);
+	return o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(domains);
 }
 	
 void PlanningConstraintManager::extractGoalCauses(const State& seed, const DomainMap& domains, const DomainMap& clone, FactSetPtr causes, std::vector<bool>& set, unsigned num_set) const {
@@ -79,8 +81,8 @@ void PlanningConstraintManager::extractGoalCauses(const State& seed, const Domai
 	selected_dom->insert(selected_value);
 	
 	// 4.2 Apply the constraints again
-	ScopedConstraint::Output o = manager.filterWithGoalConstraints(domains);
-	if (o == ScopedConstraint::Output::Failure || !manager.checkConsistency(domains)) {
+	ScopedConstraint::Output o = goalConstraintsManager.filter(domains);
+	if (o == ScopedConstraint::Output::Failure || !ConstraintManager::checkConsistency(domains)) {
 		// If the selection made the domains inconsistent, instead of backtracking we simply
 		// select arbitrary domains from the original domain set.
 		extractGoalCausesArbitrarily(seed, clone, causes, set);

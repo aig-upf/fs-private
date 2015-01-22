@@ -5,7 +5,7 @@
 #include <iosfwd>
 #include <fs0_types.hxx>
 #include <fact.hxx>
-#include <constraints/manager.hxx>
+#include <constraints/constraint_manager.hxx>
 
 namespace fs0 {
 
@@ -17,7 +17,8 @@ class PlanningConstraintManager
 public:
 	typedef std::shared_ptr<const PlanningConstraintManager> cptr;
 	
-	const ConstraintManager manager;
+	const ConstraintManager stateConstraintsManager;
+	const ConstraintManager goalConstraintsManager;
 	
 	PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
 	
@@ -25,7 +26,7 @@ public:
 	ScopedConstraint::Output pruneUsingStateConstraints(RelaxedState& state) const;
 	
 	//! Goal checking for non-relaxed states.
-	inline bool isGoal(const State& s) const { return manager.checkGoalConstraintsSatisfied(s); }
+	inline bool isGoal(const State& s) const { return goalConstraintsManager.checkSatisfaction(s); }
 	
 	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
 	//! Besides, return the causes of the goal to be later processed by the RPG heuristic backchaining procedure.
