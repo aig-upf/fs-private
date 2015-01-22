@@ -2,7 +2,7 @@
 #pragma once
 
 #include <iosfwd>
-#include <app_entity.hxx>
+#include <actions.hxx>
 #include <heuristics/changeset.hxx>
 #include <fs0_types.hxx>
 #include <fact.hxx>

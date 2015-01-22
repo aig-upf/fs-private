@@ -7,7 +7,7 @@
 #include <fact.hxx>
 #include <constraints/scoped_constraint.hxx>
 #include <utils/projections.hxx>
-#include <app_entity.hxx>
+#include <actions.hxx>
 
 
 namespace fs0 {

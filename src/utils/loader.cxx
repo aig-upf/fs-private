@@ -8,7 +8,7 @@
 #include <problem.hxx>
 #include <utils/loader.hxx>
 #include <constraints/factory.hxx>
-#include <app_entity.hxx>
+#include <actions.hxx>
 
 namespace fs0 {
 
@@ -24,8 +24,6 @@ void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory
 
 	/* Generate goal constraints from the goal evaluator */
 	generateGoalConstraints(dir + "/goal.data", goalFactory, problem);
-	
-	problem.createConstraintManager();		
 }
 	
 	

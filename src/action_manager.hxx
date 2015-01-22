@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <app_entity.hxx>
+#include <actions.hxx>
 #include <fs0_types.hxx>
 #include <state.hxx>
 #include <problem.hxx>

@@ -6,6 +6,7 @@
 #include <heuristics/changeset.hxx>
 #include <relaxed_action_set_manager.hxx>
 #include <utils/projections.hxx>
+#include "relaxed_effect_manager.hxx"
 
 namespace fs0 {
 
@@ -54,13 +55,14 @@ bool ActionManager::applyRelaxedPlan(const Problem& problem, const ActionPlan& p
 }
 
 bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, RelaxedState& s) {
-	RelaxedActionSetManager manager(Problem::getCurrentProblem()->getConstraints());
+	RelaxedActionSetManager appManager(Problem::getCurrentProblem()->getConstraints());
+	const RelaxedEffectManager& effManager = Problem::getCurrentProblem()->getRelaxedEffectManager();
 	DomainMap projection = Projections::projectToActionVariables(s, action);
-	auto res = manager.isApplicable(action, projection);
+	auto res = appManager.isApplicable(action, projection);
 	
 	if (res.first) { // The action is applicable
 		Changeset changeset(seed, s);
-		manager.computeChangeset(action, projection, changeset);
+		effManager.computeChangeset(action, projection, changeset);
 		s.accumulate(changeset);
 	}
 	return res.first;

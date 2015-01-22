@@ -10,18 +10,16 @@
 #include <simple_action_set_manager.hxx>
 #include <constraints/problem_manager.hxx>
 #include "constraints/scoped_constraint.hxx"
-#include <app_entity.hxx>
+#include <actions.hxx>
+#include "relaxed_effect_manager.hxx"
 
 namespace fs0 {
 
 class Problem
 {
 public:
-	Problem() {}
-	~Problem() {
-		for (const auto& ctr:_constraints) delete ctr;
-		for (const auto& ctr:_gconstraints) delete ctr;
-	} 
+	Problem();
+	~Problem();
 
 	//! Modify the problem initial state
 	void setInitialState(const State::cptr& state) { _initialState = state; }
@@ -40,17 +38,18 @@ public:
 	bool isGoal(const State& s) const { return ctrManager->isGoal(s); }
 
 	
-	void registerConstraint(const ScopedConstraint::cptr constraint) { _constraints.push_back(constraint);}
-	const ScopedConstraint::vcptr& getConstraints() const { return _constraints; }
-	void registerGoalConstraint(ScopedConstraint::cptr constraint) { _gconstraints.push_back(constraint);}
-	const ScopedConstraint::vcptr& getGoalConstraints() const { return _gconstraints; }
+	void registerConstraint(const ScopedConstraint::cptr constraint) { stateConstraints.push_back(constraint);}
+	const ScopedConstraint::vcptr& getConstraints() const { return stateConstraints; }
+	void registerGoalConstraint(ScopedConstraint::cptr constraint) { goalConstraints.push_back(constraint);}
+	const ScopedConstraint::vcptr& getGoalConstraints() const { return goalConstraints; }
 
 	
 	//! Getter/setter for the associated ProblemInfo object.
 	void setProblemInfo(const ProblemInfo::cptr& problemInfo) { _problemInfo = problemInfo; }
 	const ProblemInfo::cptr getProblemInfo() const { return _problemInfo; }
 	
-	static void setCurrentProblem(const Problem& problem) {
+	static void setCurrentProblem(Problem& problem) {
+		problem.bootstrap();
 		_instance = &problem;
 	}
 	
@@ -59,11 +58,9 @@ public:
 		return _instance;
 	}
 	
-	void createConstraintManager() {
-		ctrManager = std::make_shared<PlanningConstraintManager>(_gconstraints, _constraints);
-	}
-	
 	PlanningConstraintManager::cptr getConstraintManager() const { return ctrManager; }
+	
+	const RelaxedEffectManager& getRelaxedEffectManager() const { return effManager; }
 
 protected:
 	State::cptr _initialState;
@@ -75,10 +72,15 @@ protected:
 	ProblemInfo::cptr _problemInfo;
 	
 	//! Vectors of pointers to the different problem constraints. This class owns the pointers.
-	ScopedConstraint::vcptr _constraints;
-	ScopedConstraint::vcptr _gconstraints;
+	ScopedConstraint::vcptr stateConstraints;
+	ScopedConstraint::vcptr goalConstraints;
+	
+	RelaxedEffectManager effManager;
 	
 	static const Problem* _instance;
+
+	//! This performs a number of necessary routines once all of the problem information has been defined.
+	void bootstrap();
 };
 
 	  

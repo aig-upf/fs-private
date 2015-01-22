@@ -1,7 +1,7 @@
 
 #include <cassert>
 #include <utils/projections.hxx>
-#include <app_entity.hxx>
+#include <actions.hxx>
 #include <problem.hxx>
 
 namespace fs0 {
