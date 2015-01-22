@@ -5,46 +5,48 @@
 
 namespace fs0 {
 
-bool RelaxedApplicabilityManager::checkCompleteApplicabilityManagerNeeded(const Action::vcptr& actions) {
-	bool need_complex_applicability_manager = false;
-	
-	// We first analyse the type of actions preconditions
-	for (const Action::cptr& action:actions) {
-		for (const ScopedConstraint::cptr constraint:action->getConstraints()) {
-			unsigned arity = constraint->getArity();
-			if (arity == 0) {
-				throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
+bool RelaxedApplicabilityManager::checkActionNeedsCompleteApplicabilityManager(const Action::cptr action) {
+	bool needs_generic_manager = false;
+	for (const ScopedConstraint::cptr constraint:action->getConstraints()) {
+		unsigned arity = constraint->getArity();
+		if (arity == 0) {
+			throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
+		}
+		else if(arity == 1) {
+			if (!dynamic_cast<UnaryParametrizedScopedConstraint*>(constraint) || constraint->filteringType() != ScopedConstraint::Filtering::Unary) {
+				throw std::runtime_error("Cannot handle this type of unary constraint in action preconditions.");
 			}
-			
-			if(arity == 1) {
-				if (!dynamic_cast<UnaryParametrizedScopedConstraint*>(constraint) || constraint->filteringType() != ScopedConstraint::Filtering::Unary) {
-					throw std::runtime_error("Cannot handle this type of unary constraint in action preconditions.");
-				}
-			} else {
-				need_complex_applicability_manager = true;
-			}
+		} else {
+			needs_generic_manager = true;
 		}
 	}
-	return need_complex_applicability_manager;
+	return needs_generic_manager;
 }
 
 RelaxedApplicabilityManager* RelaxedApplicabilityManager::createApplicabilityManager(const Action::vcptr& actions) {
-	
-	if (checkCompleteApplicabilityManagerNeeded(actions)) {
-		// Construct a constraint manager for every action.
-		for (const Action::cptr& action:actions) action->constructConstraintManager();
-		return new GenericApplicabilityManager();
+	for (const Action::cptr& action:actions) {
+		if (checkActionNeedsCompleteApplicabilityManager(action)) {
+			action->constructConstraintManager();
+		}
+	}
+	return new RelaxedApplicabilityManager();
+}
+
+std::pair<bool, FactSetPtr> RelaxedApplicabilityManager::isApplicable(const Action& action, const State& seed, const DomainMap& domains) const {
+	ConstraintManager* manager = action.getConstraintManager();
+	if (!manager) {
+		// If the action has no associated manager, we know for sure that all of the action applicability constraints are unary.
+		return unaryApplicable(action, seed, domains);
 	} else {
-		// We now for sure that all action constraints are unary and can be safely casted to UnaryParametrizedScopedConstraint during the relaxed plan computation
-		return new UnaryApplicabilityManager();		
+		return genericApplicable(manager, seed, domains);
 	}
 }
 
-std::pair<bool, FactSetPtr> UnaryApplicabilityManager::isApplicable(const Action& action, const State& seed, const DomainMap& domains) const {
+std::pair<bool, FactSetPtr> RelaxedApplicabilityManager::unaryApplicable(const Action& action, const State& seed, const DomainMap& domains) const {
 	FactSetPtr causes = std::make_shared<FactSet>();
 	
 	for (const ScopedConstraint::cptr constraint:action.getConstraints()) {
-		if (!isProcedureApplicable(constraint, domains, seed, causes)) {
+		if (!isUnaryProcedureApplicable(constraint, domains, seed, causes)) {
 			return std::make_pair(false, nullptr);
 		}
 	}
@@ -52,7 +54,7 @@ std::pair<bool, FactSetPtr> UnaryApplicabilityManager::isApplicable(const Action
 	return std::make_pair(true, causes);
 }
 
-bool UnaryApplicabilityManager::isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const {
+bool RelaxedApplicabilityManager::isUnaryProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const {
 	// Note that because we are using this type of applicability manager, we know for sure that the constraint must be a UnaryConstraint.
 	
 	// TODO - Optimize taking into account that the constraint is unary
@@ -87,9 +89,8 @@ bool UnaryApplicabilityManager::isProcedureApplicable(const ScopedConstraint::cp
 }
 
 
-std::pair<bool, FactSetPtr> GenericApplicabilityManager::isApplicable(const Action& action, const State& seed, const DomainMap& domains) const {
+std::pair<bool, FactSetPtr> RelaxedApplicabilityManager::genericApplicable(ConstraintManager* manager, const State& seed, const DomainMap& domains) const {
 	FactSetPtr causes = std::make_shared<FactSet>();
-	ConstraintManager* manager = action.getConstraintManager();
 	ScopedConstraint::Output o = manager->filter(domains);
 	
 	if(o == ScopedConstraint::Output::Failure || !ConstraintManager::checkConsistency(domains)) {
