@@ -3,7 +3,7 @@
 #include <heuristics/relaxed_plan.hxx>
 #include <utils/projections.hxx>
 #include <action_manager.hxx>
-#include <relaxed_action_set_manager.hxx>
+#include <relaxed_applicability_manager.hxx>
 #include <heuristics/rpg.hxx>
 
 namespace fs0 {
@@ -21,7 +21,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	const Action::vcptr& actions = _problem.getAllActions();
 	
 	RelaxedState relaxed(seed);
-	RelaxedActionSetManager appManager(&seed, _problem.getConstraints());
+	const RelaxedApplicabilityManager& appManager = _problem.getRelaxedApplicabilityManager();
 	const RelaxedEffectManager& effManager = _problem.getRelaxedEffectManager();
 	
 	if (_problem.isGoal(seed)) return 0; // The seed state is a goal
@@ -46,7 +46,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 			DomainMap projection = Projections::projectToActionVariables(relaxed, action);
 			
 			// ... and this prunes them with the unary constraints represented by each procedure.
-			std::pair<bool, FactSetPtr> res = appManager.isApplicable(action, projection);
+			std::pair<bool, FactSetPtr> res = appManager.isApplicable(action, seed, projection);
 			if (res.first) { // If the action is applicable in the current RPG layer...
 				// ...we accumulate the effects on the changeset with all new reachable effects.
 				changeset->setCurrentAction(idx, rpg.pruneSeedSupporters(res.second));  // We record the applicability causes

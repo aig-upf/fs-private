@@ -8,6 +8,7 @@ const Problem* Problem::_instance = 0;
 Problem::Problem() :
 	stateConstraints(),
 	goalConstraints(),
+	appManager(stateConstraints),
 	effManager(stateConstraints)
 {}
 

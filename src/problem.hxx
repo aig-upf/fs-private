@@ -11,7 +11,8 @@
 #include <constraints/problem_manager.hxx>
 #include "constraints/scoped_constraint.hxx"
 #include <actions.hxx>
-#include "relaxed_effect_manager.hxx"
+#include <relaxed_applicability_manager.hxx>
+#include <relaxed_effect_manager.hxx>
 
 namespace fs0 {
 
@@ -60,6 +61,7 @@ public:
 	
 	PlanningConstraintManager::cptr getConstraintManager() const { return ctrManager; }
 	
+	const RelaxedApplicabilityManager& getRelaxedApplicabilityManager() const { return appManager; }
 	const RelaxedEffectManager& getRelaxedEffectManager() const { return effManager; }
 
 protected:
@@ -75,7 +77,8 @@ protected:
 	ScopedConstraint::vcptr stateConstraints;
 	ScopedConstraint::vcptr goalConstraints;
 	
-	RelaxedEffectManager effManager;
+	const RelaxedApplicabilityManager appManager;
+	const RelaxedEffectManager effManager;
 	
 	static const Problem* _instance;
 

@@ -4,7 +4,7 @@
 
 #include <action_manager.hxx>
 #include <heuristics/changeset.hxx>
-#include <relaxed_action_set_manager.hxx>
+#include <relaxed_applicability_manager.hxx>
 #include <utils/projections.hxx>
 #include "relaxed_effect_manager.hxx"
 
@@ -55,10 +55,10 @@ bool ActionManager::applyRelaxedPlan(const Problem& problem, const ActionPlan& p
 }
 
 bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, RelaxedState& s) {
-	RelaxedActionSetManager appManager(Problem::getCurrentProblem()->getConstraints());
+	const RelaxedApplicabilityManager& appManager = Problem::getCurrentProblem()->getRelaxedApplicabilityManager();
 	const RelaxedEffectManager& effManager = Problem::getCurrentProblem()->getRelaxedEffectManager();
 	DomainMap projection = Projections::projectToActionVariables(s, action);
-	auto res = appManager.isApplicable(action, projection);
+	auto res = appManager.isApplicable(action, seed, projection);
 	
 	if (res.first) { // The action is applicable
 		Changeset changeset(seed, s);
