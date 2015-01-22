@@ -6,5 +6,5 @@
 			ScopedEffect::vcptr effects = {
 				${effect_list}
 			};
-			aptr = new ${classname}(binding, constraints, effects);
+			action = new ${classname}(binding, constraints, effects);
         }

@@ -13,8 +13,9 @@ Problem::Problem() :
 {}
 
 Problem::~Problem() {
-	for (const auto& pointer:stateConstraints) delete pointer;
-	for (const auto& pointer:goalConstraints) delete pointer;
+	for (const auto pointer:_actions) delete pointer;
+	for (const auto pointer:stateConstraints) delete pointer;
+	for (const auto pointer:goalConstraints) delete pointer;
 	delete appManager;
 } 
 	

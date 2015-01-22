@@ -35,7 +35,8 @@ protected:
 public:
 	static const ActionIdx INVALID;
 	
-	typedef std::shared_ptr<const Action> cptr;
+	// typedef std::shared_ptr<const Action> cptr;
+	typedef Action const * cptr;
 	typedef std::vector<Action::cptr> vcptr;
 	
 	Action(const ObjectIdxVector& binding, const ScopedConstraint::vcptr& constraints, const ScopedEffect::vcptr& effects);
