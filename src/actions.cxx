@@ -29,6 +29,7 @@ VariableIdxVector Action::extractRelevantVariables() {
 
 Action::~Action() {
 	for (const ScopedConstraint* constraint:_constraints) delete constraint;
+	for (const ScopedEffect* effect:_effects) delete effect;
 };
 
 std::ostream& Action::print(std::ostream& os) const {
