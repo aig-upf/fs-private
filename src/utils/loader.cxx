@@ -7,12 +7,12 @@
 
 #include <problem.hxx>
 #include <utils/loader.hxx>
-#include <constraints/factory.hxx>
+#include <constraints/constraint_factory.hxx>
 #include <actions.hxx>
 
 namespace fs0 {
 
-void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory, GoalFactoryType goalFactory, Problem& problem) {
+void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory, ConstraintFactoryType constraintFactory, GoalFactoryType goalFactory, Problem& problem) {
 	/* Define the actions */
 	loadGroundedActions(dir + "/actions.data", actionFactory, problem);
 
@@ -20,7 +20,7 @@ void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory
 	problem.setInitialState(loadStateFromFile(dir + "/init.data"));
 
 	/* Load the state and goal constraints */
-	loadConstraints(dir + "/constraints.data", problem);
+	loadConstraints(dir + "/constraints.data", constraintFactory, problem);
 
 	/* Generate goal constraints from the goal evaluator */
 	generateGoalConstraints(dir + "/goal.data", goalFactory, problem);
@@ -98,9 +98,10 @@ void Loader::generateGoalConstraints(const std::string& filename, GoalFactoryTyp
 	}
 }
 
-void Loader::loadConstraints(const std::string& filename, Problem& problem) {
+void Loader::loadConstraints(const std::string& filename, ConstraintFactoryType constraintFactory, Problem& problem) {
 	std::string line;
 	std::ifstream in(filename);
+	
 	
 	// Each line encodes a constraint.
 	while (std::getline(in, line)) {
@@ -110,15 +111,19 @@ void Loader::loadConstraints(const std::string& filename, Problem& problem) {
 		// strs contains 3 elements: 
 		// (0) The constraint description
 		// (1) The constraint name
-		// (2) The variables upon which the constraint is enforced
-		assert(strs.size()==3);
+		// (2) The constraint parameters
+		// (3) The variables upon which the constraint is enforced
+		assert(strs.size()==4);
 
 		// We ignore the grounded name for the moment being.
 		const std::string& name = strs[1];
-		VariableIdxVector variables = parseNumberList<unsigned>(strs[2]);
+		ObjectIdxVector parameters = parseNumberList<int>(strs[2]);
+		VariableIdxVector variables = parseNumberList<unsigned>(strs[3]);
 		
-		ScopedConstraint::cptr constraint = ConstraintFactory::create(name, variables);
-		problem.registerConstraint(constraint);
+		problem.registerConstraint(constraintFactory(name, parameters, variables));
+		
+// 		ScopedConstraint::cptr constraint = ConstraintFactory::create(name, parameters, variables);
+// 		problem.registerConstraint(constraint);
 	}
 }
 

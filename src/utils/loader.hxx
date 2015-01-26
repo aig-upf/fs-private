@@ -29,11 +29,13 @@ public:
 	
 	typedef std::function<ScopedConstraint::vcptr (const std::vector<VariableIdxVector>&)> GoalFactoryType;
 	
+	typedef std::function<ScopedConstraint::cptr (const std::string& classname, const ObjectIdxVector&, const VariableIdxVector&)> ConstraintFactoryType;
+	
 	
 	/**
 	 * 
 	 */
-	static void loadProblem(const std::string& dir, ActionFactoryType actionFactory, GoalFactoryType goalFactory, Problem& problem);
+	static void loadProblem(const std::string& dir, ActionFactoryType actionFactory, ConstraintFactoryType constraintFactory, GoalFactoryType goalFactory, Problem& problem);
 	
 	/**
 	 * Loads a state specification for a given text file.
@@ -50,7 +52,7 @@ public:
 	static void generateGoalConstraints(const std::string& filename, GoalFactoryType goalFactory, Problem& problem);
 	
 	//! Loads a set of state constraints from the given file
-	static void loadConstraints(const std::string& filename, Problem& problem);
+	static void loadConstraints(const std::string& filename, ConstraintFactoryType constraintFactory, Problem& problem);
 	
 protected:
 	template<typename T>

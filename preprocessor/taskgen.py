@@ -107,8 +107,7 @@ def create_problem_instance(name, task, domain, objects, init, goal, static_data
     instance.static_symbols = task.static_symbols
     instance.fluent_symbols = task.fluent_symbols
 
-
-    # check_state_complete(instance, init)
+    # TODO - check_state_complete(instance, init)
 
     return instance
 
@@ -134,7 +133,7 @@ def process_types(instance):
 
         # Then index by all of the parent types
         if o.typename != 'object':  # Sometimes type 'object' is parsed as having supertype 'object' as well.
-            if not o.typename in instance.domain.supertypes:
+            if o.typename not in instance.domain.supertypes:
                 raise ValueError("Unkown type '{}'".format(o.typename))
             for t in instance.domain.supertypes[o.typename]:
                 type_map[t].append(o.name)

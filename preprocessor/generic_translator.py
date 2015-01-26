@@ -39,14 +39,17 @@ class Translator(object):
         processed = []
         supported = dict(sum=Sum, alldiff=Alldiff)
         for c in constraints:
-            variables = [base.Variable(arg[0], arg[1:]) for arg in c.args]
+            # We support two types of constraint arguments: state variables and objects
+            # (which will be transformed into constraint parameters)
+            variables = [base.Variable(arg[0], arg[1:]) for arg in c.args if isinstance(arg, list)]
+            parameters = [arg for arg in c.args if isinstance(arg, str)]
 
             if is_external(c.name):
                 constraint_class = External
-                processed.append(constraint_class(c.name, variables))
+                processed.append(constraint_class(c.name, parameters, variables))
             elif c.name in supported:
                 constraint_class = supported[c.name]
-                processed.append(constraint_class(variables))
+                processed.append(constraint_class(parameters, variables))
             else:
                 raise RuntimeError("Unsupported constrain type: '{}'".format(c.name))
 

@@ -6,5 +6,5 @@
 			ScopedEffect::vcptr effects = {
 				${effect_list}
 			};
-			action = new ${classname}(binding, constraints, effects);
+			pointer = new ${classname}(binding, constraints, effects);
         }

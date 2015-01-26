@@ -10,12 +10,13 @@ public:
         const std::vector<VariableIdxVector>& effRelevantVars,
         const std::vector<VariableIdxVector>& effAffectedVars
     ) {
-        Action* action = nullptr;
+        Action* pointer = nullptr;
+
         if (false) {}
-        ${lines}
+        ${actions}
         else throw std::runtime_error("Unknown action name.");
 
-        return action;
+        return pointer;
     }
 
     static ScopedConstraint::vcptr instantiateGoal(const std::vector<VariableIdxVector>& appRelevantVars) {
@@ -23,5 +24,9 @@ public:
 		return {
 		    ${goal_constraint_instantiations}
 		};
+    }
+
+    static ScopedConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) {
+        return external->instantiateConstraint(classname, parameters, variables);
     }
 };

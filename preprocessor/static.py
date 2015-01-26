@@ -12,7 +12,7 @@ def instantiate_function(name, arity):
 
 
 def instantiate_predicate(name, arity):
-    classes = {1: UnarySet, 2: BinarySet, 3: Arity3Set}
+    classes = {1: UnarySet, 2: BinarySet, 3: Arity3Set, 4: Arity4Set}
     if arity not in classes:
         raise RuntimeError("Currently only up to arity-3 predicates are supported")
     return (classes[arity])(name)
@@ -152,6 +152,16 @@ class Arity3Set(BinarySet):
     def get_tpl(self, name):
         return dict(
             declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> {name};',
-            accessor='bool {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.find({{x,y,z}}) != {name}.end(); }}',
+            accessor='bool {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.find(std::make_tuple(x,y,z)) != {name}.end(); }}',
+        )[name]
+
+
+class Arity4Set(BinarySet):
+    DESERIALIZER = 'deserializeArity4Set'
+
+    def get_tpl(self, name):
+        return dict(
+            declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx, ObjectIdx>> {name};',
+            accessor='bool {accessor}(ObjectIdx o1, ObjectIdx o2, ObjectIdx o3, ObjectIdx o4) {{ return {name}.find(std::make_tuple(o1,o2,o3,o4)) != {name}.end(); }}',
         )[name]
 

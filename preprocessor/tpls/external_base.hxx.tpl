@@ -9,6 +9,7 @@
 
 #include <fs0_types.hxx>
 #include <utils/serializer.hxx>
+#include <constraints/constraint_factory.hxx>
 
 using namespace fs0;
 
@@ -24,6 +25,9 @@ public:
         : ${data_initialization}
     {}
 
+    static ScopedConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) {
+		return ConstraintFactory::create(classname, parameters, variables); // By default we try to instantiate the constraint as a global constraint
+    }
 
     ${data_accessors}
 };

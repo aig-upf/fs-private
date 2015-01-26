@@ -178,7 +178,7 @@ int main( int argc, char** argv ) {
 	std::string data_dir(argv[2]);
 	std::string out_dir(argv[3]);
 	
-	ProblemInfo::cptr problemInfo(new ProblemInfo(data_dir));
+	ProblemInfo::cptr problemInfo = std::make_shared<ProblemInfo>(data_dir);
 	
 	// Instantiate the problem
 	std::cout << "Generating the problem... ";

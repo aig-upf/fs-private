@@ -10,6 +10,7 @@ class CompilationIndex(object):
         self.task = task
         self.types = {}  # Type name to type ID.
         self.objects = IndexDictionary()  # object name to object ID.
+        self.typed_objects = {}
         self.symbols = {}  # symbol name to symbol ID.
         self.variables = {}  # A state variable index.
 
@@ -21,7 +22,7 @@ class CompilationIndex(object):
         self.types['object'] = 0
         self.types['_bool_'] = 1
         for t in task.types:
-            if not t.name in ('object', '_bool_'):
+            if t.name not in ('object', '_bool_'):
                 self.types[t.name] = len(self.types)
 
     def index_objects(self, task):
@@ -34,5 +35,5 @@ class CompilationIndex(object):
     def index_symbols(self, task):
         self.symbols['_eq_'] = 0
         for symbol_name in task.symbols.keys():
-            if not symbol_name in self.symbols:
+            if symbol_name not in self.symbols:
                 self.symbols[symbol_name] = len(self.symbols)

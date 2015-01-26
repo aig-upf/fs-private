@@ -1,12 +1,12 @@
 
 
-#include <constraints/factory.hxx>
+#include <constraints/constraint_factory.hxx>
 #include <constraints/scoped_alldiff_constraint.hxx>
 #include <constraints/scoped_sum_constraint.hxx>
 
 namespace fs0 {
 
-const ScopedConstraint::cptr ConstraintFactory::create(const std::string& name, const VariableIdxVector& scope) {
+const ScopedConstraint::cptr ConstraintFactory::create(const std::string& name, const ObjectIdxVector& parameters, const VariableIdxVector& scope) {
 	if (name == "alldiff") {
 		return new ScopedAlldiffConstraint(scope);
 	} else if (name == "sum") {

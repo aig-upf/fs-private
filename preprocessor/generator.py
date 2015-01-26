@@ -211,6 +211,10 @@ def move_files_around(base_dir, instance, domain, target_dir):
     # The ad-hoc external definitions file - if it does not exist, we use the default.
     if os.path.isfile(base_dir + '/external.hxx'):
         shutil.copy(base_dir + '/external.hxx', target_dir)
+
+        if os.path.isfile(base_dir + '/external.cxx'):  # We also copy a possible cxx implementation file
+            shutil.copy(base_dir + '/external.cxx', target_dir)
+
     else:
         default = tplManager.get('external_default.hxx').substitute()  # No substitutions for the default template
         util.save_file(target_dir + '/external.hxx', default)
@@ -243,6 +247,7 @@ class Generator(object):
 
         self.dump_variable_data()
         self.dump_object_data()
+        self.dump_type_data()
         self.dump_action_data()
         self.dump_init_data()
         self.dump_constraints_data()
@@ -337,8 +342,8 @@ class Generator(object):
         return '\n'.join(elems)
 
     def get_method_factories(self):
-        return tplManager.get('method-factories').substitute(
-            lines='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
+        return tplManager.get('factories').substitute(
+            actions='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
             goal_constraint_instantiations=',\n\t\t\t'.join(self.goal_code.constraint_instantiations)
         )
 
@@ -367,8 +372,9 @@ class Generator(object):
     def serialize_constraints(self, constraints):
         serialized = []
         for constraint in constraints:
-            variable_idxs = self.gen_vector([self.index.variables.get_index(var) for var in constraint.args])
-            serialized.append('#'.join([str(constraint), constraint.name, variable_idxs]))
+            variable_idxs = self.gen_vector([self.index.variables.get_index(var) for var in constraint.variables])
+            parameter_idxs = self.gen_vector([self.index.objects.get_index(var) for var in constraint.parameters])
+            serialized.append('#'.join([str(constraint), constraint.name, parameter_idxs, variable_idxs]))
         return serialized
 
     def dump_constraints_data(self):
@@ -405,6 +411,14 @@ class Generator(object):
 
     def dump_object_data(self):
             self.dump_data('objects', self.index.objects.dump_index(print_index=False))
+
+    def dump_type_data(self):
+        """ Dumps a map of types to corresponding objects"""
+        dump = []
+        for t, objects in self.task.type_map.items():
+            object_idxs = (str(self.index.objects.get_index(o)) for o in objects)
+            dump.append("{}#{}".format(t, ','.join(object_idxs)))
+        self.dump_data('object-types', dump)
 
     def serialize_variables_data(self, procedures):
         """

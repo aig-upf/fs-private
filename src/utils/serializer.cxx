@@ -66,14 +66,14 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::UnaryMap
 
 Serializer::UnaryMap Serializer::deserializeUnaryMap(const std::string& filename) {
 	UnaryMap data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 2); data.insert({elems[0], elems[1]}); };
+	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
 	deserialize(filename, inserter);
 	return data;
 }
 
 Serializer::BinaryMap Serializer::deserializeBinaryMap(const std::string& filename) {
 	BinaryMap data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 3); data.insert({{elems[0], elems[1]}, elems[2]});};
+	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 3); data.insert(std::make_pair(std::make_pair(elems[0], elems[1]), elems[2]));};
 	deserialize(filename, inserter);
 	return data;
 }
@@ -87,7 +87,21 @@ Serializer::UnarySet Serializer::deserializeUnarySet(const std::string& filename
 
 Serializer::BinarySet Serializer::deserializeBinarySet(const std::string& filename) {
 	BinarySet data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 2); data.insert({elems[0], elems[1]}); };
+	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
+	deserialize(filename, inserter);
+	return data;
+}
+
+Serializer::Arity3Set Serializer::deserializeArity3Set(const std::string& filename) {
+	Arity3Set data;
+	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 3); data.insert(std::make_tuple(elems[0], elems[1], elems[2])); };
+	deserialize(filename, inserter);
+	return data;
+}
+
+Serializer::Arity4Set Serializer::deserializeArity4Set(const std::string& filename) {
+	Arity4Set data;
+	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 4); data.insert(std::make_tuple(elems[0], elems[1], elems[2], elems[3])); };
 	deserialize(filename, inserter);
 	return data;
 }

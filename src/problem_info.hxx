@@ -27,12 +27,15 @@ protected:
 	//! A map from state variable index to action name
 	std::vector<std::string> variableNames;
 	
-	//! A map from state variable index to action name
+	//! A map from state variable index to the type of the state variable
 	std::vector<ObjectType> variableTypes;
+	std::vector<std::string> variableTypenames;
 	
 	//! A map from object index to object name
 	std::vector<std::string> objectNames;
 	
+	//! A map from typename to all of the object indexes of that type
+	std::map<std::string, std::vector<ObjectIdx>> typeObjects;
 public:
 
 	ProblemInfo(const std::string& data_dir);
@@ -55,7 +58,7 @@ public:
 protected:
 	
 	//! Load the names of the (bound) actions from the specified file.
-	void loadVariablesIndex(const std::string& filename);
+	void loadVariableIndex(const std::string& filename);
 	
 	ObjectType parseVariableType(const std::string& str);
 	
@@ -64,6 +67,9 @@ protected:
 	
 	//! Load the names of the problem objects from the specified file.
 	void loadObjectIndex(const std::string& filename);
+	
+	//! Load the map from variable types to possible objects.
+	void loadTypeObjects(const std::string& filename);
 };
 
 	  
