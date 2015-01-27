@@ -11,7 +11,7 @@ ProblemInfo::ProblemInfo(const std::string& data_dir) {
 	loadActionIndex(data_dir + "/action-index.data");
 	loadVariableIndex(data_dir + "/variables.data");
 	loadObjectIndex(data_dir + "/objects.data");
-	loadTypeObjects(data_dir + "/objects.data");
+	loadTypeObjects(data_dir + "/object-types.data");
 }
 
 const std::string& ProblemInfo::getActionName(ActionIdx index) const { return actionNames.at(index); }

@@ -297,7 +297,9 @@ class Generator(object):
                 elems.append(elem.initializer_list())
             else:
                 raise RuntimeError('What')
-        return ', '.join(elems)
+        if not elems:
+            return ''
+        return ': {}'.format(','.join(elems))
 
     def serialize_external_data(self):
         for elem in self.task.static_data.values():

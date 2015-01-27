@@ -13,13 +13,13 @@ const ActionIdx Action::INVALID = std::numeric_limits<unsigned int>::max();
 
 Action::Action(const ObjectIdxVector& binding, const ScopedConstraint::vcptr& constraints, const ScopedEffect::vcptr& effects) :
 	_binding(binding), _constraints(constraints), _effects(effects), _allRelevantVars(extractRelevantVariables()), constraintManager(nullptr)
-{};
+{}
 
 Action::~Action() {
 	for (const ScopedConstraint* pointer:_constraints) delete pointer;
 	for (const ScopedEffect* pointer:_effects) delete pointer;
 	if (constraintManager) delete constraintManager;
-};
+}
 
 VariableIdxVector Action::extractRelevantVariables() {
 	boost::container::flat_set<unsigned> unique;
