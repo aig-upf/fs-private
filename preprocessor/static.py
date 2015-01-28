@@ -88,6 +88,7 @@ class Arity0Element(DataElement):
 
 class UnaryMap(DataElement):
     DESERIALIZER = 'deserializeUnaryMap'
+    ARITY = 1
 
     def get_tpl(self, name):
         return dict(
@@ -100,14 +101,21 @@ class UnaryMap(DataElement):
         self.elems = {}
 
     def add(self, elem, value):
+        self.validate(elem, value)
         self.elems[elem] = value
 
     def serialize_data(self, symbols):
         return [serialize_tuple(k + (v,), symbols) for k, v in self.elems.items()]
 
+    def validate(self, elem, value):
+        if len(elem) != self.ARITY:
+            raise RuntimeError("Wrong type or number of arguments for data element {}: {}({}) = {}".format(
+                self.name, self.name, elem, value))
+
 
 class BinaryMap(UnaryMap):
     DESERIALIZER = 'deserializeBinaryMap'
+    ARITY = 2
 
     def get_tpl(self, name):
         return dict(
@@ -118,6 +126,7 @@ class BinaryMap(UnaryMap):
 
 class Arity3Map(BinaryMap):
     DESERIALIZER = 'deserializeArity3Map'
+    ARITY = 3
 
     def get_tpl(self, name):
         return dict(
@@ -128,6 +137,7 @@ class Arity3Map(BinaryMap):
 
 class Arity4Map(BinaryMap):
     DESERIALIZER = 'deserializeArity4Map'
+    ARITY = 4
 
     def get_tpl(self, name):
         return dict(
@@ -138,6 +148,7 @@ class Arity4Map(BinaryMap):
 
 class UnarySet(DataElement):
     DESERIALIZER = 'deserializeUnarySet'
+    ARITY = 1
 
     def get_tpl(self, name):
         return dict(
@@ -150,14 +161,21 @@ class UnarySet(DataElement):
         self.elems = set()
 
     def add(self, elem):
+        self.validate(elem)
         self.elems.add(elem)
 
     def serialize_data(self, symbols):
         return [serialize_tuple(elem, symbols) for elem in self.elems]
 
+    def validate(self, elem):
+        if len(elem) != self.ARITY:
+            raise RuntimeError("Wrong type or number of arguments for data element {}: {}({})".format(
+                self.name, self.name, elem))
+
 
 class BinarySet(UnarySet):
     DESERIALIZER = 'deserializeBinarySet'
+    ARITY = 2
 
     def get_tpl(self, name):
         return dict(
@@ -168,6 +186,7 @@ class BinarySet(UnarySet):
 
 class Arity3Set(BinarySet):
     DESERIALIZER = 'deserializeArity3Set'
+    ARITY = 3
 
     def get_tpl(self, name):
         return dict(
@@ -178,6 +197,7 @@ class Arity3Set(BinarySet):
 
 class Arity4Set(BinarySet):
     DESERIALIZER = 'deserializeArity4Set'
+    ARITY = 4
 
     def get_tpl(self, name):
         return dict(
