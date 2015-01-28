@@ -17,8 +17,8 @@ class ConstraintManager
 protected:
 	//! An arc is a pair with a procedure and the index of the relevant variable (either 0 or 1)
 	typedef std::pair<ScopedConstraint::cptr, unsigned> Arc;
- 	// typedef boost::container::flat_set<Arc> ArcSet;
-	typedef std::set<Arc> ArcSet;
+ 	typedef boost::container::flat_set<Arc> ArcSet;
+// 	typedef std::set<Arc> ArcSet;
 	
 	
 	//! The set of constraints that we manage
