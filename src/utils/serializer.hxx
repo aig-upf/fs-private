@@ -27,6 +27,7 @@ public:
 	//! For the sake of completeness
 	static int deserialize0AryElement(const std::string& filename);
 	
+	
 	//! Map (de)serialization
 	static std::ostream& serialize(std::ostream& os, const UnaryMap& map);
 	static std::ostream& serialize(std::ostream& os, const BinaryMap& map);
@@ -56,7 +57,6 @@ public:
 	static void BoostSerialize(const std::string& filename, const T& data);
 	
 	static BinaryMap bDeserializeBinaryMap(const std::string& filename);
-	
 protected:
 	static std::vector<int> deserializeLine(const std::string& line);
 };

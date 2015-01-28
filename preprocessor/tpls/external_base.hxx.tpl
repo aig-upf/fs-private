@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include <fs0_types.hxx>
+#include <problem_info.hxx>
 #include <utils/serializer.hxx>
 #include <constraints/constraint_factory.hxx>
 
@@ -18,10 +19,12 @@ using namespace fs0;
 /*********************************************/
 class ExternalBase  {
 protected:
+    ProblemInfo::cptr _problemInfo;
+
     ${data_declarations}
 
 public:
-    ExternalBase(const std::string& data_dir) ${data_initialization}
+    ExternalBase(ProblemInfo::cptr problemInfo, const std::string& data_dir) : _problemInfo(problemInfo) ${data_initialization}
     {}
 
     static ScopedConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) {

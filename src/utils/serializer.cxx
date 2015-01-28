@@ -7,8 +7,10 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/utility.hpp>
 
 namespace fs0 {
 
@@ -23,6 +25,8 @@ void Serializer::BoostDeserialize(const std::string& filename, T& data) {
 	ifs.close();
 }
 
+//! Template instantiations
+template void Serializer::BoostDeserialize<Serializer::BinarySet>(const std::string& filename, Serializer::BinarySet& data);
 
 template <typename T>
 void Serializer::BoostSerialize(const std::string& filename, const T& data) {

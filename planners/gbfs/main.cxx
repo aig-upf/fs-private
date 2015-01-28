@@ -217,16 +217,16 @@ int main(int argc, char** argv) {
 		return res;
 	}
 
-	ProblemInfo::cptr problemInfo = std::make_shared<ProblemInfo>(data_dir);
-	
-	// Instantiate the problem
 	std::cout << "Generating the problem... ";
+	
 	Problem problem;
+	ProblemInfo::cptr problemInfo = std::make_shared<ProblemInfo>(data_dir);
+	problem.setProblemInfo(problemInfo);
 	generate(data_dir, problem);
+	
+	Problem::setCurrentProblem(problem);
 	FwdSearchProblem search_prob(problem);
 	
-	problem.setProblemInfo(problemInfo);
-	Problem::setCurrentProblem(problem);
 
 	std::cout << "Done!" << std::endl;
 	reportProblemStats(problem);

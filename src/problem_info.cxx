@@ -29,6 +29,13 @@ const std::string ProblemInfo::getObjectName(VariableIdx varIdx, ObjectIdx objId
 	throw std::runtime_error("Should never get here.");
 }
 
+const std::string ProblemInfo::getObjectName(const std::string& type, ObjectIdx objIdx) const {
+	if (parseVariableType(type) == ObjectType::OBJECT) return getCustomObjectName(objIdx);
+	else if (parseVariableType(type) == ObjectType::INT) return std::to_string(objIdx);
+	else if (parseVariableType(type) == ObjectType::BOOL) return std::string((objIdx ? "true" : "false"));
+	throw std::runtime_error("Should never get here.");	
+}
+
 const std::string& ProblemInfo::getCustomObjectName(ObjectIdx objIdx) const { return objectNames.at(objIdx); }
 
 unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }
@@ -53,9 +60,9 @@ void ProblemInfo::loadVariableIndex(const std::string& filename) {
 	}
 }
 
-ProblemInfo::ObjectType ProblemInfo::parseVariableType(const std::string& str) {
-	if (str == "_int_" || str == "int") return ObjectType::INT;
-	else if (str == "_bool_" || str == "bool") return ObjectType::BOOL;
+ProblemInfo::ObjectType ProblemInfo::parseVariableType(const std::string& type) const {
+	if (type == "_int_" || type == "int") return ObjectType::INT;
+	else if (type == "_bool_" || type == "bool") return ObjectType::BOOL;
 	else return ObjectType::OBJECT;
 }
 
@@ -77,6 +84,7 @@ void ProblemInfo::loadObjectIndex(const std::string& filename) {
 	
 	// Each line is an object name.
 	while (std::getline(in, line)) {
+		objectIds.insert(std::make_pair(line, objectNames.size()));
 		objectNames.push_back(line); // The action line is implicitly the action index.
 	}
 }
