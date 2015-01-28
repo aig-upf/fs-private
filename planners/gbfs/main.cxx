@@ -1,7 +1,10 @@
+
 #include <iostream>
 #include <fstream>
 
-#include <fwd_search_prob.hxx>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/variables_map.hpp>
 
 #include <aptk/open_list.hxx>
 #include <aptk/at_gbfs.hxx>
@@ -15,6 +18,7 @@
 #include <utils/printers.hxx>
 #include <problem_info.hxx>
 #include <action_manager.hxx>
+#include <fwd_search_prob.hxx>
 
 #include <components.hxx>  // This will dinamically point to the right generated file
 
@@ -66,7 +70,7 @@ bool checkPlanCorrect(const Plan& plan) {
 }
 
 template <typename Search_Engine>
-float do_search( Search_Engine& engine, const ProblemInfo::cptr& problemInfo, float budget, const std::string& out_dir) {
+float do_search( Search_Engine& engine, const ProblemInfo::cptr& problemInfo, int budget, const std::string& out_dir) {
 
 	std::ofstream out(out_dir + "/searchlog.out");
 	std::ofstream best_plan(out_dir + "/best.plan"),
@@ -74,7 +78,7 @@ float do_search( Search_Engine& engine, const ProblemInfo::cptr& problemInfo, fl
 	
 	std::cout << "Writing results to " << out_dir + "/searchlog.out" << std::endl;
 
-	engine.set_budget( budget );
+	engine.set_budget( (float) budget );
 	engine.start();
 
 	Plan plan, last_plan;
@@ -129,7 +133,7 @@ float do_search( Search_Engine& engine, const ProblemInfo::cptr& problemInfo, fl
 }
 
 
-void instantiate_seach_engine_and_run(const FwdSearchProblem& search_prob, const ProblemInfo::cptr& problemInfo, float timeout, const std::string& out_dir) {
+void instantiate_seach_engine_and_run(const FwdSearchProblem& search_prob, const ProblemInfo::cptr& problemInfo, int timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
 	aptk::search::bfs::AT_GBFS_SQ_SH< FwdSearchProblem, RelaxedHeuristic, BFS_Open_List > rp_bfs_engine( search_prob );
@@ -167,17 +171,52 @@ void reportProblemStats(const Problem& problem) {
 }
 
 
+namespace po = boost::program_options;
 
-int main( int argc, char** argv ) {
-	if (argc != 4) {
-		std::cerr << "Wrong number of parameters\nUsage: " << argv[0] << " timeout data_dir out_dir" << std::endl;
-		return -1;
+int parse_options(int argc, char** argv, int& timeout, std::string& data_dir, std::string& out_dir) {
+	po::options_description description("Allowed options");
+	description.add_options()
+		("help,h", "Display this help message")
+		("timeout,t", po::value<int>()->default_value(10), "The timeout, in seconds.")
+		("data", po::value<std::string>()->default_value("data"), "The directory where the input data is stored.")
+		("out", po::value<std::string>()->default_value("."), "The directory where the results data is to be output.");
+		
+	po::positional_options_description pos;
+	pos.add("timeout", 1)
+	   .add("data", 1)
+	   .add("out", 1);
+	
+	po::variables_map vm;
+	try {
+		po::store(po::command_line_parser(argc, argv).options(description).positional(pos).run(), vm);
+		po::notify(vm);
+	} catch(const boost::program_options::invalid_option_value& ex) {
+		std::cout << "Wrong parameter types:";
+		std::cout << ex.what() << std::endl;
+		std::cout << std::endl << description << std::endl;
+		return 1;
 	}
 	
-	float timeout =  atof(argv[1]);
-	std::string data_dir(argv[2]);
-	std::string out_dir(argv[3]);
+	if (vm.count("help")) {
+		std::cout << description << "\n";
+		return 1;
+	}
 	
+	timeout = vm["timeout"].as<int>();
+	data_dir = vm["data"].as<std::string>();
+	out_dir = vm["out"].as<std::string>();
+	return 0;
+}
+
+
+int main(int argc, char** argv) {
+	
+	int timeout; std::string data_dir; std::string out_dir;
+	int res = parse_options(argc, argv, timeout, data_dir, out_dir);
+	if (res != 0) {
+		return res;
+	}
+
 	ProblemInfo::cptr problemInfo = std::make_shared<ProblemInfo>(data_dir);
 	
 	// Instantiate the problem
