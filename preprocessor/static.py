@@ -5,7 +5,7 @@
 
 
 def instantiate_function(name, arity):
-    classes = {0: Arity0Element, 1: UnaryMap, 2: BinaryMap}
+    classes = {0: Arity0Element, 1: UnaryMap, 2: BinaryMap, 3: Arity3Map, 4: Arity4Map}
     if arity not in classes:
         raise RuntimeError("Currently only up to arity-2 functions are supported")
     return (classes[arity])(name)
@@ -113,6 +113,26 @@ class BinaryMap(UnaryMap):
         return dict(
             declaration='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
             accessor='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
+        )[name]
+
+
+class Arity3Map(BinaryMap):
+    DESERIALIZER = 'deserializeArity3Map'
+
+    def get_tpl(self, name):
+        return dict(
+            declaration='const std::map<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
+            accessor='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.at(std::make_tuple(x,y,z)); }}',
+        )[name]
+
+
+class Arity4Map(BinaryMap):
+    DESERIALIZER = 'deserializeArity4Map'
+
+    def get_tpl(self, name):
+        return dict(
+            declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
+            accessor='ObjectIdx {accessor}(ObjectIdx o1, ObjectIdx o2, ObjectIdx o3, ObjectIdx o4) {{ return {name}.at(std::make_tuple(o1,o2,o3,o4)); }}',
         )[name]
 
 

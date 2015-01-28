@@ -32,6 +32,8 @@ public:
 	static std::ostream& serialize(std::ostream& os, const BinaryMap& map);
 	static UnaryMap deserializeUnaryMap(const std::string& filename);
 	static BinaryMap deserializeBinaryMap(const std::string& filename);
+	static Arity3Map deserializeArity3Map(const std::string& filename);
+	static Arity4Map deserializeArity4Map(const std::string& filename);
 	
 	
 	//! Set (de)serialization

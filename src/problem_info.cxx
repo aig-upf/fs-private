@@ -95,10 +95,12 @@ void ProblemInfo::loadTypeObjects(const std::string& filename) {
 		// We read and convert to integer type the vector of Object indexes
 		std::vector<std::string> string_indexes;
 		std::vector<ObjectIdx> indexes;
-		boost::split(string_indexes, strs[1], boost::is_any_of(","));
-		indexes.resize(string_indexes.size());
-		for (auto& str:string_indexes) indexes.push_back(boost::lexical_cast<ObjectIdx>(str));
-		typeObjects[strs[0]] = indexes;
+		if (strs[1].size() > 0) {
+			boost::split(string_indexes, strs[1], boost::is_any_of(","));
+			indexes.resize(string_indexes.size());
+			for (auto& str:string_indexes) indexes.push_back(boost::lexical_cast<ObjectIdx>(str));
+			typeObjects[strs[0]] = indexes;
+		}
 	}
 }
 

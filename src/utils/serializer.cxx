@@ -38,10 +38,6 @@ Serializer::BinaryMap Serializer::bDeserializeBinaryMap(const std::string& filen
 	return data;
 }
 
-
-
-
-	
 void Serializer::deserialize(const std::string& filename, DataInserter& inserter) {
 	std::ifstream is(filename);
 	std::string line;
@@ -74,6 +70,19 @@ Serializer::UnaryMap Serializer::deserializeUnaryMap(const std::string& filename
 Serializer::BinaryMap Serializer::deserializeBinaryMap(const std::string& filename) {
 	BinaryMap data;
 	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 3); data.insert(std::make_pair(std::make_pair(elems[0], elems[1]), elems[2]));};
+	deserialize(filename, inserter);
+	return data;
+}
+
+Serializer::Arity3Map Serializer::deserializeArity3Map(const std::string& filename) {
+	Arity3Map data;
+	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 4); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2]), elems[3]));};
+	deserialize(filename, inserter);
+	return data;	
+}
+Serializer::Arity4Map Serializer::deserializeArity4Map(const std::string& filename) {
+	Arity4Map data;
+	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 5); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2], elems[3]), elems[4]));};
 	deserialize(filename, inserter);
 	return data;
 }
