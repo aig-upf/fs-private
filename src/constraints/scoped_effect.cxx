@@ -18,5 +18,11 @@ UnaryScopedEffect::UnaryScopedEffect(const VariableIdxVector& scope, const Varia
 	assert(scope.size() == 1);
 }
 
+ZeroaryScopedEffect::ZeroaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters) :
+	ScopedEffect(scope, image, parameters)
+{
+	assert(scope.size() == 0);
+}
+
 } // namespaces
 
