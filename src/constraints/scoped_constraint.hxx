@@ -101,6 +101,10 @@ public:
 	
 	bool isSatisfied(const ObjectIdxVector& values) const;
 	
+	bool isSatisfied(const State& s) const {
+		return this->isSatisfied(s.getValue(_scope[0]));
+	}
+	
 	//! To be overriden by the concrete constraint class.
 	virtual bool isSatisfied(ObjectIdx o) const = 0;
 	
@@ -119,6 +123,10 @@ public:
 	virtual Filtering filteringType() { return Filtering::ArcReduction; };
 	
 	bool isSatisfied(const ObjectIdxVector& values) const;
+	
+	bool isSatisfied(const State& s) const {
+		return this->isSatisfied(s.getValue(_scope[0]), s.getValue(_scope[1]));
+	}
 	
 	//! To be overriden by the concrete constraint class.
 	virtual bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const = 0;

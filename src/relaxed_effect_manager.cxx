@@ -10,9 +10,8 @@ void RelaxedEffectManager::computeChangeset(const Action& action, const DomainMa
 		
 		const VariableIdxVector& relevant = effect->getScope();
 		
-		
 		if(relevant.size() == 0) {  // No need to pass any point.
-			changeset.add(Fact(effect->getAffected(), effect->apply({})), {});
+			changeset.add(Fact(effect->getAffected(), effect->apply()), {});
 		}
 		else if(relevant.size() == 1) {  // micro-optimization
 			VariableIdx rel = relevant[0];
@@ -42,7 +41,7 @@ void RelaxedEffectManager::computeUnaryChangeset(const ScopedEffect::cptr effect
        VariableIdx affected = effect->getAffected();
 
        // Add as extra causes all the relevant facts of the effect procedure.
-       changeset.add(Fact(affected, effect->apply({value})), {Fact(relevant, value)}); // TODO - Get rid of the vector creation
+       changeset.add(Fact(affected, effect->apply(value)), {Fact(relevant, value)});
 }
 
 /*

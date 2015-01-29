@@ -561,7 +561,8 @@ class ProcessedComponent(object):
 
     def get_baseclass(self):
         if self._type == 'EFFECT':
-            return 'ScopedEffect'
+            classnames = {0: 'ZeroaryScopedEffect', 1: 'UnaryScopedEffect'}
+            return classnames[self.arity] if self.arity in classnames else 'ScopedEffect'
         else:
             classnames = {1: 'UnaryParametrizedScopedConstraint', 2: 'BinaryParametrizedScopedConstraint'}
             return classnames[self.arity]
@@ -572,6 +573,10 @@ class ProcessedComponent(object):
         else:
             classnames = {1: 'satisfied_unary_header', 2: 'satisfied_binary_header'}
             return classnames[self.arity] if self.arity in classnames else 'satisfied_generic_header'
+
+    def get_apply_header(self):
+        classnames = {1: 'apply_unary_header', 0: 'apply_zeroary_header'}
+        return classnames[self.arity] if self.arity in classnames else 'apply_generic_header'
 
     def get_instantiation_tpl(self):
         if self._type == 'EFFECT':
@@ -584,11 +589,16 @@ class ProcessedComponent(object):
     def optimize_code(self, code_blocks, arity):
         """  This is a big hack. But works. """
         if self._type == 'EFFECT':
-            return code_blocks
-
-        if arity == 1:
-            return [code.replace('relevant[0]', 'v1') for code in code_blocks]
-        elif arity == 2:
-            return [code.replace('relevant[0]', 'v1').replace('relevant[1]', 'v2') for code in code_blocks]
+            if arity == 1:
+                return [code.replace('relevant[0]', 'v1') for code in code_blocks]
+            elif arity == 2:
+                return [code.replace('relevant[0]', 'v1').replace('relevant[1]', 'v2') for code in code_blocks]
+            else:
+                return code_blocks
         else:
-            return code_blocks
+            if arity == 1:
+                return [code.replace('relevant[0]', 'v1') for code in code_blocks]
+            elif arity == 2:
+                return [code.replace('relevant[0]', 'v1').replace('relevant[1]', 'v2') for code in code_blocks]
+            else:
+                return code_blocks

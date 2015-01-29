@@ -187,11 +187,13 @@ def generate_constraint_code(name, blocks, tpl):
         if not component.builtin:
             satisfied_header = component.get_satisfied_header()
             satisfied_header = tplManager.get(satisfied_header).substitute() if satisfied_header else ''
+            apply_header = tplManager.get(component.get_apply_header()).substitute()
 
             classes.append(tplManager.get(tpl).substitute(
                 classname=classname,
                 parent=component.get_baseclass(),
                 satisfied_header=satisfied_header,
+                apply_header=apply_header,
                 code='\n\t\t'.join(component.code)
             ))
 

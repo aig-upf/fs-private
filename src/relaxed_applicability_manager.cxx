@@ -61,7 +61,7 @@ bool RelaxedApplicabilityManager::isUnaryProcedureApplicable(const ScopedConstra
 	// Check first if the original value is applicable. This is slightly inefficient, but ensures that if the original values
 	// make an action applicable, we won't waste time tracing the causes of other values that might make it applicable as well.
 	const ObjectIdx value = seed.getValue(variable);
-	if (constraint->isSatisfied({value})) {
+	if (constraint->isSatisfied(value)) {
 		causes.push_back(Fact(variable, value));
 		cause_found = true;
 	}
@@ -70,7 +70,7 @@ bool RelaxedApplicabilityManager::isUnaryProcedureApplicable(const ScopedConstra
 	Domain new_domain;
 	
 	for (auto& value:values) {
-		if (constraint->isSatisfied({value})) {
+		if (constraint->isSatisfied(value)) {
 			if (!cause_found) { // We only want to insert one single (arbitrarily chosen) cause for the unary app constraint.
 				causes.push_back(Fact(variable, value));
 				cause_found = true;

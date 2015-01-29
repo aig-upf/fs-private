@@ -24,6 +24,10 @@ _base = dict(
     satisfied_generic_header='isSatisfied(const ObjectIdxVector& relevant)',
     satisfied_unary_header='isSatisfied(ObjectIdx v1)',
     satisfied_binary_header='isSatisfied(ObjectIdx v1, ObjectIdx v2)',
+
+    apply_generic_header='apply(const ObjectIdxVector& values)',
+    apply_unary_header='apply(ObjectIdx v1)',
+    apply_zeroary_header='apply()',
 )
 
 
