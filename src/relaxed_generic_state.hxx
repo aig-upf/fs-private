@@ -55,12 +55,12 @@ public:
 	}
 	
 	void set(const Fact& fact) {
-		_domains.at(fact._variable)->insert(fact._value);
+		_domains.at(fact.getVariable())->insert(fact.getValue());
 	}
 	
 	bool contains(const Fact& fact) const {
-		const auto& possibleValues = getValues(fact._variable);
-		return possibleValues->find(fact._value) != possibleValues->end();
+		const auto& possibleValues = getValues(fact.getVariable());
+		return possibleValues->find(fact.getValue()) != possibleValues->end();
 	}
 	
 	DomainVector& getDomains() { return _domains; }

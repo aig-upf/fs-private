@@ -27,7 +27,6 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	if (_problem.isGoal(seed)) return 0; // The seed state is a goal
 	
 	std::vector<Changeset::ptr> changesets;
-	RPGraph rpg = RPGraph(_problem, seed, changesets);
 	
 	#ifdef FS0_DEBUG
 	std::cout << std::endl << "RP Graph computation from seed state: " << std::endl << seed << std::endl << "****************************************" << std::endl;;
@@ -49,7 +48,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 			std::pair<bool, FactSetPtr> res = appManager.isApplicable(action, seed, projection);
 			if (res.first) { // If the action is applicable in the current RPG layer...
 				// ...we accumulate the effects on the changeset with all new reachable effects.
-				changeset->setCurrentAction(idx, rpg.pruneSeedSupporters(res.second));  // We record the applicability causes
+				changeset->setCurrentAction(idx, RPGraph::pruneSeedSupporters(res.second, seed));  // We record the applicability causes
 				effManager.computeChangeset(action, projection, *changeset);
 			}
 		}
@@ -79,7 +78,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		std::cout << "New RPG Layer: " << relaxed << std::endl; // std::cout << "Changeset: " << *changeset << std::endl << std::endl;
 		#endif
 		
-		float h = computeHeuristic(rpg, seed, relaxed, changesets);
+		float h = computeHeuristic(seed, relaxed, changesets);
 		if (h > -1) {
 			#ifdef FS0_DEBUG
 			std::cout << "All changesets: " <<  std::endl; print_changesets(changesets);
@@ -90,9 +89,10 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 }
 
 template <typename T>
-float RelaxedPlanHeuristic<T>::computeHeuristic(RPGraph& rpg, const State& seed, const RelaxedState& state, const Changeset::vptr& changesets) {
-	Fact::vctrp causes = std::make_shared<Fact::vctr>();
+float RelaxedPlanHeuristic<T>::computeHeuristic(const State& seed, const RelaxedState& state, const Changeset::vptr& changesets) {
+	Fact::vctr causes;
 	if (_problem.getConstraintManager()->isGoal(seed, state, causes)) {
+		RPGraph rpg = RPGraph(seed, changesets);
 		auto cost = rpg.computeRelaxedPlanCost(causes);
 		return cost;
 	} else {

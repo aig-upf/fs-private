@@ -77,11 +77,11 @@ public:
 	bool operator!=(const GenericState &rhs) const { return !(this->operator==(rhs));}
 	
 	void set(const Fact& fact) {
-		_values.at(fact._variable) = fact._value;
+		_values.at(fact.getVariable()) = fact.getValue();
 	}
 	
 	bool contains(const Fact& fact) const {
-		return getValue(fact._variable) == fact._value;
+		return getValue(fact.getVariable()) == fact.getValue();
 	}
 	
 	ObjectIdx getValue(const VariableIdx& variable) const {

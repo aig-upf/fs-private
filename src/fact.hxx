@@ -4,146 +4,53 @@
 #include <cstdint>
 #include <vector>
 #include <boost/container/flat_set.hpp>
-#include <boost/concept_check.hpp>
 
 #include <fs0_types.hxx>
 
 namespace fs0 {
 
-class GenericState;
-typedef GenericState State;
-
-
-class Formula {
-public:
-	typedef std::shared_ptr<Formula> ptr;
-	typedef std::shared_ptr<const Formula> cptr;
-	
-	//! Keep it virtual
-	virtual ~Formula() {};
-};
-
 /**
- * A single effect of an action on the state of the world.
+ *  A fact (i.e. an atom) is a tuple X=x, where X is a state variable and x a value from its domain.
  */
-class Fact : public Formula
+class Fact // : public Formula
 {
 public:
 	typedef std::shared_ptr<const Fact> cptr;
 	typedef std::vector<Fact> vctr;
 	typedef std::shared_ptr<Fact::vctr> vctrp;
 	
-	//! The affected state variable
+	Fact(const VariableIdx variable, const ObjectIdx value);
+	
+	inline VariableIdx getVariable() const { return _variable; }
+	inline ObjectIdx getValue() const { return _value; }
+	
+	std::ostream& print(std::ostream& os) const;
+	friend std::ostream& operator<<(std::ostream &os, const Fact&  eff) { return eff.print(os); }
+	virtual const std::string getSign() const { return "="; }
+
+protected:
+	//! The state variable
 	VariableIdx _variable; 
 	
-	//! The new value.
+	//! The domain value.
 	ObjectIdx  _value;
-	
-	Fact(const VariableIdx variable, const ObjectIdx value) :
-		_variable(variable),
-		_value(value)
-	{};
-	
-	//! Keep it virtual
-	virtual ~Fact() {};
-	
-	std::ostream& print(std::ostream& os) const;
-	
-	virtual const std::string getSign() const { return "="; }
-	
-	friend std::ostream& operator<<(std::ostream &os, const Fact&  eff) { return eff.print(os); }
-	
-// 	virtual bool isSatisfiable(const State& state) const;
 };
 
-bool operator< (const Fact& lhs, const Fact& rhs);
+//! Comparison operators
+inline bool operator==(const Fact& lhs, const Fact& rhs){ return lhs.getVariable() == rhs.getVariable() && lhs.getValue() == rhs.getValue(); }
+inline bool operator!=(const Fact& lhs, const Fact& rhs){return !operator==(lhs,rhs);}
+inline bool operator< (const Fact& lhs, const Fact& rhs){ 
+	if (lhs.getVariable() < rhs.getVariable()) return true;
+	if (lhs.getVariable() > rhs.getVariable()) return false;
+	if (lhs.getValue() < rhs.getValue()) return true;
+	return false;
+}
+inline bool operator> (const Fact& lhs, const Fact& rhs){return  operator< (rhs,lhs);}
+inline bool operator<=(const Fact& lhs, const Fact& rhs){return !operator> (lhs,rhs);}
+inline bool operator>=(const Fact& lhs, const Fact& rhs){return !operator< (lhs,rhs);}
 
 typedef boost::container::flat_set<Fact> FactSet;
-typedef std::shared_ptr<boost::container::flat_set<Fact>> FactSetPtr;
-typedef std::shared_ptr<const boost::container::flat_set<Fact>> FactSetcPtr;
-
-
-
-class NegatedFact : public Fact
-{
-public:
-	typedef std::shared_ptr<const NegatedFact> cptr;
-	
-	NegatedFact(const VariableIdx variable, const ObjectIdx value) :
-		Fact(variable, value)
-	{};
-	
-	virtual const std::string getSign() const { return "!="; }
-	
-	//! Double-dispatch - this is necessary to call the NegatedFact version of ActionManager::checkFormulaSatisfiable
-// 	virtual bool isSatisfiable(const State& state) const;
-};
-
-
-// class ConjunctiveFact : Formula
-// {
-// public:
-// 	//! The elements of the conjunction
-// 	std::vector<Formula::cptr> elements;
-// 	
-// 	std::ostream& print(std::ostream& os) const;
-// 	
-// 	friend std::ostream& operator<<(std::ostream &os, const ConjunctiveFact&  eff) { return eff.print(os); }	
-// };
-
-
-//! Conjunctions of only facts or negated-facts
-class PlainAggregatedFact : public Formula
-{
-public:
-	//! The elements of the conjunction
-	std::vector<Fact::cptr> elements;
-	
-	PlainAggregatedFact(const std::vector<Fact::cptr>& facts) :
-		elements(facts)
-	{}	
-	
-	std::ostream& print(std::ostream& os) const;
-	
-	friend std::ostream& operator<<(std::ostream &os, const PlainAggregatedFact&  eff) { return eff.print(os); }
-	
-	virtual std::string getOperatorName() const = 0;
-	
-	void add(Fact::cptr fact) {
-		elements.push_back(fact);
-	}
-};
-
-class PlainConjunctiveFact : public PlainAggregatedFact
-{
-public:
-	typedef std::shared_ptr<const PlainConjunctiveFact> cptr;
-	
-	PlainConjunctiveFact(const std::vector<Fact::cptr>& facts) :
-		PlainAggregatedFact(facts)
-	{}		
-
-protected:
-	std::string getOperatorName() const { return "AND"; }
-};
-
-class PlainDisjunctiveFact : public PlainAggregatedFact
-{
-public:
-	typedef std::shared_ptr<const PlainDisjunctiveFact> cptr;
-	
-	PlainDisjunctiveFact(const std::vector<Fact::cptr>& facts) :
-		PlainAggregatedFact(facts)
-	{}
-
-protected:
-	std::string getOperatorName() const { return "OR"; }
-};
-
-
-
-
-
+typedef std::shared_ptr<FactSet> FactSetPtr;
 
 
 } // namespaces
