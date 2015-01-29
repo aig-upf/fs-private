@@ -5,7 +5,7 @@
 #include <map>
 #include <cassert>
 #include <fs0_types.hxx>
-#include <fact.hxx>
+#include <atoms.hxx>
 #include <state.hxx>
 
 

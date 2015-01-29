@@ -1,6 +1,6 @@
 
 #include <relaxed_effect_manager.hxx>
-#include <fact.hxx>
+#include <atoms.hxx>
 
 namespace fs0 {
 

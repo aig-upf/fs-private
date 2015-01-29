@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <fs0_types.hxx>
-#include <fact.hxx>
+#include <atoms.hxx>
 #include <generic_state.hxx>
 
 namespace fs0 {

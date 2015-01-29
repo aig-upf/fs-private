@@ -9,7 +9,7 @@
 #include <boost/functional/hash.hpp>
 
 #include <fs0_types.hxx>
-#include <fact.hxx>
+#include <atoms.hxx>
 
 namespace fs0 {
 

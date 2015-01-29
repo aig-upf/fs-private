@@ -5,7 +5,7 @@
 #include <actions.hxx>
 #include <heuristics/changeset.hxx>
 #include <fs0_types.hxx>
-#include <fact.hxx>
+#include <atoms.hxx>
 #include <constraints/scoped_constraint.hxx>
 
 namespace fs0 {

@@ -1,7 +1,7 @@
 
 #include <relaxed_applicability_manager.hxx>
 #include <action_manager.hxx>
-#include <fact.hxx>
+#include <atoms.hxx>
 
 namespace fs0 {
 

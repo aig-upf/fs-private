@@ -1,5 +1,5 @@
 
-#include <fact.hxx>
+#include <atoms.hxx>
 #include <problem.hxx>
 
 namespace fs0 {

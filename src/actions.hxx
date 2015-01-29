@@ -8,7 +8,7 @@
 
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <fact.hxx>
+#include <atoms.hxx>
 #include <constraints/scoped_constraint.hxx>
 #include "constraints/scoped_effect.hxx"
 

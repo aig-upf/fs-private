@@ -4,7 +4,7 @@
 #include <cassert>
 #include <iosfwd>
 #include <fs0_types.hxx>
-#include <fact.hxx>
+#include <atoms.hxx>
 #include <constraints/constraint_manager.hxx>
 
 namespace fs0 {
