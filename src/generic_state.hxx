@@ -55,8 +55,8 @@ public:
 	{}
 	
 	//! A constructor that receives a number of atoms and constructs a state that is equal to the received
-	//! state plus the new atoms.
-	GenericState(const GenericState& state, const FactSet& atoms) :
+	//! state plus the new atoms. Note that we do not check that there are no contradictory atoms.
+	GenericState(const GenericState& state, const Fact::vctr& atoms) :
 		_values(state._values), _hash(state._hash) {
 		accumulate(atoms);
 	}
@@ -76,12 +76,12 @@ public:
 	
 	bool operator!=(const GenericState &rhs) const { return !(this->operator==(rhs));}
 	
-	void set(const Fact& fact) {
-		_values.at(fact.getVariable()) = fact.getValue();
+	void set(const Fact& atom) {
+		_values.at(atom.getVariable()) = atom.getValue();
 	}
 	
-	bool contains(const Fact& fact) const {
-		return getValue(fact.getVariable()) == fact.getValue();
+	bool contains(const Fact& atom) const {
+		return getValue(atom.getVariable()) == atom.getValue();
 	}
 	
 	ObjectIdx getValue(const VariableIdx& variable) const {
@@ -90,7 +90,7 @@ public:
 	
 protected:
 	//! "Applies" the given atoms into the current state.
-	void accumulate(const FactSet& atoms);
+	void accumulate(const Fact::vctr& atoms);
 	
 	void updateHash() { _hash = computeHash(); }
 	

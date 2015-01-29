@@ -39,9 +39,7 @@ public:
 		if (!checkPreconditionsHold(action)) return false;
 		
 		if (stateConstraints.size() != 0) { // If we have no constraints, we can spare the cost of creating the new state.
-			FactSet atoms;
-			computeChangeset(action, atoms);
-			State s1(_state, atoms);
+			State s1(_state, computeEffects(action));
 			return checkStateConstraintsHold(s1);
 		}
 		return true;
@@ -54,10 +52,13 @@ public:
 		return true;
 	}
 	
-	void computeChangeset(const Action& action, FactSet& atoms) const {
+	//! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
+	Fact::vctr computeEffects(const Action& action) const {
+		Fact::vctr atoms;
 		for (const ScopedEffect::cptr effect:action.getEffects()) {
-			atoms.insert(effect->apply(_state)); // TODO - Note that this won't work for conditional effects where an action might have no effect at all
+			atoms.push_back(effect->apply(_state)); // TODO - Note that this won't work for conditional effects where an action might have no effect at all
 		}
+		return atoms;
 	}
 	
 protected:

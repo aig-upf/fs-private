@@ -103,14 +103,14 @@ public:
 		os << "Changeset causes for:";
 		for (const auto& x:_causes) {
 			os << " #" << x.first  << ": {";
-			printFactSet(x.second, os);
+			printFacts(x.second, os);
 			os << "}";
 		}
 		os << std::endl;
 		return os;
 	}
 	
-	void printFactSet(const Fact::vctrp vector, std::ostream& os) const {
+	void printFacts(const Fact::vctrp vector, std::ostream& os) const {
 		for (const auto& fact:*vector) {
 			os << fact << ", ";
 		}
@@ -120,7 +120,7 @@ public:
 		os << "Changeset effects: ";
 		for (const auto& x:_effects) {
 			os << x.first  << " (action #" << std::get<0>(x.second) << "), (extra: ";
-			printFactSet(std::get<1>(x.second), os);
+			printFacts(std::get<1>(x.second), os);
 			os << "), ";
 		}
 		os << std::endl;

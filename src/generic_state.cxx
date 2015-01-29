@@ -10,7 +10,7 @@ namespace fs0 {
 	
 
 //! Applies the given changeset into the current state.
-void GenericState::accumulate(const FactSet& atoms) {
+void GenericState::accumulate(const Fact::vctr& atoms) {
 	for (const Fact& fact:atoms) { 
 		set(fact);
 	}

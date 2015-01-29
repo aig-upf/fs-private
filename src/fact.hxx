@@ -49,8 +49,4 @@ inline bool operator> (const Fact& lhs, const Fact& rhs){return  operator< (rhs,
 inline bool operator<=(const Fact& lhs, const Fact& rhs){return !operator> (lhs,rhs);}
 inline bool operator>=(const Fact& lhs, const Fact& rhs){return !operator< (lhs,rhs);}
 
-typedef boost::container::flat_set<Fact> FactSet;
-typedef std::shared_ptr<FactSet> FactSetPtr;
-
-
 } // namespaces

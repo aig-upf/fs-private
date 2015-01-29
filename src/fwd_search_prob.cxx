@@ -40,10 +40,8 @@ float	FwdSearchProblem::cost( const State& s, aptk::Action_Idx a ) const {
 }
 
 State* FwdSearchProblem::next( const State& s, aptk::Action_Idx actionIdx ) const {
-	FactSet atoms;
 	StandardApplicabilityManager manager(s, task.getConstraints());
-	manager.computeChangeset(*task.getAction(actionIdx), atoms);
-	return new State(s, atoms); // Copy everything into the new state and apply the changeset
+	return new State(s, manager.computeEffects(*task.getAction(actionIdx))); // Copy everything into the new state and apply the changeset
 } 
 
 void FwdSearchProblem::print( std::ostream& os ) const {

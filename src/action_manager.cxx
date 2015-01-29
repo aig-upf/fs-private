@@ -33,9 +33,7 @@ State::ptr ActionManager::applyAction(const Action::cptr& action, const State::p
 		return State::ptr();
 	}
 	
-	FactSet atoms;
-	manager.computeChangeset(*action, atoms);
-	return std::make_shared<State>(*s0, atoms); // Copy everything into the new state and apply the changeset
+	return std::make_shared<State>(*s0, manager.computeEffects(*action)); // Copy everything into the new state and apply the changeset
 }
 
 
