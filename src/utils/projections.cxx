@@ -22,8 +22,7 @@ DomainMap Projections::projectToActionVariables(RelaxedState& state, const Actio
 DomainMap Projections::project(RelaxedState& state, const VariableIdxVector& scope) { //!  TODO - CHECK THIS IS APPLYING RVO??
 	DomainMap projection;
 	for (VariableIdx var:scope) {
-		DomainPtr domain = state.getValues(var);
-		projection.insert(std::make_pair(var, domain));
+		projection.insert(std::make_pair(var, state.getValues(var)));
 	}
 	return projection;
 }
@@ -31,8 +30,7 @@ DomainMap Projections::project(RelaxedState& state, const VariableIdxVector& sco
 DomainMap Projections::projectCopy(const RelaxedState& state, const VariableIdxVector& scope) {
 	DomainMap projection;
 	for (VariableIdx var:scope) {
-		DomainPtr domain = std::make_shared<Domain>(*(state.getValues(var))); // We copy construct the whole domain
-		projection.insert(std::make_pair(var, domain));
+		projection.insert(std::make_pair(var, std::make_shared<Domain>(*(state.getValues(var))))); // We copy construct the whole domain
 	}
 	return projection;
 }	
