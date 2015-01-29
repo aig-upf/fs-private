@@ -47,7 +47,8 @@ bool PlanningConstraintManager::checkGoal(const DomainMap& domains) const {
 	ScopedConstraint::Output o = goalConstraintsManager.filter(domains);
 	return o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(domains);
 }
-	
+
+//! Note that here we can guarantee that we'll always insert different atoms in `causes`, since all the inserted atoms have a different variable
 void PlanningConstraintManager::extractGoalCauses(const State& seed, const DomainMap& domains, const DomainMap& clone, Fact::vctr& causes, std::vector<bool>& set, unsigned num_set) const {
 	
 	// 0. Base case

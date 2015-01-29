@@ -45,10 +45,10 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 			DomainMap projection = Projections::projectToActionVariables(relaxed, action);
 			
 			// ... and this prunes them with the unary constraints represented by each procedure.
-			std::pair<bool, FactSetPtr> res = appManager.isApplicable(action, seed, projection);
-			if (res.first) { // If the action is applicable in the current RPG layer...
+			Fact::vctr causes;
+			if (appManager.isApplicable(action, seed, projection, causes)) { // If the action is applicable in the current RPG layer...
 				// ...we accumulate the effects on the changeset with all new reachable effects.
-				changeset->setCurrentAction(idx, RPGraph::pruneSeedSupporters(res.second, seed));  // We record the applicability causes
+				changeset->setCurrentAction(idx, RPGraph::pruneSeedSupporters(causes, seed));  // We record the applicability causes
 				effManager.computeChangeset(action, projection, *changeset);
 			}
 		}

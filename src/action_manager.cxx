@@ -58,14 +58,15 @@ bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, 
 	const RelaxedApplicabilityManager& appManager = Problem::getCurrentProblem()->getRelaxedApplicabilityManager();
 	const RelaxedEffectManager& effManager = Problem::getCurrentProblem()->getRelaxedEffectManager();
 	DomainMap projection = Projections::projectToActionVariables(s, action);
-	auto res = appManager.isApplicable(action, seed, projection);
-	
-	if (res.first) { // The action is applicable
+
+	Fact::vctr causes;
+	if (appManager.isApplicable(action, seed, projection, causes)) { // The action is applicable - we ignore the causes
 		Changeset changeset(seed, s);
 		effManager.computeChangeset(action, projection, changeset);
 		s.accumulate(changeset);
+		return true;
 	}
-	return res.first;
+	return false;
 }
 
 

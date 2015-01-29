@@ -31,13 +31,13 @@ public:
 	~RelaxedApplicabilityManager() {}
 	
 	//!
-	std::pair<bool, FactSetPtr> isApplicable(const Action& action, const State& seed, const DomainMap& domains) const;
+	bool isApplicable(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
 
 protected:
-	std::pair<bool, FactSetPtr> unaryApplicable(const Action& action, const State& seed, const DomainMap& domains) const;
-	std::pair<bool, FactSetPtr> genericApplicable(ConstraintManager* manager, const State& seed, const DomainMap& domains) const;
+	bool unaryApplicable(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
+	bool genericApplicable(ConstraintManager* manager, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
 	
-	bool isUnaryProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, FactSetPtr causes) const;
+	bool isUnaryProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, Fact::vctr& causes) const;
 };
 
 

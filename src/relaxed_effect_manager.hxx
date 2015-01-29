@@ -24,7 +24,8 @@ public:
 	void computeChangeset(const Action& action, const DomainMap& domains, Changeset& changeset) const;
 	
 protected:
-	void computeProcedurePointChangeset(const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const;
+	void computeUnaryChangeset(const ScopedEffect::cptr effect, VariableIdx relevant, ObjectIdx value, Changeset& changeset) const;
+// 	void computeProcedurePointChangeset(const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const;
 };
 
 } // namespaces

@@ -12,11 +12,12 @@ void RelaxedEffectManager::computeChangeset(const Action& action, const DomainMa
 		
 		
 		if(relevant.size() == 0) {  // No need to pass any point.
-			changeset.add(Fact(effect->getAffected(), effect->apply({})), std::make_shared<FactSet>());
+			changeset.add(Fact(effect->getAffected(), effect->apply({})), {});
 		}
 		else if(relevant.size() == 1) {  // micro-optimization
-			for (ObjectIdx val:*(domains.at(relevant[0]))) { // Add to the changeset for every allowed value of the relevant variable
-				computeProcedurePointChangeset(effect, relevant, {val}, changeset);
+			VariableIdx rel = relevant[0];
+			for (ObjectIdx val:*(domains.at(rel))) { // Add to the changeset for every allowed value of the relevant variable
+				computeUnaryChangeset(effect, rel, val, changeset);
 			}
 		}
 		
@@ -34,9 +35,18 @@ void RelaxedEffectManager::computeChangeset(const Action& action, const DomainMa
 	}
 }
 
+// Micro-optimization
+void RelaxedEffectManager::computeUnaryChangeset(const ScopedEffect::cptr effect, VariableIdx relevant, ObjectIdx value, Changeset& changeset) const {
+       
+       // TODO - Note that this won't work for conditional effects where an action might have no effect at all
+       VariableIdx affected = effect->getAffected();
 
-void RelaxedEffectManager::computeProcedurePointChangeset(
-	const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const {
+       // Add as extra causes all the relevant facts of the effect procedure.
+       changeset.add(Fact(affected, effect->apply({value})), {Fact(relevant, value)}); // TODO - Get rid of the vector creation
+}
+
+/*
+void RelaxedEffectManager::computeProcedurePointChangeset(const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const {
 	
 	// TODO - Note that this won't work for conditional effects where an action might have no effect at all
 	VariableIdx affected = effect->getAffected();
@@ -48,6 +58,7 @@ void RelaxedEffectManager::computeProcedurePointChangeset(
 	}
 	changeset.add(Fact(affected, effect->apply(values)), extraCauses);
 }
+*/
 
 
 } // namespaces

@@ -81,14 +81,14 @@ public:
 	}
 	
 	//! Returns only those atoms that were not in the given seed state.
-	static Fact::vctrp pruneSeedSupporters(const FactSetPtr& causes, const State& seed) {
-		Fact::vctrp nonSeed = std::make_shared<Fact::vctr>();
-		for(const auto& atom:*causes) {
+	static Fact::vctrp pruneSeedSupporters(const Fact::vctr& causes, const State& seed) {
+		Fact::vctrp notInSeed = std::make_shared<Fact::vctr>();
+		for(const auto& atom:causes) {
 			if (!seed.contains(atom)) {
-				nonSeed->push_back(atom);
+				notInSeed->push_back(atom);
 			}
 		}
-		return nonSeed;
+		return notInSeed;
 	}
 	
 protected:
