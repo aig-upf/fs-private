@@ -20,6 +20,10 @@ _base = dict(
 
     constraint_instantiation='new ${classname}(appRelevantVars[${i}], binding)',
     effect_instantiation='new ${classname}(effRelevantVars[${i}], effAffectedVars[${i}], binding)',
+
+    satisfied_generic_header='isSatisfied(const ObjectIdxVector& relevant)',
+    satisfied_unary_header='isSatisfied(ObjectIdx v1)',
+    satisfied_binary_header='isSatisfied(ObjectIdx v1, ObjectIdx v2)',
 )
 
 

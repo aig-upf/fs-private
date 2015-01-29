@@ -14,10 +14,10 @@ ParametrizedScopedConstraint::ParametrizedScopedConstraint(const VariableIdxVect
 UnaryParametrizedScopedConstraint::UnaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
 	ParametrizedScopedConstraint(scope, parameters) {}
 
-// bool UnaryParametrizedScopedConstraint::isSatisfied(const ObjectIdxVector& values) const {
-// 	assert(values.size()==1);
-// 	return this->isSatisfied(values[0]);
-// }
+bool UnaryParametrizedScopedConstraint::isSatisfied(const ObjectIdxVector& values) const {
+	assert(values.size()==1);
+	return this->isSatisfied(values[0]);
+}
 
 //! Filters from a new set of domains.
 ScopedConstraint::Output UnaryParametrizedScopedConstraint::filter(const DomainMap& domains) const {
@@ -30,7 +30,7 @@ ScopedConstraint::Output UnaryParametrizedScopedConstraint::filter(const DomainM
 	Output output = Output::Unpruned;
 	
 	for (ObjectIdx value:domain) {
-		if (this->isSatisfied({value})) {
+		if (this->isSatisfied(value)) {
 			new_domain.insert(new_domain.cend(), value); // We will insert on the end of the container, as it is already sorted.
 		} else {
 			output = Output::Pruned; // Mark the result as "pruned", but keep iterating to prune more values
@@ -43,6 +43,11 @@ ScopedConstraint::Output UnaryParametrizedScopedConstraint::filter(const DomainM
 BinaryParametrizedScopedConstraint::BinaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
 	ParametrizedScopedConstraint(scope, parameters) {}
 
+	
+bool BinaryParametrizedScopedConstraint::isSatisfied(const ObjectIdxVector& values) const {
+	assert(values.size()==2);
+	return this->isSatisfied(values[0], values[1]);
+}
 
 //! This actually arc-reduces the constraint with respect to the relevant variable given by the index
 ScopedConstraint::Output BinaryParametrizedScopedConstraint::filter(unsigned variable) {
@@ -52,35 +57,25 @@ ScopedConstraint::Output BinaryParametrizedScopedConstraint::filter(unsigned var
 	unsigned other = (variable == 0) ? 1 : 0;
 	
 	Domain& domain = *(projection[variable]);
-	Domain& other_domain = *(projection[other]);		
+	Domain& other_domain = *(projection[other]);
 	Domain new_domain;
-	
-	Output output = Output::Unpruned;
-	
-	// A small helper to create the point having the values in the right order.
-	auto make_point = [&variable](ObjectIdx x, ObjectIdx z) -> ObjectIdxVector {
-		if (variable == 0) return {x, z};
-		else return {z, x};
-	};
 	
 	for (ObjectIdx x:domain) {
 		for (ObjectIdx z:other_domain) {
-			if (this->isSatisfied(make_point(x, z))) {
+			// We need to invoke isSatisfied with the parameters in the right order
+			if ((variable == 0 && this->isSatisfied(x, z)) || (variable == 1 && this->isSatisfied(z, x))) {
 				new_domain.insert(new_domain.cend(), x); // We will insert on the end of the container, as it is already sorted.
-				break; // x is an arc-consistent value, so we can break the inner loop and continue to check the next possible value.
+				break; // x is an arc-consistent value, so we can break the inner loop and continue to check the next possible value.				
 			}
 		}
 	}
 	
 	if (new_domain.size() == 0) return Output::Failure;
-	
 	if (new_domain.size() != domain.size()) {
 		domain = new_domain; // Update the domain by using the assignment operator.
-		output = Output::Pruned;
+		return Output::Pruned;
 	}
-	
-	return output;
-	
+	return Output::Unpruned;;
 }
 
 

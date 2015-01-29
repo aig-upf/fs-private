@@ -554,10 +554,10 @@ class ProcessedComponent(object):
     def __init__(self, name, code, _type, builtin, arity):
         assert isinstance(code, list)
         self.name = name
-        self.code = code
+        self.arity = arity
         self._type = _type
         self.builtin = builtin
-        self.arity = arity
+        self.code = self.optimize_code(code, arity)
 
     def get_baseclass(self):
         if self._type == 'EFFECT':
@@ -566,6 +566,13 @@ class ProcessedComponent(object):
             classnames = {1: 'UnaryParametrizedScopedConstraint', 2: 'BinaryParametrizedScopedConstraint'}
             return classnames[self.arity]
 
+    def get_satisfied_header(self):
+        if self._type == 'EFFECT':
+            return ''
+        else:
+            classnames = {1: 'satisfied_unary_header', 2: 'satisfied_binary_header'}
+            return classnames[self.arity] if self.arity in classnames else 'satisfied_generic_header'
+
     def get_instantiation_tpl(self):
         if self._type == 'EFFECT':
             return 'effect_instantiation'
@@ -573,3 +580,15 @@ class ProcessedComponent(object):
             return 'constraint_instantiation'
         else:
             raise RuntimeError("Unknown component type")
+
+    def optimize_code(self, code_blocks, arity):
+        """  This is a big hack. But works. """
+        if self._type == 'EFFECT':
+            return code_blocks
+
+        if arity == 1:
+            return [code.replace('relevant[0]', 'v1') for code in code_blocks]
+        elif arity == 2:
+            return [code.replace('relevant[0]', 'v1').replace('relevant[1]', 'v2') for code in code_blocks]
+        else:
+            return code_blocks

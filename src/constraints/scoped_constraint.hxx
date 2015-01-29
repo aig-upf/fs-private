@@ -47,6 +47,10 @@ public:
 	virtual bool isSatisfied(const State& s) const {
 		return this->isSatisfied(Projections::project(s, _scope));
 	}
+	
+	//! Some specialized methods for better performance
+	virtual bool isSatisfied(ObjectIdx o) const { throw std::runtime_error("This type of constraint does not support the unary isSatisfied method"); }
+	virtual bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const { throw std::runtime_error("This type of constraint does not support the binary isSatisfied method"); }
 
 	//! Filters from a new set of domains.
 	virtual Output filter(const DomainMap& domains) const  {
@@ -95,12 +99,11 @@ public:
 	
 	virtual Filtering filteringType() { return Filtering::Unary; };
 	
-	//! TODO - This should get proxied to the vector-less version
-	bool isSatisfied(const ObjectIdxVector& values) const = 0;
+	bool isSatisfied(const ObjectIdxVector& values) const;
 	
 	//! To be overriden by the concrete constraint class.
-// 	virtual bool isSatisfied(ObjectIdx value) const = 0;
-
+	virtual bool isSatisfied(ObjectIdx o) const = 0;
+	
 	//! Filters from a new set of domains.
 	virtual Output filter(const DomainMap& domains) const;
 };
@@ -112,8 +115,13 @@ public:
 	BinaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
 	virtual ~BinaryParametrizedScopedConstraint() {};
-	
+
 	virtual Filtering filteringType() { return Filtering::ArcReduction; };
+	
+	bool isSatisfied(const ObjectIdxVector& values) const;
+	
+	//! To be overriden by the concrete constraint class.
+	virtual bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const = 0;
 	
 	virtual Output filter(unsigned variable);
 };
