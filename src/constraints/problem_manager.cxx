@@ -8,11 +8,17 @@
 namespace fs0 {
 
 // Note that we use both types of constraints as goal constraints
-PlanningConstraintManager::PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints)
-	: allGoalConstraints(Utils::merge(goalConstraints, stateConstraints)), stateConstraintsManager(stateConstraints), goalConstraintsManager(allGoalConstraints)
+PlanningConstraintManager::PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints) :
+	allGoalConstraints(Utils::merge(goalConstraints, stateConstraints)),
+	stateConstraintsManager(stateConstraints),
+	goalConstraintsManager(allGoalConstraints), // We store all the constraints in a new vector so that we can pass a const reference 
+	                                            // - we're strongly interested in the ConstraintManager having only a reference, not the actual value,
+	                                            // since in some cases each grounded action will have a ConstraintManager
+	hasStateConstraints(stateConstraints.size() > 0)
 {}
 
 ScopedConstraint::Output PlanningConstraintManager::pruneUsingStateConstraints(RelaxedState& state) const {
+	if (!hasStateConstraints) return ScopedConstraint::Output::Unpruned;
 	DomainMap domains = Projections::project(state, stateConstraintsManager.getAllRelevantVariables());  // This does NOT copy the domains
 	return stateConstraintsManager.filter(domains);
 }

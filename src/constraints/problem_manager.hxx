@@ -17,13 +17,6 @@ class PlanningConstraintManager
 public:
 	typedef std::shared_ptr<const PlanningConstraintManager> cptr;
 	
-	//! We store here all the constraints that we want to take into account when determining if a relaxed state is a goal:
-	//! This includes both the explicit goal constraints plus the state constraints.
-	const ScopedConstraint::vcptr allGoalConstraints;
-	
-	const ConstraintManager stateConstraintsManager;
-	const ConstraintManager goalConstraintsManager;
-	
 	PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
@@ -40,6 +33,17 @@ public:
 	bool isGoal(const RelaxedState& state) const;
 	
 protected:
+	
+	//! We store here all the constraints that we want to take into account when determining if a relaxed state is a goal:
+	//! This includes both the explicit goal constraints plus the state constraints.
+	const ScopedConstraint::vcptr allGoalConstraints;
+	
+	const ConstraintManager stateConstraintsManager;
+	const ConstraintManager goalConstraintsManager;
+	
+	//! True iff there is at least one state constraint.
+	bool hasStateConstraints;
+	
 	//! Returns true iff the given domains are not inconsistent when filtering them with all the goal constraints.
 	bool checkGoal(const DomainMap& domains) const;
 	
