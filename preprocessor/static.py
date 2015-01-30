@@ -92,7 +92,7 @@ class UnaryMap(DataElement):
 
     def get_tpl(self, name):
         return dict(
-            declaration='const std::map<ObjectIdx, ObjectIdx> {name};',
+            declaration='const Serializer::BoostUnaryMap {name};',
             accessor='ObjectIdx {accessor}(ObjectIdx x) {{ return {name}.at(x); }}',
         )[name]
 
@@ -119,7 +119,7 @@ class BinaryMap(UnaryMap):
 
     def get_tpl(self, name):
         return dict(
-            declaration='const std::map<std::pair<ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
+            declaration='const Serializer::BoostBinaryMap {name};',
             accessor='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
         )[name]
 
@@ -130,7 +130,7 @@ class Arity3Map(BinaryMap):
 
     def get_tpl(self, name):
         return dict(
-            declaration='const std::map<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
+            declaration='const Serializer::BoostArity3Map {name};',
             accessor='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.at(std::make_tuple(x,y,z)); }}',
         )[name]
 
@@ -141,7 +141,7 @@ class Arity4Map(BinaryMap):
 
     def get_tpl(self, name):
         return dict(
-            declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx, ObjectIdx>, ObjectIdx> {name};',
+            declaration='const Serializer::BoostArity4Map {name};',
             accessor='ObjectIdx {accessor}(ObjectIdx o1, ObjectIdx o2, ObjectIdx o3, ObjectIdx o4) {{ return {name}.at(std::make_tuple(o1,o2,o3,o4)); }}',
         )[name]
 
@@ -152,7 +152,7 @@ class UnarySet(DataElement):
 
     def get_tpl(self, name):
         return dict(
-            declaration='const std::set<ObjectIdx> {name};',
+            declaration='const Serializer::BoostUnarySet {name};',
             accessor='bool {accessor}(ObjectIdx x) {{ return {name}.find(x) != {name}.end(); }}',
         )[name]
 
@@ -179,7 +179,7 @@ class BinarySet(UnarySet):
 
     def get_tpl(self, name):
         return dict(
-            declaration='const std::set<std::pair<ObjectIdx, ObjectIdx>> {name};',
+            declaration='const Serializer::BoostBinarySet {name};',
             accessor='bool {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.find({{x,y}}) != {name}.end(); }}',
         )[name]
 
@@ -190,7 +190,7 @@ class Arity3Set(BinarySet):
 
     def get_tpl(self, name):
         return dict(
-            declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx>> {name};',
+            declaration='const Serializer::BoostArity3Set {name};',
             accessor='bool {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.find(std::make_tuple(x,y,z)) != {name}.end(); }}',
         )[name]
 
@@ -201,7 +201,7 @@ class Arity4Set(BinarySet):
 
     def get_tpl(self, name):
         return dict(
-            declaration='const std::set<std::tuple<ObjectIdx, ObjectIdx, ObjectIdx, ObjectIdx>> {name};',
+            declaration='const Serializer::BoostArity4Set {name};',
             accessor='bool {accessor}(ObjectIdx o1, ObjectIdx o2, ObjectIdx o3, ObjectIdx o4) {{ return {name}.find(std::make_tuple(o1,o2,o3,o4)) != {name}.end(); }}',
         )[name]
 
