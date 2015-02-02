@@ -105,7 +105,7 @@ void ProblemInfo::loadTypeObjects(const std::string& filename) {
 		std::vector<ObjectIdx> indexes;
 		if (strs[1].size() > 0) {
 			boost::split(string_indexes, strs[1], boost::is_any_of(","));
-			indexes.resize(string_indexes.size());
+			indexes.reserve(string_indexes.size());
 			for (auto& str:string_indexes) indexes.push_back(boost::lexical_cast<ObjectIdx>(str));
 			typeObjects[strs[0]] = indexes;
 		}
