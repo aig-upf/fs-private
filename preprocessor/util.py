@@ -16,8 +16,12 @@ def normalize(name):
     return slug
 
 
+def normalize_and_camelcase(name):
+    return to_camelcase(normalize(name))
+
+
 def normalize_action_name(name):
-        return to_camelcase(normalize(name)) + 'Action'
+        return normalize_and_camelcase(name) + 'Action'
 
 
 def to_camelcase(word):

@@ -2,6 +2,7 @@
     This module contains a number of classes and routines to handle the static (external) data, including its
     declaration and serialization.
 """
+import util
 
 
 def instantiate_function(name, arity):
@@ -36,8 +37,8 @@ class DataElement:
     DESERIALIZER = None
 
     def __init__(self, name):
-        self.name = name
-        self.accessor = 'get_' + name
+        self.name = util.normalize(name)
+        self.accessor = 'get_' + self.name
 
     def get_tpl(self, name):
         raise RuntimeError("Method must be subclassed")
