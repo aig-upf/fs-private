@@ -26,11 +26,15 @@ class StaticData(object):
         self.initializations = []
 
 
+def serialize_symbol(symbol, table):
+    serialized = symbol if isinstance(symbol, int) else table[symbol]
+    return str(serialized)
+
+
 def serialize_tuple(t, symbols):
     """  A small helper to serialize a whole tuple with the help of a symbol table """
     t = (t,) if not isinstance(t, (list, tuple)) else t
-    symbol_id = lambda x: x if isinstance(x, int) else symbols[x]
-    return ','.join(str(symbol_id(e)) for e in t)
+    return ','.join(serialize_symbol(e, symbols) for e in t)
 
 
 class DataElement:
@@ -84,7 +88,7 @@ class Arity0Element(DataElement):
         return self.get_tpl('declaration').format(name=self.name, val=self.elems[()])
 
     def serialize_data(self, symbols):
-        return [str(self.elems[()])]  # We simply print the only element
+        return [serialize_symbol(self.elems[()], symbols)]  # We simply print the only element
 
 
 class UnaryMap(DataElement):

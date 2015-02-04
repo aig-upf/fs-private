@@ -303,11 +303,9 @@ class Generator(object):
 
     def serialize_external_data(self):
         for elem in self.task.static_data.values():
-            if isinstance(elem, DataElement):
-                serialized = elem.serialize_data(self.index.objects.obj_to_idx)
-                self.dump_data(elem.name, serialized)
-            else:
-                raise RuntimeError('What')
+            assert isinstance(elem, DataElement)
+            serialized = elem.serialize_data(self.index.objects.obj_to_idx)
+            self.dump_data(elem.name, serialized)
 
     def get_normalized_task_name(self):
         return util.normalize(self.task.name)
