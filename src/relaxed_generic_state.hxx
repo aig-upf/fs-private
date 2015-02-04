@@ -54,6 +54,14 @@ public:
 		}
 	}
 	
+	inline bool operator==(const RelaxedGenericState& rhs){
+		if (_domains.size() != rhs._domains.size()) return false;
+		for (unsigned i = 0; i < _domains.size(); ++i) {
+			if (*(_domains.at(i)) != *(rhs._domains.at(i))) return false;
+		}
+		return true;
+	}
+	
 	void set(const Fact& fact) {
 		_domains.at(fact.getVariable())->insert(fact.getValue());
 	}
