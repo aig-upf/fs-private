@@ -2,6 +2,7 @@
 # pragma once
 
 #include <iosfwd>
+#include <boost/concept_check.hpp>
 
 #include <fs0_types.hxx>
 #include <state.hxx>
@@ -13,6 +14,7 @@
 #include <actions.hxx>
 #include <relaxed_applicability_manager.hxx>
 #include <relaxed_effect_manager.hxx>
+#include <constraints/compiled.hxx>
 
 namespace fs0 {
 
@@ -63,6 +65,10 @@ public:
 	
 	const RelaxedApplicabilityManager& getRelaxedApplicabilityManager() const { assert(appManager); return *appManager; }
 	const RelaxedEffectManager& getRelaxedEffectManager() const { return effManager; }
+	
+	
+	void compileActionConstraints();
+	
 
 protected:
 	State::cptr _initialState;

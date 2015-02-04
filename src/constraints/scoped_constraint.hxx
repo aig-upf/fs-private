@@ -87,6 +87,8 @@ public:
 	
 	virtual ~ParametrizedScopedConstraint() {}
 	
+	const std::vector<int>& getParameters() const { return _binding; }
+	
 	virtual bool isSatisfied(const ObjectIdxVector& values) const = 0;
 };
 

@@ -75,7 +75,7 @@ ScopedConstraint::Output BinaryParametrizedScopedConstraint::filter(unsigned var
 		domain = new_domain; // Update the domain by using the assignment operator.
 		return Output::Pruned;
 	}
-	return Output::Unpruned;;
+	return Output::Unpruned;
 }
 
 

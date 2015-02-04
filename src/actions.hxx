@@ -25,7 +25,7 @@ protected:
 	
 	//! One VariableIdxVector per each applicability procedure, containing the indexes of those state variables 
 	//! relevant to that procedure.
-	const ScopedConstraint::vcptr _constraints;
+	ScopedConstraint::vcptr _constraints;
 	
 	const ScopedEffect::vcptr _effects;
 	
@@ -39,6 +39,7 @@ public:
 	static const ActionIdx INVALID;
 	
 	// typedef std::shared_ptr<const Action> cptr;
+	typedef Action* ptr;
 	typedef Action* cptr;
 	typedef std::vector<Action::cptr> vcptr;
 	
@@ -60,7 +61,8 @@ public:
 	//! An action signature is a vector v of types, where v[i] denotes the type of the action's i-th parameter.
 	virtual const ActionSignature& getSignature() const = 0;
 	
-	inline const ScopedConstraint::vcptr getConstraints() const { return _constraints; }
+	inline const ScopedConstraint::vcptr& getConstraints() const { return _constraints; }
+	inline ScopedConstraint::vcptr& getConstraints() { return _constraints; }
 	
 	inline const ScopedEffect::vcptr getEffects() const { return _effects; }
 	
