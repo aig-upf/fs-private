@@ -12,7 +12,7 @@ from compilation.actions import ActionCompiler
 from compilation.exceptions import ParseException
 from compilation.helper import is_external
 from static import StaticProcedure, instantiate_function, instantiate_predicate
-from constraints import Sum, Alldiff, External
+from constraints import ConstraintCatalog, External
 
 
 class Translator(object):
@@ -37,7 +37,6 @@ class Translator(object):
 
     def process_constraints(self, constraints):
         processed = []
-        supported = dict(sum=Sum, alldiff=Alldiff)
         for c in constraints:
             # We support two types of constraint arguments: state variables and objects
             # (which will be transformed into constraint parameters)
@@ -47,9 +46,8 @@ class Translator(object):
             if is_external(c.name):
                 constraint_class = External
                 processed.append(constraint_class(c.name, parameters, variables))
-            elif c.name in supported:
-                constraint_class = supported[c.name]
-                processed.append(constraint_class(parameters, variables))
+            elif ConstraintCatalog.is_supported(c.name):
+                processed.append(ConstraintCatalog.instantiate(c.name, parameters, variables))
             else:
                 raise RuntimeError("Unsupported constrain type: '{}'".format(c.name))
 

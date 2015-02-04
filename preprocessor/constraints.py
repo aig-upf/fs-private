@@ -33,3 +33,21 @@ class Sum(Constraint):
 class External(Constraint):
     def __init__(self, name, parameters, variables):
         super().__init__(name, parameters, variables)
+
+
+class GeqConstraint(Constraint):
+    def __init__(self, parameters, variables):
+        super().__init__("geq", parameters, variables)
+
+
+class ConstraintCatalog(object):
+    """ A catalog of custom constraints """
+    supported = {'sum': Sum, 'alldiff': Alldiff, ">=": GeqConstraint}
+
+    @classmethod
+    def is_supported(cls, name):
+        return name in cls.supported
+
+    @classmethod
+    def instantiate(cls, name, parameters, variables):
+        return cls.supported[name](parameters, variables)

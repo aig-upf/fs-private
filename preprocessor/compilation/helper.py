@@ -8,7 +8,10 @@ from compilation.exceptions import UnimplementedFeature
 
 
 def get_formula_parts(formula):
-    assert (isinstance(formula, (pddl.conditions.Conjunction, pddl.conditions.Atom, pddl.conditions.NegatedAtom)))
+    assert (isinstance(formula, (pddl.conditions.Conjunction, pddl.conditions.Atom, pddl.conditions.NegatedAtom,
+                                 pddl.conditions.Truth)))
+    if isinstance(formula, pddl.conditions.Truth):
+        return []
     return formula.parts if isinstance(formula, pddl.conditions.Conjunction) else [formula]
 
 

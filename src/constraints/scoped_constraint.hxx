@@ -134,5 +134,17 @@ public:
 	virtual Output filter(unsigned variable);
 };
 
+class GEQConstraint : public BinaryParametrizedScopedConstraint
+{
+public:
+	GEQConstraint(const VariableIdxVector& scope) :
+		BinaryParametrizedScopedConstraint(scope, {}) {}
+	virtual ~GEQConstraint() {};
+
+	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
+		return o1 >= o2;
+	}
+};
+
 } // namespaces
 

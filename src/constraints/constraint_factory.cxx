@@ -7,7 +7,11 @@
 namespace fs0 {
 
 const ScopedConstraint::cptr ConstraintFactory::create(const std::string& name, const ObjectIdxVector& parameters, const VariableIdxVector& scope) {
-	if (name == "alldiff") {
+
+	if (name == "geq") {
+		assert(parameters.empty());
+		return new GEQConstraint(scope);
+	} else if (name == "alldiff") {
 		return new ScopedAlldiffConstraint(scope);
 	} else if (name == "sum") {
 		return new ScopedSumConstraint(scope);
