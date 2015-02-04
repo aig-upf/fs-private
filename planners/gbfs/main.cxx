@@ -218,6 +218,7 @@ int main(int argc, char** argv) {
 	}
 
 	std::cout << "Generating the problem... ";
+	std::cout.flush();
 	
 	Problem problem;
 	ProblemInfo::cptr problemInfo = std::make_shared<ProblemInfo>(data_dir);

@@ -32,7 +32,6 @@ namespace fs0 {
 	
 	//! The index identifying a state variable.
 	typedef unsigned VariableIdx;
-	
 
 	typedef std::vector<VariableIdx> VariableIdxVector;
 	typedef std::vector<ObjectIdx> ObjectIdxVector;

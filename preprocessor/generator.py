@@ -420,6 +420,12 @@ class Generator(object):
             dump.append("{}#{}".format(t, ','.join(object_idxs)))
         self.dump_data('object-types', dump)
 
+        type_list = [t.name for t in self.task.types]
+        if 'object' not in type_list:
+            type_list.insert(0, 'object')
+        types = ["{}#{}".format(i, t) for i, t in enumerate(type_list)]
+        self.dump_data('types', types)
+
     def serialize_variables_data(self, procedures):
         """
         Serializes the indexes of the relevant and affected variables data of a set of procedures.
