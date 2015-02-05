@@ -38,17 +38,19 @@ public:
 class CompiledBinaryConstraint : public BinaryParametrizedScopedConstraint
 {
 protected:
-	typedef std::pair<ObjectIdx, ObjectIdx> ElementT;
-	typedef std::vector<ElementT> ExtensionT;
+	// For a binary constraint with scope <X, Y>, the extension is a map mapping each possible x \in D_X to an ordered 
+	// vector containing all y \in D_Y s.t. <x, y> satisfies the constraint.
+	typedef std::unordered_map<ObjectIdx, ObjectIdxVector> ExtensionT;
 	
 	//! Precondition: the vector is sorted.
-	const ExtensionT _extension;
+	const ExtensionT _extension1;
+	const ExtensionT _extension2;
 	
 	//! Protected constructor to be used from the other constructor
-	CompiledBinaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension);
+	CompiledBinaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension1, ExtensionT&& extension2);
 	
 	//! Returns an ordered ExtensionT data structure with all the elements that satisfy the constraint.
-	ExtensionT compile(const BinaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo);
+	ExtensionT compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo);
 	
 public:
 	//! Construct a binary compiled constraint by compiling a standard binary constraint.

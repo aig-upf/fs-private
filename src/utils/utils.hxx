@@ -47,7 +47,24 @@ public:
 	static std::vector<T> unique(const std::vector<T>& vector) {
 		boost::container::flat_set<T> unique(vector.cbegin(), vector.cend());
 		return std::vector<T>(unique.cbegin(), unique.cend());
-	}	
+	}
+	
+	//! Returns true iff the intersection of the first container (first1-last1) with the second container (first2-last2) is not empty.
+	//! Complexity: O(min(n1, n2)), where n1 and n2 are the sizes of the first and second containers.
+	template<class InputIt1, class InputIt2>
+	static bool empty_intersection(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2) {
+		while (first1 != last1 && first2 != last2) {
+			if (*first1 < *first2) {
+				++first1;
+			} else  {
+				if (!(*first2 < *first1)) { // Pointers point to equal element - we can tell the intersection won't be empty
+					return false;
+				}
+				++first2;
+			}
+		}
+		return false;
+	}
 
 protected:
 	template <typename IteratorCallback>
