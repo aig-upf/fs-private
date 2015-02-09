@@ -64,6 +64,8 @@ public:
 	inline const ScopedConstraint::vcptr& getConstraints() const { return _constraints; }
 	inline ScopedConstraint::vcptr& getConstraints() { return _constraints; }
 	
+	inline void addConstraint(ScopedConstraint::cptr constraint) { _constraints.push_back(constraint); }
+	
 	inline const ScopedEffect::vcptr getEffects() const { return _effects; }
 	
 	void constructConstraintManager();

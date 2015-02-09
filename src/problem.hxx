@@ -21,7 +21,8 @@ namespace fs0 {
 class Problem
 {
 public:
-	Problem();
+	//! Constructs a problem by loading the problem data from the given directory.
+	Problem(const std::string& data_dir);
 	~Problem();
 
 	//! Modify the problem initial state
@@ -34,13 +35,10 @@ public:
 	unsigned getNumActions() const { return _actions.size(); }
 	const Action::vcptr& getAllActions() const { return _actions; }
 
-	SimpleApplicableActionSet getApplicableActions(const State& s) const {
-		return SimpleApplicableActionSet(StandardApplicabilityManager(s, getConstraints()), _actions);
-	}
+	SimpleApplicableActionSet getApplicableActions(const State& s) const;
 	
 	bool isGoal(const State& s) const { return ctrManager->isGoal(s); }
 
-	
 	void registerConstraint(const ScopedConstraint::cptr constraint) { stateConstraints.push_back(constraint);}
 	const ScopedConstraint::vcptr& getConstraints() const { return stateConstraints; }
 	void registerGoalConstraint(ScopedConstraint::cptr constraint) { goalConstraints.push_back(constraint);}
@@ -48,8 +46,7 @@ public:
 
 	
 	//! Getter/setter for the associated ProblemInfo object.
-	void setProblemInfo(const ProblemInfo::cptr& problemInfo) { _problemInfo = problemInfo; }
-	const ProblemInfo::cptr getProblemInfo() const { return _problemInfo; }
+	const ProblemInfo& getProblemInfo() const { return _problemInfo; }
 	
 	static void setCurrentProblem(Problem& problem) {
 		problem.bootstrap();
@@ -67,6 +64,8 @@ public:
 	const RelaxedEffectManager& getRelaxedEffectManager() const { return effManager; }
 	
 	
+	void addDomainBoundConstraints();
+	
 	void compileActionConstraints();
 	
 
@@ -77,7 +76,7 @@ protected:
 	
 	Action::vcptr _actions;
 	
-	ProblemInfo::cptr _problemInfo;
+	const ProblemInfo _problemInfo;
 	
 	//! Vectors of pointers to the different problem constraints. This class owns the pointers.
 	ScopedConstraint::vcptr stateConstraints;

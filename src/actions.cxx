@@ -35,10 +35,10 @@ VariableIdxVector Action::extractRelevantVariables() {
 }
 
 std::ostream& Action::print(std::ostream& os) const {
-	auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
 	os << getName() << "(";
 	for(auto obj:_binding) {
-		os << problemInfo->getCustomObjectName(obj) << ", ";
+		os << problemInfo.getCustomObjectName(obj) << ", ";
 	}
 	os << ")";
 	return os;

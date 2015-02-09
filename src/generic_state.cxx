@@ -22,11 +22,11 @@ std::ostream& GenericState::print(std::ostream& os) const {
 }
 
 std::ostream& GenericState::print(std::ostream& os, const Problem& problem) const {
-	auto problemInfo = problem.getProblemInfo();
+	const ProblemInfo& problemInfo = problem.getProblemInfo();
 	os << "GenericState";
 	os << "(" << _hash << ")[";
 	for (unsigned i = 0; i < _values.size(); ++i) { // Iterate through all the sets
-		os << problemInfo->getVariableName(i) << "=" << problemInfo->getObjectName(i, _values.at(i)) << ",";
+		os << problemInfo.getVariableName(i) << "=" << problemInfo.getObjectName(i, _values.at(i)) << ",";
 	}
 	os << "]";
 	return os;

@@ -70,7 +70,7 @@ bool checkPlanCorrect(const Plan& plan) {
 }
 
 template <typename Search_Engine>
-float do_search( Search_Engine& engine, const ProblemInfo::cptr& problemInfo, int budget, const std::string& out_dir) {
+float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, int budget, const std::string& out_dir) {
 
 	std::ofstream out(out_dir + "/searchlog.out");
 	std::ofstream best_plan(out_dir + "/best.plan"),
@@ -133,7 +133,7 @@ float do_search( Search_Engine& engine, const ProblemInfo::cptr& problemInfo, in
 }
 
 
-void instantiate_seach_engine_and_run(const FwdSearchProblem& search_prob, const ProblemInfo::cptr& problemInfo, int timeout, const std::string& out_dir) {
+void instantiate_seach_engine_and_run(const FwdSearchProblem& search_prob, const ProblemInfo& problemInfo, int timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
 	aptk::search::bfs::AT_GBFS_SQ_SH< FwdSearchProblem, RelaxedHeuristic, BFS_Open_List > rp_bfs_engine( search_prob );
@@ -155,8 +155,8 @@ void reportProblemStats(const Problem& problem) {
 // 	const auto& st = problem.get_symbol_table();
 // 	
 // 	std::cout << "Number of object types: " << st.get_num_types() << std::endl;
-	std::cout << "Number of objects: " << problem.getProblemInfo()->getNumObjects() << std::endl;
-	std::cout << "Number of state variables: " << problem.getProblemInfo()->getNumVariables() << std::endl;
+	std::cout << "Number of objects: " << problem.getProblemInfo().getNumObjects() << std::endl;
+	std::cout << "Number of state variables: " << problem.getProblemInfo().getNumVariables() << std::endl;
 	
 	std::cout << "Number of ground actions: " << problem.getNumActions() << std::endl;
 	if (problem.getNumActions() > 1000) {
@@ -220,9 +220,7 @@ int main(int argc, char** argv) {
 	std::cout << "Generating the problem... ";
 	std::cout.flush();
 	
-	Problem problem;
-	ProblemInfo::cptr problemInfo = std::make_shared<ProblemInfo>(data_dir);
-	problem.setProblemInfo(problemInfo);
+	Problem problem(data_dir);
 	generate(data_dir, problem);
 	
 	Problem::setCurrentProblem(problem);
@@ -233,6 +231,6 @@ int main(int argc, char** argv) {
 	reportProblemStats(problem);
 	
 	// Instantiate the engine
-	instantiate_seach_engine_and_run(search_prob, problemInfo, timeout, out_dir);
+	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), timeout, out_dir);
 	return 0;
 }

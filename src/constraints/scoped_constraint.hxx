@@ -7,6 +7,8 @@
 
 namespace fs0 {
 
+class ProblemInfo; class UnaryScopedEffect;
+	
 class ScopedConstraint
 {
 protected:
@@ -136,5 +138,19 @@ public:
 	virtual Output filter(unsigned variable);
 };
 
-} // namespaces
+class DomainBoundsConstraint : public UnaryParametrizedScopedConstraint {
+protected:
+	const ProblemInfo& _problemInfo;
+	
+	const UnaryScopedEffect* _effect;
+	
+public:
+	//! 
+	DomainBoundsConstraint(const UnaryScopedEffect* effect, const ProblemInfo& problemInfo);
+	
+	virtual ~DomainBoundsConstraint() {};
+	
+	bool isSatisfied(ObjectIdx o) const;
+};
 
+} // namespaces

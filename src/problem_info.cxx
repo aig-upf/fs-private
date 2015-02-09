@@ -4,15 +4,19 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <atoms.hxx>
 
 namespace fs0 {
 
+// e.g. "int[-3..10]"
+const boost::regex ProblemInfo::boundedIntRE("^int\\[(.*)\\.\\.(.*)\\]$");
+	
 ProblemInfo::ProblemInfo(const std::string& data_dir) {
 	loadTypeIndex(data_dir + "/types.data"); // Order matters
 	loadActionIndex(data_dir + "/action-index.data");
-	loadVariableIndex(data_dir + "/variables.data");
 	loadObjectIndex(data_dir + "/objects.data");
 	loadTypeObjects(data_dir + "/object-types.data");
+	loadVariableIndex(data_dir + "/variables.data");
 }
 
 const std::string& ProblemInfo::getActionName(ActionIdx index) const { return actionNames.at(index); }
@@ -61,7 +65,7 @@ void ProblemInfo::loadVariableIndex(const std::string& filename) {
 }
 
 ProblemInfo::ObjectType ProblemInfo::parseVariableType(const std::string& type) const {
-	if (type == "_int_" || type == "int") return ObjectType::INT;
+	if (isTypeBounded[getTypeId(type)] || type == "_int_" || type == "int") return ObjectType::INT;
 	else if (type == "_bool_" || type == "bool") return ObjectType::BOOL;
 	else return ObjectType::OBJECT;
 }
@@ -94,6 +98,8 @@ void ProblemInfo::loadTypeObjects(const std::string& filename) {
 	std::ifstream in(filename);
 	
 	typeObjects.resize(name_to_type.size()); // Resize the vector to the number of types that we have
+	isTypeBounded.resize(name_to_type.size());
+	typeBounds.resize(name_to_type.size());
 	
 	// Each line is an object name.
 	while (std::getline(in, line)) {
@@ -101,20 +107,35 @@ void ProblemInfo::loadTypeObjects(const std::string& filename) {
 		std::vector<std::string> strs;
 		boost::split(strs, line, boost::is_any_of("#"));
 		assert(strs.size()==2);
+		if (strs[1].size() == 0) throw std::runtime_error("No objects declared in " + filename + " for type " + strs[0]);
+		
+		TypeIdx type_id = name_to_type.at(strs[0]);
+		assert(type_id < typeObjects.size());
 		
 		// We read and convert to integer type the vector of Object indexes
-		std::vector<std::string> string_indexes;
-		std::vector<ObjectIdx> indexes;
-		if (strs[1].size() > 0) {
+		// strs[1] is either of the form (a) "5,6,7,8" or (b) "int[0..10]"
+		boost::match_results<std::string::const_iterator> results;
+		if (boost::regex_match(strs[1], results, boundedIntRE)) { // We have a bounded integer domain
+			int lower = boost::lexical_cast<int>(results[1]);
+			int upper = boost::lexical_cast<int>(results[2]);
+			if (lower > upper) throw std::runtime_error("Incorrect bounded integer expression " + line);
+			typeBounds[type_id] = std::make_pair(lower, upper);
+			isTypeBounded[type_id] = true;
+			
+			// Unfold the range
+			std::vector<ObjectIdx> values;
+			values.reserve(upper - lower + 1);
+			for (int v = lower; v <= upper; ++v) values.push_back(v);
+			typeObjects[type_id] = values;
+		} else { // We have an enumeration of object IDs
+			std::vector<std::string> string_indexes;
+			std::vector<ObjectIdx> indexes;
 			boost::split(string_indexes, strs[1], boost::is_any_of(","));
 			indexes.reserve(string_indexes.size());
 			for (auto& str:string_indexes) indexes.push_back(boost::lexical_cast<ObjectIdx>(str));
-			TypeIdx type_id = name_to_type.at(strs[0]);
-			assert(type_id < typeObjects.size());
 			typeObjects[type_id] = indexes;
 		}
 	}
-	
 }
 
 void ProblemInfo::loadTypeIndex(const std::string& filename) {
@@ -131,6 +152,17 @@ void ProblemInfo::loadTypeIndex(const std::string& filename) {
 		name_to_type.insert(std::make_pair(strs[1], type_to_name.size()));
 		type_to_name.push_back(strs[1]);
 	}
+}
+
+bool ProblemInfo::checkValueIsValid(const Fact& atom) const {
+	return checkValueIsValid(atom.getVariable(), atom.getValue());
+}
+
+bool ProblemInfo::checkValueIsValid(VariableIdx variable, ObjectIdx value) const {
+	TypeIdx type = getVariableType(variable);
+	if (!isTypeBounded[type]) return true;
+	const auto& bounds = typeBounds[type];
+	return value >= bounds.first && value <= bounds.second;
 }
 
 } // namespaces

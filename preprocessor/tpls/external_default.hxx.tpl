@@ -4,5 +4,5 @@
 //! This is a default External class for those domains that do not need any custom external code.
 class External : public ExternalBase {
 public:
-	External(ProblemInfo::cptr problemInfo, const std::string& data_dir) : ExternalBase(problemInfo, data_dir) {}
+	External(const ProblemInfo& problemInfo, const std::string& data_dir) : ExternalBase(problemInfo, data_dir) {}
 };

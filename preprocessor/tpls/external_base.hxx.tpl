@@ -19,12 +19,12 @@ using namespace fs0;
 /*********************************************/
 class ExternalBase  {
 protected:
-    ProblemInfo::cptr _problemInfo;
+    const ProblemInfo& _problemInfo;
 
     ${data_declarations}
 
 public:
-    ExternalBase(ProblemInfo::cptr problemInfo, const std::string& data_dir) : _problemInfo(problemInfo) ${data_initialization}
+    ExternalBase(const ProblemInfo& problemInfo, const std::string& data_dir) : _problemInfo(problemInfo) ${data_initialization}
     {}
 
     static ScopedConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) {

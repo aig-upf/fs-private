@@ -33,15 +33,15 @@ std::ostream& RelaxedGenericState::print(std::ostream& os) const {
 }
 
 std::ostream& RelaxedGenericState::print(std::ostream& os, const Problem& problem) const {
-	auto problemInfo = problem.getProblemInfo();
+	const ProblemInfo& problemInfo = problem.getProblemInfo();
 	os << "RelaxedGenericState[";
 	for (unsigned i = 0; i < _domains.size(); ++i) { // Iterate through all the sets
 		const DomainPtr& vals = _domains.at(i);
 		assert(vals->size() != 0);
 		
-		os << problemInfo->getVariableName(i) << "={";
+		os << problemInfo.getVariableName(i) << "={";
 		for (const auto& objIdx:*vals) { // Iterate through the set elements.
-			os << problemInfo->getObjectName(i, objIdx) << ",";
+			os << problemInfo.getObjectName(i, objIdx) << ",";
 		}
 		os << "}, ";
 	}

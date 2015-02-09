@@ -1,6 +1,8 @@
 
 #include <constraints/scoped_constraint.hxx>
 #include <utils/projections.hxx>
+#include <constraints/scoped_effect.hxx>
+#include <problem_info.hxx>
 
 namespace fs0 {
 
@@ -78,6 +80,17 @@ ScopedConstraint::Output BinaryParametrizedScopedConstraint::filter(unsigned var
 	return Output::Unpruned;
 }
 
+DomainBoundsConstraint::DomainBoundsConstraint(const UnaryScopedEffect* effect, const ProblemInfo& problemInfo) :
+	UnaryParametrizedScopedConstraint(effect->getScope(), {}), _problemInfo(problemInfo), _effect(effect)
+{}
+
+// The domain constraint is satisfied iff the application of the corresponding effect keeps the affected
+// value within the domain bounds.
+bool DomainBoundsConstraint::isSatisfied(ObjectIdx o) const {
+		VariableIdx affected = _effect->getAffected();
+		ObjectIdx value = _effect->apply(o);
+		return _problemInfo.checkValueIsValid(affected, value);
+}
 
 
 } // namespaces

@@ -4,6 +4,7 @@ Several methods for generating VPM tasks.
 from collections import deque, defaultdict
 import operator
 from functools import reduce
+import re
 
 import base
 from base import ProblemDomain, ProblemInstance, Function, Predicate
@@ -99,7 +100,7 @@ def create_problem_instance(name, task, domain, objects, init, goal, static_data
     """
     instance = ProblemInstance(name, domain, objects, init, goal, static_data, constraints, gconstraints)
 
-    instance.type_map, instance.object_type = process_types(instance)
+    instance.type_map, instance.object_type = process_types(instance, task.bounds)
 
     # For easier reference
     instance.types = instance.domain.types
@@ -112,7 +113,22 @@ def create_problem_instance(name, task, domain, objects, init, goal, static_data
     return instance
 
 
-def process_types(instance):
+def process_bounds(bounds):
+
+    bounded_types = {}
+    for bound in bounds:
+        res = re.match('int\[(.*)\.\.(.*)\]', bound.bound)
+        assert res is not None
+        lower = int(res.group(1))
+        upper = int(res.group(2))
+        if lower > upper:
+            raise RuntimeError("Incorrect bound {}".format(bound))
+
+        # bounded_types[bound.typename] = (lower, upper)
+        bounded_types[bound.typename] = list(range(lower, upper + 1))
+    return bounded_types
+
+def process_types(instance, bounds):
     """
     Returns (1) a map from each type to its objects.
             (2) a map from each object name to its immediate object typename
@@ -126,6 +142,8 @@ def process_types(instance):
     type_map = defaultdict(list)
     object_type = {}
 
+    bounded_types = process_bounds(bounds)
+
     # for every type we append the corresponding object
     for o in instance.objects:
         object_type[o.name] = o.typename
@@ -137,6 +155,8 @@ def process_types(instance):
                 raise ValueError("Unkown type '{}'".format(o.typename))
             for t in instance.domain.supertypes[o.typename]:
                 type_map[t].append(o.name)
+
+    type_map = dict(list(type_map.items()) + list(bounded_types.items()))  # merge the two dictionaries
 
     return type_map, object_type
 

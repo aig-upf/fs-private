@@ -416,7 +416,11 @@ class Generator(object):
         """ Dumps a map of types to corresponding objects"""
         dump = []
         for t, objects in self.task.type_map.items():
-            object_idxs = (str(self.index.objects.get_index(o)) for o in objects)
+
+            if objects and isinstance(objects[0], int):  # We have a bounded int variable
+                object_idxs = ['int[{}..{}]'.format(objects[0], objects[-1])]
+            else:
+                object_idxs = (str(self.index.objects.get_index(o)) for o in objects)
             dump.append("{}#{}".format(t, ','.join(object_idxs)))
         self.dump_data('object-types', dump)
 
@@ -446,8 +450,8 @@ class Generator(object):
         for lifted_action, grounded in grounded_actions.items():
             classname = util.normalize_action_name(lifted_action)
             for action in grounded:
-                binding = self.gen_vector(self.index.objects[x] for x in action.binding)
-                derived = self.gen_vector(self.index.objects[x] for x in action.derived)
+                binding = self.gen_vector(self.generate_object_id_list(action.binding))
+                derived = self.gen_vector(self.generate_object_id_list(action.derived))
 
                 arv, _ = self.serialize_variables_data(action.applicability_procedures)
                 erv, eav = self.serialize_variables_data(action.effect_procedures)
@@ -520,6 +524,17 @@ class Generator(object):
             # bool variables also need to be treated specially
             value = base.bool_string(value) if isinstance(value, bool) else value
             return self.index.objects[value]
+
+    def generate_object_id_list(self, objects):
+        res = []
+        for x in objects:
+            if isinstance(x, int):
+                res.append(x)
+            else:
+                res.append(self.index.objects[x])
+        return res
+
+
 
 if __name__ == "__main__":
     main()

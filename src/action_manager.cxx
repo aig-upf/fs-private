@@ -6,7 +6,8 @@
 #include <heuristics/changeset.hxx>
 #include <relaxed_applicability_manager.hxx>
 #include <utils/projections.hxx>
-#include "relaxed_effect_manager.hxx"
+#include <relaxed_effect_manager.hxx>
+#include <problem.hxx>
 
 namespace fs0 {
 
@@ -19,15 +20,15 @@ bool ActionManager::checkPlanSuccessful(const Problem& problem, const ActionPlan
 
 State::ptr ActionManager::applyPlan(const Problem& problem, const ActionPlan& plan, const State& s0) {
 	State::ptr s = std::make_shared<State>(s0);
-	for (const auto& idx:plan) {
-		s = applyAction(problem.getAction(idx), s);
+	for (unsigned idx:plan) {
+		s = applyAction(problem, problem.getAction(idx), s);
 		if (!s) return s;
 	}
 	return s;
 }	
 
-State::ptr ActionManager::applyAction(const Action::cptr& action, const State::ptr& s0) {
-	StandardApplicabilityManager manager(*s0, Problem::getCurrentProblem()->getConstraints());
+State::ptr ActionManager::applyAction(const Problem& problem, const Action::cptr& action, const State::ptr& s0) {
+	StandardApplicabilityManager manager(*s0, problem.getConstraints());
 	
 	if (!manager.isApplicable(*action)) {
 		return State::ptr();
@@ -58,7 +59,7 @@ bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, 
 	DomainMap projection = Projections::projectToActionVariables(s, action);
 
 	Fact::vctr causes;
-	if (appManager.isApplicable(action, seed, projection, causes)) { // The action is applicable - we ignore the causes
+	if (appManager.checkPreconditionsHold(action, seed, projection, causes)) { // The action is applicable - we ignore the causes
 		Changeset changeset(seed, s);
 		effManager.computeChangeset(action, projection, changeset);
 		s.accumulate(changeset);

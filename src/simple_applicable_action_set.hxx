@@ -5,6 +5,7 @@
 #include <fs0_types.hxx>
 #include <state.hxx>
 #include <standard_applicability_manager.hxx>
+#include <actions.hxx>
 
 namespace fs0 {
 

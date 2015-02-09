@@ -5,10 +5,13 @@
 #include <vector>
 #include <unordered_map>
 
+#include <boost/regex.hpp>
 #include <fs0_types.hxx>
 
 
 namespace fs0 {
+
+class Fact;
 
 /**
   * A ProblemInfo instance holds all the relevant information about the problem, including the names and types of state variables, problem objects, etc.
@@ -41,9 +44,15 @@ protected:
 	//! A map from type ID to all of the object indexes of that type
 	std::vector<ObjectIdxVector> typeObjects;
 	
+	//! An integer type will have associated lower and upper bounds.
+	std::vector<std::pair<int, int>> typeBounds;
+	std::vector<bool> isTypeBounded;
+	
 	//! Maps between typenames and type IDs.
 	std::unordered_map<std::string, TypeIdx> name_to_type;
 	std::vector<std::string> type_to_name;
+	
+	static const boost::regex boundedIntRE;
 	
 public:
 
@@ -76,6 +85,11 @@ public:
 	const std::string& getCustomObjectName(ObjectIdx objIdx) const;
 	
 	unsigned getNumObjects() const;
+	
+	bool checkValueIsValid(const Fact& atom) const;
+	bool checkValueIsValid(VariableIdx variable, ObjectIdx value) const;
+	
+	bool hasVariableBoundedDomain(VariableIdx variable) const { return isTypeBounded[getVariableType(variable)];  }
 
 protected:
 	

@@ -10,8 +10,8 @@ Fact::Fact(const VariableIdx variable, const ObjectIdx value) :
 {};
 	
 std::ostream& Fact::print(std::ostream& os) const {
-	auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();
-	os << "[" << problemInfo->getVariableName(_variable) << getSign() << problemInfo->getObjectName(_variable, _value) << "]";
+	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
+	os << "[" << problemInfo.getVariableName(_variable) << getSign() << problemInfo.getObjectName(_variable, _value) << "]";
 	return os;
 }
 

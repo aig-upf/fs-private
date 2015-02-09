@@ -4,10 +4,11 @@
 #include <actions.hxx>
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <problem.hxx>
 
 namespace fs0 {
-	
+
+class Problem;
+
 /**
  * Some helper methods.
  * TODO - This should all be refactored into the existing Relaxed and NonRelaxed managers.
@@ -21,9 +22,9 @@ public:
 	
 	static State::ptr applyPlan(const Problem& problem, const ActionPlan& plan, const State& s0);
 	
-	static State::ptr applyAction(const Action::cptr& action, const State::ptr& s0);
+	static State::ptr applyAction(const Problem& problem, const Action::cptr& action, const State::ptr& s0);
 
-	
+
 	//! Returns true iff the given plan is valid and leads to a goal state, when applied to state s0 in relaxed mode.
 	static bool checkRelaxedPlanSuccessful(const Problem& problem, const ActionPlan& plan, const State& s0);
 

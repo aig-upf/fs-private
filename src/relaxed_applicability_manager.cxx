@@ -2,6 +2,7 @@
 #include <relaxed_applicability_manager.hxx>
 #include <action_manager.hxx>
 #include <atoms.hxx>
+#include <constraints/constraint_manager.hxx>
 
 namespace fs0 {
 
@@ -32,17 +33,17 @@ RelaxedApplicabilityManager* RelaxedApplicabilityManager::createApplicabilityMan
 	return new RelaxedApplicabilityManager();
 }
 
-bool RelaxedApplicabilityManager::isApplicable(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const {
+bool RelaxedApplicabilityManager::checkPreconditionsHold(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const {
 	ConstraintManager* manager = action.getConstraintManager();
 	if (!manager) {
 		// If the action has no associated manager, we know for sure that all of the action applicability constraints are unary.
-		return unaryApplicable(action, seed, domains, causes);
+		return checkUnaryPreconditionsHold(action, seed, domains, causes);
 	} else {
-		return genericApplicable(manager, seed, domains, causes);
+		return checkGenericPreconditionsHold(manager, seed, domains, causes);
 	}
 }
 
-bool RelaxedApplicabilityManager::unaryApplicable(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const {
+bool RelaxedApplicabilityManager::checkUnaryPreconditionsHold(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const {
 	for (const ScopedConstraint::cptr constraint:action.getConstraints()) {
 		if (!isUnaryProcedureApplicable(constraint, domains, seed, causes)) return false;
 	}
@@ -84,7 +85,7 @@ bool RelaxedApplicabilityManager::isUnaryProcedureApplicable(const ScopedConstra
 }
 
 
-bool RelaxedApplicabilityManager::genericApplicable(ConstraintManager* manager, const State& seed, const DomainMap& domains, Fact::vctr& causes) const {
+bool RelaxedApplicabilityManager::checkGenericPreconditionsHold(ConstraintManager* manager, const State& seed, const DomainMap& domains, Fact::vctr& causes) const {
 	ScopedConstraint::Output o = manager->filter(domains);
 	
 	if(o == ScopedConstraint::Output::Failure || !ConstraintManager::checkConsistency(domains)) {

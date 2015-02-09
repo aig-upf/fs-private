@@ -7,7 +7,8 @@ namespace fs0 {
 	
 const Problem* Problem::_instance = 0;
 
-Problem::Problem() :
+Problem::Problem(const std::string& data_dir) :
+	_problemInfo(data_dir),
 	stateConstraints(),
 	goalConstraints(),
 	effManager()
@@ -22,6 +23,9 @@ Problem::~Problem() {
 	
 
 void Problem::bootstrap() {
+	// Add the necessary (unary) constraints to keep the appropriate values, if any, within their bounds.
+	addDomainBoundConstraints();
+	
 	// Compile the constraints if necessary
 	compileActionConstraints();
 	
@@ -32,6 +36,31 @@ void Problem::bootstrap() {
 	appManager = RelaxedApplicabilityManager::createApplicabilityManager(_actions);
 }
 
+void Problem::addDomainBoundConstraints() {
+	
+	for (Action::ptr action:_actions) {
+		
+		for (const ScopedEffect::cptr effect:action->getEffects()) {
+			VariableIdx affected = effect->getAffected();
+			const VariableIdxVector& relevant = effect->getScope();
+			
+			if (relevant.size() > 1) throw std::runtime_error("Action effect procedures of arity > 1 are currently unsupported");
+			
+			if (_problemInfo.hasVariableBoundedDomain(affected)) {
+				if (relevant.size() == 0) {
+					ObjectIdx value = effect->apply();
+					if (!_problemInfo.checkValueIsValid(affected, value)) throw std::runtime_error("A 0-ary effect produces out-of-bounds variable values");
+				} else { // unary effect
+					const UnaryScopedEffect* eff = dynamic_cast<const UnaryScopedEffect *>(effect);
+					assert(eff);
+					ScopedConstraint::cptr constraint = new DomainBoundsConstraint(eff, _problemInfo);
+					action->addConstraint(constraint);
+				}
+			}
+		}
+	}
+}
+
 void Problem::compileActionConstraints() {
 	
 	for (Action::ptr action:_actions) {
@@ -39,10 +68,10 @@ void Problem::compileActionConstraints() {
 		std::vector<ScopedConstraint::cptr>& constraints = action->getConstraints();
 		for (unsigned i = 0; i < constraints.size(); ++i) {
 			if(UnaryParametrizedScopedConstraint* p = dynamic_cast<UnaryParametrizedScopedConstraint*>(constraints[i])) {
-				constraints[i] = new CompiledUnaryConstraint(*p, *_problemInfo);
+				constraints[i] = new CompiledUnaryConstraint(*p, _problemInfo);
  				delete p;
 			} else if (BinaryParametrizedScopedConstraint* p = dynamic_cast<BinaryParametrizedScopedConstraint*>(constraints[i])) {
-				constraints[i] = new CompiledBinaryConstraint(*p, *_problemInfo);
+				constraints[i] = new CompiledBinaryConstraint(*p, _problemInfo);
  				delete p;
 			}
 		}
@@ -50,7 +79,8 @@ void Problem::compileActionConstraints() {
 	}
 }
 
+SimpleApplicableActionSet Problem::getApplicableActions(const State& s) const {
+	return SimpleApplicableActionSet(StandardApplicabilityManager(s, getConstraints()), _actions);
+}
 
-	
-	
 } // namespaces

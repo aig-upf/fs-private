@@ -53,18 +53,17 @@ DomainMap Projections::clone(const DomainMap& domains) {
 }
 
 void Projections::printDomains(const DomainMap& domains) {
-	const auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
 	for (const auto& domain:domains) {
-		std::cout << problemInfo->getVariableName(domain.first) << "={";
+		std::cout << problemInfo.getVariableName(domain.first) << "={";
 		for (auto objIdx:*(domain.second)) {
-			std::cout << problemInfo->getObjectName(domain.first, objIdx) << ",";
+			std::cout << problemInfo.getObjectName(domain.first, objIdx) << ",";
 		}
 		std::cout << "}" << std::endl;
 	}
 }
 
 void Projections::printDomains(const DomainVector& domains) {
-	const auto problemInfo = Problem::getCurrentProblem()->getProblemInfo();
 	for (unsigned i = 0; i < domains.size(); ++i) {
 		const Domain& domain = *domains[i];
 		std::cout << "variable #" << i << " ={";

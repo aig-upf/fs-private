@@ -30,12 +30,13 @@ public:
 	RelaxedApplicabilityManager() {}
 	~RelaxedApplicabilityManager() {}
 	
-	//!
-	bool isApplicable(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
+	//! Returns true iff all the preconditions of the given action hold in the relaxed state represented by `domains`,
+	//! in which case also prunes `domains` so that only values which are per-procedure locally consistent remain.
+	bool checkPreconditionsHold(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
 
 protected:
-	bool unaryApplicable(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
-	bool genericApplicable(ConstraintManager* manager, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
+	bool checkUnaryPreconditionsHold(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
+	bool checkGenericPreconditionsHold(ConstraintManager* manager, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
 	
 	bool isUnaryProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, Fact::vctr& causes) const;
 };
