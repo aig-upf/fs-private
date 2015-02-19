@@ -47,6 +47,8 @@ public:
 	// where variables are replaced by their inverse, deducing max bounds.
 	Output filter();
 	
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
 protected:
 	//! Invert a domain, e.g. from D = {3, 4, 7} to D = {-7, -4, -3}
 	Domain invertDomain(const Domain& domain) const;
@@ -65,7 +67,6 @@ protected:
 	Output insert(const DomainVector& domains, unsigned i);
 	
 	Output bounds_consistency(const DomainVector& domains);
-	
 };
 
 

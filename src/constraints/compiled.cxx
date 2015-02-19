@@ -10,11 +10,11 @@ CompiledUnaryConstraint::CompiledUnaryConstraint(const VariableIdxVector& scope,
 {}
 
 CompiledUnaryConstraint::CompiledUnaryConstraint(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) :
-	CompiledUnaryConstraint(constraint.getScope(), constraint.getParameters(), compile(constraint, problemInfo))
+	CompiledUnaryConstraint(constraint.getScope(), constraint.getParameters(), _compile(constraint, problemInfo))
 {}
 
 
-CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) {
+CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) {
 	VariableIdx relevant = constraint.getScope()[0];
 	const ObjectIdxVector& all_values = problemInfo.getVariableObjects(relevant);
 	
@@ -54,7 +54,7 @@ CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scop
 {}
 
 CompiledBinaryConstraint::CompiledBinaryConstraint(const BinaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) :
-	CompiledBinaryConstraint(constraint.getScope(), constraint.getParameters(), compile(constraint, 0, problemInfo), compile(constraint, 1, problemInfo))
+	CompiledBinaryConstraint(constraint.getScope(), constraint.getParameters(), _compile(constraint, 0, problemInfo), _compile(constraint, 1, problemInfo))
 {}
 
 
@@ -65,7 +65,7 @@ bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 	return std::binary_search(D_y.begin(), D_y.end(), o2); // TODO - Change for a O(1) lookup in a std::unordered_set ?
 }
 
-CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo) {
+CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo) {
 	
 	assert(variable == 0 || variable == 1);
 	unsigned other = (variable == 0) ? 1 : 0;

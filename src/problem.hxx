@@ -66,7 +66,7 @@ public:
 	
 	void addDomainBoundConstraints();
 	
-	void compileActionConstraints();
+	void compileConstraints();
 	
 
 protected:
@@ -89,6 +89,9 @@ protected:
 
 	//! This performs a number of necessary routines once all of the problem information has been defined.
 	void bootstrap();
+	
+	//! A helper that compiles in-place a vector of constraints. Returns how many constraints were actually compiled.
+	unsigned compileConstraintVector(ScopedConstraint::vcptr& constraints) const;
 };
 
 	  

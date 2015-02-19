@@ -26,6 +26,8 @@ public:
 	
 	//! Filters from the set of currently loaded projections
 	Output filter();
+	
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
 };
 
 

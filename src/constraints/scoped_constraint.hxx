@@ -30,6 +30,7 @@ public:
 	 */
 	enum class Filtering {Unary, ArcReduction, Custom};
 	
+	
 // 	typedef ScopedConstraint const * cptr;
 	typedef ScopedConstraint* cptr;
 	typedef std::vector<ScopedConstraint::cptr> vcptr;
@@ -76,6 +77,11 @@ public:
 	
 	//! Empties the domain cache
 	void emptyDomains() { projection.clear(); }
+	
+	//! Every type of constraint determines whether it makes sense for the constraint to be precompiled or not.
+	//! Thus, the compile method must be subclassed and either return NULL, if the constraint shouldn't be compiled,
+	//! or an actual compiled constraint, if it should.
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const = 0;
 };
 
 class ParametrizedScopedConstraint : public ScopedConstraint
@@ -114,6 +120,9 @@ public:
 	
 	//! Filters from a new set of domains.
 	virtual Output filter(const DomainMap& domains) const;
+	
+	//! All unary constraints are compiled by default
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const;
 };
 
 
@@ -136,6 +145,9 @@ public:
 	virtual bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const = 0;
 	
 	virtual Output filter(unsigned variable);
+	
+	//! All binary constraints are compiled by default
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const;
 };
 
 class DomainBoundsConstraint : public UnaryParametrizedScopedConstraint {

@@ -21,7 +21,7 @@ protected:
 	CompiledUnaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension);
 	
 	//! Returns an ordered ExtensionT data structure with all the elements that satisfy the constraint.
-	ExtensionT compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo);
+	ExtensionT _compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo);
 	
 public:
 	//! Construct a unary compiled constraint by compiling a standard unary constraint.
@@ -33,6 +33,9 @@ public:
 	
 	//! Filters from a new set of domains.
 	Output filter(const DomainMap& domains) const;
+	
+	//! Compiled constraints cannot be compiled
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
 };
 
 class CompiledBinaryConstraint : public BinaryParametrizedScopedConstraint
@@ -50,7 +53,7 @@ protected:
 	CompiledBinaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension1, ExtensionT&& extension2);
 	
 	//! Returns an ordered ExtensionT data structure with all the elements that satisfy the constraint.
-	ExtensionT compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo);
+	ExtensionT _compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo);
 	
 public:
 	//! Construct a binary compiled constraint by compiling a standard binary constraint.
@@ -61,6 +64,9 @@ public:
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const;
 	
 	Output filter(unsigned variable);
+	
+	//! Compiled constraints cannot be compiled
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
 };
 
 

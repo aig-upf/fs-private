@@ -1,5 +1,6 @@
 
 #include <constraints/scoped_constraint.hxx>
+#include <constraints/compiled.hxx>
 #include <utils/projections.hxx>
 #include <constraints/scoped_effect.hxx>
 #include <problem_info.hxx>
@@ -92,6 +93,14 @@ bool DomainBoundsConstraint::isSatisfied(ObjectIdx o) const {
 		return _problemInfo.checkValueIsValid(affected, value);
 }
 
+
+ScopedConstraint::cptr UnaryParametrizedScopedConstraint::compile(const ProblemInfo& problemInfo) const {
+	return new CompiledUnaryConstraint(*this, problemInfo);
+}
+
+ScopedConstraint::cptr BinaryParametrizedScopedConstraint::compile(const ProblemInfo& problemInfo) const {
+	return new CompiledBinaryConstraint(*this, problemInfo);
+}
 
 } // namespaces
 

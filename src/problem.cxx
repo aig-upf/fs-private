@@ -27,7 +27,7 @@ void Problem::bootstrap() {
 	addDomainBoundConstraints();
 	
 	// Compile the constraints if necessary
-	compileActionConstraints();
+	compileConstraints();
 	
 	// Create the constraint manager
 	ctrManager = std::make_shared<PlanningConstraintManager>(goalConstraints, stateConstraints);
@@ -37,6 +37,7 @@ void Problem::bootstrap() {
 }
 
 void Problem::addDomainBoundConstraints() {
+	unsigned num_bconstraints = 0;
 	
 	for (Action::ptr action:_actions) {
 		
@@ -55,28 +56,37 @@ void Problem::addDomainBoundConstraints() {
 					assert(eff);
 					ScopedConstraint::cptr constraint = new DomainBoundsConstraint(eff, _problemInfo);
 					action->addConstraint(constraint);
+					++num_bconstraints;
 				}
 			}
 		}
 	}
+	
+	std::cout << "Added a total of " << num_bconstraints << " constraints to the problem actions." << std::endl;
 }
 
-void Problem::compileActionConstraints() {
-	
+void Problem::compileConstraints() {
+	unsigned num_compiled = 0;
 	for (Action::ptr action:_actions) {
-		
-		std::vector<ScopedConstraint::cptr>& constraints = action->getConstraints();
-		for (unsigned i = 0; i < constraints.size(); ++i) {
-			if(UnaryParametrizedScopedConstraint* p = dynamic_cast<UnaryParametrizedScopedConstraint*>(constraints[i])) {
-				constraints[i] = new CompiledUnaryConstraint(*p, _problemInfo);
- 				delete p;
-			} else if (BinaryParametrizedScopedConstraint* p = dynamic_cast<BinaryParametrizedScopedConstraint*>(constraints[i])) {
-				constraints[i] = new CompiledBinaryConstraint(*p, _problemInfo);
- 				delete p;
-			}
-		}
-		
+		num_compiled += compileConstraintVector(action->getConstraints());
 	}
+	num_compiled += compileConstraintVector(stateConstraints);
+	num_compiled += compileConstraintVector(goalConstraints);
+	
+	std::cout << "Compiled a total of " << num_compiled << " constraints." << std::endl;
+}
+
+unsigned Problem::compileConstraintVector(ScopedConstraint::vcptr& constraints) const {
+	unsigned num_compiled = 0;
+	for (unsigned i = 0; i < constraints.size(); ++i) {
+		ScopedConstraint::cptr compiled = constraints[i]->compile(_problemInfo);
+		if (compiled) { // The constraint type requires pre-compilation
+			delete constraints[i];
+			constraints[i] = compiled;
+			++num_compiled;
+		}
+	}
+	return num_compiled;
 }
 
 SimpleApplicableActionSet Problem::getApplicableActions(const State& s) const {

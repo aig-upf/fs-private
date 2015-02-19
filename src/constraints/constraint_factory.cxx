@@ -10,8 +10,8 @@ namespace fs0 {
 const ScopedConstraint::cptr ConstraintFactory::create(const std::string& name, const ObjectIdxVector& parameters, const VariableIdxVector& scope) {
 
 	if (name == "geq") {
-		assert(parameters.empty());
-		return new GEQConstraint(scope);
+		throw std::runtime_error("Use a <= constraint with a reversed scope");
+// 		return new GEQConstraint(scope, parameters);
 	} else if (name == "alldiff") {
 		return new ScopedAlldiffConstraint(scope);
 	} else if (name == "sum") {
