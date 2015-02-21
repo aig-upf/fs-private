@@ -106,4 +106,28 @@ ScopedConstraint::Output EQConstraint::filter(unsigned variable) {
 	return Output::Pruned;
 }
 
+
+NEQConstraint::NEQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+	BinaryParametrizedScopedConstraint(scope, parameters)
+{
+	assert(parameters.empty());
+}
+	
+ScopedConstraint::Output NEQConstraint::filter(unsigned variable) {
+	assert(projection.size() == 2);
+	assert(variable == 0 || variable == 1);
+	unsigned other = (variable == 0) ? 1 : 0;
+	Domain& domain = *(projection[variable]);
+	Domain& other_domain = *(projection[other]);
+	
+	if (other_domain.size() >= 2) return Output::Unpruned; // If the other domain has at least two domains, we won't be able to prune anything
+	
+	assert(other_domain.size() == 1);
+	ObjectIdx other_val = *(other_domain.cbegin());
+	
+	// If we can erase the only value, i.e. it was in the domain, we do it, otherwise the result is an unpruned domain.
+	if (domain.erase(other_val) == 0) return Output::Unpruned;
+	return domain.size() > 0 ? Output::Pruned : Output::Failure;
+}
+
 } // namespaces

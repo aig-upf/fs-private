@@ -50,5 +50,19 @@ public:
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
 };
 
+// X != Y
+class NEQConstraint : public BinaryParametrizedScopedConstraint
+{
+public:
+	NEQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	virtual ~NEQConstraint() {};
+
+	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 != o2; }
+	
+	Output filter(unsigned variable);
+	
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+};
+
 } // namespaces
 
