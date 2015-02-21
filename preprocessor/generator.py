@@ -424,7 +424,8 @@ class Generator(object):
             dump.append("{}#{}".format(t, ','.join(object_idxs)))
         self.dump_data('object-types', dump)
 
-        type_list = [t.name for t in self.task.types]
+        # type_list = [t.name for t in self.task.types]
+        type_list = list(self.task.type_map.keys())
         if 'object' not in type_list:
             type_list.insert(0, 'object')
         types = ["{}#{}".format(i, t) for i, t in enumerate(type_list)]

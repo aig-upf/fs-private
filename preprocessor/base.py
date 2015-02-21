@@ -96,7 +96,7 @@ class Parameter(object):
 class AppProcedure(object):
     TYPE = 'CONSTRAINT'
 
-    def __init__(self, name, variables, code, comment="", builtin=False):
+    def __init__(self, name, variables, code, comment="", builtin=None):
         self.name = name
         self.comment = comment
         self.variables = variables
@@ -547,6 +547,65 @@ class ObjectExpression(Expression):
 
 class NumericExpression(Expression):
     pass
+
+
+class EQConstraintExpression(ConstraintExpression):
+    codename = "EQConstraint"
+
+
+class NEQConstraintExpression(ConstraintExpression):
+    codename = "NEQConstraint"
+
+
+class LTConstraintExpression(ConstraintExpression):
+    codename = "LTConstraint"
+
+
+class LEQConstraintExpression(ConstraintExpression):
+    codename = "LEQConstraint"
+
+
+class SumConstraintExpression(ConstraintExpression):
+    codename = "ScopedSumConstraint"
+
+
+class AlldiffConstraintExpression(ConstraintExpression):
+    codename = "ScopedAlldiffConstraint"
+
+
+class ConstraintExpressionCatalog(object):
+    """ A catalog of custom constraints """
+    supported = {'=': EQConstraintExpression, '<': LTConstraintExpression, '<=': LEQConstraintExpression}
+    supported_inv = {">=": LEQConstraintExpression, ">": LTConstraintExpression}
+    supported_neg = {'=': NEQConstraintExpression, '>=': LTConstraintExpression, ">": LEQConstraintExpression}
+    supported_neg_inv = {'<': LEQConstraintExpression, '<=': LTConstraintExpression}
+
+    @classmethod
+    def instantiate(cls, exp):
+        s, args = exp.symbol, exp.arguments
+        if len(args) != 2 or not all(isinstance(arg, VariableExpression) for arg in args):
+            return None
+
+        if not exp.negated:
+            if s in cls.supported:
+                return cls.supported[s](s, args)
+            elif s in cls.supported_inv:  # We need to invert the argument list
+                return cls.supported_inv[s](s, [args[1], args[0]])
+
+        else:
+            if s in cls.supported_neg:
+                return cls.supported_neg[s](s, args)
+            elif s in cls.supported_neg_inv:  # We need to invert the argument list
+                return cls.supported_neg_inv[s](s, [args[1], args[0]])
+
+        return None
+
+    @classmethod
+    def instantiate_custom_constraint(cls, name, args):
+        custom = {"sum_constraint": SumConstraintExpression, "alldiff_constraint": AlldiffConstraintExpression}
+        assert name in custom
+        return custom[name](name, args)
+
 
 
 class ProcessedComponent(object):

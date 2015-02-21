@@ -206,7 +206,6 @@ def generate_constraint_code(name, blocks, tpl):
 
 
 def get_component_classname(component, name, i):
-    builtin_classnames = {"sum_constraint": "ScopedSumConstraint", "alldiff_constraint": "ScopedAlldiffConstraint"}
     if component.builtin:
-        return builtin_classnames[component.name]
+        return component.builtin.codename
     return '{}{}'.format(name, i)

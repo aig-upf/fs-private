@@ -1,6 +1,8 @@
 """
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
+from copy import deepcopy
+import base
 
 from pddl.f_expression import FunctionalTerm
 from pddl import Atom, NegatedAtom
@@ -13,7 +15,7 @@ from compilation.helper import is_int
 
 
 BASE_SYMBOLS = ("=", "!=", "+", "-", ">", "<", ">=", "<=")
-BUILTIN_CONSTRAINTS = ("sum_constraint", "alldiff_constraint")
+CUSTOM_CONSTRAINTS = ("sum_constraint", "alldiff_constraint")
 
 
 def is_basic_symbol(symbol):
@@ -21,7 +23,7 @@ def is_basic_symbol(symbol):
 
 
 def is_constraint_expression(symbol):
-    return symbol in BUILTIN_CONSTRAINTS
+    return symbol in CUSTOM_CONSTRAINTS
 
 
 class Parser(object):
@@ -63,7 +65,7 @@ class Parser(object):
 
     def process_constraint_expression(self, exp):
         """ Process a constraint expression such as sum(x,y,z). """
-        return ConstraintExpression(exp.predicate, self.process_argument_list(exp.args))
+        return base.ConstraintExpressionCatalog.instantiate_custom_constraint(exp.predicate, self.process_argument_list(exp.args))
 
     def process_relational_operator(self, exp):
         """ Process a relational operator such as =, <=, ... """
@@ -94,7 +96,7 @@ class Parser(object):
         elif is_basic_symbol(exp.predicate):  # A relational operator
             return self.process_relational_operator(exp)
 
-        elif is_constraint_expression(exp.predicate):  # A relational operator
+        elif is_constraint_expression(exp.predicate):
             return self.process_constraint_expression(exp)
 
         else:  # A "standard" predicate

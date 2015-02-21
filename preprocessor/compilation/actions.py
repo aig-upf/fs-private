@@ -48,8 +48,8 @@ class ActionCompiler(object):
     def build_procedure_index(self, relevant):
         return ProcedureIndex(self.processed_action.parameter_map, self.task.index.objects, index_list(relevant))
 
-    def generate_app_procedure(self, exp):
-        exp, relevant = self.parser.process(exp)
+    def generate_app_procedure(self, expression):
+        exp, relevant = self.parser.process(expression)
         index = self.build_procedure_index(relevant)
 
         if exp.is_static() and exp.is_subtree_static():
@@ -64,13 +64,22 @@ class ActionCompiler(object):
                 raise RuntimeError("Unknown type of expression '{}'".format(exp))
 
         else:
+            exp = self.process_builtin_constraint(exp)
+
             if isinstance(exp, base.ConstraintExpression):
-                procedure = base.AppProcedure(exp.symbol, relevant, '', comment=str(exp), builtin=True)
+                procedure = base.AppProcedure(exp.symbol, relevant, '', comment=str(exp), builtin=exp)
             else:
                 code = finish_bool_code(CppPrinter(index).print(exp))
                 procedure = base.AppProcedure(str(exp), relevant, code)
 
         return procedure
+
+    def process_builtin_constraint(self, exp):
+        if not isinstance(exp, base.RelationalExpression):
+            return exp
+
+        const = base.ConstraintExpressionCatalog.instantiate(exp)
+        return exp if const is None else const
 
     def generate_eff_procedure(self, expression):
         if isinstance(expression, AssignmentEffect):  # A functional effect
