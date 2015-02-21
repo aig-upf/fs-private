@@ -63,7 +63,7 @@ public:
 				++first2;
 			}
 		}
-		return false;
+		return true;
 	}
 
 protected:

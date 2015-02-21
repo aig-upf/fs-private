@@ -139,12 +139,10 @@ ScopedConstraint::Output CompiledBinaryConstraint::filter(unsigned variable) {
 		auto iter = extension_map.find(x);
 		assert(iter != extension_map.end());
 		const ObjectIdxVector& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
-		if (!Utils::empty_intersection(other_domain.begin(), other_domain.end(), D_y.begin() ,D_y.end())) {
-			new_domain.insert(new_domain.cend(), x); // We will insert on the end of the container, as it is already sorted.
-			break; // x is an arc-consistent value, so we can break the inner loop and continue to check the next possible value.			
+		if (!Utils::empty_intersection(other_domain.begin(), other_domain.end(), D_y.begin(), D_y.end())) {
+			new_domain.insert(new_domain.cend(), x); //  x is an arc-consistent value. We will insert on the end of the container, as it is already sorted.
 		}
 	}
-	
 	if (new_domain.size() == domain.size()) return Output::Unpruned;
 	if (new_domain.size() == 0) return Output::Failure;
 

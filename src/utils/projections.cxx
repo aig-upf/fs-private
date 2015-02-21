@@ -65,13 +65,18 @@ void Projections::printDomains(const DomainMap& domains) {
 
 void Projections::printDomains(const DomainVector& domains) {
 	for (unsigned i = 0; i < domains.size(); ++i) {
-		const Domain& domain = *domains[i];
-		std::cout << "variable #" << i << " ={";
-		for (auto objIdx:domain) {
-			std::cout << objIdx << ",";
-		}
-		std::cout << "}" << std::endl;
+		std::cout << "variable #" << i << "=";
+		printDomain(*domains[i]);
+		std::cout << std::endl;
 	}
+}
+
+void Projections::printDomain(const Domain& domain) {
+	std::cout << "{";
+	for (auto objIdx:domain) {
+		std::cout << objIdx << ",";
+	}
+	std::cout << "}";
 }
 
 } // namespaces
