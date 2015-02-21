@@ -95,35 +95,6 @@ CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const Bi
 	return extension;
 }
 
-/*
-ScopedConstraint::Output CompiledBinaryConstraint::filter(unsigned variable) {
-	assert(projection.size() == 2);
-	assert(variable == 0 || variable == 1);
-	unsigned other = (variable == 0) ? 1 : 0;
-	
-	Domain& domain = *(projection[variable]);
-	Domain& other_domain = *(projection[other]);
-	Domain new_domain;
-	
-	for (ObjectIdx x:domain) {
-		for (ObjectIdx z:other_domain) {
-			// We need to invoke isSatisfied with the parameters in the right order
-			if ((variable == 0 && this->isSatisfied(x, z)) || (variable == 1 && this->isSatisfied(z, x))) {
-				new_domain.insert(new_domain.cend(), x); // We will insert on the end of the container, as it is already sorted.
-				break; // x is an arc-consistent value, so we can break the inner loop and continue to check the next possible value.				
-			}
-		}
-	}
-	
-	if (new_domain.size() == domain.size()) return Output::Unpruned;
-	if (new_domain.size() == 0) return Output::Failure;
-
-	// Otherwise the domain has necessarily been pruned
-	domain = new_domain; // Update the domain by using the assignment operator.
-	return Output::Pruned;
-}
-*/
-
 
 ScopedConstraint::Output CompiledBinaryConstraint::filter(unsigned variable) {
 	assert(projection.size() == 2);
@@ -150,9 +121,6 @@ ScopedConstraint::Output CompiledBinaryConstraint::filter(unsigned variable) {
 	domain = new_domain; // Update the domain by using the assignment operator.
 	return Output::Pruned;
 }
-
-
-
 
 
 } // namespaces

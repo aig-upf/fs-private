@@ -36,5 +36,19 @@ public:
 };
 
 
+// X = Y
+class EQConstraint : public BinaryParametrizedScopedConstraint
+{
+public:
+	EQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	virtual ~EQConstraint() {};
+
+	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 == o2; }
+	
+	Output filter(unsigned variable);
+	
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+};
+
 } // namespaces
 
