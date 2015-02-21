@@ -144,6 +144,9 @@ def process_types(instance, bounds):
 
     bounded_types = process_bounds(bounds)
 
+    # Always add the bool type
+    type_map['_bool_'] = ['_false_', '_true_']
+
     # for every type we append the corresponding object
     for o in instance.objects:
         object_type[o.name] = o.typename
