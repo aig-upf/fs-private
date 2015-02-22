@@ -217,8 +217,7 @@ int main(int argc, char** argv) {
 		return res;
 	}
 
-	std::cout << "Generating the problem... ";
-	std::cout.flush();
+	std::cout << "Generating the problem... " << std::endl;
 	
 	Problem problem(data_dir);
 	generate(data_dir, problem);

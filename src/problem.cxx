@@ -39,6 +39,8 @@ void Problem::bootstrap() {
 void Problem::addDomainBoundConstraints() {
 	unsigned num_bconstraints = 0;
 	
+	std::cout << "Generating unary constraints for bounded domains..." << std::endl;
+	
 	for (Action::ptr action:_actions) {
 		
 		for (const ScopedEffect::cptr effect:action->getEffects()) {
@@ -62,7 +64,7 @@ void Problem::addDomainBoundConstraints() {
 		}
 	}
 	
-	std::cout << "Added a total of " << num_bconstraints << " constraints to the problem actions." << std::endl;
+	std::cout << "Added a total of " << num_bconstraints << " unary constraints for bounded domains to the " <<  _actions.size() << " problem actions." << std::endl;
 }
 
 void Problem::compileConstraints() {
