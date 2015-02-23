@@ -56,8 +56,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		
 		#ifdef FS0_DEBUG
 		std::cout << std::endl << "Changeset size: " << changeset->size() << std::endl;
-		// std::cout << "Changeset: " << *changeset << std::endl;
-		// print_changesets(changesets);
+		std::cout << "Changeset: " << *changeset << std::endl;
 		#endif
 		
 		// If there is no novel fact in the changeset, we reached a fixpoint, thus there is no solution.
@@ -70,12 +69,14 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		
 		// Prune using state constraints
 		ScopedConstraint::Output o = _problem.getConstraintManager()->pruneUsingStateConstraints(relaxed);
-// 		std::cout << "State Constraint pruning output: " <<  static_cast<std::underlying_type<ScopedConstraint::Output>::type>(o) << std::endl;
+		#ifdef FS0_DEBUG
+		std::cout << "State Constraint pruning output: " <<  static_cast<std::underlying_type<ScopedConstraint::Output>::type>(o) << std::endl;
+		#endif
 		if (o == ScopedConstraint::Output::Failure) return std::numeric_limits<float>::infinity();
 		if (o == ScopedConstraint::Output::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 		
 		#ifdef FS0_DEBUG
-		std::cout << "New RPG Layer: " << relaxed << std::endl; // std::cout << "Changeset: " << *changeset << std::endl << std::endl;
+		std::cout << "RPG Layer #" << changesets.size() << ": " << relaxed << std::endl; // std::cout << "Changeset: " << *changeset << std::endl << std::endl;
 		#endif
 		
 		float h = computeHeuristic(seed, relaxed, changesets);

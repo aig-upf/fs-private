@@ -73,13 +73,16 @@ CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const Bi
 	
 	std::map<ObjectIdx, std::set<ObjectIdx>> ordered;
 	
-	for (ObjectIdx x:problemInfo.getVariableObjects(scope[variable])) {
+	const ObjectIdxVector& Dx = problemInfo.getVariableObjects(scope[variable]);
+	const ObjectIdxVector& Dy = problemInfo.getVariableObjects(scope[other]);
+	
+	for (ObjectIdx x:Dx) {
 		auto res = ordered.insert(std::make_pair(x, std::set<ObjectIdx>())); // We insert the empty vector (all elements will at least have it) and keep the reference.
 		assert(res.second); // The element couldn't exist
 		std::set<ObjectIdx>& set = res.first->second;
 		
-		for (ObjectIdx y:problemInfo.getVariableObjects(scope[other])) {
-			if (constraint.isSatisfied(x, y)) {
+		for (ObjectIdx y:Dy) {
+			if ((variable == 0 && constraint.isSatisfied(x, y)) || (variable == 1 && constraint.isSatisfied(y, x))) {
 				set.insert(y);
 			}
 		}
