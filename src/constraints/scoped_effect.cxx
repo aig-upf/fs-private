@@ -12,16 +12,22 @@ ScopedEffect::ScopedEffect(const VariableIdxVector& scope, const VariableIdxVect
 	}
 }
 
+ZeroaryScopedEffect::ZeroaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters) :
+	ScopedEffect(scope, image, parameters)
+{
+	assert(scope.size() == 0);
+}
+
 UnaryScopedEffect::UnaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters) :
 	ScopedEffect(scope, image, parameters)
 {
 	assert(scope.size() == 1);
 }
 
-ZeroaryScopedEffect::ZeroaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters) :
+BinaryScopedEffect::BinaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters) :
 	ScopedEffect(scope, image, parameters)
 {
-	assert(scope.size() == 0);
+	assert(scope.size() == 2);
 }
 
 } // namespaces

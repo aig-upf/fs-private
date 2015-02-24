@@ -620,7 +620,7 @@ class ProcessedComponent(object):
 
     def get_baseclass(self):
         if self._type == 'EFFECT':
-            classnames = {0: 'ZeroaryScopedEffect', 1: 'UnaryScopedEffect'}
+            classnames = {0: 'ZeroaryScopedEffect', 1: 'UnaryScopedEffect', 2: 'BinaryScopedEffect'}
             return classnames[self.arity] if self.arity in classnames else 'ScopedEffect'
         else:
             classnames = {1: 'UnaryParametrizedScopedConstraint', 2: 'BinaryParametrizedScopedConstraint'}
@@ -634,7 +634,7 @@ class ProcessedComponent(object):
             return classnames[self.arity] if self.arity in classnames else 'satisfied_generic_header'
 
     def get_apply_header(self):
-        classnames = {1: 'apply_unary_header', 0: 'apply_zeroary_header'}
+        classnames = {0: 'apply_zeroary_header', 1: 'apply_unary_header', 2: 'apply_binary_header'}
         return classnames[self.arity] if self.arity in classnames else 'apply_generic_header'
 
     def get_instantiation_tpl(self):

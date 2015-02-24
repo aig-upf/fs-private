@@ -43,6 +43,10 @@ public:
 		throw std::runtime_error("This method can only be used by unary effects");
 	};
 	
+	virtual ObjectIdx apply(ObjectIdx v1, ObjectIdx v2) const {
+		throw std::runtime_error("This method can only be used by binary effects");
+	};
+	
 	//! A small helper
 	inline virtual Fact apply(const State& s) const { return Fact(_affected, this->apply(Projections::project(s, _scope))); }
 };
@@ -83,6 +87,25 @@ public:
 	
 	//! A small helper
 	Fact apply(const State& s) const { return Fact(_affected, this->apply(s.getValue(_scope[0]))); }
+};
+
+//! We specialize this class for performance reasons, since it is so common.
+class BinaryScopedEffect : public ScopedEffect
+{
+public:
+	BinaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters);
+	virtual ~BinaryScopedEffect() {}
+	
+	//! To be overriden by the concrete subclasses
+	ObjectIdx apply(const ObjectIdxVector& values) const {
+		throw std::runtime_error("Binary effects are expected not to use this method");
+	};
+	
+	//! To be overriden by concrete subclasses
+	ObjectIdx apply(ObjectIdx v1, ObjectIdx v2) const = 0;
+	
+	//! A small helper
+	Fact apply(const State& s) const { return Fact(_affected, this->apply(s.getValue(_scope[0]), s.getValue(_scope[1]))); }
 };
 
 } // namespaces
