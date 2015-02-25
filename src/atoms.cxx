@@ -7,7 +7,7 @@ namespace fs0 {
 Fact::Fact(const VariableIdx variable, const ObjectIdx value) :
 	_variable(variable),
 	_value(value)
-{};
+{}
 	
 std::ostream& Fact::print(std::ostream& os) const {
 	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();

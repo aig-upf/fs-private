@@ -41,7 +41,7 @@ ScopedConstraint::Output UnaryParametrizedScopedConstraint::filter(const DomainM
 	}
 	domain = new_domain;  // Update the domain with the new values using the assignment operator
 	return (domain.size() == 0) ? Output::Failure : output;
-};
+}
 
 BinaryParametrizedScopedConstraint::BinaryParametrizedScopedConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
 	ParametrizedScopedConstraint(scope, parameters) {}
