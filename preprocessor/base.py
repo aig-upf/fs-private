@@ -1,6 +1,7 @@
 """
  This file contains all the necessary entities to define P3R domains and problems.
 """
+import operator
 from compilation.exceptions import ParseException
 
 
@@ -161,14 +162,19 @@ class StaticRoutine(object):
 
 
 class StaticFunctionalRoutine(StaticRoutine):
+    BUILTIN = {"+": operator.add, "-": operator.sub}
+
     def execute(self, static, binding):
         """ Executes the static routine extracting the relevant parameters from a parameter binding. """
         # params = [binding[param] for param in self.parameters]
         # return self.routine(*params)
         assert all(isinstance(a, ParameterExpression) for a in self.parameters)
         args = tuple(binding[a.symbol] for a in self.parameters)
-        data = static[self.routine].elems
-        return data[args] if args in data else None
+        if self.routine in self.BUILTIN:
+            return self.BUILTIN[self.routine](*args)
+        else:
+            data = static[self.routine].elems
+            return data[args] if args in data else None
 
 
 class StaticPredicativeRoutine(StaticRoutine):
@@ -178,6 +184,7 @@ class StaticPredicativeRoutine(StaticRoutine):
 
 
 class StaticRelationalRoutine(StaticPredicativeRoutine):
+    BUILTIN = {"=": operator.eq, "<=": operator.le, "<": operator.lt, ">=": operator.ge, ">": operator.gt}
 
     def execute(self, static, binding):
         """ Executes the static routine extracting the relevant parameters from a parameter binding. """
@@ -185,9 +192,9 @@ class StaticRelationalRoutine(StaticPredicativeRoutine):
         # return self.routine(*params)
         # assert all(isinstance(a, ParameterExpression) for a in subexp.arguments)
         args = self.compute_parameters(self.parameters, static, binding)
-        assert self.routine == "="  # So far we only support this type of operation
-        assert len(args) == 2
-        return args[0] != args[1] if self.negated else args[0] == args[1]
+        assert self.routine in self.BUILTIN and len(args) == 2
+        res = self.BUILTIN[self.routine](*args)
+        return not res if self.negated else res
 
     def compute_parameters(self, parameters, static, binding):
         computed = []
@@ -197,6 +204,10 @@ class StaticRelationalRoutine(StaticPredicativeRoutine):
             elif isinstance(p, StaticFunctionalExpression):
                 routine = StaticFunctionalRoutine(p.symbol, p.arguments)
                 computed.append(routine.execute(static, binding))
+            elif isinstance(p, NumericExpression):
+                computed.append(int(p.symbol))
+            else:
+                raise RuntimeError("Unimplemented")
 
         return tuple(computed)
 

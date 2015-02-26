@@ -27,7 +27,7 @@ class StaticData(object):
 
 
 def serialize_symbol(symbol, table):
-    serialized = symbol if isinstance(symbol, int) else table[symbol]
+    serialized = symbol if util.is_int(symbol) else table[symbol]
     return str(serialized)
 
 

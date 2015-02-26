@@ -90,3 +90,11 @@ def load_file_safely(filename):
 def save_file(name, content):
     with open(name, "w") as f:
         f.write(content)
+
+
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
