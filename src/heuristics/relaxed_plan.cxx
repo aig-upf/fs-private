@@ -81,9 +81,6 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		
 		float h = computeHeuristic(seed, relaxed, changesets);
 		if (h > -1) {
-			#ifdef FS0_DEBUG
-			std::cout << "All changesets: " <<  std::endl; print_changesets(changesets);
-			#endif
 			return h;
 		}
 	}
