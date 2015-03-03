@@ -371,9 +371,10 @@ class Generator(object):
 
     def serialize_constraints(self, constraints):
         serialized = []
+        obj_id = lambda x: int(x) if util.is_int(x) else self.index.objects.get_index(x)
         for constraint in constraints:
             variable_idxs = self.gen_vector([self.index.variables.get_index(var) for var in constraint.variables])
-            parameter_idxs = self.gen_vector([self.index.objects.get_index(var) for var in constraint.parameters])
+            parameter_idxs = self.gen_vector([obj_id(param) for param in constraint.parameters])
             serialized.append('#'.join([str(constraint), constraint.name, parameter_idxs, variable_idxs]))
         return serialized
 
