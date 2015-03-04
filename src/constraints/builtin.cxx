@@ -130,4 +130,20 @@ ScopedConstraint::Output NEQConstraint::filter(unsigned variable) {
 	return domain.size() > 0 ? Output::Pruned : Output::Failure;
 }
 
+NEQXConstraint::NEQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+	UnaryParametrizedScopedConstraint(scope, parameters)
+{
+	assert(parameters.size() == 1);
+}
+	
+
+ScopedConstraint::Output NEQXConstraint::filter(const DomainMap& domains) const {
+	assert(_scope.size() == 1);
+	Domain& domain = *(domains.at(_scope[0]));
+	unsigned erased = domain.erase(_binding[0]);
+	if (erased == 0) return Output::Unpruned;
+	else return (domain.size() == 0) ? Output::Failure : Output::Pruned;
+}
+
+
 } // namespaces

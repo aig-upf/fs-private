@@ -64,5 +64,20 @@ public:
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
 };
 
+// X != c
+class NEQXConstraint : public UnaryParametrizedScopedConstraint
+{
+public:
+	NEQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	virtual ~NEQXConstraint() {};
+
+	bool isSatisfied(ObjectIdx o) const { return o != _binding[0]; }
+	
+	Output filter(const DomainMap& domains) const;
+	
+	// No compilation
+	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+};
+
 } // namespaces
 
