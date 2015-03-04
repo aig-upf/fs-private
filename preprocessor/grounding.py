@@ -1,6 +1,7 @@
 
 
 from __future__ import print_function  # To print without newline
+from collections import OrderedDict
 import itertools
 from string import Template
 import sys
@@ -51,7 +52,7 @@ class Grounder(object):
         """ Ground a list of actions and return the resulting list of operators. """
         print("Grounding actions...")
         all_actions_counter = 0
-        self.grounded_actions = {}
+        self.grounded_actions = OrderedDict()
         for action in self.task.actions:
             self.grounded_actions[action.name], unpruned = self.ground_action(action)
             all_actions_counter += unpruned
@@ -61,85 +62,6 @@ class Grounder(object):
             all_actions_counter,
             len(self.all_grounded_actions)))
 
-    # def expand_axioms(self):
-    #     """ Expands all the axioms in the actions predicates and in the goal. """
-    #     # Actions
-    #     for a in self.all_grounded_actions:
-    #         a.preconditions = self.process_axioms(a.preconditions)
-    #
-    #     #Goal
-    #     self.processed_goal = self.process_axioms(self.processed_goal)
-    #
-    # def process_axioms(self, facts):
-    #     expanded = Conjunction()
-    #     for fact in facts:
-    #         expanded.add(self.expand_fact(fact))
-    #     return expanded.normalize()
-    #
-    # def expand_fact(self, fact):
-    #     assert isinstance(fact, Fact)
-    #     if fact.symbol in self.task.axiom_idx:
-    #         fact = self.grounded_axioms[fact.var]
-    #     return fact
-    #
-    # def ground_axioms(self):
-    #     """ Ground the task axioms. """
-    #     print("Grounding axioms...")
-    #     self.grounded_axioms = {}
-    #     for axiom in self.task.axioms:
-    #         self.ground_axiom(axiom, self.grounded_axioms)
-    #     print("Num. (grounded) axioms: {}".format(len(self.grounded_axioms)))
-    #
-    # @staticmethod
-    # def get_preconditions(action):
-    #     if isinstance(action.precondition, pddl.Conjunction):
-    #         return action.precondition.parts
-    #     elif isinstance(action.precondition, pddl.Atom):
-    #         return [action.precondition]
-    #     else:
-    #         raise UnimplementedFeature('TODO - Precondition type not yet supported')
-    #
-    # def discard_individual_bindings(self, action, instantiations):
-    #     """
-    #      Filter out all those possible individual parameter assignments that involve static facts which are not
-    #      reachable given the initial state.
-    #      An example would be sokoban's move(?from, ?to, ?dir) action, with precondition move-dir(?from, ?to, ?dir),
-    #      where move-dir is static. If there is no move-dir('pos-01-01', x, y) fact in the initial state, regardless
-    #      of x and y, we can ensure that 'pos-01-01' is not a possible assignment for the action's first parameter.
-    #      NOTE that here we still do not check for the combination of parameter instantiations, which will be done later.
-    #      """
-    #     for prec in self.get_preconditions(action):
-    #         self.filter_unreachable_instantiations(prec, instantiations)
-    #
-    #     #if verbose_logging:
-    #     #    logging.info('Static precondition analysis removed %d possible objects' % remove_debug)
-    #
-    # def filter_unreachable_instantiations(self, prec, instantiations):
-    #     """ @see discard_individual_bindings"""
-    #     if code.is_feasibility_atom(prec):
-    #         return
-    #
-    #     # Currently not still handling functional expressions in preconditions,
-    #     # although nothing would prevent us from doing so, in principle
-    #     assert(isinstance(prec, (pddl.Atom, pddl.NegatedAtom)))
-    #
-    #     symbol = prec.predicate
-    #
-    #     if not symbol in self.statics:
-    #         return
-    #
-    #     def valid(param_position, obj):
-    #         init_state_instantiations = self.init_index[symbol][param_position]
-    #
-    #         if isinstance(prec, pddl.Atom):
-    #             return obj in init_state_instantiations
-    #         else:  # Negated precondition
-    #             return obj not in init_state_instantiations
-    #
-    #     # For each parameter, we only keep those instantiations which actually make sense on the initial state,
-    #     # i.e. those for which the initial state contains some fact.
-    #     for param_pos, param in enumerate(prec.args):
-    #         instantiations[param] = [o for o in instantiations[param] if valid(param_pos, o)]
 
     def compute_possible_action_instantiations(self, action):
         """ Return a dictionary mapping each action parameter to all its possible object instantiations. """

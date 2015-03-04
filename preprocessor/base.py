@@ -1,6 +1,7 @@
 """
  This file contains all the necessary entities to define P3R domains and problems.
 """
+from collections import OrderedDict
 import operator
 from compilation.exceptions import ParseException
 
@@ -403,7 +404,10 @@ class ProblemDomain(object):
 
     def index_by_name(self, objects):
         """ Index the given objects by their name """
-        return {obj.name: obj for obj in objects}
+        ordered = OrderedDict()
+        for obj in objects:
+            ordered[obj.name] = obj
+        return ordered
 
     def get_predicates(self):
         """ Small helper to iterate through the predicates """
