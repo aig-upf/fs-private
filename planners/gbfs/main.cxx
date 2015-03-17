@@ -125,6 +125,9 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, int budg
 	out << "Nodes pruned by bound: " << engine.pruned_by_bound() << std::endl;
 	out << "Dead-end nodes: " << engine.dead_ends() << std::endl;
 	out << "Nodes in OPEN replaced: " << engine.open_repl() << std::endl;
+	
+	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated() / total_time) : "-";
+	out << "Heuristic evaluations per second: " <<  eval_speed << std::endl;
 
 	out.close();
 	best_plan.close(); first_plan.close();
