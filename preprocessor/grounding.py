@@ -62,7 +62,6 @@ class Grounder(object):
             all_actions_counter,
             len(self.all_grounded_actions)))
 
-
     def compute_possible_action_instantiations(self, action):
         """ Return a dictionary mapping each action parameter to all its possible object instantiations. """
         return {p.name: self.task.type_map[p.typename] for p in action.parameters}
@@ -150,7 +149,7 @@ class Grounder(object):
             # static reachability analysis on functional symbols
             if fact.is_predicate():
                 # TODO - This hasn't been refactored yet, as we still don't use predicates.
-                if not symbol in self.init_index:
+                if symbol not in self.init_index:
                     # initialize a list of as many empty sets as arguments has the atom
                     self.init_index[symbol] = [set() for _ in range(len(args))]
 

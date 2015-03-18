@@ -4,6 +4,7 @@
 from collections import OrderedDict
 import operator
 from compilation.exceptions import ParseException
+from util import is_int
 
 
 class Variable(object):
@@ -12,7 +13,7 @@ class Variable(object):
     """
     def __init__(self, symbol, args):
         self.symbol = symbol
-        self.args = tuple(args)
+        self.args = tuple(int(a) if is_int(a) else a for a in args)
 
     # def is_lifted(self):
     #     return any(is_action_parameter(arg) for arg in self.args)

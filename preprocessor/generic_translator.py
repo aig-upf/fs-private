@@ -10,7 +10,7 @@ from pddl.actions import Action
 import base
 from compilation.actions import ActionCompiler
 from compilation.exceptions import ParseException
-from compilation.helper import is_external
+from compilation.helper import is_external, is_int
 from static import StaticProcedure, instantiate_function, instantiate_predicate
 from constraints import ConstraintCatalog, External
 
@@ -120,7 +120,7 @@ class Translator(object):
             if isinstance(atom, pddl.Assign):
                 name = atom.fluent.symbol
                 var = init if name in self.task.fluent_symbols else static
-                args = atom.fluent.args
+                args = tuple(int(a) if is_int(a) else a for a in atom.fluent.args)
                 val = self.parse_value(atom.expression)
                 var[name].add(args, val)
             elif isinstance(atom, pddl.Atom):
