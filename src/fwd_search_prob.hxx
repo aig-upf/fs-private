@@ -28,7 +28,7 @@ class FwdSearchProblem : public aptk::Search_Problem<State> {
 		
 		virtual bool     goal( const State& s ) const;
 		
-// 		virtual bool     is_applicable( const aptk::core::State& s, aptk::core::ActionIdx idx ) const;
+ 		virtual bool     is_applicable( const State& s, aptk::Action_Idx idx ) const;
 		
 // 		virtual void     applicable_set( const aptk::core::State& s, std::vector< aptk::core::ActionIdx >& app_set ) const;	
 		
