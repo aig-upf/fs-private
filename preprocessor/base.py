@@ -4,7 +4,7 @@
 from collections import OrderedDict
 import operator
 from compilation.exceptions import ParseException
-from util import is_int
+from util import is_int, is_action_parameter
 
 
 class Variable(object):
@@ -29,8 +29,12 @@ class Variable(object):
     __repr__ = __str__
 
     def ground(self, binding):
-        # args = [a.ground(binding) for a in self.args]
-        args = [binding[a] for a in self.args]
+        args = []
+        for a in self.args:
+            if is_action_parameter(a):
+                args.append(binding[a])
+            else:  # Assume it is a constant
+                args.append(a)
         return Variable(self.symbol, args)
 
 
