@@ -10,7 +10,7 @@ HOME = os.path.expanduser("~")
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Whether this is a debug build', 'no'))
-vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LWAPTKDEV', ''), PathVariable.PathIsDir))
+vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKTDEV', ''), PathVariable.PathIsDir))
 vars.Add(PathVariable('fs0', 'Path where the FS0 library is installed', os.getenv('FS0_PATH', ''), PathVariable.PathIsDir))
 
 def which(program):
@@ -43,7 +43,7 @@ include_paths = ['.',
                  env['lapkt'] + '/interfaces/agnostic',
                 ]
 
-lib_paths = [env['fs0'] + '/lib']
+lib_paths = [env['fs0'] + '/lib', '/usr/lib', '/usr/local/lib']
 
 # If we have a local libs on the home directory, use them.
 if os.path.exists(HOME + '/local/lib'):
@@ -55,7 +55,7 @@ env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
 
 src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both the main.cxx and the generated code for the particular instance
 
-env.Append(LIBS=['boost_program_options', 'boost_serialization', 'boost_regex', fs0_libname])
+env.Append(LIBS=[fs0_libname, 'boost_program_options', 'boost_serialization', 'boost_regex'])
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
 
 env.Program(exe_name, src_objs )

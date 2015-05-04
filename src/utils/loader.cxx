@@ -10,19 +10,25 @@
 #include <constraints/constraint_factory.hxx>
 #include <actions.hxx>
 
+#include <iostream>
+
 namespace fs0 {
 
 void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory, ConstraintFactoryType constraintFactory, GoalFactoryType goalFactory, Problem& problem) {
 	/* Define the actions */
+	std::cout << "\tDefining actions..." << std::endl;
 	loadGroundedActions(dir + "/actions.data", actionFactory, problem);
 
 	/* Define the initial state */
+	std::cout << "\tDefining initial state..." << std::endl;
 	problem.setInitialState(loadStateFromFile(dir + "/init.data"));
 
 	/* Load the state and goal constraints */
+	std::cout << "\tDefining state and goal constraints..." << std::endl;
 	loadConstraints(dir + "/constraints.data", constraintFactory, problem);
 
 	/* Generate goal constraints from the goal evaluator */
+	std::cout << "\tGenerating goal constraints..." << std::endl;
 	generateGoalConstraints(dir + "/goal.data", goalFactory, problem);
 }
 	
@@ -31,6 +37,13 @@ const State::cptr Loader::loadStateFromFile(const std::string& filename) {
 	Fact::vctr facts;
 	std::string str;
 	std::ifstream in(filename);
+
+	if ( in.fail() ) {
+
+		std::cerr << "Loader::loadStateFromFile: Error opening file '" << filename << "'" << std::endl;
+		std::cout << "Bailing out!" << std::endl;
+		std::exit(1);
+	}
 	
 	// Parse the total number of facts
 	std::getline(in, str);

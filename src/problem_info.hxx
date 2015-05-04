@@ -7,7 +7,7 @@
 
 #include <boost/regex.hpp>
 #include <fs0_types.hxx>
-
+#include <iostream>
 
 namespace fs0 {
 
@@ -80,7 +80,15 @@ public:
 		return getTypeObjects(getVariableType(variable));
 	}
 	
-	inline TypeIdx getTypeId(const std::string& type_name) const { return name_to_type.at(type_name);}
+	inline TypeIdx getTypeId(const std::string& type_name) const {
+		// MRJ: Pre-processor guards included for efficiency
+		try {
+			return name_to_type.at(type_name);
+		} catch ( std::out_of_range& ex ) {
+			std::cout << type_name << " not in type dictionary!" << std::endl;
+			return 0;
+		}
+	}
 	
 	const std::string& getCustomObjectName(ObjectIdx objIdx) const;
 	

@@ -7,7 +7,7 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include <aptk/open_list.hxx>
-#include <aptk/at_gbfs.hxx>
+#include <at_gbfs.hxx>
 #include <aptk/at_wbfs.hxx>
 
 #include <heuristics/null_heuristic.hxx>
@@ -22,21 +22,87 @@
 
 #include <components.hxx>  // This will dinamically point to the right generated file
 
-using	aptk::Action;
-
 using 	aptk::search::Open_List;
 using	aptk::search::Node_Comparer;
-using	aptk::search::bfs::Node;
+
+
+	template <typename State>
+	class FS0_Node {
+	public:
+	
+		typedef State State_Type;
+	
+		FS0_Node( State* s, float cost, aptk::Action_Idx action, FS0_Node<State>* parent ) 
+		: m_state( s ), m_parent( parent ), m_action(action), m_g( 0 ) {
+			m_g = ( parent ? parent->m_g + cost : 0.0f);
+		}
+		
+		virtual ~FS0_Node() {
+			if ( m_state != NULL ) delete m_state;
+		}
+	
+		float&			hn()		{ return m_h; }
+		float			hn() const 	{ return m_h; }
+		float&			gn()		{ return m_g; }			
+		float			gn() const 	{ return m_g; }
+		float&			fn()		{ return m_f; }
+		float			fn() const	{ return m_f; }
+		FS0_Node<State>*		parent()   	{ return m_parent; }
+		aptk::Action_Idx		action() const 	{ return m_action; }
+		State*			state()		{ return m_state; }
+		const State&		state() const 	{ return *m_state; }
+		void			print( std::ostream& os ) const {
+			os << "{@ = " << this << ", s = " << m_state << ", parent = " << m_parent << ", g(n) = " << m_g << ", h(n) = " << m_h << ", f(n) = " << m_f << "}";
+		}
+	
+		bool   	operator==( const FS0_Node<State>& o ) const {
+		
+			if( &(o.state()) != NULL && &(state()) != NULL)
+				return (const State&)(o.state()) == (const State&)(state());
+			/**
+			* Lazy
+			*/
+			if  ( m_parent == NULL ) {
+				if ( o.m_parent == NULL ) return true;
+				return false;
+			}
+		
+			if ( o.m_parent == NULL ) return false;
+			
+			return (m_action == o.m_action) && ( *(m_parent->m_state) == *(o.m_parent->m_state) );
+		}
+	
+		size_t                  hash() const { return m_state->hash(); }
+	
+	public:
+	
+		State*		m_state;
+		FS0_Node<State>*	m_parent;
+		float		m_h;
+		aptk::Action_Idx	m_action;
+		float		m_g;
+		float		m_f;
+
+		std::vector< int >	pref_ops;
+	};
+ 
+	template <typename Node>
+	class Node_Comparer_GBFS {
+	public:
+		bool operator()( Node* a, Node* b ) const {
+			if ( b->hn() < a->hn() ) return true;
+			return false;
+		}
+	};
 
 using namespace fs0;
 
 // MRJ: We start defining the type of nodes for our planner
-typedef Node< fs0::State > Search_Node;
+typedef FS0_Node< fs0::State > Search_Node;
 
 // MRJ: Then we define the type of the tie-breaking algorithm
 // for the open list we are going to use
-typedef		Node_Comparer< Search_Node >					Tie_Breaking_Algorithm;
-typedef aptk::search::Node_Comparer_GBFS< Search_Node > GBFS_Comparer;
+typedef Node_Comparer_GBFS< Search_Node > GBFS_Comparer;
 
 
 // MRJ: Now we define the Open List type by combining the types we have defined before
@@ -220,12 +286,15 @@ int main(int argc, char** argv) {
 		return res;
 	}
 
-	std::cout << "Generating the problem... " << std::endl;
-	
+	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	Problem problem(data_dir);
-	generate(data_dir, problem);
 	
+	std::cout << "Calling generate()" << std::endl; 
+	generate(data_dir, problem);
+
+	std::cout << "Setting current problem to problem" << std::endl;	
 	Problem::setCurrentProblem(problem);
+	std::cout << "Creating Search_Problem instance" << std::endl;
 	FwdSearchProblem search_prob(problem);
 	
 

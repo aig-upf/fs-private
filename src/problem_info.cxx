@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <atoms.hxx>
+#include <iostream>
 
 namespace fs0 {
 
@@ -12,11 +13,17 @@ namespace fs0 {
 const boost::regex ProblemInfo::boundedIntRE("^int\\[(.*)\\.\\.(.*)\\]$");
 	
 ProblemInfo::ProblemInfo(const std::string& data_dir) {
+	std::cout << "\t Loading Type index..." << std::endl;
 	loadTypeIndex(data_dir + "/types.data"); // Order matters
+	std::cout << "\t Loading Action index..." << std::endl;
 	loadActionIndex(data_dir + "/action-index.data");
+	std::cout << "\t Loading Object index..." << std::endl;
 	loadObjectIndex(data_dir + "/objects.data");
+	std::cout << "\t Loading Type Objects index..." << std::endl;
 	loadTypeObjects(data_dir + "/object-types.data");
+	std::cout << "\t Loading Variable index..." << std::endl;
 	loadVariableIndex(data_dir + "/variables.data");
+	std::cout << "\t All indices loaded!" << std::endl;
 }
 
 const std::string& ProblemInfo::getActionName(ActionIdx index) const { return actionNames.at(index); }
@@ -48,6 +55,12 @@ unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }
 void ProblemInfo::loadVariableIndex(const std::string& filename) {
 	std::string line;
 	std::ifstream in(filename);
+
+	if ( in.fail() ) {
+		std::cerr << "ProblemInfo::loadVariableIndex: could not open filename '" << filename << "'" << std::endl;
+		std::cerr << "Bailing out!" << std::endl;
+		std::exit(1);
+	}
 	
 	// Parse the names of the state variables - each line is a variable.
 	while (std::getline(in, line)) {
@@ -60,7 +73,12 @@ void ProblemInfo::loadVariableIndex(const std::string& filename) {
 		assert((unsigned)std::stoi(strs[0].substr(0, point)) == variableNames.size());
 		variableNames.push_back(strs[0].substr(point + 1));
 		variableGenericTypes.push_back(parseVariableType(strs[1]));
-		variableTypes.push_back(name_to_type.at(strs[1]));
+		try {
+			variableTypes.push_back(name_to_type.at(strs[1]));
+		} catch( std::out_of_range& ex ) {
+			// MRJ: Type index defaults to zero?
+			variableTypes.push_back( 0 );
+		}
 	}
 }
 
@@ -141,6 +159,12 @@ void ProblemInfo::loadTypeObjects(const std::string& filename) {
 void ProblemInfo::loadTypeIndex(const std::string& filename) {
 	std::string line;
 	std::ifstream in(filename);
+
+	if ( in.fail() ) {
+		std::cerr << "Error opening file '" << filename << "'" << std::endl;
+		std::cerr << "Bailing out!" << std::endl;
+		std::exit(1);
+	}
 	
 	// Each line is an object name.
 	while (std::getline(in, line)) {

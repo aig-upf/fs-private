@@ -22,9 +22,10 @@ State* FwdSearchProblem::init() const {
 
 bool FwdSearchProblem::goal( const State& s ) const { return task.isGoal(s); }
 
-// bool FwdSearchProblem::is_applicable( const State& s, ActionIdx idx ) const {
-// 	return task.getAction(idx)->applicable(s);
-// }
+bool FwdSearchProblem::is_applicable( const State& s, aptk::Action_Idx idx ) const {
+	assert(false);
+ 	return false;
+}
 
 // THIS FUNCTION IS CURRENTLY NOT USED IN THE ENGINE, AND IT'S NOT STRAIGHT-FORWARD TO IMPLEMENT, SINCE IT
 // WAS DESIGNED FOR GROUNDED ACTIONS, WHICH I AM TRYING TO AVOID. THUS WE'LL LEFT IT UNIMPLEMENTED.
