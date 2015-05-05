@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <aptk/search_prob.hxx>
 #include <aptk/resources_control.hxx>
 #include <aptk/closed_list.hxx>
+#include <aptk/ext_math.hxx>
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -39,8 +40,8 @@ public:
 
 	typedef State State_Type;
 
-	FS0_Node( State* s, float cost, aptk::Action_Idx action, FS0_Node<State>* parent ) 
-	: m_state( s ), m_parent( parent ), m_action(action), m_g( 0 ) {
+	FS0_Node( State* s, float cost, aptk::Action_Idx action, FS0_Node<State>* parent )
+		: m_state( s ), m_parent( parent ),  m_action(action), m_g(0), m_h(0) {
 		m_g = ( parent ? parent->m_g + cost : 0.0f);
 	}
 	
@@ -52,14 +53,12 @@ public:
 	float			hn() const 	{ return m_h; }
 	float&			gn()		{ return m_g; }			
 	float			gn() const 	{ return m_g; }
-	float&			fn()		{ return m_f; }
-	float			fn() const	{ return m_f; }
 	FS0_Node<State>*		parent()   	{ return m_parent; }
 	aptk::Action_Idx		action() const 	{ return m_action; }
 	State*			state()		{ return m_state; }
 	const State&		state() const 	{ return *m_state; }
 	void			print( std::ostream& os ) const {
-		os << "{@ = " << this << ", s = " << m_state << ", parent = " << m_parent << ", g(n) = " << m_g << ", h(n) = " << m_h << ", f(n) = " << m_f << "}";
+		os << "{@ = " << this << ", s = " << m_state << ", parent = " << m_parent << ", g(n) = " << m_g << ", f(n) = h(n) = " << m_h << "}";
 	}
 
 	bool   	operator==( const FS0_Node<State>& o ) const {
@@ -85,10 +84,9 @@ public:
 
 	State*		m_state;
 	FS0_Node<State>*	m_parent;
-	float		m_h;
 	aptk::Action_Idx	m_action;
 	float		m_g;
-	float		m_f;
+	float		m_h;
 
 	std::vector< int >	pref_ops;
 };
@@ -96,7 +94,7 @@ public:
 template <typename Node>
 class GBFSComparer {
 public:
-	inline bool operator()( Node* a, Node* b ) const { return b->hn() < a->hn(); }
+	inline bool operator()( Node* a, Node* b ) const { return aptk::dless(b->hn(), a->hn()); }
 };
 
 /**
@@ -189,22 +187,26 @@ public:
 	void			eval( Search_Node* candidate ) {
 		m_heuristic_func->eval( *(candidate->state()), candidate->hn() ); //, candidate->pref_ops );
 	}
+	
+	//! We disregard the node only if it is already on the close list.
+	bool is_closed(Search_Node* n) { return (this->closed().retrieve(n) != NULL); }
 
-	bool 		is_closed( Search_Node* n ) 	{ 
+	/* GFM
+	bool is_closed( Search_Node* n ) { 
 		Search_Node* n2 = this->closed().retrieve(n);
 
 		if ( n2 != NULL ) {
 			if ( n2->gn() <= n->gn() ) {
-				// The node we generated is a worse path than
-				// the one we already found
+				// The node we generated is a worse path than the one we already found
 				return true;
 			}
-			// Otherwise, we put it into Open and remove
-			// n2 from closed
+			// Otherwise, we put it into the open list and remove n2 from closed
 			this->closed().erase( this->closed().retrieve_iterator( n2 ) );
+			delete n2; // Memory leak otherwise?
 		}
 		return false;
 	}
+	*/
 
 	Search_Node* 		get_node() {
 		Search_Node *next = NULL;
@@ -229,21 +231,18 @@ public:
 
 	virtual void 			process(  Search_Node *head ) {
 		#ifdef DEBUG
-		std::cout << "Expanding:" << std::endl;
+		std::cout << std::endl << "Expanding:" << std::endl;
 		head->print(std::cout);
 		std::cout << std::endl;
 		head->state()->print( std::cout );
 		std::cout << std::endl;
 		#endif
-		const State& s = *(head->state());
-		auto  app_set = m_problem.applicable_actions( s );
 
-		for ( auto action_it = app_set.begin(); action_it != app_set.end(); action_it++ ) {
-			Action_Idx a = *action_it;
-			State *succ = m_problem.next( *(head->state()), a );
-			Search_Node* n = new Search_Node( succ, m_problem.cost( *(head->state()), a ), a, head );
+		for (Action_Idx action: m_problem.applicable_actions(*(head->state()))) {
+			State *succ = m_problem.next( *(head->state()), action );
+			Search_Node* n = new Search_Node( succ, m_problem.cost( *(head->state()), action ), action, head );
 			#ifdef DEBUG
-			std::cout << "Successor:" << std::endl;
+			std::cout << "Successor (action #" << a << "):" << std::endl;
 			n->print(std::cout);
 			std::cout << std::endl;
 			n->state()->print( std::cout );
@@ -257,8 +256,10 @@ public:
 				delete n;
 				continue;
 			}
-			n->hn() = head->hn();
-			n->fn() = n->hn();
+			
+			//n->hn() = head->hn(); // Delayed evaluation
+			eval(n); // Non-delayed evaluation
+			
 			if( previously_hashed(n) ) {
 				#ifdef DEBUG
 				std::cout << "Already in OPEN" << std::endl;
@@ -267,7 +268,7 @@ public:
 			}
 			else {
 				#ifdef DEBUG
-				std::cout << "Inserted into OPEN" << std::endl;
+				std::cout << "Inserted into OPEN with h(n)=" << n->hn() << std::endl;
 				#endif
 				open_node(n);	
 			}
@@ -291,36 +292,36 @@ public:
 				set_bound( head->gn() );	
 				return head;
 			}
-			if ( (time_used() - m_t0 ) > m_time_budget )
+			
+			if ( (time_used() - m_t0 ) > m_time_budget ) {
+				std::cout << "Greedy Best-First Search time budget exhausted." << std::endl;
 				return NULL;
+			}
 	
-			eval( head );
+			// eval(n); // Activate only for delayed evaluation - otherwise nodes get evaluated twice
 
 			process(head);
 			close(head);
 			counter++;
 			head = get_node();
 		}
+		
+		std::cout << "Greedy Best-First Search explored all nodes." << std::endl;
 		return NULL;
 	}
 
-	virtual bool 			previously_hashed( Search_Node *n ) {
-		Search_Node *previous_copy = NULL;
+	virtual bool previously_hashed( Search_Node *n ) {
+		Search_Node *previous_copy = m_open_hash.retrieve(n);
 
-		if( (previous_copy = m_open_hash.retrieve(n)) ) {
-			
-			if(n->gn() < previous_copy->gn())
-			{
-				previous_copy->m_parent = n->m_parent;
-				previous_copy->m_action = n->m_action;
-				previous_copy->m_g = n->m_g;
-				previous_copy->m_f = previous_copy->m_h + previous_copy->m_g;
-				inc_replaced_open();
-			}
-			return true;
+		if (!previous_copy) return false;
+		
+		if(n->gn() < previous_copy->gn()) {
+			previous_copy->m_parent = n->m_parent;
+			previous_copy->m_action = n->m_action;
+			previous_copy->m_g = n->m_g;
+			inc_replaced_open();
 		}
-
-		return false;
+		return true;
 	}
 
 protected:
