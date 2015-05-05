@@ -1,7 +1,5 @@
-#
 # This SConstruct file is automatically moved to the directory where the generated 
 # instance-specific problem data resides during the process of generating the executable solver.
-#
 
 import os
 
@@ -10,7 +8,7 @@ HOME = os.path.expanduser("~")
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Whether this is a debug build', 'no'))
-vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKTDEV', ''), PathVariable.PathIsDir))
+vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT_PATH', ''), PathVariable.PathIsDir))
 vars.Add(PathVariable('fs0', 'Path where the FS0 library is installed', os.getenv('FS0_PATH', ''), PathVariable.PathIsDir))
 
 def which(program):
@@ -36,20 +34,10 @@ else:
 	fs0_libname = 'fs0'
 	exe_name = 'solver.bin'
 
-
-include_paths = ['.',
-				 env['fs0'] + '/src',
-				 env['lapkt'] + '/include',
-                 env['lapkt'] + '/interfaces/agnostic',
-                ]
-
-lib_paths = [env['fs0'] + '/lib', '/usr/lib', '/usr/local/lib']
-
-# If we have a local libs on the home directory, use them.
-if os.path.exists(HOME + '/local/lib'):
-    lib_paths.append(HOME + '/local/lib')
-if os.path.exists(HOME + '/local/include'):
-    include_paths.append(HOME + '/local/include')
+# Header and library directories.
+# We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
+include_paths = ['.', env['fs0'] + '/src', env['lapkt'] + '/include', env['lapkt'] + '/interfaces/agnostic', HOME + '/local/include']
+lib_paths = [env['fs0'] + '/lib', HOME + '/local/lib']
     
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
 

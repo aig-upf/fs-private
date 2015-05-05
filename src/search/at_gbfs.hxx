@@ -1,7 +1,7 @@
 /*
 FS0 planner
 Copyright (c) 2015
-Guillem Frances <gfrances@gmail.com>
+Guillem Frances <guillem.frances@upf.edu>
 
 
 Lightweight Automated Planning Toolkit
@@ -23,8 +23,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __ANYTIME_SINGLE_QUEUE_SINGLE_HEURISTIC_GREEDY_BEST_FIRST_SEARCH__
-#define __ANYTIME_SINGLE_QUEUE_SINGLE_HEURISTIC_GREEDY_BEST_FIRST_SEARCH__
+#pragma once
 
 #include <aptk/search_prob.hxx>
 #include <aptk/resources_control.hxx>
@@ -34,16 +33,78 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <aptk/at_bfs.hxx>
 
-namespace aptk {
+template <typename State>
+class FS0_Node {
+public:
 
-namespace search {
+	typedef State State_Type;
 
-namespace bfs {
+	FS0_Node( State* s, float cost, aptk::Action_Idx action, FS0_Node<State>* parent ) 
+	: m_state( s ), m_parent( parent ), m_action(action), m_g( 0 ) {
+		m_g = ( parent ? parent->m_g + cost : 0.0f);
+	}
+	
+	virtual ~FS0_Node() {
+		if ( m_state != NULL ) delete m_state;
+	}
 
+	float&			hn()		{ return m_h; }
+	float			hn() const 	{ return m_h; }
+	float&			gn()		{ return m_g; }			
+	float			gn() const 	{ return m_g; }
+	float&			fn()		{ return m_f; }
+	float			fn() const	{ return m_f; }
+	FS0_Node<State>*		parent()   	{ return m_parent; }
+	aptk::Action_Idx		action() const 	{ return m_action; }
+	State*			state()		{ return m_state; }
+	const State&		state() const 	{ return *m_state; }
+	void			print( std::ostream& os ) const {
+		os << "{@ = " << this << ", s = " << m_state << ", parent = " << m_parent << ", g(n) = " << m_g << ", h(n) = " << m_h << ", f(n) = " << m_f << "}";
+	}
 
+	bool   	operator==( const FS0_Node<State>& o ) const {
+	
+		if( &(o.state()) != NULL && &(state()) != NULL)
+			return (const State&)(o.state()) == (const State&)(state());
+		/**
+		* Lazy
+		*/
+		if  ( m_parent == NULL ) {
+			if ( o.m_parent == NULL ) return true;
+			return false;
+		}
+	
+		if ( o.m_parent == NULL ) return false;
+		
+		return (m_action == o.m_action) && ( *(m_parent->m_state) == *(o.m_parent->m_state) );
+	}
 
-// Anytime greedy-best-first search, with one single open list and one single
-// heuristic estimator, with delayed evaluation of states generated
+	size_t                  hash() const { return m_state->hash(); }
+
+public:
+
+	State*		m_state;
+	FS0_Node<State>*	m_parent;
+	float		m_h;
+	aptk::Action_Idx	m_action;
+	float		m_g;
+	float		m_f;
+
+	std::vector< int >	pref_ops;
+};
+
+template <typename Node>
+class GBFSComparer {
+public:
+	inline bool operator()( Node* a, Node* b ) const { return b->hn() < a->hn(); }
+};
+
+/**
+ * This is a custom version of LAPKT's GBFS search algorithm.
+ */
+namespace aptk { namespace search { namespace bfs {
+
+// Anytime greedy-best-first search, with one single open list and one single heuristic estimator.
 template <typename Search_Model, typename Abstract_Heuristic, typename Open_List_Type >
 class AT_GBFS_SQ_SH {
 
@@ -304,10 +365,4 @@ protected:
 	std::vector<Action_Idx> 		m_app_set;
 };
 
-}
-
-}
-
-}
-
-#endif // at_gbfs.hxx
+} } }  // namespaces

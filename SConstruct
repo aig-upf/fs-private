@@ -6,9 +6,8 @@ vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Debug build', 'no'))
 vars.Add(BoolVariable('fdebug', 'Debug FS0', 'no'))
 
-
-default_lapkt_path = os.getenv('LAPKTDEV', '')
-vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', default_lapkt_path, PathVariable.PathIsDir))
+# The LAPKT path can be optionally specified, otherwise we fetch it from the corresponding environment variable.
+vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT_PATH', ''), PathVariable.PathIsDir))
 
 def which(program):
 	""" Helper function emulating unix 'which' command """

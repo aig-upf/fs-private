@@ -22,8 +22,9 @@ State* FwdSearchProblem::init() const {
 
 bool FwdSearchProblem::goal( const State& s ) const { return task.isGoal(s); }
 
+// We implement this only to make the class non-abstract, but should not be using it.
 bool FwdSearchProblem::is_applicable( const State& s, aptk::Action_Idx idx ) const {
-	throw std::runtime_error("Should not be using this method");
+	throw std::runtime_error("Should not be using this method but the action iterator instead");
 }
 
 
