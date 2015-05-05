@@ -23,21 +23,12 @@ State* FwdSearchProblem::init() const {
 bool FwdSearchProblem::goal( const State& s ) const { return task.isGoal(s); }
 
 bool FwdSearchProblem::is_applicable( const State& s, aptk::Action_Idx idx ) const {
-	assert(false);
- 	return false;
+	throw std::runtime_error("Should not be using this method");
 }
 
-// THIS FUNCTION IS CURRENTLY NOT USED IN THE ENGINE, AND IT'S NOT STRAIGHT-FORWARD TO IMPLEMENT, SINCE IT
-// WAS DESIGNED FOR GROUNDED ACTIONS, WHICH I AM TRYING TO AVOID. THUS WE'LL LEFT IT UNIMPLEMENTED.
-// void FwdSearchProblem::applicable_set( const State& s, std::vector<ActionIdx>& app_set ) const {
-// 	throw NonImplementedException(); 
-// 	// m_task->applicable_actions( s, app_set ); 
-// }
 
 float	FwdSearchProblem::cost( const State& s, aptk::Action_Idx a ) const {
-// 	const Action& act = *(task.actions().at(a));
-// 	return act.cost();
-  return 1.0; // TODO - Implement
+	return 1.0; // TODO - Implement if support for action costs is needed
 }
 
 State* FwdSearchProblem::next( const State& s, aptk::Action_Idx actionIdx ) const {
