@@ -11,14 +11,16 @@ Installation
 --------------
 In order to run `FS0`, you need to have access to 
 
+1. The [LAPKT Planning Toolkit](http://lapkt.org/), which provides the base search algorithms used with our heuristics.
+
 1. A [custom version](https://bitbucket.org/gfrances/downward-aig) of the Fast Downward PDDL 3.0 parser (written in Python), modified with the purpose of fully supporting the functional capabilities of the language and allowing for constraints and external procedures to be used on the specification of the domain.
 
-1. The [LAPKT Planning Toolkit](http://lapkt.org/), which provides the base search algorithms used with our heuristics.
 
 Once you have cloned both projects, your system needs to be configured with the following environment variables, e.g. by setting them up in your  `~/.bashrc` configuration file:
 
 
 ```
+#!shell
 export LAPKT_PATH="${HOME}/projects/code/lapkt"
 export FD_AIG_PATH="${HOME}/projects/code/downward/downward-aig"
 export FS0_PATH="${HOME}/projects/code/fs0"
@@ -33,7 +35,9 @@ fi
 Once all this is set up, you can build the `FS0` library by doing
 
 ```
-cd $FS0_PATH && scons
+#!shell
+cd $FS0_PATH
+scons
 ```
 
 You can run `scons debug=1` to build the debug version of the library, or `scons debug=1 fdebug=1` to build an extremely-verbose debug version.
@@ -46,19 +50,17 @@ The actual process of solving a planning problem involves a preprocessing phase 
 You can bootstrap the whole process by running e.g. (replace `$BENCHMARKS` by an appropriate directory):
 
 ```
+#!shell
 python3 generator.py --set test --instance $BENCHMARKS/fn-simple-sokoban/instance_6.pddl
 ```
 
 Where `instance_6` is a PDDL3.0 instance file, and 
-`test` is an arbitrary name that will be used to determine the output directory where the executable solver will be left, which in this case will be:
-
-```
-$FS0_PATH/generated/test/fn-simple-sokoban/instance_6
-```
-
+`test` is an arbitrary name that will be used to determine the output directory where the executable solver will be left, which in this case will be
+`$FS0_PATH/generated/test/fn-simple-sokoban/instance_6`.
 In order to solve the instance, we need to run the automatically generated `solver.bin` executable from that directory (add the `-h` flag for further options :
 
 ```
+#!shell
 cd $FS0_PATH/generated/test/fn-simple-sokoban/instance_6
 ./solver.bin
 ```
