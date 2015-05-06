@@ -1,7 +1,7 @@
 /*
 FS0 planner
 Copyright (c) 2015
-Guillem Frances <gfrances@gmail.com>
+Guillem Frances <guillem.frances@upf.edu>
 
 
 Lightweight Automated Planning Toolkit
@@ -23,27 +23,86 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __ANYTIME_SINGLE_QUEUE_SINGLE_HEURISTIC_GREEDY_BEST_FIRST_SEARCH__
-#define __ANYTIME_SINGLE_QUEUE_SINGLE_HEURISTIC_GREEDY_BEST_FIRST_SEARCH__
+#pragma once
 
 #include <aptk/search_prob.hxx>
 #include <aptk/resources_control.hxx>
 #include <aptk/closed_list.hxx>
+#include <aptk/ext_math.hxx>
 #include <vector>
 #include <algorithm>
 #include <iostream>
 #include <aptk/at_bfs.hxx>
 
-namespace aptk {
+template <typename State>
+class FS0_Node {
+public:
 
-namespace search {
+	typedef State State_Type;
 
-namespace bfs {
+	FS0_Node( State* s, float cost, aptk::Action_Idx action, FS0_Node<State>* parent )
+		: m_state( s ), m_parent( parent ),  m_action(action), m_g(0), m_h(0) {
+		m_g = ( parent ? parent->m_g + cost : 0.0f);
+	}
+	
+	virtual ~FS0_Node() {
+		if ( m_state != NULL ) delete m_state;
+	}
 
+	float&			hn()		{ return m_h; }
+	float			hn() const 	{ return m_h; }
+	float&			gn()		{ return m_g; }			
+	float			gn() const 	{ return m_g; }
+	FS0_Node<State>*		parent()   	{ return m_parent; }
+	aptk::Action_Idx		action() const 	{ return m_action; }
+	State*			state()		{ return m_state; }
+	const State&		state() const 	{ return *m_state; }
+	void			print( std::ostream& os ) const {
+		os << "{@ = " << this << ", s = " << m_state << ", parent = " << m_parent << ", g(n) = " << m_g << ", f(n) = h(n) = " << m_h << "}";
+	}
 
+	bool   	operator==( const FS0_Node<State>& o ) const {
+	
+		if( &(o.state()) != NULL && &(state()) != NULL)
+			return (const State&)(o.state()) == (const State&)(state());
+		/**
+		* Lazy
+		*/
+		if  ( m_parent == NULL ) {
+			if ( o.m_parent == NULL ) return true;
+			return false;
+		}
+	
+		if ( o.m_parent == NULL ) return false;
+		
+		return (m_action == o.m_action) && ( *(m_parent->m_state) == *(o.m_parent->m_state) );
+	}
 
-// Anytime greedy-best-first search, with one single open list and one single
-// heuristic estimator, with delayed evaluation of states generated
+	size_t                  hash() const { return m_state->hash(); }
+
+public:
+
+	State*		m_state;
+	FS0_Node<State>*	m_parent;
+	aptk::Action_Idx	m_action;
+	float		m_g;
+	float		m_h;
+
+	std::vector< int >	pref_ops;
+};
+
+template <typename Node>
+class GBFSComparer {
+public:
+	inline bool operator()( Node* a, Node* b ) const { return aptk::dless(b->hn(), a->hn()); }
+};
+
+/**
+ * This is a custom version of LAPKT's GBFS search algorithm.
+ */
+namespace aptk { namespace search { namespace bfs {
+
+// Anytime greedy-best-first search, with one single open list and one single heuristic estimator.
 template <typename Search_Model, typename Abstract_Heuristic, typename Open_List_Type >
 class AT_GBFS_SQ_SH {
 
@@ -128,22 +187,26 @@ public:
 	void			eval( Search_Node* candidate ) {
 		candidate->hn() = m_heuristic_func->evaluate( *(candidate->state()) );
 	}
+	
+	//! We disregard the node only if it is already on the close list.
+	bool is_closed(Search_Node* n) { return (this->closed().retrieve(n) != NULL); }
 
-	bool 		is_closed( Search_Node* n ) 	{ 
+	/* GFM
+	bool is_closed( Search_Node* n ) { 
 		Search_Node* n2 = this->closed().retrieve(n);
 
 		if ( n2 != NULL ) {
 			if ( n2->gn() <= n->gn() ) {
-				// The node we generated is a worse path than
-				// the one we already found
+				// The node we generated is a worse path than the one we already found
 				return true;
 			}
-			// Otherwise, we put it into Open and remove
-			// n2 from closed
+			// Otherwise, we put it into the open list and remove n2 from closed
 			this->closed().erase( this->closed().retrieve_iterator( n2 ) );
+			delete n2; // Memory leak otherwise?
 		}
 		return false;
 	}
+	*/
 
 	Search_Node* 		get_node() {
 		Search_Node *next = NULL;
@@ -168,21 +231,18 @@ public:
 
 	virtual void 			process(  Search_Node *head ) {
 		#ifdef DEBUG
-		std::cout << "Expanding:" << std::endl;
+		std::cout << std::endl << "Expanding:" << std::endl;
 		head->print(std::cout);
 		std::cout << std::endl;
 		head->state()->print( std::cout );
 		std::cout << std::endl;
 		#endif
-		const State& s = *(head->state());
-		auto  app_set = m_problem.applicable_actions( s );
 
-		for ( auto action_it = app_set.begin(); action_it != app_set.end(); action_it++ ) {
-			Action_Idx a = *action_it;
-			State *succ = m_problem.next( *(head->state()), a );
-			Search_Node* n = new Search_Node( succ, m_problem.cost( *(head->state()), a ), a, head );
+		for (Action_Idx action: m_problem.applicable_actions(*(head->state()))) {
+			State *succ = m_problem.next( *(head->state()), action );
+			Search_Node* n = new Search_Node( succ, m_problem.cost( *(head->state()), action ), action, head );
 			#ifdef DEBUG
-			std::cout << "Successor:" << std::endl;
+			std::cout << "Successor (action #" << a << "):" << std::endl;
 			n->print(std::cout);
 			std::cout << std::endl;
 			n->state()->print( std::cout );
@@ -196,8 +256,10 @@ public:
 				delete n;
 				continue;
 			}
-			n->hn() = head->hn();
-			n->fn() = n->hn();
+			
+			//n->hn() = head->hn(); // Delayed evaluation
+			eval(n); // Non-delayed evaluation
+			
 			if( previously_hashed(n) ) {
 				#ifdef DEBUG
 				std::cout << "Already in OPEN" << std::endl;
@@ -206,7 +268,7 @@ public:
 			}
 			else {
 				#ifdef DEBUG
-				std::cout << "Inserted into OPEN" << std::endl;
+				std::cout << "Inserted into OPEN with h(n)=" << n->hn() << std::endl;
 				#endif
 				open_node(n);	
 			}
@@ -230,36 +292,36 @@ public:
 				set_bound( head->gn() );	
 				return head;
 			}
-			if ( (time_used() - m_t0 ) > m_time_budget )
+			
+			if ( (time_used() - m_t0 ) > m_time_budget ) {
+				std::cout << "Greedy Best-First Search time budget exhausted." << std::endl;
 				return NULL;
+			}
 	
-			eval( head );
+			// eval(n); // Activate only for delayed evaluation - otherwise nodes get evaluated twice
 
 			process(head);
 			close(head);
 			counter++;
 			head = get_node();
 		}
+		
+		std::cout << "Greedy Best-First Search explored all nodes." << std::endl;
 		return NULL;
 	}
 
-	virtual bool 			previously_hashed( Search_Node *n ) {
-		Search_Node *previous_copy = NULL;
+	virtual bool previously_hashed( Search_Node *n ) {
+		Search_Node *previous_copy = m_open_hash.retrieve(n);
 
-		if( (previous_copy = m_open_hash.retrieve(n)) ) {
-			
-			if(n->gn() < previous_copy->gn())
-			{
-				previous_copy->m_parent = n->m_parent;
-				previous_copy->m_action = n->m_action;
-				previous_copy->m_g = n->m_g;
-				previous_copy->m_f = previous_copy->m_h + previous_copy->m_g;
-				inc_replaced_open();
-			}
-			return true;
+		if (!previous_copy) return false;
+		
+		if(n->gn() < previous_copy->gn()) {
+			previous_copy->m_parent = n->m_parent;
+			previous_copy->m_action = n->m_action;
+			previous_copy->m_g = n->m_g;
+			inc_replaced_open();
 		}
-
-		return false;
+		return true;
 	}
 
 protected:
@@ -304,10 +366,4 @@ protected:
 	std::vector<Action_Idx> 		m_app_set;
 };
 
-}
-
-}
-
-}
-
-#endif // at_gbfs.hxx
+} } }  // namespaces

@@ -8,12 +8,7 @@
 
 namespace fs0 {
 
-/**
- * 
- * NOTE: OF THE THREE POSSIBLE WAYS TO ITERATE THROUGH APPLICABLE ACTIONS
- * (NAMELY: (1) FwdSearchProblem::is_applicable, (2) FwdSearchProblem::applicable_set AND (3) Fwd_Search_Problem::Action_Iterator
- * ONLY (3) IS CURRENTLY USED BY THE SEARCH ENGINE.
- */
+
 class FwdSearchProblem : public aptk::Search_Problem<State> {
 	public:
 		
@@ -29,8 +24,6 @@ class FwdSearchProblem : public aptk::Search_Problem<State> {
 		virtual bool     goal( const State& s ) const;
 		
  		virtual bool     is_applicable( const State& s, aptk::Action_Idx idx ) const;
-		
-// 		virtual void     applicable_set( const aptk::core::State& s, std::vector< aptk::core::ActionIdx >& app_set ) const;	
 		
 		virtual float    cost( const State& s, aptk::Action_Idx a ) const;
 		

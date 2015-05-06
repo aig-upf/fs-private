@@ -181,7 +181,6 @@ def compile_translation(translation_dir, debug=False, predstate=False):
 
     bfs_dir = os.path.abspath('../planners/gbfs')
     shutil.copy(bfs_dir + '/main.cxx', translation_dir)
-    shutil.copy(bfs_dir + '/at_gbfs.hxx', translation_dir)
     shutil.copy(bfs_dir + '/SConstruct', translation_dir + '/SConstruct')
 
     command = "scons {} {}".format(debug_flag, predstate_flag)
