@@ -3,7 +3,11 @@
 
 #include <constraints/scoped_constraint.hxx>
 #include <problem_info.hxx>
-
+// MRJ: This allows to switch between unordered_set and vector to represent extensionally
+// constraints.
+#ifndef EXTENSIONAL_REPRESENTATION_USES_VECTORS 
+	#include <unordered_set>
+#endif
 
 namespace fs0 {
 
@@ -12,7 +16,11 @@ namespace fs0 {
 class CompiledUnaryConstraint : public UnaryParametrizedScopedConstraint {
 protected:
 	typedef ObjectIdx ElementT;
-	typedef std::vector<ElementT> ExtensionT;
+	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
+		typedef std::vector<ElementT> ExtensionT;
+	#else
+		typedef std::unordered_set<ElementT> ExtensionT;
+	#endif
 	
 	//! Precondition: the vector is sorted.
 	const ExtensionT _extension;
@@ -43,7 +51,12 @@ class CompiledBinaryConstraint : public BinaryParametrizedScopedConstraint
 protected:
 	// For a binary constraint with scope <X, Y>, the extension is a map mapping each possible x \in D_X to an ordered 
 	// vector containing all y \in D_Y s.t. <x, y> satisfies the constraint.
-	typedef std::unordered_map<ObjectIdx, ObjectIdxVector> ExtensionT;
+	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
+		typedef std::unordered_map<ObjectIdx, ObjectIdxVector> ExtensionT;
+	#else
+		typedef std::unordered_set< ObjectIdx >	ObjectIdxHash;
+		typedef std::unordered_map< ObjectIdx, ObjectIdxHash > ExtensionT;
+	#endif
 	
 	//! Precondition: the vector is sorted.
 	const ExtensionT _extension1;

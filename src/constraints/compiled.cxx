@@ -29,7 +29,11 @@ CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const Unar
 }
 
 bool CompiledUnaryConstraint::isSatisfied(ObjectIdx o) const {
+	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 	return std::binary_search(_extension.begin(), _extension.end(), o); // TODO - Change for a O(1) lookup in a std::unordered_set ?
+	#else
+	return _extension.find(o) != _extension.end();
+	#endif
 }
 
 ScopedConstraint::Output CompiledUnaryConstraint::filter(const DomainMap& domains) const {
@@ -61,8 +65,13 @@ CompiledBinaryConstraint::CompiledBinaryConstraint(const BinaryParametrizedScope
 bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 	auto iter = _extension1.find(o1);
 	assert(iter != _extension1.end());
+	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 	const ObjectIdxVector& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
 	return std::binary_search(D_y.begin(), D_y.end(), o2); // TODO - Change for a O(1) lookup in a std::unordered_set ?
+	#else
+	const ObjectIdxHash& D_y = iter->second;
+	return D_y.find( o2 ) != D_y.end();
+	#endif
 }
 
 CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo) {
@@ -91,9 +100,15 @@ CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const Bi
 	// Now we transform the ordered set into a (implicitly ordered) vector
 	ExtensionT extension;
 	for(const auto& elem:ordered) {
+		#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 		extension.insert(std::make_pair(elem.first,
 			ObjectIdxVector(elem.second.begin(), elem.second.end())
 		));
+		#else
+		extension.insert( std::make_pair( elem.first,
+						ObjectIdxHash( elem.second.begin(), elem.second.end() )
+		));	
+		#endif
 	}
 	return extension;
 }
@@ -112,7 +127,11 @@ ScopedConstraint::Output CompiledBinaryConstraint::filter(unsigned variable) {
 	for (ObjectIdx x:domain) {
 		auto iter = extension_map.find(x);
 		assert(iter != extension_map.end());
+		#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 		const ObjectIdxVector& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
+		#else
+		const ObjectIdxHash& D_y = iter->second;
+		#endif
 		if (!Utils::empty_intersection(other_domain.begin(), other_domain.end(), D_y.begin(), D_y.end())) {
 			new_domain.insert(new_domain.cend(), x); //  x is an arc-consistent value. We will insert on the end of the container, as it is already sorted.
 		}
