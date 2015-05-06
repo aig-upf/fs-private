@@ -31,6 +31,7 @@ DomainMap Projections::projectCopy(const RelaxedState& state, const VariableIdxV
 	DomainMap projection;
 	for (VariableIdx var:scope) {
 		projection.insert(std::make_pair(var, std::make_shared<Domain>(*(state.getValues(var))))); // We copy construct the whole domain
+		assert( *(state.getValues(var)) == *(projection.at(var)) );
 	}
 	return projection;
 }	
