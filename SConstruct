@@ -7,7 +7,7 @@ vars.Add(BoolVariable('debug', 'Debug build', 'no'))
 vars.Add(BoolVariable('fdebug', 'Debug FS0', 'no'))
 
 
-default_lapkt_path = os.getenv('LAPKTDEV', '')
+default_lapkt_path = os.getenv('LAPKT_PATH', '')
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', default_lapkt_path, PathVariable.PathIsDir))
 
 def which(program):
