@@ -126,7 +126,7 @@ public:
 	const	Search_Model&	problem() const			{ return m_problem; }
 
 	void			eval( Search_Node* candidate ) {
-		m_heuristic_func->eval( *(candidate->state()), candidate->hn() ); //, candidate->pref_ops );
+		candidate->hn() = m_heuristic_func->evaluate( *(candidate->state()) );
 	}
 
 	bool 		is_closed( Search_Node* n ) 	{ 
