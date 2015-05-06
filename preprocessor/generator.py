@@ -24,7 +24,8 @@ import pddl  # This should be imported from a custom-set PYTHONPATH containing t
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Parse a given problem instance from a given benchmark set.')
     parser.add_argument('--set', required=True, help="The name of the benchmark set.")
-    parser.add_argument('--instance', required=True, help="The problem instance filename.")
+    parser.add_argument('--instance', required=True, help="The problem instance filename (heuristics are used to determine domain filename).")
+    parser.add_argument('--domain', required=False, help="The problem domain filename.",default=None )
     parser.add_argument('--translator', required=False, help="The directory containing the problem translation code.")
     parser.add_argument('--output_base', default="../generated",
                         help="The base for the output directory where the compiled planner will be left. "
@@ -141,14 +142,15 @@ def extract_names(instance, domain_filename):
 
 def main():
     args = parse_arguments()
-    args.domain_filename = pddl.pddl_file.extract_domain_name(args.instance)
-    task = parse_pddl_task(args.domain_filename, args.instance)
+    if args.domain is None :
+    	args.domain = pddl.pddl_file.extract_domain_name(args.instance)
+    task = parse_pddl_task(args.domain, args.instance)
 
     classify_symbols(task)
     task.index = CompilationIndex(task)
 
     translator = import_translator(args, task)
-    instance_name, domain_name = extract_names(args.instance, args.domain_filename)
+    instance_name, domain_name = extract_names(args.instance, args.domain)
     domain = create_domain(domain_name, translator)
     instance = create_instance(instance_name, translator, domain)
     instance = TaskPreprocessor(instance).do()
@@ -194,7 +196,7 @@ def compile_translation(translation_dir, debug=False, predstate=False):
 def translate_and_compile(instance, translation_dir, args):
     gen = Generator(instance, args, translation_dir)
     translation_dir = gen.translate(args.instance_dir)
-    move_files_around(args.instance_dir, args.instance, args.domain_filename, translation_dir)
+    move_files_around(args.instance_dir, args.instance, args.domain, translation_dir)
     compile_translation(translation_dir, args.debug, gen.task.domain.is_predicative())
     return gen.get_normalized_task_name(), translation_dir
 
