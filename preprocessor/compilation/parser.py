@@ -14,7 +14,7 @@ from compilation.exceptions import ParseException
 from compilation.helper import is_int
 
 
-BASE_SYMBOLS = ("=", "!=", "+", "-", ">", "<", ">=", "<=")
+BASE_SYMBOLS = ("=", "!=", "+", "-", "*", "increase", "decrease", ">", "<", ">=", "<=")
 CUSTOM_CONSTRAINTS = ("sum_constraint", "alldiff_constraint")
 
 
@@ -111,4 +111,4 @@ class Parser(object):
 
     def check_declared(self, symbol):
         if not is_basic_symbol(symbol) and not is_constraint_expression(symbol) and symbol not in self.all:
-            raise ParseException("Undeclared symbol '{}'".format(symbol))
+            raise ParseException("Undeclared symbol '{0}'".format(symbol))
