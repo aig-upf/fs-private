@@ -242,7 +242,7 @@ public:
 			State *succ = m_problem.next( *(head->state()), action );
 			Search_Node* n = new Search_Node( succ, m_problem.cost( *(head->state()), action ), action, head );
 			#ifdef DEBUG
-			std::cout << "Successor (action #" << a << "):" << std::endl;
+			std::cout << "Successor (action #" << action << "):" << std::endl;
 			n->print(std::cout);
 			std::cout << std::endl;
 			n->state()->print( std::cout );
