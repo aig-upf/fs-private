@@ -184,7 +184,9 @@ def generate_constraint_code(name, blocks, tpl):
     for i, component in enumerate(blocks, 0):
         classname = get_component_classname(component, name, i)
 
-        if not component.builtin:
+        if component.builtin:
+            binding_variable = "{}"  # Don't use the bindings for constraints
+        else:
             satisfied_header = component.get_satisfied_header()
             satisfied_header = tplManager.get(satisfied_header).substitute() if satisfied_header else ''
             apply_header = tplManager.get(component.get_apply_header()).substitute()
@@ -196,11 +198,13 @@ def generate_constraint_code(name, blocks, tpl):
                 apply_header=apply_header,
                 code='\n\t\t'.join(component.code)
             ))
+            binding_variable = 'binding'
 
         instantiation_tpl = component.get_instantiation_tpl()
         instantiations.append(tplManager.get(instantiation_tpl).substitute(
             classname=classname,
-            i=i
+            i=i,
+            binding=binding_variable
         ))
     return classes, instantiations
 
