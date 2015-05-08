@@ -36,14 +36,40 @@ bool CompiledUnaryConstraint::isSatisfied(ObjectIdx o) const {
 	#endif
 }
 
+#ifndef EXTENSIONAL_REPRESENTATION_USES_VECTORS
+namespace detail{
+
+template <typename ExtensionType>
+class	IntersectionTest
+{
+public:
+	IntersectionTest( const ExtensionType& ext, Domain& dst ) 
+	: _ext( ext ), _dst( dst ) {}
+
+	void operator()( ObjectIdx o )  {
+		if ( _ext.find( o ) == _ext.end() ) return;
+		_dst.insert(o);
+	}
+
+	const ExtensionType& 	_ext;
+	Domain&			_dst;
+};
+
+}
+#endif
+
 ScopedConstraint::Output CompiledUnaryConstraint::filter(const DomainMap& domains) const {
 	
 	DomainVector projection = Projections::project(domains, _scope);
 	assert(projection.size() == 1);
 	Domain& domain = *(projection[0]);
 	Domain new_domain;
-	
+
+	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 	std::set_intersection(domain.begin(), domain.end(), _extension.begin(), _extension.end(), std::inserter(new_domain, new_domain.end()));
+	#else
+	std::for_each( domain.begin(), domain.end(), detail::IntersectionTest<ExtensionT>( _extension, new_domain ) ); 
+	#endif
 	
 	if (new_domain.size() == domain.size()) return Output::Unpruned;
 	if (new_domain.size() == 0) return Output::Failure;
