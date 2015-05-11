@@ -98,7 +98,8 @@ public:
 	
 	//! To be overriden by the concrete subclasses
 	ObjectIdx apply(const ObjectIdxVector& values) const {
-		throw std::runtime_error("Binary effects are expected not to use this method");
+		assert(values.size() == 2);
+		return apply(values[0], values[1]);
 	};
 	
 	//! To be overriden by concrete subclasses

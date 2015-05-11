@@ -25,7 +25,7 @@ public:
 	
 protected:
 	void computeUnaryChangeset(const ScopedEffect::cptr effect, VariableIdx relevant, ObjectIdx value, Changeset& changeset) const;
-// 	void computeProcedurePointChangeset(const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const;
+	void computeNAryChangeset(const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const;
 };
 
 } // namespaces

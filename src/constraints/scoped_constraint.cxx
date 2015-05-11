@@ -81,15 +81,25 @@ ScopedConstraint::Output BinaryParametrizedScopedConstraint::filter(unsigned var
 	return Output::Unpruned;
 }
 
-DomainBoundsConstraint::DomainBoundsConstraint(const UnaryScopedEffect* effect, const ProblemInfo& problemInfo) :
+UnaryDomainBoundsConstraint::UnaryDomainBoundsConstraint(const UnaryScopedEffect* effect, const ProblemInfo& problemInfo) :
 	UnaryParametrizedScopedConstraint(effect->getScope(), {}), _problemInfo(problemInfo), _effect(effect)
 {}
 
 // The domain constraint is satisfied iff the application of the corresponding effect keeps the affected
 // value within the domain bounds.
-bool DomainBoundsConstraint::isSatisfied(ObjectIdx o) const {
+bool UnaryDomainBoundsConstraint::isSatisfied(ObjectIdx o) const {
 		VariableIdx affected = _effect->getAffected();
 		ObjectIdx value = _effect->apply(o);
+		return _problemInfo.checkValueIsValid(affected, value);
+}
+
+BinaryDomainBoundsConstraint::BinaryDomainBoundsConstraint(const BinaryScopedEffect* effect, const ProblemInfo& problemInfo) :
+	BinaryParametrizedScopedConstraint(effect->getScope(), {}), _problemInfo(problemInfo), _effect(effect)
+{}
+
+bool BinaryDomainBoundsConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
+		VariableIdx affected = _effect->getAffected();
+		ObjectIdx value = _effect->apply(o1, o2);
 		return _problemInfo.checkValueIsValid(affected, value);
 }
 

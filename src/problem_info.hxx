@@ -94,6 +94,8 @@ public:
 	
 	unsigned getNumObjects() const;
 	
+	//! Both methods check that the value of a given variable is within the bounds of the variable,
+	//! in case it is a variable of a bounded type.
 	bool checkValueIsValid(const Fact& atom) const;
 	bool checkValueIsValid(VariableIdx variable, ObjectIdx value) const;
 	

@@ -51,13 +51,9 @@ namespace fs0 {
 	/**
 	 * Custom exceptions
 	 */
-	struct DuplicateObjectException : std::exception {};
-	struct DuplicateTypeException   : std::exception {};
-	struct DuplicateSymbolException : std::exception {};
-	
-	struct NonExistingTypeException : std::exception {};
-	struct NonImplementedException : std::exception {};
-	
-	struct InvalidConstraintException : std::exception {};
+	class UnimplementedFeatureException : public std::runtime_error {
+	public:
+		UnimplementedFeatureException(const std::string& msg) : std::runtime_error(msg) {}
+	};
 	
 } // namespaces
