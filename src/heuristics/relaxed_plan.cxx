@@ -1,9 +1,9 @@
 
+#include <action_manager.hxx>
+#include <relaxed_action_manager.hxx>
 #include <fwd_search_prob.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <utils/projections.hxx>
-#include <action_manager.hxx>
-#include <relaxed_applicability_manager.hxx>
 #include <heuristics/rpg.hxx>
 
 namespace fs0 {
@@ -14,22 +14,19 @@ RelaxedPlanHeuristic<T>::RelaxedPlanHeuristic( const T& problem ) :
 	_problem(problem.getTask())
 {}
 
+
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 template <typename T>
 float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	
-	const Action::vcptr& actions = _problem.getAllActions();
-	
-	RelaxedState relaxed(seed);
-	const RelaxedApplicabilityManager& appManager = _problem.getRelaxedApplicabilityManager();
-	const RelaxedEffectManager& effManager = _problem.getRelaxedEffectManager();
-	
 	if (_problem.isGoal(seed)) return 0; // The seed state is a goal
 	
+	const Action::vcptr& actions = _problem.getAllActions();
+	RelaxedState relaxed(seed);
 	std::vector<Changeset::ptr> changesets;
 	
 	#ifdef FS0_DEBUG
-	std::cout << std::endl << "RP Graph computation from seed state: " << std::endl << seed << std::endl << "****************************************" << std::endl;;
+	std::cout << std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************" << std::endl;;
 	#endif
 	
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the changeset is empty),
@@ -37,20 +34,10 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	while(true) {
 		Changeset::ptr changeset = std::make_shared<Changeset>(seed, relaxed);
 		
+		// Apply all the actions to the RPG layer
 		for (unsigned idx = 0; idx < actions.size(); ++idx) {
-			auto& action = *actions[idx];
-			
-			// We compute the projection of the current relaxed state to the variables relevant to the action
-			// Note that this _clones_ the actual domains, since we want to modify them.
-			DomainMap projection = Projections::projectToActionVariables(relaxed, action);
-			
-			// ... and this prunes them with the constraints represented by each procedure.
-			Fact::vctr causes;
-			if (appManager.checkPreconditionsHold(action, seed, projection, causes)) { // If the action is applicable in the current RPG layer...
-				// ...we accumulate the effects on the changeset with all new reachable effects.
-				changeset->setCurrentAction(idx, RPGraph::pruneSeedSupporters(causes, seed));  // We record the applicability causes
-				effManager.computeChangeset(action, projection, *changeset);
-			}
+			const Action& action = *actions[idx];
+			action.getConstraintManager()->processAction(idx, action, seed, relaxed, *changeset);
 		}
 		
 		

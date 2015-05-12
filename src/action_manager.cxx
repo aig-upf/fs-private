@@ -4,10 +4,9 @@
 
 #include <action_manager.hxx>
 #include <heuristics/changeset.hxx>
-#include <relaxed_applicability_manager.hxx>
 #include <utils/projections.hxx>
-#include <relaxed_effect_manager.hxx>
 #include <problem.hxx>
+#include <relaxed_action_manager.hxx>
 
 namespace fs0 {
 
@@ -54,14 +53,12 @@ bool ActionManager::applyRelaxedPlan(const Problem& problem, const ActionPlan& p
 }
 
 bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, RelaxedState& s) {
-	const RelaxedApplicabilityManager& appManager = Problem::getCurrentProblem()->getRelaxedApplicabilityManager();
-	const RelaxedEffectManager& effManager = Problem::getCurrentProblem()->getRelaxedEffectManager();
 	DomainMap projection = Projections::projectToActionVariables(s, action);
 
 	Fact::vctr causes;
-	if (appManager.checkPreconditionsHold(action, seed, projection, causes)) { // The action is applicable - we ignore the causes
+	if (action.getConstraintManager()->checkPreconditionApplicability(action, seed, projection, causes)) { // The action is applicable - we ignore the causes
 		Changeset changeset(seed, s);
-		effManager.computeChangeset(action, projection, changeset);
+		action.getConstraintManager()->computeChangeset(action, projection, changeset);
 		s.accumulate(changeset);
 		return true;
 	}

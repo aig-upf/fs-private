@@ -2,6 +2,7 @@
 #include <problem.hxx>
 #include <constraints/scoped_constraint.hxx>
 #include <actions.hxx>
+#include <relaxed_action_manager.hxx>
 
 namespace fs0 {
 	
@@ -10,15 +11,13 @@ const Problem* Problem::_instance = 0;
 Problem::Problem(const std::string& data_dir) :
 	_problemInfo(data_dir),
 	stateConstraints(),
-	goalConstraints(),
-	effManager()
+	goalConstraints()
 {}
 
 Problem::~Problem() {
 	for (const auto pointer:_actions) delete pointer;
 	for (const auto pointer:stateConstraints) delete pointer;
 	for (const auto pointer:goalConstraints) delete pointer;
-	delete appManager;
 } 
 	
 
@@ -33,7 +32,7 @@ void Problem::bootstrap() {
 	ctrManager = std::make_shared<PlanningConstraintManager>(goalConstraints, stateConstraints);
 	
 	// Creates the appropriate applicability manager depending on the type and arity of action precondition constraints.
-	appManager = RelaxedApplicabilityManager::createApplicabilityManager(_actions);
+	ActionManagerFactory::instantiateActionManager(_actions);
 }
 
 //! For every action, if any of its effects affects a bounded-domain variable, we place

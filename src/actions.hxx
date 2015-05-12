@@ -14,7 +14,7 @@
 
 namespace fs0 {
 
-class ConstraintManager;
+class BaseActionManager;
 
 class Action
 {
@@ -33,7 +33,8 @@ protected:
 	const VariableIdxVector _allRelevantVars;
 	
 	//! Optionally, each action might have an associated constraint manager that handles its precondition constraints.
-	ConstraintManager* constraintManager;
+	//! Ownership of the pointer belongs to the action itself.
+	BaseActionManager* _constraintManager;
 	
 public:
 	static const ActionIdx INVALID;
@@ -68,8 +69,8 @@ public:
 	
 	inline const ScopedEffect::vcptr getEffects() const { return _effects; }
 	
-	void constructConstraintManager();
-	ConstraintManager* getConstraintManager() const { return constraintManager; };
+	BaseActionManager* getConstraintManager() const { return _constraintManager; };
+	void setConstraintManager(BaseActionManager* constraintManager) { _constraintManager = constraintManager; };
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Action&  entity) { return entity.print(os); }

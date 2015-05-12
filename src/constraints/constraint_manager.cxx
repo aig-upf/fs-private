@@ -209,5 +209,8 @@ VariableIdxVector ConstraintManager::indexRelevantVariables(const ScopedConstrai
 	return VariableIdxVector(relevant.begin(), relevant.end());
 }
 
+
+
 } // namespaces
+
 

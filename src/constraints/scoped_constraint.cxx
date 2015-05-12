@@ -105,10 +105,12 @@ bool BinaryDomainBoundsConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const
 
 
 ScopedConstraint::cptr UnaryParametrizedScopedConstraint::compile(const ProblemInfo& problemInfo) const {
+	return nullptr;
 	return new CompiledUnaryConstraint(*this, problemInfo);
 }
 
 ScopedConstraint::cptr BinaryParametrizedScopedConstraint::compile(const ProblemInfo& problemInfo) const {
+	return nullptr;
 	return new CompiledBinaryConstraint(*this, problemInfo);
 }
 
