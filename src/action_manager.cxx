@@ -55,11 +55,11 @@ bool ActionManager::applyRelaxedPlan(const Problem& problem, const ActionPlan& p
 bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, RelaxedState& s) {
 	DomainMap actionProjection = Projections::projectToActionVariables(s, action);
 
-	Fact::vctr causes;
+	Atom::vctr causes;
 	if (action.getConstraintManager()->checkPreconditionApplicability(action, seed, actionProjection, causes)) { // The action is applicable - we ignore the causes
 		RPGData rpgData(s);
 		// We can safely 'fake' the action index since we do not care about causality data structures.
-		action.getConstraintManager()->processEffects(0, action, std::make_shared<Fact::vctr>(), seed, actionProjection, rpgData);
+		action.getConstraintManager()->processEffects(0, action, std::make_shared<Atom::vctr>(), seed, actionProjection, rpgData);
 		RPGData::accumulate(s, rpgData);
 		return true;
 	}

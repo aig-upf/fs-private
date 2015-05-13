@@ -34,7 +34,7 @@ void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory
 	
 	
 const State::cptr Loader::loadStateFromFile(const std::string& filename) {
-	Fact::vctr facts;
+	Atom::vctr facts;
 	std::string str;
 	std::ifstream in(filename);
 
@@ -47,7 +47,7 @@ const State::cptr Loader::loadStateFromFile(const std::string& filename) {
 	
 	// Parse the total number of facts
 	std::getline(in, str);
-	unsigned numFacts = std::stoi(str);
+	unsigned numAtoms = std::stoi(str);
 	
 	// Parse the initial facts themselves
 	std::getline(in, str);
@@ -56,11 +56,11 @@ const State::cptr Loader::loadStateFromFile(const std::string& filename) {
 	for (auto factStr:tok) {
 		std::vector<std::string> strs;
 		boost::split(strs, factStr, boost::is_any_of("="));
-		facts.push_back(Fact(std::stoi(strs[0]), std::stoi(strs[1])));
+		facts.push_back(Atom(std::stoi(strs[0]), std::stoi(strs[1])));
 	}
-// 		std::cout << numFacts << std::endl;
+// 		std::cout << numAtoms << std::endl;
 // 		for (auto f: facts) std::cout << f << std::endl;
-	return std::make_shared<State>(numFacts, facts);
+	return std::make_shared<State>(numAtoms, facts);
 }
 
 void Loader::loadGroundedActions(const std::string& filename, ActionFactoryType actionFactory, Problem& problem) {

@@ -4,12 +4,12 @@
 
 namespace fs0 {
 
-Fact::Fact(const VariableIdx variable, const ObjectIdx value) :
+Atom::Atom(const VariableIdx variable, const ObjectIdx value) :
 	_variable(variable),
 	_value(value)
 {}
 	
-std::ostream& Fact::print(std::ostream& os) const {
+std::ostream& Atom::print(std::ostream& os) const {
 	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
 	os << "[" << problemInfo.getVariableName(_variable) << getSign() << problemInfo.getObjectName(_variable, _value) << "]";
 	return os;

@@ -37,11 +37,11 @@ public:
 	//! TODO - We might want to perform type checking here against the predicate and function signatures.
 	//! TODO - We might also want to ensure here that all symbol extensions have been defined. This won't be expensive, 
 	//! as it will be done only when we create the initial state.
-	GenericState(unsigned numFacts, const Fact::vctr& facts) :
-		_values(numFacts)
+	GenericState(unsigned numAtoms, const Atom::vctr& facts) :
+		_values(numAtoms)
 	{
 		// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
-		// assert(numFacts == facts.size());
+		// assert(numAtoms == facts.size());
 		for (const auto& fact:facts) { // Insert all the elements of the vector
 			set(fact);
 		}
@@ -56,7 +56,7 @@ public:
 	
 	//! A constructor that receives a number of atoms and constructs a state that is equal to the received
 	//! state plus the new atoms. Note that we do not check that there are no contradictory atoms.
-	GenericState(const GenericState& state, const Fact::vctr& atoms) :
+	GenericState(const GenericState& state, const Atom::vctr& atoms) :
 		_values(state._values), _hash(state._hash) {
 		accumulate(atoms);
 	}
@@ -76,11 +76,11 @@ public:
 	
 	bool operator!=(const GenericState &rhs) const { return !(this->operator==(rhs));}
 	
-	void set(const Fact& atom) {
+	void set(const Atom& atom) {
 		_values.at(atom.getVariable()) = atom.getValue();
 	}
 	
-	bool contains(const Fact& atom) const {
+	bool contains(const Atom& atom) const {
 		return getValue(atom.getVariable()) == atom.getValue();
 	}
 	
@@ -90,7 +90,7 @@ public:
 	
 protected:
 	//! "Applies" the given atoms into the current state.
-	void accumulate(const Fact::vctr& atoms);
+	void accumulate(const Atom::vctr& atoms);
 	
 	void updateHash() { _hash = computeHash(); }
 	

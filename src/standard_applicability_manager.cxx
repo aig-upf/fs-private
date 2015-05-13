@@ -40,8 +40,8 @@ bool StandardApplicabilityManager::checkStateConstraintsHold(const State& s) con
 }
 
 //! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
-Fact::vctr StandardApplicabilityManager::computeEffects(const Action& action) const {
-	Fact::vctr atoms;
+Atom::vctr StandardApplicabilityManager::computeEffects(const Action& action) const {
+	Atom::vctr atoms;
 	for (const ScopedEffect::cptr effect:action.getEffects()) {
 		atoms.push_back(effect->apply(_state)); // TODO - Note that this won't work for conditional effects where an action might have no effect at all
 	}

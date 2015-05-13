@@ -73,7 +73,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 
 template <typename T>
 float RelaxedPlanHeuristic<T>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
-	Fact::vctr causes;
+	Atom::vctr causes;
 	if (_problem.getConstraintManager()->isGoal(seed, state, causes)) {
 		RPGraph rpg = RPGraph(seed, rpgData);
 		auto cost = rpg.computeRelaxedPlanCost(causes);

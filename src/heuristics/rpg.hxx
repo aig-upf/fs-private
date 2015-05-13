@@ -27,8 +27,8 @@ protected:
 	
 	std::vector<std::set<ActionIdx>> perLayerSupporters;
 	
-	std::set<Fact> processed;
-	std::queue<Fact> pending;
+	std::set<Atom> processed;
+	std::queue<Atom> pending;
 
 public:
 	
@@ -49,12 +49,12 @@ public:
 	 * 
 	 * @param causes The atoms that allowed the planning graph to reach a goal state.
 	 */
-	float computeRelaxedPlanCost(const Fact::vctr& causes) {
+	float computeRelaxedPlanCost(const Atom::vctr& causes) {
 		
 		enqueueAtoms(causes);
 		
 		while (!pending.empty()) {
-			const Fact& atom = pending.front();
+			const Atom& atom = pending.front();
 			processAtom(atom);
 			pending.pop();
 		}
@@ -82,8 +82,8 @@ public:
 	}
 	
 	//! Returns only those atoms that were not in the given seed state.
-	static Fact::vctrp pruneSeedSupporters(const Fact::vctr& causes, const State& seed) {
-		Fact::vctrp notInSeed = std::make_shared<Fact::vctr>();
+	static Atom::vctrp pruneSeedSupporters(const Atom::vctr& causes, const State& seed) {
+		Atom::vctrp notInSeed = std::make_shared<Atom::vctr>();
 		for(const auto& atom:causes) {
 			if (!seed.contains(atom)) {
 				notInSeed->push_back(atom);
@@ -94,12 +94,12 @@ public:
 	
 protected:
 	
-	inline void enqueueAtoms(const Fact::vctr& atoms) {
+	inline void enqueueAtoms(const Atom::vctr& atoms) {
 		for(auto& atom:atoms) pending.push(atom);
 	}
 
 	//! Process a single atom by seeking its supports left-to-right in the RPG and enqueuing them to be further processed
-	void processAtom(const Fact& atom) {
+	void processAtom(const Atom& atom) {
 		if (_seed.contains(atom)) return; // The atom was already on the seed state, thus has empty support.
 		if (processed.find(atom) != processed.end()) return; // The atom has already been justfied
 		

@@ -30,7 +30,7 @@ public:
 	bool checkStateConstraintsHold(const State& s) const;
 	
 	//! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
-	Fact::vctr computeEffects(const Action& action) const;
+	Atom::vctr computeEffects(const Action& action) const;
 	
 protected:
 	//! The state

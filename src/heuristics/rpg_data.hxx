@@ -21,11 +21,11 @@ namespace fs0 {
 class RPGData
 {
 public:
-	typedef std::tuple<unsigned, ActionIdx, Fact::vctrp> AtomSupport;
+	typedef std::tuple<unsigned, ActionIdx, Atom::vctrp> AtomSupport;
 	
 protected:
 	//! This keeps a reference to the novel atoms that have been inserted in the most recent layer of the RPG.
-	std::vector<const Fact*> novelAtoms;
+	std::vector<const Atom*> novelAtoms;
 	
 	//! The current number of layers.
 	unsigned currentLayerIdx;
@@ -36,7 +36,7 @@ protected:
 	 * - 'A' is the index of one of the actions that achieves the atom.
 	 * - 'V' is a vector with all the atoms that support the achievement of atom X=x through the application of action A.
 	 */
-	std::map<Fact, AtomSupport> _effects;
+	std::map<Atom, AtomSupport> _effects;
 	
 	//! We keep a pointer to the previous RPG layer to ensure that we only add novel atoms.
 	const RelaxedState& _referenceState;
@@ -65,7 +65,7 @@ public:
 	}
 	
 	//! Returns the support for the given atom
-	const AtomSupport& getAtomSupport(const Fact& atom) const {
+	const AtomSupport& getAtomSupport(const Atom& atom) const {
 		auto it = _effects.find(atom);
 		assert(it != _effects.end());
 		return it->second;
@@ -73,16 +73,16 @@ public:
 	
 	//! Accumulates all the atoms contained *in the last layer* of the given RPG into the given relaxed state.
 	static void accumulate(RelaxedGenericState& state, const RPGData& rpg) {
-		for (const Fact* atom:rpg.novelAtoms) {
+		for (const Atom* atom:rpg.novelAtoms) {
 			state.set(*atom);
 		}
 	}
 	
-	const std::vector<const Fact*>& getNovelAtoms() const { return novelAtoms; }
+	const std::vector<const Atom*>& getNovelAtoms() const { return novelAtoms; }
 
 
 	
-	virtual void add(const Fact& atom, ActionIdx action, Fact::vctrp causes) {
+	virtual void add(const Atom& atom, ActionIdx action, Atom::vctrp causes) {
 		if (_referenceState.contains(atom)) return; // Make sure that the atom is novel.
 		
 		auto lb = _effects.lower_bound(atom); // @see http://stackoverflow.com/a/101980
@@ -111,14 +111,14 @@ public:
 		os << "All RPG accumulated atoms: ";
 		for (const auto& x:_effects) {
 			os << x.first  << " (action #" << std::get<1>(x.second) << "), (layer #" << std::get<0>(x.second) << ") (support: ";
-			printFacts(std::get<2>(x.second), os);
+			printAtoms(std::get<2>(x.second), os);
 			os << "), ";
 		}
 		os << std::endl;
 		return os;
 	}
 	
-	void printFacts(const Fact::vctrp vector, std::ostream& os) const {
+	void printAtoms(const Atom::vctrp vector, std::ostream& os) const {
 		for (const auto& fact:*vector) {
 			os << fact << ", ";
 		}

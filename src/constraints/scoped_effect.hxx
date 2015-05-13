@@ -48,7 +48,7 @@ public:
 	};
 	
 	//! A small helper
-	inline virtual Fact apply(const State& s) const { return Fact(_affected, this->apply(Projections::project(s, _scope))); }
+	inline virtual Atom apply(const State& s) const { return Atom(_affected, this->apply(Projections::project(s, _scope))); }
 };
 
 //! We specialize this class for performance reasons, since it is so common.
@@ -67,7 +67,7 @@ public:
 	ObjectIdx apply() const = 0;
 	
 	//! A small helper
-	inline Fact apply(const State& s) const { return Fact(_affected, this->apply()); }
+	inline Atom apply(const State& s) const { return Atom(_affected, this->apply()); }
 };
 
 //! We specialize this class for performance reasons, since it is so common.
@@ -86,7 +86,7 @@ public:
 	ObjectIdx apply(ObjectIdx value) const = 0;
 	
 	//! A small helper
-	Fact apply(const State& s) const { return Fact(_affected, this->apply(s.getValue(_scope[0]))); }
+	Atom apply(const State& s) const { return Atom(_affected, this->apply(s.getValue(_scope[0]))); }
 };
 
 //! We specialize this class for performance reasons, since it is so common.
@@ -106,7 +106,7 @@ public:
 	ObjectIdx apply(ObjectIdx v1, ObjectIdx v2) const = 0;
 	
 	//! A small helper
-	Fact apply(const State& s) const { return Fact(_affected, this->apply(s.getValue(_scope[0]), s.getValue(_scope[1]))); }
+	Atom apply(const State& s) const { return Atom(_affected, this->apply(s.getValue(_scope[0]), s.getValue(_scope[1]))); }
 };
 
 } // namespaces

@@ -62,11 +62,11 @@ public:
 		return true;
 	}
 	
-	void set(const Fact& fact) {
+	void set(const Atom& fact) {
 		_domains.at(fact.getVariable())->insert(fact.getValue());
 	}
 	
-	bool contains(const Fact& fact) const {
+	bool contains(const Atom& fact) const {
 		const auto& possibleValues = getValues(fact.getVariable());
 		return possibleValues->find(fact.getValue()) != possibleValues->end();
 	}

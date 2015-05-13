@@ -10,8 +10,8 @@ namespace fs0 {
 	
 
 //! Applies the given changeset into the current state.
-void GenericState::accumulate(const Fact::vctr& atoms) {
-	for (const Fact& fact:atoms) { 
+void GenericState::accumulate(const Atom::vctr& atoms) {
+	for (const Atom& fact:atoms) { 
 		set(fact);
 	}
 	updateHash(); // Important to update the hash value after all the changes have been applied!

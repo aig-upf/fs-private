@@ -56,35 +56,35 @@ void BaseActionManager::processAction(unsigned actionIdx, const Action& action, 
 	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
 	
 	// This prunes the domains using the constraints represented by each procedure.
-	Fact::vctr causes;
+	Atom::vctr causes;
 	if (checkPreconditionApplicability(action, seed, actionProjection, causes)) { // If the action is applicable in the current RPG layer...
-		Fact::vctrp actionSupport = RPGraph::pruneSeedSupporters(causes, seed);
+		Atom::vctrp actionSupport = RPGraph::pruneSeedSupporters(causes, seed);
 		// We update the RPG data with all new reachable effects.
 		processEffects(actionIdx, action, actionSupport ,seed, actionProjection, rpgData);
 	}
 }
 
 
-void BaseActionManager::processEffects(unsigned actionIdx, const Action& action, Fact::vctrp actionSupport, const State& seed, const DomainMap& actionProjection, RPGData& rpgData) const {
+void BaseActionManager::processEffects(unsigned actionIdx, const Action& action, Atom::vctrp actionSupport, const State& seed, const DomainMap& actionProjection, RPGData& rpgData) const {
 	
 	for (const ScopedEffect::cptr effect:action.getEffects()) {
 		const VariableIdxVector& relevant = effect->getScope();
 		
 		if(relevant.size() == 0) {  // No need to pass any point.
-			rpgData.add(Fact(effect->getAffected(), effect->apply()), actionIdx, actionSupport);
+			rpgData.add(Atom(effect->getAffected(), effect->apply()), actionIdx, actionSupport);
 		}
 		
 		else if(relevant.size() == 1) {  // Micro-optimization for unary effects
 			for (ObjectIdx value:*(actionProjection.at(relevant[0]))) { // Add to the RPG for every allowed value of the relevant variable
 				// Add the relevant variable value to the atoms that made the action applicable. Note that this is slightly redundant since that same variable might have already a different value.
 				// TODO To be corrected
-				Fact::vctrp allCauses = std::make_shared<Fact::vctr>(*actionSupport);
+				Atom::vctrp allCauses = std::make_shared<Atom::vctr>(*actionSupport);
 				if (seed.getValue(relevant[0]) != value) {
-					allCauses->push_back(Fact(relevant[0], value));
+					allCauses->push_back(Atom(relevant[0], value));
 				}
 				
 				// TODO - Note that this won't work for conditional effects where an action might have no effect at all
-				rpgData.add(Fact(effect->getAffected(), effect->apply(value)), actionIdx, allCauses);
+				rpgData.add(Atom(effect->getAffected(), effect->apply(value)), actionIdx, allCauses);
 			}
 		}
 		
@@ -98,28 +98,28 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 				const ObjectIdxVector& values = *it;
 
 				// Add as extra causes all the relevant facts of the effect procedure.
-				Fact::vctrp allCauses = std::make_shared<Fact::vctr>(*actionSupport);
+				Atom::vctrp allCauses = std::make_shared<Atom::vctr>(*actionSupport);
 				for (unsigned i = 0; i < relevant.size(); ++i) {
 					if (seed.getValue(relevant[i]) != values[i]) {
-						allCauses->push_back(Fact(relevant[i], values[i]));
+						allCauses->push_back(Atom(relevant[i], values[i]));
 					}
 				}
 				// TODO - Again this won't work for conditional effects where an action might have no effect at all
-				rpgData.add(Fact(effect->getAffected(), effect->apply(values)), actionIdx, allCauses);
+				rpgData.add(Atom(effect->getAffected(), effect->apply(values)), actionIdx, allCauses);
 			}
 		}
 	}
 }
 
 
-bool UnaryActionManager::checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const {
+bool UnaryActionManager::checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const {
 	for (const ScopedConstraint::cptr constraint:action.getConstraints()) {
 		if (!isProcedureApplicable(constraint, domains, seed, causes)) return false;
 	}
 	return true;
 }
 
-bool UnaryActionManager::isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, Fact::vctr& causes) {
+bool UnaryActionManager::isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, Atom::vctr& causes) {
 	// TODO - Optimize taking into account that the constraint is unary
 	
 	const VariableIdxVector& relevant = constraint->getScope();
@@ -130,7 +130,7 @@ bool UnaryActionManager::isProcedureApplicable(const ScopedConstraint::cptr cons
 	// make an action applicable, we won't waste time tracing the causes of other values that might make it applicable as well.
 	const ObjectIdx value = seed.getValue(variable);
 	if (constraint->isSatisfied(value)) {
-		causes.push_back(Fact(variable, value));
+		causes.push_back(Atom(variable, value));
 		cause_found = true;
 	}
 	
@@ -140,7 +140,7 @@ bool UnaryActionManager::isProcedureApplicable(const ScopedConstraint::cptr cons
 	for (auto& value:values) {
 		if (constraint->isSatisfied(value)) {
 			if (!cause_found) { // We only want to insert one single (arbitrarily chosen) cause for the unary app constraint.
-				causes.push_back(Fact(variable, value));
+				causes.push_back(Atom(variable, value));
 				cause_found = true;
 			}
 			new_domain.insert(new_domain.end(), value); // We'll insert the element at the end, since we're iterating in order.
@@ -152,7 +152,7 @@ bool UnaryActionManager::isProcedureApplicable(const ScopedConstraint::cptr cons
 }
 
 
-bool GenericActionManager::checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const {
+bool GenericActionManager::checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const {
 	ScopedConstraint::Output o = manager.filter(domains);
 	
 	if(o == ScopedConstraint::Output::Failure || !ConstraintManager::checkConsistency(domains)) {
@@ -167,7 +167,7 @@ bool GenericActionManager::checkPreconditionApplicability(const Action& action, 
 		ObjectIdx seed_value = seed.getValue(variable);
 		if (domain.second->find(seed_value) == domain.second->end()) {  // If the original value makes the situation a goal, then we don't need to add anything for this variable.
 			ObjectIdx value = *(domain.second->cbegin());
-			causes.push_back(Fact(variable, value)); // Otherwise we simply select an arbitrary value.
+			causes.push_back(Atom(variable, value)); // Otherwise we simply select an arbitrary value.
 		}
 	}
 	return true;

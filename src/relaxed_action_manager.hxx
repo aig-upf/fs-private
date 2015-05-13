@@ -49,10 +49,10 @@ public:
 	void processAction(unsigned actionIdx, const Action& action, const State& seed, const RelaxedState& layer, RPGData& changeset) const;
 	
 	//!
-	virtual bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const = 0;
+	virtual bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const = 0;
 	
 	//!
-	void processEffects(unsigned actionIdx, const Action& action, Fact::vctrp actionSupport, const State& seed, const DomainMap& actionProjection, RPGData& rpgData) const;
+	void processEffects(unsigned actionIdx, const Action& action, Atom::vctrp actionSupport, const State& seed, const DomainMap& actionProjection, RPGData& rpgData) const;
 	
 protected:
 	bool _hasNaryEffects;
@@ -71,10 +71,10 @@ public:
 		: BaseActionManager(naryEffects) {}
 	~UnaryActionManager() {}
 	
-	bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
+	bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const;
 	
 protected:
-	static bool isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, Fact::vctr& causes);
+	static bool isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, Atom::vctr& causes);
 };
 
 
@@ -90,7 +90,7 @@ public:
 		:  BaseActionManager(naryEffects) ,manager(action.getConstraints()) {}
 	~GenericActionManager() {}
 	
-	bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const;
+	bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const;
 };
 
 } // namespaces
