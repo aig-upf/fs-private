@@ -8,7 +8,7 @@
 
 namespace fs0 {
 
-class Problem;
+class Problem; class RPGData;
 
 
 /**
@@ -42,23 +42,20 @@ public:
 class BaseActionManager {
 public:
 	
-	BaseActionManager(bool naryEffects) : _naryEffects(naryEffects) {};
+	BaseActionManager(bool hasNaryEffects) : _hasNaryEffects(hasNaryEffects) {};
 	virtual ~BaseActionManager() {};
 	
 	//! 
-	void processAction(unsigned actionIdx, const Action& action, const State& seed, const RelaxedState& layer, Changeset& changeset) const;
+	void processAction(unsigned actionIdx, const Action& action, const State& seed, const RelaxedState& layer, RPGData& changeset) const;
 	
 	//!
 	virtual bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Fact::vctr& causes) const = 0;
 	
 	//!
-	void computeChangeset(const Action& action, const DomainMap& domains, Changeset& changeset) const;
+	void processEffects(unsigned actionIdx, const Action& action, Fact::vctrp actionSupport, const State& seed, const DomainMap& actionProjection, RPGData& rpgData) const;
 	
 protected:
-	bool _naryEffects;
-	
-	void computeUnaryChangeset(const ScopedEffect::cptr effect, VariableIdx relevant, ObjectIdx value, Changeset& changeset) const;
-	void computeNAryChangeset(const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const;	
+	bool _hasNaryEffects;
 };
 
 

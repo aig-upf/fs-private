@@ -10,7 +10,6 @@
 #include <state.hxx>
 #include <actions.hxx>
 #include <fs0_types.hxx>
-#include <heuristics/changeset.hxx>
 #include <atoms.hxx>
 #include <problem.hxx>
 #include "external.hxx"

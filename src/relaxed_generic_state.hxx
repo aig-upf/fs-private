@@ -13,7 +13,7 @@
 
 namespace fs0 {
 
-class GenericState; class Problem; class Changeset;
+class GenericState; class Problem;
 
 class RelaxedGenericState
 {
@@ -85,9 +85,6 @@ public:
 		}
 		return total;
 	}
-	
-	//! Applies the given changeset into the current state.
-	void accumulate(const Changeset& changeset);
 	
 	friend std::ostream& operator<<(std::ostream &os, const RelaxedGenericState&  state) { return state.print(os); }
 	

@@ -5,7 +5,7 @@
 #include <relaxed_action_manager.hxx>
 #include <utils/cartesian_product.hxx>
 #include <constraints/constraint_manager.hxx>
-#include <heuristics/changeset.hxx>
+#include <heuristics/rpg_data.hxx>
 #include <heuristics/rpg.hxx>
 
 namespace fs0 {
@@ -50,70 +50,65 @@ bool ActionManagerFactory::checkActionHasNaryEffects(const Action::cptr action) 
 }
 
 	
-void BaseActionManager::processAction(unsigned actionIdx, const Action& action, const State& seed, const RelaxedState& layer, Changeset& changeset) const {
+void BaseActionManager::processAction(unsigned actionIdx, const Action& action, const State& seed, const RelaxedState& layer, RPGData& rpgData) const {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
-	DomainMap projection = Projections::projectToActionVariables(layer, action);
+	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
 	
 	// This prunes the domains using the constraints represented by each procedure.
 	Fact::vctr causes;
-	if (checkPreconditionApplicability(action, seed, projection, causes)) { // If the action is applicable in the current RPG layer...
-		// ...we accumulate the effects on the changeset with all new reachable effects.
-		changeset.setCurrentAction(actionIdx, RPGraph::pruneSeedSupporters(causes, seed));  // We record the applicability causes
-		computeChangeset(action, projection, changeset);
+	if (checkPreconditionApplicability(action, seed, actionProjection, causes)) { // If the action is applicable in the current RPG layer...
+		Fact::vctrp actionSupport = RPGraph::pruneSeedSupporters(causes, seed);
+		// We update the RPG data with all new reachable effects.
+		processEffects(actionIdx, action, actionSupport ,seed, actionProjection, rpgData);
 	}
 }
 
 
-void BaseActionManager::computeChangeset(const Action& action, const DomainMap& domains, Changeset& changeset) const {
+void BaseActionManager::processEffects(unsigned actionIdx, const Action& action, Fact::vctrp actionSupport, const State& seed, const DomainMap& actionProjection, RPGData& rpgData) const {
 	
 	for (const ScopedEffect::cptr effect:action.getEffects()) {
-		
 		const VariableIdxVector& relevant = effect->getScope();
 		
 		if(relevant.size() == 0) {  // No need to pass any point.
-			changeset.add(Fact(effect->getAffected(), effect->apply()), {});
+			rpgData.add(Fact(effect->getAffected(), effect->apply()), actionIdx, actionSupport);
 		}
-		else if(relevant.size() == 1) {  // micro-optimization for unary effects
-			VariableIdx rel = relevant[0];
-			for (ObjectIdx val:*(domains.at(rel))) { // Add to the changeset for every allowed value of the relevant variable
-				computeUnaryChangeset(effect, rel, val, changeset);
+		
+		else if(relevant.size() == 1) {  // Micro-optimization for unary effects
+			for (ObjectIdx value:*(actionProjection.at(relevant[0]))) { // Add to the RPG for every allowed value of the relevant variable
+				// Add the relevant variable value to the atoms that made the action applicable. Note that this is slightly redundant since that same variable might have already a different value.
+				// TODO To be corrected
+				Fact::vctrp allCauses = std::make_shared<Fact::vctr>(*actionSupport);
+				if (seed.getValue(relevant[0]) != value) {
+					allCauses->push_back(Fact(relevant[0], value));
+				}
+				
+				// TODO - Note that this won't work for conditional effects where an action might have no effect at all
+				rpgData.add(Fact(effect->getAffected(), effect->apply(value)), actionIdx, allCauses);
 			}
 		}
+		
+		
 		else { // The general, n-ary case. We iterate over the cartesian product of the allowed values for the relevant variables.
-			const DomainVector projection = Projections::project(domains, relevant);
-			CartesianProductIterator it(projection);
+			const DomainVector effectProjection = Projections::project(actionProjection, relevant);
+			CartesianProductIterator it(effectProjection);
 			
 			for (; !it.ended(); ++it) {
-				computeNAryChangeset(effect, relevant, *it, changeset);
+				
+				const ObjectIdxVector& values = *it;
+
+				// Add as extra causes all the relevant facts of the effect procedure.
+				Fact::vctrp allCauses = std::make_shared<Fact::vctr>(*actionSupport);
+				for (unsigned i = 0; i < relevant.size(); ++i) {
+					if (seed.getValue(relevant[i]) != values[i]) {
+						allCauses->push_back(Fact(relevant[i], values[i]));
+					}
+				}
+				// TODO - Again this won't work for conditional effects where an action might have no effect at all
+				rpgData.add(Fact(effect->getAffected(), effect->apply(values)), actionIdx, allCauses);
 			}
 		}
 	}
-}
-
-// Micro-optimization for unary effects
-void BaseActionManager::computeUnaryChangeset(const ScopedEffect::cptr effect, VariableIdx relevant, ObjectIdx value, Changeset& changeset) const {
-       
-       // TODO - Note that this won't work for conditional effects where an action might have no effect at all
-       VariableIdx affected = effect->getAffected();
-
-       // Add as extra causes all the relevant facts of the effect procedure.
-       changeset.add(Fact(affected, effect->apply(value)), {Fact(relevant, value)});	
-}
-
-
-void BaseActionManager::computeNAryChangeset(const ScopedEffect::cptr effect, const VariableIdxVector& relevant, const ObjectIdxVector& values, Changeset& changeset) const {
-	
-	
-	// TODO - Note that this won't work for conditional effects where an action might have no effect at all
-	VariableIdx affected = effect->getAffected();
-
-	// Add as extra causes all the relevant facts of the effect procedure.
-	Fact::vctr extraCauses;
-	for (unsigned i = 0; i < relevant.size(); ++i) {
-		extraCauses.push_back(Fact(relevant[i], values[i]));
-	}
-	changeset.add(Fact(affected, effect->apply(values)), extraCauses);
 }
 
 

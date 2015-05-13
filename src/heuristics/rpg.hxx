@@ -7,7 +7,7 @@
 
 #include <state.hxx>
 #include <problem.hxx>
-#include <heuristics/changeset.hxx>
+#include <heuristics/rpg_data.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
 #include <action_manager.hxx>
@@ -21,10 +21,11 @@ namespace fs0 {
 class RPGraph {
 protected:
 	const State& _seed;
-	const std::vector<Changeset::ptr>& _changesets;
 	
-	typedef std::vector<std::set<ActionIdx>> LayeredSupporters;
-	LayeredSupporters perLayerSupporters;
+	//! The book-keeping RPG data.
+	const RPGData& _data;
+	
+	std::vector<std::set<ActionIdx>> perLayerSupporters;
 	
 	std::set<Fact> processed;
 	std::queue<Fact> pending;
@@ -36,8 +37,8 @@ public:
  	 * @param changesets An (ordered) stack of changesets representing the planning graph
 	 *                  (top element represents last layer).
 	 */
-	RPGraph(const State& seed, const Changeset::vptr& changesets) :
-		_seed(seed), _changesets(changesets), perLayerSupporters(changesets.size()),
+	RPGraph(const State& seed, const RPGData& data) :
+		_seed(seed), _data(data), perLayerSupporters(data.getNumLayers()),
 		processed(), pending()
 	{}
 
@@ -102,21 +103,10 @@ protected:
 		if (_seed.contains(atom)) return; // The atom was already on the seed state, thus has empty support.
 		if (processed.find(atom) != processed.end()) return; // The atom has already been justfied
 		
-		// We simply look for the first changeset containing the atom and process its achievers.
-		for (unsigned i = 0; i < _changesets.size(); ++i) {
-			const Changeset::ptr changeset = _changesets[i];
-			const auto& achieverAndCauses = changeset->getAchieverAndCauses(atom);
-			ActionIdx achiever = std::get<0>(achieverAndCauses);
-			
-			if (achiever != Action::INVALID) { 
-				perLayerSupporters[i].insert(achiever);
-				enqueueAtoms(*(changeset->getCauses(achiever))); // push the action causes themselves
- 				enqueueAtoms(*(std::get<1>(achieverAndCauses))); // and push the specific extra causes that were relevant to turn the atom true.
-				processed.insert(atom);
-				return;
-			}
-		}
-		throw std::runtime_error("This point should never be reached"); // The achiever should have been found when we reach this point
+		const RPGData::AtomSupport& support = _data.getAtomSupport(atom);
+		perLayerSupporters[std::get<0>(support)].insert(std::get<1>(support));
+		enqueueAtoms(*(std::get<2>(support))); // Push the causes of the particular atom.
+		processed.insert(atom); // Tag the atom as processed.
 	}
 
 };
