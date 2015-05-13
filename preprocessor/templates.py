@@ -25,10 +25,10 @@ _base = dict(
     satisfied_unary_header='isSatisfied(ObjectIdx v1)',
     satisfied_binary_header='isSatisfied(ObjectIdx v1, ObjectIdx v2)',
 
-    apply_generic_header='apply(const ObjectIdxVector& values)',
-    apply_zeroary_header='apply()',
-    apply_unary_header='apply(ObjectIdx v1)',
-    apply_binary_header='apply(ObjectIdx v1, ObjectIdx v2)',
+    apply_generic_header='apply(const ObjectIdxVector& values) const { \n\t\tassert(applicable(values));',
+    apply_zeroary_header='apply() const { \n\t\tassert(applicable());',
+    apply_unary_header='apply(ObjectIdx v1) const { \n\t\tassert(applicable(v1));',
+    apply_binary_header='apply(ObjectIdx v1, ObjectIdx v2) const { \n\t\tassert(applicable(v1, v2));',
 )
 
 

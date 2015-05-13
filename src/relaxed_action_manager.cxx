@@ -44,8 +44,11 @@ bool ActionManagerFactory::checkActionHasNaryPreconditions(const Action::cptr ac
 bool ActionManagerFactory::checkActionHasNaryEffects(const Action::cptr action) {
 	bool result = false;
 	for (const ScopedEffect::cptr effect:action->getEffects()) {
+		if (effect->getArity() == 0 && !effect->applicable()) {
+			throw std::runtime_error("A 0-ary non-applicable effect was detected.");
+		}
 		if (effect->getArity() > 1) result = true;
-	}	
+	}
 	return result;
 }
 
@@ -71,11 +74,15 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 		const VariableIdxVector& relevant = effect->getScope();
 		
 		if(relevant.size() == 0) {  // No need to pass any point.
-			rpgData.add(Atom(effect->getAffected(), effect->apply()), actionIdx, actionSupport);
+			if (effect->applicable()) {
+				rpgData.add(effect->apply(), actionIdx, actionSupport);
+			}
 		}
 		
 		else if(relevant.size() == 1) {  // Micro-optimization for unary effects
 			for (ObjectIdx value:*(actionProjection.at(relevant[0]))) { // Add to the RPG for every allowed value of the relevant variable
+				if (!effect->applicable(value)) continue;
+				
 				// Add the relevant variable value to the atoms that made the action applicable. Note that this is slightly redundant since that same variable might have already a different value.
 				// TODO To be corrected
 				Atom::vctrp allCauses = std::make_shared<Atom::vctr>(*actionSupport);
@@ -83,8 +90,7 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 					allCauses->push_back(Atom(relevant[0], value));
 				}
 				
-				// TODO - Note that this won't work for conditional effects where an action might have no effect at all
-				rpgData.add(Atom(effect->getAffected(), effect->apply(value)), actionIdx, allCauses);
+				rpgData.add(effect->apply(value), actionIdx, allCauses);
 			}
 		}
 		
@@ -94,8 +100,8 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 			CartesianProductIterator it(effectProjection);
 			
 			for (; !it.ended(); ++it) {
-				
 				const ObjectIdxVector& values = *it;
+				if (!effect->applicable(values)) continue;
 
 				// Add as extra causes all the relevant facts of the effect procedure.
 				Atom::vctrp allCauses = std::make_shared<Atom::vctr>(*actionSupport);
@@ -104,8 +110,7 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 						allCauses->push_back(Atom(relevant[i], values[i]));
 					}
 				}
-				// TODO - Again this won't work for conditional effects where an action might have no effect at all
-				rpgData.add(Atom(effect->getAffected(), effect->apply(values)), actionIdx, allCauses);
+				rpgData.add(effect->apply(values), actionIdx, allCauses);
 			}
 		}
 	}

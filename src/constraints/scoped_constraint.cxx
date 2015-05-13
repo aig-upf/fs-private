@@ -88,9 +88,7 @@ UnaryDomainBoundsConstraint::UnaryDomainBoundsConstraint(const UnaryScopedEffect
 // The domain constraint is satisfied iff the application of the corresponding effect keeps the affected
 // value within the domain bounds.
 bool UnaryDomainBoundsConstraint::isSatisfied(ObjectIdx o) const {
-		VariableIdx affected = _effect->getAffected();
-		ObjectIdx value = _effect->apply(o);
-		return _problemInfo.checkValueIsValid(affected, value);
+		return _effect->applicable(o) && _problemInfo.checkValueIsValid(_effect->apply(o));
 }
 
 BinaryDomainBoundsConstraint::BinaryDomainBoundsConstraint(const BinaryScopedEffect* effect, const ProblemInfo& problemInfo) :
@@ -98,9 +96,7 @@ BinaryDomainBoundsConstraint::BinaryDomainBoundsConstraint(const BinaryScopedEff
 {}
 
 bool BinaryDomainBoundsConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
-		VariableIdx affected = _effect->getAffected();
-		ObjectIdx value = _effect->apply(o1, o2);
-		return _problemInfo.checkValueIsValid(affected, value);
+		return _effect->applicable(o1, o2) &&  _problemInfo.checkValueIsValid(_effect->apply(o1, o2));
 }
 
 

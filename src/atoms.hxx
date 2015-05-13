@@ -12,8 +12,7 @@ namespace fs0 {
 /**
  *  An atom is a tuple X=x, where X is a state variable and x a value from its domain.
  */
-class Atom // : public Formula
-{
+class Atom {
 public:
 	typedef std::vector<Atom> vctr;
 	typedef std::shared_ptr<Atom::vctr> vctrp;
@@ -24,8 +23,7 @@ public:
 	inline ObjectIdx getValue() const { return _value; }
 	
 	std::ostream& print(std::ostream& os) const;
-	friend std::ostream& operator<<(std::ostream &os, const Atom&  eff) { return eff.print(os); }
-	virtual const std::string getSign() const { return "="; }
+	friend std::ostream& operator<<(std::ostream &os, const Atom& atom) { return atom.print(os); }
 
 protected:
 	//! The state variable

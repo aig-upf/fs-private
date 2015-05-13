@@ -52,7 +52,7 @@ void Problem::addDomainBoundConstraints() {
 			// We process the creation of the bound-constraint differently  for each arity
 			unsigned arity = effect->getScope().size();
 			if (arity == 0) {
-				if (!_problemInfo.checkValueIsValid(affected, effect->apply()))
+				if (!_problemInfo.checkValueIsValid(effect->apply()))
 					throw std::runtime_error("A 0-ary effect produces out-of-bounds variable values");
 			} else if (arity == 1) {
 				const auto* casted_effect = dynamic_cast<const UnaryScopedEffect *>(effect);
