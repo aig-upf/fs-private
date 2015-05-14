@@ -10,6 +10,12 @@ import ccode
 import taskgen
 import util
 
+if os.environ.get('PYTHONHASHSEED', None) is not '1':
+    print('\n' + "*"*80)
+    print("- WARNING -\nInvoke this script through the 'generate.sh' bash script\nor set manually the "
+          "'PYTHONHASHSEED' environment variable\nto obtain more reliable results")
+    print('\n' + "*"*80 + '\n')
+
 
 sys.path.append(os.path.abspath('..'))
 
