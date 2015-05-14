@@ -52,131 +52,119 @@ bool ActionManagerFactory::checkActionHasNaryEffects(const Action::cptr action) 
 	return result;
 }
 
-	
-void BaseActionManager::processAction(unsigned actionIdx, const Action& action, const State& seed, const RelaxedState& layer, RPGData& rpgData) const {
+
+void BaseActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpgData) const {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
 	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
 	
-	// This prunes the domains using the constraints represented by each procedure.
-	Atom::vctr causes;
-	if (checkPreconditionApplicability(action, seed, actionProjection, causes)) { // If the action is applicable in the current RPG layer...
-		Atom::vctrp actionSupport = RPGraph::pruneSeedSupporters(causes, seed);
-		// We update the RPG data with all new reachable effects.
-		processEffects(actionIdx, action, actionSupport ,seed, actionProjection, rpgData);
+	ScopedConstraint::Output o = manager.filter(actionProjection); // Check with local consistency
+	if ( o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(actionProjection)) {
+		processEffects(actionIdx, action, actionProjection, rpgData);
 	}
 }
 
 
-void BaseActionManager::processEffects(unsigned actionIdx, const Action& action, Atom::vctrp actionSupport, const State& seed, const DomainMap& actionProjection, RPGData& rpgData) const {
+
+
+
+void BaseActionManager::processEffects(unsigned actionIdx, const Action& action, const DomainMap& actionProjection, RPGData& rpgData) const {
+	const VariableIdxVector& actionScope = action.getScope();
 	
 	for (const ScopedEffect::cptr effect:action.getEffects()) {
-		const VariableIdxVector& relevant = effect->getScope();
+		const VariableIdxVector& effectScope = effect->getScope();
 		
-		if(relevant.size() == 0) {  // No need to pass any point.
-			if (effect->applicable()) {
-				rpgData.add(effect->apply(), actionIdx, actionSupport);
+		
+		/***** 0-ary Effects *****/
+		if(effectScope.size() == 0) {  // No need to pass any point.
+			assert(effect->applicable()); // The effect is assumed to be applicable - non-applicable 0-ary effects make no sense and are detected before the search.
+			
+			Atom atom = effect->apply();
+			auto hint = rpgData.getInsertionHint(atom);
+			
+			if (hint.first) {
+				Atom::vctrp support = std::make_shared<Atom::vctr>();
+				completeAtomSupport(actionScope, actionProjection, effectScope, support);
+				rpgData.add(atom, actionIdx, support, hint.second);
 			}
 		}
 		
-		else if(relevant.size() == 1) {  // Micro-optimization for unary effects
-			for (ObjectIdx value:*(actionProjection.at(relevant[0]))) { // Add to the RPG for every allowed value of the relevant variable
+		/***** Unary Effects *****/
+		else if(effectScope.size() == 1) {  // Micro-optimization for unary effects
+			for (ObjectIdx value:*(actionProjection.at(effectScope[0]))) { // Add to the RPG for every allowed value of the relevant variable
 				if (!effect->applicable(value)) continue;
+				Atom atom = effect->apply(value);
+				auto hint = rpgData.getInsertionHint(atom);
 				
-				// Add the relevant variable value to the atoms that made the action applicable. Note that this is slightly redundant since that same variable might have already a different value.
-				// TODO To be corrected
-				Atom::vctrp allCauses = std::make_shared<Atom::vctr>(*actionSupport);
-				if (seed.getValue(relevant[0]) != value) {
-					allCauses->push_back(Atom(relevant[0], value));
+				if (hint.first) {
+					Atom::vctrp support = std::make_shared<Atom::vctr>();
+					support->push_back(Atom(effectScope[0], value));// Just insert the only value
+					completeAtomSupport(actionScope, actionProjection, effectScope, support);
+					rpgData.add(atom, actionIdx, support, hint.second);
 				}
-				
-				rpgData.add(effect->apply(value), actionIdx, allCauses);
 			}
 		}
 		
-		
+		/***** Higher-arity Effects *****/
 		else { // The general, n-ary case. We iterate over the cartesian product of the allowed values for the relevant variables.
-			const DomainVector effectProjection = Projections::project(actionProjection, relevant);
+			const DomainVector effectProjection = Projections::project(actionProjection, effectScope);
 			CartesianProductIterator it(effectProjection);
 			
 			for (; !it.ended(); ++it) {
 				const ObjectIdxVector& values = *it;
-				if (!effect->applicable(values)) continue;
-
-				// Add as extra causes all the relevant facts of the effect procedure.
-				Atom::vctrp allCauses = std::make_shared<Atom::vctr>(*actionSupport);
-				for (unsigned i = 0; i < relevant.size(); ++i) {
-					if (seed.getValue(relevant[i]) != values[i]) {
-						allCauses->push_back(Atom(relevant[i], values[i]));
-					}
-				}
-				rpgData.add(effect->apply(values), actionIdx, allCauses);
+				if (!effect->applicable(values)) continue; // Conditional effect check
+			
+				Atom::vctrp support = std::make_shared<Atom::vctr>();
+				if (!isCartesianProductElementApplicable(actionScope, effectScope, actionProjection, values, support)) continue;
+				
+				rpgData.add(effect->apply(values), actionIdx, support);
 			}
 		}
 	}
 }
 
-
-bool UnaryActionManager::checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const {
-	for (const ScopedConstraint::cptr constraint:action.getConstraints()) {
-		if (!isProcedureApplicable(constraint, domains, seed, causes)) return false;
-	}
-	return true;
-}
-
-bool UnaryActionManager::isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, Atom::vctr& causes) {
-	// TODO - Optimize taking into account that the constraint is unary
-	
-	const VariableIdxVector& relevant = constraint->getScope();
-	VariableIdx variable = relevant[0];
-	bool cause_found = false;
-	
-	// Check first if the original value is applicable. This is slightly inefficient, but ensures that if the original values
-	// make an action applicable, we won't waste time tracing the causes of other values that might make it applicable as well.
-	const ObjectIdx value = seed.getValue(variable);
-	if (constraint->isSatisfied(value)) {
-		causes.push_back(Atom(variable, value));
-		cause_found = true;
-	}
-	
-	Domain& values = *(domains.at(variable));
-	Domain new_domain;
-	
-	for (auto& value:values) {
-		if (constraint->isSatisfied(value)) {
-			if (!cause_found) { // We only want to insert one single (arbitrarily chosen) cause for the unary app constraint.
-				causes.push_back(Atom(variable, value));
-				cause_found = true;
-			}
-			new_domain.insert(new_domain.end(), value); // We'll insert the element at the end, since we're iterating in order.
+void BaseActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
+	boost::container::flat_set<VariableIdx> processed(effectScope.begin(), effectScope.end());
+	for (VariableIdx variable:actionScope) {
+		if (processed.find(variable) == processed.end()) {
+			ObjectIdx value = *(actionProjection.at(variable)->cbegin());
+			support->push_back(Atom(variable, value));
 		}
 	}
-	
-	values = new_domain; // Update the values with those that satisfy the unary constraint.
-	return cause_found;
 }
 
 
-bool GenericActionManager::checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const {
+bool GenericActionManager::isCartesianProductElementApplicable(const VariableIdxVector& actionScope, const VariableIdxVector& effectScope, const DomainMap& actionProjection, const ObjectIdxVector& element, Atom::vctrp support) const {
+	
+	// We need to check that this concrete instantiation makes the action applicable - before we only checked for the local consistency of individual values
+	DomainMap domains(actionProjection); // Clone the projection - this performs a certain amount of unnecessary work
+	
+	// Prune the domains of the variables relevant to the effect into a singleton domain.
+	for (unsigned i = 0; i < effectScope.size(); ++i) {
+		const VariableIdx& variable = effectScope[i];
+		const ObjectIdx& value = element[i];
+		Domain& d = *(domains[variable]);
+		d.clear();
+		d.insert(value);
+		support->push_back(Atom(variable, value)); // Zip the variables with their values
+	}
+	
+	manager.filter(domains); // Re-apply the filtering but with the domains of the variables relevant to the particular effect turned into singletons
 	ScopedConstraint::Output o = manager.filter(domains);
+	if (o == ScopedConstraint::Output::Failure) return false;
 	
-	if(o == ScopedConstraint::Output::Failure || !ConstraintManager::checkConsistency(domains)) {
-		return false;
-	}
-	
-	// The CSP is _not_ inconsistent. To build the cause of applicability of the action, we pick arbitrary values among the remaining consistent values.
-	// We favor the seed value, if it is among them.
-	for (const auto& domain:domains) {
-		VariableIdx variable = domain.first;
-		
-		ObjectIdx seed_value = seed.getValue(variable);
-		if (domain.second->find(seed_value) == domain.second->end()) {  // If the original value makes the situation a goal, then we don't need to add anything for this variable.
-			ObjectIdx value = *(domain.second->cbegin());
-			causes.push_back(Atom(variable, value)); // Otherwise we simply select an arbitrary value.
-		}
-	}
+	completeAtomSupport(actionScope, domains, effectScope, support);
 	return true;
 }
+
+
+bool BaseActionManager::checkPreconditionApplicability(const DomainMap& domains) const {
+	ScopedConstraint::Output o = manager.filter(domains);
+	return o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(domains);
+}
+
+
+
 
 } // namespaces
 

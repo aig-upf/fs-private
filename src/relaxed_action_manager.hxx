@@ -42,20 +42,29 @@ public:
 class BaseActionManager {
 public:
 	
-	BaseActionManager(bool hasNaryEffects) : _hasNaryEffects(hasNaryEffects) {};
+	BaseActionManager(const Action& action, bool hasNaryEffects) : manager(action.getConstraints()), _hasNaryEffects(hasNaryEffects) {};
 	virtual ~BaseActionManager() {};
 	
 	//! 
-	void processAction(unsigned actionIdx, const Action& action, const State& seed, const RelaxedState& layer, RPGData& changeset) const;
+	void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset) const;
 	
 	//!
-	virtual bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const = 0;
+	virtual bool checkPreconditionApplicability(const DomainMap& domains) const;
 	
 	//!
-	void processEffects(unsigned actionIdx, const Action& action, Atom::vctrp actionSupport, const State& seed, const DomainMap& actionProjection, RPGData& rpgData) const;
+	void processEffects(unsigned actionIdx, const Action& action, const DomainMap& actionProjection, RPGData& rpgData) const;
+	
+	//! By default, any element of the Cartesian product of 
+	virtual bool isCartesianProductElementApplicable(const VariableIdxVector& actionScope, const VariableIdxVector& effectScope, const DomainMap& actionProjection, const ObjectIdxVector& element, Atom::vctrp support) const = 0;
 	
 protected:
+	//! 
+	const ConstraintManager manager;
+	
+	//!
 	bool _hasNaryEffects;
+	
+	void completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const;
 };
 
 
@@ -68,29 +77,26 @@ class UnaryActionManager : public BaseActionManager
 public:
 	//! Constructs a manager handling the given set of constraints
 	UnaryActionManager(const Action& action, bool naryEffects)
-		: BaseActionManager(naryEffects) {}
+		:  BaseActionManager(action, naryEffects) {}
 	~UnaryActionManager() {}
 	
-	bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const;
-	
-protected:
-	static bool isProcedureApplicable(const ScopedConstraint::cptr constraint, const DomainMap& domains, const State& seed, Atom::vctr& causes);
+	//! Any element of the Cartesian product is applicable when the constraints are all unary.
+	bool isCartesianProductElementApplicable(const VariableIdxVector& actionScope, const VariableIdxVector& effectScope, const DomainMap& actionProjection, const ObjectIdxVector& element, Atom::vctrp support) const {
+		return true;
+	}
 };
 
 
 class GenericActionManager : public BaseActionManager
 {
-protected:
-	//! 
-	const ConstraintManager manager;
-	
 public:
 	//! Constructs a manager handling the given set of constraints
 	GenericActionManager(const Action& action, bool naryEffects)
-		:  BaseActionManager(naryEffects) ,manager(action.getConstraints()) {}
+		:  BaseActionManager(action, naryEffects) {}
 	~GenericActionManager() {}
 	
-	bool checkPreconditionApplicability(const Action& action, const State& seed, const DomainMap& domains, Atom::vctr& causes) const;
+	//! For actions with higher-arity applicability constraints, we need to thoroughly check for applicability of every element of the Cartesian product.
+	virtual bool isCartesianProductElementApplicable(const VariableIdxVector& actionScope, const VariableIdxVector& effectScope, const DomainMap& actionProjection, const ObjectIdxVector& element, Atom::vctrp support) const;
 };
 
 } // namespaces

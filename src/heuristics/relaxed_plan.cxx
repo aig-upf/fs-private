@@ -36,13 +36,13 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		// Apply all the actions to the RPG layer
 		for (unsigned idx = 0; idx < actions.size(); ++idx) {
 			const Action& action = *actions[idx];
-			action.getConstraintManager()->processAction(idx, action, seed, relaxed, rpgData);
+			action.getConstraintManager()->processAction(idx, action, relaxed, rpgData);
 		}
 		
 		
 		#ifdef FS0_DEBUG
 		std::cout << std::endl << "The last layer of the RPG contains " << rpgData.getNovelAtoms().size() << " novel atoms." << std::endl;
-		std::cout << "RPGData: " << rpgData << std::endl;
+		std::cout << rpgData << std::endl;
 		#endif
 		
 		// If there is no novel fact in the rpg, we reached a fixpoint, thus there is no solution.

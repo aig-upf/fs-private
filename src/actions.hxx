@@ -29,6 +29,9 @@ protected:
 	
 	const ScopedEffect::vcptr _effects;
 	
+	//! The indexes of _only_ those variables relevant to the applicability procedures of the action.
+	const VariableIdxVector _scope;
+	
 	//! The indexes of _all_ the state variables relevant to at least one of the effect or applicability procedures of the action.
 	const VariableIdxVector _allRelevantVars;
 	
@@ -53,6 +56,7 @@ public:
 	
 	inline unsigned getNumEffects() const { return _effects.size(); }
 	
+	const VariableIdxVector& getScope() const { return _scope; }
 	const VariableIdxVector& getAllRelevantVariables() const { return _allRelevantVars; }
 	
 	//! Returns the name of the action. To be implemented in each concrete action.
@@ -77,7 +81,8 @@ public:
 	virtual std::ostream& print(std::ostream& os) const;
 
 protected:
-	//!
+	//! Helpers to initialize the action data structures
+	VariableIdxVector extractScope();
 	VariableIdxVector extractRelevantVariables();
 };
 

@@ -53,7 +53,10 @@ ScopedConstraint::Output ConstraintManager::filter(const DomainMap& domains) con
 	if (_constraints.empty()) return ScopedConstraint::Output::Unpruned; // Safety check
 	
 	ScopedConstraint::Output result = unaryFiltering(domains);
-	if (result == ScopedConstraint::Output::Failure) return result;
+	if (result == ScopedConstraint::Output::Failure ||
+		unary_constraints.size() == _constraints.size()) { // If all constraints are unary, there's no need to go on.
+		return result;
+	}
 
 	ArcSet worklist(AC3Worklist);  // Copy the state constraint worklist
 	// printArcSet(worklist);
