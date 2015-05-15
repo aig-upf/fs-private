@@ -12,9 +12,13 @@ import util
 
 if os.environ.get('PYTHONHASHSEED', None) is not '1':
     print('\n' + "*"*80)
-    print("- WARNING -\nInvoke this script through the 'generate.sh' bash script\nor set manually the "
-          "'PYTHONHASHSEED' environment variable\nto obtain more reliable results")
-    print('\n' + "*"*80 + '\n')
+    print("- WARNING -\n Automatically setting PYTHONHASHSEED to 1 to obtain more reliable results")
+    print("*"*80 + '\n')
+
+    # We simply set the environment variable and re-call ourselves.
+    from subprocess import call
+    os.environ["PYTHONHASHSEED"] = '1'
+    call(["python3", "-OO"] + sys.argv)
 
 
 sys.path.append(os.path.abspath('..'))
