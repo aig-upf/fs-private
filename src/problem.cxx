@@ -3,6 +3,7 @@
 #include <constraints/scoped_constraint.hxx>
 #include <actions.hxx>
 #include <relaxed_action_manager.hxx>
+#include <sstream>
 
 namespace fs0 {
 	
@@ -52,8 +53,15 @@ void Problem::addDomainBoundConstraints() {
 			// We process the creation of the bound-constraint differently  for each arity
 			unsigned arity = effect->getScope().size();
 			if (arity == 0) {
-				if (!_problemInfo.checkValueIsValid(effect->apply()))
-					throw std::runtime_error("A 0-ary effect produces out-of-bounds variable values");
+				if (!_problemInfo.checkValueIsValid(effect->apply())) {
+					std::stringstream buffer;
+					buffer << "Error: 0-ary effect '";
+					buffer << effect->getName();
+					buffer << "' of action ";
+					buffer << action->getName();
+					buffer << " produces out-of-bounds variable values" << std::endl; 
+					throw std::runtime_error(buffer.str());
+				}
 			} else if (arity == 1) {
 				const auto* casted_effect = dynamic_cast<const UnaryScopedEffect *>(effect);
 				assert(casted_effect);
@@ -63,7 +71,10 @@ void Problem::addDomainBoundConstraints() {
 				assert(casted_effect);
 				action->addConstraint(new BinaryDomainBoundsConstraint(casted_effect, _problemInfo));
 			} else {
-				throw UnimplementedFeatureException("Action effect procedures of arity > 2 are currently unsupported");
+				std::stringstream buffer;
+				buffer << "Error: Action " << action->getName();
+				buffer << " has effects with arity > 2, which are currently unsupported" << std::endl;
+				throw UnimplementedFeatureException(buffer.str());
 			}
 
 			++num_bconstraints;

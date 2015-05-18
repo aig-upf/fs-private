@@ -6,4 +6,8 @@ public:
 	Atom ${apply_header}
 		${code}
 	}
+
+	std::string getName() const { 
+		${getname_code}
+	}
 };

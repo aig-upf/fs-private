@@ -51,6 +51,9 @@ public:
 	
 	//! A small helper
 	inline virtual Atom apply(const State& s) const { return this->apply(Projections::project(s, _scope)); }
+
+	virtual std::string getName() const = 0;
+
 };
 
 //! We specialize this class for performance reasons, since it is so common.

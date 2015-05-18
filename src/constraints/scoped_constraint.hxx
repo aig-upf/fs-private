@@ -82,6 +82,8 @@ public:
 	//! Thus, the compile method must be subclassed and either return NULL, if the constraint shouldn't be compiled,
 	//! or an actual compiled constraint, if it should.
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const = 0;
+
+	virtual std::string getName() const {return std::string("<unnamed constraint>");}
 };
 
 class ParametrizedScopedConstraint : public ScopedConstraint
