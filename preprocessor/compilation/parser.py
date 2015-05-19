@@ -14,7 +14,7 @@ from compilation.exceptions import ParseException
 from compilation.helper import is_int
 
 
-BASE_SYMBOLS = ("=", "!=", "+", "-", ">", "<", ">=", "<=")
+BASE_SYMBOLS = ("=", "!=", "*", "+", "-", ">", "<", ">=", "<=")
 CUSTOM_CONSTRAINTS = ("sum_constraint", "alldiff_constraint")
 
 

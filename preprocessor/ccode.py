@@ -2,7 +2,7 @@ from pddl import Atom, NegatedAtom
 
 import base
 import util
-from templates import tplManager
+from templates import tplManager, _base
 
 
 def gen_param_unwrapping(parameters):
@@ -196,7 +196,8 @@ def generate_constraint_code(name, blocks, tpl):
                 parent=component.get_baseclass(),
                 satisfied_header=satisfied_header,
                 apply_header=apply_header,
-                code='\n\t\t'.join(component.code)
+                code='\n\t\t'.join(component.code),
+		getname_code=_base['getname_code'].format( component.name )
             ))
             binding_variable = 'binding'
 

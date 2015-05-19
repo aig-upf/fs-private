@@ -51,7 +51,9 @@ ScopedConstraint::Output LEQConstraint::filter(unsigned variable) {
 	assert(variable == 0 || variable == 1);
 	
 	Domain& x_dom = *(projection[0]);
+	assert( x_dom.size() > 0 );
 	Domain& y_dom = *(projection[1]);
+	assert( y_dom.size() > 0 );
 	ObjectIdx x_min = *(x_dom.cbegin()), x_max = *(x_dom.crbegin());
 	ObjectIdx y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
 	
@@ -61,7 +63,10 @@ ScopedConstraint::Output LEQConstraint::filter(unsigned variable) {
 		
 		// Otherwise there must be at least a value, but not all, in the new domain.
 		auto it = x_dom.lower_bound(y_max);
-		assert(it != x_dom.begin() && it != x_dom.end()); // it points to the first x in x_dom such that x >= y_max
+		// assert(it != x_dom.begin() && it != x_dom.end()); // it points to the first x in x_dom such that x >= y_max
+		// MRJ: The above is too strong, consider the case that the domain of y consists exactly of one value, and
+		// it happens that it is the same as x_min (the first value in x_dom).
+		assert( it != x_dom.end() );
 		if (*it == y_max) ++it;
 		x_dom = Domain(x_dom.begin(), it); // Update the domain by using the assignment operator.
 		return Output::Pruned;
@@ -72,6 +77,7 @@ ScopedConstraint::Output LEQConstraint::filter(unsigned variable) {
 		// Otherwise the domain has necessarily to be pruned, but is not inconsistent
 		auto it = y_dom.lower_bound(x_min);
 		assert(it != y_dom.begin() && it != y_dom.end());
+		
 		y_dom = Domain(it, y_dom.end());  // Update the domain by using the assignment operator.
 		return Output::Pruned;
 	}

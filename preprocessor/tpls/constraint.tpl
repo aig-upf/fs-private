@@ -6,4 +6,8 @@ public:
     bool ${satisfied_header} const {
 		${code}
 	}
+	
+	std::string getName() const {
+		${getname_code}
+	}
 };

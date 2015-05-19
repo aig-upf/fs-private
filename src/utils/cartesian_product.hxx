@@ -37,6 +37,14 @@ public:
 			_element.push_back(*it);
 		}
 	}
+
+	CartesianProductIterator( const CartesianProductIterator& o ) 
+	:	_values ( o._values ),
+		_iterators( o._iterators ),
+		_element( o._element ),
+		_ended( o._ended )
+	{
+	}
 	
 	//! Advances the iterator at position 'idx' or, if it has reached the end, resets its and tries with the one at the left, recursively.
 	void advanceIterator(unsigned idx) {
