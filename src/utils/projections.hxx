@@ -18,7 +18,7 @@ public:
 	static ObjectIdxVector project(const State& s, const VariableIdxVector& scope);
 
 	//! Helper function to copy-project a relaxed state to all of the variables relevant to a given applicable entity.
-	static DomainMap projectToActionVariables(RelaxedState& state, const Action& action);
+	static DomainMap projectToActionVariables(const RelaxedState& state, const Action& action);
 	
 	/**
 	 * Returns the projection of the domains of a relaxed state into a subset of variables.

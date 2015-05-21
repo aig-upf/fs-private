@@ -3,11 +3,10 @@
 #include <iosfwd>
 
 #include <action_manager.hxx>
-#include <heuristics/changeset.hxx>
-#include <relaxed_applicability_manager.hxx>
+#include <heuristics/rpg_data.hxx>
 #include <utils/projections.hxx>
-#include <relaxed_effect_manager.hxx>
 #include <problem.hxx>
+#include <relaxed_action_manager.hxx>
 
 namespace fs0 {
 
@@ -34,7 +33,7 @@ State::ptr ActionManager::applyAction(const Problem& problem, const Action::cptr
 		return State::ptr();
 	}
 	
-	return std::make_shared<State>(*s0, manager.computeEffects(*action)); // Copy everything into the new state and apply the changeset
+	return std::make_shared<State>(*s0, manager.computeEffects(*action)); // Copy everything into the new state and apply the changes
 }
 
 
@@ -54,15 +53,14 @@ bool ActionManager::applyRelaxedPlan(const Problem& problem, const ActionPlan& p
 }
 
 bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, RelaxedState& s) {
-	const RelaxedApplicabilityManager& appManager = Problem::getCurrentProblem()->getRelaxedApplicabilityManager();
-	const RelaxedEffectManager& effManager = Problem::getCurrentProblem()->getRelaxedEffectManager();
-	DomainMap projection = Projections::projectToActionVariables(s, action);
+	DomainMap actionProjection = Projections::projectToActionVariables(s, action);
 
-	Fact::vctr causes;
-	if (appManager.checkPreconditionsHold(action, seed, projection, causes)) { // The action is applicable - we ignore the causes
-		Changeset changeset(seed, s);
-		effManager.computeChangeset(action, projection, changeset);
-		s.accumulate(changeset);
+	Atom::vctr causes;
+	if (action.getConstraintManager()->checkPreconditionApplicability(actionProjection)) { // The action is applicable - we ignore the causes
+		RPGData rpgData(s);
+		// We can safely 'fake' the action index since we do not care about causality data structures.
+		action.getConstraintManager()->processEffects(0, action, actionProjection, rpgData);
+		RPGData::accumulate(s, rpgData);
 		return true;
 	}
 	return false;

@@ -2,6 +2,8 @@
 #include <problem.hxx>
 #include <constraints/scoped_constraint.hxx>
 #include <actions.hxx>
+#include <relaxed_action_manager.hxx>
+#include <sstream>
 
 namespace fs0 {
 	
@@ -10,15 +12,13 @@ const Problem* Problem::_instance = 0;
 Problem::Problem(const std::string& data_dir) :
 	_problemInfo(data_dir),
 	stateConstraints(),
-	goalConstraints(),
-	effManager()
+	goalConstraints()
 {}
 
 Problem::~Problem() {
 	for (const auto pointer:_actions) delete pointer;
 	for (const auto pointer:stateConstraints) delete pointer;
 	for (const auto pointer:goalConstraints) delete pointer;
-	delete appManager;
 } 
 	
 
@@ -33,9 +33,12 @@ void Problem::bootstrap() {
 	ctrManager = std::make_shared<PlanningConstraintManager>(goalConstraints, stateConstraints);
 	
 	// Creates the appropriate applicability manager depending on the type and arity of action precondition constraints.
-	appManager = RelaxedApplicabilityManager::createApplicabilityManager(_actions);
+	ActionManagerFactory::instantiateActionManager(_actions);
 }
 
+//! For every action, if any of its effects affects a bounded-domain variable, we place
+//! an "automatic" "bounds constraint" upon the variables which are relevant to the effect,
+//! so that they won't generate an out-of-bounds value.
 void Problem::addDomainBoundConstraints() {
 	unsigned num_bconstraints = 0;
 	
@@ -45,26 +48,40 @@ void Problem::addDomainBoundConstraints() {
 		
 		for (const ScopedEffect::cptr effect:action->getEffects()) {
 			VariableIdx affected = effect->getAffected();
-			const VariableIdxVector& relevant = effect->getScope();
-			
-			if (relevant.size() > 1) throw std::runtime_error("Action effect procedures of arity > 1 are currently unsupported");
-			
-			if (_problemInfo.hasVariableBoundedDomain(affected)) {
-				if (relevant.size() == 0) {
-					ObjectIdx value = effect->apply();
-					if (!_problemInfo.checkValueIsValid(affected, value)) throw std::runtime_error("A 0-ary effect produces out-of-bounds variable values");
-				} else { // unary effect
-					const UnaryScopedEffect* eff = dynamic_cast<const UnaryScopedEffect *>(effect);
-					assert(eff);
-					ScopedConstraint::cptr constraint = new DomainBoundsConstraint(eff, _problemInfo);
-					action->addConstraint(constraint);
-					++num_bconstraints;
+			if (!_problemInfo.hasVariableBoundedDomain(affected)) continue;
+
+			// We process the creation of the bound-constraint differently  for each arity
+			unsigned arity = effect->getScope().size();
+			if (arity == 0) {
+				if (!_problemInfo.checkValueIsValid(effect->apply())) {
+					std::stringstream buffer;
+					buffer << "Error: 0-ary effect '";
+					buffer << effect->getName();
+					buffer << "' of action ";
+					buffer << action->getName();
+					buffer << " produces out-of-bounds variable values" << std::endl; 
+					throw std::runtime_error(buffer.str());
 				}
+			} else if (arity == 1) {
+				const auto* casted_effect = dynamic_cast<const UnaryScopedEffect *>(effect);
+				assert(casted_effect);
+				action->addConstraint(new UnaryDomainBoundsConstraint(casted_effect, _problemInfo));
+			} else if (arity == 2) {
+				const auto* casted_effect = dynamic_cast<const BinaryScopedEffect *>(effect);
+				assert(casted_effect);
+				action->addConstraint(new BinaryDomainBoundsConstraint(casted_effect, _problemInfo));
+			} else {
+				std::stringstream buffer;
+				buffer << "Error: Action " << action->getName();
+				buffer << " has effects with arity > 2, which are currently unsupported" << std::endl;
+				throw UnimplementedFeatureException(buffer.str());
 			}
+
+			++num_bconstraints;
 		}
 	}
 	
-	std::cout << "Added a total of " << num_bconstraints << " unary constraints for bounded domains to the " <<  _actions.size() << " problem actions." << std::endl;
+	std::cout << "Added a total of " << num_bconstraints << " bound-constraints to the " <<  _actions.size() << " problem actions." << std::endl;
 }
 
 void Problem::compileConstraints() {

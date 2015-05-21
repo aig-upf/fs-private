@@ -178,7 +178,7 @@ void ProblemInfo::loadTypeIndex(const std::string& filename) {
 	}
 }
 
-bool ProblemInfo::checkValueIsValid(const Fact& atom) const {
+bool ProblemInfo::checkValueIsValid(const Atom& atom) const {
 	return checkValueIsValid(atom.getVariable(), atom.getValue());
 }
 

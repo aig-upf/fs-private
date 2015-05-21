@@ -3,7 +3,11 @@ class ${classname} : public ${parent} {
 public:
 	${classname}(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters) : ${parent}(scope, image, parameters) {}
 
-	ObjectIdx ${apply_header} const {
+	Atom ${apply_header}
 		${code}
+	}
+
+	std::string getName() const { 
+		${getname_code}
 	}
 };

@@ -14,7 +14,7 @@
 
 namespace fs0 {
 
-class ConstraintManager;
+class BaseActionManager;
 
 class Action
 {
@@ -29,11 +29,15 @@ protected:
 	
 	const ScopedEffect::vcptr _effects;
 	
+	//! The indexes of _only_ those variables relevant to the applicability procedures of the action.
+	const VariableIdxVector _scope;
+	
 	//! The indexes of _all_ the state variables relevant to at least one of the effect or applicability procedures of the action.
 	const VariableIdxVector _allRelevantVars;
 	
 	//! Optionally, each action might have an associated constraint manager that handles its precondition constraints.
-	ConstraintManager* constraintManager;
+	//! Ownership of the pointer belongs to the action itself.
+	BaseActionManager* _constraintManager;
 	
 public:
 	static const ActionIdx INVALID;
@@ -52,6 +56,7 @@ public:
 	
 	inline unsigned getNumEffects() const { return _effects.size(); }
 	
+	const VariableIdxVector& getScope() const { return _scope; }
 	const VariableIdxVector& getAllRelevantVariables() const { return _allRelevantVars; }
 	
 	//! Returns the name of the action. To be implemented in each concrete action.
@@ -68,15 +73,16 @@ public:
 	
 	inline const ScopedEffect::vcptr getEffects() const { return _effects; }
 	
-	void constructConstraintManager();
-	ConstraintManager* getConstraintManager() const { return constraintManager; };
+	BaseActionManager* getConstraintManager() const { return _constraintManager; };
+	void setConstraintManager(BaseActionManager* constraintManager) { _constraintManager = constraintManager; };
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Action&  entity) { return entity.print(os); }
 	virtual std::ostream& print(std::ostream& os) const;
 
 protected:
-	//!
+	//! Helpers to initialize the action data structures
+	VariableIdxVector extractScope();
 	VariableIdxVector extractRelevantVariables();
 };
 

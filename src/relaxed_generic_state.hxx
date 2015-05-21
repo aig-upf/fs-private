@@ -13,7 +13,7 @@
 
 namespace fs0 {
 
-class GenericState; class Problem; class Changeset;
+class GenericState; class Problem;
 
 class RelaxedGenericState
 {
@@ -62,11 +62,11 @@ public:
 		return true;
 	}
 	
-	void set(const Fact& fact) {
+	void set(const Atom& fact) {
 		_domains.at(fact.getVariable())->insert(fact.getValue());
 	}
 	
-	bool contains(const Fact& fact) const {
+	bool contains(const Atom& fact) const {
 		const auto& possibleValues = getValues(fact.getVariable());
 		return possibleValues->find(fact.getValue()) != possibleValues->end();
 	}
@@ -85,9 +85,6 @@ public:
 		}
 		return total;
 	}
-	
-	//! Applies the given changeset into the current state.
-	void accumulate(const Changeset& changeset);
 	
 	friend std::ostream& operator<<(std::ostream &os, const RelaxedGenericState&  state) { return state.print(os); }
 	

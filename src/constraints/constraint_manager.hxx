@@ -21,7 +21,7 @@ protected:
 // 	typedef std::set<Arc> ArcSet;
 	
 	
-	//! The set of constraints that we manage
+	//! The set of constraints that we manage.
 	//! This will be a reference to either the vector of constraints stored in the Problem object
 	//! or to the vector of constraints stored in some action.
 	const ScopedConstraint::vcptr& _constraints;
@@ -39,6 +39,7 @@ protected:
 public:
 	//! Constructs a manager handling the given set of constraints
 	ConstraintManager(const ScopedConstraint::vcptr& constraints);
+	~ConstraintManager() {}
 	
 	//! Precompute some of the structures that we'll need later on.
 	void initialize();
@@ -81,8 +82,6 @@ protected:
 	//! Apply whatever custom filtering algorithm the constraint has
 	ScopedConstraint::Output globalFiltering() const;	
 };
-
-
 
 } // namespaces
 

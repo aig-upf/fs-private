@@ -3,7 +3,6 @@
 #include <cassert>
 
 #include <relaxed_generic_state.hxx>
-#include <heuristics/changeset.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
 
@@ -19,13 +18,6 @@ bool RelaxedGenericState::checkPointerOwnershipIsCorrect() const {
 		if (domain.use_count() != 1) return false;
 	}
 	return true;
-}
-
-//! Applies the given changeset into the current state.
-void RelaxedGenericState::accumulate(const Changeset& changeset) {
-	for (const auto& elem:changeset.getEffects()) {
-		set(std::get<0>(elem));
-	}
 }
 
 std::ostream& RelaxedGenericState::print(std::ostream& os) const {

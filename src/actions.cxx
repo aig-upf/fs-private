@@ -4,7 +4,7 @@
 #include <problem_info.hxx>
 #include <limits>
 #include <utils/utils.hxx>
-#include <constraints/constraint_manager.hxx>
+#include <relaxed_action_manager.hxx>
 
 
 namespace fs0 {
@@ -12,21 +12,26 @@ namespace fs0 {
 const ActionIdx Action::INVALID = std::numeric_limits<unsigned int>::max();
 
 Action::Action(const ObjectIdxVector& binding, const ScopedConstraint::vcptr& constraints, const ScopedEffect::vcptr& effects) :
-	_binding(binding), _constraints(constraints), _effects(effects), _allRelevantVars(extractRelevantVariables()), constraintManager(nullptr)
+	_binding(binding), _constraints(constraints), _effects(effects), _scope(extractScope()) ,_allRelevantVars(extractRelevantVariables()), _constraintManager(nullptr)
 {}
 
 Action::~Action() {
 	for (const ScopedConstraint* pointer:_constraints) delete pointer;
 	for (const ScopedEffect* pointer:_effects) delete pointer;
-	if (constraintManager) delete constraintManager;
+	if (_constraintManager) delete _constraintManager;
 }
 
-VariableIdxVector Action::extractRelevantVariables() {
+VariableIdxVector Action::extractScope() {
 	boost::container::flat_set<unsigned> unique;
 	for (ScopedConstraint::cptr constraint:_constraints) {
 		const VariableIdxVector& scope = constraint->getScope();
 		unique.insert(scope.begin(), scope.end());
 	}
+	return VariableIdxVector(unique.cbegin(), unique.cend());
+}
+
+VariableIdxVector Action::extractRelevantVariables() {
+	boost::container::flat_set<unsigned> unique(_scope.begin(), _scope.end());
 	for (ScopedEffect::cptr effect:_effects) {
 		const VariableIdxVector& scope = effect->getScope();
 		unique.insert(scope.begin(), scope.end());
@@ -44,8 +49,5 @@ std::ostream& Action::print(std::ostream& os) const {
 	return os;
 }
 
-void Action::constructConstraintManager() {
-	constraintManager = new ConstraintManager(_constraints);
-}
 
 } // namespaces

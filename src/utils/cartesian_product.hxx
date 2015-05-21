@@ -5,71 +5,84 @@
 #include <ostream>
 #include <cassert>
 
+#include <fs0_types.hxx>
+
 namespace fs0 {
 
-	class CartesianProductIterator {
-	public:
-		typedef std::vector<std::vector<int>> ValueSet;
-		typedef std::vector<int> Point;
-		
-	protected:
-		const ValueSet& _values;
-		std::vector<unsigned> _currentIndexes;
-		bool _ended;
-	
-	public:
-		CartesianProductIterator(const ValueSet& values) :
-			_values(values),
-			_currentIndexes(values.size()),  // All indexes get implicitly initialized to 0
-			_ended(false)
-		{
-			checkInitialndexValidity();
-		}
-		
-		//! Check that all the sets of the cartesian product have at least one element - otherwise the product will be empty
-		void checkInitialndexValidity() {
-			_ended = _ended || _currentIndexes.size() == 0;
-			for (unsigned i = 0; i < _currentIndexes.size() && !_ended; ++i) {
-				_ended = _ended || _values[i].size() == 0;
-			}
-		}
-		
-		void incrementIndex(unsigned idx) {
-			assert(idx < _currentIndexes.size());
-			if (_currentIndexes[idx] < _values[idx].size() - 1) {
-				_currentIndexes[idx]++;
-			} else {
-				if (idx == 0) { // Base case: We're done with all the elements in the cartesian product.
-					_ended = true;
-					return;
-				}
-				
-				// otherwise: reset the current idx to zero and try incrementing the previous one.
-				_currentIndexes[idx] = 0;
-				incrementIndex(idx-1);
-			}
-		}
+class CartesianProductIterator {
+protected:
+	const DomainVector& _values;
+	std::vector<Domain::const_iterator> _iterators;
+	std::vector<ObjectIdx> _element; // The current element
+	bool _ended;
 
-	public:
-		Point operator*() const {
-			// Build a point with the current indexes.
-			Point p(_currentIndexes.size());
-			for (unsigned i = 0; i < _currentIndexes.size(); ++i) {
-				p[i] = _values[i][_currentIndexes[i]];
+public:
+	CartesianProductIterator(const DomainVector& values) :
+		_values(values),
+		_iterators(),
+		_element(),
+		_ended(values.size() == 0)
+	{
+		// Initialize the iterator vector and check that all the sets of the cartesian product have at least one element
+		// (otherwise the product will be empty)
+		_iterators.reserve(_values.size());
+		_element.reserve(_values.size());
+		for (const DomainPtr& domain:values) {
+			if (domain->size() == 0) {
+				_ended = true;
+				break;
 			}
-			return p;
+			auto it = domain->begin();
+			_iterators.push_back(it);
+			_element.push_back(*it);
 		}
-		
-		const CartesianProductIterator& operator++() {
-			incrementIndex(_currentIndexes.size()-1);
-			return *this;
-		}
-		const CartesianProductIterator operator++(int) {CartesianProductIterator tmp(*this); operator++(); return tmp;}
-		
-		bool ended() const { return _ended; }
+	}
 
-	};
+	CartesianProductIterator( const CartesianProductIterator& o ) 
+	:	_values ( o._values ),
+		_iterators( o._iterators ),
+		_element( o._element ),
+		_ended( o._ended )
+	{
+	}
 	
+	//! Advances the iterator at position 'idx' or, if it has reached the end, resets its and tries with the one at the left, recursively.
+	void advanceIterator(unsigned idx) {
+		assert(idx < _iterators.size());
+		++_iterators[idx];
+		if (_iterators[idx] != _values[idx]->end()) {
+			updateElement(idx);
+		} else {
+			if (idx == 0) { // Base case: We're done with all the elements in the cartesian product.
+				_ended = true;
+				return;
+			}
+			
+			// otherwise: reset the current idx to zero and try incrementing the previous one.
+			_iterators[idx] = _values[idx]->begin();
+			updateElement(idx);
+			advanceIterator(idx-1);
+		}
+	}
+	
+	inline void updateElement(unsigned idx) {
+		assert(_iterators[idx] != _values[idx]->end());
+		_element[idx] = *(_iterators[idx]);
+	}
+
+public:
+	const std::vector<ObjectIdx>& operator*() const { return _element; }
+	
+	const CartesianProductIterator& operator++() {
+		advanceIterator(_iterators.size()-1);
+		return *this;
+	}
+	const CartesianProductIterator operator++(int) {CartesianProductIterator tmp(*this); operator++(); return tmp;}
+	
+	bool ended() const { return _ended; }
+
+};
+
 
 
 } // namespaces

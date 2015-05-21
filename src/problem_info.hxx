@@ -11,7 +11,7 @@
 
 namespace fs0 {
 
-class Fact;
+class Atom;
 
 /**
   * A ProblemInfo instance holds all the relevant information about the problem, including the names and types of state variables, problem objects, etc.
@@ -94,7 +94,9 @@ public:
 	
 	unsigned getNumObjects() const;
 	
-	bool checkValueIsValid(const Fact& atom) const;
+	//! Both methods check that the value of a given variable is within the bounds of the variable,
+	//! in case it is a variable of a bounded type.
+	bool checkValueIsValid(const Atom& atom) const;
 	bool checkValueIsValid(VariableIdx variable, ObjectIdx value) const;
 	
 	bool hasVariableBoundedDomain(VariableIdx variable) const { return isTypeBounded[getVariableType(variable)];  }

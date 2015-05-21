@@ -12,8 +12,6 @@
 #include <constraints/problem_manager.hxx>
 #include "constraints/scoped_constraint.hxx"
 #include <actions.hxx>
-#include <relaxed_applicability_manager.hxx>
-#include <relaxed_effect_manager.hxx>
 #include <constraints/compiled.hxx>
 
 namespace fs0 {
@@ -60,10 +58,6 @@ public:
 	
 	PlanningConstraintManager::cptr getConstraintManager() const { return ctrManager; }
 	
-	const RelaxedApplicabilityManager& getRelaxedApplicabilityManager() const { assert(appManager); return *appManager; }
-	const RelaxedEffectManager& getRelaxedEffectManager() const { return effManager; }
-	
-	
 	void addDomainBoundConstraints();
 	
 	void compileConstraints();
@@ -81,9 +75,6 @@ protected:
 	//! Vectors of pointers to the different problem constraints. This class owns the pointers.
 	ScopedConstraint::vcptr stateConstraints;
 	ScopedConstraint::vcptr goalConstraints;
-	
-	RelaxedApplicabilityManager const * appManager;
-	const RelaxedEffectManager effManager;
 	
 	static const Problem* _instance;
 

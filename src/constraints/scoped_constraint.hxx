@@ -7,7 +7,7 @@
 
 namespace fs0 {
 
-class ProblemInfo; class UnaryScopedEffect;
+class ProblemInfo; class UnaryScopedEffect; class BinaryScopedEffect;
 	
 class ScopedConstraint
 {
@@ -82,6 +82,8 @@ public:
 	//! Thus, the compile method must be subclassed and either return NULL, if the constraint shouldn't be compiled,
 	//! or an actual compiled constraint, if it should.
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const = 0;
+
+	virtual std::string getName() const {return std::string("<unnamed constraint>");}
 };
 
 class ParametrizedScopedConstraint : public ScopedConstraint
@@ -150,19 +152,46 @@ public:
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const;
 };
 
-class DomainBoundsConstraint : public UnaryParametrizedScopedConstraint {
+
+/**
+ * A UnaryDomainBoundsConstraint applies to a relevant variable X and checks that 
+ * the application of a certain action effect upon it produces a value for another variable Y
+ * which does not violate the allowed bounds for Y.
+ * 
+ * As an example, if X is of type int[0..10] and we have an action effect X := f(Y), we will want to 
+ * place a UnaryDomainBoundsConstraint upon Y which checks that 0 <= f(Y) <= 10.
+ */
+class UnaryDomainBoundsConstraint : public UnaryParametrizedScopedConstraint {
 protected:
 	const ProblemInfo& _problemInfo;
 	
 	const UnaryScopedEffect* _effect;
 	
 public:
-	//! 
-	DomainBoundsConstraint(const UnaryScopedEffect* effect, const ProblemInfo& problemInfo);
+	UnaryDomainBoundsConstraint(const UnaryScopedEffect* effect, const ProblemInfo& problemInfo);
 	
-	virtual ~DomainBoundsConstraint() {};
+	virtual ~UnaryDomainBoundsConstraint() {};
 	
 	bool isSatisfied(ObjectIdx o) const;
 };
 
+/**
+ * A BinaryScopedEffect is like a UnaryDomainBoundsConstraint but works for arity-2 effects.
+ * 
+ * An example would be an effect X := X - Y, where we will want to place a binary constraint
+ * that makes sure that X-Y remains within the bounds of the variable X.
+ */
+class BinaryDomainBoundsConstraint : public BinaryParametrizedScopedConstraint {
+protected:
+	const ProblemInfo& _problemInfo;
+	
+	const BinaryScopedEffect* _effect;
+	
+public:
+	BinaryDomainBoundsConstraint(const BinaryScopedEffect* effect, const ProblemInfo& problemInfo);
+	
+	virtual ~BinaryDomainBoundsConstraint() {};
+	
+	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const;
+};
 } // namespaces

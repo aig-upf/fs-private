@@ -7,7 +7,7 @@
 
 #include <state.hxx>
 #include <problem.hxx>
-#include <heuristics/changeset.hxx>
+#include <heuristics/rpg_data.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
 #include <action_manager.hxx>
@@ -21,13 +21,14 @@ namespace fs0 {
 class RPGraph {
 protected:
 	const State& _seed;
-	const std::vector<Changeset::ptr>& _changesets;
 	
-	typedef std::vector<std::set<ActionIdx>> LayeredSupporters;
-	LayeredSupporters perLayerSupporters;
+	//! The book-keeping RPG data.
+	const RPGData& _data;
 	
-	std::set<Fact> processed;
-	std::queue<Fact> pending;
+	std::vector<std::set<ActionIdx>> perLayerSupporters;
+	
+	std::set<Atom> processed;
+	std::queue<Atom> pending;
 
 public:
 	
@@ -36,8 +37,8 @@ public:
  	 * @param changesets An (ordered) stack of changesets representing the planning graph
 	 *                  (top element represents last layer).
 	 */
-	RPGraph(const State& seed, const Changeset::vptr& changesets) :
-		_seed(seed), _changesets(changesets), perLayerSupporters(changesets.size()),
+	RPGraph(const State& seed, const RPGData& data) :
+		_seed(seed), _data(data), perLayerSupporters(data.getNumLayers()),
 		processed(), pending()
 	{}
 
@@ -48,12 +49,12 @@ public:
 	 * 
 	 * @param causes The atoms that allowed the planning graph to reach a goal state.
 	 */
-	float computeRelaxedPlanCost(const Fact::vctr& causes) {
+	float computeRelaxedPlanCost(const Atom::vctr& causes) {
 		
 		enqueueAtoms(causes);
 		
 		while (!pending.empty()) {
-			const Fact& atom = pending.front();
+			const Atom& atom = pending.front();
 			processAtom(atom);
 			pending.pop();
 		}
@@ -81,8 +82,8 @@ public:
 	}
 	
 	//! Returns only those atoms that were not in the given seed state.
-	static Fact::vctrp pruneSeedSupporters(const Fact::vctr& causes, const State& seed) {
-		Fact::vctrp notInSeed = std::make_shared<Fact::vctr>();
+	static Atom::vctrp pruneSeedSupporters(const Atom::vctr& causes, const State& seed) {
+		Atom::vctrp notInSeed = std::make_shared<Atom::vctr>();
 		for(const auto& atom:causes) {
 			if (!seed.contains(atom)) {
 				notInSeed->push_back(atom);
@@ -93,30 +94,19 @@ public:
 	
 protected:
 	
-	inline void enqueueAtoms(const Fact::vctr& atoms) {
+	inline void enqueueAtoms(const Atom::vctr& atoms) {
 		for(auto& atom:atoms) pending.push(atom);
 	}
 
 	//! Process a single atom by seeking its supports left-to-right in the RPG and enqueuing them to be further processed
-	void processAtom(const Fact& atom) {
+	void processAtom(const Atom& atom) {
 		if (_seed.contains(atom)) return; // The atom was already on the seed state, thus has empty support.
 		if (processed.find(atom) != processed.end()) return; // The atom has already been justfied
 		
-		// We simply look for the first changeset containing the atom and process its achievers.
-		for (unsigned i = 0; i < _changesets.size(); ++i) {
-			const Changeset::ptr changeset = _changesets[i];
-			const auto& achieverAndCauses = changeset->getAchieverAndCauses(atom);
-			ActionIdx achiever = std::get<0>(achieverAndCauses);
-			
-			if (achiever != Action::INVALID) { 
-				perLayerSupporters[i].insert(achiever);
-				enqueueAtoms(*(changeset->getCauses(achiever))); // push the action causes themselves
- 				enqueueAtoms(*(std::get<1>(achieverAndCauses))); // and push the specific extra causes that were relevant to turn the atom true.
-				processed.insert(atom);
-				return;
-			}
-		}
-		throw std::runtime_error("This point should never be reached"); // The achiever should have been found when we reach this point
+		const RPGData::AtomSupport& support = _data.getAtomSupport(atom);
+		perLayerSupporters[std::get<0>(support)].insert(std::get<1>(support));
+		enqueueAtoms(*(std::get<2>(support))); // Push the causes of the particular atom.
+		processed.insert(atom); // Tag the atom as processed.
 	}
 
 };
