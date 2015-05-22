@@ -4,7 +4,6 @@
 #include <vector>
 #include <algorithm>
 
-#include <aptk/heuristic.hxx>
 #include <state.hxx>
 #include <problem.hxx>
 #include <heuristics/rpg_data.hxx>
@@ -15,8 +14,10 @@ namespace fs0 {
 class RPGraph;
 
 template < typename SearchModel >
-class RelaxedPlanHeuristic : public aptk::Heuristic<State> {
+class RelaxedPlanHeuristic {
 public:
+	typedef typename SearchModel::ActionType		Action;	
+	typedef std::vector< typename Action::IdType >		PrefOpsVec;
 
 	RelaxedPlanHeuristic( const SearchModel& problem );
 
@@ -31,10 +32,12 @@ public:
 	virtual float computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData);
 	
 	//! Proxy to circumvent the unusual virtual method signature
+	// @TODO: MRJ: Remove this method, it is now deprecated
 	virtual void eval(const State& s, float& h_val) { h_val = evaluate(s); }
 	
 	//! So far just act as a proxy, we do not compute the preferred operations yet.
-	virtual void eval( const State& s, float& h_val,  std::vector<aptk::Action_Idx>& pref_ops ) { eval(s, h_val); }
+	// @TODO: MRJ: Remove this method, it is not deprecated
+	virtual void eval( const State& s, float& h_val,  PrefOpsVec& pref_ops ) { eval(s, h_val); }
 	
 protected:
 	const Problem& _problem;

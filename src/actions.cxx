@@ -10,6 +10,7 @@
 namespace fs0 {
 
 const ActionIdx Action::INVALID = std::numeric_limits<unsigned int>::max();
+const ActionIdx Action::invalid_action_id = Action::INVALID;
 
 Action::Action(const ObjectIdxVector& binding, const ScopedConstraint::vcptr& constraints, const ScopedEffect::vcptr& effects) :
 	_binding(binding), _constraints(constraints), _effects(effects), _scope(extractScope()) ,_allRelevantVars(extractRelevantVariables()), _constraintManager(nullptr)

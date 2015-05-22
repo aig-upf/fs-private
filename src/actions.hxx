@@ -15,6 +15,7 @@
 namespace fs0 {
 
 class BaseActionManager;
+class SimpleApplicableActionSet;
 
 class Action
 {
@@ -40,7 +41,13 @@ protected:
 	BaseActionManager* _constraintManager;
 	
 public:
+
+	//! Trait required by aptk::DetStateModel
+	typedef	ActionIdx			IdType;
+	typedef SimpleApplicableActionSet	ApplicableSet;
+
 	static const ActionIdx INVALID;
+	static const ActionIdx invalid_action_id;
 	
 	// typedef std::shared_ptr<const Action> cptr;
 	typedef Action* ptr;

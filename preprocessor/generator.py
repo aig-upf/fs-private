@@ -42,6 +42,7 @@ def parse_arguments():
     parser.add_argument('--instance', required=True, help="The problem instance filename (heuristics are used to determine domain filename).")
     parser.add_argument('--domain', required=False, help="The problem domain filename.",default=None )
     parser.add_argument('--translator', required=False, help="The directory containing the problem translation code.")
+    parser.add_argument('--planner', required=False, help="The directory containing the planner sources." )
     parser.add_argument('--output_base', default="../generated",
                         help="The base for the output directory where the compiled planner will be left. "
                              "Additional subdirectories will be created with the name of the domain and the instance")
@@ -186,7 +187,7 @@ def translate_pddl(instance, args):
     return inst_name, translation_dir
 
 
-def compile_translation(translation_dir, debug=False, predstate=False):
+def compile_translation(translation_dir, planner, debug=False, predstate=False):
     """
     Copies the relevant files from the BFS directory to the newly-created translation directory,
      and then calls scons to compile the problem there.
@@ -194,9 +195,12 @@ def compile_translation(translation_dir, debug=False, predstate=False):
     debug_flag = "debug={0}".format(1 if debug else 0)
     predstate_flag = "predstate=1" if predstate else ''
 
-    bfs_dir = os.path.abspath('../planners/gbfs')
-    shutil.copy(bfs_dir + '/main.cxx', translation_dir)
-    shutil.copy(bfs_dir + '/SConstruct', translation_dir + '/SConstruct')
+    planner_dir = os.path.abspath('../planners/gbfs')
+    if planner is not None :
+        planner_dir = os.path.abspath( planner )
+
+    shutil.copy(planner_dir + '/main.cxx', translation_dir)
+    shutil.copy(planner_dir + '/SConstruct', translation_dir + '/SConstruct')
 
     command = "scons {} {}".format(debug_flag, predstate_flag)
 
@@ -211,7 +215,7 @@ def translate_and_compile(instance, translation_dir, args):
     gen = Generator(instance, args, translation_dir)
     translation_dir = gen.translate(args.instance_dir)
     move_files_around(args.instance_dir, args.instance, args.domain, translation_dir)
-    compile_translation(translation_dir, args.debug, gen.task.domain.is_predicative())
+    compile_translation(translation_dir, args.planner, args.debug, gen.task.domain.is_predicative())
     return gen.get_normalized_task_name(), translation_dir
 
 

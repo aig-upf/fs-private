@@ -9,7 +9,7 @@ void NullHeuristic<ProblemT>::eval( const State& s, float& h_val ) {
 }
 
 template <typename ProblemT>
-void NullHeuristic<ProblemT>::eval( const State& s, float& h_val,  std::vector<aptk::Action_Idx>& pref_ops ) {
+void NullHeuristic<ProblemT>::eval( const State& s, float& h_val,  NullHeuristic<ProblemT>::PrefOpsVec& pref_ops ) {
 	h_val = 0.0f;
 }
 

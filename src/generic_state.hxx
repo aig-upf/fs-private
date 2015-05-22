@@ -69,6 +69,21 @@ public:
 		_hash = rhs._hash;
 		return *this;
 	}
+
+	//! Move constructor
+	GenericState( GenericState&& state ) {
+		// MRJ: I love this sh*t
+		_values = std::move(state._values);
+		_hash = state._hash;
+	}
+
+	//! Assignment operator by move
+	GenericState&	operator=( GenericState&& state ) {
+		_values = std::move( state._values );
+		_hash = state._hash;
+		return *this;
+	}
+
 	
 	bool operator==(const GenericState &rhs) const {
 		return _hash == rhs._hash && _values == rhs._values; // Check the hash first for performance.

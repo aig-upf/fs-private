@@ -11,7 +11,6 @@ namespace fs0 {
 
 template <typename T>
 RelaxedPlanHeuristic<T>::RelaxedPlanHeuristic( const T& problem ) :
-	Heuristic<State>( problem ),
 	_problem(problem.getTask())
 {}
 
@@ -22,7 +21,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	
 	if (_problem.isGoal(seed)) return 0; // The seed state is a goal
 	
-	const Action::vcptr& actions = _problem.getAllActions();
+	const typename Action::vcptr& actions = _problem.getAllActions();
 	RelaxedState relaxed(seed);
 	RPGData rpgData(relaxed);
 	

@@ -14,7 +14,7 @@ void Printers::printPlan(const ActionPlan& plan, const Problem& problem, std::os
 	}
 }
 
-void Printers::printPlan(const std::vector<int>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
+void Printers::printPlan(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
 	for (int action:plan) {
 		out << problemInfo.getActionName(action) << std::endl;
 	}
