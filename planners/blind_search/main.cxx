@@ -39,41 +39,11 @@ public:
 	}
 
 	//! Constructor for successor states, doesn't copy the state
-	FS0_Node( State&& _state, Action::IdType _action, const FS0_Node<State>& _parent ) :
+	FS0_Node( State&& _state, Action::IdType _action, std::shared_ptr<FS0_Node<State>>& _parent ) :
 		state(_state) {
 		action = _action;
-		parent = &_parent;
+		parent = _parent;
 	}
-
-	//! Move constructor
-	FS0_Node( FS0_Node<State>&& other ) :
-		state( std::move( other.state )),
-		action( other.action),
-		parent( other.parent)
-	{
-	}
-
-	//! Move assignment operator
-	FS0_Node<State>& operator=( FS0_Node<State>&& other ) {
-		state = std::move( other.state );
-		action = other.action;
-		parent = other.parent;
-		return *this;
-	}
-
-	explicit FS0_Node( const FS0_Node<State>& o ) :
-		state( o.state),
-		action( o.action),
-		parent( o.parent) {
-	}
-
-	const FS0_Node& operator=( const FS0_Node<State>& o ) {
-		state = o.state;
-		action = o.action;
-		parent = o.parent;
-		return *this;
-	}
-
 
 	virtual ~FS0_Node() {
 	}
@@ -92,9 +62,9 @@ public:
 
 public:
 
-	State			state;
-	Action::IdType		action;
-	const FS0_Node<State>*	parent;
+	State					state;
+	Action::IdType				action;
+	std::shared_ptr<FS0_Node<State> >	parent;
 };
 
 
@@ -124,6 +94,7 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	if ( engine.solve_model( plan ) ) {
 		assert(checkPlanCorrect(plan));
 		out << "\n\nPlan found:" << std::endl;
+		Printers::printPlan(plan, problemInfo, out);
 		Printers::printPlan(plan, problemInfo, plan_out);
 	}
 	
