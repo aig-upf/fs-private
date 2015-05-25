@@ -22,21 +22,21 @@ def which(program):
 
 env = Environment(variables=vars, ENV=os.environ, CXX='clang' if which('clang') else 'g++')
 
-env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++0x' ] )  # Flags common to all options
+env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ] )  # Flags common to all options
 env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
 
 if env['debug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DFS0_DEBUG' ] )
 	fs0_libname = 'fs0-debug'
-	exe_name = 'solver-debug.bin'
+	exe_name = 'gbfs-planner-debug.bin'
 else:
 	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
 	fs0_libname = 'fs0'
-	exe_name = 'solver.bin'
+	exe_name = 'gbfs-planner.bin'
 
 # Header and library directories.
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
-include_paths = ['.', env['fs0'] + '/src', env['lapkt'] + '/include', env['lapkt'] + '/interfaces/agnostic', HOME + '/local/include']
+include_paths = ['.', env['fs0'] + '/src', env['lapkt'], env['lapkt'] + '/interfaces/agnostic', HOME + '/local/include']
 lib_paths = [env['fs0'] + '/lib', HOME + '/local/lib']
     
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])

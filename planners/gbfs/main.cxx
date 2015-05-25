@@ -6,9 +6,8 @@
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 
-#include <aptk/open_list.hxx>
-#include <search/at_gbfs.hxx>
-#include <aptk/at_wbfs.hxx>
+#include <aptk2/search/algorithms/best_first_search.hxx>
+#include <aptk2/tools/resources_control.hxx>
 
 #include <heuristics/null_heuristic.hxx>
 #include <heuristics/relaxed_plan.hxx>
@@ -24,17 +23,69 @@
 
 using namespace fs0;
 
-// MRJ: We start defining the type of nodes for our planner
-typedef FS0_Node<fs0::State> Search_Node;
-
-// MRJ: Now we define the Open List type by combining the types we have defined before
-typedef aptk::search::Open_List<GBFSComparer<Search_Node>, Search_Node> BFS_Open_List;
-
 // MRJ: Now we define the heuristics
 typedef		RelaxedPlanHeuristic<FwdSearchProblem> RelaxedHeuristic;
 typedef		HMaxHeuristic<FwdSearchProblem> RelaxedMaxHeuristic;
 
-typedef std::vector<int> Plan;
+
+template <typename State>
+class FS0_Node {
+public:
+
+	typedef State State_Type;
+
+
+	// Kill default constructors
+	explicit FS0_Node(); 	
+	//! Constructor for initial nodes, copies state
+	FS0_Node( const State& s )
+		: state( s ), action( Action::invalid_action_id ), parent( nullptr ) {
+	}
+
+	//! Constructor for successor states, doesn't copy the state
+	FS0_Node( State&& _state, Action::IdType _action, std::shared_ptr< FS0_Node<State> > _parent ) :
+		state(_state) {
+		action = _action;
+		parent = _parent;
+	}
+
+	virtual ~FS0_Node() {
+	}
+
+	bool	has_parent() const { return parent != nullptr; }
+
+	void			print( std::ostream& os ) const {
+		os << "{@ = " << this << ", s = " << state << ", h = " << h << ", parent = " << parent << "}";
+	}
+
+	bool   	operator==( const FS0_Node<State>& o ) const {
+		return state == o.state;
+	}
+
+	// MRJ: This is part of the required interface of the Heuristic
+	template <typename Heuristic>
+	void	evaluate_with( Heuristic& heuristic ) {
+		h = heuristic.evaluate( state );	
+	}
+
+	size_t                  hash() const { return state.hash(); }
+
+	// MRJ: With this we implement Greedy Best First search
+	bool	operator>( const FS0_Node<State>& other ) const {
+		return h > other.h;
+	}
+
+public:
+
+	State					state;
+	Action::IdType				action;
+	std::shared_ptr<FS0_Node<State> >	parent;
+	unsigned				h;
+};
+
+// MRJ: We start defining the type of nodes for our planner
+typedef FS0_Node<fs0::State> Search_Node;
+typedef std::vector<Action::IdType> Plan;
 
 bool checkPlanCorrect(const Plan& plan) {
 	auto problem = Problem::getCurrentProblem();
@@ -44,67 +95,32 @@ bool checkPlanCorrect(const Plan& plan) {
 }
 
 template <typename Search_Engine>
-float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, int budget, const std::string& out_dir) {
+float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const std::string& out_dir) {
 
 	std::ofstream out(out_dir + "/searchlog.out");
-	std::ofstream best_plan(out_dir + "/best.plan"),
-				  first_plan(out_dir + "/first.plan");
+	std::ofstream plan_out(out_dir + "/first.plan");
 	
 	std::cout << "Writing results to " << out_dir + "/searchlog.out" << std::endl;
 
-	engine.set_budget( (float) budget );
-	engine.start();
-
-	Plan plan, last_plan;
-	float cost;
-
-	float ref = aptk::time_used();
+	Plan plan;
 	float t0 = aptk::time_used();
 
-	unsigned expanded_0 = engine.expanded();
-	unsigned generated_0 = engine.generated();
-	
-	bool found = false;
-
-	// Deactivate anytime search
-	if ( engine.find_solution( cost, plan ) ) {
-// 	while ( engine.find_solution( cost, plan ) ) {
+	if ( engine.solve_model( plan ) ) {
 		assert(checkPlanCorrect(plan));
-		out << "\n\nPlan found with cost: " << cost << std::endl;
 		Printers::printPlan(plan, problemInfo, out);
-		if (!found) {
-			Printers::printPlan(plan, problemInfo, first_plan);
-			found = true;
-		}
-		
-		float tf = aptk::time_used();
-		unsigned expanded_f = engine.expanded();
-		unsigned generated_f = engine.generated();
-		out << "Time: " << tf - t0 << std::endl;
-		out << "Generated: " << generated_f - generated_0 << std::endl;
-		out << "Expanded: " << expanded_f - expanded_0 << std::endl;
-		t0 = tf;
-		expanded_0 = expanded_f;
-		generated_0 = generated_f;
-		last_plan = plan;
-		plan.clear();
+		Printers::printPlan(plan, problemInfo, plan_out);
 	}
 	
-// 	Utils::printPlan(last_plan, problemInfo, best_plan); // Print the last plan
-	
-	float total_time = aptk::time_used() - ref;
+	float total_time = aptk::time_used() - t0;
 	out << "Total time: " << total_time << std::endl;
-	out << "Nodes generated during search: " << engine.generated() << std::endl;
-	out << "Nodes expanded during search: " << engine.expanded() << std::endl;
-	out << "Nodes pruned by bound: " << engine.pruned_by_bound() << std::endl;
-	out << "Dead-end nodes: " << engine.dead_ends() << std::endl;
-	out << "Nodes in OPEN replaced: " << engine.open_repl() << std::endl;
+	out << "Nodes generated during search: " << engine.generated << std::endl;
+	out << "Nodes expanded during search: " << engine.expanded << std::endl;
 	
-	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated() / total_time) : "-";
+	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated / total_time) : "-";
 	out << "Heuristic evaluations per second: " <<  eval_speed << std::endl;
 
 	out.close();
-	best_plan.close(); first_plan.close();
+	plan_out.close();
 	
 	return total_time;
 }
@@ -113,9 +129,8 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, int budg
 void instantiate_seach_engine_and_run(const FwdSearchProblem& search_prob, const ProblemInfo& problemInfo, int timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
-	aptk::search::bfs::AT_GBFS_SQ_SH< FwdSearchProblem, RelaxedHeuristic, BFS_Open_List > rp_bfs_engine( search_prob );
-// 	aptk::search::bfs::AT_GBFS_SQ_SH< FwdSearchProblem, RelaxedMaxHeuristic, BFS_Open_List > rp_bfs_engine( search_prob );
-	timer = do_search(rp_bfs_engine, problemInfo, timeout, out_dir);
+	aptk::StlBestFirstSearch< Search_Node, RelaxedHeuristic, FwdSearchProblem > rp_bfs_engine( search_prob );
+	timer = do_search(rp_bfs_engine, problemInfo, out_dir);
 	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }
 
