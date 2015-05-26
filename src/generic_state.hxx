@@ -102,6 +102,8 @@ public:
 	ObjectIdx getValue(const VariableIdx& variable) const {
 		return _values.at(variable);
 	}
+
+	unsigned	numAtoms() const { return _values.size(); }
 	
 protected:
 	//! "Applies" the given atoms into the current state.

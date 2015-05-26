@@ -44,11 +44,14 @@ for d in source_dirs:
 # Source dependencies from LAPKT search interfaces
 Export('env')
 aptk_search_interface_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/search/interfaces/SConscript' ) )
+aptk_heuristics_objs = SConscript(  os.path.join( env['lapkt'], 'aptk2/heuristics/interfaces/SConscript' ) ) 
+aptk_heuristics_objs += SConscript( os.path.join( env['lapkt'], 'aptk2/heuristics/novelty/SConscript' ) )
 aptk_tools_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/tools/SConscript' ) )
   
 build_files = [build_dirname + '/' + src for src in src_files]
 build_files += aptk_search_interface_objs
 build_files += aptk_tools_objs
+build_files += aptk_heuristics_objs
 
 env.Append(CPPPATH = ['src', env['lapkt']])
 

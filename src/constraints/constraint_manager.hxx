@@ -61,9 +61,16 @@ public:
 	
 	//! Returns true iff the given non-relaxed state satisfies all the constraints.
 	bool checkSatisfaction(const State& s) const;
+
+	//! Returns the number of unsatisfied constraints
+	unsigned countUnsatisfied( const State& s ) const;
 	
 	//! Return true iff all variable domain are non-empty
 	static bool checkConsistency(const DomainMap& domains);
+
+	//! Return number of constraints
+	unsigned numConstraints() const { return _constraints.size(); }
+
 	
 protected:
 	

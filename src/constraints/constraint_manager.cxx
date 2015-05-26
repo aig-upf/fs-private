@@ -183,6 +183,14 @@ bool ConstraintManager::checkSatisfaction(const State& s) const {
 	return true;
 }
 
+unsigned ConstraintManager::countUnsatisfied(const State& s) const {
+	unsigned count=0;
+	for (ScopedConstraint::cptr constraint:_constraints) {
+		if (!constraint->isSatisfied(s)) count++;
+	}
+	return count;
+}
+
 bool ConstraintManager::checkConsistency(const DomainMap& domains) {
 	for (const auto& domain:domains) {
 		if (domain.second->size() == 0) return false; // If any pruned domain is empty, the CSP has no solution.

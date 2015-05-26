@@ -37,6 +37,10 @@ public:
 	
 	bool isGoal(const State& s) const { return ctrManager->isGoal(s); }
 
+	unsigned numUnsatisfiedGoals( const State& s ) const { return ctrManager->numUnsatisfiedGoals( s ); }
+
+	unsigned numGoalConstraints() const { return ctrManager->numGoalConstraints(); }
+
 	void registerConstraint(const ScopedConstraint::cptr constraint) { stateConstraints.push_back(constraint);}
 	const ScopedConstraint::vcptr& getConstraints() const { return stateConstraints; }
 	void registerGoalConstraint(ScopedConstraint::cptr constraint) { goalConstraints.push_back(constraint);}

@@ -25,6 +25,10 @@ public:
 	//! Goal checking for non-relaxed states.
 	inline bool isGoal(const State& s) const { return goalConstraintsManager.checkSatisfaction(s); }
 	
+	inline unsigned numUnsatisfiedGoals( const State& s ) const { return goalConstraintsManager.countUnsatisfied(s); }
+
+	inline unsigned numGoalConstraints( ) const { return goalConstraintsManager.numConstraints(); }
+
 	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
 	//! Besides, return the causes of the goal to be later processed by the RPG heuristic backchaining procedure.
 	bool isGoal(const State& seed, const RelaxedState& state, Atom::vctr& causes) const;
