@@ -36,10 +36,10 @@ public:
 
 
 	// Kill default constructors
-	explicit FS0_Node(); 	
+	explicit FS0_Node();
 	//! Constructor for initial nodes, copies state
 	FS0_Node( const State& s )
-		: state( s ), action( Action::invalid_action_id ), parent( nullptr ) {
+		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), g(0) {
 	}
 
 	//! Constructor for successor states, doesn't copy the state
@@ -47,6 +47,7 @@ public:
 		state(_state) {
 		action = _action;
 		parent = _parent;
+		g = _parent->g + 1;
 	}
 
 	virtual ~FS0_Node() {
@@ -65,7 +66,7 @@ public:
 	// MRJ: This is part of the required interface of the Heuristic
 	template <typename Heuristic>
 	void	evaluate_with( Heuristic& heuristic ) {
-		h = heuristic.evaluate( state );	
+		h = heuristic.evaluate( state );
 	}
 
 	size_t                  hash() const { return state.hash(); }
@@ -77,10 +78,11 @@ public:
 
 public:
 
-	State					state;
-	Action::IdType				action;
+	State															state;
+	Action::IdType										action;
 	std::shared_ptr<FS0_Node<State> >	parent;
-	unsigned				h;
+	unsigned													h;
+	unsigned													g;
 };
 
 // MRJ: We start defining the type of nodes for our planner
@@ -99,7 +101,7 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	std::ofstream out(out_dir + "/searchlog.out");
 	std::ofstream plan_out(out_dir + "/first.plan");
-	
+
 	std::cout << "Writing results to " << out_dir + "/searchlog.out" << std::endl;
 
 	Plan plan;
@@ -110,18 +112,18 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 		Printers::printPlan(plan, problemInfo, out);
 		Printers::printPlan(plan, problemInfo, plan_out);
 	}
-	
+
 	float total_time = aptk::time_used() - t0;
 	out << "Total time: " << total_time << std::endl;
 	out << "Nodes generated during search: " << engine.generated << std::endl;
 	out << "Nodes expanded during search: " << engine.expanded << std::endl;
-	
+
 	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated / total_time) : "-";
 	out << "Heuristic evaluations per second: " <<  eval_speed << std::endl;
 
 	out.close();
 	plan_out.close();
-	
+
 	return total_time;
 }
 
@@ -143,20 +145,20 @@ void reportActionsInfo(const Problem& problem) {
 }
 
 void reportProblemStats(const Problem& problem) {
-	
+
 // 	std::cout << "Number of object types: " << st.get_num_types() << std::endl;
 	std::cout << "Number of objects: " << problem.getProblemInfo().getNumObjects() << std::endl;
 	std::cout << "Number of state variables: " << problem.getProblemInfo().getNumVariables() << std::endl;
-	
+
 	std::cout << "Number of ground actions: " << problem.getNumActions() << std::endl;
 	if (problem.getNumActions() > 1000) {
 		std::cout << "WARNING: The number of ground actions (" << problem.getNumActions() <<
 		") is too high for our current applicable action strategy to perform well." << std::endl;
 	}
-	
+
 	std::cout << "Number of state constraints: " << problem.getConstraints().size() << std::endl;
 	std::cout << "Number of goal constraints: " << problem.getGoalConstraints().size() << std::endl;
-	
+
 // 	reportActionsInfo(problem);
 }
 
@@ -170,12 +172,12 @@ int parse_options(int argc, char** argv, int& timeout, std::string& data_dir, st
 		("timeout,t", po::value<int>()->default_value(10), "The timeout, in seconds.")
 		("data", po::value<std::string>()->default_value("data"), "The directory where the input data is stored.")
 		("out", po::value<std::string>()->default_value("."), "The directory where the results data is to be output.");
-		
+
 	po::positional_options_description pos;
 	pos.add("timeout", 1)
 	   .add("data", 1)
 	   .add("out", 1);
-	
+
 	po::variables_map vm;
 	try {
 		po::store(po::command_line_parser(argc, argv).options(description).positional(pos).run(), vm);
@@ -186,12 +188,12 @@ int parse_options(int argc, char** argv, int& timeout, std::string& data_dir, st
 		std::cout << std::endl << description << std::endl;
 		return 1;
 	}
-	
+
 	if (vm.count("help")) {
 		std::cout << description << "\n";
 		return 1;
 	}
-	
+
 	timeout = vm["timeout"].as<int>();
 	data_dir = vm["data"].as<std::string>();
 	out_dir = vm["out"].as<std::string>();
@@ -200,7 +202,7 @@ int parse_options(int argc, char** argv, int& timeout, std::string& data_dir, st
 
 
 int main(int argc, char** argv) {
-	
+
 	int timeout; std::string data_dir; std::string out_dir;
 	int res = parse_options(argc, argv, timeout, data_dir, out_dir);
 	if (res != 0) {
@@ -209,19 +211,19 @@ int main(int argc, char** argv) {
 
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	Problem problem(data_dir);
-	
-	std::cout << "Calling generate()" << std::endl; 
+
+	std::cout << "Calling generate()" << std::endl;
 	generate(data_dir, problem);
 
-	std::cout << "Setting current problem to problem" << std::endl;	
+	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
 	std::cout << "Creating Search_Problem instance" << std::endl;
 	FwdSearchProblem search_prob(problem);
-	
+
 
 	std::cout << "Done!" << std::endl;
 	reportProblemStats(problem);
-	
+
 	// Instantiate the engine
 	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), timeout, out_dir);
 	return 0;
