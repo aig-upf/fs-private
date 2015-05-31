@@ -52,7 +52,7 @@ public:
 	//! A small helper
 	inline virtual Atom apply(const State& s) const { return this->apply(Projections::project(s, _scope)); }
 
-	virtual std::string getName() const = 0;
+	virtual std::string getName() const {return std::string("<unnamed effect>");}
 
 };
 
