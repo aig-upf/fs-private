@@ -47,10 +47,14 @@ class CppPrinter(object):
 
     def print_code(self, symbol, params, negated=False):
         """ Helper """
-        neg = "! " if negated else ""
         paramstr = ', '.join(str(p) for p in params)
         if is_external(symbol):
             name = symbol[1:]
         else:
             name = 'get_' + symbol
-        return "{neg}external->{name}({params})".format(neg=neg, name=name, params=paramstr)
+        code = "external->{name}({params})".format(name=name, params=paramstr)
+        return self.print_negation(code, negated)
+
+    def print_negation(self, code, negated):
+        """ Prints a possibly negated piece of procedural C++ code """
+        return "{negated}{code}".format(negated="! " if negated else "", code=code)
