@@ -41,6 +41,8 @@ public:
 	const ScopedConstraint::vcptr& getConstraints() const { return stateConstraints; }
 	void registerGoalConstraint(ScopedConstraint::cptr constraint) { goalConstraints.push_back(constraint);}
 	const ScopedConstraint::vcptr& getGoalConstraints() const { return goalConstraints; }
+	
+	const std::string& get_action_name(unsigned action) const { return _problemInfo.getActionName(action); }
 
 	
 	//! Getter/setter for the associated ProblemInfo object.

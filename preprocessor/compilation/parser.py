@@ -91,19 +91,23 @@ class Parser(object):
     def process_predicative_expression(self, exp):
         assert isinstance(exp, (Atom, NegatedAtom))
         if exp.predicate == "@defined":  # An special _is_defined_  predicate
-            processed = self.process_define_expression(exp)
+            result = self.process_define_expression(exp)
 
         elif is_basic_symbol(exp.predicate):  # A relational operator
-            return self.process_relational_operator(exp)
+            result = self.process_relational_operator(exp)
 
         elif is_constraint_expression(exp.predicate):
-            return self.process_constraint_expression(exp)
+            result = self.process_constraint_expression(exp)
 
         else:  # A "standard" predicate
-            c = StaticPredicativeExpression if self.is_static(exp.predicate) else PredicativeExpression
-            processed = c(exp.predicate, exp.negated, self.process_argument_list(exp.args))
+            if self.is_static(exp.predicate):
+                result = StaticPredicativeExpression(exp.predicate, exp.negated, self.process_argument_list(exp.args))
+            else:  # an atom p is equivalent to a relation p = 1; and similarly for a negated atom, but with p = 0
+                value = "1" if not exp.negated else "0"
+                atom = Atom("=", [FunctionalTerm(exp.predicate, exp.args), value])
+                result = self.process_relational_operator(atom)
 
-        return processed
+        return result
 
     def process_argument_list(self, args):
         """ Parses a list of predicate / function arguments """

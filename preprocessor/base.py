@@ -515,6 +515,10 @@ class PredicativeExpression(Expression):
     def compute_relevant_variables(self, relevant):
         return self._compute_fluent_relevant_variables(relevant)
 
+    def __str__(self):
+        p = Expression.__str__(self)
+        return '{}{}'.format("not " if self.negated else "", p)
+
 
 class StaticPredicativeExpression(PredicativeExpression):
     def is_static(self):
