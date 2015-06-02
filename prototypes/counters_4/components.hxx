@@ -14,6 +14,7 @@
 #include <problem.hxx>
 #include "external.hxx"
 #include <constraints/all.hxx>
+#include <gecode/int.hh>
 
 using namespace fs0;
 
@@ -70,6 +71,19 @@ public:
 	std::string getName() const {
 		return std::string("value(?c) := +(value(?c), 1)");
 	}
+
+  void addConstraint( SupportCSP& csp ) const {
+    auto y_var = csp.resolveY(_affected);
+    auto x_var = csp.resolveX(_scope[0]);
+    IntArgs     coeffs(2);
+    IntVarArgs  vars(2);
+    coeffs[0] = 1;
+    coeffs[1] = -1;
+    vars[0] = y_var;
+    vars[1] = x_var;
+    Gecode::linear( csp, coeffs, vars, IRT_EQ, 1 );
+  }
+
 };
 
 
@@ -86,8 +100,20 @@ public:
 
 	std::string getName() const {
 		return std::string("value(?c) := -(value(?c), 1)");
-
 	}
+
+  void addConstraint( SupportCSP& csp ) const {
+    auto y_var = csp.resolveY(_affected);
+    auto x_var = csp.resolveX(_scope[0]);
+    IntArgs     coeffs(2);
+    IntVarArgs  vars(2);
+    coeffs[0] = 1;
+    coeffs[1] = -1;
+    vars[0] = y_var;
+    vars[1] = x_var;
+    Gecode::linear( csp, coeffs, vars, IRT_EQ, -1 );
+  }
+
 };
 
 
