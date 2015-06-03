@@ -63,7 +63,8 @@ public:
 
 	const std::string& getVariableName(VariableIdx index) const;
 
-	const TypeIdx getVariableType(VariableIdx index) const { return variableTypes.at(index); }
+	const TypeIdx 		getVariableType(VariableIdx index) const { return variableTypes.at(index); }
+	const ObjectType 	getVariableGenericType(VariableIdx index) const { return variableGenericTypes.at(index); }
 
 	unsigned getNumVariables() const;
 
