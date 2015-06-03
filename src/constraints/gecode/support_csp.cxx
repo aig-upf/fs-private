@@ -1,5 +1,7 @@
 #include <constraints/gecode/support_csp.hxx>
 #include <gecode/driver.hh>
+#include <set>
+#include <algorithm>
 
 // MRJ: I don't love doing this
 using namespace Gecode;
@@ -52,28 +54,34 @@ namespace fs0 {
   }
   */
 
-  void SupportCSP::addEqualityConstraint( VariableIdx v, bool value ) {
+  void
+  SupportCSP::addEqualityConstraint( VariableIdx v, bool value ) {
     auto it = _inVarsMap.find( v );
     assert( it != _inVarsMap.end() );
     value = ( value ? 1 : 0 );
+    // MRJ: v = value
     rel( *this, _X[ it->second ], IRT_EQ, value );
   }
 
-  void SupportCSP::addEqualityConstraint( VariableIdx v, ObjectIdx value ) {
+  void
+  SupportCSP::addEqualityConstraint( VariableIdx v, ObjectIdx value ) {
     auto it = _inVarsMap.find( v );
     assert( it != _inVarsMap.end() );
+    //MRJ: v = value
     rel( *this, _X[ it->second ], IRT_EQ, value );
   }
 
 
-  void SupportCSP::addBoundsConstraint( VariableIdx v, int lb, int ub ) {
+  void
+  SupportCSP::addBoundsConstraint( VariableIdx v, int lb, int ub ) {
     auto it = _inVarsMap.find( v );
     assert( it != _inVarsMap.end() );
     // MRJ: lb <= v <= ub
     dom( *this, _X[ it->second], lb, ub);
   }
 
-  void SupportCSP::addMembershipConstraint( VariableIdx v, DomainPtr varDomain ) {
+  void
+  SupportCSP::addMembershipConstraint( VariableIdx v, DomainPtr varDomain ) {
     auto it = _inVarsMap.find( v );
     assert( it != _inVarsMap.end() );
     // MRJ: v \in dom
@@ -82,7 +90,38 @@ namespace fs0 {
       valueSet.add( IntArgs( 1, v ));
     }
     valueSet.finalize();
+    // MRJ: v \in valueSet
     extensional( *this, IntVarArgs() << _X[ it->second ], valueSet );
+  }
+
+  SupportCSP::ptr
+  SupportCSP::create( const ProblemInfo& info, const Action& a, const ScopedConstraint::vcptr& globalConstraints ) {
+    // Determine input and output variables for this action
+    VariableIdxSet inputVars, outputVars;
+    // Add the variables mentioned by global constraints
+    for ( ScopedConstraint::cptr global : globalConstraints )
+      inputVars.insert( global.getScope().begin(), global.getScope().end() );
+    // Add the variables mentioned in the preconditions
+    for ( ScopedConstraint::cptr prec : a.getConstraints() )
+      inputVars.insert( prec.getScope().begin(), prec.getScope().end() );
+    // Add the variables appearing in the scope of the effects
+    for ( ScopedEffect::cptr eff : a.getEffects() ) {}
+      inputVars.insert( eff.getScope().begin(), eff.getScope().end() );
+      outputVars.insert( eff.getAffected() );
+    }
+    VariableIdxVector tmpX( inputVars.begin(), inputVars.end() );
+    VariableIdxVector tmpY( outputVars.begin(), outputVars.end() );
+    SupportCSP::ptr csp = new SupportCSP( info, tmpX, tmpY );
+
+    // Create constraints
+
+  }
+
+  void
+  SupportCSP::create( const Problem& problem, SupportCSP::vptr& csps ) {
+    const ProblemInfo& info = problem.getProblemInfo();
+    for ( auto a : problem.getAllActions() )
+      csps.push_back( SupportCSP::create( info, *a, problem.getConstraints() ) );
   }
 
 }

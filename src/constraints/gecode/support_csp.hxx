@@ -1,16 +1,20 @@
 #ifndef SUPPORT_CSP
 #define SUPPORT_CSP
 
-#include <gecode/int.hxx>
+#include <gecode/int.hh>
 #include <fs0_types.hxx>
 #include <problem_info.hxx>
-#include <assert>
+#include <cassert>
+#include <vector>
+#include <actions.hxx>
 
 namespace fs0 {
 
   class SupportCSP : public Gecode::Space {
   public:
 
+    typedef   SupportCSP *                          ptr;
+    typedef   std::vector< SupportCSP::ptr >        vptr;
     typedef   std::map< VariableIdx, unsigned >     VariableMap;
 
     SupportCSP( const ProblemInfo& info, const VariableIdxVector& inputVars, const VariableIdxVector& outputVars );
@@ -24,6 +28,11 @@ namespace fs0 {
       return resolveVariableName( varName, _Y, _outVarsMap );
     }
 
+    void addEqualityConstraint( VariableIdx varName, bool value );
+    // MRJ: This overload will be necessary as soon as int and ObjectIdx
+    // cease to be the same thing
+    //void addEqualityConstraint( VariableIdx varName, int  value );
+    void addEqualityConstraint( VariableIdx varName, ObjectIdx value );
     void addMembershipConstraint( VariableIdx varName, DomainPtr values );
     void addBoundsConstraint( VariableIdx varName, int lb, int ub );
 
@@ -39,9 +48,12 @@ namespace fs0 {
       return new SupportCSP( share, *this );
     }
 
+    static SupportCSP::ptr  create( const ProblemInfo& info, const Action& a, const ScopedConstraint::vcptr& globalConstraints );
+    static void             create( const Problem& problem, SupportCSP::vptr& supportCSPs );
+
   protected:
 
-    const Gecode::IntVar& resolveVariableName( VariableIdx varName, const IntVarArray& actualVars, const VariableMap& varMap ) const {
+    const Gecode::IntVar& resolveVariableName( VariableIdx varName, const Gecode::IntVarArray& actualVars, const VariableMap& varMap ) const {
       auto it = varMap.find( varName );
       assert( it != _inVarsMap.end() );
       return actualVars[ it->second ];
