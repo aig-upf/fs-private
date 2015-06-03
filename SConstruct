@@ -40,18 +40,21 @@ source_dirs = ['src', 'src/constraints', 'src/utils', 'src/heuristics']
 src_files = []
 for d in source_dirs:
 	src_files += [str(f) for f in Glob(d + '/*.cxx')]
-         
+
 # Source dependencies from LAPKT search interfaces
 Export('env')
 aptk_search_interface_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/search/interfaces/SConscript' ) )
-aptk_heuristics_objs = SConscript(  os.path.join( env['lapkt'], 'aptk2/heuristics/interfaces/SConscript' ) ) 
+aptk_heuristics_objs = SConscript(  os.path.join( env['lapkt'], 'aptk2/heuristics/interfaces/SConscript' ) )
 aptk_heuristics_objs += SConscript( os.path.join( env['lapkt'], 'aptk2/heuristics/novelty/SConscript' ) )
 aptk_tools_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/tools/SConscript' ) )
-  
+
+gecode_objs = SConscript( 'src/constraints/gecode/SConscript' )
+
 build_files = [build_dirname + '/' + src for src in src_files]
 build_files += aptk_search_interface_objs
 build_files += aptk_tools_objs
 build_files += aptk_heuristics_objs
+build_files += gecode_objs
 
 env.Append(CPPPATH = ['src', env['lapkt']])
 
@@ -60,5 +63,3 @@ static_lib = env.Library('lib/' + lib_name, build_files)
 
 #Default([static_lib, shared_lib])
 Default([static_lib])
-
-
