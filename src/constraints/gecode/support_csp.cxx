@@ -1,4 +1,6 @@
 #include <constraints/gecode/support_csp.hxx>
+#include <constraints/gecode/expr_translator_repository.hxx>
+#include <problem.hxx>
 #include <gecode/driver.hh>
 #include <set>
 #include <algorithm>
@@ -102,22 +104,36 @@ namespace fs0 {
       VariableIdxSet inputVars, outputVars;
       // Add the variables mentioned by global constraints
       for ( ScopedConstraint::cptr global : globalConstraints )
-        inputVars.insert( global.getScope().begin(), global.getScope().end() );
+        inputVars.insert( global->getScope().begin(), global->getScope().end() );
       // Add the variables mentioned in the preconditions
       for ( ScopedConstraint::cptr prec : a.getConstraints() )
-        inputVars.insert( prec.getScope().begin(), prec.getScope().end() );
+        inputVars.insert( prec->getScope().begin(), prec->getScope().end() );
       // Add the variables appearing in the scope of the effects
-      for ( ScopedEffect::cptr eff : a.getEffects() ) {}
-        inputVars.insert( eff.getScope().begin(), eff.getScope().end() );
-        outputVars.insert( eff.getAffected() );
+      for ( ScopedEffect::cptr eff : a.getEffects() ) {
+        inputVars.insert( eff->getScope().begin(), eff->getScope().end() );
+        outputVars.insert( eff->getAffected() );
       }
       VariableIdxVector tmpX( inputVars.begin(), inputVars.end() );
       VariableIdxVector tmpY( outputVars.begin(), outputVars.end() );
       SupportCSP::ptr csp = new SupportCSP( info, tmpX, tmpY );
 
-      // Create constraints
+      // Create constraints, once variables have been properly defined
+      for ( ScopedConstraint::cptr global : globalConstraints ) {
+        auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(global) );
+        transObj->addConstraint( global, *csp );
+      }
 
+      for ( ScopedConstraint::cptr prec : a.getConstraints() ) {
+        auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(prec) );
+        transObj->addConstraint( prec, *csp );
+      }
 
+      for ( ScopedEffect::cptr eff : a.getEffects() ) {
+        auto transObj = TranslatorRepository::instance().getEffectTranslator( typeid(eff) );
+        transObj->addConstraint( eff, *csp );
+      }
+
+      return csp;
     }
 
     void
