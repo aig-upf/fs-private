@@ -10,65 +10,70 @@
 
 namespace fs0 {
 
-  class SupportCSP : public Gecode::Space {
-  public:
+  namespace gecode {
 
-    typedef   SupportCSP *                          ptr;
-    typedef   std::vector< SupportCSP::ptr >        vptr;
-    typedef   std::map< VariableIdx, unsigned >     VariableMap;
+    class SupportCSP : public Gecode::Space {
+    public:
 
-    SupportCSP( const ProblemInfo& info, const VariableIdxVector& inputVars, const VariableIdxVector& outputVars );
-    virtual ~SupportCSP();
+      typedef   SupportCSP *                          ptr;
+      typedef   std::vector< SupportCSP::ptr >        vptr;
+      typedef   std::map< VariableIdx, unsigned >     VariableMap;
 
-    const Gecode::IntVar&  resolveX( VariableIdx varName ) const {
-      return resolveVariableName( varName, _X, _inVarsMap );
-    }
+      SupportCSP( const ProblemInfo& info, const VariableIdxVector& inputVars, const VariableIdxVector& outputVars );
+      virtual ~SupportCSP();
 
-    const Gecode::IntVar&  resolveY( VariableIdx varName ) const {
-      return resolveVariableName( varName, _Y, _outVarsMap );
-    }
+      const Gecode::IntVar&  resolveX( VariableIdx varName ) const {
+        return resolveVariableName( varName, _X, _inVarsMap );
+      }
 
-    void addEqualityConstraint( VariableIdx varName, bool value );
-    // MRJ: This overload will be necessary as soon as int and ObjectIdx
-    // cease to be the same thing
-    //void addEqualityConstraint( VariableIdx varName, int  value );
-    void addEqualityConstraint( VariableIdx varName, ObjectIdx value );
-    void addMembershipConstraint( VariableIdx varName, DomainPtr values );
-    void addBoundsConstraint( VariableIdx varName, int lb, int ub );
+      const Gecode::IntVar&  resolveY( VariableIdx varName ) const {
+        return resolveVariableName( varName, _Y, _outVarsMap );
+      }
 
-    // Cloning constructor
-    SupportCSP( bool share, SupportCSP& other ) :
-      Gecode::Space( share, other ) {
-      _X.update( *this, share, other._X );
-      _Y.update( *this, share, other._Y );
-    }
+      void addEqualityConstraint( VariableIdx varName, bool value );
+      // MRJ: This overload will be necessary as soon as int and ObjectIdx
+      // cease to be the same thing
+      //void addEqualityConstraint( VariableIdx varName, int  value );
+      void addEqualityConstraint( VariableIdx varName, ObjectIdx value );
+      void addMembershipConstraint( VariableIdx varName, DomainPtr values );
+      void addBoundsConstraint( VariableIdx varName, int lb, int ub );
 
-    virtual Gecode::Space*
-    copy( bool share ) {
-      return new SupportCSP( share, *this );
-    }
+      // Cloning constructor
+      SupportCSP( bool share, SupportCSP& other ) :
+        Gecode::Space( share, other ) {
+        _X.update( *this, share, other._X );
+        _Y.update( *this, share, other._Y );
+      }
 
-    static SupportCSP::ptr  create( const ProblemInfo& info, const Action& a, const ScopedConstraint::vcptr& globalConstraints );
-    static void             create( const Problem& problem, SupportCSP::vptr& supportCSPs );
+      virtual Gecode::Space*
+      copy( bool share ) {
+        return new SupportCSP( share, *this );
+      }
 
-  protected:
+      static SupportCSP::ptr  create( const ProblemInfo& info, const Action& a, const ScopedConstraint::vcptr& globalConstraints );
+      static void             create( const Problem& problem, SupportCSP::vptr& supportCSPs );
 
-    const Gecode::IntVar& resolveVariableName( VariableIdx varName, const Gecode::IntVarArray& actualVars, const VariableMap& varMap ) const {
-      auto it = varMap.find( varName );
-      assert( it != _inVarsMap.end() );
-      return actualVars[ it->second ];
-    }
+    protected:
 
-  protected:
-    //! Input variables
-    Gecode::IntVarArray _X;
-    //! Output variables
-    Gecode::IntVarArray _Y;
-    //! Input variables mapping
-    VariableMap _inVarsMap;
-    //! Output variables mapping
-    VariableMap _outVarsMap;
-  };
+      const Gecode::IntVar& resolveVariableName( VariableIdx varName, const Gecode::IntVarArray& actualVars, const VariableMap& varMap ) const {
+        auto it = varMap.find( varName );
+        assert( it != _inVarsMap.end() );
+        return actualVars[ it->second ];
+      }
+
+    protected:
+      //! Input variables
+      Gecode::IntVarArray _X;
+      //! Output variables
+      Gecode::IntVarArray _Y;
+      //! Input variables mapping
+      VariableMap _inVarsMap;
+      //! Output variables mapping
+      VariableMap _outVarsMap;
+    };
+
+
+  }
 
 }
 

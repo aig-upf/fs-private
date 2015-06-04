@@ -15,6 +15,7 @@
 #include "external.hxx"
 #include <constraints/all.hxx>
 #include <gecode/int.hh>
+#include <constraints/gecode/expr_translators.hxx>
 
 using namespace fs0;
 
@@ -72,9 +73,14 @@ public:
 		return std::string("value(?c) := +(value(?c), 1)");
 	}
 
-  void addConstraint( SupportCSP& csp ) const {
-    auto y_var = csp.resolveY(_affected);
-    auto x_var = csp.resolveX(_scope[0]);
+};
+
+class IncrementActionEffect0Implementer : public EffectTranslator {
+public:
+
+  void addConstraint( ScopedEffect::cptr eff, SupportCSP& csp ) {
+    auto y_var = csp.resolveY(eff->getAffected());
+    auto x_var = csp.resolveX(eff->getScope()[0]);
     IntArgs     coeffs(2);
     IntVarArgs  vars(2);
     coeffs[0] = 1;
@@ -85,6 +91,7 @@ public:
   }
 
 };
+
 
 
 
@@ -102,9 +109,14 @@ public:
 		return std::string("value(?c) := -(value(?c), 1)");
 	}
 
-  void addConstraint( SupportCSP& csp ) const {
-    auto y_var = csp.resolveY(_affected);
-    auto x_var = csp.resolveX(_scope[0]);
+
+};
+
+class DecrementActionEffect0Implementer : public EffectTranslator {
+public:
+  void addConstraint( ScopedEffect::cptr eff, SupportCSP& csp ) const {
+    auto y_var = csp.resolveY(eff->getAffected());
+    auto x_var = csp.resolveX(eff->getScope()[0]);
     IntArgs     coeffs(2);
     IntVarArgs  vars(2);
     coeffs[0] = 1;
@@ -115,8 +127,6 @@ public:
   }
 
 };
-
-
 
 
 /*********************************************/
