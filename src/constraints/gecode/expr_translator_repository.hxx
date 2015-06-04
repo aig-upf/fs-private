@@ -23,9 +23,8 @@ namespace fs0 {
       ~TranslatorRepository();
 
       static  TranslatorRepository&   instance();
-
-      void                            register( TypeInfoRef type, ConstraintTranslator::ptr obj);
-      void                            register( TypeInfoRef type, EffectTranslator::ptr obj);
+      void                            addEntry( TypeInfoRef type, ConstraintTranslator::ptr obj);
+      void                            addEntry( TypeInfoRef type, EffectTranslator::ptr obj);
 
       EffectTranslator::ptr           getEffectTranslator( TypeInfoRef type );
       ConstraintTranslator::ptr       getConstraintTranslator( TypeInfoRef type );
@@ -44,7 +43,7 @@ namespace fs0 {
     class TranslatorRegistrar {
     public :
       TranslatorRegistrar( TypeInfoRef k ) {
-        TranslatorRepository::instance().register( k, new TranslatorType );
+        TranslatorRepository::instance().addEntry( k, new TranslatorType );
       }
     };
 

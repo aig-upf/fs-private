@@ -19,26 +19,26 @@ namespace fs0 {
     }
 
     void
-    TranslatorRepository::register( TypeInfoRef typeThing, ConstraintTranslator::ptr transObj ) {
+    TranslatorRepository::addEntry( TypeInfoRef typeThing, ConstraintTranslator::ptr transObj ) {
       _constraintTranslators[ typeThing ] = transObj;
     }
 
     void
-    TranslatorRepository::register( TypeInfoRef typeThing, EffectTranslator::ptr transObj ) {
+    TranslatorRepository::addEntry( TypeInfoRef typeThing, EffectTranslator::ptr transObj ) {
       _effectTranslators[ typeThing ] = transObj;
     }
 
     EffectTranslator::ptr
     TranslatorRepository::getEffectTranslator( TypeInfoRef type ) {
-      auto it = _effectTranslator.find( type );
-      if ( it == _effectTranslator.end() ) return nullptr;
+      auto it = _effectTranslators.find( type );
+      if ( it == _effectTranslators.end() ) return nullptr;
       return it->second;
     }
 
     ConstraintTranslator::ptr
     TranslatorRepository::getConstraintTranslator( TypeInfoRef type ) {
-      auto it = _constraintTranslator.find( type );
-      if ( it == _constraintTranslator.end() ) return nullptr;
+      auto it = _constraintTranslators.find( type );
+      if ( it == _constraintTranslators.end() ) return nullptr;
       return it->second;
     }
 
