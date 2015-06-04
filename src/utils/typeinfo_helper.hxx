@@ -6,7 +6,7 @@
 
 namespace fs0 {
 
-  using TypeInfoRef =  std::reference_wrapper< const std::type_info >;
+  typedef  std::reference_wrapper< const std::type_info > TypeInfoRef;
 
   struct TypeInfoHasher {
 
