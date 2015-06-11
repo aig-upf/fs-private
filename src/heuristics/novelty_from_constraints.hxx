@@ -53,6 +53,7 @@ namespace fs0 {
    if ( values.size() != _featureMap.numFeatures() )
      values.resize( _featureMap.numFeatures() );
    for ( unsigned k = 0; k < _featureMap.numFeatures(); k++ ) {
+     varnames[k] = k;
      values[k] = ( _featureMap.feature( k )->isSatisfied( _adapted ) ? 1 : 0 );
    }
  }

@@ -37,7 +37,7 @@ public :
 		: _problem( problem ), _reachability_heuristic( problem ) {
 		// MRJ: setups the novelty heuristic, this is all it
 		// needs to know
-		_novelty_heuristic.set_max_novelty( 3 );
+		_novelty_heuristic.set_max_novelty( 1 );
 		_novelty_heuristic.selectFeatures( problem.getTask(), true );
 	}
 
