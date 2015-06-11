@@ -39,12 +39,12 @@ public:
 	explicit FS0_Node();
 	//! Constructor for initial nodes, copies state
 	FS0_Node( const State& s )
-		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), g(0) {
+		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), g(0), is_dead_end(false) {
 	}
 
 	//! Constructor for successor states, doesn't copy the state
 	FS0_Node( State&& _state, Action::IdType _action, std::shared_ptr< FS0_Node<State> > _parent ) :
-		state(_state) {
+		state(_state), is_dead_end(false) {
 		action = _action;
 		parent = _parent;
 		g = _parent->g + 1;
@@ -63,10 +63,15 @@ public:
 		return state == o.state;
 	}
 
+	bool 		dead_end() const {
+		return is_dead_end;
+	}
+
 	// MRJ: This is part of the required interface of the Heuristic
 	template <typename Heuristic>
 	void	evaluate_with( Heuristic& heuristic ) {
 		h = heuristic.evaluate( state );
+		if ( h == std::numeric_limits<float>::max() ) is_dead_end = true;
 	}
 
 	size_t                  hash() const { return state.hash(); }
@@ -83,6 +88,7 @@ public:
 	std::shared_ptr<FS0_Node<State> >	parent;
 	unsigned													h;
 	unsigned													g;
+	bool															is_dead_end;
 };
 
 // MRJ: We start defining the type of nodes for our planner
