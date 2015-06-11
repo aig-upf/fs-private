@@ -12,7 +12,7 @@
 #include <heuristics/null_heuristic.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <heuristics/hmax.hxx>
-#include <heuristics/novelty_from_constraints.hxx>
+#include <heuristics/novelty_from_preconditions.hxx>
 #include <state.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
@@ -37,12 +37,13 @@ public :
 		: _problem( problem ), _reachability_heuristic( problem ) {
 		// MRJ: setups the novelty heuristic, this is all it
 		// needs to know
-		_novelty_heuristic.resize( problem.getTask().numGoalConstraints() + 1 );
-		std::cout << "# Novelty evaluators: " << _novelty_heuristic.size() << std::endl;
-		for ( unsigned i = 0; i < _novelty_heuristic.size(); i++ ) {
-			NoveltyFromConstraints& eval = _novelty_heuristic[i];
-			eval.set_max_novelty( 2 );
-			eval.selectFeatures( problem.getTask(), i == problem.getTask().numGoalConstraints() );
+		_novelty_heuristic.set_max_novelty( 3 );
+		_novelty_heuristic.selectFeatures( problem.getTask(), true );
+	}
+
+	~HeuristicEnsemble() {
+		for ( unsigned k = 1; k <= novelty_bound(); k++ ) {
+			std::cout << "# novelty(s)=" << k << " : " << _novelty_heuristic.get_num_states(k) << std::endl;;
 		}
 	}
 
@@ -51,16 +52,16 @@ public :
 	}
 
 	unsigned evaluate_novelty( const GenericState& s ) {
-		return _novelty_heuristic[ _problem.getTask().numUnsatisfiedGoals(s) ].evaluate( s );
+		return _novelty_heuristic.evaluate( s );
 	}
 
-	unsigned	novelty_bound() { return _novelty_heuristic[0].max_novelty(); }
+	unsigned	novelty_bound() { return _novelty_heuristic.max_novelty(); }
 
 protected:
 
 	const	FwdSearchProblem&							_problem;
 	RelaxedHeuristic										_reachability_heuristic;
-	std::vector<NoveltyFromConstraints>	_novelty_heuristic;
+	NoveltyFromPreconditions						_novelty_heuristic;
 };
 
 
