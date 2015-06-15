@@ -39,11 +39,22 @@ namespace fs0 {
 
     };
 
+    // MRJ: Having to split the registrar into two types is highly unsatisfying
+    // but I see that g++ can't resolve overloaded methods when there is and
+    // implicit upcast (which is kind of reasonable, I guess)
     template <typename TranslatorType >
-    class TranslatorRegistrar {
+    class EffectTranslatorRegistrar {
     public :
-      TranslatorRegistrar( TypeInfoRef k ) {
-        TranslatorRepository::instance().addEntry( k, new TranslatorType );
+      EffectTranslatorRegistrar( TypeInfoRef k ) {
+        TranslatorRepository::instance().addEntry( k, (EffectTranslator::ptr)(new TranslatorType()) );
+      }
+    };
+
+    template <typename TranslatorType >
+    class ConstraintTranslatorRegistrar {
+    public :
+      EffectTranslatorRegistrar( TypeInfoRef k ) {
+        TranslatorRepository::instance().addEntry( k, (Constraint::ptr)(new TranslatorType()) );
       }
     };
 
