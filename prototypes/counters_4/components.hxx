@@ -15,6 +15,7 @@
 #include "external.hxx"
 #include <constraints/all.hxx>
 #include <gecode/int.hh>
+#include <constraints/gecode/support_csp.hxx>
 #include <constraints/gecode/expr_translators.hxx>
 
 using namespace fs0;
@@ -75,19 +76,19 @@ public:
 
 };
 
-class IncrementActionEffect0Implementer : public EffectTranslator {
+class IncrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
 
-  void addConstraint( ScopedEffect::cptr eff, SupportCSP& csp ) {
+  void addConstraint( ScopedEffect::cptr eff, gecode::SupportCSP& csp ) const {
     auto y_var = csp.resolveY(eff->getAffected());
     auto x_var = csp.resolveX(eff->getScope()[0]);
-    IntArgs     coeffs(2);
-    IntVarArgs  vars(2);
+    Gecode::IntArgs     coeffs(2);
+    Gecode::IntVarArgs  vars(2);
     coeffs[0] = 1;
     coeffs[1] = -1;
     vars[0] = y_var;
     vars[1] = x_var;
-    Gecode::linear( csp, coeffs, vars, IRT_EQ, 1 );
+    Gecode::linear( csp, coeffs, vars, Gecode::IRT_EQ, 1 );
   }
 
 };
@@ -108,22 +109,20 @@ public:
 	std::string getName() const {
 		return std::string("value(?c) := -(value(?c), 1)");
 	}
-
-
 };
 
-class DecrementActionEffect0Implementer : public EffectTranslator {
+class DecrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
-  void addConstraint( ScopedEffect::cptr eff, SupportCSP& csp ) const {
+  void addConstraint( ScopedEffect::cptr eff, gecode::SupportCSP& csp ) const {
     auto y_var = csp.resolveY(eff->getAffected());
     auto x_var = csp.resolveX(eff->getScope()[0]);
-    IntArgs     coeffs(2);
-    IntVarArgs  vars(2);
+    Gecode::IntArgs     coeffs(2);
+    Gecode::IntVarArgs  vars(2);
     coeffs[0] = 1;
     coeffs[1] = -1;
     vars[0] = y_var;
     vars[1] = x_var;
-    Gecode::linear( csp, coeffs, vars, IRT_EQ, -1 );
+    Gecode::linear( csp, coeffs, vars, Gecode::IRT_EQ, -1 );
   }
 
 };

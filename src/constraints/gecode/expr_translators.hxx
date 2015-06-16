@@ -17,7 +17,7 @@ namespace fs0 {
 
       virtual ~ConstraintTranslator();
 
-      virtual void addConstraint( ScopedConstraint::cptr constr, SupportCSP& s ) = 0;
+      virtual void addConstraint( ScopedConstraint::cptr constr, SupportCSP& s ) const = 0;
     };
 
     class EffectTranslator  {
@@ -27,7 +27,7 @@ namespace fs0 {
 
       virtual ~EffectTranslator();
 
-      virtual void addConstraint( ScopedEffect::cptr eff,  SupportCSP& s ) = 0;
+      virtual void addConstraint( ScopedEffect::cptr eff,  SupportCSP& s ) const = 0;
     };
 
 

@@ -18,6 +18,7 @@
 #include <problem_info.hxx>
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
+#include <constraints/gecode/support_csp.hxx>
 
 #include <components.hxx>  // This will dinamically point to the right generated file
 
@@ -39,7 +40,7 @@ public:
 	explicit FS0_Node();
 	//! Constructor for initial nodes, copies state
 	FS0_Node( const State& s )
-		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), g(0) {
+		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), g(0), is_dead_end(false) {
 	}
 
 	//! Constructor for successor states, doesn't copy the state
@@ -48,6 +49,7 @@ public:
 		action = _action;
 		parent = _parent;
 		g = _parent->g + 1;
+		is_dead_end = false;
 	}
 
 	virtual ~FS0_Node() {
@@ -76,6 +78,10 @@ public:
 		return h > other.h;
 	}
 
+	bool	dead_end() const {
+		return is_dead_end;
+	}
+
 public:
 
 	State															state;
@@ -83,6 +89,7 @@ public:
 	std::shared_ptr<FS0_Node<State> >	parent;
 	unsigned													h;
 	unsigned													g;
+	bool															is_dead_end;
 };
 
 // MRJ: We start defining the type of nodes for our planner
@@ -217,6 +224,11 @@ int main(int argc, char** argv) {
 
 	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
+
+	gecode::SupportCSP::vptr	csps;
+	gecode::SupportCSP::create( problem, csps );
+	std::cout << "Support CSPs created: " << csps.size() << std::endl;
+
 	std::cout << "Creating Search_Problem instance" << std::endl;
 	FwdSearchProblem search_prob(problem);
 

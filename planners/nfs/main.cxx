@@ -37,7 +37,7 @@ public :
 		: _problem( problem ), _reachability_heuristic( problem ) {
 		// MRJ: setups the novelty heuristic, this is all it
 		// needs to know
-		_novelty_heuristic.set_max_novelty( 1 );
+		_novelty_heuristic.set_max_novelty( 2 );
 		_novelty_heuristic.selectFeatures( problem.getTask(), true );
 	}
 
@@ -53,6 +53,10 @@ public :
 
 	unsigned evaluate_novelty( const GenericState& s ) {
 		return _novelty_heuristic.evaluate( s );
+	}
+
+	unsigned	evaluate_num_unsat_goals( const GenericState& s ) {
+		return _problem.getTask().numUnsatisfiedGoals(s);
 	}
 
 	unsigned	novelty_bound() { return _novelty_heuristic.max_novelty(); }
@@ -76,14 +80,14 @@ public:
 	explicit FS0_Node();
 	//! Constructor for initial nodes, copies state
 	FS0_Node( const State& s )
-		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), _is_dead_end(false) {
+		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), _is_dead_end(false), num_unsat(0) {
 		g = 0;
 		f = 0;
 	}
 
 	//! Constructor for successor states, doesn't copy the state
 	FS0_Node( State&& _state, Action::IdType _action, std::shared_ptr< FS0_Node<State> > _parent ) :
-		state(_state), _is_dead_end(false) {
+		state(_state), _is_dead_end(false), num_unsat(0) {
 		action = _action;
 		parent = _parent;
 		g = _parent->g + 1;
@@ -96,7 +100,7 @@ public:
 	bool	has_parent() const { return parent != nullptr; }
 
 	void			print( std::ostream& os ) const {
-		os << "{@ = " << this << ", s = " << state << ", f = " << f << ",g = " << g << ", parent = " << parent << "}";
+		os << "{@ = " << this << ", s = " << state << ", f = " << f << ",g = " << g << " unsat = " << num_unsat << ", parent = " << parent << "}";
 	}
 
 	bool   	operator==( const FS0_Node<State>& o ) const {
@@ -108,6 +112,12 @@ public:
 	void	evaluate_with( Heuristic& heuristic ) {
 		f = heuristic.evaluate_novelty( state );
 		_is_dead_end = f > heuristic.novelty_bound();
+		num_unsat = heuristic.evaluate_num_unsat_goals( state );
+		if ( parent != nullptr && num_unsat < parent->num_unsat ) {
+			std::cout << "Reward!" << std::endl;
+			print(std::cout);
+			std::cout << std::endl;
+		}
 		/*
 		h = heuristic.evaluate_reachability( state );
 		unsigned ha = 2;
@@ -137,6 +147,8 @@ public:
 	unsigned													g;
 	unsigned													f; // evaluation function
 	bool															_is_dead_end;
+	unsigned													num_unsat;
+
 };
 
 // MRJ: We start defining the type of nodes for our planner

@@ -53,8 +53,8 @@ namespace fs0 {
     template <typename TranslatorType >
     class ConstraintTranslatorRegistrar {
     public :
-      EffectTranslatorRegistrar( TypeInfoRef k ) {
-        TranslatorRepository::instance().addEntry( k, (Constraint::ptr)(new TranslatorType()) );
+      ConstraintTranslatorRegistrar( TypeInfoRef k ) {
+        TranslatorRepository::instance().addEntry( k, (ConstraintTranslator::ptr)(new TranslatorType()) );
       }
     };
 

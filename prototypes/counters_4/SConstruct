@@ -1,4 +1,4 @@
-# This SConstruct file is automatically moved to the directory where the generated 
+# This SConstruct file is automatically moved to the directory where the generated
 # instance-specific problem data resides during the process of generating the executable solver.
 
 import os
@@ -38,12 +38,14 @@ else:
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
 include_paths = ['.', env['fs0'] + '/src', env['lapkt'], env['lapkt'] + '/interfaces/agnostic', HOME + '/local/include']
 lib_paths = [env['fs0'] + '/lib', HOME + '/local/lib']
-    
+
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
 
 src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both the main.cxx and the generated code for the particular instance
 
 env.Append(LIBS=[fs0_libname, 'boost_program_options', 'boost_serialization', 'boost_regex'])
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
+Export('env')
+SConscript( os.path.join(env['fs0'],'src/constraints/gecode/Dependencies') )
 
 env.Program(exe_name, src_objs )
