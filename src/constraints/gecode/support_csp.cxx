@@ -31,16 +31,17 @@ namespace fs0 {
         }
     }
 
-    SupportCSP::SupportCSP( const ProblemInfo& info, const VariableIdxVector& inputVars, const VariableIdxVector& outputVars) {
+    SupportCSP::SupportCSP( const ProblemInfo& info, const VariableIdxVector& inputVars, const VariableIdxVector& outputVars)
+    : _info( info ) {
       IntVarArgs tmpX;
       for ( unsigned k = 0; k < inputVars.size(); k++ ) {
-        processVariable( *this, info, inputVars[k], tmpX );
+        processVariable( *this, _info, inputVars[k], tmpX );
         _inVarsMap.insert( std::make_pair( inputVars[k], k) );
       }
       _X = IntVarArray( *this, tmpX );
       IntVarArgs tmpY;
       for ( unsigned k =0; k < outputVars.size(); k++ ) {
-        processVariable( *this, info, outputVars[k], tmpY );
+        processVariable( *this, _info, outputVars[k], tmpY );
         _outVarsMap.insert( std::make_pair( outputVars[k], k ) );
       }
       _Y = IntVarArray( *this, tmpY );
@@ -85,6 +86,17 @@ namespace fs0 {
     }
 
     void
+    SupportCSP::addBoundsConstraintFromDomain( VariableIdx v ) {
+      auto it = _inVarsMap.find( v );
+      assert( it != _inVarsMap.end() );
+      TypeIdx type = _info.getVariableType(v);
+      if (!_info.hasVariableBoundedDomain(type)) return; // Nothing to do in this case
+      const auto& bounds = _info.getVariableBounds(type);
+      // MRJ: bounds.first <= v <= bounds.second
+      dom( *this, _X[ it->second], bounds.first, bounds.second);
+    }
+
+    void
     SupportCSP::addMembershipConstraint( VariableIdx v, DomainPtr varDomain ) {
       auto it = _inVarsMap.find( v );
       assert( it != _inVarsMap.end() );
@@ -118,18 +130,23 @@ namespace fs0 {
       SupportCSP::ptr csp = new SupportCSP( info, tmpX, tmpY );
 
       // Create constraints, once variables have been properly defined
+      // MRJ: These constraints should always be translatable if they're
+      // in the action description
       for ( ScopedConstraint::cptr global : globalConstraints ) {
         auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(global) );
+        assert( transObj != nullptr );
         transObj->addConstraint( global, *csp );
       }
 
       for ( ScopedConstraint::cptr prec : a.getConstraints() ) {
         auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(prec) );
+        assert( transObj != nullptr );
         transObj->addConstraint( prec, *csp );
       }
 
       for ( ScopedEffect::cptr eff : a.getEffects() ) {
         auto transObj = TranslatorRepository::instance().getEffectTranslator( typeid(eff) );
+        assert( transObj != nullptr );
         transObj->addConstraint( eff, *csp );
       }
 

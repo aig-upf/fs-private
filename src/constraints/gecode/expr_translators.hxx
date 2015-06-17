@@ -3,12 +3,13 @@
 
 #include <constraints/scoped_constraint.hxx>
 #include <constraints/scoped_effect.hxx>
-#include <constraints/gecode/support_csp.hxx>
 #include <gecode/driver.hh>
 
 namespace fs0 {
 
   namespace gecode {
+
+    class SupportCSP;
 
     class ConstraintTranslator  {
     public:

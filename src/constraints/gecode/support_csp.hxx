@@ -37,10 +37,11 @@ namespace fs0 {
       void addEqualityConstraint( VariableIdx varName, ObjectIdx value );
       void addMembershipConstraint( VariableIdx varName, DomainPtr values );
       void addBoundsConstraint( VariableIdx varName, int lb, int ub );
+      void addBoundsConstraintFromDomain( VariableIdx varName );
 
       // Cloning constructor
       SupportCSP( bool share, SupportCSP& other ) :
-        Gecode::Space( share, other ) {
+        Gecode::Space( share, other ), _info( other._info )  {
         _X.update( *this, share, other._X );
         _Y.update( *this, share, other._Y );
       }
@@ -70,6 +71,8 @@ namespace fs0 {
       VariableMap _inVarsMap;
       //! Output variables mapping
       VariableMap _outVarsMap;
+      //! Reference to problem info
+      const ProblemInfo&  _info;
     };
 
 
