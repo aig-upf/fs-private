@@ -30,9 +30,6 @@ namespace fs0 {
       csp.addBoundsConstraintFromDomain( con->getAffected() );
     }
 
-    ConstraintTranslatorRegistrar< UnaryDomainBoundsConstraintTranslator > registrarUnaryDomainBounds( typeid( UnaryDomainBoundsConstraint ) );
-    ConstraintTranslatorRegistrar< BinaryDomainBoundsConstraintTranslator > registrarBinaryDomainBounds( typeid( BinaryDomainBoundsConstraint ) );
-
 
   }
 

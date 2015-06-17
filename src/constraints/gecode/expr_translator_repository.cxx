@@ -1,4 +1,5 @@
 #include <constraints/gecode/expr_translator_repository.hxx>
+#include <iostream>
 
 namespace fs0 {
 
@@ -31,6 +32,7 @@ namespace fs0 {
     EffectTranslator::ptr
     TranslatorRepository::getEffectTranslator( TypeInfoRef type ) {
       auto it = _effectTranslators.find( type );
+      std::cout << "# Effect translators registered: " << _effectTranslators.size() << std::endl;
       if ( it == _effectTranslators.end() ) return nullptr;
       return it->second;
     }
@@ -38,6 +40,9 @@ namespace fs0 {
     ConstraintTranslator::ptr
     TranslatorRepository::getConstraintTranslator( TypeInfoRef type ) {
       auto it = _constraintTranslators.find( type );
+      std::cout << "# Constraint translators registered: " << _constraintTranslators.size() << std::endl;
+      std::cout << "# Effect translators registered: " << _effectTranslators.size() << std::endl;
+
       if ( it == _constraintTranslators.end() ) return nullptr;
       return it->second;
     }

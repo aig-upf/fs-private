@@ -19,6 +19,7 @@
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
 #include <constraints/gecode/support_csp.hxx>
+#include <constraints/gecode/constraint_translation.hxx>
 
 #include <components.hxx>  // This will dinamically point to the right generated file
 
@@ -225,6 +226,8 @@ int main(int argc, char** argv) {
 	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
 
+	// MRJ: This is not very nice, but cannot be avoided :(
+	gecode::registerTranslators();
 	gecode::SupportCSP::vptr	csps;
 	gecode::SupportCSP::create( problem, csps );
 	std::cout << "Support CSPs created: " << csps.size() << std::endl;

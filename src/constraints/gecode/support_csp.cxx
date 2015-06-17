@@ -133,19 +133,19 @@ namespace fs0 {
       // MRJ: These constraints should always be translatable if they're
       // in the action description
       for ( ScopedConstraint::cptr global : globalConstraints ) {
-        auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(global) );
+        auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(*global) );
         assert( transObj != nullptr );
         transObj->addConstraint( global, *csp );
       }
 
       for ( ScopedConstraint::cptr prec : a.getConstraints() ) {
-        auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(prec) );
+        auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(*prec) );
         assert( transObj != nullptr );
         transObj->addConstraint( prec, *csp );
       }
 
       for ( ScopedEffect::cptr eff : a.getEffects() ) {
-        auto transObj = TranslatorRepository::instance().getEffectTranslator( typeid(eff) );
+        auto transObj = TranslatorRepository::instance().getEffectTranslator( typeid(*eff) );
         assert( transObj != nullptr );
         transObj->addConstraint( eff, *csp );
       }
