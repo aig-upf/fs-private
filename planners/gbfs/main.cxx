@@ -70,8 +70,9 @@ public:
 	// MRJ: This is part of the required interface of the Heuristic
 	template <typename Heuristic>
 	void	evaluate_with( Heuristic& heuristic ) {
-		h = heuristic.evaluate( state );
-		if ( h == std::numeric_limits<float>::max() ) is_dead_end = true;
+		float _h = heuristic.evaluate( state );
+		if ( _h == std::numeric_limits<float>::max() ) is_dead_end = true;
+		h = _h;
 	}
 
 	size_t                  hash() const { return state.hash(); }
@@ -218,17 +219,21 @@ int main(int argc, char** argv) {
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	Problem problem(data_dir);
 
-	std::cout << "Calling generate()" << std::endl;
-	generate(data_dir, problem);
-
 	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
+
+
+	std::cout << "Calling generate()" << std::endl;
+	generate(data_dir, problem);
+	reportProblemStats(problem);
+	problem.analyzeVariablesRelevance();
+
 	std::cout << "Creating Search_Problem instance" << std::endl;
 	FwdSearchProblem search_prob(problem);
 
 
 	std::cout << "Done!" << std::endl;
-	reportProblemStats(problem);
+
 
 	// Instantiate the engine
 	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), timeout, out_dir);
