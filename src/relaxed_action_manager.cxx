@@ -57,7 +57,7 @@ void BaseActionManager::processAction(unsigned actionIdx, const Action& action, 
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
 	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
-	
+
 	ScopedConstraint::Output o = manager.filter(actionProjection); // Check with local consistency
 	if ( o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(actionProjection)) {
 		processEffects(actionIdx, action, actionProjection, rpgData);
@@ -79,33 +79,33 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 		#ifdef FS0_DEBUG
 		std::cout << "\t effect: " << effect->getName() << std::endl;
 		#endif
-		
+
 		/***** 0-ary Effects *****/
 		if(effectScope.size() == 0) {  // No need to pass any point.
 			assert(effect->applicable()); // The effect is assumed to be applicable - non-applicable 0-ary effects make no sense and are detected before the search.
 			#ifdef FS0_DEBUG
 			std::cout << "\t\t 0-ary effect" << std::endl;
-			#endif	
+			#endif
 			Atom atom = effect->apply();
 			auto hint = rpgData.getInsertionHint(atom);
-			
+
 			if (hint.first) {
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 				completeAtomSupport(actionScope, actionProjection, effectScope, support);
 				rpgData.add(atom, actionIdx, support, hint.second);
 			}
 		}
-		
+
 		/***** Unary Effects *****/
 		else if(effectScope.size() == 1) {  // Micro-optimization for unary effects
 			#ifdef FS0_DEBUG
 			std::cout << "\t\t 1-ary effect" << std::endl;
-			#endif	
+			#endif
 			for (ObjectIdx value:*(actionProjection.at(effectScope[0]))) { // Add to the RPG for every allowed value of the relevant variable
 				if (!effect->applicable(value)) continue;
 				Atom atom = effect->apply(value);
 				auto hint = rpgData.getInsertionHint(atom);
-				
+
 				if (hint.first) {
 					Atom::vctrp support = std::make_shared<Atom::vctr>();
 					support->push_back(Atom(effectScope[0], value));// Just insert the only value
@@ -114,7 +114,7 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 				}
 			}
 		}
-		
+
 		/***** Higher-arity Effects *****/
 		else { // The general, n-ary case. We iterate over the cartesian product of the allowed values for the relevant variables.
 			const DomainVector effectProjection = Projections::project(actionProjection, effectScope);
@@ -122,7 +122,7 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 			#ifdef FS0_DEBUG
 			std::cout << "\t\t n-ary effect" << std::endl;
 			Projections::printDomains( effectProjection );
-			#endif	
+			#endif
 			for (; !it.ended(); ++it) {
 				const ObjectIdxVector& values = *it;
 				#ifdef FS0_DEBUG
@@ -132,11 +132,11 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 					std::cout << value << ",";
 				}
 				std::cout << std::endl;
-				#endif	
+				#endif
 				if (!effect->applicable(values)) continue; // Conditional effect check
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 				if (!isCartesianProductElementApplicable(actionScope, effectScope, actionProjection, values, support)) continue;
-				
+
 				rpgData.add(effect->apply(values), actionIdx, support);
 			}
 		}
@@ -154,8 +154,12 @@ void BaseActionManager::completeAtomSupport(const VariableIdxVector& actionScope
 }
 
 
-bool GenericActionManager::isCartesianProductElementApplicable(const VariableIdxVector& actionScope, const VariableIdxVector& effectScope, const DomainMap& actionProjection, const ObjectIdxVector& element, Atom::vctrp support) const {
-	
+bool GenericActionManager::isCartesianProductElementApplicable(	const VariableIdxVector& actionScope,
+																																const VariableIdxVector& effectScope,
+																																const DomainMap& actionProjection,
+																																const ObjectIdxVector& element,
+																																Atom::vctrp support) const {
+
 	// We need to check that this concrete instantiation makes the action applicable - before we only checked for the local consistency of individual values
 	//DomainMap domains(actionProjection); // Clone the projection - this performs a certain amount of unnecessary work
 	// MRJ: Copy the domains as well - the above only copies the pointers!
@@ -167,7 +171,7 @@ bool GenericActionManager::isCartesianProductElementApplicable(const VariableIdx
 		domainsStorage.push_back( *(it->second) );
 		domains.insert( std::make_pair( it->first, std::make_shared<Domain>( domainsStorage.back() ) ) );
 	}
-	
+
 	// Prune the domains of the variables relevant to the effect into a singleton domain.
 	for (unsigned i = 0; i < effectScope.size(); ++i) {
 		const VariableIdx& variable = effectScope[i];
@@ -177,11 +181,11 @@ bool GenericActionManager::isCartesianProductElementApplicable(const VariableIdx
 		d.insert(value);
 		support->push_back(Atom(variable, value)); // Zip the variables with their values
 	}
-	
+
 	manager.filter(domains); // Re-apply the filtering but with the domains of the variables relevant to the particular effect turned into singletons
 	ScopedConstraint::Output o = manager.filter(domains);
 	if (o == ScopedConstraint::Output::Failure) return false;
-	
+
 	completeAtomSupport(actionScope, domains, effectScope, support);
 	return true;
 }
@@ -196,4 +200,3 @@ bool BaseActionManager::checkPreconditionApplicability(const DomainMap& domains)
 
 
 } // namespaces
-

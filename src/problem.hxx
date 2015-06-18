@@ -26,7 +26,7 @@ public:
 	//! Modify the problem initial state
 	void setInitialState(const State::cptr& state) { _initialState = state; }
 	const State::cptr getInitialState() const { return _initialState; }
-	
+
 	//! Modify the problem (grounded) actions
 	void addAction(const Action::cptr& action) { _actions.push_back(action); }
 	const Action::cptr& getAction(ActionIdx idx) const { return _actions.at(idx); }
@@ -34,7 +34,7 @@ public:
 	const Action::vcptr& getAllActions() const { return _actions; }
 
 	SimpleApplicableActionSet getApplicableActions(const State& s) const;
-	
+
 	bool isGoal(const State& s) const { return ctrManager->isGoal(s); }
 
 	unsigned numUnsatisfiedGoals( const State& s ) const { return ctrManager->numUnsatisfiedGoals( s ); }
@@ -45,54 +45,64 @@ public:
 	const ScopedConstraint::vcptr& getConstraints() const { return stateConstraints; }
 	void registerGoalConstraint(ScopedConstraint::cptr constraint) { goalConstraints.push_back(constraint);}
 	const ScopedConstraint::vcptr& getGoalConstraints() const { return goalConstraints; }
-	
+
 	const std::string& get_action_name(unsigned action) const { return _problemInfo.getActionName(action); }
 
-	
+	//! Simple relevance analysis that over-approximates the set of state variables whose
+	//! values can matter for the goal being achievable
+	void analyzeVariablesRelevance();
+
 	//! Getter/setter for the associated ProblemInfo object.
 	const ProblemInfo& getProblemInfo() const { return _problemInfo; }
-	
+
 	static void setCurrentProblem(Problem& problem) {
 		problem.bootstrap();
 		_instance = &problem;
 	}
-	
+
 	static const Problem* getCurrentProblem() {
 		assert(_instance);
 		return _instance;
 	}
-	
+
 	PlanningConstraintManager::cptr getConstraintManager() const { return ctrManager; }
-	
+
 	void addDomainBoundConstraints();
-	
+
 	void compileConstraints();
-	
+
+	static bool isGoalRelevant( VariableIdx var ) {
+		return getCurrentProblem()->_goalRelevantVars[var];
+	}
+
 
 protected:
 	State::cptr _initialState;
-	
+
 	PlanningConstraintManager::cptr ctrManager;
-	
+
 	Action::vcptr _actions;
-	
+
 	const ProblemInfo _problemInfo;
-	
+
 	//! Vectors of pointers to the different problem constraints. This class owns the pointers.
 	ScopedConstraint::vcptr stateConstraints;
 	ScopedConstraint::vcptr goalConstraints;
-	
+
 	static const Problem* _instance;
 
 	//! This performs a number of necessary routines once all of the problem information has been defined.
 	void bootstrap();
-	
+
 	//! A helper that compiles in-place a vector of constraints. Returns how many constraints were actually compiled.
 	unsigned compileConstraintVector(ScopedConstraint::vcptr& constraints) const;
+
+
+	//! Bitmap holding what variables are relevant to the goal (i.e. appear on Goal, Precondition or Global constraints)
+	std::vector<bool>		_goalRelevantVars;
 };
 
-	  
-	  
-	  
-} // namespaces
 
+
+
+} // namespaces

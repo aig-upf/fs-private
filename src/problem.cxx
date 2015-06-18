@@ -6,34 +6,70 @@
 #include <sstream>
 
 namespace fs0 {
-	
+
 const Problem* Problem::_instance = 0;
 
 Problem::Problem(const std::string& data_dir) :
 	_problemInfo(data_dir),
 	stateConstraints(),
 	goalConstraints()
-{}
+{
+}
 
 Problem::~Problem() {
 	for (const auto pointer:_actions) delete pointer;
 	for (const auto pointer:stateConstraints) delete pointer;
 	for (const auto pointer:goalConstraints) delete pointer;
-} 
-	
+}
+
 
 void Problem::bootstrap() {
 	// Add the necessary (unary) constraints to keep the appropriate values, if any, within their bounds.
 	addDomainBoundConstraints();
-	
+
 	// Compile the constraints if necessary
 	compileConstraints();
-	
+
 	// Create the constraint manager
 	ctrManager = std::make_shared<PlanningConstraintManager>(goalConstraints, stateConstraints);
-	
+
 	// Creates the appropriate applicability manager depending on the type and arity of action precondition constraints.
 	ActionManagerFactory::instantiateActionManager(_actions);
+
+	_goalRelevantVars.resize(_problemInfo.getNumVariables());
+	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )
+		_goalRelevantVars[i] = true;
+}
+
+//! For every goal, precondition and global constraint, we note the name of
+//! the variables in their scope inside the _relevantVars array
+void
+Problem::analyzeVariablesRelevance() {
+	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )
+		_goalRelevantVars[i] = false;
+
+	for ( ScopedConstraint::cptr global : getGoalConstraints() )
+		for ( auto x : global->getScope() ) _goalRelevantVars[x] = true;
+
+	for ( ScopedConstraint::cptr global : getConstraints() )
+		for ( auto x : global->getScope() ) _goalRelevantVars[x] = true;
+
+	for ( auto a : getAllActions() ) {
+		for ( ScopedConstraint::cptr prec : a->getConstraints() ) {
+			UnaryDomainBoundsConstraint* conc_1 = dynamic_cast<UnaryDomainBoundsConstraint*>(prec);
+			if (conc_1 != nullptr ) continue;
+			BinaryDomainBoundsConstraint* conc_2 = dynamic_cast<BinaryDomainBoundsConstraint*>(prec);
+			if (conc_2 != nullptr ) continue;
+
+			for ( auto x : prec->getScope() ) _goalRelevantVars[x] = true;
+		}
+	}
+
+	unsigned numGoalRelevantVars = 0;
+	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )
+		numGoalRelevantVars = ( _goalRelevantVars[i] ? numGoalRelevantVars+1 : numGoalRelevantVars );
+	std::cout << "# State variables relevant to the goal: " << numGoalRelevantVars << std::endl;
+
 }
 
 //! For every action, if any of its effects affects a bounded-domain variable, we place
@@ -41,11 +77,11 @@ void Problem::bootstrap() {
 //! so that they won't generate an out-of-bounds value.
 void Problem::addDomainBoundConstraints() {
 	unsigned num_bconstraints = 0;
-	
+
 	std::cout << "Generating unary constraints for bounded domains..." << std::endl;
-	
+
 	for (Action::ptr action:_actions) {
-		
+
 		for (const ScopedEffect::cptr effect:action->getEffects()) {
 			VariableIdx affected = effect->getAffected();
 			if (!_problemInfo.hasVariableBoundedDomain(affected)) continue;
@@ -59,7 +95,7 @@ void Problem::addDomainBoundConstraints() {
 					buffer << effect->getName();
 					buffer << "' of action ";
 					buffer << action->getName();
-					buffer << " produces out-of-bounds variable values" << std::endl; 
+					buffer << " produces out-of-bounds variable values" << std::endl;
 					throw std::runtime_error(buffer.str());
 				}
 			} else if (arity == 1) {
@@ -80,7 +116,7 @@ void Problem::addDomainBoundConstraints() {
 			++num_bconstraints;
 		}
 	}
-	
+
 	std::cout << "Added a total of " << num_bconstraints << " bound-constraints to the " <<  _actions.size() << " problem actions." << std::endl;
 }
 
@@ -91,7 +127,7 @@ void Problem::compileConstraints() {
 	}
 	num_compiled += compileConstraintVector(stateConstraints);
 	num_compiled += compileConstraintVector(goalConstraints);
-	
+
 	std::cout << "Compiled a total of " << num_compiled << " constraints." << std::endl;
 }
 

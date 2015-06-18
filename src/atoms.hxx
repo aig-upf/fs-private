@@ -16,27 +16,37 @@ class Atom {
 public:
 	typedef std::vector<Atom> vctr;
 	typedef std::shared_ptr<Atom::vctr> vctrp;
-	
-	Atom(const VariableIdx variable, const ObjectIdx value);
-	
+
+	Atom(const VariableIdx variable, const ObjectIdx value, bool checkRelevance = true);
+	Atom( const Atom& other );
+	Atom( Atom&& other );
+
+	const Atom& operator=( const Atom& other );
+	Atom& operator=( Atom&& other );
+
 	inline VariableIdx getVariable() const { return _variable; }
 	inline ObjectIdx getValue() const { return _value; }
-	
+
+	bool	isGoalRelevant() const { return _relevant; }
+
 	std::ostream& print(std::ostream& os) const;
 	friend std::ostream& operator<<(std::ostream &os, const Atom& atom) { return atom.print(os); }
 
 protected:
 	//! The state variable
-	VariableIdx _variable; 
-	
+	VariableIdx _variable;
+
 	//! The domain value.
 	ObjectIdx  _value;
+
+	//! Whether this atom is goal relevant
+	bool				_relevant;
 };
 
 //! Comparison operators
 inline bool operator==(const Atom& lhs, const Atom& rhs){ return lhs.getVariable() == rhs.getVariable() && lhs.getValue() == rhs.getValue(); }
 inline bool operator!=(const Atom& lhs, const Atom& rhs){return !operator==(lhs,rhs);}
-inline bool operator< (const Atom& lhs, const Atom& rhs){ 
+inline bool operator< (const Atom& lhs, const Atom& rhs){
 	if (lhs.getVariable() < rhs.getVariable()) return true;
 	if (lhs.getVariable() > rhs.getVariable()) return false;
 	if (lhs.getValue() < rhs.getValue()) return true;
