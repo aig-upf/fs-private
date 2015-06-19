@@ -61,7 +61,6 @@ public:
 	}
 
 	static const Problem* getCurrentProblem() {
-		assert(_instance);
 		return _instance;
 	}
 

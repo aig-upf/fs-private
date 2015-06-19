@@ -45,6 +45,7 @@ void Problem::bootstrap() {
 //! the variables in their scope inside the _relevantVars array
 void
 Problem::analyzeVariablesRelevance() {
+	assert( !getGoalConstraints().empty() );
 	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )
 		_goalRelevantVars[i] = false;
 

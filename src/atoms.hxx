@@ -17,7 +17,7 @@ public:
 	typedef std::vector<Atom> vctr;
 	typedef std::shared_ptr<Atom::vctr> vctrp;
 
-	Atom(const VariableIdx variable, const ObjectIdx value, bool checkRelevance = true);
+	Atom(const VariableIdx variable, const ObjectIdx value);
 	Atom( const Atom& other );
 	Atom( Atom&& other );
 

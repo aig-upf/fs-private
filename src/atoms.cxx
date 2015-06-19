@@ -4,11 +4,14 @@
 
 namespace fs0 {
 
-Atom::Atom(const VariableIdx variable, const ObjectIdx value, bool checkRelevance ) :
-	_variable(variable), _value(value), _relevant(false)
+Atom::Atom(const VariableIdx variable, const ObjectIdx value ) :
+	_variable(variable), _value(value), _relevant(true)
 {
-	_relevant = ( checkRelevance ? Problem::getCurrentProblem()->isGoalRelevant( variable ) : true );
-
+	if ( Problem::getCurrentProblem() == nullptr ) {
+		_relevant = true;
+		return;
+	}
+	_relevant = Problem::getCurrentProblem()->isGoalRelevant( variable );
 }
 
 Atom::Atom( const Atom& other ) :

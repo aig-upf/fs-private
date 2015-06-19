@@ -15,10 +15,10 @@ ConstraintManager::ConstraintManager(const ScopedConstraint::vcptr& constraints)
 void ConstraintManager::initialize() {
 	// Index the different constraints by arity
 	indexConstraintsByArity();
-	
+
 	// Initialize the worklist
 	initializeAC3Worklist(binary_constraints, AC3Worklist);
-	
+
 	// Index all the relevant variables
 	relevant = indexRelevantVariables(_constraints);
 }
@@ -51,7 +51,7 @@ void ConstraintManager::initializeAC3Worklist(const ScopedConstraint::vcptr& con
 
 ScopedConstraint::Output ConstraintManager::filter(const DomainMap& domains) const {
 	if (_constraints.empty()) return ScopedConstraint::Output::Unpruned; // Safety check
-	
+
 	ScopedConstraint::Output result = unaryFiltering(domains);
 	if (result == ScopedConstraint::Output::Failure ||
 		unary_constraints.size() == _constraints.size()) { // If all constraints are unary, there's no need to go on.
@@ -60,11 +60,11 @@ ScopedConstraint::Output ConstraintManager::filter(const DomainMap& domains) con
 
 	ArcSet worklist(AC3Worklist);  // Copy the state constraint worklist
 	// printArcSet(worklist);
-	
+
 	// Pre-load the non-unary constraints
 	loadConstraintDomains(domains, binary_constraints);
 	loadConstraintDomains(domains, n_ary_constraints);
-	
+
 	// First apply both types of filtering
 	ScopedConstraint::Output b_result = binaryFiltering(worklist);
 	if (b_result == ScopedConstraint::Output::Failure) {
@@ -73,7 +73,7 @@ ScopedConstraint::Output ConstraintManager::filter(const DomainMap& domains) con
 		emptyConstraintDomains(n_ary_constraints);
 		return b_result;
 	}
-	
+
 	ScopedConstraint::Output g_result = globalFiltering();
 	if (g_result == ScopedConstraint::Output::Failure) {
 		// Empty the non-unary constraints
@@ -81,10 +81,10 @@ ScopedConstraint::Output ConstraintManager::filter(const DomainMap& domains) con
 		emptyConstraintDomains(n_ary_constraints);
 		return g_result;
 	}
-	
+
 	// The global result won't be affected: if it was "Pruned", it'll continue to be prune regardless of what happens inside the loop.
 	if (b_result == ScopedConstraint::Output::Pruned || g_result == ScopedConstraint::Output::Pruned) result = ScopedConstraint::Output::Pruned;
-		
+
 	// Keep pruning until we reach a fixpoint.
 	while (b_result == ScopedConstraint::Output::Pruned && g_result == ScopedConstraint::Output::Pruned) {
 		// Each type of pruning (global or binary) needs only be performed
@@ -96,7 +96,7 @@ ScopedConstraint::Output ConstraintManager::filter(const DomainMap& domains) con
 	// Empty the non-unary constraints
 	emptyConstraintDomains(binary_constraints);
 	emptyConstraintDomains(n_ary_constraints);
-	
+
 	return result;
 }
 
@@ -115,7 +115,7 @@ void ConstraintManager::loadConstraintDomains(const DomainMap& domains, const Sc
 
 ScopedConstraint::Output ConstraintManager::unaryFiltering(const DomainMap& domains) const {
 	ScopedConstraint::Output output = ScopedConstraint::Output::Unpruned;
-	
+
 	for (ScopedConstraint::cptr ctr:unary_constraints) {
 		assert(ctr->getArity() == 1);
 		ScopedConstraint::Output o = ctr->filter(domains);
@@ -130,9 +130,9 @@ ScopedConstraint::Output ConstraintManager::unaryFiltering(const DomainMap& doma
 
 //! AC3 filtering
 ScopedConstraint::Output ConstraintManager::binaryFiltering(ArcSet& worklist) const {
-	
+
 	ScopedConstraint::Output result = ScopedConstraint::Output::Unpruned;
-	
+
 	// 1. Analyse pending arcs until the worklist is empty
 	while (!worklist.empty()) {
 		Arc a = select(worklist);
@@ -143,7 +143,7 @@ ScopedConstraint::Output ConstraintManager::binaryFiltering(ArcSet& worklist) co
 		// 2. Arc-reduce the constraint with respect to the variable `variable`
 		ScopedConstraint::Output o = constraint->filter(variable);
 		if (o == ScopedConstraint::Output::Failure) return o;
-		
+
 
 		// 3. If we have removed some element from the domain, we insert the related constraints into the worklist in order to reconsider them again.
 		if (o == ScopedConstraint::Output::Pruned) {
@@ -151,18 +151,18 @@ ScopedConstraint::Output ConstraintManager::binaryFiltering(ArcSet& worklist) co
 			VariableIdx pruned = constraint->getScope()[variable];  // This is the index of the state variable whose domain we have pruned
 			for (ScopedConstraint::cptr ctr:binary_constraints) {
 				if (ctr == constraint) continue;  // No need to reinsert the same constraint we just used.
-				
+
 				// Only if the constraint has overlapping scope, we insert in the worklist the constraint paired with _the other_ variable, to be analysed later.
 				const VariableIdxVector& scope = ctr->getScope();
 				assert(scope.size() == 2);
-				
+
 				if (pruned == scope[0]) worklist.insert(std::make_pair(ctr, 1));
 				else if (pruned == scope[1]) worklist.insert(std::make_pair(ctr, 0));
 				else continue;
 			}
 		}
 	}
-	
+
 	return result;
 }
 
@@ -177,6 +177,7 @@ ScopedConstraint::Output ConstraintManager::globalFiltering() const {
 }
 
 bool ConstraintManager::checkSatisfaction(const State& s) const {
+	if ( _constraints.empty() ) return true; // trivially satisfiable
 	for (ScopedConstraint::cptr constraint:_constraints) {
 		if (!constraint->isSatisfied(s)) return false;
 	}
@@ -223,5 +224,3 @@ VariableIdxVector ConstraintManager::indexRelevantVariables(const ScopedConstrai
 
 
 } // namespaces
-
-

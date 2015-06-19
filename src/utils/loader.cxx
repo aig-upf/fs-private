@@ -56,7 +56,7 @@ const State::cptr Loader::loadStateFromFile(const std::string& filename) {
 	for (auto factStr:tok) {
 		std::vector<std::string> strs;
 		boost::split(strs, factStr, boost::is_any_of("="));
-		facts.push_back(Atom(std::stoi(strs[0]), std::stoi(strs[1]), false));
+		facts.push_back(Atom(std::stoi(strs[0]), std::stoi(strs[1])));
 	}
 // 		std::cout << numAtoms << std::endl;
 // 		for (auto f: facts) std::cout << f << std::endl;
