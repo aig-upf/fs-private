@@ -20,4 +20,13 @@ void Printers::printPlan(const std::vector<Action::IdType>& plan, const ProblemI
 	}
 }
 
+void Printers::printPlanJSON(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
+	out << "[";
+	for ( unsigned k = 0; k < plan.size(); k++ ) {
+		out << "\"" << problemInfo.getActionName(plan[k]) << "\"";
+		if ( k < plan.size() - 1 ) out << ", ";
+	}
+	out << "]";
+}
+
 } // namespaces

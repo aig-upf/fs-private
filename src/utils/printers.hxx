@@ -15,6 +15,7 @@ class Printers {
 public:
 	static void printPlan(const ActionPlan& plan, const Problem& problem, std::ostream& out);
 	static void printPlan(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out);
+	static void printPlanJSON(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out);
 };
 
 
