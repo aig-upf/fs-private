@@ -81,7 +81,7 @@ class SearchStatistics {
 
 	private:
 			SearchStatistics() :
-				min_num_goals_sat(0)
+				min_num_goals_sat(100000)
 			{}
 
 
