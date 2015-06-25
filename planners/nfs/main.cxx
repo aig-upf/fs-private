@@ -224,8 +224,11 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	json_out << "\t\"max_num_goals_sat\" : " << engine.model.getTask().numGoalConstraints() - SearchStatistics::instance().min_num_goals_sat << "," << std::endl;
 	json_out << "\t\"num_features\" : " << engine.heuristic_function._novelty_heuristic.numFeatures() << "," << std::endl;
 	json_out << "\t\"novelty_histogram\" : {" << std::endl;
-	for ( unsigned i = 0; i <= engine.heuristic_function.novelty_bound(); i++ )
-		json_out << "\t\t\"" << i << "\" : " << engine.heuristic_function._novelty_heuristic.get_num_states(i) << ", " << std::endl;
+	for ( unsigned i = 0; i <= engine.heuristic_function.novelty_bound(); i++ ) {
+		json_out << "\t\t\"" << i << "\" : " << engine.heuristic_function._novelty_heuristic.get_num_states(i);
+		if ( i < engine.heuristic_function.novelty_bound() ) json_out << ", ";
+		json_out << std::endl;
+	}
 	json_out << "\t}," << std::endl;
 	json_out << "\t\"plan\" : ";
 	if ( solved )
