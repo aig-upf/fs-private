@@ -66,7 +66,7 @@ namespace fs0 {
 		typedef aptk::FiniteDomainNoveltyEvaluator< NoveltyFromPreconditionsAdapter > BaseClass;
 
 
-    void  selectFeatures( const Problem& problem, bool useGoal );
+    void  selectFeatures( const Problem& problem, bool useStateVars, bool useGoal, bool useActions );
 
 		unsigned evaluate( const GenericState& s ) {
       NoveltyFromPreconditionsAdapter adaptee( s, *this );

@@ -28,7 +28,7 @@ namespace fs0 {
     return value;
   }
 
-  void NoveltyFromPreconditions::selectFeatures( const Problem& theProblem, bool useGoal ) {
+  void NoveltyFromPreconditions::selectFeatures( const Problem& theProblem, bool useStateVars, bool useGoal, bool useActions ) {
 
     std::set< VariableIdx > relevantVars;
 
@@ -43,23 +43,28 @@ namespace fs0 {
     }
 
     for ( Action::cptr a : theProblem.getAllActions() ) {
-      //ConstraintSetFeature*  f_a = new ConstraintSetFeature;
+      ConstraintSetFeature*  f_a = new ConstraintSetFeature;
       for ( ScopedConstraint::cptr c : a->getConstraints() ) {
         // Leave out bounds constraints!
         if ( dynamic_cast< const UnaryDomainBoundsConstraint*>(c) != nullptr ) continue;
         if ( dynamic_cast< const BinaryDomainBoundsConstraint*>(c) != nullptr ) continue;
-        for ( VariableIdx x : c->getScope() )
-          relevantVars.insert(x);
-
-        //f_a->addConstraint( c);
+        if ( useStateVars ) {
+          for ( VariableIdx x : c->getScope() )
+            relevantVars.insert(x);
+        }
+        if ( useActions ) f_a->addConstraint( c);
       }
-      //_features.push_back(f_a);
+      if (useActions)
+        _features.push_back(f_a);
+      else
+        delete f_a;
     }
 
-    for ( VariableIdx x : relevantVars ) {
-      _features.push_back( new StateVarFeature( x ) );
+    if ( useStateVars ) {
+      for ( VariableIdx x : relevantVars ) {
+        _features.push_back( new StateVarFeature( x ) );
+      }
     }
-
     std::cout << "Novelty From Constraints: # features: " << numFeatures() << std::endl;
   }
 
