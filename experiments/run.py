@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import pp
 import logging
 import sys
@@ -5,7 +7,9 @@ import argparse
 import glob
 import os
 
-def run_task( benchmark, domain, instance, folder, timeout ) :
+
+
+def run_task( benchmark, command, domain, instance, folder, timeout ) :
     import benchmark
     import os
     import json
@@ -13,22 +17,32 @@ def run_task( benchmark, domain, instance, folder, timeout ) :
     current_dir = os.getcwd()
     os.chdir( folder )
     log = 'trace.log'
-    command = './nfs-planner.bin'
     rv, time = benchmark.run( command, timeout, 4096, benchmark.Log(log) )
     command_info = {}
     command_info['exit_code'] = rv
     command_info['wall_time'] = time
 
     if rv == 0 :
-        if os.path.exists( 'search.json ') :
-            with open( 'search.json') as input :
-                data = json.loads( input.read() )
-                for k, v in data :
+        json_search_data = 'search.json'
+        if os.path.exists( json_search_data ) :
+            with open( json_search_data ) as input :
+                try :
+                    s = input.read()
+                    data = json.loads( s )
+                except ValueError as e:
+                    print( e )
+                    print( "Read from file:")
+                    print( s )
+                    os.chdir( current_dir )
+                    return
+                for k, v in data.items() :
                     command_info[k] = v
+        else :
+            print("No json data payload found!")
 
     os.chdir( current_dir )
     data_folder = 'data'
-    data_folder = os.path.join( data, domain )
+    data_folder = os.path.join( data_folder, domain )
     if not os.path.exists( data_folder ) :
         os.makedirs(data_folder)
 
@@ -39,11 +53,15 @@ def run_task( benchmark, domain, instance, folder, timeout ) :
         info['instance'] = instance
         info['planners_data'] = {}
     else :
-        info = json.loads( info_filename )
+        with open( info_filename ) as instream :
+            info = json.loads( instream.read() )
     info['planners_data'][command] = command_info
 
-    with open ( info_filename, 'w' ) as out:
-        print( json.dumps( info, separators=(',',':'), indent=4, sort_keys = True), file=out)
+    with open ( info_filename, 'w' ) as outstream:
+        payload = json.dumps( info, separators=(',',':'), indent=4, sort_keys = True)
+        outstream.write( payload )
+
+    return payload
 
 def main() :
 
@@ -53,6 +71,7 @@ def main() :
     parser.add_argument( '--timeout', required=False, help='Planner time out (defaults to 1800 secs)')
     parser.add_argument( '--cpus', required=False, help='Number of cpus to be used (defaults to 2)')
     parser.add_argument( '--secret', required=True, help='Server password')
+    parser.add_argument( '--planner', required=True, help='Command used to invoke the planner')
 
     args = parser.parse_args()
 
@@ -62,6 +81,8 @@ def main() :
 
     if args.timeout is None :
         args.timeout = 1800
+
+    print(args.planner)
 
     tasks = []
     if args.domain is not None :
@@ -77,11 +98,13 @@ def main() :
         instances = glob.glob( os.path.join( domain_dir, '*') )
         instances = [ inst for inst in instances if os.path.isdir( inst ) ]
         for inst in instances :
-            tasks.append( (os.path.basename(args.benchmark), os.path.basename(domain_dir), os.path.basename(inst), inst, args.timeout) )
-
-    num_cpus = int(args.cpus)
+            tasks.append( (os.path.basename(args.benchmark), args.planner, os.path.basename(domain_dir), os.path.basename(inst), inst, args.timeout) )
+    if args.cpus is None :
+        num_cpus = 2
+    else :
+        num_cpus = int(args.cpus)
     ppservers = ()
-    jobserver = pp.Server( num_cpus, ppservers=ppservers, socket_timeout=2, secret=args.secret)
+    job_server = pp.Server( num_cpus, ppservers=ppservers, socket_timeout=2, secret=args.secret)
     print ('Tasks to be executed: {0}'.format(len(tasks)))
     jobs = [  (task, job_server.submit( run_task, (task), (), ())) for task in tasks ]
 
