@@ -35,16 +35,19 @@ public :
 
 	HeuristicEnsemble( const FwdSearchProblem& problem )
 		: _problem( problem ), _reachability_heuristic( problem ) {
-		// MRJ: setups the novelty heuristic, this is all it
-		// needs to know
-		_novelty_heuristic.set_max_novelty( 1 );
-		_novelty_heuristic.selectFeatures( problem.getTask(), true );
 	}
 
 	~HeuristicEnsemble() {
 		for ( unsigned k = 1; k <= novelty_bound(); k++ ) {
 			std::cout << "# novelty(s)=" << k << " : " << _novelty_heuristic.get_num_states(k) << std::endl;;
 		}
+	}
+
+	void setup( int max_novelty, bool useStateVars, bool useGoal, bool useActions ) {
+		// MRJ: setups the novelty heuristic, this is all it
+		// needs to know
+		_novelty_heuristic.set_max_novelty( max_novelty );
+		_novelty_heuristic.selectFeatures( _problem.getTask(), useStateVars, useGoal, useActions );
 	}
 
 	float	evaluate_reachability( const GenericState& s ) {
@@ -61,11 +64,27 @@ public :
 
 	unsigned	novelty_bound() { return _novelty_heuristic.max_novelty(); }
 
-protected:
-
 	const	FwdSearchProblem&							_problem;
 	RelaxedHeuristic										_reachability_heuristic;
 	NoveltyFromPreconditions						_novelty_heuristic;
+};
+
+class SearchStatistics {
+	public:
+
+		static SearchStatistics& 	instance() {
+			static SearchStatistics theInstance;
+			return theInstance;
+		}
+
+	unsigned	min_num_goals_sat;
+
+	private:
+			SearchStatistics() :
+				min_num_goals_sat(0)
+			{}
+
+
 };
 
 
@@ -113,6 +132,7 @@ public:
 		f = heuristic.evaluate_novelty( state );
 		_is_dead_end = f > heuristic.novelty_bound();
 		num_unsat = heuristic.evaluate_num_unsat_goals( state );
+		SearchStatistics::instance().min_num_goals_sat = std::min( num_unsat, SearchStatistics::instance().min_num_goals_sat);
 		if ( parent != nullptr && num_unsat < parent->num_unsat ) {
 			std::cout << "Reward!" << std::endl;
 			print(std::cout);
@@ -194,17 +214,24 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	plan_out.close();
 
 	json_out << "{" << std::endl;
-	json_out << "\tsearch_time : " << total_time << "," << std::endl;
-	json_out << "\tgenerated : " << engine.generated << "," << std::endl;
-	json_out << "\texpanded : " << engine.expanded << "," << std::endl;
-	json_out << "\teval_per_second : " << eval_speed << "," << std::endl;
-	json_out << "\tsolved : " << ( solved ? "True" : "False" ) << "," << std::endl;
-	json_out << "\tvalid : " << ( valid ? "True" : "False" ) << "," << std::endl;
-	json_out << "\tplan : ";
+	json_out << "\t\"search_time\" : " << total_time << "," << std::endl;
+	json_out << "\t\"generated\" : " << engine.generated << "," << std::endl;
+	json_out << "\t\"expanded\" : " << engine.expanded << "," << std::endl;
+	json_out << "\t\"eval_per_second\" : " << eval_speed << "," << std::endl;
+	json_out << "\t\"solved\" : " << ( solved ? "true" : "false" ) << "," << std::endl;
+	json_out << "\t\"valid\" : " << ( valid ? "true" : "false" ) << "," << std::endl;
+	json_out << "\t\"num_goals\" : " << engine.model.getTask().numGoalConstraints() << "," << std::endl;
+	json_out << "\t\"max_num_goals_sat\" : " << engine.model.getTask().numGoalConstraints() - SearchStatistics::instance().min_num_goals_sat << "," << std::endl;
+	json_out << "\t\"num_features\" : " << engine.heuristic_function._novelty_heuristic.numFeatures() << "," << std::endl;
+	json_out << "\t\"novelty_histogram\" : {" << std::endl;
+	for ( unsigned i = 0; i <= engine.heuristic_function.novelty_bound(); i++ )
+		json_out << "\t\t\"" << i << "\" : " << engine.heuristic_function._novelty_heuristic.get_num_states(i) << ", " << std::endl;
+	json_out << "\t}," << std::endl;
+	json_out << "\t\"plan\" : ";
 	if ( solved )
 		Printers::printPlanJSON( plan, problemInfo, json_out);
 	else
-		json_out << "[]";
+		json_out << "null";
 	json_out << std::endl;
 	json_out <<  "}" << std::endl;
 
@@ -214,10 +241,18 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 }
 
 
-void instantiate_seach_engine_and_run(const FwdSearchProblem& search_prob, const ProblemInfo& problemInfo, int timeout, const std::string& out_dir) {
+void instantiate_seach_engine_and_run(
+	const FwdSearchProblem& search_prob, const ProblemInfo& problemInfo, int max_novelty,
+	bool useStateVars, bool useGoal, bool useActions,	int timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan/Novelty Heuristic greedy best first search (time budget is " << timeout << " secs)..." << std::endl;
 	aptk::StlBestFirstSearch< Search_Node, HeuristicEnsemble, FwdSearchProblem > rp_bfs_engine( search_prob );
+	std::cout << "Heuristic options:" << std::endl;
+	std::cout << "\tMax novelty: " << max_novelty << std::endl;
+	std::cout << "\tUsing state vars as features: " << ( useStateVars ? "yes" : "no ") << std::endl;
+	std::cout << "\tUsing goal as feature: " << ( useGoal ? "yes" : "no ") << std::endl;
+	std::cout << "\tUsing actions as features: " << ( useActions ? "yes" : "no ") << std::endl;
+	rp_bfs_engine.heuristic_function.setup(max_novelty, useStateVars, useGoal, useActions );
 	timer = do_search(rp_bfs_engine, problemInfo, out_dir);
 	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }
@@ -251,18 +286,24 @@ void reportProblemStats(const Problem& problem) {
 
 namespace po = boost::program_options;
 
-int parse_options(int argc, char** argv, int& timeout, std::string& data_dir, std::string& out_dir) {
+int parse_options(	int argc, char** argv, int& timeout, std::string& data_dir, std::string& out_dir, int& max_novelty,
+										bool& use_state_vars, bool& use_goal, bool& use_actions ) {
 	po::options_description description("Allowed options");
 	description.add_options()
 		("help,h", "Display this help message")
 		("timeout,t", po::value<int>()->default_value(10), "The timeout, in seconds.")
 		("data", po::value<std::string>()->default_value("data"), "The directory where the input data is stored.")
-		("out", po::value<std::string>()->default_value("."), "The directory where the results data is to be output.");
+		("out", po::value<std::string>()->default_value("."), "The directory where the results data is to be output.")
+		("max_novelty,n", po::value<int>()->default_value(1), "Maximum novelty (defaults to 2)")
+		("use_state_vars", po::value<bool>()->default_value(true), "Use state variables as features (default is true)")
+		("use_goal", po::value<bool>()->default_value(true), "Use goal satisfiability as a feature (default is true)")
+		("use_actions", po::value<bool>()->default_value(false), "Use action preconditions satisfiability as a feature (default is false)");
 
 	po::positional_options_description pos;
 	pos.add("timeout", 1)
 	   .add("data", 1)
-	   .add("out", 1);
+	   .add("out", 1)
+		 .add("max_novelty", 1);
 
 	po::variables_map vm;
 	try {
@@ -283,14 +324,19 @@ int parse_options(int argc, char** argv, int& timeout, std::string& data_dir, st
 	timeout = vm["timeout"].as<int>();
 	data_dir = vm["data"].as<std::string>();
 	out_dir = vm["out"].as<std::string>();
+	max_novelty = vm["max_novelty"].as<int>();
+	use_state_vars = vm["use_state_vars"].as<bool>();
+	use_goal = vm["use_goal"].as<bool>();
+	use_actions = vm["use_actions"].as<bool>();
 	return 0;
 }
 
 
 int main(int argc, char** argv) {
 
-	int timeout; std::string data_dir; std::string out_dir;
-	int res = parse_options(argc, argv, timeout, data_dir, out_dir);
+	int timeout, max_novelty; std::string data_dir; std::string out_dir;
+	bool use_state_vars, use_goal, use_actions;
+	int res = parse_options(argc, argv, timeout, data_dir, out_dir, max_novelty, use_state_vars, use_goal, use_actions);
 	if (res != 0) {
 		return res;
 	}
@@ -311,6 +357,6 @@ int main(int argc, char** argv) {
 	reportProblemStats(problem);
 
 	// Instantiate the engine
-	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), timeout, out_dir);
+	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), max_novelty, use_state_vars, use_goal, use_actions, timeout, out_dir);
 	return 0;
 }
