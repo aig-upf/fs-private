@@ -14,96 +14,68 @@
 
 namespace fs0 {
 
-void Loader::loadProblem(const std::string& dir, ActionFactoryType actionFactory, ConstraintFactoryType constraintFactory, GoalFactoryType goalFactory, Problem& problem) {
+void Loader::loadProblem(const rapidjson::Document& data, ActionFactoryType actionFactory, ConstraintFactoryType constraintFactory, GoalFactoryType goalFactory, Problem& problem) {
 	/* Define the actions */
 	std::cout << "\tDefining actions..." << std::endl;
-	loadGroundedActions(dir + "/actions.data", actionFactory, problem);
+	loadGroundedActions(data["actions"], actionFactory, problem);
 
 	/* Define the initial state */
 	std::cout << "\tDefining initial state..." << std::endl;
-	problem.setInitialState(loadStateFromFile(dir + "/init.data"));
+	problem.setInitialState(loadState(data["init"]));
 
 	/* Load the state and goal constraints */
 	std::cout << "\tDefining state and goal constraints..." << std::endl;
-	loadConstraints(dir + "/constraints.data", constraintFactory, problem);
+	loadConstraints(data["constraints"], constraintFactory, problem);
 
 	/* Generate goal constraints from the goal evaluator */
 	std::cout << "\tGenerating goal constraints..." << std::endl;
-	generateGoalConstraints(dir + "/goal.data", goalFactory, problem);
+	generateGoalConstraints(data["goal"], goalFactory, problem);
 }
-	
-	
-const State::cptr Loader::loadStateFromFile(const std::string& filename) {
+
+
+const State::cptr Loader::loadState(const rapidjson::Value& data) {
+	// The state is an array of two-sized arrays [x,v], representing atoms x=v
+	unsigned numAtoms = data["variables"].GetInt();
 	Atom::vctr facts;
-	std::string str;
-	std::ifstream in(filename);
-
-	if ( in.fail() ) {
-
-		std::cerr << "Loader::loadStateFromFile: Error opening file '" << filename << "'" << std::endl;
-		std::cout << "Bailing out!" << std::endl;
-		std::exit(1);
+	for (unsigned i = 0; i < data["atoms"].Size(); ++i) {
+		const rapidjson::Value& node = data["atoms"][i];
+		facts.push_back(Atom(node[0].GetInt(), node[1].GetInt()));
 	}
-	
-	// Parse the total number of facts
-	std::getline(in, str);
-	unsigned numAtoms = std::stoi(str);
-	
-	// Parse the initial facts themselves
-	std::getline(in, str);
-	typedef boost::tokenizer<boost::escaped_list_separator<char> > Tokenizer;
-	Tokenizer tok(str);
-	for (auto factStr:tok) {
-		std::vector<std::string> strs;
-		boost::split(strs, factStr, boost::is_any_of("="));
-		facts.push_back(Atom(std::stoi(strs[0]), std::stoi(strs[1])));
-	}
-// 		std::cout << numAtoms << std::endl;
-// 		for (auto f: facts) std::cout << f << std::endl;
 	return std::make_shared<State>(numAtoms, facts);
 }
 
-void Loader::loadGroundedActions(const std::string& filename, ActionFactoryType actionFactory, Problem& problem) {
-	std::string line;
-	std::ifstream in(filename);
+void Loader::loadGroundedActions(const rapidjson::Value& data, ActionFactoryType actionFactory, Problem& problem) {
+	assert(problem.getNumActions() == 0);
 	
-	// Parse the ground actions - each line is an action
-	while (std::getline(in, line)) {
-		// std::cout << line << std::endl;
-		std::vector<std::string> strs;
-		boost::split(strs, line, boost::is_any_of("#"));
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		const rapidjson::Value& node = data[i];
 		
-		// strs contains 7 elements: 
-		// # (0) Action name
-		// # (1) classname
-		// # (2) binding
-		// # (3) derived objects
-		// # (4) applicability relevant vars
-		// # (5) effect relevant vars
-		// # (6) effect affected vars
-		assert(strs.size()==7);
+// 		# Format: a number of elements defining the action:
+// 		# (0) Action ID (index)
+// 		# (1) Action name
+// 		# (2) classname
+// 		# (3) binding
+// 		# (4) derived objects
+// 		# (5) applicability relevant vars
+// 		# (6) effect relevant vars
+// 		# (7) effect affected vars
 		
 		
 		// We ignore the grounded name for the moment being.
-		const std::string& actionClassname = strs[1];
-		ObjectIdxVector binding = parseNumberList<int>(strs[2]);
-		ObjectIdxVector derived = parseNumberList<int>(strs[3]);
-		std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(strs[4]);
-		std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(strs[5]);
-		std::vector<VariableIdxVector> effAffectedVars = parseDoubleNumberList<unsigned>(strs[6]);
-
+		const std::string& actionClassname = node[2].GetString();
+		ObjectIdxVector binding = parseNumberList<int>(node[3]);
+		ObjectIdxVector derived = parseNumberList<int>(node[4]);
+		std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(node[5]);
+		std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(node[6]);
+		std::vector<VariableIdxVector> effAffectedVars = parseDoubleNumberList<unsigned>(node[7]);
+		
 		problem.addAction(actionFactory(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars));
 	}
 }
 
-void Loader::generateGoalConstraints(const std::string& filename, GoalFactoryType goalFactory, Problem& problem) {
-	std::string line;
-	std::ifstream in(filename);
-	
-	// Parse the goal relevant variables - we simply have one line with the variables indexes.
-	std::getline(in, line);
-	
-	std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(line);
+void Loader::generateGoalConstraints(const rapidjson::Value& data, GoalFactoryType goalFactory, Problem& problem) {
+	// We have one single line with the variables indexes relevant to the goal procedures.
+	std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(data);
 	ScopedConstraint::vcptr goal_constraints = goalFactory(appRelevantVars);
 	
 	for (const auto& ctr:goal_constraints) {
@@ -111,63 +83,64 @@ void Loader::generateGoalConstraints(const std::string& filename, GoalFactoryTyp
 	}
 }
 
-void Loader::loadConstraints(const std::string& filename, ConstraintFactoryType constraintFactory, Problem& problem) {
-	std::string line;
-	std::ifstream in(filename);
-	
-	
-	// Each line encodes a constraint.
-	while (std::getline(in, line)) {
-		std::vector<std::string> strs;
-		boost::split(strs, line, boost::is_any_of("#"));
+void Loader::loadConstraints(const rapidjson::Value& data, ConstraintFactoryType constraintFactory, Problem& problem) {
+
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		const rapidjson::Value& node = data[i];
 		
-		// strs contains 3 elements: 
+		// Each node contains 4 elements
 		// (0) The constraint description
 		// (1) The constraint name
 		// (2) The constraint parameters
 		// (3) The variables upon which the constraint is enforced
-		assert(strs.size()==4);
+		assert(node.Size()==4);
 
 		// We ignore the grounded name for the moment being.
-		const std::string& name = strs[1];
-		ObjectIdxVector parameters = parseNumberList<int>(strs[2]);
-		VariableIdxVector variables = parseNumberList<unsigned>(strs[3]);
+		const std::string& name = node[1].GetString();
+		ObjectIdxVector parameters = parseNumberList<int>(node[2]);
+		VariableIdxVector variables = parseNumberList<unsigned>(node[3]);
 		
 		problem.registerConstraint(constraintFactory(name, parameters, variables));
-		
-// 		ScopedConstraint::cptr constraint = ConstraintFactory::create(name, parameters, variables);
-// 		problem.registerConstraint(constraint);
 	}
 }
 
-template<typename T>
-std::vector<T> Loader::parseNumberList(const std::string& input, const std::string sep) {
-	if (input == "") return std::vector<T>();
-	
-	std::vector<T> output;
-	
-	std::vector<std::string> strs;
-	boost::split(strs, input, boost::is_any_of(sep));
+rapidjson::Document Loader::loadJSONObject(const std::string& filename) {
+	// Load and parse the JSON data file.
+	std::ifstream in(filename);
+	if ( in.fail() ) {
+		std::cerr << "Could not open filename '" << filename << "'" << std::endl;
+		std::exit(1);
+	}
+	std::string str((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	rapidjson::Document data;
+	data.Parse(str.c_str());
+	return data;
+}
 
-	for(const auto& str:strs) {
-		output.push_back(boost::lexical_cast<T>(str));
+
+template<typename T>
+std::vector<T> Loader::parseNumberList(const rapidjson::Value& data) {
+	std::vector<T> output;
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		output.push_back(boost::lexical_cast<T>(data[i].GetInt()));
 	}
 	return output;
 }
 
+
 template<typename T>
-std::vector<std::vector<T>> Loader::parseDoubleNumberList(const std::string& input, const std::string sep) {
+std::vector<std::vector<T>> Loader::parseDoubleNumberList(const rapidjson::Value& data) {
 	std::vector<std::vector<T>> output;
-	std::vector<std::string> strs;
-	boost::split(strs, input, boost::is_any_of(sep));
-	
-	if (strs.size() == 0) {
+	assert(data.IsArray());
+	if (data.Size() == 0) {
 		output.push_back(std::vector<T>());
 	} else {
-		for(const auto& str:strs) {
-			output.push_back(parseNumberList<T>(str));
+		for (unsigned i = 0; i < data.Size(); ++i) {
+			output.push_back(parseNumberList<T>(data[i]));
 		}
 	}
 	return output;
 }
+
+
 } // namespaces

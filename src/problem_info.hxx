@@ -9,6 +9,8 @@
 #include <fs0_types.hxx>
 #include <iostream>
 
+#include "lib/rapidjson/document.h"
+
 namespace fs0 {
 
 class Atom;
@@ -52,11 +54,9 @@ protected:
 	std::unordered_map<std::string, TypeIdx> name_to_type;
 	std::vector<std::string> type_to_name;
 	
-	static const boost::regex boundedIntRE;
-	
 public:
 
-	ProblemInfo(const std::string& data_dir);
+	ProblemInfo(const rapidjson::Document& data);
 	~ProblemInfo() {}
 	
 	const std::string& getActionName(ActionIdx index) const;
@@ -103,25 +103,19 @@ public:
 
 protected:
 	
-	//! Load the names of the (bound) actions from the specified file.
-	void loadVariableIndex(const std::string& filename);
+	//! Load the names of the state variables from the specified file.
+	void loadVariableIndex(const rapidjson::Value& data);
 	
 	ObjectType parseVariableType(const std::string& str) const;
 	
-	//! Load the names of the state variables from the specified file.
-	void loadActionIndex(const std::string& filename);
+	//! Load the names of the (bound) actions from the specified file.
+	void loadActionIndex(const rapidjson::Value& data);
 	
 	//! Load the names of the problem objects from the specified file.
-	void loadObjectIndex(const std::string& filename);
+	void loadObjectIndex(const rapidjson::Value& data);
 	
-	//! Load the map from variable types to possible objects.
-	void loadTypeObjects(const std::string& filename);
-	
-	//! Load the map from variable types to possible objects.
-	void loadTypeIndex(const std::string& filename);
+	//! Load all type-related info.
+	void loadTypeIndex(const rapidjson::Value& data);
 };
 
-	  
-	  
-	  
 } // namespaces

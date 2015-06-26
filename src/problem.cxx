@@ -9,8 +9,8 @@ namespace fs0 {
 	
 const Problem* Problem::_instance = 0;
 
-Problem::Problem(const std::string& data_dir) :
-	_problemInfo(data_dir),
+Problem::Problem(const rapidjson::Document& data) :
+	_problemInfo(data),
 	stateConstraints(),
 	goalConstraints()
 {}

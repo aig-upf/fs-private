@@ -20,7 +20,7 @@ class Problem
 {
 public:
 	//! Constructs a problem by loading the problem data from the given directory.
-	Problem(const std::string& data_dir);
+	Problem(const rapidjson::Document& data);
 	~Problem();
 
 	//! Modify the problem initial state
