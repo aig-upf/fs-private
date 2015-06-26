@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <boost/container/flat_set.hpp>
+#include <tuple>
 
 #include <fs0_types.hxx>
 
@@ -14,8 +15,10 @@ namespace fs0 {
  */
 class Atom {
 public:
-	typedef std::vector<Atom> vctr;
+	typedef std::vector<Atom> 					vctr;
 	typedef std::shared_ptr<Atom::vctr> vctrp;
+	typedef std::tuple<Atom,Atom> 			range;
+	typedef std::vector< range >				vrange;
 
 	Atom(const VariableIdx variable, const ObjectIdx value);
 	Atom( const Atom& other );
