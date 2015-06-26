@@ -109,13 +109,13 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	std::ofstream out(out_dir + "/searchlog.out");
 	std::ofstream plan_out(out_dir + "/first.plan");
-	std::ofstream json_out( out_dir, "/search.json" );
+	std::ofstream json_out( out_dir + "/search.json" );
 
 	std::cout << "Writing results to " << out_dir + "/searchlog.out" << std::endl;
 
 	Plan plan;
 	float t0 = aptk::time_used();
-	bool solved = engine.solved_model( plan );
+	bool solved = engine.solve_model( plan );
 	float total_time = aptk::time_used() - t0;
 
 
@@ -140,13 +140,14 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	json_out << "\tgenerated : " << engine.generated << "," << std::endl;
 	json_out << "\texpanded : " << engine.expanded << "," << std::endl;
 	json_out << "\teval_per_second : " << eval_speed << "," << std::endl;
-	json_out << "\tsolved : " << ( solved ? "True" : "False" ) << "," << std::endl;
-	json_out << "\tvalid : " << ( valid ? "True" : "False" ) << "," << std::endl;
+	json_out << "\tsolved : " << ( solved ? "true" : "false" ) << "," << std::endl;
+	json_out << "\tvalid : " << ( valid ? "true" : "false" ) << "," << std::endl;
 	json_out << "\tplan : ";
 	if ( solved )
 		Printers::printPlanJSON( plan, problemInfo, json_out);
 	else
-		json_out << "[]";
+		json_out << "null";
+	json_out << std::endl;
 	json_out << "}" << std::endl;
 
 	json_out.close();
