@@ -24,6 +24,13 @@ Problem::~Problem() {
 
 
 void Problem::bootstrap() {
+	// Safety check
+	if (goalConstraints.empty()) {
+		throw std::runtime_error(
+			std::string("No goal specification detected. The problem is probably being bootstrapped before having been fully") + 
+			 "initialized with the per-instance generate() procedure");
+	}
+	
 	// Add the necessary (unary) constraints to keep the appropriate values, if any, within their bounds.
 	addDomainBoundConstraints();
 

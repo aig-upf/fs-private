@@ -240,12 +240,11 @@ int main(int argc, char** argv) {
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	Problem problem(data_dir);
 
-	std::cout << "Setting current problem to problem" << std::endl;
-	Problem::setCurrentProblem(problem);
-
-
 	std::cout << "Calling generate()" << std::endl;
 	generate(data_dir, problem);
+	
+	std::cout << "Setting current problem to problem" << std::endl;
+	Problem::setCurrentProblem(problem);
 
 	// MRJ: This is not very nice, but cannot be avoided :(
 	gecode::registerTranslators();
