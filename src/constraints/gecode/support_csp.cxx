@@ -160,6 +160,20 @@ namespace fs0 {
         csps.push_back( SupportCSP::create( info, *a, problem.getConstraints() ) );
     }
 
+    void
+    SupportCSP::retrieveAtomsForAffectedVariable( VariableIdx varName, Atom::vctr& atoms ) const {
+      auto x = resolveY( varName );
+      for (Gecode::IntVarValues i(x); i(); ++i)
+        atoms.push_back( Atom( varName, i.val() ));
+    }
+
+    void
+    SupportCSP::retrieveRangesForAffectedVariable(VariableIdx varName, Atom::vrange& ranges) const {
+      auto x = resolveY( varName );
+      for (Gecode::IntVarRanges i(x); i(); ++i)
+        ranges.push_back( std::make_tuple( Atom( varName, i.min()), Atom( varName, i.max()) ) );
+    }
+
   }
 
 }
