@@ -63,6 +63,7 @@ namespace fs0 {
     SupportCSP::addEqualityConstraint( VariableIdx v, bool value ) {
       auto it = _inVarsMap.find( v );
       assert( it != _inVarsMap.end() );
+      if ( it == _inVarMaps.end() ) return;
       value = ( value ? 1 : 0 );
       // MRJ: v = value
       rel( *this, _X[ it->second ], IRT_EQ, value );
@@ -72,6 +73,7 @@ namespace fs0 {
     SupportCSP::addEqualityConstraint( VariableIdx v, ObjectIdx value ) {
       auto it = _inVarsMap.find( v );
       assert( it != _inVarsMap.end() );
+      if ( it == _inVarMaps.end() ) return;
       //MRJ: v = value
       rel( *this, _X[ it->second ], IRT_EQ, value );
     }
@@ -81,6 +83,7 @@ namespace fs0 {
     SupportCSP::addBoundsConstraint( VariableIdx v, int lb, int ub ) {
       auto it = _inVarsMap.find( v );
       assert( it != _inVarsMap.end() );
+      if ( it == _inVarMaps.end() ) return;
       // MRJ: lb <= v <= ub
       dom( *this, _X[ it->second], lb, ub);
     }
@@ -89,6 +92,7 @@ namespace fs0 {
     SupportCSP::addBoundsConstraintFromDomain( VariableIdx v ) {
       auto it = _inVarsMap.find( v );
       assert( it != _inVarsMap.end() );
+      if ( it == _inVarMaps.end() ) return;
       TypeIdx type = _info.getVariableType(v);
       if (!_info.hasVariableBoundedDomain(type)) return; // Nothing to do in this case
       const auto& bounds = _info.getVariableBounds(type);
