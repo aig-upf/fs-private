@@ -20,7 +20,7 @@ namespace fs0 {
     void
     RelaxedActionManager::processAction(  unsigned actionIdx, const Action& action,
                                           const RelaxedState& layer, RPGData& changeset) const {
-      SupportCSP::ptr tmp = CSPSet[actionIdx]->copy(true);
+      SupportCSP::ptr tmp = new SupportCSP( true, *CSPSet[actionIdx] );
 
       // Setup domain constraints etc.
       DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
@@ -28,14 +28,14 @@ namespace fs0 {
         VariableIdx x;
         DomainPtr dom;
         std::tie( x, dom ) = entry;
-        if ( dom.size() == 1 ) {
+        if ( dom->size() == 1 ) {
           tmp->addEqualityConstraint( x, *(dom->begin()) );
           continue;
         }
         ObjectIdx lb = *(dom->begin());
         ObjectIdx ub = *(dom->rbegin());
         // MRJ: Check this is a safe assumption
-        if ( dom.size() == (ub - lb) ) {
+        if ( dom->size() == (ub - lb) ) {
           tmp->addBoundsConstraint( x, lb, ub );
           continue;
         }
@@ -53,7 +53,7 @@ namespace fs0 {
 
         Atom::vctrp support = std::make_shared<Atom::vctr>();
 
-        rpgData.add(effect->apply(values), actionIdx, support);
+        //rpgData.add(effect->apply(values), actionIdx, support);
       }
 
     }
