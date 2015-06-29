@@ -101,7 +101,10 @@ public:
 	bool checkValueIsValid(VariableIdx variable, ObjectIdx value) const;
 
 	bool hasVariableBoundedDomain(VariableIdx variable) const { return isTypeBounded[getVariableType(variable)];  }
-	std::pair<int,int> getVariableBounds( VariableIdx variable ) const { return typeBounds[variable];}
+	std::pair<int,int> getVariableBounds( VariableIdx variable ) const {
+		assert(hasVariableBoundedDomain(variable));
+		return typeBounds[getVariableType(variable)];
+	}
 
 protected:
 
