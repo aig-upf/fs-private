@@ -15,7 +15,7 @@
 #include "external.hxx"
 #include <constraints/all.hxx>
 #include <gecode/int.hh>
-#include <constraints/gecode/support_csp.hxx>
+#include <constraints/gecode/action_csp.hxx>
 #include <constraints/gecode/expr_translators.hxx>
 
 using namespace fs0;
@@ -79,7 +79,7 @@ public:
 class IncrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
 
-  void addConstraint( ScopedEffect::cptr eff, gecode::SupportCSP& csp ) const {
+  void addConstraint( ScopedEffect::cptr eff, gecode::ActionCSP& csp ) const {
     auto y_var = csp.resolveY(eff->getAffected());
     auto x_var = csp.resolveX(eff->getScope()[0]);
     Gecode::IntArgs     coeffs(2);
@@ -113,7 +113,7 @@ public:
 
 class DecrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
-  void addConstraint( ScopedEffect::cptr eff, gecode::SupportCSP& csp ) const {
+  void addConstraint( ScopedEffect::cptr eff, gecode::ActionCSP& csp ) const {
     auto y_var = csp.resolveY(eff->getAffected());
     auto x_var = csp.resolveX(eff->getScope()[0]);
     Gecode::IntArgs     coeffs(2);

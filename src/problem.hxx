@@ -61,6 +61,7 @@ public:
 	}
 
 	static const Problem* getCurrentProblem() {
+		if (!_instance) throw std::runtime_error("Problem has not been instantiated yet");
 		return _instance;
 	}
 
@@ -70,10 +71,8 @@ public:
 
 	void compileConstraints();
 
-	static bool isGoalRelevant( VariableIdx var ) {
-		return getCurrentProblem()->_goalRelevantVars[var];
-	}
-
+	//! Tells if the given variable is relevant for the goal.
+	static bool isRelevantForGoal(VariableIdx var) { return getCurrentProblem()->_goalRelevantVars[var]; }
 
 protected:
 	State::cptr _initialState;

@@ -8,17 +8,24 @@
 #include <heuristics/rpg_data.hxx>
 #include <heuristics/rpg.hxx>
 
+#include <constraints/gecode/action_csp.hxx>
+
 namespace fs0 {
 
-void ActionManagerFactory::instantiateActionManager(const Action::vcptr& actions) {
+void ActionManagerFactory::instantiateActionManager(const Problem& problem, const Action::vcptr& actions) {
 	for (const Action::cptr& action:actions) {
 		BaseActionManager* manager = nullptr;
 		bool action_has_nary_effects = checkActionHasNaryEffects(action);
+		
+		manager = new ComplexActionManager(problem, *action);
+		/*
 		if (checkActionHasNaryPreconditions(action)) {
 			manager = new GenericActionManager(*action, action_has_nary_effects);
 		} else {
 			manager = new UnaryActionManager(*action, action_has_nary_effects);
 		}
+		*/
+		
 		action->setConstraintManager(manager);
 	}
 }
@@ -155,11 +162,11 @@ void BaseActionManager::completeAtomSupport(const VariableIdxVector& actionScope
 
 
 bool GenericActionManager::isCartesianProductElementApplicable(	const VariableIdxVector& actionScope,
-																																const VariableIdxVector& effectScope,
-																																const DomainMap& actionProjection,
-																																const ObjectIdxVector& element,
-																																Atom::vctrp support) const {
-
+																const VariableIdxVector& effectScope,
+																const DomainMap& actionProjection,
+																const ObjectIdxVector& element,
+																Atom::vctrp support) const
+{
 	// We need to check that this concrete instantiation makes the action applicable - before we only checked for the local consistency of individual values
 	//DomainMap domains(actionProjection); // Clone the projection - this performs a certain amount of unnecessary work
 	// MRJ: Copy the domains as well - the above only copies the pointers!
@@ -198,5 +205,59 @@ bool BaseActionManager::checkPreconditionApplicability(const DomainMap& domains)
 
 
 
+ComplexActionManager::ComplexActionManager(const Problem& problem, const Action& action)
+	:  BaseActionManager(action, true)
+{
+	csp = gecode::ActionCSP::create( problem.getProblemInfo(), action, problem.getConstraints());
+}
+ComplexActionManager::~ComplexActionManager() { delete csp; }
+	
 
+void ComplexActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset) const {
+// 	gecode::ActionCSP currentCSP(true, *csp); // Shallow copy, currently not working - call to status produces segfault
+// 	gecode::ActionCSP currentCSP(*csp); // Full copy... doesn't seem to work either - call to status produces segfault
+	
+	
+	gecode::ActionCSP* _currentCSP = gecode::ActionCSP::create(Problem::getCurrentProblem()->getProblemInfo(), action, Problem::getCurrentProblem()->getConstraints());
+	gecode::ActionCSP& currentCSP = *_currentCSP;
+	
+	std::cout << currentCSP << std::endl;
+
+	// Setup domain constraints etc.
+	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
+	for ( auto entry : actionProjection ) {
+		VariableIdx x;
+		DomainPtr dom;
+		std::tie( x, dom ) = entry;
+		if ( dom->size() == 1 ) {
+			currentCSP.addEqualityConstraint( x, *(dom->begin()) );
+			continue;
+		}
+		ObjectIdx lb = *(dom->begin());
+		ObjectIdx ub = *(dom->rbegin());
+		// MRJ: Check this is a safe assumption
+		if ( dom->size() == (ub - lb) ) {
+			currentCSP.addBoundsConstraint( x, lb, ub );
+			continue;
+		}
+		// MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
+		currentCSP.addMembershipConstraint( x, dom );
+	}
+
+	// Check local consistency
+	std::cout << currentCSP << std::endl;
+	if (!currentCSP.checkConsistency()) return; // We're done
+
+	for ( ScopedEffect::cptr effect : action.getEffects() ) {
+	// MRJ: What are exactly supports?
+
+	Atom::vctrp support = std::make_shared<Atom::vctr>();
+
+	//         rpgData.add(effect->apply(values), actionIdx, support);
+	}
+
+    }
+
+  
+  
 } // namespaces

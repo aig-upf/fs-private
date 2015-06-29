@@ -25,7 +25,7 @@ class ActionManagerFactory
 {
 public:
 	//! A factory method to create the appropriate manager.
-	static void instantiateActionManager(const Action::vcptr& actions);
+	static void instantiateActionManager(const Problem& problem, const Action::vcptr& actions);
 	
 	//! Returns true iff at least one of the preconditions of the action has arity higher than one.
 	static bool checkActionHasNaryPreconditions(const Action::cptr action);
@@ -46,7 +46,7 @@ public:
 	virtual ~BaseActionManager() {};
 	
 	//! 
-	void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset) const;
+	virtual void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset) const;
 	
 	//!
 	virtual bool checkPreconditionApplicability(const DomainMap& domains) const;
@@ -98,5 +98,53 @@ public:
 	//! For actions with higher-arity applicability constraints, we need to thoroughly check for applicability of every element of the Cartesian product.
 	virtual bool isCartesianProductElementApplicable(const VariableIdxVector& actionScope, const VariableIdxVector& effectScope, const DomainMap& actionProjection, const ObjectIdxVector& element, Atom::vctrp support) const;
 };
+
+
+
+namespace gecode { class ActionCSP; }
+
+class ComplexActionManager : public BaseActionManager
+{
+protected:
+	gecode::ActionCSP* csp;
+	
+public:
+	//! 
+	ComplexActionManager(const Problem& problem, const Action& action);
+	~ComplexActionManager();
+	
+	
+	//! 
+	void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset) const;
+	
+	
+	//!
+	bool checkPreconditionApplicability(const DomainMap& domains) const
+	{
+		throw std::runtime_error("ComplexActionManager::isCartesianProductElementApplicable should never be called");
+	}	
+	
+	
+	//!
+	void processEffects(unsigned actionIdx, const Action& action, const DomainMap& actionProjection, RPGData& rpgData) const
+	{
+		throw std::runtime_error("ComplexActionManager::isCartesianProductElementApplicable should never be called");
+	}	
+	
+	//! For actions with higher-arity applicability constraints, we need to thoroughly check for applicability of every element of the Cartesian product.
+	virtual bool isCartesianProductElementApplicable(const VariableIdxVector& actionScope, const VariableIdxVector& effectScope,
+													 const DomainMap& actionProjection, const ObjectIdxVector& element, Atom::vctrp support) const
+	{
+		throw std::runtime_error("ComplexActionManager::isCartesianProductElementApplicable should never be called");
+	}
+};
+
+
+
+
+
+
+
+
 
 } // namespaces

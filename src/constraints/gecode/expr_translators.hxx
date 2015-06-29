@@ -9,7 +9,7 @@ namespace fs0 {
 
   namespace gecode {
 
-    class SupportCSP;
+    class ActionCSP;
 
     class ConstraintTranslator  {
     public:
@@ -18,7 +18,7 @@ namespace fs0 {
 
       virtual ~ConstraintTranslator();
 
-      virtual void addConstraint( ScopedConstraint::cptr constr, SupportCSP& s ) const = 0;
+      virtual void addConstraint( ScopedConstraint::cptr constr, ActionCSP& s ) const = 0;
     };
 
     class EffectTranslator  {
@@ -28,7 +28,7 @@ namespace fs0 {
 
       virtual ~EffectTranslator();
 
-      virtual void addConstraint( ScopedEffect::cptr eff,  SupportCSP& s ) const = 0;
+      virtual void addConstraint( ScopedEffect::cptr eff,  ActionCSP& s ) const = 0;
     };
 
 

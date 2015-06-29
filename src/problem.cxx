@@ -41,7 +41,7 @@ void Problem::bootstrap() {
 	ctrManager = std::make_shared<PlanningConstraintManager>(goalConstraints, stateConstraints);
 
 	// Creates the appropriate applicability manager depending on the type and arity of action precondition constraints.
-	ActionManagerFactory::instantiateActionManager(_actions);
+	ActionManagerFactory::instantiateActionManager(*this, _actions);
 
 	_goalRelevantVars.resize(_problemInfo.getNumVariables());
 	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )
