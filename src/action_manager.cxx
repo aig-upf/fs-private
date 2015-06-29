@@ -39,31 +39,21 @@ State::ptr ActionManager::applyAction(const Problem& problem, const Action::cptr
 
 //! Returns true iff the given plan is valid AND leads to a goal state, when applied to state s0.
 bool ActionManager::checkRelaxedPlanSuccessful(const Problem& problem, const ActionPlan& plan, const State& seed) {
-	RelaxedState relaxed(seed);
-	if (!applyRelaxedPlan(problem, plan, seed, relaxed)) return false;
-	return problem.getConstraintManager()->isGoal(relaxed);
+	RelaxedState layer(seed);
+	if (!applyRelaxedPlan(problem, plan, layer)) return false;
+	return problem.getConstraintManager()->isGoal(layer);
 }
 
 //! Applies the given plan in relaxed mode to the given relaxed state.
-bool ActionManager::applyRelaxedPlan(const Problem& problem, const ActionPlan& plan, const State& seed, RelaxedState& relaxed) {
+// TODO - This might not be precise at all - we need to make clear what we understand by the application of a relaxed plan.
+bool ActionManager::applyRelaxedPlan(const Problem& problem, const ActionPlan& plan, RelaxedState& relaxed) {
+	RPGData rpg(relaxed);
 	for (const auto& idx:plan) {
-		if (!applyRelaxedAction(*(problem.getAction(idx)), seed, relaxed)) return false;
+		const Action& action = *(problem.getAction(idx));
+		action.getConstraintManager()->processAction(idx, action, relaxed, rpg);
+		RPGData::accumulate(relaxed, rpg);
 	}
 	return true;
-}
-
-bool ActionManager::applyRelaxedAction(const Action& action, const State& seed, RelaxedState& s) {
-	DomainMap actionProjection = Projections::projectToActionVariables(s, action);
-
-	Atom::vctr causes;
-	if (action.getConstraintManager()->checkPreconditionApplicability(actionProjection)) { // The action is applicable - we ignore the causes
-		RPGData rpgData(s);
-		// We can safely 'fake' the action index since we do not care about causality data structures.
-		action.getConstraintManager()->processEffects(0, action, actionProjection, rpgData);
-		RPGData::accumulate(s, rpgData);
-		return true;
-	}
-	return false;
 }
 
 

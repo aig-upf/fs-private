@@ -15,8 +15,8 @@
 #include "external.hxx"
 #include <constraints/all.hxx>
 #include <gecode/int.hh>
-#include <constraints/gecode/action_csp.hxx>
 #include <constraints/gecode/expr_translators.hxx>
+#include <relaxed_action_manager.hxx>
 
 using namespace fs0;
 
@@ -79,16 +79,16 @@ public:
 class IncrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
 
-  void addConstraint( ScopedEffect::cptr eff, gecode::ActionCSP& csp ) const {
-    auto y_var = csp.resolveY(eff->getAffected());
-    auto x_var = csp.resolveX(eff->getScope()[0]);
+  void addConstraint( ScopedEffect::cptr eff, ComplexActionManager& manager ) const {
+    auto y_var = manager.resolveY(eff->getAffected());
+    auto x_var = manager.resolveX(eff->getScope()[0]);
     Gecode::IntArgs     coeffs(2);
     Gecode::IntVarArgs  vars(2);
     coeffs[0] = 1;
     coeffs[1] = -1;
     vars[0] = y_var;
     vars[1] = x_var;
-    Gecode::linear( csp, coeffs, vars, Gecode::IRT_EQ, 1 );
+    Gecode::linear( *(manager.getCSP()), coeffs, vars, Gecode::IRT_EQ, 1 );
   }
 
 };
@@ -113,16 +113,17 @@ public:
 
 class DecrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
-  void addConstraint( ScopedEffect::cptr eff, gecode::ActionCSP& csp ) const {
-    auto y_var = csp.resolveY(eff->getAffected());
-    auto x_var = csp.resolveX(eff->getScope()[0]);
+  void addConstraint( ScopedEffect::cptr eff, ComplexActionManager& manager ) const {
+	assert(0); // Just checking
+    auto y_var = manager.resolveY(eff->getAffected());
+    auto x_var = manager.resolveX(eff->getScope()[0]);
     Gecode::IntArgs     coeffs(2);
     Gecode::IntVarArgs  vars(2);
     coeffs[0] = 1;
     coeffs[1] = -1;
     vars[0] = y_var;
     vars[1] = x_var;
-    Gecode::linear( csp, coeffs, vars, Gecode::IRT_EQ, -1 );
+    Gecode::linear( *(manager.getCSP()), coeffs, vars, Gecode::IRT_EQ, -1 );
   }
 
 };

@@ -3,6 +3,7 @@
 #include <iosfwd>
 
 #include <relaxed_action_manager.hxx>
+#include <complex_action_manager.hxx>
 #include <utils/cartesian_product.hxx>
 #include <constraints/constraint_manager.hxx>
 #include <heuristics/rpg_data.hxx>
@@ -13,24 +14,24 @@
 namespace fs0 {
 
 void ActionManagerFactory::instantiateActionManager(const Problem& problem, const Action::vcptr& actions) {
+	
 	for (const Action::cptr& action:actions) {
 		BaseActionManager* manager = nullptr;
-		bool action_has_nary_effects = checkActionHasNaryEffects(action);
 		
-		manager = new ComplexActionManager(problem, *action);
-		/*
-		if (checkActionHasNaryPreconditions(action)) {
-			manager = new GenericActionManager(*action, action_has_nary_effects);
+		bool complexPreconditions = actionHasHigherArityPreconditions(action);
+		bool complexEffects = actionHasHigherArityEffects(action);
+		
+		if (complexPreconditions || complexEffects) {
+			manager = new ComplexActionManager(problem, *action);
 		} else {
-			manager = new UnaryActionManager(*action, action_has_nary_effects);
+			manager = new UnaryActionManager(*action);
 		}
-		*/
 		
 		action->setConstraintManager(manager);
 	}
 }
 
-bool ActionManagerFactory::checkActionHasNaryPreconditions(const Action::cptr action) {
+bool ActionManagerFactory::actionHasHigherArityPreconditions(const Action::cptr action) {
 	bool needs_generic_manager = false;
 	for (const ScopedConstraint::cptr constraint:action->getConstraints()) {
 		unsigned arity = constraint->getArity();
@@ -48,7 +49,7 @@ bool ActionManagerFactory::checkActionHasNaryPreconditions(const Action::cptr ac
 	return needs_generic_manager;
 }
 
-bool ActionManagerFactory::checkActionHasNaryEffects(const Action::cptr action) {
+bool ActionManagerFactory::actionHasHigherArityEffects(const Action::cptr action) {
 	bool result = false;
 	for (const ScopedEffect::cptr effect:action->getEffects()) {
 		if (effect->getArity() == 0 && !effect->applicable()) {
@@ -60,22 +61,22 @@ bool ActionManagerFactory::checkActionHasNaryEffects(const Action::cptr action) 
 }
 
 
-void BaseActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpgData) const {
+void UnaryActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg) {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
 	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
 
-	ScopedConstraint::Output o = manager.filter(actionProjection); // Check with local consistency
-	if ( o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(actionProjection)) {
-		processEffects(actionIdx, action, actionProjection, rpgData);
+	if (checkPreconditionApplicability(actionProjection)) { // Check with local consistency
+		processEffects(actionIdx, action, actionProjection, rpg);
 	}
 }
 
+bool UnaryActionManager::checkPreconditionApplicability(const DomainMap& domains) const {
+	ScopedConstraint::Output o = manager.filter(domains);
+	return o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(domains);
+}
 
-
-
-
-void BaseActionManager::processEffects(unsigned actionIdx, const Action& action, const DomainMap& actionProjection, RPGData& rpgData) const {
+void UnaryActionManager::processEffects(unsigned actionIdx, const Action& action, const DomainMap& actionProjection, RPGData& rpg) const {
 	const VariableIdxVector& actionScope = action.getScope();
 	#ifdef FS0_DEBUG
 	std::cout << "processing action effects: " << action.getName() << std::endl;
@@ -94,12 +95,12 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 			std::cout << "\t\t 0-ary effect" << std::endl;
 			#endif
 			Atom atom = effect->apply();
-			auto hint = rpgData.getInsertionHint(atom);
+			auto hint = rpg.getInsertionHint(atom);
 
 			if (hint.first) {
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 				completeAtomSupport(actionScope, actionProjection, effectScope, support);
-				rpgData.add(atom, actionIdx, support, hint.second);
+				rpg.add(atom, actionIdx, support, hint.second);
 			}
 		}
 
@@ -111,19 +112,21 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 			for (ObjectIdx value:*(actionProjection.at(effectScope[0]))) { // Add to the RPG for every allowed value of the relevant variable
 				if (!effect->applicable(value)) continue;
 				Atom atom = effect->apply(value);
-				auto hint = rpgData.getInsertionHint(atom);
+				auto hint = rpg.getInsertionHint(atom);
 
 				if (hint.first) {
 					Atom::vctrp support = std::make_shared<Atom::vctr>();
 					support->push_back(Atom(effectScope[0], value));// Just insert the only value
 					completeAtomSupport(actionScope, actionProjection, effectScope, support);
-					rpgData.add(atom, actionIdx, support, hint.second);
+					rpg.add(atom, actionIdx, support, hint.second);
 				}
 			}
 		}
 
 		/***** Higher-arity Effects *****/
 		else { // The general, n-ary case. We iterate over the cartesian product of the allowed values for the relevant variables.
+			throw std::runtime_error("Shouldn't be here!");
+			/*
 			const DomainVector effectProjection = Projections::project(actionProjection, effectScope);
 			CartesianProductIterator it(effectProjection);
 			#ifdef FS0_DEBUG
@@ -144,12 +147,26 @@ void BaseActionManager::processEffects(unsigned actionIdx, const Action& action,
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 				if (!isCartesianProductElementApplicable(actionScope, effectScope, actionProjection, values, support)) continue;
 
-				rpgData.add(effect->apply(values), actionIdx, support);
+				rpg.add(effect->apply(values), actionIdx, support);
 			}
+			*/
 		}
 	}
 }
 
+void UnaryActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
+	
+	for (VariableIdx variable:actionScope) {
+		if (effectScope.empty() || variable != effectScope[0]) { // (We know that the effect scope has at most one variable)
+			ObjectIdx value = *(actionProjection.at(variable)->cbegin());
+			support->push_back(Atom(variable, value));
+		}
+	}
+}
+
+
+
+/*
 void BaseActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
 	boost::container::flat_set<VariableIdx> processed(effectScope.begin(), effectScope.end());
 	for (VariableIdx variable:actionScope) {
@@ -196,68 +213,8 @@ bool GenericActionManager::isCartesianProductElementApplicable(	const VariableId
 	completeAtomSupport(actionScope, domains, effectScope, support);
 	return true;
 }
+*/
 
 
-bool BaseActionManager::checkPreconditionApplicability(const DomainMap& domains) const {
-	ScopedConstraint::Output o = manager.filter(domains);
-	return o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(domains);
-}
-
-
-
-ComplexActionManager::ComplexActionManager(const Problem& problem, const Action& action)
-	:  BaseActionManager(action, true)
-{
-	csp = gecode::ActionCSP::create( problem.getProblemInfo(), action, problem.getConstraints());
-}
-ComplexActionManager::~ComplexActionManager() { delete csp; }
-	
-
-void ComplexActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset) const {
-// 	gecode::ActionCSP currentCSP(true, *csp); // Shallow copy, currently not working - call to status produces segfault
-// 	gecode::ActionCSP currentCSP(*csp); // Full copy... doesn't seem to work either - call to status produces segfault
-	
-	
-	gecode::ActionCSP* _currentCSP = gecode::ActionCSP::create(Problem::getCurrentProblem()->getProblemInfo(), action, Problem::getCurrentProblem()->getConstraints());
-	gecode::ActionCSP& currentCSP = *_currentCSP;
-	
-	std::cout << currentCSP << std::endl;
-
-	// Setup domain constraints etc.
-	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
-	for ( auto entry : actionProjection ) {
-		VariableIdx x;
-		DomainPtr dom;
-		std::tie( x, dom ) = entry;
-		if ( dom->size() == 1 ) {
-			currentCSP.addEqualityConstraint( x, *(dom->begin()) );
-			continue;
-		}
-		ObjectIdx lb = *(dom->begin());
-		ObjectIdx ub = *(dom->rbegin());
-		// MRJ: Check this is a safe assumption
-		if ( dom->size() == (ub - lb) ) {
-			currentCSP.addBoundsConstraint( x, lb, ub );
-			continue;
-		}
-		// MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
-		currentCSP.addMembershipConstraint( x, dom );
-	}
-
-	// Check local consistency
-	std::cout << currentCSP << std::endl;
-	if (!currentCSP.checkConsistency()) return; // We're done
-
-	for ( ScopedEffect::cptr effect : action.getEffects() ) {
-	// MRJ: What are exactly supports?
-
-	Atom::vctrp support = std::make_shared<Atom::vctr>();
-
-	//         rpgData.add(effect->apply(values), actionIdx, support);
-	}
-
-    }
-
-  
   
 } // namespaces

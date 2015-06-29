@@ -19,5 +19,5 @@ gecode_libs = [ 'gecodeflatzinc',
 
 gecode_lib_path = [ '/usr/local/lib' ]
 
-env.Append( LIBS = gecode_libs )
+env.Append( LIBS = gecode_libs + ['pthread'])
 env.Append( LIBPATH = [ os.path.abspath(p) for p in gecode_lib_path ] )
