@@ -34,20 +34,29 @@ class HeuristicEnsemble {
 public :
 
 	HeuristicEnsemble( const FwdSearchProblem& problem )
-		: _problem( problem ), _reachability_heuristic( problem ) {
+		: _problem( problem ), _reachability_heuristic( problem ), _max_novelty(0) {
+		// MRJ: setups the novelty heuristic, this is all it
+		// needs to know
+		_novelty_heuristic.resize( problem.getTask().numGoalConstraints() + 1 );
+		std::cout << "# Novelty evaluators: " << _novelty_heuristic.size() << std::endl;
+
 	}
 
 	~HeuristicEnsemble() {
-		for ( unsigned k = 1; k <= novelty_bound(); k++ ) {
-			std::cout << "# novelty(s)=" << k << " : " << _novelty_heuristic.get_num_states(k) << std::endl;;
-		}
+		for (unsigned j = 0; j < _novelty_heuristic.size(); j++)
+			for ( unsigned k = 1; k <= novelty_bound(); k++ ) {
+				std::cout << "# novelty(s)[#goals=" << j << "]=" << k << " : " << _novelty_heuristic[j].get_num_states(k) << std::endl;;
+			}
 	}
 
 	void setup( int max_novelty, bool useStateVars, bool useGoal, bool useActions ) {
 		// MRJ: setups the novelty heuristic, this is all it
 		// needs to know
-		_novelty_heuristic.set_max_novelty( max_novelty );
-		_novelty_heuristic.selectFeatures( _problem.getTask(), useStateVars, useGoal, useActions );
+		_max_novelty = max_novelty;
+		for ( unsigned k = 0; k < _novelty_heuristic.size(); k++ ) {
+			_novelty_heuristic[k].set_max_novelty( novelty_bound() );
+			_novelty_heuristic[k].selectFeatures( _problem.getTask(), useStateVars, useGoal, useActions );
+		}
 	}
 
 	float	evaluate_reachability( const GenericState& s ) {
@@ -55,18 +64,19 @@ public :
 	}
 
 	unsigned evaluate_novelty( const GenericState& s ) {
-		return _novelty_heuristic.evaluate( s );
+		return _novelty_heuristic[evaluate_num_unsat_goals(s)].evaluate( s );
 	}
 
 	unsigned	evaluate_num_unsat_goals( const GenericState& s ) {
 		return _problem.getTask().numUnsatisfiedGoals(s);
 	}
 
-	unsigned	novelty_bound() { return _novelty_heuristic.max_novelty(); }
+	unsigned	novelty_bound() { return _max_novelty; }
 
-	const	FwdSearchProblem&							_problem;
-	RelaxedHeuristic										_reachability_heuristic;
-	NoveltyFromPreconditions						_novelty_heuristic;
+	const	FwdSearchProblem&														_problem;
+	RelaxedHeuristic																	_reachability_heuristic;
+	std::vector< NoveltyFromPreconditions >						_novelty_heuristic;
+	unsigned																					_max_novelty;
 };
 
 class SearchStatistics {
@@ -222,11 +232,18 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	json_out << "\t\"valid\" : " << ( valid ? "true" : "false" ) << "," << std::endl;
 	json_out << "\t\"num_goals\" : " << engine.model.getTask().numGoalConstraints() << "," << std::endl;
 	json_out << "\t\"max_num_goals_sat\" : " << engine.model.getTask().numGoalConstraints() - SearchStatistics::instance().min_num_goals_sat << "," << std::endl;
-	json_out << "\t\"num_features\" : " << engine.heuristic_function._novelty_heuristic.numFeatures() << "," << std::endl;
+	json_out << "\t\"num_features\" : " << engine.heuristic_function._novelty_heuristic[0].numFeatures() << "," << std::endl;
 	json_out << "\t\"novelty_histogram\" : {" << std::endl;
-	for ( unsigned i = 0; i <= engine.heuristic_function.novelty_bound(); i++ ) {
-		json_out << "\t\t\"" << i << "\" : " << engine.heuristic_function._novelty_heuristic.get_num_states(i);
-		if ( i < engine.heuristic_function.novelty_bound() ) json_out << ", ";
+	for ( unsigned j = 0; j < engine.heuristic_function._novelty_heuristic.size(); j++ ) {
+		json_out << "\t\t\"" << j << "\": {" << std::endl;
+		for ( unsigned i = 0; i <= engine.heuristic_function.novelty_bound(); i++ ) {
+			json_out << "\t\t\t\t\"" << i << "\" : " << engine.heuristic_function._novelty_heuristic[j].get_num_states(i);
+			if ( i < engine.heuristic_function.novelty_bound() ) json_out << ", ";
+			json_out << std::endl;
+		}
+		json_out << "\t\t}";
+		if ( j < engine.heuristic_function._novelty_heuristic.size() - 1)
+			json_out << ",";
 		json_out << std::endl;
 	}
 	json_out << "\t}," << std::endl;
