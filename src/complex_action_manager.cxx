@@ -7,7 +7,7 @@
 #include <boost/container/flat_map.hpp>
 #include <constraints/gecode/action_csp.hxx>
 #include <constraints/gecode/expr_translator_repository.hxx>
-
+#include <tuple>
 
 using namespace Gecode;
 using namespace fs0::gecode;
@@ -17,18 +17,30 @@ namespace fs0 {
 ComplexActionManager::ComplexActionManager(const Problem& problem, const Action& action)
 	:  BaseActionManager()
 {
-	baseCSP = createCSP(action, problem.getConstraints());
+	// MRJ: Very important - having the managers to be the ones "collecting" the constraints
+	// from preconditions and actions, means that we need to make sure that the CSP being
+	// referred to by the action manager is already built and assigned. Having addDefaultConstraints()
+	// to be called from within createCSPVariables() will cause to refer to the baseCSP
+	// attribute *before* it is properly initialized...
+	baseCSP = createCSPVariables(action, problem.getConstraints());
+	addDefaultConstraints( action, problem.getConstraints() );
+	// MRJ: in order to be able to clone a CSP, we need to ensure that
+	// it is "stable" i.e. propagate all constraints until fixed point
+	baseCSP->status();
 }
-ComplexActionManager::~ComplexActionManager() { delete baseCSP; }
-	
+
+ComplexActionManager::~ComplexActionManager() {
+	delete baseCSP;
+}
+
 
 void ComplexActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset) {
-// 	ActionCSP currentCSP(true, *baseCSP); // Shallow copy, currently not working - call to status produces segfault
-// 	ActionCSP currentCSP(*baseCSP); // Full copy... doesn't seem to work either - call to status produces segfault
-	// Generation from scratch of the CSP:
-	ActionCSP* currentCSP = createCSP(action, Problem::getCurrentProblem()->getConstraints());
-	
-// 	std::cout << *currentCSP << std::endl;
+	// MRJ: This is rather ugly, the problem is that clone returns a pointer to Space...
+	// it may be a good idea to overwrite this method on ActionCSP to avoid this down
+	// cast.
+	ActionCSP* currentCSP = dynamic_cast<ActionCSP::ptr>(baseCSP->clone());
+
+	//std::cout << *currentCSP << std::endl;
 
 	// Setup domain constraints etc.
 	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
@@ -55,7 +67,7 @@ void ComplexActionManager::processAction(unsigned actionIdx, const Action& actio
 
 	for ( ScopedEffect::cptr effect : action.getEffects() ) {
 		Atom::vctrp support = std::make_shared<Atom::vctr>();
-		
+
 		// TODO (guillem): Add to the support all atoms arising from the values assigned to the relevant state variables
 		// by the current CSP solution (or at least some solution)
 		// Alternatively (we'll analyze the performance of both options) randomly select one value from the set of locally consistent values
@@ -130,47 +142,56 @@ void ComplexActionManager::addMembershipConstraint(ActionCSP& csp, VariableIdx v
 	extensional( csp, IntVarArgs() << csp._X[ it->second ], valueSet ); // MRJ: v \in valueSet
 }
 
- 	
-ActionCSP::ptr ComplexActionManager::createCSP( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
+
+ActionCSP::ptr ComplexActionManager::createCSPVariables( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
 	// Determine input and output variables for this action: we first amalgamate variables into a set
 	// to avoid repetitions, then generate corresponding CSP variables, then create the CSP model with them
 	// and finally add the model constraints.
 	VariableIdxSet inputVars, outputVars;
-	
+
 	// Add the variables mentioned by state constraints
 // 	for ( ScopedConstraint::cptr global : stateConstraints ) {
 // 		inputVars.insert( global->getScope().begin(), global->getScope().end() );
 // 	}
-	
+
 	// Add the variables mentioned in the preconditions
 	for ( ScopedConstraint::cptr prec : a.getConstraints() ) {
 		inputVars.insert( prec->getScope().begin(), prec->getScope().end() );
 	}
-	
+
 	// Add the variables appearing in the scope of the effects
 	for ( ScopedEffect::cptr eff : a.getEffects() ) {
 		inputVars.insert( eff->getScope().begin(), eff->getScope().end() );
 		outputVars.insert( eff->getAffected() );
 	}
-	
-	ActionCSP::ptr csp = new ActionCSP();
-	
+
+	ActionCSP::ptr csp = new ActionCSP;
+
 	IntVarArgs relevant;
 	for (VariableIdx var:inputVars) {
 		unsigned id = processVariable( *csp, var, relevant );
 		inputVariables.insert( std::make_pair(var, id) );
 	}
-	
+
 	IntVarArgs affected;
 	for (VariableIdx var:outputVars) {
 		unsigned id = processVariable( *csp, var, affected );
 		outputVariables.insert( std::make_pair(var, id) );
 	}
-	
-	csp->_X = IntVarArray(*csp, relevant);
-	csp->_Y = IntVarArray(*csp, affected);
+
+	IntVarArray tmpX( *csp, relevant );
+	csp->_X.update( *csp, false, tmpX );// = IntVarArray( *csp, relevant );
+	IntVarArray tmpY(*csp, affected);
+	csp->_Y.update( *csp, false, tmpY ); //= IntVarArray( *csp, affected );
+
+
 	std::cout << "Created ActionCSP with input variables: " << csp->_X << " and output variables: " << csp->_Y << std::endl;
-	
+
+	return csp;
+}
+
+void
+ComplexActionManager::addDefaultConstraints( const Action& a, const ScopedConstraint::vcptr& stateConstraints) {
 	// Create constraints, once variables have been properly defined
 	// MRJ: These constraints should always be translatable if they're in the action description
 // 	for ( ScopedConstraint::cptr global : stateConstraints ) {
@@ -191,7 +212,6 @@ ActionCSP::ptr ComplexActionManager::createCSP( const Action& a, const ScopedCon
 		transObj->addConstraint( eff, *this );
 	}
 
-	return csp;
 }
 
 unsigned ComplexActionManager::processVariable( ActionCSP& csp, VariableIdx var, IntVarArgs& varArray ) {
@@ -217,5 +237,5 @@ unsigned ComplexActionManager::processVariable( ActionCSP& csp, VariableIdx var,
 	return varArray.size() - 1;
 }
 
-  
+
 } // namespaces
