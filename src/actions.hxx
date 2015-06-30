@@ -24,8 +24,7 @@ protected:
 	//! The indexes of the action binding, if any.
 	const ObjectIdxVector _binding;
 	
-	//! One VariableIdxVector per each applicability procedure, containing the indexes of those state variables 
-	//! relevant to that procedure.
+	//! The set of constraints that encodes the action precondition.
 	ScopedConstraint::vcptr _constraints;
 	
 	const ScopedEffect::vcptr _effects;

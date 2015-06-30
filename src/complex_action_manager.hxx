@@ -32,12 +32,14 @@ protected:
 	const Gecode::IntVar& resolveVariableName( VariableIdx varName, const Gecode::IntVarArray& actualVars, const VariableMap& map ) const;
 
 public:
+	enum class VariableType {Input, Output};
+	
 	//!
 	ComplexActionManager(const Problem& problem, const Action& action);
 	~ComplexActionManager();
 
 	//!
-	void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset);
+	void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg);
 
 	gecode::ActionCSP::ptr getCSP() { return baseCSP; }
 
@@ -67,17 +69,28 @@ public:
 	//! the type of varName.
 	void addBoundsConstraintFromDomain(gecode::ActionCSP& csp,  VariableIdx varName);
 
-
+	//!
+	const ObjectIdx resolveValue(gecode::ActionCSP& csp, VariableIdx variable, ComplexActionManager::VariableType type) const;
+	
 protected:
 
-
+	//!
 	static unsigned processVariable(gecode::ActionCSP& csp, VariableIdx var, Gecode::IntVarArgs& varArray);
 
+	//!
+	const void solveCSP(gecode::ActionCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const;
+		
 	//! Creates the ActionCSP that corresponds to a given action.
 	gecode::ActionCSP::ptr createCSPVariables( const Action& a, const ScopedConstraint::vcptr& globalConstraints );
 
 	//! Adds constraints to the csp being managed
 	void addDefaultConstraints( const Action& a, const ScopedConstraint::vcptr& globalConstraints  );
+	
+	//! Adds the RPG-layer-dependent constraints to the CSP.
+	void addRelevantVariableConstraints(const VariableIdxVector& scope, const RelaxedState& layer, gecode::ActionCSP& csp);
+	
+	//! Prevents the affected variables to take values already achieved in the previous layer
+	void addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, gecode::ActionCSP& csp);
 };
 
 

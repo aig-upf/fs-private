@@ -64,7 +64,7 @@ bool ActionManagerFactory::actionHasHigherArityEffects(const Action::cptr action
 void UnaryActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg) {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
-	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
+	DomainMap actionProjection = Projections::projectCopyToActionVariables(layer, action);
 
 	if (checkPreconditionApplicability(actionProjection)) { // Check with local consistency
 		processEffects(actionIdx, action, actionProjection, rpg);

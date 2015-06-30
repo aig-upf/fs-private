@@ -24,58 +24,104 @@ ComplexActionManager::ComplexActionManager(const Problem& problem, const Action&
 	// attribute *before* it is properly initialized...
 	baseCSP = createCSPVariables(action, problem.getConstraints());
 	addDefaultConstraints( action, problem.getConstraints() );
+	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that
 	// it is "stable" i.e. propagate all constraints until fixed point
-	baseCSP->status();
+	Gecode::SpaceStatus st = baseCSP->status();
+	// TODO This should prob. never happened, as it'd mean that the action is (statically) unapplicable.
+	assert(st != Gecode::SpaceStatus::SS_FAILED); 
 }
 
 ComplexActionManager::~ComplexActionManager() {
 	delete baseCSP;
 }
 
-
-void ComplexActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& changeset) {
+void ComplexActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg) {
 	// MRJ: This is rather ugly, the problem is that clone returns a pointer to Space...
 	// it may be a good idea to overwrite this method on ActionCSP to avoid this down
 	// cast.
+	// GFM: Can probably be safely changed to a static cast??
 	ActionCSP* currentCSP = dynamic_cast<ActionCSP::ptr>(baseCSP->clone());
 
 	//std::cout << *currentCSP << std::endl;
 
 	// Setup domain constraints etc.
-	DomainMap actionProjection = Projections::projectToActionVariables(layer, action);
-	for ( auto entry : actionProjection ) {
-		VariableIdx x = entry.first;
-		DomainPtr dom = entry.second;
-		if ( dom->size() == 1 ) {
-			addEqualityConstraint( *currentCSP, x, *(dom->begin()) );
-		} else {
-			ObjectIdx lb = *(dom->begin());
-			ObjectIdx ub = *(dom->rbegin());
-			// MRJ: Check this is a safe assumption
-			if ( dom->size() == (ub - lb) ) {
-				addBoundsConstraint( *currentCSP, x, lb, ub );
-			} else { // MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
-			addMembershipConstraint( *currentCSP, x, dom );
+	addRelevantVariableConstraints(action.getAllRelevantVariables(), layer, *currentCSP);
+	
+	// We do not need to take values that were already achieved in the previous layer into account.
+	for ( ScopedEffect::cptr effect : action.getEffects() ) {
+		addNoveltyConstraints(effect->getAffected(), layer, *currentCSP);
+	}
+	
+	if (true) {  // Solve the CSP completely
+		solveCSP(currentCSP, actionIdx, action, rpg);
+	} else { // Check only local consistency
+		if (!currentCSP->checkConsistency()) return; // We're done
+	}
+}
+
+
+
+const void ComplexActionManager::solveCSP(gecode::ActionCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const {
+	
+	// TODO posting a branching might make sense to prioritize some branching strategy?
+    // branch(*this, l, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+	DFS<ActionCSP> engine(csp);
+	
+	while (ActionCSP* solution = engine.next()) {
+		
+		for ( ScopedEffect::cptr effect : action.getEffects() ) {
+			VariableIdx affected = effect->getAffected();
+			Atom atom(affected, resolveValue(*solution, affected, VariableType::Output)); // TODO - this could be optimized and factored out of the loop
+			auto hint = rpg.getInsertionHint(atom);
+			
+			if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
+				Atom::vctrp support = std::make_shared<Atom::vctr>();
+				for (VariableIdx scopeVariable: effect->getScope()) {
+					support->push_back(Atom(scopeVariable, resolveValue(*solution, scopeVariable, VariableType::Input)));
+				}
+				rpg.add(atom, actionIdx, support, hint.second);
 			}
 		}
 	}
+}
 
-	// Check local consistency
-// 	std::cout << currentCSP << std::endl;
-	if (!currentCSP->checkConsistency()) return; // We're done
 
-	for ( ScopedEffect::cptr effect : action.getEffects() ) {
-		Atom::vctrp support = std::make_shared<Atom::vctr>();
+const ObjectIdx ComplexActionManager::resolveValue(gecode::ActionCSP& csp, VariableIdx variable, VariableType type) const {
+	auto& map = (type == VariableType::Input) ? inputVariables : outputVariables;
+	auto it = map.find(variable);
+	assert(it != map.end());
+	auto& csp_var = (type == VariableType::Input) ? csp._X[it->second] : csp._Y[it->second];
+	return csp_var.val();
+}
 
-		// TODO (guillem): Add to the support all atoms arising from the values assigned to the relevant state variables
-		// by the current CSP solution (or at least some solution)
-		// Alternatively (we'll analyze the performance of both options) randomly select one value from the set of locally consistent values
-		// of each variable.
-
-	//         rpg.add(effect->apply(values), actionIdx, support);
+void ComplexActionManager::addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, ActionCSP& csp) {
+	// TODO - This could be built incrementally to incorporate values added in this layer by previous actions in the iteration!
+	auto it = outputVariables.find(variable);
+	assert(it != outputVariables.end());
+	auto& csp_var = csp._Y[ it->second ];
+	for (ObjectIdx value:*(layer.getValues(variable))) {
+		rel( csp, csp_var, IRT_NQ, value ); // v != value
 	}
+}
 
+void ComplexActionManager::addRelevantVariableConstraints(const VariableIdxVector& scope, const RelaxedState& layer, ActionCSP& csp) {
+	// Loop over the domains of each of the relevant variables in the RPG layer and process them one by one.
+	for (VariableIdx variable:scope) {
+		const DomainPtr& domain = layer.getValues(variable);
+		if ( domain->size() == 1 ) {
+			addEqualityConstraint( csp, variable, *(domain->begin()) );
+		} else {
+			ObjectIdx lb = *(domain->begin());
+			ObjectIdx ub = *(domain->rbegin());
+			
+			if ( domain->size() == (ub - lb) ) { // MRJ: Check this is a safe assumption
+				addBoundsConstraint( csp, variable, lb, ub );
+			} else { // MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
+				addMembershipConstraint( csp, variable, domain );
+			}
+		}
+	}
 }
 
 const IntVar&  ComplexActionManager::resolveX( VariableIdx varName ) const {

@@ -15,7 +15,8 @@ ObjectIdxVector Projections::project(const State& s, const VariableIdxVector& sc
 	return values;
 }
 
-DomainMap Projections::projectToActionVariables(const RelaxedState& state, const Action& action) {
+
+DomainMap Projections::projectCopyToActionVariables(const RelaxedState& state, const Action& action) {
 	return projectCopy(state, action.getAllRelevantVariables());
 }
 
@@ -26,6 +27,15 @@ DomainMap Projections::project(RelaxedState& state, const VariableIdxVector& sco
 	}
 	return projection;
 }
+
+const DomainVector Projections::projectValues(const RelaxedState& state, const VariableIdxVector& scope) {
+	DomainVector projection;
+	for (VariableIdx var:scope) {
+		projection.push_back(state.getValues(var));
+	}
+	return projection;
+}
+
 
 DomainMap Projections::projectCopy(const RelaxedState& state, const VariableIdxVector& scope) {
 	DomainMap projection;

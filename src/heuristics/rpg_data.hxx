@@ -83,8 +83,8 @@ public:
 
 	//! Returns true iff the given atom is not already tracked by the RPG. In that case, it returns an insertion hint too.
 	std::pair<bool, SupportMap::iterator> getInsertionHint(const Atom& atom) {
-		if (!Problem::isRelevantForGoal(atom.getVariable())) return std::make_pair( false, _effects.end() );
-		if (_referenceState.contains(atom)) return std::make_pair(false, _effects.end()); // Make sure that the atom is novel.
+		if (!Problem::isRelevantForGoal(atom.getVariable()) || _referenceState.contains(atom)) 
+			return std::make_pair(false, _effects.end()); // Make sure that the atom is novel and relevant
 
 		SupportMap::iterator lb = _effects.lower_bound(atom); // @see http://stackoverflow.com/a/101980
 		bool keyInMap = lb != _effects.end() && !(_effects.key_comp()(atom, lb->first));
