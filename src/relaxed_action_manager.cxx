@@ -14,19 +14,19 @@
 namespace fs0 {
 
 void ActionManagerFactory::instantiateActionManager(const Problem& problem, const Action::vcptr& actions) {
-	
+
 	for (const Action::cptr& action:actions) {
 		BaseActionManager* manager = nullptr;
-		
+
 		bool complexPreconditions = actionHasHigherArityPreconditions(action);
 		bool complexEffects = actionHasHigherArityEffects(action);
-		
-		if (complexPreconditions || complexEffects) {
+
+		if ( true ) { //complexPreconditions || complexEffects) {
 			manager = new ComplexActionManager(problem, *action);
 		} else {
 			manager = new UnaryActionManager(*action);
 		}
-		
+
 		action->setConstraintManager(manager);
 	}
 }
@@ -155,7 +155,7 @@ void UnaryActionManager::processEffects(unsigned actionIdx, const Action& action
 }
 
 void UnaryActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
-	
+
 	for (VariableIdx variable:actionScope) {
 		if (effectScope.empty() || variable != effectScope[0]) { // (We know that the effect scope has at most one variable)
 			ObjectIdx value = *(actionProjection.at(variable)->cbegin());
@@ -216,5 +216,5 @@ bool GenericActionManager::isCartesianProductElementApplicable(	const VariableId
 */
 
 
-  
+
 } // namespaces
