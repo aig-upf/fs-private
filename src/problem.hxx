@@ -56,8 +56,8 @@ public:
 	const ProblemInfo& getProblemInfo() const { return _problemInfo; }
 
 	static void setCurrentProblem(Problem& problem) {
-		problem.bootstrap();
 		_instance = &problem;
+		problem.bootstrap();
 	}
 
 	static const Problem* getCurrentProblem() {
