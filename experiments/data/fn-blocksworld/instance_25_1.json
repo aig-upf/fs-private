@@ -1,0 +1,668 @@
+{
+    "domain":"fn-blocksworld",
+    "instance":"instance_25_1",
+    "planners_data":{
+        "./nfs-planner.bin --max_novelty 1 ":{
+            "eval_per_second":34336.1875,
+            "exit_code":0,
+            "expanded":11969,
+            "generated":731554,
+            "max_num_goals_sat":24,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":0
+                },
+                "1":{
+                    "0":0,
+                    "1":1
+                },
+                "10":{
+                    "0":21692,
+                    "1":563
+                },
+                "11":{
+                    "0":22016,
+                    "1":571
+                },
+                "12":{
+                    "0":23268,
+                    "1":571
+                },
+                "13":{
+                    "0":25475,
+                    "1":573
+                },
+                "14":{
+                    "0":27879,
+                    "1":571
+                },
+                "15":{
+                    "0":30927,
+                    "1":578
+                },
+                "16":{
+                    "0":31519,
+                    "1":580
+                },
+                "17":{
+                    "0":32083,
+                    "1":580
+                },
+                "18":{
+                    "0":33780,
+                    "1":580
+                },
+                "19":{
+                    "0":35146,
+                    "1":583
+                },
+                "2":{
+                    "0":0,
+                    "1":31
+                },
+                "20":{
+                    "0":39687,
+                    "1":588
+                },
+                "21":{
+                    "0":46134,
+                    "1":592
+                },
+                "22":{
+                    "0":52649,
+                    "1":597
+                },
+                "23":{
+                    "0":56735,
+                    "1":592
+                },
+                "24":{
+                    "0":84313,
+                    "1":578
+                },
+                "25":{
+                    "0":65024,
+                    "1":529
+                },
+                "3":{
+                    "0":647,
+                    "1":111
+                },
+                "4":{
+                    "0":2633,
+                    "1":218
+                },
+                "5":{
+                    "0":6377,
+                    "1":341
+                },
+                "6":{
+                    "0":10546,
+                    "1":435
+                },
+                "7":{
+                    "0":14855,
+                    "1":509
+                },
+                "8":{
+                    "0":20242,
+                    "1":545
+                },
+                "9":{
+                    "0":22720,
+                    "1":552
+                }
+            },
+            "num_features":51,
+            "num_goals":25,
+            "plan":null,
+            "search_time":21.3056,
+            "solved":false,
+            "valid":false,
+            "wall_time":21.66
+        },
+        "./nfs-planner.bin --max_novelty 1  --use_goal 0":{
+            "eval_per_second":36177.792969,
+            "exit_code":0,
+            "expanded":11969,
+            "generated":731554,
+            "max_num_goals_sat":24,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":0
+                },
+                "1":{
+                    "0":0,
+                    "1":1
+                },
+                "10":{
+                    "0":21692,
+                    "1":563
+                },
+                "11":{
+                    "0":22016,
+                    "1":571
+                },
+                "12":{
+                    "0":23268,
+                    "1":571
+                },
+                "13":{
+                    "0":25475,
+                    "1":573
+                },
+                "14":{
+                    "0":27879,
+                    "1":571
+                },
+                "15":{
+                    "0":30927,
+                    "1":578
+                },
+                "16":{
+                    "0":31519,
+                    "1":580
+                },
+                "17":{
+                    "0":32083,
+                    "1":580
+                },
+                "18":{
+                    "0":33780,
+                    "1":580
+                },
+                "19":{
+                    "0":35146,
+                    "1":583
+                },
+                "2":{
+                    "0":0,
+                    "1":31
+                },
+                "20":{
+                    "0":39687,
+                    "1":588
+                },
+                "21":{
+                    "0":46134,
+                    "1":592
+                },
+                "22":{
+                    "0":52649,
+                    "1":597
+                },
+                "23":{
+                    "0":56735,
+                    "1":592
+                },
+                "24":{
+                    "0":84313,
+                    "1":578
+                },
+                "25":{
+                    "0":65024,
+                    "1":529
+                },
+                "3":{
+                    "0":647,
+                    "1":111
+                },
+                "4":{
+                    "0":2633,
+                    "1":218
+                },
+                "5":{
+                    "0":6377,
+                    "1":341
+                },
+                "6":{
+                    "0":10546,
+                    "1":435
+                },
+                "7":{
+                    "0":14855,
+                    "1":509
+                },
+                "8":{
+                    "0":20242,
+                    "1":545
+                },
+                "9":{
+                    "0":22720,
+                    "1":552
+                }
+            },
+            "num_features":50,
+            "num_goals":25,
+            "plan":null,
+            "search_time":20.2211,
+            "solved":false,
+            "valid":false,
+            "wall_time":20.57
+        },
+        "./nfs-planner.bin --max_novelty 1  --use_state_vars 0 --use_goal 0 --use_actions 1":{
+            "exit_code":38912,
+            "wall_time":1795.0100000000002
+        },
+        "./nfs-planner.bin --max_novelty 2 ":{
+            "eval_per_second":4921.623535,
+            "exit_code":0,
+            "expanded":10861,
+            "generated":349250,
+            "max_num_goals_sat":25,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":1,
+                    "2":0
+                },
+                "1":{
+                    "0":0,
+                    "1":12,
+                    "2":0
+                },
+                "10":{
+                    "0":735,
+                    "1":541,
+                    "2":11612
+                },
+                "11":{
+                    "0":685,
+                    "1":562,
+                    "2":12998
+                },
+                "12":{
+                    "0":796,
+                    "1":574,
+                    "2":13987
+                },
+                "13":{
+                    "0":696,
+                    "1":568,
+                    "2":13626
+                },
+                "14":{
+                    "0":967,
+                    "1":572,
+                    "2":14963
+                },
+                "15":{
+                    "0":1428,
+                    "1":574,
+                    "2":17603
+                },
+                "16":{
+                    "0":1341,
+                    "1":570,
+                    "2":18029
+                },
+                "17":{
+                    "0":1049,
+                    "1":571,
+                    "2":17325
+                },
+                "18":{
+                    "0":1262,
+                    "1":566,
+                    "2":17159
+                },
+                "19":{
+                    "0":1273,
+                    "1":559,
+                    "2":15309
+                },
+                "2":{
+                    "0":0,
+                    "1":46,
+                    "2":65
+                },
+                "20":{
+                    "0":1173,
+                    "1":561,
+                    "2":14452
+                },
+                "21":{
+                    "0":1149,
+                    "1":573,
+                    "2":14665
+                },
+                "22":{
+                    "0":1187,
+                    "1":570,
+                    "2":15083
+                },
+                "23":{
+                    "0":814,
+                    "1":570,
+                    "2":12933
+                },
+                "24":{
+                    "0":817,
+                    "1":522,
+                    "2":15482
+                },
+                "25":{
+                    "0":210,
+                    "1":349,
+                    "2":6497
+                },
+                "3":{
+                    "0":24,
+                    "1":64,
+                    "2":259
+                },
+                "4":{
+                    "0":46,
+                    "1":125,
+                    "2":668
+                },
+                "5":{
+                    "0":97,
+                    "1":209,
+                    "2":1596
+                },
+                "6":{
+                    "0":75,
+                    "1":291,
+                    "2":2856
+                },
+                "7":{
+                    "0":196,
+                    "1":395,
+                    "2":4933
+                },
+                "8":{
+                    "0":227,
+                    "1":486,
+                    "2":7310
+                },
+                "9":{
+                    "0":452,
+                    "1":525,
+                    "2":10163
+                }
+            },
+            "num_features":51,
+            "num_goals":25,
+            "plan":[
+                "move-to-block(b18, b7, b1)",
+                "move-to-block(b10, b6, b18)",
+                "move-to-table(b7, b19)",
+                "move-to-table(b19, b15)",
+                "move-to-table(b6, b20)",
+                "move-to-block(b20, b24, b19)",
+                "move-to-block(b24, b23, b6)",
+                "move-to-block(b23, b22, b10)",
+                "move-to-table(b15, b12)",
+                "move-to-block(b22, b25, b12)",
+                "move-to-block(b25, b5, b22)",
+                "move-to-block(b24, b6, b15)",
+                "move-to-block(b5, b9, b24)",
+                "move-to-block(b6, table, b5)",
+                "move-to-block(b9, b21, b6)",
+                "move-to-block(b20, b19, b9)",
+                "move-to-block(b21, b16, b20)",
+                "move-to-block(b16, b3, b19)",
+                "move-to-block(b3, b13, b23)",
+                "move-to-block(b7, table, b16)",
+                "move-to-block(b25, b22, b3)",
+                "move-to-block(b22, b12, b13)",
+                "move-to-block(b12, b8, b7)",
+                "move-to-block(b8, table, b21)",
+                "move-to-block(b22, b13, b25)",
+                "move-to-block(b13, b2, b8)",
+                "move-to-block(b2, b4, b12)",
+                "move-to-block(b22, b25, b13)",
+                "move-to-block(b25, b3, b22)",
+                "move-to-block(b4, b17, b3)",
+                "move-to-block(b17, b11, b25)",
+                "move-to-block(b2, b12, b17)",
+                "move-to-block(b12, b7, b11)",
+                "move-to-block(b2, b17, b12)",
+                "move-to-block(b4, b3, b17)",
+                "move-to-block(b3, b23, b2)",
+                "move-to-block(b23, b10, b7)",
+                "move-to-block(b3, b2, b23)",
+                "move-to-block(b10, b18, b3)",
+                "move-to-block(b18, b1, b2)",
+                "move-to-block(b10, b3, b18)",
+                "move-to-table(b1, b14)",
+                "move-to-block(b3, b23, b14)",
+                "move-to-block(b23, b7, b10)",
+                "move-to-block(b3, b14, b23)",
+                "move-to-block(b14, table, b3)",
+                "move-to-block(b7, b16, b4)",
+                "move-to-block(b16, b19, b14)",
+                "move-to-block(b1, table, b19)",
+                "move-to-block(b7, b4, b16)"
+            ],
+            "search_time":70.9624,
+            "solved":true,
+            "valid":true,
+            "wall_time":71.68000000000006
+        },
+        "./nfs-planner.bin --max_novelty 2  --use_goal 0":{
+            "eval_per_second":5470.92627,
+            "exit_code":0,
+            "expanded":10861,
+            "generated":349250,
+            "max_num_goals_sat":25,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":1,
+                    "2":0
+                },
+                "1":{
+                    "0":0,
+                    "1":12,
+                    "2":0
+                },
+                "10":{
+                    "0":735,
+                    "1":541,
+                    "2":11612
+                },
+                "11":{
+                    "0":685,
+                    "1":562,
+                    "2":12998
+                },
+                "12":{
+                    "0":796,
+                    "1":574,
+                    "2":13987
+                },
+                "13":{
+                    "0":696,
+                    "1":568,
+                    "2":13626
+                },
+                "14":{
+                    "0":967,
+                    "1":572,
+                    "2":14963
+                },
+                "15":{
+                    "0":1428,
+                    "1":574,
+                    "2":17603
+                },
+                "16":{
+                    "0":1341,
+                    "1":570,
+                    "2":18029
+                },
+                "17":{
+                    "0":1049,
+                    "1":571,
+                    "2":17325
+                },
+                "18":{
+                    "0":1262,
+                    "1":566,
+                    "2":17159
+                },
+                "19":{
+                    "0":1273,
+                    "1":559,
+                    "2":15309
+                },
+                "2":{
+                    "0":0,
+                    "1":46,
+                    "2":65
+                },
+                "20":{
+                    "0":1173,
+                    "1":561,
+                    "2":14452
+                },
+                "21":{
+                    "0":1149,
+                    "1":573,
+                    "2":14665
+                },
+                "22":{
+                    "0":1187,
+                    "1":570,
+                    "2":15083
+                },
+                "23":{
+                    "0":814,
+                    "1":570,
+                    "2":12933
+                },
+                "24":{
+                    "0":817,
+                    "1":522,
+                    "2":15482
+                },
+                "25":{
+                    "0":210,
+                    "1":349,
+                    "2":6497
+                },
+                "3":{
+                    "0":24,
+                    "1":64,
+                    "2":259
+                },
+                "4":{
+                    "0":46,
+                    "1":125,
+                    "2":668
+                },
+                "5":{
+                    "0":97,
+                    "1":209,
+                    "2":1596
+                },
+                "6":{
+                    "0":75,
+                    "1":291,
+                    "2":2856
+                },
+                "7":{
+                    "0":196,
+                    "1":395,
+                    "2":4933
+                },
+                "8":{
+                    "0":227,
+                    "1":486,
+                    "2":7310
+                },
+                "9":{
+                    "0":452,
+                    "1":525,
+                    "2":10163
+                }
+            },
+            "num_features":50,
+            "num_goals":25,
+            "plan":[
+                "move-to-block(b18, b7, b1)",
+                "move-to-block(b10, b6, b18)",
+                "move-to-table(b7, b19)",
+                "move-to-table(b19, b15)",
+                "move-to-table(b6, b20)",
+                "move-to-block(b20, b24, b19)",
+                "move-to-block(b24, b23, b6)",
+                "move-to-block(b23, b22, b10)",
+                "move-to-table(b15, b12)",
+                "move-to-block(b22, b25, b12)",
+                "move-to-block(b25, b5, b22)",
+                "move-to-block(b24, b6, b15)",
+                "move-to-block(b5, b9, b24)",
+                "move-to-block(b6, table, b5)",
+                "move-to-block(b9, b21, b6)",
+                "move-to-block(b20, b19, b9)",
+                "move-to-block(b21, b16, b20)",
+                "move-to-block(b16, b3, b19)",
+                "move-to-block(b3, b13, b23)",
+                "move-to-block(b7, table, b16)",
+                "move-to-block(b25, b22, b3)",
+                "move-to-block(b22, b12, b13)",
+                "move-to-block(b12, b8, b7)",
+                "move-to-block(b8, table, b21)",
+                "move-to-block(b22, b13, b25)",
+                "move-to-block(b13, b2, b8)",
+                "move-to-block(b2, b4, b12)",
+                "move-to-block(b22, b25, b13)",
+                "move-to-block(b25, b3, b22)",
+                "move-to-block(b4, b17, b3)",
+                "move-to-block(b17, b11, b25)",
+                "move-to-block(b2, b12, b17)",
+                "move-to-block(b12, b7, b11)",
+                "move-to-block(b2, b17, b12)",
+                "move-to-block(b4, b3, b17)",
+                "move-to-block(b3, b23, b2)",
+                "move-to-block(b23, b10, b7)",
+                "move-to-block(b3, b2, b23)",
+                "move-to-block(b10, b18, b3)",
+                "move-to-block(b18, b1, b2)",
+                "move-to-block(b10, b3, b18)",
+                "move-to-table(b1, b14)",
+                "move-to-block(b3, b23, b14)",
+                "move-to-block(b23, b7, b10)",
+                "move-to-block(b3, b14, b23)",
+                "move-to-block(b14, table, b3)",
+                "move-to-block(b7, b16, b4)",
+                "move-to-block(b16, b19, b14)",
+                "move-to-block(b1, table, b19)",
+                "move-to-block(b7, b4, b16)"
+            ],
+            "search_time":63.8375,
+            "solved":true,
+            "valid":true,
+            "wall_time":64.61000000000013
+        },
+        "./nfs-planner.bin --max_novelty 2  --use_state_vars 0 --use_goal 0 --use_actions 1":{
+            "exit_code":34304,
+            "wall_time":28.849999999999454
+        },
+        "./nfs-planner.bin --max_novelty 3 ":{
+            "exit_code":38912,
+            "wall_time":1795.3199999999997
+        },
+        "./nfs-planner.bin --max_novelty 3  --use_goal 0":{
+            "exit_code":38912,
+            "wall_time":1795.2999999999997
+        },
+        "./nfs-planner.bin --max_novelty 3  --use_state_vars 0 --use_goal 0 --use_actions 1":{
+            "exit_code":34304,
+            "wall_time":33.91
+        },
+        "./nfs-planner.bin --max_novelty 4 ":{
+            "exit_code":34304,
+            "wall_time":799.73
+        },
+        "./nfs-planner.bin --max_novelty 4  --use_goal 0":{
+            "exit_code":34304,
+            "wall_time":795.8399999999997
+        }
+    }
+}

@@ -7,19 +7,20 @@ if __name__ == '__main__' :
 
     for i in range(1,5) :
         # run V+G over bound i
-        subprocess.call( cmd, shell=True )
+        cmd_vg = cmd.format(i, '' )
+        subprocess.call( cmd_vg, shell=True )
         # run V+G+A over bound i
-        cmd_vga = cmd.format(i," --use_actions 1")
-        subprocess.call( cmd_vga, shell=True )
+        #cmd_vga = cmd.format(i," --use_actions 1")
+        #subprocess.call( cmd_vga, shell=True )
         # run V over bound i
         cmd_v = cmd.format(i," --use_goal 0")
         subprocess.call( cmd_v, shell=True)
         # run V+A over bound i
-        cmd_va = cmd.format(i, " --use_actions 1" )
-        subprocess.call( cmd_va, shell=True)
+        #cmd_va = cmd.format(i, " --use_actions 1" )
+        #subprocess.call( cmd_va, shell=True)
         # run A over bound i
         cmd_a = cmd.format(i, " --use_state_vars 0 --use_goal 0 --use_actions 1")
         subprocess.call( cmd_a, shell=True)
         # run A+G over bound i
-        cmd_ag = cmd.format(i, " --use_state_vars 0 --use_goal 1 --use_actions 1")
-        subprocess.call( cmd_ag, shell=True)
+        #cmd_ag = cmd.format(i, " --use_state_vars 0 --use_goal 1 --use_actions 1")
+        #subprocess.call( cmd_ag, shell=True)

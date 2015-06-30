@@ -1,0 +1,817 @@
+{
+    "domain":"fn-blocksworld",
+    "instance":"instance_14_3",
+    "planners_data":{
+        "./nfs-planner.bin --max_novelty 1 ":{
+            "eval_per_second":210991.859375,
+            "exit_code":0,
+            "expanded":1793,
+            "generated":46134,
+            "max_num_goals_sat":13,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":0
+                },
+                "1":{
+                    "0":0,
+                    "1":1
+                },
+                "10":{
+                    "0":4852,
+                    "1":167
+                },
+                "11":{
+                    "0":4911,
+                    "1":166
+                },
+                "12":{
+                    "0":5004,
+                    "1":174
+                },
+                "13":{
+                    "0":4725,
+                    "1":169
+                },
+                "14":{
+                    "0":3906,
+                    "1":149
+                },
+                "2":{
+                    "0":0,
+                    "1":14
+                },
+                "3":{
+                    "0":148,
+                    "1":57
+                },
+                "4":{
+                    "0":767,
+                    "1":106
+                },
+                "5":{
+                    "0":1970,
+                    "1":143
+                },
+                "6":{
+                    "0":3131,
+                    "1":158
+                },
+                "7":{
+                    "0":3987,
+                    "1":162
+                },
+                "8":{
+                    "0":4695,
+                    "1":161
+                },
+                "9":{
+                    "0":4699,
+                    "1":166
+                }
+            },
+            "num_features":29,
+            "num_goals":14,
+            "plan":null,
+            "search_time":0.218653,
+            "solved":false,
+            "valid":false,
+            "wall_time":0.26
+        },
+        "./nfs-planner.bin --max_novelty 1  --use_goal 0":{
+            "eval_per_second":200491.953125,
+            "exit_code":0,
+            "expanded":1793,
+            "generated":46134,
+            "max_num_goals_sat":13,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":0
+                },
+                "1":{
+                    "0":0,
+                    "1":1
+                },
+                "10":{
+                    "0":4852,
+                    "1":167
+                },
+                "11":{
+                    "0":4911,
+                    "1":166
+                },
+                "12":{
+                    "0":5004,
+                    "1":174
+                },
+                "13":{
+                    "0":4725,
+                    "1":169
+                },
+                "14":{
+                    "0":3906,
+                    "1":149
+                },
+                "2":{
+                    "0":0,
+                    "1":14
+                },
+                "3":{
+                    "0":148,
+                    "1":57
+                },
+                "4":{
+                    "0":767,
+                    "1":106
+                },
+                "5":{
+                    "0":1970,
+                    "1":143
+                },
+                "6":{
+                    "0":3131,
+                    "1":158
+                },
+                "7":{
+                    "0":3987,
+                    "1":162
+                },
+                "8":{
+                    "0":4695,
+                    "1":161
+                },
+                "9":{
+                    "0":4699,
+                    "1":166
+                }
+            },
+            "num_features":28,
+            "num_goals":14,
+            "plan":null,
+            "search_time":0.230104,
+            "solved":false,
+            "valid":false,
+            "wall_time":0.26
+        },
+        "./nfs-planner.bin --max_novelty 1  --use_state_vars 0 --use_goal 0 --use_actions 1":{
+            "eval_per_second":1514.552979,
+            "exit_code":0,
+            "expanded":14419,
+            "generated":482419,
+            "max_num_goals_sat":14,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":1
+                },
+                "1":{
+                    "0":0,
+                    "1":12
+                },
+                "10":{
+                    "0":50837,
+                    "1":1181
+                },
+                "11":{
+                    "0":53279,
+                    "1":1208
+                },
+                "12":{
+                    "0":54687,
+                    "1":1225
+                },
+                "13":{
+                    "0":52080,
+                    "1":1292
+                },
+                "14":{
+                    "0":39837,
+                    "1":1273
+                },
+                "2":{
+                    "0":22,
+                    "1":118
+                },
+                "3":{
+                    "0":1058,
+                    "1":529
+                },
+                "4":{
+                    "0":6842,
+                    "1":1162
+                },
+                "5":{
+                    "0":19601,
+                    "1":1479
+                },
+                "6":{
+                    "0":32603,
+                    "1":1345
+                },
+                "7":{
+                    "0":40193,
+                    "1":1253
+                },
+                "8":{
+                    "0":44608,
+                    "1":1178
+                },
+                "9":{
+                    "0":47918,
+                    "1":1188
+                }
+            },
+            "num_features":2548,
+            "num_goals":14,
+            "plan":[
+                "move-to-table(b1, b7)",
+                "move-to-table(b7, b14)",
+                "move-to-table(b14, b9)",
+                "move-to-table(b9, b10)",
+                "move-to-block(b10, b13, b7)",
+                "move-to-block(b13, b8, b10)",
+                "move-to-block(b8, b6, b1)",
+                "move-to-table(b6, b3)",
+                "move-to-table(b3, b12)",
+                "move-to-table(b12, b5)",
+                "move-to-block(b5, b4, b9)",
+                "move-to-table(b4, b2)",
+                "move-to-block(b2, b11, b14)",
+                "move-to-block(b11, table, b12)",
+                "move-to-block(b8, b1, b11)",
+                "move-to-block(b1, table, b4)",
+                "move-to-block(b6, table, b1)",
+                "move-to-block(b13, b10, b3)",
+                "move-to-block(b10, b7, b6)",
+                "move-to-block(b13, b3, b10)",
+                "move-to-block(b5, b9, b7)",
+                "move-to-block(b9, table, b13)",
+                "move-to-block(b5, b7, b9)",
+                "move-to-block(b7, table, b5)",
+                "move-to-table(b8, b11)",
+                "move-to-block(b11, b12, b8)",
+                "move-to-block(b12, table, b7)",
+                "move-to-block(b11, b8, b12)",
+                "move-to-block(b8, table, b11)",
+                "move-to-table(b2, b14)",
+                "move-to-block(b14, table, b8)",
+                "move-to-block(b2, table, b14)"
+            ],
+            "search_time":318.522,
+            "solved":true,
+            "valid":true,
+            "wall_time":318.58
+        },
+        "./nfs-planner.bin --max_novelty 2 ":{
+            "eval_per_second":18862.023438,
+            "exit_code":0,
+            "expanded":109480,
+            "generated":2552739,
+            "max_num_goals_sat":14,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":1,
+                    "2":0
+                },
+                "1":{
+                    "0":0,
+                    "1":7,
+                    "2":0
+                },
+                "10":{
+                    "0":283214,
+                    "1":172,
+                    "2":10445
+                },
+                "11":{
+                    "0":281485,
+                    "1":173,
+                    "2":10410
+                },
+                "12":{
+                    "0":281981,
+                    "1":177,
+                    "2":10465
+                },
+                "13":{
+                    "0":282573,
+                    "1":177,
+                    "2":10817
+                },
+                "14":{
+                    "0":201832,
+                    "1":167,
+                    "2":9376
+                },
+                "2":{
+                    "0":0,
+                    "1":48,
+                    "2":50
+                },
+                "3":{
+                    "0":541,
+                    "1":160,
+                    "2":732
+                },
+                "4":{
+                    "0":9095,
+                    "1":173,
+                    "2":3810
+                },
+                "5":{
+                    "0":53464,
+                    "1":173,
+                    "2":8612
+                },
+                "6":{
+                    "0":137558,
+                    "1":167,
+                    "2":10974
+                },
+                "7":{
+                    "0":207147,
+                    "1":170,
+                    "2":11076
+                },
+                "8":{
+                    "0":254218,
+                    "1":172,
+                    "2":10906
+                },
+                "9":{
+                    "0":281517,
+                    "1":172,
+                    "2":10673
+                }
+            },
+            "num_features":29,
+            "num_goals":14,
+            "plan":[
+                "move-to-table(b1, b7)",
+                "move-to-table(b7, b14)",
+                "move-to-block(b14, b9, b1)",
+                "move-to-table(b9, b10)",
+                "move-to-block(b10, b13, b7)",
+                "move-to-block(b13, b8, b9)",
+                "move-to-block(b8, b6, b14)",
+                "move-to-block(b6, b3, b10)",
+                "move-to-table(b3, b12)",
+                "move-to-table(b12, b5)",
+                "move-to-table(b5, b4)",
+                "move-to-table(b4, b2)",
+                "move-to-block(b2, b11, b6)",
+                "move-to-block(b8, b14, b11)",
+                "move-to-block(b14, b1, b8)",
+                "move-to-block(b1, table, b4)",
+                "move-to-block(b2, b6, b14)",
+                "move-to-block(b6, b10, b1)",
+                "move-to-block(b10, b7, b6)",
+                "move-to-block(b7, table, b12)",
+                "move-to-block(b13, b9, b10)",
+                "move-to-block(b9, table, b13)",
+                "move-to-block(b5, table, b9)",
+                "move-to-block(b7, b12, b5)",
+                "move-to-block(b12, table, b7)",
+                "move-to-block(b2, b14, b3)",
+                "move-to-block(b14, b8, b2)",
+                "move-to-block(b8, b11, b14)",
+                "move-to-block(b11, table, b12)",
+                "move-to-block(b8, b14, b11)",
+                "move-to-block(b14, b2, b8)",
+                "move-to-block(b2, b3, b14)"
+            ],
+            "search_time":135.337,
+            "solved":true,
+            "valid":true,
+            "wall_time":135.45999999999998
+        },
+        "./nfs-planner.bin --max_novelty 2  --use_goal 0":{
+            "eval_per_second":21305.601562,
+            "exit_code":0,
+            "expanded":109480,
+            "generated":2552739,
+            "max_num_goals_sat":14,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":1,
+                    "2":0
+                },
+                "1":{
+                    "0":0,
+                    "1":7,
+                    "2":0
+                },
+                "10":{
+                    "0":283214,
+                    "1":172,
+                    "2":10445
+                },
+                "11":{
+                    "0":281485,
+                    "1":173,
+                    "2":10410
+                },
+                "12":{
+                    "0":281981,
+                    "1":177,
+                    "2":10465
+                },
+                "13":{
+                    "0":282573,
+                    "1":177,
+                    "2":10817
+                },
+                "14":{
+                    "0":201832,
+                    "1":167,
+                    "2":9376
+                },
+                "2":{
+                    "0":0,
+                    "1":48,
+                    "2":50
+                },
+                "3":{
+                    "0":541,
+                    "1":160,
+                    "2":732
+                },
+                "4":{
+                    "0":9095,
+                    "1":173,
+                    "2":3810
+                },
+                "5":{
+                    "0":53464,
+                    "1":173,
+                    "2":8612
+                },
+                "6":{
+                    "0":137558,
+                    "1":167,
+                    "2":10974
+                },
+                "7":{
+                    "0":207147,
+                    "1":170,
+                    "2":11076
+                },
+                "8":{
+                    "0":254218,
+                    "1":172,
+                    "2":10906
+                },
+                "9":{
+                    "0":281517,
+                    "1":172,
+                    "2":10673
+                }
+            },
+            "num_features":28,
+            "num_goals":14,
+            "plan":[
+                "move-to-table(b1, b7)",
+                "move-to-table(b7, b14)",
+                "move-to-block(b14, b9, b1)",
+                "move-to-table(b9, b10)",
+                "move-to-block(b10, b13, b7)",
+                "move-to-block(b13, b8, b9)",
+                "move-to-block(b8, b6, b14)",
+                "move-to-block(b6, b3, b10)",
+                "move-to-table(b3, b12)",
+                "move-to-table(b12, b5)",
+                "move-to-table(b5, b4)",
+                "move-to-table(b4, b2)",
+                "move-to-block(b2, b11, b6)",
+                "move-to-block(b8, b14, b11)",
+                "move-to-block(b14, b1, b8)",
+                "move-to-block(b1, table, b4)",
+                "move-to-block(b2, b6, b14)",
+                "move-to-block(b6, b10, b1)",
+                "move-to-block(b10, b7, b6)",
+                "move-to-block(b7, table, b12)",
+                "move-to-block(b13, b9, b10)",
+                "move-to-block(b9, table, b13)",
+                "move-to-block(b5, table, b9)",
+                "move-to-block(b7, b12, b5)",
+                "move-to-block(b12, table, b7)",
+                "move-to-block(b2, b14, b3)",
+                "move-to-block(b14, b8, b2)",
+                "move-to-block(b8, b11, b14)",
+                "move-to-block(b11, table, b12)",
+                "move-to-block(b8, b14, b11)",
+                "move-to-block(b14, b2, b8)",
+                "move-to-block(b2, b3, b14)"
+            ],
+            "search_time":119.815,
+            "solved":true,
+            "valid":true,
+            "wall_time":119.91999999999999
+        },
+        "./nfs-planner.bin --max_novelty 2  --use_state_vars 0 --use_goal 0 --use_actions 1":{
+            "exit_code":34304,
+            "wall_time":1184.5500000000002
+        },
+        "./nfs-planner.bin --max_novelty 3 ":{
+            "eval_per_second":1836.348022,
+            "exit_code":0,
+            "expanded":112260,
+            "generated":2463258,
+            "max_num_goals_sat":14,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":1,
+                    "2":0,
+                    "3":0
+                },
+                "1":{
+                    "0":0,
+                    "1":13,
+                    "2":0,
+                    "3":0
+                },
+                "10":{
+                    "0":54142,
+                    "1":172,
+                    "2":10629,
+                    "3":157012
+                },
+                "11":{
+                    "0":55651,
+                    "1":173,
+                    "2":10546,
+                    "3":155460
+                },
+                "12":{
+                    "0":56486,
+                    "1":176,
+                    "2":10272,
+                    "3":152655
+                },
+                "13":{
+                    "0":57143,
+                    "1":176,
+                    "2":10559,
+                    "3":146119
+                },
+                "14":{
+                    "0":44917,
+                    "1":165,
+                    "2":9556,
+                    "3":114088
+                },
+                "2":{
+                    "0":0,
+                    "1":72,
+                    "2":96,
+                    "3":0
+                },
+                "3":{
+                    "0":0,
+                    "1":169,
+                    "2":1070,
+                    "3":392
+                },
+                "4":{
+                    "0":632,
+                    "1":174,
+                    "2":4726,
+                    "3":6091
+                },
+                "5":{
+                    "0":5577,
+                    "1":173,
+                    "2":9126,
+                    "3":33785
+                },
+                "6":{
+                    "0":18207,
+                    "1":172,
+                    "2":11034,
+                    "3":80481
+                },
+                "7":{
+                    "0":31506,
+                    "1":171,
+                    "2":11193,
+                    "3":118631
+                },
+                "8":{
+                    "0":40246,
+                    "1":169,
+                    "2":10984,
+                    "3":143544
+                },
+                "9":{
+                    "0":49863,
+                    "1":171,
+                    "2":10743,
+                    "3":155757
+                }
+            },
+            "num_features":29,
+            "num_goals":14,
+            "plan":[
+                "move-to-table(b1, b7)",
+                "move-to-block(b7, b14, b1)",
+                "move-to-block(b14, b9, b7)",
+                "move-to-block(b9, b10, b14)",
+                "move-to-table(b10, b13)",
+                "move-to-table(b13, b8)",
+                "move-to-table(b10, b9)",
+                "move-to-table(b10, b9)",
+                "move-to-table(b3, b12)",
+                "move-to-block(b12, b5, b3)",
+                "move-to-block(b5, b4, b10)",
+                "move-to-table(b4, b2)",
+                "move-to-block(b9, b14, b2)",
+                "move-to-block(b14, b7, b8)",
+                "move-to-block(b7, b1, b14)",
+                "move-to-block(b1, table, b4)",
+                "move-to-block(b5, b10, b9)",
+                "move-to-block(b6, b13, b1)",
+                "move-to-block(b10, table, b6)",
+                "move-to-block(b7, b14, b12)",
+                "move-to-block(b13, table, b10)",
+                "move-to-block(b5, b9, b14)",
+                "move-to-block(b9, b2, b13)",
+                "move-to-block(b5, b14, b9)",
+                "move-to-block(b2, b11, b14)",
+                "move-to-block(b11, table, b2)",
+                "move-to-block(b7, b12, b5)",
+                "move-to-block(b12, b3, b7)",
+                "move-to-block(b11, b2, b12)",
+                "move-to-table(b2, b14)",
+                "move-to-block(b14, b8, b2)",
+                "move-to-block(b8, table, b11)",
+                "move-to-block(b14, b2, b8)",
+                "move-to-block(b2, table, b14)"
+            ],
+            "search_time":1341.39,
+            "solved":true,
+            "valid":false,
+            "wall_time":1345.6399999999999
+        },
+        "./nfs-planner.bin --max_novelty 3  --use_goal 0":{
+            "eval_per_second":1941.081909,
+            "exit_code":0,
+            "expanded":112260,
+            "generated":2463258,
+            "max_num_goals_sat":14,
+            "novelty_histogram":{
+                "0":{
+                    "0":0,
+                    "1":1,
+                    "2":0,
+                    "3":0
+                },
+                "1":{
+                    "0":0,
+                    "1":13,
+                    "2":0,
+                    "3":0
+                },
+                "10":{
+                    "0":54142,
+                    "1":172,
+                    "2":10629,
+                    "3":157012
+                },
+                "11":{
+                    "0":55651,
+                    "1":173,
+                    "2":10546,
+                    "3":155460
+                },
+                "12":{
+                    "0":56486,
+                    "1":176,
+                    "2":10272,
+                    "3":152655
+                },
+                "13":{
+                    "0":57143,
+                    "1":176,
+                    "2":10559,
+                    "3":146119
+                },
+                "14":{
+                    "0":44917,
+                    "1":165,
+                    "2":9556,
+                    "3":114088
+                },
+                "2":{
+                    "0":0,
+                    "1":72,
+                    "2":96,
+                    "3":0
+                },
+                "3":{
+                    "0":0,
+                    "1":169,
+                    "2":1070,
+                    "3":392
+                },
+                "4":{
+                    "0":632,
+                    "1":174,
+                    "2":4726,
+                    "3":6091
+                },
+                "5":{
+                    "0":5577,
+                    "1":173,
+                    "2":9126,
+                    "3":33785
+                },
+                "6":{
+                    "0":18207,
+                    "1":172,
+                    "2":11034,
+                    "3":80481
+                },
+                "7":{
+                    "0":31506,
+                    "1":171,
+                    "2":11193,
+                    "3":118631
+                },
+                "8":{
+                    "0":40246,
+                    "1":169,
+                    "2":10984,
+                    "3":143544
+                },
+                "9":{
+                    "0":49863,
+                    "1":171,
+                    "2":10743,
+                    "3":155757
+                }
+            },
+            "num_features":28,
+            "num_goals":14,
+            "plan":[
+                "move-to-table(b1, b7)",
+                "move-to-block(b7, b14, b1)",
+                "move-to-block(b14, b9, b7)",
+                "move-to-block(b9, b10, b14)",
+                "move-to-table(b10, b13)",
+                "move-to-table(b13, b8)",
+                "move-to-table(b10, b9)",
+                "move-to-table(b10, b9)",
+                "move-to-table(b3, b12)",
+                "move-to-block(b12, b5, b3)",
+                "move-to-block(b5, b4, b10)",
+                "move-to-table(b4, b2)",
+                "move-to-block(b9, b14, b2)",
+                "move-to-block(b14, b7, b8)",
+                "move-to-block(b7, b1, b14)",
+                "move-to-block(b1, table, b4)",
+                "move-to-block(b5, b10, b9)",
+                "move-to-block(b6, b13, b1)",
+                "move-to-block(b10, table, b6)",
+                "move-to-block(b7, b14, b12)",
+                "move-to-block(b13, table, b10)",
+                "move-to-block(b5, b9, b14)",
+                "move-to-block(b9, b2, b13)",
+                "move-to-block(b5, b14, b9)",
+                "move-to-block(b2, b11, b14)",
+                "move-to-block(b11, table, b2)",
+                "move-to-block(b7, b12, b5)",
+                "move-to-block(b12, b3, b7)",
+                "move-to-block(b11, b2, b12)",
+                "move-to-table(b2, b14)",
+                "move-to-block(b14, b8, b2)",
+                "move-to-block(b8, table, b11)",
+                "move-to-block(b14, b2, b8)",
+                "move-to-block(b2, table, b14)"
+            ],
+            "search_time":1269.01,
+            "solved":true,
+            "valid":false,
+            "wall_time":1273.22
+        },
+        "./nfs-planner.bin --max_novelty 3  --use_state_vars 0 --use_goal 0 --use_actions 1":{
+            "exit_code":34304,
+            "wall_time":32.29
+        },
+        "./nfs-planner.bin --max_novelty 4 ":{
+            "exit_code":34304,
+            "wall_time":504.03000000000003
+        },
+        "./nfs-planner.bin --max_novelty 4  --use_goal 0":{
+            "exit_code":34304,
+            "wall_time":529.61
+        },
+        "./nfs-planner.bin --max_novelty 4  --use_state_vars 0 --use_goal 0 --use_actions 1":{
+            "exit_code":34304,
+            "wall_time":33.88
+        }
+    }
+}
