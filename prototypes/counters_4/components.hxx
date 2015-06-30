@@ -114,7 +114,7 @@ public:
 class DecrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
   void addConstraint( ScopedEffect::cptr eff, ComplexActionManager& manager ) const {
-	assert(0); // Just checking
+	//assert(0); // Just checking
     auto y_var = manager.resolveY(eff->getAffected());
     auto x_var = manager.resolveX(eff->getScope()[0]);
     Gecode::IntArgs     coeffs(2);
