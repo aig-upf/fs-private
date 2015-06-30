@@ -5,33 +5,22 @@
 namespace fs0 {
 
 Atom::Atom(const VariableIdx variable, const ObjectIdx value ) :
-	_variable(variable), _value(value), _relevant(true)
-{
-	if ( Problem::getCurrentProblem() == nullptr ) {
-		_relevant = true;
-		return;
-	}
-	_relevant = Problem::getCurrentProblem()->isGoalRelevant( variable );
-}
+	_variable(variable), _value(value)
+{}
 
 Atom::Atom( const Atom& other ) :
-	_variable(other._variable), _value(other._value), _relevant(other._relevant )
-{
-
-}
+	_variable(other._variable), _value(other._value)
+{}
 
 Atom::Atom( Atom&& other ) :
-	_variable(other._variable), _value(other._value), _relevant(other._relevant )
-{
-
-}
+	_variable(other._variable), _value(other._value)
+{}
 
 const Atom&
 Atom::operator=( const Atom& other ) {
 	if ( this == &other) return *this;
 	_variable = other._variable;
 	_value = other._value;
-	_relevant = other._relevant;
 	return *this;
 }
 
@@ -40,7 +29,6 @@ Atom::operator=( Atom&& other ) {
 	if ( this == &other) return *this;
 	_variable = other._variable;
 	_value = other._value;
-	_relevant = other._relevant;
 	return *this;
 }
 

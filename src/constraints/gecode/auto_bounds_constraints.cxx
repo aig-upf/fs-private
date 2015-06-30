@@ -1,5 +1,5 @@
 #include <constraints/gecode/auto_bounds_constraints.hxx>
-#include <constraints/gecode/support_csp.hxx>
+#include <constraints/gecode/action_csp.hxx>
 #include <constraints/scoped_constraint.hxx>
 #include <constraints/gecode/expr_translator_repository.hxx>
 #include <cassert>
@@ -13,10 +13,10 @@ namespace fs0 {
     }
 
     void
-    UnaryDomainBoundsConstraintTranslator::addConstraint(ScopedConstraint::cptr c, SupportCSP& csp ) const {
+    UnaryDomainBoundsConstraintTranslator::addConstraint(ScopedConstraint::cptr c, ComplexActionManager& manager ) const {
       auto* con = dynamic_cast<UnaryDomainBoundsConstraint*>( c );
       assert( con != nullptr);
-      csp.addBoundsConstraintFromDomain( con->getAffected() );
+      manager.addBoundsConstraintFromDomain(*(manager.getCSP()), con->getAffected());
     }
 
     BinaryDomainBoundsConstraintTranslator::~BinaryDomainBoundsConstraintTranslator() {
@@ -24,10 +24,10 @@ namespace fs0 {
     }
 
     void
-    BinaryDomainBoundsConstraintTranslator::addConstraint( ScopedConstraint::cptr c, SupportCSP& csp ) const {
+    BinaryDomainBoundsConstraintTranslator::addConstraint( ScopedConstraint::cptr c, ComplexActionManager& manager ) const {
       auto* con = dynamic_cast<BinaryDomainBoundsConstraint*>( c );
       assert( con != nullptr);
-      csp.addBoundsConstraintFromDomain( con->getAffected() );
+      manager.addBoundsConstraintFromDomain(*(manager.getCSP()), con->getAffected());
     }
 
 

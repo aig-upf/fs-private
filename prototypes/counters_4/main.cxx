@@ -18,7 +18,7 @@
 #include <problem_info.hxx>
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
-#include <constraints/gecode/support_csp.hxx>
+#include <constraints/gecode/action_csp.hxx>
 #include <constraints/gecode/constraint_translation.hxx>
 #include <constraints/gecode/gecode_action_manager.hxx>
 
@@ -238,6 +238,9 @@ int main(int argc, char** argv) {
 		return res;
 	}
 
+
+	gecode::registerTranslators();
+
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	Problem problem(data_dir);
 
@@ -246,12 +249,6 @@ int main(int argc, char** argv) {
 
 	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
-
-	// MRJ: This is not very nice, but cannot be avoided :(
-	gecode::registerTranslators();
-	gecode::SupportCSP::vptr	csps;
-	gecode::SupportCSP::create( problem, gecode::RelaxedActionManager::CSPSet );
-	std::cout << "Support CSPs created: " << csps.size() << std::endl;
 
 	std::cout << "Creating Search_Problem instance" << std::endl;
 	FwdSearchProblem search_prob(problem);

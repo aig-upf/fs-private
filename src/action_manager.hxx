@@ -26,13 +26,10 @@ public:
 
 
 	//! Returns true iff the given plan is valid and leads to a goal state, when applied to state s0 in relaxed mode.
-	static bool checkRelaxedPlanSuccessful(const Problem& problem, const ActionPlan& plan, const State& s0);
+	static bool checkRelaxedPlanSuccessful(const Problem& problem, const ActionPlan& plan, const State& seed);
 
 	//! Applies the given plan in relaxed mode to the given relaxed state.
-	static bool applyRelaxedPlan(const Problem& problem, const ActionPlan& plan, const State& seed, RelaxedState& relaxed);
-
-	//! Applies a single action to a given relaxed state and accumulates its effects into the same state.
-	static bool applyRelaxedAction(const Action& action, const State& seed, RelaxedState& s);
+	static bool applyRelaxedPlan(const Problem& problem, const ActionPlan& plan, RelaxedState& relaxed);
 };
 
 } // namespaces

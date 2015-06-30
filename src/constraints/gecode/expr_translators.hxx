@@ -3,13 +3,12 @@
 
 #include <constraints/scoped_constraint.hxx>
 #include <constraints/scoped_effect.hxx>
+#include <complex_action_manager.hxx>
 #include <gecode/driver.hh>
 
 namespace fs0 {
 
   namespace gecode {
-
-    class SupportCSP;
 
     class ConstraintTranslator  {
     public:
@@ -18,7 +17,7 @@ namespace fs0 {
 
       virtual ~ConstraintTranslator();
 
-      virtual void addConstraint( ScopedConstraint::cptr constr, SupportCSP& s ) const = 0;
+      virtual void addConstraint( ScopedConstraint::cptr constr, ComplexActionManager& manager ) const = 0;
     };
 
     class EffectTranslator  {
@@ -28,7 +27,7 @@ namespace fs0 {
 
       virtual ~EffectTranslator();
 
-      virtual void addConstraint( ScopedEffect::cptr eff,  SupportCSP& s ) const = 0;
+      virtual void addConstraint( ScopedEffect::cptr eff,  ComplexActionManager& manager ) const = 0;
     };
 
 

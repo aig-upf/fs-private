@@ -11,14 +11,14 @@ namespace fs0 {
     public:
 
       virtual ~UnaryDomainBoundsConstraintTranslator();
-      virtual void addConstraint( ScopedConstraint::cptr constr, SupportCSP& s ) const;
+      virtual void addConstraint( ScopedConstraint::cptr constr, ComplexActionManager& manager ) const;
     };
 
     class BinaryDomainBoundsConstraintTranslator : public ConstraintTranslator  {
     public:
 
       virtual ~BinaryDomainBoundsConstraintTranslator();
-      virtual void addConstraint( ScopedConstraint::cptr constr, SupportCSP& s ) const;
+      virtual void addConstraint( ScopedConstraint::cptr constr, ComplexActionManager& manager ) const;
     };
 
 

@@ -30,8 +30,6 @@ public:
 	inline VariableIdx getVariable() const { return _variable; }
 	inline ObjectIdx getValue() const { return _value; }
 
-	bool	isGoalRelevant() const { return _relevant; }
-
 	std::ostream& print(std::ostream& os) const;
 	friend std::ostream& operator<<(std::ostream &os, const Atom& atom) { return atom.print(os); }
 
@@ -41,9 +39,6 @@ protected:
 
 	//! The domain value.
 	ObjectIdx  _value;
-
-	//! Whether this atom is goal relevant
-	bool				_relevant;
 };
 
 //! Comparison operators
