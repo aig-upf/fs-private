@@ -9,7 +9,7 @@ using namespace Gecode;
 
 namespace fs0 { namespace gecode {
 
-ActionCSP::ActionCSP( bool share, ActionCSP& other ) : 
+ActionCSP::ActionCSP( bool share, ActionCSP& other ) :
 	Gecode::Space( share, other )
 {
 	_X.update( *this, share, other._X );
@@ -22,13 +22,6 @@ Gecode::Space* ActionCSP::copy( bool share ) {
 	return new ActionCSP( share, *this );
 }
 
-//! Standard copy constructor
-ActionCSP::ActionCSP(ActionCSP& other) : 
-	Gecode::Space(other), 
-	_X(other._X),
-	_Y(other._Y)
-{}
-	
 bool ActionCSP::checkConsistency() {
 	Gecode::SpaceStatus st = status();
 	return st != Gecode::SpaceStatus::SS_FAILED;
