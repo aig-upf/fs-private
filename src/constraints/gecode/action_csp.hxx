@@ -16,7 +16,7 @@ public:
 	typedef   ActionCSP *                          ptr;
 	typedef   std::vector< ActionCSP::ptr >        vptr;
 
-	ActionCSP() {}
+	ActionCSP( ) {};
 	virtual ~ActionCSP() {}
 
 	//! Retrieves possible valuations for a given variable varName
@@ -31,15 +31,15 @@ public:
 	//! Shallow copy operator, see notes on search in Gecode to
 	//! get an idea of what is being "actually" copied
 	virtual Gecode::Space* copy( bool share );
-	
+
 	//! Standard copy constructor
-	ActionCSP(ActionCSP& other);
+	explicit ActionCSP(ActionCSP& other);
 
 	bool checkConsistency();
 
 	//! Prints a representation of a CSP. Mostly for debugging purposes
 	friend std::ostream& operator<<(std::ostream &os, const ActionCSP&  csp) { return csp.print(os); }
-	std::ostream& print(std::ostream& os) const { 
+	std::ostream& print(std::ostream& os) const {
 		os << _X;
 		return os;
 	}
@@ -47,11 +47,10 @@ public:
 // protected:
 	//! CSP variables that correspond to the planning problem state variables that are relevant to the action preconditions and effects
 	Gecode::IntVarArray _X;
-	
+
 	//! CSP variables that correspond to the planning problem state variables that are affected by the action's effects
 	Gecode::IntVarArray _Y;
 };
 
 
 } } // namespaces
-
