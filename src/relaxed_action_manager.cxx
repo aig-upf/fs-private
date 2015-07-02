@@ -83,7 +83,7 @@ void UnaryActionManager::processEffects(unsigned actionIdx, const Action& action
 	for (const ScopedEffect::cptr effect:action.getEffects()) {
 		const VariableIdxVector& effectScope = effect->getScope();
 		#ifdef FS0_DEBUG
-		std::cout << "\t effect: " << effect->getName() << std::endl;
+		std::cout << "\t effect: " << effect << std::endl;
 		#endif
 
 		/***** 0-ary Effects *****/

@@ -83,7 +83,13 @@ public:
 	//! or an actual compiled constraint, if it should.
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const = 0;
 
-	virtual std::string getName() const {return std::string("<unnamed constraint>");}
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const ScopedConstraint& o) { return o.print(os); }
+	virtual std::ostream& print(std::ostream& os) const {
+		os << "<unnamed constraint>";
+		return os;
+	}
 };
 
 class ParametrizedScopedConstraint : public ScopedConstraint

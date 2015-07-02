@@ -52,8 +52,12 @@ public:
 	//! A small helper
 	inline virtual Atom apply(const State& s) const { return this->apply(Projections::project(s, _scope)); }
 
-	virtual std::string getName() const = 0;
-
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const ScopedEffect& o) { return o.print(os); }
+	virtual std::ostream& print(std::ostream& os) const {
+		os << "<unnamed effect>";
+		return os;
+	}
 };
 
 //! We specialize this class for performance reasons, since it is so common.

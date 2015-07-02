@@ -105,11 +105,8 @@ void Problem::addDomainBoundConstraints() {
 			if (arity == 0) {
 				if (!_problemInfo.checkValueIsValid(effect->apply())) {
 					std::stringstream buffer;
-					buffer << "Error: 0-ary effect '";
-					buffer << effect->getName();
-					buffer << "' of action ";
-					buffer << action->getName();
-					buffer << " produces out-of-bounds variable values" << std::endl;
+					buffer << "Error: 0-ary effect '" << effect << "' of action ";
+					buffer << action->getName() << " produces out-of-bounds variable values" << std::endl;
 					throw std::runtime_error(buffer.str());
 				}
 			} else if (arity == 1) {
