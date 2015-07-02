@@ -41,30 +41,17 @@ public:
 	bool isGoal(const RelaxedState& state) const;
 	
 protected:
-	
-	//! A vector with all the variables that are relevant to the goal.
-	VariableIdxVector allRelevantVariables;
-	
 	//! We store here all the constraints that we want to take into account when determining if a relaxed state is a goal:
 	//! This includes both the explicit goal constraints plus the state constraints.
-	const ScopedConstraint::vcptr allGoalConstraints;
+	const ScopedConstraint::vcptr allConstraints;
+	
+	//! A vector with all the variables that are relevant to the goal.
+	VariableIdxVector allRelevantVariables;	
 	
 	const ConstraintManager goalConstraintsManager;
 	
 	//! True iff there is at least one state constraint.
 	bool hasStateConstraints;
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	//! Variables mapping: For a state variable X, variables[X] is the (implicit, unsigned) ID of corresponding Gecode CSP variable.
 	std::map<VariableIdx, unsigned> _variables;
@@ -76,13 +63,13 @@ protected:
 	gecode::GecodeCSPTranslator translator;
 	
 	//! Creates the CSP that corresponds to a given action.
-	gecode::SimpleCSP::ptr createCSPVariables( const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints );
+	gecode::SimpleCSP::ptr createCSPVariables();
 	
 	//! Adds constraints to the csp being managed
 	void addDefaultConstraints( const Action& a, const ScopedConstraint::vcptr& stateConstraints  );
 	
 	//! Helper to extract all relevant variables _uniquely_.
-	static VariableIdxSet getAllRelevantVariables(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
+	static VariableIdxSet getAllRelevantVariables(const ScopedConstraint::vcptr& constraints);
 	
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool solveCSP(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const;

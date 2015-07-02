@@ -16,19 +16,18 @@ namespace fs0 {
 
 // Note that we use both types of constraints as goal constraints
 GecodeConstraintManager::GecodeConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints) :
+	allConstraints(Utils::merge(goalConstraints, stateConstraints)),
 	allRelevantVariables(),
-	allGoalConstraints(Utils::merge(goalConstraints, stateConstraints)),
-	goalConstraintsManager(allGoalConstraints), // We store all the constraints in a new vector so that we can pass a const reference 
+	goalConstraintsManager(allConstraints), // We store all the constraints in a new vector so that we can pass a const reference 
 	                                            // - we're strongly interested in the ConstraintManager having only a reference, not the actual value,
 	                                            // since in some cases each grounded action will have a ConstraintManager
 	hasStateConstraints(stateConstraints.size() > 0)
 {
-	auto relevantSet = getAllRelevantVariables(goalConstraints, stateConstraints);
+	auto relevantSet = getAllRelevantVariables(allConstraints);
 	allRelevantVariables = VariableIdxVector(relevantSet.begin(), relevantSet.end());
 	
-	baseCSP = createCSPVariables(goalConstraints, stateConstraints);
-	Helper::translateConstraints(*baseCSP, translator, stateConstraints); // state constraints
-	Helper::translateConstraints(*baseCSP, translator, goalConstraints); // Action preconditions
+	baseCSP = createCSPVariables();
+	Helper::translateConstraints(*baseCSP, translator, allConstraints);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
 	Gecode::SpaceStatus st = baseCSP->status();
@@ -43,16 +42,6 @@ ScopedConstraint::Output GecodeConstraintManager::pruneUsingStateConstraints(Rel
 	
 	return ScopedConstraint::Output::Unpruned;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -87,7 +76,7 @@ bool GecodeConstraintManager::isGoal(const RelaxedState& layer) const {
 }
 
 
-SimpleCSP::ptr GecodeConstraintManager::createCSPVariables(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints) {
+SimpleCSP::ptr GecodeConstraintManager::createCSPVariables() {
 	// Determine input and output variables for this action: we first amalgamate variables into a set
 	// to avoid repetitions, then generate corresponding CSP variables, then create the CSP model with them
 	// and finally add the model constraints.
@@ -108,12 +97,9 @@ SimpleCSP::ptr GecodeConstraintManager::createCSPVariables(const ScopedConstrain
 	return csp;
 }
 
-VariableIdxSet GecodeConstraintManager::getAllRelevantVariables(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints) {
+VariableIdxSet GecodeConstraintManager::getAllRelevantVariables(const ScopedConstraint::vcptr& constraints) {
 	VariableIdxSet variables;
-	// Add the variables mentioned by state constraints
-	for (ScopedConstraint::cptr constraint : stateConstraints) variables.insert( constraint->getScope().begin(), constraint->getScope().end() );
-	// Add the variables mentioned in the preconditions
-	for (ScopedConstraint::cptr constraint : goalConstraints) variables.insert( constraint->getScope().begin(), constraint->getScope().end() );
+	for (ScopedConstraint::cptr constraint : constraints) variables.insert(constraint->getScope().begin(), constraint->getScope().end());
 	return variables;
 }
 

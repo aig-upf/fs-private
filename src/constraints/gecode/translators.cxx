@@ -1,6 +1,6 @@
 
 #include <problem_info.hxx>
-#include <constraints/builtin.hxx>
+#include <constraints/builtin_constraints.hxx>
 #include <constraints/gecode/translators.hxx>
 #include <constraints/gecode/translator_repository.hxx>
 #include <constraints/gecode/simple_csp.hxx>
