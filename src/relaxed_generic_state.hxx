@@ -86,12 +86,9 @@ public:
 		return total;
 	}
 	
-	friend std::ostream& operator<<(std::ostream &os, const RelaxedGenericState&  state) { return state.print(os); }
-	
 	//! Prints a representation of the state to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const RelaxedGenericState&  state) { return state.print(os); }
 	std::ostream& print(std::ostream& os) const;
-	std::ostream& printAll(std::ostream& os) const;
-	std::ostream& print(std::ostream& os, const Problem& problem) const;
 
 protected:
 	//! Small helper for debugging purposes

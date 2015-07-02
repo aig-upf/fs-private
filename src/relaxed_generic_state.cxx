@@ -21,11 +21,7 @@ bool RelaxedGenericState::checkPointerOwnershipIsCorrect() const {
 }
 
 std::ostream& RelaxedGenericState::print(std::ostream& os) const {
-	return print(os, *(Problem::getCurrentProblem()));
-}
-
-std::ostream& RelaxedGenericState::print(std::ostream& os, const Problem& problem) const {
-	const ProblemInfo& problemInfo = problem.getProblemInfo();
+	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
 	os << "RelaxedGenericState[";
 	for (unsigned i = 0; i < _domains.size(); ++i) { // Iterate through all the sets
 		const DomainPtr& vals = _domains.at(i);

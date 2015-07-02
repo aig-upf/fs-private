@@ -18,11 +18,7 @@ void GenericState::accumulate(const Atom::vctr& atoms) {
 }
 
 std::ostream& GenericState::print(std::ostream& os) const {
-	return print(os, *(Problem::getCurrentProblem()));
-}
-
-std::ostream& GenericState::print(std::ostream& os, const Problem& problem) const {
-	const ProblemInfo& problemInfo = problem.getProblemInfo();
+	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
 	os << "GenericState";
 	os << "(" << _hash << ")[";
 	for (unsigned i = 0; i < _values.size(); ++i) { // Iterate through all the sets
