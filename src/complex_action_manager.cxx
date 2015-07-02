@@ -5,9 +5,11 @@
 #include <constraints/constraint_manager.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <boost/container/flat_map.hpp>
-#include <constraints/gecode/expr_translator_repository.hxx>
+#include <constraints/gecode/translators.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <tuple>
+
+#include <gecode/driver.hh>
 
 using namespace Gecode;
 using namespace fs0::gecode;

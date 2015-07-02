@@ -7,6 +7,8 @@
 #include <utils/utils.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 
+#include <gecode/driver.hh>
+
 using namespace Gecode;
 using namespace fs0::gecode;
 

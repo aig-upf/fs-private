@@ -7,7 +7,7 @@
 #include <problem.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
-#include <constraints/gecode/expr_translator_repository.hxx>
+#include <constraints/gecode/translator_repository.hxx>
 
 #include <gecode/int.hh>
 

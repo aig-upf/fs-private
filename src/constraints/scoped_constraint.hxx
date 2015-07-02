@@ -100,6 +100,8 @@ public:
 	const std::vector<int>& getParameters() const { return _binding; }
 
 	virtual bool isSatisfied(const ObjectIdxVector& values) const = 0;
+	
+	const std::vector<int>& getBinding() const { return _binding; }
 };
 
 class UnaryParametrizedScopedConstraint : public ParametrizedScopedConstraint

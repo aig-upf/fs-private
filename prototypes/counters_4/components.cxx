@@ -2,7 +2,7 @@
 #include "components.hxx"
 #include <utils/loader.hxx>
 #include <typeinfo>
-#include <constraints/gecode/expr_translator_repository.hxx>
+#include <constraints/gecode/translator_repository.hxx>
 
 std::unique_ptr<External> external;
 
@@ -13,7 +13,6 @@ const ActionSignature DecrementAction::signature_ = {2};
 
 static fs0::gecode::EffectTranslatorRegistrar< IncrementActionEffect0Implementer > registrarIncrementEffect0( typeid( IncrementActionEffect0 ) );
 static fs0::gecode::EffectTranslatorRegistrar< DecrementActionEffect0Implementer > registrarDecrementEffect0( typeid( DecrementActionEffect0 ) );
-// static fs0::gecode::EffectTranslatorRegistrar< GoalConstraint0Implementer > registrarGoalConstraint0( typeid( ??? ) );
 
 
 void generate(const std::string& data_dir, Problem& problem) {

@@ -15,7 +15,8 @@
 #include "external.hxx"
 #include <constraints/all.hxx>
 #include <gecode/int.hh>
-#include <constraints/gecode/expr_translators.hxx>
+#include <constraints/gecode/translators.hxx>
+#include <constraints/gecode/csp_translator.hxx>
 #include <relaxed_action_manager.hxx>
 
 using namespace fs0;
@@ -131,6 +132,7 @@ public:
 		Gecode::rel(csp, x1, Gecode::IRT_LE, x2);
 	}
 };
+
 
 /*********************************************/
 /* Method factories                          */

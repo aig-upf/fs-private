@@ -5,7 +5,7 @@
 #include <relaxed_action_manager.hxx>
 #include <sstream>
 #include <constraints/gecode_constraint_manager.hxx>
-#include <constraints/gecode/constraint_translation.hxx>
+#include <constraints/gecode/translators.hxx>
 
 namespace fs0 {
 
