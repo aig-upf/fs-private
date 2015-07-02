@@ -26,12 +26,13 @@ public:
 	typedef ScopedEffect const * cptr;
 	typedef std::vector<ScopedEffect::cptr> vcptr;
 	
-	ScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters);
+	ScopedEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
 	
 	virtual ~ScopedEffect() {}
 	
 	inline const VariableIdxVector& getScope() const { return _scope; }
 	inline VariableIdx getAffected() const { return _affected; }
+	inline const std::vector<int>& getBinding() const { return _binding; }
 	inline unsigned getArity() const { return _scope.size(); }
 	
 	//! The generic appllicable / apply methods, to be overriden by concrete subclasses.
@@ -64,7 +65,7 @@ public:
 class ZeroaryScopedEffect : public ScopedEffect
 {
 public:
-	ZeroaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters);
+	ZeroaryScopedEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
 	virtual ~ZeroaryScopedEffect() {}
 	
 	//! Effects are by default applicable, i.e. condition-less.
@@ -84,7 +85,7 @@ public:
 class UnaryScopedEffect : public ScopedEffect
 {
 public:
-	UnaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters);
+	UnaryScopedEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
 	virtual ~UnaryScopedEffect() {}
 	
 	//! Effects are by default applicable, i.e. condition-less.
@@ -104,7 +105,7 @@ public:
 class BinaryScopedEffect : public ScopedEffect
 {
 public:
-	BinaryScopedEffect(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters);
+	BinaryScopedEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
 	virtual ~BinaryScopedEffect() {}
 	
 	//! Effects are by default applicable, i.e. condition-less.

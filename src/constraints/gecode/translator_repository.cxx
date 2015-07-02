@@ -27,14 +27,18 @@ TranslatorRepository::addEntry( TypeInfoRef typeThing, EffectTranslator::ptr tra
 EffectTranslator::ptr
 TranslatorRepository::getEffectTranslator( TypeInfoRef type ) {
 	auto it = _effectTranslators.find( type );
-	if ( it == _effectTranslators.end() ) return nullptr;
+	if ( it == _effectTranslators.end() ) {
+		throw std::runtime_error("No EffectTranslator registered for the given type ");
+	}
 	return it->second;
 }
 
 ConstraintTranslator::ptr
 TranslatorRepository::getConstraintTranslator( TypeInfoRef type ) {
 	auto it = _constraintTranslators.find( type );
-	if ( it == _constraintTranslators.end() ) return nullptr;
+	if ( it == _constraintTranslators.end() ) {
+		throw std::runtime_error("No ConstraintTranslator registered for the given type ");
+	}
 	return it->second;
 }
 

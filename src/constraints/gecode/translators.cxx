@@ -1,6 +1,7 @@
 
 #include <problem_info.hxx>
 #include <constraints/builtin_constraints.hxx>
+#include <constraints/builtin_effects.hxx>
 #include <constraints/gecode/translators.hxx>
 #include <constraints/gecode/translator_repository.hxx>
 #include <constraints/gecode/simple_csp.hxx>
@@ -47,21 +48,43 @@ void BinaryRelationTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTran
 }
 
 
+void ValueAssignmentEffectTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+	auto y = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
+	Gecode::rel(csp, y, Gecode::IRT_EQ, effect->getBinding()[0]);
+}
+
+void AdditiveUnaryEffectTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+	auto y_var = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
+	auto x_var = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
+	Gecode::IntArgs     coeffs(2);
+	Gecode::IntVarArgs  vars(2);
+	coeffs[0] = 1;
+	coeffs[1] = -1;
+	vars[0] = y_var;
+	vars[1] = x_var;
+	Gecode::linear(csp, coeffs, vars, Gecode::IRT_EQ, effect->getBinding()[0]);
+}
+
+
 //! Perform the actual registration of all available translators (to be invoked during bootstrap)
 void registerTranslators() {
 	// Translators for the automatic domain-bounds constraints
 	TranslatorRepository::instance().addEntry(typeid(UnaryDomainBoundsConstraint),    new UnaryDomainBoundsConstraintTranslator());
 	TranslatorRepository::instance().addEntry(typeid(BinaryDomainBoundsConstraint),   new BinaryDomainBoundsConstraintTranslator());
 	
-	
 	// Translators for built-in constraints
-// 	ConstraintTranslatorRegistrar<LTConstraintTranslator> registrarUnaryDomainBounds( typeid( UnaryDomainBoundsConstraint ) );
 	TranslatorRepository::instance().addEntry(typeid(LTConstraint),   new BinaryRelationTranslator(Gecode::IRT_LE)); // X < Y
 	TranslatorRepository::instance().addEntry(typeid(LEQConstraint),  new BinaryRelationTranslator(Gecode::IRT_LQ)); // X <= Y
 	TranslatorRepository::instance().addEntry(typeid(EQConstraint),   new BinaryRelationTranslator(Gecode::IRT_EQ)); // X = Y
 	TranslatorRepository::instance().addEntry(typeid(NEQConstraint),  new BinaryRelationTranslator(Gecode::IRT_NQ)); // X != Y
 	
 	TranslatorRepository::instance().addEntry(typeid(NEQXConstraint), new UnaryRelationTranslator(Gecode::IRT_NQ)); // 
+	
+	// Translators for built-in effects
+	TranslatorRepository::instance().addEntry(typeid(ValueAssignmentEffect), new ValueAssignmentEffectTranslator()); // Y := c
+	TranslatorRepository::instance().addEntry(typeid(AdditiveUnaryEffect),   new AdditiveUnaryEffectTranslator());   // Y := X + c
+	
+	
 }
 
 } } // namespaces

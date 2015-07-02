@@ -8,15 +8,24 @@
 
 namespace fs0 {
 
-// X := value
+// X := c
 class ValueAssignmentEffect : public ZeroaryScopedEffect
 {
 public:
-	ValueAssignmentEffect(const VariableIdx variable, const ObjectIdx value);
-	virtual ~ValueAssignmentEffect() {};
+	ValueAssignmentEffect(const VariableIdx affected, const ObjectIdx value);
 	
 	virtual Atom apply() const;
 	
+	virtual std::ostream& print(std::ostream& os) const;
+};
+
+// X = Y + c (with X and Y possibly being the same variable.
+class AdditiveUnaryEffect : public UnaryScopedEffect {
+public:
+	AdditiveUnaryEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
+
+	Atom apply(ObjectIdx v1) const;
+
 	virtual std::ostream& print(std::ostream& os) const;
 };
 

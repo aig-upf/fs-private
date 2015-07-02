@@ -60,80 +60,6 @@ public:
 
 
 
-
-class IncrementActionEffect0 : public UnaryScopedEffect {
-public:
-	IncrementActionEffect0(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters) : UnaryScopedEffect(scope, image, parameters) {}
-
-	Atom apply(ObjectIdx v1) const {
-		assert(applicable(v1));
-		// value(?c) := +(value(?c), 1)
-		return Atom(_affected, v1 + 1);
-	}
-
-	std::string getName() const {
-		return std::string("value(?c) := +(value(?c), 1)");
-	}
-
-};
-
-class IncrementActionEffect0Implementer : public gecode::EffectTranslator {
-public:
-	void addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
-		auto y_var = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
-		auto x_var = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
-		Gecode::IntArgs     coeffs(2);
-		Gecode::IntVarArgs  vars(2);
-		coeffs[0] = 1;
-		coeffs[1] = -1;
-		vars[0] = y_var;
-		vars[1] = x_var;
-		Gecode::linear( csp, coeffs, vars, Gecode::IRT_EQ, 1 );
-	}
-};
-
-
-class DecrementActionEffect0 : public UnaryScopedEffect {
-public:
-	DecrementActionEffect0(const VariableIdxVector& scope, const VariableIdxVector& image, const std::vector<int>& parameters) : UnaryScopedEffect(scope, image, parameters) {}
-
-	Atom apply(ObjectIdx v1) const {
-		assert(applicable(v1));
-		// value(?c) := -(value(?c), 1)
-		return Atom(_affected, v1 - 1);
-	}
-
-	std::string getName() const {
-		return std::string("value(?c) := -(value(?c), 1)");
-	}
-};
-
-class DecrementActionEffect0Implementer : public gecode::EffectTranslator {
-public:
-	void addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
-		auto y_var = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
-		auto x_var = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
-		Gecode::IntArgs     coeffs(2);
-		Gecode::IntVarArgs  vars(2);
-		coeffs[0] = 1;
-		coeffs[1] = -1;
-		vars[0] = y_var;
-		vars[1] = x_var;
-		Gecode::linear( csp, coeffs, vars, Gecode::IRT_EQ, -1 );
-	}
-};
-
-
-class GoalConstraint0Implementer : public gecode::ConstraintTranslator {
-public:
-	void addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
-		auto x1 = translator.resolveVariable(csp, constraint->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
-		auto x2 = translator.resolveVariable(csp, constraint->getScope()[1], gecode::GecodeCSPTranslator::VariableType::Input);
-		Gecode::rel(csp, x1, Gecode::IRT_LE, x2);
-	}
-};
-
-
 /*********************************************/
 /* Method factories                          */
 /*********************************************/
@@ -158,7 +84,7 @@ public:
 
 			};
 			ScopedEffect::vcptr effects = {
-				new IncrementActionEffect0(effRelevantVars[0], effAffectedVars[0], binding)
+				new AdditiveUnaryEffect(effRelevantVars[0], effAffectedVars[0][0], {1})
 			};
 			pointer = new IncrementAction(binding, constraints, effects);
         }
@@ -168,7 +94,7 @@ public:
 
 			};
 			ScopedEffect::vcptr effects = {
-				new DecrementActionEffect0(effRelevantVars[0], effAffectedVars[0], binding)
+				new AdditiveUnaryEffect(effRelevantVars[0], effAffectedVars[0][0], {-1})
 			};
 			pointer = new DecrementAction(binding, constraints, effects);
         }
