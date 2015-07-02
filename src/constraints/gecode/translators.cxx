@@ -50,8 +50,9 @@ void BinaryRelationTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTran
 //! Perform the actual registration of all available translators (to be invoked during bootstrap)
 void registerTranslators() {
 	// Translators for the automatic domain-bounds constraints
-	ConstraintTranslatorRegistrar< UnaryDomainBoundsConstraintTranslator > registrarUnaryDomainBounds( typeid( UnaryDomainBoundsConstraint ) );
-	ConstraintTranslatorRegistrar< BinaryDomainBoundsConstraintTranslator > registrarBinaryDomainBounds( typeid( BinaryDomainBoundsConstraint ) );	
+	TranslatorRepository::instance().addEntry(typeid(UnaryDomainBoundsConstraint),    new UnaryDomainBoundsConstraintTranslator());
+	TranslatorRepository::instance().addEntry(typeid(BinaryDomainBoundsConstraint),   new BinaryDomainBoundsConstraintTranslator());
+	
 	
 	// Translators for built-in constraints
 // 	ConstraintTranslatorRegistrar<LTConstraintTranslator> registrarUnaryDomainBounds( typeid( UnaryDomainBoundsConstraint ) );

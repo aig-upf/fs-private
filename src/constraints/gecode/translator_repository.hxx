@@ -29,31 +29,10 @@ public:
 
 
 protected:
-
 	TranslatorRepository();
 
 	ConstraintTranslatorTable   _constraintTranslators;
 	EffectTranslatorTable       _effectTranslators;
-
 };
-
-    // MRJ: Having to split the registrar into two types is highly unsatisfying
-    // but I see that g++ can't resolve overloaded methods when there is and
-    // implicit upcast (which is kind of reasonable, I guess)
-    template <typename TranslatorType>
-    class EffectTranslatorRegistrar {
-    public :
-      EffectTranslatorRegistrar( TypeInfoRef k ) {
-        TranslatorRepository::instance().addEntry( k, (EffectTranslator::ptr)(new TranslatorType()) );
-      }
-    };
-
-    template <typename TranslatorType>
-    class ConstraintTranslatorRegistrar {
-    public :
-      ConstraintTranslatorRegistrar( TypeInfoRef k ) {
-        TranslatorRepository::instance().addEntry( k, (ConstraintTranslator::ptr)(new TranslatorType()) );
-      }
-    };
 
 } } // namespaces

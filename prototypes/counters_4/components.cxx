@@ -11,11 +11,12 @@ const ActionSignature IncrementAction::signature_ = {2};
 const std::string DecrementAction::name_ = "decrement";
 const ActionSignature DecrementAction::signature_ = {2};
 
-static fs0::gecode::EffectTranslatorRegistrar< IncrementActionEffect0Implementer > registrarIncrementEffect0( typeid( IncrementActionEffect0 ) );
-static fs0::gecode::EffectTranslatorRegistrar< DecrementActionEffect0Implementer > registrarDecrementEffect0( typeid( DecrementActionEffect0 ) );
-
 
 void generate(const std::string& data_dir, Problem& problem) {
+	
+	fs0::gecode::TranslatorRepository::instance().addEntry(typeid(IncrementActionEffect0),   new IncrementActionEffect0Implementer());
+	fs0::gecode::TranslatorRepository::instance().addEntry(typeid(DecrementActionEffect0),   new DecrementActionEffect0Implementer());
+	
 	external = std::unique_ptr<External>(new External(problem.getProblemInfo(), data_dir));
 	Loader::loadProblem(data_dir, ComponentFactory::instantiateAction, ComponentFactory::instantiateConstraint, ComponentFactory::instantiateGoal, problem);
 }
