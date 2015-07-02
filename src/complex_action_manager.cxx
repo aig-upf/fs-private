@@ -43,9 +43,11 @@ void ComplexActionManager::processAction(unsigned actionIdx, const Action& actio
 	Helper::addRelevantVariableConstraints(*csp, translator, action.getAllRelevantVariables(), layer);
 	
 	// We do not need to take values that were already achieved in the previous layer into account.
-	for ( ScopedEffect::cptr effect : action.getEffects() ) {
-		addNoveltyConstraints(effect->getAffected(), layer, *csp);
-	}
+	// TODO - This is not correct yet and needs further thought - e.g. instead of constraints Y not in "set of already achieved values",
+	// TODO - the correct thing to do would be a constraint "Y in set of already achieved values OR Y = [w]^k"
+// 	for ( ScopedEffect::cptr effect : action.getEffects() ) {
+// 		addNoveltyConstraints(effect->getAffected(), layer, *csp);
+// 	}
 	
 	if (true) {  // Solve the CSP completely
 		solveCSP(csp, actionIdx, action, rpg);
@@ -65,8 +67,12 @@ const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actio
 	// TODO posting a branching might make sense to prioritize some branching strategy?
     // branch(*this, l, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 	DFS<SimpleCSP> engine(csp);
-	
+
+	std::cout << "Trying to solve an action CSP " << action.getName() << std::endl;
+		
 	while (SimpleCSP* solution = engine.next()) {
+		
+		std::cout << "A solution was found: " << *solution << std::endl;
 		
 		for ( ScopedEffect::cptr effect : action.getEffects() ) {
 			VariableIdx affected = effect->getAffected();
