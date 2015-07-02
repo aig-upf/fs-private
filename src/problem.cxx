@@ -5,6 +5,7 @@
 #include <relaxed_action_manager.hxx>
 #include <sstream>
 #include <constraints/gecode_constraint_manager.hxx>
+#include <constraints/gecode/constraint_translation.hxx>
 
 namespace fs0 {
 
@@ -32,6 +33,8 @@ void Problem::bootstrap() {
 			std::string("No goal specification detected. The problem is probably being bootstrapped before having been fully") + 
 			 "initialized with the per-instance generate() procedure");
 	}
+	
+	gecode::registerTranslators();
 	
 	// Add the necessary (unary) constraints to keep the appropriate values, if any, within their bounds.
 	addDomainBoundConstraints();

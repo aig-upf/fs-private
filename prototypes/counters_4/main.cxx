@@ -18,7 +18,6 @@
 #include <problem_info.hxx>
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
-#include <constraints/gecode/constraint_translation.hxx>
 
 #include <components.hxx>  // This will dinamically point to the right generated file
 
@@ -236,8 +235,6 @@ int main(int argc, char** argv) {
 		return res;
 	}
 
-
-	gecode::registerTranslators();
 
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	Problem problem(data_dir);

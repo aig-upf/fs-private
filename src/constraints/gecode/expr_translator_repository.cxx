@@ -1,9 +1,7 @@
 #include <constraints/gecode/expr_translator_repository.hxx>
 #include <iostream>
 
-namespace fs0 {
-
-  namespace gecode {
+namespace fs0 { namespace gecode {
 
     TranslatorRepository::TranslatorRepository() {
 
@@ -44,6 +42,4 @@ namespace fs0 {
     }
 
 
-  }
-
-}
+} } // namespaces

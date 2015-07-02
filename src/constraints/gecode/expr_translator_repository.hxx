@@ -1,13 +1,11 @@
-#ifndef __EXPR_TRANSLATOR_Repository__
-#define __EXPR_TRANSLATOR_Repository__
+
+#pragma once
 
 #include <unordered_map>
 #include <utils/typeinfo_helper.hxx>
 #include <constraints/gecode/expr_translators.hxx>
 
-namespace fs0 {
-
-  namespace gecode {
+namespace fs0 { namespace gecode {
 
     class TranslatorRepository {
     public:
@@ -58,8 +56,4 @@ namespace fs0 {
       }
     };
 
-  }
-
-}
-
-#endif // expr_translator_Repository.hxx
+} } // namespaces
