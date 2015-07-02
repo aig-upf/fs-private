@@ -77,7 +77,7 @@ public:
 	
 	inline void addConstraint(ScopedConstraint::cptr constraint) { _constraints.push_back(constraint); }
 	
-	inline const ScopedEffect::vcptr getEffects() const { return _effects; }
+	inline const ScopedEffect::vcptr& getEffects() const { return _effects; }
 	
 	BaseActionManager* getConstraintManager() const { return _constraintManager; };
 	void setConstraintManager(BaseActionManager* constraintManager) { _constraintManager = constraintManager; };
