@@ -78,22 +78,18 @@ public:
 
 class IncrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
-
-  void addConstraint( ScopedEffect::cptr eff, ComplexActionManager& manager ) const {
-    auto y_var = manager.resolveY(eff->getAffected());
-    auto x_var = manager.resolveX(eff->getScope()[0]);
-    Gecode::IntArgs     coeffs(2);
-    Gecode::IntVarArgs  vars(2);
-    coeffs[0] = 1;
-    coeffs[1] = -1;
-    vars[0] = y_var;
-    vars[1] = x_var;
-    Gecode::linear( *(manager.getCSP()), coeffs, vars, Gecode::IRT_EQ, 1 );
-  }
-
+	void addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+		auto y_var = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
+		auto x_var = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
+		Gecode::IntArgs     coeffs(2);
+		Gecode::IntVarArgs  vars(2);
+		coeffs[0] = 1;
+		coeffs[1] = -1;
+		vars[0] = y_var;
+		vars[1] = x_var;
+		Gecode::linear( csp, coeffs, vars, Gecode::IRT_EQ, 1 );
+	}
 };
-
-
 
 
 class DecrementActionEffect0 : public UnaryScopedEffect {
@@ -113,20 +109,28 @@ public:
 
 class DecrementActionEffect0Implementer : public gecode::EffectTranslator {
 public:
-  void addConstraint( ScopedEffect::cptr eff, ComplexActionManager& manager ) const {
-    auto y_var = manager.resolveY(eff->getAffected());
-    auto x_var = manager.resolveX(eff->getScope()[0]);
-    Gecode::IntArgs     coeffs(2);
-    Gecode::IntVarArgs  vars(2);
-    coeffs[0] = 1;
-    coeffs[1] = -1;
-    vars[0] = y_var;
-    vars[1] = x_var;
-    Gecode::linear( *(manager.getCSP()), coeffs, vars, Gecode::IRT_EQ, -1 );
-  }
-
+	void addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+		auto y_var = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
+		auto x_var = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
+		Gecode::IntArgs     coeffs(2);
+		Gecode::IntVarArgs  vars(2);
+		coeffs[0] = 1;
+		coeffs[1] = -1;
+		vars[0] = y_var;
+		vars[1] = x_var;
+		Gecode::linear( csp, coeffs, vars, Gecode::IRT_EQ, -1 );
+	}
 };
 
+
+class GoalConstraint0Implementer : public gecode::ConstraintTranslator {
+public:
+	void addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+		auto x1 = translator.resolveVariable(csp, constraint->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
+		auto x2 = translator.resolveVariable(csp, constraint->getScope()[1], gecode::GecodeCSPTranslator::VariableType::Input);
+		Gecode::rel(csp, x1, Gecode::IRT_LE, x2);
+	}
+};
 
 /*********************************************/
 /* Method factories                          */

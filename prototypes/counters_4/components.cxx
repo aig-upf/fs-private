@@ -13,6 +13,8 @@ const ActionSignature DecrementAction::signature_ = {2};
 
 static fs0::gecode::EffectTranslatorRegistrar< IncrementActionEffect0Implementer > registrarIncrementEffect0( typeid( IncrementActionEffect0 ) );
 static fs0::gecode::EffectTranslatorRegistrar< DecrementActionEffect0Implementer > registrarDecrementEffect0( typeid( DecrementActionEffect0 ) );
+// static fs0::gecode::EffectTranslatorRegistrar< GoalConstraint0Implementer > registrarGoalConstraint0( typeid( ??? ) );
+
 
 void generate(const std::string& data_dir, Problem& problem) {
 	external = std::unique_ptr<External>(new External(problem.getProblemInfo(), data_dir));

@@ -1,38 +1,31 @@
-#ifndef __EXPR_TRANSLATORS__
-#define __EXPR_TRANSLATORS__
+
+#pragma once
 
 #include <constraints/scoped_constraint.hxx>
 #include <constraints/scoped_effect.hxx>
 #include <complex_action_manager.hxx>
 #include <gecode/driver.hh>
 
-namespace fs0 {
+namespace fs0 { namespace gecode {
 
-  namespace gecode {
+class ConstraintTranslator  {
+public:
+	typedef ConstraintTranslator* ptr;
 
-    class ConstraintTranslator  {
-    public:
+	virtual ~ConstraintTranslator();
 
-      typedef ConstraintTranslator  *   ptr;
+	virtual void addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const = 0;
+};
 
-      virtual ~ConstraintTranslator();
+class EffectTranslator  {
+public:
+	typedef EffectTranslator* ptr;
 
-      virtual void addConstraint( ScopedConstraint::cptr constr, ComplexActionManager& manager ) const = 0;
-    };
+	virtual ~EffectTranslator();
 
-    class EffectTranslator  {
-    public:
-
-      typedef EffectTranslator  *   ptr;
-
-      virtual ~EffectTranslator();
-
-      virtual void addConstraint( ScopedEffect::cptr eff,  ComplexActionManager& manager ) const = 0;
-    };
+	virtual void addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const = 0;
+};
 
 
-  }
+} } // namespaces
 
-}
-
-#endif // expr_translators.hxx

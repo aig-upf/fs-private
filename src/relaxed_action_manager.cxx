@@ -9,8 +9,6 @@
 #include <heuristics/rpg_data.hxx>
 #include <heuristics/rpg.hxx>
 
-#include <constraints/gecode/action_csp.hxx>
-
 namespace fs0 {
 
 void ActionManagerFactory::instantiateActionManager(const Problem& problem, const Action::vcptr& actions) {
@@ -22,7 +20,7 @@ void ActionManagerFactory::instantiateActionManager(const Problem& problem, cons
 		bool complexEffects = actionHasHigherArityEffects(action);
 
 		if ( true ) { //complexPreconditions || complexEffects) {
-			manager = new ComplexActionManager(problem, *action);
+			manager = new ComplexActionManager(*action, problem.getConstraints());
 		} else {
 			manager = new UnaryActionManager(*action);
 		}

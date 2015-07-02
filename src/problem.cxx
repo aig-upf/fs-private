@@ -4,6 +4,7 @@
 #include <actions.hxx>
 #include <relaxed_action_manager.hxx>
 #include <sstream>
+#include <constraints/gecode_constraint_manager.hxx>
 
 namespace fs0 {
 
@@ -20,6 +21,7 @@ Problem::~Problem() {
 	for (const auto pointer:_actions) delete pointer;
 	for (const auto pointer:stateConstraints) delete pointer;
 	for (const auto pointer:goalConstraints) delete pointer;
+	delete ctrManager;
 }
 
 
@@ -38,7 +40,8 @@ void Problem::bootstrap() {
 	compileConstraints();
 
 	// Create the constraint manager
-	ctrManager = std::make_shared<PlanningConstraintManager>(goalConstraints, stateConstraints);
+// 	ctrManager = new PlanningConstraintManager(goalConstraints, stateConstraints);
+	ctrManager = new GecodeConstraintManager(goalConstraints, stateConstraints);
 
 	// Creates the appropriate applicability manager depending on the type and arity of action precondition constraints.
 	ActionManagerFactory::instantiateActionManager(*this, _actions);

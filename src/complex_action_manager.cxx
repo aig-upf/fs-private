@@ -5,8 +5,8 @@
 #include <constraints/constraint_manager.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <boost/container/flat_map.hpp>
-#include <constraints/gecode/action_csp.hxx>
 #include <constraints/gecode/expr_translator_repository.hxx>
+#include <constraints/gecode/helper.hxx>
 #include <tuple>
 
 using namespace Gecode;
@@ -14,20 +14,15 @@ using namespace fs0::gecode;
 
 namespace fs0 {
 
-ComplexActionManager::ComplexActionManager(const Problem& problem, const Action& action)
+ComplexActionManager::ComplexActionManager(const Action& action, const ScopedConstraint::vcptr& stateConstraints)
 	:  BaseActionManager()
 {
-	// MRJ: Very important - having the managers to be the ones "collecting" the constraints
-	// from preconditions and actions, means that we need to make sure that the CSP being
-	// referred to by the action manager is already built and assigned. Having addDefaultConstraints()
-	// to be called from within createCSPVariables() will cause to refer to the baseCSP
-	// attribute *before* it is properly initialized...
-	baseCSP = createCSPVariables(action, problem.getConstraints());
-	addDefaultConstraints( action, problem.getConstraints() );
+	baseCSP = createCSPVariables(action, stateConstraints);
+	addDefaultConstraints(action, stateConstraints);
 	
-	// MRJ: in order to be able to clone a CSP, we need to ensure that
-	// it is "stable" i.e. propagate all constraints until fixed point
+	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
 	Gecode::SpaceStatus st = baseCSP->status();
+	
 	// TODO This should prob. never happened, as it'd mean that the action is (statically) unapplicable.
 	assert(st != Gecode::SpaceStatus::SS_FAILED); 
 }
@@ -38,47 +33,48 @@ ComplexActionManager::~ComplexActionManager() {
 
 void ComplexActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg) {
 	// MRJ: This is rather ugly, the problem is that clone returns a pointer to Space...
-	// it may be a good idea to overwrite this method on ActionCSP to avoid this down
-	// cast.
+	// it may be a good idea to overwrite this method on SimpleCSP to avoid this downcast.
 	// GFM: Can probably be safely changed to a static cast??
-	ActionCSP* currentCSP = dynamic_cast<ActionCSP::ptr>(baseCSP->clone());
-
-	//std::cout << *currentCSP << std::endl;
+	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(baseCSP->clone());
 
 	// Setup domain constraints etc.
-	addRelevantVariableConstraints(action.getAllRelevantVariables(), layer, *currentCSP);
+	Helper::addRelevantVariableConstraints(*csp, translator, action.getAllRelevantVariables(), layer);
 	
 	// We do not need to take values that were already achieved in the previous layer into account.
 	for ( ScopedEffect::cptr effect : action.getEffects() ) {
-		addNoveltyConstraints(effect->getAffected(), layer, *currentCSP);
+		addNoveltyConstraints(effect->getAffected(), layer, *csp);
 	}
 	
 	if (true) {  // Solve the CSP completely
-		solveCSP(currentCSP, actionIdx, action, rpg);
+		solveCSP(csp, actionIdx, action, rpg);
 	} else { // Check only local consistency
-		if (!currentCSP->checkConsistency()) return; // We're done
+// 		if (!csp->checkConsistency()) return; // We're done
+		// TODO - Don't forget to delete the CSP in case of premature exit
+		
 	}
+	
+	delete csp;
 }
 
 
 
-const void ComplexActionManager::solveCSP(gecode::ActionCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const {
+const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const {
 	
 	// TODO posting a branching might make sense to prioritize some branching strategy?
     // branch(*this, l, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-	DFS<ActionCSP> engine(csp);
+	DFS<SimpleCSP> engine(csp);
 	
-	while (ActionCSP* solution = engine.next()) {
+	while (SimpleCSP* solution = engine.next()) {
 		
 		for ( ScopedEffect::cptr effect : action.getEffects() ) {
 			VariableIdx affected = effect->getAffected();
-			Atom atom(affected, resolveValue(*solution, affected, VariableType::Output)); // TODO - this could be optimized and factored out of the loop
+			Atom atom(affected, translator.resolveValue(*solution, affected, GecodeCSPTranslator::VariableType::Output)); // TODO - this could be optimized and factored out of the loop
 			auto hint = rpg.getInsertionHint(atom);
 			
 			if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 				for (VariableIdx scopeVariable: effect->getScope()) {
-					support->push_back(Atom(scopeVariable, resolveValue(*solution, scopeVariable, VariableType::Input)));
+					support->push_back(Atom(scopeVariable, translator.resolveValue(*solution, scopeVariable, GecodeCSPTranslator::VariableType::Input)));
 				}
 				rpg.add(atom, actionIdx, support, hint.second);
 			}
@@ -87,201 +83,64 @@ const void ComplexActionManager::solveCSP(gecode::ActionCSP* csp, unsigned actio
 }
 
 
-const ObjectIdx ComplexActionManager::resolveValue(gecode::ActionCSP& csp, VariableIdx variable, VariableType type) const {
-	auto& map = (type == VariableType::Input) ? inputVariables : outputVariables;
-	auto it = map.find(variable);
-	assert(it != map.end());
-	auto& csp_var = (type == VariableType::Input) ? csp._X[it->second] : csp._Y[it->second];
-	return csp_var.val();
-}
-
-void ComplexActionManager::addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, ActionCSP& csp) {
+void ComplexActionManager::addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp) {
 	// TODO - This could be built incrementally to incorporate values added in this layer by previous actions in the iteration!
-	auto it = outputVariables.find(variable);
-	assert(it != outputVariables.end());
-	auto& csp_var = csp._Y[ it->second ];
+	auto& csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Output);
 	for (ObjectIdx value:*(layer.getValues(variable))) {
 		rel( csp, csp_var, IRT_NQ, value ); // v != value
 	}
 }
 
-void ComplexActionManager::addRelevantVariableConstraints(const VariableIdxVector& scope, const RelaxedState& layer, ActionCSP& csp) {
-	// Loop over the domains of each of the relevant variables in the RPG layer and process them one by one.
-	for (VariableIdx variable:scope) {
-		const DomainPtr& domain = layer.getValues(variable);
-		if ( domain->size() == 1 ) {
-			addEqualityConstraint( csp, variable, *(domain->begin()) );
-		} else {
-			ObjectIdx lb = *(domain->begin());
-			ObjectIdx ub = *(domain->rbegin());
-			
-			if ( domain->size() == (ub - lb) ) { // MRJ: Check this is a safe assumption
-				addBoundsConstraint( csp, variable, lb, ub );
-			} else { // MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
-				addMembershipConstraint( csp, variable, domain );
-			}
-		}
-	}
+
+VariableIdxSet ComplexActionManager::getAllRelevantVariables( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
+	VariableIdxSet variables;
+	// Add the variables mentioned by state constraints
+	// for ( ScopedConstraint::cptr global : stateConstraints ) variables.insert( global->getScope().begin(), global->getScope().end() );
+	// Add the variables mentioned in the preconditions
+	for ( ScopedConstraint::cptr precondition : a.getConstraints() ) variables.insert( precondition->getScope().begin(), precondition->getScope().end() );
+	// Add the variables appearing in the scope of the effects
+	for ( ScopedEffect::cptr effect : a.getEffects() ) variables.insert( effect->getScope().begin(), effect->getScope().end() );
+	return variables;
 }
 
-const IntVar&  ComplexActionManager::resolveX( VariableIdx varName ) const {
-	return resolveVariableName( varName, baseCSP->_X, inputVariables );
+VariableIdxSet ComplexActionManager::getAllAffectedVariables(const Action& a) {
+	VariableIdxSet variables;
+	// Add the variables appearing in the scope of the effects
+	for ( ScopedEffect::cptr effect : a.getEffects() ) variables.insert( effect->getAffected() );
+	return variables;
 }
 
-const IntVar&  ComplexActionManager::resolveY( VariableIdx varName ) const {
-	return resolveVariableName( varName, baseCSP->_Y, outputVariables );
-}
-
-const IntVar& ComplexActionManager::resolveVariableName( VariableIdx varName, const IntVarArray& actualVars, const VariableMap& map ) const {
-	auto it = map.find( varName );
-	assert( it != map.end() );
-	return actualVars[ it->second ];
-}
-
-
-/* MRJ: See comment in support_csp.hxx
-void ActionCSP::addEqualityConstraint( VariableIdx v, int value ) {
-	auto it = inputVariables.find( v );
-	assert( it != inputVariables.end() );
-	rel( *this, _X[ it->second ], IRT_EQ, value );
-}
-*/
-
-void ComplexActionManager::addEqualityConstraint(ActionCSP& csp, VariableIdx v, bool value) {
-	auto it = inputVariables.find( v );
-	assert( it != inputVariables.end() );
-	rel( csp, csp._X[ it->second ], IRT_EQ, (value ? 1 : 0) ); // v = value
-}
-
-void ComplexActionManager::addEqualityConstraint(ActionCSP& csp, VariableIdx v, ObjectIdx value) {
-	auto it = inputVariables.find( v );
-	assert( it != inputVariables.end() );
-	rel( csp, csp._X[ it->second ], IRT_EQ, value ); // v = value
-}
-
-
-void ComplexActionManager::addBoundsConstraint(ActionCSP& csp, VariableIdx v, int lb, int ub) {
-	auto it = inputVariables.find( v );
-	assert( it != inputVariables.end() );
-	dom( csp, csp._X[ it->second], lb, ub); // MRJ: lb <= v <= ub
-}
-
-void ComplexActionManager::addBoundsConstraintFromDomain(ActionCSP& csp, VariableIdx v) {
-	auto it = inputVariables.find( v );
-	assert( it != inputVariables.end() );
-	const auto& info = Problem::getCurrentProblem()->getProblemInfo();
-	TypeIdx type = info.getVariableType(v);
-	if (!info.hasVariableBoundedDomain(type)) return; // Nothing to do in this case
-	const auto& bounds = info.getVariableBounds(type);
-	dom( csp, csp._X[ it->second], bounds.first, bounds.second); // MRJ: bounds.first <= v <= bounds.second
-}
-
-void ComplexActionManager::addMembershipConstraint(ActionCSP& csp, VariableIdx v, DomainPtr varDomain) {
-	auto it = inputVariables.find( v );
-	assert( it != inputVariables.end() );
-	// MRJ: v \in dom
-	TupleSet valueSet;
-	for ( auto v : *varDomain ) {
-		valueSet.add( IntArgs( 1, v ));
-	}
-	valueSet.finalize();
-	extensional( csp, IntVarArgs() << csp._X[ it->second ], valueSet ); // MRJ: v \in valueSet
-}
-
-
-ActionCSP::ptr ComplexActionManager::createCSPVariables( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
+SimpleCSP::ptr ComplexActionManager::createCSPVariables( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
 	// Determine input and output variables for this action: we first amalgamate variables into a set
 	// to avoid repetitions, then generate corresponding CSP variables, then create the CSP model with them
 	// and finally add the model constraints.
-	VariableIdxSet inputVars, outputVars;
 
-	// Add the variables mentioned by state constraints
-// 	for ( ScopedConstraint::cptr global : stateConstraints ) {
-// 		inputVars.insert( global->getScope().begin(), global->getScope().end() );
-// 	}
+	SimpleCSP::ptr csp = new SimpleCSP;
 
-	// Add the variables mentioned in the preconditions
-	for ( ScopedConstraint::cptr prec : a.getConstraints() ) {
-		inputVars.insert( prec->getScope().begin(), prec->getScope().end() );
+	IntVarArgs variables;
+	// Index the relevant variables first
+	for (VariableIdx var:getAllRelevantVariables(a, stateConstraints)) {
+		unsigned id = Helper::processVariable( *csp, var, variables );
+		translator.registerCSPVariable(var, GecodeCSPTranslator::VariableType::Input, id);
 	}
 
-	// Add the variables appearing in the scope of the effects
-	for ( ScopedEffect::cptr eff : a.getEffects() ) {
-		inputVars.insert( eff->getScope().begin(), eff->getScope().end() );
-		outputVars.insert( eff->getAffected() );
+	// Index the affected variables next
+	for (VariableIdx var:getAllAffectedVariables(a)) {
+		unsigned id = Helper::processVariable( *csp, var, variables );
+		translator.registerCSPVariable(var, GecodeCSPTranslator::VariableType::Output, id);
 	}
 
-	ActionCSP::ptr csp = new ActionCSP;
+	IntVarArray tmp( *csp, variables );
+	csp->_X.update( *csp, false, tmp );
 
-	IntVarArgs relevant;
-	for (VariableIdx var:inputVars) {
-		unsigned id = processVariable( *csp, var, relevant );
-		inputVariables.insert( std::make_pair(var, id) );
-	}
-
-	IntVarArgs affected;
-	for (VariableIdx var:outputVars) {
-		unsigned id = processVariable( *csp, var, affected );
-		outputVariables.insert( std::make_pair(var, id) );
-	}
-
-	IntVarArray tmpX( *csp, relevant );
-	csp->_X.update( *csp, false, tmpX );// = IntVarArray( *csp, relevant );
-	IntVarArray tmpY(*csp, affected);
-	csp->_Y.update( *csp, false, tmpY ); //= IntVarArray( *csp, affected );
-
-
-	std::cout << "Created ActionCSP with input variables: " << csp->_X << " and output variables: " << csp->_Y << std::endl;
-
+	std::cout << "Created SimpleCSP with variables: " << csp->_X << std::endl;
 	return csp;
 }
 
-void
-ComplexActionManager::addDefaultConstraints( const Action& a, const ScopedConstraint::vcptr& stateConstraints) {
-	// Create constraints, once variables have been properly defined
-	// MRJ: These constraints should always be translatable if they're in the action description
-// 	for ( ScopedConstraint::cptr global : stateConstraints ) {
-// 		auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(*global) );
-// 		assert( transObj != nullptr );
-// 		transObj->addConstraint( global, *csp );
-// 	}
-
-	for ( ScopedConstraint::cptr prec : a.getConstraints() ) {
-		auto transObj = gecode::TranslatorRepository::instance().getConstraintTranslator( typeid(*prec) );
-		assert( transObj != nullptr );
-		transObj->addConstraint( prec, *this );
-	}
-
-	for ( ScopedEffect::cptr eff : a.getEffects() ) {
-		auto transObj = gecode::TranslatorRepository::instance().getEffectTranslator( typeid(*eff) );
-		assert( transObj != nullptr );
-		transObj->addConstraint( eff, *this );
-	}
-
+void ComplexActionManager::addDefaultConstraints(const Action& a, const ScopedConstraint::vcptr& stateConstraints) {
+	// translateConstraints(*baseCSP, translator, stateConstraints); // state constraints
+	Helper::translateConstraints(*baseCSP, translator, a.getConstraints()); // Action preconditions
+	Helper::translateEffects(*baseCSP, translator, a.getEffects()); // Action preconditions
 }
-
-unsigned ComplexActionManager::processVariable( ActionCSP& csp, VariableIdx var, IntVarArgs& varArray ) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	ProblemInfo::ObjectType varType = info.getVariableGenericType( var );
-	if ( varType == ProblemInfo::ObjectType::INT ) {
-		auto bounds = info.getVariableBounds(var);
-		IntVar x( csp, bounds.first, bounds.second );
-		std::cout << "Created CSP variable for state variable " << var << ": " << x << std::endl;
-		varArray << x;
-	}
-	else if ( varType == ProblemInfo::ObjectType::BOOL ) {
-		varArray << IntVar( csp, 0, 1 );
-	}
-	else if ( varType == ProblemInfo::ObjectType::OBJECT ) {
-		const ObjectIdxVector& values = info.getVariableObjects( var );
-		std::vector<int> _values( values.size() );
-		for ( unsigned j = 0; j < values.size(); j++ ) {
-			_values[j] = values[j];
-		}
-		varArray << IntVar( csp, IntSet( _values.data(), values.size() ));
-	}
-	return varArray.size() - 1;
-}
-
 
 } // namespaces

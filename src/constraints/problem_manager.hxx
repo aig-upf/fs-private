@@ -9,15 +9,43 @@
 
 namespace fs0 {
 
+	
+class BaseConstraintManager {
+public:
+	typedef BaseConstraintManager* cptr;
+	
+	BaseConstraintManager() {}
+	virtual ~BaseConstraintManager() {}
+	
+	virtual ScopedConstraint::Output pruneUsingStateConstraints(RelaxedState& state) const = 0;
+	
+	//! Goal checking for non-relaxed states.
+	virtual inline bool isGoal(const State& s) const = 0;
+	
+	virtual inline unsigned numUnsatisfiedGoals( const State& s ) const  = 0 ;
+
+	virtual inline unsigned numGoalConstraints( ) const = 0;
+
+	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
+	//! Besides, return the causes of the goal to be later processed by the RPG heuristic backchaining procedure.
+	virtual bool isGoal(const State& seed, const RelaxedState& state, Atom::vctr& causes) const = 0;
+	
+	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
+	virtual bool isGoal(const RelaxedState& state) const = 0;
+};
+
+
 /**
  * 
  */
-class PlanningConstraintManager
+class PlanningConstraintManager : public BaseConstraintManager
 {
 public:
-	typedef std::shared_ptr<const PlanningConstraintManager> cptr;
+	typedef PlanningConstraintManager* cptr;
 	
 	PlanningConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
+	
+	~PlanningConstraintManager() {}
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
 	ScopedConstraint::Output pruneUsingStateConstraints(RelaxedState& state) const;

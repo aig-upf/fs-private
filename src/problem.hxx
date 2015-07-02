@@ -65,7 +65,7 @@ public:
 		return _instance;
 	}
 
-	PlanningConstraintManager::cptr getConstraintManager() const { return ctrManager; }
+	BaseConstraintManager::cptr getConstraintManager() const { return ctrManager; }
 
 	void addDomainBoundConstraints();
 
@@ -77,7 +77,7 @@ public:
 protected:
 	State::cptr _initialState;
 
-	PlanningConstraintManager::cptr ctrManager;
+	BaseConstraintManager::cptr ctrManager;
 
 	Action::vcptr _actions;
 
