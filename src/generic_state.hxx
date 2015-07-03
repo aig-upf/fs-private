@@ -34,6 +34,8 @@ public:
 	//! Construct a state specifying all the predicates and functions - this should indeed be the only way,
 	//! although ATM we are forced to leave the no-arguments constructor in order to be able
 	//! to set a Problem's initial state after construction
+	//! Note that it is not necessarily the case that numAtoms == facts.size(); since the initial values of
+	//! some (Boolean) state variables is often left unspecified and understood to be false.
 	//! TODO - We might want to perform type checking here against the predicate and function signatures.
 	//! TODO - We might also want to ensure here that all symbol extensions have been defined. This won't be expensive, 
 	//! as it will be done only when we create the initial state.
@@ -41,7 +43,6 @@ public:
 		_values(numAtoms)
 	{
 		// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
-		// assert(numAtoms == facts.size());
 		for (const auto& fact:facts) { // Insert all the elements of the vector
 			set(fact);
 		}

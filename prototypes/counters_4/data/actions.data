@@ -1,8 +1,0 @@
-0.increment(c0)#IncrementAction#3###0#0
-1.increment(c1)#IncrementAction#4###1#1
-2.increment(c2)#IncrementAction#5###2#2
-3.increment(c3)#IncrementAction#6###3#3
-4.decrement(c0)#DecrementAction#3###0#0
-5.decrement(c1)#DecrementAction#4###1#1
-6.decrement(c2)#DecrementAction#5###2#2
-7.decrement(c3)#DecrementAction#6###3#3

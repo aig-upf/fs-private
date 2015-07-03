@@ -10,6 +10,7 @@
 #include <aptk2/tools/resources_control.hxx>
 
 #include <utils/logging.hxx>
+#include <utils/loader.hxx>
 #include <heuristics/null_heuristic.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <heuristics/hmax.hxx>
@@ -239,10 +240,11 @@ int main(int argc, char** argv) {
 	Logger::init("./logs");
 	FINFO("main", "Generating the problem (" << data_dir << ")... ");
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
-	Problem problem(data_dir);
+	auto data = Loader::loadJSONObject(data_dir + "/problem.json");
+	Problem problem(data);
 
 	std::cout << "Calling generate()" << std::endl;
-	generate(data_dir, problem);
+	generate(data, data_dir, problem);
 
 	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);

@@ -7,23 +7,24 @@
 #include <atoms.hxx>
 #include <iostream>
 
+
 namespace fs0 {
 
-// e.g. "int[-3..10]"
-const boost::regex ProblemInfo::boundedIntRE("^int\\[(.*)\\.\\.(.*)\\]$");
+ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	
-ProblemInfo::ProblemInfo(const std::string& data_dir) {
 	std::cout << "\t Loading Type index..." << std::endl;
-	loadTypeIndex(data_dir + "/types.data"); // Order matters
+	loadTypeIndex(data["types"]); // Order matters
+	
 	std::cout << "\t Loading Action index..." << std::endl;
-	loadActionIndex(data_dir + "/action-index.data");
+	loadActionIndex(data["actions"]);
+	
 	std::cout << "\t Loading Object index..." << std::endl;
-	loadObjectIndex(data_dir + "/objects.data");
-	std::cout << "\t Loading Type Objects index..." << std::endl;
-	loadTypeObjects(data_dir + "/object-types.data");
+	loadObjectIndex(data["objects"]);
+	
 	std::cout << "\t Loading Variable index..." << std::endl;
-	loadVariableIndex(data_dir + "/variables.data");
-	std::cout << "\t All indices loaded!" << std::endl;
+	loadVariableIndex(data["variables"]);
+	
+	std::cout << "\t All indexes loaded!" << std::endl;
 }
 
 const std::string& ProblemInfo::getActionName(ActionIdx index) const { return actionNames.at(index); }
@@ -52,32 +53,18 @@ const std::string& ProblemInfo::getCustomObjectName(ObjectIdx objIdx) const { re
 unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }
 
 
-void ProblemInfo::loadVariableIndex(const std::string& filename) {
-	std::string line;
-	std::ifstream in(filename);
-
-	if ( in.fail() ) {
-		std::cerr << "ProblemInfo::loadVariableIndex: could not open filename '" << filename << "'" << std::endl;
-		std::cerr << "Bailing out!" << std::endl;
-		std::exit(1);
-	}
+void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
+	assert(variableNames.empty());
 	
-	// Parse the names of the state variables - each line is a variable.
-	while (std::getline(in, line)) {
-		// line is of the form "16.ontable(d)#_bool_"
-		std::vector<std::string> strs;
-		boost::split(strs, line, boost::is_any_of("#"));
-		assert(strs.size()==2);
-		
-		unsigned point = strs[0].find(".");
-		assert((unsigned)std::stoi(strs[0].substr(0, point)) == variableNames.size());
-		variableNames.push_back(strs[0].substr(point + 1));
-		variableGenericTypes.push_back(parseVariableType(strs[1]));
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		assert(data[i]["id"].GetInt() == variableNames.size()); // Check values are decoded in the proper order
+		const std::string type(data[i]["type"].GetString());
+		variableNames.push_back(data[i]["name"].GetString());
+		variableGenericTypes.push_back(parseVariableType(type));
 		try {
-			variableTypes.push_back(name_to_type.at(strs[1]));
+			variableTypes.push_back(name_to_type.at(type));
 		} catch( std::out_of_range& ex ) {
-			// MRJ: Type index defaults to zero?
-			variableTypes.push_back( 0 );
+			throw std::runtime_error("Unknown type " + type);
 		}
 	}
 }
@@ -89,92 +76,64 @@ ProblemInfo::ObjectType ProblemInfo::parseVariableType(const std::string& type) 
 }
 
 //! Load the names of the state variables from the specified file.
-void ProblemInfo::loadActionIndex(const std::string& filename) {
-	std::string line;
-	std::ifstream in(filename);
+void ProblemInfo::loadActionIndex(const rapidjson::Value& data) {
+	assert(actionNames.empty());
 	
-	// Parse the names of the ground actions - each line is an action name.
-	while (std::getline(in, line)) {
-		actionNames.push_back(line); // The action line is implicitly the action index.
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		assert(data[i][0].GetInt() == actionNames.size()); // Check values are decoded in the proper order
+		actionNames.push_back(data[i][1].GetString());
 	}
 }
 
 //! Load the names of the problem objects from the specified file.
-void ProblemInfo::loadObjectIndex(const std::string& filename) {
-	std::string line;
-	std::ifstream in(filename);
+void ProblemInfo::loadObjectIndex(const rapidjson::Value& data) {
+	assert(objectNames.empty());
 	
-	// Each line is an object name.
-	while (std::getline(in, line)) {
-		objectIds.insert(std::make_pair(line, objectNames.size()));
-		objectNames.push_back(line); // The action line is implicitly the action index.
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		assert(data[i]["id"].GetInt() == objectNames.size()); // Check values are decoded in the proper order
+		const std::string& name = data[i]["name"].GetString();
+		objectIds.insert(std::make_pair(name, objectNames.size()));
+		objectNames.push_back(name);
 	}
 }
 
-void ProblemInfo::loadTypeObjects(const std::string& filename) {
-	std::string line;
-	std::ifstream in(filename);
+
+void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
+	assert(type_to_name.empty());
+	unsigned num_types = data.Size();
 	
-	typeObjects.resize(name_to_type.size()); // Resize the vector to the number of types that we have
-	isTypeBounded.resize(name_to_type.size());
-	typeBounds.resize(name_to_type.size());
+	typeObjects.resize(num_types); // Resize the vector to the number of types that we have
+	isTypeBounded.resize(num_types);
+	typeBounds.resize(num_types);
 	
-	// Each line is an object name.
-	while (std::getline(in, line)) {
-		// line is of the form "tdirection#5,6,7,8,9,10,11,12"
-		std::vector<std::string> strs;
-		boost::split(strs, line, boost::is_any_of("#"));
-		assert(strs.size()==2);
-		if (strs[1].size() == 0) throw std::runtime_error("No objects declared in " + filename + " for type " + strs[0]);
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		TypeIdx type_id = data[i][0].GetInt();
+		std::string type_name(data[i][1].GetString());
+		assert(type_id == type_to_name.size()); // Check values are decoded in the proper order
 		
-		TypeIdx type_id = name_to_type.at(strs[0]);
-		assert(type_id < typeObjects.size());
+		name_to_type.insert(std::make_pair(type_name, type_id));
+		type_to_name.push_back(type_name);
 		
 		// We read and convert to integer type the vector of Object indexes
 		// strs[1] is either of the form (a) "5,6,7,8" or (b) "int[0..10]"
-		boost::match_results<std::string::const_iterator> results;
-		if (boost::regex_match(strs[1], results, boundedIntRE)) { // We have a bounded integer domain
-			int lower = boost::lexical_cast<int>(results[1]);
-			int upper = boost::lexical_cast<int>(results[2]);
-			if (lower > upper) throw std::runtime_error("Incorrect bounded integer expression " + line);
+		if (data[i][2].IsString()) {
+			assert(std::string(data[i][2].GetString()) == "int" && data[i].Size() == 4);
+			int lower = data[i][3][0].GetInt();
+			int upper = data[i][3][1].GetInt();
+			if (lower > upper) throw std::runtime_error("Incorrect bounded integer expression: [" + std::to_string(lower) + ", " + std::to_string(upper) + "]");
+			
 			typeBounds[type_id] = std::make_pair(lower, upper);
 			isTypeBounded[type_id] = true;
 			
 			// Unfold the range
-			std::vector<ObjectIdx> values;
-			values.reserve(upper - lower + 1);
-			for (int v = lower; v <= upper; ++v) values.push_back(v);
-			typeObjects[type_id] = values;
+			typeObjects[type_id].reserve(upper - lower + 1);
+			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(v);
 		} else { // We have an enumeration of object IDs
-			std::vector<std::string> string_indexes;
-			std::vector<ObjectIdx> indexes;
-			boost::split(string_indexes, strs[1], boost::is_any_of(","));
-			indexes.reserve(string_indexes.size());
-			for (auto& str:string_indexes) indexes.push_back(boost::lexical_cast<ObjectIdx>(str));
-			typeObjects[type_id] = indexes;
+			typeObjects[type_id].reserve(data[i][2].Size());
+			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
+				typeObjects[type_id].push_back(boost::lexical_cast<ObjectIdx>(data[i][2][j].GetString()));
+			}
 		}
-	}
-}
-
-void ProblemInfo::loadTypeIndex(const std::string& filename) {
-	std::string line;
-	std::ifstream in(filename);
-
-	if ( in.fail() ) {
-		std::cerr << "Error opening file '" << filename << "'" << std::endl;
-		std::cerr << "Bailing out!" << std::endl;
-		std::exit(1);
-	}
-	
-	// Each line is an object name.
-	while (std::getline(in, line)) {
-		// line is of the form "0#typename"
-		std::vector<std::string> strs;
-		boost::split(strs, line, boost::is_any_of("#"));
-		assert(strs.size()==2);
-		assert(type_to_name.size() == boost::lexical_cast<unsigned>(strs[0]));
-		name_to_type.insert(std::make_pair(strs[1], type_to_name.size()));
-		type_to_name.push_back(strs[1]);
 	}
 }
 

@@ -1,5 +1,6 @@
 import argparse
 import glob
+import json
 import os
 import subprocess
 import sys
@@ -266,17 +267,19 @@ class Generator(object):
         self.process_elements()
         self._generate_components_code(dirname)
 
-        self.dump_variable_data()
-        self.dump_object_data()
-        self.dump_type_data()
-        self.dump_action_data()
-        self.dump_init_data()
-        self.dump_constraints_data()
-        self.dump_goal_data()
+        data = {'variables': self.dump_variable_data(),
+                'objects': self.dump_object_data(),
+                'types': self.dump_type_data(),
+                'actions': self.dump_action_data(),
+                'constraints': self.dump_constraints_data(),
+                'init': self.dump_init_data(),
+                'goal': self.dump_goal_data()}
 
         print("Problem '{problem}' translated to directory '{dir}'".format(
             problem=self.task.get_complete_name(), dir=self.out_dir)
         )
+
+        self.dump_data('problem', json.dumps(data), ext='json')
 
         return self.out_dir
 
@@ -385,73 +388,47 @@ class Generator(object):
 
         return '\n'.join(elems)
 
-    def index_fact(self, fact):
-        return '{idx}={val}'.format(
-            idx=self.index.variables.get_index(fact.var),
-            val=self.get_value_idx(fact.value))
-
-    def serialize_constraints(self, constraints):
-        serialized = []
-        obj_id = lambda x: int(x) if util.is_int(x) else self.index.objects.get_index(x)
-        for constraint in constraints:
-            variable_idxs = self.gen_vector([self.index.variables.get_index(var) for var in constraint.variables])
-            parameter_idxs = self.gen_vector([obj_id(param) for param in constraint.parameters])
-            serialized.append('#'.join([str(constraint), constraint.name, parameter_idxs, variable_idxs]))
-        return serialized
-
     def dump_constraints_data(self):
-        """ Saves the data related to state and goal constraints """
-        self.dump_data('constraints', self.serialize_constraints(self.task.constraints))
-        # This is not needed anymore, as we include the global constraints into the regular goal expression
-        # self.dump_data('goal-constraints', self.serialize_constraints(self.task.gconstraints))
+        """ Saves the data related to state constraints """
+        data = []
+        obj_id = lambda x: int(x) if util.is_int(x) else self.index.objects.get_index(x)
+        for constraint in self.task.constraints:
+            variable_idxs = [self.index.variables.get_index(var) for var in constraint.variables]
+            parameter_idxs = [obj_id(param) for param in constraint.parameters]
+            data.append([str(constraint), constraint.name, parameter_idxs, variable_idxs])
+        return data
 
     def dump_init_data(self):
-        """
-        Saves the data related to the initial state:
-         - The total number of state variables
-         - The initial state facts themselves.
-         """
-        init_data = [str(len(self.index.variables))]  # The number of state variables
-
-        facts = self.grounder.get_relevant_init_facts()
-        indexed_facts = (self.index_fact(f) for f in facts)
-        init_data.append(','.join(indexed_facts))
-        self.dump_data('init', init_data)
-
-    def gen_vector_of_vectors(self, data):
-        return '/'.join(self.gen_vector(inner) for inner in data)
-
-    def gen_vector(self, data):
-        return ','.join(map(str, data))
+        """ Saves the initial values of all state variables explicitly mentioned in the initialization """
+        atoms = self.grounder.get_relevant_init_facts()
+        indexer = lambda f: [self.index.variables.get_index(f.var), self.get_value_idx(f.value)]
+        indexed_atoms = [indexer(f) for f in atoms]
+        return dict(variables=len(self.index.variables), atoms=indexed_atoms)
 
     def dump_variable_data(self):
-        data = []
+        res = []
         for i, var in enumerate(self.index.variables.idx_to_obj):
-            data.append("{}.{}#{}".format(i, var, self.task.domain.symbol_types[var.symbol]))
-
-        self.dump_data('variables', '\n'.join(data))
+            res.append({'id': i, 'name': str(var), 'type': self.task.domain.symbol_types[var.symbol]})
+        return res
 
     def dump_object_data(self):
-            self.dump_data('objects', self.index.objects.dump_index(print_index=False))
+        return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump_index(print_index=True))]
 
     def dump_type_data(self):
         """ Dumps a map of types to corresponding objects"""
-        dump = []
-        for t, objects in self.task.type_map.items():
+        data = []
 
+        if 'object' not in self.task.type_map:
+            self.task.type_map['object'] = []
+
+        for i, (t, objects) in enumerate(self.task.type_map.items()):
             if objects and isinstance(objects[0], int):  # We have a bounded int variable
-                object_idxs = ['int[{}..{}]'.format(objects[0], objects[-1])]
+                data.append([i, t, 'int', [objects[0], objects[-1]]])
             else:
-                object_idxs = (str(self.index.objects.get_index(o)) for o in objects)
-            dump.append("{}#{}".format(t, ','.join(object_idxs)))
-        self.dump_data('object-types', dump)
+                object_idxs = [str(self.index.objects.get_index(o)) for o in objects]
+                data.append([i, t, object_idxs])
 
-        # type_list = [t.name for t in self.task.types]
-        type_list = list(self.task.type_map.keys())
-        if 'object' not in type_list:
-            type_list.insert(0, 'object')
-        types = ["{}#{}".format(i, t) for i, t in enumerate(type_list)]
-        self.dump_data('types', types)
+        return data
 
     def serialize_variables_data(self, procedures):
         """
@@ -460,45 +437,42 @@ class Generator(object):
         """
         rel_vars, aff_vars = [], []
         for proc in procedures:
-            rel_vars.append([str(self.index.variables.get_index(var)) for var in proc.variables])
+            rel_vars.append([self.index.variables.get_index(var) for var in proc.variables])
             if hasattr(proc, 'affected_variables'):
-                aff_vars.append([str(self.index.variables.get_index(var)) for var in proc.affected_variables])
-        return self.gen_vector_of_vectors(rel_vars), self.gen_vector_of_vectors(aff_vars)
+                aff_vars.append([self.index.variables.get_index(var) for var in proc.affected_variables])
+        return rel_vars, aff_vars
 
     def dump_action_data(self):
-        action_data = []
-        names = []
+        data = []
         grounded_actions = self.grounder.grounded_actions
         idx = 0
         for lifted_action, grounded in grounded_actions.items():
             classname = util.normalize_action_name(lifted_action)
             for action in grounded:
-                binding = self.gen_vector(self.generate_object_id_list(action.binding))
-                derived = self.gen_vector(self.generate_object_id_list(action.derived))
+                binding = self.generate_object_id_list(action.binding)
+                derived = self.generate_object_id_list(action.derived)
 
                 arv, _ = self.serialize_variables_data(action.applicability_procedures)
                 erv, eav = self.serialize_variables_data(action.effect_procedures)
 
-                # Format: a number of elements defining the action, separated by '#' signs, as follows:
-                # (1) Action name
-                # (2) classname
-                # (3) binding
-                # (4) derived objects
-                # (5) applicability relevant vars
-                # (6) effect relevant vars
-                # (7) effect affected vars
-                numbered_name = str(idx) + '.' + str(action)
-                action_data.append('#'.join([numbered_name, classname, binding, derived, arv, erv, eav]))
-                names.append(str(action))
+                # Format: a number of elements defining the action:
+                # (1) Action ID (index)
+                # (2) Action name
+                # (3) classname
+                # (4) binding
+                # (5) derived objects
+                # (6) applicability relevant vars
+                # (7) effect relevant vars
+                # (8) effect affected vars
+                data.append([idx, str(action), classname, binding, derived, arv, erv, eav])
                 idx += 1
 
-        self.dump_data('actions', action_data)
-        self.dump_data('action-index', names)
+        return data
 
     def dump_goal_data(self):
         assert isinstance(self.task.goal, base.Goal)
         goal_rel_vars, _ = self.serialize_variables_data(self.task.goal.applicability_procedures)
-        self.dump_data('goal', goal_rel_vars)
+        return goal_rel_vars
 
     def generate_component_class_definitions(self):
         # The constraints of each of the actions
@@ -529,13 +503,13 @@ class Generator(object):
         with open(self.out_dir + '/' + name, "w") as f:
             f.write(translation)
 
-    def dump_data(self, name, data):
+    def dump_data(self, name, data, ext='data'):
         if not isinstance(data, list):
             data = [data]
 
         basedir = self.out_dir + '/data'
         util.mkdirp(basedir)
-        with open(basedir + '/' + name + '.data', "w") as f:
+        with open(basedir + '/' + name + '.' + ext, "w") as f:
             for l in data:
                 f.write(str(l) + '\n')
 

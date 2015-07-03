@@ -175,38 +175,41 @@ void BaseActionManager::completeAtomSupport(const VariableIdxVector& actionScope
 }
 
 
-bool GenericActionManager::isCartesianProductElementApplicable(	const VariableIdxVector& actionScope,
-																const VariableIdxVector& effectScope,
-																const DomainMap& actionProjection,
-																const ObjectIdxVector& element,
-																Atom::vctrp support) const
-{
+bool GenericActionManager::isCartesianProductElementApplicable(const VariableIdxVector& actionScope, const VariableIdxVector& effectScope, const DomainMap& actionProjection, const ObjectIdxVector& element, Atom::vctrp support) const {
+	
 	// We need to check that this concrete instantiation makes the action applicable - before we only checked for the local consistency of individual values
 	//DomainMap domains(actionProjection); // Clone the projection - this performs a certain amount of unnecessary work
 	// MRJ: Copy the domains as well - the above only copies the pointers!
 	std::vector<Domain> 	domainsStorage;
 	DomainMap domains;
-	for ( auto it = actionProjection.begin();
-		it != actionProjection.end();
-		it++ ) {
-		domainsStorage.push_back( *(it->second) );
-		domains.insert( std::make_pair( it->first, std::make_shared<Domain>( domainsStorage.back() ) ) );
-	}
-
-	// Prune the domains of the variables relevant to the effect into a singleton domain.
+	
+	// First fix the domains of the effect scope to the values of the cartesian product.
 	for (unsigned i = 0; i < effectScope.size(); ++i) {
 		const VariableIdx& variable = effectScope[i];
 		const ObjectIdx& value = element[i];
-		Domain& d = *(domains[variable]);
-		d.clear();
-		d.insert(value);
-		support->push_back(Atom(variable, value)); // Zip the variables with their values
+		
+		auto singleton = std::make_shared<Domain>();
+		singleton->insert(value);
+		domains.insert(std::make_pair(variable, singleton));
+		
+		support->push_back(Atom(variable, value)); // Zip the variables with their values		
 	}
-
-	manager.filter(domains); // Re-apply the filtering but with the domains of the variables relevant to the particular effect turned into singletons
+	
+	// Now copy the rest of the domains
+	for (auto elem: actionProjection) {
+		// Insert a copy of the domain _only_ if we have not inserted a singleton domain on the previous iteration.
+		auto lb = domains.lower_bound(elem.first); // see http://stackoverflow.com/a/101980
+		
+		if(lb == domains.end() || domains.key_comp()(elem.first, lb->first)) { // The key does not exist yet
+			domains.insert(lb, std::make_pair(elem.first, std::make_shared<Domain>(*(elem.second))));   
+		}
+	}
+	
+	
+	// And re-apply the filtering but with the domains of the variables relevant to the particular effect turned into singletons
 	ScopedConstraint::Output o = manager.filter(domains);
 	if (o == ScopedConstraint::Output::Failure) return false;
-
+	
 	completeAtomSupport(actionScope, domains, effectScope, support);
 	return true;
 }

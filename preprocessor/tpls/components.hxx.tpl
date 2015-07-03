@@ -35,4 +35,4 @@ ${component_classes}
 $method_factories
 
 /* Generate the whole planning problem */
-void generate(const std::string& data_dir, Problem& problem);
+void generate(const rapidjson::Document& data, const std::string& data_dir, Problem& problem);

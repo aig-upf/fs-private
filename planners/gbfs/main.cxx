@@ -15,9 +15,12 @@
 #include <state.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
+#include <utils/loader.hxx>
 #include <problem_info.hxx>
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
+
+#include <utils/logging.hxx>
 
 #include <components.hxx>  // This will dinamically point to the right generated file
 
@@ -216,11 +219,13 @@ int main(int argc, char** argv) {
 		return res;
 	}
 
+	Logger::init("./logs");
+	
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
-	Problem problem(data_dir);
+	auto data = Loader::loadJSONObject(data_dir + "/problem.json");
+	Problem problem(data);
 
-	std::cout << "Calling generate()" << std::endl;
-	generate(data_dir, problem);
+	generate(data, data_dir, problem);
 
 	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
