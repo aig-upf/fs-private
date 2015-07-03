@@ -26,7 +26,7 @@ public:
 			const ObjectIdxVector&,
 			const std::vector<VariableIdxVector>&,
 			const std::vector<VariableIdxVector>&,
-			const std::vector<VariableIdxVector>&
+			const VariableIdxVector&
 			)> ActionFactoryType;
 	
 	typedef std::function<ScopedConstraint::vcptr (const std::vector<VariableIdxVector>&)> GoalFactoryType;

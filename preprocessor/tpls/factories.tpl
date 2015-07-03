@@ -8,7 +8,7 @@ public:
 		const ObjectIdxVector& derived,
         const std::vector<VariableIdxVector>& appRelevantVars,
         const std::vector<VariableIdxVector>& effRelevantVars,
-        const std::vector<VariableIdxVector>& effAffectedVars
+        const VariableIdxVector& effAffectedVars
     ) {
         Action* pointer = nullptr;
 

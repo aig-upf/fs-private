@@ -439,7 +439,9 @@ class Generator(object):
         for proc in procedures:
             rel_vars.append([self.index.variables.get_index(var) for var in proc.variables])
             if hasattr(proc, 'affected_variables'):
-                aff_vars.append([self.index.variables.get_index(var) for var in proc.affected_variables])
+                assert len(proc.affected_variables) == 1,\
+                    "Currently only accepted effects are those affecting one single variable"
+                aff_vars.append(self.index.variables.get_index(proc.affected_variables[0]))
         return rel_vars, aff_vars
 
     def dump_action_data(self):

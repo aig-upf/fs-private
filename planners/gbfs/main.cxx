@@ -9,18 +9,17 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <aptk2/tools/resources_control.hxx>
 
+#include <utils/logging.hxx>
+#include <utils/loader.hxx>
 #include <heuristics/null_heuristic.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <heuristics/hmax.hxx>
 #include <state.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
-#include <utils/loader.hxx>
 #include <problem_info.hxx>
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
-
-#include <utils/logging.hxx>
 
 #include <components.hxx>  // This will dinamically point to the right generated file
 
@@ -47,10 +46,11 @@ public:
 
 	//! Constructor for successor states, doesn't copy the state
 	FS0_Node( State&& _state, Action::IdType _action, std::shared_ptr< FS0_Node<State> > _parent ) :
-		state(_state), is_dead_end(false) {
+		state(_state) {
 		action = _action;
 		parent = _parent;
 		g = _parent->g + 1;
+		is_dead_end = false;
 	}
 
 	virtual ~FS0_Node() {
@@ -66,10 +66,6 @@ public:
 		return state == o.state;
 	}
 
-	bool 		dead_end() const {
-		return is_dead_end;
-	}
-
 	// MRJ: This is part of the required interface of the Heuristic
 	template <typename Heuristic>
 	void	evaluate_with( Heuristic& heuristic ) {
@@ -83,6 +79,10 @@ public:
 	// MRJ: With this we implement Greedy Best First search
 	bool	operator>( const FS0_Node<State>& other ) const {
 		return h > other.h;
+	}
+
+	bool	dead_end() const {
+		return is_dead_end;
 	}
 
 public:
@@ -111,19 +111,22 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	std::ofstream out(out_dir + "/searchlog.out");
 	std::ofstream plan_out(out_dir + "/first.plan");
+	std::ofstream json_out( out_dir + "/search.json" );
 
 	std::cout << "Writing results to " << out_dir + "/searchlog.out" << std::endl;
 
 	Plan plan;
 	float t0 = aptk::time_used();
+	bool solved = engine.solve_model( plan );
+	float total_time = aptk::time_used() - t0;
 
-	if ( engine.solve_model( plan ) ) {
-		assert(checkPlanCorrect(plan));
+
+	bool valid = checkPlanCorrect(plan);
+	if ( solved ) {
 		Printers::printPlan(plan, problemInfo, out);
 		Printers::printPlan(plan, problemInfo, plan_out);
 	}
 
-	float total_time = aptk::time_used() - t0;
 	out << "Total time: " << total_time << std::endl;
 	out << "Nodes generated during search: " << engine.generated << std::endl;
 	out << "Nodes expanded during search: " << engine.expanded << std::endl;
@@ -133,6 +136,23 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	out.close();
 	plan_out.close();
+
+	json_out << "{" << std::endl;
+	json_out << "\tsearch_time : " << total_time << "," << std::endl;
+	json_out << "\tgenerated : " << engine.generated << "," << std::endl;
+	json_out << "\texpanded : " << engine.expanded << "," << std::endl;
+	json_out << "\teval_per_second : " << eval_speed << "," << std::endl;
+	json_out << "\tsolved : " << ( solved ? "true" : "false" ) << "," << std::endl;
+	json_out << "\tvalid : " << ( valid ? "true" : "false" ) << "," << std::endl;
+	json_out << "\tplan : ";
+	if ( solved )
+		Printers::printPlanJSON( plan, problemInfo, json_out);
+	else
+		json_out << "null";
+	json_out << std::endl;
+	json_out << "}" << std::endl;
+
+	json_out.close();
 
 	return total_time;
 }
@@ -220,7 +240,7 @@ int main(int argc, char** argv) {
 	}
 
 	Logger::init("./logs");
-	
+	FINFO("main", "Generating the problem (" << data_dir << ")... ");
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	auto data = Loader::loadJSONObject(data_dir + "/problem.json");
 	Problem problem(data);

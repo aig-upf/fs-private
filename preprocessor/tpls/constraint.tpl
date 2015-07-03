@@ -7,7 +7,8 @@ public:
 		${code}
 	}
 	
-	std::string getName() const {
+	virtual std::ostream& print(std::ostream& os) const {
 		${getname_code}
+		return os;
 	}
 };

@@ -67,7 +67,7 @@ void Loader::loadGroundedActions(const rapidjson::Value& data, ActionFactoryType
 		ObjectIdxVector derived = parseNumberList<int>(node[4]);
 		std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(node[5]);
 		std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(node[6]);
-		std::vector<VariableIdxVector> effAffectedVars = parseDoubleNumberList<unsigned>(node[7]);
+		VariableIdxVector effAffectedVars = parseNumberList<unsigned>(node[7]);
 		
 		problem.addAction(actionFactory(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars));
 	}
