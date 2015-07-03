@@ -21,6 +21,7 @@ ComplexActionManager::ComplexActionManager(const Action& action, const ScopedCon
 {
 	baseCSP = createCSPVariables(action, stateConstraints);
 	addDefaultConstraints(action, stateConstraints);
+	Helper::postBranchingStrategy(*baseCSP);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
 	Gecode::SpaceStatus st = baseCSP->status();
@@ -63,17 +64,9 @@ void ComplexActionManager::processAction(unsigned actionIdx, const Action& actio
 
 
 const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const {
-	
-	// TODO posting a branching might make sense to prioritize some branching strategy?
-    // branch(*this, l, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 	DFS<SimpleCSP> engine(csp);
 
-	std::cout << "Trying to solve an action CSP " << action.getName() << std::endl;
-		
 	while (SimpleCSP* solution = engine.next()) {
-		
-		std::cout << "A solution was found: " << *solution << std::endl;
-		
 		for ( ScopedEffect::cptr effect : action.getEffects() ) {
 			VariableIdx affected = effect->getAffected();
 			Atom atom(affected, translator.resolveValue(*solution, affected, GecodeCSPTranslator::VariableType::Output)); // TODO - this could be optimized and factored out of the loop

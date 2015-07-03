@@ -126,6 +126,11 @@ public:
 			}
 		}
 	}
+	
+	static void postBranchingStrategy(SimpleCSP& csp) {
+		// TODO posting a particular branching strategy might make sense to prioritize some branching strategy?
+		branch(csp, csp._X, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+	}
 };
 
 } } // namespaces
