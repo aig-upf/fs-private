@@ -48,25 +48,37 @@ public:
 		return *_instance;
 	}
 	
-	std::ostream& log(const std::string& level, const std::string& fileName);
+	//! Returns a stream to debug to the given filename
+	std::ostream& log(const std::string& level, const std::string& filename);
 };
 
 } // namespaces
 
 
 // ************************
+// INFO MACRO
+// ************************
+#define FINFO(file, message) Logger::instance().log("INFO", file) << message << std::endl;
+
+// ************************
 // DEBUG MACRO
 // ************************
-#ifdef FS0_DEBUG 
-#define FS0DEBUG(file, message) Logger::instance().log("DEBUG", file) << message << std::endl;
+#ifdef DEBUG 
+#define FDEBUG(file, message) Logger::instance().log("DEBUG", file) << message << std::endl;
 #else
-#define FS0DEBUG(file, message)
+#define FDEBUG(file, message)
 #endif
 
 // ************************
-// INFO MACRO
+// EXTREME DEBUG MACRO
 // ************************
-#define FS0INFO(file, message) Logger::instance().log("INFO", file) << message << std::endl;
+#ifdef FS0_DEBUG 
+#define FFDEBUG(file, message) Logger::instance().log("EDEBUG", file) << message << std::endl;
+#else
+#define FFDEBUG(file, message)
+#endif
+
+
 
 
 

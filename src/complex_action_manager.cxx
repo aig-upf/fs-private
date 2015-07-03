@@ -7,6 +7,7 @@
 #include <boost/container/flat_map.hpp>
 #include <constraints/gecode/translators.hxx>
 #include <constraints/gecode/helper.hxx>
+#include <utils/logging.hxx>
 #include <tuple>
 
 #include <gecode/driver.hh>
@@ -39,6 +40,8 @@ void ComplexActionManager::processAction(unsigned actionIdx, const Action& actio
 	// it may be a good idea to overwrite this method on SimpleCSP to avoid this downcast.
 	// GFM: Can probably be safely changed to a static cast??
 	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(baseCSP->clone());
+	
+	FDEBUG("main", "Processing action " << action);
 
 	// Setup domain constraints etc.
 	Helper::addRelevantVariableConstraints(*csp, translator, action.getAllRelevantVariables(), layer);
@@ -50,20 +53,25 @@ void ComplexActionManager::processAction(unsigned actionIdx, const Action& actio
 // 		addNoveltyConstraints(effect->getAffected(), layer, *csp);
 // 	}
 	
-	if (true) {  // Solve the CSP completely
-		solveCSP(csp, actionIdx, action, rpg);
-	} else { // Check only local consistency
-// 		if (!csp->checkConsistency()) return; // We're done
-		// TODO - Don't forget to delete the CSP in case of premature exit
-		
-	}
+	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 	
+	if (!locallyConsistent) {
+		FDEBUG("main", "The action CSP is locally inconsistent");
+	} else {
+		if (true) {  // Solve the CSP completely
+			solveCSP(csp, actionIdx, action, rpg);
+		} else { // Check only local consistency
+			// TODO - Don't forget to delete the CSP in case of premature exit
+		}
+	}
 	delete csp;
 }
 
 
 
 const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const {
+	FDEBUG("main", "Solving the Action CSP completely" << std::endl << *csp);
+	
 	DFS<SimpleCSP> engine(csp);
 
 	while (SimpleCSP* solution = engine.next()) {
@@ -142,5 +150,10 @@ void ComplexActionManager::addDefaultConstraints(const Action& a, const ScopedCo
 	Helper::translateConstraints(*baseCSP, translator, a.getConstraints()); // Action preconditions
 	Helper::translateEffects(*baseCSP, translator, a.getEffects()); // Action preconditions
 }
+
+std::ostream& ComplexActionManager::print(std::ostream& os) const {
+	return translator.print(os, *baseCSP);
+}
+
 
 } // namespaces

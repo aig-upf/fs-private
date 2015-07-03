@@ -9,6 +9,8 @@
 #include <heuristics/rpg_data.hxx>
 #include <heuristics/rpg.hxx>
 
+#include <utils/logging.hxx>
+
 namespace fs0 {
 
 void ActionManagerFactory::instantiateActionManager(const Problem& problem, const Action::vcptr& actions) {
@@ -21,6 +23,7 @@ void ActionManagerFactory::instantiateActionManager(const Problem& problem, cons
 
 		if ( true ) { //complexPreconditions || complexEffects) {
 			manager = new ComplexActionManager(*action, problem.getConstraints());
+			FDEBUG("main", "Generated CSP for action " << action->getName() << std::endl <<  *manager << std::endl);
 		} else {
 			manager = new UnaryActionManager(*action);
 		}
@@ -76,22 +79,16 @@ bool UnaryActionManager::checkPreconditionApplicability(const DomainMap& domains
 
 void UnaryActionManager::processEffects(unsigned actionIdx, const Action& action, const DomainMap& actionProjection, RPGData& rpg) const {
 	const VariableIdxVector& actionScope = action.getScope();
-	#ifdef FS0_DEBUG
-	std::cout << "processing action effects: " << action.getName() << std::endl;
-	#endif
+	FFDEBUG("main", "processing action effects: " << action.getName());
 
 	for (const ScopedEffect::cptr effect:action.getEffects()) {
 		const VariableIdxVector& effectScope = effect->getScope();
-		#ifdef FS0_DEBUG
-		std::cout << "\t effect: " << effect << std::endl;
-		#endif
+		FFDEBUG("main", "\t effect: " << effect);
 
 		/***** 0-ary Effects *****/
 		if(effectScope.size() == 0) {  // No need to pass any point.
 			assert(effect->applicable()); // The effect is assumed to be applicable - non-applicable 0-ary effects make no sense and are detected before the search.
-			#ifdef FS0_DEBUG
-			std::cout << "\t\t 0-ary effect" << std::endl;
-			#endif
+			FFDEBUG("main", "\t\t 0-ary effect");
 			Atom atom = effect->apply();
 			auto hint = rpg.getInsertionHint(atom);
 
@@ -104,9 +101,7 @@ void UnaryActionManager::processEffects(unsigned actionIdx, const Action& action
 
 		/***** Unary Effects *****/
 		else if(effectScope.size() == 1) {  // Micro-optimization for unary effects
-			#ifdef FS0_DEBUG
-			std::cout << "\t\t 1-ary effect" << std::endl;
-			#endif
+			FFDEBUG("main", "\t\t 1-ary effect");
 			for (ObjectIdx value:*(actionProjection.at(effectScope[0]))) { // Add to the RPG for every allowed value of the relevant variable
 				if (!effect->applicable(value)) continue;
 				Atom atom = effect->apply(value);
@@ -163,6 +158,10 @@ void UnaryActionManager::completeAtomSupport(const VariableIdxVector& actionScop
 }
 
 
+std::ostream& UnaryActionManager::print(std::ostream& os) const {
+	os << "UnaryActionManager[]";
+	return os;
+}
 
 /*
 void BaseActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {

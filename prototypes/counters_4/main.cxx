@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
 	}
 
 	Logger::init("./logs");
-	FS0INFO("main", "Generating the problem (" << data_dir << ")... ");
+	FINFO("main", "Generating the problem (" << data_dir << ")... ");
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	Problem problem(data_dir);
 

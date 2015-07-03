@@ -33,9 +33,9 @@ std::ofstream& Logger::log( const std::string & key) {
 	return *(it->second);
 }
 
-std::ostream& Logger::log(const std::string& level, const std::string& fileName) {
+std::ostream& Logger::log(const std::string& level, const std::string& filename) {
 	boost::timer::cpu_times elapsed = _timer.elapsed();
-	std::ostream& stream = log(fileName);
+	std::ostream& stream = log(filename);
 	
 	// Append the log level
 	stream  << "[" << level << "]";

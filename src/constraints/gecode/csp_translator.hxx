@@ -34,38 +34,23 @@ public:
 	//! Forbid copy constructor
 	explicit GecodeCSPTranslator(GecodeCSPTranslator& other);
 	
-	void registerCSPVariable(VariableIdx variable, VariableType type, unsigned csp_variable) {
-		auto res = _variables.insert(std::make_pair(
-			std::make_pair(variable, type),
-			csp_variable
-		));
-		if (!res.second) {
-			throw std::runtime_error("Tried to register a CSP variable that already existed: <" + std::to_string(variable) + ">");
-		}
-	}
+	//! Register the given planning variable under the give role/type as corresponding to the CSP variable with the given index.
+	void registerCSPVariable(VariableIdx variable, VariableType type, unsigned csp_variable);
 	
 	//! Returns the Gecode CSP variable that corresponds to the given state variable and type, in the given CSP.
-	const Gecode::IntVar& resolveVariable(const SimpleCSP& csp, VariableIdx variable, VariableType type) const {
-		auto it = _variables.find(std::make_pair(variable, type));
-		if(it == _variables.end()) {
-			throw std::runtime_error("Trying to translate a non-existing CSP variable");
-		}
-		return csp._X[ it->second ];
-	}
+	const Gecode::IntVar& resolveVariable(const SimpleCSP& csp, VariableIdx variable, VariableType type) const;
 	
 	//! Returns the value of the CSP variable that corresponds to the given state variable and type, in the given CSP.
 	inline const ObjectIdx resolveValue(const SimpleCSP& csp, VariableIdx variable, VariableType type) const {
 		return resolveVariable(csp, variable, type).val();
 	}
 
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
 
-	//! Prints a representation of a CSP. Mostly for debugging purposes
-    // friend std::ostream& operator<<(std::ostream &os, const GecodeCSPTranslator&  csp) { return csp.print(os); }
-    // std::ostream& print(std::ostream& os) const { os << _X; return os; }
-
-public:
-	typedef std::pair<VariableIdx, VariableType> CSPVariableIdentifier;
 protected:
+	typedef std::pair<VariableIdx, VariableType> CSPVariableIdentifier;
+	
 	//! Variable mapping: For a state variable X, variables[X] is the (implicit, unsigned) ID of corresponding Gecode CSP variable.
 	std::map<CSPVariableIdentifier, unsigned> _variables;
 };

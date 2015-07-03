@@ -35,6 +35,9 @@ public:
 	//!
 	void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg);
 
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os) const;
+	
 protected:
 
 	//!

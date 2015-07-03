@@ -6,6 +6,7 @@
 #include <utils/projections.hxx>
 #include <heuristics/rpg.hxx>
 #include <heuristics/rpg_data.hxx>
+#include <utils/logging.hxx>
 
 namespace fs0 {
 
@@ -25,9 +26,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 	RelaxedState relaxed(seed);
 	RPGData rpgData(relaxed);
 	
-	#ifdef FS0_DEBUG
-	std::cout << std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************" << std::endl;;
-	#endif
+	FFDEBUG("main", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty),
 	// or we get to a goal graph layer.
@@ -38,11 +37,7 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 			action.getConstraintManager()->processAction(idx, action, relaxed, rpgData);
 		}
 		
-		
-		#ifdef FS0_DEBUG
-		std::cout << std::endl << "The last layer of the RPG contains " << rpgData.getNovelAtoms().size() << " novel atoms." << std::endl;
-		std::cout << rpgData << std::endl;
-		#endif
+		FFDEBUG("main", std::endl << "The last layer of the RPG contains " << rpgData.getNovelAtoms().size() << " novel atoms." << std::endl << rpgData);
 		
 		// If there is no novel fact in the rpg, we reached a fixpoint, thus there is no solution.
 		if (rpgData.getNovelAtoms().size() == 0) return std::numeric_limits<float>::infinity();
@@ -53,15 +48,12 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		
 		// Prune using state constraints
 		ScopedConstraint::Output o = _problem.getConstraintManager()->pruneUsingStateConstraints(relaxed);
-		#ifdef FS0_DEBUG
-		std::cout << "State Constraint pruning output: " <<  static_cast<std::underlying_type<ScopedConstraint::Output>::type>(o) << std::endl;
-		#endif
+		
+		FFDEBUG("main", "State Constraint pruning output: " <<  static_cast<std::underlying_type<ScopedConstraint::Output>::type>(o));
 		if (o == ScopedConstraint::Output::Failure) return std::numeric_limits<float>::infinity();
 		if (o == ScopedConstraint::Output::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 		
-		#ifdef FS0_DEBUG
-		std::cout << "RPG Layer #" << rpgData.getNumLayers() << ": " << relaxed << std::endl; // std::cout << "RPGData: " << rpgData << std::endl << std::endl;
-		#endif
+		FFDEBUG("main", "RPG Layer #" << rpgData.getNumLayers() << ": " << relaxed);
 		
 		float h = computeHeuristic(seed, relaxed, rpgData);
 		if (h > -1) {

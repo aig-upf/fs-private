@@ -49,6 +49,10 @@ public:
 
 	//! Process the given action in the given layer of the RPG, adding newly-achievable atoms and their supoprts to the rpg data structure.
 	virtual void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg) = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const BaseActionManager& o) { return o.print(os); }
+	virtual std::ostream& print(std::ostream& os) const = 0;
 };
 
 
@@ -78,6 +82,8 @@ protected:
 
 	//!
 	void completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const;
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 
