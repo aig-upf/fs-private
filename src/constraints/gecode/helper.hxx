@@ -28,7 +28,6 @@ public:
 		if ( varType == ProblemInfo::ObjectType::INT ) {
 			auto bounds = info.getVariableBounds(var);
 			Gecode::IntVar x( csp, bounds.first, bounds.second );
-			std::cout << "Created CSP variable for state variable " << var << ": " << x << std::endl;
 			varArray << x;
 		}
 		else if ( varType == ProblemInfo::ObjectType::BOOL ) {

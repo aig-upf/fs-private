@@ -9,6 +9,7 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <aptk2/tools/resources_control.hxx>
 
+#include <utils/logging.hxx>
 #include <heuristics/null_heuristic.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <heuristics/hmax.hxx>
@@ -235,7 +236,8 @@ int main(int argc, char** argv) {
 		return res;
 	}
 
-
+	Logger::init("./logs");
+	FS0INFO("main", "Generating the problem (" << data_dir << ")... ");
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	Problem problem(data_dir);
 

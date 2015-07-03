@@ -93,7 +93,6 @@ SimpleCSP::ptr GecodeConstraintManager::createCSPVariables() {
 	IntVarArray tmp( *csp, variables );
 	csp->_X.update( *csp, false, tmp );
 
-	std::cout << "Created SimpleCSP with variables: " << csp->_X << std::endl;
 	return csp;
 }
 
