@@ -6,7 +6,14 @@ namespace fs0 { namespace gecode {
 
 TranslatorRepository::TranslatorRepository() {}
 
-TranslatorRepository::~TranslatorRepository() {}
+TranslatorRepository::~TranslatorRepository() {
+	for (auto& it:_constraintTranslators) {
+		delete it.second;
+	}
+	for (auto& it:_effectTranslators) {
+		delete it.second;
+	}	
+}
 
 TranslatorRepository&
 TranslatorRepository::instance() {

@@ -18,8 +18,9 @@ using namespace fs0::gecode;
 namespace fs0 {
 
 ComplexActionManager::ComplexActionManager(const Action& action, const ScopedConstraint::vcptr& stateConstraints)
-	:  BaseActionManager()
+	:  BaseActionManager(), baseCSP(nullptr), translator()
 {
+	
 	baseCSP = createCSPVariables(action, stateConstraints);
 	addDefaultConstraints(action, stateConstraints);
 	Helper::postBranchingStrategy(*baseCSP);
@@ -87,6 +88,7 @@ const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actio
 				}
 				rpg.add(atom, actionIdx, support, hint.second);
 			}
+			delete solution;
 		}
 	}
 }

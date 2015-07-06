@@ -21,7 +21,7 @@ public:
 	typedef GecodeConstraintManager* cptr;
 	
 	GecodeConstraintManager(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
-	~GecodeConstraintManager() {};
+	~GecodeConstraintManager();
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
 	ScopedConstraint::Output pruneUsingStateConstraints(RelaxedState& state) const;

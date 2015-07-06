@@ -20,7 +20,7 @@ public:
 	typedef   SimpleCSP* ptr;
 
 	SimpleCSP( ) {};
-	virtual ~SimpleCSP() {}
+// 	virtual ~SimpleCSP() {}
 
 	//! Cloning constructor, required by Gecode
 	SimpleCSP( bool share, SimpleCSP& other ) :

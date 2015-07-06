@@ -21,18 +21,24 @@ GecodeConstraintManager::GecodeConstraintManager(const ScopedConstraint::vcptr& 
 	goalConstraintsManager(allConstraints), // We store all the constraints in a new vector so that we can pass a const reference 
 	                                            // - we're strongly interested in the ConstraintManager having only a reference, not the actual value,
 	                                            // since in some cases each grounded action will have a ConstraintManager
-	hasStateConstraints(stateConstraints.size() > 0)
+	hasStateConstraints(stateConstraints.size() > 0),
+	baseCSP(nullptr), translator()
 {
 	auto relevantSet = getAllRelevantVariables(allConstraints);
 	allRelevantVariables = VariableIdxVector(relevantSet.begin(), relevantSet.end());
 	
 	baseCSP = createCSPVariables();
 	Helper::translateConstraints(*baseCSP, translator, allConstraints);
+	Helper::postBranchingStrategy(*baseCSP);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
 	Gecode::SpaceStatus st = baseCSP->status();
 	// TODO This should prob. never happened, as it'd mean that the action is (statically) unapplicable.
 	assert(st != Gecode::SpaceStatus::SS_FAILED); 	
+}
+
+GecodeConstraintManager::~GecodeConstraintManager() {
+	delete baseCSP;
 }
 
 ScopedConstraint::Output GecodeConstraintManager::pruneUsingStateConstraints(RelaxedState& state) const {
@@ -114,6 +120,7 @@ bool GecodeConstraintManager::solveCSP(gecode::SimpleCSP* csp, Atom::vctr& suppo
 		for (VariableIdx variable:allRelevantVariables) {
 			support.push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
 		}
+		delete solution;
 	}
 	return (bool) solution;
 }
