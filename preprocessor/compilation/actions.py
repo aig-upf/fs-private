@@ -64,19 +64,20 @@ class ActionCompiler(object):
                 raise RuntimeError("Unknown type of expression '{}'".format(exp))
 
         else:
-            code = finish_bool_code(CppPrinter(index).print(exp))
+            printer = CppPrinter(index)
+            code = finish_bool_code(printer.print(exp))
             procedure = base.AppProcedure(str(exp), relevant, code, comment=str(exp))
 
             # Check if there is a builtin constraint available:
-            procedure.builtin = self.process_builtin_constraint(procedure, index, exp)
+            procedure.builtin = self.process_builtin_constraint(procedure, index, printer, exp)
 
         return procedure
 
-    def process_builtin_constraint(self, procedure, index, expression):
+    def process_builtin_constraint(self, procedure, index, printer, expression):
         if not isinstance(expression, base.RelationalExpression):
             return expression
 
-        const = base.ConstraintExpressionCatalog.instantiate(expression, index)
+        const = base.ConstraintExpressionCatalog.instantiate(expression, index, printer)
         return expression if const is None else const
 
     def generate_eff_procedure(self, expression):
@@ -91,13 +92,14 @@ class ActionCompiler(object):
             procedure = base.EffProcedure(str(expression), relevant, affected, code)
 
             # Check if there is a builtin effect available:
-            procedure.builtin = base.EffectExpressionCatalog.instantiate(procedure, index, rhs)
-            return procedure
+            procedure.builtin = base.EffectExpressionCatalog.instantiate(procedure, index, printer, rhs)
 
         else:  # A predicative effect
             exp, affected = self.parser.process(expression)
-            rhs_code = "0" if expression.negated else "1"
+            value = "0" if expression.negated else "1"
             relevant = []  # Predicative effects cannot have nested relevant variables
-            code = "return Atom(_affected, {});".format(rhs_code)
-            return base.EffProcedure(str(expression), relevant, affected, code)
+            code = "return Atom(_affected, {});".format(value)
+            procedure = base.EffProcedure(str(expression), relevant, affected, code)
+            procedure.builtin = base.ValueAssignmentEffectExpression([], affected, [value])
 
+        return procedure

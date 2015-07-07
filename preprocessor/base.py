@@ -646,9 +646,9 @@ class ConstraintExpressionCatalog(object):
     supported_neg_inv = {'<': LEQConstraintExpression, '<=': LTConstraintExpression}
 
     @classmethod
-    def instantiate(cls, expression, index):
+    def instantiate(cls, expression, index, printer):
         s, args = expression.symbol, expression.arguments
-        scope, binding, parameters = classify_arguments(args, index)
+        scope, binding, parameters = classify_arguments(args, index, printer)
 
         if len(args) != 2:
             return None
@@ -693,10 +693,10 @@ class EffectExpressionCatalog(object):
     """ A catalog of possible builtin effect constraints """
 
     @classmethod
-    def instantiate(cls, procedure, index, expression):
+    def instantiate(cls, procedure, index, printer, expression):
         affected = procedure.affected_variables
         s, args = expression.symbol, expression.arguments
-        scope, binding, parameters = classify_arguments(args, index)
+        scope, binding, parameters = classify_arguments(args, index, printer)
         if isinstance(expression, ArithmeticExpression):
             if s == '+':
                 return AdditiveUnaryEffectExpression(scope, affected, parameters)
@@ -705,32 +705,44 @@ class EffectExpressionCatalog(object):
                 return AdditiveUnaryEffectExpression(scope, affected, parameters)
             else:
                 raise RuntimeError("To implement")
+
         elif isinstance(expression, ParameterExpression):
             assert len(parameters) == 0 and len(scope) == 0
             parameters = [index.parameters[expression.symbol]]
             return ValueAssignmentEffectExpression(scope, affected, parameters)
+
         elif isinstance(expression, ObjectExpression):
             parameters = [index.object_idx[expression.symbol]]
             return ValueAssignmentEffectExpression(scope, affected, parameters)
+
         elif isinstance(expression, VariableExpression):
             return VariableAssignmentEffectExpression(scope, affected, parameters)
 
         return None
 
 
-def classify_arguments(arguments, index):
+def classify_arguments(arguments, index, printer):
     scope = []
     binding = []
     parameters = []
     for arg in arguments:
         if isinstance(arg, VariableExpression):
             scope.append(arg)
+
         elif isinstance(arg, NumericExpression):
             parameters.append(int(arg.symbol))
+
         elif isinstance(arg, ParameterExpression):
             parameters.append(index.parameters[arg.symbol])
+
         elif isinstance(arg, ObjectExpression):
             parameters.append(index.object_idx[arg.symbol])
+
+        elif isinstance(arg, StaticFunctionalExpression):
+            parameters.append(printer.print(arg))
+
+        else:
+            raise RuntimeError("Unknown argument")
     return scope, binding, parameters
 
 
