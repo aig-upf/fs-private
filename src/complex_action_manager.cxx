@@ -88,8 +88,8 @@ const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actio
 				}
 				rpg.add(atom, actionIdx, support, hint.second);
 			}
-			delete solution;
 		}
+		delete solution;
 	}
 }
 
