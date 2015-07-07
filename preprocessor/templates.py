@@ -18,8 +18,8 @@ _base = dict(
     action_name_init='const std::string $actionName::name_ = "${name}";',
     action_signature_init='const ActionSignature $actionName::signature_ = ${signature};',
 
-    constraint_instantiation='new ${classname}(appRelevantVars[${i}], ${binding})',
-    effect_instantiation='new ${classname}(effRelevantVars[${i}], effAffectedVars[${i}], binding)',
+    constraint_instantiation='new ${classname}(appRelevantVars[${i}], ${binding}), // ${comment}',
+    effect_instantiation='new ${classname}(effRelevantVars[${i}], effAffectedVars[${i}], ${binding}), // ${comment}',
 
     satisfied_generic_header='isSatisfied(const ObjectIdxVector& relevant)',
     satisfied_unary_header='isSatisfied(ObjectIdx v1)',

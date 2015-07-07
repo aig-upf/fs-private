@@ -131,7 +131,8 @@ class ApplicableObject(object):
         self.applicability_constraints = None
         self.constraint_instantiations = None
 
-    def get_procedures_code(self, procedure_list, symbol_map={}):
+    def get_procedures_code(self, procedure_list, symbol_map=None):
+        symbol_map = {} if not symbol_map else symbol_map
         return [proc.process_component(symbol_map) for proc in procedure_list]
 
     def process_applicability(self):
@@ -186,6 +187,8 @@ def generate_constraint_code(name, blocks, tpl):
 
         if component.builtin:
             binding_variable = "{}"  # Don't use the bindings for constraints
+            if hasattr(component.builtin, 'parameters'):
+                binding_variable = print_vector_initialization(component.builtin.parameters)
         else:
             satisfied_header = component.get_satisfied_header()
             satisfied_header = tplManager.get(satisfied_header).substitute() if satisfied_header else ''
@@ -197,7 +200,7 @@ def generate_constraint_code(name, blocks, tpl):
                 satisfied_header=satisfied_header,
                 apply_header=apply_header,
                 code='\n\t\t'.join(component.code),
-		getname_code=_base['getname_code'].format( component.name )
+                getname_code=_base['getname_code'].format(component.name)
             ))
             binding_variable = 'binding'
 
@@ -205,7 +208,8 @@ def generate_constraint_code(name, blocks, tpl):
         instantiations.append(tplManager.get(instantiation_tpl).substitute(
             classname=classname,
             i=i,
-            binding=binding_variable
+            binding=binding_variable,
+            comment=component.name
         ))
     return classes, instantiations
 
@@ -214,3 +218,7 @@ def get_component_classname(component, name, i):
     if component.builtin:
         return component.builtin.codename
     return '{}{}'.format(name, i)
+
+
+def print_vector_initialization(vector):
+    return '{{{}}}'.format(','.join(str(elem) for elem in vector))

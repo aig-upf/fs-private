@@ -64,37 +64,40 @@ class ActionCompiler(object):
                 raise RuntimeError("Unknown type of expression '{}'".format(exp))
 
         else:
-            exp = self.process_builtin_constraint(exp)
+            code = finish_bool_code(CppPrinter(index).print(exp))
+            procedure = base.AppProcedure(str(exp), relevant, code, comment=str(exp))
 
-            if isinstance(exp, base.ConstraintExpression):
-                procedure = base.AppProcedure(exp.symbol, relevant, '', comment=str(exp), builtin=exp)
-            else:
-                code = finish_bool_code(CppPrinter(index).print(exp))
-                procedure = base.AppProcedure(str(exp), relevant, code)
+            # Check if there is a builtin constraint available:
+            procedure.builtin = self.process_builtin_constraint(procedure, index, exp)
 
         return procedure
 
-    def process_builtin_constraint(self, exp):
-        if not isinstance(exp, base.RelationalExpression):
-            return exp
+    def process_builtin_constraint(self, procedure, index, expression):
+        if not isinstance(expression, base.RelationalExpression):
+            return expression
 
-        const = base.ConstraintExpressionCatalog.instantiate(exp)
-        return exp if const is None else const
+        const = base.ConstraintExpressionCatalog.instantiate(expression, index)
+        return expression if const is None else const
 
     def generate_eff_procedure(self, expression):
         if isinstance(expression, AssignmentEffect):  # A functional effect
             lhs, affected = self.parser.process(expression.lhs)
             rhs, relevant = self.parser.process(expression.rhs)
-            printer = CppPrinter(self.build_procedure_index(relevant))
+
+            index = self.build_procedure_index(relevant)
+            printer = CppPrinter(index)
             rhs_code = printer.print(rhs)
+            code = "return Atom(_affected, {});".format(rhs_code)
+            procedure = base.EffProcedure(str(expression), relevant, affected, code)
+
+            # Check if there is a builtin effect available:
+            procedure.builtin = base.EffectExpressionCatalog.instantiate(procedure, index, rhs)
+            return procedure
 
         else:  # A predicative effect
             exp, affected = self.parser.process(expression)
             rhs_code = "0" if expression.negated else "1"
             relevant = []  # Predicative effects cannot have nested relevant variables
-
-        assert len(affected) == 1
-        code = "return Atom(_affected, {});".format(rhs_code)
-        return base.EffProcedure(str(expression), relevant, affected, code)
-
+            code = "return Atom(_affected, {});".format(rhs_code)
+            return base.EffProcedure(str(expression), relevant, affected, code)
 

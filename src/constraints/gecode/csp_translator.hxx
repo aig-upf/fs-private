@@ -42,7 +42,8 @@ public:
 	
 	//! Returns the value of the CSP variable that corresponds to the given state variable and type, in the given CSP.
 	inline const ObjectIdx resolveValue(const SimpleCSP& csp, VariableIdx variable, VariableType type) const {
-		return resolveVariable(csp, variable, type).val();
+		const Gecode::IntVar& csp_var = resolveVariable(csp, variable, type);
+		return csp_var.val();
 	}
 
 	//! Prints a representation of the object to the given stream.

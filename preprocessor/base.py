@@ -11,12 +11,13 @@ class Variable(object):
     """
     A state variable, made up of a symbol and a number of arguments.
     """
+
     def __init__(self, symbol, args):
         self.symbol = symbol
         self.args = tuple(int(a) if is_int(a) else a for a in args)
 
     # def is_lifted(self):
-    #     return any(is_action_parameter(arg) for arg in self.args)
+    # return any(is_action_parameter(arg) for arg in self.args)
 
     def __hash__(self):
         return hash((self.symbol, self.args))
@@ -26,6 +27,7 @@ class Variable(object):
 
     def __str__(self):
         return '{}{}'.format(self.symbol, "(" + ', '.join(map(str, self.args)) + ")")
+
     __repr__ = __str__
 
     def ground(self, binding):
@@ -114,6 +116,7 @@ class AppProcedure(object):
         code = []
         if not self.builtin:
             code = self.get_comments() + [self.templatize_code(symbol_map)]
+
         return ProcessedComponent(self.name, code, self.TYPE, self.builtin, len(self.variables))
 
     def get_comments(self):
@@ -126,8 +129,8 @@ class AppProcedure(object):
 class EffProcedure(AppProcedure):
     TYPE = 'EFFECT'
 
-    def __init__(self, name, relevant_variables, affected_variables, code, comment=""):
-        super().__init__(name, relevant_variables, code, comment)
+    def __init__(self, name, relevant_variables, affected_variables, code, comment="", builtin=None):
+        super().__init__(name, relevant_variables, code, comment, builtin)
         if len(affected_variables) != 1:
             raise RuntimeError("Currently only effects that affect one single variable are accepted")
         self.affected_variables = affected_variables
@@ -142,6 +145,7 @@ class StaticAppProcedure(object):
 
 class StaticRoutine(object):
     """ A Static Routine is some kind of routine that can be statically computed during grounding time """
+
     def __init__(self, routine, parameters):
         self.routine = routine
         self.parameters = parameters
@@ -239,6 +243,7 @@ class Code(object):
         A Code object contains a with C++ code that possibly needs to be instantiated with the actual variable
         indexes that correspond to parameters, etc. of the action where the code is to be used.
     """
+
     def __init__(self, code):
         assert isinstance(code, str)
         self.code = code
@@ -282,7 +287,7 @@ class ApplicableEntity(object):
     def define(self, name, routine):
         """ Defines a derived value to be used during the definition of the action """
         assert isinstance(routine, StaticRoutine)
-        assert name not in self.define_index and name not in self.param_index,\
+        assert name not in self.define_index and name not in self.param_index, \
             "A defined symbol with name '{}' has already been defined".format(name)
         self.define_index[name] = routine
         self.defines.append(name)
@@ -314,7 +319,7 @@ class Action(ApplicableEntity):
         self.effect_procedures = []
 
     def add_effect_procedure(self, procedure):
-        assert(isinstance(procedure, EffProcedure))
+        assert (isinstance(procedure, EffProcedure))
         self.effect_procedures.append(procedure)
 
     def __str__(self):
@@ -330,7 +335,7 @@ class GroundedApplicableEntity(object):
         self.applicability_procedures = applicability_procedures if applicability_procedures else []
 
     def add_applicability_procedure(self, procedure):
-        assert(isinstance(procedure, AppProcedure))
+        assert (isinstance(procedure, AppProcedure))
         self.applicability_procedures.append(procedure)
 
 
@@ -340,7 +345,7 @@ class GroundedAction(GroundedApplicableEntity):
         self.effect_procedures = effect_procedures if effect_procedures else []
 
     def add_effect_procedure(self, procedure):
-        assert(isinstance(procedure, EffProcedure))
+        assert (isinstance(procedure, EffProcedure))
         self.effect_procedures.append(procedure)
 
     def __str__(self):
@@ -396,7 +401,7 @@ class Goal(GroundedApplicableEntity):
 
 class State(object):
     def __init__(self, instantiations):
-            self.instantiations = instantiations
+        self.instantiations = instantiations
 
 
 class ProblemDomain(object):
@@ -445,7 +450,7 @@ def bool_string(value):
 class Expression(object):
     def __init__(self, symbol, arguments=None):
         self.symbol = symbol
-        self.arguments = arguments
+        self.arguments = arguments if arguments else []
 
         if self.is_fluent() and not self.is_subtree_static():
             raise ParseException("Unsupported nested expression '{}'".format(self))
@@ -580,6 +585,22 @@ class EQConstraintExpression(ConstraintExpression):
 class NEQConstraintExpression(ConstraintExpression):
     codename = "NEQConstraint"
 
+    def __init__(self, arguments, parameters):
+        super().__init__('!=', arguments)
+        self.parameters = parameters
+
+
+class EQXConstraintExpression(ConstraintExpression):
+    codename = "EQXConstraint"
+
+    def __init__(self, arguments, parameters):
+        super().__init__('=', arguments)
+        self.parameters = parameters
+
+
+class NEQXConstraintExpression(ConstraintExpression):
+    codename = "NEQXConstraint"
+
 
 class LTConstraintExpression(ConstraintExpression):
     codename = "LTConstraint"
@@ -597,20 +618,57 @@ class AlldiffConstraintExpression(ConstraintExpression):
     codename = "ScopedAlldiffConstraint"
 
 
+class EffectExpression(object):
+    def __init__(self, scope, affected, parameters=None):
+        parameters = parameters if parameters is not None else []
+        self.scope = scope
+        self.affected = affected
+        self.parameters = parameters
+
+
+class AdditiveUnaryEffectExpression(EffectExpression):
+    codename = "AdditiveUnaryEffect"
+
+
+class ValueAssignmentEffectExpression(EffectExpression):
+    codename = "ValueAssignmentEffect"
+
+
+class VariableAssignmentEffectExpression(EffectExpression):
+    codename = "VariableAssignmentEffect"
+
+
 class ConstraintExpressionCatalog(object):
-    """ A catalog of custom constraints """
-    supported = {'=': EQConstraintExpression, '<': LTConstraintExpression, '<=': LEQConstraintExpression}
+    """ A catalog of possible builtin precondition / goal constraints """
+    supported = {'<': LTConstraintExpression, '<=': LEQConstraintExpression}
     supported_inv = {">=": LEQConstraintExpression, ">": LTConstraintExpression}
-    supported_neg = {'=': NEQConstraintExpression, '>=': LTConstraintExpression, ">": LEQConstraintExpression}
+    supported_neg = {'>=': LTConstraintExpression, ">": LEQConstraintExpression}
     supported_neg_inv = {'<': LEQConstraintExpression, '<=': LTConstraintExpression}
 
     @classmethod
-    def instantiate(cls, exp):
-        s, args = exp.symbol, exp.arguments
-        if len(args) != 2 or not all(isinstance(arg, VariableExpression) for arg in args):
+    def instantiate(cls, expression, index):
+        s, args = expression.symbol, expression.arguments
+        scope, binding, parameters = classify_arguments(args, index)
+
+        if len(args) != 2:
             return None
 
-        if not exp.negated:
+        # Handle first equality constraints
+        if s == '=':  # (in) equalities are symmetric
+            assert len(scope) in (1, 2)
+            if len(scope) == 2:
+                if not expression.negated:
+                    return EQConstraintExpression('=', args)
+                else:
+                    return NEQConstraintExpression('=', args)
+            elif len(scope) == 1:
+                if not expression.negated:
+                    return EQXConstraintExpression(args, parameters)
+                else:
+                    return NEQXConstraintExpression(args, parameters)
+
+        # Now for inequality constraints
+        if not expression.negated:
             if s in cls.supported:
                 return cls.supported[s](s, args)
             elif s in cls.supported_inv:  # We need to invert the argument list
@@ -631,9 +689,54 @@ class ConstraintExpressionCatalog(object):
         return custom[name](name, args)
 
 
+class EffectExpressionCatalog(object):
+    """ A catalog of possible builtin effect constraints """
+
+    @classmethod
+    def instantiate(cls, procedure, index, expression):
+        affected = procedure.affected_variables
+        s, args = expression.symbol, expression.arguments
+        scope, binding, parameters = classify_arguments(args, index)
+        if isinstance(expression, ArithmeticExpression):
+            if s == '+':
+                return AdditiveUnaryEffectExpression(scope, affected, parameters)
+            elif s == '-':
+                parameters = [-1 * p for p in parameters]
+                return AdditiveUnaryEffectExpression(scope, affected, parameters)
+            else:
+                raise RuntimeError("To implement")
+        elif isinstance(expression, ParameterExpression):
+            assert len(parameters) == 0 and len(scope) == 0
+            parameters = [index.parameters[expression.symbol]]
+            return ValueAssignmentEffectExpression(scope, affected, parameters)
+        elif isinstance(expression, ObjectExpression):
+            parameters = [index.object_idx[expression.symbol]]
+            return ValueAssignmentEffectExpression(scope, affected, parameters)
+        elif isinstance(expression, VariableExpression):
+            return VariableAssignmentEffectExpression(scope, affected, parameters)
+
+        return None
+
+
+def classify_arguments(arguments, index):
+    scope = []
+    binding = []
+    parameters = []
+    for arg in arguments:
+        if isinstance(arg, VariableExpression):
+            scope.append(arg)
+        elif isinstance(arg, NumericExpression):
+            parameters.append(int(arg.symbol))
+        elif isinstance(arg, ParameterExpression):
+            parameters.append(index.parameters[arg.symbol])
+        elif isinstance(arg, ObjectExpression):
+            parameters.append(index.object_idx[arg.symbol])
+    return scope, binding, parameters
+
 
 class ProcessedComponent(object):
     """ A processed component contains the relevant code and information for a processed constraint / effect """
+
     def __init__(self, name, code, _type, builtin, arity):
         assert isinstance(code, list)
         self.name = name

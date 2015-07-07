@@ -17,15 +17,15 @@ except Exception as e:
     val = None
 
 if val != 1:
-    print('\n' + "*"*80)
+    print('\n' + "*" * 80)
     print("- WARNING -\n Automatically setting PYTHONHASHSEED to 1 to obtain more reliable results")
-    print("*"*80 + '\n')
+    print("*" * 80 + '\n')
     # We simply set the environment variable and re-call ourselves.
     from subprocess import call
+
     os.environ["PYTHONHASHSEED"] = '1'
     call(["python3", "-OO"] + sys.argv)
     sys.exit(1)
-
 
 sys.path.append(os.path.abspath('..'))
 
@@ -40,10 +40,11 @@ import pddl  # This should be imported from a custom-set PYTHONPATH containing t
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Parse a given problem instance from a given benchmark set.')
     parser.add_argument('--set', required=True, help="The name of the benchmark set.")
-    parser.add_argument('--instance', required=True, help="The problem instance filename (heuristics are used to determine domain filename).")
-    parser.add_argument('--domain', required=False, help="The problem domain filename.",default=None )
+    parser.add_argument('--instance', required=True,
+                        help="The problem instance filename (heuristics are used to determine domain filename).")
+    parser.add_argument('--domain', required=False, help="The problem domain filename.", default=None)
     parser.add_argument('--translator', required=False, help="The directory containing the problem translation code.")
-    parser.add_argument('--planner', required=False, help="The directory containing the planner sources." )
+    parser.add_argument('--planner', required=False, help="The directory containing the planner sources.")
     parser.add_argument('--output_base', default="../generated",
                         help="The base for the output directory where the compiled planner will be left. "
                              "Additional subdirectories will be created with the name of the domain and the instance")
@@ -60,6 +61,7 @@ def import_translator(args, task):
     """ Import the translator modules specific to the domain from the given path """
     if args.translator is None:
         from generic_translator import Translator
+
         return Translator(task)
 
     old = sys.path
@@ -88,7 +90,7 @@ class ActionIndex(object):  # TODO - Migrate to IndexDictionary
     def index_affected_variables(self, action):
         pass
         # for eff in action.effects:
-        #     fact = Fact.create(eff.literal)
+        # fact = Fact.create(eff.literal)
         #     self.affected_vars_inv[fact.var] = len(self.affected_vars)
         #     self.affected_vars.append(fact.var)
 
@@ -103,10 +105,10 @@ class TaskPreprocessor(object):
         self.task.axioms = []  # TODO
         return self.task
 
-    # def process_init(self):
+        # def process_init(self):
         # facts = []
         # for symbol, inst in self.task.init.instantiations.items():
-        #     assert isinstance(inst, (base.PredicateInstantiation, base.FunctionInstantiation))
+        # assert isinstance(inst, (base.PredicateInstantiation, base.FunctionInstantiation))
         #     if isinstance(inst, base.PredicateInstantiation):
         #         for point in inst.set:
         #             facts.append(Fact(StateVariable(symbol, tuple(point)), value))
@@ -159,8 +161,8 @@ def extract_names(instance, domain_filename):
 
 def main():
     args = parse_arguments()
-    if args.domain is None :
-    	args.domain = pddl.pddl_file.extract_domain_name(args.instance)
+    if args.domain is None:
+        args.domain = pddl.pddl_file.extract_domain_name(args.instance)
     task = parse_pddl_task(args.domain, args.instance)
 
     classify_symbols(task)
@@ -197,8 +199,8 @@ def compile_translation(translation_dir, planner, debug=False, predstate=False):
     predstate_flag = "predstate=1" if predstate else ''
 
     planner_dir = os.path.abspath('../planners/gbfs')
-    if planner is not None :
-        planner_dir = os.path.abspath( planner )
+    if planner is not None:
+        planner_dir = os.path.abspath(planner)
 
     shutil.copy(planner_dir + '/main.cxx', translation_dir)
     shutil.copy(planner_dir + '/SConstruct', translation_dir + '/SConstruct')
@@ -368,14 +370,14 @@ class Generator(object):
     def get_method_factories(self):
         return tplManager.get('factories').substitute(
             actions='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
-            goal_constraint_instantiations=',\n\t\t\t'.join(self.goal_code.constraint_instantiations)
+            goal_constraint_instantiations='\n\t\t\t'.join(self.goal_code.constraint_instantiations)
         )
 
     def get_action_factory_line(self, action_code):
         return tplManager.get('action-instantiation').substitute(
             classname=action_code.get_entity_name(),
-            constraint_list=',\n\t\t\t\t'.join(action_code.constraint_instantiations),
-            effect_list=',\n\t\t\t\t'.join(action_code.effect_instantiations),
+            constraint_list='\n\t\t\t\t'.join(action_code.constraint_instantiations),
+            effect_list='\n\t\t\t\t'.join(action_code.effect_instantiations),
         )
 
     def get_action_definitions(self):
@@ -412,7 +414,7 @@ class Generator(object):
         return res
 
     def dump_object_data(self):
-        return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump_index(print_index=True))]
+        return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump_index(print_index=False))]
 
     def dump_type_data(self):
         """ Dumps a map of types to corresponding objects"""
@@ -439,7 +441,7 @@ class Generator(object):
         for proc in procedures:
             rel_vars.append([self.index.variables.get_index(var) for var in proc.variables])
             if hasattr(proc, 'affected_variables'):
-                assert len(proc.affected_variables) == 1,\
+                assert len(proc.affected_variables) == 1, \
                     "Currently only accepted effects are those affecting one single variable"
                 aff_vars.append(self.index.variables.get_index(proc.affected_variables[0]))
         return rel_vars, aff_vars
@@ -532,7 +534,6 @@ class Generator(object):
             else:
                 res.append(self.index.objects[x])
         return res
-
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ class CppPrinter(object):
         elif isinstance(exp, ConstraintExpression):
             return ''  # Constraint expressions need no code
         elif isinstance(exp, ArithmeticExpression):
+            return ''  # ArithmeticExpressions expressions need no code
             lhs, rhs = self.print_parameters(exp)
             return "{} {} {}".format(lhs, exp.symbol, rhs)
         elif isinstance(exp, VariableExpression):

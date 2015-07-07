@@ -73,7 +73,7 @@ public:
 		const ObjectIdxVector& derived,
         const std::vector<VariableIdxVector>& appRelevantVars,
         const std::vector<VariableIdxVector>& effRelevantVars,
-        const std::vector<VariableIdxVector>& effAffectedVars
+        const VariableIdxVector& effAffectedVars
     ) {
         Action* pointer = nullptr;
 
@@ -84,7 +84,7 @@ public:
 
 			};
 			ScopedEffect::vcptr effects = {
-				new AdditiveUnaryEffect(effRelevantVars[0], effAffectedVars[0][0], {1})
+				new AdditiveUnaryEffect(effRelevantVars[0], effAffectedVars[0], {1})
 			};
 			pointer = new IncrementAction(binding, constraints, effects);
         }
@@ -94,7 +94,7 @@ public:
 
 			};
 			ScopedEffect::vcptr effects = {
-				new AdditiveUnaryEffect(effRelevantVars[0], effAffectedVars[0][0], {-1})
+				new AdditiveUnaryEffect(effRelevantVars[0], effAffectedVars[0], {-1})
 			};
 			pointer = new DecrementAction(binding, constraints, effects);
         }

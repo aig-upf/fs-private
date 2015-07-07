@@ -53,6 +53,12 @@ void ValueAssignmentEffectTranslator::addConstraint(SimpleCSP& csp, const Gecode
 	Gecode::rel(csp, y, Gecode::IRT_EQ, effect->getBinding()[0]);
 }
 
+void VariableAssignmentEffectTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+	auto y = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
+	auto x = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
+	Gecode::rel(csp, y, Gecode::IRT_EQ, x);
+}
+
 void AdditiveUnaryEffectTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
 	auto y_var = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
 	auto x_var = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
@@ -78,11 +84,13 @@ void registerTranslators() {
 	TranslatorRepository::instance().addEntry(typeid(EQConstraint),   new BinaryRelationTranslator(Gecode::IRT_EQ)); // X = Y
 	TranslatorRepository::instance().addEntry(typeid(NEQConstraint),  new BinaryRelationTranslator(Gecode::IRT_NQ)); // X != Y
 	
-	TranslatorRepository::instance().addEntry(typeid(NEQXConstraint), new UnaryRelationTranslator(Gecode::IRT_NQ)); // 
+	TranslatorRepository::instance().addEntry(typeid(EQXConstraint),  new UnaryRelationTranslator(Gecode::IRT_EQ)); // X == c
+	TranslatorRepository::instance().addEntry(typeid(NEQXConstraint), new UnaryRelationTranslator(Gecode::IRT_NQ)); // X != c
 	
 	// Translators for built-in effects
-	TranslatorRepository::instance().addEntry(typeid(ValueAssignmentEffect), new ValueAssignmentEffectTranslator()); // Y := c
-	TranslatorRepository::instance().addEntry(typeid(AdditiveUnaryEffect),   new AdditiveUnaryEffectTranslator());   // Y := X + c
+	TranslatorRepository::instance().addEntry(typeid(ValueAssignmentEffect),    new ValueAssignmentEffectTranslator()); // Y := c
+	TranslatorRepository::instance().addEntry(typeid(VariableAssignmentEffect), new VariableAssignmentEffectTranslator()); // Y := X
+	TranslatorRepository::instance().addEntry(typeid(AdditiveUnaryEffect),      new AdditiveUnaryEffectTranslator());   // Y := X + c
 	
 	
 }

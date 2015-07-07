@@ -75,6 +75,13 @@ public:
 	void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const;
 };
 
+
+class VariableAssignmentEffectTranslator : public EffectTranslator  {
+public:
+	void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const;
+};
+
+
 class AdditiveUnaryEffectTranslator : public EffectTranslator  {
 public:
 	void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const;

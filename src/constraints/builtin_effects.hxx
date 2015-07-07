@@ -12,9 +12,20 @@ namespace fs0 {
 class ValueAssignmentEffect : public ZeroaryScopedEffect
 {
 public:
-	ValueAssignmentEffect(const VariableIdx affected, const ObjectIdx value);
+	ValueAssignmentEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
 	
 	virtual Atom apply() const;
+	
+	virtual std::ostream& print(std::ostream& os) const;
+};
+
+// X := Y
+class VariableAssignmentEffect : public UnaryScopedEffect
+{
+public:
+	VariableAssignmentEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
+	
+	Atom apply(ObjectIdx v1) const;
 	
 	virtual std::ostream& print(std::ostream& os) const;
 };

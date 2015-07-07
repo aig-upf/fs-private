@@ -12,6 +12,8 @@ public:
     ) {
         Action* pointer = nullptr;
 
+        const ObjectIdxVector& _binding = binding; // syntactic sugar
+
         if (false) {}
         ${actions}
         else throw std::runtime_error("Unknown action name.");

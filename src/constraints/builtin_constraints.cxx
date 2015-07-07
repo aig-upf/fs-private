@@ -136,13 +136,40 @@ ScopedConstraint::Output NEQConstraint::filter(unsigned variable) {
 	return domain.size() > 0 ? Output::Pruned : Output::Failure;
 }
 
+EQXConstraint::EQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+	UnaryParametrizedScopedConstraint(scope, parameters)
+{
+	assert(parameters.size() == 1);
+}
+	
+// Filtering for a X = c constraint simply consists on pruning from the variable
+// domain all values different than c.
+ScopedConstraint::Output EQXConstraint::filter(const DomainMap& domains) const {
+	assert(_scope.size() == 1);
+	Domain& domain = *(domains.at(_scope[0]));
+	auto it = domain.find(_binding[0]);
+	if (it == domain.end()) {
+		domain.clear(); // Just in case
+		return Output::Failure;
+	}
+	
+	if (domain.size() == 1) return Output::Unpruned; // 'c' is the only value in the set
+	
+	Domain new_domain;
+	new_domain.insert(new_domain.cend(), _binding[0]);
+	domain = new_domain; // Update the domain by using the assignment operator.	
+	
+	return Output::Pruned;
+}
+
 NEQXConstraint::NEQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
 	UnaryParametrizedScopedConstraint(scope, parameters)
 {
 	assert(parameters.size() == 1);
 }
 	
-
+// Filtering for a X <> c constraint simply consists on pruning from the variable
+// domain value 'c', if available.
 ScopedConstraint::Output NEQXConstraint::filter(const DomainMap& domains) const {
 	assert(_scope.size() == 1);
 	Domain& domain = *(domains.at(_scope[0]));
