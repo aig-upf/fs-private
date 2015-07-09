@@ -6,6 +6,7 @@
 #include <utils/projections.hxx>
 #include <utils/utils.hxx>
 #include <constraints/gecode/simple_csp.hxx>
+#include <utils/logging.hxx>
 
 #include <gecode/driver.hh>
 
@@ -28,13 +29,23 @@ GecodeConstraintManager::GecodeConstraintManager(const ScopedConstraint::vcptr& 
 	allRelevantVariables = VariableIdxVector(relevantSet.begin(), relevantSet.end());
 	
 	baseCSP = createCSPVariables();
+	
 	Helper::translateConstraints(*baseCSP, translator, allConstraints);
+	
 	Helper::postBranchingStrategy(*baseCSP);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
 	Gecode::SpaceStatus st = baseCSP->status();
-	// TODO This should prob. never happened, as it'd mean that the action is (statically) unapplicable.
-	assert(st != Gecode::SpaceStatus::SS_FAILED); 	
+	
+	if (st == Gecode::SpaceStatus::SS_SOLVED) {
+		FINFO("main", "The Goal CSP was statically solved:" << std::endl <<  *this);
+	} else if (st == Gecode::SpaceStatus::SS_FAILED) {
+		// TODO This should prob. never happened, as it'd mean that the action is (statically) unapplicable.
+		throw std::runtime_error("Goal CSP statically failed");
+	} else {
+		FINFO("main", "Goal CSP after the initial, static propagation: " << *this);
+	}
+	
 }
 
 GecodeConstraintManager::~GecodeConstraintManager() {
@@ -109,8 +120,6 @@ VariableIdxSet GecodeConstraintManager::getAllRelevantVariables(const ScopedCons
 }
 
 bool GecodeConstraintManager::solveCSP(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
-	// TODO posting a branching might make sense to prioritize some branching strategy?
-    // branch(*this, l, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 	DFS<SimpleCSP> engine(csp);
 	
 	// ATM we are happy to extract the goal support from the first solution
@@ -121,8 +130,9 @@ bool GecodeConstraintManager::solveCSP(gecode::SimpleCSP* csp, Atom::vctr& suppo
 			support.push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
 		}
 		delete solution;
+		return true;
 	}
-	return (bool) solution;
+	return false;
 }
 
 

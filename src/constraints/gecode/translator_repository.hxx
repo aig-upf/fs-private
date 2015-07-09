@@ -21,8 +21,8 @@ public:
 	~TranslatorRepository();
 
 	static  TranslatorRepository&   instance();
-	void                            addEntry( TypeInfoRef type, ConstraintTranslator::ptr obj);
-	void                            addEntry( TypeInfoRef type, EffectTranslator::ptr obj);
+	void                            addEntry(TypeInfoRef type, ConstraintTranslator::ptr componentTranslator);
+	void                            addEntry(TypeInfoRef type, EffectTranslator::ptr componentTranslator);
 
 	EffectTranslator::ptr           getEffectTranslator( TypeInfoRef type );
 	ConstraintTranslator::ptr       getConstraintTranslator( TypeInfoRef type );

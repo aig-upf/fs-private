@@ -83,6 +83,8 @@ public:
 	//! or an actual compiled constraint, if it should.
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const = 0;
 
+	//! Return a default type ID object for registration purposes.
+	virtual const std::type_info& getDefaultTypeId() const { return typeid(ScopedConstraint); }
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ScopedConstraint& o) { return o.print(os); }
@@ -133,6 +135,8 @@ public:
 
 	//! All unary constraints are compiled by default
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const;
+	
+	virtual const std::type_info& getDefaultTypeId() const { return typeid(UnaryParametrizedScopedConstraint); }
 };
 
 
@@ -158,6 +162,8 @@ public:
 
 	//! All binary constraints are compiled by default
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const;
+	
+	virtual const std::type_info& getDefaultTypeId() const { return typeid(BinaryParametrizedScopedConstraint); }
 };
 
 

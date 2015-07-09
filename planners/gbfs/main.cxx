@@ -70,7 +70,9 @@ public:
 	template <typename Heuristic>
 	void	evaluate_with( Heuristic& heuristic ) {
 		float _h = heuristic.evaluate( state );
-		if ( _h == std::numeric_limits<float>::max() ) is_dead_end = true;
+		if ( _h == std::numeric_limits<float>::infinity() ) {
+			is_dead_end = true;
+		}
 		h = _h;
 	}
 

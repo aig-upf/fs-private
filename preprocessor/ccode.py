@@ -200,7 +200,7 @@ def generate_constraint_code(name, blocks, tpl):
                 satisfied_header=satisfied_header,
                 apply_header=apply_header,
                 code='\n\t\t'.join(component.code),
-                getname_code=tplManager.get('getname_code').format(component.name)
+                getname_code=tplManager.get('getname_code').substitute(printed=component.name)
             ))
             binding_variable = 'binding'
 

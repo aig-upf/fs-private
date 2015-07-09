@@ -32,6 +32,10 @@ public:
 	
 	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
 	virtual bool isGoal(const RelaxedState& state) const = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const BaseConstraintManager& o) { return o.print(os); }
+	virtual std::ostream& print(std::ostream& os) const = 0;
 };
 
 
@@ -63,6 +67,11 @@ public:
 	
 	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
 	bool isGoal(const RelaxedState& state) const;
+	
+	std::ostream& print(std::ostream& os) const {
+		os << "[Basic Goal Constraint Manager]";
+		return os;
+	}
 	
 protected:
 	

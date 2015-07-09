@@ -21,6 +21,7 @@ namespace fs0 {
 class RPGData
 {
 public:
+	//! <layer ID, Action ID, action supporting atoms>
 	typedef std::tuple<unsigned, ActionIdx, Atom::vctrp> AtomSupport;
 	typedef std::map<Atom, AtomSupport> SupportMap;
 
@@ -83,7 +84,7 @@ public:
 
 	//! Returns true iff the given atom is not already tracked by the RPG. In that case, it returns an insertion hint too.
 	std::pair<bool, SupportMap::iterator> getInsertionHint(const Atom& atom) {
-		if (!Problem::isRelevantForGoal(atom.getVariable()) || _referenceState.contains(atom)) 
+		if (_referenceState.contains(atom)) 
 			return std::make_pair(false, _effects.end()); // Make sure that the atom is novel and relevant
 
 		SupportMap::iterator lb = _effects.lower_bound(atom); // @see http://stackoverflow.com/a/101980
@@ -94,7 +95,6 @@ public:
 
 	//! The version with hint assumes that the atom needs to be inserted.
 	void add(const Atom& atom, ActionIdx action, Atom::vctrp causes, SupportMap::iterator hint) {
-		if (!Problem::isRelevantForGoal(atom.getVariable())) return;
 		// updateEffectMapSimple(fact, RPGraph::pruneSeedSupporters(extraCauses, _seed));
 		auto it = _effects.insert(hint, std::make_pair(atom, std::make_tuple(currentLayerIdx, action, causes)));
 
@@ -105,7 +105,6 @@ public:
 	}
 
 	void add(const Atom& atom, ActionIdx action, Atom::vctrp causes) {
-		if (!Problem::isRelevantForGoal(atom.getVariable())) return;
 		auto hint = getInsertionHint(atom);
 		if (!hint.first) return; // Don't insert the atom if it was already tracked by the RPG
 		add(atom, action, causes, hint.second);

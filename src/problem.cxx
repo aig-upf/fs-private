@@ -7,6 +7,8 @@
 #include <constraints/gecode_constraint_manager.hxx>
 #include <constraints/gecode/translators.hxx>
 
+#include <utils/logging.hxx>
+
 namespace fs0 {
 
 const Problem* Problem::_instance = 0;
@@ -45,6 +47,8 @@ void Problem::bootstrap() {
 	// Create the constraint manager
 // 	ctrManager = new PlanningConstraintManager(goalConstraints, stateConstraints);
 	ctrManager = new GecodeConstraintManager(goalConstraints, stateConstraints);
+	FDEBUG("main", "Generated goal CSP:" << std::endl <<  *ctrManager << std::endl);
+	
 
 	// Creates the appropriate applicability manager depending on the type and arity of action precondition constraints.
 	ActionManagerFactory::instantiateActionManager(*this, _actions);

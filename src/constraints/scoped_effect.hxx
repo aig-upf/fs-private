@@ -59,6 +59,9 @@ public:
 		os << "<unnamed effect>";
 		return os;
 	}
+	
+	//! Return a default type ID object for registration purposes.
+	virtual const std::type_info& getDefaultTypeId() const { return typeid(ScopedEffect); }
 };
 
 //! We specialize this class for performance reasons, since it is so common.
@@ -79,6 +82,8 @@ public:
 	
 	//! A small helper
 	inline Atom apply(const State& s) const { return this->apply(); }
+	
+	virtual const std::type_info& getDefaultTypeId() const { return typeid(ZeroaryScopedEffect); }
 };
 
 //! We specialize this class for performance reasons, since it is so common.
@@ -99,6 +104,8 @@ public:
 	
 	//! A small helper
 	Atom apply(const State& s) const { return this->apply(s.getValue(_scope[0])); }
+	
+	virtual const std::type_info& getDefaultTypeId() const { return typeid(UnaryScopedEffect); }
 };
 
 //! We specialize this class for performance reasons, since it is so common.

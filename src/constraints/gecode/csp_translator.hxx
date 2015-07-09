@@ -40,6 +40,15 @@ public:
 	//! Returns the Gecode CSP variable that corresponds to the given state variable and type, in the given CSP.
 	const Gecode::IntVar& resolveVariable(const SimpleCSP& csp, VariableIdx variable, VariableType type) const;
 	
+	//! A small helper to resolve a whole scope.
+	Gecode::IntVarArgs resolveScope(const SimpleCSP& csp, const VariableIdxVector& scope, VariableType type) const {
+		Gecode::IntVarArgs variables;
+		for (VariableIdx variable:scope) {
+			variables << resolveVariable(csp, variable, type);
+		}
+		return variables;
+	}
+	
 	//! Returns the value of the CSP variable that corresponds to the given state variable and type, in the given CSP.
 	inline const ObjectIdx resolveValue(const SimpleCSP& csp, VariableIdx variable, VariableType type) const {
 		const Gecode::IntVar& csp_var = resolveVariable(csp, variable, type);

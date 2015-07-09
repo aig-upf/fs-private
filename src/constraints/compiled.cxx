@@ -14,18 +14,29 @@ CompiledUnaryConstraint::CompiledUnaryConstraint(const UnaryParametrizedScopedCo
 {}
 
 
-CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) {
+std::unordered_set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) {
 	VariableIdx relevant = constraint.getScope()[0];
 	const ObjectIdxVector& all_values = problemInfo.getVariableObjects(relevant);
 	
-	std::set<ElementT> ordered;
+	std::unordered_set<ElementT> ordered;
 	for(ObjectIdx value:all_values) {
 		if (constraint.isSatisfied(value)) {
 			ordered.insert(value);
 		}
 	}
-	
-	return ExtensionT(ordered.begin(), ordered.end());
+	return ordered;
+}
+
+
+CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) {
+	// Depending on the type of representation, we can directly return the compiled data structure or not.
+	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
+		auto ordered = compile(constraint, problemInfo);
+		return ExtensionT(ordered.begin(), ordered.end());
+		
+	#else
+		return compile(constraint, problemInfo);
+	#endif
 }
 
 bool CompiledUnaryConstraint::isSatisfied(ObjectIdx o) const {
@@ -100,8 +111,7 @@ bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 	#endif
 }
 
-CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo) {
-	
+std::map<ObjectIdx, std::set<ObjectIdx>> CompiledBinaryConstraint::compile(const fs0::BinaryParametrizedScopedConstraint& constraint, unsigned int variable, const fs0::ProblemInfo& problemInfo) {
 	assert(variable == 0 || variable == 1);
 	unsigned other = (variable == 0) ? 1 : 0;
 	VariableIdxVector scope = constraint.getScope();
@@ -122,18 +132,20 @@ CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const Bi
 			}
 		}
 	}
+	return ordered;
+}
+
+CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo) {
+	
+	auto ordered = compile(constraint, variable, problemInfo);
 	
 	// Now we transform the ordered set into a (implicitly ordered) vector
 	ExtensionT extension;
 	for(const auto& elem:ordered) {
 		#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
-		extension.insert(std::make_pair(elem.first,
-			ObjectIdxVector(elem.second.begin(), elem.second.end())
-		));
+		extension.insert(std::make_pair(elem.first, ObjectIdxVector(elem.second.begin(), elem.second.end()) ));
 		#else
-		extension.insert( std::make_pair( elem.first,
-						ObjectIdxHash( elem.second.begin(), elem.second.end() )
-		));	
+		extension.insert( std::make_pair( elem.first, ObjectIdxHash( elem.second.begin(), elem.second.end() ) ));
 		#endif
 	}
 	return extension;
@@ -170,5 +182,22 @@ ScopedConstraint::Output CompiledBinaryConstraint::filter(unsigned variable) {
 	return Output::Pruned;
 }
 
+
+CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const fs0::UnaryScopedEffect& effect, const fs0::ProblemInfo& problemInfo) {
+	VariableIdx relevant = effect.getScope()[0];
+	const ObjectIdxVector& all_values = problemInfo.getVariableObjects(relevant);
+	
+	ExtensionT map;
+	for(ObjectIdx value:all_values) {
+		try {
+			auto atom = effect.apply(value);
+			assert(atom.getVariable() == effect.getAffected());
+			map.insert(std::make_pair(value, atom.getValue()));
+		} catch(const std::out_of_range& e) {  // TODO - Refactor this, too hacky...
+			// If the effect produces an exception, we simply consider it non-applicable and go on.
+		}
+	}
+	return map;
+}
 
 } // namespaces

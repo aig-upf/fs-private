@@ -2,15 +2,18 @@
 #pragma once
 
 #include <constraints/scoped_constraint.hxx>
+#include <constraints/scoped_effect.hxx>
 #include <problem_info.hxx>
-// MRJ: This allows to switch between unordered_set and vector to represent extensionally
-// constraints.
+#include <boost/container/flat_map.hpp>
+
+// MRJ: This allows to switch between unordered_set and vector to represent constraints extensionally.
 #ifndef EXTENSIONAL_REPRESENTATION_USES_VECTORS 
 	#include <unordered_set>
 #endif
 
-namespace fs0 {
 
+
+namespace fs0 {
 
 
 class CompiledUnaryConstraint : public UnaryParametrizedScopedConstraint {
@@ -29,7 +32,7 @@ protected:
 	CompiledUnaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension);
 	
 	//! Returns an ordered ExtensionT data structure with all the elements that satisfy the constraint.
-	ExtensionT _compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo);
+	static ExtensionT _compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo);
 	
 public:
 	//! Construct a unary compiled constraint by compiling a standard unary constraint.
@@ -42,9 +45,13 @@ public:
 	//! Filters from a new set of domains.
 	Output filter(const DomainMap& domains) const;
 	
-	//! Compiled constraints cannot be compiled
+	//! Compiled constraints cannot be compiled again!
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	//! Returns a set with all values that satisfy the constraint
+	static std::unordered_set<ElementT> compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo);
 };
+
 
 class CompiledBinaryConstraint : public BinaryParametrizedScopedConstraint
 {
@@ -66,7 +73,7 @@ protected:
 	CompiledBinaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension1, ExtensionT&& extension2);
 	
 	//! Returns an ordered ExtensionT data structure with all the elements that satisfy the constraint.
-	ExtensionT _compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo);
+	static ExtensionT _compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo);
 	
 public:
 	//! Construct a binary compiled constraint by compiling a standard binary constraint.
@@ -78,8 +85,23 @@ public:
 	
 	Output filter(unsigned variable);
 	
-	//! Compiled constraints cannot be compiled
+	//! Compiled constraints cannot be compiled again!
 	virtual ScopedConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	//! Returns a set with all values that satisfy the constraint
+	static std::map<ObjectIdx, std::set<ObjectIdx>> compile(const fs0::BinaryParametrizedScopedConstraint& constraint, unsigned int variable, const fs0::ProblemInfo& problemInfo);
+};
+
+
+
+class CompiledUnaryEffect  {
+protected:
+	typedef ObjectIdx ElementT;
+	typedef boost::container::flat_map<ElementT, ElementT> ExtensionT;
+	
+public:
+	//! Returns a set with all values that satisfy the constraint
+	static ExtensionT compile(const UnaryScopedEffect& effect, const ProblemInfo& problemInfo);
 };
 
 

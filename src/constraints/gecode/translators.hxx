@@ -12,6 +12,8 @@ namespace fs0 { namespace gecode {
 	
 class GecodeCSPTranslator; class SimpleCSP;
 
+
+//! Abstract constraint translator
 class ConstraintTranslator {
 public:
 	typedef ConstraintTranslator* ptr;
@@ -21,6 +23,26 @@ public:
 	virtual void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const = 0;
 };
 
+//! Abstract effect translator
+class EffectTranslator {
+public:
+	typedef EffectTranslator* ptr;
+
+	virtual ~EffectTranslator();
+
+	virtual void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const = 0;
+};
+
+
+class ExtensionalUnaryConstraintTranslator : public ConstraintTranslator  {
+public:
+	void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const;
+};
+
+class ExtensionalBinaryConstraintTranslator : public ConstraintTranslator  {
+public:
+	void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const;
+};
 
 class UnaryDomainBoundsConstraintTranslator : public ConstraintTranslator  {
 public:
@@ -35,7 +57,7 @@ public:
 	virtual void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const;
 };
 
-
+//! An abstract class for constraints that can be modeled as Gecode relations.
 class GecodeRelationTranslator : public ConstraintTranslator {
 protected:
 	Gecode::IntRelType _type;
@@ -60,14 +82,22 @@ public:
 	void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const;
 };
 
-
-class EffectTranslator {
+//! A translator for the 'sum' global constraint
+class SumConstraintTranslator : public ConstraintTranslator  {
 public:
-	typedef EffectTranslator* ptr;
+	virtual void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const;
+};
 
-	virtual ~EffectTranslator();
+//! A translator for the 'alldiff' global constraint
+class AlldiffConstraintTranslator : public ConstraintTranslator  {
+public:
+	virtual void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const;
+};
 
-	virtual void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const = 0;
+
+class ExtensionalUnaryEffectTranslator : public EffectTranslator  {
+public:
+	void addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr constraint) const;
 };
 
 class ValueAssignmentEffectTranslator : public EffectTranslator  {

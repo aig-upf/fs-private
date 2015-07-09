@@ -28,7 +28,7 @@ ComplexActionManager::ComplexActionManager(const Action& action, const ScopedCon
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
 	Gecode::SpaceStatus st = baseCSP->status();
 	
-	// TODO This should prob. never happened, as it'd mean that the action is (statically) unapplicable.
+	// TODO This should prob. never happen, as it'd mean that the action is (statically) unapplicable.
 	assert(st != Gecode::SpaceStatus::SS_FAILED); 
 }
 
@@ -71,26 +71,42 @@ void ComplexActionManager::processAction(unsigned actionIdx, const Action& actio
 
 
 const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const {
-	FDEBUG("main", "Solving the Action CSP completely" << std::endl << *csp);
-	
+	unsigned num_solutions = 0;
 	DFS<SimpleCSP> engine(csp);
 
 	while (SimpleCSP* solution = engine.next()) {
-		for ( ScopedEffect::cptr effect : action.getEffects() ) {
+		for (ScopedEffect::cptr effect : action.getEffects()) {
 			VariableIdx affected = effect->getAffected();
 			Atom atom(affected, translator.resolveValue(*solution, affected, GecodeCSPTranslator::VariableType::Output)); // TODO - this could be optimized and factored out of the loop
 			auto hint = rpg.getInsertionHint(atom);
 			
 			if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
-				for (VariableIdx scopeVariable: effect->getScope()) {
-					support->push_back(Atom(scopeVariable, translator.resolveValue(*solution, scopeVariable, GecodeCSPTranslator::VariableType::Input)));
+				boost::container::flat_set<VariableIdx> processed;
+				
+				// TODO - The set of variables related to the support of each effect could indeed be precomputed in order to speed up this.
+				// First extract the supports related to the variables relevant to the particular effect
+				for (VariableIdx variable: effect->getScope()) {
+					support->push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
+					processed.insert(variable);
 				}
+				
+				// And now those related to the variables relevant to the action precondition - without repeating those that might already have been part of the effect.
+				for (VariableIdx variable: action.getScope()) {
+					if (processed.find(variable) == processed.end()) {
+						support->push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
+					}
+				}
+				
+				// Once the support is computed, we insert the new atom into the RPG data structure
 				rpg.add(atom, actionIdx, support, hint.second);
 			}
 		}
+		++num_solutions;
 		delete solution;
 	}
+	
+	FDEBUG("main", "Solving the Action CSP completely produced " << num_solutions << " solutions"  << std::endl << *this);
 }
 
 

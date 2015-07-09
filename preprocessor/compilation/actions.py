@@ -74,11 +74,9 @@ class ActionCompiler(object):
         return procedure
 
     def process_builtin_constraint(self, procedure, index, printer, expression):
-        if not isinstance(expression, base.RelationalExpression):
-            return expression
-
-        const = base.ConstraintExpressionCatalog.instantiate(expression, index, printer)
-        return expression if const is None else const
+        if isinstance(expression, (base.ConstraintExpression, base.EffectExpression)):
+            return expression  # The builtin component is already instantiated
+        return base.ConstraintExpressionCatalog.instantiate(expression, index, printer)
 
     def generate_eff_procedure(self, expression):
         if isinstance(expression, AssignmentEffect):  # A functional effect

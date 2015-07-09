@@ -10,8 +10,7 @@
 #include <constraints/gecode/translator_repository.hxx>
 
 #include <gecode/int.hh>
-
-
+#include <boost/units/detail/utility.hpp>
 using namespace Gecode;
 
 namespace fs0 { namespace gecode {
@@ -92,17 +91,35 @@ public:
 
 	static void translateConstraints(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, const ScopedConstraint::vcptr& constraints) {
 		for (ScopedConstraint::cptr constraint:constraints) {
-			auto transObj = TranslatorRepository::instance().getConstraintTranslator( typeid(*constraint) );
-			assert(transObj != nullptr);
-			transObj->addConstraint(csp, translator, constraint);
+			const std::type_info& type = typeid(*constraint);
+			auto componentTranslator = TranslatorRepository::instance().getConstraintTranslator( typeid(*constraint) );
+			
+			if (componentTranslator == nullptr) {
+				// If no translator was registered for the concrete component, we try out with the few (extensional) generic translators that we have.
+				componentTranslator = TranslatorRepository::instance().getConstraintTranslator(constraint->getDefaultTypeId());
+				
+				// Otherwise, we cannot continue
+				if (!componentTranslator) throw std::runtime_error("No ConstraintTranslator registered for type " + boost::units::detail::demangle(type.name()));
+			}
+			
+			componentTranslator->addConstraint(csp, translator, constraint);
 		}
 	}
 
 	static void translateEffects(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, const ScopedEffect::vcptr& effects) {
 		for (ScopedEffect::cptr effect:effects) {
-			auto transObj = TranslatorRepository::instance().getEffectTranslator( typeid(*effect) );
-			assert(transObj != nullptr);
-			transObj->addConstraint(csp, translator, effect);
+			const std::type_info& type = typeid(*effect);
+			auto componentTranslator = TranslatorRepository::instance().getEffectTranslator(type);
+			
+			if (componentTranslator == nullptr) {
+				// If no translator was registered for the concrete component, we try out with the few (extensional) generic translators that we have.
+				componentTranslator = TranslatorRepository::instance().getEffectTranslator(effect->getDefaultTypeId());
+				
+				// Otherwise, we cannot continue
+				if (!componentTranslator) throw std::runtime_error("No EffectTranslator registered for type " + boost::units::detail::demangle(type.name()));
+			}
+			
+			componentTranslator->addConstraint(csp, translator, effect);
 		}
 	}
 
@@ -130,6 +147,7 @@ public:
 		// TODO posting a particular branching strategy might make sense to prioritize some branching strategy?
 		branch(csp, csp._X, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 	}
+
 };
 
 } } // namespaces

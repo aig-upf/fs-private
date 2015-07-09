@@ -23,7 +23,7 @@ void ActionManagerFactory::instantiateActionManager(const Problem& problem, cons
 
 		if ( true ) { //complexPreconditions || complexEffects) {
 			manager = new ComplexActionManager(*action, problem.getConstraints());
-			FDEBUG("main", "Generated CSP for action " << action->getName() << std::endl <<  *manager << std::endl);
+			FDEBUG("main", "Generated CSP for action " << *action << std::endl <<  *manager << std::endl);
 		} else {
 			manager = new UnaryActionManager(*action);
 		}

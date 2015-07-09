@@ -40,6 +40,11 @@ public:
 	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
 	bool isGoal(const RelaxedState& state) const;
 	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os) const {
+		return translator.print(os, *baseCSP);
+	}
+	
 protected:
 	//! We store here all the constraints that we want to take into account when determining if a relaxed state is a goal:
 	//! This includes both the explicit goal constraints plus the state constraints.
