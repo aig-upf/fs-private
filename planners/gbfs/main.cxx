@@ -33,9 +33,7 @@ typedef		HMaxHeuristic<FwdSearchProblem> RelaxedMaxHeuristic;
 template <typename State>
 class FS0_Node {
 public:
-
 	typedef State State_Type;
-
 
 	// Kill default constructors
 	explicit FS0_Node();
@@ -53,23 +51,22 @@ public:
 		is_dead_end = false;
 	}
 
-	virtual ~FS0_Node() {
-	}
+	virtual ~FS0_Node() {}
 
 	bool	has_parent() const { return parent != nullptr; }
 
-	void			print( std::ostream& os ) const {
+	void print( std::ostream& os ) const {
 		os << "{@ = " << this << ", s = " << state << ", h = " << h << ", parent = " << parent << "}";
 	}
 
-	bool   	operator==( const FS0_Node<State>& o ) const {
-		return state == o.state;
-	}
+	//! Forward the comparison to the planning state.
+	bool operator==( const FS0_Node<State>& o ) const { return state == o.state; }
 
 	// MRJ: This is part of the required interface of the Heuristic
 	template <typename Heuristic>
 	void	evaluate_with( Heuristic& heuristic ) {
-		float _h = heuristic.evaluate( state );
+		float _h = heuristic.evaluate(state);
+		FDEBUG("heuristic" , std::endl << "Computed heuristic value of " << _h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
 		if ( _h == std::numeric_limits<float>::infinity() ) {
 			is_dead_end = true;
 		}
@@ -125,8 +122,8 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	bool valid = checkPlanCorrect(plan);
 	if ( solved ) {
-		Printers::printPlan(plan, problemInfo, out);
-		Printers::printPlan(plan, problemInfo, plan_out);
+		PlanPrinter::printPlan(plan, problemInfo, out);
+		PlanPrinter::printPlan(plan, problemInfo, plan_out);
 	}
 
 	out << "Total time: " << total_time << std::endl;
@@ -148,7 +145,7 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	json_out << "\tvalid : " << ( valid ? "true" : "false" ) << "," << std::endl;
 	json_out << "\tplan : ";
 	if ( solved )
-		Printers::printPlanJSON( plan, problemInfo, json_out);
+		PlanPrinter::printPlanJSON( plan, problemInfo, json_out);
 	else
 		json_out << "null";
 	json_out << std::endl;

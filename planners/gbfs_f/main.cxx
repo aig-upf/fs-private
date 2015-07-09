@@ -153,8 +153,8 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	if ( engine.solve_model( plan ) ) {
 		assert(checkPlanCorrect(plan));
-		Printers::printPlan(plan, problemInfo, out);
-		Printers::printPlan(plan, problemInfo, plan_out);
+		PlanPrinter::printPlan(plan, problemInfo, out);
+		PlanPrinter::printPlan(plan, problemInfo, plan_out);
 	}
 	
 	float total_time = aptk::time_used() - t0;

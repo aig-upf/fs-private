@@ -209,8 +209,8 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	bool valid = checkPlanCorrect(plan);
 	if ( solved ) {
-		Printers::printPlan(plan, problemInfo, out);
-		Printers::printPlan(plan, problemInfo, plan_out);
+		PlanPrinter::printPlan(plan, problemInfo, out);
+		PlanPrinter::printPlan(plan, problemInfo, plan_out);
 	}
 
 	out << "Total time: " << total_time << std::endl;
@@ -249,7 +249,7 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	json_out << "\t}," << std::endl;
 	json_out << "\t\"plan\" : ";
 	if ( solved )
-		Printers::printPlanJSON( plan, problemInfo, json_out);
+		PlanPrinter::printPlanJSON( plan, problemInfo, json_out);
 	else
 		json_out << "null";
 	json_out << std::endl;

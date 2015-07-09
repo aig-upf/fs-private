@@ -4,7 +4,7 @@ import os
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Debug build', 'no'))
-vars.Add(BoolVariable('fdebug', 'Debug FS0', 'no'))
+vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
 
 # The LAPKT path can be optionally specified, otherwise we fetch it from the corresponding environment variable.
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT_PATH', ''), PathVariable.PathIsDir))
@@ -20,21 +20,31 @@ def which(program):
 
 env = Environment(variables=vars, ENV=os.environ, CXX='clang' if which('clang') else 'g++')
 
-build_dirname = 'build/debug' if env['debug'] else 'build/prod'
+if env['edebug']:
+	build_dirname = 'build/edebug'
+elif env['debug']:
+	build_dirname = 'build/debug'
+else:
+	build_dirname = 'build/prod'
 env.VariantDir(build_dirname, '.')
 
 Help(vars.GenerateHelpText(env))
 
 env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ])  # Flags common to all options
 
-if env['debug']:
+# Extreme debug implies normal debug as well
+if env['debug'] or env['edebug']:
 	env.Append(CCFLAGS = ['-g', '-DDEBUG' ])
-	if env['fdebug']:
-		env.Append(CCFLAGS = ['-DFS0_DEBUG'])
 	lib_name = 'fs0-debug'
 else:
 	env.Append(CCFLAGS = ['-Ofast', '-DNDEBUG' ])
 	lib_name = 'fs0'
+
+# Additionally, extreme debug implies a different name plus extra compilation flags
+if env['edebug']:
+	env.Append(CCFLAGS = ['-DFS0_DEBUG'])
+	lib_name = 'fs0-edebug'
+
 
 source_dirs = ['src', 'src/constraints', 'src/utils', 'src/heuristics']
 src_files = []

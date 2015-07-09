@@ -7,26 +7,31 @@
 
 namespace fs0 {
 
-void Printers::printPlan(const ActionPlan& plan, const Problem& problem, std::ostream& out) {
+void PlanPrinter::printPlan(const ActionPlan& plan, const Problem& problem, std::ostream& out) {
 	const ProblemInfo& problemInfo = problem.getProblemInfo();
 	for (int action:plan) {
 		out << problemInfo.getActionName(action) << std::endl;
 	}
 }
 
-void Printers::printPlan(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
+void PlanPrinter::printPlan(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
 	for (int action:plan) {
 		out << problemInfo.getActionName(action) << std::endl;
 	}
 }
 
-void Printers::printPlanJSON(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
+void PlanPrinter::printPlanJSON(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
 	out << "[";
 	for ( unsigned k = 0; k < plan.size(); k++ ) {
 		out << "\"" << problemInfo.getActionName(plan[k]) << "\"";
 		if ( k < plan.size() - 1 ) out << ", ";
 	}
 	out << "]";
+}
+
+std::ostream& PlanPrinter::print(std::ostream& os) const {
+	printPlan(_plan, *Problem::getCurrentProblem(), os);
+	return os;
 }
 
 } // namespaces

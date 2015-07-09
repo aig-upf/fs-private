@@ -12,6 +12,8 @@
 #include <utils/printers.hxx>
 #include <action_manager.hxx>
 
+#include <utils/logging.hxx>
+
 namespace fs0 {
 
 /**
@@ -72,12 +74,8 @@ public:
 // 		}
 		// Note that computing the relaxed heuristic by using some form of local consistency might yield plans that are not correct for the relaxation
 		// assert(ActionManager::checkRelaxedPlanSuccessful(*Problem::getCurrentProblem(), plan, _seed));
-		#ifdef FS0_DEBUG
-		std::cout << "Relaxed plan found, cost=" << plan.size() << std::endl;
-		Printers::printPlan(plan, *Problem::getCurrentProblem(), std::cout);
-		#endif
+		FDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << PlanPrinter(plan));
 
-		
 		return (float) plan.size();
 	}
 	

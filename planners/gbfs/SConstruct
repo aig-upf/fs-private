@@ -8,6 +8,7 @@ HOME = os.path.expanduser("~")
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Whether this is a debug build', 'no'))
+vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT_PATH', ''), PathVariable.PathIsDir))
 vars.Add(PathVariable('fs0', 'Path where the FS0 library is installed', os.getenv('FS0_PATH', ''), PathVariable.PathIsDir))
 
@@ -22,13 +23,18 @@ def which(program):
 
 env = Environment(variables=vars, ENV=os.environ, CXX='clang' if which('clang') else 'g++')
 
+
 env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ] )  # Flags common to all options
 env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
 
-if env['debug']:
+if env['edebug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DFS0_DEBUG' ] )
+	fs0_libname = 'fs0-edebug'
+	exe_name = 'gbfs-planner.edebug.bin'
+elif env['debug']:
+	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
 	fs0_libname = 'fs0-debug'
-	exe_name = 'gbfs-planner-debug.bin'
+	exe_name = 'gbfs-planner.debug.bin'
 else:
 	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
 	fs0_libname = 'fs0'

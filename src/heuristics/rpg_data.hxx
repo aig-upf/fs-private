@@ -56,9 +56,10 @@ public:
 	~RPGData() {};
 
 	//! Returns the number of layers of the RPG.
-	unsigned getNumLayers() const  {
-		return currentLayerIdx + 1; // 0-indexed!
-	}
+	unsigned getNumLayers() const  {return currentLayerIdx + 1; } // 0-indexed!
+	
+	//! Returns the current layer index
+	unsigned getCurrentLayerIdx() const  {return currentLayerIdx; }
 
 	//! Closes the last RPG layer and opens up a new one
 	void advanceLayer() {

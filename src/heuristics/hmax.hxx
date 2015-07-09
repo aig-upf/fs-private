@@ -15,7 +15,7 @@ public:
 	//! The hmax heuristic only cares about the size of the RP graph.
 	float computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpg) {
 		if (this->_problem.getConstraintManager()->isGoal(state)) {
-			return rpg.getNumLayers();
+			return rpg.getCurrentLayerIdx();
 		}
 		return -1;
 	}

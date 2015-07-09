@@ -55,7 +55,8 @@ float RelaxedPlanHeuristic<T>::evaluate(const State& seed) {
 		if (o == ScopedConstraint::Output::Failure) return std::numeric_limits<float>::infinity();
 		if (o == ScopedConstraint::Output::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 		
-		FFDEBUG("main", "RPG Layer #" << rpgData.getNumLayers() << ": " << relaxed);
+		
+		FFDEBUG("main", "RPG Layer #" << rpgData.getCurrentLayerIdx() << ": " << relaxed);
 		
 		float h = computeHeuristic(seed, relaxed, rpgData);
 		if (h > -1) {
