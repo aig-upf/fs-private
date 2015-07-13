@@ -141,7 +141,12 @@ bool GecodeConstraintManager::solveCSP(gecode::SimpleCSP* csp, Atom::vctr& suppo
 }
 
 void GecodeConstraintManager::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
-	//TODO
+	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
+	for (VariableIdx variable:allRelevantVariables) {
+		IntVarValues values(translator.resolveVariable(*csp, variable, GecodeCSPTranslator::VariableType::Input)); 
+		assert(values()); // Otherwise the CSP would be inconsistent.
+		support.push_back(Atom(variable, values.val()));
+	}
 }
 
 
