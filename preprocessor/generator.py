@@ -276,7 +276,10 @@ class Generator(object):
                 'actions': self.dump_action_data(),
                 'constraints': self.dump_constraints_data(),
                 'init': self.dump_init_data(),
-                'goal': self.dump_goal_data()}
+                'goal': self.dump_goal_data(),
+                'problem': {'domain': self.task.domain.name, 'instance': self.task.name}
+
+        }
 
         print("Problem '{problem}' translated to directory '{dir}'".format(
             problem=self.task.get_complete_name(), dir=self.out_dir)

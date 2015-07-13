@@ -74,6 +74,7 @@ public:
 	//! Tells if the given variable is relevant for the goal.
 	static bool isRelevantForGoal(VariableIdx var) { return getCurrentProblem()->_goalRelevantVars[var]; }
 
+
 protected:
 	State::cptr _initialState;
 
@@ -97,7 +98,7 @@ protected:
 
 
 	//! Bitmap holding what variables are relevant to the goal (i.e. appear on Goal, Precondition or Global constraints)
-	std::vector<bool>		_goalRelevantVars;
+	std::vector<bool> _goalRelevantVars;
 };
 
 

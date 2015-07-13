@@ -111,7 +111,7 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	std::ofstream out(out_dir + "/searchlog.out");
 	std::ofstream plan_out(out_dir + "/first.plan");
-	std::ofstream json_out( out_dir + "/search.json" );
+	std::ofstream json_out( out_dir + "/results.json" );
 
 	std::cout << "Writing results to " << out_dir + "/searchlog.out" << std::endl;
 
@@ -241,12 +241,9 @@ int main(int argc, char** argv) {
 
 	Logger::init("./logs");
 	Config::init("config.json");
-	Config::instance(); // Not strictly necessary, just to bootstrap the configuration object
 	
 	FINFO("main", "Planner configuration: " << std::endl << Config::instance());
-	
 	FINFO("main", "Generating the problem (" << data_dir << ")... ");
-	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	auto data = Loader::loadJSONObject(data_dir + "/problem.json");
 	Problem problem(data);
 

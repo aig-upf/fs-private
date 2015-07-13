@@ -142,5 +142,4 @@ std::vector<std::vector<T>> Loader::parseDoubleNumberList(const rapidjson::Value
 	return output;
 }
 
-
 } // namespaces

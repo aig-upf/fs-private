@@ -24,6 +24,8 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	std::cout << "\t Loading Variable index..." << std::endl;
 	loadVariableIndex(data["variables"]);
 	
+	loadProblemMetadata(data["problem"]);
+	
 	std::cout << "\t All indexes loaded!" << std::endl;
 }
 
@@ -146,6 +148,12 @@ bool ProblemInfo::checkValueIsValid(VariableIdx variable, ObjectIdx value) const
 	if (!isTypeBounded[type]) return true;
 	const auto& bounds = typeBounds[type];
 	return value >= bounds.first && value <= bounds.second;
+}
+
+
+void ProblemInfo::loadProblemMetadata(const rapidjson::Value& data) {
+	setDomainName(data["instance"].GetString());
+	setInstanceName(data["domain"].GetString());
 }
 
 } // namespaces

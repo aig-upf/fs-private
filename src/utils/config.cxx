@@ -66,6 +66,10 @@ void Config::validateConfig(const Config& config) {
 	if (config.getGoalManagerType() != GoalManagerType::Gecode && config.getGoalResolutionType() == CSPResolutionType::Full) {
 		throw InvalidConfiguration("Full Goal CSP resolution can only be performed with a Gecode Goal Manager");
 	}
+	
+	if (config.getActionPreconditionResolutionType() == CSPResolutionType::Approximate) {
+		throw InvalidConfiguration("Action CSP approximate resolution not yet implemented");
+	}	
 }
 
 std::ostream& Config::print(std::ostream& os) const {

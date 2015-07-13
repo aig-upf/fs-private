@@ -1,8 +1,9 @@
 {
 	"action_manager": "hybrid",
+	"precondition_resolution": "full",
+
 	"goal_manager": "gecode",
 	"goal_resolution": "approximate",
-	"precondition_resolution": "full",
 	
 	"heuristics": {
 		"plan_extraction": "propositional"

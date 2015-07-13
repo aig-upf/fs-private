@@ -54,6 +54,10 @@ protected:
 	std::unordered_map<std::string, TypeIdx> name_to_type;
 	std::vector<std::string> type_to_name;
 	
+	//! The names of the problem domain and instance
+	std::string _domain;
+	std::string _instance;
+	
 public:
 
 	ProblemInfo(const rapidjson::Document& data);
@@ -105,6 +109,11 @@ public:
 		assert(hasVariableBoundedDomain(variable));
 		return typeBounds[getVariableType(variable)];
 	}
+	
+	void setDomainName(const std::string& domain) { _domain = domain; }
+	void setInstanceName(const std::string& instance) { _instance = instance; }
+	const std::string& getDomainName() const { return _domain; }
+	const std::string& getInstanceName() const { return _instance; }
 
 protected:
 	
@@ -121,6 +130,8 @@ protected:
 	
 	//! Load all type-related info.
 	void loadTypeIndex(const rapidjson::Value& data);
+	
+	void loadProblemMetadata(const rapidjson::Value& data);
 };
 
 } // namespaces
