@@ -1,7 +1,7 @@
 
 #include <cassert>
 #include <iosfwd>
-#include <complex_action_manager.hxx>
+#include <gecode_action_manager.hxx>
 #include <constraints/constraint_manager.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <boost/container/flat_map.hpp>
@@ -17,7 +17,7 @@ using namespace fs0::gecode;
 
 namespace fs0 {
 
-ComplexActionManager::ComplexActionManager(const Action& action, const ScopedConstraint::vcptr& stateConstraints)
+GecodeActionManager::GecodeActionManager(const Action& action, const ScopedConstraint::vcptr& stateConstraints)
 	:  BaseActionManager(), baseCSP(nullptr), translator()
 {
 	
@@ -32,11 +32,11 @@ ComplexActionManager::ComplexActionManager(const Action& action, const ScopedCon
 	assert(st != Gecode::SpaceStatus::SS_FAILED); 
 }
 
-ComplexActionManager::~ComplexActionManager() {
+GecodeActionManager::~GecodeActionManager() {
 	delete baseCSP;
 }
 
-void ComplexActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg) {
+void GecodeActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg) {
 	// MRJ: This is rather ugly, the problem is that clone returns a pointer to Space...
 	// it may be a good idea to overwrite this method on SimpleCSP to avoid this downcast.
 	// GFM: Can probably be safely changed to a static cast??
@@ -70,7 +70,7 @@ void ComplexActionManager::processAction(unsigned actionIdx, const Action& actio
 
 
 
-const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const {
+const void GecodeActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actionIdx, const Action& action, RPGData& rpg) const {
 	unsigned num_solutions = 0;
 	DFS<SimpleCSP> engine(csp);
 
@@ -111,7 +111,7 @@ const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actio
 }
 
 
-void ComplexActionManager::addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp) {
+void GecodeActionManager::addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp) {
 	// TODO - This could be built incrementally to incorporate values added in this layer by previous actions in the iteration!
 	auto& csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Output);
 	for (ObjectIdx value:*(layer.getValues(variable))) {
@@ -120,7 +120,7 @@ void ComplexActionManager::addNoveltyConstraints(const VariableIdx variable, con
 }
 
 
-VariableIdxSet ComplexActionManager::getAllRelevantVariables( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
+VariableIdxSet GecodeActionManager::getAllRelevantVariables( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
 	VariableIdxSet variables;
 	// Add the variables mentioned by state constraints
 	// for ( ScopedConstraint::cptr global : stateConstraints ) variables.insert( global->getScope().begin(), global->getScope().end() );
@@ -131,14 +131,14 @@ VariableIdxSet ComplexActionManager::getAllRelevantVariables( const Action& a, c
 	return variables;
 }
 
-VariableIdxSet ComplexActionManager::getAllAffectedVariables(const Action& a) {
+VariableIdxSet GecodeActionManager::getAllAffectedVariables(const Action& a) {
 	VariableIdxSet variables;
 	// Add the variables appearing in the scope of the effects
 	for ( ScopedEffect::cptr effect : a.getEffects() ) variables.insert( effect->getAffected() );
 	return variables;
 }
 
-SimpleCSP::ptr ComplexActionManager::createCSPVariables( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
+SimpleCSP::ptr GecodeActionManager::createCSPVariables( const Action& a, const ScopedConstraint::vcptr& stateConstraints ) {
 	// Determine input and output variables for this action: we first amalgamate variables into a set
 	// to avoid repetitions, then generate corresponding CSP variables, then create the CSP model with them
 	// and finally add the model constraints.
@@ -164,13 +164,13 @@ SimpleCSP::ptr ComplexActionManager::createCSPVariables( const Action& a, const 
 	return csp;
 }
 
-void ComplexActionManager::addDefaultConstraints(const Action& a, const ScopedConstraint::vcptr& stateConstraints) {
+void GecodeActionManager::addDefaultConstraints(const Action& a, const ScopedConstraint::vcptr& stateConstraints) {
 	// translateConstraints(*baseCSP, translator, stateConstraints); // state constraints
 	Helper::translateConstraints(*baseCSP, translator, a.getConstraints()); // Action preconditions
 	Helper::translateEffects(*baseCSP, translator, a.getEffects()); // Action preconditions
 }
 
-std::ostream& ComplexActionManager::print(std::ostream& os) const {
+std::ostream& GecodeActionManager::print(std::ostream& os) const {
 	return translator.print(os, *baseCSP);
 }
 

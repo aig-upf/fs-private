@@ -18,7 +18,7 @@ class RPGData;
 /**
  * An action manager based on modeling the action preconditions and effects as a CSP and solving it approximately / completely with Gecode.
  */
-class ComplexActionManager : public BaseActionManager
+class GecodeActionManager : public BaseActionManager
 {
 protected:
 	//!
@@ -29,8 +29,8 @@ protected:
 
 public:
 	//!
-	ComplexActionManager(const Action& action, const ScopedConstraint::vcptr& stateConstraints);
-	~ComplexActionManager();
+	GecodeActionManager(const Action& action, const ScopedConstraint::vcptr& stateConstraints);
+	~GecodeActionManager();
 
 	//!
 	void processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg);

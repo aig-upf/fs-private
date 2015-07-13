@@ -20,7 +20,7 @@ class Problem; class RPGData;
  *     we use an exact method implemented by the UnaryActionManager.
  *
  * (2) In the general case, i.e. when the above restrictions on the arity of the procedures do not hold,
- *     we use a ComplexActionManager that involves a Gecode model.
+ *     we use a GecodeActionManager that involves a Gecode model.
  */
 class ActionManagerFactory
 {
@@ -90,7 +90,7 @@ protected:
 };
 
 
-// This is probably completely subsumed by the ComplexActionManager and should be erased.
+// This is probably completely subsumed by the GecodeActionManager and should be erased.
 //
 // class GenericActionManager : public BaseActionManager
 // {

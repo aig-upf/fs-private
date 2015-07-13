@@ -3,7 +3,7 @@
 #include <iosfwd>
 
 #include <relaxed_action_manager.hxx>
-#include <complex_action_manager.hxx>
+#include <gecode_action_manager.hxx>
 #include <utils/cartesian_product.hxx>
 #include <constraints/constraint_manager.hxx>
 #include <heuristics/rpg_data.hxx>
@@ -22,7 +22,7 @@ BaseActionManager* ActionManagerFactory::create(const Problem& problem, const Ac
 	BaseActionManager* manager = nullptr;
 
 	if (manager_t == Config::ActionManagerType::Gecode || complexPreconditions || complexEffects) {
-		manager = new ComplexActionManager(action, problem.getConstraints());
+		manager = new GecodeActionManager(action, problem.getConstraints());
 		FDEBUG("main", "Generated CSP for action " << action << std::endl <<  *manager << std::endl);
 	} else {
 		manager = new UnaryActionManager(action);
