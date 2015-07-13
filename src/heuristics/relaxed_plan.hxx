@@ -11,8 +11,6 @@
 
 namespace fs0 {
 
-class RPGraph;
-
 template < typename SearchModel >
 class RelaxedPlanHeuristic {
 public:

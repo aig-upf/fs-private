@@ -21,8 +21,8 @@ namespace fs0 {
 class RPGData
 {
 public:
-	//! <layer ID, Action ID, action supporting atoms>
-	typedef std::tuple<unsigned, ActionIdx, Atom::vctrp> AtomSupport;
+	//! <layer ID, Action ID, action support, atom support>
+	typedef std::tuple<unsigned, ActionIdx, Atom::vctrp, Atom::vctrp> AtomSupport;
 	typedef std::map<Atom, AtomSupport> SupportMap;
 
 protected:
@@ -95,20 +95,20 @@ public:
 	}
 
 	//! The version with hint assumes that the atom needs to be inserted.
-	void add(const Atom& atom, ActionIdx action, Atom::vctrp causes, SupportMap::iterator hint) {
-		// updateEffectMapSimple(fact, RPGraph::pruneSeedSupporters(extraCauses, _seed));
-		auto it = _effects.insert(hint, std::make_pair(atom, std::make_tuple(currentLayerIdx, action, causes)));
-
+	void add(const Atom& atom, ActionIdx action, Atom::vctrp actionSupport, Atom::vctrp atomSupport, SupportMap::iterator hint) {
+		// updateEffectMapSimple(fact, RelaxedPlanExtractor::pruneSeedSupporters(extraCauses, _seed));
+		auto it = _effects.insert(hint, std::make_pair(atom, std::make_tuple(currentLayerIdx, action, actionSupport, atomSupport)));
+		
 		// Keep a pointer to the inserted atom. Since the current strategy guarantees that we only insert one atom the first time we encounter it,
 		// we can be sure that pointers in the 'novelAtoms' will always be valid and that no pointer will be intended to point to the same atom twice.
 		// BEWARE that if we change the update strategy, this might no longer hold.
 		novelAtoms.push_back(&(it->first));
 	}
-
-	void add(const Atom& atom, ActionIdx action, Atom::vctrp causes) {
+	
+	void add(const Atom& atom, ActionIdx action, Atom::vctrp actionSupport, Atom::vctrp atomSupport) {
 		auto hint = getInsertionHint(atom);
 		if (!hint.first) return; // Don't insert the atom if it was already tracked by the RPG
-		add(atom, action, causes, hint.second);
+		add(atom, action, actionSupport, atomSupport, hint.second);
 	}
 
 	friend std::ostream& operator<<(std::ostream &os, const RPGData& data) { return data.print(os); }
@@ -117,8 +117,11 @@ public:
 	std::ostream& print(std::ostream& os) const {
 		os << "All RPG accumulated atoms (" << _effects.size() << "): ";
 		for (const auto& x:_effects) {
-			os << x.first  << " (action #" << std::get<1>(x.second) << "), (layer #" << std::get<0>(x.second) << "), (support: ";
+			os << x.first  << " (action #" << std::get<1>(x.second) << "), (layer #" << std::get<0>(x.second) << "), (action support: ";
 			printAtoms(std::get<2>(x.second), os);
+			os << "), ";
+			os << "(atom support: ";
+			printAtoms(std::get<3>(x.second), os);
 			os << "), ";
 		}
 		os << std::endl;

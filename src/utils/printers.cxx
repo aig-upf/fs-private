@@ -4,6 +4,7 @@
 #include <utils/printers.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
+#include <heuristics/relaxed_plan_extractor.hxx>
 
 namespace fs0 {
 
@@ -32,6 +33,12 @@ void PlanPrinter::printPlanJSON(const std::vector<Action::IdType>& plan, const P
 std::ostream& PlanPrinter::print(std::ostream& os) const {
 	printPlan(_plan, *Problem::getCurrentProblem(), os);
 	return os;
+}
+
+void SupportedPlanPrinter::printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out) {
+	for (const auto& element:plan) {
+		out << element << std::endl;
+	}
 }
 
 } // namespaces

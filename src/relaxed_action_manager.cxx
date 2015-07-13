@@ -7,7 +7,6 @@
 #include <utils/cartesian_product.hxx>
 #include <constraints/constraint_manager.hxx>
 #include <heuristics/rpg_data.hxx>
-#include <heuristics/rpg.hxx>
 
 #include <utils/logging.hxx>
 
@@ -93,9 +92,10 @@ void UnaryActionManager::processEffects(unsigned actionIdx, const Action& action
 			auto hint = rpg.getInsertionHint(atom);
 
 			if (hint.first) {
-				Atom::vctrp support = std::make_shared<Atom::vctr>();
-				completeAtomSupport(actionScope, actionProjection, effectScope, support);
-				rpg.add(atom, actionIdx, support, hint.second);
+				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>(); // 0-ary effects will have no atom support
+				Atom::vctrp actionSupport = std::make_shared<Atom::vctr>();
+				completeAtomSupport(actionScope, actionProjection, effectScope, actionSupport);
+				rpg.add(atom, actionIdx, actionSupport, atomSupport, hint.second);
 			}
 		}
 
@@ -108,10 +108,11 @@ void UnaryActionManager::processEffects(unsigned actionIdx, const Action& action
 				auto hint = rpg.getInsertionHint(atom);
 
 				if (hint.first) {
-					Atom::vctrp support = std::make_shared<Atom::vctr>();
-					support->push_back(Atom(effectScope[0], value));// Just insert the only value
-					completeAtomSupport(actionScope, actionProjection, effectScope, support);
-					rpg.add(atom, actionIdx, support, hint.second);
+				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>();
+				Atom::vctrp actionSupport = std::make_shared<Atom::vctr>();
+					atomSupport->push_back(Atom(effectScope[0], value));// Just insert the only value
+					completeAtomSupport(actionScope, actionProjection, effectScope, actionSupport);
+					rpg.add(atom, actionIdx, actionSupport, atomSupport, hint.second);
 				}
 			}
 		}
@@ -148,7 +149,6 @@ void UnaryActionManager::processEffects(unsigned actionIdx, const Action& action
 }
 
 void UnaryActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
-
 	for (VariableIdx variable:actionScope) {
 		if (effectScope.empty() || variable != effectScope[0]) { // (We know that the effect scope has at most one variable)
 			ObjectIdx value = *(actionProjection.at(variable)->cbegin());

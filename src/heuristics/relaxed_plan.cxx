@@ -4,7 +4,7 @@
 #include <fwd_search_prob.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <utils/projections.hxx>
-#include <heuristics/rpg.hxx>
+#include <heuristics/relaxed_plan_extractor.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <utils/logging.hxx>
 
@@ -69,8 +69,8 @@ template <typename T>
 float RelaxedPlanHeuristic<T>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
 	Atom::vctr causes;
 	if (_problem.getConstraintManager()->isGoal(seed, state, causes)) {
-		RPGraph rpg = RPGraph(seed, rpgData);
-		auto cost = rpg.computeRelaxedPlanCost(causes);
+		ApproximateRelaxedPlanExtractor extractor(seed, rpgData);
+		auto cost = extractor.computeRelaxedPlanCost(causes);
 		return cost;
 	} else {
 		return -1;

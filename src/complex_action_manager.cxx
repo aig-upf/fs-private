@@ -81,25 +81,26 @@ const void ComplexActionManager::solveCSP(gecode::SimpleCSP* csp, unsigned actio
 			auto hint = rpg.getInsertionHint(atom);
 			
 			if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
-				Atom::vctrp support = std::make_shared<Atom::vctr>();
+				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>();
+				Atom::vctrp actionSupport = std::make_shared<Atom::vctr>();
 				boost::container::flat_set<VariableIdx> processed;
 				
 				// TODO - The set of variables related to the support of each effect could indeed be precomputed in order to speed up this.
 				// First extract the supports related to the variables relevant to the particular effect
 				for (VariableIdx variable: effect->getScope()) {
-					support->push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
+					atomSupport->push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
 					processed.insert(variable);
 				}
 				
 				// And now those related to the variables relevant to the action precondition - without repeating those that might already have been part of the effect.
 				for (VariableIdx variable: action.getScope()) {
 					if (processed.find(variable) == processed.end()) {
-						support->push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
+						actionSupport->push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
 					}
 				}
 				
 				// Once the support is computed, we insert the new atom into the RPG data structure
-				rpg.add(atom, actionIdx, support, hint.second);
+				rpg.add(atom, actionIdx, actionSupport, atomSupport, hint.second);
 			}
 		}
 		++num_solutions;
