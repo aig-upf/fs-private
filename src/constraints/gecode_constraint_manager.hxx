@@ -78,6 +78,9 @@ protected:
 	
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool solveCSP(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const;
+	
+	//! Recovers an approximate support for the goal
+	void recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const ;
 };
 
 } // namespaces

@@ -57,5 +57,10 @@ namespace fs0 {
 	public:
 		UnimplementedFeatureException(const std::string& msg) : std::runtime_error(msg) {}
 	};
+	
+	class InvalidConfiguration : public std::runtime_error {
+	public:
+		InvalidConfiguration(const std::string& msg) : std::runtime_error(msg) {}
+	};
 
 } // namespaces

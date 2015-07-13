@@ -7,6 +7,7 @@
 #include <utils/utils.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <utils/logging.hxx>
+#include <utils/config.hxx>
 
 #include <gecode/driver.hh>
 
@@ -70,14 +71,18 @@ bool GecodeConstraintManager::isGoal(const State& seed, const RelaxedState& laye
 
 	// Setup domain constraints etc.
 	Helper::addRelevantVariableConstraints(*csp, translator, allRelevantVariables, layer);
+
+	if (!csp->checkConsistency()) {
+		delete csp;
+		return false;
+	}
 	
 	bool res;
-	if (true) {  // Solve the CSP completely
+	if (Config::instance().getGoalResolutionType() == Config::CSPResolutionType::Full) {  // Solve the CSP completely
 		res = solveCSP(csp, support, seed);
 	} else { // Check only local consistency
-// 		if (!csp->checkConsistency()) return; // We're done
-		// TODO
-		res = false;
+		res = true;
+		recoverApproximateSupport(csp, support, seed);
 	}
 	
 	delete csp;
@@ -100,15 +105,15 @@ SimpleCSP::ptr GecodeConstraintManager::createCSPVariables() {
 
 	SimpleCSP::ptr csp = new SimpleCSP;
 
+	// Index all the variables relevant to the goal
 	IntVarArgs variables;
-	// Index the relevant variables first
 	for (VariableIdx var:allRelevantVariables) {
 		unsigned id = Helper::processVariable( *csp, var, variables );
 		translator.registerCSPVariable(var, GecodeCSPTranslator::VariableType::Input, id);
 	}
 
-	IntVarArray tmp( *csp, variables );
-	csp->_X.update( *csp, false, tmp );
+	IntVarArray tmp(*csp, variables);
+	csp->_X.update(*csp, false, tmp);
 
 	return csp;
 }
@@ -133,6 +138,10 @@ bool GecodeConstraintManager::solveCSP(gecode::SimpleCSP* csp, Atom::vctr& suppo
 		return true;
 	}
 	return false;
+}
+
+void GecodeConstraintManager::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
+	//TODO
 }
 
 
