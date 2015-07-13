@@ -1,9 +1,11 @@
 
 
 #include <constraints/problem_manager.hxx>
+#include "gecode_constraint_manager.hxx"
 #include <problem.hxx>
 #include <utils/projections.hxx>
 #include <utils/utils.hxx>
+#include <utils/config.hxx>
 
 namespace fs0 {
 
@@ -111,6 +113,16 @@ void PlanningConstraintManager::extractGoalCausesArbitrarily(const State& seed, 
 		}
 	}
 }
+
+BaseConstraintManager* PlanningConstraintManagerFactory::create(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints) {
+	const Config::GoalManagerType manager_t = Config::instance().getGoalManagerType();
+	if (manager_t == Config::GoalManagerType::Gecode) {
+		return new GecodeConstraintManager(goalConstraints, stateConstraints);
+	} else {
+		return new PlanningConstraintManager(goalConstraints, stateConstraints);
+	}
+}
+
 
 } // namespaces
 

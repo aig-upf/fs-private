@@ -9,31 +9,38 @@
 #include <heuristics/rpg_data.hxx>
 
 #include <utils/logging.hxx>
+#include "utils/config.hxx"
 
 namespace fs0 {
 
-void ActionManagerFactory::instantiateActionManager(const Problem& problem, const Action::vcptr& actions) {
 
+BaseActionManager* ActionManagerFactory::create(const Problem& problem, const Action& action) {
+	const Config::ActionManagerType manager_t = Config::instance().getActionManagerType();
+
+	bool complexPreconditions = actionHasHigherArityPreconditions(action);
+	bool complexEffects = actionHasHigherArityEffects(action);
+	BaseActionManager* manager = nullptr;
+
+	if (manager_t == Config::ActionManagerType::Gecode || complexPreconditions || complexEffects) {
+		manager = new ComplexActionManager(action, problem.getConstraints());
+		FDEBUG("main", "Generated CSP for action " << action << std::endl <<  *manager << std::endl);
+	} else {
+		manager = new UnaryActionManager(action);
+		FDEBUG("main", "Generated a UnaryActionManager for action " << action << std::endl <<  *manager << std::endl);
+	}
+
+	return manager;
+}
+
+void ActionManagerFactory::instantiate(const Problem& problem, const Action::vcptr& actions) {
 	for (const Action::cptr& action:actions) {
-		BaseActionManager* manager = nullptr;
-
-		bool complexPreconditions = actionHasHigherArityPreconditions(action);
-		bool complexEffects = actionHasHigherArityEffects(action);
-
-		if ( true ) { //complexPreconditions || complexEffects) {
-			manager = new ComplexActionManager(*action, problem.getConstraints());
-			FDEBUG("main", "Generated CSP for action " << *action << std::endl <<  *manager << std::endl);
-		} else {
-			manager = new UnaryActionManager(*action);
-		}
-
-		action->setConstraintManager(manager);
+		action->setConstraintManager(create(problem, *action));
 	}
 }
 
-bool ActionManagerFactory::actionHasHigherArityPreconditions(const Action::cptr action) {
+bool ActionManagerFactory::actionHasHigherArityPreconditions(const Action& action) {
 	bool needs_generic_manager = false;
-	for (const ScopedConstraint::cptr constraint:action->getConstraints()) {
+	for (const ScopedConstraint::cptr constraint:action.getConstraints()) {
 		unsigned arity = constraint->getArity();
 		if (arity == 0) {
 			throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
@@ -49,15 +56,16 @@ bool ActionManagerFactory::actionHasHigherArityPreconditions(const Action::cptr 
 	return needs_generic_manager;
 }
 
-bool ActionManagerFactory::actionHasHigherArityEffects(const Action::cptr action) {
-	bool result = false;
-	for (const ScopedEffect::cptr effect:action->getEffects()) {
+bool ActionManagerFactory::actionHasHigherArityEffects(const Action& action) {
+	for (const ScopedEffect::cptr effect:action.getEffects()) {
 		if (effect->getArity() == 0 && !effect->applicable()) {
 			throw std::runtime_error("A 0-ary non-applicable effect was detected.");
 		}
-		if (effect->getArity() > 1) result = true;
+		if (effect->getArity() > 1) {
+			return true;
+		}
 	}
-	return result;
+	return false;
 }
 
 

@@ -46,6 +46,7 @@ public:
 	}
 };
 
+
 /**
  * A Relaxed Plan extractor. This class is used to perform plan extraction from
  * an already existing RPG data structure. Two different subclasses exist differing
@@ -117,12 +118,12 @@ protected:
 
 
 /**
- * In a CompleteRelaxedPlanExtractor, a relaxed plan is composed not only of actions but
+ * In a SupportedRelaxedPlanExtractor, a relaxed plan is composed not only of actions but
  * only of the conditions under which those actions are performed, e.g. an action being such as:
  * "move(right), when the current position is (1, 3)"
  * This yields longer relaxed plans.
  */
-class CompleteRelaxedPlanExtractor : public BaseRelaxedPlanExtractor {
+class SupportedRelaxedPlanExtractor : public BaseRelaxedPlanExtractor {
 protected:
 	std::set<SupportedAction> supporters;
 
@@ -131,7 +132,7 @@ public:
 	 * @param seed The original, non-relaxed state.
  	 * @param data The data structure representing the planning graph
 	 */
-	CompleteRelaxedPlanExtractor(const State& seed, const RPGData& data) :
+	SupportedRelaxedPlanExtractor(const State& seed, const RPGData& data) :
 		BaseRelaxedPlanExtractor(seed, data), supporters()
 	{}
 
@@ -153,11 +154,11 @@ protected:
 };
 
 /**
- * In an ApproximateRelaxedPlanExtractor, a relaxed plan is simply composed of a list of actions,
+ * In an PropositionalRelaxedPlanExtractor, a relaxed plan is simply composed of a list of actions,
  * not making any distinction with respect to the values of variables relevant for the action effects
  * under which the action is undertaken.
  */
-class ApproximateRelaxedPlanExtractor : public BaseRelaxedPlanExtractor {
+class PropositionalRelaxedPlanExtractor : public BaseRelaxedPlanExtractor {
 protected:
 		std::vector<std::set<ActionIdx>> perLayerSupporters;
 
@@ -166,7 +167,7 @@ public:
 	 * @param seed The original, non-relaxed state.
  	 * @param data The data structure representing the planning graph
 	 */
-	ApproximateRelaxedPlanExtractor(const State& seed, const RPGData& data) :
+	PropositionalRelaxedPlanExtractor(const State& seed, const RPGData& data) :
 		BaseRelaxedPlanExtractor(seed, data), perLayerSupporters(data.getNumLayers())
 	{}
 
@@ -199,6 +200,11 @@ protected:
 
 		return (float) plan.size();
 	}
+};
+
+class RelaxedPlanExtractorFactory {
+public:
+	static BaseRelaxedPlanExtractor* create(const State& seed, const RPGData& data);
 };
 
 } // namespaces

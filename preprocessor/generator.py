@@ -203,6 +203,7 @@ def compile_translation(translation_dir, planner, debug=False, predstate=False):
         planner_dir = os.path.abspath(planner)
 
     shutil.copy(planner_dir + '/main.cxx', translation_dir)
+    shutil.copy(planner_dir + '/config.json', translation_dir)
     shutil.copy(planner_dir + '/SConstruct', translation_dir + '/SConstruct')
 
     command = "scons {} {}".format(debug_flag, predstate_flag)

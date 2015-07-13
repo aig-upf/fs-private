@@ -17,6 +17,7 @@
 #include <state.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
+#include <utils/config.hxx>
 #include <problem_info.hxx>
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
@@ -239,6 +240,11 @@ int main(int argc, char** argv) {
 	}
 
 	Logger::init("./logs");
+	Config::init("config.json");
+	Config::instance(); // Not strictly necessary, just to bootstrap the configuration object
+	
+	FINFO("main", "Planner configuration: " << std::endl << Config::instance());
+	
 	FINFO("main", "Generating the problem (" << data_dir << ")... ");
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
 	auto data = Loader::loadJSONObject(data_dir + "/problem.json");

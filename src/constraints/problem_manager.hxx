@@ -95,5 +95,12 @@ protected:
 	void extractGoalCausesArbitrarily(const State& seed, const DomainMap& domains, Atom::vctr& causes, std::vector<bool>& set) const;
 };
 
+
+class PlanningConstraintManagerFactory {
+public:
+	//! A factory method to create the appropriate manager.
+	static BaseConstraintManager* create(const ScopedConstraint::vcptr& goalConstraints, const ScopedConstraint::vcptr& stateConstraints);
+};
+
 } // namespaces
 

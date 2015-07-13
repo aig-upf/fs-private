@@ -45,13 +45,12 @@ void Problem::bootstrap() {
 	compileConstraints();
 
 	// Create the constraint manager
-// 	ctrManager = new PlanningConstraintManager(goalConstraints, stateConstraints);
-	ctrManager = new GecodeConstraintManager(goalConstraints, stateConstraints);
+	ctrManager = PlanningConstraintManagerFactory::create(goalConstraints, stateConstraints);
 	FDEBUG("main", "Generated goal CSP:" << std::endl <<  *ctrManager << std::endl);
 	
 
 	// Creates the appropriate applicability manager depending on the type and arity of action precondition constraints.
-	ActionManagerFactory::instantiateActionManager(*this, _actions);
+	ActionManagerFactory::instantiate(*this, _actions);
 
 	_goalRelevantVars.resize(_problemInfo.getNumVariables());
 	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )

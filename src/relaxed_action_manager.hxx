@@ -26,14 +26,17 @@ class ActionManagerFactory
 {
 public:
 	//! A factory method to create the appropriate manager.
-	static void instantiateActionManager(const Problem& problem, const Action::vcptr& actions);
+	static BaseActionManager* create(const Problem& problem, const Action& action);
+	
+	//! Helper to instantiate the manager for all actions in a given vector
+	static void instantiate(const Problem& problem, const Action::vcptr& actions);
 
 protected:
 	//! Returns true iff at least one of the preconditions of the action has arity higher than one.
-	static bool actionHasHigherArityPreconditions(const Action::cptr action);
+	static bool actionHasHigherArityPreconditions(const Action& action);
 
 	//! Returns true iff at least one of the effects of the action has arity higher than one.
-	static bool actionHasHigherArityEffects(const Action::cptr action);
+	static bool actionHasHigherArityEffects(const Action& action);
 };
 
 

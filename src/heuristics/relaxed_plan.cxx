@@ -69,8 +69,9 @@ template <typename T>
 float RelaxedPlanHeuristic<T>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
 	Atom::vctr causes;
 	if (_problem.getConstraintManager()->isGoal(seed, state, causes)) {
-		ApproximateRelaxedPlanExtractor extractor(seed, rpgData);
-		auto cost = extractor.computeRelaxedPlanCost(causes);
+		BaseRelaxedPlanExtractor* extractor = RelaxedPlanExtractorFactory::create(seed, rpgData);
+		float cost = extractor->computeRelaxedPlanCost(causes);
+		delete extractor;
 		return cost;
 	} else {
 		return -1;

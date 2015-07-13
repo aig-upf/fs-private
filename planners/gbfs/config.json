@@ -1,0 +1,8 @@
+{
+	"action_manager": "hybrid",
+	"goal_manager": "basic",
+	
+	"heuristics": {
+		"plan_extraction": "propositional"
+	}
+}
