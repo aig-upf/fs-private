@@ -651,9 +651,9 @@ class ConstraintExpressionCatalog(object):
     @classmethod
     def instantiate(cls, expression, index, printer):
         s, args = expression.symbol, expression.arguments
-        scope, binding, parameters = classify_arguments(args, index, printer)
+        scope, nested, parameters = classify_arguments(args, index, printer)
 
-        if len(args) != 2:
+        if len(args) != 2 or len(nested) > 0:
             return None
 
         # Handle first equality constraints
@@ -726,7 +726,7 @@ class EffectExpressionCatalog(object):
 
 def classify_arguments(arguments, index, printer):
     scope = []
-    binding = []
+    nested = []
     parameters = []
     for arg in arguments:
         if isinstance(arg, VariableExpression):
@@ -745,11 +745,11 @@ def classify_arguments(arguments, index, printer):
             if arg.is_tree_static():
                 parameters.append(printer.print(arg))
             else:
-                scope.append(printer.print(arg))
+                nested.append(printer.print(arg))
 
         else:
             raise RuntimeError("Unknown argument")
-    return scope, binding, parameters
+    return scope, nested, parameters
 
 
 class ProcessedComponent(object):
