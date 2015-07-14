@@ -473,6 +473,9 @@ class Expression(object):
                     return False
         return True
 
+    def is_tree_static(self):
+        return self.is_static() and self.is_subtree_static()
+
     def consolidate_variables(self):
         """
         Traverses the parse tree and substitutes all those fluent functional or predicative expressions by their
@@ -739,7 +742,10 @@ def classify_arguments(arguments, index, printer):
             parameters.append(index.object_idx[arg.symbol])
 
         elif isinstance(arg, StaticFunctionalExpression):
-            parameters.append(printer.print(arg))
+            if arg.is_tree_static():
+                parameters.append(printer.print(arg))
+            else:
+                scope.append(printer.print(arg))
 
         else:
             raise RuntimeError("Unknown argument")
