@@ -1,6 +1,7 @@
 
 
 #include <constraints/scoped_alldiff_constraint.hxx>
+#include <algorithm>
 
 namespace fs0 {
 
