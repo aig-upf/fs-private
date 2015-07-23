@@ -80,7 +80,9 @@ public:
 	//! Tells if the given variable is relevant for the goal.
 	static bool isRelevantForGoal(VariableIdx var) { return getCurrentProblem()->_goalRelevantVars[var]; }
 
-	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
 
 protected:
 	State::cptr _initialState;

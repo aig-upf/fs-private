@@ -139,7 +139,7 @@ Term* ActionSchemaParameter::process(const ObjectIdxVector& binding) const {
 }
 
 std::ostream& ActionSchemaParameter::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << "[" << _position << "]";
+	os << "?" << _position;
 	return os;
 }
 
@@ -164,7 +164,7 @@ void AtomicFormula::computeScope(VariableIdxVector& scope) const {
 std::ostream& AtomicFormula::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& AtomicFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << lhs << " " << AtomicFormula::symbol_to_string.at(symbol()) << " " << rhs;
+	os << *lhs << " " << AtomicFormula::symbol_to_string.at(symbol()) << " " << *rhs;
 	return os;
 }
 
@@ -175,21 +175,21 @@ AtomicFormulaSchema::cptr AtomicFormulaSchema::create(const std::string& symbol,
 std::ostream& AtomicFormulaSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& AtomicFormulaSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << lhs << " " << AtomicFormula::symbol_to_string.at(symbol) << " " << rhs;
+	os << *lhs << " " << AtomicFormula::symbol_to_string.at(symbol) << " " << *rhs;
 	return os;
 }
 
 std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << lhs << " := " << rhs;
+	os << *lhs << " := " << *rhs;
 	return os;
 }
 
 std::ostream& ActionEffectSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& ActionEffectSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << lhs << " := " << rhs;
+	os << *lhs << " := " << *rhs;
 	return os;
 }
 

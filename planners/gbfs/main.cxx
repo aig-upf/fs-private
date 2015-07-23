@@ -175,7 +175,7 @@ void reportActionsInfo(const Problem& problem) {
 }
 
 void reportProblemStats(const Problem& problem) {
-
+	
 // 	std::cout << "Number of object types: " << st.get_num_types() << std::endl;
 	std::cout << "Number of objects: " << problem.getProblemInfo().getNumObjects() << std::endl;
 	std::cout << "Number of state variables: " << problem.getProblemInfo().getNumVariables() << std::endl;
@@ -188,8 +188,6 @@ void reportProblemStats(const Problem& problem) {
 
 	std::cout << "Number of state constraints: " << problem.getConstraints().size() << std::endl;
 	std::cout << "Number of goal constraints: " << problem.getGoalConstraints().size() << std::endl;
-
-// 	reportActionsInfo(problem);
 }
 
 
@@ -248,20 +246,16 @@ int main(int argc, char** argv) {
 	Problem problem(data);
 
 	generate(data, data_dir, problem);
-
-	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
-
-
+	FINFO("main", "Problem bootstrapped" << std::endl << problem);
+	
+	
 	reportProblemStats(problem);
 	problem.analyzeVariablesRelevance();
 
-	std::cout << "Creating Search_Problem instance" << std::endl;
 	FwdSearchProblem search_prob(problem);
 
-
 	std::cout << "Done!" << std::endl;
-
 
 	// Instantiate the engine
 	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), timeout, out_dir);

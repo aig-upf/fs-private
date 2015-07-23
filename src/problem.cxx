@@ -163,4 +163,16 @@ SimpleApplicableActionSet Problem::getApplicableActions(const State& s) const {
 	return SimpleApplicableActionSet(StandardApplicabilityManager(s, getConstraints()), _actions);
 }
 
+
+std::ostream& Problem::print(std::ostream& os) const { 
+	const fs0::ProblemInfo& info = getProblemInfo();
+	os << "Planning Problem [domain:" << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;
+	
+	os << "Action schemata" << std::endl;
+	for (const ActionSchema::cptr elem:_schemata) {
+		os << *elem << std::endl;
+	}
+	return os;
+}
+
 } // namespaces
