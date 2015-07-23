@@ -501,10 +501,17 @@ class Expression(object):
         relevant.append(var)
         return VariableExpression(var)
 
+    def dump(self, object_index, parameter_index):
+        raise RuntimeError("Needs to be subclassed")
+
 
 class FunctionalExpression(Expression):
     def compute_relevant_variables(self, relevant):
         return self._compute_fluent_relevant_variables(relevant)
+
+    def dump(self, objects, parameters):
+        subterms = [elem.dump(objects, parameters) for elem in self.arguments]
+        return dict(type='nested', symbol=self.symbol, subterms=subterms)
 
 
 class StaticFunctionalExpression(FunctionalExpression):
@@ -526,6 +533,15 @@ class PredicativeExpression(Expression):
     def __str__(self):
         p = Expression.__str__(self)
         return '{}{}'.format("not " if self.negated else "", p)
+
+    def dump(self, objects, parameters):
+        assert len(self.arguments) == 2
+        subterms = [elem.dump(objects, parameters) for elem in self.arguments]
+        return dict(type='atom', symbol=self.process_symbol(), subterms=subterms)
+
+    def process_symbol(self):
+        assert not self.negated  # TODO reverse the symbol whenever the expression is negated.
+        return self.symbol
 
 
 class StaticPredicativeExpression(PredicativeExpression):
@@ -567,18 +583,26 @@ class VariableExpression(Expression):
     def __str__(self):
         return str(self.variable)
 
+    def dump(self, objects, parameters):
+        raise RuntimeError("dump() should never be called on VariableExpressions!")
+
 
 class ParameterExpression(Expression):
     def __init__(self, name):
         super().__init__(name)
 
+    def dump(self, objects, parameters):
+        return dict(type='parameter', position=parameters[self.symbol])
+
 
 class ObjectExpression(Expression):
-    pass
+    def dump(self, objects, parameters):
+        return dict(type='constant', value=objects.get_index(self.symbol))
 
 
 class NumericExpression(Expression):
-    pass
+    def dump(self, objects, parameters):
+        return dict(type='constant', value=int(self.symbol))
 
 
 class EQConstraintExpression(ConstraintExpression):

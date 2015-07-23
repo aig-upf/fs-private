@@ -15,6 +15,8 @@
 #include "external.hxx"
 #include <constraints/all.hxx>
 
+#include <component_factory.hxx>
+
 using namespace fs0;
 
 extern std::unique_ptr<External> external;

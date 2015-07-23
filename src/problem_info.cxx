@@ -24,6 +24,9 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	std::cout << "\t Loading Variable index..." << std::endl;
 	loadVariableIndex(data["variables"]);
 	
+	std::cout << "\t Loading Function index..." << std::endl;
+	loadFunctionIndex(data["functions"]);
+	
 	loadProblemMetadata(data["problem"]);
 	
 	std::cout << "\t All indexes loaded!" << std::endl;
@@ -43,13 +46,6 @@ const std::string ProblemInfo::getObjectName(VariableIdx varIdx, ObjectIdx objId
 	throw std::runtime_error("Should never get here.");
 }
 
-const std::string ProblemInfo::getObjectName(const std::string& type, ObjectIdx objIdx) const {
-	if (parseVariableType(type) == ObjectType::OBJECT) return getCustomObjectName(objIdx);
-	else if (parseVariableType(type) == ObjectType::INT) return std::to_string(objIdx);
-	else if (parseVariableType(type) == ObjectType::BOOL) return std::string((objIdx ? "true" : "false"));
-	throw std::runtime_error("Should never get here.");	
-}
-
 const std::string& ProblemInfo::getCustomObjectName(ObjectIdx objIdx) const { return objectNames.at(objIdx); }
 
 unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }
@@ -59,21 +55,78 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 	assert(variableNames.empty());
 	
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		assert(data[i]["id"].GetInt() == variableNames.size()); // Check values are decoded in the proper order
+		unsigned id = variableNames.size();
+		assert(data[i]["id"].GetInt() == id); // Check values are decoded in the proper order
+		
 		const std::string type(data[i]["type"].GetString());
-		variableNames.push_back(data[i]["name"].GetString());
-		variableGenericTypes.push_back(parseVariableType(type));
+		const std::string name(data[i]["name"].GetString());
+		variableNames.push_back(name);
+		variableIds.insert(std::make_pair(name, id));
+		
+		variableGenericTypes.push_back(getGenericType(getTypeId(type)));
 		try {
 			variableTypes.push_back(name_to_type.at(type));
 		} catch( std::out_of_range& ex ) {
 			throw std::runtime_error("Unknown type " + type);
 		}
+		
+		// Load the info necessary to resolve state variables dynamically
+		const auto& var_data = data[i]["data"];
+		unsigned symbol_id = var_data[0].GetInt();
+		 std::vector<ObjectIdx> constants;
+		for (unsigned j = 0; j < var_data[1].Size(); ++j) {
+			constants.push_back(var_data[1][j].GetInt());
+		}
+		
+		variableDataToId.insert(std::make_pair(
+			std::make_pair(symbol_id, constants),
+			id
+		));
 	}
 }
 
-ProblemInfo::ObjectType ProblemInfo::parseVariableType(const std::string& type) const {
-	if (isTypeBounded[getTypeId(type)] || type == "_int_" || type == "int") return ObjectType::INT;
-	else if (type == "_bool_" || type == "bool") return ObjectType::BOOL;
+VariableIdx ProblemInfo::getVariableId(unsigned symbol_id, const std::vector<ObjectIdx>& subterms) const {
+	return variableDataToId.at(std::make_pair(symbol_id, subterms));
+}
+
+void ProblemInfo::loadFunctionIndex(const rapidjson::Value& data) {
+	assert(functionIds.empty());
+	
+
+	// Function data is stored as: <function_id, function_name, <function_domain>, function_codomain, state_variables, static_flag>
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		const unsigned id = data[i][0].GetInt();
+		const std::string name(data[i][1].GetString());
+		assert(id == functionIds.size()); // Check values are decoded in the proper order
+		functionIds.insert(std::make_pair(name, id));
+		functionNames.push_back(name);
+		
+		// Parse the domain IDs
+		const auto& domains = data[i][2];
+		std::vector<TypeIdx> domain;
+		for (unsigned j = 0; j < domains.Size(); ++j) {
+			domain.push_back(getTypeId(domains[j].GetString()));
+		}
+		
+		// Parse the codomain ID
+		TypeIdx codomain = getTypeId(data[i][3].GetString());
+		
+		// Parse the function variables
+		std::vector<VariableIdx> variables;
+		const auto& list = data[i][4];
+		for (unsigned j = 0; j < list.Size(); ++j) {
+			variables.push_back(list[j][0].GetInt());
+		}
+		
+		bool is_static = data[i][5].GetBool();
+		functionData.push_back(FunctionData(domain, codomain, variables, is_static));
+	}
+}
+
+
+ProblemInfo::ObjectType ProblemInfo::getGenericType(TypeIdx typeId) const {
+	if (isTypeBounded[typeId]) return ObjectType::INT;
+// 	else if (type == "_bool_" || type == "bool") return ObjectType::BOOL;
 	else return ObjectType::OBJECT;
 }
 
@@ -117,7 +170,6 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 		type_to_name.push_back(type_name);
 		
 		// We read and convert to integer type the vector of Object indexes
-		// strs[1] is either of the form (a) "5,6,7,8" or (b) "int[0..10]"
 		if (data[i][2].IsString()) {
 			assert(std::string(data[i][2].GetString()) == "int" && data[i].Size() == 4);
 			int lower = data[i][3][0].GetInt();

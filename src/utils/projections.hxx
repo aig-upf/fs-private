@@ -20,6 +20,9 @@ public:
 	//! Helper function to copy-project a relaxed state to all of the variables relevant to a given applicable entity.
 	static DomainMap projectCopyToActionVariables(const RelaxedState& state, const Action& action);
 	
+	//! Zip a scope and a values to an equivalent partial assignment
+	static PartialAssignment zip(const VariableIdxVector& scope, const ObjectIdxVector& values);
+	
 	//! Project values only - no copy, const version
 	static const DomainVector projectValues(const RelaxedState& state, const VariableIdxVector& scope);
 	

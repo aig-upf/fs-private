@@ -13,48 +13,33 @@
 #include "lib/rapidjson/document.h"
 
 namespace fs0 {
+
+class BaseComponentFactory;
 class Problem;
 
 class Loader
 {
 public:
 	
-	//! The type of an action factory
-	typedef std::function<Action::cptr (
-			const std::string&,
-			const ObjectIdxVector&,
-			const ObjectIdxVector&,
-			const std::vector<VariableIdxVector>&,
-			const std::vector<VariableIdxVector>&,
-			const VariableIdxVector&
-			)> ActionFactoryType;
+	//!
+	static void loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory, Problem& problem);
 	
-	typedef std::function<ScopedConstraint::vcptr (const std::vector<VariableIdxVector>&)> GoalFactoryType;
-	
-	typedef std::function<ScopedConstraint::cptr (const std::string& classname, const ObjectIdxVector&, const VariableIdxVector&)> ConstraintFactoryType;
-	
-	
-	/**
-	 * 
-	 */
-	static void loadProblem(const rapidjson::Document& data, ActionFactoryType actionFactory, ConstraintFactoryType constraintFactory, GoalFactoryType goalFactory, Problem& problem);
-	
-	/**
-	 * Loads a state specification for a given text file.
-	 * The specification basically consists on an assignation of values to all the state variables.
-	 */
+	 //! Loads a state specification for a given text file.
+	 //! The specification basically consists on an assignation of values to all the state variables.
 	static const State::cptr loadState(const rapidjson::Value& data);
 	
-	/**
-	 * Instantiates all the grounded actions from the information stored in the given text files and by calling
-	 * the specified function, which is generated dinamically and performs the actual instantiation.
-	 */
-	static void loadGroundedActions(const rapidjson::Value& data, ActionFactoryType actionFactory, Problem& problem);
+	 //! Instantiates all the grounded actions from the information stored in the given text files and by calling
+	 //! the specified function, which is generated dinamically and performs the actual instantiation.
+	static void loadGroundedActions(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem);
 	
-	static void generateGoalConstraints(const rapidjson::Value& data, GoalFactoryType goalFactory, Problem& problem);
+	static void loadActionSchemata(const rapidjson::Value& data, Problem& problem);
+	
+	static void generateGoalConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem);
 	
 	//! Loads a set of state constraints from the given file
-	static void loadConstraints(const rapidjson::Value& data, ConstraintFactoryType constraintFactory, Problem& problem);
+	static void loadConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem);
+	
+	static void loadFunctions(const BaseComponentFactory& factory, Problem& problem);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
 	

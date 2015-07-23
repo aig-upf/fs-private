@@ -4,9 +4,7 @@
 """
 
 import itertools
-
 import pddl
-
 from compilation.helper import get_effect_symbol, parse_value
 from compilation.exceptions import ParseException
 

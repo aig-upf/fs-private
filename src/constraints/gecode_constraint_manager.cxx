@@ -108,8 +108,7 @@ SimpleCSP::ptr GecodeConstraintManager::createCSPVariables() {
 	// Index all the variables relevant to the goal
 	IntVarArgs variables;
 	for (VariableIdx var:allRelevantVariables) {
-		unsigned id = Helper::processVariable( *csp, var, variables );
-		translator.registerCSPVariable(var, GecodeCSPTranslator::VariableType::Input, id);
+		Helper::registerPlanningVariable(*csp, var, CSPVariableType::Input, variables, translator);
 	}
 
 	IntVarArray tmp(*csp, variables);
@@ -132,7 +131,7 @@ bool GecodeConstraintManager::solveCSP(gecode::SimpleCSP* csp, Atom::vctr& suppo
 	SimpleCSP* solution = engine.next();
 	if (solution) {
 		for (VariableIdx variable:allRelevantVariables) {
-			support.push_back(Atom(variable, translator.resolveValue(*solution, variable, GecodeCSPTranslator::VariableType::Input)));
+			support.push_back(Atom(variable, translator.resolveValue(*solution, variable, CSPVariableType::Input)));
 		}
 		delete solution;
 		return true;
@@ -143,7 +142,7 @@ bool GecodeConstraintManager::solveCSP(gecode::SimpleCSP* csp, Atom::vctr& suppo
 void GecodeConstraintManager::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
 	for (VariableIdx variable:allRelevantVariables) {
-		IntVarValues values(translator.resolveVariable(*csp, variable, GecodeCSPTranslator::VariableType::Input)); 
+		IntVarValues values(translator.resolveVariable(*csp, variable, CSPVariableType::Input)); 
 		assert(values()); // Otherwise the CSP would be inconsistent.
 		support.push_back(Atom(variable, values.val()));
 	}

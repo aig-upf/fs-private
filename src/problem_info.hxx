@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include <boost/regex.hpp>
+#include <boost/iterator/iterator_concepts.hpp>
 #include <fs0_types.hxx>
 #include <iostream>
 
@@ -14,6 +15,37 @@
 namespace fs0 {
 
 class Atom;
+
+//! Data related to the functional symbols
+class FunctionData {
+public:
+	
+	FunctionData(const std::vector<TypeIdx>& domain, TypeIdx codomain, std::vector<VariableIdx>& variables, bool stat):
+		_domain(domain), _codomain(codomain), _variables(variables), _static(stat) {}
+	
+	//! Returns the state variables derived from the given function (e.g. for a function "f", f(1), f(2), ...)
+	const std::vector<VariableIdx>& getStateVariables() const { return _variables; }
+	
+	const TypeIdx& getCodomainType() const { return _codomain; }
+	
+	bool isStatic() const { return _static; }
+	
+	//! Sets/Gets the actual implementation of the function
+	void setFunction(Function function) { _function = function; }
+	const Function& getFunction() const { 
+		assert(_function);
+		return _function;
+	}
+
+protected:
+	std::vector<TypeIdx> _domain;
+	TypeIdx _codomain;
+	std::vector<VariableIdx> _variables;
+	bool _static;
+	
+	//! The actual implementation of the function
+	Function _function;
+};
 
 /**
   * A ProblemInfo instance holds all the relevant information about the problem, including the names and types of state variables, problem objects, etc.
@@ -32,6 +64,8 @@ protected:
 	
 	//! A map from state variable index to action name
 	std::vector<std::string> variableNames;
+	std::map<std::string, VariableIdx> variableIds;
+	std::map<std::pair<unsigned, std::vector<ObjectIdx>>, VariableIdx> variableDataToId;
 	
 	//! A map from state variable index to the type of the state variable
 	std::vector<ObjectType> variableGenericTypes;
@@ -54,6 +88,11 @@ protected:
 	std::unordered_map<std::string, TypeIdx> name_to_type;
 	std::vector<std::string> type_to_name;
 	
+	//! A map from function name to function index:
+	std::vector<std::string> functionNames;
+	std::map<std::string, unsigned> functionIds;
+	std::vector<FunctionData> functionData;
+	
 	//! The names of the problem domain and instance
 	std::string _domain;
 	std::string _instance;
@@ -66,15 +105,21 @@ public:
 	const std::string& getActionName(ActionIdx index) const;
 	
 	const std::string& getVariableName(VariableIdx index) const;
+	inline VariableIdx getVariableId(const std::string& name) const { return variableIds.at(name); }
+	VariableIdx getVariableId(unsigned symbol_id, const std::vector<ObjectIdx>& subterms) const;
 	
 	const TypeIdx getVariableType(VariableIdx index) const { return variableTypes.at(index); }
-	const ObjectType 	getVariableGenericType(VariableIdx index) const { return variableGenericTypes.at(index); }
+	const ObjectType getVariableGenericType(VariableIdx index) const { return variableGenericTypes.at(index); }
 	
 	unsigned getNumVariables() const;
 	
 	const std::string getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const;
-	const std::string getObjectName(const std::string& type, ObjectIdx objIdx) const;
 	inline ObjectIdx getObjectId(const std::string& name) const { return objectIds.at(name); }
+	
+	//! Return the ID of the function with given name
+	inline unsigned getFunctionId(const std::string& name) const { return functionIds.at(name); }
+	const std::string& getFunctionName(unsigned function_id) const { return functionNames.at(function_id); }
+	inline const FunctionData& getFunctionData(unsigned functionId) const { return functionData.at(functionId); }
 	
 	//! Returns all the objects of the given type _or of a descendant type_
 	inline const ObjectIdxVector& getTypeObjects(TypeIdx type) const { return typeObjects.at(type); }
@@ -95,6 +140,9 @@ public:
 		}
 	}
 	
+	//! Resolves a pair of function ID + an assignment of values to their parameters to the corresponding state variable.
+	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<ObjectIdx>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
+	
 	const std::string& getCustomObjectName(ObjectIdx objIdx) const;
 	
 	unsigned getNumObjects() const;
@@ -114,18 +162,22 @@ public:
 	void setInstanceName(const std::string& instance) { _instance = instance; }
 	const std::string& getDomainName() const { return _domain; }
 	const std::string& getInstanceName() const { return _instance; }
+	
+	//! Returns the generic type (object, int, bool, etc.) corresponding to a concrete type
+	ObjectType getGenericType(TypeIdx typeId) const;
 
 protected:
 	
-	//! Load the names of the state variables from the specified file.
+	//! Load all the function-related data 
+	void loadFunctionIndex(const rapidjson::Value& data);
+	
+	//! Load the names of the state variables
 	void loadVariableIndex(const rapidjson::Value& data);
 	
-	ObjectType parseVariableType(const std::string& str) const;
-	
-	//! Load the names of the (bound) actions from the specified file.
+	//! Load the names of the (bound) actions
 	void loadActionIndex(const rapidjson::Value& data);
 	
-	//! Load the names of the problem objects from the specified file.
+	//! Load the names of the problem objects
 	void loadObjectIndex(const rapidjson::Value& data);
 	
 	//! Load all type-related info.

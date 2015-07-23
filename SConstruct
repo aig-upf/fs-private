@@ -46,7 +46,7 @@ if env['edebug']:
 	lib_name = 'fs0-edebug'
 
 
-source_dirs = ['src', 'src/constraints', 'src/utils', 'src/heuristics']
+source_dirs = ['src', 'src/constraints', 'src/utils', 'src/heuristics', 'src/languages/fstrips']
 src_files = []
 for d in source_dirs:
 	src_files += [str(f) for f in Glob(d + '/*.cxx')]

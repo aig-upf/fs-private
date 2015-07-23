@@ -22,6 +22,7 @@ Problem::Problem(const rapidjson::Document& data) :
 
 Problem::~Problem() {
 	for (const auto pointer:_actions) delete pointer;
+	for (const auto pointer:_schemata) delete pointer;
 	for (const auto pointer:stateConstraints) delete pointer;
 	for (const auto pointer:goalConstraints) delete pointer;
 	delete ctrManager;

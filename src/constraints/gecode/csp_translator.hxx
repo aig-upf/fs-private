@@ -12,6 +12,13 @@
 
 namespace fs0 { namespace gecode {
 
+//! The possible types of CSP variables that we might consider
+enum class CSPVariableType {
+	Input, // a variable relevant to some formula (in an action precondition, goal, etc.)
+	Output, // a variable affected by some action effect
+	Temporary,  // a temporal variable useful only for the CSP, but not coming from the planning problem
+};
+	
 /**
  * A CSP translator keeps track of the correspondence between Planning variables and CSP variables.
  * To this end, it keeps a mapping of the form <x, t> --> y, where:
@@ -22,11 +29,7 @@ namespace fs0 { namespace gecode {
  */
 class GecodeCSPTranslator {
 public:
-	//! The possible types of CSP variables that we might consider
-	enum class VariableType {
-		Input, // a variable relevant to some formula (in an action precondition, goal, etc.)
-		Output // a variable affected by some action effect
-	};
+
 	
 	GecodeCSPTranslator() {};
 	virtual ~GecodeCSPTranslator() {}
@@ -35,22 +38,21 @@ public:
 	explicit GecodeCSPTranslator(GecodeCSPTranslator& other);
 	
 	//! Register the given planning variable under the give role/type as corresponding to the CSP variable with the given index.
-	void registerCSPVariable(VariableIdx variable, VariableType type, unsigned csp_variable);
+	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)
+	bool registerCSPVariable(VariableIdx variable, CSPVariableType type, unsigned csp_variable);
 	
 	//! Returns the Gecode CSP variable that corresponds to the given state variable and type, in the given CSP.
-	const Gecode::IntVar& resolveVariable(const SimpleCSP& csp, VariableIdx variable, VariableType type) const;
+	const Gecode::IntVar& resolveVariable(const SimpleCSP& csp, VariableIdx variable, CSPVariableType type) const;
+	
+	//! Returns the set of Gecode CSP variables that corresponds to all the state variables derived from a function
+	//! when used according to the given type.
+	Gecode::IntVarArgs resolveFunction(const SimpleCSP& csp, const FunctionData& function, CSPVariableType type) const;
 	
 	//! A small helper to resolve a whole scope.
-	Gecode::IntVarArgs resolveScope(const SimpleCSP& csp, const VariableIdxVector& scope, VariableType type) const {
-		Gecode::IntVarArgs variables;
-		for (VariableIdx variable:scope) {
-			variables << resolveVariable(csp, variable, type);
-		}
-		return variables;
-	}
+	Gecode::IntVarArgs resolveScope(const SimpleCSP& csp, const VariableIdxVector& scope, CSPVariableType type) const;
 	
 	//! Returns the value of the CSP variable that corresponds to the given state variable and type, in the given CSP.
-	inline const ObjectIdx resolveValue(const SimpleCSP& csp, VariableIdx variable, VariableType type) const {
+	inline const ObjectIdx resolveValue(const SimpleCSP& csp, VariableIdx variable, CSPVariableType type) const {
 		const Gecode::IntVar& csp_var = resolveVariable(csp, variable, type);
 		return csp_var.val();
 	}
@@ -59,7 +61,7 @@ public:
 	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
 
 protected:
-	typedef std::pair<VariableIdx, VariableType> CSPVariableIdentifier;
+	typedef std::pair<VariableIdx, CSPVariableType> CSPVariableIdentifier;
 	
 	//! Variable mapping: For a state variable X, variables[X] is the (implicit, unsigned) ID of corresponding Gecode CSP variable.
 	std::map<CSPVariableIdentifier, unsigned> _variables;

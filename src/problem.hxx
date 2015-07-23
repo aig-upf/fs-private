@@ -1,5 +1,5 @@
 
-# pragma once
+#pragma once
 
 #include <iosfwd>
 #include <boost/concept_check.hpp>
@@ -13,6 +13,7 @@
 #include "constraints/scoped_constraint.hxx"
 #include <actions.hxx>
 #include <constraints/compiled.hxx>
+#include "action_schema.hxx"
 
 namespace fs0 {
 
@@ -28,10 +29,15 @@ public:
 	const State::cptr getInitialState() const { return _initialState; }
 
 	//! Modify the problem (grounded) actions
-	void addAction(const Action::cptr& action) { _actions.push_back(action); }
-	const Action::cptr& getAction(ActionIdx idx) const { return _actions.at(idx); }
+	void addAction(const Action::cptr action) { _actions.push_back(action); }
+	const Action::cptr getAction(ActionIdx idx) const { return _actions.at(idx); }
 	unsigned getNumActions() const { return _actions.size(); }
 	const Action::vcptr& getAllActions() const { return _actions; }
+	
+	void addActionSchema(const ActionSchema::cptr action) { _schemata.push_back(action); }
+	const ActionSchema::cptr getActionSchema(unsigned idx) const { return _schemata.at(idx); }
+	unsigned getNumSchemata() const { return _schemata.size(); }
+	const std::vector<ActionSchema::cptr>& getAllSchemata() const { return _schemata; }
 
 	SimpleApplicableActionSet getApplicableActions(const State& s) const;
 
@@ -74,6 +80,7 @@ public:
 	//! Tells if the given variable is relevant for the goal.
 	static bool isRelevantForGoal(VariableIdx var) { return getCurrentProblem()->_goalRelevantVars[var]; }
 
+	
 
 protected:
 	State::cptr _initialState;
@@ -81,6 +88,8 @@ protected:
 	BaseConstraintManager::cptr ctrManager;
 
 	Action::vcptr _actions;
+	
+	std::vector<ActionSchema::cptr> _schemata;
 
 	const ProblemInfo _problemInfo;
 

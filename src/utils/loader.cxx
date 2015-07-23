@@ -9,15 +9,17 @@
 #include <utils/loader.hxx>
 #include <constraints/constraint_factory.hxx>
 #include <actions.hxx>
+#include <component_factory.hxx>
 
 #include <iostream>
 
 namespace fs0 {
 
-void Loader::loadProblem(const rapidjson::Document& data, ActionFactoryType actionFactory, ConstraintFactoryType constraintFactory, GoalFactoryType goalFactory, Problem& problem) {
+void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory, Problem& problem) {
 	/* Define the actions */
 	std::cout << "\tDefining actions..." << std::endl;
-	loadGroundedActions(data["actions"], actionFactory, problem);
+	loadGroundedActions(data["actions"], factory, problem);
+	loadActionSchemata(data["action_schemata"], problem);
 
 	/* Define the initial state */
 	std::cout << "\tDefining initial state..." << std::endl;
@@ -25,13 +27,22 @@ void Loader::loadProblem(const rapidjson::Document& data, ActionFactoryType acti
 
 	/* Load the state and goal constraints */
 	std::cout << "\tDefining state and goal constraints..." << std::endl;
-	loadConstraints(data["constraints"], constraintFactory, problem);
+	loadConstraints(data["constraints"], factory, problem);
 
 	/* Generate goal constraints from the goal evaluator */
 	std::cout << "\tGenerating goal constraints..." << std::endl;
-	generateGoalConstraints(data["goal"], goalFactory, problem);
+	generateGoalConstraints(data["goal"], factory, problem);
+	
+	loadFunctions(factory, problem);
 }
 
+void Loader::loadFunctions(const BaseComponentFactory& factory, Problem& problem) {
+	const ProblemInfo& info = problem.getProblemInfo();
+	for (auto elem:factory.instantiateFunctions()) {
+		FunctionData data = info.getFunctionData(info.getFunctionId(elem.first));
+		data.setFunction(elem.second);
+	}
+}
 
 const State::cptr Loader::loadState(const rapidjson::Value& data) {
 	// The state is an array of two-sized arrays [x,v], representing atoms x=v
@@ -44,7 +55,7 @@ const State::cptr Loader::loadState(const rapidjson::Value& data) {
 	return std::make_shared<State>(numAtoms, facts);
 }
 
-void Loader::loadGroundedActions(const rapidjson::Value& data, ActionFactoryType actionFactory, Problem& problem) {
+void Loader::loadGroundedActions(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem) {
 	assert(problem.getNumActions() == 0);
 	
 	for (unsigned i = 0; i < data.Size(); ++i) {
@@ -69,21 +80,53 @@ void Loader::loadGroundedActions(const rapidjson::Value& data, ActionFactoryType
 		std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(node[6]);
 		VariableIdxVector effAffectedVars = parseNumberList<unsigned>(node[7]);
 		
-		problem.addAction(actionFactory(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars));
+		problem.addAction(factory.instantiateAction(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars));
 	}
 }
 
-void Loader::generateGoalConstraints(const rapidjson::Value& data, GoalFactoryType goalFactory, Problem& problem) {
+void Loader::loadActionSchemata(const rapidjson::Value& data, Problem& problem) {
+	assert(problem.getNumActions() == 0);
+	
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		const rapidjson::Value& node = data[i];
+		
+// 		# Format: a number of elements defining the action:
+// 		# (0) Action ID (index)
+// 		# (1) Action name
+// 		# (2) classname
+// 		# (3) binding
+// 		# (4) derived objects
+// 		# (5) applicability relevant vars
+// 		# (6) effect relevant vars
+// 		# (7) effect affected vars
+		
+		
+		// We ignore the grounded name for the moment being.
+		const std::string& actionClassname = node[2].GetString();
+		ObjectIdxVector binding = parseNumberList<int>(node[3]);
+		ObjectIdxVector derived = parseNumberList<int>(node[4]);
+		std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(node[5]);
+		std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(node[6]);
+		VariableIdxVector effAffectedVars = parseNumberList<unsigned>(node[7]);
+		
+// 		factory.instantiateAction(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars)
+		
+		
+// 		problem.addActionSchema();
+	}
+}
+
+void Loader::generateGoalConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem) {
 	// We have one single line with the variables indexes relevant to the goal procedures.
 	std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(data);
-	ScopedConstraint::vcptr goal_constraints = goalFactory(appRelevantVars);
+	ScopedConstraint::vcptr goal_constraints = factory.instantiateGoal(appRelevantVars);
 	
 	for (const auto& ctr:goal_constraints) {
 		problem.registerGoalConstraint(ctr);
 	}
 }
 
-void Loader::loadConstraints(const rapidjson::Value& data, ConstraintFactoryType constraintFactory, Problem& problem) {
+void Loader::loadConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem) {
 
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		const rapidjson::Value& node = data[i];
@@ -100,7 +143,7 @@ void Loader::loadConstraints(const rapidjson::Value& data, ConstraintFactoryType
 		ObjectIdxVector parameters = parseNumberList<int>(node[2]);
 		VariableIdxVector variables = parseNumberList<unsigned>(node[3]);
 		
-		problem.registerConstraint(constraintFactory(name, parameters, variables));
+		problem.registerConstraint(factory.instantiateConstraint(name, parameters, variables));
 	}
 }
 

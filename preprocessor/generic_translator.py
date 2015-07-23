@@ -2,6 +2,7 @@
 This is a generic PDDL-to-VPM translator.
 """
 import itertools
+from compilation.schemata import ActionSchemaProcessor
 
 import pddl  # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
 from pddl.f_expression import NumericConstant
@@ -74,8 +75,14 @@ class Translator(object):
         compiler = ActionCompiler(self.task, action)
         return compiler.process()
 
+    def process_action_schema(self, action):
+        return ActionSchemaProcessor(self.task, action).process()
+
     def get_actions(self):
         return [self.process_action(a) for a in self.task.actions]
+
+    def get_action_schemata(self):
+        return [self.process_action_schema(a) for a in self.task.actions]
 
     def get_var_from_term(self, term):
         assert all(isinstance(arg, str) and arg in self.task.index.objects.obj_to_idx for arg in term.args)

@@ -11,7 +11,6 @@ const ScopedConstraint::cptr ConstraintFactory::create(const std::string& name, 
 
 	if (name == "geq") {
 		throw std::runtime_error("Use a <= constraint with a reversed scope");
-// 		return new GEQConstraint(scope, parameters);
 	} else if (name == "alldiff") {
 		return new ScopedAlldiffConstraint(scope);
 	} else if (name == "sum") {
@@ -21,18 +20,6 @@ const ScopedConstraint::cptr ConstraintFactory::create(const std::string& name, 
 	}
 }
 
-/*
-const ScopedConstraint::cptr ConstraintFactory::createExternalConstraint(ApplicableEntity::cptr entity, unsigned procedureIdx) {
-	const VariableIdxVector& relevant = entity->getApplicabilityRelevantVars(procedureIdx);
-	if (relevant.size() == 1) {
-		constraint = new ExternalUnaryConstraint(entity, procedureIdx);
-	} else if (relevant.size() == 2) {
-		constraint = new ExternalBinaryConstraint(entity, procedureIdx);
-	} else {
-		throw std::runtime_error("Shouldn't have n-ary constraints here");
-	}
-	return constraint;
-}
-*/
+
 } // namespaces
 

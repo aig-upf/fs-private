@@ -20,29 +20,57 @@ namespace fs0 { namespace gecode {
  */
 class Helper {
 public:
-	//!
-	static unsigned processVariable(Gecode::Space& csp, VariableIdx var, Gecode::IntVarArgs& varArray) {
+	//! Creates the actual Gecode CSP variable and assigns it a proper domain based on the planning problem variable type
+	static Gecode::IntVar processPlanningVariable(Gecode::Space& csp, VariableIdx var) {
 		const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-		ProblemInfo::ObjectType varType = info.getVariableGenericType( var );
-		if ( varType == ProblemInfo::ObjectType::INT ) {
+		return processVariable(csp, var, info.getVariableGenericType(var));
+	}
+	
+	static Gecode::IntVar processTemporaryVariable(Gecode::Space& csp, VariableIdx var, TypeIdx typeId) {
+		const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+		return processVariable(csp, var, info.getGenericType(typeId));
+	}
+	
+	static Gecode::IntVar processVariable(Gecode::Space& csp, VariableIdx var, ProblemInfo::ObjectType type) {
+		const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+		if ( type == ProblemInfo::ObjectType::INT ) {
 			auto bounds = info.getVariableBounds(var);
-			Gecode::IntVar x( csp, bounds.first, bounds.second );
-			varArray << x;
+			return Gecode::IntVar( csp, bounds.first, bounds.second );
 		}
-		else if ( varType == ProblemInfo::ObjectType::BOOL ) {
-			varArray << Gecode::IntVar( csp, 0, 1 );
+		else if ( type == ProblemInfo::ObjectType::BOOL ) {
+			return Gecode::IntVar( csp, 0, 1 );
 		}
-		else if ( varType == ProblemInfo::ObjectType::OBJECT ) {
+		else if ( type == ProblemInfo::ObjectType::OBJECT ) {
 			const ObjectIdxVector& values = info.getVariableObjects( var );
 			std::vector<int> _values( values.size() );
 			for ( unsigned j = 0; j < values.size(); j++ ) {
 				_values[j] = values[j];
 			}
-			varArray << Gecode::IntVar( csp, Gecode::IntSet( _values.data(), values.size() ));
+			return Gecode::IntVar( csp, Gecode::IntSet( _values.data(), values.size() ));
 		}
-		return varArray.size() - 1;
+		assert(false);
+	}	
+	
+	//!
+	static void registerPlanningVariable(Gecode::Space& csp, VariableIdx planning_var, CSPVariableType type, Gecode::IntVarArgs& variables, GecodeCSPTranslator& translator) {
+		auto csp_var = processPlanningVariable(csp, planning_var);
+		if (translator.registerCSPVariable(planning_var, type, variables.size())) {
+			variables << csp_var;
+		}
+	}
+	
+	//!
+	static void registerTemporaryVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPTranslator& translator, TypeIdx typeId) {
+		auto csp_var = processTemporaryVariable(csp, planning_var, typeId);
+		if (translator.registerCSPVariable(planning_var, CSPVariableType::Temporary, variables.size())) {
+			variables << csp_var;
+		}
 	}
 
+	
+	
+	
+	//!
 	static void addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, bool value) {
 		addEqualityConstraint(csp, translator, variable, (value ? 1 : 0));
 	}
@@ -52,14 +80,14 @@ public:
 
 	//! Adds constraint of the form $variable = value$ to the CSP
 	static void addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, ObjectIdx value) {
-		auto csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Input);
+		auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
 		rel( csp, csp_var, IRT_EQ, value ); // v = value
 	}
 
 
 	//! Adds constraint of the form $variable \in values$ to the CSP
 	static void addMembershipConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, DomainPtr values) {
-		auto csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Input);
+		auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
 
 		// MRJ: variable \in dom
 		TupleSet valueSet;
@@ -72,7 +100,7 @@ public:
 
 	//! Adds constraint of the form $lb <= variable <= ub$ to the CSP
 	static void addBoundsConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, int lb, int ub) {
-		auto csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Input);
+		auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
 		dom( csp, csp_var, lb, ub); // MRJ: lb <= variable <= ub
 	}
 
@@ -80,7 +108,7 @@ public:
 	//! where min and max are the minimum and maximum values defined for
 	//! the type of variable.
 	static void addBoundsConstraintFromDomain(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable) {
-		auto csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Input);
+		auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
 		const auto& info = Problem::getCurrentProblem()->getProblemInfo();
 		TypeIdx type = info.getVariableType(variable);
 		if (!info.hasVariableBoundedDomain(type)) return; // Nothing to do in this case
@@ -88,38 +116,45 @@ public:
 		dom( csp, csp_var, bounds.first, bounds.second); // MRJ: bounds.first <= variable <= bounds.second
 	}
 
+	//! Returns the translator that corresponds to a given constraint, if available, or throws a fatal exception otherwise.
+	static ConstraintTranslator::ptr getConstraintTranslator(const ScopedConstraint& constraint) {
+		const std::type_info& type = typeid(constraint);
+		ConstraintTranslator::ptr componentTranslator = TranslatorRepository::instance().getConstraintTranslator(type);
+		
+		if (componentTranslator) return componentTranslator;
+			
+		// If no translator was registered for the concrete component, we try out with the few (extensional) generic translators that we have.
+		componentTranslator = TranslatorRepository::instance().getConstraintTranslator(constraint.getDefaultTypeId());
+		
+		// Otherwise, we cannot continue
+		if (!componentTranslator) throw std::runtime_error("No ConstraintTranslator registered for type " + boost::units::detail::demangle(type.name()));
+		return componentTranslator;
+	}
+	
+	//! Returns the translator that corresponds to a given effect, if available, or throws a fatal exception otherwise.
+	static EffectTranslator::ptr getEffectTranslator(const ScopedEffect& effect) {
+		const std::type_info& type = typeid(effect);
+		auto componentTranslator = TranslatorRepository::instance().getEffectTranslator(type);
+		
+		if (componentTranslator) return componentTranslator;
+		
+		// If no translator was registered for the concrete component, we try out with the few (extensional) generic translators that we have.
+		componentTranslator = TranslatorRepository::instance().getEffectTranslator(effect.getDefaultTypeId());
+		
+		// Otherwise, we cannot continue
+		if (!componentTranslator) throw std::runtime_error("No EffectTranslator registered for type " + boost::units::detail::demangle(type.name()));
+		return componentTranslator;
+	}
 
 	static void translateConstraints(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, const ScopedConstraint::vcptr& constraints) {
 		for (ScopedConstraint::cptr constraint:constraints) {
-			const std::type_info& type = typeid(*constraint);
-			auto componentTranslator = TranslatorRepository::instance().getConstraintTranslator( typeid(*constraint) );
-			
-			if (componentTranslator == nullptr) {
-				// If no translator was registered for the concrete component, we try out with the few (extensional) generic translators that we have.
-				componentTranslator = TranslatorRepository::instance().getConstraintTranslator(constraint->getDefaultTypeId());
-				
-				// Otherwise, we cannot continue
-				if (!componentTranslator) throw std::runtime_error("No ConstraintTranslator registered for type " + boost::units::detail::demangle(type.name()));
-			}
-			
-			componentTranslator->addConstraint(csp, translator, constraint);
+			getConstraintTranslator(*constraint)->registerConstraints(csp, translator, constraint);
 		}
 	}
 
 	static void translateEffects(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, const ScopedEffect::vcptr& effects) {
 		for (ScopedEffect::cptr effect:effects) {
-			const std::type_info& type = typeid(*effect);
-			auto componentTranslator = TranslatorRepository::instance().getEffectTranslator(type);
-			
-			if (componentTranslator == nullptr) {
-				// If no translator was registered for the concrete component, we try out with the few (extensional) generic translators that we have.
-				componentTranslator = TranslatorRepository::instance().getEffectTranslator(effect->getDefaultTypeId());
-				
-				// Otherwise, we cannot continue
-				if (!componentTranslator) throw std::runtime_error("No EffectTranslator registered for type " + boost::units::detail::demangle(type.name()));
-			}
-			
-			componentTranslator->addConstraint(csp, translator, effect);
+			getEffectTranslator(*effect)->registerConstraints(csp, translator, effect);
 		}
 	}
 

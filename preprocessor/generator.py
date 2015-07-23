@@ -137,8 +137,9 @@ def create_domain(name, translator):
     types = translator.get_types()
     symbols = translator.get_symbols()
     actions = translator.get_actions()
-    # name = translator.get_domain_name()
-    return taskgen.create_problem_domain(name, types, symbols, actions)
+    domain = taskgen.create_problem_domain(name, types, symbols, actions)
+    domain.schemata = translator.get_action_schemata()
+    return domain
 
 
 def create_instance(name, translator, domain):
@@ -270,15 +271,18 @@ class Generator(object):
         self.process_elements()
         self._generate_components_code(dirname)
 
+        self.symbol_index = {name: i for i, name in enumerate(self.task.symbols.keys())}
+
         data = {'variables': self.dump_variable_data(),
                 'objects': self.dump_object_data(),
                 'types': self.dump_type_data(),
                 'actions': self.dump_action_data(),
+                'action_schemata': self.task.domain.schemata,
                 'constraints': self.dump_constraints_data(),
                 'init': self.dump_init_data(),
                 'goal': self.dump_goal_data(),
+                'functions': self.dump_function_data(),
                 'problem': {'domain': self.task.domain.name, 'instance': self.task.name}
-
         }
 
         print("Problem '{problem}' translated to directory '{dir}'".format(
@@ -374,7 +378,8 @@ class Generator(object):
     def get_method_factories(self):
         return tplManager.get('factories').substitute(
             actions='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
-            goal_constraint_instantiations='\n\t\t\t'.join(self.goal_code.constraint_instantiations)
+            goal_constraint_instantiations='\n\t\t\t'.join(self.goal_code.constraint_instantiations),
+            functions='\n\t\t\t'.join(self.get_function_instantiations()),
         )
 
     def get_action_factory_line(self, action_code):
@@ -414,11 +419,32 @@ class Generator(object):
     def dump_variable_data(self):
         res = []
         for i, var in enumerate(self.index.variables.idx_to_obj):
-            res.append({'id': i, 'name': str(var), 'type': self.task.domain.symbol_types[var.symbol]})
+            data = self.dump_state_variable(var)
+            res.append({'id': i, 'name': str(var), 'type': self.task.domain.symbol_types[var.symbol], 'data': data})
         return res
+
+    def dump_state_variable(self, var):
+        head = self.symbol_index[var.symbol]
+        constants = [self.index.objects.get_index(arg) for arg in var.args]
+        return [head, constants]
 
     def dump_object_data(self):
         return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump_index(print_index=False))]
+
+    def dump_function_data(self):
+        res = []
+        for name, symbol in self.task.symbols.items():
+            i = self.symbol_index[name]
+
+            # Collect the list of variables that arise from this particular symbol
+            f_variables = [(i, str(v)) for i, v in enumerate(self.index.variables.idx_to_obj) if v.symbol == name]
+
+            static = name in self.task.static_symbols
+
+            # Store the function info as a tuple:
+            # <function_id, function_name, <function_domain>, function_codomain, state_variables>
+            res.append([i, name, symbol.arguments, symbol.codomain, f_variables, static])
+        return res
 
     def dump_type_data(self):
         """ Dumps a map of types to corresponding objects"""
@@ -538,6 +564,13 @@ class Generator(object):
             else:
                 res.append(self.index.objects[x])
         return res
+
+    def get_function_instantiations(self):
+        return [
+            tplManager.get('function_instantiation').substitute(name=elem.name, accessor=elem.accessor)
+            for elem in self.task.static_data.values() if isinstance(elem, DataElement)
+        ]
+
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 #include <constraints/compiled.hxx>
 #include <utils/projections.hxx>
 #include <utils/utils.hxx>
+#include <problem.hxx>
 
 namespace fs0 {
 
@@ -9,33 +10,37 @@ CompiledUnaryConstraint::CompiledUnaryConstraint(const VariableIdxVector& scope,
 	UnaryParametrizedScopedConstraint(scope, parameters), _extension(extension)
 {}
 
-CompiledUnaryConstraint::CompiledUnaryConstraint(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) :
-	CompiledUnaryConstraint(constraint.getScope(), constraint.getParameters(), _compile(constraint, problemInfo))
+CompiledUnaryConstraint::CompiledUnaryConstraint(const UnaryParametrizedScopedConstraint& constraint) :
+	CompiledUnaryConstraint(constraint.getScope(), constraint.getParameters(), _compile(constraint))
 {}
 
+CompiledUnaryConstraint::CompiledUnaryConstraint(const VariableIdxVector& scope, const Tester& tester) 
+	: CompiledUnaryConstraint(scope, {}, compile(scope, tester))
+{}
 
-std::unordered_set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) {
-	VariableIdx relevant = constraint.getScope()[0];
-	const ObjectIdxVector& all_values = problemInfo.getVariableObjects(relevant);
+std::unordered_set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(const VariableIdxVector& scope, const CompiledUnaryConstraint::Tester& tester) {
+	assert(scope.size() == 1);
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	
+	VariableIdx relevant = scope[0];
 	
 	std::unordered_set<ElementT> ordered;
-	for(ObjectIdx value:all_values) {
-		if (constraint.isSatisfied(value)) {
-			ordered.insert(value);
-		}
+	for(ObjectIdx value:info.getVariableObjects(relevant)) {
+		if (tester(value)) ordered.insert(value);
 	}
 	return ordered;
 }
 
 
-CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const UnaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) {
+
+CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const UnaryParametrizedScopedConstraint& constraint) {
 	// Depending on the type of representation, we can directly return the compiled data structure or not.
 	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
-		auto ordered = compile(constraint, problemInfo);
+		auto ordered = compile(constraint);
 		return ExtensionT(ordered.begin(), ordered.end());
 		
 	#else
-		return compile(constraint, problemInfo);
+		return compile(constraint);
 	#endif
 }
 
@@ -62,8 +67,8 @@ public:
 		_dst.insert(o);
 	}
 
-	const ExtensionType& 	_ext;
-	Domain&			_dst;
+	const ExtensionType& _ext;
+	Domain& _dst;
 };
 
 }
@@ -90,12 +95,17 @@ ScopedConstraint::Output CompiledUnaryConstraint::filter(const DomainMap& domain
 	return Output::Pruned;
 }
 
-CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension1, ExtensionT&& extension2) :
-	BinaryParametrizedScopedConstraint(scope, parameters), _extension1(extension1),  _extension2(extension2)
-{}
 
 CompiledBinaryConstraint::CompiledBinaryConstraint(const BinaryParametrizedScopedConstraint& constraint, const ProblemInfo& problemInfo) :
-	CompiledBinaryConstraint(constraint.getScope(), constraint.getParameters(), _compile(constraint, 0, problemInfo), _compile(constraint, 1, problemInfo))
+	CompiledBinaryConstraint(constraint.getScope(), constraint.getParameters(), compile(constraint))
+{}
+
+CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, const CompiledBinaryConstraint::TupleExtension& extension) 
+	: BinaryParametrizedScopedConstraint(scope, parameters), _extension1(index(extension, 0)),  _extension2(index(extension, 1))
+{}
+
+CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scope, const CompiledBinaryConstraint::Tester& tester) 
+	: CompiledBinaryConstraint(scope, {}, compile(scope, tester))
 {}
 
 
@@ -111,44 +121,44 @@ bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 	#endif
 }
 
-std::map<ObjectIdx, std::set<ObjectIdx>> CompiledBinaryConstraint::compile(const fs0::BinaryParametrizedScopedConstraint& constraint, unsigned int variable, const fs0::ProblemInfo& problemInfo) {
-	assert(variable == 0 || variable == 1);
-	unsigned other = (variable == 0) ? 1 : 0;
-	VariableIdxVector scope = constraint.getScope();
+CompiledBinaryConstraint::TupleExtension CompiledBinaryConstraint::compile(const VariableIdxVector& scope, const CompiledBinaryConstraint::Tester& tester) {
+	assert(scope.size()==2);
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	
-	std::map<ObjectIdx, std::set<ObjectIdx>> ordered;
+	TupleExtension extension;
 	
-	const ObjectIdxVector& Dx = problemInfo.getVariableObjects(scope[variable]);
-	const ObjectIdxVector& Dy = problemInfo.getVariableObjects(scope[other]);
-	
-	for (ObjectIdx x:Dx) {
-		auto res = ordered.insert(std::make_pair(x, std::set<ObjectIdx>())); // We insert the empty vector (all elements will at least have it) and keep the reference.
-		assert(res.second); // The element couldn't exist
-		std::set<ObjectIdx>& set = res.first->second;
-		
-		for (ObjectIdx y:Dy) {
-			if ((variable == 0 && constraint.isSatisfied(x, y)) || (variable == 1 && constraint.isSatisfied(y, x))) {
-				set.insert(y);
+	for(ObjectIdx x:info.getVariableObjects(scope[0])) {
+		for(ObjectIdx y:info.getVariableObjects(scope[1])) {
+			if (tester(x, y)) {
+				extension.insert(std::make_tuple(x, y));
 			}
 		}
 	}
-	return ordered;
+	return extension;
 }
 
-CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::_compile(const BinaryParametrizedScopedConstraint& constraint, unsigned variable, const ProblemInfo& problemInfo) {
+
+CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::index(const CompiledBinaryConstraint::TupleExtension& extension, unsigned variable) {
+	assert(variable == 0 || variable == 1);
+	std::map<ObjectIdx, std::set<ObjectIdx>> values;
 	
-	auto ordered = compile(constraint, variable, problemInfo);
+	// We perform two passes to make sure that elements are sorted, although depending on the compilation flags this is unnecessary
 	
-	// Now we transform the ordered set into a (implicitly ordered) vector
-	ExtensionT extension;
-	for(const auto& elem:ordered) {
-		#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
-		extension.insert(std::make_pair(elem.first, ObjectIdxVector(elem.second.begin(), elem.second.end()) ));
-		#else
-		extension.insert( std::make_pair( elem.first, ObjectIdxHash( elem.second.begin(), elem.second.end() ) ));
-		#endif
+	for (const auto& tuple:extension) {
+		ObjectIdx x = (variable == 0) ? std::get<0>(tuple) : std::get<1>(tuple);
+		ObjectIdx y = (variable == 0) ? std::get<1>(tuple) : std::get<0>(tuple);
+		values[x].insert(y);
 	}
-	return extension;
+
+	ExtensionT res;
+	for (const auto& element:values) {
+#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
+		res.insert(std::make_pair(element.first, ObjectIdxVector(element.second.begin(), element.second.end()) ));
+#else
+		res.insert( std::make_pair(element.first, ObjectIdxHash(element.second.begin(), element.second.end() ) ));
+#endif
+	}
+	return res;
 }
 
 

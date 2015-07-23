@@ -16,12 +16,13 @@ EffectTranslator::~EffectTranslator() {}
 
 
 // We compile the unary constraint to obtain the satisfying values and turn this into a Gecode extensional constraint
-void ExtensionalUnaryConstraintTranslator::addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+void ExtensionalUnaryConstraintTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
 	auto* unaryConstraint = dynamic_cast<UnaryParametrizedScopedConstraint*>(constraint);
 	if (unaryConstraint == nullptr) throw std::runtime_error("Unary Extensional constraints are not applicable to non-unary constraints");
 	
-	auto variable = translator.resolveVariable(csp, constraint->getScope()[0], GecodeCSPTranslator::VariableType::Input);
-	auto values = CompiledUnaryConstraint::compile(*unaryConstraint, Problem::getCurrentProblem()->getProblemInfo());
+	const auto& scope = constraint->getScope();
+	auto variable = translator.resolveVariable(csp, scope[0], CSPVariableType::Input);
+	auto values = CompiledUnaryConstraint::compile(*unaryConstraint);
 	
 	Gecode::TupleSet tuples;
 	for (auto& value:values) {
@@ -32,21 +33,18 @@ void ExtensionalUnaryConstraintTranslator::addConstraint(gecode::SimpleCSP& csp,
 }
 
 // We compile the unary constraint to obtain the satisfying values and turn this into a Gecode extensional constraint
-void ExtensionalBinaryConstraintTranslator::addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+void ExtensionalBinaryConstraintTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
 	auto* binaryConstraint = dynamic_cast<BinaryParametrizedScopedConstraint*>(constraint);
 	if (binaryConstraint == nullptr) throw std::runtime_error("Binary Extensional constraints are not applicable to non-binary constraints");
 	
-	Gecode::IntVarArgs variables = translator.resolveScope(csp, constraint->getScope(), GecodeCSPTranslator::VariableType::Input);
+	Gecode::IntVarArgs variables = translator.resolveScope(csp, constraint->getScope(), CSPVariableType::Input);
 
 	// Note that we invoke and obtain the compilation for the first variable (value 0 of second parameter). Order matters.
-	std::map<ObjectIdx, std::set<ObjectIdx>> values = CompiledBinaryConstraint::compile(*binaryConstraint, 0, Problem::getCurrentProblem()->getProblemInfo());
+	CompiledBinaryConstraint::TupleExtension values = CompiledBinaryConstraint::compile(*binaryConstraint);
 	
 	Gecode::TupleSet tuples;
 	for (const auto& value:values) {
-		ObjectIdx value_x = value.first;
-		for (ObjectIdx value_y:value.second) {
-			tuples.add( Gecode::IntArgs(2, value_x, value_y));
-		}
+		tuples.add( Gecode::IntArgs(2, std::get<0>(value), std::get<1>(value)));
 	}
 	tuples.finalize();
 	Gecode::extensional(csp, variables, tuples);
@@ -56,7 +54,7 @@ void ExtensionalBinaryConstraintTranslator::addConstraint(gecode::SimpleCSP& csp
 
 UnaryDomainBoundsConstraintTranslator::~UnaryDomainBoundsConstraintTranslator() {}
 
-void UnaryDomainBoundsConstraintTranslator::addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+void UnaryDomainBoundsConstraintTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
 	auto* con = dynamic_cast<UnaryDomainBoundsConstraint*>(constraint);
 	assert( con != nullptr);
 	// TODO - Rethink, I think it is not entirely correct... constraint should be placed not on the affected variable but on the relevant variable...
@@ -66,31 +64,31 @@ void UnaryDomainBoundsConstraintTranslator::addConstraint(gecode::SimpleCSP& csp
 
 BinaryDomainBoundsConstraintTranslator::~BinaryDomainBoundsConstraintTranslator() {}
 
-void BinaryDomainBoundsConstraintTranslator::addConstraint(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+void BinaryDomainBoundsConstraintTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
 	auto* con = dynamic_cast<BinaryDomainBoundsConstraint*>(constraint);
 	assert( con != nullptr);
 //       Helper::addBoundsConstraintFromDomain(csp, translator, con->getAffected()); // TODO - SAME HERE
 }
 
 
-void UnaryRelationTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+void UnaryRelationTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
 	UnaryParametrizedScopedConstraint* c = dynamic_cast<UnaryParametrizedScopedConstraint*>(constraint);
 	if (!c) throw std::runtime_error("Trying to translate wrong type of constraint");
-	auto x1 = translator.resolveVariable(csp, constraint->getScope()[0], GecodeCSPTranslator::VariableType::Input);
+	auto x1 = translator.resolveVariable(csp, constraint->getScope()[0], CSPVariableType::Input);
 	auto constant = c->getBinding()[0];
 	Gecode::rel(csp, x1, _type, constant);
 }
 	
-void BinaryRelationTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
-	Gecode::IntVarArgs variables = translator.resolveScope(csp, constraint->getScope(), GecodeCSPTranslator::VariableType::Input);
+void BinaryRelationTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+	Gecode::IntVarArgs variables = translator.resolveScope(csp, constraint->getScope(), CSPVariableType::Input);
 	Gecode::rel(csp, variables[0], _type, variables[1]);
 }
 
 
-void SumConstraintTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+void SumConstraintTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
 	const VariableIdxVector& scope = constraint->getScope();
 	
-	Gecode::IntVarArgs variables = translator.resolveScope(csp, scope, GecodeCSPTranslator::VariableType::Input);
+	Gecode::IntVarArgs variables = translator.resolveScope(csp, scope, CSPVariableType::Input);
 	std::vector<int> v_coefficients(scope.size(), 1);
 	v_coefficients[scope.size() - 1] = -1; // Last coefficient is a -1, since the last variable of the scope is the element of the sum
 	Gecode::IntArgs coefficients(v_coefficients);
@@ -98,20 +96,20 @@ void SumConstraintTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTrans
 	Gecode::linear(csp, coefficients, variables, Gecode::IRT_EQ, 0);
 }
 
-void AlldiffConstraintTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
-	Gecode::IntVarArgs variables = translator.resolveScope(csp, constraint->getScope(), GecodeCSPTranslator::VariableType::Input);
+void AlldiffConstraintTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedConstraint::cptr constraint) const {
+	Gecode::IntVarArgs variables = translator.resolveScope(csp, constraint->getScope(), CSPVariableType::Input);
 	Gecode::distinct(csp, variables);
 }
 
 
-void ExtensionalUnaryEffectTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+void ExtensionalUnaryEffectTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
 	auto* unaryEffect = dynamic_cast<const UnaryScopedEffect*>(effect);
 	if (unaryEffect == nullptr) throw std::runtime_error("Unary Extensional effects are not applicable to non-unary effects");
 	
 	// Order is relevant: first the input variable, then the output
 	Gecode::IntVarArgs variables;
-	variables << translator.resolveVariable(csp, effect->getScope()[0], GecodeCSPTranslator::VariableType::Input);
-	variables << translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
+	variables << translator.resolveVariable(csp, effect->getScope()[0], CSPVariableType::Input);
+	variables << translator.resolveVariable(csp, effect->getAffected(), CSPVariableType::Output);
 	auto map = CompiledUnaryEffect::compile(*unaryEffect, Problem::getCurrentProblem()->getProblemInfo());
 	
 	Gecode::TupleSet tuples;
@@ -122,20 +120,20 @@ void ExtensionalUnaryEffectTranslator::addConstraint(SimpleCSP& csp, const Gecod
 	Gecode::extensional(csp, variables, tuples);
 }
 
-void ValueAssignmentEffectTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
-	auto y = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
+void ValueAssignmentEffectTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+	auto y = translator.resolveVariable(csp, effect->getAffected(), CSPVariableType::Output);
 	Gecode::rel(csp, y, Gecode::IRT_EQ, effect->getBinding()[0]);
 }
 
-void VariableAssignmentEffectTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
-	auto y = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
-	auto x = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
+void VariableAssignmentEffectTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+	auto y = translator.resolveVariable(csp, effect->getAffected(), CSPVariableType::Output);
+	auto x = translator.resolveVariable(csp, effect->getScope()[0], CSPVariableType::Input);
 	Gecode::rel(csp, y, Gecode::IRT_EQ, x);
 }
 
-void AdditiveUnaryEffectTranslator::addConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
-	auto y_var = translator.resolveVariable(csp, effect->getAffected(), gecode::GecodeCSPTranslator::VariableType::Output);
-	auto x_var = translator.resolveVariable(csp, effect->getScope()[0], gecode::GecodeCSPTranslator::VariableType::Input);
+void AdditiveUnaryEffectTranslator::registerConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, ScopedEffect::cptr effect) const {
+	auto y_var = translator.resolveVariable(csp, effect->getAffected(), CSPVariableType::Output);
+	auto x_var = translator.resolveVariable(csp, effect->getScope()[0], CSPVariableType::Input);
 	Gecode::IntArgs     coeffs(2);
 	Gecode::IntVarArgs  vars(2);
 	coeffs[0] = 1;

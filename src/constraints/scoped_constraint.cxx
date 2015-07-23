@@ -111,7 +111,7 @@ BinaryDomainBoundsConstraint::getAffected() const {
 
 ScopedConstraint::cptr UnaryParametrizedScopedConstraint::compile(const ProblemInfo& problemInfo) const {
 	return nullptr;
-	return new CompiledUnaryConstraint(*this, problemInfo);
+	return new CompiledUnaryConstraint(*this);
 }
 
 ScopedConstraint::cptr BinaryParametrizedScopedConstraint::compile(const ProblemInfo& problemInfo) const {
