@@ -20,10 +20,10 @@ protected:
 // 	static std::tuple<ObjectIdxVector, VariableIdxVector> classify(const std::vector<Term::cptr>& terms);
 	
 	//!
-	static ScopedConstraint::cptr instantiateUnaryConstraint(AtomicFormula::RelationSymbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
+	static ScopedConstraint::cptr instantiateUnaryConstraint(AtomicFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
 	//!
-	static ScopedConstraint::cptr instantiateBinaryConstraint(AtomicFormula::RelationSymbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
+	static ScopedConstraint::cptr instantiateBinaryConstraint(AtomicFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
 };
 

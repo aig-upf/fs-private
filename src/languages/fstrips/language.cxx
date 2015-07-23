@@ -2,19 +2,18 @@
 #include <problem_info.hxx>
 #include <languages/fstrips/language.hxx>
 #include <problem.hxx>
+#include <utils/utils.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
-//! Helper to print out relation symbols
-std::string print_symbol(AtomicFormula::RelationSymbol symbol) {
-	if (symbol == AtomicFormula::RelationSymbol::EQ)       return "=";
-	else if (symbol == AtomicFormula::RelationSymbol::NEQ) return "!=";
-	else if (symbol == AtomicFormula::RelationSymbol::LT)  return "<";
-	else if (symbol == AtomicFormula::RelationSymbol::LEQ) return "<=";
-	else if (symbol == AtomicFormula::RelationSymbol::GT)  return ">";
-	else if (symbol == AtomicFormula::RelationSymbol::GEQ) return ">=";
-	throw std::runtime_error("Shouldn't get here");
-}
+// A small workaround to circumvent the fact that boost containers do not seem to allow initializer lists
+typedef AtomicFormula::Symbol AFSymbol;
+std::vector<std::pair<AFSymbol, std::string>> symbol_to_string_init{
+	{AFSymbol::EQ, "="}, {AFSymbol::NEQ, "!="}, {AFSymbol::LT, "<"}, {AFSymbol::LEQ, "<="}, {AFSymbol::GT, ">"}, {AFSymbol::GEQ, ">="}
+};
+const boost::container::flat_map<AFSymbol, std::string> AtomicFormula::symbol_to_string(symbol_to_string_init.begin(), symbol_to_string_init.end());
+const boost::container::flat_map<std::string, AFSymbol> AtomicFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
+
 
 //! A small helper
 template <typename T>
@@ -165,14 +164,18 @@ void AtomicFormula::computeScope(VariableIdxVector& scope) const {
 std::ostream& AtomicFormula::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& AtomicFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << lhs << " " << print_symbol(symbol()) << " " << rhs;
+	os << lhs << " " << AtomicFormula::symbol_to_string.at(symbol()) << " " << rhs;
 	return os;
+}
+
+AtomicFormulaSchema::cptr AtomicFormulaSchema::create(const std::string& symbol, TermSchema::cptr lhs, TermSchema::cptr rhs) {
+	return new AtomicFormulaSchema(AtomicFormula::string_to_symbol.at(symbol), lhs, rhs);
 }
 
 std::ostream& AtomicFormulaSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& AtomicFormulaSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << lhs << " " << print_symbol(symbol) << " " << rhs;
+	os << lhs << " " << AtomicFormula::symbol_to_string.at(symbol) << " " << rhs;
 	return os;
 }
 

@@ -269,7 +269,7 @@ class AtomicFormula {
 public:
 	typedef const AtomicFormula* cptr;
 	
-	enum class RelationSymbol {EQ, NEQ, LT, LEQ, GT, GEQ};
+	enum class Symbol {EQ, NEQ, LT, LEQ, GT, GEQ};
 	
 	AtomicFormula(Term::cptr lhs_, Term::cptr rhs_) : lhs(lhs_), rhs(rhs_) {}
 	
@@ -282,7 +282,7 @@ public:
 	
 	bool interpret(const PartialAssignment& assignment) const { return _satisfied(lhs->interpret(assignment), rhs->interpret(assignment)); }
 	
-	virtual RelationSymbol symbol() const = 0;
+	virtual Symbol symbol() const = 0;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const AtomicFormula& o) { return o.print(os); }
@@ -291,6 +291,10 @@ public:
 	
 	Term::cptr lhs;
 	Term::cptr rhs;
+	
+	const static boost::container::flat_map<AtomicFormula::Symbol, std::string> symbol_to_string;
+	const static boost::container::flat_map<std::string, AtomicFormula::Symbol> string_to_symbol;
+	
 protected:
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const;
 };
@@ -301,7 +305,7 @@ public:
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 = o2; }
 	
-	virtual RelationSymbol symbol() const { return RelationSymbol::EQ; }
+	virtual Symbol symbol() const { return Symbol::EQ; }
 	
 	std::string symbol_str() const { return "="; }
 };
@@ -312,7 +316,7 @@ public:
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 != o2; }
 	
-	RelationSymbol symbol() const { return RelationSymbol::NEQ; }
+	Symbol symbol() const { return Symbol::NEQ; }
 };
 
 class LTAtomicFormula : public AtomicFormula {
@@ -321,7 +325,7 @@ public:
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 < o2; }
 	
-	RelationSymbol symbol() const { return RelationSymbol::LT; }
+	Symbol symbol() const { return Symbol::LT; }
 };
 
 class LEQAtomicFormula : public AtomicFormula {
@@ -330,7 +334,7 @@ public:
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 <= o2; }
 	
-	RelationSymbol symbol() const { return RelationSymbol::LEQ; }
+	Symbol symbol() const { return Symbol::LEQ; }
 };
 
 class GTAtomicFormula : public AtomicFormula {
@@ -339,7 +343,7 @@ public:
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 > o2; }
 	
-	RelationSymbol symbol() const { return RelationSymbol::GT; }
+	Symbol symbol() const { return Symbol::GT; }
 };
 
 class GEQAtomicFormula : public AtomicFormula {
@@ -348,7 +352,7 @@ public:
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 >= o2; }
 	
-	RelationSymbol symbol() const { return RelationSymbol::GEQ; }
+	Symbol symbol() const { return Symbol::GEQ; }
 };
 
 
@@ -356,20 +360,21 @@ class AtomicFormulaSchema {
 public:
 	typedef const AtomicFormulaSchema* cptr;
 	
-	AtomicFormulaSchema(TermSchema::cptr lhs_, TermSchema::cptr rhs_, AtomicFormula::RelationSymbol symbol_) : lhs(lhs_), rhs(rhs_), symbol(symbol_) {}
+	static AtomicFormulaSchema::cptr create(const std::string& symbol, TermSchema::cptr lhs, TermSchema::cptr rhs);
 	
-	virtual ~AtomicFormulaSchema() {
-		delete lhs; delete rhs;
-	}
+	virtual ~AtomicFormulaSchema() { delete lhs; delete rhs; }
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const AtomicFormulaSchema& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;	
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 	
+protected:
+	AtomicFormulaSchema(AtomicFormula::Symbol symbol_, TermSchema::cptr lhs_, TermSchema::cptr rhs_) : symbol(symbol_), lhs(lhs_), rhs(rhs_) {}
+	
+	AtomicFormula::Symbol symbol;
 	TermSchema::cptr lhs;
 	TermSchema::cptr rhs;
-	AtomicFormula::RelationSymbol symbol;
 };
 
 

@@ -11,13 +11,14 @@ namespace fs0 { namespace language { namespace fstrips {
 
 class Loader {
 public:
-	//! Parse an (unprocessed) term from a JSON node
-	static TermSchema::cptr parseTerm(const pt::ptree& tree);
-	
 	//! Parse an atomic formula from a JSON node
 	static AtomicFormulaSchema::cptr parseAtomicFormula(const pt::ptree& tree);
 	
+	//! Parse an (unprocessed) term from a JSON node
+	static TermSchema::cptr parseTerm(const pt::ptree& tree);
 	
+	//! Parse a list of term
+	static std::vector<TermSchema::cptr> parseTermList(const pt::ptree& tree);
 	
 };
 

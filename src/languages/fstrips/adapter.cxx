@@ -85,14 +85,14 @@ std::tuple<ObjectIdxVector, VariableIdxVector> Adapter::classify(const std::vect
 	return std::make_tuple(constants, variables);
 }*/
 
-ScopedConstraint::cptr Adapter::instantiateUnaryConstraint(AtomicFormula::RelationSymbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
+ScopedConstraint::cptr Adapter::instantiateUnaryConstraint(AtomicFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
 	
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
-		case AtomicFormula::RelationSymbol::EQ:
+		case AtomicFormula::Symbol::EQ:
 			return new EQXConstraint(scope, parameters);
 			break;
 			
-		case AtomicFormula::RelationSymbol::NEQ:
+		case AtomicFormula::Symbol::NEQ:
 			return new NEQXConstraint(scope, parameters);
 			break;
 			
@@ -102,22 +102,22 @@ ScopedConstraint::cptr Adapter::instantiateUnaryConstraint(AtomicFormula::Relati
 	}
 }
 
-ScopedConstraint::cptr Adapter::instantiateBinaryConstraint(AtomicFormula::RelationSymbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
+ScopedConstraint::cptr Adapter::instantiateBinaryConstraint(AtomicFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
 	
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
-		case AtomicFormula::RelationSymbol::EQ:
+		case AtomicFormula::Symbol::EQ:
 			return new EQConstraint(scope, parameters);
 			break;
 			
-		case AtomicFormula::RelationSymbol::NEQ:
+		case AtomicFormula::Symbol::NEQ:
 			return new NEQConstraint(scope, parameters);
 			break;
 			
-		case AtomicFormula::RelationSymbol::LT:
+		case AtomicFormula::Symbol::LT:
 			return new LTConstraint(scope, parameters);
 			break;
 		
-		case AtomicFormula::RelationSymbol::LEQ:
+		case AtomicFormula::Symbol::LEQ:
 			return new LEQConstraint(scope, parameters);
 			break;
 			
