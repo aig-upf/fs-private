@@ -4,8 +4,8 @@
 
 namespace fs0 {
 
-ActionSchema::ActionSchema(const std::vector<AtomicFormulaSchema::cptr>& conditions, const std::vector<ActionEffectSchema::cptr>& effects)
-	: _conditions(conditions), _effects(effects)
+ActionSchema::ActionSchema(const std::string& name, const std::string& classname, const std::vector<AtomicFormulaSchema::cptr>& conditions, const std::vector<ActionEffectSchema::cptr>& effects)
+	: _name(name), _classname(classname), _conditions(conditions), _effects(effects)
 {}
 
 

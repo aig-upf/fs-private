@@ -10,7 +10,9 @@
 #include <fs0_types.hxx>
 #include <state.hxx>
 #include <actions.hxx>
-#include "lib/rapidjson/document.h"
+
+#include <lib/rapidjson/document.h>
+#include <action_schema.hxx>
 
 namespace fs0 {
 
@@ -23,6 +25,10 @@ public:
 	
 	//!
 	static void loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory, Problem& problem);
+	
+	static rapidjson::Document loadJSONObject(const std::string& filename);
+	
+protected:
 	
 	 //! Loads a state specification for a given text file.
 	 //! The specification basically consists on an assignation of values to all the state variables.
@@ -41,9 +47,8 @@ public:
 	
 	static void loadFunctions(const BaseComponentFactory& factory, Problem& problem);
 	
-	static rapidjson::Document loadJSONObject(const std::string& filename);
+	static ActionSchema::cptr loadActionSchema(const rapidjson::Value& data, const ProblemInfo& info);
 	
-protected:
 	// Conversion to a C++ vector of values.
 	template<typename T>
 	static std::vector<T> parseNumberList(const rapidjson::Value& data);

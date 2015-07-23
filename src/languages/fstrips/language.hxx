@@ -12,7 +12,7 @@ public:
 	typedef const Term* cptr;
 	
 	Term() {}
-	virtual ~Term() = 0;
+	virtual ~Term() {}
 
 	//! Clone idiom
 	virtual Term* clone() const = 0;
@@ -176,7 +176,7 @@ public:
 	typedef const TermSchema* cptr;
 	
 	TermSchema() {}
-	virtual ~TermSchema() = 0;
+	virtual ~TermSchema() {}
 
 	virtual TermSchema* clone() const = 0;
 	
@@ -212,10 +212,10 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term* process(const ObjectIdxVector& binding) const;	
+	Term* process(const ObjectIdxVector& binding) const;
 	
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
 	
 protected:
 	//! The ID of the function or predicate symbol, e.g. in the state variable loc(A), the id of 'loc'
@@ -238,7 +238,7 @@ public:
 	Term* process(const ObjectIdxVector& binding) const;
 	
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
 	
 protected:
 	//! The position of the parameter within the ordered set of action parameters
@@ -257,7 +257,7 @@ public:
 	Term* process(const ObjectIdxVector& binding) const;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
 	
 protected:
 	//! The actual value of the constant

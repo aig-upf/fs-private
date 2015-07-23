@@ -13,6 +13,10 @@
 
 #include <iostream>
 
+#include <languages/fstrips/loader.hxx>
+
+namespace fs = fs0::language::fstrips;
+
 namespace fs0 {
 
 void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory, Problem& problem) {
@@ -85,35 +89,20 @@ void Loader::loadGroundedActions(const rapidjson::Value& data, const BaseCompone
 }
 
 void Loader::loadActionSchemata(const rapidjson::Value& data, Problem& problem) {
-	assert(problem.getNumActions() == 0);
-	
+	assert(problem.getNumSchemata() == 0);
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		const rapidjson::Value& node = data[i];
-		
-// 		# Format: a number of elements defining the action:
-// 		# (0) Action ID (index)
-// 		# (1) Action name
-// 		# (2) classname
-// 		# (3) binding
-// 		# (4) derived objects
-// 		# (5) applicability relevant vars
-// 		# (6) effect relevant vars
-// 		# (7) effect affected vars
-		
-		
-		// We ignore the grounded name for the moment being.
-		const std::string& actionClassname = node[2].GetString();
-		ObjectIdxVector binding = parseNumberList<int>(node[3]);
-		ObjectIdxVector derived = parseNumberList<int>(node[4]);
-		std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(node[5]);
-		std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(node[6]);
-		VariableIdxVector effAffectedVars = parseNumberList<unsigned>(node[7]);
-		
-// 		factory.instantiateAction(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars)
-		
-		
-// 		problem.addActionSchema();
+ 		problem.addActionSchema(loadActionSchema(data[i], problem.getProblemInfo()));
 	}
+}
+
+ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const ProblemInfo& info) {
+	const std::string& name = node["name"].GetString();
+	const std::string& classname = node["classname"].GetString();
+	
+	const std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(node["conditions"], info);
+	const std::vector<ActionEffectSchema::cptr> effects = fs::Loader::parseAtomicEffectList(node["effects"], info);
+	
+	return new ActionSchema(name, classname, conditions, effects);
 }
 
 void Loader::generateGoalConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem) {
