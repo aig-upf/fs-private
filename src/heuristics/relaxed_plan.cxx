@@ -17,7 +17,7 @@
 namespace fs0 {
 
 template <typename Model, typename RPGBuilder>
-RelaxedPlanHeuristic<Model, RPGBuilder>::RelaxedPlanHeuristic(const Model& problem, RPGBuilder*  builder) :
+RelaxedPlanHeuristic<Model, RPGBuilder>::RelaxedPlanHeuristic(const Model& problem, std::shared_ptr<RPGBuilder> builder) :
 	_problem(problem.getTask()), _builder(builder)
 {}
 

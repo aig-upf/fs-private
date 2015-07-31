@@ -29,7 +29,7 @@ protected:
 	std::vector<DirectConstraint::cptr> binary_constraints;
 	std::vector<DirectConstraint::cptr> n_ary_constraints;
 	
-	VariableIdxVector relevant;
+	VariableIdxVector _relevant;
 
 public:
 	//! Constructs a manager handling the given set of constraints
@@ -39,7 +39,7 @@ public:
 	//! Precompute some of the structures that we'll need later on.
 	void initialize();
 	
-	const VariableIdxVector& getAllRelevantVariables() const;
+	const VariableIdxVector& getAllRelevantVariables() const { return _relevant; }
 	
 	//! Indexes pointers to the constraints in three different vectors: unary, binary and n-ary constraints.
 	void indexConstraintsByArity();
@@ -58,7 +58,7 @@ public:
 	static bool checkConsistency(const DomainMap& domains);
 
 	//! Static (node-consistent) filtering of the given unary constraints
-	static FilteringOutput unaryFiltering(const std::vector<DirectConstraint::cptr>& contraints, const DomainMap& domains);
+	static FilteringOutput unaryFiltering(const std::vector<DirectConstraint::cptr>& constraints, const DomainMap& domains);
 	
 protected:
 	

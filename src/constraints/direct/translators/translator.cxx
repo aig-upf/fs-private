@@ -7,15 +7,17 @@
 namespace fs0 {
 
 
+void DirectTranslator::checkSupported(const fs::Term::cptr lhs, const fs::Term::cptr rhs) {
+	unsigned l1 = lhs->nestedness();
+	unsigned l2 = rhs->nestedness();
+	if (l1 > 0 || l2 > 0) throw UnimplementedFeatureException("Cannot translate nested fluents to DirectConstraints- try Gecode instead!");	
+}
+	
 DirectConstraint::cptr DirectTranslator::generate(const AtomicFormula& formula) {
-	
-	
-	unsigned l1 = formula.lhs->nestedness();
-	unsigned l2 = formula.rhs->nestedness();
-	if (l1 > 0 || l2 > 0) throw UnimplementedFeatureException("Cannot translate nested fluents to DirectConstraints- try Gecode instead!");
+	checkSupported(formula.lhs, formula.rhs);
 	
 	VariableIdxVector formula_scope = formula.computeScope();
-	if (formula_scope.size() > 2) throw std::runtime_error("Too high a scope for native constraints");
+	if (formula_scope.size() > 2) throw std::runtime_error("Too high a scope for direct constraints");
 	
 	// Here we can assume that the scope is <= 2 and there are no nested fluents
 	Term::cptr lhs = formula.lhs, rhs = formula.rhs; // shortcuts
@@ -72,10 +74,32 @@ std::vector<DirectConstraint::cptr> DirectTranslator::generate(const std::vector
 }
 
 DirectEffect::cptr DirectTranslator::generate(const ActionEffect& effect) {
-	assert(0); // TODO - TO IMPLEMENT
-	return nullptr;
-}
+	checkSupported(effect.lhs, effect.rhs);
+	auto lhs_var = dynamic_cast<StateVariable::cptr>(effect.lhs);
+	if (!lhs_var) throw std::runtime_error("Unsupported left-hand side type on action effect");
+	assert(effect.affected.size()==1);
+	VariableIdx affected = effect.affected[0];
 	
+	VariableIdxVector rhs_scope = effect.rhs->computeScope();
+	if (rhs_scope.size() > 2) throw std::runtime_error("Too high a scope for direct effects");
+	
+	if (auto rhs_const = dynamic_cast<Constant::cptr>(effect.rhs)) {
+		return new ValueAssignmentEffect(affected, rhs_const->getValue());
+		
+	} else if (auto rhs_var = dynamic_cast<StateVariable::cptr>(effect.rhs)) {
+		return new VariableAssignmentEffect(rhs_var->getValue(), affected);
+		
+	} else {
+		// We necessarily have a statically-headed term which in turn will have at most scope two
+		if (rhs_scope.size() == 1) {
+			return new CompiledUnaryEffect(rhs_scope[0], affected, *(effect.rhs));
+		} else {
+			assert(rhs_scope.size() == 2);
+			return new CompiledBinaryEffect(rhs_scope, affected, *(effect.rhs));
+		}
+	}
+}
+
 std::vector<DirectEffect::cptr> DirectTranslator::generate(const std::vector<ActionEffect::cptr>& effects) {
 	std::vector<DirectEffect::cptr> generated;
 	for (const auto effect:effects) {

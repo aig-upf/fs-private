@@ -4,6 +4,7 @@
 #include <problem_info.hxx>
 #include <limits>
 #include <utils/utils.hxx>
+#include <utils/printers/binding.hxx>
 
 
 namespace fs0 {
@@ -42,12 +43,7 @@ VariableIdxVector GroundAction::extractAffectedVariables() const {
 }
 
 std::ostream& GroundAction::print(std::ostream& os) const {
-	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
-	os << getName() << "(";
-	for(auto obj:_binding) {
-		os << problemInfo.getCustomObjectName(obj) << ", ";
-	}
-	os << ")";
+	os << getName() << "(" << print::binding(_binding, _schema->getSignature()) << ")";
 	return os;
 }
 

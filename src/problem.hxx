@@ -5,7 +5,7 @@
 
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <problem_info.hxx>
+
 #include <actions/applicable_action_set.hxx>
 #include <actions/action_schema.hxx>
 #include <actions/ground_action.hxx>
@@ -16,7 +16,7 @@ class Problem
 {
 public:
 	//! Constructs a problem by loading the problem data from the given directory.
-	Problem(const rapidjson::Document& data);
+	Problem();
 	~Problem();
 
 	//! Modify the problem initial state
@@ -36,10 +36,14 @@ public:
 	void registerGoalCondition(AtomicFormula::cptr condition) { _goalConditions.push_back(condition);}
 	const std::vector<AtomicFormula::cptr>& getGoalConditions() const { return _goalConditions; }
 
-	const std::string& get_action_name(unsigned action) const { return _problemInfo.getActionName(action); }
+	const std::string& get_action_name(unsigned action) const { return _problemInfo->getActionName(action); }
 
 	//! Getter/setter for the associated ProblemInfo object.
-	const ProblemInfo& getProblemInfo() const { return _problemInfo; }
+	void setProblemInfo(ProblemInfo* info) { _problemInfo = info; }
+	const ProblemInfo& getProblemInfo() const {
+		if (!_problemInfo) throw std::runtime_error("ProblemInfo object has not been set yet");
+		return *_problemInfo;
+	}
 
 	static void setCurrentProblem(Problem& problem) {
 		_instance = &problem;
@@ -71,8 +75,8 @@ protected:
 	// The set of grounded actions of the problem
 	std::vector<GroundAction::cptr> _ground;
 	
-	//! An object with all sorts of ectra book-keeping information
-	const ProblemInfo _problemInfo;
+	//! An object with all sorts of extra book-keeping information
+	ProblemInfo* _problemInfo;
 	
 	//! Pointers to the different problem constraints. This class owns the pointers.
 	std::vector<AtomicFormula::cptr> _stateConstraints;

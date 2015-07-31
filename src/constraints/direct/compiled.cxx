@@ -192,10 +192,23 @@ FilteringOutput CompiledBinaryConstraint::filter(unsigned variable) {
 	return FilteringOutput::Pruned;
 }
 
+	
+CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, ExtensionT&& extension)
+	: UnaryDirectEffect(relevant, affected, {}), _extension(extension)
+{}
+	
+CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, const Term& term) 
+	: CompiledUnaryEffect(relevant, affected, compile(term, Problem::getCurrentProblem()->getProblemInfo()))
+{}
+	
 
-CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEffect& effect, const fs0::ProblemInfo& problemInfo) {
+Atom CompiledUnaryEffect::apply(ObjectIdx value) const {
+	return Atom(_affected, _extension.at(value));
+}
+
+CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEffect& effect, const fs0::ProblemInfo& info) {
 	VariableIdx relevant = effect.getScope()[0];
-	const ObjectIdxVector& all_values = problemInfo.getVariableObjects(relevant);
+	const ObjectIdxVector& all_values = info.getVariableObjects(relevant);
 	
 	ExtensionT map;
 	for(ObjectIdx value:all_values) {
@@ -209,5 +222,45 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEf
 	}
 	return map;
 }
+
+CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const Term& term, const ProblemInfo& info) {
+	VariableIdxVector scope = term.computeScope();
+	assert(scope.size() == 1);
+	ExtensionT map;
+	
+	for(ObjectIdx value:info.getVariableObjects(scope[0])) {
+		ObjectIdx out = term.interpret(Projections::zip(scope, {value}));
+		map.insert(std::make_pair(value, out));
+	}
+	return map;
+}
+
+CompiledBinaryEffect::CompiledBinaryEffect(const VariableIdxVector& scope, VariableIdx affected, ExtensionT&& extension) 
+	: BinaryDirectEffect(scope, affected, {}), _extension(extension)
+{}
+
+CompiledBinaryEffect::CompiledBinaryEffect(const VariableIdxVector& scope, VariableIdx affected, const fs::Term& term)
+	: CompiledBinaryEffect(scope, affected, compile(term, Problem::getCurrentProblem()->getProblemInfo()))
+{}
+
+CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& term, const ProblemInfo& info) {
+	VariableIdxVector scope = term.computeScope();
+	assert(scope.size() == 2);
+	ExtensionT map;
+	
+	for(ObjectIdx x:info.getVariableObjects(scope[0])) {
+		for(ObjectIdx y:info.getVariableObjects(scope[1])) {
+			ObjectIdx out = term.interpret(Projections::zip(scope, {x, y}));
+			map.insert(std::make_pair(std::make_pair(x, y), out));
+		}
+	}
+	return map;
+}
+
+
+Atom CompiledBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
+	return Atom(_affected, _extension.at({v1, v2}));
+}
+
 
 } // namespaces

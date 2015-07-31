@@ -7,7 +7,6 @@
 
 namespace fs0 { namespace print {
 
-	
 class binding {
 	protected:
 		const std::vector<int>& _binding;
@@ -20,6 +19,5 @@ class binding {
 		friend std::ostream& operator<<(std::ostream &os, const binding& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
-
 
 } } // namespaces

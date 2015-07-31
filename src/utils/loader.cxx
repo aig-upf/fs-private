@@ -26,9 +26,16 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 {
 
 void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory, Problem& problem) {
+	
+	// Load and set the ProblemInfo data structure
+	auto info = new ProblemInfo(data);
+	problem.setProblemInfo(info);
+	
+	//! Load the actual static functions
+	loadFunctions(factory, problem, *info);
+	
 	/* Define the actions */
 	std::cout << "\tDefining actions..." << std::endl;
-	
 	auto schema_index = loadActionSchemata(data["action_schemata"], problem);
 	
 	loadGroundedActions(data["actions"], factory, schema_index, problem);
@@ -44,15 +51,11 @@ void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFac
 	/* Generate goal constraints from the goal evaluator */
 	std::cout << "\tGenerating goal constraints..." << std::endl;
 	loadGoalConditions(data["goal"], factory, problem);
-	
-	loadFunctions(factory, problem);
 }
 
-void Loader::loadFunctions(const BaseComponentFactory& factory, Problem& problem) {
-	const ProblemInfo& info = problem.getProblemInfo();
+void Loader::loadFunctions(const BaseComponentFactory& factory, Problem& problem, ProblemInfo& info) {
 	for (auto elem:factory.instantiateFunctions()) {
-		FunctionData data = info.getFunctionData(info.getFunctionId(elem.first));
-		data.setFunction(elem.second);
+		info.setFunction(info.getFunctionId(elem.first), elem.second);
 	}
 }
 
@@ -91,10 +94,15 @@ void Loader::loadGroundedActions(const rapidjson::Value& data, const BaseCompone
 		// XXX - With GroundActions
 		ActionSchema::cptr schema = schema_index.at(actionClassname);
 		
-		FDEBUG("main", "Processing with binding " << print::binding(binding, schema->getSignature()) << " action schema\n" << *schema);
-		auto ground = schema->process(binding, problem.getProblemInfo());
-		ground->setManager(ActionManagerFactory::create(*ground));
-		problem.addGroundAction(ground);
+		FDEBUG("grounding", "Processing with binding " << print::binding(binding, schema->getSignature()) << " action schema...\n" << *schema);
+		GroundAction* ground = schema->process(binding, problem.getProblemInfo());
+		if (ground) {
+			FDEBUG("grounding", "Generated grounded action:\n" << *ground);
+			ground->setManager(ActionManagerFactory::create(*ground));
+			problem.addGroundAction(ground);
+		} else {
+			FDEBUG("grounding", "Grounded action is statically non-applicable");
+		}
 	}
 }
 
@@ -129,32 +137,14 @@ void Loader::loadGoalConditions(const rapidjson::Value& data, const BaseComponen
 		auto processed = condition->process({}, problem.getProblemInfo()); // Goal conditions are by definition already grounded, thus we need no binding
 		problem.registerGoalCondition(processed);
 	}
-	
-	
-	
 }
 
 void Loader::loadStateConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem) {
-
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		const rapidjson::Value& node = data[i];
-		
-		assert(0);
-		// TODO - USE SAME STRUCTURE THAN FOR GOAL CONDITIONS, we simply need to parse a formula.
-		// Each node contains 4 elements
-		// (0) The constraint description
-		// (1) The constraint name
-		// (2) The constraint parameters
-		// (3) The variables upon which the constraint is enforced
-		assert(node.Size()==4);
-
-		// We ignore the grounded name for the moment being.
-		const std::string& name = node[1].GetString();
-		ObjectIdxVector parameters = parseNumberList<int>(node[2]);
-		VariableIdxVector variables = parseNumberList<unsigned>(node[3]);
-		
-// 		auto unprocessed = factory.instantiateConstraint(name, parameters, variables);
-// 		problem.registerStateConstraint(unprocessed->process({}));
+	assert(problem.getStateConstraints().empty());
+	std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(data["conditions"], problem.getProblemInfo());
+	for (const AtomicFormulaSchema::cptr condition:conditions) {
+		auto processed = condition->process({}, problem.getProblemInfo()); // State constraintsare by definition already grounded, thus we need no binding
+		problem.registerStateConstraint(processed);
 	}
 }
 

@@ -20,9 +20,10 @@ class DirectRPGBuilder {
 public:
 	typedef DirectRPGBuilder* cptr;
 	
-	DirectRPGBuilder(const std::vector<fs::AtomicFormula::cptr>& goalConstraints, const std::vector<fs::AtomicFormula::cptr>& stateConstraints);
+	//! Factory method to create Direct RPG builders
+	static DirectRPGBuilder::cptr create(const std::vector<fs::AtomicFormula::cptr>& goalConditions, const std::vector<fs::AtomicFormula::cptr>& stateConstraints);
 	
-	~DirectRPGBuilder() {}
+	~DirectRPGBuilder();
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
 	FilteringOutput pruneUsingStateConstraints(RelaxedState& state) const;
@@ -38,6 +39,8 @@ public:
 	std::ostream& print(std::ostream& os) const;
 	
 protected:
+	//! Private constructor
+	DirectRPGBuilder(const std::vector<DirectConstraint::cptr>& goalConstraints, const std::vector<DirectConstraint::cptr>& stateConstraints);
 	
 	//! We store here all the constraints that we want to take into account when determining if a relaxed state is a goal:
 	//! This includes both the explicit goal constraints plus the state constraints.

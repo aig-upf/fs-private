@@ -46,7 +46,7 @@ protected:
 	//! Loads a set of state constraints from the given file
 	static void loadStateConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem);
 	
-	static void loadFunctions(const BaseComponentFactory& factory, Problem& problem);
+	static void loadFunctions(const BaseComponentFactory& factory, Problem& problem, ProblemInfo& info);
 	
 	static ActionSchema::cptr loadActionSchema(const rapidjson::Value& data, const ProblemInfo& info);
 	

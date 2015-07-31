@@ -20,7 +20,7 @@ class DirectActionManager : public BaseActionManager
 public:
 	//! Constructs a manager handling the given set of constraints
 	DirectActionManager(const GroundAction& action);
-	~DirectActionManager() {}
+	~DirectActionManager();
 
 	virtual void process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg);
 

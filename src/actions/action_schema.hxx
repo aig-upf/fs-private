@@ -39,6 +39,8 @@ public:
 	std::ostream& print(std::ostream& os) const;
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 	
+	//! Process the action schema with a given parameter binding and return the corresponding GroundAction
+	//! A nullptr is returned if the action is detected to be statically non-applicable
 	GroundAction* process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
 };
 

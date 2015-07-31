@@ -10,17 +10,28 @@
 
 namespace fs0 {
 
+DirectRPGBuilder::cptr DirectRPGBuilder::create(const std::vector<fs::AtomicFormula::cptr>& goalConditions, const std::vector<fs::AtomicFormula::cptr>& stateConstraints) {
+	auto directStateConstraints = DirectTranslator::generate(stateConstraints);
+	auto allGoalConstraints = Utils::merge(DirectTranslator::generate(goalConditions), directStateConstraints);
+	return new DirectRPGBuilder(allGoalConstraints, directStateConstraints);
+}
+	
 // Note that we use both types of constraints as goal constraints
-DirectRPGBuilder::DirectRPGBuilder(const std::vector<AtomicFormula::cptr>& goalConstraints, const std::vector<AtomicFormula::cptr>& stateConstraints) :
-	_stateConstraints(DirectTranslator::generate(stateConstraints)),
-	_allGoalConstraints(Utils::merge(DirectTranslator::generate(goalConstraints), _stateConstraints)), // Goal constraints include state constraints as well
+DirectRPGBuilder::DirectRPGBuilder(const std::vector<DirectConstraint::cptr>& goalConstraints, const std::vector<DirectConstraint::cptr>& stateConstraints) :
+	_stateConstraints(stateConstraints),
+	_allGoalConstraints(goalConstraints), // Goal constraints include state constraints as well
 	_stateConstraintsHandler(_stateConstraints),
 	_goalConstraintsHandler(_allGoalConstraints), // We store all the constraints in a new vector so that we can pass a const reference 
 	                                            // - we're strongly interested in the ConstraintManager having only a reference, not the actual value,
 	                                            // since in some cases each grounded action will have a ConstraintManager
 	hasStateConstraints(stateConstraints.size() > 0)
-{}
+{
+}
 
+DirectRPGBuilder::~DirectRPGBuilder() {
+	for (const auto ptr: _allGoalConstraints) delete ptr;
+	// We do not need to delete the state constraints, as they form part of the goal constraint vector as well
+}
 
 FilteringOutput DirectRPGBuilder::pruneUsingStateConstraints(RelaxedState& state) const {
 	if (!hasStateConstraints) return FilteringOutput::Unpruned;

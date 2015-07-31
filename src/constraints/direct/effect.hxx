@@ -58,7 +58,7 @@ public:
 class ZeroaryDirectEffect : public DirectEffect
 {
 public:
-	ZeroaryDirectEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
+	ZeroaryDirectEffect(VariableIdx affected, const std::vector<int>& parameters);
 	virtual ~ZeroaryDirectEffect() {}
 	
 	//! Effects are by default applicable, i.e. condition-less.
@@ -80,7 +80,7 @@ public:
 class UnaryDirectEffect : public DirectEffect
 {
 public:
-	UnaryDirectEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
+	UnaryDirectEffect(VariableIdx relevant, VariableIdx affected, const std::vector<int>& parameters);
 	virtual ~UnaryDirectEffect() {}
 	
 	//! Effects are by default applicable, i.e. condition-less.
@@ -88,7 +88,7 @@ public:
 	
 	//! Unary effects should use the specialized version
 	Atom apply(const ObjectIdxVector& values) const { throw std::runtime_error("Unary effects are expected not to use this method"); };
-	
+
 	//! To be overriden by the concrete effect.
 	virtual Atom apply(ObjectIdx value) const = 0;
 	
@@ -107,7 +107,7 @@ public:
 	
 	//! Effects are by default applicable, i.e. condition-less.
 	virtual bool applicable(ObjectIdx v1, ObjectIdx v2) const { return true; };
-		
+	
 	//! This might be necessary in some cases.
 	Atom apply(const ObjectIdxVector& values) const {
 		assert(values.size() == 2);

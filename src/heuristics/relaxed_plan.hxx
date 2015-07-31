@@ -13,9 +13,9 @@ class RelaxedPlanHeuristic {
 public:
 	typedef typename Model::ActionType Action;
 
-	RelaxedPlanHeuristic(const Model& problem, RPGBuilder* builder);
-
-	virtual ~RelaxedPlanHeuristic() { delete _builder; }
+	RelaxedPlanHeuristic(const Model& problem, std::shared_ptr<RPGBuilder> builder);
+	
+	virtual ~RelaxedPlanHeuristic() {}
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& seed);
@@ -28,7 +28,7 @@ public:
 protected:
 	const Problem& _problem;
 	
-	const typename RPGBuilder::cptr _builder;
+	const std::shared_ptr<RPGBuilder> _builder;
 };
 
 } // namespaces

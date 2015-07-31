@@ -7,7 +7,7 @@ namespace fs0 {
 
 
 DirectCSPHandler::DirectCSPHandler(const std::vector<DirectConstraint::cptr>& constraints)
-	: _constraints(constraints) {
+	: _constraints(constraints), _relevant(indexRelevantVariables(constraints)) {
 	initialize();
 }
 
@@ -18,12 +18,7 @@ void DirectCSPHandler::initialize() {
 
 	// Initialize the worklist
 	initializeAC3Worklist(binary_constraints, AC3Worklist);
-
-	// Index all the relevant variables
-	relevant = indexRelevantVariables(_constraints);
 }
-
-const VariableIdxVector& DirectCSPHandler::getAllRelevantVariables() const { return relevant; }
 
 //! Indexes pointers to the constraints in three different vectors: unary, binary and n-ary constraints.
 void DirectCSPHandler::indexConstraintsByArity() {
@@ -117,10 +112,10 @@ FilteringOutput DirectCSPHandler::unaryFiltering(const DomainMap& domains) const
 	return unaryFiltering(unary_constraints, domains);
 }
 
-FilteringOutput DirectCSPHandler::unaryFiltering(const std::vector<DirectConstraint::cptr>& contraints, const DomainMap& domains) {
+FilteringOutput DirectCSPHandler::unaryFiltering(const std::vector<DirectConstraint::cptr>& constraints, const DomainMap& domains) {
 	FilteringOutput output = FilteringOutput::Unpruned;
 
-	for (DirectConstraint::cptr ctr:contraints) {
+	for (DirectConstraint::cptr ctr:constraints) {
 		assert(ctr->getArity() == 1);
 		FilteringOutput o = ctr->filter(domains);
 		if (o == FilteringOutput::Pruned) {

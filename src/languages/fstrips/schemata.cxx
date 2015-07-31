@@ -29,8 +29,16 @@ Term* NestedTermSchema::process(const ObjectIdxVector& binding, const ProblemInf
 		}
 	}
 	
-	if (info.getFunctionData(_symbol_id).isStatic()) {
-		if (constant_values.size() == _subterms.size()) throw std::runtime_error("Unimplemented... should resolve the value statically?");
+	const auto& function = info.getFunctionData(_symbol_id);
+	if (function.isStatic()) {
+		
+		// If all subterms are constants, we can resolve the value of the term schema statically
+		if (constant_values.size() == _subterms.size()) { 
+			auto value = function.getFunction()(constant_values);
+			return new Constant(value);
+		}
+		
+		// Otherwise, we have a statically-headed nested term
 		return new StaticHeadedNestedTerm(_symbol_id, st);
 	} else {
 		// If all subterms were constant, and the symbol is fluent, we have a state variable

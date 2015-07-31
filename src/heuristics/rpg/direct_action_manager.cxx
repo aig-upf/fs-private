@@ -15,7 +15,12 @@ DirectActionManager::DirectActionManager(const GroundAction& action)
 	   _constraints(DirectTranslator::generate(action.getConditions())),
 	   _effects(DirectTranslator::generate(action.getEffects())),
 	   _handler(_constraints)
-{
+{}
+
+DirectActionManager::~DirectActionManager() {
+	for (const auto ptr:_constraints) delete ptr;
+	for (const auto ptr:_effects) delete ptr;
+	
 }
 
 void DirectActionManager::process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg) {

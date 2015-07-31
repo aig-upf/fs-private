@@ -10,7 +10,7 @@
 #include <fs0_types.hxx>
 #include <iostream>
 
-#include "lib/rapidjson/document.h"
+#include <lib/rapidjson/document.h>
 
 namespace fs0 {
 
@@ -31,7 +31,9 @@ public:
 	bool isStatic() const { return _static; }
 	
 	//! Sets/Gets the actual implementation of the function
-	void setFunction(Function function) { _function = function; }
+	void setFunction(const Function& function) { 
+		_function = function;
+	}
 	const Function& getFunction() const { 
 		assert(_function);
 		return _function;
@@ -120,6 +122,9 @@ public:
 	//! Return the ID of the function with given name
 	inline unsigned getFunctionId(const std::string& name) const { return functionIds.at(name); }
 	const std::string& getFunctionName(unsigned function_id) const { return functionNames.at(function_id); }
+	void setFunction(unsigned functionId, const Function& function) {
+		functionData.at(functionId).setFunction(function);
+	}
 	inline const FunctionData& getFunctionData(unsigned functionId) const { return functionData.at(functionId); }
 	
 	//! Returns all the objects of the given type _or of a descendant type_

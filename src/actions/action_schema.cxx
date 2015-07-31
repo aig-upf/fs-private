@@ -42,7 +42,18 @@ std::ostream& ActionSchema::print(std::ostream& os, const fs0::ProblemInfo& info
 GroundAction* ActionSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	std::vector<AtomicFormula::cptr> conditions;
 	for (const AtomicFormulaSchema::cptr condition:_conditions) {
-		auto processed = condition->process(binding, info);
+		AtomicFormula::cptr processed = condition->process(binding, info);
+		if (processed->getScope().size() == 0) { // The condition formula can be statically resolved to either true or false
+			
+			if (processed->interpret({})) { // No need to add the condition, which is always true
+				delete processed;
+				continue; 
+			}
+			else { // The action is statically non-applicable
+				for (const auto c:conditions) delete c;
+				return nullptr;
+			}
+		}
 		conditions.push_back(processed);
 	}
 	

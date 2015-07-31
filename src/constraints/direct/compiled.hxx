@@ -14,6 +14,12 @@
 
 
 
+namespace fs0 { namespace language { namespace fstrips {
+	class Term;
+} } }
+
+namespace fs = fs0::language::fstrips;
+
 namespace fs0 {
 
 
@@ -119,16 +125,47 @@ public:
 
 
 
-class CompiledUnaryEffect  {
+class CompiledUnaryEffect : public UnaryDirectEffect {
 protected:
 	typedef ObjectIdx ElementT;
 	typedef boost::container::flat_map<ElementT, ElementT> ExtensionT;
 	
+	// The extension is a map x -> y, implicitly encoding the current effect y := f(x)
+	ExtensionT _extension;
+	
+	//! Protected constructor, to be invoked from the factory method
+	CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, ExtensionT&& extension);
+
 public:
+	//! Construct a Compiled unary effect from a given logical term
+	CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, const fs::Term& term);
+	
+	Atom apply(ObjectIdx value) const;
+	
 	//! Returns a set with all values that satisfy the constraint
-	static ExtensionT compile(const UnaryDirectEffect& effect, const ProblemInfo& problemInfo);
+	static ExtensionT compile(const UnaryDirectEffect& effect, const ProblemInfo& info);
+	static ExtensionT compile(const fs::Term& term, const ProblemInfo& info);
 };
 
+class CompiledBinaryEffect : public BinaryDirectEffect {
+protected:
+	typedef ObjectIdx ElementT;
+	typedef boost::container::flat_map<std::pair<ElementT, ElementT>, ElementT> ExtensionT;
+	
+	// The extension is a map (x1, x2) -> y, implicitly encoding the current effect y := f(x1, x2)
+	ExtensionT _extension;
+	
+	//! Protected constructor, to be invoked from the factory method
+	CompiledBinaryEffect(const VariableIdxVector& scope, VariableIdx affected, ExtensionT&& extension);
 
+public:
+	//! Construct a Compiled unary effect from a given logical term
+	CompiledBinaryEffect(const VariableIdxVector& scope, VariableIdx affected, const fs::Term& term);
+	
+	Atom apply(ObjectIdx v1, ObjectIdx v2) const;
+	
+	//! Returns a set with all values that satisfy the constraint
+	static ExtensionT compile(const fs::Term& term, const ProblemInfo& info);
+};
 } // namespaces
 

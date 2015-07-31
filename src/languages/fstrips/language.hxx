@@ -238,8 +238,10 @@ public:
 	const static std::map<AtomicFormula::Symbol, std::string> symbol_to_string;
 	const static std::map<std::string, AtomicFormula::Symbol> string_to_symbol;
 	
+	const VariableIdxVector& getScope() const { return scope; }
+	
 	//! We cache the scope for performance reasons
-	const VariableIdxVector scope;	
+	const VariableIdxVector scope;
 	
 protected:
 	virtual bool _satisfied(ObjectIdx o1, ObjectIdx o2) const = 0;

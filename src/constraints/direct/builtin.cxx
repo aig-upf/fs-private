@@ -177,12 +177,9 @@ FilteringOutput NEQXConstraint::filter(const DomainMap& domains) const {
 }
 
 
-ValueAssignmentEffect::ValueAssignmentEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters)
-	: ZeroaryDirectEffect(scope, affected, parameters)
-{
-	assert(scope.size()==0);
-	assert(parameters.size()==1);
-}
+ValueAssignmentEffect::ValueAssignmentEffect(VariableIdx affected, ObjectIdx value)
+	: ZeroaryDirectEffect(affected, {value})
+{}
 
 Atom ValueAssignmentEffect::apply() const {
 	assert(applicable());
@@ -195,11 +192,9 @@ std::ostream& ValueAssignmentEffect::print(std::ostream& os) const {
 	return os;
 }
 
-VariableAssignmentEffect::VariableAssignmentEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters)
-	: UnaryDirectEffect(scope, affected, parameters)
-{
-	assert(parameters.size()==0);
-}
+VariableAssignmentEffect::VariableAssignmentEffect(VariableIdx relevant, VariableIdx affected)
+	: UnaryDirectEffect(relevant, affected, {})
+{}
 
 
 Atom VariableAssignmentEffect::apply(ObjectIdx v1) const {
@@ -214,11 +209,9 @@ std::ostream& VariableAssignmentEffect::print(std::ostream& os) const {
 }
 
 
-AdditiveUnaryEffect::AdditiveUnaryEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters)
-	: UnaryDirectEffect(scope, affected, parameters)
-{
-	assert(parameters.size()==1);
-}
+AdditiveUnaryEffect::AdditiveUnaryEffect(VariableIdx relevant, VariableIdx affected, int value)
+	: UnaryDirectEffect(relevant, affected, {value})
+{}
 
 
 Atom AdditiveUnaryEffect::apply(ObjectIdx v1) const {

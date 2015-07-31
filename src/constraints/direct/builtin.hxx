@@ -96,11 +96,10 @@ public:
 	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
 };
 
-// X := c
-class ValueAssignmentEffect : public ZeroaryDirectEffect
-{
+// X := c, where X os the affected variable, and c is the only parameter
+class ValueAssignmentEffect : public ZeroaryDirectEffect {
 public:
-	ValueAssignmentEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
+	ValueAssignmentEffect(VariableIdx affected, ObjectIdx value);
 	
 	virtual Atom apply() const;
 	
@@ -111,17 +110,17 @@ public:
 class VariableAssignmentEffect : public UnaryDirectEffect
 {
 public:
-	VariableAssignmentEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
+	VariableAssignmentEffect(VariableIdx relevant, VariableIdx affected);
 	
 	Atom apply(ObjectIdx v1) const;
 	
 	virtual std::ostream& print(std::ostream& os) const;
 };
 
-// X = Y + c (with X and Y possibly being the same variable.
+// X = Y + c (with X and Y possibly being the same variable)
 class AdditiveUnaryEffect : public UnaryDirectEffect {
 public:
-	AdditiveUnaryEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters);
+	AdditiveUnaryEffect(VariableIdx relevant, VariableIdx affected, int value);
 
 	Atom apply(ObjectIdx v1) const;
 

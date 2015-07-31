@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
 	FINFO("main", "Planner configuration: " << std::endl << Config::instance());
 	FINFO("main", "Generating the problem (" << data_dir << ")... ");
 	auto data = Loader::loadJSONObject(data_dir + "/problem.json");
-	Problem problem(data);
+	Problem problem;
 	Problem::setCurrentProblem(problem);
 	generate(data, data_dir, problem);
 	problem.bootstrap();

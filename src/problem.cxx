@@ -1,22 +1,22 @@
 
 #include <problem.hxx>
 #include <sstream>
-
+#include <problem_info.hxx>
 #include <utils/logging.hxx>
-#include "heuristics/rpg/action_manager_factory.hxx"
 
 namespace fs0 {
 
 const Problem* Problem::_instance = 0;
 
-Problem::Problem(const rapidjson::Document& data) :
-	_problemInfo(data),
+Problem::Problem() :
+	_problemInfo(nullptr),
 	_stateConstraints(),
 	_goalConditions()
 {
 }
 
 Problem::~Problem() {
+	delete _problemInfo;
 	for (const auto pointer:_schemata) delete pointer;
 	for (const auto pointer:_ground) delete pointer;
 	for (const auto pointer:_stateConstraints) delete pointer;

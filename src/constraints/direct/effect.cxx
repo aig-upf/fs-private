@@ -8,17 +8,13 @@ DirectEffect::DirectEffect(const VariableIdxVector& scope, VariableIdx affected,
 	DirectComponent(scope, parameters), _affected(affected)
 {}
 
-ZeroaryDirectEffect::ZeroaryDirectEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters) :
-	DirectEffect(scope, affected, parameters)
-{
-	assert(scope.size() == 0);
-}
+ZeroaryDirectEffect::ZeroaryDirectEffect(VariableIdx affected, const std::vector<int>& parameters) :
+	DirectEffect({}, affected, parameters)
+{}
 
-UnaryDirectEffect::UnaryDirectEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters) :
-	DirectEffect(scope, affected, parameters)
-{
-	assert(scope.size() == 1);
-}
+UnaryDirectEffect::UnaryDirectEffect(VariableIdx relevant, VariableIdx affected, const std::vector<int>& parameters) :
+	DirectEffect({relevant}, affected, parameters)
+{}
 
 BinaryDirectEffect::BinaryDirectEffect(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters) :
 	DirectEffect(scope, affected, parameters)
