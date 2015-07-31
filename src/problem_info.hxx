@@ -114,6 +114,7 @@ public:
 	unsigned getNumVariables() const;
 	
 	const std::string getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const;
+	const std::string deduceObjectName(ObjectIdx object, TypeIdx type) const;
 	inline ObjectIdx getObjectId(const std::string& name) const { return objectIds.at(name); }
 	
 	//! Return the ID of the function with given name
@@ -139,6 +140,8 @@ public:
 			return 0;
 		}
 	}
+	
+	inline const std::string& getTypename(TypeIdx type) const { return type_to_name.at(type); }
 	
 	//! Resolves a pair of function ID + an assignment of values to their parameters to the corresponding state variable.
 	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<ObjectIdx>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }

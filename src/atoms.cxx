@@ -16,19 +16,19 @@ Atom::Atom( Atom&& other ) :
 	_variable(other._variable), _value(other._value)
 {}
 
-const Atom&
-Atom::operator=( const Atom& other ) {
-	if ( this == &other) return *this;
-	_variable = other._variable;
-	_value = other._value;
+const Atom& Atom::operator=( const Atom& other ) {
+	if ( this != &other) {
+		_variable = other._variable;
+		_value = other._value;
+	}
 	return *this;
 }
 
-Atom&
-Atom::operator=( Atom&& other ) {
-	if ( this == &other) return *this;
-	_variable = other._variable;
-	_value = other._value;
+Atom& Atom::operator=( Atom&& other ) {
+	if ( this != &other) {
+		_variable = other._variable;
+		_value = other._value;
+	}
 	return *this;
 }
 

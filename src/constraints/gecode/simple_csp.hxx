@@ -1,13 +1,8 @@
 
 #pragma once
 
-#include <gecode/int.hh>
 #include <fs0_types.hxx>
-#include <problem_info.hxx>
-#include <cassert>
-#include <vector>
-#include <actions.hxx>
-#include <atoms.hxx>
+#include <gecode/int.hh>
 
 namespace fs0 { namespace gecode {
 

@@ -2,7 +2,7 @@
 
 class ComponentFactory : public BaseComponentFactory {
 public:
-    Action::cptr instantiateAction(
+    GroundAction::cptr instantiateAction(
         const std::string& classname,
 		const ObjectIdxVector& binding,
 		const ObjectIdxVector& derived,
@@ -10,7 +10,7 @@ public:
         const std::vector<VariableIdxVector>& effRelevantVars,
         const VariableIdxVector& effAffectedVars
     ) const {
-        Action* pointer = nullptr;
+        GroundAction* pointer = nullptr;
 
         const ObjectIdxVector& _binding = binding; // syntactic sugar
 
@@ -21,14 +21,7 @@ public:
         return pointer;
     }
 
-    ScopedConstraint::vcptr instantiateGoal(const std::vector<VariableIdxVector>& appRelevantVars) const {
-    const ObjectIdxVector binding;  // The goal has empty binding
-		return {
-		    ${goal_constraint_instantiations}
-		};
-    }
-
-    ScopedConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) const {
+    DirectConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) const {
         return external->instantiateConstraint(classname, parameters, variables);
     }
 

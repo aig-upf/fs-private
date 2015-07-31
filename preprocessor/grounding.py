@@ -22,7 +22,6 @@ class Grounder(object):
         self.grounded_actions = {}
         self.all_grounded_actions = []
         self.goal_facts = []
-        self.index_axioms()
 
     def ground(self, compilation_index):
         """ Grounds the task, adding some extra information to the compilation index on the way. """
@@ -33,17 +32,8 @@ class Grounder(object):
         # Index the symbol instantiations of the initial state
         # self.index_initial_state()
 
-        # Ground axioms
-        # self.ground_axioms()
-
         # Ground actions
         self.ground_actions()
-
-        # Process goal
-        self.process_goal()
-
-        # expand the axioms in the actions predicates into their definitions.
-        # self.expand_axioms()
 
     def flatten_ground_actions(self):
         self.all_grounded_actions = list(itertools.chain.from_iterable(self.grounded_actions.values()))
@@ -119,20 +109,6 @@ class Grounder(object):
 
         print(" Done")
         return grounded, num_instantiations
-
-    # def ground_axiom(self, axiom, grounded):
-    #     """ Ground an axiom. """
-    #     param_to_objects = self.compute_possible_action_instantiations(axiom)
-    #
-    #     # save a list of possible assignment tuples (param_name, object)
-    #     domain_lists = [[(name, obj) for obj in objects] for name, objects in param_to_objects.items()]
-    #
-    #     # Iterate over all possible parameter bindings
-    #     converter = FormulaConverter(self.task, self.compilation_index)
-    #     for assign in itertools.product(*domain_lists):
-    #         binding = dict(assign)
-    #         var = StateVariable.create(axiom).ground(binding)
-    #         grounded[var] = converter.ground_formula(axiom.condition, binding)
 
     def index_initial_state(self):
         """ For each symbol in the initial state, we index all the possible values (i.e. objects)
@@ -212,26 +188,6 @@ class Grounder(object):
                 variables.index(base.Variable(symbol.name, instantiation))
         return variables
 
-    def process_goal(self):
-        # Substitute the occurrences of object names by their actual indexes.
-        self.process_procedures_code(self.task.goal.applicability_procedures)
-
-    def process_procedures_code(self, procedures):
-        for procedure in procedures:
-            self.process_procedure_code(procedure)
-
-    def process_procedure_code(self, procedure):
-        procedure.code = self.process_code(procedure.code)
-
-    def process_code(self, code):
-        return Template(code).substitute(self.compilation_index.objects.obj_to_idx)
-
-    def index_axioms(self):
-        task = self.task
-        task.axiom_idx = {}
-        for axiom in task.axioms:
-            task.axiom_idx[axiom.name] = axiom
-
     def get_relevant_init_facts(self):
         """ Return a list of all the non-static facts in the initial state. """
         init = self.task.init
@@ -254,5 +210,5 @@ class Grounder(object):
         return facts
 
     def is_variable(self, name):
-        return not is_external(name) and name not in self.task.static_symbols and name not in self.task.axiom_idx
+        return not is_external(name) and name not in self.task.static_symbols
 

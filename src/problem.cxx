@@ -1,13 +1,9 @@
 
 #include <problem.hxx>
-#include <constraints/scoped_constraint.hxx>
-#include <actions.hxx>
-#include <relaxed_action_manager.hxx>
 #include <sstream>
-#include <constraints/gecode_constraint_manager.hxx>
-#include <constraints/gecode/translators.hxx>
 
 #include <utils/logging.hxx>
+#include "heuristics/rpg/action_manager_factory.hxx"
 
 namespace fs0 {
 
@@ -15,81 +11,35 @@ const Problem* Problem::_instance = 0;
 
 Problem::Problem(const rapidjson::Document& data) :
 	_problemInfo(data),
-	stateConstraints(),
-	goalConstraints()
+	_stateConstraints(),
+	_goalConditions()
 {
 }
 
 Problem::~Problem() {
-	for (const auto pointer:_actions) delete pointer;
 	for (const auto pointer:_schemata) delete pointer;
-	for (const auto pointer:stateConstraints) delete pointer;
-	for (const auto pointer:goalConstraints) delete pointer;
-	delete ctrManager;
+	for (const auto pointer:_ground) delete pointer;
+	for (const auto pointer:_stateConstraints) delete pointer;
+	for (const auto pointer:_goalConditions) delete pointer;
 }
 
 
 void Problem::bootstrap() {
 	// Safety check
-	if (goalConstraints.empty()) {
-		throw std::runtime_error(
-			std::string("No goal specification detected. The problem is probably being bootstrapped before having been fully") + 
-			 "initialized with the per-instance generate() procedure");
+	if (_goalConditions.empty()) {
+		throw std::runtime_error("No goal specification detected. The problem is probably being bootstrapped before having been fully initialized with the per-instance generate() procedure"); 
 	}
 	
-	gecode::registerTranslators();
+// 	gecode::registerTranslators();
 	
 	// Add the necessary (unary) constraints to keep the appropriate values, if any, within their bounds.
-	addDomainBoundConstraints();
+// 	addDomainBoundConstraints();
 
 	// Compile the constraints if necessary
-	compileConstraints();
-
-	// Create the constraint manager
-	ctrManager = PlanningConstraintManagerFactory::create(goalConstraints, stateConstraints);
-	FDEBUG("main", "Generated goal CSP:" << std::endl <<  *ctrManager << std::endl);
-	
-
-	// Creates the appropriate applicability manager depending on the type and arity of action precondition constraints.
-	ActionManagerFactory::instantiate(*this, _actions);
-
-	_goalRelevantVars.resize(_problemInfo.getNumVariables());
-	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )
-		_goalRelevantVars[i] = true;
+// 	compileConstraints();
 }
 
-//! For every goal, precondition and global constraint, we note the name of
-//! the variables in their scope inside the _relevantVars array
-void
-Problem::analyzeVariablesRelevance() {
-	assert( !getGoalConstraints().empty() );
-	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )
-		_goalRelevantVars[i] = false;
-
-	for ( ScopedConstraint::cptr global : getGoalConstraints() )
-		for ( auto x : global->getScope() ) _goalRelevantVars[x] = true;
-
-	for ( ScopedConstraint::cptr global : getConstraints() )
-		for ( auto x : global->getScope() ) _goalRelevantVars[x] = true;
-
-	for ( auto a : getAllActions() ) {
-		for ( ScopedConstraint::cptr prec : a->getConstraints() ) {
-			UnaryDomainBoundsConstraint* conc_1 = dynamic_cast<UnaryDomainBoundsConstraint*>(prec);
-			if (conc_1 != nullptr ) continue;
-			BinaryDomainBoundsConstraint* conc_2 = dynamic_cast<BinaryDomainBoundsConstraint*>(prec);
-			if (conc_2 != nullptr ) continue;
-
-			for ( auto x : prec->getScope() ) _goalRelevantVars[x] = true;
-		}
-	}
-
-	unsigned numGoalRelevantVars = 0;
-	for ( unsigned i = 0; i < _goalRelevantVars.size(); i++ )
-		numGoalRelevantVars = ( _goalRelevantVars[i] ? numGoalRelevantVars+1 : numGoalRelevantVars );
-	std::cout << "# State variables relevant to the goal: " << numGoalRelevantVars << std::endl;
-
-}
-
+/*
 //! For every action, if any of its effects affects a bounded-domain variable, we place
 //! an "automatic" "bounds constraint" upon the variables which are relevant to the effect,
 //! so that they won't generate an out-of-bounds value.
@@ -134,7 +84,9 @@ void Problem::addDomainBoundConstraints() {
 
 	std::cout << "Added a total of " << num_bconstraints << " bound-constraints to the " <<  _actions.size() << " problem actions." << std::endl;
 }
+*/
 
+/*
 void Problem::compileConstraints() {
 	unsigned num_compiled = 0;
 	for (Action::ptr action:_actions) {
@@ -158,9 +110,10 @@ unsigned Problem::compileConstraintVector(ScopedConstraint::vcptr& constraints) 
 	}
 	return num_compiled;
 }
+*/
 
-SimpleApplicableActionSet Problem::getApplicableActions(const State& s) const {
-	return SimpleApplicableActionSet(StandardApplicabilityManager(s, getConstraints()), _actions);
+ApplicableActionSet Problem::getApplicableActions(const State& s) const {
+	return ApplicableActionSet(ApplicabilityManager(getStateConstraints()), s, _ground);
 }
 
 
@@ -172,6 +125,12 @@ std::ostream& Problem::print(std::ostream& os) const {
 	for (const ActionSchema::cptr elem:_schemata) {
 		os << *elem << std::endl;
 	}
+	
+	os << "Ground Actions" << std::endl;
+	for (const GroundAction::cptr elem:_ground) {
+		os << *elem << std::endl;
+	}
+	
 	return os;
 }
 

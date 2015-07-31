@@ -65,6 +65,7 @@ class Symbol(object):
 class Predicate(Symbol):
     def __init__(self, name, domain):
         super().__init__(name, domain)
+        self.codomain = '_bool_'
 
 
 class Function(Symbol):
@@ -394,11 +395,6 @@ class GroundedAction(GroundedApplicableEntity):
         return grounded
 
 
-class Goal(GroundedApplicableEntity):
-    def __init__(self):
-        super().__init__("_goal_")
-
-
 class State(object):
     def __init__(self, instantiations):
         self.instantiations = instantiations
@@ -429,15 +425,12 @@ class ProblemDomain(object):
 
 
 class ProblemInstance(object):
-    def __init__(self, name, domain, objects, init, goal, static_data, constraints, gconstraints):
+    def __init__(self, name, domain, objects, init, static_data):
         self.name = name
         self.domain = domain
         self.objects = objects
         self.init = init
-        self.goal = goal
         self.static_data = static_data
-        self.constraints = constraints
-        self.gconstraints = gconstraints
 
     def get_complete_name(self):
         return self.domain.name + '/' + self.name
@@ -540,8 +533,7 @@ class PredicativeExpression(Expression):
         return dict(type='atom', symbol=self.process_symbol(), subterms=subterms)
 
     def process_symbol(self):
-        assert not self.negated  # TODO reverse the symbol whenever the expression is negated.
-        return self.symbol
+        return _process_symbol(self.symbol, self.negated)
 
 
 class StaticPredicativeExpression(PredicativeExpression):
@@ -663,6 +655,13 @@ class ValueAssignmentEffectExpression(EffectExpression):
 
 class VariableAssignmentEffectExpression(EffectExpression):
     codename = "VariableAssignmentEffect"
+
+
+_NEGATED_SYMBOLS = {"=": "!=", "<": ">=", "<=": ">", ">": "<=", ">=": "<"}
+def _process_symbol(symbol, negated):
+    if not negated:
+        return symbol
+    return _NEGATED_SYMBOLS[symbol]
 
 
 class ConstraintExpressionCatalog(object):

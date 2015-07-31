@@ -1,20 +1,21 @@
 
 
 #include <constraints/constraint_factory.hxx>
-#include <constraints/scoped_alldiff_constraint.hxx>
-#include <constraints/scoped_sum_constraint.hxx>
-#include <constraints/builtin_constraints.hxx>
+#include <constraints/direct/builtin.hxx>
+#include <constraints/direct/alldiff_constraint.hxx>
+#include <constraints/direct/sum_constraint.hxx>
 
 namespace fs0 {
 
-const ScopedConstraint::cptr ConstraintFactory::create(const std::string& name, const ObjectIdxVector& parameters, const VariableIdxVector& scope) {
+//! @deprecated ??
+const DirectConstraint::cptr ConstraintFactory::create(const std::string& name, const ObjectIdxVector& parameters, const VariableIdxVector& scope) {
 
 	if (name == "geq") {
 		throw std::runtime_error("Use a <= constraint with a reversed scope");
 	} else if (name == "alldiff") {
-		return new ScopedAlldiffConstraint(scope);
+		return new AlldiffConstraint(scope);
 	} else if (name == "sum") {
-		return new ScopedSumConstraint(scope);
+		return new SumConstraint(scope);
 	} else {
 		throw std::runtime_error("Unknown constraint name: " + name);
 	}

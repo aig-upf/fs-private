@@ -8,7 +8,7 @@
 #include <unordered_map>
 
 #include <state.hxx>
-#include <actions.hxx>
+#include <actions/ground_action.hxx>
 #include <fs0_types.hxx>
 #include <atoms.hxx>
 #include <problem.hxx>

@@ -6,7 +6,7 @@
 #include <cassert>
 #include <fs0_types.hxx>
 #include <atoms.hxx>
-#include <state.hxx>
+#include <relaxed_state.hxx>
 #include <problem.hxx>
 
 namespace fs0 {
@@ -18,8 +18,7 @@ namespace fs0 {
  * atoms that make a particular effect reachable, i.e. those related to the relevant
  * variables of the effect procedure that achieves the effect.
  */
-class RPGData
-{
+class RPGData {
 public:
 	//! <layer ID, Action ID, action support, atom support>
 	typedef std::tuple<unsigned, ActionIdx, Atom::vctrp, Atom::vctrp> AtomSupport;
@@ -75,7 +74,7 @@ public:
 	}
 
 	//! Accumulates all the atoms contained *in the last layer* of the given RPG into the given relaxed state.
-	static void accumulate(RelaxedGenericState& state, const RPGData& rpg) {
+	static void accumulate(RelaxedState& state, const RPGData& rpg) {
 		for (const Atom* atom:rpg.novelAtoms) {
 			state.set(*atom);
 		}

@@ -6,7 +6,6 @@
 #include <problem_info.hxx>
 #include <cassert>
 #include <vector>
-#include <actions.hxx>
 #include <atoms.hxx>
 #include "simple_csp.hxx"
 
@@ -17,6 +16,7 @@ enum class CSPVariableType {
 	Input, // a variable relevant to some formula (in an action precondition, goal, etc.)
 	Output, // a variable affected by some action effect
 	Temporary,  // a temporal variable useful only for the CSP, but not coming from the planning problem
+	TemporaryOutput, // a temporal variable which substitutes for the LHS term of an assignment
 };
 	
 /**
@@ -46,7 +46,7 @@ public:
 	
 	//! Returns the set of Gecode CSP variables that corresponds to all the state variables derived from a function
 	//! when used according to the given type.
-	Gecode::IntVarArgs resolveFunction(const SimpleCSP& csp, const FunctionData& function, CSPVariableType type) const;
+	Gecode::IntVarArgs resolveFunction(const SimpleCSP& csp, unsigned symbol_id, CSPVariableType type) const;
 	
 	//! A small helper to resolve a whole scope.
 	Gecode::IntVarArgs resolveScope(const SimpleCSP& csp, const VariableIdxVector& scope, CSPVariableType type) const;

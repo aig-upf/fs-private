@@ -2,8 +2,6 @@
 #pragma once
 
 #include <constraints/constraint_factory.hxx>
-#include <constraints/scoped_constraint.hxx>
-#include <constraints/builtin_constraints.hxx>
-#include <constraints/builtin_effects.hxx>
-#include <constraints/scoped_alldiff_constraint.hxx>
-#include <constraints/scoped_sum_constraint.hxx>
+#include <constraints/direct/builtin.hxx>
+#include <constraints/direct/sum_constraint.hxx>
+#include <constraints/direct/alldiff_constraint.hxx>

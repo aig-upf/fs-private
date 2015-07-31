@@ -58,13 +58,13 @@ public:
 // ************************
 // INFO MACRO
 // ************************
-#define FINFO(file, message) Logger::instance().log("INFO", file) << message << std::endl;
+#define FINFO(file, message) fs0::Logger::instance().log("INFO", file) << message << std::endl;
 
 // ************************
 // DEBUG MACRO
 // ************************
 #ifdef DEBUG 
-#define FDEBUG(file, message) Logger::instance().log("DEBUG", file) << message << std::endl;
+#define FDEBUG(file, message) fs0::Logger::instance().log("DEBUG", file) << message << std::endl;
 #else
 #define FDEBUG(file, message)
 #endif
@@ -73,7 +73,7 @@ public:
 // EXTREME DEBUG MACRO
 // ************************
 #ifdef FS0_DEBUG 
-#define FFDEBUG(file, message) Logger::instance().log("EDEBUG", file) << message << std::endl;
+#define FFDEBUG(file, message) fs0::Logger::instance().log("EDEBUG", file) << message << std::endl;
 #else
 #define FFDEBUG(file, message)
 #endif

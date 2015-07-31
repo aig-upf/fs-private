@@ -2,32 +2,33 @@
     A class to dump the information relevant to action schemata
 """
 import base
+from compilation.component_processor import BaseComponentProcessor
 from pddl import Truth, Effect
 from pddl.effects import AssignmentEffect
-from .helper import get_formula_parts
-from compilation.parser import Parser
 import util
 
 
-class ActionSchemaProcessor(object):
+class ActionSchemaProcessor(BaseComponentProcessor):
     def __init__(self, task, action):
+        self.index = task.index
         self.action = action
         self.parameters = {p.name: i for i, p in enumerate(action.parameters)}
-        self.parser = Parser(task)
-        self.index = task.index
-        self.data = dict(name=action.name, classname=util.normalize_action_name(action.name),
-                         conditions=[], effects=[])
+        super().__init__(task)
+
+    def init_data(self):
+        name = self.action.name
+        params = list(self.parameters.keys())
+        signature = [self.index.types[p.type] for p in self.action.parameters]
+        return dict(name=name, classname=util.normalize_action_name(name), signature=signature, parameters=params,
+                    conditions=[], effects=[])
 
     def process(self):
-        self.process_conditions()
+        self.process_conditions(self.action.precondition)
         self.process_effects()
         return self.data
 
-    def process_conditions(self):
-        """  Generates the applicability procedures from the PDDL parser precondition list"""
-        for part in get_formula_parts(self.action.precondition):
-            exp = self.parser.process_expression(part)
-            self.data['conditions'].append(exp.dump(self.index.objects, self.parameters))
+    def get_parameters(self):
+        return self.parameters
 
     def process_effects(self):
         """  Generates the effect procedures from the PDDL parser effect list"""

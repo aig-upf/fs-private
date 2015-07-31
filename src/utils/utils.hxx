@@ -1,11 +1,9 @@
 
 #pragma once
 
+#include <fs0_types.hxx>
 #include <vector>
 #include <ostream>
-
-#include <fs0_types.hxx>
-#include <state.hxx>
 
 namespace fs0 {
 	
@@ -59,8 +57,8 @@ public:
 	
 	//! Flips the elements of a one-to-one map.
 	template <typename T1, typename T2>
-	static boost::container::flat_map<T2, T1> flip_map(const boost::container::flat_map<T1, T2>& input) {
-		boost::container::flat_map<T2, T1> output;
+	static std::map<T2, T1> flip_map(const std::map<T1, T2>& input) {
+		std::map<T2, T1> output;
 		for (const auto& elem:input) {
 			assert(output.find(elem.second) == output.end());
 			output[elem.second] = elem.first;

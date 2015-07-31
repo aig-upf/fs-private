@@ -1,4 +1,4 @@
-
+/*
 class $classname : public Action {
 
 protected:
@@ -11,3 +11,4 @@ public:
     const std::string& getName() const { return name_; }
     const ActionSignature& getSignature() const { return signature_; }
 };
+*/

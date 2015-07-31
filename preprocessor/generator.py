@@ -102,7 +102,6 @@ class TaskPreprocessor(object):
     def do(self):
         self.process_actions()
         # self.process_init()
-        self.task.axioms = []  # TODO
         return self.task
 
         # def process_init(self):
@@ -144,14 +143,13 @@ def create_domain(name, translator):
 
 def create_instance(name, translator, domain):
     objects = translator.get_objects()
-    goal = translator.get_goal()
     translator.process_initial_state()
     init = translator.get_initial_state()
     data = translator.get_static_data()
-    sconstraints = translator.get_state_constraints()
-    gconstraints = translator.get_goal_constraints()
-    return taskgen.create_problem_instance(name, translator.task, domain, objects, init, goal, data, sconstraints,
-                                           gconstraints)
+    instance = taskgen.create_problem_instance(name, translator.task, domain, objects, init, data)
+    instance.goal_formula = translator.get_goal_formula()
+    instance.state_constraints = translator.get_state_constraints()
+    return instance
 
 
 def extract_names(instance, domain_filename):
@@ -278,9 +276,9 @@ class Generator(object):
                 'types': self.dump_type_data(),
                 'actions': self.dump_action_data(),
                 'action_schemata': self.task.domain.schemata,
-                'constraints': self.dump_constraints_data(),
+                'state_constraints': self.task.state_constraints,
                 'init': self.dump_init_data(),
-                'goal': self.dump_goal_data(),
+                'goal': self.task.goal_formula,
                 'functions': self.dump_function_data(),
                 'problem': {'domain': self.task.domain.name, 'instance': self.task.name}
         }
@@ -295,7 +293,6 @@ class Generator(object):
 
     def process_elements(self):
         self.action_code = {act.name: ccode.process_action(act) for act in self.task.actions}
-        self.goal_code = ccode.process_goal(self.task.goal, self.index)
 
     def _generate_components_code(self, dirname):
         # components.hxx:
@@ -306,9 +303,7 @@ class Generator(object):
         ))
 
         # components.cxx:
-        self.save_translation('components.cxx', tplManager.get('components.cxx').substitute(
-            action_code=self.get_actions_cxx_code(),
-        ))
+        self.save_translation('components.cxx', tplManager.get('components.cxx').substitute())
 
         # external_base.hxx:
         self.save_translation('external_base.hxx', tplManager.get('external_base.hxx').substitute(
@@ -378,7 +373,6 @@ class Generator(object):
     def get_method_factories(self):
         return tplManager.get('factories').substitute(
             actions='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
-            goal_constraint_instantiations='\n\t\t\t'.join(self.goal_code.constraint_instantiations),
             functions='\n\t\t\t'.join(self.get_function_instantiations()),
         )
 
@@ -398,16 +392,6 @@ class Generator(object):
             ))
 
         return '\n'.join(elems)
-
-    def dump_constraints_data(self):
-        """ Saves the data related to state constraints """
-        data = []
-        obj_id = lambda x: int(x) if util.is_int(x) else self.index.objects.get_index(x)
-        for constraint in self.task.constraints:
-            variable_idxs = [self.index.variables.get_index(var) for var in constraint.variables]
-            parameter_idxs = [obj_id(param) for param in constraint.parameters]
-            data.append([str(constraint), constraint.name, parameter_idxs, variable_idxs])
-        return data
 
     def dump_init_data(self):
         """ Saves the initial values of all state variables explicitly mentioned in the initialization """
@@ -479,34 +463,19 @@ class Generator(object):
     def dump_action_data(self):
         data = []
         grounded_actions = self.grounder.grounded_actions
-        idx = 0
         for lifted_action, grounded in grounded_actions.items():
             classname = util.normalize_action_name(lifted_action)
             for action in grounded:
                 binding = self.generate_object_id_list(action.binding)
-                derived = self.generate_object_id_list(action.derived)
-
-                arv, _ = self.serialize_variables_data(action.applicability_procedures)
-                erv, eav = self.serialize_variables_data(action.effect_procedures)
 
                 # Format: a number of elements defining the action:
                 # (1) Action ID (index)
                 # (2) Action name
                 # (3) classname
                 # (4) binding
-                # (5) derived objects
-                # (6) applicability relevant vars
-                # (7) effect relevant vars
-                # (8) effect affected vars
-                data.append([idx, str(action), classname, binding, derived, arv, erv, eav])
-                idx += 1
+                data.append([len(data), str(action), classname, binding])
 
         return data
-
-    def dump_goal_data(self):
-        assert isinstance(self.task.goal, base.Goal)
-        goal_rel_vars, _ = self.serialize_variables_data(self.task.goal.applicability_procedures)
-        return goal_rel_vars
 
     def generate_component_class_definitions(self):
         # The constraints of each of the actions
@@ -515,8 +484,6 @@ class Generator(object):
         # The effects of the actions
         all_definitions += ['\n\n'.join(action.effect_components) for action in self.action_code.values()]
 
-        # The constraints of the goal
-        all_definitions.append('\n\n'.join(self.goal_code.applicability_constraints))
         return '\n\n'.join(all_definitions)
 
     def _get_all_symbol_declarations(self):

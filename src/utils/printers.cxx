@@ -15,13 +15,13 @@ void PlanPrinter::printPlan(const ActionPlan& plan, const Problem& problem, std:
 	}
 }
 
-void PlanPrinter::printPlan(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
+void PlanPrinter::printPlan(const std::vector<GroundAction::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
 	for (int action:plan) {
 		out << problemInfo.getActionName(action) << std::endl;
 	}
 }
 
-void PlanPrinter::printPlanJSON(const std::vector<Action::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
+void PlanPrinter::printPlanJSON(const std::vector<GroundAction::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
 	out << "[";
 	for ( unsigned k = 0; k < plan.size(); k++ ) {
 		out << "\"" << problemInfo.getActionName(plan[k]) << "\"";

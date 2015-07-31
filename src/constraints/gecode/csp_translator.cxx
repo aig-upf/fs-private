@@ -22,9 +22,10 @@ const Gecode::IntVar& GecodeCSPTranslator::resolveVariable(const SimpleCSP& csp,
 	return csp._X[ it->second ];
 }
 
-Gecode::IntVarArgs GecodeCSPTranslator::resolveFunction(const SimpleCSP& csp, const FunctionData& function, CSPVariableType type) const {
+Gecode::IntVarArgs GecodeCSPTranslator::resolveFunction(const SimpleCSP& csp, unsigned symbol_id, CSPVariableType type) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	Gecode::IntVarArgs variables;
-	for (VariableIdx variable:function.getStateVariables()) {
+	for (VariableIdx variable:info.getFunctionData(symbol_id).getStateVariables()) {
 		variables << resolveVariable(csp, variable, type);
 	}
 	return variables;

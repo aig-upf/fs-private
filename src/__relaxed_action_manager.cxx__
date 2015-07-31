@@ -1,0 +1,147 @@
+
+#include <cassert>
+#include <iosfwd>
+
+#include <relaxed_action_manager.hxx>
+#include <gecode_action_manager.hxx>
+#include <utils/cartesian_product.hxx>
+#include <constraints/constraint_manager.hxx>
+#include <heuristics/rpg_data.hxx>
+
+#include <utils/logging.hxx>
+#include "utils/config.hxx"
+
+namespace fs0 {
+
+
+BaseActionManager* ActionManagerFactory::create(const Problem& problem, const Action& action) {
+	const Config::ActionManagerType manager_t = Config::instance().getActionManagerType();
+
+	bool complexPreconditions = actionHasHigherArityPreconditions(action);
+	bool complexEffects = actionHasHigherArityEffects(action);
+	BaseActionManager* manager = nullptr;
+
+	if (manager_t == Config::ActionManagerType::Gecode || complexPreconditions || complexEffects) {
+		manager = new GecodeActionManager(action, problem.getConstraints());
+		FDEBUG("main", "Generated CSP for action " << action << std::endl <<  *manager << std::endl);
+	} else {
+		manager = new DirectActionManager(action);
+		FDEBUG("main", "Generated a DirectActionManager for action " << action << std::endl <<  *manager << std::endl);
+	}
+
+	return manager;
+}
+
+void ActionManagerFactory::instantiate(const Problem& problem, const Action::vcptr& actions) {
+	for (const Action::cptr& action:actions) {
+		action->setConstraintManager(create(problem, *action));
+	}
+}
+
+bool ActionManagerFactory::actionHasHigherArityPreconditions(const Action& action) {
+	bool needs_generic_manager = false;
+	for (const ScopedConstraint::cptr constraint:action.getConstraints()) {
+		unsigned arity = constraint->getArity();
+		if (arity == 0) {
+			throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
+		}
+		else if(arity == 1) {
+			if (!dynamic_cast<UnaryParametrizedScopedConstraint*>(constraint) || constraint->filteringType() != ScopedConstraint::Filtering::Unary) {
+				throw std::runtime_error("Cannot handle this type of unary constraint in action preconditions.");
+			}
+		} else {
+			needs_generic_manager = true;
+		}
+	}
+	return needs_generic_manager;
+}
+
+bool ActionManagerFactory::actionHasHigherArityEffects(const Action& action) {
+	for (const ScopedEffect::cptr effect:action.getEffects()) {
+		if (effect->getArity() == 0 && !effect->applicable()) {
+			throw std::runtime_error("A 0-ary non-applicable effect was detected.");
+		}
+		if (effect->getArity() > 1) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+void DirectActionManager::processAction(unsigned actionIdx, const Action& action, const RelaxedState& layer, RPGData& rpg) {
+	// We compute the projection of the current relaxed state to the variables relevant to the action
+	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
+	DomainMap actionProjection = Projections::projectCopyToActionVariables(layer, action);
+
+	if (checkPreconditionApplicability(actionProjection)) { // Check with local consistency
+		processEffects(actionIdx, action, actionProjection, rpg);
+	}
+}
+
+bool DirectActionManager::checkPreconditionApplicability(const DomainMap& domains) const {
+	ScopedConstraint::Output o = manager.filter(domains);
+	return o != ScopedConstraint::Output::Failure && ConstraintManager::checkConsistency(domains);
+}
+
+void DirectActionManager::processEffects(unsigned actionIdx, const Action& action, const DomainMap& actionProjection, RPGData& rpg) const {
+	const VariableIdxVector& actionScope = action.getScope();
+	FFDEBUG("main", "processing action effects: " << action.getName());
+
+	for (const ScopedEffect::cptr effect:action.getEffects()) {
+		const VariableIdxVector& effectScope = effect->getScope();
+
+		/***** 0-ary Effects *****/
+		if(effectScope.size() == 0) {  // No need to pass any point.
+			assert(effect->applicable()); // The effect is assumed to be applicable - non-applicable 0-ary effects make no sense and are detected before the search.
+			FFDEBUG("main", "\t\t 0-ary effect");
+			Atom atom = effect->apply();
+			auto hint = rpg.getInsertionHint(atom);
+
+			if (hint.first) {
+				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>(); // 0-ary effects will have no atom support
+				Atom::vctrp actionSupport = std::make_shared<Atom::vctr>();
+				completeAtomSupport(actionScope, actionProjection, effectScope, actionSupport);
+				rpg.add(atom, actionIdx, actionSupport, atomSupport, hint.second);
+			}
+		}
+
+		/***** Unary Effects *****/
+		else if(effectScope.size() == 1) {  // Micro-optimization for unary effects
+			for (ObjectIdx value:*(actionProjection.at(effectScope[0]))) { // Add to the RPG for every allowed value of the relevant variable
+				if (!effect->applicable(value)) continue;
+				Atom atom = effect->apply(value);
+				auto hint = rpg.getInsertionHint(atom);
+
+				if (hint.first) {
+				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>();
+				Atom::vctrp actionSupport = std::make_shared<Atom::vctr>();
+					atomSupport->push_back(Atom(effectScope[0], value));// Just insert the only value
+					completeAtomSupport(actionScope, actionProjection, effectScope, actionSupport);
+					rpg.add(atom, actionIdx, actionSupport, atomSupport, hint.second);
+				}
+			}
+		}
+
+		/***** Higher-arity Effects: Only supported with the gecode handler *****/
+		else throw std::runtime_error("Shouldn't be here!");
+	}
+}
+
+void DirectActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
+	for (VariableIdx variable:actionScope) {
+		if (effectScope.empty() || variable != effectScope[0]) { // (We know that the effect scope has at most one variable)
+			ObjectIdx value = *(actionProjection.at(variable)->cbegin());
+			support->push_back(Atom(variable, value));
+		}
+	}
+}
+
+
+std::ostream& DirectActionManager::print(std::ostream& os) const {
+	os << "DirectActionManager[]";
+	return os;
+}
+
+
+} // namespaces

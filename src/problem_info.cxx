@@ -46,6 +46,14 @@ const std::string ProblemInfo::getObjectName(VariableIdx varIdx, ObjectIdx objId
 	throw std::runtime_error("Should never get here.");
 }
 
+const std::string ProblemInfo::deduceObjectName(ObjectIdx object, TypeIdx type) const {
+	const ObjectType generictype = getGenericType(type);
+	if (generictype == ObjectType::OBJECT) return getCustomObjectName(object);
+	else if (generictype == ObjectType::INT) return std::to_string(object);
+	else if (generictype == ObjectType::BOOL) return std::string((object ? "true" : "false"));
+	throw std::runtime_error("Should never get here.");
+}
+
 const std::string& ProblemInfo::getCustomObjectName(ObjectIdx objIdx) const { return objectNames.at(objIdx); }
 
 unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }

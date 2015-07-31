@@ -1,19 +1,17 @@
 """
 This is a generic PDDL-to-VPM translator.
 """
-import itertools
+from compilation.formula_processor import FormulaProcessor
 from compilation.schemata import ActionSchemaProcessor
 
 import pddl  # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
 from pddl.f_expression import NumericConstant
-from pddl.actions import Action
 
 import base
 from compilation.actions import ActionCompiler
 from compilation.exceptions import ParseException
 from compilation.helper import is_external, is_int
 from static import StaticProcedure, instantiate_function, instantiate_predicate
-from constraints import ConstraintCatalog, External
 
 
 class Translator(object):
@@ -36,30 +34,6 @@ class Translator(object):
                 elements.append(base.ObjectType(t.name, t.basetype_name))
         return elements
 
-    def process_constraints(self, constraints):
-        processed = []
-        for c in constraints:
-            # We support two types of constraint arguments: state variables and objects
-            # (which will be transformed into constraint parameters)
-            variables = [base.Variable(arg[0], arg[1:]) for arg in c.args if isinstance(arg, list)]
-            parameters = [arg for arg in c.args if isinstance(arg, str)]
-
-            if is_external(c.name):
-                constraint_class = External
-                processed.append(constraint_class(c.name, parameters, variables))
-            elif ConstraintCatalog.is_supported(c.name):
-                processed.append(ConstraintCatalog.instantiate(c.name, parameters, variables))
-            else:
-                raise RuntimeError("Unsupported constrain type: '{}'".format(c.name))
-
-        return processed
-
-    def get_goal_constraints(self):
-        return self.process_constraints(self.task.gconstraints)
-
-    def get_state_constraints(self):
-        return self.process_constraints(self.task.constraints)
-
     def get_symbols(self):
         elements = []
         for s in self.task.predicates:
@@ -75,14 +49,17 @@ class Translator(object):
         compiler = ActionCompiler(self.task, action)
         return compiler.process()
 
-    def process_action_schema(self, action):
-        return ActionSchemaProcessor(self.task, action).process()
-
     def get_actions(self):
         return [self.process_action(a) for a in self.task.actions]
 
     def get_action_schemata(self):
-        return [self.process_action_schema(a) for a in self.task.actions]
+        return [ActionSchemaProcessor(self.task, action).process() for action in self.task.actions]
+
+    def get_goal_formula(self):
+        return FormulaProcessor(self.task, self.task.goal).process()
+
+    def get_state_constraints(self):
+        return FormulaProcessor(self.task, self.task.constraints).process()
 
     def get_var_from_term(self, term):
         assert all(isinstance(arg, str) and arg in self.task.index.objects.obj_to_idx for arg in term.args)
@@ -90,22 +67,6 @@ class Translator(object):
 
     def get_objects(self):
         return [base.ProblemObject(o.name, o.type) for o in self.task.objects]
-
-    def get_goal(self):
-        goal = base.Goal()
-
-        # We create a dummy "goal" action.
-        dummy = Action("dummy-goal-action", [], 0, self.task.goal, [], None)
-        processed = self.process_action(dummy)
-
-        if processed.static_applicability_procedures:
-            # Static goal expressions make no sense, no need to handle them
-            raise ParseException("Static goal expression detected: {}".format(
-                ', '.join(str(p) for p in processed.static_applicability_procedures)))
-
-        for procedure in itertools.chain(processed.applicability_procedures, ):
-            goal.add_applicability_procedure(procedure)
-        return goal
 
     def get_initial_state(self):
         return self.init

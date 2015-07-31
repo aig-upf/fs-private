@@ -1,8 +1,10 @@
 
 #include <cassert>
 #include <utils/projections.hxx>
-#include <actions.hxx>
+#include <actions/ground_action.hxx>
 #include <problem.hxx>
+#include <state.hxx>
+#include <relaxed_state.hxx>
 
 namespace fs0 {
 
@@ -16,7 +18,7 @@ ObjectIdxVector Projections::project(const State& s, const VariableIdxVector& sc
 }
 
 
-DomainMap Projections::projectCopyToActionVariables(const RelaxedState& state, const Action& action) {
+DomainMap Projections::projectCopyToActionVariables(const RelaxedState& state, const GroundAction& action) {
 	return projectCopy(state, action.getAllRelevantVariables());
 }
 

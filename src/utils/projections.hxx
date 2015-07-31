@@ -1,16 +1,12 @@
 
 #pragma once
 
-#include <vector>
-#include <ostream>
-
 #include <fs0_types.hxx>
-#include <state.hxx>
 
 
 namespace fs0 {
 
-class Action;
+class State; class RelaxedState; class GroundAction;
 
 class Projections {
 public:
@@ -18,7 +14,7 @@ public:
 	static ObjectIdxVector project(const State& s, const VariableIdxVector& scope);
 
 	//! Helper function to copy-project a relaxed state to all of the variables relevant to a given applicable entity.
-	static DomainMap projectCopyToActionVariables(const RelaxedState& state, const Action& action);
+	static DomainMap projectCopyToActionVariables(const RelaxedState& state, const GroundAction& action);
 	
 	//! Zip a scope and a values to an equivalent partial assignment
 	static PartialAssignment zip(const VariableIdxVector& scope, const ObjectIdxVector& values);

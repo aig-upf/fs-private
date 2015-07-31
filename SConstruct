@@ -1,5 +1,7 @@
 
+import fnmatch
 import os
+
 
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
@@ -17,6 +19,13 @@ def which(program):
 		if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
 			return exe_file
 	return None
+
+def locate_source_files(base_dir, pattern):
+	matches = []
+	for root, dirnames, filenames in os.walk(base_dir):
+		for filename in fnmatch.filter(filenames, pattern):
+			matches.append(os.path.join(root, filename))
+	return matches
 
 env = Environment(variables=vars, ENV=os.environ, CXX='clang' if which('clang') else 'g++')
 
@@ -46,11 +55,6 @@ if env['edebug']:
 	lib_name = 'fs0-edebug'
 
 
-source_dirs = ['src', 'src/constraints', 'src/utils', 'src/heuristics', 'src/languages/fstrips']
-src_files = []
-for d in source_dirs:
-	src_files += [str(f) for f in Glob(d + '/*.cxx')]
-
 # Source dependencies from LAPKT search interfaces
 Export('env')
 aptk_search_interface_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/search/interfaces/SConscript' ) )
@@ -60,7 +64,7 @@ aptk_tools_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/tools/SConscrip
 
 gecode_objs = SConscript( 'src/constraints/gecode/SConscript' )
 
-build_files = [build_dirname + '/' + src for src in src_files]
+build_files = [build_dirname + '/' + src for src in locate_source_files('src', '*.cxx')]
 build_files += aptk_search_interface_objs
 build_files += aptk_tools_objs
 build_files += aptk_heuristics_objs

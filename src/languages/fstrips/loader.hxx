@@ -1,12 +1,14 @@
 
 #pragma once
 
-#include <languages/fstrips/language.hxx>
+#include <languages/fstrips/schemata.hxx>
 #include <lib/rapidjson/document.h>
 
 namespace fs0 {
+	class ProblemInfo;
+}
 
-class ProblemInfo; namespace language { namespace fstrips {
+namespace fs0 { namespace language { namespace fstrips {
 
 class Loader {
 public:

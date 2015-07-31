@@ -26,6 +26,9 @@ def is_constraint_expression(symbol):
     return symbol in CUSTOM_CONSTRAINTS
 
 
+def is_external_symbol(symbol):
+    return symbol[0] == '@'
+
 class Parser(object):
     def __init__(self, task):
         self.all = task.all_symbols
@@ -76,7 +79,7 @@ class Parser(object):
         return ArithmeticExpression(exp.symbol, self.process_argument_list(exp.args))
 
     def is_static(self, symbol):
-        return symbol in self.static or symbol in BASE_SYMBOLS
+        return symbol in self.static or symbol in BASE_SYMBOLS or is_external_symbol(symbol)
 
     def process_functional_expression(self, exp):
         """  Parse a functional expression """
@@ -114,5 +117,8 @@ class Parser(object):
         return [self.process_expression(arg) for arg in args]
 
     def check_declared(self, symbol):
-        if not is_basic_symbol(symbol) and not is_constraint_expression(symbol) and symbol not in self.all:
+        if not is_basic_symbol(symbol) and \
+           not is_constraint_expression(symbol) and \
+           symbol not in self.all and \
+           symbol[0] is not "@":
             raise ParseException("Undeclared symbol '{0}'".format(symbol))

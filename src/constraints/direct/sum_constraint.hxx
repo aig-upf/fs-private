@@ -1,0 +1,36 @@
+
+#pragma once
+
+#include <memory>
+#include <vector>
+#include <constraints/direct/constraint.hxx>
+namespace fs0 {
+
+
+/**
+ * A Sum constraint custom propagator. 
+ */
+class SumConstraint : public DirectConstraint
+{
+public:
+	
+	SumConstraint(const VariableIdxVector& scope);
+	SumConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	
+	virtual ~SumConstraint() {}
+	
+	virtual FilteringType filteringType() { return FilteringType::Custom; };
+	
+	bool isSatisfied(const ObjectIdxVector& values) const;
+	
+	//! Filters from the set of currently loaded projections
+	FilteringOutput filter();
+	
+	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	virtual const std::type_info& getDefaultTypeId() const { return typeid(SumConstraint); }
+};
+
+
+} // namespaces
+

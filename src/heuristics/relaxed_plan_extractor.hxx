@@ -10,7 +10,6 @@
 #include <heuristics/rpg_data.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
-#include <action_manager.hxx>
 
 #include <utils/logging.hxx>
 
