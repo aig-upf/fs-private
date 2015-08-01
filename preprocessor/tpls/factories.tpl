@@ -27,7 +27,7 @@ public:
 
     std::map<std::string, Function> instantiateFunctions() const {
 		return {
-			{$functions}
+			${functions}
 		};
 	}
 };

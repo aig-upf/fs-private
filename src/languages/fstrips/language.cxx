@@ -51,17 +51,22 @@ std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) 
 
 
 StaticHeadedNestedTerm::StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
-	: NestedTerm(symbol_id, subterms),
-	_function(Problem::getCurrentProblem()->getProblemInfo().getFunctionData(_symbol_id).getFunction())
+	: NestedTerm(symbol_id, subterms)
+{}
+
+UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
+	: StaticHeadedNestedTerm(symbol_id, subterms),
+	_function(Problem::getCurrentProblem()->getProblemInfo().getFunctionData(symbol_id).getFunction())
 {}
 		 
-ObjectIdx StaticHeadedNestedTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment) const {
 	return _function(interpret_subterms(_subterms, assignment));
 }
 
-ObjectIdx StaticHeadedNestedTerm::interpret(const State& state) const {
+ObjectIdx UserDefinedStaticTerm::interpret(const State& state) const {
 	return _function(interpret_subterms(_subterms, state));
 }
+
 
 void FluentHeadedNestedTerm::computeScope(std::set<VariableIdx>& scope) const {
 	// The scope of a term headed by a nested fluent contains the scope of all the subterms

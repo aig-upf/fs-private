@@ -21,7 +21,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	virtual Term* process(const ObjectIdxVector& binding, const ProblemInfo& info) const = 0;
+	virtual Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const = 0;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const TermSchema& o) { return o.print(os); }
@@ -51,7 +51,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term* process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -59,6 +59,42 @@ public:
 protected:
 	//! The ID of the function or predicate symbol, e.g. in the state variable loc(A), the id of 'loc'
 	unsigned _symbol_id;
+	
+	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
+	std::vector<TermSchema::cptr> _subterms;
+};
+
+class BuiltinNestedTermSchema : public TermSchema {
+public:
+	BuiltinNestedTermSchema(const std::string& symbol, const std::vector<TermSchema::cptr>& subterms)
+		: _symbol(symbol), _subterms(subterms)
+	{
+		assert(subterms.size() == 2);
+	}
+	
+	virtual ~BuiltinNestedTermSchema() {
+		for (TermSchema::cptr term:_subterms) delete term;
+	}
+	
+	BuiltinNestedTermSchema(const BuiltinNestedTermSchema& term)
+		: _symbol(term._symbol) {
+		for (TermSchema::cptr subterm:term._subterms) {
+			_subterms.push_back(subterm->clone());
+		}
+	}
+	
+	BuiltinNestedTermSchema* clone() const { return new BuiltinNestedTermSchema(*this); }
+	
+	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
+	//! and binding action parameters to concrete language constants.
+	Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
+	
+protected:
+	//! The ID of the function or predicate symbol, e.g. in the state variable loc(A), the id of 'loc'
+	std::string _symbol;
 	
 	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
 	std::vector<TermSchema::cptr> _subterms;
@@ -74,7 +110,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term* process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -93,7 +129,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term* process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;

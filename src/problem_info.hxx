@@ -24,14 +24,18 @@ public:
 		_domain(domain), _codomain(codomain), _variables(variables), _static(stat) {}
 	
 	//! Returns the state variables derived from the given function (e.g. for a function "f", f(1), f(2), ...)
-	const std::vector<VariableIdx>& getStateVariables() const { return _variables; }
+	const std::vector<VariableIdx>& getStateVariables() const {
+		assert(!_static);
+		return _variables;
+	}
 	
 	const TypeIdx& getCodomainType() const { return _codomain; }
 	
 	bool isStatic() const { return _static; }
 	
 	//! Sets/Gets the actual implementation of the function
-	void setFunction(const Function& function) { 
+	void setFunction(const Function& function) {
+		assert(_static);
 		_function = function;
 	}
 	const Function& getFunction() const { 
@@ -73,9 +77,6 @@ protected:
 	//! A map from the actual data "f(t1, t2, ..., tn)" to the assigned variable ID
 	std::map<std::pair<unsigned, std::vector<ObjectIdx>>, VariableIdx> variableDataToId;
 	
-	//! A map from function ID to the set of all state variables that the function might produce
-	std::vector<VariableIdxVector> functionIdToVariables;
-	
 	//! A map from state variable index to the type of the state variable
 	std::vector<ObjectType> variableGenericTypes;
 	
@@ -84,6 +85,8 @@ protected:
 	
 	//! A map from object index to object name
 	std::vector<std::string> objectNames;
+	
+	//! A map from object name to object index
 	std::map<std::string, ObjectIdx> objectIds;
 	
 	//! A map from type ID to all of the object indexes of that type
@@ -163,7 +166,7 @@ public:
 	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<ObjectIdx>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
 	
 	//! Resolves a function ID to all state variables in which the function can result
-	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return functionIdToVariables.at(symbol_id); }
+	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return getFunctionData(symbol_id).getStateVariables(); }
 	
 	
 	const std::string& getCustomObjectName(ObjectIdx objIdx) const;

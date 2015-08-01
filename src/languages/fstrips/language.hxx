@@ -99,18 +99,28 @@ public:
 	
 	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms);
 	
-	StaticHeadedNestedTerm* clone() const { return new StaticHeadedNestedTerm(*this); }
-	
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	virtual ObjectIdx interpret(const PartialAssignment& assignment) const = 0;
+	virtual ObjectIdx interpret(const State& state) const = 0;
 	
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	
 	// A nested term headed by a static symbol has as many levels of nestedness as the maximum of its subterms
-	virtual unsigned nestedness() const {
-		return maxSubtermNestedness();
-	}
+	unsigned nestedness() const { return maxSubtermNestedness(); }
+};
+
+//! A statically-headed term defined extensionally or otherwise by the concrete planning instance
+class UserDefinedStaticTerm : public StaticHeadedNestedTerm {
+public:
+	typedef const UserDefinedStaticTerm* cptr;
+	
+	UserDefinedStaticTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms);
+	
+	UserDefinedStaticTerm* clone() const { return new UserDefinedStaticTerm(*this); }
+	
+	ObjectIdx interpret(const PartialAssignment& assignment) const;
+	ObjectIdx interpret(const State& state) const;
+	
 protected:
 	// The (static) logical function implementation
 	const Function& _function;

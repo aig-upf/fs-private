@@ -85,8 +85,6 @@ namespace fs0 { namespace gecode {
 		
 		// An extremely ugly case-based analysis of the different types of subterms that we can encounter
 		
-		Gecode::IntVar lhs_gec_var, rhs_gec_var;
-		
 		auto lhs_nested = dynamic_cast<NestedTerm::cptr>(condition->lhs);
 		auto rhs_nested = dynamic_cast<NestedTerm::cptr>(condition->rhs);
 		auto lhs_var = dynamic_cast<StateVariable::cptr>(condition->lhs);
@@ -102,20 +100,20 @@ namespace fs0 { namespace gecode {
 
 		// Case 2
 		if (lhs_var && rhs_var) { // X = Y
-			lhs_gec_var = _translator.resolveVariable(_csp, lhs_var->getValue(), CSPVariableType::Input);
-			rhs_gec_var = _translator.resolveVariable(_csp, rhs_var->getValue(), CSPVariableType::Input);
-			Gecode::rel(_csp, rhs_gec_var, gecode_symbol(condition), rhs_gec_var);
+			auto& lhs_gec_var = _translator.resolveVariable(_csp, lhs_var->getValue(), CSPVariableType::Input);
+			auto& rhs_gec_var = _translator.resolveVariable(_csp, rhs_var->getValue(), CSPVariableType::Input);
+			Gecode::rel(_csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
 		}
 		
 		// Case 3
 		else if (lhs_var && rhs_const) { // X = c
-			lhs_gec_var = _translator.resolveVariable(_csp, lhs_var->getValue(), CSPVariableType::Input);
+			auto& lhs_gec_var = _translator.resolveVariable(_csp, lhs_var->getValue(), CSPVariableType::Input);
 			Gecode::rel(_csp, lhs_gec_var, gecode_symbol(condition), rhs_const->getValue());
 		}
 		 
 		// Case 4
 		else if (lhs_const && rhs_var) { // c = X
-			rhs_gec_var = _translator.resolveVariable(_csp, rhs_var->getValue(), CSPVariableType::Input);
+			auto& rhs_gec_var = _translator.resolveVariable(_csp, rhs_var->getValue(), CSPVariableType::Input);
 			auto inverted = invert_operator(gecode_symbol(condition));
 			Gecode::rel(_csp, rhs_gec_var, inverted, lhs_const->getValue());
 		}
@@ -123,39 +121,39 @@ namespace fs0 { namespace gecode {
 		// Case 5
 		else if (lhs_nested && rhs_nested) { // f(X) = g(Y)
 			unsigned lhs_id = _temp_variables.at(lhs_nested).getVariableId();
-			lhs_gec_var = _translator.resolveVariable(_csp, lhs_id, CSPVariableType::Temporary);
+			auto& lhs_gec_var = _translator.resolveVariable(_csp, lhs_id, CSPVariableType::Temporary);
 			unsigned rhs_id = _temp_variables.at(rhs_nested).getVariableId();
-			rhs_gec_var = _translator.resolveVariable(_csp, rhs_id, CSPVariableType::Temporary);
+			auto& rhs_gec_var = _translator.resolveVariable(_csp, rhs_id, CSPVariableType::Temporary);
 			Gecode::rel(_csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
 		}
 		
 		// Case 6
 		else if (lhs_nested && rhs_var) { // f(X) = Y
 			unsigned lhs_id = _temp_variables.at(lhs_nested).getVariableId();
-			lhs_gec_var = _translator.resolveVariable(_csp, lhs_id, CSPVariableType::Temporary);
-			rhs_gec_var = _translator.resolveVariable(_csp, rhs_var->getValue(), CSPVariableType::Input);
+			auto& lhs_gec_var = _translator.resolveVariable(_csp, lhs_id, CSPVariableType::Temporary);
+			auto& rhs_gec_var = _translator.resolveVariable(_csp, rhs_var->getValue(), CSPVariableType::Input);
 			Gecode::rel(_csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
 		}
 		
 		// Case 7
 		else if (lhs_nested && rhs_const) { // f(X) = c
 			unsigned lhs_id = _temp_variables.at(lhs_nested).getVariableId();
-			lhs_gec_var = _translator.resolveVariable(_csp, lhs_id, CSPVariableType::Temporary);
+			auto& lhs_gec_var = _translator.resolveVariable(_csp, lhs_id, CSPVariableType::Temporary);
 			Gecode::rel(_csp, lhs_gec_var, gecode_symbol(condition), rhs_const->getValue());
 		}
 		
 		// Case 8
 		else if (lhs_var && rhs_nested) { // X = g(Y)
-			lhs_gec_var = _translator.resolveVariable(_csp, lhs_var->getValue(), CSPVariableType::Input);
+			auto& lhs_gec_var = _translator.resolveVariable(_csp, lhs_var->getValue(), CSPVariableType::Input);
 			unsigned rhs_id = _temp_variables.at(rhs_nested).getVariableId();
-			rhs_gec_var = _translator.resolveVariable(_csp, rhs_id, CSPVariableType::Temporary);
+			auto& rhs_gec_var = _translator.resolveVariable(_csp, rhs_id, CSPVariableType::Temporary);
 			Gecode::rel(_csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
 		}
 		
 		// Case 9
 		else if (lhs_const && rhs_nested) { // f(X) = Y
 			unsigned rhs_id = _temp_variables.at(rhs_nested).getVariableId();
-			rhs_gec_var = _translator.resolveVariable(_csp, rhs_id, CSPVariableType::Temporary);
+			auto& rhs_gec_var = _translator.resolveVariable(_csp, rhs_id, CSPVariableType::Temporary);
 			auto inverted = invert_operator(gecode_symbol(condition));
 			Gecode::rel(_csp, rhs_gec_var, inverted, lhs_const->getValue());			
 		}

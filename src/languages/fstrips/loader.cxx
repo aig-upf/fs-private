@@ -1,5 +1,6 @@
 
 #include <languages/fstrips/loader.hxx>
+#include "builtin.hxx"
 #include <problem.hxx>
 
 
@@ -33,9 +34,11 @@ TermSchema::cptr Loader::parseTerm(const rapidjson::Value& tree, const ProblemIn
 	} else if (term_type == "parameter") {
 		return new ActionSchemaParameter(tree["position"].GetInt());
 	} else if (term_type == "nested") {
-		unsigned symbol_id = info.getFunctionId(tree["symbol"].GetString());
+		std::string symbol = tree["symbol"].GetString();
 		std::vector<TermSchema::cptr> subterms = parseTermList(tree["subterms"], info);
-		return new NestedTermSchema(symbol_id, subterms);
+		
+		if (BuiltinTermFactory::isBuiltinTerm(symbol)) return new BuiltinNestedTermSchema(symbol, subterms);
+		else return new NestedTermSchema(info.getFunctionId(symbol), subterms);
 		
 	} else throw std::runtime_error("Unknown node type " + term_type);
 }
