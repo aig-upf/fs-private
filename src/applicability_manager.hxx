@@ -18,18 +18,16 @@ class ApplicabilityManager
 public:
 	ApplicabilityManager(const std::vector<AtomicFormula::cptr>& state_constraints);
 		
-	//! Return true iff the preconditions of the applicable entity hold.
-	bool checkPreconditionsHold(const State& state, const GroundAction& action) const; 
-	
 	//! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
 	bool isApplicable(const State& state, const GroundAction& action) const;
-	
-	bool checkStateConstraintsHold(const State& s) const;
 	
 	//! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
 	Atom::vctr computeEffects(const State& state, const GroundAction& action) const;
 	
 	static bool checkFormulaHolds(const std::vector<AtomicFormula::cptr>& formula, const State& state);
+	
+	//! Checks that all of the given new atoms do not violate domain bounds
+	static bool checkAtomsWithinBounds(const std::vector<Atom>& atoms);
 	
 protected:
 	//! The state constraints
