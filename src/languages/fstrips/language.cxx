@@ -63,16 +63,32 @@ ObjectIdx StaticHeadedNestedTerm::interpret(const State& state) const {
 	return _function(interpret_subterms(_subterms, state));
 }
 
-ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment) const {
+void FluentHeadedNestedTerm::computeScope(std::set<VariableIdx>& scope) const {
+	// The scope of a term headed by a nested fluent contains the scope of all the subterms
+	// plus all possible state variables in which the top-level fluent might result
+	NestedTerm::computeScope(scope);
+	computeTopLevelScope(scope);
+}
+
+void FluentHeadedNestedTerm::computeTopLevelScope(std::set<VariableIdx>& scope) const {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, assignment));
-	return assignment.at(variable);
+	const VariableIdxVector& possible_variables = info.resolveStateVariable(_symbol_id);
+	scope.insert(possible_variables.cbegin(), possible_variables.cend());
+}
+
+ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment) const {
+	return assignment.at(interpretVariable(assignment));
 }
 
 ObjectIdx FluentHeadedNestedTerm::interpret(const State& state) const {
 	return state.getValue(interpretVariable(state));
 }
 
+VariableIdx FluentHeadedNestedTerm::interpretVariable(const PartialAssignment& assignment) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, assignment));
+	return variable;
+}
 VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state) const {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, state));
@@ -165,7 +181,7 @@ void ActionEffect::computeAffected(std::set<VariableIdx>& affected) const {
 		// We necessarily have a LHS term headed by a fluent function
 		auto lhs_fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(lhs);
 		assert(lhs_fluent);
-		throw std::runtime_error("Nested fluent - To be implemented");
+		lhs_fluent->computeTopLevelScope(affected);
 	}
 }
 

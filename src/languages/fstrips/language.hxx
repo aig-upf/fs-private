@@ -30,6 +30,7 @@ public:
 	virtual ObjectIdx interpret(const State& state) const = 0;
 	
 	//! Returns the index of the state variable to which the current term resolves under the given state.
+	virtual VariableIdx interpretVariable(const PartialAssignment& assignment) const = 0;
 	virtual VariableIdx interpretVariable(const State& state) const = 0;
 	
 	//! Prints a representation of the object to the given stream.
@@ -103,6 +104,7 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
 	
+	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	
 	// A nested term headed by a static symbol has as many levels of nestedness as the maximum of its subterms
@@ -128,12 +130,18 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
 	
+	VariableIdx interpretVariable(const PartialAssignment& assignment) const;
 	VariableIdx interpretVariable(const State& state) const;
 	
+	//! The scope of a nested term headed by a fluent includes all possible variables
+	//! resulting from the different possible values of its subterms
+	void computeScope(std::set<VariableIdx>& scope) const;
+	
+	//! Return all state variables in which possible instantiations of the subterms might result
+	void computeTopLevelScope(std::set<VariableIdx>& scope) const;
+	
 	// A nested term headed by a fluent symbol has as many levels of nestedness as the maximum of its subterms plus one (standing for itself)
-	unsigned nestedness() const {
-		return maxSubtermNestedness() + 1;
-	}
+	unsigned nestedness() const { return maxSubtermNestedness() + 1; }
 	
 	//! Computes the term scope ignoring the first level, i.e. the head of the term
 	void computeSubtermScope(std::set<VariableIdx>& scope) const;
@@ -160,6 +168,7 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment) const { return assignment.at(_variable_id); }
 	ObjectIdx interpret(const State& state) const;
 	
+	VariableIdx interpretVariable(const PartialAssignment& assignment) const { return _variable_id; }
 	VariableIdx interpretVariable(const State& state) const { return _variable_id; }
 	
 	//! Prints a representation of the object to the given stream.
@@ -192,6 +201,7 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment) const { return _value; }
 	ObjectIdx interpret(const State& state) const { { return _value; }}
 	
+	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 	
 	//! Prints a representation of the object to the given stream.

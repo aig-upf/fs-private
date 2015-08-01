@@ -64,10 +64,17 @@ protected:
 	//! A map from action index to action name
 	std::vector<std::string> actionNames;
 	
-	//! A map from state variable index to action name
+	//! A map from state variable ID to state variable name
 	std::vector<std::string> variableNames;
+	
+	//! A map from state variable name to state variable ID
 	std::map<std::string, VariableIdx> variableIds;
+	
+	//! A map from the actual data "f(t1, t2, ..., tn)" to the assigned variable ID
 	std::map<std::pair<unsigned, std::vector<ObjectIdx>>, VariableIdx> variableDataToId;
+	
+	//! A map from function ID to the set of all state variables that the function might produce
+	std::vector<VariableIdxVector> functionIdToVariables;
 	
 	//! A map from state variable index to the type of the state variable
 	std::vector<ObjectType> variableGenericTypes;
@@ -90,9 +97,13 @@ protected:
 	std::unordered_map<std::string, TypeIdx> name_to_type;
 	std::vector<std::string> type_to_name;
 	
-	//! A map from function name to function index:
+	//! A map from function ID to function name
 	std::vector<std::string> functionNames;
+	
+	//! A map from function name to function ID
 	std::map<std::string, unsigned> functionIds;
+	
+	//! A map from function ID to the function data
 	std::vector<FunctionData> functionData;
 	
 	//! The names of the problem domain and instance
@@ -150,6 +161,10 @@ public:
 	
 	//! Resolves a pair of function ID + an assignment of values to their parameters to the corresponding state variable.
 	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<ObjectIdx>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
+	
+	//! Resolves a function ID to all state variables in which the function can result
+	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return functionIdToVariables.at(symbol_id); }
+	
 	
 	const std::string& getCustomObjectName(ObjectIdx objIdx) const;
 	

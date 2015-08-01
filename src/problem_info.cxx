@@ -86,10 +86,8 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 			constants.push_back(var_data[1][j].GetInt());
 		}
 		
-		variableDataToId.insert(std::make_pair(
-			std::make_pair(symbol_id, constants),
-			id
-		));
+		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, constants),  id));
+		functionIdToVariables[symbol_id].push_back(id);
 	}
 }
 
