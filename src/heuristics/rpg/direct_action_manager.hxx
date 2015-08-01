@@ -19,7 +19,8 @@ class DirectActionManager : public BaseActionManager
 {
 public:
 	//! Constructs a manager handling the given set of constraints
-	DirectActionManager(const GroundAction& action);
+	static DirectActionManager* create(const GroundAction& action);
+	
 	~DirectActionManager();
 
 	virtual void process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg);
@@ -28,6 +29,9 @@ public:
 	virtual bool checkPreconditionApplicability(const DomainMap& domains) const;
 
 protected:
+	
+	//! Private constructor
+	DirectActionManager(const GroundAction& action, std::vector<DirectConstraint::cptr>&& constraints, std::vector<DirectEffect::cptr>&& effects);
 	
 	//!
 	void processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const;

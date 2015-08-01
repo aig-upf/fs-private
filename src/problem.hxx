@@ -54,8 +54,6 @@ public:
 		return _instance;
 	}
 
-	void addDomainBoundConstraints();
-
 	void compileConstraints();
 
 	//! This performs a number of necessary routines once all of the problem information has been defined.

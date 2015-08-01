@@ -32,59 +32,10 @@ void Problem::bootstrap() {
 	
 // 	gecode::registerTranslators();
 	
-	// Add the necessary (unary) constraints to keep the appropriate values, if any, within their bounds.
-// 	addDomainBoundConstraints();
-
 	// Compile the constraints if necessary
 // 	compileConstraints();
 }
 
-/*
-//! For every action, if any of its effects affects a bounded-domain variable, we place
-//! an "automatic" "bounds constraint" upon the variables which are relevant to the effect,
-//! so that they won't generate an out-of-bounds value.
-void Problem::addDomainBoundConstraints() {
-	unsigned num_bconstraints = 0;
-
-	std::cout << "Generating unary constraints for bounded domains..." << std::endl;
-
-	for (Action::ptr action:_actions) {
-
-		for (const ScopedEffect::cptr effect:action->getEffects()) {
-			VariableIdx affected = effect->getAffected();
-			if (!_problemInfo.hasVariableBoundedDomain(affected)) continue;
-
-			// We process the creation of the bound-constraint differently  for each arity
-			unsigned arity = effect->getScope().size();
-			if (arity == 0) {
-				if (!_problemInfo.checkValueIsValid(effect->apply())) {
-					std::stringstream buffer;
-					buffer << "Error: 0-ary effect '" << effect << "' of action ";
-					buffer << action->getName() << " produces out-of-bounds variable values" << std::endl;
-					throw std::runtime_error(buffer.str());
-				}
-			} else if (arity == 1) {
-				const auto* casted_effect = dynamic_cast<const UnaryScopedEffect *>(effect);
-				assert(casted_effect);
-				action->addConstraint(new UnaryDomainBoundsConstraint(casted_effect, _problemInfo));
-			} else if (arity == 2) {
-				const auto* casted_effect = dynamic_cast<const BinaryScopedEffect *>(effect);
-				assert(casted_effect);
-				action->addConstraint(new BinaryDomainBoundsConstraint(casted_effect, _problemInfo));
-			} else {
-				std::stringstream buffer;
-				buffer << "Error: Action " << action->getName();
-				buffer << " has effects with arity > 2, which are currently unsupported" << std::endl;
-				throw UnimplementedFeatureException(buffer.str());
-			}
-
-			++num_bconstraints;
-		}
-	}
-
-	std::cout << "Added a total of " << num_bconstraints << " bound-constraints to the " <<  _actions.size() << " problem actions." << std::endl;
-}
-*/
 
 /*
 void Problem::compileConstraints() {

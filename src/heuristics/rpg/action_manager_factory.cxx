@@ -25,7 +25,7 @@ BaseActionManager* ActionManagerFactory::create(const GroundAction& action) {
 		manager = gecode::GecodeActionManager::create(action);
 		FDEBUG("main", "Generated CSP for action " << action << std::endl <<  *manager << std::endl);
 	} else {
-		manager = new DirectActionManager(action);
+		manager = DirectActionManager::create(action);
 		FDEBUG("main", "Generated a DirectActionManager for action " << action << std::endl <<  *manager << std::endl);
 	}
 

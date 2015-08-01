@@ -5,16 +5,26 @@
 #include <heuristics/rpg/direct_action_manager.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <constraints/direct/translators/translator.hxx>
+#include <constraints/direct/bound_constraint.hxx>
 #include <utils/projections.hxx>
 #include <utils/logging.hxx>
 
 namespace fs0 {
 
-DirectActionManager::DirectActionManager(const GroundAction& action)
-	:  BaseActionManager(), _action(action),
-	   _constraints(DirectTranslator::generate(action.getConditions())),
-	   _effects(DirectTranslator::generate(action.getEffects())),
-	   _handler(_constraints)
+DirectActionManager* DirectActionManager::create(const GroundAction& action) {
+	std::vector<DirectConstraint::cptr> constraints = DirectTranslator::generate(action.getConditions());
+	std::vector<DirectEffect::cptr> effects = DirectTranslator::generate(action.getEffects());
+	// Add the necessary bound-constraints
+	BoundsConstraintsGenerator::generate(action, effects, constraints);
+	return new DirectActionManager(action, std::move(constraints), std::move(effects));
+}
+
+DirectActionManager::DirectActionManager(const GroundAction& action, std::vector<DirectConstraint::cptr>&& constraints, std::vector<DirectEffect::cptr>&& effects)
+	: BaseActionManager(),
+	  _action(action),
+	  _constraints(constraints),
+	  _effects(effects),
+	  _handler(_constraints)
 {}
 
 DirectActionManager::~DirectActionManager() {

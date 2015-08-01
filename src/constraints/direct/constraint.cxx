@@ -70,19 +70,21 @@ FilteringOutput BinaryDirectConstraint::filter(unsigned variable) {
 }
 
 UnaryDirectConstraint::UnaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	DirectConstraint(scope, parameters) {}
+	DirectConstraint(scope, parameters) {
+	assert(scope.size() == 1);
+}
 
 DirectConstraint::cptr UnaryDirectConstraint::compile(const ProblemInfo& problemInfo) const {
 	return nullptr;
-// 	return new CompiledUnaryConstraint(*this);
 }
 
 BinaryDirectConstraint::BinaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	DirectConstraint(scope, parameters) {}
+	DirectConstraint(scope, parameters) {
+	assert(scope.size() == 2);
+}
 	
 DirectConstraint::cptr BinaryDirectConstraint::compile(const ProblemInfo& problemInfo) const {
 	return nullptr;
-// 	return new CompiledBinaryConstraint(*this, problemInfo);
 }
 
 bool UnaryDirectConstraint::isSatisfied(const State& s) const {
