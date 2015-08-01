@@ -22,7 +22,6 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-
 class CompiledUnaryConstraint : public UnaryDirectConstraint {
 protected:
 	typedef ObjectIdx ElementT;
@@ -167,5 +166,13 @@ public:
 	//! Returns a set with all values that satisfy the constraint
 	static ExtensionT compile(const fs::Term& term, const ProblemInfo& info);
 };
+
+class ConstraintCompiler {
+public:
+	// In-place compilation of a set of constraints. Returns the number of compiled constraints.
+	static unsigned compileConstraints(std::vector<DirectConstraint::cptr>& constraints);
+};
+
+
 } // namespaces
 

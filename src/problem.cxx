@@ -29,39 +29,8 @@ void Problem::bootstrap() {
 	if (_goalConditions.empty()) {
 		throw std::runtime_error("No goal specification detected. The problem is probably being bootstrapped before having been fully initialized with the per-instance generate() procedure"); 
 	}
-	
-// 	gecode::registerTranslators();
-	
-	// Compile the constraints if necessary
-// 	compileConstraints();
 }
 
-
-/*
-void Problem::compileConstraints() {
-	unsigned num_compiled = 0;
-	for (Action::ptr action:_actions) {
-		num_compiled += compileConstraintVector(action->getConstraints());
-	}
-	num_compiled += compileConstraintVector(stateConstraints);
-	num_compiled += compileConstraintVector(goalConstraints);
-
-	std::cout << "Compiled a total of " << num_compiled << " constraints." << std::endl;
-}
-
-unsigned Problem::compileConstraintVector(ScopedConstraint::vcptr& constraints) const {
-	unsigned num_compiled = 0;
-	for (unsigned i = 0; i < constraints.size(); ++i) {
-		ScopedConstraint::cptr compiled = constraints[i]->compile(_problemInfo);
-		if (compiled) { // The constraint type requires pre-compilation
-			delete constraints[i];
-			constraints[i] = compiled;
-			++num_compiled;
-		}
-	}
-	return num_compiled;
-}
-*/
 
 ApplicableActionSet Problem::getApplicableActions(const State& s) const {
 	return ApplicableActionSet(ApplicabilityManager(getStateConstraints()), s, _ground);

@@ -14,8 +14,13 @@ namespace fs0 {
 DirectActionManager* DirectActionManager::create(const GroundAction& action) {
 	std::vector<DirectConstraint::cptr> constraints = DirectTranslator::generate(action.getConditions());
 	std::vector<DirectEffect::cptr> effects = DirectTranslator::generate(action.getEffects());
+	
 	// Add the necessary bound-constraints
 	BoundsConstraintsGenerator::generate(action, effects, constraints);
+	
+	// Compile constraints if necessary
+	ConstraintCompiler::compileConstraints(constraints);
+	
 	return new DirectActionManager(action, std::move(constraints), std::move(effects));
 }
 

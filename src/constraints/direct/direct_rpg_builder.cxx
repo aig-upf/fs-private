@@ -5,6 +5,7 @@
 #include <utils/projections.hxx>
 #include <problem.hxx>
 #include <constraints/direct/constraint.hxx>
+#include <constraints/direct/compiled.hxx>
 #include <constraints/direct/translators/translator.hxx>
 #include <utils/logging.hxx>
 
@@ -12,12 +13,17 @@ namespace fs0 {
 
 DirectRPGBuilder::cptr DirectRPGBuilder::create(const std::vector<fs::AtomicFormula::cptr>& goalConditions, const std::vector<fs::AtomicFormula::cptr>& stateConstraints) {
 	auto directStateConstraints = DirectTranslator::generate(stateConstraints);
-	auto allGoalConstraints = Utils::merge(DirectTranslator::generate(goalConditions), directStateConstraints);
-	return new DirectRPGBuilder(allGoalConstraints, directStateConstraints);
+	ConstraintCompiler::compileConstraints(directStateConstraints);
+	
+	auto directGoalConstraints = DirectTranslator::generate(goalConditions);
+	ConstraintCompiler::compileConstraints(directGoalConstraints);
+	
+	auto allGoalConstraints = Utils::merge(directGoalConstraints, directStateConstraints);
+	return new DirectRPGBuilder(std::move(allGoalConstraints), std::move(directStateConstraints));
 }
 	
 // Note that we use both types of constraints as goal constraints
-DirectRPGBuilder::DirectRPGBuilder(const std::vector<DirectConstraint::cptr>& goalConstraints, const std::vector<DirectConstraint::cptr>& stateConstraints) :
+DirectRPGBuilder::DirectRPGBuilder(const std::vector<DirectConstraint::cptr>&& goalConstraints, const std::vector<DirectConstraint::cptr>&& stateConstraints) :
 	_stateConstraints(stateConstraints),
 	_allGoalConstraints(goalConstraints), // Goal constraints include state constraints as well
 	_stateConstraintsHandler(_stateConstraints),

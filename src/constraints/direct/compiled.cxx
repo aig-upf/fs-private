@@ -263,4 +263,20 @@ Atom CompiledBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
 }
 
 
+unsigned ConstraintCompiler::compileConstraints(std::vector<DirectConstraint::cptr>& constraints) {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	
+	unsigned num_compiled = 0;
+	for (unsigned i = 0; i < constraints.size(); ++i) {
+		DirectConstraint::cptr compiled = constraints[i]->compile(info);
+		if (compiled) { // The constraint type requires pre-compilation
+			delete constraints[i];
+			constraints[i] = compiled;
+			++num_compiled;
+		}
+	}
+	return num_compiled;	
+}
+
+
 } // namespaces

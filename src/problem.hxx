@@ -82,12 +82,6 @@ protected:
 
 	//! The singleton instance
 	static const Problem* _instance;
-
-	//! A helper that compiles in-place a vector of constraints. Returns how many constraints were actually compiled.
-	// unsigned compileConstraintVector(ScopedConstraint::vcptr& constraints) const;
 };
-
-
-
 
 } // namespaces

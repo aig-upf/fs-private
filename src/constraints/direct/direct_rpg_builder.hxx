@@ -40,7 +40,7 @@ public:
 	
 protected:
 	//! Private constructor
-	DirectRPGBuilder(const std::vector<DirectConstraint::cptr>& goalConstraints, const std::vector<DirectConstraint::cptr>& stateConstraints);
+	DirectRPGBuilder(const std::vector<DirectConstraint::cptr>&& goalConstraints, const std::vector<DirectConstraint::cptr>&& stateConstraints);
 	
 	//! We store here all the constraints that we want to take into account when determining if a relaxed state is a goal:
 	//! This includes both the explicit goal constraints plus the state constraints.
