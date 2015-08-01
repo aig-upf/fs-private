@@ -4,7 +4,7 @@
 
 #include <heuristics/rpg/action_manager_factory.hxx>
 #include <constraints/gecode/action_manager.hxx>
-#include <heuristics/rpg/direct_action_manager.hxx>
+#include <constraints/direct/direct_action_manager.hxx>
 #include <utils/cartesian_product.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <constraints/filtering.hxx>

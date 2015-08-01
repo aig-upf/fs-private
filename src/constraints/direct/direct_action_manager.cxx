@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iosfwd>
 
-#include <heuristics/rpg/direct_action_manager.hxx>
+#include <constraints/direct/direct_action_manager.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <constraints/direct/translators/translator.hxx>
 #include <constraints/direct/bound_constraint.hxx>
