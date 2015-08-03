@@ -43,11 +43,13 @@ void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFac
 
 	/* Load the state and goal constraints */
 	std::cout << "\tDefining state and goal constraints..." << std::endl;
-	loadStateConstraints(data["state_constraints"], factory, problem);
+	assert(problem.getStateConstraints().empty());
+	problem.setStateConstraints(loadGroundedConditions(data["state_constraints"], problem));
 
 	/* Generate goal constraints from the goal evaluator */
 	std::cout << "\tGenerating goal constraints..." << std::endl;
-	loadGoalConditions(data["goal"], factory, problem);
+	assert(problem.getGoalConditions().empty());
+	problem.setGoalConditions(loadGroundedConditions(data["goal"], problem));
 }
 
 void Loader::loadFunctions(const BaseComponentFactory& factory, Problem& problem, ProblemInfo& info) {
@@ -95,7 +97,6 @@ void Loader::loadGroundedActions(const rapidjson::Value& data, const BaseCompone
 		GroundAction* ground = schema->process(binding, problem.getProblemInfo());
 		if (ground) {
 			FDEBUG("grounding", "Generated grounded action:\n" << *ground);
-			ground->setManager(ActionManagerFactory::create(*ground));
 			problem.addGroundAction(ground);
 		} else {
 			FDEBUG("grounding", "Grounded action is statically non-applicable");
@@ -127,22 +128,14 @@ ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const 
 	return new ActionSchema(name, classname, signature, parameters, conditions, effects);
 }
 
-void Loader::loadGoalConditions(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem) {
-	assert(problem.getGoalConditions().empty());
+std::vector<AtomicFormula::cptr> Loader::loadGroundedConditions(const rapidjson::Value& data, Problem& problem) {
+	std::vector<AtomicFormula::cptr> processed;
 	std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(data["conditions"], problem.getProblemInfo());
 	for (const AtomicFormulaSchema::cptr condition:conditions) {
-		auto processed = condition->process({}, problem.getProblemInfo()); // Goal conditions are by definition already grounded, thus we need no binding
-		problem.registerGoalCondition(processed);
+		processed.push_back(condition->process({}, problem.getProblemInfo())); // The conditions are by definition already grounded, thus we need no binding
+		delete condition;
 	}
-}
-
-void Loader::loadStateConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem) {
-	assert(problem.getStateConstraints().empty());
-	std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(data["conditions"], problem.getProblemInfo());
-	for (const AtomicFormulaSchema::cptr condition:conditions) {
-		auto processed = condition->process({}, problem.getProblemInfo()); // State constraintsare by definition already grounded, thus we need no binding
-		problem.registerStateConstraint(processed);
-	}
+	return processed;
 }
 
 rapidjson::Document Loader::loadJSONObject(const std::string& filename) {

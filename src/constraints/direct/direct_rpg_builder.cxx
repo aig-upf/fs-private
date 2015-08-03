@@ -27,10 +27,9 @@ DirectRPGBuilder::DirectRPGBuilder(const std::vector<DirectConstraint::cptr>&& g
 	_stateConstraints(stateConstraints),
 	_allGoalConstraints(goalConstraints), // Goal constraints include state constraints as well
 	_stateConstraintsHandler(_stateConstraints),
-	_goalConstraintsHandler(_allGoalConstraints), // We store all the constraints in a new vector so that we can pass a const reference 
+	_goalConstraintsHandler(_allGoalConstraints) // We store all the constraints in a new vector so that we can pass a const reference 
 	                                            // - we're strongly interested in the ConstraintManager having only a reference, not the actual value,
 	                                            // since in some cases each grounded action will have a ConstraintManager
-	hasStateConstraints(stateConstraints.size() > 0)
 {
 }
 
@@ -40,7 +39,7 @@ DirectRPGBuilder::~DirectRPGBuilder() {
 }
 
 FilteringOutput DirectRPGBuilder::pruneUsingStateConstraints(RelaxedState& state) const {
-	if (!hasStateConstraints) return FilteringOutput::Unpruned;
+	if (_stateConstraints.empty()) return FilteringOutput::Unpruned;
 	DomainMap domains = Projections::project(state, _stateConstraintsHandler.getAllRelevantVariables());  // This does NOT copy the domains
 	return _stateConstraintsHandler.filter(domains);
 }

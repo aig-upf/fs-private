@@ -10,11 +10,11 @@ namespace pt = boost::property_tree;
 
 namespace fs0 {
 	
-Config* Config::_instance = nullptr;
+std::unique_ptr<Config> Config::_instance = nullptr;
 
 void Config::init(const std::string& filename) {
 	if (_instance) throw std::runtime_error("Global configuration object already initialized");
-	_instance = new Config(filename);
+	_instance = std::unique_ptr<Config>(new Config(filename));
 	validateConfig(*_instance);
 }
 

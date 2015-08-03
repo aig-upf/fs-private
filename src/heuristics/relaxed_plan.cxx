@@ -17,8 +17,8 @@
 namespace fs0 {
 
 template <typename Model, typename RPGBuilder>
-RelaxedPlanHeuristic<Model, RPGBuilder>::RelaxedPlanHeuristic(const Model& problem, std::shared_ptr<RPGBuilder> builder) :
-	_problem(problem.getTask()), _builder(builder)
+RelaxedPlanHeuristic<Model, RPGBuilder>::RelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder) :
+	_problem(problem.getTask()), _managers(managers), _builder(builder)
 {}
 
 
@@ -27,8 +27,6 @@ template <typename Model, typename RPGBuilder>
 float RelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
 	
 	if (ApplicabilityManager::checkFormulaHolds(_problem.getGoalConditions(), seed)) return 0; // The seed state is a goal
-	
-	const std::vector<GroundAction::cptr>& actions = _problem.getGroundActions();
 	
 	RelaxedState relaxed(seed);
 	RPGData rpgData(relaxed);
@@ -39,10 +37,10 @@ float RelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
 	// or we get to a goal graph layer.
 	while(true) {
 		// Apply all the actions to the RPG layer
-		for (unsigned idx = 0; idx < actions.size(); ++idx) {
-			const GroundAction& action = *actions[idx];
-			FFDEBUG("heuristic", "Processing ground action:" << action);
-			action.getManager()->process(idx, relaxed, rpgData);
+		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
+			std::shared_ptr<BaseActionManager> manager = _managers[idx];
+			FFDEBUG("heuristic", "Processing ground action #" << idx << ":" << std::endl << manager->getAction());
+			manager->process(idx, relaxed, rpgData);
 		}
 		
 		FFDEBUG("heuristic", "The last layer of the RPG contains " << rpgData.getNovelAtoms().size() << " novel atoms." << std::endl << rpgData);

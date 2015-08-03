@@ -31,9 +31,9 @@ public:
 	
 	ApplicableActionSet getApplicableActions(const State& s) const;
 	
-	void registerStateConstraint(AtomicFormula::cptr constraint) { _stateConstraints.push_back(constraint);}
+	void setStateConstraints(const std::vector<AtomicFormula::cptr>& constraints) { _stateConstraints = constraints;}
 	const std::vector<AtomicFormula::cptr>& getStateConstraints() const { return _stateConstraints; }
-	void registerGoalCondition(AtomicFormula::cptr condition) { _goalConditions.push_back(condition);}
+	void setGoalConditions(const std::vector<AtomicFormula::cptr>& conditions) { _goalConditions = conditions;}
 	const std::vector<AtomicFormula::cptr>& getGoalConditions() const { return _goalConditions; }
 
 	const std::string& get_action_name(unsigned action) const { return _problemInfo->getActionName(action); }

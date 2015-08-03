@@ -31,11 +31,6 @@ protected:
 	//! The indexes of all variables that might be affected by the action
 	const VariableIdxVector _allAffected;
 	
-	//! Optionally, each action might have an associated constraint manager that handles its precondition constraints.
-	//! Ownership of the pointer belongs to the action itself.
-	// TODO - Ugly, refactor out of here
-	BaseActionManager* _constraintManager;	
-	
 public:
 	typedef const GroundAction* cptr;
 	
@@ -58,10 +53,6 @@ public:
 	inline const std::vector<AtomicFormula::cptr>& getConditions() const { return _conditions; }
 	
 	inline const std::vector<ActionEffect::cptr>& getEffects() const { return _effects; }
-	
-	// TODO - Ugly, refactor out of here
-	BaseActionManager* getManager() const { return _constraintManager; };
-	void setManager(BaseActionManager* constraintManager) { _constraintManager = constraintManager; };
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GroundAction&  entity) { return entity.print(os); }

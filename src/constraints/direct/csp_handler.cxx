@@ -53,8 +53,11 @@ FilteringOutput DirectCSPHandler::filter(const DomainMap& domains) const {
 		return result;
 	}
 
-	ArcSet worklist(AC3Worklist);  // Copy the state constraint worklist
-	// printArcSet(worklist);
+	// We copy the constraint worklist, but only if it is not empty. Copying empty boost containers produces
+	// a nasty memory leak in some boost versions, as per https://svn.boost.org/trac/boost/ticket/9166
+	ArcSet worklist;
+	if (!AC3Worklist.empty()) worklist = AC3Worklist;
+	
 
 	// Pre-load the non-unary constraints
 	loadConstraintDomains(domains, binary_constraints);

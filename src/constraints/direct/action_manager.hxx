@@ -22,6 +22,8 @@ public:
 	static DirectActionManager* create(const GroundAction& action);
 	
 	~DirectActionManager();
+	
+	const GroundAction& getAction() const { return _action; }
 
 	virtual void process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg);
 
@@ -36,7 +38,7 @@ protected:
 	//!
 	void processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const;
 	
-	//!
+	//! The action being managed
 	const GroundAction& _action;
 	
 	const std::vector<DirectConstraint::cptr> _constraints;

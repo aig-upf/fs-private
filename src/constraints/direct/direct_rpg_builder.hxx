@@ -50,9 +50,6 @@ protected:
 	const DirectCSPHandler _stateConstraintsHandler;
 	const DirectCSPHandler _goalConstraintsHandler;
 	
-	//! True iff there is at least one state constraint.
-	bool hasStateConstraints;
-	
 	//! Returns true iff the given domains are not inconsistent when filtering them with all the goal constraints.
 	bool checkGoal(const DomainMap& domains) const;
 	

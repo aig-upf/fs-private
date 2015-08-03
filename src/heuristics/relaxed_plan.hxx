@@ -6,14 +6,14 @@
 
 namespace fs0 {
 	
-class Problem; class State; class RelaxedState; class RPGData;
+class Problem; class State; class RelaxedState; class RPGData; class BaseActionManager;
 
 template <typename Model, typename RPGBuilder>
 class RelaxedPlanHeuristic {
 public:
 	typedef typename Model::ActionType Action;
 
-	RelaxedPlanHeuristic(const Model& problem, std::shared_ptr<RPGBuilder> builder);
+	RelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder);
 	
 	virtual ~RelaxedPlanHeuristic() {}
 	
@@ -26,8 +26,13 @@ public:
 	virtual float computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData);
 	
 protected:
+	//! The actual planning problem
 	const Problem& _problem;
 	
+	//! The set of action managers, one per every action
+	const std::vector<std::shared_ptr<BaseActionManager>> _managers;
+	
+	//! The RPG building helper
 	const std::shared_ptr<RPGBuilder> _builder;
 };
 

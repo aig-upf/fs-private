@@ -38,6 +38,10 @@ void GecodeActionManager::process(unsigned actionIdx, const RelaxedState& layer,
 	delete csp;
 }
 
+const GroundAction& GecodeActionManager::getAction() const {
+	return _handler->getAction();
+}
+
 std::ostream& GecodeActionManager::print(std::ostream& os) const {
 	return _handler->print(os);
 }

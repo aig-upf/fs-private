@@ -25,6 +25,9 @@ class ActionManagerFactory
 public:
 	//! A factory method to create the appropriate manager.
 	static BaseActionManager* create(const GroundAction& action);
+	
+	//! A helper to instantiate a suitable base action manager for a set of actions
+	static std::vector<std::shared_ptr<BaseActionManager>> create(const std::vector<GroundAction::cptr>& actions);
 
 protected:
 	//! Returns true iff at least one of the preconditions of the action has arity higher than one.

@@ -41,14 +41,12 @@ protected:
 	
 	static SchemaIndex loadActionSchemata(const rapidjson::Value& data, Problem& problem);
 	
-	static void loadGoalConditions(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem);
-	
-	//! Loads a set of state constraints from the given file
-	static void loadStateConstraints(const rapidjson::Value& data, const BaseComponentFactory& factory, Problem& problem);
-	
 	static void loadFunctions(const BaseComponentFactory& factory, Problem& problem, ProblemInfo& info);
 	
 	static ActionSchema::cptr loadActionSchema(const rapidjson::Value& data, const ProblemInfo& info);
+	
+	//! Load a set of already-grounded atomic formulae
+	static std::vector<AtomicFormula::cptr> loadGroundedConditions(const rapidjson::Value& data, Problem& problem);
 	
 	// Conversion to a C++ vector of values.
 	template<typename T>

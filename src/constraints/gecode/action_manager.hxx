@@ -24,6 +24,8 @@ public:
 	
 	//! Factory method - ownership of the pointer belongs to the caller
 	static GecodeActionManager::ptr create(const GroundAction& action);
+	
+	const GroundAction& getAction() const;
 
 protected:
 	//! Private constructor, use factory method instead

@@ -4,7 +4,7 @@
 
 #include <heuristics/rpg/action_manager_factory.hxx>
 #include <constraints/gecode/action_manager.hxx>
-#include <constraints/direct/direct_action_manager.hxx>
+#include <constraints/direct/action_manager.hxx>
 #include <utils/cartesian_product.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <constraints/filtering.hxx>
@@ -13,6 +13,15 @@
 
 namespace fs0 {
 
+
+std::vector<std::shared_ptr<BaseActionManager>> ActionManagerFactory::create(const std::vector<GroundAction::cptr>& actions) {
+	std::vector<std::shared_ptr<BaseActionManager>> managers;
+	managers.reserve(actions.size());
+	for (const auto action:actions) {
+		managers.push_back(std::shared_ptr<BaseActionManager>(create(*action)));
+	}
+	return managers;
+}
 
 BaseActionManager* ActionManagerFactory::create(const GroundAction& action) {
 	const Config::ActionManagerType manager_t = Config::instance().getActionManagerType();

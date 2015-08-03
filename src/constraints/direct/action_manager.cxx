@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iosfwd>
 
-#include <constraints/direct/direct_action_manager.hxx>
+#include <constraints/direct/action_manager.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <constraints/direct/translators/translator.hxx>
 #include <constraints/direct/bound_constraint.hxx>
@@ -47,6 +47,7 @@ void DirectActionManager::process(unsigned actionIdx, const RelaxedState& layer,
 		processEffects(actionIdx, actionProjection, rpg);
 	}
 }
+
 
 bool DirectActionManager::checkPreconditionApplicability(const DomainMap& domains) const {
 	FilteringOutput o = _handler.filter(domains);
