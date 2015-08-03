@@ -2,6 +2,7 @@
 #include <actions/action_schema.hxx>
 #include <problem.hxx>
 #include <actions/ground_action.hxx>
+#include <utils/printers/binding.hxx>
 
 namespace fs0 {
 
@@ -22,20 +23,13 @@ ActionSchema::~ActionSchema() {
 std::ostream& ActionSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& ActionSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << "Action " << _name << "(";
-	for (unsigned i = 0; i < _parameters.size(); ++i) {
-		os << _parameters[i] << ": " << info.getTypename(_signature[i]);
-		if (i != _parameters.size() - 1) os << ", ";
-	}
-	os << "):" << std::endl;
+	os <<  _name << "(" << print::signature(_parameters, getSignature()) << ")" << std::endl;
+	
 	os << "Preconditions:" << std::endl;
-	for (auto elem:_conditions) {
-		os << "\t" << *elem << std::endl;
-	}
+	for (auto elem:_conditions) os << "\t" << *elem << std::endl;
+	
 	os << "Effects:" << std::endl;
-	for (auto elem:_effects) {
-		os << "\t" << *elem << std::endl;
-	}
+	for (auto elem:_effects) os << "\t" << *elem << std::endl;
 	return os;
 }
 
@@ -43,16 +37,18 @@ GroundAction* ActionSchema::process(const ObjectIdxVector& binding, const Proble
 	std::vector<AtomicFormula::cptr> conditions;
 	for (const AtomicFormulaSchema::cptr condition:_conditions) {
 		AtomicFormula::cptr processed = condition->process(binding, info);
-		conditions.push_back(processed);
 		
 		// Static checks
 		if (processed->is_tautology()) { // No need to add the condition, which is always true
 			delete processed;
 			continue; 
 		} else if (processed->is_contradiction()) { // The action is statically non-applicable
+			delete processed;
 			for (const auto c:conditions) delete c;
 			return nullptr;
 		}
+		
+		conditions.push_back(processed);
 	}
 	
 	std::vector<ActionEffect::cptr> effects;

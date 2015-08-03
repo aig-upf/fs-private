@@ -20,4 +20,19 @@ class binding {
 		std::ostream& print(std::ostream& os) const;
 };
 
+class signature {
+	protected:
+		const std::vector<std::string>& _parameter_names;
+		const std::vector<TypeIdx>& _signature;
+	public:
+		signature(const std::vector<std::string>& parameter_names, const std::vector<TypeIdx>& signature) : _parameter_names(parameter_names), _signature(signature) {
+			assert(parameter_names.size() == signature.size());
+		}
+		
+		friend std::ostream& operator<<(std::ostream &os, const signature& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
+
+
 } } // namespaces
