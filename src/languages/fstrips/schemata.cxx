@@ -100,43 +100,25 @@ std::ostream& ConstantSchema::print(std::ostream& os, const fs0::ProblemInfo& in
 }
 
 
-AtomicFormulaSchema::cptr AtomicFormulaSchema::create(const std::string& symbol, const std::vector<TermSchema::cptr>& subterms) {
+AtomicFormula::cptr AtomicFormulaSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
+	// Process the subterms first
+	std::vector<const Term*> processed_subterms;
+	std::vector<ObjectIdx> constant_values;
+	process_subterms(binding, info, _subterms, processed_subterms, constant_values);
 	
-	auto it = RelationalFormula::string_to_symbol.find(symbol);
+	// Create the corresponding relational or external formula object, according to the symbol
+	AtomicFormula::cptr processed;
+	auto it = RelationalFormula::string_to_symbol.find(_symbol);
 	if (it != RelationalFormula::string_to_symbol.end()) { // We have a relation formula
-		if (subterms.size() != 2) std::runtime_error("Only binary relational formulas are accepted");
-		return new RelationalFormulaSchema(it->second, subterms);
+		if (processed_subterms.size() != 2) std::runtime_error("Only binary relational formulas are accepted");
+		processed = RelationalFormula::create(it->second, processed_subterms);
 	}
 	else { // We assume the formula semantics is externally defined
-		return new ExternalFormulaSchema(symbol, subterms);
-	}
-}
-
-AtomicFormula::cptr ExternalFormulaSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
-	std::vector<const Term*> st;
-	std::vector<ObjectIdx> constant_values;
-	process_subterms(binding, info, _subterms, st, constant_values);
-	
-	auto processed = ExternalComponentRepository::instance().instantiate_formula(symbol, st);
-	
-	if (constant_values.size() == _subterms.size()) { // We can resolve the value of the formula statically
-		auto resolved = processed->interpret({}) ? static_cast<AtomicFormula::cptr>(new TrueFormula) : static_cast<AtomicFormula::cptr>(new FalseFormula);
-		delete processed;
-		return resolved;
+		processed = ExternalComponentRepository::instance().instantiate_formula(_symbol, processed_subterms);
 	}
 	
-	return processed;
-}
-
-
-AtomicFormula::cptr RelationalFormulaSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
-	std::vector<const Term*> st;
-	std::vector<ObjectIdx> constant_values;
-	process_subterms(binding, info, _subterms, st, constant_values);
-	
-	auto processed = RelationalFormula::create(symbol, st);
-	
-	if (constant_values.size() == _subterms.size()) { // We can resolve the value of the formula statically
+	// Check if we can resolve the value of the formula statically
+	if (constant_values.size() == _subterms.size()) {
 		auto resolved = processed->interpret({}) ? static_cast<AtomicFormula::cptr>(new TrueFormula) : static_cast<AtomicFormula::cptr>(new FalseFormula);
 		delete processed;
 		return resolved;
@@ -147,15 +129,16 @@ AtomicFormula::cptr RelationalFormulaSchema::process(const ObjectIdxVector& bind
 
 std::ostream& AtomicFormulaSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
-std::ostream& ExternalFormulaSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << symbol << "(";
-	for (const auto term:_subterms) os << *term << ", ";
-	os << ")";
-	return os;
-}
-
-std::ostream& RelationalFormulaSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << *_subterms[0] << " " << RelationalFormula::symbol_to_string.at(symbol) << " " << *_subterms[1];
+std::ostream& AtomicFormulaSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	// Distinguish between infix and prefix operators
+	if (RelationalFormula::string_to_symbol.find(_symbol) != RelationalFormula::string_to_symbol.end()) {
+		assert(_subterms.size() == 2);
+		os << *_subterms[0] << " " << _symbol << " " << *_subterms[1];
+	} else {
+		os << _symbol << "(";
+		for (const auto term:_subterms) os << *term << ", ";
+		os << ")";
+	}
 	return os;
 }
 

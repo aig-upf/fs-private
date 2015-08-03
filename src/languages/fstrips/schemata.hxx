@@ -143,59 +143,25 @@ protected:
 class AtomicFormulaSchema {
 public:
 	typedef const AtomicFormulaSchema* cptr;
-	
-	static AtomicFormulaSchema::cptr create(const std::string& symbol, const std::vector<TermSchema::cptr>& subterms);
+
+	AtomicFormulaSchema(const std::string& symbol ,const std::vector<TermSchema::cptr>& subterms) : _symbol(symbol), _subterms(subterms) {}	
 	
 	virtual ~AtomicFormulaSchema() { 
 		for (const auto ptr:_subterms) delete ptr;
 	}
 	
-	virtual AtomicFormula::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const = 0;
+	virtual AtomicFormula::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const AtomicFormulaSchema& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
-	
-protected:
-	AtomicFormulaSchema(const std::vector<TermSchema::cptr>& subterms) : _subterms(subterms) {}
-	
-	std::vector<TermSchema::cptr> _subterms;
-};
-
-class ExternalFormulaSchema : public AtomicFormulaSchema {
-public:
-	typedef const ExternalFormulaSchema* cptr;
-	
-	ExternalFormulaSchema(const std::string symbol_, const std::vector<TermSchema::cptr>& subterms_) : AtomicFormulaSchema(subterms_), symbol(symbol_) {}
-	
-	AtomicFormula::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
-	
-	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 	
 protected:
 	//! The symbol identifying the external method
-	const std::string symbol;
-};
-
-class RelationalFormulaSchema : public AtomicFormulaSchema {
-public:
-	typedef const RelationalFormulaSchema* cptr;
-
-	RelationalFormulaSchema(RelationalFormula::Symbol symbol_, const std::vector<TermSchema::cptr>& subterms) : AtomicFormulaSchema(subterms), symbol(symbol_) {
-		assert(subterms.size() == 2);
-	}
+	const std::string _symbol;
 	
-	AtomicFormula::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
-	
-	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const RelationalFormulaSchema& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const;
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
-	
-protected:
-	RelationalFormula::Symbol symbol;
+	std::vector<TermSchema::cptr> _subterms;
 };
 
 

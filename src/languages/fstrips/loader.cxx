@@ -12,7 +12,7 @@ AtomicFormulaSchema::cptr Loader::parseAtomicFormula(const rapidjson::Value& tre
 	if (term_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<TermSchema::cptr> subterms = parseTermList(tree["subterms"], info);
-		return AtomicFormulaSchema::create(symbol, subterms);
+		return new AtomicFormulaSchema(symbol, subterms);
 	}
 	
 	else throw std::runtime_error("Unknown node type " + term_type);
