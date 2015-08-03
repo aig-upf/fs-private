@@ -38,10 +38,10 @@ public:
 	
 protected:
 	//! A helper data structure to help translate language relational symbols to gecode relational operators
-	const static std::map<fs::AtomicFormula::Symbol, Gecode::IntRelType> symbol_to_gecode;
+	const static std::map<fs::RelationalFormula::Symbol, Gecode::IntRelType> symbol_to_gecode;
 	
 	//! A helper function to recover the gecode relational operator from a formula
-	static Gecode::IntRelType gecode_symbol(fs::AtomicFormula::cptr formula);
+	static Gecode::IntRelType gecode_symbol(fs::RelationalFormula::cptr formula);
 	
 	//! A helper data structure to map gecode operators with their inverse.
 	const static std::map<Gecode::IntRelType, Gecode::IntRelType> operator_inversions;
@@ -63,12 +63,14 @@ protected:
 	void registerTempVariables(const fs::Term::cptr term, Gecode::IntVarArgs& variables);
 	void registerTempVariables(const std::vector<fs::Term::cptr>& terms, Gecode::IntVarArgs& variables);
 	void registerTempVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& variables);
+	void registerTempVariables(const fs::RelationalFormula::cptr condition, Gecode::IntVarArgs& variables);
 	void registerTempVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& variables);
 	
 	// Constraint registration methods
 	void registerConstraints(const fs::Term::cptr term) const;
 	void registerConstraints(const std::vector<fs::Term::cptr>& terms) const;
 	void registerConstraints(const fs::AtomicFormula::cptr condition) const;
+	void registerConstraints(const fs::RelationalFormula::cptr condition) const;
 	void registerConstraints(const std::vector<fs::AtomicFormula::cptr>& conditions) const;
 	
 	//! Conditionally register the constraints associated with certain type of terms

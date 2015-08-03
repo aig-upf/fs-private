@@ -21,8 +21,6 @@ public:
 	
 	virtual FilteringType filteringType() { return FilteringType::Custom; };
 	
-	bool isSatisfied(const ObjectIdxVector& values) const;
-	
 	//! Filters from the set of currently loaded projections
 	FilteringOutput filter();
 	

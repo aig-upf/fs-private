@@ -51,7 +51,10 @@ void GecodeFormulaCSPHandler::registerConstraints() {
 
 VariableIdxVector GecodeFormulaCSPHandler::extractRelevantVariables(const std::vector<AtomicFormula::cptr>& conditions) {
 	std::set<VariableIdx> relevant;
-	for (const AtomicFormula::cptr formula:conditions) formula->computeScope(relevant);
+	for (const AtomicFormula::cptr formula:conditions) {
+		VariableIdxVector scope = formula->getScope();
+		relevant.insert(scope.begin(), scope.end());
+	}
 	return VariableIdxVector(relevant.begin(), relevant.end());
 }
 

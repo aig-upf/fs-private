@@ -87,12 +87,5 @@ DirectConstraint::cptr BinaryDirectConstraint::compile(const ProblemInfo& proble
 	return nullptr;
 }
 
-bool UnaryDirectConstraint::isSatisfied(const State& s) const {
-	return this->isSatisfied(s.getValue(_scope[0]));
-}
-
-bool BinaryDirectConstraint::isSatisfied(const State& s) const {
-	return this->isSatisfied(s.getValue(_scope[0]), s.getValue(_scope[1]));
-}
 
 } // namespaces

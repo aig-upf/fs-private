@@ -10,13 +10,13 @@
 
 namespace fs0 { namespace gecode {
 	
-	typedef fs::AtomicFormula::Symbol AFSymbol;
+	typedef fs::RelationalFormula::Symbol AFSymbol;
 	const std::map<AFSymbol, Gecode::IntRelType> GecodeBaseTranslator::symbol_to_gecode = {
 		{AFSymbol::EQ, Gecode::IRT_EQ}, {AFSymbol::NEQ, Gecode::IRT_NQ}, {AFSymbol::LT, Gecode::IRT_LE},
 		{AFSymbol::LEQ, Gecode::IRT_LQ}, {AFSymbol::GT, Gecode::IRT_GR}, {AFSymbol::GEQ, Gecode::IRT_GQ}
 	};
 	
-	Gecode::IntRelType GecodeBaseTranslator::gecode_symbol(fs::AtomicFormula::cptr formula) { return symbol_to_gecode.at(formula->symbol()); }
+	Gecode::IntRelType GecodeBaseTranslator::gecode_symbol(fs::RelationalFormula::cptr formula) { return symbol_to_gecode.at(formula->symbol()); }
 	
 	
 	const std::map<Gecode::IntRelType, Gecode::IntRelType> GecodeBaseTranslator::operator_inversions = {
@@ -62,8 +62,14 @@ namespace fs0 { namespace gecode {
 	}
 	
 	void GecodeBaseTranslator::registerTempVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& variables) {
-		registerTempVariables(condition->lhs, variables);
-		registerTempVariables(condition->rhs, variables);
+		if (auto relational = dynamic_cast<fs::RelationalFormula::cptr>(condition)) registerTempVariables(relational, variables);
+		// Else, it must be a built-in, or external condition??
+		throw std::runtime_error("Unimplemented!");
+	}
+	
+	void GecodeBaseTranslator::registerTempVariables(const fs::RelationalFormula::cptr condition, Gecode::IntVarArgs& variables) {
+		registerTempVariables(condition->lhs(), variables);
+		registerTempVariables(condition->rhs(), variables);
 	}
 	
 	void GecodeBaseTranslator::registerTempVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& variables) {
@@ -77,20 +83,26 @@ namespace fs0 { namespace gecode {
 	
 	
 	void GecodeBaseTranslator::registerConstraints(const fs::AtomicFormula::cptr condition) const {
+		if (auto relational = dynamic_cast<fs::RelationalFormula::cptr>(condition)) return registerConstraints(relational);
+		// Else, it must be a built-in, or external condition??
+		throw std::runtime_error("Unimplemented!");
+	}
+	
+	void GecodeBaseTranslator::registerConstraints(const fs::RelationalFormula::cptr condition) const {
 		
 		// Register possible nested constraints recursively:
-		registerConstraints(condition->lhs);
-		registerConstraints(condition->rhs);
+		registerConstraints(condition->lhs());
+		registerConstraints(condition->rhs());
 		
 		
 		// An extremely ugly case-based analysis of the different types of subterms that we can encounter
 		
-		auto lhs_nested = dynamic_cast<NestedTerm::cptr>(condition->lhs);
-		auto rhs_nested = dynamic_cast<NestedTerm::cptr>(condition->rhs);
-		auto lhs_var = dynamic_cast<StateVariable::cptr>(condition->lhs);
-		auto rhs_var = dynamic_cast<StateVariable::cptr>(condition->rhs);
-		auto lhs_const = dynamic_cast<Constant::cptr>(condition->lhs);
-		auto rhs_const = dynamic_cast<Constant::cptr>(condition->rhs);
+		auto lhs_nested = dynamic_cast<NestedTerm::cptr>(condition->lhs());
+		auto rhs_nested = dynamic_cast<NestedTerm::cptr>(condition->rhs());
+		auto lhs_var = dynamic_cast<StateVariable::cptr>(condition->lhs());
+		auto rhs_var = dynamic_cast<StateVariable::cptr>(condition->rhs());
+		auto lhs_const = dynamic_cast<Constant::cptr>(condition->lhs());
+		auto rhs_const = dynamic_cast<Constant::cptr>(condition->rhs());
 		
 		
 		// Case 1

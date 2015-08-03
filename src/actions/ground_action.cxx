@@ -26,7 +26,12 @@ GroundAction::~GroundAction() {
 
 VariableIdxVector GroundAction::extractScope() const {
 	std::set<VariableIdx> unique;
-	for (AtomicFormula::cptr condition:_conditions) condition->computeScope(unique);
+	
+	for (const AtomicFormula::cptr formula:_conditions) {
+		VariableIdxVector scope = formula->getScope();
+		unique.insert(scope.begin(), scope.end());
+	}
+	
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 

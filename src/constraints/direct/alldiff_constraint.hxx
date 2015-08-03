@@ -39,8 +39,6 @@ public:
 	
 	virtual FilteringType filteringType() { return FilteringType::Custom; };
 	
-	bool isSatisfied(const ObjectIdxVector& values) const;
-
 	//! Filters from the set of currently loaded projections
 	// Computing bound consistent domains is done in two passes. The algorithm that computes new
 	// min is applied twice: first to the original problem, resulting into new min bounds, second to the problem

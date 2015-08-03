@@ -65,4 +65,41 @@ public:
 	ObjectIdx interpret(const State& state) const;
 };
 
+
+class ExternallyDefinedFormula : public AtomicFormula {
+public:
+	typedef const ExternallyDefinedFormula* cptr;
+	
+	ExternallyDefinedFormula(const std::vector<Term::cptr>& subterms) : AtomicFormula(subterms) {}
+	
+	virtual std::string name() const = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+};
+
+class AlldiffFormula : public ExternallyDefinedFormula {
+public:
+	typedef const AlldiffFormula* cptr;
+	
+	AlldiffFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
+	
+	virtual std::string name() const { return "alldiff"; }
+	
+protected:
+	bool _satisfied(const ObjectIdxVector& values) const;
+};
+
+class SumFormula : public ExternallyDefinedFormula {
+public:
+	typedef const SumFormula* cptr;
+	
+	SumFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
+	
+	virtual std::string name() const { return "sum"; }
+	
+protected:
+	bool _satisfied(const ObjectIdxVector& values) const;
+};
+
 } } } // namespaces

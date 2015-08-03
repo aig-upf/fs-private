@@ -14,13 +14,6 @@ SumConstraint::SumConstraint(const VariableIdxVector& scope)
 	if(scope.size() <= 1) throw std::runtime_error("The Sum global constraint requires at least two variables");
 }
 
-bool SumConstraint::isSatisfied(const ObjectIdxVector& values) const {
-	assert(values.size() == _scope.size());
-	int expected_sum_value = values.back();
-	int total_sum  = std::accumulate(values.begin(), values.end(), 0);
-	return expected_sum_value*2 == total_sum;
-}
-
 
 FilteringOutput SumConstraint::filter() {
 	unsigned last_addend = _scope.size() - 1;

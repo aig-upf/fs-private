@@ -216,9 +216,7 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEf
 			auto atom = effect.apply(value);
 			assert(atom.getVariable() == effect.getAffected());
 			map.insert(std::make_pair(value, atom.getValue()));
-		} catch(const std::out_of_range& e) {  // TODO - Refactor this, too hacky...
-			// If the effect produces an exception, we simply consider it non-applicable and go on.
-		}
+		} catch(const std::out_of_range& e) {}  // If the effect produces an exception, we simply consider it non-applicable and go on.
 	}
 	return map;
 }
@@ -229,8 +227,10 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const Term& term, c
 	ExtensionT map;
 	
 	for(ObjectIdx value:info.getVariableObjects(scope[0])) {
-		ObjectIdx out = term.interpret(Projections::zip(scope, {value}));
-		map.insert(std::make_pair(value, out));
+		try {
+			ObjectIdx out = term.interpret(Projections::zip(scope, {value}));
+			map.insert(std::make_pair(value, out));
+		} catch(const std::out_of_range& e) {}  // If the effect produces an exception, we simply consider it non-applicable and go on.
 	}
 	return map;
 }
@@ -250,8 +250,10 @@ CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& t
 	
 	for(ObjectIdx x:info.getVariableObjects(scope[0])) {
 		for(ObjectIdx y:info.getVariableObjects(scope[1])) {
-			ObjectIdx out = term.interpret(Projections::zip(scope, {x, y}));
-			map.insert(std::make_pair(std::make_pair(x, y), out));
+			try {
+				ObjectIdx out = term.interpret(Projections::zip(scope, {x, y}));
+				map.insert(std::make_pair(std::make_pair(x, y), out));
+			} catch(const std::out_of_range& e) {}  // If the effect produces an exception, we simply consider it non-applicable and go on.
 		}
 	}
 	return map;

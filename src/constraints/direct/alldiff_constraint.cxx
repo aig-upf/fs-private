@@ -12,16 +12,6 @@ AlldiffConstraint::AlldiffConstraint(const VariableIdxVector& scope)
 	: DirectConstraint(scope), _arity(scope.size()), min(_arity), max(_arity), sorted_vars(_arity), u(_arity)
 {}
 
-bool AlldiffConstraint::isSatisfied(const ObjectIdxVector& values) const {
-	assert(values.size() == _arity);
-	std::set<ObjectIdx> distinct;
-	for (ObjectIdx val:values) {
-		auto res = distinct.insert(val);
-		if (!res.second) return false; // We found a duplicate
-	}
-	return true;
-}
-
 // Computing bound consistent domains is done in two passes. The algorithm that computes new
 // min is applied twice: first to the original problem, resulting into new min bounds, second to the problem
 // where variables are replaced by their inverse, deducing max bounds.

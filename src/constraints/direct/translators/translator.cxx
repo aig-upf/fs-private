@@ -3,6 +3,7 @@
 #include <constraints/direct/builtin.hxx>
 #include <constraints/direct/compiled.hxx>
 #include <problem.hxx>
+#include <external/repository.hxx>
 
 namespace fs0 {
 
@@ -10,17 +11,30 @@ namespace fs0 {
 void DirectTranslator::checkSupported(const fs::Term::cptr lhs, const fs::Term::cptr rhs) {
 	unsigned l1 = lhs->nestedness();
 	unsigned l2 = rhs->nestedness();
-	if (l1 > 0 || l2 > 0) throw UnimplementedFeatureException("Cannot translate nested fluents to DirectConstraints- try Gecode instead!");	
+	if (l1 > 0 || l2 > 0) throw UnimplementedFeatureException("Cannot translate nested fluents to DirectConstraints --- try Gecode instead!");
 }
-	
+
+
 DirectConstraint::cptr DirectTranslator::generate(const AtomicFormula& formula) {
-	checkSupported(formula.lhs, formula.rhs);
+	if (auto relational = dynamic_cast<fs::RelationalFormula::cptr>(&formula)) return generate(*relational);
 	
-	VariableIdxVector formula_scope = formula.computeScope();
+	// Else, it must be a built-in, or external condition
+	auto instance = ExternalComponentRepository::instance().instantiate_direct_constraint(formula);
+	if (!instance) { // No constraint translator was registered, thus we try to extensionalize the formula
+		instance = extensionalize(formula);
+		if (!instance) throw std::runtime_error("No constraint translator specified for externally defined formula");
+	}
+	return instance;
+}
+
+DirectConstraint::cptr DirectTranslator::generate(const RelationalFormula& formula) {
+	checkSupported(formula.lhs(), formula.rhs());
+	
+	VariableIdxVector formula_scope = formula.getScope();
 	if (formula_scope.size() > 2) throw std::runtime_error("Too high a scope for direct constraints");
 	
 	// Here we can assume that the scope is <= 2 and there are no nested fluents
-	Term::cptr lhs = formula.lhs, rhs = formula.rhs; // shortcuts
+	Term::cptr lhs = formula.lhs(), rhs = formula.rhs(); // shortcuts
 	
 	auto lhs_var = dynamic_cast<StateVariable::cptr>(lhs);
 	auto rhs_var = dynamic_cast<StateVariable::cptr>(rhs);
@@ -51,18 +65,23 @@ DirectConstraint::cptr DirectTranslator::generate(const AtomicFormula& formula) 
 	// Otherwise we have some complex term of the form e.g. next(d, current) != undefined  (where next is static, current is fluent.
 	// We compile it into extensional form.
 	assert(formula_scope.size() == 1 || formula_scope.size() == 2);
+	return extensionalize(formula);
+}
+
+DirectConstraint::cptr DirectTranslator::extensionalize(const AtomicFormula& formula) {
+	VariableIdxVector scope = formula.getScope();
 	
-	
-	if (formula_scope.size() == 1) {
-		return new CompiledUnaryConstraint(formula_scope, [&formula, &formula_scope](ObjectIdx value) {
-			return formula.interpret(Projections::zip(formula_scope, {value}));
+	if (scope.size() == 1) {
+		return new CompiledUnaryConstraint(scope, [&formula, &scope](ObjectIdx value) {
+			return formula.interpret(Projections::zip(scope, {value}));
 		});
 	}
-	else {
-		return new CompiledBinaryConstraint(formula_scope, [&formula, &formula_scope](ObjectIdx x1, ObjectIdx x2) {
-			return formula.interpret(Projections::zip(formula_scope, {x1, x2}));
+	else if (scope.size() == 2) {
+		return new CompiledBinaryConstraint(scope, [&formula, &scope](ObjectIdx x1, ObjectIdx x2) {
+			return formula.interpret(Projections::zip(scope, {x1, x2}));
 		});
 	}
+	else return nullptr;
 }
 
 std::vector<DirectConstraint::cptr> DirectTranslator::generate(const std::vector<AtomicFormula::cptr> formulae) {
@@ -109,14 +128,14 @@ std::vector<DirectEffect::cptr> DirectTranslator::generate(const std::vector<Act
 }
 
 
-DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(AtomicFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
+DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
 	
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
-		case AtomicFormula::Symbol::EQ:
+		case RelationalFormula::Symbol::EQ:
 			return new EQXConstraint(scope, parameters);
 			break;
 			
-		case AtomicFormula::Symbol::NEQ:
+		case RelationalFormula::Symbol::NEQ:
 			return new NEQXConstraint(scope, parameters);
 			break;
 			
@@ -126,22 +145,22 @@ DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(AtomicFormul
 	}
 }
 
-DirectConstraint::cptr DirectTranslator::instantiateBinaryConstraint(AtomicFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
+DirectConstraint::cptr DirectTranslator::instantiateBinaryConstraint(RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
 	
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
-		case AtomicFormula::Symbol::EQ:
+		case RelationalFormula::Symbol::EQ:
 			return new EQConstraint(scope, parameters);
 			break;
 			
-		case AtomicFormula::Symbol::NEQ:
+		case RelationalFormula::Symbol::NEQ:
 			return new NEQConstraint(scope, parameters);
 			break;
 			
-		case AtomicFormula::Symbol::LT:
+		case RelationalFormula::Symbol::LT:
 			return new LTConstraint(scope, parameters);
 			break;
 		
-		case AtomicFormula::Symbol::LEQ:
+		case RelationalFormula::Symbol::LEQ:
 			return new LEQConstraint(scope, parameters);
 			break;
 			

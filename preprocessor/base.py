@@ -629,13 +629,6 @@ class LEQConstraintExpression(ConstraintExpression):
     codename = "LEQConstraint"
 
 
-class SumConstraintExpression(ConstraintExpression):
-    codename = "ScopedSumConstraint"
-
-
-class AlldiffConstraintExpression(ConstraintExpression):
-    codename = "ScopedAlldiffConstraint"
-
 
 class EffectExpression(object):
     def __init__(self, scope, affected, parameters=None):
@@ -658,6 +651,8 @@ class VariableAssignmentEffectExpression(EffectExpression):
 
 
 _NEGATED_SYMBOLS = {"=": "!=", "<": ">=", "<=": ">", ">": "<=", ">=": "<"}
+
+
 def _process_symbol(symbol, negated):
     if not negated:
         return symbol
@@ -707,12 +702,6 @@ class ConstraintExpressionCatalog(object):
                 return cls.supported_neg_inv[s](s, [args[1], args[0]])
 
         return None
-
-    @classmethod
-    def instantiate_custom_constraint(cls, name, args):
-        custom = {"sum_constraint": SumConstraintExpression, "alldiff_constraint": AlldiffConstraintExpression}
-        assert name in custom
-        return custom[name](name, args)
 
 
 class EffectExpressionCatalog(object):

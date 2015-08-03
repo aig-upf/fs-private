@@ -43,18 +43,16 @@ GroundAction* ActionSchema::process(const ObjectIdxVector& binding, const Proble
 	std::vector<AtomicFormula::cptr> conditions;
 	for (const AtomicFormulaSchema::cptr condition:_conditions) {
 		AtomicFormula::cptr processed = condition->process(binding, info);
-		if (processed->getScope().size() == 0) { // The condition formula can be statically resolved to either true or false
-			
-			if (processed->interpret({})) { // No need to add the condition, which is always true
-				delete processed;
-				continue; 
-			}
-			else { // The action is statically non-applicable
-				for (const auto c:conditions) delete c;
-				return nullptr;
-			}
-		}
 		conditions.push_back(processed);
+		
+		// Static checks
+		if (processed->is_tautology()) { // No need to add the condition, which is always true
+			delete processed;
+			continue; 
+		} else if (processed->is_contradiction()) { // The action is statically non-applicable
+			for (const auto c:conditions) delete c;
+			return nullptr;
+		}
 	}
 	
 	std::vector<ActionEffect::cptr> effects;

@@ -23,7 +23,7 @@ public:
 
 //     virtual fs::AtomicFormulaSchema::cptr instantiateGoal(const std::vector<VariableIdxVector>& appRelevantVars) const = 0;
 
-    virtual DirectConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) const = 0;
+//     virtual DirectConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) const = 0;
     
     virtual std::map<std::string, Function> instantiateFunctions() const = 0;
 };

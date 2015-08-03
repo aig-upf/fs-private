@@ -12,10 +12,10 @@ AtomicFormulaSchema::cptr Loader::parseAtomicFormula(const rapidjson::Value& tre
 	if (term_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<TermSchema::cptr> subterms = parseTermList(tree["subterms"], info);
-		if (subterms.size() != 2) std::runtime_error("Only binary atoms accepted so far");
-		return AtomicFormulaSchema::create(symbol, subterms[0], subterms[1]);
-
-	} else throw std::runtime_error("Unknown node type " + term_type);
+		return AtomicFormulaSchema::create(symbol, subterms);
+	}
+	
+	else throw std::runtime_error("Unknown node type " + term_type);
 }
 
 std::vector<AtomicFormulaSchema::cptr> Loader::parseAtomicFormulaList(const rapidjson::Value& tree, const ProblemInfo& info) {

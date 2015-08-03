@@ -1,13 +1,10 @@
 
 #include <cassert>
 #include <memory>
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <problem.hxx>
 #include <utils/loader.hxx>
-#include <constraints/constraint_factory.hxx>
 #include <actions/ground_action.hxx>
 #include <component_factory.hxx>
 

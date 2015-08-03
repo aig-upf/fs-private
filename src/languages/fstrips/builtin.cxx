@@ -78,4 +78,29 @@ std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo
 	return os;
 }
 
+std::ostream& ExternallyDefinedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << name() << "(";
+	for (const auto ptr:_subterms) os << *ptr << ", ";
+	os << ")";
+	return os;
+}
+
+bool AlldiffFormula::_satisfied(const ObjectIdxVector& values) const {
+	std::set<ObjectIdx> distinct;
+	for (ObjectIdx val:values) {
+		auto res = distinct.insert(val);
+		if (!res.second) return false; // We found a duplicate, hence the formula is false
+	}
+	return true;
+}
+
+
+
+bool SumFormula::_satisfied(const ObjectIdxVector& values) const {
+	int expected_sum_value = values.back();
+	int total_sum  = std::accumulate(values.begin(), values.end(), 0);
+	return expected_sum_value*2 == total_sum;
+}
+
+
 } } } // namespaces

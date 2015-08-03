@@ -24,9 +24,10 @@ namespace fs0 { namespace engines {
 		auto engine = new aptk::StlBestFirstSearch<FS0SearchNode, RelaxedPlanHeuristic<FS0StateModel, DirectRPGBuilder>, FS0StateModel>(model, heuristic_1);
 		
 		
-		
+		/*
 		std::shared_ptr<GecodeRPGBuilder> gecode_builder = std::shared_ptr<GecodeRPGBuilder>(GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
 		RelaxedPlanHeuristic<FS0StateModel, GecodeRPGBuilder> heuristic_2(model, gecode_builder);
+		*/
 		
 		return std::unique_ptr<FS0SearchAlgorithm>(engine);
 	}

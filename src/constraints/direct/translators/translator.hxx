@@ -14,6 +14,7 @@ class DirectTranslator {
 public:
 	//! Generates the DirectConstraint that corresponds to a given (atomic) formula
 	static DirectConstraint::cptr generate(const fs::AtomicFormula& formula);
+	static DirectConstraint::cptr generate(const fs::RelationalFormula& formula);
 	
 	//! Generates the set of DirectConstraints that corresponds to a given set of (atomic) formulae
 	static std::vector<DirectConstraint::cptr> generate(const std::vector<fs::AtomicFormula::cptr> formulae);
@@ -27,13 +28,17 @@ public:
 protected:
 	
 	//! Helper to instantiate unary constraints
-	static DirectConstraint::cptr instantiateUnaryConstraint(fs::AtomicFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
+	static DirectConstraint::cptr instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
 	//! Helper to instantiate binary constraints
-	static DirectConstraint::cptr instantiateBinaryConstraint(fs::AtomicFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
+	static DirectConstraint::cptr instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
 	
 	//! Perform some basic checks to ensure that the term is compatible with direct components
 	static void checkSupported(const fs::Term::cptr lhs, const fs::Term::cptr rhs);
+	
+	//! Transforms a given formula into an extensional constraint, if the scope is small enough.
+	//! Otherwise returns a null pointer.
+	static DirectConstraint::cptr extensionalize(const fs::AtomicFormula& formula);
 };
 
 } // namespaces

@@ -36,7 +36,7 @@ BaseActionManager* ActionManagerFactory::create(const GroundAction& action) {
 bool ActionManagerFactory::actionHasHigherArityPreconditions(const GroundAction& action) {
 	bool needs_generic_manager = false;
 	for (const AtomicFormula::cptr constraint:action.getConditions()) {
-		unsigned arity = constraint->scope.size();
+		unsigned arity = constraint->getScope().size();
 		if (arity == 0) {
 			throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
 		}

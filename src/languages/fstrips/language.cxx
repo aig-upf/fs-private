@@ -8,17 +8,17 @@
 namespace fs0 { namespace language { namespace fstrips {
 
 // A small workaround to circumvent the fact that boost containers do not seem to allow initializer lists
-typedef AtomicFormula::Symbol AFSymbol;
+typedef RelationalFormula::Symbol AFSymbol;
 std::vector<std::pair<AFSymbol, std::string>> symbol_to_string_init{
 	{AFSymbol::EQ, "="}, {AFSymbol::NEQ, "!="}, {AFSymbol::LT, "<"}, {AFSymbol::LEQ, "<="}, {AFSymbol::GT, ">"}, {AFSymbol::GEQ, ">="}
 };
-const std::map<AFSymbol, std::string> AtomicFormula::symbol_to_string(symbol_to_string_init.begin(), symbol_to_string_init.end());
-const std::map<std::string, AFSymbol> AtomicFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
+const std::map<AFSymbol, std::string> RelationalFormula::symbol_to_string(symbol_to_string_init.begin(), symbol_to_string_init.end());
+const std::map<std::string, AFSymbol> RelationalFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
 
 
 //! A helper to interpret a vector of terms
 template <typename T>
-ObjectIdxVector interpret_subterms(const std::vector<Term::cptr>& subterms, const T& assignment) {
+ObjectIdxVector NestedTerm::interpret_subterms(const std::vector<Term::cptr>& subterms, const T& assignment) {
 	ObjectIdxVector interpreted;
 	for (Term::cptr subterm:subterms) {
 		interpreted.push_back(subterm->interpret(assignment));
@@ -122,34 +122,41 @@ std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) co
 	return os;
 }
 
-
-AtomicFormula::cptr AtomicFormula::create(AtomicFormula::Symbol symbol, Term::cptr lhs, Term::cptr rhs) {
-	if (symbol == AtomicFormula::Symbol::EQ)  return new EQAtomicFormula(lhs, rhs);
-	if (symbol == AtomicFormula::Symbol::NEQ) return new NEQAtomicFormula(lhs, rhs);
-	if (symbol == AtomicFormula::Symbol::LT)  return new LTAtomicFormula(lhs, rhs);
-	if (symbol == AtomicFormula::Symbol::LEQ) return new LEQAtomicFormula(lhs, rhs);
-	if (symbol == AtomicFormula::Symbol::GT)  return new GTAtomicFormula(lhs, rhs);
-	if (symbol == AtomicFormula::Symbol::GEQ) return new GEQAtomicFormula(lhs, rhs);
-	assert(0);
-}
-
-
-void AtomicFormula::computeScope(std::set<VariableIdx>& scope) const {
-	lhs->computeScope(scope);
-	rhs->computeScope(scope);
-}
-
 VariableIdxVector AtomicFormula::computeScope() const {
 	std::set<VariableIdx> set;
 	computeScope(set);
 	return VariableIdxVector(set.cbegin(), set.cend());
 }
 
+void AtomicFormula::computeScope(std::set<VariableIdx>& scope) const {
+	for (const auto subterm:_subterms) subterm->computeScope(scope);
+}
+
+bool AtomicFormula::interpret(const PartialAssignment& assignment) const {
+	return _satisfied(NestedTerm::interpret_subterms(_subterms, assignment));
+}
+
+bool AtomicFormula::interpret(const State& state) const {
+	return _satisfied(NestedTerm::interpret_subterms(_subterms, state));
+}
 
 std::ostream& AtomicFormula::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
-std::ostream& AtomicFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os << *lhs << " " << AtomicFormula::symbol_to_string.at(symbol()) << " " << *rhs;
+
+RelationalFormula::cptr RelationalFormula::create(RelationalFormula::Symbol symbol, const std::vector<Term::cptr>& subterms) {
+	if (symbol == RelationalFormula::Symbol::EQ)  return new EQAtomicFormula(subterms);
+	if (symbol == RelationalFormula::Symbol::NEQ) return new NEQAtomicFormula(subterms);
+	if (symbol == RelationalFormula::Symbol::LT)  return new LTAtomicFormula(subterms);
+	if (symbol == RelationalFormula::Symbol::LEQ) return new LEQAtomicFormula(subterms);
+	if (symbol == RelationalFormula::Symbol::GT)  return new GTAtomicFormula(subterms);
+	if (symbol == RelationalFormula::Symbol::GEQ) return new GEQAtomicFormula(subterms);
+	assert(0);
+}
+
+
+
+std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
+	os << *_subterms[0] << " " << RelationalFormula::symbol_to_string.at(symbol()) << " " << *_subterms[1];
 	return os;
 }
 

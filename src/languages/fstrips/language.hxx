@@ -73,6 +73,9 @@ public:
 		return os;
 	}
 	
+	template <typename T>
+	static ObjectIdxVector interpret_subterms(const std::vector<Term::cptr>& subterms, const T& assignment);
+	
 	unsigned getSymbolId() const { return _symbol_id; }
 	
 	const std::vector<Term::cptr>& getSubterms() const { return _subterms; }
@@ -223,98 +226,157 @@ protected:
 };
 
 
-
+//! An atomic formula, implicitly understood to be static (fluent formulae are considered terms with Boolean codomain)
 class AtomicFormula {
 public:
 	typedef const AtomicFormula* cptr;
 	
-	enum class Symbol {EQ, NEQ, LT, LEQ, GT, GEQ};
-	
-	static AtomicFormula::cptr create(Symbol symbol, Term::cptr lhs, Term::cptr rhs);
-	
-	AtomicFormula(Term::cptr lhs_, Term::cptr rhs_) : lhs(lhs_), rhs(rhs_), scope(computeScope()) {}
+	AtomicFormula(const std::vector<Term::cptr>& subterms) : _subterms(subterms), _scope(computeScope()) {}
 	
 	virtual ~AtomicFormula() {
-		delete lhs; delete rhs;
+		for (const auto ptr:_subterms) delete ptr;
 	}
-		
-	//! Returns the scope of the atomic formula, i.e. a vector/set with all state variables involved in it.
-	void computeScope(std::set<VariableIdx>& scope) const;
-	VariableIdxVector computeScope() const;
 	
-	bool interpret(const PartialAssignment& assignment) const { return _satisfied(lhs->interpret(assignment), rhs->interpret(assignment)); }
-	bool interpret(const State& state) const { return _satisfied(lhs->interpret(state), rhs->interpret(state)); }
-	
-	virtual Symbol symbol() const = 0;
+	bool interpret(const PartialAssignment& assignment) const;
+	bool interpret(const State& state) const;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const AtomicFormula& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;	
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
 	
-	Term::cptr lhs;
-	Term::cptr rhs;
+	const VariableIdxVector& getScope() const { return _scope; }
 	
-	const static std::map<AtomicFormula::Symbol, std::string> symbol_to_string;
-	const static std::map<std::string, AtomicFormula::Symbol> string_to_symbol;
-	
-	const VariableIdxVector& getScope() const { return scope; }
-	
-	//! We cache the scope for performance reasons
-	const VariableIdxVector scope;
+	//! By default, formulae are not tautology nor contradiction
+	virtual bool is_tautology() const { return false; }
+	virtual bool is_contradiction() const { return false; }
 	
 protected:
+	//! Returns the scope of the atomic formula, i.e. a vector/set with all state variables involved in it.
+	void computeScope(std::set<VariableIdx>& scope) const;
+	VariableIdxVector computeScope() const;
+	
+	//! The formula subterms
+	std::vector<Term::cptr> _subterms;
+	
+	//! We cache the scope for performance reasons
+	const VariableIdxVector _scope;
+	
+	//! A helper to recursively evaluate the formula - must be subclassed
+	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
+};
+
+//! The True truth value
+class TrueFormula : public AtomicFormula {
+public:
+	typedef const TrueFormula* cptr;
+	
+	TrueFormula() : AtomicFormula({}) {}
+	
+	bool interpret(const PartialAssignment& assignment) const { return true; }
+	bool interpret(const State& state) const { return true; }
+	bool _satisfied(const ObjectIdxVector& values) const { return true; }
+	
+	bool is_tautology() const { return true; }
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const { os << "True"; return os; }
+};
+
+//! The False truth value
+class FalseFormula : public AtomicFormula {
+public:
+	typedef const FalseFormula* cptr;
+	
+	FalseFormula() : AtomicFormula({}) {}
+	
+	bool interpret(const PartialAssignment& assignment) const { return false; }
+	bool interpret(const State& state) const { return false; }
+	bool _satisfied(const ObjectIdxVector& values) const { return false; }
+	
+	bool is_contradiction() const { return true; }
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const { os << "False"; return os; }
+};
+
+class RelationalFormula : public AtomicFormula {
+public:
+	typedef const RelationalFormula* cptr;
+	
+	enum class Symbol {EQ, NEQ, LT, LEQ, GT, GEQ};
+	
+	static RelationalFormula::cptr create(Symbol symbol, const std::vector<Term::cptr>& subterms);
+	
+	RelationalFormula(const std::vector<Term::cptr>& subterms) : AtomicFormula(subterms) {
+		assert(subterms.size() == 2);
+	}
+	
+	virtual Symbol symbol() const = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;	
+	
+	
+	const static std::map<RelationalFormula::Symbol, std::string> symbol_to_string;
+	const static std::map<std::string, RelationalFormula::Symbol> string_to_symbol;
+	
+	const Term::cptr lhs() const { return _subterms[0]; }
+	const Term::cptr rhs() const { return _subterms[1]; }
+	
+protected:
+	bool _satisfied(const ObjectIdxVector& values) const { return _satisfied(values[0], values[1]); }
 	virtual bool _satisfied(ObjectIdx o1, ObjectIdx o2) const = 0;
 };
 
-class EQAtomicFormula : public AtomicFormula {
+class EQAtomicFormula : public RelationalFormula {
 public:
-	EQAtomicFormula(Term::cptr lhs_, Term::cptr rhs_) : AtomicFormula(lhs_, rhs_) {}
+	EQAtomicFormula(const std::vector<Term::cptr>& subterms) : RelationalFormula(subterms) {}
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 == o2; }
 	
 	virtual Symbol symbol() const { return Symbol::EQ; }
 };
 
-class NEQAtomicFormula : public AtomicFormula {
+class NEQAtomicFormula : public RelationalFormula {
 public:
-	NEQAtomicFormula(Term::cptr lhs_, Term::cptr rhs_) : AtomicFormula(lhs_, rhs_) {}
+	NEQAtomicFormula(const std::vector<Term::cptr>& subterms) : RelationalFormula(subterms) {}
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 != o2; }
 	
 	Symbol symbol() const { return Symbol::NEQ; }
 };
 
-class LTAtomicFormula : public AtomicFormula {
+class LTAtomicFormula : public RelationalFormula {
 public:
-	LTAtomicFormula(Term::cptr lhs_, Term::cptr rhs_) : AtomicFormula(lhs_, rhs_) {}
+	LTAtomicFormula(const std::vector<Term::cptr>& subterms) : RelationalFormula(subterms) {}
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 < o2; }
 	
 	Symbol symbol() const { return Symbol::LT; }
 };
 
-class LEQAtomicFormula : public AtomicFormula {
+class LEQAtomicFormula : public RelationalFormula {
 public:
-	LEQAtomicFormula(Term::cptr lhs_, Term::cptr rhs_) : AtomicFormula(lhs_, rhs_) {}
+	LEQAtomicFormula(const std::vector<Term::cptr>& subterms) : RelationalFormula(subterms) {}
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 <= o2; }
 	
 	Symbol symbol() const { return Symbol::LEQ; }
 };
 
-class GTAtomicFormula : public AtomicFormula {
+class GTAtomicFormula : public RelationalFormula {
 public:
-	GTAtomicFormula(Term::cptr lhs_, Term::cptr rhs_) : AtomicFormula(lhs_, rhs_) {}
+	GTAtomicFormula(const std::vector<Term::cptr>& subterms) : RelationalFormula(subterms) {}
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 > o2; }
 	
 	Symbol symbol() const { return Symbol::GT; }
 };
 
-class GEQAtomicFormula : public AtomicFormula {
+class GEQAtomicFormula : public RelationalFormula {
 public:
-	GEQAtomicFormula(Term::cptr lhs_, Term::cptr rhs_) : AtomicFormula(lhs_, rhs_) {}
+	GEQAtomicFormula(const std::vector<Term::cptr>& subterms) : RelationalFormula(subterms) {}
 		
 	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 >= o2; }
 	

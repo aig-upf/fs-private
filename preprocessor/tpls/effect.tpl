@@ -1,4 +1,5 @@
 
+/*
 class ${classname} : public ${parent} {
 public:
 	${classname}(const VariableIdxVector& scope, VariableIdx affected, const std::vector<int>& parameters) : ${parent}(scope, affected, parameters) {}
@@ -12,3 +13,4 @@ public:
 		return os;
 	}
 };
+*/

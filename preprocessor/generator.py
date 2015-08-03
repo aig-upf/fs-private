@@ -373,7 +373,7 @@ class Generator(object):
     def get_method_factories(self):
         return tplManager.get('factories').substitute(
             actions='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
-            functions='\n\t\t\t'.join(self.get_function_instantiations()),
+            functions=',\n\t\t\t'.join(self.get_function_instantiations()),
         )
 
     def get_action_factory_line(self, action_code):
@@ -533,12 +533,15 @@ class Generator(object):
         return res
 
     def get_function_instantiations(self):
-        return [
-            tplManager.get('function_instantiation').substitute(name=elem.name, accessor=elem.accessor)
+        tpl = tplManager.get('function_instantiation')
+        extensional = [
+            tpl.substitute(name=elem.name, accessor=elem.accessor)
             for elem in self.task.static_data.values() if isinstance(elem, DataElement)
         ]
+        external = [
+            tpl.substitute(name=symbol, accessor=symbol[1:]) for symbol in self.task.static_symbols if symbol[0] == '@']
 
-
+        return extensional + external
 
 if __name__ == "__main__":
     main()

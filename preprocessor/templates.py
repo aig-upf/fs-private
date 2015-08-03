@@ -30,7 +30,7 @@ _base = dict(
     apply_unary_header='apply(ObjectIdx v1) const { \n\t\tassert(applicable(v1));',
     apply_binary_header='apply(ObjectIdx v1, ObjectIdx v2) const { \n\t\tassert(applicable(v1, v2));',
     getname_code='os << "${printed}";',
-    function_instantiation='{"${name}", [](const ObjectIdxVector& parameters){ return external->${accessor}(parameters) ;}}',
+    function_instantiation='{"${name}", [](const ObjectIdxVector& parameters){ return external->${accessor}(parameters); }}',
 )
 
 

@@ -12,7 +12,7 @@ public:
     ) const {
         GroundAction* pointer = nullptr;
 
-        const ObjectIdxVector& _binding = binding; // syntactic sugar
+        // const ObjectIdxVector& _binding = binding; // syntactic sugar
 
         if (false) {}
         ${actions}
@@ -21,9 +21,11 @@ public:
         return pointer;
     }
 
+    /*
     DirectConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) const {
         return external->instantiateConstraint(classname, parameters, variables);
     }
+    */
 
     std::map<std::string, Function> instantiateFunctions() const {
 		return {
