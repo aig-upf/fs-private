@@ -29,7 +29,7 @@ namespace fs0 { namespace gecode {
 	}
 	
 	
-	GecodeBaseTranslator::GecodeBaseTranslator(SimpleCSP& csp, GecodeCSPTranslator& translator) 
+	GecodeBaseTranslator::GecodeBaseTranslator(SimpleCSP& csp, GecodeCSPVariableTranslator& translator) 
 		: _csp(csp), _translator(translator)
 	{}
 	

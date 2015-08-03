@@ -27,15 +27,15 @@ enum class CSPVariableType {
  *     (e.g. the same state variable 'val(c1)' could appear in a certain CSP as input _and_ output variable of an effect
  *   - 'y' is the identifier of the CSP variable (i.e. implementation-wise, the position in which the variable appears on the '_X' IntVarArray of the CSP)
  */
-class GecodeCSPTranslator {
+class GecodeCSPVariableTranslator {
 public:
 
 	
-	GecodeCSPTranslator() {};
-	virtual ~GecodeCSPTranslator() {}
+	GecodeCSPVariableTranslator() {};
+	virtual ~GecodeCSPVariableTranslator() {}
 
 	//! Forbid copy constructor
-	explicit GecodeCSPTranslator(GecodeCSPTranslator& other);
+	explicit GecodeCSPVariableTranslator(GecodeCSPVariableTranslator& other);
 	
 	//! Register the given planning variable under the give role/type as corresponding to the CSP variable with the given index.
 	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)

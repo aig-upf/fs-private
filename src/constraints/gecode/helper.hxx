@@ -14,7 +14,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class SimpleCSP; class GecodeCSPTranslator; enum class CSPVariableType;
+class SimpleCSP; class GecodeCSPVariableTranslator; enum class CSPVariableType;
 
 /**
  *  Some helper methods related to the construction of Gecode CSPs.
@@ -29,32 +29,32 @@ public:
 	static Gecode::IntVar processVariable(Gecode::Space& csp, VariableIdx var, ProblemInfo::ObjectType type);
 	
 	//!
-	static void registerPlanningVariable(Gecode::Space& csp, VariableIdx planning_var, CSPVariableType type, Gecode::IntVarArgs& variables, GecodeCSPTranslator& translator);
+	static void registerPlanningVariable(Gecode::Space& csp, VariableIdx planning_var, CSPVariableType type, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator);
 	
 	//!
-	static void registerTemporaryVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPTranslator& translator, TypeIdx typeId);
+	static void registerTemporaryVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator, TypeIdx typeId);
 	
-	static void registerTemporaryOutputVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPTranslator& translator, TypeIdx typeId);
+	static void registerTemporaryOutputVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator, TypeIdx typeId);
 	
 	//!
-	static void addEqualityConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, VariableIdx variable, bool value);
+	static void addEqualityConstraint(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, VariableIdx variable, bool value);
 
 	// MRJ: This overload will be necessary as soon as int and ObjectIdx cease to be the same thing
 	//void addEqualityConstraint(SimpleCSP& csp,  VariableIdx variable, int  value );
 
 	//! Adds constraint of the form $variable = value$ to the CSP
-	static void addEqualityConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, VariableIdx variable, ObjectIdx value);
+	static void addEqualityConstraint(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, VariableIdx variable, ObjectIdx value);
 
 	//! Adds constraint of the form $variable \in values$ to the CSP
-	static void addMembershipConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, VariableIdx variable, DomainPtr values);
+	static void addMembershipConstraint(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, VariableIdx variable, DomainPtr values);
 
 	//! Adds constraint of the form $lb <= variable <= ub$ to the CSP
-	static void addBoundsConstraint(SimpleCSP& csp, const GecodeCSPTranslator& translator, VariableIdx variable, int lb, int ub);
+	static void addBoundsConstraint(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, VariableIdx variable, int lb, int ub);
 
 	//! Adds constraint of the form $min <= variable <= max$ to the CSP,
 	//! where min and max are the minimum and maximum values defined for
 	//! the type of variable.
-	static void addBoundsConstraintFromDomain(SimpleCSP& csp, const GecodeCSPTranslator& translator, VariableIdx variable);
+	static void addBoundsConstraintFromDomain(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, VariableIdx variable);
 
 	/*
 	//! Returns the translator that corresponds to a given constraint, if available, or throws a fatal exception otherwise.
@@ -87,13 +87,13 @@ public:
 		return componentTranslator;
 	}
 
-	static void translateConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, const ScopedConstraint::vcptr& constraints) {
+	static void translateConstraints(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const ScopedConstraint::vcptr& constraints) {
 		for (ScopedConstraint::cptr constraint:constraints) {
 			getConstraintTranslator(*constraint)->registerConstraints(csp, translator, constraint);
 		}
 	}
 
-	static void translateEffects(SimpleCSP& csp, const GecodeCSPTranslator& translator, const ScopedEffect::vcptr& effects) {
+	static void translateEffects(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const ScopedEffect::vcptr& effects) {
 		for (ScopedEffect::cptr effect:effects) {
 			getEffectTranslator(*effect)->registerConstraints(csp, translator, effect);
 		}
@@ -101,7 +101,7 @@ public:
 	*/
 
 	//! Adds the RPG-layer-dependent constraints to the CSP.
-	static void addRelevantVariableConstraints(SimpleCSP& csp, const GecodeCSPTranslator& translator, const VariableIdxVector& scope, const RelaxedState& layer);
+	static void addRelevantVariableConstraints(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const VariableIdxVector& scope, const RelaxedState& layer);
 	
 	static void postBranchingStrategy(SimpleCSP& csp);
 	

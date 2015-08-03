@@ -9,7 +9,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class GecodeCSPTranslator; class SimpleCSP;
+class GecodeCSPVariableTranslator; class SimpleCSP;
 
 //! Utility class to store information related to temporary variables.
 class TranslationData {
@@ -27,7 +27,7 @@ protected:
 //! Abstract constraint translator
 class GecodeBaseTranslator {
 public:
-	GecodeBaseTranslator(SimpleCSP& csp, GecodeCSPTranslator& translator);
+	GecodeBaseTranslator(SimpleCSP& csp, GecodeCSPVariableTranslator& translator);
 	virtual ~GecodeBaseTranslator() {}
 
 	//! The translator can optionally register any number of (probably temporary) CSP variables.
@@ -53,7 +53,7 @@ protected:
 	
 	SimpleCSP& _csp;
 	
-	GecodeCSPTranslator& _translator;
+	GecodeCSPVariableTranslator& _translator;
 	
 	//! A map of already-processed terms and their assigned temporary data.
 	std::map<const fs::Term*, TranslationData> _temp_variables;

@@ -40,7 +40,7 @@ protected:
 	SimpleCSP _base_csp;
 	
 	//! A translator to map planning variables with gecode variables
-	GecodeCSPTranslator translator;
+	GecodeCSPVariableTranslator translator;
 
 };
 

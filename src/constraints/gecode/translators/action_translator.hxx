@@ -11,7 +11,7 @@ namespace fs0 { namespace gecode {
 
 class GecodeActionTranslator : public GecodeBaseTranslator {
 public:
-	GecodeActionTranslator(const GroundAction& action, SimpleCSP& csp, GecodeCSPTranslator& translator);
+	GecodeActionTranslator(const GroundAction& action, SimpleCSP& csp, GecodeCSPVariableTranslator& translator);
 
 	//! The translator can optionally register any number of (probably temporary) CSP variables.
 	void registerVariables(Gecode::IntVarArgs& variables);

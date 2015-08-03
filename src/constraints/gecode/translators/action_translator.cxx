@@ -11,7 +11,7 @@
 
 namespace fs0 { namespace gecode {
 	
-	GecodeActionTranslator::GecodeActionTranslator(const GroundAction& action, SimpleCSP& csp, GecodeCSPTranslator& translator)
+	GecodeActionTranslator::GecodeActionTranslator(const GroundAction& action, SimpleCSP& csp, GecodeCSPVariableTranslator& translator)
 		: GecodeBaseTranslator(csp, translator), _action(action), _temp_output_variables(0)
 	{}
 	

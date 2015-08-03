@@ -11,7 +11,7 @@
 
 namespace fs0 { namespace gecode {
 	
-	GecodeFormulaTranslator::GecodeFormulaTranslator(const std::vector<fs::AtomicFormula::cptr>& conditions, const VariableIdxVector& relevant, SimpleCSP& csp, GecodeCSPTranslator& translator)
+	GecodeFormulaTranslator::GecodeFormulaTranslator(const std::vector<fs::AtomicFormula::cptr>& conditions, const VariableIdxVector& relevant, SimpleCSP& csp, GecodeCSPVariableTranslator& translator)
 		: GecodeBaseTranslator(csp, translator), _conditions(conditions), _relevant(relevant) {}
 
 	void GecodeFormulaTranslator::registerVariables(Gecode::IntVarArgs& variables) {

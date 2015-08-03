@@ -43,7 +43,7 @@ Gecode::IntVar Helper::processVariable(Gecode::Space& csp, VariableIdx var, Prob
 }
 
 //!
-void Helper::registerPlanningVariable(Gecode::Space& csp, VariableIdx planning_var, CSPVariableType type, Gecode::IntVarArgs& variables, GecodeCSPTranslator& translator) {
+void Helper::registerPlanningVariable(Gecode::Space& csp, VariableIdx planning_var, CSPVariableType type, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator) {
 	auto csp_var = processPlanningVariable(csp, planning_var);
 	if (translator.registerCSPVariable(planning_var, type, variables.size())) {
 		variables << csp_var;
@@ -51,14 +51,14 @@ void Helper::registerPlanningVariable(Gecode::Space& csp, VariableIdx planning_v
 }
 
 //!
-void Helper::registerTemporaryVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPTranslator& translator, TypeIdx typeId) {
+void Helper::registerTemporaryVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator, TypeIdx typeId) {
 	auto csp_var = processTemporaryVariable(csp, planning_var, typeId);
 	if (translator.registerCSPVariable(planning_var, CSPVariableType::Temporary, variables.size())) {
 		variables << csp_var;
 	}
 }
 
-void Helper::registerTemporaryOutputVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPTranslator& translator, TypeIdx typeId) {
+void Helper::registerTemporaryOutputVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator, TypeIdx typeId) {
 	auto csp_var = processTemporaryVariable(csp, planning_var, typeId);
 	if (translator.registerCSPVariable(planning_var, CSPVariableType::TemporaryOutput, variables.size())) {
 		variables << csp_var;
@@ -66,19 +66,19 @@ void Helper::registerTemporaryOutputVariable(Gecode::Space& csp, VariableIdx pla
 }
 
 //!
-void Helper::addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, bool value) {
+void Helper::addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable, bool value) {
 	addEqualityConstraint(csp, translator, variable, (value ? 1 : 0));
 }
 
 //! Adds constraint of the form $variable = value$ to the CSP
-void Helper::addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, ObjectIdx value) {
+void Helper::addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable, ObjectIdx value) {
 	auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
 	rel( csp, csp_var, IRT_EQ, value ); // v = value
 }
 
 
 //! Adds constraint of the form $variable \in values$ to the CSP
-void Helper::addMembershipConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, DomainPtr values) {
+void Helper::addMembershipConstraint(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable, DomainPtr values) {
 	auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
 
 	// MRJ: variable \in dom
@@ -91,7 +91,7 @@ void Helper::addMembershipConstraint(SimpleCSP& csp, const gecode::GecodeCSPTran
 }
 
 //! Adds constraint of the form $lb <= variable <= ub$ to the CSP
-void Helper::addBoundsConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, int lb, int ub) {
+void Helper::addBoundsConstraint(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable, int lb, int ub) {
 	auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
 	dom( csp, csp_var, lb, ub); // MRJ: lb <= variable <= ub
 }
@@ -99,7 +99,7 @@ void Helper::addBoundsConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslat
 //! Adds constraint of the form $min <= variable <= max$ to the CSP,
 //! where min and max are the minimum and maximum values defined for
 //! the type of variable.
-void Helper::addBoundsConstraintFromDomain(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable) {
+void Helper::addBoundsConstraintFromDomain(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable) {
 	auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
 	const auto& info = Problem::getCurrentProblem()->getProblemInfo();
 	TypeIdx type = info.getVariableType(variable);
@@ -109,7 +109,7 @@ void Helper::addBoundsConstraintFromDomain(SimpleCSP& csp, const gecode::GecodeC
 }
 
 //! Adds the RPG-layer-dependent constraints to the CSP.
-void Helper::addRelevantVariableConstraints(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, const VariableIdxVector& scope, const RelaxedState& layer) {
+void Helper::addRelevantVariableConstraints(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, const VariableIdxVector& scope, const RelaxedState& layer) {
 	// Loop over the domains of each of the relevant variables in the RPG layer and process them one by one.
 	for (VariableIdx variable:scope) {
 		const DomainPtr& domain = layer.getValues(variable);
