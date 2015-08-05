@@ -100,19 +100,6 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 }
 
 
-
-// XXX TO DEPRECATE:
-/*
-const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(const SimpleCSP& csp, VariableIdx variable, CSPVariableType type) const {
-	auto it = _variables.find(std::make_pair(variable, type));
-	if(it == _variables.end()) {
-		throw std::runtime_error("Trying to translate a non-existing CSP variable");
-	}
-	return csp._X[ it->second ];
-}
-*/
-
-
 Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveFunction(const SimpleCSP& csp, unsigned symbol_id, CSPVariableType type) const {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	Gecode::IntVarArgs variables;

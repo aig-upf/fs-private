@@ -20,7 +20,9 @@ namespace fs0 {
 template <typename Model, typename RPGBuilder>
 RelaxedPlanHeuristic<Model, RPGBuilder>::RelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder) :
 	_problem(problem.getTask()), _managers(managers), _builder(builder)
-{}
+{
+	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
+}
 
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.

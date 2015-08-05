@@ -74,19 +74,19 @@ public:
 
 
 
-
 class AtomicFormulaTranslator {
 public:
 	typedef const AtomicFormulaTranslator* cptr;
 	
 	AtomicFormulaTranslator() {}
+	virtual ~AtomicFormulaTranslator() {}
 
 	//! Most atomic formulae simply need all their subterms to have their variables registered
-	void registerVariables(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
+	virtual void registerVariables(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
 	
 	//! For constraint registration, each particular subclass translator will probably want to add to the common functionality here,
 	//! which simply performs the recursive registration of each subterm's own constraints
-	void registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const;
+	virtual void registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const;
 };
 
 class RelationalFormulaTranslator : public AtomicFormulaTranslator {

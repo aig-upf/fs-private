@@ -30,10 +30,6 @@ namespace fs0 { namespace gecode {
 	}
 	
 	
-	
-	
-	
-	
 void ConstantTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType root_type, CSPVariableType children_type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const {
 	auto constant = dynamic_cast<fs::Constant::cptr>(term);
 	assert(constant);
@@ -122,8 +118,6 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	
 // 		Gecode::element(csp, function_vars, index_var, output_var);
 }
-
-
 
 
 

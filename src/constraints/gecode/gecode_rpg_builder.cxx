@@ -45,6 +45,7 @@ bool GecodeRPGBuilder::isGoal(const State& seed, const RelaxedState& layer, Atom
 	bool is_goal = false;
 	
 	if (csp->checkConsistency()) {
+		FFDEBUG("heuristic", "Formula CSP found to be consistent: " << *csp);
 		if (Config::instance().getGoalResolutionType() == Config::CSPResolutionType::Full) {  // Solve the CSP completely
 			is_goal = _goal_handler->compute_support(csp, support, seed);
 		} else { // Check only local consistency
@@ -57,6 +58,14 @@ bool GecodeRPGBuilder::isGoal(const State& seed, const RelaxedState& layer, Atom
 	return is_goal;
 }
 
+std::ostream& GecodeRPGBuilder::print(std::ostream& os) const {
+	os  << std::endl << "GecodeRPGBuilder" << std::endl;
+	os << "----------------" << std::endl;
+	os << "Goal handler: " << std::endl << *_goal_handler << std::endl;
+	if (_state_constraint_handler) os << "State constraint handler: " << std::endl << *_state_constraint_handler << std::endl;
+	os  << std::endl;
+	return os;
+}
 
 
 

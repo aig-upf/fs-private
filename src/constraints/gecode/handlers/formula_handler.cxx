@@ -50,16 +50,16 @@ bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& suppor
 	// ATM we are happy to extract the goal support from the first solution
 	// TODO An alternative strategy to try out would be to select the solution with most atoms in the seed state, but that implies iterating through all solutions, which might not be worth it?
 	SimpleCSP* solution = engine.next();
-	if (solution) {
-		for (const auto& it:_translator.getAllInputVariables()) {
-			VariableIdx planning_variable = it.first;
-			const Gecode::IntVar& csp_var = solution->_X[it.second];
-			support.push_back(Atom(planning_variable, csp_var.val()));
-		}
-		delete solution;
-		return true;
+	if (!solution) return false;
+	
+	FFDEBUG("heuristic", "Formula solution found: " << *solution);
+	for (const auto& it:_translator.getAllInputVariables()) {
+		VariableIdx planning_variable = it.first;
+		const Gecode::IntVar& csp_var = solution->_X[it.second];
+		support.push_back(Atom(planning_variable, csp_var.val()));
 	}
-	return false;
+	delete solution;
+	return true;
 }
 
 void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {

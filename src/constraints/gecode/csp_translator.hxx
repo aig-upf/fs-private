@@ -41,7 +41,6 @@ public:
 	explicit GecodeCSPVariableTranslator(GecodeCSPVariableTranslator& other);
 	
 	
-	
 	//! Returns true iff the given term has already an associated CSP variable
 	bool isRegistered(const fs::Term::cptr term, CSPVariableType type) const;
 
@@ -61,11 +60,6 @@ public:
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(SimpleCSP& csp, const RelaxedState& layer) const;
 
-	
-	// XXX DEPRECATE
-	//! Returns the Gecode CSP variable that corresponds to the given state variable and type, in the given CSP.
-// 	const Gecode::IntVar& resolveVariable(const SimpleCSP& csp, VariableIdx variable, CSPVariableType type) const;
-	
 	//! Returns the set of Gecode CSP variables that corresponds to all the state variables derived from a function
 	//! when used according to the given type.
 	Gecode::IntVarArgs resolveFunction(const SimpleCSP& csp, unsigned symbol_id, CSPVariableType type) const;

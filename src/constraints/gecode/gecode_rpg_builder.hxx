@@ -34,6 +34,10 @@ public:
 	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
 	bool isGoal(const RelaxedState& state) const;
 	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const GecodeRPGBuilder& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
+	
 protected:
 	//! Private constructor
 	GecodeRPGBuilder(gecode::GecodeFormulaCSPHandler::ptr goal_handler, gecode::GecodeFormulaCSPHandler::ptr state_constraint_handler)

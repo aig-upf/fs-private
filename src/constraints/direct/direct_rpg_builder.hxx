@@ -22,7 +22,6 @@ public:
 	
 	//! Factory method to create Direct RPG builders
 	static DirectRPGBuilder::cptr create(const std::vector<fs::AtomicFormula::cptr>& goalConditions, const std::vector<fs::AtomicFormula::cptr>& stateConstraints);
-	
 	~DirectRPGBuilder();
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
@@ -36,6 +35,7 @@ public:
 	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
 	bool isGoal(const RelaxedState& state) const;
 	
+	friend std::ostream& operator<<(std::ostream &os, const DirectRPGBuilder& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
 	
 protected:
