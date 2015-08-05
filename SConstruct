@@ -62,7 +62,10 @@ aptk_heuristics_objs = SConscript(  os.path.join( env['lapkt'], 'aptk2/heuristic
 aptk_heuristics_objs += SConscript( os.path.join( env['lapkt'], 'aptk2/heuristics/novelty/SConscript' ) )
 aptk_tools_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/tools/SConscript' ) )
 
-SConscript( 'src/constraints/gecode/SConscript' )
+# Gecode tweaks
+gecode_include_path = '/usr/local/include'  # MRJ: This probably should be acquired from an environment variable
+include_paths = [ gecode_include_path ]
+env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 
 build_files = [build_dirname + '/' + src for src in locate_source_files('src', '*.cxx')]
 build_files += aptk_search_interface_objs

@@ -52,6 +52,5 @@ src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both t
 env.Append(LIBS=[fs0_libname, 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_filesystem', 'm'])
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
 Export('env')
-SConscript( os.path.join(env['fs0'],'src/constraints/gecode/Dependencies') )
-
+SConscript( os.path.join(env['fs0'], 'gecode_dependencies') )
 env.Program(exe_name, src_objs )

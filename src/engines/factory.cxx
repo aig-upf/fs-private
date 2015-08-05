@@ -14,21 +14,26 @@ using namespace fs0::gecode;
 namespace fs0 { namespace engines {
 
 	std::unique_ptr<FS0SearchAlgorithm> EngineFactory::create(const Config& config, const FS0StateModel& model) {
-		
-		// TODO - Instantiate the search engine based on the configuration object
-		
 		const Problem& problem = model.getTask();
 		
-		auto managers = ActionManagerFactory::create(problem.getGroundActions());
-		std::shared_ptr<DirectRPGBuilder> direct_builder = std::shared_ptr<DirectRPGBuilder>(DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
-		RelaxedPlanHeuristic<FS0StateModel, DirectRPGBuilder> heuristic_1(model, std::move(managers), direct_builder);
+		FS0SearchAlgorithm* engine = nullptr;
 		
-		auto engine = new aptk::StlBestFirstSearch<FS0SearchNode, RelaxedPlanHeuristic<FS0StateModel, DirectRPGBuilder>, FS0StateModel>(model, std::move(heuristic_1));
+		auto action_managers = ActionManagerFactory::create(problem.getGroundActions());
 		
-		
-		
-		std::shared_ptr<GecodeRPGBuilder> gecode_builder = std::shared_ptr<GecodeRPGBuilder>(GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
-		RelaxedPlanHeuristic<FS0StateModel, GecodeRPGBuilder> heuristic_2(model, std::move(managers), gecode_builder);
+		if (Config::instance().getGoalManagerType() == Config::GoalManagerType::Gecode) {
+			// We use a Gecode RPG builder
+			typedef RelaxedPlanHeuristic<FS0StateModel, GecodeRPGBuilder> GecodeRPHeuristic;
+			std::shared_ptr<GecodeRPGBuilder> gecode_builder = std::shared_ptr<GecodeRPGBuilder>(GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
+			GecodeRPHeuristic gecode_builder_heuristic(model, std::move(action_managers), gecode_builder);
+			engine = new aptk::StlBestFirstSearch<FS0SearchNode, GecodeRPHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic));
+			
+		} else {
+			// We use a direct RPG builder
+			typedef RelaxedPlanHeuristic<FS0StateModel, DirectRPGBuilder> DirectRPHeuristic;
+			std::shared_ptr<DirectRPGBuilder> direct_builder = std::shared_ptr<DirectRPGBuilder>(DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
+			DirectRPHeuristic direct_builder_heuristic(model, std::move(action_managers), direct_builder);
+			engine = new aptk::StlBestFirstSearch<FS0SearchNode, DirectRPHeuristic, FS0StateModel>(model, std::move(direct_builder_heuristic));
+		}
 		
 		
 		return std::unique_ptr<FS0SearchAlgorithm>(engine);
