@@ -34,6 +34,14 @@ LogicalComponentRegistry::LogicalComponentRegistry() {
 	add(typeid(fs::SumFormula), new gecode::SumGecodeTranslator());
 	
 	
+	// Standard relational formulae
+	add("=",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::EQAtomicFormula(subterms); });
+	add("!=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::NEQAtomicFormula(subterms); });
+	add("<",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::LTAtomicFormula(subterms); });
+	add("<=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::LEQAtomicFormula(subterms); });
+	add(">",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::GTAtomicFormula(subterms); });
+	add(">=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::GEQAtomicFormula(subterms); });
+	
 	// Register the builtin global constraints
 	add("@alldiff", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::AlldiffFormula(subterms); });
 	add("@sum",     [](const std::vector<fs::Term::cptr>& subterms){ return new fs::SumFormula(subterms); });

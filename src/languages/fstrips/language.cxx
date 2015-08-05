@@ -11,10 +11,9 @@ namespace fs0 { namespace language { namespace fstrips {
 
 // A small workaround to circumvent the fact that boost containers do not seem to allow initializer lists
 typedef RelationalFormula::Symbol AFSymbol;
-std::vector<std::pair<AFSymbol, std::string>> symbol_to_string_init{
+const std::map<AFSymbol, std::string> RelationalFormula::symbol_to_string{
 	{AFSymbol::EQ, "="}, {AFSymbol::NEQ, "!="}, {AFSymbol::LT, "<"}, {AFSymbol::LEQ, "<="}, {AFSymbol::GT, ">"}, {AFSymbol::GEQ, ">="}
 };
-const std::map<AFSymbol, std::string> RelationalFormula::symbol_to_string(symbol_to_string_init.begin(), symbol_to_string_init.end());
 const std::map<std::string, AFSymbol> RelationalFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
 
 
@@ -141,19 +140,6 @@ bool AtomicFormula::interpret(const PartialAssignment& assignment) const {
 bool AtomicFormula::interpret(const State& state) const {
 	return _satisfied(NestedTerm::interpret_subterms(_subterms, state));
 }
-
-
-RelationalFormula::cptr RelationalFormula::create(RelationalFormula::Symbol symbol, const std::vector<Term::cptr>& subterms) {
-	if (symbol == RelationalFormula::Symbol::EQ)  return new EQAtomicFormula(subterms);
-	if (symbol == RelationalFormula::Symbol::NEQ) return new NEQAtomicFormula(subterms);
-	if (symbol == RelationalFormula::Symbol::LT)  return new LTAtomicFormula(subterms);
-	if (symbol == RelationalFormula::Symbol::LEQ) return new LEQAtomicFormula(subterms);
-	if (symbol == RelationalFormula::Symbol::GT)  return new GTAtomicFormula(subterms);
-	if (symbol == RelationalFormula::Symbol::GEQ) return new GEQAtomicFormula(subterms);
-	assert(0);
-}
-
-
 
 std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
 	os << *_subterms[0] << " " << RelationalFormula::symbol_to_string.at(symbol()) << " " << *_subterms[1];

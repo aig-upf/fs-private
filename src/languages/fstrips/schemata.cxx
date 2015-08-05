@@ -107,15 +107,7 @@ AtomicFormula::cptr AtomicFormulaSchema::process(const ObjectIdxVector& binding,
 	process_subterms(binding, info, _subterms, processed_subterms, constant_values);
 	
 	// Create the corresponding relational or external formula object, according to the symbol
-	AtomicFormula::cptr processed;
-	auto it = RelationalFormula::string_to_symbol.find(_symbol);
-	if (it != RelationalFormula::string_to_symbol.end()) { // We have a relation formula
-		if (processed_subterms.size() != 2) std::runtime_error("Only binary relational formulas are accepted");
-		processed = RelationalFormula::create(it->second, processed_subterms);
-	}
-	else { // We assume the formula semantics is externally defined
-		processed = LogicalComponentRegistry::instance().instantiate_formula(_symbol, processed_subterms);
-	}
+	AtomicFormula::cptr processed = LogicalComponentRegistry::instance().instantiate_formula(_symbol, processed_subterms);
 	
 	// Check if we can resolve the value of the formula statically
 	if (constant_values.size() == _subterms.size()) {

@@ -329,8 +329,6 @@ public:
 	
 	enum class Symbol {EQ, NEQ, LT, LEQ, GT, GEQ};
 	
-	static RelationalFormula::cptr create(Symbol symbol, const std::vector<Term::cptr>& subterms);
-	
 	RelationalFormula(const std::vector<Term::cptr>& subterms) : AtomicFormula(subterms) {
 		assert(subterms.size() == 2);
 	}
