@@ -62,13 +62,12 @@ aptk_heuristics_objs = SConscript(  os.path.join( env['lapkt'], 'aptk2/heuristic
 aptk_heuristics_objs += SConscript( os.path.join( env['lapkt'], 'aptk2/heuristics/novelty/SConscript' ) )
 aptk_tools_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/tools/SConscript' ) )
 
-gecode_objs = SConscript( 'src/constraints/gecode/SConscript' )
+SConscript( 'src/constraints/gecode/SConscript' )
 
 build_files = [build_dirname + '/' + src for src in locate_source_files('src', '*.cxx')]
 build_files += aptk_search_interface_objs
 build_files += aptk_tools_objs
 build_files += aptk_heuristics_objs
-build_files += gecode_objs
 
 env.Append(CPPPATH = ['src', env['lapkt']])
 
