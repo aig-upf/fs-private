@@ -1,0 +1,32 @@
+
+#include <constraints/gecode/translators/action_translator.hxx>
+#include <actions/ground_action.hxx>
+#include <constraints/gecode/simple_csp.hxx>
+#include <constraints/gecode/csp_translator.hxx>
+#include <constraints/gecode/helper.hxx>
+#include <constraints/direct/compiled.hxx>
+#include <problem.hxx>
+
+#include <gecode/int.hh>
+
+namespace fs0 { namespace gecode {
+	
+	GecodeActionTranslator::GecodeActionTranslator(const GroundAction& action, SimpleCSP& csp, GecodeCSPVariableTranslator& translator)
+		: GecodeBaseTranslator(csp, translator), _action(action), _temp_output_variables(0)
+	{}
+	
+	
+	
+	
+	
+	void GecodeActionTranslator::registerConstraints(const fs::ActionEffect::cptr effect) const {
+		assert(0);
+		// TODO FINISH
+// 		Helper::translateEffects(*base_csp, translator, action.getEffects()); // Action effects
+	}
+	
+	void GecodeActionTranslator::registerConstraints(const std::vector<fs::ActionEffect::cptr>& effects) const {
+		for (const auto effect:effects) registerConstraints(effect);
+	}
+
+} } // namespaces

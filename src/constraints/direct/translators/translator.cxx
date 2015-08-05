@@ -3,7 +3,7 @@
 #include <constraints/direct/builtin.hxx>
 #include <constraints/direct/compiled.hxx>
 #include <problem.hxx>
-#include <external/repository.hxx>
+#include <constraints/registry.hxx>
 
 namespace fs0 {
 
@@ -19,7 +19,7 @@ DirectConstraint::cptr DirectTranslator::generate(const AtomicFormula& formula) 
 	if (auto relational = dynamic_cast<fs::RelationalFormula::cptr>(&formula)) return generate(*relational);
 	
 	// Else, it must be a built-in, or external condition
-	auto instance = ExternalComponentRepository::instance().instantiate_direct_constraint(formula);
+	auto instance = LogicalComponentRegistry::instance().instantiate_direct_constraint(formula);
 	if (!instance) { // No constraint translator was registered, thus we try to extensionalize the formula
 		instance = extensionalize(formula);
 		if (!instance) throw std::runtime_error("No constraint translator specified for externally defined formula");

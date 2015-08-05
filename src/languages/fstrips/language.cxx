@@ -5,6 +5,8 @@
 #include <utils/utils.hxx>
 #include <state.hxx>
 
+#include <typeinfo>
+
 namespace fs0 { namespace language { namespace fstrips {
 
 // A small workaround to circumvent the fact that boost containers do not seem to allow initializer lists
@@ -32,7 +34,7 @@ VariableIdxVector Term::computeScope() const {
 	return VariableIdxVector(set.cbegin(), set.cend());
 }
 
-std::ostream& Term::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
+std::ostream& LogicalElement::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
 	os << "<unnamed term>";
@@ -140,8 +142,6 @@ bool AtomicFormula::interpret(const State& state) const {
 	return _satisfied(NestedTerm::interpret_subterms(_subterms, state));
 }
 
-std::ostream& AtomicFormula::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
-
 
 RelationalFormula::cptr RelationalFormula::create(RelationalFormula::Symbol symbol, const std::vector<Term::cptr>& subterms) {
 	if (symbol == RelationalFormula::Symbol::EQ)  return new EQAtomicFormula(subterms);
@@ -210,6 +210,59 @@ std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info
 	os << *lhs << " := " << *rhs;
 	return os;
 }
+
+
+bool NestedTerm::operator==(const Term& other) const {
+	auto derived = dynamic_cast<const NestedTerm*>(&other);
+	if (!derived
+		|| _symbol_id != derived->_symbol_id
+		|| _subterms.size() != derived->_subterms.size()) {
+		return false;
+	}
+	
+	for (unsigned i = 0; i < _subterms.size(); ++i) {
+		if (_subterms[i] != derived->_subterms[i]) return false;
+	}
+	
+	return true;
+}
+
+bool StateVariable::operator==(const Term& other) const {
+	auto derived = dynamic_cast<const StateVariable*>(&other);
+	return derived && _variable_id == derived->_variable_id;
+}
+
+bool Constant::operator==(const Term& other) const {
+	auto derived = dynamic_cast<const Constant*>(&other);
+	return derived && _value == derived->_value;
+}
+
+
+std::size_t NestedTerm::hash_code() const {
+	std::size_t hash = 0;
+	boost::hash_combine(hash, typeid(*this).hash_code());
+	boost::hash_combine(hash, _symbol_id);
+	for (const Term::cptr term:_subterms) {
+		boost::hash_combine(hash, term->hash_code());
+	}
+	return hash;
+}
+
+std::size_t StateVariable::hash_code() const {
+	std::size_t hash = 0;
+	boost::hash_combine(hash, typeid(*this).hash_code());
+	boost::hash_combine(hash, _variable_id);
+	return hash;
+}
+
+std::size_t Constant::hash_code() const {
+	std::size_t hash = 0;
+	boost::hash_combine(hash, typeid(*this).hash_code());
+	boost::hash_combine(hash, _value);
+	return hash;
+}
+
+
 
 
 } } } // namespaces

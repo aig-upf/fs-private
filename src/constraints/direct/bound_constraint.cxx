@@ -30,7 +30,7 @@ void BoundsConstraintsGenerator::generate(const GroundAction& action, const std:
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	for (const DirectEffect::cptr effect:effects) {
 		VariableIdx affected = effect->getAffected();
-		if (!info.hasVariableBoundedDomain(affected)) continue;
+		if (!info.isBoundedVariable(affected)) continue;
 
 		// We process the creation of the bound-constraint differently for each arity
 		if (dynamic_cast<const ZeroaryDirectEffect*>(effect)) {

@@ -10,11 +10,11 @@ namespace fs0 { namespace gecode {
 	
 GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const std::vector<AtomicFormula::cptr>& conditions)
 	:  GecodeCSPHandler(),
-	  relevantVariables(extractRelevantVariables(conditions)),
-	  formulaTranslator(conditions, relevantVariables, _base_csp, translator)
+	  _conditions(conditions)
 {
 	createCSPVariables();
-	registerConstraints();
+	registerFormulaConstraints(_conditions);
+	
 	Helper::postBranchingStrategy(_base_csp);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
@@ -32,33 +32,17 @@ GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const std::vector<AtomicFormula
 
 SimpleCSP::ptr GecodeFormulaCSPHandler::instantiate_csp(const RelaxedState& layer) const {
 	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(_base_csp.clone());
-	Helper::addRelevantVariableConstraints(*csp, translator, relevantVariables, layer);
+	_translator.updateStateVariableDomains(*csp, layer);
 	return csp;
 }
 
 
 void GecodeFormulaCSPHandler::createCSPVariables() {
 	IntVarArgs variables;
-	formulaTranslator.registerVariables(variables);
+	registerFormulaVariables(_conditions,  variables);
 	IntVarArray tmp(_base_csp, variables);
 	_base_csp._X.update(_base_csp, false, tmp);
 }
-
-void GecodeFormulaCSPHandler::registerConstraints() {
-// 	Helper::translateConstraints(_base_csp, translator, conditions);
-	formulaTranslator.registerConstraints();
-}
-
-VariableIdxVector GecodeFormulaCSPHandler::extractRelevantVariables(const std::vector<AtomicFormula::cptr>& conditions) {
-	std::set<VariableIdx> relevant;
-	for (const AtomicFormula::cptr formula:conditions) {
-		VariableIdxVector scope = formula->getScope();
-		relevant.insert(scope.begin(), scope.end());
-	}
-	return VariableIdxVector(relevant.begin(), relevant.end());
-}
-
-
 
 bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	DFS<SimpleCSP> engine(csp);
@@ -67,8 +51,10 @@ bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& suppor
 	// TODO An alternative strategy to try out would be to select the solution with most atoms in the seed state, but that implies iterating through all solutions, which might not be worth it?
 	SimpleCSP* solution = engine.next();
 	if (solution) {
-		for (VariableIdx variable:relevantVariables) {
-			support.push_back(Atom(variable, translator.resolveValue(*solution, variable, CSPVariableType::Input)));
+		for (const auto& it:_translator.getAllInputVariables()) {
+			VariableIdx planning_variable = it.first;
+			const Gecode::IntVar& csp_var = csp->_X[it.second];
+			support.push_back(Atom(planning_variable, csp_var.val()));
 		}
 		delete solution;
 		return true;
@@ -78,10 +64,13 @@ bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& suppor
 
 void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
-	for (VariableIdx variable:relevantVariables) {
-		IntVarValues values(translator.resolveVariable(*csp, variable, CSPVariableType::Input)); 
+	
+	for (const auto& it:_translator.getAllInputVariables()) {
+		VariableIdx planning_variable = it.first;
+		const Gecode::IntVar& csp_var = csp->_X[it.second];
+		IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
 		assert(values()); // Otherwise the CSP would be inconsistent.
-		support.push_back(Atom(variable, values.val()));
+		support.push_back(Atom(planning_variable, values.val()));
 	}
 }
 

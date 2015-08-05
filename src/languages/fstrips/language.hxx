@@ -8,7 +8,19 @@ namespace fs0 { class State; }
 
 namespace fs0 { namespace language { namespace fstrips {
 
-class Term {
+//! A common base class for both terms and formulas
+//! This is necessary in order to be able to use both types of entities in a common registry
+class LogicalElement {
+public:
+	typedef const LogicalElement* cptr;
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const LogicalElement& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
+};
+
+class Term : public LogicalElement {
 public:
 	typedef const Term* cptr;
 	
@@ -34,9 +46,11 @@ public:
 	virtual VariableIdx interpretVariable(const State& state) const = 0;
 	
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const Term& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const;
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	
+	virtual bool operator==(const Term& other) const = 0;
+	inline bool operator!=(const Term& rhs) const { return !this->operator==(rhs); }
+	virtual std::size_t hash_code() const = 0;
 };
 
 class NestedTerm : public Term {
@@ -79,6 +93,9 @@ public:
 	unsigned getSymbolId() const { return _symbol_id; }
 	
 	const std::vector<Term::cptr>& getSubterms() const { return _subterms; }
+	
+	bool operator==(const Term& other) const;
+	virtual std::size_t hash_code() const;
 	
 protected:
 	//! The ID of the function or predicate symbol, e.g. in the state variable loc(A), the id of 'loc'
@@ -187,6 +204,9 @@ public:
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 	
+	bool operator==(const Term& other) const;
+	virtual std::size_t hash_code() const;
+	
 protected:
 	//! The ID of the state variable
 	VariableIdx _variable_id;
@@ -220,6 +240,9 @@ public:
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 	
+	bool operator==(const Term& other) const;
+	virtual std::size_t hash_code() const;
+	
 protected:
 	//! The actual value of the constant
 	ObjectIdx _value;
@@ -227,7 +250,7 @@ protected:
 
 
 //! An atomic formula, implicitly understood to be static (fluent formulae are considered terms with Boolean codomain)
-class AtomicFormula {
+class AtomicFormula : public LogicalElement {
 public:
 	typedef const AtomicFormula* cptr;
 	
@@ -237,12 +260,12 @@ public:
 		for (const auto ptr:_subterms) delete ptr;
 	}
 	
+	const std::vector<Term::cptr>& getSubterms() const { return _subterms; }
+	
 	bool interpret(const PartialAssignment& assignment) const;
 	bool interpret(const State& state) const;
 	
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const AtomicFormula& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const;
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
 	
 	const VariableIdxVector& getScope() const { return _scope; }

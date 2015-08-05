@@ -3,6 +3,8 @@
 #include <sstream>
 #include <problem_info.hxx>
 #include <utils/logging.hxx>
+#include <constraints/registry.hxx>
+#include <utils/printers/registry.hxx>
 
 namespace fs0 {
 
@@ -29,6 +31,8 @@ void Problem::bootstrap() {
 	if (_goalConditions.empty()) {
 		throw std::runtime_error("No goal specification detected. The problem is probably being bootstrapped before having been fully initialized with the per-instance generate() procedure"); 
 	}
+	
+	FDEBUG("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 }
 
 

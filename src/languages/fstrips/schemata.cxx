@@ -2,11 +2,11 @@
 #include <problem_info.hxx>
 #include <languages/fstrips/schemata.hxx>
 #include <languages/fstrips/language.hxx>
-#include "builtin.hxx"
+#include <languages/fstrips/builtin.hxx>
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>
-#include <external/repository.hxx>
+#include <constraints/registry.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -114,7 +114,7 @@ AtomicFormula::cptr AtomicFormulaSchema::process(const ObjectIdxVector& binding,
 		processed = RelationalFormula::create(it->second, processed_subterms);
 	}
 	else { // We assume the formula semantics is externally defined
-		processed = ExternalComponentRepository::instance().instantiate_formula(_symbol, processed_subterms);
+		processed = LogicalComponentRegistry::instance().instantiate_formula(_symbol, processed_subterms);
 	}
 	
 	// Check if we can resolve the value of the formula statically

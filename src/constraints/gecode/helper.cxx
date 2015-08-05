@@ -6,128 +6,65 @@
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <relaxed_state.hxx>
-#include <boost/units/detail/utility.hpp>
 
 
 namespace fs0 { namespace gecode {
 	
 	
-Gecode::IntVar Helper::processPlanningVariable(Gecode::Space& csp, VariableIdx var) {
+Gecode::IntVar Helper::createPlanningVariable(Gecode::Space& csp, VariableIdx variable) {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	return processVariable(csp, var, info.getVariableGenericType(var));
+	return createVariable(csp, info.getVariableType(variable));
 }
 
-Gecode::IntVar Helper::processTemporaryVariable(Gecode::Space& csp, VariableIdx var, TypeIdx typeId) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	return processVariable(csp, var, info.getGenericType(typeId));
+Gecode::IntVar Helper::createTemporaryVariable(Gecode::Space& csp, TypeIdx typeId) {
+	return createVariable(csp, typeId);
 }
 
-Gecode::IntVar Helper::processVariable(Gecode::Space& csp, VariableIdx var, ProblemInfo::ObjectType type) {
+Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	if ( type == ProblemInfo::ObjectType::INT ) {
-		auto bounds = info.getVariableBounds(var);
+	auto generic_type = info.getGenericType(typeId);
+	
+	if ( generic_type == ProblemInfo::ObjectType::INT ) {
+		const auto& bounds = info.getTypeBounds(typeId);
 		return Gecode::IntVar( csp, bounds.first, bounds.second );
 	}
-	else if ( type == ProblemInfo::ObjectType::BOOL ) {
+	else if ( generic_type == ProblemInfo::ObjectType::BOOL ) {
 		return Gecode::IntVar( csp, 0, 1 );
 	}
 	else {
-		assert(type == ProblemInfo::ObjectType::OBJECT);
-		const ObjectIdxVector& values = info.getVariableObjects( var );
-		std::vector<int> _values( values.size() );
-		for ( unsigned j = 0; j < values.size(); j++ ) {
-			_values[j] = values[j];
-		}
-		return Gecode::IntVar( csp, Gecode::IntSet( _values.data(), values.size() ));
+		assert(generic_type == ProblemInfo::ObjectType::OBJECT);
+		const ObjectIdxVector& values = info.getTypeObjects(typeId);
+		return Gecode::IntVar(csp, Gecode::IntSet(values.data(), values.size()));
 	}
 }
 
-//!
-void Helper::registerPlanningVariable(Gecode::Space& csp, VariableIdx planning_var, CSPVariableType type, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator) {
-	auto csp_var = processPlanningVariable(csp, planning_var);
-	if (translator.registerCSPVariable(planning_var, type, variables.size())) {
-		variables << csp_var;
-	}
-}
-
-//!
-void Helper::registerTemporaryVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator, TypeIdx typeId) {
-	auto csp_var = processTemporaryVariable(csp, planning_var, typeId);
-	if (translator.registerCSPVariable(planning_var, CSPVariableType::Temporary, variables.size())) {
-		variables << csp_var;
-	}
-}
-
-void Helper::registerTemporaryOutputVariable(Gecode::Space& csp, VariableIdx planning_var, Gecode::IntVarArgs& variables, GecodeCSPVariableTranslator& translator, TypeIdx typeId) {
-	auto csp_var = processTemporaryVariable(csp, planning_var, typeId);
-	if (translator.registerCSPVariable(planning_var, CSPVariableType::TemporaryOutput, variables.size())) {
-		variables << csp_var;
-	}
-}
-
-//!
-void Helper::addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable, bool value) {
-	addEqualityConstraint(csp, translator, variable, (value ? 1 : 0));
-}
-
-//! Adds constraint of the form $variable = value$ to the CSP
-void Helper::addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable, ObjectIdx value) {
-	auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
-	rel( csp, csp_var, IRT_EQ, value ); // v = value
-}
-
-
-//! Adds constraint of the form $variable \in values$ to the CSP
-void Helper::addMembershipConstraint(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable, DomainPtr values) {
-	auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
-
-	// MRJ: variable \in dom
-	TupleSet valueSet;
-	for ( auto v : *values ) {
-		valueSet.add( IntArgs( 1, v ));
-	}
-	valueSet.finalize();
-	extensional( csp, IntVarArgs() << csp_var, valueSet ); // MRJ: v \in valueSet
-}
-
-//! Adds constraint of the form $lb <= variable <= ub$ to the CSP
-void Helper::addBoundsConstraint(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable, int lb, int ub) {
-	auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
-	dom( csp, csp_var, lb, ub); // MRJ: lb <= variable <= ub
-}
-
-//! Adds constraint of the form $min <= variable <= max$ to the CSP,
-//! where min and max are the minimum and maximum values defined for
-//! the type of variable.
-void Helper::addBoundsConstraintFromDomain(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, VariableIdx variable) {
-	auto csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Input);
-	const auto& info = Problem::getCurrentProblem()->getProblemInfo();
-	TypeIdx type = info.getVariableType(variable);
-	if (!info.hasVariableBoundedDomain(type)) return; // Nothing to do in this case
-	const auto& bounds = info.getVariableBounds(type);
-	dom( csp, csp_var, bounds.first, bounds.second); // MRJ: bounds.first <= variable <= bounds.second
-}
-
-//! Adds the RPG-layer-dependent constraints to the CSP.
-void Helper::addRelevantVariableConstraints(SimpleCSP& csp, const gecode::GecodeCSPVariableTranslator& translator, const VariableIdxVector& scope, const RelaxedState& layer) {
-	// Loop over the domains of each of the relevant variables in the RPG layer and process them one by one.
-	for (VariableIdx variable:scope) {
-		const DomainPtr& domain = layer.getValues(variable);
-		if ( domain->size() == 1 ) {
-			addEqualityConstraint( csp, translator, variable, *(domain->begin()) );
-		} else {
-			ObjectIdx lb = *(domain->begin());
-			ObjectIdx ub = *(domain->rbegin());
-			
-			if ( domain->size() == static_cast<unsigned>(ub - lb) ) { // MRJ: Check this is a safe assumption - We can guarantee it is unsigned, since the elements in the domain are ordered
-				addBoundsConstraint( csp, translator, variable, lb, ub );
-			} else { // MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
-				addMembershipConstraint( csp, translator, variable, domain );
-			}
+void Helper::constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain) {
+	const Gecode::IntVar& variable = csp._X[csp_variable_id];
+	
+	if ( domain->size() == 1 ) { // The simplest case
+		Gecode::rel(csp, variable, Gecode::IRT_EQ, *(domain->cbegin()));
+	} else {
+		ObjectIdx lb = *(domain->cbegin());
+		ObjectIdx ub = *(domain->crbegin());
+		
+		if (domain->size() == static_cast<unsigned>(ub - lb) ) { // MRJ: Check this is a safe assumption - We can guarantee it is unsigned, since the elements in the domain are ordered
+			Gecode::dom(csp, variable, lb, ub); // MRJ: lb <= variable <= ub
+		} else { // TODO - MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
+			// We constraint the variable through an extensional constraint
+			Gecode::extensional(csp, IntVarArgs() << variable, buildTupleset(*domain));
 		}
 	}
 }
 
+
+Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain) {
+	Gecode::TupleSet tuples;
+	for (auto value:domain) {
+		tuples.add(IntArgs(1, value));
+	}
+	tuples.finalize();
+	return tuples;
+}
 
 Gecode::TupleSet Helper::extensionalize(const Term::cptr term, const VariableIdxVector& scope) {
 	if (scope.size() > 2) throw std::runtime_error("Error trying to extensionalize a term with too high a scope");

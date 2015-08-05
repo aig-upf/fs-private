@@ -12,16 +12,10 @@
 namespace fs0 { namespace gecode {
 	
 	GecodeFormulaTranslator::GecodeFormulaTranslator(const std::vector<fs::AtomicFormula::cptr>& conditions, const VariableIdxVector& relevant, SimpleCSP& csp, GecodeCSPVariableTranslator& translator)
-		: GecodeBaseTranslator(csp, translator), _conditions(conditions), _relevant(relevant) {}
+		: GecodeBaseTranslator(csp, translator), _conditions(conditions) {}
 
 	void GecodeFormulaTranslator::registerVariables(Gecode::IntVarArgs& variables) {
-		
-		for (VariableIdx var:_relevant) {
-			Helper::registerPlanningVariable(_csp, var, CSPVariableType::Input, variables, _translator);
-		}
-		
-		// Register now the temporary variables
-		registerTempVariables(_conditions, variables);
+		registerVariables(_conditions, variables);
 	}
 	
 	void GecodeFormulaTranslator::registerConstraints() const {

@@ -178,10 +178,12 @@ public:
 	bool checkValueIsValid(const Atom& atom) const;
 	bool checkValueIsValid(VariableIdx variable, ObjectIdx value) const;
 	
-	bool hasVariableBoundedDomain(VariableIdx variable) const { return isTypeBounded[getVariableType(variable)];  }
-	std::pair<int,int> getVariableBounds( VariableIdx variable ) const {
-		assert(hasVariableBoundedDomain(variable));
-		return typeBounds[getVariableType(variable)];
+	bool isBoundedType(TypeIdx type) const { return isTypeBounded[type];  }
+	bool isBoundedVariable(VariableIdx variable) const { return isBoundedType(getVariableType(variable));  }
+	
+	const std::pair<int,int>& getTypeBounds(TypeIdx type) const {
+		assert(isBoundedType(type));
+		return typeBounds.at(type);
 	}
 	
 	void setDomainName(const std::string& domain) { _domain = domain; }

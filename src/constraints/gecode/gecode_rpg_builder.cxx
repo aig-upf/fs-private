@@ -26,6 +26,7 @@ FilteringOutput GecodeRPGBuilder::pruneUsingStateConstraints(RelaxedState& state
 	if (!_state_constraint_handler) return FilteringOutput::Unpruned;
 	
 	// TODO TODO TODO
+	assert(0);
 	
 	return FilteringOutput::Unpruned;
 }

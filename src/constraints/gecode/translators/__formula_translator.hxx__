@@ -29,9 +29,7 @@ protected:
 	//! The conditions being translated
 	const std::vector<fs::AtomicFormula::cptr>& _conditions;
 	
-	//! All the relevant variables
-	const VariableIdxVector& _relevant;
-	
+	using GecodeBaseTranslator::registerVariables;
 	using GecodeBaseTranslator::registerConstraints;
 	
 };

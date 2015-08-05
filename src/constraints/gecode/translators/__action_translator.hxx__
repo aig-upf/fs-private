@@ -26,13 +26,12 @@ protected:
 	//! An id-counter for temporary variables that substitute LHS terms in assignments
 	unsigned _temp_output_variables;
 	
-	
-	using GecodeBaseTranslator::registerTempVariables;
+	using GecodeBaseTranslator::registerVariables;
 	using GecodeBaseTranslator::registerConstraints;
 	
 	// Variable registration methods
-	void registerTempVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& variables);
-	void registerTempVariables(const std::vector<fs::ActionEffect::cptr>& effects, Gecode::IntVarArgs& variables);
+	void registerVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& variables);
+	void registerVariables(const std::vector<fs::ActionEffect::cptr>& effects, Gecode::IntVarArgs& variables);
 	
 	// Constraint registration methods
 	void registerConstraints(const fs::ActionEffect::cptr effect) const;

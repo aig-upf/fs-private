@@ -5,8 +5,6 @@
 #include <gecode/int.hh>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
-#include <constraints/gecode/translators/action_translator.hxx>
-#include <constraints/gecode/translators/formula_translator.hxx>
 #include <languages/fstrips/language.hxx>
 
 
@@ -31,8 +29,16 @@ public:
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeCSPHandler& o) { return o.print(os); }
 	virtual std::ostream& print(std::ostream& os) const {
-		return translator.print(os, _base_csp);
+		return _translator.print(os, _base_csp);
 	}
+
+		
+	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
+	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType root_type, CSPVariableType children_type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
+	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
+	
+	static void registerTermConstraints(const fs::Term::cptr term, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator);
+	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator);
 	
 protected:
 	
@@ -40,8 +46,13 @@ protected:
 	SimpleCSP _base_csp;
 	
 	//! A translator to map planning variables with gecode variables
-	GecodeCSPVariableTranslator translator;
-
+	GecodeCSPVariableTranslator _translator;
+	
+	void registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& variables);
+	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& variables);
+	
+	void registerFormulaConstraints(const fs::AtomicFormula::cptr condition);
+	void registerFormulaConstraints(const std::vector<fs::AtomicFormula::cptr>& conditions);
 };
 
 
@@ -63,22 +74,14 @@ public:
 	
 	//! Recovers an approximate support for the goal
 	void recoverApproximateSupport(SimpleCSP* csp, Atom::vctr& support, const State& seed) const;
+
 	
 protected:
-	
-	//! All the planning variables relevant to the formula CSP.
-	VariableIdxVector relevantVariables;
-	
-	GecodeFormulaTranslator formulaTranslator;
+	//! The formula being translated
+	const std::vector<fs::AtomicFormula::cptr>& _conditions;
 	
 	//! Creates the SimpleCSP that corresponds to a certain amount of relevant variables
 	void createCSPVariables();
-	
-	//! Adds constraints to the csp being managed
-	void registerConstraints();
-	
-	//! Helper
-	static VariableIdxVector extractRelevantVariables(const std::vector<fs::AtomicFormula::cptr>& conditions);
 };
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
@@ -103,13 +106,14 @@ public:
 protected:
 	const GroundAction& _action;
 	
-	GecodeActionTranslator actionTranslator;
-	
 	//! Creates the SimpleCSP that corresponds to a given action.
 	void createCSPVariables();
 
-	//! Adds constraints to the csp being managed
-	void registerConstraints();
+	// Variable registration methods
+	void registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& variables);
+	
+	// Constraint registration methods
+	void registerEffectConstraints(const fs::ActionEffect::cptr effect);
 	
 	//! Prevents the affected variables to take values already achieved in the previous layer
 	// void addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp);
