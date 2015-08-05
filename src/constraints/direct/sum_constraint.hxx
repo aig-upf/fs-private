@@ -25,8 +25,6 @@ public:
 	FilteringOutput filter();
 	
 	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
-	
-	virtual const std::type_info& getDefaultTypeId() const { return typeid(SumConstraint); }
 };
 
 

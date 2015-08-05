@@ -56,7 +56,6 @@ bool DirectActionManager::checkPreconditionApplicability(const DomainMap& domain
 
 void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const {
 	const VariableIdxVector& actionScope = _action.getScope();
-	FFDEBUG("main", "processing action effects: " << _action.getName());
 
 	for (const DirectEffect::cptr effect:_effects) {
 		const VariableIdxVector& effectScope = effect->getScope();

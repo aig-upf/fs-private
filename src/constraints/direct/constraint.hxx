@@ -77,8 +77,6 @@ public:
 
 	//! All unary constraints are compiled by default
 	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const;
-	
-	virtual const std::type_info& getDefaultTypeId() const { return typeid(UnaryDirectConstraint); }
 };
 
 
@@ -97,8 +95,6 @@ public:
 
 	//! All binary constraints are compiled by default
 	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const;
-	
-	virtual const std::type_info& getDefaultTypeId() const { return typeid(BinaryDirectConstraint); }
 };
 
 } // namespaces

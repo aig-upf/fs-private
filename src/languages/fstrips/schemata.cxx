@@ -76,7 +76,7 @@ Term::cptr BuiltinNestedTermSchema::process(const ObjectIdxVector& binding, cons
 
 
 std::ostream& BuiltinNestedTermSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << *_subterms[0] << _symbol << *_subterms[1];
+	os << *_subterms[0] << " " << _symbol << " " << *_subterms[1];
 	return os;
 }
 

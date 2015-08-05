@@ -53,7 +53,7 @@ bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& suppor
 	if (solution) {
 		for (const auto& it:_translator.getAllInputVariables()) {
 			VariableIdx planning_variable = it.first;
-			const Gecode::IntVar& csp_var = csp->_X[it.second];
+			const Gecode::IntVar& csp_var = solution->_X[it.second];
 			support.push_back(Atom(planning_variable, csp_var.val()));
 		}
 		delete solution;

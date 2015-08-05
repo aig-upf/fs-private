@@ -34,9 +34,6 @@ public:
 	//! Getter for the component binding
 	inline const std::vector<int>& getParameters() const { return _parameters; }
 
-	//! Return a default type ID object for registration purposes.
-	virtual const std::type_info& getDefaultTypeId() const = 0;
-	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const DirectComponent& o) { return o.print(os); }
 	virtual std::ostream& print(std::ostream& os) const {

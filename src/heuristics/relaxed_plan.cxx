@@ -6,6 +6,7 @@
 #include <heuristics/rpg_data.hxx>
 #include <constraints/filtering.hxx>
 #include <utils/logging.hxx>
+#include <utils/printers/actions.hxx>
 #include <relaxed_state.hxx>
 #include <heuristics/rpg/base_action_manager.hxx>
 
@@ -39,7 +40,7 @@ float RelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
 		// Apply all the actions to the RPG layer
 		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
 			std::shared_ptr<BaseActionManager> manager = _managers[idx];
-			FFDEBUG("heuristic", "Processing ground action #" << idx << ":" << std::endl << manager->getAction());
+			FFDEBUG("heuristic", "Processing ground action #" << idx << ":" << print::action_name(manager->getAction()));
 			manager->process(idx, relaxed, rpgData);
 		}
 		

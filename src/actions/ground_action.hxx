@@ -43,8 +43,10 @@ public:
 	GroundAction(ActionSchema::cptr schema, const ObjectIdxVector& binding, const std::vector<AtomicFormula::cptr>& conditions, const std::vector<ActionEffect::cptr>& effects);
 	~GroundAction();
 	
-	//! Returns the name of the action. To be implemented in each concrete action.
+	//! Returns the name of the action
 	const std::string& getName() const { return _schema->getName(); }
+	const std::vector<TypeIdx>& getSignature() const { return _schema->getSignature(); }
+	const ObjectIdxVector& getBinding() const { return _binding; }
 	
 	const VariableIdxVector& getScope() const { return _scope; }
 	const VariableIdxVector& getAllRelevantVariables() const { return _allRelevant; }

@@ -5,6 +5,7 @@
 #include <utils/logging.hxx>
 #include <constraints/registry.hxx>
 #include <utils/printers/registry.hxx>
+#include "utils/printers/language.hxx"
 
 namespace fs0 {
 
@@ -32,7 +33,7 @@ void Problem::bootstrap() {
 		throw std::runtime_error("No goal specification detected. The problem is probably being bootstrapped before having been fully initialized with the per-instance generate() procedure"); 
 	}
 	
-	FDEBUG("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
+	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 }
 
 
@@ -43,17 +44,27 @@ ApplicableActionSet Problem::getApplicableActions(const State& s) const {
 
 std::ostream& Problem::print(std::ostream& os) const { 
 	const fs0::ProblemInfo& info = getProblemInfo();
-	os << "Planning Problem [domain:" << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;
+	os << "Planning Problem [domain: " << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;
 	
-	os << "Action schemata" << std::endl;
+	os << "Goal Conditions:" << std::endl << "------------------" << std::endl;
+	for (const auto formula:getGoalConditions()) os << "\t" << print::formula(*formula) << std::endl;
+	os << std::endl;
+	
+	os << "State Constraints:" << std::endl << "------------------" << std::endl;
+	for (const auto formula:getStateConstraints()) os << "\t" << print::formula(*formula) << std::endl;
+	os << std::endl;
+	
+	os << "Action schemata" << std::endl << "------------------" << std::endl;
 	for (const ActionSchema::cptr elem:_schemata) {
 		os << *elem << std::endl;
 	}
+	os << std::endl;
 	
-	os << "Ground Actions" << std::endl;
+	os << "Ground Actions" << std::endl << "------------------" << std::endl;
 	for (const GroundAction::cptr elem:_ground) {
 		os << *elem << std::endl;
 	}
+	os << std::endl;
 	
 	return os;
 }
