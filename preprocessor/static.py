@@ -74,7 +74,7 @@ class Arity0Element(DataElement):
     def get_tpl(self, name):
         return dict(
             declaration='const ObjectIdx {name};',
-            accessor='ObjectIdx {accessor}() {{ return {name}; }}',
+            accessor='ObjectIdx {accessor}(const ObjectIdxVector& params) {{ return {name}; }}',
             accessor2='',
         )[name]
 
