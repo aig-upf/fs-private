@@ -1,14 +1,11 @@
 """
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
-import base
-
 from pddl.f_expression import FunctionalTerm
 from pddl import Atom, NegatedAtom
 
 from base import ParameterExpression, NumericExpression, ObjectExpression, DefinedExpression, RelationalExpression, \
-    ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression, \
-    PredicativeExpression
+    ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression
 from compilation.exceptions import ParseException
 from compilation.helper import is_int, is_external
 

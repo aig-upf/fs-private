@@ -3,7 +3,8 @@
 """
 import base
 from compilation.component_processor import BaseComponentProcessor
-from pddl import Truth, Effect
+from pddl import Truth, Effect, Atom, NegatedAtom
+from pddl.f_expression import FunctionalTerm
 from pddl.effects import AssignmentEffect
 import util
 
@@ -38,13 +39,14 @@ class ActionSchemaProcessor(BaseComponentProcessor):
             self.data['effects'].append(effect)
 
     def process_effect(self, expression):
-        if isinstance(expression, AssignmentEffect):  # A functional effect
-            elems = [self.parser.process_expression(elem) for elem in (expression.lhs, expression.rhs)]
+        assert isinstance(expression, (AssignmentEffect, Atom, NegatedAtom))
 
-        else:  # A predicative effect
-            lhs = self.parser.process_expression(expression)
-            rhs = base.NumericExpression(0 if expression.negated else 1)
-            elems = [lhs, rhs]
+        if isinstance(expression, (Atom, NegatedAtom)):
+            # The effect has form visited(c), and we want to give it functional form visited(c) := true
+            lhs = FunctionalTerm(expression.predicate, expression.args)
+            rhs = "0" if expression.negated else "1"
+            expression = AssignmentEffect(lhs, rhs)
 
+        elems = [self.parser.process_expression(elem) for elem in (expression.lhs, expression.rhs)]
         return [elem.dump(self.index.objects, self.parameters) for elem in elems]
 
