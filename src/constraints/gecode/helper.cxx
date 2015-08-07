@@ -20,6 +20,10 @@ Gecode::IntVar Helper::createTemporaryVariable(Gecode::Space& csp, TypeIdx typeI
 	return createVariable(csp, typeId);
 }
 
+Gecode::IntVar Helper::createTemporaryIntVariable(Gecode::Space& csp, int min, int max) {
+	return Gecode::IntVar(csp, min, max);
+}
+
 Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	auto generic_type = info.getGenericType(typeId);

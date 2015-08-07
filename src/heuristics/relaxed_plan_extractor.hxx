@@ -9,7 +9,7 @@
 #include <problem.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <utils/utils.hxx>
-#include <utils/printers.hxx>
+#include <utils/printers/printers.hxx>
 
 #include <utils/logging.hxx>
 

@@ -46,6 +46,7 @@ void NestedTerm::computeScope(std::set<VariableIdx>& scope) const {
 	}
 }
 
+
 std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	return printFunction(os, info, _symbol_id, _subterms);
 }
@@ -57,15 +58,21 @@ StaticHeadedNestedTerm::StaticHeadedNestedTerm(unsigned symbol_id, const std::ve
 
 UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
 	: StaticHeadedNestedTerm(symbol_id, subterms),
-	_function(Problem::getCurrentProblem()->getProblemInfo().getFunctionData(symbol_id).getFunction())
+	_function(Problem::getCurrentProblem()->getProblemInfo().getFunctionData(symbol_id))
 {}
+
+std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	auto type = _function.getCodomainType();
+	return info.getTypeBounds(type);
+}
 		 
 ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment) const {
-	return _function(interpret_subterms(_subterms, assignment));
+	return _function.getFunction()(interpret_subterms(_subterms, assignment));
 }
 
 ObjectIdx UserDefinedStaticTerm::interpret(const State& state) const {
-	return _function(interpret_subterms(_subterms, state));
+	return _function.getFunction()(interpret_subterms(_subterms, state));
 }
 
 
@@ -105,12 +112,23 @@ void FluentHeadedNestedTerm::computeSubtermScope(std::set<VariableIdx>& scope) c
 	return NestedTerm::computeScope(scope);
 }
 
+std::pair<int, int> FluentHeadedNestedTerm::getBounds() const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	auto type = Problem::getCurrentProblem()->getProblemInfo().getFunctionData(_symbol_id).getCodomainType();
+	return info.getTypeBounds(type);
+}
+
 void StateVariable::computeScope(std::set<VariableIdx>& scope) const {
 	scope.insert(_variable_id);
 }
 
 ObjectIdx StateVariable::interpret(const State& state) const { 
 	return state.getValue(_variable_id);
+}
+
+std::pair<int, int> StateVariable::getBounds() const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	return info.getVariableBounds(_variable_id);
 }
 
 std::ostream& StateVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {

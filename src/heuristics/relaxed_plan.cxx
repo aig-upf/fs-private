@@ -42,7 +42,7 @@ float RelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
 		// Apply all the actions to the RPG layer
 		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
 			std::shared_ptr<BaseActionManager> manager = _managers[idx];
-			FFDEBUG("heuristic", "Processing ground action #" << idx << ":" << print::action_name(manager->getAction()));
+			FFDEBUG("heuristic", "Processing ground action #" << idx << ": " << print::action_name(manager->getAction()));
 			manager->process(idx, relaxed, rpgData);
 		}
 		

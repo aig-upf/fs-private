@@ -47,14 +47,27 @@ bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr 
 }
 
 bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
+	TypeIdx domain_type = Problem::getCurrentProblem()->getProblemInfo().getFunctionData(nested->getSymbolId()).getCodomainType();
+	return registerNestedTerm(nested, type, domain_type, csp, variables);
+}
+
+bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, TypeIdx domain_type, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
 	TranslationKey key(nested, type);
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
 	
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	TypeIdx domain_type = info.getFunctionData(nested->getSymbolId()).getCodomainType();
-	
 	variables << Helper::createTemporaryVariable(csp, domain_type);
+	
+	_registered.insert(it, std::make_pair(key, variables.size()-1));
+	return true;
+}
+
+bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, int min, int max, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
+	TranslationKey key(nested, type);
+	auto it = _registered.find(key);
+	if (it!= _registered.end()) return false; // The element was already registered
+	
+	variables << Helper::createTemporaryIntVariable(csp, min, max);
 	
 	_registered.insert(it, std::make_pair(key, variables.size()-1));
 	return true;

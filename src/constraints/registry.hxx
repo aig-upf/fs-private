@@ -7,6 +7,7 @@
 #include <fs0_types.hxx>
 #include <languages/fstrips/language.hxx>
 #include <constraints/direct/constraint.hxx>
+#include <constraints/direct/translators/effects.hxx>
 #include <constraints/gecode/translators/component_translator.hxx>
 
 
@@ -33,30 +34,47 @@ public:
 	
 	static LogicalComponentRegistry& instance();
 	
+	//! Add a formula creator for formulae with the given symbol to the registry
+	void add(const std::string& symbol, const FormulaCreator& creator);
+	
+	//! Add a Direct Formula translator of the given type to the registry
+	void add(const std::type_info& type, const DirectFormulaTranslator& translator);
+	
+	//! Add a Direct effect translator for effects with RHS of the given type
+	void add(const std::type_info& type, EffectTranslator::cptr translator);
+	
+	//! Add a Gecode Term translator for the given type to the registry
+	void add(const std::type_info& type, const gecode::TermTranslator::cptr translator);
+	
+	//! Add a Gecode Formula translator for the given type to the registry
+	void add(const std::type_info& type, const gecode::AtomicFormulaTranslator::cptr translator);
+	
 	fs::AtomicFormula::cptr instantiate_formula(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
 	
 	DirectConstraint::cptr instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
 	
+	EffectTranslator::cptr getDirectEffectTranslator(const fs::Term& term) const;
+	
 	gecode::TermTranslator::cptr getGecodeTranslator(const fs::Term& term) const;
+	
 	gecode::AtomicFormulaTranslator::cptr getGecodeTranslator(const fs::AtomicFormula& formula) const;
-	
-	void add(const std::string& symbol, const FormulaCreator& creator);
-	
-	void add(const std::type_info& type, const DirectFormulaTranslator& creator);
-	
-	void add(const std::type_info& type, const gecode::TermTranslator::cptr translator);
-	void add(const std::type_info& type, const gecode::AtomicFormulaTranslator::cptr translator);
-	
+
 	friend class print::logical_registry; // Grant access to the corresponding printer class
 	
 protected:
 	LogicalComponentRegistry();
+	
+	void registerLogicalElementCreators();
+	void registerDirectTranslators();
+	void registerGecodeTranslators();
 	
 	std::map<std::string, FormulaCreator> _formula_creators;
 	
 	typedef std::unordered_map<std::type_index, DirectFormulaTranslator> DirectTranslatorsTable;
 	DirectTranslatorsTable _direct_formula_translators;
 	
+	
+	std::unordered_map<std::type_index, EffectTranslator::cptr> _direct_effect_translators;
 	
 	std::unordered_map<std::type_index, gecode::TermTranslator::cptr> _gecode_term_translators;
 	std::unordered_map<std::type_index, gecode::AtomicFormulaTranslator::cptr> _gecode_formula_translators;

@@ -225,4 +225,99 @@ std::ostream& AdditiveUnaryEffect::print(std::ostream& os) const {
 	return os;
 }
 
+AdditiveBinaryEffect::AdditiveBinaryEffect(const VariableIdxVector& scope, VariableIdx affected)
+	: BinaryDirectEffect(scope, affected, {})
+{}
+
+Atom AdditiveBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
+	assert(applicable(v1, v2));
+	return Atom(_affected, v1 + v2);
+}
+
+std::ostream& AdditiveBinaryEffect::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " + " << info.getVariableName(_scope[1]);
+	return os;
+}
+
+
+SubtractiveUnaryEffect::SubtractiveUnaryEffect(VariableIdx relevant, VariableIdx affected, int value)
+	: UnaryDirectEffect(relevant, affected, {value})
+{}
+
+
+Atom SubtractiveUnaryEffect::apply(ObjectIdx v1) const {
+	assert(applicable(v1));
+	return Atom(_affected, v1 - _parameters[0]);
+}
+
+std::ostream& SubtractiveUnaryEffect::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " - " << _parameters[0];
+	return os;
+}
+
+InvSubtractiveUnaryEffect::InvSubtractiveUnaryEffect(VariableIdx relevant, VariableIdx affected, int value)
+	: UnaryDirectEffect(relevant, affected, {value})
+{}
+
+
+Atom InvSubtractiveUnaryEffect::apply(ObjectIdx v1) const {
+	assert(applicable(v1));
+	return Atom(_affected, _parameters[0] - v1);
+}
+
+std::ostream& InvSubtractiveUnaryEffect::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	os << info.getVariableName(_affected) << " := " << _parameters[0] << " - " << info.getVariableName(_scope[0]);
+	return os;
+}
+
+
+SubtractiveBinaryEffect::SubtractiveBinaryEffect(const VariableIdxVector& scope, VariableIdx affected)
+	: BinaryDirectEffect(scope, affected, {})
+{}
+
+Atom SubtractiveBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
+	assert(applicable(v1, v2));
+	return Atom(_affected, v1 - v2);
+}
+
+std::ostream& SubtractiveBinaryEffect::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " - " << info.getVariableName(_scope[1]);
+	return os;
+}
+
+MultiplicativeUnaryEffect::MultiplicativeUnaryEffect(VariableIdx relevant, VariableIdx affected, int value)
+	: UnaryDirectEffect(relevant, affected, {value})
+{}
+
+
+Atom MultiplicativeUnaryEffect::apply(ObjectIdx v1) const {
+	assert(applicable(v1));
+	return Atom(_affected, v1 * _parameters[0]);
+}
+
+std::ostream& MultiplicativeUnaryEffect::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " * " << _parameters[0];
+	return os;
+}
+
+MultiplicativeBinaryEffect::MultiplicativeBinaryEffect(const VariableIdxVector& scope, VariableIdx affected)
+	: BinaryDirectEffect(scope, affected, {})
+{}
+
+Atom MultiplicativeBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
+	assert(applicable(v1, v2));
+	return Atom(_affected, v1 * v2);
+}
+
+std::ostream& MultiplicativeBinaryEffect::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " * " << info.getVariableName(_scope[1]);
+	return os;
+}
+
 } // namespaces

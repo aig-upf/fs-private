@@ -54,9 +54,12 @@ public:
 	NestedTermTranslator() {}
 
 	//! The registration of variables is common to both static- and fluent- headed terms
-	void registerVariables(const fs::Term::cptr term, CSPVariableType root_type, CSPVariableType children_type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
-};
+	virtual void registerVariables(const fs::Term::cptr term, CSPVariableType root_type, CSPVariableType children_type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
 
+protected:
+	//! Do the actual registration on the translator. Can be overriden if a particular logic is necessary
+	virtual void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
+};
 
 class StaticNestedTermTranslator : public NestedTermTranslator {
 public:
@@ -72,7 +75,44 @@ public:
 	void registerConstraints(const fs::Term::cptr term, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const;
 };
 
+class ArithmeticTermTranslator : public NestedTermTranslator {
+public:
+	ArithmeticTermTranslator() {}
+	
+	void registerConstraints(const fs::Term::cptr formula, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const;
+	
+protected:
+	// Might want to be overriden by some subclass
+	Gecode::IntRelType getRelationType() const { return Gecode::IRT_EQ; }
+	
+	virtual Gecode::IntArgs getLinearCoefficients() const = 0;
+	
+	virtual void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const = 0;
 
+	//! Arithmetic terms do a special type of registration for the temporary variable
+	void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
+};
+
+class AdditionTermTranslator : public ArithmeticTermTranslator {
+public:
+	Gecode::IntArgs getLinearCoefficients() const;
+	
+	void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
+};
+
+class SubtractionTermTranslator : public ArithmeticTermTranslator {
+public:
+	Gecode::IntArgs getLinearCoefficients() const;
+	
+	void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
+};
+
+class MultiplicationTermTranslator : public ArithmeticTermTranslator {
+public:
+	Gecode::IntArgs getLinearCoefficients() const;
+	
+	void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
+};
 
 class AtomicFormulaTranslator {
 public:

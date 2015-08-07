@@ -54,8 +54,60 @@ void NestedTermTranslator::registerVariables(const fs::Term::cptr term, CSPVaria
 	GecodeCSPHandler::registerTermVariables(nested->getSubterms(), children_type, csp, translator, variables);
 	
 	// And now register the CSP variable corresponding to the current term
-	translator.registerNestedTerm(nested, root_type, csp, variables);
+	do_root_registration(nested, root_type, csp, translator, variables);
 }
+
+void NestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const {
+	translator.registerNestedTerm(nested, type, csp, variables);
+}
+
+
+void ArithmeticTermTranslator::do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const {
+	auto bounds = nested->getBounds();
+	translator.registerNestedTerm(nested, type, bounds.first, bounds.second, csp, variables);
+}
+
+void ArithmeticTermTranslator::registerConstraints(const fs::Term::cptr term, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
+	auto addition = dynamic_cast<fs::AdditionTerm::cptr>(term);
+	assert(addition);
+	
+	// First we register recursively the constraints of the subterms
+	GecodeCSPHandler::registerTermConstraints(addition->getSubterms(), csp, translator);
+	
+	// Now we assert that the root temporary variable equals the sum of the subterms
+	const Gecode::IntVar& result = translator.resolveVariable(term, CSPVariableType::Input, csp);
+	Gecode::IntVarArgs operands = translator.resolveVariables(addition->getSubterms(), CSPVariableType::Input, csp);
+	post(csp, operands, result);
+}
+
+
+void AdditionTermTranslator::post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+	Gecode::linear(csp, getLinearCoefficients(), operands, getRelationType(), result);
+}
+
+void SubtractionTermTranslator::post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+	Gecode::linear(csp, getLinearCoefficients(), operands, getRelationType(), result);
+}
+
+void MultiplicationTermTranslator::post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+	Gecode::mult(csp, operands[0], operands[1], result);
+}
+	
+Gecode::IntArgs AdditionTermTranslator::getLinearCoefficients() const {
+	std::vector<int> coefficients{1, 1};
+	return Gecode::IntArgs(coefficients);
+}
+
+Gecode::IntArgs SubtractionTermTranslator::getLinearCoefficients() const {
+	std::vector<int> coefficients{1, -1};
+	return Gecode::IntArgs(coefficients);
+}
+
+Gecode::IntArgs MultiplicationTermTranslator::getLinearCoefficients() const {
+	std::vector<int> coefficients{1, -1};
+	return Gecode::IntArgs(coefficients);
+}
+
 
 void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
 	auto stat = dynamic_cast<fs::StaticHeadedNestedTerm::cptr>(term);

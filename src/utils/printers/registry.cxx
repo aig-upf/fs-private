@@ -1,8 +1,9 @@
 
 #include <utils/printers/registry.hxx>
+#include <utils/printers/printers.hxx>
 #include <problem.hxx>
 #include <constraints/registry.hxx>
-#include <boost/units/detail/utility.hpp>
+
 
 namespace fs0 { namespace print {
 
@@ -19,18 +20,18 @@ std::ostream& logical_registry::print(std::ostream& os) const {
 	
 	os << "Direct translators for logical elements: " << std::endl;
 	for (const auto& it:_registry._direct_formula_translators) {
-		os << "\t* " << boost::units::detail::demangle(it.first.name()) << std::endl;
+		os << "\t* " << type_info_name(it.first) << std::endl;
 	}
 	os << std::endl;
 	
 	os << "Gecode translators for logical elements: " << std::endl;
 	for (const auto& it:_registry._gecode_term_translators) {
-		os << "\t* " << boost::units::detail::demangle(it.first.name()) << std::endl;
+		os << "\t* " << type_info_name(it.first) << std::endl;
 	}
 	os << std::endl;
 	
 	for (const auto& it:_registry._gecode_formula_translators) {
-		os << "\t* " << boost::units::detail::demangle(it.first.name()) << std::endl;
+		os << "\t* " << type_info_name(it.first) << std::endl;
 	}
 	os << std::endl;
 	

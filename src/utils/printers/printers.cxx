@@ -1,12 +1,13 @@
 
 #include <cassert>
 #include <memory>
-#include <utils/printers.hxx>
+#include <utils/printers/printers.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <heuristics/relaxed_plan_extractor.hxx>
 
 namespace fs0 {
+
 
 void PlanPrinter::printPlan(const ActionPlan& plan, const Problem& problem, std::ostream& out) {
 	const ProblemInfo& problemInfo = problem.getProblemInfo();
@@ -40,5 +41,6 @@ void SupportedPlanPrinter::printSupportedPlan(const std::set<SupportedAction>& p
 		out << element << std::endl;
 	}
 }
+
 
 } // namespaces

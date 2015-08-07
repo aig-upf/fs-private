@@ -13,7 +13,7 @@
 #include <utils/loader.hxx>
 #include <state.hxx>
 #include <utils/utils.hxx>
-#include <utils/printers.hxx>
+#include <utils/printers/printers.hxx>
 #include <utils/config.hxx>
 #include <problem_info.hxx>
 #include <actions/checker.hxx>

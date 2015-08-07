@@ -31,12 +31,16 @@ ObjectIdx AdditionTerm::interpret(const State& state) const {
 	return _subterms[0]->interpret(state) + _subterms[1]->interpret(state);
 }
 
+std::pair<int, int> AdditionTerm::getBounds() const {
+	auto min = _subterms[0]->getBounds().first + _subterms[1]->getBounds().first; 
+	auto max = _subterms[0]->getBounds().second + _subterms[1]->getBounds().second; 
+	return std::make_pair(min, max);
+}
+
 std::ostream& AdditionTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_subterms[0] << " + " << *_subterms[1];
 	return os;
 }
-
-
 
 SubtractionTerm::SubtractionTerm(const std::vector<Term::cptr>& subterms)
 	: StaticHeadedNestedTerm(-1, subterms)
@@ -52,11 +56,16 @@ ObjectIdx SubtractionTerm::interpret(const State& state) const {
 	return _subterms[0]->interpret(state) - _subterms[1]->interpret(state);
 }
 
+std::pair<int, int> SubtractionTerm::getBounds() const {
+	auto min = _subterms[0]->getBounds().first + _subterms[1]->getBounds().second; 
+	auto max = _subterms[0]->getBounds().second + _subterms[1]->getBounds().first; 
+	return std::make_pair(min, max);
+}
+
 std::ostream& SubtractionTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_subterms[0] << " - " << *_subterms[1];
 	return os;
 }
-
 
 
 MultiplicationTerm::MultiplicationTerm(const std::vector<Term::cptr>& subterms)
@@ -71,6 +80,12 @@ ObjectIdx MultiplicationTerm::interpret(const PartialAssignment& assignment) con
 
 ObjectIdx MultiplicationTerm::interpret(const State& state) const {
 	return _subterms[0]->interpret(state) * _subterms[1]->interpret(state);
+}
+
+std::pair<int, int> MultiplicationTerm::getBounds() const {
+	auto min = _subterms[0]->getBounds().first * _subterms[1]->getBounds().first; 
+	auto max = _subterms[0]->getBounds().second * _subterms[1]->getBounds().second; 
+	return std::make_pair(min, max);
 }
 
 std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {

@@ -4,6 +4,7 @@
 #include <constraints/direct/compiled.hxx>
 #include <problem.hxx>
 #include <constraints/registry.hxx>
+#include <utils/logging.hxx>
 
 namespace fs0 {
 
@@ -95,27 +96,28 @@ std::vector<DirectConstraint::cptr> DirectTranslator::generate(const std::vector
 DirectEffect::cptr DirectTranslator::generate(const ActionEffect& effect) {
 	checkSupported(effect.lhs, effect.rhs);
 	auto lhs_var = dynamic_cast<StateVariable::cptr>(effect.lhs);
-	if (!lhs_var) throw std::runtime_error("Unsupported left-hand side type on action effect");
-	assert(effect.affected.size()==1);
+	if (!lhs_var) throw std::runtime_error("Direct effects accept only state variables on the LHS of an effect");
 	VariableIdx affected = effect.affected[0];
 	
-	VariableIdxVector rhs_scope = effect.rhs->computeScope();
+	const Term& rhs = *effect.rhs;
+	
+	VariableIdxVector rhs_scope = rhs.computeScope();
 	if (rhs_scope.size() > 2) throw std::runtime_error("Too high a scope for direct effects");
 	
-	if (auto rhs_const = dynamic_cast<Constant::cptr>(effect.rhs)) {
-		return new ValueAssignmentEffect(affected, rhs_const->getValue());
-		
-	} else if (auto rhs_var = dynamic_cast<StateVariable::cptr>(effect.rhs)) {
-		return new VariableAssignmentEffect(rhs_var->getValue(), affected);
-		
+	auto translator = LogicalComponentRegistry::instance().getDirectEffectTranslator(rhs);
+	if (translator) {
+		auto translated = translator->translate(*lhs_var, rhs);
+		if (translated) return translated;
+	}
+	
+	// If there was no particular translator registered for the type of term, or the registered translator couldn't handle the term,
+	// we fall back to (try to) extensionalize the constraint
+	FDEBUG("components", "Could not find a suitable translator for the following, effect, falling back to extensionalization: " << effect);
+	if (rhs_scope.size() == 1) {
+		return new CompiledUnaryEffect(rhs_scope[0], affected, rhs);
 	} else {
-		// We necessarily have a statically-headed term which in turn will have at most scope two
-		if (rhs_scope.size() == 1) {
-			return new CompiledUnaryEffect(rhs_scope[0], affected, *(effect.rhs));
-		} else {
-			assert(rhs_scope.size() == 2);
-			return new CompiledBinaryEffect(rhs_scope, affected, *(effect.rhs));
-		}
+		assert(rhs_scope.size() == 2);
+		return new CompiledBinaryEffect(rhs_scope, affected, rhs);
 	}
 }
 

@@ -33,6 +33,9 @@ public:
 	//! Returns the level of nestedness of the term.
 	virtual unsigned nestedness() const = 0;
 	
+	//! Returns true if the element is flat, i.e. is a state variable or a constant
+	virtual bool flat() const = 0;
+	
 	//! Computes the term scope, i.e. a vector of state variables involved in the term.
 	virtual VariableIdxVector computeScope() const;
 	virtual void computeScope(std::set<VariableIdx>& scope) const = 0;
@@ -44,6 +47,8 @@ public:
 	//! Returns the index of the state variable to which the current term resolves under the given state.
 	virtual VariableIdx interpretVariable(const PartialAssignment& assignment) const = 0;
 	virtual VariableIdx interpretVariable(const State& state) const = 0;
+	
+	virtual std::pair<int, int> getBounds() const = 0;
 	
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
@@ -71,6 +76,8 @@ public:
 			_subterms.push_back(subterm->clone());
 		}
 	}
+	
+	bool flat() const { return false; }
 	
 	using Term::computeScope; // necessary to make the other computeScope visible too
 	void computeScope(std::set<VariableIdx>& scope) const;
@@ -138,12 +145,14 @@ public:
 	
 	UserDefinedStaticTerm* clone() const { return new UserDefinedStaticTerm(*this); }
 	
+	virtual std::pair<int, int> getBounds() const;
+	
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
 	
 protected:
 	// The (static) logical function implementation
-	const Function& _function;
+	const FunctionData& _function;
 };
 
 
@@ -162,6 +171,8 @@ public:
 	
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const;
 	VariableIdx interpretVariable(const State& state) const;
+	
+	virtual std::pair<int, int> getBounds() const;
 	
 	//! The scope of a nested term headed by a fluent includes all possible variables
 	//! resulting from the different possible values of its subterms
@@ -189,6 +200,8 @@ public:
 	
 	virtual unsigned nestedness() const { return 0; }
 	
+	bool flat() const { return true; }
+	
 	//! A constant term has no scope.
 	virtual void computeScope(std::set<VariableIdx>& scope) const;
 	
@@ -200,6 +213,8 @@ public:
 	
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const { return _variable_id; }
 	VariableIdx interpretVariable(const State& state) const { return _variable_id; }
+	
+	virtual std::pair<int, int> getBounds() const;
 	
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
@@ -224,6 +239,8 @@ public:
 	
 	virtual unsigned nestedness() const { return 0; }
 	
+	bool flat() const { return true; }
+	
 	//! A constant term has no scope.
 	virtual void computeScope(std::set<VariableIdx>& scope) const { return; }
 	
@@ -237,6 +254,8 @@ public:
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 	
+	virtual std::pair<int, int> getBounds() const { return std::make_pair(_value, _value); }
+	
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 	
@@ -247,6 +266,23 @@ protected:
 	//! The actual value of the constant
 	ObjectIdx _value;
 };
+
+/*
+//! An integer constant
+class IntConstant : public Constant {
+public:
+	typedef const IntConstant* cptr;
+	
+	IntConstant(ObjectIdx value)  : Constant(value) {}
+	
+	IntConstant* clone() const { return new IntConstant(*this); }
+	
+	virtual std::pair<int, int> getBounds() const { return std::make_pair(_value, _value); }
+	
+	//! Prints a representation of the object to the given stream.
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+};
+*/
 
 
 //! An atomic formula, implicitly understood to be static (fluent formulae are considered terms with Boolean codomain)

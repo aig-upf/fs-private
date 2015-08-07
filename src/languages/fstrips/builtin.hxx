@@ -26,11 +26,13 @@ public:
 	
 	AdditionTerm* clone() const { return new AdditionTerm(*this); }
 	
-	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::pair<int, int> getBounds() const;
 	
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 };
 
 //! A statically-headed term that subtracts up the values of the two subterms
@@ -40,13 +42,15 @@ public:
 	
 	SubtractionTerm(const std::vector<Term::cptr>& subterms);
 	
-	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
-	
 	SubtractionTerm* clone() const { return new SubtractionTerm(*this); }
 	
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
+	
+	virtual std::pair<int, int> getBounds() const;
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 };
 
 //! A statically-headed term that multiplies the values of the two subterms
@@ -56,13 +60,15 @@ public:
 	
 	MultiplicationTerm(const std::vector<Term::cptr>& subterms);
 	
-	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
-	
 	MultiplicationTerm* clone() const { return new MultiplicationTerm(*this); }
 	
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
+	
+	virtual std::pair<int, int> getBounds() const;
+	
+	//! Prints a representation of the object to the given stream.
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 };
 
 
