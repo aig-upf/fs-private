@@ -51,16 +51,19 @@ float RelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
 		// If there is no novel fact in the rpg, we reached a fixpoint, thus there is no solution.
 		if (rpgData.getNovelAtoms().size() == 0) return std::numeric_limits<float>::infinity();
 		
-		unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
+// 		unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
 		RPGData::accumulate(relaxed, rpgData);
 		rpgData.advanceLayer();
-		
+
+/*
+ * RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THE CSP MODEL
+ 		
 		// Prune using state constraints - TODO - Would be nicer if the whole state constraint pruning was refactored into a single line
 		FilteringOutput o = _builder->pruneUsingStateConstraints(relaxed);
 		FFDEBUG("heuristic", "State Constraint pruning output: " <<  static_cast<std::underlying_type<FilteringOutput>::type>(o));
 		if (o == FilteringOutput::Failure) return std::numeric_limits<float>::infinity();
 		if (o == FilteringOutput::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
-		
+*/
 		
 		FFDEBUG("heuristic", "RPG Layer #" << rpgData.getCurrentLayerIdx() << ": " << relaxed);
 		

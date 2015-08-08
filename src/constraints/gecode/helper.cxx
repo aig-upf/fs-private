@@ -6,6 +6,7 @@
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <relaxed_state.hxx>
+#include <utils/cartesian_iterator.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -70,6 +71,8 @@ Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain) {
 	return tuples;
 }
 
+//! @deprecated
+/* 
 Gecode::TupleSet Helper::extensionalize(const Term::cptr term, const VariableIdxVector& scope) {
 	if (scope.size() > 2) throw std::runtime_error("Error trying to extensionalize a term with too high a scope");
 	
@@ -101,9 +104,40 @@ Gecode::TupleSet Helper::extensionalize(const Term::cptr term, const VariableIdx
 	tuples.finalize();
 	return tuples;
 }
+*/
+
+Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	auto f_data = info.getFunctionData(term->getSymbolId());
+	const Signature& signature = f_data.getSignature();
+	const auto& functor = f_data.getFunction();
+	
+	Gecode::TupleSet tuples;
+	
+	utils::cartesian_iterator all_values(info.getSignatureValues(signature));
+	for (; !all_values.ended(); ++all_values) {
+		try {
+			ObjectIdx out = functor(*all_values);
+			tuples.add(Gecode::IntArgs(*all_values) << out); // Add the term value as the last element
+		} catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
+	}
+	
+	tuples.finalize();
+	return tuples;
+}
 
 void Helper::postBranchingStrategy(SimpleCSP& csp) {
 	branch(csp, csp._X, INT_VAR_SIZE_MIN(), INT_VAL_MIN()); // TODO posting a particular branching strategy might make sense to prioritize some branching strategy?
 }
-	
+
+int Helper::selectValueIfExists(IntVarValues& value_set, int value) {
+	assert(value_set());
+	int arbitrary_element;
+	for (; value_set(); ++value_set) {
+		arbitrary_element = value_set.val();
+		if (arbitrary_element == value) return value;
+	}
+	return arbitrary_element;
+}
+
 } } // namespaces

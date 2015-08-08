@@ -90,6 +90,14 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 	}
 }
 
+std::vector<const ObjectIdxVector*> ProblemInfo::getSignatureValues(const Signature& signature) const {
+	std::vector<const ObjectIdxVector*> res;
+	for (TypeIdx type:signature) {
+		res.push_back(&getTypeObjects(type));
+	}
+	return res;
+}
+
 VariableIdx ProblemInfo::getVariableId(unsigned symbol_id, const std::vector<ObjectIdx>& subterms) const {
 	return variableDataToId.at(std::make_pair(symbol_id, subterms));
 }

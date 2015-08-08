@@ -72,6 +72,9 @@ public:
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const;
 	
+	//! Simply checks if the given CSP has at least one solution
+	bool check_solution_exists(SimpleCSP* csp) const;
+	
 	//! Recovers an approximate support for the goal
 	void recoverApproximateSupport(SimpleCSP* csp, Atom::vctr& support, const State& seed) const;
 

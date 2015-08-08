@@ -20,8 +20,8 @@ class Atom;
 class FunctionData {
 public:
 	
-	FunctionData(const std::vector<TypeIdx>& domain, TypeIdx codomain, std::vector<VariableIdx>& variables, bool stat):
-		_domain(domain), _codomain(codomain), _variables(variables), _static(stat) {}
+	FunctionData(const Signature& signature, TypeIdx codomain, std::vector<VariableIdx>& variables, bool stat):
+		_signature(signature), _codomain(codomain), _variables(variables), _static(stat) {}
 	
 	//! Returns the state variables derived from the given function (e.g. for a function "f", f(1), f(2), ...)
 	const std::vector<VariableIdx>& getStateVariables() const {
@@ -29,6 +29,7 @@ public:
 		return _variables;
 	}
 	
+	const Signature& getSignature() const { return _signature; }
 	const TypeIdx& getCodomainType() const { return _codomain; }
 	
 	bool isStatic() const { return _static; }
@@ -44,7 +45,7 @@ public:
 	}
 
 protected:
-	std::vector<TypeIdx> _domain;
+	Signature _signature;
 	TypeIdx _codomain;
 	std::vector<VariableIdx> _variables;
 	bool _static;
@@ -195,6 +196,9 @@ public:
 	
 	//! Returns the generic type (object, int, bool, etc.) corresponding to a concrete type
 	ObjectType getGenericType(TypeIdx typeId) const;
+	
+	std::vector<const ObjectIdxVector*> getSignatureValues(const Signature& signature) const;
+	
 
 protected:
 	

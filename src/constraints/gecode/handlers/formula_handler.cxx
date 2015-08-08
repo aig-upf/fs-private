@@ -21,11 +21,11 @@ GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const std::vector<AtomicFormula
 	Gecode::SpaceStatus st = _base_csp.status();
 	
 	if (st == Gecode::SpaceStatus::SS_SOLVED) {
-		FINFO("main", "The Goal CSP was statically solved:" << std::endl <<  *this);
+		FINFO("main", "Formula CSP was statically solved:" << std::endl <<  *this);
 	} else if (st == Gecode::SpaceStatus::SS_FAILED) { // This should never happen, as it'd mean that the action is (statically) unapplicable.
-		throw std::runtime_error("Goal CSP statically failed");
+		throw std::runtime_error("Formula CSP statically failed");
 	} else {
-		FINFO("main", "Goal CSP after the initial, static propagation: " << *this);
+		FINFO("main", "Formula CSP after the initial, static propagation: " << *this);
 	}
 }
 
@@ -55,9 +55,16 @@ bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& suppor
 	FFDEBUG("heuristic", "Formula solution found: " << *solution);
 	for (const auto& it:_translator.getAllInputVariables()) {
 		VariableIdx planning_variable = it.first;
-		const Gecode::IntVar& csp_var = solution->_X[it.second];
-		support.push_back(Atom(planning_variable, csp_var.val()));
+		support.push_back(Atom(planning_variable, _translator.resolveInputStateVariableValue(*solution, planning_variable)));
 	}
+	delete solution;
+	return true;
+}
+
+bool GecodeFormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {
+	DFS<SimpleCSP> engine(csp);
+	SimpleCSP* solution = engine.next();
+	if (!solution) return false;
 	delete solution;
 	return true;
 }
@@ -69,8 +76,13 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 		VariableIdx planning_variable = it.first;
 		const Gecode::IntVar& csp_var = csp->_X[it.second];
 		IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
-		assert(values()); // Otherwise the CSP would be inconsistent.
-		support.push_back(Atom(planning_variable, values.val()));
+		assert(values()); // Otherwise the CSP would be inconsistent!
+		
+		// If the original value makes the situation a goal, then we don't need to add anything for this variable.
+		int seed_value = seed.getValue(planning_variable);
+		int selected = Helper::selectValueIfExists(values, seed_value);
+		if (selected == seed_value) continue;
+		support.push_back(Atom(planning_variable, selected)); // We simply pick the first consistent value
 	}
 }
 

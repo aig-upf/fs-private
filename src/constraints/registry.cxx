@@ -46,8 +46,9 @@ void LogicalComponentRegistry::registerGecodeTranslators() {
 	// Register the gecode translators for the basic terms
 	add(typeid(fs::Constant), new gecode::ConstantTermTranslator());
 	add(typeid(fs::StateVariable), new gecode::StateVariableTermTranslator());
-	add(typeid(fs::StaticHeadedNestedTerm), new gecode::StaticNestedTermTranslator());
 	add(typeid(fs::FluentHeadedNestedTerm), new gecode::FluentNestedTermTranslator());
+	add(typeid(fs::StaticHeadedNestedTerm), new gecode::StaticNestedTermTranslator());
+	add(typeid(fs::UserDefinedStaticTerm), new gecode::StaticNestedTermTranslator()); // user-defined terms can be translated with the "parent" static translator
 	
 	add(typeid(fs::AdditionTerm), new gecode::AdditionTermTranslator());
 	add(typeid(fs::SubtractionTerm), new gecode::SubtractionTermTranslator());

@@ -33,15 +33,19 @@ public:
 	//! Constrains the given CSP variable to have values in the given domain
 	static void constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain);
 	
-	//! Extensionalizes a given term (with scope up to two) by building a tupleset of the values of the relevant state variables 
-	//! for which the term is properly defined and their resulting interpretations
-	static Gecode::TupleSet extensionalize(const fs::Term::cptr term, const VariableIdxVector& scope);
+	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
+	//! that underlies the static term in all interpretations.
+	static Gecode::TupleSet extensionalize(const fs::StaticHeadedNestedTerm::cptr term);
 
 	//! Builds a gecode tupleset from the values contained in a state variable domain
 	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain);
 	
 	//! A simple helper to post a certain Gecode branching strategy to the CSP
 	static void postBranchingStrategy(SimpleCSP& csp);
+	
+	//! Small helper to check whether a Gecode IntVarValues set contains a given value
+	//! Unfortunately, it has linear cost.
+	static int selectValueIfExists(IntVarValues& value_set, int value);
 };
 
 } } // namespaces

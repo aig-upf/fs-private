@@ -28,7 +28,7 @@ namespace fs0 {
 	typedef int ObjectIdx;
 
 	//! An action signature is a list of (positional) parameters with a given type.
-	typedef std::vector<TypeIdx> ActionSignature;
+	typedef std::vector<TypeIdx> Signature;
 
 	//! The index identifying a state variable.
 	typedef unsigned VariableIdx;

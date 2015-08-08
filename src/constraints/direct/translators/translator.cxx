@@ -112,7 +112,7 @@ DirectEffect::cptr DirectTranslator::generate(const ActionEffect& effect) {
 	
 	// If there was no particular translator registered for the type of term, or the registered translator couldn't handle the term,
 	// we fall back to (try to) extensionalize the constraint
-	FDEBUG("components", "Could not find a suitable translator for the following, effect, falling back to extensionalization: " << effect);
+	FDEBUG("components", "Could not find a suitable translator for the following effect, falling back to extensionalization: " << effect);
 	if (rhs_scope.size() == 1) {
 		return new CompiledUnaryEffect(rhs_scope[0], affected, rhs);
 	} else {

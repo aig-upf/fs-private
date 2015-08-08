@@ -22,13 +22,17 @@ GecodeRPGBuilder::~GecodeRPGBuilder() {
 	delete _state_constraint_handler;
 }
 
-FilteringOutput GecodeRPGBuilder::pruneUsingStateConstraints(RelaxedState& state) const {
+FilteringOutput GecodeRPGBuilder::pruneUsingStateConstraints(RelaxedState& layer) const {
 	if (!_state_constraint_handler) return FilteringOutput::Unpruned;
 	
-	// TODO TODO TODO
-	assert(0);
+	SimpleCSP* csp = _state_constraint_handler->instantiate_csp(layer);
+	bool consistent = csp->checkConsistency();
 	
-	return FilteringOutput::Unpruned;
+	delete csp;
+	
+	// TODO This is not entirely correct, as we should be pruning the RPG layers domain. The entire state constraint model needs rethinking, anyway
+	assert(0);
+	return consistent ? FilteringOutput::Unpruned : FilteringOutput::Failure;
 }
 
 
