@@ -55,7 +55,6 @@ bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, Atom
 	DomainMap clone = Projections::clone(domains);  // We need a deep copy
 
 	extractGoalCauses(seed, domains, clone, causes, set, 0);
-	// reportGoalFound(state, domains, causes);
 	return true;
 }
 

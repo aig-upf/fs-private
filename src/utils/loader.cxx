@@ -16,7 +16,7 @@
 
 #include <component_factory.hxx>
 #include <utils/logging.hxx>
-#include <utils/printers/binding.hxx>
+
 
 namespace fs = fs0::language::fstrips;
 
@@ -33,9 +33,7 @@ void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFac
 	
 	/* Define the actions */
 	std::cout << "\tDefining actions..." << std::endl;
-	auto schema_index = loadActionSchemata(data["action_schemata"], problem);
-	
-	loadGroundedActions(data["actions"], factory, schema_index, problem);
+	loadActionSchemata(data["action_schemata"], problem);
 	
 	/* Define the initial state */
 	std::cout << "\tDefining initial state..." << std::endl;
@@ -69,63 +67,24 @@ const State::cptr Loader::loadState(const rapidjson::Value& data) {
 	return std::make_shared<State>(numAtoms, facts);
 }
 
-void Loader::loadGroundedActions(const rapidjson::Value& data, const BaseComponentFactory& factory, const SchemaIndex& schema_index, Problem& problem) {
-	assert(problem.getGroundActions().empty());
-	
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		const rapidjson::Value& node = data[i];
-		
-// 		# Format: a number of elements defining the action:
-// 		# (0) Action ID (index)
-// 		# (1) Action name
-// 		# (2) classname
-// 		# (3) binding
-		
-		
-		// We ignore the grounded name for the moment being.
-		const std::string& actionClassname = node[2].GetString();
-		ObjectIdxVector binding = parseNumberList<int>(node[3]);
-		
-		// This is no longer necessary, we perform the grounding in the engine
-// 		problem.addAction(factory.instantiateAction(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars));
-		
-		
-		// XXX - With GroundActions
-		ActionSchema::cptr schema = schema_index.at(actionClassname);
-		
-		FDEBUG("grounding", "Processing with binding " << print::binding(binding, schema->getSignature()) << " action schema...\n" << *schema);
-		GroundAction* ground = schema->process(binding, problem.getProblemInfo());
-		if (ground) {
-			FDEBUG("grounding", "Generated grounded action:\n" << *ground);
-			problem.addGroundAction(ground);
-		} else {
-			FDEBUG("grounding", "Grounded action is statically non-applicable");
-		}
-	}
-}
 
-Loader::SchemaIndex Loader::loadActionSchemata(const rapidjson::Value& data, Problem& problem) {
+void Loader::loadActionSchemata(const rapidjson::Value& data, Problem& problem) {
 	assert(problem.getActionSchemata().empty());
 	
-	SchemaIndex index;
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		ActionSchema::cptr schema = loadActionSchema(data[i], problem.getProblemInfo());
- 		problem.addActionSchema(schema);
-		index.insert(std::make_pair(schema->getClassname(), schema));
+ 		problem.addActionSchema(loadActionSchema(data[i], problem.getProblemInfo()));
 	}
-	return index;
 }
 
 ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const ProblemInfo& info) {
 	const std::string& name = node["name"].GetString();
-	const std::string& classname = node["classname"].GetString();
 	const std::vector<TypeIdx> signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	
 	const std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(node["conditions"], info);
 	const std::vector<ActionEffectSchema::cptr> effects = fs::Loader::parseAtomicEffectList(node["effects"], info);
 	
-	return new ActionSchema(name, classname, signature, parameters, conditions, effects);
+	return new ActionSchema(name, signature, parameters, conditions, effects);
 }
 
 std::vector<AtomicFormula::cptr> Loader::loadGroundedConditions(const rapidjson::Value& data, Problem& problem) {

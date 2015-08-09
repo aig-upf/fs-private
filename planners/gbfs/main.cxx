@@ -37,7 +37,7 @@ bool checkPlanCorrect(const Plan& plan) {
 	return Checker::checkPlanSuccessful(*problem, p, *(problem->getInitialState()));
 }
 
-float do_search(fs0::engines::FS0SearchAlgorithm& engine, const ProblemInfo& problemInfo, const std::string& out_dir) {
+float do_search(fs0::engines::FS0SearchAlgorithm& engine, const Problem& problem, const std::string& out_dir) {
 
 	std::ofstream out(out_dir + "/searchlog.out");
 	std::ofstream plan_out(out_dir + "/first.plan");
@@ -53,8 +53,8 @@ float do_search(fs0::engines::FS0SearchAlgorithm& engine, const ProblemInfo& pro
 
 	bool valid = checkPlanCorrect(plan);
 	if ( solved ) {
-		PlanPrinter::printPlan(plan, problemInfo, out);
-		PlanPrinter::printPlan(plan, problemInfo, plan_out);
+		PlanPrinter::printPlan(plan, problem, out);
+		PlanPrinter::printPlan(plan, problem, plan_out);
 	}
 
 	out << "Total time: " << total_time << std::endl;
@@ -76,7 +76,7 @@ float do_search(fs0::engines::FS0SearchAlgorithm& engine, const ProblemInfo& pro
 	json_out << "\tvalid : " << ( valid ? "true" : "false" ) << "," << std::endl;
 	json_out << "\tplan : ";
 	if ( solved )
-		PlanPrinter::printPlanJSON( plan, problemInfo, json_out);
+		PlanPrinter::printPlanJSON( plan, problem, json_out);
 	else
 		json_out << "null";
 	json_out << std::endl;
@@ -88,12 +88,12 @@ float do_search(fs0::engines::FS0SearchAlgorithm& engine, const ProblemInfo& pro
 }
 
 
-void instantiate_seach_engine_and_run(const FS0StateModel& search_prob, const ProblemInfo& problemInfo, int timeout, const std::string& out_dir) {
+void instantiate_seach_engine_and_run(const FS0StateModel& search_prob, int timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
 	
 	auto engine = fs0::engines::EngineFactory::create(Config::instance(), search_prob);
-	timer = do_search(*engine, problemInfo, out_dir);
+	timer = do_search(*engine, search_prob.getTask(), out_dir);
 	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }
 
@@ -182,6 +182,6 @@ int main(int argc, char** argv) {
 	std::cout << "Done!" << std::endl;
 
 	// Instantiate the engine
-	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), timeout, out_dir);
+	instantiate_seach_engine_and_run(search_prob, timeout, out_dir);
 	return 0;
 }

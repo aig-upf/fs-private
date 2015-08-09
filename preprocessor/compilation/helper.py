@@ -36,33 +36,5 @@ def parse_value(expression):
         raise UnimplementedFeature("Unsupported expression type for '{}'".format(expression))
 
 
-def finish_code(code):
-    return "return " + code + ";"
-
-
-def finish_bool_code(code):
-    return finish_code("(bool) " + code)
-
-
-def assignment_code(lhs, rhs):
-    return "{} = {};".format(lhs, rhs)
-
-
-def index_list(l):
-    """
-    Given a list of hashable items, returns a dictionary having
-    the items as keys and their position in the list as values
-    """
-    return {var: idx for idx, var in enumerate(l)}
-
-
-def is_int(s):
-    try:
-        x = int(s)
-        return str(x) == s
-    except ValueError:
-        return False
-
-
 def is_external(symbol):
     return symbol[0] == '@'

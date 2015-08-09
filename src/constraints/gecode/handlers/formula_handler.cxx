@@ -82,7 +82,7 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 		int seed_value = seed.getValue(planning_variable);
 		int selected = Helper::selectValueIfExists(values, seed_value);
 		if (selected == seed_value) continue;
-		support.push_back(Atom(planning_variable, selected)); // We simply pick the first consistent value
+		support.push_back(Atom(planning_variable, selected)); // It not, we simply pick the first consistent value
 	}
 }
 

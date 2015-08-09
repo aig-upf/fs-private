@@ -14,7 +14,6 @@ class ProblemInfo; class GroundAction;
 class ActionSchema {
 protected:
 	const std::string _name;
-	const std::string _classname;
 	const std::vector<TypeIdx> _signature;
 	const std::vector<std::string> _parameters;
 	const std::vector<AtomicFormulaSchema::cptr> _conditions;
@@ -24,13 +23,12 @@ protected:
 
 public:
 	typedef const ActionSchema* cptr;
-	ActionSchema(const std::string& name, const std::string& classname,
+	ActionSchema(const std::string& name,
 				 const std::vector<TypeIdx>& signature, const std::vector<std::string>& parameters,
 			     const std::vector<AtomicFormulaSchema::cptr>& conditions, const std::vector<ActionEffectSchema::cptr>& effects);
 	~ActionSchema();
 	
 	inline const std::string& getName() const { return _name; }
-	inline const std::string& getClassname() const { return _classname; }
 	inline const std::vector<TypeIdx>& getSignature() const { return _signature; }
 	inline const std::vector<std::string>& getParameters() const { return _parameters; }
 

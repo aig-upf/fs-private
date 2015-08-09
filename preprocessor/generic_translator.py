@@ -8,10 +8,10 @@ import pddl  # This should be imported from a custom-set PYTHONPATH containing t
 from pddl.f_expression import NumericConstant
 
 import base
-from compilation.actions import ActionCompiler
 from compilation.exceptions import ParseException
-from compilation.helper import is_external, is_int
+from compilation.helper import is_external
 from static import StaticProcedure, instantiate_function, instantiate_predicate
+from util import is_int
 
 
 class Translator(object):
@@ -44,13 +44,6 @@ class Translator(object):
             argtypes = [t.type for t in s.arguments]
             elements.append(base.Function(s.name, argtypes, s.type))
         return elements
-
-    def process_action(self, action):
-        compiler = ActionCompiler(self.task, action)
-        return compiler.process()
-
-    def get_actions(self):
-        return [self.process_action(a) for a in self.task.actions]
 
     def get_action_schemata(self):
         return [ActionSchemaProcessor(self.task, action).process() for action in self.task.actions]

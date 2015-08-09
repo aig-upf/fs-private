@@ -2,7 +2,7 @@
 import util
 
 
-class Fact(object):
+class Atom(object):
     """ A generic (possibly functional) fact """
     def __init__(self, var, value):  # TODO - Maybe use indexes directly?
         self.var = var
@@ -42,9 +42,6 @@ class Fact(object):
     def args(self):
         return self.var.args
 
-
-class NegatedFact(Fact):
-    OP = '!='
 
 
 class IndexDictionary(object):

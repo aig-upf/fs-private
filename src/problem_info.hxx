@@ -66,9 +66,6 @@ public:
 	enum class ObjectType {INT, BOOL, OBJECT}; 
 
 protected:
-	//! A map from action index to action name
-	std::vector<std::string> actionNames;
-	
 	//! A map from state variable ID to state variable name
 	std::vector<std::string> variableNames;
 	
@@ -118,8 +115,6 @@ public:
 
 	ProblemInfo(const rapidjson::Document& data);
 	~ProblemInfo() {}
-	
-	const std::string& getActionName(ActionIdx index) const;
 	
 	const std::string& getVariableName(VariableIdx index) const;
 	inline VariableIdx getVariableId(const std::string& name) const { return variableIds.at(name); }
@@ -197,6 +192,7 @@ public:
 	//! Returns the generic type (object, int, bool, etc.) corresponding to a concrete type
 	ObjectType getGenericType(TypeIdx typeId) const;
 	
+	//! Returns a vector 'v' such that 'v[i]' contains all posible values for the type 'signature[i]'
 	std::vector<const ObjectIdxVector*> getSignatureValues(const Signature& signature) const;
 	
 
@@ -207,9 +203,6 @@ protected:
 	
 	//! Load the names of the state variables
 	void loadVariableIndex(const rapidjson::Value& data);
-	
-	//! Load the names of the (bound) actions
-	void loadActionIndex(const rapidjson::Value& data);
 	
 	//! Load the names of the problem objects
 	void loadObjectIndex(const rapidjson::Value& data);

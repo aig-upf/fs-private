@@ -9,23 +9,16 @@
 namespace fs0 {
 
 
-void PlanPrinter::printPlan(const ActionPlan& plan, const Problem& problem, std::ostream& out) {
-	const ProblemInfo& problemInfo = problem.getProblemInfo();
-	for (int action:plan) {
-		out << problemInfo.getActionName(action) << std::endl;
+void PlanPrinter::printPlan(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out) {
+	for (auto action:plan) {
+		out << problem.get_action_name(action) << std::endl;
 	}
 }
 
-void PlanPrinter::printPlan(const std::vector<GroundAction::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
-	for (int action:plan) {
-		out << problemInfo.getActionName(action) << std::endl;
-	}
-}
-
-void PlanPrinter::printPlanJSON(const std::vector<GroundAction::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out) {
+void PlanPrinter::printPlanJSON(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out) {
 	out << "[";
 	for ( unsigned k = 0; k < plan.size(); k++ ) {
-		out << "\"" << problemInfo.getActionName(plan[k]) << "\"";
+		out << "\"" << problem.get_action_name(plan[k]) << "\"";
 		if ( k < plan.size() - 1 ) out << ", ";
 	}
 	out << "]";

@@ -1,12 +1,10 @@
 """
     A class to dump the information relevant to action schemata
 """
-import base
 from compilation.component_processor import BaseComponentProcessor
 from pddl import Truth, Effect, Atom, NegatedAtom
 from pddl.f_expression import FunctionalTerm
 from pddl.effects import AssignmentEffect
-import util
 
 
 class ActionSchemaProcessor(BaseComponentProcessor):
@@ -20,7 +18,7 @@ class ActionSchemaProcessor(BaseComponentProcessor):
         name = self.action.name
         params = list(self.parameters.keys())
         signature = [self.index.types[p.type] for p in self.action.parameters]
-        return dict(name=name, classname=util.normalize_action_name(name), signature=signature, parameters=params,
+        return dict(name=name, signature=signature, parameters=params,
                     conditions=[], effects=[])
 
     def process(self):
@@ -32,7 +30,7 @@ class ActionSchemaProcessor(BaseComponentProcessor):
         return self.parameters
 
     def process_effects(self):
-        """  Generates the effect procedures from the PDDL parser effect list"""
+        """  Generates the actual effects from the PDDL parser effect list"""
         for effect in self.action.effects:
             assert isinstance(effect, Effect) and isinstance(effect.condition, Truth) and not effect.parameters
             effect = self.process_effect(effect.literal)

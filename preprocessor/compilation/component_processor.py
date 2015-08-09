@@ -24,7 +24,7 @@ class BaseComponentProcessor(object):
         raise RuntimeError("Must subclass")
 
     def process_conditions(self, conditions):
-        """  Generates the applicability procedures from the PDDL parser precondition list"""
+        """  Generates the actual conditions from the PDDL parser precondition list"""
         if conditions:
             for part in get_formula_parts(conditions):
                 exp = self.parser.process_expression(part)

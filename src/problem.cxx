@@ -6,6 +6,7 @@
 #include <constraints/registry.hxx>
 #include <utils/printers/registry.hxx>
 #include "utils/printers/language.hxx"
+#include "actions/grounding.hxx"
 
 namespace fs0 {
 
@@ -34,11 +35,17 @@ void Problem::bootstrap() {
 	}
 	
 	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
+	
+	_ground = ActionGrounder::ground(_schemata, getProblemInfo());
 }
 
 
 ApplicableActionSet Problem::getApplicableActions(const State& s) const {
 	return ApplicableActionSet(ApplicabilityManager(getStateConstraints()), s, _ground);
+}
+
+std::string Problem::get_action_name(unsigned action) const {
+	return _ground[action]->getFullName();
 }
 
 

@@ -6,10 +6,10 @@
 
 namespace fs0 {
 
-ActionSchema::ActionSchema(const std::string& name, const std::string& classname,
+ActionSchema::ActionSchema(const std::string& name,
 						   const std::vector<TypeIdx>& signature, const std::vector<std::string>& parameters,
 						   const std::vector<AtomicFormulaSchema::cptr>& conditions, const std::vector<ActionEffectSchema::cptr>& effects)
-	: _name(name), _classname(classname), _signature(signature), _parameters(parameters), _conditions(conditions), _effects(effects)
+	: _name(name), _signature(signature), _parameters(parameters), _conditions(conditions), _effects(effects)
 {
 	assert(parameters.size() == signature.size());
 }

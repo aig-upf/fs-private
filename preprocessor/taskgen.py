@@ -24,9 +24,9 @@ def process_symbol_types(symbols):
     return types
 
 
-def create_problem_domain(name, types, symbols, actions):
+def create_problem_domain(name, types, symbols):
     """ Create a problem domain and perform the appropriate validity checks """
-    domain = ProblemDomain(name, types, symbols, actions)
+    domain = ProblemDomain(name, types, symbols)
     domain.supertypes = process_type_hierarchy(types)
     domain.symbol_types = process_symbol_types(symbols)
     return domain

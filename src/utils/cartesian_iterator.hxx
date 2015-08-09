@@ -25,12 +25,12 @@ public:
 		_values(values),
 		_iterators(),
 		_element(),
-		_ended(values.size() == 0)
+		_ended(_values.empty())
 	{
 		// Initialize the iterator vector and check that all the sets of the cartesian product have at least one element (otherwise the product will be empty)
 		_iterators.reserve(_values.size());
 		_element.reserve(_values.size());
-		for (const auto& domain:values) {
+		for (const auto& domain:_values) {
 			if (domain->size() == 0) {
 				_ended = true;
 				break;

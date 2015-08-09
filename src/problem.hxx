@@ -26,8 +26,7 @@ public:
 	void addActionSchema(const ActionSchema::cptr action) { _schemata.push_back(action); }
 	const std::vector<ActionSchema::cptr>& getActionSchemata() const { return _schemata; }
 	
-	void addGroundAction(const GroundAction::cptr action) { _ground.push_back(action); }
-	const std::vector<GroundAction::cptr>& getGroundActions() const { return _ground; }	
+	const std::vector<GroundAction::cptr>& getGroundActions() const { return _ground; }
 	
 	ApplicableActionSet getApplicableActions(const State& s) const;
 	
@@ -36,7 +35,7 @@ public:
 	void setGoalConditions(const std::vector<AtomicFormula::cptr>& conditions) { _goalConditions = conditions;}
 	const std::vector<AtomicFormula::cptr>& getGoalConditions() const { return _goalConditions; }
 
-	const std::string& get_action_name(unsigned action) const { return _problemInfo->getActionName(action); }
+	std::string get_action_name(unsigned action) const;
 
 	//! Getter/setter for the associated ProblemInfo object.
 	void setProblemInfo(ProblemInfo* info) { _problemInfo = info; }

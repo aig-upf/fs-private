@@ -4,17 +4,18 @@
 from pddl.f_expression import FunctionalTerm
 from pddl import Atom, NegatedAtom
 
-from base import ParameterExpression, NumericExpression, ObjectExpression, DefinedExpression, RelationalExpression, \
+from base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
     ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression
 from compilation.exceptions import ParseException
-from compilation.helper import is_int, is_external
+from compilation.helper import is_external
+from util import is_int
 
 
 BASE_SYMBOLS = ("=", "!=", "*", "+", "-", ">", "<", ">=", "<=")
 
 
 def is_basic_symbol(symbol):
-    return symbol in BASE_SYMBOLS or symbol == "@defined"
+    return symbol in BASE_SYMBOLS
 
 
 class Parser(object):
@@ -22,14 +23,6 @@ class Parser(object):
         self.all = task.all_symbols
         self.static = task.static_symbols
         self.fluent = task.fluent_symbols
-
-    def process(self, exp):
-        """
-        Processes the whole parse tree represented by the given expression 'exp' and builds a new tree with our custom
-        data structures, and where all functional and predicative fluents have been replaced by their corresponding
-        state variables.
-        """
-        return self.process_expression(exp).consolidate_variables()
 
     def process_expression(self, exp):
         """  Process an arbitrary expression """
@@ -48,11 +41,6 @@ class Parser(object):
                 return ObjectExpression(exp)
         else:
             raise ParseException("Unknown expression type for expression '{}'".format(exp))
-
-    def process_define_expression(self, exp):
-        """ Process the special @define atoms """
-        assert len(exp.args) == 1
-        return DefinedExpression(exp.negated, self.process_functional_expression(exp.args[0]))
 
     def process_relational_operator(self, exp):
         """ Process a relational operator such as =, <=, ... """
@@ -77,10 +65,7 @@ class Parser(object):
 
     def process_predicative_expression(self, exp):
         assert isinstance(exp, (Atom, NegatedAtom))
-        if exp.predicate == "@defined":  # An special _is_defined_  predicate
-            result = self.process_define_expression(exp)
-
-        elif is_basic_symbol(exp.predicate):  # A relational operator
+        if is_basic_symbol(exp.predicate):  # A relational operator
             result = self.process_relational_operator(exp)
 
         else:  # A "standard" predicate

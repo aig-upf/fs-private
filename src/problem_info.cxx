@@ -15,9 +15,6 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	std::cout << "\t Loading Type index..." << std::endl;
 	loadTypeIndex(data["types"]); // Order matters
 	
-	std::cout << "\t Loading Action index..." << std::endl;
-	loadActionIndex(data["actions"]);
-	
 	std::cout << "\t Loading Object index..." << std::endl;
 	loadObjectIndex(data["objects"]);
 
@@ -31,8 +28,6 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	
 	std::cout << "\t All indexes loaded!" << std::endl;
 }
-
-const std::string& ProblemInfo::getActionName(ActionIdx index) const { return actionNames.at(index); }
 
 const std::string& ProblemInfo::getVariableName(VariableIdx index) const { return variableNames.at(index); }
 
@@ -141,16 +136,6 @@ ProblemInfo::ObjectType ProblemInfo::getGenericType(TypeIdx typeId) const {
 	if (isTypeBounded[typeId]) return ObjectType::INT;
 // 	else if (type == "_bool_" || type == "bool") return ObjectType::BOOL;
 	else return ObjectType::OBJECT;
-}
-
-//! Load the names of the state variables from the specified file.
-void ProblemInfo::loadActionIndex(const rapidjson::Value& data) {
-	assert(actionNames.empty());
-	
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		assert(data[i][0].GetInt() == actionNames.size()); // Check values are decoded in the proper order
-		actionNames.push_back(data[i][1].GetString());
-	}
 }
 
 //! Load the names of the problem objects from the specified file.

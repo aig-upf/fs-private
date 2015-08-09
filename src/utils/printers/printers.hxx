@@ -26,9 +26,8 @@ public:
 	static void printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out);
 	
 	//! static helpers
-	static void printPlan(const ActionPlan& plan, const Problem& problem, std::ostream& out);
-	static void printPlan(const std::vector<GroundAction::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out);
-	static void printPlanJSON(const std::vector<GroundAction::IdType>& plan, const ProblemInfo& problemInfo, std::ostream& out);	
+	static void printPlan(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out);
+	static void printPlanJSON(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out);	
 };
 
 class SupportedPlanPrinter {

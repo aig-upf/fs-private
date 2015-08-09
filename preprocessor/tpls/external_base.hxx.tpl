@@ -23,12 +23,6 @@ public:
     ExternalBase(const std::string& data_dir) ${data_initialization}
     {}
 
-    /*
-    static DirectConstraint::cptr instantiateConstraint(const std::string& classname, const ObjectIdxVector& parameters, const VariableIdxVector& variables) {
-		return ConstraintFactory::create(classname, parameters, variables); // By default we try to instantiate the constraint as a global constraint
-    }
-    */
-
     ${data_accessors}
 
     //! By default, we register no component

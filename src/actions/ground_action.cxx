@@ -48,6 +48,12 @@ VariableIdxVector GroundAction::extractAffectedVariables() const {
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 
+std::string GroundAction::getFullName() const {
+     std::ostringstream stream;
+     stream << getName() << "(" << print::binding(getBinding(), getSignature()) << ")";
+     return stream.str();
+}
+
 std::ostream& GroundAction::print(std::ostream& os) const {
 	os << print::action_name(*this) << std::endl;
 	

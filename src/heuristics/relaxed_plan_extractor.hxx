@@ -38,8 +38,7 @@ public:
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const SupportedAction& o) { return o.print(os); }
 	std::ostream& print(std::ostream& out) const {
-		const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
-		out << problemInfo.getActionName(_action) << ", where: ";
+		out << Problem::getCurrentProblem()->get_action_name(_action) << ", where: ";
 		for (const auto& atom:*(_support))  out << atom << ", ";
 		return out;
 	}

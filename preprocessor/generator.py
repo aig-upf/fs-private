@@ -7,9 +7,11 @@ import sys
 import shutil
 
 import base
-import ccode
 import taskgen
 import util
+import operator
+from compilation.helper import is_external
+from generic_translator import Translator
 
 try:
     val = int(os.environ['PYTHONHASHSEED'])
@@ -43,7 +45,6 @@ def parse_arguments():
     parser.add_argument('--instance', required=True,
                         help="The problem instance filename (heuristics are used to determine domain filename).")
     parser.add_argument('--domain', required=False, help="The problem domain filename.", default=None)
-    parser.add_argument('--translator', required=False, help="The directory containing the problem translation code.")
     parser.add_argument('--planner', required=False, help="The directory containing the planner sources.")
     parser.add_argument('--output_base', default="../generated",
                         help="The base for the output directory where the compiled planner will be left. "
@@ -57,74 +58,6 @@ def parse_arguments():
     return args
 
 
-def import_translator(args, task):
-    """ Import the translator modules specific to the domain from the given path """
-    if args.translator is None:
-        from generic_translator import Translator
-
-        return Translator(task)
-
-    old = sys.path
-    sys.path = [args.translator]
-    try:
-        from translator import Translator  # This will be imported from the appended path.
-    except ImportError:
-        sys.path = old
-        from generic_translator import Translator
-
-    return Translator(task)
-
-
-class ActionIndex(object):  # TODO - Migrate to IndexDictionary
-    def __init__(self, action):
-        # Index the position of each parameter
-        self.param_idx = {param.name: i for i, param in enumerate(action.parameters, 0)}
-
-        # index the action effect affected variables.
-        self.index_affected_variables(action)
-
-    def get_var_idx(self, var):
-        assert False  # TODO
-        return self.affected_vars_inv[var]
-
-    def index_affected_variables(self, action):
-        pass
-        # for eff in action.effects:
-        # fact = Fact.create(eff.literal)
-        #     self.affected_vars_inv[fact.var] = len(self.affected_vars)
-        #     self.affected_vars.append(fact.var)
-
-
-class TaskPreprocessor(object):
-    def __init__(self, task):
-        self.task = task
-
-    def do(self):
-        self.process_actions()
-        # self.process_init()
-        return self.task
-
-        # def process_init(self):
-        # facts = []
-        # for symbol, inst in self.task.init.instantiations.items():
-        # assert isinstance(inst, (base.PredicateInstantiation, base.FunctionInstantiation))
-        #     if isinstance(inst, base.PredicateInstantiation):
-        #         for point in inst.set:
-        #             facts.append(Fact(StateVariable(symbol, tuple(point)), value))
-        #     else:
-        #         for point, value in inst.mapping.items():
-        #             facts.append(Fact(StateVariable(symbol, tuple(point)), value))
-        #
-        # self.task.init_facts = facts
-
-    def process_actions(self):
-        actions = []
-        for a in self.task.domain.actions:
-            a.info = ActionIndex(a)
-            actions.append(a)
-        self.task.actions = actions
-
-
 def parse_pddl_task(domain, instance):
     domain_pddl = pddl.pddl_file.parse_pddl_file("domain", domain)
     task_pddl = pddl.pddl_file.parse_pddl_file("task", instance)
@@ -135,8 +68,7 @@ def parse_pddl_task(domain, instance):
 def create_domain(name, translator):
     types = translator.get_types()
     symbols = translator.get_symbols()
-    actions = translator.get_actions()
-    domain = taskgen.create_problem_domain(name, types, symbols, actions)
+    domain = taskgen.create_problem_domain(name, types, symbols)
     domain.schemata = translator.get_action_schemata()
     return domain
 
@@ -167,11 +99,10 @@ def main():
     classify_symbols(task)
     task.index = CompilationIndex(task)
 
-    translator = import_translator(args, task)
+    translator = Translator(task)
     instance_name, domain_name = extract_names(args.instance, args.domain)
     domain = create_domain(domain_name, translator)
     instance = create_instance(instance_name, translator, domain)
-    instance = TaskPreprocessor(instance).do()
     _, trans_dir = translate_pddl(instance, args)
 
 
@@ -187,6 +118,14 @@ def translate_pddl(instance, args):
 
     inst_name, translation_dir = translate_and_compile(instance, translation_dir, args)
     return inst_name, translation_dir
+
+
+def translate_and_compile(instance, translation_dir, args):
+    gen = Generator(instance, args, translation_dir)
+    translation_dir = gen.translate()
+    move_files_around(args.instance_dir, args.instance, args.domain, translation_dir)
+    compile_translation(translation_dir, args.planner, args.debug, gen.task.domain.is_predicative())
+    return gen.get_normalized_task_name(), translation_dir
 
 
 def compile_translation(translation_dir, planner, debug=False, predstate=False):
@@ -212,14 +151,6 @@ def compile_translation(translation_dir, planner, debug=False, predstate=False):
     output = subprocess.call(command.split(), cwd=translation_dir)
     if not output == 0:
         raise RuntimeError('Error compiling problem at {0}'.format(translation_dir))
-
-
-def translate_and_compile(instance, translation_dir, args):
-    gen = Generator(instance, args, translation_dir)
-    translation_dir = gen.translate(args.instance_dir)
-    move_files_around(args.instance_dir, args.instance, args.domain, translation_dir)
-    compile_translation(translation_dir, args.planner, args.debug, gen.task.domain.is_predicative())
-    return gen.get_normalized_task_name(), translation_dir
 
 
 def move_files_around(base_dir, instance, domain, target_dir):
@@ -257,31 +188,25 @@ class Generator(object):
         self.index = CompilationIndex(instance)
         self.grounder = Grounder(instance, self.index)
         self.out_dir = ''
-        self.symbol_decl = []
-        self.symbol_init = []
-        self.goal_code = None
-        self.action_code = {}
         self.init_filenames(args, translation_dir)
+        self.symbol_index = {}
 
-    def translate(self, dirname):
+    def translate(self):
         self.preprocess_task()
-        self.grounder.ground(self.index)
-        self.process_elements()
-        self._generate_components_code(dirname)
-
+        self.grounder.ground_state_variables(self.index)
+        self.generate_components_code()
         self.symbol_index = {name: i for i, name in enumerate(self.task.symbols.keys())}
 
         data = {'variables': self.dump_variable_data(),
                 'objects': self.dump_object_data(),
                 'types': self.dump_type_data(),
-                'actions': self.dump_action_data(),
                 'action_schemata': self.task.domain.schemata,
                 'state_constraints': self.task.state_constraints,
                 'init': self.dump_init_data(),
                 'goal': self.task.goal_formula,
                 'functions': self.dump_function_data(),
                 'problem': {'domain': self.task.domain.name, 'instance': self.task.name}
-        }
+                }
 
         print("Problem '{problem}' translated to directory '{dir}'".format(
             problem=self.task.get_complete_name(), dir=self.out_dir)
@@ -291,15 +216,10 @@ class Generator(object):
 
         return self.out_dir
 
-    def process_elements(self):
-        self.action_code = {act.name: ccode.process_action(act) for act in self.task.actions}
-
-    def _generate_components_code(self, dirname):
+    def generate_components_code(self):
         # components.hxx:
         self.save_translation('components.hxx', tplManager.get('components.hxx').substitute(
-            action_definitions=self.get_action_definitions(),
             method_factories=self.get_method_factories(),
-            component_classes=self.generate_component_class_definitions(),
         ))
 
         # components.cxx:
@@ -325,7 +245,7 @@ class Generator(object):
             if isinstance(elem, DataElement):
                 elems.append(elem.initializer_list())
             else:
-                raise RuntimeError('What')
+                raise RuntimeError()
         if not elems:
             return ''
         return ': {}'.format(','.join(elems))
@@ -354,44 +274,10 @@ class Generator(object):
         if not os.path.isdir(self.out_dir):
             os.makedirs(self.out_dir)
 
-    def get_actions_cxx_code(self):
-        elems = []
-
-        for action in self.task.actions:
-            elems.append(tplManager.get('action_name_init').substitute(
-                actionName=util.normalize_action_name(action.name),
-                name=action.name,
-            ))
-
-            elems.append(tplManager.get('action_signature_init').substitute(
-                actionName=util.normalize_action_name(action.name),
-                signature=self._get_action_signature(action),
-            ))
-
-        return '\n'.join(elems)
-
     def get_method_factories(self):
         return tplManager.get('factories').substitute(
-            actions='\n\t\t'.join(self.get_action_factory_line(a) for a in self.action_code.values()),
             functions=',\n\t\t\t'.join(self.get_function_instantiations()),
         )
-
-    def get_action_factory_line(self, action_code):
-        return tplManager.get('action-instantiation').substitute(
-            classname=action_code.get_entity_name(),
-            constraint_list='\n\t\t\t\t'.join(action_code.constraint_instantiations),
-            effect_list='\n\t\t\t\t'.join(action_code.effect_instantiations),
-        )
-
-    def get_action_definitions(self):
-        elems = []
-
-        for action in self.task.actions:
-            elems.append(tplManager.get('action').substitute(
-                classname=util.normalize_action_name(action.name),
-            ))
-
-        return '\n'.join(elems)
 
     def dump_init_data(self):
         """ Saves the initial values of all state variables explicitly mentioned in the initialization """
@@ -437,7 +323,10 @@ class Generator(object):
         if 'object' not in self.task.type_map:
             self.task.type_map['object'] = []
 
-        for i, (t, objects) in enumerate(self.task.type_map.items()):
+        type_map = self.task.type_map
+        _sorted = sorted(self.index.types.items(), key=operator.itemgetter(1))  # all types, sorted by type ID
+        for t, i in _sorted:
+            objects = type_map[t]
             if objects and isinstance(objects[0], int):  # We have a bounded int variable
                 data.append([i, t, 'int', [objects[0], objects[-1]]])
             else:
@@ -445,53 +334,6 @@ class Generator(object):
                 data.append([i, t, object_idxs])
 
         return data
-
-    def serialize_variables_data(self, procedures):
-        """
-        Serializes the indexes of the relevant and affected variables data of a set of procedures.
-        For applicability procedures, the set of affected variables is empty.
-        """
-        rel_vars, aff_vars = [], []
-        for proc in procedures:
-            rel_vars.append([self.index.variables.get_index(var) for var in proc.variables])
-            if hasattr(proc, 'affected_variables'):
-                assert len(proc.affected_variables) == 1, \
-                    "Currently only accepted effects are those affecting one single variable"
-                aff_vars.append(self.index.variables.get_index(proc.affected_variables[0]))
-        return rel_vars, aff_vars
-
-    def dump_action_data(self):
-        data = []
-        grounded_actions = self.grounder.grounded_actions
-        for lifted_action, grounded in grounded_actions.items():
-            classname = util.normalize_action_name(lifted_action)
-            for action in grounded:
-                binding = self.generate_object_id_list(action.binding)
-
-                # Format: a number of elements defining the action:
-                # (1) Action ID (index)
-                # (2) Action name
-                # (3) classname
-                # (4) binding
-                data.append([len(data), str(action), classname, binding])
-
-        return data
-
-    def generate_component_class_definitions(self):
-        # The constraints of each of the actions
-        all_definitions = ['\n\n'.join(action.applicability_constraints) for action in self.action_code.values()]
-
-        # The effects of the actions
-        all_definitions += ['\n\n'.join(action.effect_components) for action in self.action_code.values()]
-
-        return '\n\n'.join(all_definitions)
-
-    def _get_all_symbol_declarations(self):
-        return '\n\t'.join(self.symbol_decl)
-
-    def _get_action_signature(self, action):
-        types = [str(self.index.types[p.typename]) for p in action.parameters]
-        return '{' + ','.join(types) + '}'
 
     def preprocess_task(self):
         # We substitute the predicate '=' for a syntactically acceptable predicate '_eq_'
@@ -520,17 +362,8 @@ class Generator(object):
             return value
         else:
             # bool variables also need to be treated specially
-            value = base.bool_string(value) if isinstance(value, bool) else value
+            value = util.bool_string(value) if isinstance(value, bool) else value
             return self.index.objects[value]
-
-    def generate_object_id_list(self, objects):
-        res = []
-        for x in objects:
-            if isinstance(x, int):
-                res.append(x)
-            else:
-                res.append(self.index.objects[x])
-        return res
 
     def get_function_instantiations(self):
         tpl = tplManager.get('function_instantiation')
@@ -538,11 +371,10 @@ class Generator(object):
             tpl.substitute(name=elem.name, accessor=elem.accessor)
             for elem in self.task.static_data.values() if isinstance(elem, DataElement)
         ]
-        external = [
-            tpl.substitute(name=symbol, accessor=symbol[1:]) for symbol in self.task.static_symbols if symbol[0] == '@']
+        external = [tpl.substitute(
+            name=symbol, accessor=symbol[1:]) for symbol in self.task.static_symbols if is_external(symbol)]
 
         return extensional + external
 
 if __name__ == "__main__":
     main()
-
