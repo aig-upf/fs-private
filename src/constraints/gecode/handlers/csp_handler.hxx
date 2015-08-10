@@ -34,11 +34,10 @@ public:
 
 		
 	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
-	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType root_type, CSPVariableType children_type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
 	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
 	
-	static void registerTermConstraints(const fs::Term::cptr term, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator);
-	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator);
+	static void registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator);
+	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator);
 	
 protected:
 	

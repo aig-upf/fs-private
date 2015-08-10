@@ -60,14 +60,14 @@ void GecodeActionCSPHandler::registerEffectVariables(const fs::ActionEffect::cpt
 	registerTermVariables(effect->rhs, CSPVariableType::Input, _base_csp, _translator, variables);
 	
 	// As for the LHS variable, we register the root level as an output CSP variable, and the children (if any) recursively as input variables
-	registerTermVariables(effect->lhs, CSPVariableType::Output, CSPVariableType::Input, _base_csp, _translator, variables);
+	registerTermVariables(effect->lhs, CSPVariableType::Output, _base_csp, _translator, variables);
 }
 
 
 void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cptr effect) {
 	// Register the lhs and rhs constraints recursively
-	GecodeCSPHandler::registerTermConstraints(effect->lhs, _base_csp, _translator);
-	GecodeCSPHandler::registerTermConstraints(effect->rhs, _base_csp, _translator);
+	GecodeCSPHandler::registerTermConstraints(effect->lhs, CSPVariableType::Output, _base_csp, _translator);
+	GecodeCSPHandler::registerTermConstraints(effect->rhs, CSPVariableType::Input, _base_csp, _translator);
 	
 	// And now equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
 	const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs, CSPVariableType::Output, _base_csp);

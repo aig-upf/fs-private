@@ -61,7 +61,6 @@ void Helper::constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, cons
 	}
 }
 
-
 Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain) {
 	Gecode::TupleSet tuples;
 	for (auto value:domain) {
@@ -70,41 +69,6 @@ Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain) {
 	tuples.finalize();
 	return tuples;
 }
-
-//! @deprecated
-/* 
-Gecode::TupleSet Helper::extensionalize(const Term::cptr term, const VariableIdxVector& scope) {
-	if (scope.size() > 2) throw std::runtime_error("Error trying to extensionalize a term with too high a scope");
-	
-	// This is not entirely correct - we need to compile static fluents differently
-	// We need to examine subterm by subterm, fix those that are fixed (constants), and use whole domains for those that are either 
-	// state variables or temporary variables.
-	assert(0); 
-	
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	Gecode::TupleSet tuples;
-	
-	if (scope.size() == 1) {
-		
-		for(ObjectIdx value:info.getVariableObjects(scope[0])) {
-			ObjectIdx out = term->interpret(Projections::zip(scope, {value}));
-			tuples.add(Gecode::IntArgs(2, value, out));
-		}
-		
-	} else { // scope.size() == 2
-		
-		for(ObjectIdx x:info.getVariableObjects(scope[0])) {
-			for(ObjectIdx y:info.getVariableObjects(scope[1])) {
-				ObjectIdx out = term->interpret(Projections::zip(scope, {x, y}));
-				tuples.add(Gecode::IntArgs(3, x, y, out));
-			}
-		}
-	}
-	
-	tuples.finalize();
-	return tuples;
-}
-*/
 
 Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
@@ -127,7 +91,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr t
 }
 
 void Helper::postBranchingStrategy(SimpleCSP& csp) {
-	branch(csp, csp._X, INT_VAR_SIZE_MIN(), INT_VAL_MIN()); // TODO posting a particular branching strategy might make sense to prioritize some branching strategy?
+	branch(csp, csp._X, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 }
 
 int Helper::selectValueIfExists(IntVarValues& value_set, int value) {

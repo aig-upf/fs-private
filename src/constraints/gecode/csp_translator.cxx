@@ -89,7 +89,6 @@ Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vect
 	return variables;
 }
 
-
 std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
 	os << "Gecode CSP with variables: " << std::endl;
 	for (auto it:_registered) {
@@ -101,7 +100,6 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 	return os;
 }
 
-
 void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const RelaxedState& layer) const {
 	// Iterate over all the input state variables and constrain them accodrding to the RPG layer
 	for (const auto& it:_input_state_variables) {
@@ -111,22 +109,5 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 		Helper::constrainCSPVariable(csp, csp_variable_id, domain);
 	}
 }
-
-
-Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveFunction(const SimpleCSP& csp, unsigned symbol_id, CSPVariableType type) const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	Gecode::IntVarArgs variables;
-	for (VariableIdx variable:info.getFunctionData(symbol_id).getStateVariables()) {
-// 		variables << resolveVariable(csp, variable, type);
-		// TODO - RETHINK
-		assert(0);
-		
-	}
-	return variables;
-}
-
-
-
-
 
 } } // namespaces

@@ -12,13 +12,9 @@ namespace fs0 { namespace gecode {
 
 
 void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) {
-	GecodeCSPHandler::registerTermVariables(term, type, type, csp, translator, variables); // If only one variable role is specified, we use it for both root and children CSP variables
-}
-
-void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType root_type, CSPVariableType children_type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
-	component_translator->registerVariables(term, root_type, children_type, csp, translator, variables);
+	component_translator->registerVariables(term, type, csp, translator, variables);
 }
 
 void GecodeCSPHandler::registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) {
@@ -36,14 +32,14 @@ void GecodeCSPHandler::registerFormulaVariables(const std::vector<fs::AtomicForm
 }
 
 
-void GecodeCSPHandler::registerTermConstraints(const fs::Term::cptr term, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) {
+void GecodeCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
-	component_translator->registerConstraints(term, csp, translator);
+	component_translator->registerConstraints(term, type, csp, translator);
 }
 
-void GecodeCSPHandler::registerTermConstraints(const std::vector<fs::Term::cptr>& terms, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) {
-	for (const auto term:terms) registerTermConstraints(term, csp, translator);
+void GecodeCSPHandler::registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) {
+	for (const auto term:terms) registerTermConstraints(term, type,  csp, translator);
 }
 
 

@@ -20,6 +20,7 @@ public:
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
 };
 
+//! A logical term in FSTRIPS
 class Term : public LogicalElement {
 public:
 	typedef const Term* cptr;
@@ -58,6 +59,9 @@ public:
 	virtual std::size_t hash_code() const = 0;
 };
 
+//! A nested logical term in FSTRIPS, i.e. a term of the form f(t_1, ..., t_n)
+//! The class is abstract and intended to have two possible subclasses, depending on whether
+//! the functional symbol 'f' is fluent or not.
 class NestedTerm : public Term {
 public:
 	typedef const NestedTerm* cptr;
@@ -228,7 +232,7 @@ protected:
 };
 
 
-//! A simple constant
+//! A simple constant term.
 class Constant : public Term {
 public:
 	typedef const Constant* cptr;
@@ -359,6 +363,8 @@ public:
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const { os << "False"; return os; }
 };
 
+//! A formula of the form t_1 <op> t_2, where t_i are terms and <op> is a basic relational
+//! operator such as =, !=, >, etc.
 class RelationalFormula : public AtomicFormula {
 public:
 	typedef const RelationalFormula* cptr;
@@ -440,7 +446,10 @@ public:
 	Symbol symbol() const { return Symbol::GEQ; }
 };
 
-
+//! The effect of a planning (grounded) action, which is of the form
+//!     LHS := RHS
+//! where both LHS (left-hand side) and RHS (right-hand side) are terms in our language,
+//! with the particularity that LHS must be either a state variable or a fluent-headed nested term.
 class ActionEffect {
 public:
 	typedef const ActionEffect* cptr;

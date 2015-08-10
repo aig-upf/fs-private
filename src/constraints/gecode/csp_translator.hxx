@@ -62,26 +62,29 @@ public:
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(SimpleCSP& csp, const RelaxedState& layer) const;
 
-	//! Returns the set of Gecode CSP variables that corresponds to all the state variables derived from a function
-	//! when used according to the given type.
-	Gecode::IntVarArgs resolveFunction(const SimpleCSP& csp, unsigned symbol_id, CSPVariableType type) const;
-	
-	
-	//! Returns the value of the CSP variable that corresponds to the given INPUT state variable, in the given CSP.
-	const ObjectIdx resolveInputStateVariableValue(const SimpleCSP& csp, VariableIdx variable) const {
+	//! Returns the CSP variable that corresponds to the given input state variable, in the given CSP.
+	const Gecode::IntVar&  resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);
 		if (it == _input_state_variables.end()) throw std::runtime_error("Trying to resolve non-registered input state variable");
-		const Gecode::IntVar& csp_var = csp._X[it->second];
-		return csp_var.val();
+		return csp._X[it->second];
 	}
 	
-	//! Returns the value of the CSP variable that corresponds to the given INPUT state variable, in the given CSP.
-	const ObjectIdx resolveOutputStateVariableValue(const SimpleCSP& csp, VariableIdx variable) const {
+	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
+	const ObjectIdx resolveInputStateVariableValue(const SimpleCSP& csp, VariableIdx variable) const {
+		return resolveInputStateVariable(csp, variable).val();
+	}	
+	
+	//! Returns the CSP variable that corresponds to the given output state variable, in the given CSP.
+	const Gecode::IntVar& resolveOutputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
 		const auto& it = _output_state_variables.find(variable);
 		if (it == _output_state_variables.end()) throw std::runtime_error("Trying to resolve non-registered output state variable");
-		const Gecode::IntVar& csp_var = csp._X[it->second];
-		return csp_var.val();
-	}	
+		return csp._X[it->second];
+	}
+	
+	//! Returns the value of the CSP variable that corresponds to the given output state variable, in the given CSP.
+	const ObjectIdx resolveOutputStateVariableValue(const SimpleCSP& csp, VariableIdx variable) const {
+		return resolveOutputStateVariable(csp, variable).val();
+	}
 	
 	const std::unordered_map<VariableIdx, unsigned>& getAllInputVariables() const { return _input_state_variables; }
 
