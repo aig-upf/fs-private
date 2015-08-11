@@ -6,8 +6,18 @@
 #include <relaxed_state.hxx>
 
 namespace fs0 { namespace gecode {
-	
-	
+
+UnregisteredStateVariableError::UnregisteredStateVariableError( const char* what_msg )
+	: std::runtime_error( what_msg ) {}
+
+UnregisteredStateVariableError::UnregisteredStateVariableError( const std::string& what_msg )
+	: std::runtime_error( what_msg ) {}
+
+UnregisteredStateVariableError::~UnregisteredStateVariableError() {
+
+}
+
+
 bool GecodeCSPVariableTranslator::isRegistered(const fs::Term::cptr term, CSPVariableType type) const {
 	TranslationKey key(term, type);
 	return _registered.find(key) != _registered.end();
@@ -15,14 +25,14 @@ bool GecodeCSPVariableTranslator::isRegistered(const fs::Term::cptr term, CSPVar
 
 bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
 	TranslationKey key(constant, CSPVariableType::Input);
-	
+
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
-	
+
 	unsigned id = variables.size();
 	int value = constant->getValue();
 	variables << Gecode::IntVar(csp, value, value);
-	
+
 	_registered.insert(it, std::make_pair(key, id)); // Constants are always considered as input variables
 	return true;
 }
@@ -31,12 +41,12 @@ bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr 
 	TranslationKey key(variable, type);
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
-	
+
 	variables << Helper::createPlanningVariable(csp, variable->getValue());
-	
+
 	unsigned id = variables.size()-1;
 	_registered.insert(it, std::make_pair(key, id));
-	
+
 	// We now cache state variables in different data structures to allow for a more performant subsequent retrieval
 	if (type == CSPVariableType::Input) {
 		_input_state_variables.insert(std::make_pair(variable->getValue(), id));
@@ -55,9 +65,9 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	TranslationKey key(nested, type);
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
-	
+
 	variables << Helper::createTemporaryVariable(csp, domain_type);
-	
+
 	_registered.insert(it, std::make_pair(key, variables.size()-1));
 	return true;
 }
@@ -66,9 +76,9 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	TranslationKey key(nested, type);
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
-	
+
 	variables << Helper::createTemporaryIntVariable(csp, min, max);
-	
+
 	_registered.insert(it, std::make_pair(key, variables.size()-1));
 	return true;
 }
