@@ -4,6 +4,7 @@
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <relaxed_state.hxx>
+#include <utils/logging.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -41,11 +42,11 @@ bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr 
 	TranslationKey key(variable, type);
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
-
 	variables << Helper::createPlanningVariable(csp, variable->getValue());
 
 	unsigned id = variables.size()-1;
 	_registered.insert(it, std::make_pair(key, id));
+	FDEBUG( "translation", "Created planning variable (" << variable->getValue() << ") with id=" << id << std::endl );
 
 	// We now cache state variables in different data structures to allow for a more performant subsequent retrieval
 	if (type == CSPVariableType::Input) {
@@ -86,7 +87,7 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
 	auto it = _registered.find(TranslationKey(term, type));
 	if(it == _registered.end()) {
-		throw std::runtime_error("Trying to translate a non-existing CSP variable");
+		throw UnregisteredStateVariableError("Trying to translate a non-existing CSP variable");
 	}
 	return csp._X[it->second];
 }

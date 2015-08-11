@@ -53,5 +53,5 @@ void GecodeCSPHandler::registerFormulaConstraints(const std::vector<fs::AtomicFo
 	for (const auto condition:conditions) registerFormulaConstraints(condition);
 }
 
-	
+
 } } // namespaces
