@@ -35,6 +35,14 @@ public:
 
 };
 
+class IndirectionUniquenessViolation : public std::runtime_error {
+public:
+	IndirectionUniquenessViolation( const char* what_msg );
+	IndirectionUniquenessViolation( const std::string& what_msg );
+
+	virtual ~IndirectionUniquenessViolation();
+};
+
 /**
  * A CSP translator keeps track of the correspondence between Planning variables and CSP variables.
  * To this end, it keeps a mapping of the form <x, t> --> y, where:
@@ -65,11 +73,15 @@ public:
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, TypeIdx domain_type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, int min, int max, SimpleCSP& csp, Gecode::IntVarArgs& variables);
 
+	void registerNestedTermIndirection( fs::NestedTerm::cptr, CSPVariableType type, int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables );
+
 	//! Returns the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
 	const Gecode::IntVar& resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const;
 
 	//! Handy helper to resolve a number of variables at the same time
 	Gecode::IntVarArgs resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const;
+
+	Gecode::IntVar resolveNestedTermIndirection( fs::Term::cptr, CSPVariableType type, const SimpleCSP& csp ) const;
 
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
@@ -113,6 +125,10 @@ protected:
 	//! the ID of the corresponding CSP variable
 	std::unordered_map<VariableIdx, unsigned> _input_state_variables;
 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
+
+	//! A table keeping track of what term CSP variable points to what output variable (nested fluents)
+	std::unordered_map<TranslationKey, unsigned > 	_pointer_table;
+
 };
 
 

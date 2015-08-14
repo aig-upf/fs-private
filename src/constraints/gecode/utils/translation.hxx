@@ -18,7 +18,7 @@ enum class CSPVariableType {
 
 //!
 struct TranslationKey {
-	
+
 	TranslationKey(fs::Term::cptr term, CSPVariableType _type)
 		: _term(term), _type(_type) {}
 
@@ -47,11 +47,11 @@ struct TranslationKey {
 
 	const fs::Term::cptr getTerm() const { return _term; }
 	CSPVariableType getType() const { return _type; }
-	
+
 protected:
 	//! The actual term being indexed
 	fs::Term::cptr _term;
-	
+
 	//! The role under which the term is indexed
 	CSPVariableType _type;
 };
@@ -60,7 +60,7 @@ protected:
 } } // namespaces
 
 namespace std { // std::hash specialization for TranslationKey.
-	
+
 	template<>
 	struct hash<fs0::gecode::TranslationKey>
 	{
@@ -69,4 +69,4 @@ namespace std { // std::hash specialization for TranslationKey.
 
 		std::size_t operator()(const fs0::gecode::TranslationKey& elem) const noexcept { return elem.hash_code(); }
 	};
-} // namespace std	
+} // namespace std

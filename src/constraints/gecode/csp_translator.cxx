@@ -18,6 +18,14 @@ UnregisteredStateVariableError::~UnregisteredStateVariableError() {
 
 }
 
+IndirectionUniquenessViolation::IndirectionUniquenessViolation( const char* what_msg )
+	: std::runtime_error( what_msg ) {}
+
+IndirectionUniquenessViolation::IndirectionUniquenessViolation( const std::string& what_msg )
+	: std::runtime_error( what_msg ) {}
+
+IndirectionUniquenessViolation::~IndirectionUniquenessViolation() {}
+
 
 bool GecodeCSPVariableTranslator::isRegistered(const fs::Term::cptr term, CSPVariableType type) const {
 	TranslationKey key(term, type);
@@ -46,7 +54,6 @@ bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr 
 
 	unsigned id = variables.size()-1;
 	_registered.insert(it, std::make_pair(key, id));
-	FDEBUG( "translation", "Created planning variable (" << variable->getValue() << ") with id=" << id << std::endl );
 
 	// We now cache state variables in different data structures to allow for a more performant subsequent retrieval
 	if (type == CSPVariableType::Input) {
@@ -84,6 +91,18 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	return true;
 }
 
+void
+GecodeCSPVariableTranslator::registerNestedTermIndirection( fs::NestedTerm::cptr term, CSPVariableType type, int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables ) {
+	TranslationKey key( term, type );
+	FDEBUG( "translation", "Registering indirection for nested term: " << *term << ( type == CSPVariableType::Output ? "'" : "" ));
+	auto it = _pointer_table.find(key);
+	// MRJ: Registering more than one pointer auxiliary var for the same term is a bug
+	if ( it != _pointer_table.end() ) throw IndirectionUniquenessViolation( "Attempting to bind more than one pointer auxiliary variable to the same term" );
+	Gecode::IntVar pointer = Helper::createTemporaryIntVariable( csp, 0, max_idx );
+	variables << pointer;
+	_pointer_table.insert( it, std::make_pair( key, variables.size()-1 ));
+}
+
 const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
 	auto it = _registered.find(TranslationKey(term, type));
 	if(it == _registered.end()) {
@@ -100,10 +119,20 @@ Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vect
 	return variables;
 }
 
+Gecode::IntVar
+GecodeCSPVariableTranslator::resolveNestedTermIndirection( fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp ) const {
+
+	auto it = _pointer_table.find(TranslationKey( term, type ));
+	FDEBUG( "heuristic", "Resolving indirection for nested term: " << *term << ( type == CSPVariableType::Output ? "'" : "" ));
+	if ( it == _pointer_table.end() ) throw std::runtime_error( "Could not resolve indirection for the term provided" );
+	return csp._X[it->second];
+}
+
+
 std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
 	os << "Gecode CSP with variables: " << std::endl;
 	for (auto it:_registered) {
-		os << "\t";
+		os << "\t ";
 		os << *(it.first.getTerm());
 		if (it.first.getType() == CSPVariableType::Output) os << "'"; // We simply mark output variables with a "'"
 		os << ": " << csp._X[it.second] << std::endl;

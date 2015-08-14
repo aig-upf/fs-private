@@ -50,24 +50,38 @@ void NestedTermTranslator::registerVariables(const fs::Term::cptr term, CSPVaria
 	// in which case we do NOT want to register it again
 	if (translator.isRegistered(nested, type)) return;
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	#ifdef DEBUG
+	std::ostream& log = getDebugLogStream( "translation" );
+	log << "Registering nested term ";
+	nested->print(log, info );
+	log << std::endl;
+	#endif
 	const auto& signature = info.getFunctionData(nested->getSymbolId()).getSignature();
+	// MRJ: Why are we getting this vector? Did I eliminate code I shouldn't?
 	const std::vector<fs::Term::cptr>& subterms = nested->getSubterms();
 
 	// We first parse and register the subterms recursively. The type of subterm variables is always input
 	GecodeCSPHandler::registerTermVariables(nested->getSubterms(), CSPVariableType::Input, csp, translator, variables);
 
-	if ( dynamic_cast< fs::FluentHeadedNestedTerm::cptr >( term) != nullptr ) {
+	// MRJ: TODO: Discuss with Guillem how to introduce this into the linguistic type hierarchy
+	fs::FluentHeadedNestedTerm::cptr dyn_nested_fluent = dynamic_cast< fs::FluentHeadedNestedTerm::cptr >( term);
+	if ( dyn_nested_fluent != nullptr ) {
 
+		unsigned count = 0;
 		for (ObjectIdx object:info.getTypeObjects(signature[0])) {
 
 			VariableIdx variable = info.resolveStateVariable(nested->getSymbolId(), {object});
 
 			FDEBUG( "translation", "Registering implicitly referred variable " << info.getVariableName( variable ) << std::endl);
-			if ( _implicit_ref_vars.find( variable ) == _implicit_ref_vars.end() ) {
-				_implicit_ref_vars.insert( std::make_pair( variable, new StateVariable( variable  ) ) );
+			if ( _implicit_ref_vars.find( std::make_pair(variable,type) ) == _implicit_ref_vars.end() ) {
+				_implicit_ref_vars.insert( std::make_pair( std::make_pair(variable,type), new StateVariable( variable  ) ) );
 			}
-			translator.registerStateVariable( _implicit_ref_vars[variable], CSPVariableType::Input, csp, variables );
+			translator.registerStateVariable( _implicit_ref_vars[std::make_pair(variable,type)], type, csp, variables );
+			count++;
 		}
+		// MRJ: this registers the pointer variable in the csp
+		FDEBUG( "translation", "Registering pointer variable")
+		translator.registerNestedTermIndirection( dyn_nested_fluent, type, count-1, csp, variables  );
 	}
 	// And now register the CSP variable corresponding to the current term
 	do_root_registration(nested, type, csp, translator, variables);
@@ -170,7 +184,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 		for ( auto var : variables )
 			arity++;
 		log << "Tuples:" << std::endl;
-		for ( unsigned i = 0; i < extension.tuples(); i++  ) {
+		for ( int i = 0; i < extension.tuples(); i++  ) {
 			log << "<";
 			for ( unsigned j = 0; j < arity; j++ ) {
 				log << extension[i][j];
@@ -227,6 +241,7 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 			FDEBUG( "translation", "planning variable " << variable << " domain is " << v );
 			array_variables << v;
 		} catch( const UnregisteredStateVariableError& ) {
+			// MRJ: These need to be always "input" variables, can we have nested fluents on the lhs of an effect?
 			auto v = translator.resolveInputStateVariable(csp, variable);
 			FDEBUG( "translation", "planning variable " << variable << " domain is " << v );
 			array_variables << v;
@@ -243,14 +258,18 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	// Post the extensional constraint relating the value of the index variables
 	const Gecode::IntVar& index_variable = translator.resolveVariable(subterms[0], CSPVariableType::Input, csp);
 	//Gecode::IntVar indexed_index; // TODO - XXX - WHERE DO WE GET THIS FROM??
-	Gecode::IntVar indexed_index = Helper::createTemporaryIntVariable( csp, 0, idx-1 ); // MRJ: Maybe just like this?
+	// MRJ: check NestedTerm variable registration
+	Gecode::IntVar indexed_index = translator.resolveNestedTermIndirection( fluent, type, csp );
 	Gecode::extensional(csp, IntVarArgs() << index_variable << indexed_index, correspondence);
 	#ifdef DEBUG
-	getDebugLogStream("translation") << "Extensional constraint:" << std::endl;
-	getDebugLogStream("translation") << "Scope: index_var \\in " << index_variable << " indexed_index \\in " << indexed_index << std::endl;
-	getDebugLogStream("translation") << "Tuples: " << std::endl;
-	for ( unsigned i = 0; i < correspondence.tuples(); i++ )
-		getDebugLogStream("translation") << "<" << correspondence[i][0] << ", " << correspondence[i][1] << ">" <<std::endl;
+	{
+		std::ostream& log = getDebugLogStream("translation");
+		log << "Extensional constraint:" << std::endl;
+		log << "Scope: index_var \\in " << index_variable << " indexed_index \\in " << indexed_index << std::endl;
+		log << "Tuples: " << std::endl;
+		for ( int i = 0; i < correspondence.tuples(); i++ )
+			log << "<" << correspondence[i][0] << ", " << correspondence[i][1] << ">" <<std::endl;
+	}
 	#endif
 
 	// Now post the actual element constraint
@@ -258,25 +277,31 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 		const Gecode::IntVar& element_result = translator.resolveVariable(fluent, CSPVariableType::Input, csp); // TODO - Output or Input???
 		Gecode::element(csp, array_variables, indexed_index, element_result);
 		#ifdef DEBUG
-		getDebugLogStream("translation") << "Element constraint: element_result = array_variables[indexed_index]" << std::endl;
-		getDebugLogStream("translation") << "element_result \\in " << element_result << std::endl;
-		getDebugLogStream("translation") << "indexed_index \\in " << indexed_index << std::endl;
-		getDebugLogStream("translation") << "array_variables = {" << std::endl;
-		for ( auto var : array_variables )
-			getDebugLogStream("translation") << var << std::endl;
-		getDebugLogStream("translation") << "}" << std::endl;
+		{
+			std::ostream& log = getDebugLogStream( "translation" );
+			log << "Element constraint: element_result = array_variables[indexed_index]" << std::endl;
+			log << "element_result \\in " << element_result << std::endl;
+			log << "indexed_index \\in " << indexed_index << std::endl;
+			log << "array_variables = {" << std::endl;
+			for ( auto var : array_variables )
+				log << var << std::endl;
+			log << "}" << std::endl;
+		}
 		#endif
 	} catch ( const  UnregisteredStateVariableError& e ) {
 		const Gecode::IntVar& element_result = translator.resolveVariable(fluent, CSPVariableType::Output, csp); // TODO - Output or Input???
 		Gecode::element(csp, array_variables, indexed_index, element_result);
 		#ifdef DEBUG
-		getDebugLogStream("translation") << "Element constraint: element_result = array_variables[indexed_index]" << std::endl;
-		getDebugLogStream("translation") << "element_result \\in " << element_result << std::endl;
-		getDebugLogStream("translation") << "indexed_index \\in " << indexed_index << std::endl;
-		getDebugLogStream("translation") << "array_variables = {" << std::endl;
-		for ( auto var : array_variables )
-			getDebugLogStream("translation") << var << std::endl;
-		getDebugLogStream("translation") << "}" << std::endl;
+		{
+			std::ostream& log = getDebugLogStream("translation");
+			log << "Element constraint: element_result = array_variables[indexed_index]" << std::endl;
+			log << "element_result \\in " << element_result << std::endl;
+			log << "indexed_index \\in " << indexed_index << std::endl;
+			log << "array_variables = {" << std::endl;
+			for ( auto var : array_variables )
+				log << var << std::endl;
+			log << "}" << std::endl;
+		}
 		#endif
 	}
 }
