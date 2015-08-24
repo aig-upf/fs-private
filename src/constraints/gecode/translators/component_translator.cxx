@@ -7,6 +7,7 @@
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <utils/logging.hxx>
+#include <utils/printers/gecode.hxx>
 
 #include <gecode/int.hh>
 
@@ -43,25 +44,26 @@ void StateVariableTermTranslator::registerVariables(const fs::Term::cptr term, C
 	translator.registerStateVariable(variable, type, csp, variables);
 }
 
+NestedTermTranslator::~NestedTermTranslator() {
+	for ( auto o : _implicit_ref_vars ) delete o.second;
+}
+
 void NestedTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	auto nested = dynamic_cast<fs::NestedTerm::cptr>(term);
 	assert(nested);
 	// If the subterm occurs somewhere else in the action / formula, it might have already been parsed and registered,
 	// in which case we do NOT want to register it again
 	if (translator.isRegistered(nested, type)) return;
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	#ifdef DEBUG
-	std::ostream& log = getDebugLogStream( "translation" );
-	log << "Registering nested term ";
-	nested->print(log, info );
-	log << std::endl;
-	#endif
+	
+	FDEBUG("translation", "Registering nested term " << *nested);
+	
 	const auto& signature = info.getFunctionData(nested->getSymbolId()).getSignature();
 	// MRJ: Why are we getting this vector? Did I eliminate code I shouldn't?
 	const std::vector<fs::Term::cptr>& subterms = nested->getSubterms();
 
 	// We first parse and register the subterms recursively. The type of subterm variables is always input
-	GecodeCSPHandler::registerTermVariables(nested->getSubterms(), CSPVariableType::Input, csp, translator, variables);
+	GecodeCSPHandler::registerTermVariables(subterms, CSPVariableType::Input, csp, translator, variables);
 
 	// MRJ: TODO: Discuss with Guillem how to introduce this into the linguistic type hierarchy
 	fs::FluentHeadedNestedTerm::cptr dyn_nested_fluent = dynamic_cast< fs::FluentHeadedNestedTerm::cptr >( term);
@@ -143,14 +145,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	auto stat = dynamic_cast<fs::StaticHeadedNestedTerm::cptr>(term);
 	assert(stat);
 
-	#ifdef DEBUG
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	std::ostream& info_log = getDebugLogStream( "translation" );
-	info_log << "Registering constraints for static nested term ";
-	stat->print(info_log, info );
-	info_log << std::endl;
-	#endif
-
+	FDEBUG("translation", "Registering constraints for static nested term " << *stat);
 
 	// First we register recursively the constraints of the subterms
 	GecodeCSPHandler::registerTermConstraints(stat->getSubterms(), CSPVariableType::Input, csp, translator);
@@ -159,43 +154,15 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	// We have registered a termporary variable Z for the whole term, plus temporaries Z_i accounting for each subterm t_i
 	// Now we need to post an extensional constraint on all temporary variables <Z_1, Z_2, ..., Z_n, Z> such that
 	// the tuples <z_1, ..., z_n, z> satisfying the constraints are exactly those such that z = s(z_1, ..., z_n)
-
-	FDEBUG( "translation", "Creating extensional constraint");
+	FDEBUG("translation", "Creating extensional constraint:");
+	
 	// First compile the variables in the right order (order matters, must be the same than in the tupleset):
 	Gecode::IntVarArgs variables = translator.resolveVariables(stat->getSubterms(), CSPVariableType::Input, csp);
 	variables << translator.resolveVariable(stat, CSPVariableType::Input, csp);
 
-	#ifdef DEBUG
-	{
-		std::ostream& log = getDebugLogStream("translation");
-		log << "Scope:" << std::endl;
-		unsigned i = 0;
-		for ( auto var : variables )
-			log << "x_" << i++ << " \\in " << var << std::endl;
-	}
-	#endif
-
 	// Now compile the tupleset
 	Gecode::TupleSet extension = Helper::extensionalize(stat);
-	#ifdef DEBUG
-	{
-		std::ostream& log = getDebugLogStream("translation");
-		unsigned arity = 0;
-		for ( auto var : variables )
-			arity++;
-		log << "Tuples:" << std::endl;
-		for ( int i = 0; i < extension.tuples(); i++  ) {
-			log << "<";
-			for ( unsigned j = 0; j < arity; j++ ) {
-				log << extension[i][j];
-				if ( j < arity-1) log << ", ";
-			}
-
-			log << ">" << std::endl;
-		}
-	}
-	#endif
-
+	FDEBUG("translation", print::extensional(variables, extension));
 
 	// And finally post the constraint
 	Gecode::extensional(csp, variables, extension);
@@ -211,12 +178,7 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	const auto& signature = info.getFunctionData(fluent->getSymbolId()).getSignature();
 	const std::vector<fs::Term::cptr>& subterms = fluent->getSubterms();
 
-	#ifdef DEBUG
-	std::ostream& info_log = getDebugLogStream( "translation" );
-	info_log << "Registering constraints for fluent nested term ";
-	fluent->print(info_log, info );
-	info_log << std::endl;
-	#endif
+	FDEBUG("translation", "Registering constraints for fluent nested term " << *fluent);
 
 	// First we register recursively the constraints of the subterms - subterms' constraint will always have input type
 	GecodeCSPHandler::registerTermConstraints(subterms, type/*CSPVariableType::Input*/, csp, translator);
@@ -236,66 +198,29 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), {object});
 
 		FDEBUG( "translation", "Noting correspondence for variable " << info.getVariableName( variable ) << std::endl);
-		if ( type == CSPVariableType::Output ) {
-
-			auto v = translator.resolveOutputStateVariable(csp, variable); // TODO - Output or Input???
-			FDEBUG( "translation", "planning variable " << variable << " domain is " << v );
-			array_variables << v;
-		}
-		else {
-			// MRJ: These need to be always "input" variables, can we have nested fluents on the lhs of an effect?
-			auto v = translator.resolveInputStateVariable(csp, variable);
-			FDEBUG( "translation", "planning variable " << variable << " domain is " << v );
-			array_variables << v;
-		}
+		auto var = (type == CSPVariableType::Output) ? translator.resolveOutputStateVariable(csp, variable) : translator.resolveInputStateVariable(csp, variable);
+		FDEBUG( "translation", "Planning variable " << variable << " domain is " << var );
+		array_variables << var;
 
 		correspondence.add(IntArgs(2, object, idx));
 		++idx;
 	}
-
 	correspondence.finalize();
-
 
 
 	// Post the extensional constraint relating the value of the index variables
 	const Gecode::IntVar& index_variable = translator.resolveVariable(subterms[0], CSPVariableType::Input, csp);
-	//Gecode::IntVar indexed_index; // TODO - XXX - WHERE DO WE GET THIS FROM??
-	// MRJ: check NestedTerm variable registration
-	Gecode::IntVar indexed_index = translator.resolveNestedTermIndirection( fluent, type, csp );
-	Gecode::extensional(csp, IntVarArgs() << index_variable << indexed_index, correspondence);
-	#ifdef DEBUG
-	{
-		std::ostream& log = getDebugLogStream("translation");
-		log << "Extensional constraint:" << std::endl;
-		log << "Scope: index_var \\in " << index_variable << " indexed_index \\in " << indexed_index << std::endl;
-		log << "Tuples: " << std::endl;
-		for ( int i = 0; i < correspondence.tuples(); i++ )
-			log << "<" << correspondence[i][0] << ", " << correspondence[i][1] << ">" <<std::endl;
-	}
-	#endif
+	Gecode::IntVar indexed_index = translator.resolveNestedTermIndirection( fluent, type, csp ); // MRJ: check NestedTerm variable registration
+	IntVarArgs extensional_constraint_variables;
+	extensional_constraint_variables << index_variable << indexed_index;
+	Gecode::extensional(csp, extensional_constraint_variables, correspondence);
+	FDEBUG("translation", "Fluent-headed nested term gives rise to constraint: " << print::extensional(extensional_constraint_variables, correspondence));
 
 	// Now post the actual element constraint
-	const Gecode::IntVar& element_result = translator.resolveVariable(fluent, type, csp); // TODO - Output or Input???
+	const Gecode::IntVar& element_result = translator.resolveVariable(fluent, type, csp);
 	Gecode::element(csp, array_variables, indexed_index, element_result);
-	#ifdef DEBUG
-	{
-		std::ostream& log = getDebugLogStream( "translation" );
-		log << "Element constraint: element_result = array_variables[indexed_index]" << std::endl;
-		log << "element_result \\in " << element_result << std::endl;
-		log << "indexed_index \\in " << indexed_index << std::endl;
-		log << "array_variables = {" << std::endl;
-		for ( auto var : array_variables )
-			log << var << std::endl;
-		log << "}" << std::endl;
-	}
-	#endif
+	FDEBUG("translation", "Fluent-headed nested term gives rise to constraint: " << print::element(array_variables, indexed_index, element_result));
 }
-
-NestedTermTranslator::~NestedTermTranslator() {
-	for ( auto o : _implicit_ref_vars )
-		delete o.second;
-}
-
 
 
 
