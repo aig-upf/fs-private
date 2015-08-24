@@ -4,6 +4,7 @@
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>
+#include <utils/logging.hxx>
 
 #include <typeinfo>
 
@@ -35,7 +36,7 @@ VariableIdxVector Term::computeScope() const {
 
 std::ostream& LogicalElement::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
-std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
+std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << "<unnamed term>";
 	return os;
 }
@@ -66,7 +67,7 @@ std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
 	auto type = _function.getCodomainType();
 	return info.getTypeBounds(type);
 }
-		 
+
 ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment) const {
 	return _function.getFunction()(interpret_subterms(_subterms, assignment));
 }
@@ -122,7 +123,7 @@ void StateVariable::computeScope(std::set<VariableIdx>& scope) const {
 	scope.insert(_variable_id);
 }
 
-ObjectIdx StateVariable::interpret(const State& state) const { 
+ObjectIdx StateVariable::interpret(const State& state) const {
 	return state.getValue(_variable_id);
 }
 
@@ -159,7 +160,7 @@ bool AtomicFormula::interpret(const State& state) const {
 	return _satisfied(NestedTerm::interpret_subterms(_subterms, state));
 }
 
-std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
+std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_subterms[0] << " " << RelationalFormula::symbol_to_string.at(symbol()) << " " << *_subterms[1];
 	return os;
 }
@@ -210,7 +211,7 @@ VariableIdxVector ActionEffect::computeAffected() const {
 
 std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
-std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
+std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *lhs << " := " << *rhs;
 	return os;
 }
@@ -223,11 +224,12 @@ bool NestedTerm::operator==(const Term& other) const {
 		|| _subterms.size() != derived->_subterms.size()) {
 		return false;
 	}
-	
+
 	for (unsigned i = 0; i < _subterms.size(); ++i) {
-		if (_subterms[i] != derived->_subterms[i]) return false;
+		if ((*_subterms[i]) != (*derived->_subterms[i]))
+			return false;
 	}
-	
+
 	return true;
 }
 
