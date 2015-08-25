@@ -9,6 +9,8 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <aptk2/tools/resources_control.hxx>
 
+#include <utils/logging.hxx>
+#include <utils/loader.hxx>
 #include <heuristics/null_heuristic.hxx>
 #include <heuristics/relaxed_plan.hxx>
 #include <heuristics/hmax.hxx>
@@ -16,11 +18,12 @@
 #include <state.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers.hxx>
+#include <utils/config.hxx>
 #include <problem_info.hxx>
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
 
-//#include <components.hxx>  // This will dinamically point to the right generated file
+#include <components.hxx>  // This will dinamically point to the right generated file
 
 using namespace fs0;
 
@@ -140,7 +143,9 @@ public:
 	template <typename Heuristic>
 	void	evaluate_with( Heuristic& heuristic ) {
 		f = heuristic.evaluate_novelty( state );
+		std::cout << "f as novelty: " << f << std::endl;
 		_is_dead_end = f > heuristic.novelty_bound();
+		std::cout << "Novelty bound: " << heuristic.novelty_bound() << std::endl;
 		num_unsat = heuristic.evaluate_num_unsat_goals( state );
 		SearchStatistics::instance().min_num_goals_sat = std::min( num_unsat, SearchStatistics::instance().min_num_goals_sat);
 		if ( parent != nullptr && num_unsat < parent->num_unsat ) {
@@ -361,20 +366,31 @@ int main(int argc, char** argv) {
 		return res;
 	}
 
+	Logger::init("./logs");
+	Config::init("config.json");
+
+	FINFO("main", "Planner configuration: " << std::endl << Config::instance());
+	FINFO("main", "Generating the problem (" << data_dir << ")... ");
+
+
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
-	Problem problem(data_dir);
+auto data = Loader::loadJSONObject(data_dir + "/problem.json");
+	Problem problem(data);
 
 	std::cout << "Calling generate()" << std::endl;
-	generate(data_dir, problem);
+	generate(data, data_dir, problem);
 
 	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
+
+reportProblemStats(problem);
+	problem.analyzeVariablesRelevance();
+
 	std::cout << "Creating Search_Problem instance" << std::endl;
 	FwdSearchProblem search_prob(problem);
 
 
 	std::cout << "Done!" << std::endl;
-	reportProblemStats(problem);
 
 	// Instantiate the engine
 	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), max_novelty, use_state_vars, use_goal, use_actions, timeout, out_dir);

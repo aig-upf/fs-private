@@ -1,0 +1,24 @@
+{
+	"search_time" : 9.00001e-05,
+	"generated" : 5,
+	"expanded" : 2,
+	"eval_per_second" : 55555.476562,
+	"solved" : true,
+	"valid" : true,
+	"num_goals" : 1,
+	"max_num_goals_sat" : 1,
+	"num_features" : 3,
+	"novelty_histogram" : {
+		"0": {
+				"0" : 0, 
+				"1" : 1, 
+				"2" : 0
+		},
+		"1": {
+				"0" : 0, 
+				"1" : 4, 
+				"2" : 0
+		}
+	},
+	"plan" : ["increment(c1)"]
+}

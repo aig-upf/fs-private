@@ -15,8 +15,7 @@ namespace fs0 {
     NoveltyFromPreconditionsAdapter( const GenericState& s, const NoveltyFromPreconditions& featureMap );
     ~NoveltyFromPreconditionsAdapter();
 
-    void	get_valuation( 	std::vector< aptk::VariableIndex >& varnames,
-          std::vector< aptk::ValueIndex >& values ) const;
+    void	get_valuation( 	std::vector< aptk::VariableIndex >& varnames, std::vector< aptk::ValueIndex >& values ) const;
   protected:
     const GenericState&                 _adapted;
     const NoveltyFromPreconditions&     _featureMap;
