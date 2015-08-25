@@ -82,12 +82,14 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	return true;
 }
 
-void GecodeCSPVariableTranslator::registerNestedTermIndirection( fs::NestedTerm::cptr term, CSPVariableType type, int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables ) {
-	TranslationKey key( term, type );
-	FDEBUG( "translation", "Registering indirection for nested term: " << *term << ( type == CSPVariableType::Output ? "'" : "" ) << " with domain [" << 0 << ", " << max_idx << "]");
+void GecodeCSPVariableTranslator::registerNestedTermIndirection( fs::NestedTerm::cptr term,  int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables ) {
+	TranslationKey key( term, CSPVariableType::Input ); // Index variables always considered input variables by default
+	FDEBUG( "translation", "Registering indirection for nested term: " << *term << " with domain [" << 0 << ", " << max_idx << "]");
+	auto it = _pointer_table.find(key);
+	if (it != _pointer_table.end()) return; // We already registered an index variable for this particular nested term
+
 	variables << Helper::createTemporaryIntVariable( csp, 0, max_idx );
-	auto res = _pointer_table.insert(std::make_pair(key, variables.size()-1));
-	assert(res.second); // MRJ: Registering more than one pointer auxiliary var for the same term is a bug
+	_pointer_table.insert(std::make_pair(key, variables.size()-1));
 }
 
 const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
@@ -110,9 +112,9 @@ Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vect
 	return variables;
 }
 
-Gecode::IntVar GecodeCSPVariableTranslator::resolveNestedTermIndirection( fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp ) const {
-	auto it = _pointer_table.find(TranslationKey( term, type ));
-	FDEBUG( "heuristic", "Resolving indirection for nested term: " << *term << ( type == CSPVariableType::Output ? "'" : "" ));
+Gecode::IntVar GecodeCSPVariableTranslator::resolveNestedTermIndirection( fs::Term::cptr term, const SimpleCSP& csp ) const {
+	auto it = _pointer_table.find(TranslationKey( term, CSPVariableType::Input ));  // Index variables always considered input variables by default
+	FDEBUG( "heuristic", "Resolving indirection for nested term: " << *term);
 	if ( it == _pointer_table.end() ) throw std::runtime_error( "Could not resolve indirection for the term provided" );
 	return csp._X[it->second];
 }

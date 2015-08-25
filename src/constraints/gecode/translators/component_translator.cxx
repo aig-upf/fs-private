@@ -92,7 +92,7 @@ void FluentNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr
 	}
 	
 	// We also register the pointer variable in the csp
-	translator.registerNestedTermIndirection(fluent, type, objects.size()-1, csp, variables);
+	translator.registerNestedTermIndirection(fluent, objects.size()-1, csp, variables);
 	
 	// Don't forget to register the "standard" temporary variable for the term root.
 	translator.registerNestedTerm(nested, type, csp, variables);
@@ -210,7 +210,7 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 
 	// Post the extensional constraint relating the value of the index variables
 	const Gecode::IntVar& index_variable = translator.resolveVariable(subterms[0], CSPVariableType::Input, csp);
-	Gecode::IntVar indexed_index = translator.resolveNestedTermIndirection( fluent, type, csp );
+	Gecode::IntVar indexed_index = translator.resolveNestedTermIndirection( fluent, csp );
 	IntVarArgs extensional_constraint_variables;
 	extensional_constraint_variables << index_variable << indexed_index;
 	Gecode::extensional(csp, extensional_constraint_variables, correspondence);

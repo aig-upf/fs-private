@@ -65,7 +65,7 @@ public:
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, TypeIdx domain_type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, int min, int max, SimpleCSP& csp, Gecode::IntVarArgs& variables);
 
-	void registerNestedTermIndirection( fs::NestedTerm::cptr, CSPVariableType type, int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables );
+	void registerNestedTermIndirection( fs::NestedTerm::cptr, int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables );
 
 	//! Returns the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
 	const Gecode::IntVar& resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const;
@@ -76,7 +76,7 @@ public:
 	//! Handy helper to resolve a number of variables at the same time
 	Gecode::IntVarArgs resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const;
 
-	Gecode::IntVar resolveNestedTermIndirection( fs::Term::cptr, CSPVariableType type, const SimpleCSP& csp ) const;
+	Gecode::IntVar resolveNestedTermIndirection( fs::Term::cptr, const SimpleCSP& csp ) const;
 
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
