@@ -20,7 +20,7 @@
 #include <action_manager.hxx>
 #include <fwd_search_prob.hxx>
 
-#include <components.hxx>  // This will dinamically point to the right generated file
+//#include <components.hxx>  // This will dinamically point to the right generated file
 
 using namespace fs0;
 
