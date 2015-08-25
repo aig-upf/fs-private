@@ -59,15 +59,17 @@ public:
 
 protected:
 	//! Do the actual registration on the translator. Can be overriden if a particular logic is necessary
-	virtual void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
+	virtual void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const = 0;
 
-	mutable std::map< std::pair<VariableIdx, CSPVariableType>, fs::StateVariable* >		_implicit_ref_vars;
+	mutable std::map< std::pair<VariableIdx, CSPVariableType>, fs::StateVariable* > _implicit_ref_vars;
 };
 
 class StaticNestedTermTranslator : public NestedTermTranslator {
 public:
 	StaticNestedTermTranslator() {}
 
+	void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
+	
 	void registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const;
 };
 
@@ -75,6 +77,8 @@ class FluentNestedTermTranslator : public NestedTermTranslator {
 public:
 	FluentNestedTermTranslator() {}
 
+	void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const;
+	
 	void registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const;
 };
 

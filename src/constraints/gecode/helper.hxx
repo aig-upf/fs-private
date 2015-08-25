@@ -28,6 +28,7 @@ public:
 	//! Creates a CSP variable constraining its domain based on the given domain type
 	static Gecode::IntVar createTemporaryVariable(Gecode::Space& csp, TypeIdx typeId);
 	
+	//! Creates a temporary int variable within the given bounds.
 	static Gecode::IntVar createTemporaryIntVariable(Gecode::Space& csp, int min, int max);
 	
 	//! Constrains the given CSP variable to have values in the given domain

@@ -98,8 +98,7 @@ GecodeCSPVariableTranslator::registerNestedTermIndirection( fs::NestedTerm::cptr
 	auto it = _pointer_table.find(key);
 	// MRJ: Registering more than one pointer auxiliary var for the same term is a bug
 	if ( it != _pointer_table.end() ) throw IndirectionUniquenessViolation( "Attempting to bind more than one pointer auxiliary variable to the same term" );
-	Gecode::IntVar pointer = Helper::createTemporaryIntVariable( csp, 0, max_idx );
-	variables << pointer;
+	variables << Helper::createTemporaryIntVariable( csp, 0, max_idx );
 	_pointer_table.insert( it, std::make_pair( key, variables.size()-1 ));
 }
 

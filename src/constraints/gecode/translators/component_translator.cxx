@@ -49,7 +49,6 @@ NestedTermTranslator::~NestedTermTranslator() {
 }
 
 void NestedTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	auto nested = dynamic_cast<fs::NestedTerm::cptr>(term);
 	assert(nested);
 	// If the subterm occurs somewhere else in the action / formula, it might have already been parsed and registered,
@@ -58,38 +57,44 @@ void NestedTermTranslator::registerVariables(const fs::Term::cptr term, CSPVaria
 	
 	FDEBUG("translation", "Registering nested term " << *nested);
 	
-	const auto& signature = info.getFunctionData(nested->getSymbolId()).getSignature();
-	// MRJ: Why are we getting this vector? Did I eliminate code I shouldn't?
-	const std::vector<fs::Term::cptr>& subterms = nested->getSubterms();
-
 	// We first parse and register the subterms recursively. The type of subterm variables is always input
-	GecodeCSPHandler::registerTermVariables(subterms, CSPVariableType::Input, csp, translator, variables);
+	GecodeCSPHandler::registerTermVariables(nested->getSubterms(), CSPVariableType::Input, csp, translator, variables);
 
-	// MRJ: TODO: Discuss with Guillem how to introduce this into the linguistic type hierarchy
-	fs::FluentHeadedNestedTerm::cptr dyn_nested_fluent = dynamic_cast< fs::FluentHeadedNestedTerm::cptr >( term);
-	if ( dyn_nested_fluent != nullptr ) {
-
-		unsigned count = 0;
-		for (ObjectIdx object:info.getTypeObjects(signature[0])) {
-
-			VariableIdx variable = info.resolveStateVariable(nested->getSymbolId(), {object});
-
-			FDEBUG( "translation", "Registering implicitly referred variable " << info.getVariableName( variable ) << std::endl);
-			if ( _implicit_ref_vars.find( std::make_pair(variable,type) ) == _implicit_ref_vars.end() ) {
-				_implicit_ref_vars.insert( std::make_pair( std::make_pair(variable,type), new StateVariable( variable  ) ) );
-			}
-			translator.registerStateVariable( _implicit_ref_vars[std::make_pair(variable,type)], type, csp, variables );
-			count++;
-		}
-		// MRJ: this registers the pointer variable in the csp
-		FDEBUG( "translation", "Registering pointer variable")
-		translator.registerNestedTermIndirection( dyn_nested_fluent, type, count-1, csp, variables  );
-	}
 	// And now register the CSP variable corresponding to the current term
 	do_root_registration(nested, type, csp, translator, variables);
 }
 
-void NestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const {
+void StaticNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const {
+	translator.registerNestedTerm(nested, type, csp, variables);
+}
+
+void FluentNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) const {
+	auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(nested);
+	assert(fluent != nullptr);
+
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const auto& signature = info.getFunctionData(nested->getSymbolId()).getSignature();
+	
+	if (signature.size() > 1) throw std::runtime_error("Nested subterms of arity > 1 not yet implemented");
+	assert(signature.size() == 1); // Cannot be 0, or we'd have instead a StateVariable term
+	
+	// Now, for a nested fluent such as e.g. 'tile(blank())', we register as involved state variables all state variables
+	// tile(nw), tile(n), ..., etc., where nw, n, etc. are the possible values for state variable 'blank()'.
+	auto objects = info.getTypeObjects(signature[0]);
+	for (ObjectIdx object:objects) {
+		VariableIdx variable = info.resolveStateVariable(nested->getSymbolId(), {object});
+
+		FDEBUG( "translation", "Registering implicitly referred variable " << info.getVariableName( variable ) << std::endl);
+		if ( _implicit_ref_vars.find( std::make_pair(variable,type) ) == _implicit_ref_vars.end() ) {
+			_implicit_ref_vars.insert( std::make_pair( std::make_pair(variable,type), new StateVariable( variable  ) ) );
+		}
+		translator.registerStateVariable( _implicit_ref_vars[std::make_pair(variable,type)], type, csp, variables );
+	}
+	
+	// We also register the pointer variable in the csp
+	translator.registerNestedTermIndirection( fluent, type, objects.size()-1, csp, variables  );
+	
+	// Don't forget to register the "standard" temporary variable for the term root.
 	translator.registerNestedTerm(nested, type, csp, variables);
 }
 
@@ -171,8 +176,6 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 
-	//assert(false); // TODO - REGISTER the full element constraint, with reindexing through an extensional constraint
-
 	auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term);
 	assert(fluent);
 	const auto& signature = info.getFunctionData(fluent->getSymbolId()).getSignature();
@@ -184,23 +187,20 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	GecodeCSPHandler::registerTermConstraints(subterms, type/*CSPVariableType::Input*/, csp, translator);
 
 	assert(subterms.size() == signature.size());
-	if (subterms.size() > 1) throw std::runtime_error("Nested subterms of arity > 1 not yet implemented");
-
-	assert(signature.size() == 1); // Cannot be 0, or we'd have instead a StateVariable term
+	assert(signature.size() == 1); // This was already checked during variable registration time
+	
 	unsigned idx = 0; // element constraints are 0-indexed
 
-	Gecode::IntVarArgs array_variables; // The actual array of variables that will form the element constraint
+	Gecode::IntVarArgs table; // The actual array of variables that will form the element constraint table
 
 	// The correspondence between the index variable possible values and their 0-indexed position in the element constraint table
 	Gecode::TupleSet correspondence;
 	for (ObjectIdx object:info.getTypeObjects(signature[0])) {
-
 		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), {object});
 
-		FDEBUG( "translation", "Noting correspondence for variable " << info.getVariableName( variable ) << std::endl);
 		auto var = (type == CSPVariableType::Output) ? translator.resolveOutputStateVariable(csp, variable) : translator.resolveInputStateVariable(csp, variable);
-		FDEBUG( "translation", "Planning variable " << variable << " domain is " << var );
-		array_variables << var;
+		FDEBUG("translation", "Noting correspondence for variable " << info.getVariableName( variable ) << ", domain is: " << var << std::endl);
+		table << var;
 
 		correspondence.add(IntArgs(2, object, idx));
 		++idx;
@@ -210,7 +210,7 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 
 	// Post the extensional constraint relating the value of the index variables
 	const Gecode::IntVar& index_variable = translator.resolveVariable(subterms[0], CSPVariableType::Input, csp);
-	Gecode::IntVar indexed_index = translator.resolveNestedTermIndirection( fluent, type, csp ); // MRJ: check NestedTerm variable registration
+	Gecode::IntVar indexed_index = translator.resolveNestedTermIndirection( fluent, type, csp );
 	IntVarArgs extensional_constraint_variables;
 	extensional_constraint_variables << index_variable << indexed_index;
 	Gecode::extensional(csp, extensional_constraint_variables, correspondence);
@@ -218,8 +218,8 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 
 	// Now post the actual element constraint
 	const Gecode::IntVar& element_result = translator.resolveVariable(fluent, type, csp);
-	Gecode::element(csp, array_variables, indexed_index, element_result);
-	FDEBUG("translation", "Fluent-headed nested term gives rise to constraint: " << print::element(array_variables, indexed_index, element_result));
+	Gecode::element(csp, table, indexed_index, element_result);
+	FDEBUG("translation", "Fluent-headed nested term gives rise to constraint: " << print::element(table, indexed_index, element_result));
 }
 
 

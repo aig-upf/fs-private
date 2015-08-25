@@ -127,8 +127,7 @@ protected:
 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
 
 	//! A table keeping track of what term CSP variable points to what output variable (nested fluents)
-	std::unordered_map<TranslationKey, unsigned > 	_pointer_table;
-
+	std::unordered_map<TranslationKey, unsigned > _pointer_table;
 };
 
 

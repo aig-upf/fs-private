@@ -93,26 +93,21 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 
 			// TODO - Handle nested effects possibly affecting different variables.
 			// Do it intelligently: For each tuple in the solution of a first-level element constraint, actually only one variable will be affected!
-			// MRJ : This is my attempt - see mods to GecodeCSPVariableTranslator and NestedTermTranslator to provide with the
-			// infrastructure to make this work
+			// MRJ : This is my attempt - see mods to GecodeCSPVariableTranslator and NestedTermTranslator to provide with the infrastructure to make this work
 			FDEBUG("heuristic", "Affected variables " << effect->affected.size());
 			VariableIdx affected;
-			assert( !effect->affected.empty() );
+			assert(effect->affected.size() > 0);
 			if ( effect->affected.size() == 1 ) {
 				FDEBUG( "heuristic", "Processing regular right-hand side term");
 				affected = effect->affected[0];
-			}
-			else if ( effect->affected.size() > 1 ){
+			} else {
 				FDEBUG( "heuristic", "Processing interesting right-hand side term" );
 				Gecode::IntVar pointer = _translator.resolveNestedTermIndirection( effect->lhs, CSPVariableType::Output, *solution );
 				// MRJ: This will throw an exception of type Int::ValOfUnassignedVar if the variable is not assigned
 				affected = effect->affected[pointer.val()];
 			}
-			else {
-				assert( false ); // MRJ: This shouldn't happen
-			}
 
-			Atom atom(affected, _translator.resolveOutputStateVariableValue(*solution, affected)); // TODO - this could be optimized and factored out of the loop
+			Atom atom(affected, _translator.resolveOutputStateVariableValue(*solution, affected)); // TODO - this might be optimized and factored out of the loop?
 			auto hint = rpg.getInsertionHint(atom);
 			FDEBUG( "heuristic", "New atom: " << atom );
 
