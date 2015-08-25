@@ -1,0 +1,7 @@
+{
+	search_time : 2.60002e-05,
+	generated : 5,
+	expanded : 2,
+	solved : true,
+	plan : ["increment(c1)"]
+}
