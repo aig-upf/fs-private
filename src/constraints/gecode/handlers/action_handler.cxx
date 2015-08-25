@@ -85,31 +85,30 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 
 
 void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData& rpg) const {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	unsigned num_solutions = 0;
 	DFS<SimpleCSP> engine(csp);
-	FDEBUG("heuristic", "Computing supports for action " << _action.getFullName());
+	FFDEBUG("heuristic", "Computing supports for action " << _action.getFullName());
 	while (SimpleCSP* solution = engine.next()) {
+		FFDEBUG("heuristic", std::endl << "Processing action CSP solution: " << *solution);
+		
 		for (ActionEffect::cptr effect : _action.getEffects()) {
-
-			// TODO - Handle nested effects possibly affecting different variables.
-			// Do it intelligently: For each tuple in the solution of a first-level element constraint, actually only one variable will be affected!
-			// MRJ : This is my attempt - see mods to GecodeCSPVariableTranslator and NestedTermTranslator to provide with the infrastructure to make this work
-			FDEBUG("heuristic", "Affected variables " << effect->affected.size());
 			VariableIdx affected;
 			assert(effect->affected.size() > 0);
-			if ( effect->affected.size() == 1 ) {
-				FDEBUG( "heuristic", "Processing regular right-hand side term");
+			
+			if (dynamic_cast<fs::StateVariable::cptr>(effect->lhs)) {
+				assert(effect->affected.size() == 1);
 				affected = effect->affected[0];
-			} else {
-				FDEBUG( "heuristic", "Processing interesting right-hand side term" );
-				Gecode::IntVar pointer = _translator.resolveNestedTermIndirection( effect->lhs, CSPVariableType::Output, *solution );
-				// MRJ: This will throw an exception of type Int::ValOfUnassignedVar if the variable is not assigned
-				affected = effect->affected[pointer.val()];
+			} else { // We necessarily have a nested fluent on the LHS of the effect
+				auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs);
+				assert(fluent && fluent->getSubterms().size() == 1);
+				ObjectIdx index_val = _translator.resolveValue(fluent->getSubterms()[0], CSPVariableType::Input, *solution);
+				affected = info.resolveStateVariable(fluent->getSymbolId(), {index_val});
 			}
 
 			Atom atom(affected, _translator.resolveOutputStateVariableValue(*solution, affected)); // TODO - this might be optimized and factored out of the loop?
 			auto hint = rpg.getInsertionHint(atom);
-			FDEBUG( "heuristic", "New atom: " << atom );
+			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" (" << effect->affected.size() << " affected variables) yields new atom " << atom);
 
 			if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
 				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>();
@@ -139,6 +138,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 	}
 
 	FDEBUG("main", "Solving the Action CSP completely produced " << num_solutions << " solutions"  << std::endl << *this);
+	assert(0);
 }
 
 

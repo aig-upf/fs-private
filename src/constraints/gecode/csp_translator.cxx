@@ -18,15 +18,6 @@ UnregisteredStateVariableError::~UnregisteredStateVariableError() {
 
 }
 
-IndirectionUniquenessViolation::IndirectionUniquenessViolation( const char* what_msg )
-	: std::runtime_error( what_msg ) {}
-
-IndirectionUniquenessViolation::IndirectionUniquenessViolation( const std::string& what_msg )
-	: std::runtime_error( what_msg ) {}
-
-IndirectionUniquenessViolation::~IndirectionUniquenessViolation() {}
-
-
 bool GecodeCSPVariableTranslator::isRegistered(const fs::Term::cptr term, CSPVariableType type) const {
 	TranslationKey key(term, type);
 	return _registered.find(key) != _registered.end();
@@ -91,15 +82,12 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	return true;
 }
 
-void
-GecodeCSPVariableTranslator::registerNestedTermIndirection( fs::NestedTerm::cptr term, CSPVariableType type, int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables ) {
+void GecodeCSPVariableTranslator::registerNestedTermIndirection( fs::NestedTerm::cptr term, CSPVariableType type, int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables ) {
 	TranslationKey key( term, type );
-	FDEBUG( "translation", "Registering indirection for nested term: " << *term << ( type == CSPVariableType::Output ? "'" : "" ));
-	auto it = _pointer_table.find(key);
-	// MRJ: Registering more than one pointer auxiliary var for the same term is a bug
-	if ( it != _pointer_table.end() ) throw IndirectionUniquenessViolation( "Attempting to bind more than one pointer auxiliary variable to the same term" );
+	FDEBUG( "translation", "Registering indirection for nested term: " << *term << ( type == CSPVariableType::Output ? "'" : "" ) << " with domain [" << 0 << ", " << max_idx << "]");
 	variables << Helper::createTemporaryIntVariable( csp, 0, max_idx );
-	_pointer_table.insert( it, std::make_pair( key, variables.size()-1 ));
+	auto res = _pointer_table.insert(std::make_pair(key, variables.size()-1));
+	assert(res.second); // MRJ: Registering more than one pointer auxiliary var for the same term is a bug
 }
 
 const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
@@ -110,6 +98,10 @@ const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cpt
 	return csp._X[it->second];
 }
 
+ObjectIdx GecodeCSPVariableTranslator::resolveValue(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
+	return resolveVariable(term, type, csp).val();
+}
+
 Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const {
 	Gecode::IntVarArgs variables;
 	for (const Term::cptr term:terms) {
@@ -118,9 +110,7 @@ Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vect
 	return variables;
 }
 
-Gecode::IntVar
-GecodeCSPVariableTranslator::resolveNestedTermIndirection( fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp ) const {
-
+Gecode::IntVar GecodeCSPVariableTranslator::resolveNestedTermIndirection( fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp ) const {
 	auto it = _pointer_table.find(TranslationKey( term, type ));
 	FDEBUG( "heuristic", "Resolving indirection for nested term: " << *term << ( type == CSPVariableType::Output ? "'" : "" ));
 	if ( it == _pointer_table.end() ) throw std::runtime_error( "Could not resolve indirection for the term provided" );
@@ -129,13 +119,22 @@ GecodeCSPVariableTranslator::resolveNestedTermIndirection( fs::Term::cptr term, 
 
 
 std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
-	os << "Gecode CSP with variables: " << std::endl;
+	os << "Gecode CSP with " << _registered.size() + _pointer_table.size() << " variables: " << std::endl;
 	for (auto it:_registered) {
 		os << "\t ";
 		os << *(it.first.getTerm());
 		if (it.first.getType() == CSPVariableType::Output) os << "'"; // We simply mark output variables with a "'"
 		os << ": " << csp._X[it.second] << std::endl;
 	}
+	
+	os << std::endl << "Including \"index\" variables for the following terms: " << std::endl;
+	for (auto it:_pointer_table) {
+		os << "\t ";
+		os << *(it.first.getTerm());
+		if (it.first.getType() == CSPVariableType::Output) os << "'"; // We simply mark output variables with a "'"
+		os << ": " << csp._X[it.second] << std::endl;
+	}
+	
 	return os;
 }
 

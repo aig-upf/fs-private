@@ -92,7 +92,7 @@ void FluentNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr
 	}
 	
 	// We also register the pointer variable in the csp
-	translator.registerNestedTermIndirection( fluent, type, objects.size()-1, csp, variables  );
+	translator.registerNestedTermIndirection(fluent, type, objects.size()-1, csp, variables);
 	
 	// Don't forget to register the "standard" temporary variable for the term root.
 	translator.registerNestedTerm(nested, type, csp, variables);

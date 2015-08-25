@@ -35,14 +35,6 @@ public:
 
 };
 
-class IndirectionUniquenessViolation : public std::runtime_error {
-public:
-	IndirectionUniquenessViolation( const char* what_msg );
-	IndirectionUniquenessViolation( const std::string& what_msg );
-
-	virtual ~IndirectionUniquenessViolation();
-};
-
 /**
  * A CSP translator keeps track of the correspondence between Planning variables and CSP variables.
  * To this end, it keeps a mapping of the form <x, t> --> y, where:
@@ -77,6 +69,9 @@ public:
 
 	//! Returns the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
 	const Gecode::IntVar& resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const;
+	
+	//! Returns the value of the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
+	ObjectIdx resolveValue(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const;
 
 	//! Handy helper to resolve a number of variables at the same time
 	Gecode::IntVarArgs resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const;

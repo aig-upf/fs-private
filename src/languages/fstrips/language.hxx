@@ -93,7 +93,10 @@ public:
 	template <typename T>
 	static std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {
 		os << info.getFunctionName(symbol_id) << "(";
-		for (const T* term:subterms) os << *term << ", ";
+		for (unsigned i = 0; i < subterms.size(); ++i) {
+			os << *subterms[i];
+			if (i < subterms.size() - 1) os << ", ";
+		}
 		os << ")";
 		return os;
 	}
