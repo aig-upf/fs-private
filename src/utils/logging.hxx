@@ -60,10 +60,6 @@ public:
 // ************************
 #define FINFO(file, message) fs0::Logger::instance().log("INFO", file) << message << std::endl;
 
-inline std::ostream& getInfoLogStream( const std::string& file ) {
-	return fs0::Logger::instance().log( "INFO", file );
-}
-
 // ************************
 // DEBUG MACRO
 // ************************
@@ -72,10 +68,6 @@ inline std::ostream& getInfoLogStream( const std::string& file ) {
 #else
 #define FDEBUG(file, message)
 #endif
-
-inline std::ostream& getDebugLogStream( const std::string& file ) {
-	return fs0::Logger::instance().log( "DEBUG", file );
-}
 
 
 // ************************
