@@ -29,19 +29,25 @@ using namespace fs0;
 
 // MRJ: Now we define the heuristics
 typedef		RelaxedPlanHeuristic<FwdSearchProblem> RelaxedHeuristic;
-typedef		HMaxHeuristic<FwdSearchProblem> RelaxedMaxHeuristic;
 
 
 // MRJ: As it names indicates, an ensemble of heuristics
 class HeuristicEnsemble {
-public :
+public:
 
-	HeuristicEnsemble( const FwdSearchProblem& problem )
-		: _problem( problem ), _reachability_heuristic( problem ), _max_novelty(0) {
+	const	FwdSearchProblem&									_problem;
+	//RelaxedHeuristic											_reachability_heuristic;
+	std::vector< NoveltyFromPreconditions >						_novelty_heuristic;
+	unsigned													_max_novelty;
+
+	HeuristicEnsemble( const FwdSearchProblem& problem ): 
+		_problem( problem ), _max_novelty(0) {
+		//_problem( problem ), _reachability_heuristic( problem ), _max_novelty(0) {
 		// MRJ: setups the novelty heuristic, this is all it
 		// needs to know
 		_novelty_heuristic.resize( problem.getTask().numGoalConstraints() + 1 );
 		std::cout << "# Novelty evaluators: " << _novelty_heuristic.size() << std::endl;
+		
 
 	}
 
@@ -62,9 +68,12 @@ public :
 		}
 	}
 
+	//NOT USED
+	/*
 	float	evaluate_reachability( const GenericState& s ) {
 		return _reachability_heuristic.evaluate( s );
 	}
+	*/
 
 	unsigned evaluate_novelty( const GenericState& s ) {
 		return _novelty_heuristic[evaluate_num_unsat_goals(s)].evaluate( s );
@@ -76,10 +85,7 @@ public :
 
 	unsigned	novelty_bound() { return _max_novelty; }
 
-	const	FwdSearchProblem&														_problem;
-	RelaxedHeuristic																	_reachability_heuristic;
-	std::vector< NoveltyFromPreconditions >						_novelty_heuristic;
-	unsigned																					_max_novelty;
+
 };
 
 class SearchStatistics {
@@ -103,6 +109,19 @@ class SearchStatistics {
 
 template <typename State>
 class FS0_Node {
+
+public:
+
+	State								state;
+	Action::IdType							action;
+	std::shared_ptr<FS0_Node<State> >				parent;
+	unsigned							novelty;
+	unsigned							g;
+	unsigned							f; // evaluation function
+	bool								_is_dead_end;
+	unsigned							num_unsat;
+
+	
 public:
 
 	typedef State State_Type;
@@ -153,7 +172,7 @@ public:
 			print(std::cout);
 			std::cout << std::endl;
 		}
-		/*
+		/* NOT USED as this is the heuristic function for gbfs(f)
 		h = heuristic.evaluate_reachability( state );
 		unsigned ha = 2;
 		if ( parent != nullptr && h < parent->h ) ha = 1;
@@ -171,18 +190,10 @@ public:
 		if ( f > other.f ) return true;
 		if ( f < other.f ) return false;
 		return g > other.g;
+		
 	}
 
-public:
 
-	State															state;
-	Action::IdType										action;
-	std::shared_ptr<FS0_Node<State> >	parent;
-	unsigned													novelty;
-	unsigned													g;
-	unsigned													f; // evaluation function
-	bool															_is_dead_end;
-	unsigned													num_unsat;
 
 };
 
@@ -212,12 +223,15 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	float total_time = aptk::time_used() - t0;
 
 
+
 	bool valid = checkPlanCorrect(plan);
 	if ( solved ) {
 		PlanPrinter::printPlan(plan, problemInfo, out);
 		PlanPrinter::printPlan(plan, problemInfo, plan_out);
+	
 	}
 
+	out << "Domain: " << problemInfo.getDomainName() << std::endl;
 	out << "Total time: " << total_time << std::endl;
 	out << "Nodes generated during search: " << engine.generated << std::endl;
 	out << "Nodes expanded during search: " << engine.expanded << std::endl;
@@ -311,8 +325,9 @@ void reportProblemStats(const Problem& problem) {
 
 namespace po = boost::program_options;
 
-int parse_options(	int argc, char** argv, int& timeout, std::string& data_dir, std::string& out_dir, int& max_novelty,
-										bool& use_state_vars, bool& use_goal, bool& use_actions ) {
+int parse_options(int argc, char** argv, int& timeout, std::string& data_dir, std::string& out_dir, 
+		  int& max_novelty, bool& use_state_vars, bool& use_goal, bool& use_actions ) {
+  
 	po::options_description description("Allowed options");
 	description.add_options()
 		("help,h", "Display this help message")
@@ -328,7 +343,7 @@ int parse_options(	int argc, char** argv, int& timeout, std::string& data_dir, s
 	pos.add("timeout", 1)
 	   .add("data", 1)
 	   .add("out", 1)
-		 .add("max_novelty", 1);
+	   .add("max_novelty", 1);
 
 	po::variables_map vm;
 	try {
@@ -362,9 +377,9 @@ int main(int argc, char** argv) {
 	int timeout, max_novelty; std::string data_dir; std::string out_dir;
 	bool use_state_vars, use_goal, use_actions;
 	int res = parse_options(argc, argv, timeout, data_dir, out_dir, max_novelty, use_state_vars, use_goal, use_actions);
-	if (res != 0) {
+	if (res != 0) 
 		return res;
-	}
+	
 
 	Logger::init("./logs");
 	Config::init("config.json");
@@ -374,7 +389,7 @@ int main(int argc, char** argv) {
 
 
 	std::cout << "Generating the problem (" << data_dir << ")... " << std::endl;
-auto data = Loader::loadJSONObject(data_dir + "/problem.json");
+	auto data = Loader::loadJSONObject(data_dir + "/problem.json");
 	Problem problem(data);
 
 	std::cout << "Calling generate()" << std::endl;
@@ -383,7 +398,7 @@ auto data = Loader::loadJSONObject(data_dir + "/problem.json");
 	std::cout << "Setting current problem to problem" << std::endl;
 	Problem::setCurrentProblem(problem);
 
-reportProblemStats(problem);
+	reportProblemStats(problem);
 	problem.analyzeVariablesRelevance();
 
 	std::cout << "Creating Search_Problem instance" << std::endl;

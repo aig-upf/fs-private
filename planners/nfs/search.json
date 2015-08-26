@@ -1,8 +1,8 @@
 {
-	"search_time" : 9.00001e-05,
+	"search_time" : 5.59997e-05,
 	"generated" : 5,
 	"expanded" : 2,
-	"eval_per_second" : 55555.476562,
+	"eval_per_second" : 89286.117188,
 	"solved" : true,
 	"valid" : true,
 	"num_goals" : 1,
@@ -11,13 +11,11 @@
 	"novelty_histogram" : {
 		"0": {
 				"0" : 0, 
-				"1" : 1, 
-				"2" : 0
+				"1" : 1
 		},
 		"1": {
 				"0" : 0, 
-				"1" : 4, 
-				"2" : 0
+				"1" : 4
 		}
 	},
 	"plan" : ["increment(c1)"]
