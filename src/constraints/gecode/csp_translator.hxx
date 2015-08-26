@@ -2,7 +2,7 @@
 #pragma once
 
 #include <unordered_map>
-
+#include <unordered_set>
 
 #include <fs0_types.hxx>
 #include <problem_info.hxx>
@@ -55,6 +55,13 @@ public:
 
 	//! Returns true iff the given term has already an associated CSP variable
 	bool isRegistered(const fs::Term::cptr term, CSPVariableType type) const;
+	
+	//! Returns true iff the constraints that correspond to the term / type have already been posted
+	bool isPosted(const fs::Term::cptr term, CSPVariableType type) const;
+	
+	//! Marks the given pair of term / type as with its corresponding constraint having been posted
+	void setPosted(const fs::Term::cptr term, CSPVariableType type);
+	
 
 	//! Register the given term (under the give role/type) by creating a corresponding CSP variable.
 	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)
@@ -113,6 +120,9 @@ public:
 protected:
 	//! A map mapping terms that have already been processed (under a certain role, e.g. input/output) to the ID of their corresponding CSP variable
 	std::unordered_map<TranslationKey, unsigned> _registered;
+	
+	//! A set marking all terms whose corresponding constraints have already been posted.
+	std::unordered_set<TranslationKey> _posted;
 
 	//! Some data structures to keep track of all registered state variables, so that we can update their domains and parse their values efficiently.
 	//! In particular, these maps the index of state variables that have been registered under different input/output roles to

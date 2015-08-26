@@ -19,8 +19,16 @@ UnregisteredStateVariableError::~UnregisteredStateVariableError() {
 }
 
 bool GecodeCSPVariableTranslator::isRegistered(const fs::Term::cptr term, CSPVariableType type) const {
-	TranslationKey key(term, type);
-	return _registered.find(key) != _registered.end();
+	return _registered.find(TranslationKey(term, type)) != _registered.end();
+}
+
+bool GecodeCSPVariableTranslator::isPosted(const fs::Term::cptr term, CSPVariableType type) const {
+	return _posted.find(TranslationKey(term, type)) != _posted.end();
+}
+
+void GecodeCSPVariableTranslator::setPosted(const fs::Term::cptr term, CSPVariableType type) {
+	auto res = _posted.insert(TranslationKey(term, type));
+	assert(res.second); // If the element had already been posted, there is some bug.
 }
 
 bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant, SimpleCSP& csp, Gecode::IntVarArgs& variables) {

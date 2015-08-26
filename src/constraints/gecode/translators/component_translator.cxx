@@ -104,9 +104,14 @@ void ArithmeticTermTranslator::do_root_registration(const fs::NestedTerm::cptr n
 	translator.registerNestedTerm(nested, type, bounds.first, bounds.second, csp, variables);
 }
 
-void ArithmeticTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
+void ArithmeticTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
 	auto addition = dynamic_cast<fs::AdditionTerm::cptr>(term);
 	assert(addition);
+	
+	// If the subterm occurs somewhere else in the action / formula, its constraints might have already been posted
+	if (translator.isPosted(term, type)) return;
+	
+	FDEBUG("translation", "Registering constraints for arithmetic term " << *term << (type == CSPVariableType::Output ? "'" : ""));
 
 	// First we register recursively the constraints of the subterms
 	GecodeCSPHandler::registerTermConstraints(addition->getSubterms(), CSPVariableType::Input, csp, translator);
@@ -115,6 +120,8 @@ void ArithmeticTermTranslator::registerConstraints(const fs::Term::cptr term, CS
 	const Gecode::IntVar& result = translator.resolveVariable(addition, CSPVariableType::Input, csp);
 	Gecode::IntVarArgs operands = translator.resolveVariables(addition->getSubterms(), CSPVariableType::Input, csp);
 	post(csp, operands, result);
+	
+	translator.setPosted(term, type); // Mark the constraints as posted
 }
 
 
@@ -146,11 +153,14 @@ Gecode::IntArgs MultiplicationTermTranslator::getLinearCoefficients() const {
 }
 
 
-void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
+void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
 	auto stat = dynamic_cast<fs::StaticHeadedNestedTerm::cptr>(term);
 	assert(stat);
+	
+	// If the subterm occurs somewhere else in the action / formula, its constraints might have already been posted
+	if (translator.isPosted(term, type)) return;
 
-	FDEBUG("translation", "Registering constraints for static nested term " << *stat);
+	FDEBUG("translation", "Registering constraints for static nested term " << *stat << (type == CSPVariableType::Output ? "'" : ""));
 
 	// First we register recursively the constraints of the subterms
 	GecodeCSPHandler::registerTermConstraints(stat->getSubterms(), CSPVariableType::Input, csp, translator);
@@ -159,7 +169,6 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	// We have registered a termporary variable Z for the whole term, plus temporaries Z_i accounting for each subterm t_i
 	// Now we need to post an extensional constraint on all temporary variables <Z_1, Z_2, ..., Z_n, Z> such that
 	// the tuples <z_1, ..., z_n, z> satisfying the constraints are exactly those such that z = s(z_1, ..., z_n)
-	FDEBUG("translation", "Creating extensional constraint:");
 	
 	// First compile the variables in the right order (order matters, must be the same than in the tupleset):
 	Gecode::IntVarArgs variables = translator.resolveVariables(stat->getSubterms(), CSPVariableType::Input, csp);
@@ -167,24 +176,30 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 
 	// Now compile the tupleset
 	Gecode::TupleSet extension = Helper::extensionalize(stat);
-	FDEBUG("translation", print::extensional(variables, extension));
 
 	// And finally post the constraint
 	Gecode::extensional(csp, variables, extension);
+	
+	FDEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
+	
+	translator.setPosted(term, type); // Mark the constraints as posted
 }
 
-void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
+void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-
 	auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term);
 	assert(fluent);
+	
+	// If the subterm occurs somewhere else in the action / formula, its constraints might have already been posted
+	if (translator.isPosted(term, type)) return;
+	
 	const auto& signature = info.getFunctionData(fluent->getSymbolId()).getSignature();
 	const std::vector<fs::Term::cptr>& subterms = fluent->getSubterms();
 
-	FDEBUG("translation", "Registering constraints for fluent nested term " << *fluent);
+	FDEBUG("translation", "Registering constraints for fluent nested term " << *fluent << (type == CSPVariableType::Output ? "'" : ""));
 
 	// First we register recursively the constraints of the subterms - subterms' constraint will always have input type
-	GecodeCSPHandler::registerTermConstraints(subterms, type/*CSPVariableType::Input*/, csp, translator);
+	GecodeCSPHandler::registerTermConstraints(subterms, CSPVariableType::Input, csp, translator);
 
 	assert(subterms.size() == signature.size());
 	assert(signature.size() == 1); // This was already checked during variable registration time
@@ -220,6 +235,8 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	const Gecode::IntVar& element_result = translator.resolveVariable(fluent, type, csp);
 	Gecode::element(csp, table, indexed_index, element_result);
 	FDEBUG("translation", "Fluent-headed nested term gives rise to constraint: " << print::element(table, indexed_index, element_result));
+	
+	translator.setPosted(term, type); // Mark the constraints as posted
 }
 
 
@@ -231,14 +248,14 @@ void AtomicFormulaTranslator::registerVariables(const fs::AtomicFormula::cptr fo
 	}
 }
 
-void AtomicFormulaTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
+void AtomicFormulaTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
 	// We simply need to recursively register the constraints of each subterm
 	for (const Term::cptr subterm:formula->getSubterms()) {
 		GecodeCSPHandler::registerTermConstraints(subterm, CSPVariableType::Input, csp, translator);
 	}
 }
 
-void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
+void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
 	auto condition = dynamic_cast<fs::RelationalFormula::cptr>(formula);
 	assert(condition);
 
@@ -251,7 +268,7 @@ void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula::c
 	Gecode::rel(csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
 }
 
-void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
+void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
 	auto alldiff = dynamic_cast<fs::AlldiffFormula::cptr>(formula);
 	assert(alldiff);
 
@@ -262,7 +279,7 @@ void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr 
 	Gecode::distinct(csp, variables, Gecode::ICL_DOM);
 }
 
-void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) const {
+void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
 	auto sum = dynamic_cast<fs::SumFormula::cptr>(formula);
 	assert(sum);
 

@@ -32,13 +32,13 @@ void GecodeCSPHandler::registerFormulaVariables(const std::vector<fs::AtomicForm
 }
 
 
-void GecodeCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) {
+void GecodeCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerConstraints(term, type, csp, translator);
 }
 
-void GecodeCSPHandler::registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator) {
+void GecodeCSPHandler::registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) {
 	for (const auto term:terms) registerTermConstraints(term, type,  csp, translator);
 }
 
