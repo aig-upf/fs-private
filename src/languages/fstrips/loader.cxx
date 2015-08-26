@@ -31,13 +31,15 @@ TermSchema::cptr Loader::parseTerm(const rapidjson::Value& tree, const ProblemIn
 	
 	if (term_type == "constant") {
 		return new ConstantSchema(tree["value"].GetInt());
+	} else if (term_type == "int_constant") {
+		return new IntConstantSchema(tree["value"].GetInt());
 	} else if (term_type == "parameter") {
-		return new ActionSchemaParameter(tree["position"].GetInt());
+		return new ActionSchemaParameter(tree["position"].GetInt(), tree["name"].GetString());
 	} else if (term_type == "nested") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<TermSchema::cptr> subterms = parseTermList(tree["subterms"], info);
 		
-		if (BuiltinTermFactory::isBuiltinTerm(symbol)) return new BuiltinNestedTermSchema(symbol, subterms);
+		if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return new ArithmeticTermSchema(symbol, subterms);
 		else return new NestedTermSchema(info.getFunctionId(symbol), subterms);
 		
 	} else throw std::runtime_error("Unknown node type " + term_type);

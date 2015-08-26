@@ -36,7 +36,7 @@ std::ostream& ActionSchema::print(std::ostream& os, const fs0::ProblemInfo& info
 GroundAction* ActionSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	std::vector<AtomicFormula::cptr> conditions;
 	for (const AtomicFormulaSchema::cptr condition:_conditions) {
-		AtomicFormula::cptr processed = condition->process(binding, info);
+		AtomicFormula::cptr processed = condition->process(_signature, binding, info);
 		
 		// Static checks
 		if (processed->is_tautology()) { // No need to add the condition, which is always true
@@ -53,7 +53,7 @@ GroundAction* ActionSchema::process(const ObjectIdxVector& binding, const Proble
 	
 	std::vector<ActionEffect::cptr> effects;
 	for (const ActionEffectSchema::cptr effect:_effects) {
-		effects.push_back(effect->process(binding, info));
+		effects.push_back(effect->process(_signature, binding, info));
 	}
 	
 	return new GroundAction(this, binding, conditions, effects);

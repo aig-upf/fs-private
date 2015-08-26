@@ -91,7 +91,7 @@ std::vector<AtomicFormula::cptr> Loader::loadGroundedConditions(const rapidjson:
 	std::vector<AtomicFormula::cptr> processed;
 	std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(data["conditions"], problem.getProblemInfo());
 	for (const AtomicFormulaSchema::cptr condition:conditions) {
-		processed.push_back(condition->process({}, problem.getProblemInfo())); // The conditions are by definition already grounded, thus we need no binding
+		processed.push_back(condition->process({}, {}, problem.getProblemInfo())); // The conditions are by definition already grounded, thus we need no binding
 		delete condition;
 	}
 	return processed;

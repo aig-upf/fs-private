@@ -11,10 +11,10 @@
 namespace fs0 { namespace language { namespace fstrips {
 
 
-void process_subterms(const ObjectIdxVector& binding, const ProblemInfo& info, const std::vector<TermSchema::cptr>& subterms, std::vector<const Term*>& processed, std::vector<ObjectIdx>& constants) {
+void process_subterms(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info, const std::vector<TermSchema::cptr>& subterms, std::vector<const Term*>& processed, std::vector<ObjectIdx>& constants) {
 	assert(processed.empty() && constants.empty());
 	for (const TermSchema* unprocessed_subterm:subterms) {
-		const Term* processed_subterm = unprocessed_subterm->process(binding, info);
+		const Term* processed_subterm = unprocessed_subterm->process(signature, binding, info);
 		processed.push_back(processed_subterm);
 		
 		if (const Constant* constant = dynamic_cast<const Constant*>(processed_subterm)) {
@@ -30,17 +30,17 @@ std::ostream& TermSchema::print(std::ostream& os, const fs0::ProblemInfo& info) 
 	return os;
 }
 
-Term::cptr NestedTermSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr NestedTermSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	std::vector<const Term*> st;
 	std::vector<ObjectIdx> constant_values;
-	process_subterms(binding, info, _subterms, st, constant_values);
+	process_subterms(signature, binding, info, _subterms, st, constant_values);
 	
 	// We process the 4 different possible cases separately:
 	const auto& function = info.getFunctionData(_symbol_id);
 	if (function.isStatic() && constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:st) delete ptr;
 		auto value = function.getFunction()(constant_values);
-		return new Constant(value);
+		return info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
 	}
 	else if (function.isStatic() && constant_values.size() != _subterms.size()) { // We have a statically-headed nested term
 		return new UserDefinedStaticTerm(_symbol_id, st);
@@ -60,51 +60,60 @@ std::ostream& NestedTermSchema::print(std::ostream& os, const fs0::ProblemInfo& 
 	return NestedTerm::printFunction(os, info, _symbol_id, _subterms);
 }
 
-Term::cptr BuiltinNestedTermSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr ArithmeticTermSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	std::vector<const Term*> st;
 	std::vector<ObjectIdx> constant_values;
-	process_subterms(binding, info, _subterms, st, constant_values);
+	process_subterms(signature, binding, info, _subterms, st, constant_values);
 	
-	auto processed = BuiltinTermFactory::create(_symbol, st);
+	auto processed = ArithmeticTermFactory::create(_symbol, st);
 	if (constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		auto value = processed->interpret({});
 		delete processed;
-		return new Constant(value);
+		return new IntConstant(value); // Arithmetic terms necessarily involve integer subterms
 	}
 	else return processed;
 }
 
 
-std::ostream& BuiltinNestedTermSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& ArithmeticTermSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_subterms[0] << " " << _symbol << " " << *_subterms[1];
 	return os;
 }
 
-Term::cptr ActionSchemaParameter::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr ActionSchemaParameter::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	assert(_position < binding.size());
-	return new Constant(binding.at(_position));
+	auto value = binding.at(_position);
+	return info.isBoundedType(signature[_position]) ? new IntConstant(value) : new Constant(value);
 }
 
 std::ostream& ActionSchemaParameter::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << "?" << _position;
+	os << _name;
 	return os;
 }
 
-Term::cptr ConstantSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr ConstantSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	return new Constant(_value);
 }
 
 std::ostream& ConstantSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << info.getCustomObjectName(_value); // We are sure that this is a custom object, otherwise the IntConstantSchema::print() would be executed
+	return os;
+}
+
+Term::cptr IntConstantSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+	return new IntConstant(_value);
+}
+
+std::ostream& IntConstantSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << _value;
 	return os;
 }
 
-
-AtomicFormula::cptr AtomicFormulaSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
+AtomicFormula::cptr AtomicFormulaSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	// Process the subterms first
 	std::vector<const Term*> processed_subterms;
 	std::vector<ObjectIdx> constant_values;
-	process_subterms(binding, info, _subterms, processed_subterms, constant_values);
+	process_subterms(signature, binding, info, _subterms, processed_subterms, constant_values);
 	
 	// Create the corresponding relational or external formula object, according to the symbol
 	AtomicFormula::cptr processed = LogicalComponentRegistry::instance().instantiate_formula(_symbol, processed_subterms);
@@ -135,8 +144,8 @@ std::ostream& AtomicFormulaSchema::print(std::ostream& os, const fs0::ProblemInf
 }
 
 
-ActionEffect::cptr ActionEffectSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
-	return new ActionEffect(lhs->process(binding, info), rhs->process(binding, info));
+ActionEffect::cptr ActionEffectSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+	return new ActionEffect(lhs->process(signature, binding, info), rhs->process(signature, binding, info));
 }
 
 std::ostream& ActionEffectSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }

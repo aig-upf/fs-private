@@ -227,7 +227,7 @@ class ParameterExpression(Expression):
         super().__init__(name)
 
     def dump(self, objects, parameters):
-        return dict(type='parameter', position=parameters[self.symbol])
+        return dict(type='parameter', position=parameters[self.symbol], name=self.symbol)
 
 
 class ObjectExpression(Expression):
@@ -237,7 +237,7 @@ class ObjectExpression(Expression):
 
 class NumericExpression(Expression):
     def dump(self, objects, parameters):
-        return dict(type='constant', value=int(self.symbol))
+        return dict(type='int_constant', value=int(self.symbol))
 
 
 _NEGATED_SYMBOLS = {"=": "!=", "<": ">=", "<=": ">", ">": "<=", ">=": "<"}

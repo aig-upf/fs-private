@@ -21,7 +21,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	virtual Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const = 0;
+	virtual Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const = 0;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const TermSchema& o) { return o.print(os); }
@@ -51,7 +51,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -64,36 +64,36 @@ protected:
 	std::vector<TermSchema::cptr> _subterms;
 };
 
-class BuiltinNestedTermSchema : public TermSchema {
+class ArithmeticTermSchema : public TermSchema {
 public:
-	BuiltinNestedTermSchema(const std::string& symbol, const std::vector<TermSchema::cptr>& subterms)
+	ArithmeticTermSchema(const std::string& symbol, const std::vector<TermSchema::cptr>& subterms)
 		: _symbol(symbol), _subterms(subterms)
 	{
 		assert(subterms.size() == 2);
 	}
 	
-	virtual ~BuiltinNestedTermSchema() {
+	virtual ~ArithmeticTermSchema() {
 		for (TermSchema::cptr term:_subterms) delete term;
 	}
 	
-	BuiltinNestedTermSchema(const BuiltinNestedTermSchema& term)
+	ArithmeticTermSchema(const ArithmeticTermSchema& term)
 		: _symbol(term._symbol) {
 		for (TermSchema::cptr subterm:term._subterms) {
 			_subterms.push_back(subterm->clone());
 		}
 	}
 	
-	BuiltinNestedTermSchema* clone() const { return new BuiltinNestedTermSchema(*this); }
+	ArithmeticTermSchema* clone() const { return new ArithmeticTermSchema(*this); }
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
 	
 protected:
-	//! The ID of the function or predicate symbol, e.g. in the state variable loc(A), the id of 'loc'
+	//! The name of the function or predicate symbol, e.g. in the term a + b, the string '+'
 	std::string _symbol;
 	
 	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
@@ -101,16 +101,16 @@ protected:
 };
 
 
-//! A state variable whose value depends on a certain binding of values to parameters, e.g. parameters in an action schema.
+//! A constant which is derived from the parameter of an action schema
 class ActionSchemaParameter : public TermSchema {
 public:
-	ActionSchemaParameter(unsigned position) : _position(position) {}
+	ActionSchemaParameter(unsigned position, const std::string& name) : _position(position), _name(name) {}
 	
 	ActionSchemaParameter* clone() const { return new ActionSchemaParameter(*this); }
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -118,6 +118,9 @@ public:
 protected:
 	//! The position of the parameter within the ordered set of action parameters
 	unsigned _position;
+	
+	//! The name of the parameter
+	std::string _name;
 };
 
 //! A simple constant
@@ -129,7 +132,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -137,6 +140,20 @@ public:
 protected:
 	//! The actual value of the constant
 	ObjectIdx _value;
+};
+
+class IntConstantSchema : public ConstantSchema {
+public:
+	IntConstantSchema(ObjectIdx value)  : ConstantSchema(value) {}
+	
+	IntConstantSchema* clone() const { return new IntConstantSchema(*this); }
+	
+	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
+	//! and binding action parameters to concrete language constants.
+	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
+
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
 };
 
 
@@ -150,7 +167,7 @@ public:
 		for (const auto ptr:_subterms) delete ptr;
 	}
 	
-	virtual AtomicFormula::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	virtual AtomicFormula::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const AtomicFormulaSchema& o) { return o.print(os); }
@@ -175,7 +192,7 @@ public:
 		delete lhs; delete rhs;
 	}
 	
-	ActionEffect::cptr process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	ActionEffect::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionEffectSchema& o) { return o.print(os); }

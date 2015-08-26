@@ -8,7 +8,7 @@
 namespace fs0 { namespace language { namespace fstrips {
 
 
-StaticHeadedNestedTerm::cptr BuiltinTermFactory::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
+StaticHeadedNestedTerm::cptr ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
 	if (symbol == "+")      return new AdditionTerm(subterms);
 	else if (symbol == "-") return new SubtractionTerm(subterms);
 	else if (symbol == "*") return new MultiplicationTerm(subterms);

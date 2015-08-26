@@ -274,7 +274,7 @@ protected:
 	ObjectIdx _value;
 };
 
-/*
+
 //! An integer constant
 class IntConstant : public Constant {
 public:
@@ -289,7 +289,6 @@ public:
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 };
-*/
 
 
 //! An atomic formula, implicitly understood to be static (fluent formulae are considered terms with Boolean codomain)

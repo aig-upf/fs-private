@@ -7,7 +7,7 @@ namespace fs0 { class State; }
 
 namespace fs0 { namespace language { namespace fstrips {
 
-class BuiltinTermFactory {
+class ArithmeticTermFactory {
 public:
 	static StaticHeadedNestedTerm::cptr create(const std::string& symbol, const std::vector<const Term*>& subterms);
 	
