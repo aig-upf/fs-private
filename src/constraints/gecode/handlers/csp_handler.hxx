@@ -31,7 +31,8 @@ public:
 	virtual std::ostream& print(std::ostream& os) const {
 		return _translator.print(os, _base_csp);
 	}
-
+	
+	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 
 	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
 	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
@@ -40,7 +41,6 @@ public:
 	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, const GecodeCSPVariableTranslator& translator);
 
 protected:
-
 	//! The base Gecode CSP
 	SimpleCSP _base_csp;
 
@@ -103,8 +103,6 @@ public:
 	const GroundAction& getAction() const { return _action; }
 
 	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData& rpg) const;
-
-	void print_csp( std::ostream& os, SimpleCSP* csp ) const;
 
 protected:
 	const GroundAction& _action;

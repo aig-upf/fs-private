@@ -3,6 +3,7 @@
 #include <heuristics/rpg_data.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <utils/logging.hxx>
+#include <utils/printers/gecode.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -27,11 +28,7 @@ void GecodeActionManager::process(unsigned actionIdx, const RelaxedState& layer,
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 
 	if (!locallyConsistent) {
-		FDEBUG("main", "The action CSP is locally inconsistent");
-		#ifdef FS0_DEBUG
-		// MRJ: So we can check what planning variables' domains became empty
-		_handler->print_csp( getDebugLogStream("main"), csp );
-		#endif
+		FDEBUG("main", "The action CSP is locally inconsistent: " << print::csp(_handler->getTranslator(), *csp));
 	} else {
 		if (true) {  // Solve the CSP completely
 			_handler->compute_support(csp, actionIdx, rpg);

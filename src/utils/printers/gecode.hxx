@@ -6,6 +6,10 @@
 #include <ostream>
 
 
+namespace fs0 { namespace gecode { 
+	class GecodeCSPVariableTranslator; class SimpleCSP;
+}}
+
 namespace fs0 { namespace print {
 
 //! Prints the full extension of a Gecode tupleset
@@ -52,6 +56,18 @@ class element {
 		element(const Gecode::IntVarArgs& table, const Gecode::IntVar& index, const Gecode::IntVar& output) : _table(table), _index(index), _output(output) {}
 		
 		friend std::ostream& operator<<(std::ostream &os, const element& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
+class csp {
+	protected:
+		const gecode::GecodeCSPVariableTranslator& _translator;
+		const gecode::SimpleCSP& _csp;
+		
+	public:
+		csp(const gecode::GecodeCSPVariableTranslator& translator, const gecode::SimpleCSP& csp) : _translator(translator), _csp(csp) {}
+		
+		friend std::ostream& operator<<(std::ostream &os, const csp& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
 

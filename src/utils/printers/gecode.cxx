@@ -1,5 +1,6 @@
 
 #include <utils/printers/gecode.hxx>
+#include <constraints/gecode/csp_translator.hxx>
 
 namespace fs0 { namespace print {
 
@@ -37,6 +38,10 @@ std::ostream& element::print(std::ostream& os) const {
 	for (auto var:_table) os << var << std::endl;
 	os << "}" << std::endl;
 	return os;
+}
+
+std::ostream& csp::print(std::ostream& os) const {
+	return _translator.print(os, _csp);
 }
 
 } } // namespaces

@@ -4,6 +4,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <utils/logging.hxx>
+#include <utils/printers/gecode.hxx>
 
 #include <gecode/driver.hh>
 
@@ -40,12 +41,6 @@ SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const RelaxedState& layer
 	_translator.updateStateVariableDomains(*csp, layer);
 	return csp;
 }
-
-void GecodeActionCSPHandler::print_csp( std::ostream& os, SimpleCSP::ptr csp ) const {
-	// MRJ: We simple forward the call to the translator, who knows the names of the variables
-	_translator.print( os, *csp );
-}
-
 
 void GecodeActionCSPHandler::createCSPVariables() {
 	// Determine input and output variables for this action: we first amalgamate variables into a set
@@ -90,8 +85,8 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 	DFS<SimpleCSP> engine(csp);
 	FFDEBUG("heuristic", "Computing supports for action " << _action.getFullName());
 	while (SimpleCSP* solution = engine.next()) {
-		FFDEBUG("heuristic", std::endl << "Processing action CSP solution: " << *solution);
-		
+		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ":" << print::csp(_translator, *solution))
+
 		for (ActionEffect::cptr effect : _action.getEffects()) {
 			VariableIdx affected;
 			assert(effect->affected.size() > 0);
@@ -108,7 +103,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 
 			Atom atom(affected, _translator.resolveOutputStateVariableValue(*solution, affected)); // TODO - this might be optimized and factored out of the loop?
 			auto hint = rpg.getInsertionHint(atom);
-			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" (" << effect->affected.size() << " affected variables) yields new atom " << atom);
+			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" (" << effect->affected.size() << " affected variables) yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 
 			if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
 				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>();
