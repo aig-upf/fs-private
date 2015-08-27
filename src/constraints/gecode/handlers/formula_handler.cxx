@@ -38,10 +38,12 @@ SimpleCSP::ptr GecodeFormulaCSPHandler::instantiate_csp(const RelaxedState& laye
 
 
 void GecodeFormulaCSPHandler::createCSPVariables() {
-	IntVarArgs variables;
-	registerFormulaVariables(_conditions,  variables);
-	IntVarArray tmp(_base_csp, variables);
-	_base_csp._X.update(_base_csp, false, tmp);
+	IntVarArgs intvars;
+	BoolVarArgs boolvars;
+
+	registerFormulaVariables(_conditions,  intvars, boolvars);
+	
+	Helper::update_csp(_base_csp, intvars, boolvars);	
 }
 
 bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
@@ -74,7 +76,7 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 	
 	for (const auto& it:_translator.getAllInputVariables()) {
 		VariableIdx planning_variable = it.first;
-		const Gecode::IntVar& csp_var = csp->_X[it.second];
+		const Gecode::IntVar& csp_var = csp->_intvars[it.second];
 		IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
 		assert(values()); // Otherwise the CSP would be inconsistent!
 		

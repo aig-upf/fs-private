@@ -34,8 +34,8 @@ public:
 	
 	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 
-	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
-	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
+	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
 
 	static void registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator);
 	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator);
@@ -47,8 +47,8 @@ protected:
 	//! A translator to map planning variables with gecode variables
 	GecodeCSPVariableTranslator _translator;
 
-	void registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& variables);
-	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& variables);
+	void registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
 
 	void registerFormulaConstraints(const fs::AtomicFormula::cptr condition);
 	void registerFormulaConstraints(const std::vector<fs::AtomicFormula::cptr>& conditions);
@@ -111,7 +111,7 @@ protected:
 	void createCSPVariables();
 
 	// Variable registration methods
-	void registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& variables);
+	void registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
 
 	// Constraint registration methods
 	void registerEffectConstraints(const fs::ActionEffect::cptr effect);

@@ -25,45 +25,41 @@ GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action)
 
 	Helper::postBranchingStrategy(_base_csp);
 
-	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
+	std::cout << *this << std::endl << std::endl << std::endl;
+	
+	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
 	Gecode::SpaceStatus st = _base_csp.status();
 
+	std::cout << *this << std::endl;
 	assert(st != Gecode::SpaceStatus::SS_FAILED); // This should never happen, as it means that the action is (statically) unapplicable.
 }
 
 
 SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const RelaxedState& layer) const {
-	// MRJ: This is rather ugly, the problem is that clone returns a pointer to Space...
-	// it may be a good idea to overwrite this method on SimpleCSP to avoid this downcast.
-	// GFM: Can probably be safely changed to a static cast??
-	// MRJ: Hmmmm...
 	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(_base_csp.clone());
+	assert(csp);
 	_translator.updateStateVariableDomains(*csp, layer);
 	return csp;
 }
 
 void GecodeActionCSPHandler::createCSPVariables() {
-	// Determine input and output variables for this action: we first amalgamate variables into a set
-	// to avoid repetitions, then generate corresponding CSP variables, then create the CSP model with them
-	// and finally add the model constraints.
+	IntVarArgs intvars;
+	BoolVarArgs boolvars;
 
-	IntVarArgs variables;
-
-	registerFormulaVariables(_action.getConditions(), variables);
+	registerFormulaVariables(_action.getConditions(), intvars, boolvars);
 	for (const auto effect:_action.getEffects()) {
-		registerEffectVariables(effect, variables);
+		registerEffectVariables(effect, intvars, boolvars);
 	}
-
-	IntVarArray tmp(_base_csp, variables);
-	_base_csp._X.update(_base_csp, false, tmp);
+	
+	Helper::update_csp(_base_csp, intvars, boolvars);
 }
 
-void GecodeActionCSPHandler::registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& variables) {
+void GecodeActionCSPHandler::registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
 	// Register first the RHS variables as input variables
-	registerTermVariables(effect->rhs, CSPVariableType::Input, _base_csp, _translator, variables);
+	registerTermVariables(effect->rhs, CSPVariableType::Input, _base_csp, _translator, intvars, boolvars);
 
 	// As for the LHS variable, we register the root level as an output CSP variable, and the children (if any) recursively as input variables
-	registerTermVariables(effect->lhs, CSPVariableType::Output, _base_csp, _translator, variables);
+	registerTermVariables(effect->lhs, CSPVariableType::Output, _base_csp, _translator, intvars, boolvars);
 }
 
 
