@@ -86,11 +86,11 @@ void FluentNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr
 		VariableIdx variable = info.resolveStateVariable(nested->getSymbolId(), {object});
 
 		FDEBUG( "translation", "Registering implicitly referred variable " << info.getVariableName( variable ) << std::endl);
-		if ( _implicit_ref_vars.find( std::make_pair(variable,type) ) == _implicit_ref_vars.end() ) {
-			auto sv = new StateVariable(variable);
-			_implicit_ref_vars.insert(std::make_pair( std::make_pair(variable,type), sv));
-			translator.registerStateVariable(sv, type, csp, intvars, true); // Register the variable as nullable
+		auto var_type = std::make_pair(variable,type);
+		if (_implicit_ref_vars.find(var_type) == _implicit_ref_vars.end() ) {
+			_implicit_ref_vars.insert(std::make_pair(var_type, new StateVariable(variable)));
 		}
+		translator.registerStateVariable(_implicit_ref_vars[var_type], type, csp, intvars, true); // Register the variable as nullable
 	}
 	
 	// We also register the pointer variable in the csp
