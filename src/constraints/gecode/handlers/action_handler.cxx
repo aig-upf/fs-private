@@ -25,12 +25,9 @@ GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action)
 
 	Helper::postBranchingStrategy(_base_csp);
 
-	std::cout << *this << std::endl << std::endl << std::endl;
-	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
 	Gecode::SpaceStatus st = _base_csp.status();
 
-	std::cout << *this << std::endl;
 	assert(st != Gecode::SpaceStatus::SS_FAILED); // This should never happen, as it means that the action is (statically) unapplicable.
 }
 
