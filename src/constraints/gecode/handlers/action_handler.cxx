@@ -62,46 +62,42 @@ void GecodeActionCSPHandler::registerEffectVariables(const fs::ActionEffect::cpt
 	// Register first the RHS variables as input variables
 	registerTermVariables(effect->rhs, CSPVariableType::Input, _base_csp, _translator, variables);
 
-	// As for the LHS variable, we register the root level as an output CSP variable, and the children (if any) recursively as input variables
-	registerTermVariables(effect->lhs, CSPVariableType::Output, _base_csp, _translator, variables);
+	// As for the LHS variable, ATM we only register the subterms (if any) recursively as input CSP variables
+	auto nested_lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs);
+	if (nested_lhs) {
+		registerTermVariables(nested_lhs->getSubterms(), CSPVariableType::Input, _base_csp, _translator, variables);
+	}
 }
 
 
 void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cptr effect) {
 	// Register the lhs and rhs constraints recursively
-	GecodeCSPHandler::registerTermConstraints(effect->lhs, CSPVariableType::Output, _base_csp, _translator);
+	// GecodeCSPHandler::registerTermConstraints(effect->lhs, CSPVariableType::Output, _base_csp, _translator);
+	auto nested_lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs);
+	if (nested_lhs) {
+		GecodeCSPHandler::registerTermConstraints(nested_lhs->getSubterms(), CSPVariableType::Input, _base_csp, _translator);
+	}
 	GecodeCSPHandler::registerTermConstraints(effect->rhs, CSPVariableType::Input, _base_csp, _translator);
 
 	// And now equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
-	const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs, CSPVariableType::Output, _base_csp);
-	const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs, CSPVariableType::Input, _base_csp);
-	Gecode::rel(_base_csp, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
+// 	const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs, CSPVariableType::Output, _base_csp);
+// 	const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs, CSPVariableType::Input, _base_csp);
+// 	Gecode::rel(_base_csp, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
 }
 
 
 void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData& rpg) const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	unsigned num_solutions = 0;
 	DFS<SimpleCSP> engine(csp);
 	FFDEBUG("heuristic", "Computing supports for action " << _action.getFullName());
 	while (SimpleCSP* solution = engine.next()) {
-		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ":" << print::csp(_translator, *solution))
+		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
 
+		PartialAssignment solution_assignment = _translator.buildAssignment(*solution);
+		
 		for (ActionEffect::cptr effect : _action.getEffects()) {
-			VariableIdx affected;
-			assert(effect->affected.size() > 0);
-			
-			if (dynamic_cast<fs::StateVariable::cptr>(effect->lhs)) {
-				assert(effect->affected.size() == 1);
-				affected = effect->affected[0];
-			} else { // We necessarily have a nested fluent on the LHS of the effect
-				auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs);
-				assert(fluent && fluent->getSubterms().size() == 1);
-				ObjectIdx index_val = _translator.resolveValue(fluent->getSubterms()[0], CSPVariableType::Input, *solution);
-				affected = info.resolveStateVariable(fluent->getSymbolId(), {index_val});
-			}
-
-			Atom atom(affected, _translator.resolveOutputStateVariableValue(*solution, affected)); // TODO - this might be optimized and factored out of the loop?
+			VariableIdx affected = effect->lhs->interpretVariable(solution_assignment);
+			Atom atom(affected, _translator.resolveValue(effect->rhs, CSPVariableType::Input, *solution));// TODO - this might be optimized and factored out of the loop?
 			auto hint = rpg.getInsertionHint(atom);
 			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" (" << effect->affected.size() << " affected variables) yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 
@@ -132,8 +128,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 		delete solution;
 	}
 
-	FDEBUG("main", "Solving the Action CSP completely produced " << num_solutions << " solutions"  << std::endl << *this);
-	assert(0);
+	FDEBUG("main", "Solving the Action CSP completely produced " << num_solutions << " solutions"  << std::endl);
 }
 
 

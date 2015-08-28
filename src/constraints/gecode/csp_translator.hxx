@@ -113,6 +113,9 @@ public:
 	}
 
 	const std::unordered_map<VariableIdx, unsigned>& getAllInputVariables() const { return _input_state_variables; }
+	
+	//! Returns a partial assignment of values to the input state variables of the CSP managed by this translator, built from the given solution.
+	PartialAssignment buildAssignment(SimpleCSP& solution) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;

@@ -158,4 +158,14 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 	}
 }
 
+PartialAssignment GecodeCSPVariableTranslator::buildAssignment(SimpleCSP& solution) const {
+	PartialAssignment assignment;
+	for (const auto& it:_input_state_variables) {
+		VariableIdx variable = it.first;
+		auto& csp_variable = solution._X[it.second];
+		assignment.insert(std::make_pair(variable, csp_variable.val()));
+	}
+	return assignment;
+}
+
 } } // namespaces
