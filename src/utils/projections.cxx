@@ -18,10 +18,6 @@ ObjectIdxVector Projections::project(const State& s, const VariableIdxVector& sc
 }
 
 
-DomainMap Projections::projectCopyToActionVariables(const RelaxedState& state, const GroundAction& action) {
-	return projectCopy(state, action.getAllRelevantVariables());
-}
-
 DomainMap Projections::project(RelaxedState& state, const VariableIdxVector& scope) { //!  TODO - CHECK THIS IS APPLYING RVO??
 	DomainMap projection;
 	for (VariableIdx var:scope) {

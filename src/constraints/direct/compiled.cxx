@@ -4,6 +4,7 @@
 #include <utils/utils.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
+#include <languages/fstrips/scopes.hxx>
 
 namespace fs0 {
 
@@ -222,7 +223,7 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEf
 }
 
 CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const Term& term, const ProblemInfo& info) {
-	VariableIdxVector scope = term.computeScope();
+	VariableIdxVector scope = ScopeUtils::computeDirectScope(&term);
 	assert(scope.size() == 1);
 	ExtensionT map;
 	
@@ -244,7 +245,7 @@ CompiledBinaryEffect::CompiledBinaryEffect(const VariableIdxVector& scope, Varia
 {}
 
 CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& term, const ProblemInfo& info) {
-	VariableIdxVector scope = term.computeScope();
+	VariableIdxVector scope = ScopeUtils::computeDirectScope(&term);
 	assert(scope.size() == 2);
 	ExtensionT map;
 	

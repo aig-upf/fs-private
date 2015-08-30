@@ -35,14 +35,14 @@ public:
 	static Gecode::BoolVar createBoolVariable(Gecode::Space& csp);
 	
 	//! Constrains the given CSP variable to have values in the given domain
-	static void constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain);
+	static void constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain, bool include_dont_care = false);
 	
 	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
 	//! that underlies the static term in all interpretations.
 	static Gecode::TupleSet extensionalize(const fs::StaticHeadedNestedTerm::cptr term);
 
 	//! Builds a gecode tupleset from the values contained in a state variable domain
-	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain);
+	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain, bool include_dont_care = false);
 	
 	//! A simple helper to post a certain Gecode branching strategy to the CSP
 	static void postBranchingStrategy(SimpleCSP& csp);

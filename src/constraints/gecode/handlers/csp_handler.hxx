@@ -106,6 +106,15 @@ public:
 
 protected:
 	const GroundAction& _action;
+	
+	//! 'effect_support_variables[i]' contains the scope of the i-th effect of the action plus the scope of the action, without repetitions
+	//! and in that particular order.
+	std::vector<VariableIdxVector> effect_support_variables;
+	
+	//! 'effect_nested_fluents[i]' contains all the nested-fluent terms of the RHS of the i-th effect plus those of the action precondition,
+	//! in that particular order
+	std::vector<std::vector<fs::FluentHeadedNestedTerm::cptr>> effect_nested_fluents;
+	
 
 	//! Creates the SimpleCSP that corresponds to a given action.
 	void createCSPVariables();
@@ -118,6 +127,8 @@ protected:
 
 	//! Prevents the affected variables to take values already achieved in the previous layer
 	// void addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp);
+	
+	void index_scopes();
 };
 
 //! A CSP modeling and solving the progression between two RPG layers

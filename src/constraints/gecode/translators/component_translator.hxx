@@ -60,8 +60,6 @@ public:
 protected:
 	//! Do the actual registration on the translator. Can be overriden if a particular logic is necessary
 	virtual void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) const = 0;
-
-	mutable std::map< std::pair<VariableIdx, CSPVariableType>, fs::StateVariable* > _implicit_ref_vars;
 };
 
 class StaticNestedTermTranslator : public NestedTermTranslator {

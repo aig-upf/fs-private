@@ -46,7 +46,6 @@ void StateVariableTermTranslator::registerVariables(const fs::Term::cptr term, C
 }
 
 NestedTermTranslator::~NestedTermTranslator() {
-	for ( auto o : _implicit_ref_vars ) delete o.second;
 }
 
 void NestedTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) const {
@@ -84,17 +83,12 @@ void FluentNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr
 	auto objects = info.getTypeObjects(signature[0]);
 	for (ObjectIdx object:objects) {
 		VariableIdx variable = info.resolveStateVariable(nested->getSymbolId(), {object});
-
-		FDEBUG( "translation", "Registering implicitly referred variable " << info.getVariableName( variable ) << std::endl);
-		auto var_type = std::make_pair(variable,type);
-		if (_implicit_ref_vars.find(var_type) == _implicit_ref_vars.end() ) {
-			_implicit_ref_vars.insert(std::make_pair(var_type, new StateVariable(variable)));
-		}
-		translator.registerStateVariable(_implicit_ref_vars[var_type], type, csp, intvars, true); // Register the variable as nullable
+		FDEBUG( "translation", "Registering derived state variable " << info.getVariableName(variable) << std::endl);
+		translator.registerDerivedStateVariable(variable, type, csp, intvars);
 	}
 	
 	// We also register the pointer variable in the csp
-	translator.registerElementConstraintData(fluent, objects.size()-1, csp, intvars, boolvars);
+	translator.registerNestedFluent(fluent, objects.size(), csp, intvars, boolvars);
 	
 	// Don't forget to register the "standard" temporary variable for the term root.
 	translator.registerNestedTerm(nested, type, csp, intvars);
@@ -205,33 +199,37 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 
 	assert(subterms.size() == signature.size());
 	assert(signature.size() == 1); // This was already checked during variable registration time
-	
 
 	// Post the extensional constraint relating the value of the index variables
 	unsigned idx = 0; // element constraints are 0-indexed
 	Gecode::IntVarArgs table; // The actual array of variables that will form the element constraint table
 
 	const Gecode::IntVar& original_index = translator.resolveVariable(subterms[0], CSPVariableType::Input, csp);
-	Gecode::IntVar zero_based_index;
-	Gecode::BoolVarArgs reification_vars_0;
-	Gecode::BoolVarArgs reification_vars_1;
-	translator.resolveElementConstraintData(fluent, csp, zero_based_index, reification_vars_0, reification_vars_1);
+	
+	// TODO Refactor this, much of this functionality could go much cleaner inside of the nested translator object.
+	NestedFluentData& nested_translator = translator.resolveNestedFluent(fluent);
+	const Gecode::IntVar& zero_based_index = nested_translator.getIndex(csp);
+	Gecode::BoolVarArgs idx_reification_vars = nested_translator.getIndexReificationVariables(csp);
+	Gecode::BoolVarArgs table_reification_vars = nested_translator.getTableReificationVariables(csp);
+	std::vector<VariableIdx>& table_variables = nested_translator.getTableVariables();
 	
 	// The correspondence between the index variable possible values and their 0-indexed position in the element constraint table
 	Gecode::TupleSet correspondence;
 	for (ObjectIdx object:info.getTypeObjects(signature[0])) {
 		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), {object});
+		
 
-		auto gecode_variable = (type == CSPVariableType::Output) ? translator.resolveOutputStateVariable(csp, variable) : translator.resolveInputStateVariable(csp, variable);
-		FDEBUG("translation", "Noting correspondence for variable " << info.getVariableName( variable ) << ", domain is: " << gecode_variable << std::endl);
+		auto gecode_variable = translator.resolveDerivedStateVariable(csp, variable);
+		FDEBUG("translation", "Noting correspondence for variable " << info.getVariableName(variable) << ", domain is: " << gecode_variable << std::endl);
 		table << gecode_variable;
+		table_variables[idx] = variable;
 
 		correspondence.add(IntArgs(2, object, idx));
 		
 		// Post the necessary reification constraints to achieve the expression IDX = i \lor f(IDX) = DONT_CARE
-		Gecode::rel(csp, zero_based_index, Gecode::IRT_EQ, idx, reification_vars_0[idx]); // IDX = i <=> b0
-		Gecode::rel(csp, gecode_variable, Gecode::IRT_EQ, DONT_CARE, reification_vars_1[idx]); // f(IDX) = DONT_CARE <=> b1
-		Gecode::rel(csp, reification_vars_0[idx], BOT_OR, reification_vars_1[idx], 1); // b0 \lor b1
+		Gecode::rel(csp, zero_based_index, Gecode::IRT_EQ, idx, idx_reification_vars[idx]); // IDX = i <=> b0
+		Gecode::rel(csp, gecode_variable, Gecode::IRT_EQ, DONT_CARE, table_reification_vars[idx]); // f(IDX) = DONT_CARE <=> b1
+		Gecode::rel(csp, idx_reification_vars[idx], BOT_OR, table_reification_vars[idx], 1); // b0 \lor b1
 		
 		++idx;
 	}

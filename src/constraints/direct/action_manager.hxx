@@ -45,10 +45,20 @@ protected:
 	
 	const std::vector<DirectEffect::cptr> _effects;
 	
+		
+	//! The indexes of only those variables relevant to the applicability procedures of the action.
+	const VariableIdxVector _scope;
+	
+	//! The indexes of all (direct) state variables relevant to at least one of the effect or applicability procedures of the action.
+	const std::vector<VariableIdx> _allRelevant;
+	
 	const DirectCSPHandler _handler;
 	
 	//!
 	void completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const;
+	
+	//! Extracts all the (direct) state variables that are relevant to the action
+	VariableIdxVector extractAllRelevant() const;
 	
 	std::ostream& print(std::ostream& os) const;
 };

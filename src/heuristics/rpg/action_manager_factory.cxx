@@ -9,6 +9,7 @@
 #include <constraints/filtering.hxx>
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
+#include <languages/fstrips/scopes.hxx>
 
 namespace fs0 {
 
@@ -25,11 +26,8 @@ std::vector<std::shared_ptr<BaseActionManager>> ActionManagerFactory::create(con
 BaseActionManager* ActionManagerFactory::create(const GroundAction& action) {
 	const Config::ActionManagerType manager_t = Config::instance().getActionManagerType();
 
-	bool complexPreconditions = actionHasHigherArityPreconditions(action);
-	bool complexEffects = actionHasHigherArityEffects(action);
 	BaseActionManager* manager = nullptr;
-
-	if (manager_t == Config::ActionManagerType::Gecode || complexPreconditions || complexEffects) {
+	if (manager_t == Config::ActionManagerType::Gecode || gecodeManagerNeeded(action)) {
 		manager = gecode::GecodeActionManager::create(action);
 		FDEBUG("main", "Generated CSP for action " << action << std::endl <<  *manager << std::endl);
 	} else {
@@ -41,32 +39,23 @@ BaseActionManager* ActionManagerFactory::create(const GroundAction& action) {
 }
 
 
-bool ActionManagerFactory::actionHasHigherArityPreconditions(const GroundAction& action) {
-	bool needs_generic_manager = false;
-	for (const AtomicFormula::cptr constraint:action.getConditions()) {
-		unsigned arity = constraint->getScope().size();
-		if (arity == 0) {
-			throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
-		}
-		else if(arity == 1) {
-// 			if (!dynamic_cast<UnaryParametrizedScopedConstraint*>(constraint) || constraint->filteringType() != FilteringType::Unary) {
-// 				throw std::runtime_error("Cannot handle this type of unary constraint in action preconditions.");
-// 			}
-		} else {
-			needs_generic_manager = true;
-		}
+bool ActionManagerFactory::gecodeManagerNeeded(const GroundAction& action) {
+	
+	for (const AtomicFormula::cptr condition:action.getConditions()) {
+		if (condition->nestedness() > 0) return true;
+		
+		unsigned arity = ScopeUtils::computeDirectScope(condition).size();
+		if (arity == 0) throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
+		else if(arity > 1) return true;
 	}
-	return needs_generic_manager;
-}
-
-bool ActionManagerFactory::actionHasHigherArityEffects(const GroundAction& action) {
+	
 	for (const ActionEffect::cptr effect:action.getEffects()) {
-		if (effect->scope.size() > 1) {
-			return true;
-		}
+		if (effect->lhs()->nestedness() > 0 || effect->rhs()->nestedness() > 0 || ScopeUtils::computeDirectScope(effect).size() > 1) return true;
 	}
+	
 	return false;
 }
+
 
 
 

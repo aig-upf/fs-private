@@ -3,6 +3,7 @@
 #include <problem_info.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
+#include "translators/nested_fluent.hxx"
 #include <relaxed_state.hxx>
 #include <utils/logging.hxx>
 
@@ -45,21 +46,45 @@ bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant, 
 	return true;
 }
 
-bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables, bool nullable) {
+bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
 	TranslationKey key(variable, type);
 	auto it = _registered.find(key);
-	if (it!= _registered.end()) return false; // The element was already registered
-	variables << Helper::createPlanningVariable(csp, variable->getValue(), nullable);
+	if (it!=_registered.end()) return false; // The element was already registered
+	
+	unsigned variable_id = variable->getValue();
+	
+	//  TODO we need to think what to do in these cases where a derived state variable is also used as a primary state variable in some other expression.
+	assert(_derived.find(variable_id) == _derived.end()); 
+	
+	unsigned id = variables.size();
+	variables << Helper::createPlanningVariable(csp, variable_id);
 
-	unsigned id = variables.size()-1;
 	_registered.insert(it, std::make_pair(key, id));
 
 	// We now cache state variables in different data structures to allow for a more performant subsequent retrieval
 	if (type == CSPVariableType::Input) {
-		_input_state_variables.insert(std::make_pair(variable->getValue(), id));
+		_input_state_variables.insert(std::make_pair(variable_id, id));
 	} else if (type == CSPVariableType::Output) {
-		_output_state_variables.insert(std::make_pair(variable->getValue(), id));
+		_output_state_variables.insert(std::make_pair(variable_id, id));
 	}
+	return true;
+}
+
+bool GecodeCSPVariableTranslator::registerDerivedStateVariable(VariableIdx variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
+	// TODO We need to check that the state variable wasn't alread registered as a primary state variable
+	auto sv = new StateVariable(variable);
+	assert(_registered.find(TranslationKey(sv, type)) == _registered.end());
+	delete sv; // Yes, this is ugly, but temporary
+	
+	
+	// TODO we need to think what to do in these cases where two derived state variables come into play at the same time.
+	assert(_derived.find(variable) == _derived.end()); 
+	
+	
+	unsigned id = variables.size();
+	variables << Helper::createPlanningVariable(csp, variable, true);
+
+	_derived.insert(std::make_pair(variable, id));
 	return true;
 }
 
@@ -90,38 +115,32 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	return true;
 }
 
-void GecodeCSPVariableTranslator::registerElementConstraintData(fs::NestedTerm::cptr term, unsigned max_idx, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
-	TranslationKey key( term, CSPVariableType::Input ); // Index variables always considered input variables by default
-	FDEBUG( "translation", "Registering indirection for nested term: " << *term << " with domain [" << 0 << ", " << max_idx << "]");
+void GecodeCSPVariableTranslator::registerNestedFluent(fs::NestedTerm::cptr term, unsigned table_size, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
+	TranslationKey key(term, CSPVariableType::Input); // Index variables are always considered input variables
 	auto it = element_constraint_data.find(key);
 	if (it != element_constraint_data.end()) return; // We already registered an index variable for this particular nested term
 
 	unsigned index_var_idx = intvars.size();
-	intvars << Helper::createTemporaryIntVariable(csp, 0, max_idx);
-	
-	unsigned num_elems = max_idx + 1;
+	intvars << Helper::createTemporaryIntVariable(csp, 0, table_size-1);
 	
 	unsigned bool_var_idx = boolvars.size();
 	// We create one boolean variable for each of the elements of the disjunction IDX=i \lor TABLE_i = DONT_CARE
-	for (unsigned i = 0; i < num_elems*2; ++i) {
+	for (unsigned i = 0; i < table_size*2; ++i) {
 		boolvars << Helper::createBoolVariable(csp);
 	}
 	
-	element_constraint_data.insert(std::make_pair(key, std::make_tuple(index_var_idx, bool_var_idx, num_elems)));
+	element_constraint_data.insert(std::make_pair(key, NestedFluentData(index_var_idx, bool_var_idx, table_size)));
 }
 
-void GecodeCSPVariableTranslator::resolveElementConstraintData(fs::Term::cptr term, const SimpleCSP& csp, Gecode::IntVar& index, Gecode::BoolVarArgs& reification_vars_0, Gecode::BoolVarArgs& reification_vars_1) const {
+NestedFluentData& GecodeCSPVariableTranslator::resolveNestedFluent(fs::Term::cptr term) {
+	// To avoid code repetition, we call the const version inside the non-const version and then cast the const result back to non-const
+	return const_cast<NestedFluentData&>(static_cast<const GecodeCSPVariableTranslator*>(this)->resolveNestedFluent(term));
+}
+
+const NestedFluentData& GecodeCSPVariableTranslator::resolveNestedFluent(fs::Term::cptr term) const {
 	auto it = element_constraint_data.find(TranslationKey(term, CSPVariableType::Input));  // Index variables always considered input variables by default
-	if ( it == element_constraint_data.end() ) throw std::runtime_error( "Could not resolve indirection for the term provided" );
-	
-	index = csp._intvars[std::get<0>(it->second)];
-	
-	unsigned start = std::get<1>(it->second);
-	for (unsigned i = 0; i < 2 * std::get<2>(it->second); i += 2) {
-		// We recover the boolean variables previously created, interleaved
-		reification_vars_0 << csp._boolvars[start + i];
-		reification_vars_1 << csp._boolvars[start + i + 1];
-	}
+	if (it == element_constraint_data.end()) throw std::runtime_error( "Could not resolve indirection for the term provided" );
+	return it->second;
 }
 
 const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
@@ -145,7 +164,8 @@ Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vect
 }
 
 std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
-	os << "Gecode CSP with " << _registered.size() + element_constraint_data.size() << " variables: " << std::endl;
+	const fs0::ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	os << "Gecode CSP with " << _registered.size() << " variables: " << std::endl;
 	for (auto it:_registered) {
 		os << "\t ";
 		os << *(it.first.getTerm());
@@ -153,12 +173,17 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 		os << ": " << csp._intvars[it.second] << std::endl;
 	}
 	
-	os << std::endl << "Including \"index\" and reification variables for the following terms: " << std::endl;
+	os << std::endl << "Plus the following derived state variables: " << std::endl;
+	for (auto it:_derived) {
+		os << "\t " << info.getVariableName(it.first) << ": " << csp._intvars[it.second] << std::endl;
+	}
+	
+	os << std::endl << "Plus \"index\" and reification variables for the following terms: " << std::endl;
 	for (auto it:element_constraint_data) {
 		os << "\t ";
 		os << *(it.first.getTerm());
 		if (it.first.getType() == CSPVariableType::Output) os << "'"; // We simply mark output variables with a "'"
-		os << ": " << csp._intvars[std::get<0>(it.second)] << std::endl;
+		os << ": " << it.second.getIndex(csp) << std::endl;
 	}
 	
 	return os;
@@ -171,6 +196,14 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 		unsigned csp_variable_id = it.second;
 		const DomainPtr& domain = layer.getValues(variable);
 		Helper::constrainCSPVariable(csp, csp_variable_id, domain);
+	}
+	
+	// Now constrain the derived variables, but not excluding the DONT_CARE value
+	for (const auto& it:_derived) {
+		VariableIdx variable = it.first;
+		unsigned csp_variable_id = it.second;
+		const DomainPtr& domain = layer.getValues(variable);
+		Helper::constrainCSPVariable(csp, csp_variable_id, domain, true);
 	}
 }
 

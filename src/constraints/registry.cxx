@@ -2,6 +2,7 @@
 #include <constraints/registry.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
+#include <languages/fstrips/scopes.hxx>
 #include <constraints/direct/alldiff_constraint.hxx>
 #include <constraints/direct/sum_constraint.hxx>
 #include <utils/printers/printers.hxx>
@@ -38,8 +39,8 @@ void LogicalComponentRegistry::registerDirectTranslators() {
 	add(typeid(fs::MultiplicationTerm), new MultiplicativeTermRhsTranslator());
 	
 	// builtin global constraints
-	add(typeid(fs::AlldiffFormula), [](const fs::AtomicFormula& formula){ return new AlldiffConstraint(formula.getScope()); });
-	add(typeid(fs::SumFormula), [](const fs::AtomicFormula& formula){ return new SumConstraint(formula.getScope()); });
+	add(typeid(fs::AlldiffFormula), [](const fs::AtomicFormula& formula){ return new AlldiffConstraint(ScopeUtils::computeDirectScope(&formula)); });
+	add(typeid(fs::SumFormula), [](const fs::AtomicFormula& formula){ return new SumConstraint(ScopeUtils::computeDirectScope(&formula)); });
 }
 
 void LogicalComponentRegistry::registerGecodeTranslators() {

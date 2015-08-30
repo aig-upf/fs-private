@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <languages/fstrips/language.hxx>
+#include <languages/fstrips/terms.hxx>
 #include <boost/functional/hash.hpp>
 
 namespace fs = fs0::language::fstrips;
@@ -28,16 +28,6 @@ struct TranslationKey {
 
 	inline bool operator!=(const TranslationKey& rhs) const { return ! this->operator==(rhs); }
 
-// 	inline bool operator<(const TranslationKey& rhs) const {
-// 		return _type < rhs._type || (_type == rhs._type && *_term < *rhs._term);
-// 	}
-
-// 	inline bool operator<=(const TranslationKey& rhs) const { return !this->operator>(rhs); }
-
-// 	inline bool operator>(const TranslationKey& rhs) const { return rhs.operator<(*this); }
-
-// 	inline bool operator>=(const TranslationKey& rhs) const { return !this->operator<(rhs); }
-
 	std::size_t hash_code() const {
 		std::size_t hash = 0;
 		boost::hash_combine(hash, _type);
@@ -59,11 +49,9 @@ protected:
 
 } } // namespaces
 
-namespace std { // std::hash specialization for TranslationKey.
-
-	template<>
-	struct hash<fs0::gecode::TranslationKey>
-	{
+// std::hash specialization for TranslationKey.
+namespace std {
+	template<> struct hash<fs0::gecode::TranslationKey> {
 		typedef std::size_t        result_type;
 		typedef fs0::gecode::TranslationKey  argument_type;
 
