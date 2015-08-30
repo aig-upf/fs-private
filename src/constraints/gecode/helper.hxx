@@ -53,6 +53,9 @@ public:
 	
 	//! Update the variables of the given CSP
 	static void update_csp(SimpleCSP& csp, const IntVarArgs& intvars, const BoolVarArgs& boolvars);
+	
+	//! Computes a proper DONT_CARE value which is as close as possible to zero but not used as the ID of any object.
+	static int computeDontCareValue();
 };
 
 } } // namespaces

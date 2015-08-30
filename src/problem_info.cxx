@@ -19,7 +19,7 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	loadObjectIndex(data["objects"]);
 
 	std::cout << "\t Loading Function index..." << std::endl;
-	loadFunctionIndex(data["functions"]);	
+	loadFunctionIndex(data["functions"]);
 	
 	std::cout << "\t Loading Variable index..." << std::endl;
 	loadVariableIndex(data["variables"]);

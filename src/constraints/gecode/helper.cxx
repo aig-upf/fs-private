@@ -47,7 +47,7 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool n
 	else {
 		assert(generic_type == ProblemInfo::ObjectType::OBJECT);
 		ObjectIdxVector values = info.getTypeObjects(typeId); // We copy the vector so that we can add a DONT_CARE value if necessary
-		if (nullable) values.push_back(DONT_CARE);
+		if (nullable) values.push_back(DONT_CARE::get());
 		return Gecode::IntVar(csp, Gecode::IntSet(values.data(), values.size())); // TODO - Check if we can change this for a range-like domain creation
 	}
 }
@@ -75,7 +75,7 @@ Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain, bool include_d
 	for (auto value:domain) {
 		tuples.add(IntArgs(1, value));
 	}
-	if (include_dont_care) tuples.add(IntArgs(1, DONT_CARE));
+	if (include_dont_care) tuples.add(IntArgs(1, DONT_CARE::get()));
 	tuples.finalize();
 	return tuples;
 }
@@ -121,6 +121,18 @@ void Helper::update_csp(SimpleCSP& csp, const IntVarArgs& intvars, const BoolVar
 	
 	BoolVarArray boolarray(csp, boolvars);
 	csp._boolvars.update(csp, false, boolarray);	
+}
+
+int Helper::computeDontCareValue() {
+	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	int min = -1;
+	int max = std::numeric_limits<int>::min();
+	for (std::vector<ObjectIdx> objs:info.getTypeObjects()) {
+		min = std::min(min, *std::min_element( std::begin(objs), std::end(objs) ));
+		max = std::max(max, *std::max_element( std::begin(objs), std::end(objs) ));
+	}
+	// We select the closest value to zero which is not being used as the ID of some object / range integer
+	return -1*max < min ? min : max;
 }
 
 

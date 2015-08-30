@@ -138,6 +138,7 @@ public:
 	inline const FunctionData& getFunctionData(unsigned functionId) const { return functionData.at(functionId); }
 	
 	//! Returns all the objects of the given type _or of a descendant type_
+	inline const std::vector<ObjectIdxVector>& getTypeObjects() const { return typeObjects; }
 	inline const ObjectIdxVector& getTypeObjects(TypeIdx type) const { return typeObjects.at(type); }
 	inline const ObjectIdxVector& getTypeObjects(const std::string& type_name) const { return typeObjects.at(getTypeId(type_name)); }
 

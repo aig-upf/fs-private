@@ -228,7 +228,7 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 		
 		// Post the necessary reification constraints to achieve the expression IDX = i \lor f(IDX) = DONT_CARE
 		Gecode::rel(csp, zero_based_index, Gecode::IRT_EQ, idx, idx_reification_vars[idx]); // IDX = i <=> b0
-		Gecode::rel(csp, gecode_variable, Gecode::IRT_EQ, DONT_CARE, table_reification_vars[idx]); // f(IDX) = DONT_CARE <=> b1
+		Gecode::rel(csp, gecode_variable, Gecode::IRT_EQ, DONT_CARE::get(), table_reification_vars[idx]); // f(IDX) = DONT_CARE <=> b1
 		Gecode::rel(csp, idx_reification_vars[idx], BOT_OR, table_reification_vars[idx], 1); // b0 \lor b1
 		
 		++idx;

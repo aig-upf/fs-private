@@ -1,11 +1,20 @@
 
 #pragma once
+
 #include <gecode/int.hh>
+#include <problem.hxx>
+#include <utils/logging.hxx>
 
 namespace fs0 { namespace gecode {
+
+class DONT_CARE {
+protected:
+	static int _value;
 	
-	//! A "don't care" value
-// 	const int DONT_CARE = Gecode::Int::Limits::max;
-	const int DONT_CARE = -1;
+public:
+	static void set(int value) { _value = value; }
+	static int get() { return _value; }
+};
+
 	
 } } // namespaces

@@ -4,9 +4,11 @@
 #include <problem_info.hxx>
 #include <utils/logging.hxx>
 #include <constraints/registry.hxx>
+#include <constraints/gecode/helper.hxx>
+#include <constraints/gecode/base.hxx>
 #include <utils/printers/registry.hxx>
-#include "utils/printers/language.hxx"
-#include "actions/grounding.hxx"
+#include <utils/printers/language.hxx>
+#include <actions/grounding.hxx>
 
 namespace fs0 {
 
@@ -37,6 +39,9 @@ void Problem::bootstrap() {
 	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 	
 	_ground = ActionGrounder::ground(_schemata, getProblemInfo());
+	
+	gecode::DONT_CARE::set(gecode::Helper::computeDontCareValue());
+	FINFO("main", "Selected a Gecode DONT_CARE value of " << gecode::DONT_CARE::get());
 }
 
 
