@@ -20,8 +20,9 @@ namespace fs0 { namespace engines {
 		
 		auto action_managers = ActionManagerFactory::create(problem.getGroundActions());
 		
-		if (Config::instance().getGoalManagerType() == Config::GoalManagerType::Gecode) {
+		if (Config::instance().getGoalManagerType() == Config::GoalManagerType::Gecode || needsGecodeRPGBuilder(problem.getGoalConditions(), problem.getStateConstraints())) {
 			// We use a Gecode RPG builder
+			FINFO("main", "Chosen RPG Builder: Gecode");
 			typedef RelaxedPlanHeuristic<FS0StateModel, GecodeRPGBuilder> GecodeRPHeuristic;
 			std::shared_ptr<GecodeRPGBuilder> gecode_builder = std::shared_ptr<GecodeRPGBuilder>(GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
 			GecodeRPHeuristic gecode_builder_heuristic(model, std::move(action_managers), gecode_builder);
@@ -29,6 +30,7 @@ namespace fs0 { namespace engines {
 			
 		} else {
 			// We use a direct RPG builder
+			FINFO("main", "Chosen RPG Builder: Direct");
 			typedef RelaxedPlanHeuristic<FS0StateModel, DirectRPGBuilder> DirectRPHeuristic;
 			std::shared_ptr<DirectRPGBuilder> direct_builder = std::shared_ptr<DirectRPGBuilder>(DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
 			DirectRPHeuristic direct_builder_heuristic(model, std::move(action_managers), direct_builder);
@@ -38,4 +40,20 @@ namespace fs0 { namespace engines {
 		
 		return std::unique_ptr<FS0SearchAlgorithm>(engine);
 	}
+	
+	
+	bool EngineFactory::needsGecodeRPGBuilder(const std::vector<fs::AtomicFormula::cptr>& goal_conditions, const std::vector<fs::AtomicFormula::cptr>& state_constraints) {
+		// ATM we simply check whether there are nested fluents within the formulae
+		
+		for (auto condition:goal_conditions) {
+			if (condition->nestedness() > 0) return true;
+		}
+		
+		for (auto condition:state_constraints) {
+			if (condition->nestedness() > 0) return true;
+		}
+		
+		return false;
+	}
+	
 } } // namespaces
