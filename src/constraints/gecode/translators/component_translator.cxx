@@ -101,8 +101,8 @@ void ArithmeticTermTranslator::do_root_registration(const fs::NestedTerm::cptr n
 }
 
 void ArithmeticTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
-	auto addition = dynamic_cast<fs::AdditionTerm::cptr>(term);
-	assert(addition);
+	auto arithmetic_term = dynamic_cast<fs::ArithmeticTerm::cptr>(term);
+	assert(arithmetic_term);
 	
 	// If the subterm occurs somewhere else in the action / formula, its constraints might have already been posted
 	if (translator.isPosted(term, type)) return;
@@ -110,11 +110,11 @@ void ArithmeticTermTranslator::registerConstraints(const fs::Term::cptr term, CS
 	FDEBUG("translation", "Registering constraints for arithmetic term " << *term << (type == CSPVariableType::Output ? "'" : ""));
 
 	// First we register recursively the constraints of the subterms
-	GecodeCSPHandler::registerTermConstraints(addition->getSubterms(), CSPVariableType::Input, csp, translator);
+	GecodeCSPHandler::registerTermConstraints(arithmetic_term->getSubterms(), CSPVariableType::Input, csp, translator);
 
 	// Now we assert that the root temporary variable equals the sum of the subterms
-	const Gecode::IntVar& result = translator.resolveVariable(addition, CSPVariableType::Input, csp);
-	Gecode::IntVarArgs operands = translator.resolveVariables(addition->getSubterms(), CSPVariableType::Input, csp);
+	const Gecode::IntVar& result = translator.resolveVariable(arithmetic_term, CSPVariableType::Input, csp);
+	Gecode::IntVarArgs operands = translator.resolveVariables(arithmetic_term->getSubterms(), CSPVariableType::Input, csp);
 	post(csp, operands, result);
 	
 	translator.setPosted(term, type); // Mark the constraints as posted
