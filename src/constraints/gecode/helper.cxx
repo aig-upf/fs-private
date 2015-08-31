@@ -35,10 +35,14 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool n
 	auto generic_type = info.getGenericType(typeId);
 	
 	if ( generic_type == ProblemInfo::ObjectType::INT ) {
-		assert(!nullable); // TODO
 		const auto& bounds = info.getTypeBounds(typeId);
-		Gecode::IntSet domain(bounds.first, bounds.second);
-		return Gecode::IntVar(csp, domain);
+		if (!nullable) {
+			return Gecode::IntVar(csp, bounds.first, bounds.second);
+		} else {
+			// We specify to possible ranges: the "normal" integer range plus a second range only with the DONT_CARE value
+			const int ranges[2][2] = {{bounds.first, bounds.second}, {DONT_CARE::get(), DONT_CARE::get()}};
+			return Gecode::IntVar(csp, Gecode::IntSet(ranges, 2));
+		}
 	}
 	else if ( generic_type == ProblemInfo::ObjectType::BOOL ) {
 		assert(!nullable);
