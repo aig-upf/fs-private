@@ -57,6 +57,7 @@ float do_search(fs0::engines::FS0SearchAlgorithm& engine, const Problem& problem
 		PlanPrinter::printPlan(plan, problem, plan_out);
 	}
 
+	out << "Plan length : " << plan.size() << std::endl;
 	out << "Total time: " << total_time << std::endl;
 	out << "Nodes generated during search: " << engine.generated << std::endl;
 	out << "Nodes expanded during search: " << engine.expanded << std::endl;
@@ -74,6 +75,7 @@ float do_search(fs0::engines::FS0SearchAlgorithm& engine, const Problem& problem
 	json_out << "\teval_per_second : " << eval_speed << "," << std::endl;
 	json_out << "\tsolved : " << ( solved ? "true" : "false" ) << "," << std::endl;
 	json_out << "\tvalid : " << ( valid ? "true" : "false" ) << "," << std::endl;
+	json_out << "\tplan_length : " << plan.size() << "," << std::endl;
 	json_out << "\tplan : ";
 	if ( solved )
 		PlanPrinter::printPlanJSON( plan, problem, json_out);
