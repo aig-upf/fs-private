@@ -33,7 +33,7 @@ void GecodeCSPVariableTranslator::setPosted(const fs::Term::cptr term, CSPVariab
 }
 
 bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
-	TranslationKey key(constant, CSPVariableType::Input);
+	TranslationKey key(constant, CSPVariableType::Input); // Constants are always considered as input variables
 
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
@@ -42,7 +42,7 @@ bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant, 
 	int value = constant->getValue();
 	variables << Gecode::IntVar(csp, value, value);
 
-	_registered.insert(it, std::make_pair(key, id)); // Constants are always considered as input variables
+	_registered.insert(it, std::make_pair(key, id));
 	return true;
 }
 
