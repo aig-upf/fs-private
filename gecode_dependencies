@@ -1,0 +1,25 @@
+import os
+Import('env')
+
+# MRJ: This probably should be acquired from an environment variable
+gecode_include_path = '/usr/local/include'
+include_paths = [ gecode_include_path, '../..' ]
+env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
+
+# MRJ: I am not sure we will need ALL of the libs
+gecode_libs = [
+	#'gecodeflatzinc',
+	#'gecodedriver',
+	'gecodesearch',
+	#'gecodeminimodel',
+	#'gecodeset',
+	#'gecodefloat',
+	'gecodeint',
+	'gecodekernel',
+	'gecodesupport'
+]
+
+gecode_lib_path = [ '/usr/local/lib' ]
+
+env.Append( LIBS = gecode_libs + ['pthread'])
+env.Append( LIBPATH = [ os.path.abspath(p) for p in gecode_lib_path ] )

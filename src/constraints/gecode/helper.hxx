@@ -4,150 +4,58 @@
 
 #include <fs0_types.hxx>
 #include <problem_info.hxx>
-#include <problem.hxx>
-#include <constraints/gecode/simple_csp.hxx>
-#include <constraints/gecode/csp_translator.hxx>
-#include <constraints/gecode/translator_repository.hxx>
-
+#include <constraints/direct/compiled.hxx>
+#include <languages/fstrips/language.hxx>
 #include <gecode/int.hh>
-#include <boost/units/detail/utility.hpp>
+
 using namespace Gecode;
+
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-/**
- *  Some helper methods related to the construction of Gecode CSPs.
- */
+class SimpleCSP; class GecodeCSPVariableTranslator; enum class CSPVariableType;
+
+//! Some helper methods related to the construction of Gecode CSPs.
 class Helper {
 public:
-	//!
-	static unsigned processVariable(Gecode::Space& csp, VariableIdx var, Gecode::IntVarArgs& varArray) {
-		const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-		ProblemInfo::ObjectType varType = info.getVariableGenericType( var );
-		if ( varType == ProblemInfo::ObjectType::INT ) {
-			auto bounds = info.getVariableBounds(var);
-			Gecode::IntVar x( csp, bounds.first, bounds.second );
-			varArray << x;
-		}
-		else if ( varType == ProblemInfo::ObjectType::BOOL ) {
-			varArray << Gecode::IntVar( csp, 0, 1 );
-		}
-		else if ( varType == ProblemInfo::ObjectType::OBJECT ) {
-			const ObjectIdxVector& values = info.getVariableObjects( var );
-			std::vector<int> _values( values.size() );
-			for ( unsigned j = 0; j < values.size(); j++ ) {
-				_values[j] = values[j];
-			}
-			varArray << Gecode::IntVar( csp, Gecode::IntSet( _values.data(), values.size() ));
-		}
-		return varArray.size() - 1;
-	}
-
-	static void addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, bool value) {
-		addEqualityConstraint(csp, translator, variable, (value ? 1 : 0));
-	}
-
-	// MRJ: This overload will be necessary as soon as int and ObjectIdx cease to be the same thing
-	//void addEqualityConstraint(SimpleCSP& csp,  VariableIdx variable, int  value );
-
-	//! Adds constraint of the form $variable = value$ to the CSP
-	static void addEqualityConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, ObjectIdx value) {
-		auto csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Input);
-		rel( csp, csp_var, IRT_EQ, value ); // v = value
-	}
-
-
-	//! Adds constraint of the form $variable \in values$ to the CSP
-	static void addMembershipConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, DomainPtr values) {
-		auto csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Input);
-
-		// MRJ: variable \in dom
-		TupleSet valueSet;
-		for ( auto v : *values ) {
-			valueSet.add( IntArgs( 1, v ));
-		}
-		valueSet.finalize();
-		extensional( csp, IntVarArgs() << csp_var, valueSet ); // MRJ: v \in valueSet
-	}
-
-	//! Adds constraint of the form $lb <= variable <= ub$ to the CSP
-	static void addBoundsConstraint(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable, int lb, int ub) {
-		auto csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Input);
-		dom( csp, csp_var, lb, ub); // MRJ: lb <= variable <= ub
-	}
-
-	//! Adds constraint of the form $min <= variable <= max$ to the CSP,
-	//! where min and max are the minimum and maximum values defined for
-	//! the type of variable.
-	static void addBoundsConstraintFromDomain(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, VariableIdx variable) {
-		auto csp_var = translator.resolveVariable(csp, variable, GecodeCSPTranslator::VariableType::Input);
-		const auto& info = Problem::getCurrentProblem()->getProblemInfo();
-		TypeIdx type = info.getVariableType(variable);
-		if (!info.hasVariableBoundedDomain(type)) return; // Nothing to do in this case
-		const auto& bounds = info.getVariableBounds(type);
-		dom( csp, csp_var, bounds.first, bounds.second); // MRJ: bounds.first <= variable <= bounds.second
-	}
-
-
-	static void translateConstraints(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, const ScopedConstraint::vcptr& constraints) {
-		for (ScopedConstraint::cptr constraint:constraints) {
-			const std::type_info& type = typeid(*constraint);
-			auto componentTranslator = TranslatorRepository::instance().getConstraintTranslator( typeid(*constraint) );
-			
-			if (componentTranslator == nullptr) {
-				// If no translator was registered for the concrete component, we try out with the few (extensional) generic translators that we have.
-				componentTranslator = TranslatorRepository::instance().getConstraintTranslator(constraint->getDefaultTypeId());
-				
-				// Otherwise, we cannot continue
-				if (!componentTranslator) throw std::runtime_error("No ConstraintTranslator registered for type " + boost::units::detail::demangle(type.name()));
-			}
-			
-			componentTranslator->addConstraint(csp, translator, constraint);
-		}
-	}
-
-	static void translateEffects(gecode::SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, const ScopedEffect::vcptr& effects) {
-		for (ScopedEffect::cptr effect:effects) {
-			const std::type_info& type = typeid(*effect);
-			auto componentTranslator = TranslatorRepository::instance().getEffectTranslator(type);
-			
-			if (componentTranslator == nullptr) {
-				// If no translator was registered for the concrete component, we try out with the few (extensional) generic translators that we have.
-				componentTranslator = TranslatorRepository::instance().getEffectTranslator(effect->getDefaultTypeId());
-				
-				// Otherwise, we cannot continue
-				if (!componentTranslator) throw std::runtime_error("No EffectTranslator registered for type " + boost::units::detail::demangle(type.name()));
-			}
-			
-			componentTranslator->addConstraint(csp, translator, effect);
-		}
-	}
-
-	//! Adds the RPG-layer-dependent constraints to the CSP.
-	static void addRelevantVariableConstraints(SimpleCSP& csp, const gecode::GecodeCSPTranslator& translator, const VariableIdxVector& scope, const RelaxedState& layer) {
-		// Loop over the domains of each of the relevant variables in the RPG layer and process them one by one.
-		for (VariableIdx variable:scope) {
-			const DomainPtr& domain = layer.getValues(variable);
-			if ( domain->size() == 1 ) {
-				addEqualityConstraint( csp, translator, variable, *(domain->begin()) );
-			} else {
-				ObjectIdx lb = *(domain->begin());
-				ObjectIdx ub = *(domain->rbegin());
-				
-				if ( domain->size() == (ub - lb) ) { // MRJ: Check this is a safe assumption
-					addBoundsConstraint( csp, translator, variable, lb, ub );
-				} else { // MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
-					addMembershipConstraint( csp, translator, variable, domain );
-				}
-			}
-		}
-	}
+	//! Creates a CSP variable constraining its domain according to the given type
+	static Gecode::IntVar createVariable(Gecode::Space& csp, TypeIdx typeId, bool nullable = false);
 	
-	static void postBranchingStrategy(SimpleCSP& csp) {
-		// TODO posting a particular branching strategy might make sense to prioritize some branching strategy?
-		branch(csp, csp._X, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
-	}
+	//! Creates a CSP variable constraining its domain based on the planning problem variable type
+	static Gecode::IntVar createPlanningVariable(Gecode::Space& csp, VariableIdx var, bool nullable = false);
+	
+	//! Creates a CSP variable constraining its domain based on the given domain type
+	static Gecode::IntVar createTemporaryVariable(Gecode::Space& csp, TypeIdx typeId);
+	
+	//! Creates a Gecode int variable within the given bounds.
+	static Gecode::IntVar createTemporaryIntVariable(Gecode::Space& csp, int min, int max);
+	
+	//! Creates a Gecode bool variable within the given bounds.
+	static Gecode::BoolVar createBoolVariable(Gecode::Space& csp);
+	
+	//! Constrains the given CSP variable to have values in the given domain
+	static void constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain, bool include_dont_care = false);
+	
+	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
+	//! that underlies the static term in all interpretations.
+	static Gecode::TupleSet extensionalize(const fs::StaticHeadedNestedTerm::cptr term);
 
+	//! Builds a gecode tupleset from the values contained in a state variable domain
+	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain, bool include_dont_care = false);
+	
+	//! A simple helper to post a certain Gecode branching strategy to the CSP
+	static void postBranchingStrategy(SimpleCSP& csp);
+	
+	//! Small helper to check whether a Gecode IntVarValues set contains a given value
+	//! Unfortunately, it has linear cost.
+	static int selectValueIfExists(IntVarValues& value_set, int value);
+	
+	//! Update the variables of the given CSP
+	static void update_csp(SimpleCSP& csp, const IntVarArgs& intvars, const BoolVarArgs& boolvars);
+	
+	//! Computes a proper DONT_CARE value which is as close as possible to zero but not used as the ID of any object.
+	static int computeDontCareValue();
 };
 
 } } // namespaces

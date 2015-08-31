@@ -4,9 +4,7 @@
 """
 
 import itertools
-
 import pddl
-
 from compilation.helper import get_effect_symbol, parse_value
 from compilation.exceptions import ParseException
 
@@ -55,6 +53,6 @@ def compute_fluent_symbols(task):
 
 def compute_static_symbols(task, fluent):
     """ Determine all static predicates - those which are not fluent """
-    static = set(s for s in task.all_symbols if not s in fluent)
+    static = set(s for s in task.all_symbols if s not in fluent)
     static.add("=")  # The equality predicate is by definition static
     return static

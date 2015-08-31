@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <memory>
 
 namespace fs0 {
 
@@ -34,7 +35,7 @@ public:
 	static void validateConfig(const Config& config);
 	
 protected:
-	static Config* _instance;
+	static std::unique_ptr<Config> _instance;
 	
 	std::string _filename;
 	

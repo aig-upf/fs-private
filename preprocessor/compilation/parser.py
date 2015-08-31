@@ -1,29 +1,21 @@
 """
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
-from copy import deepcopy
-import base
-
 from pddl.f_expression import FunctionalTerm
 from pddl import Atom, NegatedAtom
 
-from base import ParameterExpression, NumericExpression, ObjectExpression, DefinedExpression, RelationalExpression, \
-    ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression, \
-    PredicativeExpression, ConstraintExpression
+from base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
+    ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression
 from compilation.exceptions import ParseException
-from compilation.helper import is_int
+from compilation.helper import is_external
+from util import is_int
 
 
 BASE_SYMBOLS = ("=", "!=", "*", "+", "-", ">", "<", ">=", "<=")
-CUSTOM_CONSTRAINTS = ("sum_constraint", "alldiff_constraint")
 
 
 def is_basic_symbol(symbol):
-    return symbol in BASE_SYMBOLS or symbol == "@defined"
-
-
-def is_constraint_expression(symbol):
-    return symbol in CUSTOM_CONSTRAINTS
+    return symbol in BASE_SYMBOLS
 
 
 class Parser(object):
@@ -31,14 +23,6 @@ class Parser(object):
         self.all = task.all_symbols
         self.static = task.static_symbols
         self.fluent = task.fluent_symbols
-
-    def process(self, exp):
-        """
-        Processes the whole parse tree represented by the given expression 'exp' and builds a new tree with our custom
-        data structures, and where all functional and predicative fluents have been replaced by their corresponding
-        state variables.
-        """
-        return self.process_expression(exp).consolidate_variables()
 
     def process_expression(self, exp):
         """  Process an arbitrary expression """
@@ -58,15 +42,6 @@ class Parser(object):
         else:
             raise ParseException("Unknown expression type for expression '{}'".format(exp))
 
-    def process_define_expression(self, exp):
-        """ Process the special @define atoms """
-        assert len(exp.args) == 1
-        return DefinedExpression(exp.negated, self.process_functional_expression(exp.args[0]))
-
-    def process_constraint_expression(self, exp):
-        """ Process a constraint expression such as sum(x,y,z). """
-        return base.ConstraintExpressionCatalog.instantiate_custom_constraint(exp.predicate, self.process_argument_list(exp.args))
-
     def process_relational_operator(self, exp):
         """ Process a relational operator such as =, <=, ... """
         return RelationalExpression(exp.predicate, exp.negated, self.process_argument_list(exp.args))
@@ -76,7 +51,7 @@ class Parser(object):
         return ArithmeticExpression(exp.symbol, self.process_argument_list(exp.args))
 
     def is_static(self, symbol):
-        return symbol in self.static or symbol in BASE_SYMBOLS
+        return symbol in self.static or symbol in BASE_SYMBOLS or is_external(symbol)
 
     def process_functional_expression(self, exp):
         """  Parse a functional expression """
@@ -90,19 +65,19 @@ class Parser(object):
 
     def process_predicative_expression(self, exp):
         assert isinstance(exp, (Atom, NegatedAtom))
-        if exp.predicate == "@defined":  # An special _is_defined_  predicate
-            result = self.process_define_expression(exp)
-
-        elif is_basic_symbol(exp.predicate):  # A relational operator
+        if is_basic_symbol(exp.predicate):  # A relational operator
             result = self.process_relational_operator(exp)
 
-        elif is_constraint_expression(exp.predicate):
-            result = self.process_constraint_expression(exp)
-
         else:  # A "standard" predicate
-            if self.is_static(exp.predicate):
+            # if self.is_static(exp.predicate):
+            #     result = StaticPredicativeExpression(exp.predicate, exp.negated, self.process_argument_list(exp.args))
+            # else:  # an atom p is equivalent to a relation p = 1; and similarly for a negated atom, but with p = 0
+            if is_external(exp.predicate):
+                assert not exp.negated, "Negated external symbols still unimplemented"
+                if not self.is_static(exp.predicate):
+                    raise RuntimeError("External symbols cannot be fluent")
                 result = StaticPredicativeExpression(exp.predicate, exp.negated, self.process_argument_list(exp.args))
-            else:  # an atom p is equivalent to a relation p = 1; and similarly for a negated atom, but with p = 0
+            else:
                 value = "1" if not exp.negated else "0"
                 atom = Atom("=", [FunctionalTerm(exp.predicate, exp.args), value])
                 result = self.process_relational_operator(atom)
@@ -114,5 +89,7 @@ class Parser(object):
         return [self.process_expression(arg) for arg in args]
 
     def check_declared(self, symbol):
-        if not is_basic_symbol(symbol) and not is_constraint_expression(symbol) and symbol not in self.all:
+        if not is_basic_symbol(symbol) and \
+           symbol not in self.all and \
+           not is_external(symbol):
             raise ParseException("Undeclared symbol '{0}'".format(symbol))

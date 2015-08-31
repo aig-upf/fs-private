@@ -6,7 +6,7 @@
 #include <cassert>
 #include <fs0_types.hxx>
 #include <atoms.hxx>
-#include <state.hxx>
+#include <relaxed_state.hxx>
 #include <problem.hxx>
 
 namespace fs0 {
@@ -18,11 +18,10 @@ namespace fs0 {
  * atoms that make a particular effect reachable, i.e. those related to the relevant
  * variables of the effect procedure that achieves the effect.
  */
-class RPGData
-{
+class RPGData {
 public:
-	//! <layer ID, Action ID, action support, atom support>
-	typedef std::tuple<unsigned, ActionIdx, Atom::vctrp, Atom::vctrp> AtomSupport;
+	//! <layer ID, Action ID, support>
+	typedef std::tuple<unsigned, ActionIdx, Atom::vctrp> AtomSupport;
 	typedef std::map<Atom, AtomSupport> SupportMap;
 
 protected:
@@ -75,12 +74,13 @@ public:
 	}
 
 	//! Accumulates all the atoms contained *in the last layer* of the given RPG into the given relaxed state.
-	static void accumulate(RelaxedGenericState& state, const RPGData& rpg) {
+	static void accumulate(RelaxedState& state, const RPGData& rpg) {
 		for (const Atom* atom:rpg.novelAtoms) {
 			state.set(*atom);
 		}
 	}
 
+	//! Get the set of new atoms in the last RPG layer
 	const std::vector<const Atom*>& getNovelAtoms() const { return novelAtoms; }
 
 	//! Returns true iff the given atom is not already tracked by the RPG. In that case, it returns an insertion hint too.
@@ -95,9 +95,9 @@ public:
 	}
 
 	//! The version with hint assumes that the atom needs to be inserted.
-	void add(const Atom& atom, ActionIdx action, Atom::vctrp actionSupport, Atom::vctrp atomSupport, SupportMap::iterator hint) {
+	void add(const Atom& atom, ActionIdx action, Atom::vctrp support, SupportMap::iterator hint) {
 		// updateEffectMapSimple(fact, RelaxedPlanExtractor::pruneSeedSupporters(extraCauses, _seed));
-		auto it = _effects.insert(hint, std::make_pair(atom, std::make_tuple(currentLayerIdx, action, actionSupport, atomSupport)));
+		auto it = _effects.insert(hint, std::make_pair(atom, std::make_tuple(currentLayerIdx, action, support)));
 		
 		// Keep a pointer to the inserted atom. Since the current strategy guarantees that we only insert one atom the first time we encounter it,
 		// we can be sure that pointers in the 'novelAtoms' will always be valid and that no pointer will be intended to point to the same atom twice.
@@ -105,24 +105,22 @@ public:
 		novelAtoms.push_back(&(it->first));
 	}
 	
-	void add(const Atom& atom, ActionIdx action, Atom::vctrp actionSupport, Atom::vctrp atomSupport) {
+	//! Add an atom to the set of newly-reached atoms, only if it is indeed new.
+	void add(const Atom& atom, ActionIdx action, Atom::vctrp support) {
 		auto hint = getInsertionHint(atom);
 		if (!hint.first) return; // Don't insert the atom if it was already tracked by the RPG
-		add(atom, action, actionSupport, atomSupport, hint.second);
+		add(atom, action, support, hint.second);
 	}
 
 	friend std::ostream& operator<<(std::ostream &os, const RPGData& data) { return data.print(os); }
 
 	//! Prints a representation of the RPG data to the given stream.
 	std::ostream& print(std::ostream& os) const {
-		os << "All RPG accumulated atoms (" << _effects.size() << "): ";
+		os << "Relaxed Planning Graph atoms (" << _effects.size() << "): " << std::endl;
 		for (const auto& x:_effects) {
-			os << x.first  << " (action #" << std::get<1>(x.second) << "), (layer #" << std::get<0>(x.second) << "), (action support: ";
+			os << x.first  << " - action #" << std::get<1>(x.second) << " - layer #" << std::get<0>(x.second) << " - support: ";
 			printAtoms(std::get<2>(x.second), os);
-			os << "), ";
-			os << "(atom support: ";
-			printAtoms(std::get<3>(x.second), os);
-			os << "), ";
+			os << std::endl;
 		}
 		os << std::endl;
 		return os;

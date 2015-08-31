@@ -1,37 +1,60 @@
 
 #include <cassert>
 #include <memory>
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <problem.hxx>
 #include <utils/loader.hxx>
-#include <constraints/constraint_factory.hxx>
-#include <actions.hxx>
+#include <actions/ground_action.hxx>
+#include <component_factory.hxx>
 
 #include <iostream>
 
+#include <languages/fstrips/loader.hxx>
+#include <heuristics/rpg/action_manager_factory.hxx>
+#include <actions/ground_action.hxx>
+
+#include <component_factory.hxx>
+#include <utils/logging.hxx>
+
+
+namespace fs = fs0::language::fstrips;
+
 namespace fs0 {
 
-void Loader::loadProblem(const rapidjson::Document& data, ActionFactoryType actionFactory, ConstraintFactoryType constraintFactory, GoalFactoryType goalFactory, Problem& problem) {
+void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory, Problem& problem) {
+	
+	// Load and set the ProblemInfo data structure
+	auto info = new ProblemInfo(data);
+	problem.setProblemInfo(info);
+	
+	//! Load the actual static functions
+	loadFunctions(factory, problem, *info);
+	
 	/* Define the actions */
 	std::cout << "\tDefining actions..." << std::endl;
-	loadGroundedActions(data["actions"], actionFactory, problem);
-
+	loadActionSchemata(data["action_schemata"], problem);
+	
 	/* Define the initial state */
 	std::cout << "\tDefining initial state..." << std::endl;
 	problem.setInitialState(loadState(data["init"]));
 
 	/* Load the state and goal constraints */
 	std::cout << "\tDefining state and goal constraints..." << std::endl;
-	loadConstraints(data["constraints"], constraintFactory, problem);
+	assert(problem.getStateConstraints().empty());
+	problem.setStateConstraints(loadGroundedConditions(data["state_constraints"], problem));
 
 	/* Generate goal constraints from the goal evaluator */
 	std::cout << "\tGenerating goal constraints..." << std::endl;
-	generateGoalConstraints(data["goal"], goalFactory, problem);
+	assert(problem.getGoalConditions().empty());
+	problem.setGoalConditions(loadGroundedConditions(data["goal"], problem));
 }
 
+void Loader::loadFunctions(const BaseComponentFactory& factory, Problem& problem, ProblemInfo& info) {
+	for (auto elem:factory.instantiateFunctions()) {
+		info.setFunction(info.getFunctionId(elem.first), elem.second);
+	}
+}
 
 const State::cptr Loader::loadState(const rapidjson::Value& data) {
 	// The state is an array of two-sized arrays [x,v], representing atoms x=v
@@ -44,73 +67,40 @@ const State::cptr Loader::loadState(const rapidjson::Value& data) {
 	return std::make_shared<State>(numAtoms, facts);
 }
 
-void Loader::loadGroundedActions(const rapidjson::Value& data, ActionFactoryType actionFactory, Problem& problem) {
-	assert(problem.getNumActions() == 0);
+
+void Loader::loadActionSchemata(const rapidjson::Value& data, Problem& problem) {
+	assert(problem.getActionSchemata().empty());
 	
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		const rapidjson::Value& node = data[i];
-		
-// 		# Format: a number of elements defining the action:
-// 		# (0) Action ID (index)
-// 		# (1) Action name
-// 		# (2) classname
-// 		# (3) binding
-// 		# (4) derived objects
-// 		# (5) applicability relevant vars
-// 		# (6) effect relevant vars
-// 		# (7) effect affected vars
-		
-		
-		// We ignore the grounded name for the moment being.
-		const std::string& actionClassname = node[2].GetString();
-		ObjectIdxVector binding = parseNumberList<int>(node[3]);
-		ObjectIdxVector derived = parseNumberList<int>(node[4]);
-		std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(node[5]);
-		std::vector<VariableIdxVector> effRelevantVars = parseDoubleNumberList<unsigned>(node[6]);
-		VariableIdxVector effAffectedVars = parseNumberList<unsigned>(node[7]);
-		
-		problem.addAction(actionFactory(actionClassname, binding, derived, appRelevantVars, effRelevantVars, effAffectedVars));
+ 		problem.addActionSchema(loadActionSchema(data[i], problem.getProblemInfo()));
 	}
 }
 
-void Loader::generateGoalConstraints(const rapidjson::Value& data, GoalFactoryType goalFactory, Problem& problem) {
-	// We have one single line with the variables indexes relevant to the goal procedures.
-	std::vector<VariableIdxVector> appRelevantVars = parseDoubleNumberList<unsigned>(data);
-	ScopedConstraint::vcptr goal_constraints = goalFactory(appRelevantVars);
+ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const ProblemInfo& info) {
+	const std::string& name = node["name"].GetString();
+	const std::vector<TypeIdx> signature = parseNumberList<unsigned>(node["signature"]);
+	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	
-	for (const auto& ctr:goal_constraints) {
-		problem.registerGoalConstraint(ctr);
-	}
+	const std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(node["conditions"], info);
+	const std::vector<ActionEffectSchema::cptr> effects = fs::Loader::parseAtomicEffectList(node["effects"], info);
+	
+	return new ActionSchema(name, signature, parameters, conditions, effects);
 }
 
-void Loader::loadConstraints(const rapidjson::Value& data, ConstraintFactoryType constraintFactory, Problem& problem) {
-
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		const rapidjson::Value& node = data[i];
-		
-		// Each node contains 4 elements
-		// (0) The constraint description
-		// (1) The constraint name
-		// (2) The constraint parameters
-		// (3) The variables upon which the constraint is enforced
-		assert(node.Size()==4);
-
-		// We ignore the grounded name for the moment being.
-		const std::string& name = node[1].GetString();
-		ObjectIdxVector parameters = parseNumberList<int>(node[2]);
-		VariableIdxVector variables = parseNumberList<unsigned>(node[3]);
-		
-		problem.registerConstraint(constraintFactory(name, parameters, variables));
+std::vector<AtomicFormula::cptr> Loader::loadGroundedConditions(const rapidjson::Value& data, Problem& problem) {
+	std::vector<AtomicFormula::cptr> processed;
+	std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(data["conditions"], problem.getProblemInfo());
+	for (const AtomicFormulaSchema::cptr condition:conditions) {
+		processed.push_back(condition->process({}, {}, problem.getProblemInfo())); // The conditions are by definition already grounded, thus we need no binding
+		delete condition;
 	}
+	return processed;
 }
 
 rapidjson::Document Loader::loadJSONObject(const std::string& filename) {
 	// Load and parse the JSON data file.
 	std::ifstream in(filename);
-	if ( in.fail() ) {
-		std::cerr << "Could not open filename '" << filename << "'" << std::endl;
-		std::exit(1);
-	}
+	if (in.fail()) throw std::runtime_error("Could not open filename '" + filename + "'");
 	std::string str((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	rapidjson::Document data;
 	data.Parse(str.c_str());
@@ -123,6 +113,14 @@ std::vector<T> Loader::parseNumberList(const rapidjson::Value& data) {
 	std::vector<T> output;
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		output.push_back(boost::lexical_cast<T>(data[i].GetInt()));
+	}
+	return output;
+}
+
+std::vector<std::string> Loader::parseStringList(const rapidjson::Value& data) {
+	std::vector<std::string> output;
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		output.push_back(data[i].GetString());
 	}
 	return output;
 }
