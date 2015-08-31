@@ -22,7 +22,8 @@ std::ostream& State::print(std::ostream& os) const {
 	os << "State";
 	os << "(" << _hash << ")[";
 	for (unsigned i = 0; i < _values.size(); ++i) { // Iterate through all the sets
-		os << problemInfo.getVariableName(i) << "=" << problemInfo.getObjectName(i, _values.at(i)) << ",";
+		os << problemInfo.getVariableName(i) << "=" << problemInfo.getObjectName(i, _values.at(i));
+		if (i < _values.size() - 1) os << ", ";
 	}
 	os << "]";
 	return os;

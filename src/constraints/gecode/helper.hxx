@@ -20,26 +20,29 @@ class SimpleCSP; class GecodeCSPVariableTranslator; enum class CSPVariableType;
 class Helper {
 public:
 	//! Creates a CSP variable constraining its domain according to the given type
-	static Gecode::IntVar createVariable(Gecode::Space& csp, TypeIdx typeId);
+	static Gecode::IntVar createVariable(Gecode::Space& csp, TypeIdx typeId, bool nullable = false);
 	
 	//! Creates a CSP variable constraining its domain based on the planning problem variable type
-	static Gecode::IntVar createPlanningVariable(Gecode::Space& csp, VariableIdx var);
+	static Gecode::IntVar createPlanningVariable(Gecode::Space& csp, VariableIdx var, bool nullable = false);
 	
 	//! Creates a CSP variable constraining its domain based on the given domain type
 	static Gecode::IntVar createTemporaryVariable(Gecode::Space& csp, TypeIdx typeId);
 	
-	//! Creates a temporary int variable within the given bounds.
+	//! Creates a Gecode int variable within the given bounds.
 	static Gecode::IntVar createTemporaryIntVariable(Gecode::Space& csp, int min, int max);
 	
+	//! Creates a Gecode bool variable within the given bounds.
+	static Gecode::BoolVar createBoolVariable(Gecode::Space& csp);
+	
 	//! Constrains the given CSP variable to have values in the given domain
-	static void constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain);
+	static void constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain, bool include_dont_care = false);
 	
 	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
 	//! that underlies the static term in all interpretations.
 	static Gecode::TupleSet extensionalize(const fs::StaticHeadedNestedTerm::cptr term);
 
 	//! Builds a gecode tupleset from the values contained in a state variable domain
-	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain);
+	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain, bool include_dont_care = false);
 	
 	//! A simple helper to post a certain Gecode branching strategy to the CSP
 	static void postBranchingStrategy(SimpleCSP& csp);
@@ -47,6 +50,12 @@ public:
 	//! Small helper to check whether a Gecode IntVarValues set contains a given value
 	//! Unfortunately, it has linear cost.
 	static int selectValueIfExists(IntVarValues& value_set, int value);
+	
+	//! Update the variables of the given CSP
+	static void update_csp(SimpleCSP& csp, const IntVarArgs& intvars, const BoolVarArgs& boolvars);
+	
+	//! Computes a proper DONT_CARE value which is as close as possible to zero but not used as the ID of any object.
+	static int computeDontCareValue();
 };
 
 } } // namespaces

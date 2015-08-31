@@ -11,24 +11,24 @@
 namespace fs0 { namespace gecode {
 
 
-void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) {
+void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
-	component_translator->registerVariables(term, type, csp, translator, variables);
+	component_translator->registerVariables(term, type, csp, translator, intvars, boolvars);
 }
 
-void GecodeCSPHandler::registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables) {
-	for (const auto term:terms) registerTermVariables(term, type, csp, translator, variables);
+void GecodeCSPHandler::registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
+	for (const auto term:terms) registerTermVariables(term, type, csp, translator, intvars, boolvars);
 }
 
-void GecodeCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& variables) {
+void GecodeCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*condition);
 	assert(component_translator);
-	component_translator->registerVariables(condition, _base_csp, _translator, variables);
+	component_translator->registerVariables(condition, _base_csp, _translator, intvars, boolvars);
 }
 
-void GecodeCSPHandler::registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& variables) {
-	for (const auto condition:conditions) registerFormulaVariables(condition, variables);
+void GecodeCSPHandler::registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
+	for (const auto condition:conditions) registerFormulaVariables(condition, intvars, boolvars);
 }
 
 

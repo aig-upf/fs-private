@@ -30,11 +30,8 @@ public:
 	static std::vector<std::shared_ptr<BaseActionManager>> create(const std::vector<GroundAction::cptr>& actions);
 
 protected:
-	//! Returns true iff at least one of the preconditions of the action has arity higher than one.
-	static bool actionHasHigherArityPreconditions(const GroundAction& action);
-
-	//! Returns true iff at least one of the effects of the action has arity higher than one.
-	static bool actionHasHigherArityEffects(const GroundAction& action);
+	//! Returns true iff at the properties of the action make necessary to use the gecode action manager.
+	static bool gecodeManagerNeeded(const GroundAction& action);
 };
 
 } // namespaces

@@ -40,7 +40,7 @@ std::ostream& RelaxedState::print(std::ostream& os) const {
 		for (const auto& objIdx:*vals) { // Iterate through the set elements.
 			os << problemInfo.getObjectName(i, objIdx) << ",";
 		}
-		os << "}, ";
+		if (i < _domains.size() - 1) os << "}, ";
 	}
 	os << "]";
 	return os;

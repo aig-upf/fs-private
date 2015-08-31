@@ -8,6 +8,7 @@
 #include <problem_info.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/utils/translation.hxx>
+#include "translators/nested_fluent.hxx"
 #include <languages/fstrips/language.hxx>
 
 #include <gecode/int.hh>
@@ -40,7 +41,7 @@ public:
  *   - 'x' is the ID of a planning variable
  *   - 't' is the type or role under which this variable can appear on a CSP
  *     (e.g. the same state variable 'val(c1)' could appear in a certain CSP as input _and_ output variable of an effect
- *   - 'y' is the identifier of the CSP variable (i.e. implementation-wise, the position in which the variable appears on the '_X' IntVarArray of the CSP)
+ *   - 'y' is the identifier of the CSP variable (i.e. implementation-wise, the position in which the variable appears on the '_intvars' IntVarArray of the CSP)
  */
 class GecodeCSPVariableTranslator {
 public:
@@ -66,12 +67,15 @@ public:
 	//! Register the given term (under the give role/type) by creating a corresponding CSP variable.
 	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)
 	bool registerConstant(fs::Constant::cptr constant, SimpleCSP& csp, Gecode::IntVarArgs& variables);
+	
 	bool registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
+	
+	//! Register a state variable which is derived from a nested fluent
+	bool registerDerivedStateVariable(VariableIdx variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
+	
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, TypeIdx domain_type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, int min, int max, SimpleCSP& csp, Gecode::IntVarArgs& variables);
-
-	void registerNestedTermIndirection( fs::NestedTerm::cptr, int max_idx, SimpleCSP& csp, Gecode::IntVarArgs& variables );
 
 	//! Returns the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
 	const Gecode::IntVar& resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const;
@@ -82,7 +86,12 @@ public:
 	//! Handy helper to resolve a number of variables at the same time
 	Gecode::IntVarArgs resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const;
 
-	Gecode::IntVar resolveNestedTermIndirection( fs::Term::cptr, const SimpleCSP& csp ) const;
+	//! Registers auxiliary data necessary for the element constraint that corresponds to the given term
+	void registerNestedFluent(fs::NestedTerm::cptr term, unsigned table_size, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	
+	//! Returns auxiliary data necessary for the element constraint that corresponds to the given term. Const and non-const versions
+	NestedFluentData& resolveNestedFluent(fs::Term::cptr term);
+	const NestedFluentData& resolveNestedFluent(fs::Term::cptr term) const;
 
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
@@ -92,7 +101,7 @@ public:
 	const Gecode::IntVar&  resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);
 		if (it == _input_state_variables.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered input state variable");
-		return csp._X[it->second];
+		return csp._intvars[it->second];
 	}
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
@@ -104,13 +113,21 @@ public:
 	const Gecode::IntVar& resolveOutputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
 		const auto& it = _output_state_variables.find(variable);
 		if (it == _output_state_variables.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered output state variable");
-		return csp._X[it->second];
+		return csp._intvars[it->second];
 	}
 
 	//! Returns the value of the CSP variable that corresponds to the given output state variable, in the given CSP.
 	const ObjectIdx resolveOutputStateVariableValue(const SimpleCSP& csp, VariableIdx variable) const {
 		return resolveOutputStateVariable(csp, variable).val();
 	}
+	
+	//! Returns the CSP variable that corresponds to the given derived state variable, in the given CSP.
+	const Gecode::IntVar& resolveDerivedStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
+		const auto& it = _derived.find(variable);
+		if (it == _derived.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered derived state variable");
+		return csp._intvars[it->second];
+	}
+	
 
 	const std::unordered_map<VariableIdx, unsigned>& getAllInputVariables() const { return _input_state_variables; }
 	
@@ -124,6 +141,9 @@ protected:
 	//! A map mapping terms that have already been processed (under a certain role, e.g. input/output) to the ID of their corresponding CSP variable
 	std::unordered_map<TranslationKey, unsigned> _registered;
 	
+	//! A map from terms representing derived state variables to the ID of their corresponding CSP variable
+	std::unordered_map<VariableIdx, unsigned> _derived;
+	
 	//! A set marking all terms whose corresponding constraints have already been posted.
 	std::unordered_set<TranslationKey> _posted;
 
@@ -133,8 +153,8 @@ protected:
 	std::unordered_map<VariableIdx, unsigned> _input_state_variables;
 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
 
-	//! A table keeping track of what term CSP variable points to what output variable (nested fluents)
-	std::unordered_map<TranslationKey, unsigned > _pointer_table;
+	//! A table keeping track of auxiliary data for the element constraint that is necessary for the given term / type.
+	std::unordered_map<TranslationKey, NestedFluentData> element_constraint_data;
 };
 
 

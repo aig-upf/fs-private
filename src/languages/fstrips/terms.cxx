@@ -1,6 +1,6 @@
 
 #include <problem_info.hxx>
-#include <languages/fstrips/language.hxx>
+#include <languages/fstrips/terms.hxx>
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>
@@ -9,13 +9,6 @@
 #include <typeinfo>
 
 namespace fs0 { namespace language { namespace fstrips {
-
-// A small workaround to circumvent the fact that boost containers do not seem to allow initializer lists
-typedef RelationalFormula::Symbol AFSymbol;
-const std::map<AFSymbol, std::string> RelationalFormula::symbol_to_string{
-	{AFSymbol::EQ, "="}, {AFSymbol::NEQ, "!="}, {AFSymbol::LT, "<"}, {AFSymbol::LEQ, "<="}, {AFSymbol::GT, ">"}, {AFSymbol::GEQ, ">="}
-};
-const std::map<std::string, AFSymbol> RelationalFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
 
 
 //! A helper to interpret a vector of terms
@@ -28,12 +21,6 @@ ObjectIdxVector NestedTerm::interpret_subterms(const std::vector<Term::cptr>& su
 	return interpreted;
 }
 
-VariableIdxVector Term::computeScope() const {
-	std::set<VariableIdx> set;
-	computeScope(set);
-	return VariableIdxVector(set.cbegin(), set.cend());
-}
-
 std::ostream& LogicalElement::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
 
 std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -41,10 +28,14 @@ std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const 
 	return os;
 }
 
-void NestedTerm::computeScope(std::set<VariableIdx>& scope) const {
+std::vector<Term::cptr> NestedTerm::flatten() const {
+	std::vector<Term::cptr> res;
+	res.push_back(this);
 	for (Term::cptr term:_subterms) {
-		term->computeScope(scope);
+		auto tmp = term->flatten();
+		res.insert(res.end(), tmp.cbegin(), tmp.cend());
 	}
+	return res;
 }
 
 
@@ -76,20 +67,6 @@ ObjectIdx UserDefinedStaticTerm::interpret(const State& state) const {
 	return _function.getFunction()(interpret_subterms(_subterms, state));
 }
 
-
-void FluentHeadedNestedTerm::computeScope(std::set<VariableIdx>& scope) const {
-	// The scope of a term headed by a nested fluent contains the scope of all the subterms
-	// plus all possible state variables in which the top-level fluent might result
-	NestedTerm::computeScope(scope);
-	computeTopLevelScope(scope);
-}
-
-void FluentHeadedNestedTerm::computeTopLevelScope(std::set<VariableIdx>& scope) const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	const VariableIdxVector& possible_variables = info.resolveStateVariable(_symbol_id);
-	scope.insert(possible_variables.cbegin(), possible_variables.cend());
-}
-
 ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment) const {
 	return assignment.at(interpretVariable(assignment));
 }
@@ -109,18 +86,10 @@ VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state) const 
 	return variable;
 }
 
-void FluentHeadedNestedTerm::computeSubtermScope(std::set<VariableIdx>& scope) const  {
-	return NestedTerm::computeScope(scope);
-}
-
 std::pair<int, int> FluentHeadedNestedTerm::getBounds() const {
 	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	auto type = Problem::getCurrentProblem()->getProblemInfo().getFunctionData(_symbol_id).getCodomainType();
 	return info.getTypeBounds(type);
-}
-
-void StateVariable::computeScope(std::set<VariableIdx>& scope) const {
-	scope.insert(_variable_id);
 }
 
 ObjectIdx StateVariable::interpret(const State& state) const {
@@ -147,79 +116,6 @@ std::ostream& IntConstant::print(std::ostream& os, const fs0::ProblemInfo& info)
 	return os;
 }
 
-VariableIdxVector AtomicFormula::computeScope() const {
-	std::set<VariableIdx> set;
-	computeScope(set);
-	return VariableIdxVector(set.cbegin(), set.cend());
-}
-
-void AtomicFormula::computeScope(std::set<VariableIdx>& scope) const {
-	for (const auto subterm:_subterms) subterm->computeScope(scope);
-}
-
-bool AtomicFormula::interpret(const PartialAssignment& assignment) const {
-	return _satisfied(NestedTerm::interpret_subterms(_subterms, assignment));
-}
-
-bool AtomicFormula::interpret(const State& state) const {
-	return _satisfied(NestedTerm::interpret_subterms(_subterms, state));
-}
-
-std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << *_subterms[0] << " " << RelationalFormula::symbol_to_string.at(symbol()) << " " << *_subterms[1];
-	return os;
-}
-
-
-bool ActionEffect::isWellFormed() const {
-	auto lhs_var = dynamic_cast<StateVariable::cptr>(lhs);
-	auto lhs_fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(lhs);
-	return lhs_var || lhs_fluent; // The LHS of the effect must be either a state variable or a fluent function.
-}
-
-Atom ActionEffect::apply(const State& state) const {
-	return Atom(lhs->interpretVariable(state), rhs->interpret(state));
-}
-
-void ActionEffect::computeScope(std::set<VariableIdx>& scope) const {
-	// The left hand side of the effect only contributes to the set of relevant variables if it itself
-	// is headed by a fluent function containing other state variables.
-	if (FluentHeadedNestedTerm::cptr lhs_fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(lhs)) {
-		lhs_fluent->computeSubtermScope(scope);
-	}
-	rhs->computeScope(scope);
-}
-
-VariableIdxVector ActionEffect::computeScope() const {
-	std::set<VariableIdx> set;
-	computeScope(set);
-	return VariableIdxVector(set.cbegin(), set.cend());
-}
-
-void ActionEffect::computeAffected(std::set<VariableIdx>& affected) const {
-	if (auto lhs_var = dynamic_cast<StateVariable::cptr>(lhs)) {
-		affected.insert(lhs_var->getValue());
-	} else {
-		// We necessarily have a LHS term headed by a fluent function
-		auto lhs_fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(lhs);
-		assert(lhs_fluent);
-		lhs_fluent->computeTopLevelScope(affected);
-	}
-}
-
-VariableIdxVector ActionEffect::computeAffected() const {
-	std::set<VariableIdx> set;
-	computeAffected(set);
-	return VariableIdxVector(set.cbegin(), set.cend());
-}
-
-
-std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
-
-std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << *lhs << " := " << *rhs;
-	return os;
-}
 
 
 bool NestedTerm::operator==(const Term& other) const {
@@ -272,8 +168,6 @@ std::size_t Constant::hash_code() const {
 	boost::hash_combine(hash, _value);
 	return hash;
 }
-
-
 
 
 } } } // namespaces

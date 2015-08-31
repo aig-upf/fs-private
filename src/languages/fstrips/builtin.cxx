@@ -17,11 +17,14 @@ StaticHeadedNestedTerm::cptr ArithmeticTermFactory::create(const std::string& sy
 
 
 
-AdditionTerm::AdditionTerm(const std::vector<Term::cptr>& subterms)
+ArithmeticTerm::ArithmeticTerm(const std::vector<Term::cptr>& subterms)
 	: StaticHeadedNestedTerm(-1, subterms)
 {
 	assert(subterms.size() == 2);
 }
+
+AdditionTerm::AdditionTerm(const std::vector<Term::cptr>& subterms)
+	: ArithmeticTerm(subterms) {}
 
 ObjectIdx AdditionTerm::interpret(const PartialAssignment& assignment) const {
 	return _subterms[0]->interpret(assignment) + _subterms[1]->interpret(assignment);
@@ -43,10 +46,7 @@ std::ostream& AdditionTerm::print(std::ostream& os, const fs0::ProblemInfo& info
 }
 
 SubtractionTerm::SubtractionTerm(const std::vector<Term::cptr>& subterms)
-	: StaticHeadedNestedTerm(-1, subterms)
-{
-	assert(subterms.size() == 2);
-}
+	: ArithmeticTerm(subterms) {}
 
 ObjectIdx SubtractionTerm::interpret(const PartialAssignment& assignment) const {
 	return _subterms[0]->interpret(assignment) - _subterms[1]->interpret(assignment);
@@ -69,10 +69,7 @@ std::ostream& SubtractionTerm::print(std::ostream& os, const fs0::ProblemInfo& i
 
 
 MultiplicationTerm::MultiplicationTerm(const std::vector<Term::cptr>& subterms)
-	: StaticHeadedNestedTerm(-1, subterms)
-{
-	assert(subterms.size() == 2);
-}
+	: ArithmeticTerm(subterms) {}
 
 ObjectIdx MultiplicationTerm::interpret(const PartialAssignment& assignment) const {
 	return _subterms[0]->interpret(assignment) * _subterms[1]->interpret(assignment);

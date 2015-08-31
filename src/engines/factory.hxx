@@ -16,6 +16,8 @@ typedef aptk::SearchAlgorithm<FS0StateModel> FS0SearchAlgorithm;
 class EngineFactory {
 public:
 	static std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const FS0StateModel& model);
+	
+	static bool needsGecodeRPGBuilder(const std::vector<fs::AtomicFormula::cptr>& goal_conditions, const std::vector<fs::AtomicFormula::cptr>& state_constraints);
 };
 
 

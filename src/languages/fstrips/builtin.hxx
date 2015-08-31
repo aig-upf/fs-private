@@ -17,8 +17,16 @@ public:
 };
 
 
+//! A statically-headed term that performs some arithmetic operation to its two subterms
+class ArithmeticTerm : public StaticHeadedNestedTerm {
+public:
+	typedef const ArithmeticTerm* cptr;
+	
+	ArithmeticTerm(const std::vector<Term::cptr>& subterms);
+};
+
 //! A statically-headed term that adds up the values of the two subterms
-class AdditionTerm : public StaticHeadedNestedTerm {
+class AdditionTerm : public ArithmeticTerm {
 public:
 	typedef const AdditionTerm* cptr;
 	
@@ -36,7 +44,7 @@ public:
 };
 
 //! A statically-headed term that subtracts up the values of the two subterms
-class SubtractionTerm : public StaticHeadedNestedTerm {
+class SubtractionTerm : public ArithmeticTerm {
 public:
 	typedef const SubtractionTerm* cptr;
 	
@@ -54,7 +62,7 @@ public:
 };
 
 //! A statically-headed term that multiplies the values of the two subterms
-class MultiplicationTerm : public StaticHeadedNestedTerm {
+class MultiplicationTerm : public ArithmeticTerm {
 public:
 	typedef const MultiplicationTerm* cptr;
 	

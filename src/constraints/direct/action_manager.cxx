@@ -8,6 +8,7 @@
 #include <constraints/direct/bound_constraint.hxx>
 #include <utils/projections.hxx>
 #include <utils/logging.hxx>
+#include <languages/fstrips/scopes.hxx>
 
 namespace fs0 {
 
@@ -29,6 +30,8 @@ DirectActionManager::DirectActionManager(const GroundAction& action, std::vector
 	  _action(action),
 	  _constraints(constraints),
 	  _effects(effects),
+	  _scope(ScopeUtils::computeActionDirectScope(action)),
+	  _allRelevant(extractAllRelevant()),
 	  _handler(_constraints)
 {}
 
@@ -38,11 +41,17 @@ DirectActionManager::~DirectActionManager() {
 	
 }
 
+VariableIdxVector DirectActionManager::extractAllRelevant() const {
+	std::set<VariableIdx> unique(_scope.begin(), _scope.end());
+	for (ActionEffect::cptr effect:_action.getEffects()) ScopeUtils::computeDirectScope(effect, unique);
+	return VariableIdxVector(unique.cbegin(), unique.cend());
+}
+
 void DirectActionManager::process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg) {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
-	DomainMap actionProjection = Projections::projectCopyToActionVariables(layer, _action);
-
+	DomainMap actionProjection = Projections::projectCopy(layer, _allRelevant);
+	
 	if (checkPreconditionApplicability(actionProjection)) { // Check with local consistency
 		processEffects(actionIdx, actionProjection, rpg);
 	}
@@ -55,8 +64,6 @@ bool DirectActionManager::checkPreconditionApplicability(const DomainMap& domain
 }
 
 void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const {
-	const VariableIdxVector& actionScope = _action.getScope();
-
 	for (const DirectEffect::cptr effect:_effects) {
 		const VariableIdxVector& effectScope = effect->getScope();
 
@@ -67,10 +74,9 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 			auto hint = rpg.getInsertionHint(atom);
 
 			if (hint.first) {
-				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>(); // 0-ary effects will have no atom support
-				Atom::vctrp actionSupport = std::make_shared<Atom::vctr>();
-				completeAtomSupport(actionScope, actionProjection, effectScope, actionSupport);
-				rpg.add(atom, actionIdx, actionSupport, atomSupport, hint.second);
+				Atom::vctrp support = std::make_shared<Atom::vctr>();
+				completeAtomSupport(_scope, actionProjection, effectScope, support);
+				rpg.add(atom, actionIdx, support, hint.second);
 			}
 		}
 
@@ -82,11 +88,10 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 				auto hint = rpg.getInsertionHint(atom);
 
 				if (hint.first) {
-				Atom::vctrp atomSupport = std::make_shared<Atom::vctr>();
-				Atom::vctrp actionSupport = std::make_shared<Atom::vctr>();
-					atomSupport->push_back(Atom(effectScope[0], value));// Just insert the only value
-					completeAtomSupport(actionScope, actionProjection, effectScope, actionSupport);
-					rpg.add(atom, actionIdx, actionSupport, atomSupport, hint.second);
+					Atom::vctrp support = std::make_shared<Atom::vctr>();
+					support->push_back(Atom(effectScope[0], value));// Just insert the only value
+					completeAtomSupport(_scope, actionProjection, effectScope, support);
+					rpg.add(atom, actionIdx, support, hint.second);
 				}
 			}
 		}

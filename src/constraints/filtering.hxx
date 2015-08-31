@@ -11,5 +11,5 @@ namespace fs0 {
 	 *   - ArcReduction: Binary constraints arc-reduce their domains wrt one of the two variables of their scope. This is used in the AC3 algorithm.
 	 *   - Custom: Other types of constraints might apply any other filtering to ensure some type of local consistency.
 	 */
-	enum class FilteringType {Unary, ArcReduction, Custom};	
+	enum class FilteringType {Unary, ArcReduction, Custom};
 } // namespaces

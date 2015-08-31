@@ -1,7 +1,6 @@
 
 #include <problem_info.hxx>
 #include <languages/fstrips/schemata.hxx>
-#include <languages/fstrips/language.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <problem.hxx>
 #include <utils/utils.hxx>

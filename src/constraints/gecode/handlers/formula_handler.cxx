@@ -3,6 +3,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <utils/logging.hxx>
+#include <languages/fstrips/scopes.hxx>
 
 #include <gecode/driver.hh>
 
@@ -38,10 +39,12 @@ SimpleCSP::ptr GecodeFormulaCSPHandler::instantiate_csp(const RelaxedState& laye
 
 
 void GecodeFormulaCSPHandler::createCSPVariables() {
-	IntVarArgs variables;
-	registerFormulaVariables(_conditions,  variables);
-	IntVarArray tmp(_base_csp, variables);
-	_base_csp._X.update(_base_csp, false, tmp);
+	IntVarArgs intvars;
+	BoolVarArgs boolvars;
+
+	registerFormulaVariables(_conditions,  intvars, boolvars);
+	
+	Helper::update_csp(_base_csp, intvars, boolvars);	
 }
 
 bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
@@ -53,10 +56,25 @@ bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& suppor
 	if (!solution) return false;
 	
 	FFDEBUG("heuristic", "Formula solution found: " << *solution);
+	
+	// First process the direct state variables
 	for (const auto& it:_translator.getAllInputVariables()) {
 		VariableIdx planning_variable = it.first;
 		support.push_back(Atom(planning_variable, _translator.resolveInputStateVariableValue(*solution, planning_variable)));
 	}
+	
+	// Now process the indirect state variables
+	std::set<VariableIdx> inserted;
+	for (auto fluent:formula_nested_fluents) {
+		VariableIdx variable = _translator.resolveNestedFluent(fluent).resolveStateVariable(*solution);
+		
+		if (inserted.find(variable) == inserted.end()) { // Don't push twice to the support the same atom
+			ObjectIdx value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
+			support.push_back(Atom(variable, value));
+			inserted.insert(variable);
+		}
+	}
+	
 	delete solution;
 	return true;
 }
@@ -72,9 +90,10 @@ bool GecodeFormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {
 void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
 	
+	// First process the direct state variables
 	for (const auto& it:_translator.getAllInputVariables()) {
 		VariableIdx planning_variable = it.first;
-		const Gecode::IntVar& csp_var = csp->_X[it.second];
+		const Gecode::IntVar& csp_var = csp->_intvars[it.second];
 		IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
 		assert(values()); // Otherwise the CSP would be inconsistent!
 		
@@ -84,6 +103,39 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 		if (selected == seed_value) continue;
 		support.push_back(Atom(planning_variable, selected)); // It not, we simply pick the first consistent value
 	}
+	
+	// Now process the indirect state variables
+	// TODO - This part on approximate recovery of values for nested term fluents is a bit iffy.
+	// For state variables acting as nested fluent indexes, we are not ensuring that the same value is selected for them
+	// when acting as support and when acting as index - but this is subject to change when we move into arity > 1 nested fluents,
+	// so I don't think it is worth the extra effort refactoring this now.
+	std::set<VariableIdx> inserted;
+	for (auto fluent:formula_nested_fluents) {
+		auto nested_translator = _translator.resolveNestedFluent(fluent);
+		auto idx_variable = nested_translator.getIndex(*csp);
+		IntVarValues values(idx_variable);
+		assert(values()); // Otherwise the CSP would be inconsistent!
+		int arbitrary_element = values.val();
+		nested_translator.getTableVariables()[arbitrary_element];
+		VariableIdx state_variable = nested_translator.getTableVariables()[arbitrary_element];
+		
+		if (inserted.find(state_variable) == inserted.end()) { // Don't push twice to the support the same atom
+			auto csp_var = _translator.resolveVariable(fluent, CSPVariableType::Input, *csp);
+			IntVarValues values(csp_var);
+			assert(values()); // Otherwise the CSP would be inconsistent!
+			support.push_back(Atom(state_variable, values.val())); // Simply push an arbitrary value
+			inserted.insert(state_variable);
+		}
+	}	
 }
+
+void GecodeFormulaCSPHandler::index_scopes() {
+	ScopeUtils::TermSet nested;
+	for (unsigned i = 0; i < _conditions.size(); ++i) {
+		ScopeUtils::computeIndirectScope(_conditions[i], nested);
+	}
+	formula_nested_fluents = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
+}
+
 
 } } // namespaces

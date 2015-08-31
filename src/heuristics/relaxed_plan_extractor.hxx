@@ -103,8 +103,7 @@ protected:
 		const RPGData::AtomSupport& support = _data.getAtomSupport(atom);
 		
 		registerPlanAction(support);
-		enqueueAtoms(*(std::get<2>(support))); // Push the causes of the causing action.
-		enqueueAtoms(*(std::get<3>(support))); // Push the causes of the particular atom.
+		enqueueAtoms(*(std::get<2>(support))); // Push the full support of the atom
 		processed.insert(atom); // Tag the atom as processed.
 	}
 	
@@ -138,7 +137,8 @@ protected:
 
 	
 	void registerPlanAction(const RPGData::AtomSupport& support) {
-		supporters.insert(SupportedAction(std::get<1>(support), std::get<3>(support)));
+		// Push the action along the full support of the particular atom
+		supporters.insert(SupportedAction(std::get<1>(support), std::get<2>(support)));
 	}
 	
 	float buildRelaxedPlan() {

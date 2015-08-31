@@ -5,6 +5,7 @@
 #include <problem.hxx>
 #include <constraints/registry.hxx>
 #include <utils/logging.hxx>
+#include <languages/fstrips/scopes.hxx>
 
 namespace fs0 {
 
@@ -31,7 +32,7 @@ DirectConstraint::cptr DirectTranslator::generate(const AtomicFormula& formula) 
 DirectConstraint::cptr DirectTranslator::generate(const RelationalFormula& formula) {
 	checkSupported(formula.lhs(), formula.rhs());
 	
-	VariableIdxVector formula_scope = formula.getScope();
+	VariableIdxVector formula_scope = ScopeUtils::computeDirectScope(&formula);
 	if (formula_scope.size() > 2) throw std::runtime_error("Too high a scope for direct constraints");
 	
 	// Here we can assume that the scope is <= 2 and there are no nested fluents
@@ -70,7 +71,7 @@ DirectConstraint::cptr DirectTranslator::generate(const RelationalFormula& formu
 }
 
 DirectConstraint::cptr DirectTranslator::extensionalize(const AtomicFormula& formula) {
-	VariableIdxVector scope = formula.getScope();
+	VariableIdxVector scope = ScopeUtils::computeDirectScope(&formula);
 	
 	if (scope.size() == 1) {
 		return new CompiledUnaryConstraint(scope, [&formula, &scope](ObjectIdx value) {
@@ -94,14 +95,14 @@ std::vector<DirectConstraint::cptr> DirectTranslator::generate(const std::vector
 }
 
 DirectEffect::cptr DirectTranslator::generate(const ActionEffect& effect) {
-	checkSupported(effect.lhs, effect.rhs);
-	auto lhs_var = dynamic_cast<StateVariable::cptr>(effect.lhs);
+	checkSupported(effect.lhs(), effect.rhs());
+	auto lhs_var = dynamic_cast<StateVariable::cptr>(effect.lhs());
 	if (!lhs_var) throw std::runtime_error("Direct effects accept only state variables on the LHS of an effect");
-	VariableIdx affected = effect.affected[0];
+	VariableIdx affected = lhs_var->getValue();
 	
-	const Term& rhs = *effect.rhs;
+	const Term& rhs = *effect.rhs();
 	
-	VariableIdxVector rhs_scope = rhs.computeScope();
+	VariableIdxVector rhs_scope = ScopeUtils::computeDirectScope(effect.rhs());
 	if (rhs_scope.size() > 2) throw std::runtime_error("Too high a scope for direct effects");
 	
 	auto translator = LogicalComponentRegistry::instance().getDirectEffectTranslator(rhs);

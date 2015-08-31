@@ -34,8 +34,8 @@ public:
 	
 	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 
-	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
-	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& variables);
+	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
 
 	static void registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator);
 	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator);
@@ -47,8 +47,8 @@ protected:
 	//! A translator to map planning variables with gecode variables
 	GecodeCSPVariableTranslator _translator;
 
-	void registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& variables);
-	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& variables);
+	void registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
 
 	void registerFormulaConstraints(const fs::AtomicFormula::cptr condition);
 	void registerFormulaConstraints(const std::vector<fs::AtomicFormula::cptr>& conditions);
@@ -81,9 +81,15 @@ public:
 protected:
 	//! The formula being translated
 	const std::vector<fs::AtomicFormula::cptr>& _conditions;
+	
+	//! 'formula_nested_fluents' contains all the nested-fluent terms of the formula
+	std::vector<fs::FluentHeadedNestedTerm::cptr> formula_nested_fluents;
 
 	//! Creates the SimpleCSP that corresponds to a certain amount of relevant variables
 	void createCSPVariables();
+	
+	//! Preprocess the action to store the IDs of direct and indirect state variables
+	void index_scopes();
 };
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
@@ -106,18 +112,30 @@ public:
 
 protected:
 	const GroundAction& _action;
+	
+	//! 'effect_support_variables[i]' contains the scope of the i-th effect of the action plus the scope of the action, without repetitions
+	//! and in that particular order.
+	std::vector<VariableIdxVector> effect_support_variables;
+	
+	//! 'effect_nested_fluents[i]' contains all the nested-fluent terms of the RHS of the i-th effect plus those of the action precondition,
+	//! in that particular order
+	std::vector<std::vector<fs::FluentHeadedNestedTerm::cptr>> effect_nested_fluents;
+	
 
 	//! Creates the SimpleCSP that corresponds to a given action.
 	void createCSPVariables();
 
 	// Variable registration methods
-	void registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& variables);
+	void registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
 
 	// Constraint registration methods
 	void registerEffectConstraints(const fs::ActionEffect::cptr effect);
 
 	//! Prevents the affected variables to take values already achieved in the previous layer
 	// void addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp);
+	
+	//! Preprocess the action to store the IDs of direct and indirect state variables
+	void index_scopes();
 };
 
 //! A CSP modeling and solving the progression between two RPG layers
