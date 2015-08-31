@@ -129,6 +129,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 
 		PartialAssignment solution_assignment = _translator.buildAssignment(*solution);
 		
+		// We compute, effect by effect, the atom produced by the effect for the given solution, as well as its supports
 		for (unsigned i = 0; i < effects.size(); ++i) {
 			ActionEffect::cptr effect = effects[i];
 			VariableIdx affected = effect->lhs()->interpretVariable(solution_assignment);

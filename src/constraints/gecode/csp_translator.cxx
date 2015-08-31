@@ -155,6 +155,8 @@ ObjectIdx GecodeCSPVariableTranslator::resolveValue(fs::Term::cptr term, CSPVari
 	return resolveVariable(term, type, csp).val();
 }
 
+
+
 Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const {
 	Gecode::IntVarArgs variables;
 	for (const Term::cptr term:terms) {

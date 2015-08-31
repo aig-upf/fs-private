@@ -81,9 +81,15 @@ public:
 protected:
 	//! The formula being translated
 	const std::vector<fs::AtomicFormula::cptr>& _conditions;
+	
+	//! 'formula_nested_fluents' contains all the nested-fluent terms of the formula
+	std::vector<fs::FluentHeadedNestedTerm::cptr> formula_nested_fluents;
 
 	//! Creates the SimpleCSP that corresponds to a certain amount of relevant variables
 	void createCSPVariables();
+	
+	//! Preprocess the action to store the IDs of direct and indirect state variables
+	void index_scopes();
 };
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
@@ -128,6 +134,7 @@ protected:
 	//! Prevents the affected variables to take values already achieved in the previous layer
 	// void addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp);
 	
+	//! Preprocess the action to store the IDs of direct and indirect state variables
 	void index_scopes();
 };
 
