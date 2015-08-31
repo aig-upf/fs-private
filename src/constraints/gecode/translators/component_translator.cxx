@@ -5,6 +5,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/handlers/csp_handler.hxx>
 #include <constraints/gecode/base.hxx>
+#include <constraints/gecode/utils/nested_fluent_iterator.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <utils/logging.hxx>
@@ -72,23 +73,17 @@ void FluentNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr
 	auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(nested);
 	assert(fluent != nullptr);
 
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	const auto& signature = info.getFunctionData(nested->getSymbolId()).getSignature();
-	
-	if (signature.size() > 1) throw std::runtime_error("Nested subterms of arity > 1 not yet implemented");
-	assert(signature.size() == 1); // Cannot be 0, or we'd have instead a StateVariable term
-	
 	// Now, for a nested fluent such as e.g. 'tile(blank())', we register as involved state variables all state variables
 	// tile(nw), tile(n), ..., etc., where nw, n, etc. are the possible values for state variable 'blank()'.
-	auto objects = info.getTypeObjects(signature[0]);
-	for (ObjectIdx object:objects) {
-		VariableIdx variable = info.resolveStateVariable(nested->getSymbolId(), {object});
-		FDEBUG( "translation", "Registering derived state variable " << info.getVariableName(variable) << std::endl);
+	nested_fluent_iterator it(fluent);
+	for (; !it.ended(); ++it) {
+		VariableIdx variable = it.getDerivedStateVariable();
+		FDEBUG( "translation", "Registering derived state variable " << Problem::getCurrentProblem()->getProblemInfo().getVariableName(variable) << std::endl);
 		translator.registerDerivedStateVariable(variable, type, csp, intvars);
 	}
 	
 	// We also register the pointer variable in the csp
-	translator.registerNestedFluent(fluent, objects.size(), csp, intvars, boolvars);
+	translator.registerNestedFluent(fluent, it.getIndex()+1, csp, intvars, boolvars);
 	
 	// Don't forget to register the "standard" temporary variable for the term root.
 	translator.registerNestedTerm(nested, type, csp, intvars);
@@ -182,14 +177,12 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 }
 
 void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
 	auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term);
 	assert(fluent);
 	
 	// If the subterm occurs somewhere else in the action / formula, its constraints might have already been posted
 	if (translator.isPosted(term, type)) return;
 	
-	const auto& signature = info.getFunctionData(fluent->getSymbolId()).getSignature();
 	const std::vector<fs::Term::cptr>& subterms = fluent->getSubterms();
 
 	FDEBUG("translation", "Registering constraints for fluent nested term " << *fluent << (type == CSPVariableType::Output ? "'" : ""));
@@ -197,15 +190,8 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	// First we register recursively the constraints of the subterms - subterms' constraint will always have input type
 	GecodeCSPHandler::registerTermConstraints(subterms, CSPVariableType::Input, csp, translator);
 
-	assert(subterms.size() == signature.size());
-	assert(signature.size() == 1); // This was already checked during variable registration time
-
-	// Post the extensional constraint relating the value of the index variables
-	unsigned idx = 0; // element constraints are 0-indexed
 	Gecode::IntVarArgs table; // The actual array of variables that will form the element constraint table
 
-	const Gecode::IntVar& original_index = translator.resolveVariable(subterms[0], CSPVariableType::Input, csp);
-	
 	// TODO Refactor this, much of this functionality could go much cleaner inside of the nested translator object.
 	NestedFluentData& nested_translator = translator.resolveNestedFluent(fluent);
 	const Gecode::IntVar& zero_based_index = nested_translator.getIndex(csp);
@@ -213,34 +199,28 @@ void FluentNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	Gecode::BoolVarArgs table_reification_vars = nested_translator.getTableReificationVariables(csp);
 	std::vector<VariableIdx>& table_variables = nested_translator.getTableVariables();
 	
-	// The correspondence between the index variable possible values and their 0-indexed position in the element constraint table
-	Gecode::TupleSet correspondence;
-	for (ObjectIdx object:info.getTypeObjects(signature[0])) {
-		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), {object});
-		
-
+	Gecode::TupleSet correspondence; // The correspondence between the index variable possible values and their 0-indexed position in the element constraint table
+	nested_fluent_iterator it(fluent);
+	for (; !it.ended(); ++it) {
+		VariableIdx variable = it.getDerivedStateVariable();
 		auto gecode_variable = translator.resolveDerivedStateVariable(csp, variable);
-		FDEBUG("translation", "Noting correspondence for variable " << info.getVariableName(variable) << ", domain is: " << gecode_variable << std::endl);
 		table << gecode_variable;
-		table_variables[idx] = variable;
+		table_variables[it.getIndex()] = variable;
 
-		correspondence.add(IntArgs(2, object, idx));
+		correspondence.add(it.getIntArgsElement());
 		
 		// Post the necessary reification constraints to achieve the expression IDX = i \lor f(IDX) = DONT_CARE
-		Gecode::rel(csp, zero_based_index, Gecode::IRT_EQ, idx, idx_reification_vars[idx]); // IDX = i <=> b0
-		Gecode::rel(csp, gecode_variable, Gecode::IRT_EQ, DONT_CARE::get(), table_reification_vars[idx]); // f(IDX) = DONT_CARE <=> b1
-		Gecode::rel(csp, idx_reification_vars[idx], BOT_OR, table_reification_vars[idx], 1); // b0 \lor b1
-		
-		++idx;
+		Gecode::rel(csp, zero_based_index, Gecode::IRT_EQ, it.getIndex(), idx_reification_vars[it.getIndex()]); // IDX = i <=> b0
+		Gecode::rel(csp, gecode_variable, Gecode::IRT_EQ, DONT_CARE::get(), table_reification_vars[it.getIndex()]); // f(IDX) = DONT_CARE <=> b1
+		Gecode::rel(csp, idx_reification_vars[it.getIndex()], BOT_OR, table_reification_vars[it.getIndex()], 1); // b0 \lor b1
 	}
 	correspondence.finalize();
 
-
-	
-	IntVarArgs extensional_constraint_variables;
-	extensional_constraint_variables << original_index << zero_based_index;
-	Gecode::extensional(csp, extensional_constraint_variables, correspondence);
-	FDEBUG("translation", "Fluent-headed term \"" << *term << "\" produces indexing constraint: " << print::extensional(extensional_constraint_variables, correspondence));
+	// Post the extensional constraint relating the value of the subterm variables to that of the temporary 0..m index variable
+	IntVarArgs index_variables = translator.resolveVariables(subterms, CSPVariableType::Input, csp);
+	index_variables << zero_based_index;
+	Gecode::extensional(csp, index_variables, correspondence);
+	FDEBUG("translation", "Fluent-headed term \"" << *term << "\" produces indexing constraint: " << print::extensional(index_variables, correspondence));
 
 	// Now post the actual element constraint
 	const Gecode::IntVar& element_result = translator.resolveVariable(fluent, type, csp);
