@@ -7,7 +7,9 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include <aptk2/search/algorithms/best_first_search.hxx>
+#include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/tools/resources_control.hxx>
+#include <aptk2/search/components/stl_unsorted_fifo_open_list_test.hxx>
 
 #include <utils/logging.hxx>
 #include <utils/loader.hxx>
@@ -31,27 +33,20 @@ using namespace fs0;
 typedef		RelaxedPlanHeuristic<FwdSearchProblem> RelaxedHeuristic;
 
 
-// MRJ: As it names indicates, an ensemble of heuristics
-class HeuristicEnsemble {
+class NoveltyEvaluator {
 public:
-
 	const	FwdSearchProblem&							_problem;
-	//RelaxedHeuristic								_reachability_heuristic;
 	std::vector< NoveltyFromPreconditions >						_novelty_heuristic;
 	unsigned									_max_novelty;
 
-	HeuristicEnsemble( const FwdSearchProblem& problem ): 
+	NoveltyEvaluator( const FwdSearchProblem& problem ): 
 		_problem( problem ), _max_novelty(0) {
-		//_problem( problem ), _reachability_heuristic( problem ), _max_novelty(0) {
-		// MRJ: setups the novelty heuristic, this is all it
-		// needs to know
+		// MRJ: setups the novelty heuristic, this is all it needs to know
 		_novelty_heuristic.resize( problem.getTask().numGoalConstraints() + 1 );
 		std::cout << "# Novelty evaluators: " << _novelty_heuristic.size() << std::endl;
-		
-
 	}
 
-	~HeuristicEnsemble() {
+	~NoveltyEvaluator() {
 		for (unsigned j = 0; j < _novelty_heuristic.size(); j++)
 			for ( unsigned k = 1; k <= novelty_bound(); k++ ) {
 				std::cout << "# novelty(s)[#goals=" << j << "]=" << k << " : " << _novelty_heuristic[j].get_num_states(k) << std::endl;;
@@ -59,8 +54,7 @@ public:
 	}
 
 	void setup( int max_novelty, bool useStateVars, bool useGoal, bool useActions ) {
-		// MRJ: setups the novelty heuristic, this is all it
-		// needs to know
+		// MRJ: setups the novelty heuristic, this is all it needs to know
 		_max_novelty = max_novelty;
 		for ( unsigned k = 0; k < _novelty_heuristic.size(); k++ ) {
 			_novelty_heuristic[k].set_max_novelty( novelty_bound() );
@@ -68,132 +62,60 @@ public:
 		}
 	}
 
-	//NOT USED
-	/*
-	float	evaluate_reachability( const GenericState& s ) {
-		return _reachability_heuristic.evaluate( s );
-	}
-	*/
-
 	unsigned evaluate_novelty( const GenericState& s ) {
 		return _novelty_heuristic[evaluate_num_unsat_goals(s)].evaluate( s );
 	}
 
-	unsigned	evaluate_num_unsat_goals( const GenericState& s ) {
+	unsigned evaluate_num_unsat_goals( const GenericState& s ) {
 		return _problem.getTask().numUnsatisfiedGoals(s);
 	}
 
-	unsigned	novelty_bound() { return _max_novelty; }
-
-
+	unsigned novelty_bound() { return _max_novelty; }
+	
+	//! Returns false iff we want to prune this node during the search
+	bool accept(const State& s) {
+	  auto novelty = evaluate_novelty(s);
+	  //std::cout << "Novelty value : " << novelty << " of state: " << s << std::endl;
+	  return novelty <= novelty_bound();
+	}
 };
 
-class SearchStatistics {
-	public:
-
-		static SearchStatistics& 	instance() {
-			static SearchStatistics theInstance;
-			return theInstance;
-		}
-
-	unsigned	min_num_goals_sat;
-
-	private:
-			SearchStatistics() :
-				min_num_goals_sat(100000)
-			{}
-
-
-};
 
 
 template <typename State>
 class FS0_Node {
-
 public:
-
 	State								state;
 	Action::IdType							action;
 	std::shared_ptr<FS0_Node<State> >				parent;
-	unsigned							novelty;
-	unsigned							g;
-	unsigned							f; // evaluation function
-	bool								_is_dead_end;
-	unsigned							num_unsat;
 
-	
 public:
-
-
 	// Kill default constructors
 	explicit FS0_Node();
+	
 	//! Constructor for initial nodes, copies state
 	FS0_Node( const State& s )
-		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), _is_dead_end(false), num_unsat(0) {
-		g = 0;
-		f = 0;
-	}
+		: state( s ), action( Action::invalid_action_id ), parent( nullptr )
+	{}
 
 	//! Constructor for successor states, doesn't copy the state
 	FS0_Node( State&& _state, Action::IdType _action, std::shared_ptr< FS0_Node<State> > _parent ) :
-		state(_state), _is_dead_end(false), num_unsat(0) {
+		state(_state) {
 		action = _action;
 		parent = _parent;
-		g = _parent->g + 1;
-		f = 0;
-		//std::cout << "Successsor state: " << state << "-------" << "Cost: " << g << std::endl;
 	}
 
-	virtual ~FS0_Node() {
-	}
+	virtual ~FS0_Node() {}
 
 	bool	has_parent() const { return parent != nullptr; }
 
 	void	print( std::ostream& os ) const {
-		os << "{@ = " << this << ", s = " << state << ", f = " << f << ",g = " << g << " unsat = " << num_unsat << ", parent = " << parent << "}";
+		os << "{@ = " << this << ", s = " << state << ", parent = " << parent << "}";
 	}
 
-	bool   	operator==( const FS0_Node<State>& o ) const {
-		return state == o.state;
-	}
+	bool   	operator==( const FS0_Node<State>& o ) const { return state == o.state; }
 
-	// MRJ: This is part of the required interface of the Heuristic
-	template <typename Heuristic>
-	void	evaluate_with( Heuristic& heuristic ) {
-		f = heuristic.evaluate_novelty( state );
-		//std::cout << "Novelty value : " << f << " of state: " << state << std::endl;
-		_is_dead_end = f > heuristic.novelty_bound();
-		//std::cout << "Novelty bound: " << heuristic.novelty_bound() << std::endl;
-		num_unsat = heuristic.evaluate_num_unsat_goals( state );
-		SearchStatistics::instance().min_num_goals_sat = std::min( num_unsat, SearchStatistics::instance().min_num_goals_sat);
-		if ( parent != nullptr && num_unsat < parent->num_unsat ) {
-			//std::cout << "Reward!" << std::endl;
-			//print(std::cout);
-			//std::cout << std::endl;
-		}
-		/* NOT USED as this is the heuristic function for gbfs(f)
-		h = heuristic.evaluate_reachability( state );
-		unsigned ha = 2;
-		if ( parent != nullptr && h < parent->h ) ha = 1;
-		f = 2 * (novelty - 1) + ha;
-		*/
-	}
-
-	bool										dead_end() const { return _is_dead_end; }
-
-	size_t                  hash() const { return state.hash(); }
-
-	// MRJ: With this we implement Greedy Best First modified to be aware of
-	// state novelty
-	bool	operator>( const FS0_Node<State>& other ) const {
-		if ( f > other.f ) return true;
-		if ( f < other.f ) return false;
-		return g > other.g;
-		
-	}
-
-
-
+	size_t hash() const { return state.hash(); }
 };
 
 // MRJ: We start defining the type of nodes for our planner
@@ -249,10 +171,8 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	json_out << "\t\"solved\" : " << ( solved ? "true" : "false" ) << "," << std::endl;
 	json_out << "\t\"valid\" : " << ( valid ? "true" : "false" ) << "," << std::endl;
 	json_out << "\t\"num_goals\" : " << engine.model.getTask().numGoalConstraints() << "," << std::endl;
-	json_out << "\t\"max_num_goals_sat\" : " << engine.model.getTask().numGoalConstraints() - SearchStatistics::instance().min_num_goals_sat << "," << std::endl;
-	json_out << "\t\"num_features\" : " << engine.heuristic_function._novelty_heuristic[0].numFeatures() << "," << std::endl;
 	json_out << "\t\"novelty_histogram\" : {" << std::endl;
-	for ( unsigned j = 0; j < engine.heuristic_function._novelty_heuristic.size(); j++ ) {
+	/*for ( unsigned j = 0; j < engine.heuristic_function._novelty_heuristic.size(); j++ ) {
 		json_out << "\t\t\"" << j << "\": {" << std::endl;
 		for ( unsigned i = 0; i <= engine.heuristic_function.novelty_bound(); i++ ) {
 			json_out << "\t\t\t\t\"" << i << "\" : " << engine.heuristic_function._novelty_heuristic[j].get_num_states(i);
@@ -263,7 +183,7 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 		if ( j < engine.heuristic_function._novelty_heuristic.size() - 1)
 			json_out << ",";
 		json_out << std::endl;
-	}
+	}*/
 	json_out << "\t}," << std::endl;
 	json_out << "\t\"plan\" : ";
 	if ( solved )
@@ -278,20 +198,31 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	return total_time;
 }
 
+typedef aptk::StlUnsortedFIFOTest<Search_Node, NoveltyEvaluator> FS0OpenList;
 
 void instantiate_search_engine_and_run(
 	const FwdSearchProblem& search_prob, const ProblemInfo& problemInfo, int max_novelty,
 	bool useStateVars, bool useGoal, bool useActions,	int timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan/Novelty Heuristic greedy best first search (time budget is " << timeout << " secs)..." << std::endl;
-	aptk::StlBestFirstSearch< Search_Node, HeuristicEnsemble, FwdSearchProblem > rp_bfs_engine( search_prob );
+	
+// 	if (true) {
+// 	  aptk::StlBestFirstSearch< Search_Node, NoveltyEvaluator, FwdSearchProblem > rp_bfs_engine( search_prob );
+// 	  rp_bfs_engine.heuristic_function.setup(max_novelty, useStateVars, useGoal, useActions );
+// 	} else {
+	    auto evaluator = std::make_shared<NoveltyEvaluator>(search_prob);
+	    evaluator->setup(max_novelty, useStateVars, useGoal, useActions );
+	    FS0OpenList open_list(evaluator);
+	    aptk::StlBreadthFirstSearch<Search_Node, FwdSearchProblem, FS0OpenList> brfs_iw_engine(search_prob, open_list);
+	    
+// 	}
 	std::cout << "Heuristic options:" << std::endl;
 	std::cout << "\tMax novelty: " << max_novelty << std::endl;
 	std::cout << "\tUsing state vars as features: " << ( useStateVars ? "yes" : "no ") << std::endl;
 	std::cout << "\tUsing goal as feature: " << ( useGoal ? "yes" : "no ") << std::endl;
 	std::cout << "\tUsing actions as features: " << ( useActions ? "yes" : "no ") << std::endl;
-	rp_bfs_engine.heuristic_function.setup(max_novelty, useStateVars, useGoal, useActions );
-	timer = do_search(rp_bfs_engine, problemInfo, out_dir);
+	
+	timer = do_search(brfs_iw_engine, problemInfo, out_dir);
 	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }
 

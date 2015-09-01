@@ -87,12 +87,12 @@ public:
 
 public:
 
-	State															state;
-	Action::IdType										action;
+	State					state;
+	Action::IdType				action;
 	std::shared_ptr<FS0_Node<State> >	parent;
-	unsigned													h;
-	unsigned													g;
-	bool															is_dead_end;
+	unsigned				h;
+	unsigned				g;
+	bool					is_dead_end;
 };
 
 // MRJ: We start defining the type of nodes for our planner

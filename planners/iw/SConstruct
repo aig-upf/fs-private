@@ -30,15 +30,15 @@ env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compat
 if env['edebug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DFS0_DEBUG' ] )
 	fs0_libname = 'fs0-edebug'
-	exe_name = 'brfs-planner.edebug.bin'
+	exe_name = 'nfs.edebug.bin'
 elif env['debug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
 	fs0_libname = 'fs0-debug'
-	exe_name = 'brfs-planner.debug.bin'
+	exe_name = 'nfs.debug.bin'
 else:
 	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
 	fs0_libname = 'fs0'
-	exe_name = 'brfs-planner.bin'
+	exe_name = 'nfs.bin'
 
 # Header and library directories.
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
@@ -55,4 +55,3 @@ Export('env')
 SConscript( os.path.join(env['fs0'],'src/constraints/gecode/Dependencies') )
 
 env.Program(exe_name, src_objs )
-

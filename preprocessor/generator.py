@@ -198,7 +198,7 @@ def compile_translation(translation_dir, planner, debug=False, predstate=False):
     debug_flag = "debug={0}".format(1 if debug else 0)
     predstate_flag = "predstate=1" if predstate else ''
 
-    planner_dir = os.path.abspath('../planners/gbfs')
+    planner_dir = os.path.abspath('../planners/nfs')
     if planner is not None:
         planner_dir = os.path.abspath(planner)
 
