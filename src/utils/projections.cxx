@@ -1,8 +1,10 @@
 
 #include <cassert>
 #include <utils/projections.hxx>
-#include <actions.hxx>
+#include <actions/ground_action.hxx>
 #include <problem.hxx>
+#include <state.hxx>
+#include <relaxed_state.hxx>
 
 namespace fs0 {
 
@@ -16,10 +18,6 @@ ObjectIdxVector Projections::project(const State& s, const VariableIdxVector& sc
 }
 
 
-DomainMap Projections::projectCopyToActionVariables(const RelaxedState& state, const Action& action) {
-	return projectCopy(state, action.getAllRelevantVariables());
-}
-
 DomainMap Projections::project(RelaxedState& state, const VariableIdxVector& scope) { //!  TODO - CHECK THIS IS APPLYING RVO??
 	DomainMap projection;
 	for (VariableIdx var:scope) {
@@ -27,6 +25,16 @@ DomainMap Projections::project(RelaxedState& state, const VariableIdxVector& sco
 	}
 	return projection;
 }
+
+PartialAssignment Projections::zip(const VariableIdxVector& scope, const ObjectIdxVector& values) {
+	assert(scope.size() == values.size());
+	PartialAssignment assignment;
+	for (unsigned i = 0; i < scope.size(); ++i) {
+		assignment.insert(std::make_pair(scope[i], values[i]));
+	}
+	return assignment;
+}
+
 
 const DomainVector Projections::projectValues(const RelaxedState& state, const VariableIdxVector& scope) {
 	DomainVector projection;

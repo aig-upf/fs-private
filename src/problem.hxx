@@ -1,18 +1,14 @@
 
-# pragma once
+#pragma once
 
 #include <iosfwd>
-#include <boost/concept_check.hpp>
 
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <problem_info.hxx>
-#include <simple_applicable_action_set.hxx>
-#include <standard_applicability_manager.hxx>
-#include <constraints/problem_manager.hxx>
-#include "constraints/scoped_constraint.hxx"
-#include <actions.hxx>
-#include <constraints/compiled.hxx>
+
+#include <actions/applicable_action_set.hxx>
+#include <actions/action_schema.hxx>
+#include <actions/ground_action.hxx>
 
 namespace fs0 {
 
@@ -20,44 +16,36 @@ class Problem
 {
 public:
 	//! Constructs a problem by loading the problem data from the given directory.
-	Problem(const rapidjson::Document& data);
+	Problem();
 	~Problem();
 
 	//! Modify the problem initial state
 	void setInitialState(const State::cptr& state) { _initialState = state; }
 	const State::cptr getInitialState() const { return _initialState; }
 
-	//! Modify the problem (grounded) actions
-	void addAction(const Action::cptr& action) { _actions.push_back(action); }
-	const Action::cptr& getAction(ActionIdx idx) const { return _actions.at(idx); }
-	unsigned getNumActions() const { return _actions.size(); }
-	const Action::vcptr& getAllActions() const { return _actions; }
+	void addActionSchema(const ActionSchema::cptr action) { _schemata.push_back(action); }
+	const std::vector<ActionSchema::cptr>& getActionSchemata() const { return _schemata; }
+	
+	const std::vector<GroundAction::cptr>& getGroundActions() const { return _ground; }
+	
+	ApplicableActionSet getApplicableActions(const State& s) const;
+	
+	void setStateConstraints(const std::vector<AtomicFormula::cptr>& constraints) { _stateConstraints = constraints;}
+	const std::vector<AtomicFormula::cptr>& getStateConstraints() const { return _stateConstraints; }
+	void setGoalConditions(const std::vector<AtomicFormula::cptr>& conditions) { _goalConditions = conditions;}
+	const std::vector<AtomicFormula::cptr>& getGoalConditions() const { return _goalConditions; }
 
-	SimpleApplicableActionSet getApplicableActions(const State& s) const;
-
-	bool isGoal(const State& s) const { return ctrManager->isGoal(s); }
-
-	unsigned numUnsatisfiedGoals( const State& s ) const { return ctrManager->numUnsatisfiedGoals( s ); }
-
-	unsigned numGoalConstraints() const { return ctrManager->numGoalConstraints(); }
-
-	void registerConstraint(const ScopedConstraint::cptr constraint) { stateConstraints.push_back(constraint);}
-	const ScopedConstraint::vcptr& getConstraints() const { return stateConstraints; }
-	void registerGoalConstraint(ScopedConstraint::cptr constraint) { goalConstraints.push_back(constraint);}
-	const ScopedConstraint::vcptr& getGoalConstraints() const { return goalConstraints; }
-
-	const std::string& get_action_name(unsigned action) const { return _problemInfo.getActionName(action); }
-
-	//! Simple relevance analysis that over-approximates the set of state variables whose
-	//! values can matter for the goal being achievable
-	void analyzeVariablesRelevance();
+	std::string get_action_name(unsigned action) const;
 
 	//! Getter/setter for the associated ProblemInfo object.
-	const ProblemInfo& getProblemInfo() const { return _problemInfo; }
+	void setProblemInfo(ProblemInfo* info) { _problemInfo = info; }
+	const ProblemInfo& getProblemInfo() const {
+		if (!_problemInfo) throw std::runtime_error("ProblemInfo object has not been set yet");
+		return *_problemInfo;
+	}
 
 	static void setCurrentProblem(Problem& problem) {
 		_instance = &problem;
-		problem.bootstrap();
 	}
 
 	static const Problem* getCurrentProblem() {
@@ -65,43 +53,34 @@ public:
 		return _instance;
 	}
 
-	BaseConstraintManager::cptr getConstraintManager() const { return ctrManager; }
-
-	void addDomainBoundConstraints();
-
 	void compileConstraints();
-
-	//! Tells if the given variable is relevant for the goal.
-	static bool isRelevantForGoal(VariableIdx var) { return getCurrentProblem()->_goalRelevantVars[var]; }
-
-
-protected:
-	State::cptr _initialState;
-
-	BaseConstraintManager::cptr ctrManager;
-
-	Action::vcptr _actions;
-
-	const ProblemInfo _problemInfo;
-
-	//! Vectors of pointers to the different problem constraints. This class owns the pointers.
-	ScopedConstraint::vcptr stateConstraints;
-	ScopedConstraint::vcptr goalConstraints;
-
-	static const Problem* _instance;
 
 	//! This performs a number of necessary routines once all of the problem information has been defined.
 	void bootstrap();
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
 
-	//! A helper that compiles in-place a vector of constraints. Returns how many constraints were actually compiled.
-	unsigned compileConstraintVector(ScopedConstraint::vcptr& constraints) const;
+protected:
+	//! The initial state of the problem
+	State::cptr _initialState;
 
+	// The set of action schemata
+	std::vector<ActionSchema::cptr> _schemata;
+	
+	// The set of grounded actions of the problem
+	std::vector<GroundAction::cptr> _ground;
+	
+	//! An object with all sorts of extra book-keeping information
+	ProblemInfo* _problemInfo;
+	
+	//! Pointers to the different problem constraints. This class owns the pointers.
+	std::vector<AtomicFormula::cptr> _stateConstraints;
+	std::vector<AtomicFormula::cptr> _goalConditions;
 
-	//! Bitmap holding what variables are relevant to the goal (i.e. appear on Goal, Precondition or Global constraints)
-	std::vector<bool> _goalRelevantVars;
+	//! The singleton instance
+	static const Problem* _instance;
 };
-
-
-
 
 } // namespaces

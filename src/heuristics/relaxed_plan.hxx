@@ -1,24 +1,20 @@
 
 #pragma once
 
-#include <vector>
-#include <algorithm>
-
-#include <state.hxx>
-#include <problem.hxx>
-#include <heuristics/rpg_data.hxx>
+#include <fs0_types.hxx>
 
 
 namespace fs0 {
+	
+class Problem; class State; class RelaxedState; class RPGData; class BaseActionManager;
 
-template < typename SearchModel >
+template <typename Model, typename RPGBuilder>
 class RelaxedPlanHeuristic {
 public:
-	typedef typename SearchModel::ActionType		Action;	
-	typedef std::vector< typename Action::IdType >		PrefOpsVec;
+	typedef typename Model::ActionType Action;
 
-	RelaxedPlanHeuristic( const SearchModel& problem );
-
+	RelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder);
+	
 	virtual ~RelaxedPlanHeuristic() {}
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
@@ -29,16 +25,15 @@ public:
 	//! To be subclassed in other RPG-based heuristics such as h_max
 	virtual float computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData);
 	
-	//! Proxy to circumvent the unusual virtual method signature
-	// @TODO: MRJ: Remove this method, it is now deprecated
-	virtual void eval(const State& s, float& h_val) { h_val = evaluate(s); }
-	
-	//! So far just act as a proxy, we do not compute the preferred operations yet.
-	// @TODO: MRJ: Remove this method, it is not deprecated
-	virtual void eval( const State& s, float& h_val,  PrefOpsVec& pref_ops ) { eval(s, h_val); }
-	
 protected:
+	//! The actual planning problem
 	const Problem& _problem;
+	
+	//! The set of action managers, one per every action
+	const std::vector<std::shared_ptr<BaseActionManager>> _managers;
+	
+	//! The RPG building helper
+	const std::shared_ptr<RPGBuilder> _builder;
 };
 
 } // namespaces

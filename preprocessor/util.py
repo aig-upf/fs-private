@@ -3,11 +3,6 @@ import unicodedata
 import re
 
 
-# def normalize(name):
-#     from slugify import slugify
-#     return slugify(name, separator="_")
-
-
 def normalize(name):
     slug = unicodedata.normalize('NFKD', name)
     slug = slug.encode('ascii', 'ignore').lower()
@@ -42,19 +37,6 @@ def make_extension_idxname(extension):
 
 def make_param_name(param):
     return normalize(param[1:]) + '_idx'  # we get rid of the '?' in the variable name
-
-
-def make_object_name(name):
-    return normalize(name) + '_obj_idx'
-
-
-def get_point(args):
-    """ Computes the (parametric or objectual) point on which a predicate is evaluated from a set of action parameters"""
-    return '{' + ','.join([make_param_or_object_name(x) for x in args]) + '}'
-
-
-def make_param_or_object_name(name):
-    return make_param_name(name) if is_action_parameter(name) else make_object_name(name)
 
 
 def is_action_parameter(name):
@@ -98,3 +80,7 @@ def is_int(s):
         return True
     except ValueError:
         return False
+
+
+def bool_string(value):
+    return '_true_' if value else '_false_'

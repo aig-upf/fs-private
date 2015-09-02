@@ -18,36 +18,36 @@ class Logger
 {
 protected:
 	typedef std::map <std::string, std::ofstream *> FileMap;
-	
+
 	FileMap _files;
-	
+
 	//! The directory where the log files will be written
 	std::string _logDirectory;
-	
+
 	//! The starting time, for reference
 	boost::timer::cpu_timer _timer;
-	
+
 	//! Singleton
 	static Logger* _instance;
 
 	//! Basic version of the logging: returns a stream to write a message to the given filename
 	std::ofstream& log(const std::string& fileName);
-	
+
 public:
 	Logger(const std::string& logDirectory);
 	virtual ~Logger();
-	
+
 	//! Explicit initizalition of the singleton
 	static void init(const std::string& logDirectory) {
 		_instance = new Logger(logDirectory);
 	}
-	
+
 	//! Retrieve the singleton instance, which has been previously initialized
 	static Logger& instance() {
 		if (!_instance) throw std::runtime_error("The logger needs to be explicitly initialized before using it");
 		return *_instance;
 	}
-	
+
 	//! Returns a stream to debug to the given filename
 	std::ostream& log(const std::string& level, const std::string& filename);
 };
@@ -58,27 +58,23 @@ public:
 // ************************
 // INFO MACRO
 // ************************
-#define FINFO(file, message) Logger::instance().log("INFO", file) << message << std::endl;
+#define FINFO(file, message) fs0::Logger::instance().log("INFO", file) << message << std::endl;
 
 // ************************
 // DEBUG MACRO
 // ************************
-#ifdef DEBUG 
-#define FDEBUG(file, message) Logger::instance().log("DEBUG", file) << message << std::endl;
+#ifdef DEBUG
+#define FDEBUG(file, message) fs0::Logger::instance().log("DEBUG", file) << message << std::endl;
 #else
 #define FDEBUG(file, message)
 #endif
 
+
 // ************************
 // EXTREME DEBUG MACRO
 // ************************
-#ifdef FS0_DEBUG 
-#define FFDEBUG(file, message) Logger::instance().log("EDEBUG", file) << message << std::endl;
+#ifdef FS0_DEBUG
+#define FFDEBUG(file, message) fs0::Logger::instance().log("EDEBUG", file) << message << std::endl;
 #else
 #define FFDEBUG(file, message)
 #endif
-
-
-
-
-

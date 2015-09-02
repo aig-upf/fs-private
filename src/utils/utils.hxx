@@ -1,11 +1,9 @@
 
 #pragma once
 
+#include <fs0_types.hxx>
 #include <vector>
 #include <ostream>
-
-#include <fs0_types.hxx>
-#include <state.hxx>
 
 namespace fs0 {
 	
@@ -13,15 +11,6 @@ class Utils {
 public:
 	typedef std::vector<std::vector<unsigned>*> ValueSet;
 	typedef std::vector<unsigned> Point;
-	
-	template <typename IteratorCallback>
-	static void iterateCartesianProduct(
-		const ValueSet& values,
-		IteratorCallback callback
-	) {
-		ObjectIdxVector tmp;
-		_iterateCartesianProduct(values, callback, tmp, 0);
-	}
 	
 	template <typename T>
 	static std::vector<T> merge(const std::vector<T>& vector1, const std::vector<T>& vector2) {
@@ -40,7 +29,7 @@ public:
 			}
 		}
 		return result;
-	}	
+	}
 	
 	//! "Uniquifies" the given vector.
 	template <typename T>
@@ -65,24 +54,17 @@ public:
 		}
 		return true;
 	}
-
-protected:
-	template <typename IteratorCallback>
-	static void _iterateCartesianProduct(const ValueSet& values, IteratorCallback callback, ObjectIdxVector& current, unsigned idx) {
-		// base case: we have generated a full element of the cartesian product
-		if (idx == values.size() - 1) {
-			callback(current);
-			return;
-		}
-		
-		// Recursive case: 
-		for(auto elem:*(values[idx])) {
-			current.push_back(elem); 
-			cartesianProduct(values, callback, current, idx+1);
-			current.pop_back();
-		}
-	}
 	
+	//! Flips the elements of a one-to-one map.
+	template <typename T1, typename T2>
+	static std::map<T2, T1> flip_map(const std::map<T1, T2>& input) {
+		std::map<T2, T1> output;
+		for (const auto& elem:input) {
+			assert(output.find(elem.second) == output.end());
+			output[elem.second] = elem.first;
+		}
+		return output;
+	}
 };
 
 

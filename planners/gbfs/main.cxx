@@ -11,103 +11,33 @@
 
 #include <utils/logging.hxx>
 #include <utils/loader.hxx>
-#include <heuristics/null_heuristic.hxx>
-#include <heuristics/relaxed_plan.hxx>
-#include <heuristics/hmax.hxx>
 #include <state.hxx>
 #include <utils/utils.hxx>
-#include <utils/printers.hxx>
+#include <utils/printers/printers.hxx>
 #include <utils/config.hxx>
 #include <problem_info.hxx>
-#include <action_manager.hxx>
-#include <fwd_search_prob.hxx>
+#include <actions/checker.hxx>
+#include <state_model.hxx>
+#include <engines/factory.hxx>
+
+#include <problem.hxx>
 
 #include <components.hxx>  // This will dinamically point to the right generated file
 
 using namespace fs0;
 
-// MRJ: Now we define the heuristics
-typedef		RelaxedPlanHeuristic<FwdSearchProblem> RelaxedHeuristic;
-typedef		HMaxHeuristic<FwdSearchProblem> RelaxedMaxHeuristic;
-
-
-template <typename State>
-class FS0_Node {
-public:
-	typedef State State_Type;
-
-	// Kill default constructors
-	explicit FS0_Node();
-	//! Constructor for initial nodes, copies state
-	FS0_Node( const State& s )
-		: state( s ), action( Action::invalid_action_id ), parent( nullptr ), g(0), is_dead_end(false) {
-	}
-
-	//! Constructor for successor states, doesn't copy the state
-	FS0_Node( State&& _state, Action::IdType _action, std::shared_ptr< FS0_Node<State> > _parent ) :
-		state(_state) {
-		action = _action;
-		parent = _parent;
-		g = _parent->g + 1;
-		is_dead_end = false;
-	}
-
-	virtual ~FS0_Node() {}
-
-	bool	has_parent() const { return parent != nullptr; }
-
-	void print( std::ostream& os ) const {
-		os << "{@ = " << this << ", s = " << state << ", h = " << h << ", parent = " << parent << "}";
-	}
-
-	//! Forward the comparison to the planning state.
-	bool operator==( const FS0_Node<State>& o ) const { return state == o.state; }
-
-	// MRJ: This is part of the required interface of the Heuristic
-	template <typename Heuristic>
-	void	evaluate_with( Heuristic& heuristic ) {
-		float _h = heuristic.evaluate(state);
-		FDEBUG("heuristic" , std::endl << "Computed heuristic value of " << _h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
-		if ( _h == std::numeric_limits<float>::infinity() ) {
-			is_dead_end = true;
-		}
-		h = _h;
-	}
-
-	size_t                  hash() const { return state.hash(); }
-
-	// MRJ: With this we implement Greedy Best First search
-	bool	operator>( const FS0_Node<State>& other ) const {
-		return h > other.h;
-	}
-
-	bool	dead_end() const {
-		return is_dead_end;
-	}
-
-public:
-
-	State					state;
-	Action::IdType				action;
-	std::shared_ptr<FS0_Node<State> >	parent;
-	unsigned				h;
-	unsigned				g;
-	bool					is_dead_end;
-};
 
 // MRJ: We start defining the type of nodes for our planner
-typedef FS0_Node<fs0::State> Search_Node;
-typedef std::vector<Action::IdType> Plan;
+typedef std::vector<GroundAction::IdType> Plan;
 
 bool checkPlanCorrect(const Plan& plan) {
 	auto problem = Problem::getCurrentProblem();
 	std::vector<unsigned> p;
 	for (const auto& elem:plan) p.push_back((unsigned) elem);
-	return ActionManager::checkPlanSuccessful(*problem, p, *(problem->getInitialState()));
+	return Checker::checkPlanSuccessful(*problem, p, *(problem->getInitialState()));
 }
 
-template <typename Search_Engine>
-float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const std::string& out_dir) {
+float do_search(fs0::engines::FS0SearchAlgorithm& engine, const Problem& problem, const std::string& out_dir) {
 
 	std::ofstream out(out_dir + "/searchlog.out");
 	std::ofstream plan_out(out_dir + "/first.plan");
@@ -123,10 +53,11 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 
 	bool valid = checkPlanCorrect(plan);
 	if ( solved ) {
-		PlanPrinter::printPlan(plan, problemInfo, out);
-		PlanPrinter::printPlan(plan, problemInfo, plan_out);
+		PlanPrinter::printPlan(plan, problem, out);
+		PlanPrinter::printPlan(plan, problem, plan_out);
 	}
 
+	out << "Plan length : " << plan.size() << std::endl;
 	out << "Total time: " << total_time << std::endl;
 	out << "Nodes generated during search: " << engine.generated << std::endl;
 	out << "Nodes expanded during search: " << engine.expanded << std::endl;
@@ -144,9 +75,10 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	json_out << "\teval_per_second : " << eval_speed << "," << std::endl;
 	json_out << "\tsolved : " << ( solved ? "true" : "false" ) << "," << std::endl;
 	json_out << "\tvalid : " << ( valid ? "true" : "false" ) << "," << std::endl;
+	json_out << "\tplan_length : " << plan.size() << "," << std::endl;
 	json_out << "\tplan : ";
 	if ( solved )
-		PlanPrinter::printPlanJSON( plan, problemInfo, json_out);
+		PlanPrinter::printPlanJSON( plan, problem, json_out);
 	else
 		json_out << "null";
 	json_out << std::endl;
@@ -158,38 +90,32 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 }
 
 
-void instantiate_seach_engine_and_run(const FwdSearchProblem& search_prob, const ProblemInfo& problemInfo, int timeout, const std::string& out_dir) {
+void instantiate_seach_engine_and_run(const FS0StateModel& search_prob, int timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
-	aptk::StlBestFirstSearch< Search_Node, RelaxedHeuristic, FwdSearchProblem > rp_bfs_engine( search_prob );
-	timer = do_search(rp_bfs_engine, problemInfo, out_dir);
+	
+	auto engine = fs0::engines::EngineFactory::create(Config::instance(), search_prob);
+	timer = do_search(*engine, search_prob.getTask(), out_dir);
 	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }
 
-void reportActionsInfo(const Problem& problem) {
-	std::cout << "Action Information: " << std::endl;
-	for (unsigned i = 0; i < problem.getNumActions(); ++i) {
-		const auto action = problem.getAction(i);
-		std::cout << "Action #" << i << ": " << *action << std::endl;
-	}
-}
 
 void reportProblemStats(const Problem& problem) {
-
+	auto actions = problem.getGroundActions();
+	unsigned n_actions = actions.size();
+	
 // 	std::cout << "Number of object types: " << st.get_num_types() << std::endl;
 	std::cout << "Number of objects: " << problem.getProblemInfo().getNumObjects() << std::endl;
 	std::cout << "Number of state variables: " << problem.getProblemInfo().getNumVariables() << std::endl;
 
-	std::cout << "Number of ground actions: " << problem.getNumActions() << std::endl;
-	if (problem.getNumActions() > 1000) {
-		std::cout << "WARNING: The number of ground actions (" << problem.getNumActions() <<
+	std::cout << "Number of ground actions: " << n_actions << std::endl;
+	if (n_actions > 1000) {
+		std::cout << "WARNING: The number of ground actions (" << n_actions <<
 		") is too high for our current applicable action strategy to perform well." << std::endl;
 	}
 
-	std::cout << "Number of state constraints: " << problem.getConstraints().size() << std::endl;
-	std::cout << "Number of goal constraints: " << problem.getGoalConstraints().size() << std::endl;
-
-// 	reportActionsInfo(problem);
+	std::cout << "Number of state constraints: " << problem.getStateConstraints().size() << std::endl;
+	std::cout << "Number of goal conditions: " << problem.getGoalConditions().size() << std::endl;
 }
 
 
@@ -245,25 +171,19 @@ int main(int argc, char** argv) {
 	FINFO("main", "Planner configuration: " << std::endl << Config::instance());
 	FINFO("main", "Generating the problem (" << data_dir << ")... ");
 	auto data = Loader::loadJSONObject(data_dir + "/problem.json");
-	Problem problem(data);
-
-	generate(data, data_dir, problem);
-
-	std::cout << "Setting current problem to problem" << std::endl;
+	Problem problem;
 	Problem::setCurrentProblem(problem);
-
-
+	generate(data, data_dir, problem);
+	problem.bootstrap();
+	FINFO("main", "Problem bootstrapped" << std::endl << problem);
+	
 	reportProblemStats(problem);
-	problem.analyzeVariablesRelevance();
 
-	std::cout << "Creating Search_Problem instance" << std::endl;
-	FwdSearchProblem search_prob(problem);
-
+	FS0StateModel search_prob(problem);
 
 	std::cout << "Done!" << std::endl;
 
-
 	// Instantiate the engine
-	instantiate_seach_engine_and_run(search_prob, problem.getProblemInfo(), timeout, out_dir);
+	instantiate_seach_engine_and_run(search_prob, timeout, out_dir);
 	return 0;
 }
