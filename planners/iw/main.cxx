@@ -9,7 +9,7 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/tools/resources_control.hxx>
-#include <aptk2/search/components/stl_unsorted_fifo_open_list_test.hxx>
+#include <aptk2/search/components/stl_unsorted_fifo_open_list_with_acceptor.hxx>
 
 #include <utils/logging.hxx>
 #include <utils/loader.hxx>
@@ -198,7 +198,7 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	return total_time;
 }
 
-typedef aptk::StlUnsortedFIFOTest<Search_Node, NoveltyEvaluator> FS0OpenList;
+typedef aptk::StlUnsortedFIFOWithAcceptor<Search_Node, NoveltyEvaluator> FS0OpenList;
 
 void instantiate_search_engine_and_run(
 	const FwdSearchProblem& search_prob, const ProblemInfo& problemInfo, int max_novelty,
@@ -212,8 +212,7 @@ void instantiate_search_engine_and_run(
 // 	} else {
 	    auto evaluator = std::make_shared<NoveltyEvaluator>(search_prob);
 	    evaluator->setup(max_novelty, useStateVars, useGoal, useActions );
-	    FS0OpenList open_list(evaluator);
-	    aptk::StlBreadthFirstSearch<Search_Node, FwdSearchProblem, FS0OpenList> brfs_iw_engine(search_prob, open_list);
+	    aptk::StlBreadthFirstSearch<Search_Node, FwdSearchProblem, FS0OpenList> brfs_iw_engine(search_prob, FS0OpenList(evaluator));
 	    
 // 	}
 	std::cout << "Heuristic options:" << std::endl;
