@@ -6,7 +6,6 @@ import subprocess
 import sys
 import shutil
 
-import base
 import taskgen
 import util
 import operator
@@ -45,7 +44,7 @@ def parse_arguments():
     parser.add_argument('--instance', required=True,
                         help="The problem instance filename (heuristics are used to determine domain filename).")
     parser.add_argument('--domain', required=False, help="The problem domain filename.", default=None)
-    parser.add_argument('--planner', required=False, help="The directory containing the planner sources.")
+    parser.add_argument('--planner', default="gbfs", help="The directory containing the planner sources.")
     parser.add_argument('--output_base', default="../generated",
                         help="The base for the output directory where the compiled planner will be left. "
                              "Additional subdirectories will be created with the name of the domain and the instance")
@@ -114,7 +113,7 @@ def translate_pddl(instance, args):
     domain = instance.domain
     translation_dir = domain.name + '/' + instance.name
 
-    print("Translating and compiling problem instance {}...".format(instance.name))
+    print("Translating instance {} and compiling it with planner '{}'...".format(instance.name, args.planner))
 
     inst_name, translation_dir = translate_and_compile(instance, translation_dir, args)
     return inst_name, translation_dir
@@ -136,9 +135,7 @@ def compile_translation(translation_dir, planner, debug=False, predstate=False):
     debug_flag = "debug={0}".format(1 if debug else 0)
     predstate_flag = "predstate=1" if predstate else ''
 
-    planner_dir = os.path.abspath('../planners/gbfs_f')
-    if planner is not None:
-        planner_dir = os.path.abspath(planner)
+    planner_dir = os.path.abspath('../planners/' + planner)
 
     shutil.copy(planner_dir + '/main.cxx', translation_dir)
     shutil.copy(planner_dir + '/config.json', translation_dir)
