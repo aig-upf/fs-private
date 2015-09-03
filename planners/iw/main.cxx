@@ -9,7 +9,7 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/tools/resources_control.hxx>
-#include <aptk2/search/components/stl_unsorted_fifo_open_list_test.hxx>
+#include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
 #include <utils/logging.hxx>
 #include <utils/loader.hxx>
@@ -31,55 +31,6 @@ using namespace fs0;
 
 // MRJ: Now we define the heuristics
 typedef		RelaxedPlanHeuristic<FwdSearchProblem> RelaxedHeuristic;
-
-
-class NoveltyEvaluator {
-public:
-	const	FwdSearchProblem&							_problem;
-	std::vector< NoveltyFromPreconditions >						_novelty_heuristic;
-	unsigned									_max_novelty;
-
-	NoveltyEvaluator( const FwdSearchProblem& problem ): 
-		_problem( problem ), _max_novelty(0) {
-		// MRJ: setups the novelty heuristic, this is all it needs to know
-		_novelty_heuristic.resize( problem.getTask().numGoalConstraints() + 1 );
-		std::cout << "# Novelty evaluators: " << _novelty_heuristic.size() << std::endl;
-	}
-
-	~NoveltyEvaluator() {
-		for (unsigned j = 0; j < _novelty_heuristic.size(); j++)
-			for ( unsigned k = 1; k <= novelty_bound(); k++ ) {
-				std::cout << "# novelty(s)[#goals=" << j << "]=" << k << " : " << _novelty_heuristic[j].get_num_states(k) << std::endl;;
-			}
-	}
-
-	void setup( int max_novelty, bool useStateVars, bool useGoal, bool useActions ) {
-		// MRJ: setups the novelty heuristic, this is all it needs to know
-		_max_novelty = max_novelty;
-		for ( unsigned k = 0; k < _novelty_heuristic.size(); k++ ) {
-			_novelty_heuristic[k].set_max_novelty( novelty_bound() );
-			_novelty_heuristic[k].selectFeatures( _problem.getTask(), useStateVars, useGoal, useActions );
-		}
-	}
-
-	unsigned evaluate_novelty( const GenericState& s ) {
-		return _novelty_heuristic[evaluate_num_unsat_goals(s)].evaluate( s );
-	}
-
-	unsigned evaluate_num_unsat_goals( const GenericState& s ) {
-		return _problem.getTask().numUnsatisfiedGoals(s);
-	}
-
-	unsigned novelty_bound() { return _max_novelty; }
-	
-	//! Returns false iff we want to prune this node during the search
-	bool accept(const State& s) {
-	  auto novelty = evaluate_novelty(s);
-	  //std::cout << "Novelty value : " << novelty << " of state: " << s << std::endl;
-	  return novelty <= novelty_bound();
-	}
-};
-
 
 
 template <typename State>
@@ -121,6 +72,51 @@ public:
 // MRJ: We start defining the type of nodes for our planner
 typedef FS0_Node<fs0::State> Search_Node;
 typedef std::vector<Action::IdType> Plan;
+
+class NoveltyEvaluator {
+protected:
+	const FwdSearchProblem* _model;
+public:
+	std::vector< NoveltyFromPreconditions >						_novelty_heuristic;
+	unsigned									_max_novelty;
+
+	NoveltyEvaluator() {}
+
+	~NoveltyEvaluator() {
+		for (unsigned j = 0; j < _novelty_heuristic.size(); j++)
+			for ( unsigned k = 1; k <= novelty_bound(); k++ ) {
+				std::cout << "# novelty(s)[#goals=" << j << "]=" << k << " : " << _novelty_heuristic[j].get_num_states(k) << std::endl;;
+			}
+	}
+
+	void setup( const FwdSearchProblem* model, int max_novelty, bool useStateVars, bool useGoal, bool useActions ) {
+		_model = model;
+		_max_novelty = max_novelty;
+		_novelty_heuristic.resize( _model->getTask().numGoalConstraints() + 1 );
+		std::cout << "# Novelty evaluators: " << _novelty_heuristic.size() << std::endl;		
+		for ( unsigned k = 0; k < _novelty_heuristic.size(); k++ ) {
+			_novelty_heuristic[k].set_max_novelty( novelty_bound() );
+			_novelty_heuristic[k].selectFeatures( _model->getTask(), useStateVars, useGoal, useActions );
+		}
+	}
+
+	unsigned evaluate_novelty( const GenericState& s ) {
+		return _novelty_heuristic[evaluate_num_unsat_goals(s)].evaluate( s );
+	}
+
+	unsigned evaluate_num_unsat_goals( const GenericState& s ) {
+		return _model->getTask().numUnsatisfiedGoals(s);
+	}
+
+	unsigned novelty_bound() { return _max_novelty; }
+	
+	//! Returns false iff we want to prune this node during the search
+	bool accept(const Search_Node& n) {
+	  auto novelty = evaluate_novelty(n.state);
+	  //std::cout << "Novelty value : " << novelty << " of state: " << s << std::endl;
+	  return novelty <= novelty_bound();
+	}
+};
 
 bool checkPlanCorrect(const Plan& plan) {
 	auto problem = Problem::getCurrentProblem();
@@ -198,7 +194,7 @@ float do_search( Search_Engine& engine, const ProblemInfo& problemInfo, const st
 	return total_time;
 }
 
-typedef aptk::StlUnsortedFIFOTest<Search_Node, NoveltyEvaluator> FS0OpenList;
+typedef aptk::StlUnsortedFIFO<Search_Node, NoveltyEvaluator> FS0OpenList;
 
 void instantiate_search_engine_and_run(
 	const FwdSearchProblem& search_prob, const ProblemInfo& problemInfo, int max_novelty,
@@ -210,10 +206,9 @@ void instantiate_search_engine_and_run(
 // 	  aptk::StlBestFirstSearch< Search_Node, NoveltyEvaluator, FwdSearchProblem > rp_bfs_engine( search_prob );
 // 	  rp_bfs_engine.heuristic_function.setup(max_novelty, useStateVars, useGoal, useActions );
 // 	} else {
-	    auto evaluator = std::make_shared<NoveltyEvaluator>(search_prob);
-	    evaluator->setup(max_novelty, useStateVars, useGoal, useActions );
-	    FS0OpenList open_list(evaluator);
-	    aptk::StlBreadthFirstSearch<Search_Node, FwdSearchProblem, FS0OpenList> brfs_iw_engine(search_prob, open_list);
+	    auto evaluator = std::make_shared<NoveltyEvaluator>();
+	    evaluator->setup(&search_prob, max_novelty, useStateVars, useGoal, useActions );
+	    aptk::StlBreadthFirstSearch<Search_Node, FwdSearchProblem, FS0OpenList> brfs_iw_engine(search_prob, FS0OpenList(evaluator));
 	    
 // 	}
 	std::cout << "Heuristic options:" << std::endl;
