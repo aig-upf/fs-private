@@ -89,7 +89,7 @@ bool GecodeCSPVariableTranslator::registerDerivedStateVariable(VariableIdx varia
 }
 
 bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
-	TypeIdx domain_type = Problem::getCurrentProblem()->getProblemInfo().getFunctionData(nested->getSymbolId()).getCodomainType();
+	TypeIdx domain_type = Problem::getInfo().getFunctionData(nested->getSymbolId()).getCodomainType();
 	return registerNestedTerm(nested, type, domain_type, csp, variables);
 }
 
@@ -166,7 +166,7 @@ Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vect
 }
 
 std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
-	const fs0::ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const fs0::ProblemInfo& info = Problem::getInfo();
 	os << "Gecode CSP with " << _registered.size() << " variables: " << std::endl;
 	for (auto it:_registered) {
 		os << "\t ";

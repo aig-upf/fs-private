@@ -25,7 +25,7 @@ void PlanPrinter::printPlanJSON(const std::vector<GroundAction::IdType>& plan, c
 }
 
 std::ostream& PlanPrinter::print(std::ostream& os) const {
-	printPlan(_plan, *Problem::getCurrentProblem(), os);
+	printPlan(_plan, Problem::getInstance(), os);
 	return os;
 }
 

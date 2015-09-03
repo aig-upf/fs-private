@@ -22,7 +22,7 @@ void process_subterms(const std::vector<TypeIdx>& signature, const ObjectIdxVect
 	}
 }
 	
-std::ostream& TermSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
+std::ostream& TermSchema::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 std::ostream& TermSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
 	os << "<unnamed unprocessed term>";
@@ -127,7 +127,7 @@ AtomicFormula::cptr AtomicFormulaSchema::process(const std::vector<TypeIdx>& sig
 	return processed;
 }
 
-std::ostream& AtomicFormulaSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
+std::ostream& AtomicFormulaSchema::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 std::ostream& AtomicFormulaSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	// Distinguish between infix and prefix operators
@@ -147,7 +147,7 @@ ActionEffect::cptr ActionEffectSchema::process(const std::vector<TypeIdx>& signa
 	return new ActionEffect(lhs->process(signature, binding, info), rhs->process(signature, binding, info));
 }
 
-std::ostream& ActionEffectSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
+std::ostream& ActionEffectSchema::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 std::ostream& ActionEffectSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
 	os << *lhs << " := " << *rhs;

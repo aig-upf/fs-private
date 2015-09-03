@@ -74,7 +74,7 @@ std::vector<VariableIdx> ScopeUtils::computeActionDirectScope(const GroundAction
 }
 
 void ScopeUtils::computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<VariableIdx>& scope) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	const std::vector<VariableIdx>& possible_variables = info.resolveStateVariable(nested.getSymbolId());
 	scope.insert(possible_variables.cbegin(), possible_variables.cend());
 }

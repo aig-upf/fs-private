@@ -27,7 +27,7 @@ bool BinaryDomainBoundsConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const
 }
 
 void BoundsConstraintsGenerator::generate(const GroundAction& action, const std::vector<DirectEffect::cptr>& effects, std::vector<DirectConstraint::cptr>& constraints) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	for (const DirectEffect::cptr effect:effects) {
 		VariableIdx affected = effect->getAffected();
 		if (!info.isBoundedVariable(affected)) continue;

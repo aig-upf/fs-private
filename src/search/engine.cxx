@@ -1,5 +1,5 @@
 
-#include <engines/factory.hxx>
+#include <search/engine.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>

@@ -39,7 +39,7 @@ public:
 	}
 	
 	std::vector<const std::vector<ObjectIdx>*> compute_possible_values(fs::FluentHeadedNestedTerm::cptr term) {
-		const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+		const ProblemInfo& info = Problem::getInfo();
 		const Signature& signature = info.getFunctionData(term->getSymbolId()).getSignature();
 		const std::vector<fs::Term::cptr>& subterms = term->getSubterms();
 		assert(subterms.size() == signature.size());
@@ -74,7 +74,7 @@ public:
 	unsigned getIndex() const { return _index; }
 	
 	VariableIdx getDerivedStateVariable() const {
-		const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+		const ProblemInfo& info = Problem::getInfo();
 		const std::vector<ObjectIdx>& point = *_iterator;
 		return info.resolveStateVariable(_term->getSymbolId(), point);
 	}

@@ -72,7 +72,7 @@ DomainMap Projections::clone(const DomainMap& domains) {
 }
 
 void Projections::printDomains(const DomainMap& domains) {
-	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& problemInfo = Problem::getInfo();
 	for (const auto& domain:domains) {
 		std::cout << problemInfo.getVariableName(domain.first) << "={";
 		for (auto objIdx:*(domain.second)) {

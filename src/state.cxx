@@ -18,7 +18,7 @@ void State::accumulate(const Atom::vctr& atoms) {
 }
 
 std::ostream& State::print(std::ostream& os) const {
-	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& problemInfo = Problem::getInfo();
 	os << "State";
 	os << "(" << _hash << ")[";
 	for (unsigned i = 0; i < _values.size(); ++i) { // Iterate through all the sets

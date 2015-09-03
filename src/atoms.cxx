@@ -34,7 +34,7 @@ Atom& Atom::operator=( Atom&& other ) {
 
 
 std::ostream& Atom::print(std::ostream& os) const {
-	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& problemInfo = Problem::getInfo();
 	os << "[" << problemInfo.getVariableName(_variable) << "=" << problemInfo.getObjectName(_variable, _value) << "]";
 	return os;
 }

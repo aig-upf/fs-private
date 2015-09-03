@@ -20,7 +20,7 @@ ActionSchema::~ActionSchema() {
 	for (const auto ptr:_effects) delete ptr;
 }
 
-std::ostream& ActionSchema::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
+std::ostream& ActionSchema::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 std::ostream& ActionSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
 	os <<  _name << "(" << print::signature(_parameters, getSignature()) << ")" << std::endl;

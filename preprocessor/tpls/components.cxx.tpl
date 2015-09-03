@@ -4,9 +4,11 @@
 
 std::unique_ptr<External> external;
 
-void generate(const rapidjson::Document& data, const std::string& data_dir, Problem& problem) {
+std::unique_ptr<Problem> generate(const rapidjson::Document& data, const std::string& data_dir) {
 	external = std::unique_ptr<External>(new External(data_dir));
 	external->registerComponents();
 	ComponentFactory factory;
-	Loader::loadProblem(data, factory, problem);
+	Problem* _problem = new Problem;
+	Loader::loadProblem(data, factory, *_problem);
+	return std::unique_ptr<Problem>(_problem);
 }

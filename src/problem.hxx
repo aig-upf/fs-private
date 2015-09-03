@@ -44,14 +44,20 @@ public:
 		return *_problemInfo;
 	}
 
-	static void setCurrentProblem(Problem& problem) {
-		_instance = &problem;
+	static void setInstance(std::unique_ptr<Problem>&& problem) {
+		if (_instance) throw std::runtime_error("Problem instance has already been set");
+		_instance = std::move(problem);
+		_instance->bootstrap();
 	}
-
-	static const Problem* getCurrentProblem() {
+	
+	//! const version of the singleton accessor
+	static const Problem& getInstance() {
 		if (!_instance) throw std::runtime_error("Problem has not been instantiated yet");
-		return _instance;
+		return *_instance;
 	}
+	
+	//! Helper to access the problem info more easily
+	static const ProblemInfo& getInfo() { return getInstance().getProblemInfo(); }
 
 	void compileConstraints();
 
@@ -80,7 +86,7 @@ protected:
 	std::vector<AtomicFormula::cptr> _goalConditions;
 
 	//! The singleton instance
-	static const Problem* _instance;
+	static std::unique_ptr<Problem> _instance;
 };
 
 } // namespaces

@@ -12,7 +12,7 @@
 
 namespace fs0 {
 
-const Problem* Problem::_instance = 0;
+std::unique_ptr<Problem> Problem::_instance = nullptr;
 
 Problem::Problem() :
 	_problemInfo(nullptr),

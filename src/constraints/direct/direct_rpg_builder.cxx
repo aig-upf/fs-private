@@ -49,7 +49,7 @@ bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, Atom
 	DomainMap domains = Projections::projectCopy(state, _goalConstraintsHandler.getAllRelevantVariables());  // This makes a copy of the domain.
 	if (!checkGoal(domains)) return false;
 	
-	unsigned numVariables = Problem::getCurrentProblem()->getProblemInfo().getNumVariables(); // The total number of state variables
+	unsigned numVariables = Problem::getInfo().getNumVariables(); // The total number of state variables
 	std::vector<bool> set(numVariables, false); // Variables that have been already set.
 	
 	DomainMap clone = Projections::clone(domains);  // We need a deep copy

@@ -22,7 +22,7 @@ CompiledUnaryConstraint::CompiledUnaryConstraint(const VariableIdxVector& scope,
 
 std::unordered_set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(const VariableIdxVector& scope, const CompiledUnaryConstraint::Tester& tester) {
 	assert(scope.size() == 1);
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	
 	VariableIdx relevant = scope[0];
 	
@@ -124,7 +124,7 @@ bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 
 CompiledBinaryConstraint::TupleExtension CompiledBinaryConstraint::compile(const VariableIdxVector& scope, const CompiledBinaryConstraint::Tester& tester) {
 	assert(scope.size()==2);
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	
 	TupleExtension extension;
 	
@@ -199,7 +199,7 @@ CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affec
 {}
 	
 CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, const Term& term) 
-	: CompiledUnaryEffect(relevant, affected, compile(term, Problem::getCurrentProblem()->getProblemInfo()))
+	: CompiledUnaryEffect(relevant, affected, compile(term, Problem::getInfo()))
 {}
 	
 
@@ -241,7 +241,7 @@ CompiledBinaryEffect::CompiledBinaryEffect(const VariableIdxVector& scope, Varia
 {}
 
 CompiledBinaryEffect::CompiledBinaryEffect(const VariableIdxVector& scope, VariableIdx affected, const fs::Term& term)
-	: CompiledBinaryEffect(scope, affected, compile(term, Problem::getCurrentProblem()->getProblemInfo()))
+	: CompiledBinaryEffect(scope, affected, compile(term, Problem::getInfo()))
 {}
 
 CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& term, const ProblemInfo& info) {
@@ -267,7 +267,7 @@ Atom CompiledBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
 
 
 unsigned ConstraintCompiler::compileConstraints(std::vector<DirectConstraint::cptr>& constraints) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	
 	unsigned num_compiled = 0;
 	for (unsigned i = 0; i < constraints.size(); ++i) {

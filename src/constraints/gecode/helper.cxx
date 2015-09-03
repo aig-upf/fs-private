@@ -14,7 +14,7 @@ namespace fs0 { namespace gecode {
 	
 	
 Gecode::IntVar Helper::createPlanningVariable(Gecode::Space& csp, VariableIdx variable, bool nullable) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	return createVariable(csp, info.getVariableType(variable), nullable);
 }
 
@@ -31,7 +31,7 @@ Gecode::BoolVar Helper::createBoolVariable(Gecode::Space& csp) {
 }
 
 Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool nullable) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	auto generic_type = info.getGenericType(typeId);
 	
 	if ( generic_type == ProblemInfo::ObjectType::INT ) {
@@ -85,7 +85,7 @@ Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain, bool include_d
 }
 
 Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	auto f_data = info.getFunctionData(term->getSymbolId());
 	const Signature& signature = f_data.getSignature();
 	const auto& functor = f_data.getFunction();
@@ -128,7 +128,7 @@ void Helper::update_csp(SimpleCSP& csp, const IntVarArgs& intvars, const BoolVar
 }
 
 int Helper::computeDontCareValue() {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	int min = -1;
 	int max = std::numeric_limits<int>::min();
 	for (std::vector<ObjectIdx> objs:info.getTypeObjects()) {

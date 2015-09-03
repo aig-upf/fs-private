@@ -21,7 +21,7 @@ ObjectIdxVector NestedTerm::interpret_subterms(const std::vector<Term::cptr>& su
 	return interpreted;
 }
 
-std::ostream& LogicalElement::print(std::ostream& os) const { return print(os, Problem::getCurrentProblem()->getProblemInfo()); }
+std::ostream& LogicalElement::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << "<unnamed term>";
@@ -50,11 +50,11 @@ StaticHeadedNestedTerm::StaticHeadedNestedTerm(unsigned symbol_id, const std::ve
 
 UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
 	: StaticHeadedNestedTerm(symbol_id, subterms),
-	_function(Problem::getCurrentProblem()->getProblemInfo().getFunctionData(symbol_id))
+	_function(Problem::getInfo().getFunctionData(symbol_id))
 {}
 
 std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	auto type = _function.getCodomainType();
 	return info.getTypeBounds(type);
 }
@@ -76,19 +76,19 @@ ObjectIdx FluentHeadedNestedTerm::interpret(const State& state) const {
 }
 
 VariableIdx FluentHeadedNestedTerm::interpretVariable(const PartialAssignment& assignment) const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, assignment));
 	return variable;
 }
 VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state) const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, state));
 	return variable;
 }
 
 std::pair<int, int> FluentHeadedNestedTerm::getBounds() const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
-	auto type = Problem::getCurrentProblem()->getProblemInfo().getFunctionData(_symbol_id).getCodomainType();
+	const ProblemInfo& info = Problem::getInfo();
+	auto type = Problem::getInfo().getFunctionData(_symbol_id).getCodomainType();
 	return info.getTypeBounds(type);
 }
 
@@ -97,7 +97,7 @@ ObjectIdx StateVariable::interpret(const State& state) const {
 }
 
 std::pair<int, int> StateVariable::getBounds() const {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	return info.getVariableBounds(_variable_id);
 }
 

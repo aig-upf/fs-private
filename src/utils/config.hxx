@@ -53,6 +53,7 @@ protected:
 	
 	
 public:
+	Config(const Config& other) = delete;
 	~Config();
 	
 	const RPGExtractionType& getRPGExtractionType() const { return _rpg_extraction; }

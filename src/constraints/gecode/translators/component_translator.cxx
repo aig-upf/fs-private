@@ -78,7 +78,7 @@ void FluentNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr
 	nested_fluent_iterator it(fluent);
 	for (; !it.ended(); ++it) {
 		VariableIdx variable = it.getDerivedStateVariable();
-		FDEBUG( "translation", "Registering derived state variable " << Problem::getCurrentProblem()->getProblemInfo().getVariableName(variable) << std::endl);
+		FDEBUG( "translation", "Registering derived state variable " << Problem::getInfo().getVariableName(variable) << std::endl);
 		translator.registerDerivedStateVariable(variable, type, csp, intvars);
 	}
 	

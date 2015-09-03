@@ -30,7 +30,7 @@ RelaxedState::RelaxedState(const State& state) {
 }
 
 std::ostream& RelaxedState::print(std::ostream& os) const {
-	const ProblemInfo& problemInfo = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& problemInfo = Problem::getInfo();
 	os << "RelaxedState[";
 	for (unsigned i = 0; i < _domains.size(); ++i) { // Iterate through all the sets
 		const DomainPtr& vals = _domains.at(i);

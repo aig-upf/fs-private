@@ -42,7 +42,7 @@ bool ApplicabilityManager::checkFormulaHolds(const std::vector<AtomicFormula::cp
 }
 
 bool ApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& atoms) {
-	const ProblemInfo& info = Problem::getCurrentProblem()->getProblemInfo();
+	const ProblemInfo& info = Problem::getInfo();
 	for (const auto& atom:atoms) {
 		if (!info.checkValueIsValid(atom)) return false;
 	}

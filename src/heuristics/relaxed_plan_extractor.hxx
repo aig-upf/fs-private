@@ -38,7 +38,7 @@ public:
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const SupportedAction& o) { return o.print(os); }
 	std::ostream& print(std::ostream& out) const {
-		out << Problem::getCurrentProblem()->get_action_name(_action) << ", where: ";
+		out << Problem::getInstance().get_action_name(_action) << ", where: ";
 		for (const auto& atom:*(_support))  out << atom << ", ";
 		return out;
 	}
@@ -193,7 +193,7 @@ protected:
 		}
 
 		// Note that computing the relaxed heuristic by using some form of local consistency might yield plans that are not correct for the relaxation
-		// assert(ActionManager::checkRelaxedPlanSuccessful(*Problem::getCurrentProblem(), plan, _seed));
+		// assert(ActionManager::checkRelaxedPlanSuccessful(Problem::getInstance(), plan, _seed));
 		FDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << PlanPrinter(plan));
 
 		return (float) plan.size();
