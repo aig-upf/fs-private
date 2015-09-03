@@ -1,7 +1,5 @@
 
 #include <heuristics/relaxed_plan.hxx>
-#include <state_model.hxx>
-#include <utils/projections.hxx>
 #include <heuristics/relaxed_plan_extractor.hxx>
 #include <heuristics/rpg_data.hxx>
 #include <constraints/filtering.hxx>
@@ -9,7 +7,6 @@
 #include <utils/printers/actions.hxx>
 #include <relaxed_state.hxx>
 #include <heuristics/rpg/base_action_manager.hxx>
-
 #include <state_model.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
