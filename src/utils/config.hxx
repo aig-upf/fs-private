@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <memory>
 
+#include <boost/property_tree/ptree.hpp>
+
+
 namespace fs0 {
 
 /**
@@ -37,7 +40,12 @@ public:
 protected:
 	static std::unique_ptr<Config> _instance;
 	
+	boost::property_tree::ptree _root;
+	
 	std::string _filename;
+	
+	//! The tag that identifies the search engine we want to use
+	std::string _engine_tag;
 	
 	RPGExtractionType _rpg_extraction;
 	
@@ -56,11 +64,18 @@ public:
 	Config(const Config& other) = delete;
 	~Config();
 	
+	const std::string& getEngineTag() const { return _engine_tag; }
 	const RPGExtractionType& getRPGExtractionType() const { return _rpg_extraction; }
 	const ActionManagerType& getActionManagerType() const { return _action_manager; }
 	const GoalManagerType& getGoalManagerType() const { return _goal_manager; }
 	const CSPResolutionType& getGoalResolutionType() const { return _goal_resolution; }
 	const CSPResolutionType& getActionPreconditionResolutionType() const { return _precondition_resolution; }
+
+	//! A generic getter
+	template <typename T>
+	T getOption(const std::string& key) const {
+		return _root.get<T>(key);
+	}
 };
 
 } // namespaces

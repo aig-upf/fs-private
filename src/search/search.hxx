@@ -2,7 +2,8 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <search/engine.hxx>
+#include <search/engines/registry.hxx>
+#include <actions/ground_action.hxx>
 
 namespace fs0 { class Problem; class Config; }
 

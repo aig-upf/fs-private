@@ -4,6 +4,7 @@
 
 #include <problem.hxx>
 #include <search/search.hxx>
+#include <search/engines/registry.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/config.hxx>
@@ -74,7 +75,8 @@ void SearchUtils::instantiate_seach_engine_and_run(const Problem& problem, const
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
 	FS0StateModel model(problem);
-	auto engine = fs0::engines::EngineFactory::create(config, model);
+	auto creator = fs0::engines::EngineRegistry::instance().get(config.getEngineTag());
+	auto engine = creator->create(config, model);
 	timer = do_search(*engine, problem, out_dir);
 	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }

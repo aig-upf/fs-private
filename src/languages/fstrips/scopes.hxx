@@ -9,8 +9,7 @@ namespace fs0 {
 
 namespace fs0 { namespace language { namespace fstrips {
 
-//! A term that has not yet been processed, meaning that it might possibly contain references to yet-unresolved values of action parameters,
-//! non-consolidated state variables, etc.
+//! A number of helper methods to compute and deal with action / formula / term scopes
 class ScopeUtils {
 public:
 	typedef std::set<FluentHeadedNestedTerm::cptr> TermSet;

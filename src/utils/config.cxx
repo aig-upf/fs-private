@@ -41,20 +41,21 @@ OptionType parseOption(const pt::ptree& tree, const std::string& key, std::map<s
 Config::Config(const std::string& filename)
 	: _filename(filename)
 {
-	pt::ptree tree;
-	pt::json_parser::read_json(filename, tree);
+	pt::json_parser::read_json(filename, _root);
+	
+	_engine_tag = getOption<std::string>("engine.tag");
 	
 	// Parse the type of relaxed plan extraction: propositional or supported
-	_rpg_extraction = parseOption<RPGExtractionType>(tree, "heuristics.plan_extraction", {{"propositional", RPGExtractionType::Propositional}, {"supported", RPGExtractionType::Supported}});
+	_rpg_extraction = parseOption<RPGExtractionType>(_root, "heuristics.plan_extraction", {{"propositional", RPGExtractionType::Propositional}, {"supported", RPGExtractionType::Supported}});
 	
 	// Parse the type of action manager: gecode or hybrid
-	_action_manager = parseOption<ActionManagerType>(tree, "action_manager", {{"hybrid", ActionManagerType::Hybrid}, {"gecode", ActionManagerType::Gecode}});
+	_action_manager = parseOption<ActionManagerType>(_root, "action_manager", {{"hybrid", ActionManagerType::Hybrid}, {"gecode", ActionManagerType::Gecode}});
 	
 	// Parse the type of action manager: gecode, hybrid, basic
-	_goal_manager = parseOption<GoalManagerType>(tree, "goal_manager", {{"gecode", GoalManagerType::Gecode}, {"hybrid", GoalManagerType::Hybrid}, {"basic", GoalManagerType::Basic}});
+	_goal_manager = parseOption<GoalManagerType>(_root, "goal_manager", {{"gecode", GoalManagerType::Gecode}, {"hybrid", GoalManagerType::Hybrid}, {"basic", GoalManagerType::Basic}});
 	
-	_goal_resolution = parseOption<CSPResolutionType>(tree, "goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
-	_precondition_resolution = parseOption<CSPResolutionType>(tree, "precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
+	_goal_resolution = parseOption<CSPResolutionType>(_root, "goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
+	_precondition_resolution = parseOption<CSPResolutionType>(_root, "precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 
 }
 

@@ -44,7 +44,7 @@ def parse_arguments():
     parser.add_argument('--instance', required=True,
                         help="The problem instance filename (heuristics are used to determine domain filename).")
     parser.add_argument('--domain', required=False, help="The problem domain filename.", default=None)
-    parser.add_argument('--planner', default="gbfs", help="The directory containing the planner sources.")
+    parser.add_argument('--planner', default="generic", help="The directory containing the planner sources.")
     parser.add_argument('--output_base', default="../generated",
                         help="The base for the output directory where the compiled planner will be left. "
                              "Additional subdirectories will be created with the name of the domain and the instance")

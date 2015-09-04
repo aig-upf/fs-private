@@ -1,4 +1,8 @@
 {
+	"engine": {
+		"tag": "gbfs_crpg"
+	},
+	
 	"action_manager": "hybrid",
 	"precondition_resolution": "full",
 
