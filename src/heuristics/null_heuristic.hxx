@@ -1,18 +1,17 @@
 
 #pragma once
 
+#include <state.hxx>
+#include <actions/ground_action.hxx>
+#include <state_model.hxx>
+
 namespace fs0 {
 
-class State;
-
-template < typename Model >
 class NullHeuristic  {
 public:
-	typedef typename Model::ActionType Action;
+	typedef GroundAction Action;
 
-	NullHeuristic( const Model& prob ) {}
-
-	virtual ~NullHeuristic() {}
+	NullHeuristic( const FS0StateModel& prob ) {}
 
 	float evaluate(const State& seed) { return 0.0f; }
 };
