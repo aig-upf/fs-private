@@ -59,8 +59,6 @@ public:
 	//! Helper to access the problem info more easily
 	static const ProblemInfo& getInfo() { return getInstance().getProblemInfo(); }
 
-	void compileConstraints();
-
 	//! This performs a number of necessary routines once all of the problem information has been defined.
 	void bootstrap();
 	
