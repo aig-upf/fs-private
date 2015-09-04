@@ -1,4 +1,6 @@
 
+#include <limits>
+
 #include <heuristics/relaxed_plan/constrained_relaxed_plan_heuristic.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
@@ -24,9 +26,11 @@ ConstrainedRelaxedPlanHeuristic<RPGBuilder>::ConstrainedRelaxedPlanHeuristic(con
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 template <typename RPGBuilder>
-float ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
+long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 	
-	if (ApplicabilityManager::checkFormulaHolds(_problem.getGoalConditions(), seed)) return 0; // The seed state is a goal
+	if (ApplicabilityManager::checkFormulaHolds(_problem.getGoalConditions(), seed)) {
+		return 0; // The seed state is a goal
+	}
 	
 	RelaxedState relaxed(seed);
 	RPGData rpgData(relaxed);
@@ -46,7 +50,9 @@ float ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 		FFDEBUG("heuristic", "The last layer of the RPG contains " << rpgData.getNovelAtoms().size() << " novel atoms." << std::endl << rpgData);
 		
 		// If there is no novel fact in the rpg, we reached a fixpoint, thus there is no solution.
-		if (rpgData.getNovelAtoms().size() == 0) return std::numeric_limits<float>::infinity();
+		if (rpgData.getNovelAtoms().size() == 0) {
+			return -1;
+		}
 		
 // 		unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
 		RPGData::accumulate(relaxed, rpgData);
@@ -58,23 +64,25 @@ float ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 		// Prune using state constraints - TODO - Would be nicer if the whole state constraint pruning was refactored into a single line
 		FilteringOutput o = _builder->pruneUsingStateConstraints(relaxed);
 		FFDEBUG("heuristic", "State Constraint pruning output: " <<  static_cast<std::underlying_type<FilteringOutput>::type>(o));
-		if (o == FilteringOutput::Failure) return std::numeric_limits<float>::infinity();
+		if (o == FilteringOutput::Failure) return std::numeric_limits<unsigned>::infinity();
 		if (o == FilteringOutput::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 */
 		
 		FFDEBUG("heuristic", "RPG Layer #" << rpgData.getCurrentLayerIdx() << ": " << relaxed);
 		
-		float h = computeHeuristic(seed, relaxed, rpgData);
-		if (h > -1) return h;
+		long h = computeHeuristic(seed, relaxed, rpgData);
+		if (h > -1) {
+			return h;
+		}
 	}
 }
 
 template <typename RPGBuilder>
-float ConstrainedRelaxedPlanHeuristic<RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
+long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
 	Atom::vctr causes;
 	if (_builder->isGoal(seed, state, causes)) {
 		BaseRelaxedPlanExtractor* extractor = RelaxedPlanExtractorFactory::create(seed, rpgData);
-		float cost = extractor->computeRelaxedPlanCost(causes);
+		long cost = extractor->computeRelaxedPlanCost(causes);
 		delete extractor;
 		return cost;
 	} else return -1;

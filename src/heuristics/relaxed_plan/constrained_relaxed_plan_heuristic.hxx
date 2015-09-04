@@ -17,12 +17,12 @@ public:
 	virtual ~ConstrainedRelaxedPlanHeuristic() {}
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
-	float evaluate(const State& seed);
+	long evaluate(const State& seed);
 	
 	//! The computation of the heuristic value. Returns -1 if the RPG layer encoded in the relaxed state is not a goal,
 	//! otherwise returns h_{FF}.
 	//! To be subclassed in other RPG-based heuristics such as h_max
-	virtual float computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData);
+	virtual long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData);
 	
 protected:
 	//! The actual planning problem

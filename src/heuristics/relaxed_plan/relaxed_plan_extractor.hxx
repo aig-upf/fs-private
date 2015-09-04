@@ -79,7 +79,7 @@ public:
 	 * 
 	 * @param goalAtoms The atoms that allowed the planning graph to reach a goal state.
 	 */
-	float computeRelaxedPlanCost(const Atom::vctr& goalAtoms) {
+	long computeRelaxedPlanCost(const Atom::vctr& goalAtoms) {
 		enqueueAtoms(goalAtoms);
 		
 		while (!pending.empty()) {
@@ -109,7 +109,7 @@ protected:
 	
 	virtual void registerPlanAction(const RPGData::AtomSupport& support) = 0;
 	
-	virtual float buildRelaxedPlan() = 0;
+	virtual long buildRelaxedPlan() = 0;
 };
 
 
@@ -141,13 +141,13 @@ protected:
 		supporters.insert(SupportedAction(std::get<1>(support), std::get<2>(support)));
 	}
 	
-	float buildRelaxedPlan() {
+	long buildRelaxedPlan() {
 #ifndef DEBUG
-		return (float) supporters.size();
+		return (long) supporters.size();
 #endif
 
 		FDEBUG("heuristic" , "Relaxed plan found with length " << supporters.size() << std::endl << SupportedPlanPrinter(supporters));
-		return (float) supporters.size();
+		return (long) supporters.size();
 	}
 };
 
@@ -176,14 +176,14 @@ protected:
 		perLayerSupporters[std::get<0>(support)].insert(std::get<1>(support));
 	}
 	
-	float buildRelaxedPlan() {
+	long buildRelaxedPlan() {
 #ifndef DEBUG
 		// In production mode, we simply count the number of actions in the plan, but prefer not to build the actual plan.
 		unsigned size = 0;
 		for (const auto& supporters:perLayerSupporters) {
 			size += supporters.size();
 		}
-		return (float) size;
+		return (long) size;
 #endif
 
 		// In debug mode, we build the relaxed plan by flattening the supporters at each layer, so that we can log the actual plan.
@@ -196,7 +196,7 @@ protected:
 		// assert(ActionManager::checkRelaxedPlanSuccessful(Problem::getInstance(), plan, _seed));
 		FDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << PlanPrinter(plan));
 
-		return (float) plan.size();
+		return (long) plan.size();
 	}
 };
 

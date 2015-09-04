@@ -69,7 +69,7 @@ public:
 	// MRJ: With this we implement Greedy Best First search
 	bool operator>( const HeuristicSearchNode<State>& other ) const { return h > other.h; }
 
-	bool dead_end() const { return h == std::numeric_limits<float>::infinity(); }
+	bool dead_end() const { return h == -1; }
 
 	State state; // TODO - Check no extra copies are being performed, or switch to pointers otherwise.
 	
@@ -79,7 +79,7 @@ public:
 	
 	unsigned g;
 	
-	unsigned h;
+	long h;
 };
 
 } }  // namespaces
