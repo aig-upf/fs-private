@@ -5,6 +5,7 @@
 #include <state_model.hxx>
 #include <utils/logging.hxx>
 #include <heuristics/novelty_from_preconditions.hxx>
+#include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 
 namespace fs0 { class Problem; class Config; }
 
@@ -20,11 +21,13 @@ protected:
 	std::vector<NoveltyFromPreconditions> _novelty_heuristic;
 	
 	unsigned _max_novelty;
+	
+	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
 public:
 
 	NoveltyEvaluator(const FS0StateModel& model)
-		: _problem(model.getTask()), _novelty_heuristic(_problem.getGoalConditions().size() + 1), _max_novelty(0)
+		: _problem(model.getTask()), _novelty_heuristic(_problem.getGoalConditions().size() + 1), _max_novelty(0), _unsat_goal_atoms_heuristic(model)
 	{}
 
 	~NoveltyEvaluator() {
@@ -42,16 +45,7 @@ public:
 		}
 	}
 
-	unsigned evaluate_num_unsat_goals(const State& state) {
-		unsigned unsatisfied = 0;
-		const std::vector<AtomicFormula::cptr>& conditions = _problem.getGoalConditions();
-		for (AtomicFormula::cptr condition:conditions) {
-			if (condition->interpret(state)) {
-				++unsatisfied;
-			}
-		}
-		return unsatisfied;
-	}
+	unsigned evaluate_num_unsat_goals(const State& state) const { return _unsat_goal_atoms_heuristic.evaluate(state); }
 
 	inline unsigned novelty_bound() { return _max_novelty; }
 	
