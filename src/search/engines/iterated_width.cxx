@@ -1,5 +1,5 @@
 
-#include <search/engines/iw_breadth_first_search.hxx>
+#include <search/engines/iterated_width.hxx>
 #include <search/components/novelty_evaluator.hxx>
 #include <state_model.hxx>
 #include <utils/config.hxx>
@@ -7,7 +7,7 @@
 
 namespace fs0 { namespace engines {
 	
-std::unique_ptr<FS0SearchAlgorithm> IWBreadthFirstSearchEngineCreator::create(const Config& config, const FS0StateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm> IteratedWidthEngineCreator::create(const Config& config, const FS0StateModel& model) const {
 	FS0SearchAlgorithm* engine = nullptr;
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");

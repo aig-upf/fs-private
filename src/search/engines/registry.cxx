@@ -1,7 +1,7 @@
 
 #include <search/engines/registry.hxx>
 #include <search/engines/gbfs_crpg.hxx>
-#include <search/engines/iw_breadth_first_search.hxx>
+#include <search/engines/iterated_width.hxx>
 #include <search/engines/breadth_first_search.hxx>
 #include <problem.hxx>
 
@@ -16,7 +16,7 @@ EngineRegistry& EngineRegistry::instance() {
 EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search engines on the instantiation of the singleton
 	add("gbfs_crpg",  new GBFSEngineCreator());
-	add("iw_breadth_first_search",  new IWBreadthFirstSearchEngineCreator());
+	add("iterated_width",  new IteratedWidthEngineCreator());
 	add("breadth_first_search",  new BreadthFirstSearchEngineCreator());
 	
 }

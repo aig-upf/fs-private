@@ -11,7 +11,7 @@ namespace fs0 { class FS0StateModel; class Config; }
 namespace fs0 { namespace engines {
 
 //! A creator for a Breadth-First Search with Novelty pruning engine
-class IWBreadthFirstSearchEngineCreator : public EngineCreator {
+class IteratedWidthEngineCreator : public EngineCreator {
 public:
 	//! IW uses a simple blind-search node
 	typedef BlindSearchNode<fs0::State> SearchNode;
