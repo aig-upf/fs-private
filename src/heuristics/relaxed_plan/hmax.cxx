@@ -8,16 +8,21 @@
 
 
 namespace fs0 {
-
-template <typename Model, typename RPGBuilder>
-float HMaxHeuristic<Model, RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpg) {
+	
+template <typename RPGBuilder>
+HMaxHeuristic<RPGBuilder>::HMaxHeuristic(const FS0StateModel& model, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder)
+	: ConstrainedRelaxedPlanHeuristic<RPGBuilder>(model, std::move(managers), builder)
+{}
+		
+template <typename RPGBuilder>
+float HMaxHeuristic<RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpg) {
 		if (this->_builder->isGoal(state)) return rpg.getCurrentLayerIdx();
 		return -1;
 }
 
 // explicit instantiations
-template class HMaxHeuristic<fs0::FS0StateModel, fs0::DirectRPGBuilder>;
-template class HMaxHeuristic<fs0::FS0StateModel, fs0::gecode::GecodeRPGBuilder>;
+template class HMaxHeuristic<fs0::DirectRPGBuilder>;
+template class HMaxHeuristic<fs0::gecode::GecodeRPGBuilder>;
 
 } // namespaces
 

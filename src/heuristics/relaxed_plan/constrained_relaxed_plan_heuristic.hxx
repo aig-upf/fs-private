@@ -3,17 +3,16 @@
 
 #include <fs0_types.hxx>
 
-
 namespace fs0 {
-	
-class Problem; class State; class RelaxedState; class RPGData; class BaseActionManager;
 
-template <typename Model, typename RPGBuilder>
+class GroundAction; class FS0StateModel; class Problem; class State; class RelaxedState; class RPGData; class BaseActionManager;
+
+template <typename RPGBuilder>
 class ConstrainedRelaxedPlanHeuristic {
 public:
-	typedef typename Model::ActionType Action;
+	typedef GroundAction Action;
 
-	ConstrainedRelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder);
+	ConstrainedRelaxedPlanHeuristic(const FS0StateModel& model, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder);
 	
 	virtual ~ConstrainedRelaxedPlanHeuristic() {}
 	

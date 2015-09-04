@@ -5,12 +5,11 @@
 
 namespace fs0 {
 
-template <typename Model, typename RPGBuilder>
-class HMaxHeuristic : public ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder> {
+template <typename RPGBuilder>
+class HMaxHeuristic : public ConstrainedRelaxedPlanHeuristic<RPGBuilder> {
 public:
 
- 	HMaxHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder)
-		: ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>(problem, std::move(managers), builder) {}
+ 	HMaxHeuristic(const FS0StateModel& model, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder);
 	virtual ~HMaxHeuristic() {}
 	
 	//! The hmax heuristic only cares about the size of the RP graph.

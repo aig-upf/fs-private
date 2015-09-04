@@ -14,17 +14,17 @@
 
 namespace fs0 {
 
-template <typename Model, typename RPGBuilder>
-ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>::ConstrainedRelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder) :
-	_problem(problem.getTask()), _managers(managers), _builder(builder)
+template <typename RPGBuilder>
+ConstrainedRelaxedPlanHeuristic<RPGBuilder>::ConstrainedRelaxedPlanHeuristic(const FS0StateModel& model, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder) :
+	_problem(model.getTask()), _managers(managers), _builder(builder)
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }
 
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
-template <typename Model, typename RPGBuilder>
-float ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
+template <typename RPGBuilder>
+float ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 	
 	if (ApplicabilityManager::checkFormulaHolds(_problem.getGoalConditions(), seed)) return 0; // The seed state is a goal
 	
@@ -69,8 +69,8 @@ float ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& 
 	}
 }
 
-template <typename Model, typename RPGBuilder>
-float ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
+template <typename RPGBuilder>
+float ConstrainedRelaxedPlanHeuristic<RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
 	Atom::vctr causes;
 	if (_builder->isGoal(seed, state, causes)) {
 		BaseRelaxedPlanExtractor* extractor = RelaxedPlanExtractorFactory::create(seed, rpgData);
@@ -81,8 +81,8 @@ float ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>::computeHeuristic(const
 }
 
 // explicit instantiations
-template class ConstrainedRelaxedPlanHeuristic<fs0::FS0StateModel, fs0::DirectRPGBuilder>;
-template class ConstrainedRelaxedPlanHeuristic<fs0::FS0StateModel, fs0::gecode::GecodeRPGBuilder>;
+template class ConstrainedRelaxedPlanHeuristic<fs0::DirectRPGBuilder>;
+template class ConstrainedRelaxedPlanHeuristic<fs0::gecode::GecodeRPGBuilder>;
 
 } // namespaces
 

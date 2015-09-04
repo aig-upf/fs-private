@@ -24,7 +24,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSEngineCreator::create(const Config& conf
 	if (Config::instance().getGoalManagerType() == Config::GoalManagerType::Gecode || needsGecodeRPGBuilder(problem.getGoalConditions(), problem.getStateConstraints())) {
 		// We use a Gecode RPG builder
 		FINFO("main", "Chosen RPG Builder: Gecode");
-		typedef ConstrainedRelaxedPlanHeuristic<FS0StateModel, GecodeRPGBuilder> GecodeRPHeuristic;
+		typedef ConstrainedRelaxedPlanHeuristic<GecodeRPGBuilder> GecodeRPHeuristic;
 		std::shared_ptr<GecodeRPGBuilder> gecode_builder = std::shared_ptr<GecodeRPGBuilder>(GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
 		GecodeRPHeuristic gecode_builder_heuristic(model, std::move(action_managers), gecode_builder);
 		engine = new aptk::StlBestFirstSearch<SearchNode, GecodeRPHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic));
@@ -32,7 +32,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSEngineCreator::create(const Config& conf
 	} else {
 		// We use a direct RPG builder
 		FINFO("main", "Chosen RPG Builder: Direct");
-		typedef ConstrainedRelaxedPlanHeuristic<FS0StateModel, DirectRPGBuilder> DirectRPHeuristic;
+		typedef ConstrainedRelaxedPlanHeuristic<DirectRPGBuilder> DirectRPHeuristic;
 		std::shared_ptr<DirectRPGBuilder> direct_builder = std::shared_ptr<DirectRPGBuilder>(DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints()));
 		DirectRPHeuristic direct_builder_heuristic(model, std::move(action_managers), direct_builder);
 		engine = new aptk::StlBestFirstSearch<SearchNode, DirectRPHeuristic, FS0StateModel>(model, std::move(direct_builder_heuristic));
