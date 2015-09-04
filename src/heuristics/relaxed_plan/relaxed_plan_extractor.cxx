@@ -1,5 +1,5 @@
 
-#include <heuristics/relaxed_plan_extractor.hxx>
+#include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <utils/config.hxx>
 
 namespace fs0 {

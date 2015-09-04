@@ -4,8 +4,8 @@
 #include <fs0_types.hxx>
 #include <state_model.hxx>
 #include <utils/logging.hxx>
-#include <heuristics/relaxed_plan.hxx>
-#include <heuristics/novelty_from_preconditions.hxx>
+#include <heuristics/relaxed_plan/constrained_relaxed_plan_heuristic.hxx>
+#include <heuristics/novelty/novelty_from_preconditions.hxx>
 #include "novelty_evaluator.hxx"
 
 namespace fs0 { class Problem; class Config; }
@@ -17,7 +17,7 @@ class NoveltyReachabilityEnsembleEvaluator : public NoveltyEvaluator<SearchNode>
 	typedef NoveltyEvaluator<SearchNode> BaseClass;
 	
 public:
-// 	typedef RelaxedPlanHeuristic<FS0StateModel> RelaxedHeuristic; // TODO - We need to decide here what type of RPG builder we'll be using here.
+// 	typedef ConstrainedRelaxedPlanHeuristic<FS0StateModel> RelaxedHeuristic; // TODO - We need to decide here what type of RPG builder we'll be using here.
 	//RelaxedHeuristic _reachability_heuristic;
 
 	NoveltyReachabilityEnsembleEvaluator(const FS0StateModel& model) : BaseClass(model) {}

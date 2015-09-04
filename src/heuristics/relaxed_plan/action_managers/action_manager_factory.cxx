@@ -2,10 +2,10 @@
 #include <cassert>
 #include <iosfwd>
 
-#include <heuristics/rpg/action_manager_factory.hxx>
+#include <heuristics/relaxed_plan/action_managers/action_manager_factory.hxx>
 #include <constraints/gecode/action_manager.hxx>
 #include <constraints/direct/action_manager.hxx>
-#include <heuristics/rpg_data.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <constraints/filtering.hxx>
 #include <utils/logging.hxx>
 #include <utils/config.hxx>

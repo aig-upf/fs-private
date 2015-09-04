@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include <languages/fstrips/loader.hxx>
-#include <heuristics/rpg/action_manager_factory.hxx>
+#include <heuristics/relaxed_plan/action_managers/action_manager_factory.hxx>
 #include <actions/ground_action.hxx>
 
 #include <component_factory.hxx>

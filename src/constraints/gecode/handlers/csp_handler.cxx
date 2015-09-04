@@ -2,7 +2,7 @@
 #include <constraints/gecode/handlers/csp_handler.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/helper.hxx>
-#include <heuristics/rpg_data.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
 #include <constraints/registry.hxx>
 

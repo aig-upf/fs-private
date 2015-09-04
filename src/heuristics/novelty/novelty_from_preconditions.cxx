@@ -2,7 +2,7 @@
 #include <iostream>
 #include <set>
 
-#include <heuristics/novelty_from_preconditions.hxx>
+#include <heuristics/novelty/novelty_from_preconditions.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/feature_set.hxx>

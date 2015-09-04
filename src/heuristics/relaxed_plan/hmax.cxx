@@ -1,6 +1,6 @@
 
-#include <heuristics/hmax.hxx>
-#include <heuristics/rpg_data.hxx>
+#include <heuristics/relaxed_plan/hmax.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <relaxed_state.hxx>
 #include <state_model.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>

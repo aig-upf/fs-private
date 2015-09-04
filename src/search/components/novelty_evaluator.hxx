@@ -4,7 +4,7 @@
 #include <fs0_types.hxx>
 #include <state_model.hxx>
 #include <utils/logging.hxx>
-#include <heuristics/novelty_from_preconditions.hxx>
+#include <heuristics/novelty/novelty_from_preconditions.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 
 namespace fs0 { class Problem; class Config; }

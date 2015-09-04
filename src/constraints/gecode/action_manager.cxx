@@ -1,6 +1,6 @@
 
 #include <constraints/gecode/action_manager.hxx>
-#include <heuristics/rpg_data.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/gecode.hxx>

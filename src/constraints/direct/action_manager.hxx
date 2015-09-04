@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <heuristics/rpg/base_action_manager.hxx>
+#include <heuristics/relaxed_plan/action_managers/base_action_manager.hxx>
 #include <constraints/direct/csp_handler.hxx>
 #include <constraints/direct/effect.hxx>
 

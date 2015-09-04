@@ -1,12 +1,12 @@
 
-#include <heuristics/relaxed_plan.hxx>
-#include <heuristics/relaxed_plan_extractor.hxx>
-#include <heuristics/rpg_data.hxx>
+#include <heuristics/relaxed_plan/constrained_relaxed_plan_heuristic.hxx>
+#include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <constraints/filtering.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/actions.hxx>
 #include <relaxed_state.hxx>
-#include <heuristics/rpg/base_action_manager.hxx>
+#include <heuristics/relaxed_plan/action_managers/base_action_manager.hxx>
 #include <state_model.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
@@ -15,7 +15,7 @@
 namespace fs0 {
 
 template <typename Model, typename RPGBuilder>
-RelaxedPlanHeuristic<Model, RPGBuilder>::RelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder) :
+ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>::ConstrainedRelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder) :
 	_problem(problem.getTask()), _managers(managers), _builder(builder)
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
@@ -24,7 +24,7 @@ RelaxedPlanHeuristic<Model, RPGBuilder>::RelaxedPlanHeuristic(const Model& probl
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 template <typename Model, typename RPGBuilder>
-float RelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
+float ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
 	
 	if (ApplicabilityManager::checkFormulaHolds(_problem.getGoalConditions(), seed)) return 0; // The seed state is a goal
 	
@@ -70,7 +70,7 @@ float RelaxedPlanHeuristic<Model, RPGBuilder>::evaluate(const State& seed) {
 }
 
 template <typename Model, typename RPGBuilder>
-float RelaxedPlanHeuristic<Model, RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
+float ConstrainedRelaxedPlanHeuristic<Model, RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData) {
 	Atom::vctr causes;
 	if (_builder->isGoal(seed, state, causes)) {
 		BaseRelaxedPlanExtractor* extractor = RelaxedPlanExtractorFactory::create(seed, rpgData);
@@ -81,8 +81,8 @@ float RelaxedPlanHeuristic<Model, RPGBuilder>::computeHeuristic(const State& see
 }
 
 // explicit instantiations
-template class RelaxedPlanHeuristic<fs0::FS0StateModel, fs0::DirectRPGBuilder>;
-template class RelaxedPlanHeuristic<fs0::FS0StateModel, fs0::gecode::GecodeRPGBuilder>;
+template class ConstrainedRelaxedPlanHeuristic<fs0::FS0StateModel, fs0::DirectRPGBuilder>;
+template class ConstrainedRelaxedPlanHeuristic<fs0::FS0StateModel, fs0::gecode::GecodeRPGBuilder>;
 
 } // namespaces
 

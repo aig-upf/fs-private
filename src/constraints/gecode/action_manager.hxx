@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <heuristics/rpg/base_action_manager.hxx>
+#include <heuristics/relaxed_plan/action_managers/base_action_manager.hxx>
 #include <constraints/gecode/handlers/csp_handler.hxx>
 
 namespace fs0 { class RPGData; }

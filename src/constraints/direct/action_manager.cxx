@@ -3,7 +3,7 @@
 #include <iosfwd>
 
 #include <constraints/direct/action_manager.hxx>
-#include <heuristics/rpg_data.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <constraints/direct/translators/translator.hxx>
 #include <constraints/direct/bound_constraint.hxx>
 #include <utils/projections.hxx>

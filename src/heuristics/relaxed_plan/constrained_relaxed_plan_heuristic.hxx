@@ -9,13 +9,13 @@ namespace fs0 {
 class Problem; class State; class RelaxedState; class RPGData; class BaseActionManager;
 
 template <typename Model, typename RPGBuilder>
-class RelaxedPlanHeuristic {
+class ConstrainedRelaxedPlanHeuristic {
 public:
 	typedef typename Model::ActionType Action;
 
-	RelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder);
+	ConstrainedRelaxedPlanHeuristic(const Model& problem, std::vector<std::shared_ptr<BaseActionManager>>&& managers, std::shared_ptr<RPGBuilder> builder);
 	
-	virtual ~RelaxedPlanHeuristic() {}
+	virtual ~ConstrainedRelaxedPlanHeuristic() {}
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& seed);

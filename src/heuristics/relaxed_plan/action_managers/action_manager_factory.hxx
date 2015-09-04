@@ -2,7 +2,7 @@
 #pragma once
 
 #include <actions/ground_action.hxx>
-#include <heuristics/rpg/base_action_manager.hxx>
+#include <heuristics/relaxed_plan/action_managers/base_action_manager.hxx>
 
 namespace fs0 {
 

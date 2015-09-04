@@ -4,7 +4,7 @@
 #include <utils/printers/printers.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
-#include <heuristics/relaxed_plan_extractor.hxx>
+#include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 
 namespace fs0 {
 

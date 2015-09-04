@@ -7,7 +7,7 @@
 
 #include <state.hxx>
 #include <problem.hxx>
-#include <heuristics/rpg_data.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/printers.hxx>
 
