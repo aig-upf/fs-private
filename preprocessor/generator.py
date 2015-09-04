@@ -132,7 +132,7 @@ def compile_translation(translation_dir, planner, debug=False, predstate=False):
     Copies the relevant files from the BFS directory to the newly-created translation directory,
      and then calls scons to compile the problem there.
     """
-    debug_flag = "debug={0}".format(1 if debug else 0)
+    debug_flag = "edebug={0}".format(1 if debug else 0)
     predstate_flag = "predstate=1" if predstate else ''
 
     planner_dir = os.path.abspath('../planners/' + planner)

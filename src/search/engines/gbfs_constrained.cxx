@@ -6,9 +6,11 @@
 #include <utils/logging.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/constrained_relaxed_plan_heuristic.hxx>
+#include <heuristics/relaxed_plan/constrained_hmax.hxx>
 #include <heuristics/relaxed_plan/action_managers/action_manager_factory.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
+
 
 using namespace fs0::gecode;
 
@@ -59,6 +61,10 @@ Config::GoalManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, Direct
 		return Config::GoalManagerType::Basic;
 	}
 }
+
+// explicit instantiations
+template class GBFSConstrainedHeuristicsCreator<ConstrainedRelaxedPlanHeuristic<GecodeRPGBuilder>, ConstrainedRelaxedPlanHeuristic<DirectRPGBuilder>>;
+template class GBFSConstrainedHeuristicsCreator<ConstrainedHMaxHeuristic<GecodeRPGBuilder>, ConstrainedHMaxHeuristic<DirectRPGBuilder>>;
 
 
 } } // namespaces
