@@ -20,7 +20,7 @@ EngineRegistry& EngineRegistry::instance() {
 
 EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search engines on the instantiation of the singleton
-	add("gbfs_crpg",  new GBFSConstrainedHeuristicsCreator<ConstrainedRelaxedPlanHeuristic<GecodeRPGBuilder>, ConstrainedRelaxedPlanHeuristic<DirectRPGBuilder>>());
+	add("gbfsc_hff",  new GBFSConstrainedHeuristicsCreator<ConstrainedRelaxedPlanHeuristic<GecodeRPGBuilder>, ConstrainedRelaxedPlanHeuristic<DirectRPGBuilder>>());
 	add("gbfs_chmax",  new GBFSConstrainedHeuristicsCreator<ConstrainedHMaxHeuristic<GecodeRPGBuilder>, ConstrainedHMaxHeuristic<DirectRPGBuilder>>());
 	add("iterated_width",  new IteratedWidthEngineCreator());
 	add("breadth_first_search",  new BreadthFirstSearchEngineCreator());
