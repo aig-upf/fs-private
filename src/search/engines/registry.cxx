@@ -1,10 +1,15 @@
 
+#include <problem.hxx>
 #include <search/engines/registry.hxx>
-#include <search/engines/gbfs_crpg.hxx>
+#include <search/engines/gbfs_constrained.hxx>
 #include <search/engines/iterated_width.hxx>
 #include <search/engines/breadth_first_search.hxx>
-#include <problem.hxx>
+#include <heuristics/relaxed_plan/constrained_relaxed_plan_heuristic.hxx>
+#include <heuristics/relaxed_plan/constrained_hmax.hxx>
+#include <constraints/direct/direct_rpg_builder.hxx>
+#include <constraints/gecode/gecode_rpg_builder.hxx>
 
+using namespace fs0::gecode;
 
 namespace fs0 { namespace engines {
 
@@ -15,7 +20,8 @@ EngineRegistry& EngineRegistry::instance() {
 
 EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search engines on the instantiation of the singleton
-	add("gbfs_crpg",  new GBFSEngineCreator());
+	add("gbfs_crpg",  new GBFSConstrainedHeuristicsCreator<ConstrainedRelaxedPlanHeuristic<GecodeRPGBuilder>, ConstrainedRelaxedPlanHeuristic<DirectRPGBuilder>>());
+	add("gbfs_chmax",  new GBFSConstrainedHeuristicsCreator<ConstrainedHMaxHeuristic<GecodeRPGBuilder>, ConstrainedHMaxHeuristic<DirectRPGBuilder>>());
 	add("iterated_width",  new IteratedWidthEngineCreator());
 	add("breadth_first_search",  new BreadthFirstSearchEngineCreator());
 	
