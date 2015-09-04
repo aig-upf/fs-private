@@ -17,7 +17,7 @@ class Problem;
 
 class State {
 protected:
-	//! A vector associating symbol IDs to their current extensional value in the state.
+	//! A vector mapping state variable (implicit) ids to their value in the current state.
 	std::vector<ObjectIdx> _values;
 
 	std::size_t _hash;
@@ -63,10 +63,10 @@ public:
 	
 	//! Assignment operator
 	// TODO - This is probably not exception-safe
-	State& operator=(const State &rhs) {
-		if (this == &rhs) return *this;
-		_values = rhs._values;
-		_hash = rhs._hash;
+	State& operator=(const State &other) {
+		if (this == &other) return *this;
+		_values = other._values;
+		_hash = other._hash;
 		return *this;
 	}
 
@@ -78,13 +78,13 @@ public:
 	}
 
 	//! Assignment operator by move
-	State&	operator=( State&& state ) {
-		_values = std::move( state._values );
-		_hash = state._hash;
+	State& operator=( State&& other ) {
+		if (this == &other) return *this;
+		_values = std::move( other._values );
+		_hash = other._hash;
 		return *this;
 	}
 
-	
 	bool operator==(const State &rhs) const {
 		return _hash == rhs._hash && _values == rhs._values; // Check the hash first for performance.
 	}
