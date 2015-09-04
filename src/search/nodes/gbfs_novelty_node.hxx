@@ -32,33 +32,37 @@ namespace fs0 { namespace engines {
 
 
 template <typename State>
-class HeuristicIWSearchNode {
+class GBFSNoveltyNode {
 public:
 	State state;
 	GroundAction::IdType action;
-	std::shared_ptr<FS0_Node<State> > parent;
-	unsigned novelty;
-	unsigned g;
-	unsigned novelty; // evaluation function
-	bool _is_dead_end;
-	unsigned num_unsat;
+	
+	std::shared_ptr<GBFSNoveltyNode<State> > parent;
 
+	//! Accummulated cost
+	unsigned g;
+
+	//! Novelty of the state
+	unsigned novelty;
+	
+	//! Number of unsatisfied goal atoms of the state
+	unsigned num_unsat;
 	
 public:
 	// Kill default constructors
-	explicit HeuristicIWSearchNode();
+	explicit GBFSNoveltyNode();
 	
 	//! Constructor with full copying of the state (expensive)
-	HeuristicIWSearchNode(const State& s)
-		: state(s), action( GroundAction::invalid_action_id ), parent( nullptr ), novelty(0), g(0), _is_dead_end(false), num_unsat(0) {
-	}
+	GBFSNoveltyNode(const State& s)
+		: state(s), action(GroundAction::invalid_action_id), parent(nullptr), g(0), novelty(0), num_unsat(0)
+	{}
 
 	//! Constructor with move of the state (cheaper)
-	HeuristicIWSearchNode(State&& _state, GroundAction::IdType _action, std::shared_ptr< HeuristicIWSearchNode<State> > _parent) :
-		state(_state), action(_action), parent(_parent), novelty(0), g(_parent->g + 1), _is_dead_end(false), num_unsat(0) {
-	}
+	GBFSNoveltyNode(State&& _state, GroundAction::IdType _action, std::shared_ptr< GBFSNoveltyNode<State> > _parent) :
+		state(_state), action(_action), parent(_parent), g(_parent->g + 1), novelty(0), num_unsat(0)
+	{}
 
-	virtual ~HeuristicIWSearchNode() {}
+	virtual ~GBFSNoveltyNode() {}
 
 	bool has_parent() const { return parent != nullptr; }
 
@@ -66,35 +70,26 @@ public:
 		os << "{@ = " << this << ", s = " << state << ", novelty = " << novelty << ", g = " << g << " unsat = " << num_unsat << ", parent = " << parent << "}";
 	}
 
-	bool operator==( const HeuristicIWSearchNode<State>& o ) const { return state == o.state; }
+	bool operator==( const GBFSNoveltyNode<State>& o ) const { return state == o.state; }
 
-	// MRJ: This is part of the required interface of the Heuristic
 	template <typename Heuristic>
 	void	evaluate_with( Heuristic& heuristic ) {
-		novelty = heuristic.evaluate_novelty( state );
-		_is_dead_end = novelty > heuristic.novelty_bound();
+		novelty = heuristic.novelty( state );
+		if (novelty > heuristic.novelty_bound()) novelty = std::numeric_limits<unsigned>::infinity();
 		num_unsat = heuristic.evaluate_num_unsat_goals( state );
-// 		if ( parent != nullptr && num_unsat < parent->num_unsat ) {
-			//std::cout << "Reward!" << std::endl;
-			//print(std::cout);
-			//std::cout << std::endl;
-// 		}
-		/* NOT USED as this is the heuristic function for gbfs(f)
-		h = heuristic.evaluate_reachability( state );
-		unsigned ha = 2;
-		if ( parent != nullptr && h < parent->h ) ha = 1;
-		novelty = 2 * (novelty - 1) + ha;
-		*/
 	}
 
-	bool dead_end() const { return _is_dead_end; }
+	bool dead_end() const { return novelty == std::numeric_limits<unsigned>::infinity(); }
 
 	std::size_t hash() const { return state.hash(); }
 
-	// MRJ: With this we implement Greedy Best First modified to be aware of state novelty
-	bool operator>( const HeuristicIWSearchNode<State>& other ) const {
+	//! The ordering of the nodes prioritizes:
+	//! (1) nodes with lower novelty, (2) nodes with lower number of unsatisfied goals, (3) nodes with lower accumulated cost
+	bool operator>( const GBFSNoveltyNode<State>& other ) const {
 		if ( novelty > other.novelty ) return true;
 		if ( novelty < other.novelty ) return false;
+		if (num_unsat > other.num_unsat) return true;
+		if (num_unsat < other.num_unsat) return true;
 		return g > other.g;
 	}
 };

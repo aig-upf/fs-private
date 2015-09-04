@@ -13,22 +13,17 @@ namespace fs0 { class Problem; class Config; }
 namespace fs0 { namespace engines {
 	
 template <typename SearchNode>
-class NoveltyReachabilityEnsembleEvaluator : public NoveltyEvaluator<SearchNode> {
+class NoveltyHeuristic : public NoveltyEvaluator<SearchNode> {
 	typedef NoveltyEvaluator<SearchNode> BaseClass;
 	
 public:
-// 	typedef ConstrainedRelaxedPlanHeuristic<FS0StateModel> RelaxedHeuristic; // TODO - We need to decide here what type of RPG builder we'll be using here.
-	//RelaxedHeuristic _reachability_heuristic;
-
-	NoveltyReachabilityEnsembleEvaluator(const FS0StateModel& model) : BaseClass(model) {}
-
-// 	float evaluate_reachability( const State& state ) {
-// 		return _reachability_heuristic.evaluate( state );
-// 	}
+	NoveltyHeuristic(const FS0StateModel& model) : BaseClass(model) {}
 
 	float evaluate(const State& state) {
 		auto novelty = BaseClass::novelty(state);
 		if (novelty > BaseClass::novelty_bound()) return std::numeric_limits<float>::infinity();
+		
+		
 
 		assert(0); // This needs to be properly implemented and clearly distinguished from gbfs(f)
 		

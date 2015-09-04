@@ -1,6 +1,5 @@
 
-#include <search/engines/iw_gbfs.hxx>
-#include <search/components/novelty_reachability_ensemble_evaluator.hxx>
+#include <search/engines/gbfs_novelty.hxx>
 #include <state_model.hxx>
 #include <utils/config.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
@@ -8,7 +7,7 @@
 
 namespace fs0 { namespace engines {
 	
-std::unique_ptr<FS0SearchAlgorithm> IWGBFSEngineCreator::create(const Config& config, const FS0StateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyEngineCreator::create(const Config& config, const FS0StateModel& model) const {
 	FS0SearchAlgorithm* engine = nullptr;
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
