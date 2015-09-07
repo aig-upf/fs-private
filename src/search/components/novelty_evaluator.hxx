@@ -4,7 +4,7 @@
 #include <fs0_types.hxx>
 #include <state_model.hxx>
 #include <utils/logging.hxx>
-#include <heuristics/novelty/novelty_from_preconditions.hxx>
+#include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 
 namespace fs0 { class Problem; class Config; }
@@ -18,10 +18,10 @@ class NoveltyEvaluator {
 protected:
 	const Problem& _problem;
 
-	std::vector<NoveltyFromPreconditions> _novelty_heuristic;
-	
+	std::vector<GenericNoveltyEvaluator> _novelty_heuristic;
+
 	unsigned _max_novelty;
-	
+
 	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
 public:
@@ -48,12 +48,12 @@ public:
 	unsigned evaluate_num_unsat_goals(const State& state) const { return _unsat_goal_atoms_heuristic.evaluate(state); }
 
 	inline unsigned novelty_bound() { return _max_novelty; }
-	
-	inline unsigned novelty(const State& state) { 
+
+	inline unsigned novelty(const State& state) {
 		NoveltyFromPreconditions& evaluator = _novelty_heuristic[evaluate_num_unsat_goals(state)];
 		return evaluator.evaluate(state);
 	}
-	
+
 	//! Returns false iff we want to prune this node during the search
 	bool accept(const SearchNode& n) {
 		return novelty(n.state) <= novelty_bound();
