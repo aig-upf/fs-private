@@ -14,12 +14,19 @@ GenericStateAdapter::GenericStateAdapter( const State& s, const GenericNoveltyEv
 
 GenericStateAdapter::~GenericStateAdapter() {}
 
+GenericNoveltyEvaluator::GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, bool useStateVars, bool useGoal, bool useActions)
+	: Base()
+{
+	set_max_novelty(novelty_bound);
+	selectFeatures(problem, useStateVars, useGoal, useActions);
+}
+
 GenericNoveltyEvaluator::~GenericNoveltyEvaluator() {
 	for ( NoveltyFeature::ptr f : _features ) delete f;
 }
 
 
-void GenericNoveltyEvaluator::selectFeatures( const Problem& problem, bool useStateVars, bool useGoal, bool useActions ) {
+void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, bool useStateVars, bool useGoal, bool useActions) {
 	std::set< VariableIdx > relevantVars;
 
 	if ( useGoal ) {

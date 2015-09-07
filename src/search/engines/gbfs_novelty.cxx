@@ -15,8 +15,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyEngineCreator::create(const Confi
 	bool use_goal = config.getOption<bool>("engine.use_goal");
 	bool use_actions = config.getOption<bool>("engine.use_actions");
 	
-	NoveltyHeuristic evaluator(model);
-	evaluator.setup(max_novelty, use_state_vars, use_goal, use_actions);
+	NoveltyHeuristic evaluator(model, max_novelty, use_state_vars, use_goal, use_actions);
 	engine = new aptk::StlBestFirstSearch<SearchNode, NoveltyHeuristic, FS0StateModel>(model, std::move(evaluator));
 	
 	FINFO("main", "Heuristic options:");

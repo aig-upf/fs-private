@@ -1,6 +1,5 @@
 
 #include <search/engines/iterated_width.hxx>
-#include <search/components/novelty_evaluator.hxx>
 #include <state_model.hxx>
 #include <utils/config.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
@@ -15,8 +14,7 @@ std::unique_ptr<FS0SearchAlgorithm> IteratedWidthEngineCreator::create(const Con
 	bool use_goal = config.getOption<bool>("engine.use_goal");
 	bool use_actions = config.getOption<bool>("engine.use_actions");
 	
-	std::shared_ptr<SearchNoveltyEvaluator> evaluator = std::make_shared<SearchNoveltyEvaluator>(model);
-	evaluator->setup(max_novelty, use_state_vars, use_goal, use_actions);
+	std::shared_ptr<SearchNoveltyEvaluator> evaluator = std::make_shared<SearchNoveltyEvaluator>(model, max_novelty, use_state_vars, use_goal, use_actions);
 	
 	FINFO("main", "Heuristic options:");
 	FINFO("main", "\tMax novelty: " << max_novelty);
