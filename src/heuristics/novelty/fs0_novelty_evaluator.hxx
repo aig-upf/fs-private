@@ -23,16 +23,17 @@ protected:
 };
 
 
-
 class GenericNoveltyEvaluator : public aptk::FiniteDomainNoveltyEvaluator< GenericStateAdapter > {
 public:
 	typedef aptk::FiniteDomainNoveltyEvaluator< GenericStateAdapter > BaseClass;
 
 	void selectFeatures( const Problem& problem, bool useStateVars, bool useGoal, bool useActions );
 
+	using BaseClass::evaluate; // So that we do not hide the base evaluate(const FiniteDomainNoveltyEvaluator&) method
+	
 	unsigned evaluate( const State& s ) {
 		GenericStateAdapter adaptee( s, *this );
-		return BaseClass::evaluate( adaptee );
+		return evaluate( adaptee );
 	}
 
 	unsigned numFeatures() const { return _features.size(); }

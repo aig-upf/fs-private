@@ -8,40 +8,42 @@
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
-	class State;
+	
+class State;
 
-	class NoveltyFeature {
-	public:
-		typedef NoveltyFeature* ptr;
+//! Base interface for any novelty feature
+class NoveltyFeature {
+public:
+	typedef NoveltyFeature* ptr;
 
-		virtual ~NoveltyFeature() {}
-		virtual aptk::ValueIndex evaluate( const State& s ) const = 0;
+	virtual ~NoveltyFeature() {}
+	virtual aptk::ValueIndex evaluate( const State& s ) const = 0;
+};
+
+//! A state variable-based feature that simply returs the value of a certain variable in the state
+class StateVariableFeature : public NoveltyFeature {
+public:
+	StateVariableFeature( VariableIdx variable ) : _variable(variable) {}
+	~StateVariableFeature() {}
+	aptk::ValueIndex  evaluate( const State& s ) const;
+
+protected:
+	VariableIdx _variable;
+};
+
+//! A feature based on a set of conditions (typically the set of preconditions of an action, 
+//! or the goal conditions), that evaluates to the number of satisfied conditions in the set for a given state.
+class ConditionSetFeature : public NoveltyFeature {
+public:
+	ConditionSetFeature() {}
+	~ConditionSetFeature() {}
+
+	void addCondition(fs::AtomicFormula::cptr condition) { _conditions.push_back(condition); }
+
+	aptk::ValueIndex  evaluate( const State& s ) const;
+
+protected:
+	std::vector<fs::AtomicFormula::cptr> _conditions;
 	};
 
-	class StateVarFeature : public NoveltyFeature {
-	public:
-		StateVarFeature( VariableIdx variable ) : _variable(variable) {}
-		~StateVarFeature() {}
-		aptk::ValueIndex  evaluate( const State& s ) const;
-
-	protected:
-		VariableIdx _variable;
-	};
-
-	class ConstraintSetFeature : public NoveltyFeature {
-	public:
-		ConstraintSetFeature() {}
-		~ConstraintSetFeature() {}
-
-		void addCondition(fs::AtomicFormula::cptr condition) {
-			_conditions.push_back(condition);
-		}
-
-		aptk::ValueIndex  evaluate( const State& s ) const;
-
-	protected:
-		std::vector<fs::AtomicFormula::cptr> _conditions;
-	};
-
-
-}
+} // namespaces

@@ -23,7 +23,7 @@ void GenericNoveltyEvaluator::selectFeatures( const Problem& problem, bool useSt
 	std::set< VariableIdx > relevantVars;
 
 	if ( useGoal ) {
-		ConstraintSetFeature* feature = new ConstraintSetFeature;
+		ConditionSetFeature* feature = new ConditionSetFeature;
 		for ( AtomicFormula::cptr condition : problem.getGoalConditions() ) {
 			feature->addCondition(condition);
 			const auto scope = ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
@@ -33,7 +33,7 @@ void GenericNoveltyEvaluator::selectFeatures( const Problem& problem, bool useSt
 	}
 
 	for ( GroundAction::cptr action : problem.getGroundActions() ) {
-		ConstraintSetFeature*  feature = new ConstraintSetFeature;
+		ConditionSetFeature*  feature = new ConditionSetFeature;
 
 		for ( AtomicFormula::cptr condition : action->getConditions() ) {
 			if ( useStateVars ) {
@@ -49,7 +49,7 @@ void GenericNoveltyEvaluator::selectFeatures( const Problem& problem, bool useSt
 
 	if ( useStateVars ) {
 		for ( VariableIdx x : relevantVars ) {
-			_features.push_back( new StateVarFeature( x ) );
+			_features.push_back( new StateVariableFeature( x ) );
 		}
 	}
 	FINFO("main", "Novelty From Constraints: # features: " << numFeatures());
