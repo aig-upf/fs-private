@@ -24,9 +24,9 @@ protected:
 
 
 
-class GenericNoveltyEvaluator : public aptk::FiniteDomainGenericNoveltyEvaluator< GenericStateAdapter > {
+class GenericNoveltyEvaluator : public aptk::FiniteDomainNoveltyEvaluator< GenericStateAdapter > {
 public:
-	typedef aptk::FiniteDomainGenericNoveltyEvaluator< GenericStateAdapter > BaseClass;
+	typedef aptk::FiniteDomainNoveltyEvaluator< GenericStateAdapter > BaseClass;
 
 	void selectFeatures( const Problem& problem, bool useStateVars, bool useGoal, bool useActions );
 

@@ -50,7 +50,7 @@ public:
 	inline unsigned novelty_bound() { return _max_novelty; }
 
 	inline unsigned novelty(const State& state) {
-		NoveltyFromPreconditions& evaluator = _novelty_heuristic[evaluate_num_unsat_goals(state)];
+		GenericNoveltyEvaluator& evaluator = _novelty_heuristic[evaluate_num_unsat_goals(state)];
 		return evaluator.evaluate(state);
 	}
 
