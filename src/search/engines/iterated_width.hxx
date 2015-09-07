@@ -13,14 +13,6 @@ namespace fs0 { namespace engines {
 //! A creator for a Breadth-First Search with Novelty pruning engine
 class IteratedWidthEngineCreator : public EngineCreator {
 public:
-	//! IW uses a simple blind-search node
-	typedef BlindSearchNode<fs0::State> SearchNode;
-	
-	typedef SingleNoveltyComponent<SearchNode> SearchNoveltyEvaluator;
-	
-	//! IW uses an unsorted queue with a NoveltyEvaluator acceptor
-	typedef aptk::StlUnsortedFIFO<SearchNode, SearchNoveltyEvaluator> OpenList;
-	
 	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const FS0StateModel& model) const;
 };
 
