@@ -7,7 +7,7 @@
 #include <set>
 #include <vector>
 #include <fs0_types.hxx>
-#include <atoms.hxx>
+#include <atom.hxx>
 
 
 namespace fs0 {

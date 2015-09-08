@@ -5,7 +5,7 @@
 #include <map>
 #include <cassert>
 #include <fs0_types.hxx>
-#include <atoms.hxx>
+#include <atom.hxx>
 #include <relaxed_state.hxx>
 #include <problem.hxx>
 

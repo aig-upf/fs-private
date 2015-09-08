@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <atoms.hxx>
+#include <atom.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/filtering.hxx>
