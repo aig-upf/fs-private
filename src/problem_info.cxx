@@ -111,7 +111,7 @@ void ProblemInfo::loadFunctionIndex(const rapidjson::Value& data) {
 		
 		// Parse the domain IDs
 		const auto& domains = data[i][2];
-		std::vector<TypeIdx> domain;
+		Signature domain;
 		for (unsigned j = 0; j < domains.Size(); ++j) {
 			domain.push_back(getTypeId(domains[j].GetString()));
 		}

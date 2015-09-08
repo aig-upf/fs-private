@@ -14,7 +14,7 @@ class ProblemInfo; class GroundAction;
 class ActionSchema {
 protected:
 	const std::string _name;
-	const std::vector<TypeIdx> _signature;
+	const Signature _signature;
 	const std::vector<std::string> _parameters;
 	const std::vector<AtomicFormulaSchema::cptr> _conditions;
 	const std::vector<ActionEffectSchema::cptr> _effects;
@@ -24,12 +24,12 @@ protected:
 public:
 	typedef const ActionSchema* cptr;
 	ActionSchema(const std::string& name,
-				 const std::vector<TypeIdx>& signature, const std::vector<std::string>& parameters,
+				 const Signature& signature, const std::vector<std::string>& parameters,
 			     const std::vector<AtomicFormulaSchema::cptr>& conditions, const std::vector<ActionEffectSchema::cptr>& effects);
 	~ActionSchema();
 	
 	inline const std::string& getName() const { return _name; }
-	inline const std::vector<TypeIdx>& getSignature() const { return _signature; }
+	inline const Signature& getSignature() const { return _signature; }
 	inline const std::vector<std::string>& getParameters() const { return _parameters; }
 
 	//! Prints a representation of the object to the given stream.

@@ -21,7 +21,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	virtual Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const = 0;
+	virtual Term::cptr process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const = 0;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const TermSchema& o) { return o.print(os); }
@@ -51,7 +51,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -87,7 +87,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -110,7 +110,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -132,7 +132,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -150,7 +150,7 @@ public:
 	
 	//! Processes a possibly nested unprocessed term, consolidating the existing state variables
 	//! and binding action parameters to concrete language constants.
-	Term::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	Term::cptr process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
@@ -167,7 +167,7 @@ public:
 		for (const auto ptr:_subterms) delete ptr;
 	}
 	
-	virtual AtomicFormula::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	virtual AtomicFormula::cptr process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const AtomicFormulaSchema& o) { return o.print(os); }
@@ -192,7 +192,7 @@ public:
 		delete lhs; delete rhs;
 	}
 	
-	ActionEffect::cptr process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	ActionEffect::cptr process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionEffectSchema& o) { return o.print(os); }

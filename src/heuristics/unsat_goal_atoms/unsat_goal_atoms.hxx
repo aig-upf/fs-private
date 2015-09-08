@@ -20,9 +20,7 @@ public:
 		unsigned unsatisfied = 0;
 		const std::vector<AtomicFormula::cptr>& conditions = _problem.getGoalConditions();
 		for (AtomicFormula::cptr condition:conditions) {
-			if (condition->interpret(state)) {
-				++unsatisfied;
-			}
+			if (!condition->interpret(state)) ++unsatisfied;
 		}
 		return unsatisfied;
 	}

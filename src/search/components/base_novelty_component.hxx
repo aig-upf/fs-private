@@ -5,7 +5,6 @@
 #include <state_model.hxx>
 #include <utils/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
-#include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 
 namespace fs0 { class Problem; class Config; }
 

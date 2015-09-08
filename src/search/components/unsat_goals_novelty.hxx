@@ -35,8 +35,6 @@ public:
 		  _unsat_goal_atoms_heuristic(model)
 	{}
 	
-	// 	GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, bool useStateVars, bool useGoal, bool useActions);
-
 	~UnsatGoalsNoveltyComponent() {
 		for (unsigned j = 0; j < _novelty_evaluators.size(); j++)
 			for ( unsigned k = 1; k <= Base::novelty_bound(); k++ ) {

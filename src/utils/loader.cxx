@@ -1,5 +1,4 @@
 
-#include <cassert>
 #include <memory>
 #include <boost/lexical_cast.hpp>
 
@@ -7,14 +6,8 @@
 #include <utils/loader.hxx>
 #include <actions/ground_action.hxx>
 #include <component_factory.hxx>
-
-#include <iostream>
-
 #include <languages/fstrips/loader.hxx>
 #include <heuristics/relaxed_plan/action_managers/action_manager_factory.hxx>
-#include <actions/ground_action.hxx>
-
-#include <component_factory.hxx>
 #include <utils/logging.hxx>
 
 
@@ -78,7 +71,7 @@ void Loader::loadActionSchemata(const rapidjson::Value& data, Problem& problem) 
 
 ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const ProblemInfo& info) {
 	const std::string& name = node["name"].GetString();
-	const std::vector<TypeIdx> signature = parseNumberList<unsigned>(node["signature"]);
+	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	
 	const std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(node["conditions"], info);
