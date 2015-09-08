@@ -3,7 +3,6 @@
 
 #include <search/engines/registry.hxx>
 #include <search/nodes/blind_search_node.hxx>
-#include <search/components/novelty_evaluator.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 

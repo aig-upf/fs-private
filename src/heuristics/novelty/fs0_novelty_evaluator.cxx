@@ -14,16 +14,23 @@ GenericStateAdapter::GenericStateAdapter( const State& s, const GenericNoveltyEv
 
 GenericStateAdapter::~GenericStateAdapter() {}
 
+GenericNoveltyEvaluator::GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, bool useStateVars, bool useGoal, bool useActions)
+	: Base()
+{
+	set_max_novelty(novelty_bound);
+	selectFeatures(problem, useStateVars, useGoal, useActions);
+}
+
 GenericNoveltyEvaluator::~GenericNoveltyEvaluator() {
 	for ( NoveltyFeature::ptr f : _features ) delete f;
 }
 
 
-void GenericNoveltyEvaluator::selectFeatures( const Problem& problem, bool useStateVars, bool useGoal, bool useActions ) {
+void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, bool useStateVars, bool useGoal, bool useActions) {
 	std::set< VariableIdx > relevantVars;
 
 	if ( useGoal ) {
-		ConstraintSetFeature* feature = new ConstraintSetFeature;
+		ConditionSetFeature* feature = new ConditionSetFeature;
 		for ( AtomicFormula::cptr condition : problem.getGoalConditions() ) {
 			feature->addCondition(condition);
 			const auto scope = ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
@@ -33,7 +40,7 @@ void GenericNoveltyEvaluator::selectFeatures( const Problem& problem, bool useSt
 	}
 
 	for ( GroundAction::cptr action : problem.getGroundActions() ) {
-		ConstraintSetFeature*  feature = new ConstraintSetFeature;
+		ConditionSetFeature*  feature = new ConditionSetFeature;
 
 		for ( AtomicFormula::cptr condition : action->getConditions() ) {
 			if ( useStateVars ) {
@@ -49,7 +56,7 @@ void GenericNoveltyEvaluator::selectFeatures( const Problem& problem, bool useSt
 
 	if ( useStateVars ) {
 		for ( VariableIdx x : relevantVars ) {
-			_features.push_back( new StateVarFeature( x ) );
+			_features.push_back( new StateVariableFeature( x ) );
 		}
 	}
 	FINFO("main", "Novelty From Constraints: # features: " << numFeatures());
