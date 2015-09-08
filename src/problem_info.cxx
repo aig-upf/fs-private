@@ -202,8 +202,8 @@ bool ProblemInfo::checkValueIsValid(VariableIdx variable, ObjectIdx value) const
 
 
 void ProblemInfo::loadProblemMetadata(const rapidjson::Value& data) {
-	setDomainName(data["instance"].GetString());
-	setInstanceName(data["domain"].GetString());
+	setDomainName(data["domain"].GetString());
+	setInstanceName(data["instance"].GetString());
 }
 
 } // namespaces
