@@ -10,7 +10,7 @@ namespace fs0 {
 	
 
 //! Applies the given changeset into the current state.
-void State::accumulate(const Atom::vctr& atoms) {
+void State::accumulate(const std::vector<Atom>& atoms) {
 	for (const Atom& fact:atoms) { 
 		set(fact);
 	}
