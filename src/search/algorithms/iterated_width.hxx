@@ -7,6 +7,7 @@
 #include <search/components/single_novelty.hxx>
 #include <search/engines/registry.hxx>
 #include <state_model.hxx>
+#include <heuristics/novelty/novelty_features_configuration.hxx>
 
 #include <aptk2/search/algorithms/generic_search.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
@@ -31,9 +32,10 @@ public:
 	//! The base algorithm for IW is a simple Breadth-First Search
 	typedef aptk::StlBreadthFirstSearch<SearchNode, FS0StateModel, OpenList> BaseAlgorithm;
 	
-	FS0IWAlgorithm(const FS0StateModel& model, unsigned initial_max_width, unsigned final_max_width, bool use_state_vars, bool use_goal, bool use_actions)
-		: FS0SearchAlgorithm(model), _current_max_width(initial_max_width), _final_max_width(final_max_width), _use_state_vars(use_state_vars), _use_goal(use_goal), _use_actions(use_actions)
+	FS0IWAlgorithm(const FS0StateModel& model, unsigned initial_max_width, unsigned final_max_width, const NoveltyFeaturesConfiguration& feature_configuration)
+		: FS0SearchAlgorithm(model), _current_max_width(initial_max_width), _final_max_width(final_max_width), _feature_configuration(feature_configuration)
 	{
+		setup_base_algorithm(_current_max_width);
 	}
 	
 	virtual ~FS0IWAlgorithm() {
@@ -45,22 +47,22 @@ public:
 		while(_current_max_width <= _final_max_width) {
 			if(_algorithm->search(state, solution)) return true;
 			++_current_max_width;
-			setup_brfs_algorithm(_current_max_width);
+			setup_base_algorithm(_current_max_width);
 			solution.clear();
 		}
 		return false;
 	}
 	
-	void setup_brfs_algorithm(unsigned max_width) {
+	void setup_base_algorithm(unsigned max_width) {
 		if (_algorithm) delete _algorithm;
-		std::shared_ptr<SearchNoveltyEvaluator> evaluator = std::make_shared<SearchNoveltyEvaluator>(this->model, _current_max_width, _use_state_vars, _use_goal, _use_actions);
+		std::shared_ptr<SearchNoveltyEvaluator> evaluator = std::make_shared<SearchNoveltyEvaluator>(this->model, _current_max_width, _feature_configuration);
 		_algorithm = new BaseAlgorithm(model, OpenList(evaluator));
 	}
 	
 protected:
 	
 	//!
-	SearchAlgorithm* _algorithm;
+	BaseAlgorithm* _algorithm;
 	
 	//!
 	unsigned _current_max_width;
@@ -68,10 +70,8 @@ protected:
 	//!
 	unsigned _final_max_width;
 
-	//! Novelty evaluator configuration - TODO This should be encapsulated out of here...
-	bool _use_state_vars;
-	bool _use_goal;
-	bool _use_actions;
+	//! Novelty evaluator configuration
+	const NoveltyFeaturesConfiguration _feature_configuration;
 };
 
 } } // namespaces

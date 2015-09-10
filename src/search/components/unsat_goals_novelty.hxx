@@ -5,6 +5,7 @@
 #include <state_model.hxx>
 #include <utils/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
+#include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 #include <search/components/base_novelty_component.hxx>
 
@@ -29,9 +30,9 @@ protected:
 public:
 	typedef BaseNoveltyComponent<SearchNode> Base;
 
-	UnsatGoalsNoveltyComponent(const FS0StateModel& model, unsigned max_novelty, bool useStateVars, bool useGoal, bool useActions)
+	UnsatGoalsNoveltyComponent(const FS0StateModel& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
 		: Base(max_novelty), 
-		  _novelty_evaluators(model.getTask().getGoalConditions().size()+1, GenericNoveltyEvaluator(model.getTask(), max_novelty, useStateVars, useGoal, useActions)), // We set up k+1 identical evaluators
+		  _novelty_evaluators(model.getTask().getGoalConditions().size()+1, GenericNoveltyEvaluator(model.getTask(), max_novelty, feature_configuration)), // We set up k+1 identical evaluators
 		  _unsat_goal_atoms_heuristic(model)
 	{}
 	
