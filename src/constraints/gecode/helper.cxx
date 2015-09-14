@@ -65,7 +65,7 @@ void Helper::constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, cons
 		ObjectIdx lb = *(domain->cbegin());
 		ObjectIdx ub = *(domain->crbegin());
 		
-		if (!include_dont_care && domain->size() == static_cast<unsigned>(ub - lb) ) { // MRJ: Check this is a safe assumption - We can guarantee it is unsigned, since the elements in the domain are ordered
+		if (!include_dont_care && domain->size() == static_cast<unsigned>(ub - lb) + 1 ) { // MRJ: Check this is a safe assumption - We can guarantee it is unsigned, since the elements in the domain are ordered
 			Gecode::dom(csp, variable, lb, ub); // MRJ: lb <= variable <= ub
 		} else { // TODO - MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
 			// We constraint the variable through an extensional constraint
