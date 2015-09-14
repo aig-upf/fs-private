@@ -43,7 +43,6 @@ class Atom(object):
         return self.var.args
 
 
-
 class IndexDictionary(object):
     """
     A very basic indexing mechanism object that assigns consecutive indexes to the indexed objects.
