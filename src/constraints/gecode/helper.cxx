@@ -132,6 +132,7 @@ int Helper::computeDontCareValue() {
 	int min = -1;
 	int max = std::numeric_limits<int>::min();
 	for (std::vector<ObjectIdx> objs:info.getTypeObjects()) {
+		if (objs.empty()) continue;
 		min = std::min(min, *std::min_element( std::begin(objs), std::end(objs) ));
 		max = std::max(max, *std::max_element( std::begin(objs), std::end(objs) ));
 	}
