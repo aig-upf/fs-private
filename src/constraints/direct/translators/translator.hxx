@@ -28,7 +28,7 @@ public:
 protected:
 	
 	//! Helper to instantiate unary constraints
-	static DirectConstraint::cptr instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
+	static DirectConstraint::cptr instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters, bool invert);
 	
 	//! Helper to instantiate binary constraints
 	static DirectConstraint::cptr instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);

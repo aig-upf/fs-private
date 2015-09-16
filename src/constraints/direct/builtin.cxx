@@ -4,12 +4,66 @@
 
 namespace fs0 {
 
-LTConstraint::LTConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	BinaryDirectConstraint(scope, parameters)
-{
-	assert(parameters.empty());
-}
+//! <-filter the given domain wrt a domain with given min and max values.
+FilteringOutput filter_lt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
+	assert( domain.size() > 0 );
+	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
+	if (x_max < y_max) return FilteringOutput::Unpruned;
+	if (x_min >= y_max) return FilteringOutput::Failure;
 	
+	// Otherwise there must be at least a value, but not all, in the new domain.
+	auto it = domain.lower_bound(y_max); // it points to the first x in domain such that x >= y_max
+	assert(it != domain.begin() && it != domain.end());
+	domain = Domain(domain.begin(), it); // Update the domain by using the assignment operator.
+	return FilteringOutput::Pruned;
+}
+
+//! <=-filter the given domain wrt a domain with given min and max values.
+FilteringOutput filter_leq(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
+	assert( domain.size() > 0 );
+	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
+	if (x_max <= y_max) return FilteringOutput::Unpruned;
+	if (x_min > y_max) return FilteringOutput::Failure;
+	
+	// Otherwise there must be at least a value, but not all, in the new domain.
+	auto it = domain.lower_bound(y_max);
+	assert( it != domain.end() );
+	if (*it == y_max) ++it;
+	domain = Domain(domain.begin(), it); // Update the domain by using the assignment operator.
+	return FilteringOutput::Pruned;
+}
+
+//! >-filter the given domain wrt a domain with given min and max values.
+FilteringOutput filter_gt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
+	assert( domain.size() > 0 );
+	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
+	if (x_min > y_min) return FilteringOutput::Unpruned;
+	if (x_max <= y_min) return FilteringOutput::Failure;
+	
+	// Otherwise the domain has necessarily to be pruned, but is not inconsistent
+	auto it = domain.lower_bound(y_min);
+	assert(it != domain.end());
+	if (*it == y_min) ++it;
+	domain = Domain(it, domain.end());  // Update the domain by using the assignment operator.
+	return FilteringOutput::Pruned;
+}
+
+//! >=-filter the given domain wrt a domain with given min and max values.
+FilteringOutput filter_geq(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
+	assert( domain.size() > 0 );
+	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
+	
+	if (x_min >= y_min) return FilteringOutput::Unpruned;
+	if (x_max < y_min) return FilteringOutput::Failure;
+	
+	// Otherwise the domain has necessarily to be pruned, but is not inconsistent
+	auto it = domain.lower_bound(y_min);
+	assert(it != domain.begin() && it != domain.end());
+	
+	domain = Domain(it, domain.end());  // Update the domain by using the assignment operator.
+	return FilteringOutput::Pruned;	
+}
+
 FilteringOutput LTConstraint::filter(unsigned variable) {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
@@ -20,33 +74,12 @@ FilteringOutput LTConstraint::filter(unsigned variable) {
 	ObjectIdx y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
 	
 	if (variable == 0) { // We filter x_dom, the domain of X
-		if (x_max < y_max) return FilteringOutput::Unpruned;
-		if (x_min >= y_max) return FilteringOutput::Failure;
-		
-		// Otherwise there must be at least a value, but not all, in the new domain.
-		auto it = x_dom.lower_bound(y_max); // it points to the first x in x_dom such that x >= y_max
-		assert(it != x_dom.begin() && it != x_dom.end());
-		x_dom = Domain(x_dom.begin(), it); // Update the domain by using the assignment operator.
-		return FilteringOutput::Pruned;
+		return filter_lt(x_dom, y_min, y_max);
 	} else { // We filter y_dom, the domain of Y
-		if (x_min < y_min) return FilteringOutput::Unpruned;
-		if (x_min >= y_max) return FilteringOutput::Failure;
-		
-		// Otherwise the domain has necessarily to be pruned, but is not inconsistent
-		auto it = y_dom.lower_bound(x_min);
-		assert(it != y_dom.end());
-		if (*it == x_min) ++it;
-		y_dom = Domain(it, y_dom.end());  // Update the domain by using the assignment operator.
-		return FilteringOutput::Pruned;
+		return filter_gt(y_dom, x_min, x_max);
 	}
 }
 
-LEQConstraint::LEQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	BinaryDirectConstraint(scope, parameters)
-{
-	assert(parameters.empty());
-}
-	
 FilteringOutput LEQConstraint::filter(unsigned variable) {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
@@ -59,32 +92,10 @@ FilteringOutput LEQConstraint::filter(unsigned variable) {
 	ObjectIdx y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
 	
 	if (variable == 0) { // We filter x_dom, the domain of X
-		if (x_max <= y_max) return FilteringOutput::Unpruned;
-		if (x_min > y_max) return FilteringOutput::Failure;
-		
-		// Otherwise there must be at least a value, but not all, in the new domain.
-		auto it = x_dom.lower_bound(y_max);
-		assert( it != x_dom.end() );
-		if (*it == y_max) ++it;
-		x_dom = Domain(x_dom.begin(), it); // Update the domain by using the assignment operator.
-		return FilteringOutput::Pruned;
+		return filter_leq(x_dom, y_min, y_max);
 	} else { // We filter y_dom, the domain of Y
-		if (x_min <= y_min) return FilteringOutput::Unpruned;
-		if (x_min > y_max) return FilteringOutput::Failure;
-		
-		// Otherwise the domain has necessarily to be pruned, but is not inconsistent
-		auto it = y_dom.lower_bound(x_min);
-		assert(it != y_dom.begin() && it != y_dom.end());
-		
-		y_dom = Domain(it, y_dom.end());  // Update the domain by using the assignment operator.
-		return FilteringOutput::Pruned;
+		return filter_geq(y_dom, x_min, x_max);
 	}
-}
-
-EQConstraint::EQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	BinaryDirectConstraint(scope, parameters)
-{
-	assert(parameters.empty());
 }
 	
 FilteringOutput EQConstraint::filter(unsigned variable) {
@@ -111,12 +122,6 @@ FilteringOutput EQConstraint::filter(unsigned variable) {
 }
 
 
-NEQConstraint::NEQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	BinaryDirectConstraint(scope, parameters)
-{
-	assert(parameters.empty());
-}
-	
 FilteringOutput NEQConstraint::filter(unsigned variable) {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
@@ -134,12 +139,6 @@ FilteringOutput NEQConstraint::filter(unsigned variable) {
 	return domain.size() > 0 ? FilteringOutput::Pruned : FilteringOutput::Failure;
 }
 
-EQXConstraint::EQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	UnaryDirectConstraint(scope, parameters)
-{
-	assert(parameters.size() == 1);
-}
-	
 // Filtering for a X = c constraint simply consists on pruning from the variable
 // domain all values different than c.
 FilteringOutput EQXConstraint::filter(const DomainMap& domains) const {
@@ -160,11 +159,6 @@ FilteringOutput EQXConstraint::filter(const DomainMap& domains) const {
 	return FilteringOutput::Pruned;
 }
 
-NEQXConstraint::NEQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
-	UnaryDirectConstraint(scope, parameters)
-{
-	assert(parameters.size() == 1);
-}
 	
 // Filtering for a X <> c constraint simply consists on pruning from the variable
 // domain value 'c', if available.
@@ -174,6 +168,27 @@ FilteringOutput NEQXConstraint::filter(const DomainMap& domains) const {
 	unsigned erased = domain.erase(_parameters[0]);
 	if (erased == 0) return FilteringOutput::Unpruned;
 	else return (domain.size() == 0) ? FilteringOutput::Failure : FilteringOutput::Pruned;
+}
+
+
+FilteringOutput LTXConstraint::filter(const DomainMap& domains) const {
+	assert(_scope.size() == 1);
+	return filter_lt(*(domains.at(_scope[0])), _parameters[0], _parameters[0]);
+}
+
+FilteringOutput LEQXConstraint::filter(const DomainMap& domains) const {
+	assert(_scope.size() == 1);
+	return filter_leq(*(domains.at(_scope[0])), _parameters[0], _parameters[0]);
+}
+
+FilteringOutput GTXConstraint::filter(const DomainMap& domains) const {
+	assert(_scope.size() == 1);
+	return filter_gt(*(domains.at(_scope[0])), _parameters[0], _parameters[0]);
+}
+
+FilteringOutput GEQXConstraint::filter(const DomainMap& domains) const {
+	assert(_scope.size() == 1);
+	return filter_geq(*(domains.at(_scope[0])), _parameters[0], _parameters[0]);
 }
 
 
