@@ -7,7 +7,6 @@
 #include <search/components/single_novelty.hxx>
 #include <search/engines/registry.hxx>
 #include <state_model.hxx>
-#include <heuristics/novelty/novelty_features_configuration.hxx>
 
 #include <aptk2/search/algorithms/generic_search.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
@@ -17,8 +16,9 @@
 
 namespace fs0 { namespace engines {
 
-//! The original IW algorithm, adapted to FStrips
-class FS0IWAlgorithm : public FS0SearchAlgorithm {
+//! The original SIW(k) algorithm adapted to FStrips.
+//! BEWARE that currently we do not implement any reachability test (so indeed this is not at all the original SIW(k)... yet)
+class FS0SIWAlgorithm : public FS0SearchAlgorithm {
 public:
 	//! IW uses a simple blind-search node
 	typedef BlindSearchNode<State> SearchNode;
@@ -29,13 +29,13 @@ public:
 	//! IW uses an unsorted queue with a NoveltyEvaluator acceptor
 	typedef aptk::StlUnsortedFIFO<SearchNode, SearchNoveltyEvaluator> OpenList;
 	
-	//! The base algorithm for IW is a simple Breadth-First Search
-	typedef aptk::StlBreadthFirstSearch<SearchNode, FS0StateModel, OpenList> BaseAlgorithm;
+	//! The base algorithm for a SIW is the single IW algorithm
+	typedef FS0IWAlgorithm BaseAlgorithm;
 	
-	FS0IWAlgorithm(const FS0StateModel& model, unsigned initial_max_width, unsigned final_max_width, const NoveltyFeaturesConfiguration& feature_configuration)
-		: FS0SearchAlgorithm(model), _current_max_width(initial_max_width), _final_max_width(final_max_width), _feature_configuration(feature_configuration)
+	FS0IWAlgorithm(const FS0StateModel& model, unsigned max_width, const NoveltyFeaturesConfiguration& feature_configuration)
+		: FS0SearchAlgorithm(model), _max_width(max_width), _feature_configuration(feature_configuration)
 	{
-		setup_base_algorithm(_current_max_width);
+		setup_base_algorithm(_max_width);
 	}
 	
 	virtual ~FS0IWAlgorithm() {
@@ -65,11 +65,8 @@ protected:
 	BaseAlgorithm* _algorithm;
 	
 	//!
-	unsigned _current_max_width;
+	unsigned _max_width;
 	
-	//!
-	unsigned _final_max_width;
-
 	//! Novelty evaluator configuration
 	const NoveltyFeaturesConfiguration _feature_configuration;
 };

@@ -55,13 +55,13 @@ DirectConstraint::cptr DirectTranslator::generate(const RelationalFormula& formu
 	if (lhs_var && rhs_const) { // X = c
 		VariableIdxVector scope{lhs_var->getValue()};
 		ObjectIdxVector parameters{rhs_const->getValue()};
-		return instantiateUnaryConstraint(formula.symbol(), scope, parameters);
+		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, false);
 	}
 	
 	if (lhs_const && rhs_var) { // c = X
 		VariableIdxVector scope{rhs_var->getValue()};
 		ObjectIdxVector parameters{lhs_const->getValue()};
-		return instantiateUnaryConstraint(formula.symbol(), scope, parameters);
+		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, true);
 	}
 	
 	// Otherwise we have some complex term of the form e.g. next(d, current) != undefined  (where next is static, current is fluent.
@@ -131,20 +131,30 @@ std::vector<DirectEffect::cptr> DirectTranslator::generate(const std::vector<Act
 }
 
 
-DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
+DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters, bool invert) {
 	
+	// Note that in some cases we might want to "invert" the relation, so that e.g. for c < X we indeed post a X > c constraint.
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
 		case RelationalFormula::Symbol::EQ:
 			return new EQXConstraint(scope, parameters);
-			break;
-			
+
 		case RelationalFormula::Symbol::NEQ:
 			return new NEQXConstraint(scope, parameters);
-			break;
+
+		case RelationalFormula::Symbol::LT:
+			return invert ?  static_cast<DirectConstraint::cptr>(new GTXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new LTXConstraint(scope, parameters));
+
+		case RelationalFormula::Symbol::LEQ:
+			return invert ?  static_cast<DirectConstraint::cptr>(new GEQXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new LEQXConstraint(scope, parameters));
 			
+		case RelationalFormula::Symbol::GT:
+			return invert ?  static_cast<DirectConstraint::cptr>(new LTXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new GTXConstraint(scope, parameters));
+			
+		case RelationalFormula::Symbol::GEQ:
+			return invert ?  static_cast<DirectConstraint::cptr>(new LEQXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new GEQXConstraint(scope, parameters));
+		
 		default:
-			// WARNING When implementing this, remember that we need to take into account what come first, whether the constant or the variable
-			throw UnimplementedFeatureException("This type of relation-based constraint has not yet been implemented");
+			assert(0);
 	}
 }
 

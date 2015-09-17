@@ -96,6 +96,7 @@ void Projections::printDomain(const Domain& domain) {
 		std::cout << objIdx << ",";
 	}
 	std::cout << "}";
+	std::cout.flush();
 }
 
 } // namespaces

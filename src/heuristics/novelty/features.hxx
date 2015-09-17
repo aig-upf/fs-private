@@ -44,6 +44,6 @@ public:
 
 protected:
 	std::vector<fs::AtomicFormula::cptr> _conditions;
-	};
+};
 
 } // namespaces

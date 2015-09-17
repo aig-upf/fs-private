@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <atoms.hxx>
+#include <atom.hxx>
 #include <constraints/direct/csp_handler.hxx>
 #include <languages/fstrips/language.hxx>
 

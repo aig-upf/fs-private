@@ -7,7 +7,7 @@
 namespace fs0 {
 
 ActionSchema::ActionSchema(const std::string& name,
-						   const std::vector<TypeIdx>& signature, const std::vector<std::string>& parameters,
+						   const Signature& signature, const std::vector<std::string>& parameters,
 						   const std::vector<AtomicFormulaSchema::cptr>& conditions, const std::vector<ActionEffectSchema::cptr>& effects)
 	: _name(name), _signature(signature), _parameters(parameters), _conditions(conditions), _effects(effects)
 {

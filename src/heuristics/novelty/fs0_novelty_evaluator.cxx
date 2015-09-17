@@ -3,6 +3,7 @@
 #include <set>
 
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
+#include "novelty_features_configuration.hxx"
 #include <languages/fstrips/scopes.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/feature_set.hxx>
@@ -14,11 +15,11 @@ GenericStateAdapter::GenericStateAdapter( const State& s, const GenericNoveltyEv
 
 GenericStateAdapter::~GenericStateAdapter() {}
 
-GenericNoveltyEvaluator::GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, bool useStateVars, bool useGoal, bool useActions)
+GenericNoveltyEvaluator::GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration)
 	: Base()
 {
 	set_max_novelty(novelty_bound);
-	selectFeatures(problem, useStateVars, useGoal, useActions);
+	selectFeatures(problem, feature_configuration);
 }
 
 GenericNoveltyEvaluator::~GenericNoveltyEvaluator() {
@@ -26,10 +27,10 @@ GenericNoveltyEvaluator::~GenericNoveltyEvaluator() {
 }
 
 
-void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, bool useStateVars, bool useGoal, bool useActions) {
+void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& feature_configuration) {
 	std::set< VariableIdx > relevantVars;
 
-	if ( useGoal ) {
+	if ( feature_configuration.useGoal() ) {
 		ConditionSetFeature* feature = new ConditionSetFeature;
 		for ( AtomicFormula::cptr condition : problem.getGoalConditions() ) {
 			feature->addCondition(condition);
@@ -43,18 +44,18 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, bool useSta
 		ConditionSetFeature*  feature = new ConditionSetFeature;
 
 		for ( AtomicFormula::cptr condition : action->getConditions() ) {
-			if ( useStateVars ) {
+			if ( feature_configuration.useStateVars() ) {
 				const auto scope = ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
 				relevantVars.insert(scope.cbegin(), scope.cend());
 			}
-			if ( useActions ) feature->addCondition(condition);
+			if ( feature_configuration.useActions() ) feature->addCondition(condition);
 		}
 
-		if (useActions) _features.push_back(feature);
+		if (feature_configuration.useActions()) _features.push_back(feature);
 		else delete feature;
 	}
 
-	if ( useStateVars ) {
+	if ( feature_configuration.useStateVars() ) {
 		for ( VariableIdx x : relevantVars ) {
 			_features.push_back( new StateVariableFeature( x ) );
 		}

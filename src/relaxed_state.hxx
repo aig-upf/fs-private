@@ -7,7 +7,7 @@
 #include <set>
 #include <vector>
 #include <fs0_types.hxx>
-#include <atoms.hxx>
+#include <atom.hxx>
 
 
 namespace fs0 {
@@ -18,12 +18,6 @@ class RelaxedState {
 protected:
 	//! A vector associating symbol IDs to all their possible current extensional value in the relaxed state.
 	DomainVector _domains;
-	
-private:
-	//! Private assignment and comparison operators
-	RelaxedState& operator=(const RelaxedState &rhs);
-// 	bool operator==(const RelaxedState &rhs) const { return _domains == rhs._domains; }
-// 	bool operator!=(const RelaxedState &rhs) const { return !(this->operator==(rhs));}
 
 public:
 	typedef std::shared_ptr<RelaxedState> ptr;
@@ -31,25 +25,14 @@ public:
 
 	virtual ~RelaxedState();
 
-	//! Copy constructor - performs a deep copy of the domains
-	RelaxedState(const RelaxedState& state) {
-		_domains.reserve(state._domains.size());
-		
-		for (const DomainPtr& domain:state._domains) {
-			_domains.push_back(std::make_shared<Domain>(*domain));
-		}
-	}
-	
-	//! Construct a relaxed state from a non-relaxed state
+	//! The only way to construct a relaxed state is from a non-relaxed state.
 	RelaxedState(const State& state);
 	
-	inline bool operator==(const RelaxedState& rhs){
-		if (_domains.size() != rhs._domains.size()) return false;
-		for (unsigned i = 0; i < _domains.size(); ++i) {
-			if (*(_domains.at(i)) != *(rhs._domains.at(i))) return false;
-		}
-		return true;
-	}
+	// No need to use this - but if ever needed, check the git history!
+	// https://bitbucket.org/gfrances/fs0/src/28ce4119f27a537d8f7628c6ca0487d03d5ed0b1/src/relaxed_state.hxx?at=gecode_integration
+	RelaxedState(const RelaxedState& state)  = delete;
+	RelaxedState& operator=(const RelaxedState& rhs) = delete;
+	bool operator==(const RelaxedState& rhs) = delete;
 	
 	void set(const Atom& fact) {
 		_domains.at(fact.getVariable())->insert(fact.getValue());

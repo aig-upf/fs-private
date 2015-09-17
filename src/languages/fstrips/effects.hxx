@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <atoms.hxx>
+#include <atom.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/terms.hxx>
 

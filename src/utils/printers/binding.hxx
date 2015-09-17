@@ -10,9 +10,9 @@ namespace fs0 { namespace print {
 class binding {
 	protected:
 		const std::vector<int>& _binding;
-		const std::vector<TypeIdx>& _signature;
+		const Signature& _signature;
 	public:
-		binding(const std::vector<int>& binding, const std::vector<TypeIdx>& signature) : _binding(binding), _signature(signature) {
+		binding(const std::vector<int>& binding, const Signature& signature) : _binding(binding), _signature(signature) {
 			assert(binding.size() == signature.size());
 		}
 		
@@ -23,9 +23,9 @@ class binding {
 class signature {
 	protected:
 		const std::vector<std::string>& _parameter_names;
-		const std::vector<TypeIdx>& _signature;
+		const Signature& _signature;
 	public:
-		signature(const std::vector<std::string>& parameter_names, const std::vector<TypeIdx>& signature) : _parameter_names(parameter_names), _signature(signature) {
+		signature(const std::vector<std::string>& parameter_names, const Signature& signature) : _parameter_names(parameter_names), _signature(signature) {
 			assert(parameter_names.size() == signature.size());
 		}
 		

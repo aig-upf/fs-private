@@ -11,18 +11,14 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyEngineCreator::create(const Confi
 	FS0SearchAlgorithm* engine = nullptr;
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
-	bool use_state_vars = config.getOption<bool>("engine.use_state_vars");
-	bool use_goal = config.getOption<bool>("engine.use_goal");
-	bool use_actions = config.getOption<bool>("engine.use_actions");
+	NoveltyFeaturesConfiguration feature_configuration(config);
 	
-	NoveltyHeuristic evaluator(model, max_novelty, use_state_vars, use_goal, use_actions);
+	NoveltyHeuristic evaluator(model, max_novelty, feature_configuration);
 	engine = new aptk::StlBestFirstSearch<SearchNode, NoveltyHeuristic, FS0StateModel>(model, std::move(evaluator));
 	
 	FINFO("main", "Heuristic options:");
 	FINFO("main", "\tMax novelty: " << max_novelty);
-	FINFO("main", "\tUsing state vars as features: " << ( use_state_vars ? "yes" : "no "));
-	FINFO("main", "\tUsing goal as feature: " << ( use_goal ? "yes" : "no "));
-	FINFO("main", "\tUsing actions as features: " << ( use_actions ? "yes" : "no "));
+	FINFO("main", "\tFeatiue extaction: " << feature_configuration);
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(engine);
 }

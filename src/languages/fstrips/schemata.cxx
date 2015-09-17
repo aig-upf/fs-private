@@ -10,7 +10,7 @@
 namespace fs0 { namespace language { namespace fstrips {
 
 
-void process_subterms(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info, const std::vector<TermSchema::cptr>& subterms, std::vector<const Term*>& processed, std::vector<ObjectIdx>& constants) {
+void process_subterms(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info, const std::vector<TermSchema::cptr>& subterms, std::vector<const Term*>& processed, std::vector<ObjectIdx>& constants) {
 	assert(processed.empty() && constants.empty());
 	for (const TermSchema* unprocessed_subterm:subterms) {
 		const Term* processed_subterm = unprocessed_subterm->process(signature, binding, info);
@@ -29,7 +29,7 @@ std::ostream& TermSchema::print(std::ostream& os, const fs0::ProblemInfo& info) 
 	return os;
 }
 
-Term::cptr NestedTermSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr NestedTermSchema::process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	std::vector<const Term*> st;
 	std::vector<ObjectIdx> constant_values;
 	process_subterms(signature, binding, info, _subterms, st, constant_values);
@@ -59,7 +59,7 @@ std::ostream& NestedTermSchema::print(std::ostream& os, const fs0::ProblemInfo& 
 	return NestedTerm::printFunction(os, info, _symbol_id, _subterms);
 }
 
-Term::cptr ArithmeticTermSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr ArithmeticTermSchema::process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	std::vector<const Term*> st;
 	std::vector<ObjectIdx> constant_values;
 	process_subterms(signature, binding, info, _subterms, st, constant_values);
@@ -79,7 +79,7 @@ std::ostream& ArithmeticTermSchema::print(std::ostream& os, const fs0::ProblemIn
 	return os;
 }
 
-Term::cptr ActionSchemaParameter::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr ActionSchemaParameter::process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	assert(_position < binding.size());
 	auto value = binding.at(_position);
 	return info.isBoundedType(signature[_position]) ? new IntConstant(value) : new Constant(value);
@@ -90,7 +90,7 @@ std::ostream& ActionSchemaParameter::print(std::ostream& os, const fs0::ProblemI
 	return os;
 }
 
-Term::cptr ConstantSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr ConstantSchema::process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	return new Constant(_value);
 }
 
@@ -99,7 +99,7 @@ std::ostream& ConstantSchema::print(std::ostream& os, const fs0::ProblemInfo& in
 	return os;
 }
 
-Term::cptr IntConstantSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+Term::cptr IntConstantSchema::process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	return new IntConstant(_value);
 }
 
@@ -108,7 +108,7 @@ std::ostream& IntConstantSchema::print(std::ostream& os, const fs0::ProblemInfo&
 	return os;
 }
 
-AtomicFormula::cptr AtomicFormulaSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+AtomicFormula::cptr AtomicFormulaSchema::process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	// Process the subterms first
 	std::vector<const Term*> processed_subterms;
 	std::vector<ObjectIdx> constant_values;
@@ -143,7 +143,7 @@ std::ostream& AtomicFormulaSchema::print(std::ostream& os, const fs0::ProblemInf
 }
 
 
-ActionEffect::cptr ActionEffectSchema::process(const std::vector<TypeIdx>& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
+ActionEffect::cptr ActionEffectSchema::process(const Signature& signature, const ObjectIdxVector& binding, const ProblemInfo& info) const {
 	return new ActionEffect(lhs->process(signature, binding, info), rhs->process(signature, binding, info));
 }
 

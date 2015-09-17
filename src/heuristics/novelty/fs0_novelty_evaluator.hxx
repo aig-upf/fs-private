@@ -8,6 +8,8 @@
 
 namespace fs0 {
 
+class NoveltyFeaturesConfiguration;
+
 class GenericNoveltyEvaluator;
 
 class GenericStateAdapter {
@@ -27,7 +29,7 @@ class GenericNoveltyEvaluator : public aptk::FiniteDomainNoveltyEvaluator< Gener
 public:
 	typedef aptk::FiniteDomainNoveltyEvaluator< GenericStateAdapter > Base;
 
-	GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, bool useStateVars, bool useGoal, bool useActions);
+	GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration);
 	virtual ~GenericNoveltyEvaluator();
 	
 	using Base::evaluate; // So that we do not hide the base evaluate(const FiniteDomainNoveltyEvaluator&) method
@@ -43,7 +45,7 @@ public:
 
 protected:
 	//! Select and create the state features that we will use henceforth to compute the novelty
-	void selectFeatures(const Problem& problem, bool useStateVars, bool useGoal, bool useActions);
+	void selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& feature_configuration);
 	
 	//! An array with all the features that we take into account when computing the novelty
 	std::vector<NoveltyFeature::ptr> _features;

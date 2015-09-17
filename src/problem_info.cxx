@@ -4,7 +4,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include <atoms.hxx>
+#include <atom.hxx>
 #include <iostream>
 
 
@@ -111,7 +111,7 @@ void ProblemInfo::loadFunctionIndex(const rapidjson::Value& data) {
 		
 		// Parse the domain IDs
 		const auto& domains = data[i][2];
-		std::vector<TypeIdx> domain;
+		Signature domain;
 		for (unsigned j = 0; j < domains.Size(); ++j) {
 			domain.push_back(getTypeId(domains[j].GetString()));
 		}
@@ -202,8 +202,8 @@ bool ProblemInfo::checkValueIsValid(VariableIdx variable, ObjectIdx value) const
 
 
 void ProblemInfo::loadProblemMetadata(const rapidjson::Value& data) {
-	setDomainName(data["instance"].GetString());
-	setInstanceName(data["domain"].GetString());
+	setDomainName(data["domain"].GetString());
+	setInstanceName(data["instance"].GetString());
 }
 
 } // namespaces

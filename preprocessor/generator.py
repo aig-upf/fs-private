@@ -292,7 +292,7 @@ class Generator(object):
 
     def dump_state_variable(self, var):
         head = self.symbol_index[var.symbol]
-        constants = [self.index.objects.get_index(arg) for arg in var.args]
+        constants = [arg if  util.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
         return [head, constants]
 
     def dump_object_data(self):

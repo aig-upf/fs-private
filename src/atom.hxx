@@ -1,44 +1,35 @@
 
 #pragma once
 
-#include <cstdint>
-#include <vector>
-#include <boost/container/flat_set.hpp>
-#include <tuple>
-
 #include <fs0_types.hxx>
 
 namespace fs0 {
 
-/**
- *  An atom is a tuple X=x, where X is a state variable and x a value from its domain.
- */
+//! An atom is a tuple X=x, where X is a state variable and x a value from its domain.
 class Atom {
-public:
-	typedef std::vector<Atom> vctr;
-	typedef std::shared_ptr<Atom::vctr> vctrp;
-	typedef std::tuple<Atom,Atom> range;
-	typedef std::vector< range > vrange;
-
-	Atom(const VariableIdx variable, const ObjectIdx value);
-	Atom( const Atom& other );
-	Atom( Atom&& other );
-
-	const Atom& operator=( const Atom& other );
-	Atom& operator=( Atom&& other );
-
-	inline VariableIdx getVariable() const { return _variable; }
-	inline ObjectIdx getValue() const { return _value; }
-
-	std::ostream& print(std::ostream& os) const;
-	friend std::ostream& operator<<(std::ostream &os, const Atom& atom) { return atom.print(os); }
-
 protected:
 	//! The state variable
 	VariableIdx _variable;
 
 	//! The domain value.
 	ObjectIdx  _value;
+	
+public:
+	typedef std::vector<Atom> vctr;
+	typedef std::shared_ptr<Atom::vctr> vctrp;
+
+	Atom(VariableIdx variable, ObjectIdx value) : _variable(variable), _value(value) {};
+	Atom(const Atom& other) = default;
+	Atom(Atom&& other) = default;
+
+	Atom& operator=(const Atom& other) = default;
+	Atom& operator=(Atom&& other) = default;
+
+	inline VariableIdx getVariable() const { return _variable; }
+	inline ObjectIdx getValue() const { return _value; }
+
+	std::ostream& print(std::ostream& os) const;
+	friend std::ostream& operator<<(std::ostream &os, const Atom& atom) { return atom.print(os); }
 };
 
 //! Comparison operators

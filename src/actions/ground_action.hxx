@@ -41,7 +41,7 @@ public:
 	std::string getFullName() const;
 	
 	//! Returns the signature of the action
-	const std::vector<TypeIdx>& getSignature() const { return _schema->getSignature(); }
+	const Signature& getSignature() const { return _schema->getSignature(); }
 	
 	//! Returns the concrete binding that created this action from its action schema
 	const ObjectIdxVector& getBinding() const { return _binding; }
