@@ -18,13 +18,6 @@ void GecodeActionManager::process(unsigned actionIdx, const RelaxedState& layer,
 
 	SimpleCSP* csp = _handler->instantiate_csp(layer);
 
-	// We do not need to take values that were already achieved in the previous layer into account.
-	// TODO - This is not correct yet and needs further thought - e.g. instead of constraints Y not in "set of already achieved values",
-	// TODO - the correct thing to do would be a constraint "Y in set of already achieved values OR Y = [w]^k"
-// 	for ( ScopedEffect::cptr effect : action.getEffects() ) {
-// 		addNoveltyConstraints(effect->getAffected(), layer, *csp);
-// 	}
-
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 
 	if (!locallyConsistent) {
@@ -34,6 +27,7 @@ void GecodeActionManager::process(unsigned actionIdx, const RelaxedState& layer,
 			_handler->compute_support(csp, actionIdx, rpg);
 		} else { // Check only local consistency
 			// TODO - Don't forget to delete the CSP in case of premature exit
+			assert(0); // TODO Unimplemented
 		}
 	}
 	delete csp;

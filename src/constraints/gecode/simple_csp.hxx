@@ -39,7 +39,7 @@ public:
 	//! Prints a representation of a CSP. Mostly for debugging purposes
 	friend std::ostream& operator<<(std::ostream &os, const SimpleCSP&  csp) { return csp.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		os << _intvars;
+		os << _intvars << std::endl;
 		os << _boolvars; 
 		return os;
 	}
