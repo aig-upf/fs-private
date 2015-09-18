@@ -27,6 +27,7 @@ public:
 	const std::vector<ActionSchema::cptr>& getActionSchemata() const { return _schemata; }
 	
 	const std::vector<GroundAction::cptr>& getGroundActions() const { return _ground; }
+	void setGroundActions(std::vector<GroundAction::cptr>&& ground) { _ground = std::move(ground); }
 	
 	ApplicableActionSet getApplicableActions(const State& s) const;
 	
@@ -47,7 +48,6 @@ public:
 	static void setInstance(std::unique_ptr<Problem>&& problem) {
 		if (_instance) throw std::runtime_error("Problem instance has already been set");
 		_instance = std::move(problem);
-		_instance->bootstrap();
 	}
 	
 	//! const version of the singleton accessor
@@ -59,9 +59,6 @@ public:
 	//! Helper to access the problem info more easily
 	static const ProblemInfo& getInfo() { return getInstance().getProblemInfo(); }
 
-	//! This performs a number of necessary routines once all of the problem information has been defined.
-	void bootstrap();
-	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;

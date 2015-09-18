@@ -14,4 +14,4 @@ extern std::unique_ptr<External> external;
 $method_factories
 
 /* Generate the whole planning problem */
-std::unique_ptr<Problem> generate(const rapidjson::Document& data, const std::string& data_dir);
+void generate(const rapidjson::Document& data, const std::string& data_dir);

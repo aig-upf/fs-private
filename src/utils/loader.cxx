@@ -5,42 +5,56 @@
 #include <problem.hxx>
 #include <utils/loader.hxx>
 #include <actions/ground_action.hxx>
+#include <actions/grounding.hxx>
 #include <component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
 #include <heuristics/relaxed_plan/action_managers/action_manager_factory.hxx>
 #include <utils/logging.hxx>
+#include <constraints/gecode/base.hxx>
+#include <constraints/gecode/helper.hxx>
+#include <constraints/registry.hxx>
+#include <utils/printers/registry.hxx>
 
 
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory, Problem& problem) {
+void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory) {
 	
+	Problem* problem = new Problem;
 	// Load and set the ProblemInfo data structure
 	auto info = new ProblemInfo(data);
-	problem.setProblemInfo(info);
+	problem->setProblemInfo(info);
+	
+	//! Set the singleton global instance
+	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	
 	//! Load the actual static functions
-	loadFunctions(factory, problem, *info);
+	loadFunctions(factory, *problem, *info);
 	
 	/* Define the actions */
 	std::cout << "\tDefining actions..." << std::endl;
-	loadActionSchemata(data["action_schemata"], problem);
+	loadActionSchemata(data["action_schemata"], *problem);
 	
 	/* Define the initial state */
 	std::cout << "\tDefining initial state..." << std::endl;
-	problem.setInitialState(loadState(data["init"]));
+	problem->setInitialState(loadState(data["init"]));
 
 	/* Load the state and goal constraints */
 	std::cout << "\tDefining state and goal constraints..." << std::endl;
-	assert(problem.getStateConstraints().empty());
-	problem.setStateConstraints(loadGroundedConditions(data["state_constraints"], problem));
+	problem->setStateConstraints(loadGroundedConditions(data["state_constraints"], *problem));
 
 	/* Generate goal constraints from the goal evaluator */
 	std::cout << "\tGenerating goal constraints..." << std::endl;
-	assert(problem.getGoalConditions().empty());
-	problem.setGoalConditions(loadGroundedConditions(data["goal"], problem));
+	problem->setGoalConditions(loadGroundedConditions(data["goal"], *problem));
+	
+	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
+	
+	problem->setGroundActions(ActionGrounder::ground(problem->getActionSchemata(), *info));
+	
+	gecode::DONT_CARE::set(gecode::Helper::computeDontCareValue());
+	FINFO("main", "Selected a Gecode DONT_CARE value of " << gecode::DONT_CARE::get());	
 }
 
 void Loader::loadFunctions(const BaseComponentFactory& factory, Problem& problem, ProblemInfo& info) {
