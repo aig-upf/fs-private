@@ -3,6 +3,8 @@
 #include <constraints/direct/compiled.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
+#include <utils/printers/vector.hxx>
+#include <utils/printers/helper.hxx>
 
 namespace fs0 {
 
@@ -15,6 +17,12 @@ UnaryDomainBoundsConstraint::UnaryDomainBoundsConstraint(const UnaryDirectEffect
 // value within the domain bounds.
 bool UnaryDomainBoundsConstraint::isSatisfied(ObjectIdx o) const {
 		return _effect->applicable(o) && _problemInfo.checkValueIsValid(_effect->apply(o));
+}
+
+std::ostream& UnaryDomainBoundsConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << "UnaryDomainBoundsConstraint[" << info.getVariableName(_scope[0]) << "]";
+	return os;
 }
 
 
@@ -48,5 +56,9 @@ void BoundsConstraintsGenerator::generate(const GroundAction& action, const std:
 	}
 }
 
+std::ostream& BinaryDomainBoundsConstraint::print(std::ostream& os) const {
+	os << "BinaryDomainBoundsConstraint[" << print::vector(print::Helper::name_variables(_scope)) << "]";
+	return os;
+}
 
 } // namespaces

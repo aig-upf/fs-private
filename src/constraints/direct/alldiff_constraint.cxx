@@ -1,6 +1,8 @@
 
 
 #include <constraints/direct/alldiff_constraint.hxx>
+#include <utils/printers/helper.hxx>
+#include <utils/printers/vector.hxx>
 #include <algorithm>
 
 namespace fs0 {
@@ -138,6 +140,11 @@ FilteringOutput AlldiffConstraint::bounds_consistency(const DomainVector& domain
 	}
 	
 	return output;
+}
+
+std::ostream& AlldiffConstraint::print(std::ostream& os) const {
+	os << "alldiff(" << print::vector(print::Helper::name_variables(_scope)) << ")";
+	return os;
 }
 
 } // namespaces

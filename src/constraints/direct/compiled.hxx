@@ -7,12 +7,6 @@
 #include <unordered_map>
 #include <functional>
 
-// MRJ: This allows to switch between unordered_set and vector to represent constraints extensionally.
-#ifndef EXTENSIONAL_REPRESENTATION_USES_VECTORS 
-	#include <unordered_set>
-#endif
-
-
 
 namespace fs0 { namespace language { namespace fstrips {
 	class Term;
@@ -25,11 +19,7 @@ namespace fs0 {
 class CompiledUnaryConstraint : public UnaryDirectConstraint {
 protected:
 	typedef ObjectIdx ElementT;
-	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
-		typedef std::vector<ElementT> ExtensionT;
-	#else
-		typedef std::unordered_set<ElementT> ExtensionT;
-	#endif
+	typedef std::vector<ElementT> ExtensionT;
 	
 	//! Precondition: the vector is sorted.
 	const ExtensionT _extension;
@@ -66,6 +56,8 @@ public:
 	static std::unordered_set<ElementT> compile(const UnaryDirectConstraint& constraint) {
 		return compile(constraint.getScope(), [&constraint](ObjectIdx value){ return constraint.isSatisfied(value); });
 	}
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 
@@ -78,12 +70,7 @@ public:
 protected:
 	// For a binary constraint with scope <X, Y>, the extension is a map mapping each possible x \in D_X to an ordered 
 	// vector containing all y \in D_Y s.t. <x, y> satisfies the constraint.
-	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
-		typedef std::unordered_map<ObjectIdx, ObjectIdxVector> ExtensionT;
-	#else
-		typedef std::unordered_set< ObjectIdx > ObjectIdxHash;
-		typedef std::unordered_map< ObjectIdx, ObjectIdxHash > ExtensionT;
-	#endif
+	typedef std::unordered_map<ObjectIdx, std::vector<ObjectIdx>> ExtensionT;
 	
 	//! Precondition: the vector is sorted.
 	const ExtensionT _extension1;
@@ -120,6 +107,8 @@ public:
 	static TupleExtension compile(const fs0::BinaryDirectConstraint& constraint) {
 		return compile(constraint.getScope(), [&constraint](ObjectIdx x, ObjectIdx y){ return constraint.isSatisfied(x, y); });
 	}
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 

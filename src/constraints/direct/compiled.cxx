@@ -2,6 +2,8 @@
 #include <constraints/direct/compiled.hxx>
 #include <utils/projections.hxx>
 #include <utils/utils.hxx>
+#include <utils/printers/vector.hxx>
+#include <utils/printers/helper.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/scopes.hxx>
@@ -35,45 +37,13 @@ std::unordered_set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::c
 
 
 CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const UnaryDirectConstraint& constraint) {
-	// Depending on the type of representation, we can directly return the compiled data structure or not.
-	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
-		auto ordered = compile(constraint);
-		return ExtensionT(ordered.begin(), ordered.end());
-		
-	#else
-		return compile(constraint);
-	#endif
+	auto ordered = compile(constraint);
+	return ExtensionT(ordered.begin(), ordered.end());
 }
 
 bool CompiledUnaryConstraint::isSatisfied(ObjectIdx o) const {
-	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 	return std::binary_search(_extension.begin(), _extension.end(), o); // TODO - Change for a O(1) lookup in a std::unordered_set ?
-	#else
-	return _extension.find(o) != _extension.end();
-	#endif
 }
-
-#ifndef EXTENSIONAL_REPRESENTATION_USES_VECTORS
-namespace detail{
-
-template <typename ExtensionType>
-class	IntersectionTest
-{
-public:
-	IntersectionTest( const ExtensionType& ext, Domain& dst ) 
-	: _ext( ext ), _dst( dst ) {}
-
-	void operator()( ObjectIdx o )  {
-		if ( _ext.find( o ) == _ext.end() ) return;
-		_dst.insert(o);
-	}
-
-	const ExtensionType& _ext;
-	Domain& _dst;
-};
-
-}
-#endif
 
 FilteringOutput CompiledUnaryConstraint::filter(const DomainMap& domains) const {
 	
@@ -82,11 +52,7 @@ FilteringOutput CompiledUnaryConstraint::filter(const DomainMap& domains) const 
 	Domain& domain = *(projection[0]);
 	Domain new_domain;
 
-	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 	std::set_intersection(domain.begin(), domain.end(), _extension.begin(), _extension.end(), std::inserter(new_domain, new_domain.end()));
-	#else
-	std::for_each( domain.begin(), domain.end(), detail::IntersectionTest<ExtensionT>( _extension, new_domain ) ); 
-	#endif
 	
 	if (new_domain.size() == domain.size()) return FilteringOutput::Unpruned;
 	if (new_domain.size() == 0) return FilteringOutput::Failure;
@@ -96,6 +62,15 @@ FilteringOutput CompiledUnaryConstraint::filter(const DomainMap& domains) const 
 	return FilteringOutput::Pruned;
 }
 
+std::ostream& CompiledUnaryConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << "CompiledUnaryConstraint[" << info.getVariableName(_scope[0]) << "] = {";
+	for (const auto& elem:_extension) {
+		os << elem;
+	}
+	os << "}";
+	return os;
+}
 
 CompiledBinaryConstraint::CompiledBinaryConstraint(const BinaryDirectConstraint& constraint, const ProblemInfo& problemInfo) :
 	CompiledBinaryConstraint(constraint.getScope(), constraint.getParameters(), compile(constraint))
@@ -113,13 +88,8 @@ CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scop
 bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 	auto iter = _extension1.find(o1);
 	assert(iter != _extension1.end());
-	#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 	const ObjectIdxVector& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
 	return std::binary_search(D_y.begin(), D_y.end(), o2); // TODO - Change for a O(1) lookup in a std::unordered_set ?
-	#else
-	const ObjectIdxHash& D_y = iter->second;
-	return D_y.find( o2 ) != D_y.end();
-	#endif
 }
 
 CompiledBinaryConstraint::TupleExtension CompiledBinaryConstraint::compile(const VariableIdxVector& scope, const CompiledBinaryConstraint::Tester& tester) {
@@ -153,11 +123,7 @@ CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::index(const Compi
 
 	ExtensionT res;
 	for (const auto& element:values) {
-#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
 		res.insert(std::make_pair(element.first, ObjectIdxVector(element.second.begin(), element.second.end()) ));
-#else
-		res.insert( std::make_pair(element.first, ObjectIdxHash(element.second.begin(), element.second.end() ) ));
-#endif
 	}
 	return res;
 }
@@ -176,11 +142,7 @@ FilteringOutput CompiledBinaryConstraint::filter(unsigned variable) {
 	for (ObjectIdx x:domain) {
 		auto iter = extension_map.find(x);
 		assert(iter != extension_map.end());
-		#ifdef EXTENSIONAL_REPRESENTATION_USES_VECTORS
-		const ObjectIdxVector& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
-		#else
-		const ObjectIdxHash& D_y = iter->second;
-		#endif
+		const auto& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
 		if (!Utils::empty_intersection(other_domain.begin(), other_domain.end(), D_y.begin(), D_y.end())) {
 			new_domain.insert(new_domain.cend(), x); //  x is an arc-consistent value. We will insert on the end of the container, as it is already sorted.
 		}
@@ -193,7 +155,29 @@ FilteringOutput CompiledBinaryConstraint::filter(unsigned variable) {
 	return FilteringOutput::Pruned;
 }
 
+std::ostream& CompiledBinaryConstraint::print(std::ostream& os) const {
+	os << "CompiledBinaryConstraint[" << print::vector(print::Helper::name_variables(_scope)) << "] = {" << std::endl;
+	os << "First view: " << std::endl;
+	for (const auto& elem:_extension1) {
+		os << "\t" << elem.first << ": [";
+		for (const auto& elem2:elem.second) {
+			os << elem2 << ", ";
+		}
+		os << "]" << std::endl;
+	}
 	
+	os << "Second view: " << std::endl;
+	for (const auto& elem:_extension2) {
+	os << "\t" << elem.first << ": [";
+	for (const auto& elem2:elem.second) {
+		os << elem2 << ", ";
+	}
+	os << "]" << std::endl;
+	}
+	os << "}";
+	return os;
+}
+
 CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, ExtensionT&& extension)
 	: UnaryDirectEffect(relevant, affected, {}), _extension(extension)
 {}

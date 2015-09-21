@@ -12,7 +12,7 @@ namespace fs0 {
 class Problem;
 class SupportedAction;
 
-//! Helper class - debugging purposes only
+//! Print a plan
 class PlanPrinter {
 protected:
 	const ActionPlan& _plan;

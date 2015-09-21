@@ -25,6 +25,8 @@ public:
 	FilteringOutput filter();
 	
 	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 

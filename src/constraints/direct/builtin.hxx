@@ -20,6 +20,8 @@ public:
 	FilteringOutput filter(unsigned variable);
 	
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 // X <= Y
@@ -33,6 +35,8 @@ public:
 	FilteringOutput filter(unsigned variable);
 	
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 
@@ -47,6 +51,8 @@ public:
 	FilteringOutput filter(unsigned variable);
 	
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 // X != Y
@@ -60,6 +66,8 @@ public:
 	FilteringOutput filter(unsigned variable);
 	
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 // X = c
@@ -74,6 +82,8 @@ public:
 	
 	// No compilation
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 // X != c
@@ -88,6 +98,8 @@ public:
 	
 	// No compilation
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 // X < c
@@ -102,6 +114,8 @@ public:
 	
 	// No compilation
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 
@@ -117,6 +131,8 @@ public:
 	
 	// No compilation
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 // X > c
@@ -131,6 +147,8 @@ public:
 	
 	// No compilation
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 // X > c
@@ -145,6 +163,8 @@ public:
 	
 	// No compilation
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 // X := c, where X os the affected variable, and c is the only parameter
