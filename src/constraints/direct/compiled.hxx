@@ -5,6 +5,7 @@
 #include <constraints/direct/effect.hxx>
 #include <boost/container/flat_map.hpp>
 #include <unordered_map>
+#include <set>
 #include <functional>
 
 
@@ -27,9 +28,6 @@ protected:
 	//! Protected constructor to be used from the other constructor
 	CompiledUnaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension);
 	
-	//! Returns an ordered ExtensionT data structure with all the elements that satisfy the constraint.
-	static ExtensionT _compile(const UnaryDirectConstraint& constraint);
-	
 public:
 	typedef std::function<bool (ObjectIdx)> Tester;
 	
@@ -50,14 +48,20 @@ public:
 	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	//! Returns a set with all tuples for the given scope that satisfy the the given state
-	static std::unordered_set<ElementT> compile(const VariableIdxVector& scope, const Tester& tester);
+	static std::set<ElementT> compile(const VariableIdxVector& scope, const Tester& tester);
 	
 	//! Helper to compile a standard unary constraint
-	static std::unordered_set<ElementT> compile(const UnaryDirectConstraint& constraint) {
+	static std::set<ElementT> compile(const UnaryDirectConstraint& constraint) {
 		return compile(constraint.getScope(), [&constraint](ObjectIdx value){ return constraint.isSatisfied(value); });
 	}
 	
 	std::ostream& print(std::ostream& os) const;
+
+protected:
+	//! Returns an ordered ExtensionT data structure with all the elements that satisfy the constraint.
+	static ExtensionT _compile(const UnaryDirectConstraint& constraint);
+	
+	static ExtensionT _compile(const VariableIdxVector& scope, const Tester& tester);
 };
 
 

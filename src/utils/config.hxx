@@ -20,7 +20,7 @@ public:
 	enum class ActionManagerType {Gecode, Hybrid};
 	
 	//! The type of goal manager
-	enum class GoalManagerType {Gecode, Hybrid, Basic};
+	enum class GoalManagerType {Gecode, Hybrid, Direct};
 	
 	//! The possible types of CSP resolutions we consider
 	enum class CSPResolutionType {Full, Approximate};

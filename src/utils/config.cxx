@@ -51,8 +51,8 @@ Config::Config(const std::string& filename)
 	// Parse the type of action manager: gecode or hybrid
 	_action_manager = parseOption<ActionManagerType>(_root, "action_manager", {{"hybrid", ActionManagerType::Hybrid}, {"gecode", ActionManagerType::Gecode}});
 	
-	// Parse the type of action manager: gecode, hybrid, basic
-	_goal_manager = parseOption<GoalManagerType>(_root, "goal_manager", {{"gecode", GoalManagerType::Gecode}, {"hybrid", GoalManagerType::Hybrid}, {"basic", GoalManagerType::Basic}});
+	// Parse the type of action manager: gecode, hybrid, direct
+	_goal_manager = parseOption<GoalManagerType>(_root, "goal_manager", {{"gecode", GoalManagerType::Gecode}, {"hybrid", GoalManagerType::Hybrid}, {"basic", GoalManagerType::Direct}});
 	
 	_goal_resolution = parseOption<CSPResolutionType>(_root, "goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 	_precondition_resolution = parseOption<CSPResolutionType>(_root, "precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
@@ -76,7 +76,7 @@ void Config::validateConfig(const Config& config) {
 std::ostream& Config::print(std::ostream& os) const {
 	os << "Action Manager:\t\t" << ((_action_manager == ActionManagerType::Gecode) ? "Gecode" : "Hybrid") << std::endl;
 	os << "Action Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
-	os << "Goal Manager:\t\t" << (_goal_manager == GoalManagerType::Gecode ? "Gecode" : (_goal_manager == GoalManagerType::Hybrid ? "Hybrid" : "Basic")) << std::endl;
+	os << "Goal Manager:\t\t" << (_goal_manager == GoalManagerType::Gecode ? "Gecode" : (_goal_manager == GoalManagerType::Hybrid ? "Hybrid" : "Direct")) << std::endl;
 	os << "Goal Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
 	os << "Plan Extraction:\t" << ((_rpg_extraction == RPGExtractionType::Propositional) ? "Propositional" : "Supported") << std::endl;
 	return os;

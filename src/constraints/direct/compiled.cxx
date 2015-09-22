@@ -19,20 +19,24 @@ CompiledUnaryConstraint::CompiledUnaryConstraint(const UnaryDirectConstraint& co
 {}
 
 CompiledUnaryConstraint::CompiledUnaryConstraint(const VariableIdxVector& scope, const Tester& tester) 
-	: CompiledUnaryConstraint(scope, {}, compile(scope, tester))
+	: CompiledUnaryConstraint(scope, {}, _compile(scope, tester))
 {}
 
-std::unordered_set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(const VariableIdxVector& scope, const CompiledUnaryConstraint::Tester& tester) {
-	assert(scope.size() == 1);
+std::set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(const VariableIdxVector& scope, const CompiledUnaryConstraint::Tester& tester) {
 	const ProblemInfo& info = Problem::getInfo();
+	assert(scope.size() == 1);
 	
-	VariableIdx relevant = scope[0];
-	
-	std::unordered_set<ElementT> ordered;
-	for(ObjectIdx value:info.getVariableObjects(relevant)) {
+	std::set<ElementT> ordered;
+	for(ObjectIdx value:info.getVariableObjects(scope[0])) {
 		if (tester(value)) ordered.insert(value);
 	}
 	return ordered;
+}
+
+
+CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const VariableIdxVector& scope, const Tester& tester) {
+	auto ordered = compile(scope, tester);
+	return ExtensionT(ordered.begin(), ordered.end());
 }
 
 

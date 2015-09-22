@@ -58,7 +58,7 @@ Config::GoalManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, Direct
 		return Config::GoalManagerType::Gecode;
 	} else {
 		FINFO("main", "Chosen RPG Builder: Direct");
-		return Config::GoalManagerType::Basic;
+		return Config::GoalManagerType::Direct;
 	}
 }
 
