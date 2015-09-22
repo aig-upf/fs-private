@@ -13,7 +13,7 @@ def instantiate_function(name, arity):
 
 
 def instantiate_predicate(name, arity):
-    classes = {1: UnarySet, 2: BinarySet, 3: Arity3Set, 4: Arity4Set}
+    classes = {0: BinaryVariable, 1: UnarySet, 2: BinarySet, 3: Arity3Set, 4: Arity4Set}
     if arity not in classes:
         raise RuntimeError("Currently only up to arity-3 predicates are supported")
     return (classes[arity])(name)
@@ -157,6 +157,7 @@ class Arity4Map(BinaryMap):
         )[name]
 
 
+
 class UnarySet(DataElement):
     DESERIALIZER = 'deserializeUnarySet'
     ARITY = 1
@@ -184,6 +185,30 @@ class UnarySet(DataElement):
             raise RuntimeError("Wrong type or number of arguments for data element {}: {}({})".format(
                 self.name, self.name, elem))
 
+
+class BinaryVariable(UnarySet):
+    DESERIALIZER = 'deserialize0AryElement'
+    ARITY = 2
+
+    def get_tpl(self, name):
+        return dict(
+            declaration='const bool {name};',
+            accessor='bool {accessor}(const ObjectIdxVector& params) {{ return {name}; }}',
+            accessor2='',
+        )[name]
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.elems = {}
+
+    def add(self, value):
+        self.elems[()] = value
+
+    def get_declaration(self, symbols):
+        return self.get_tpl('declaration').format(name=self.name, val=self.elems[()])
+
+    def serialize_data(self, symbols):
+        return [serialize_symbol(self.elems[()], symbols)]  # We simply print the only element
 
 class BinarySet(UnarySet):
     DESERIALIZER = 'deserializeBinarySet'
