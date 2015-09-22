@@ -52,7 +52,7 @@ Config::Config(const std::string& filename)
 	_action_manager = parseOption<ActionManagerType>(_root, "action_manager", {{"hybrid", ActionManagerType::Hybrid}, {"gecode", ActionManagerType::Gecode}});
 	
 	// Parse the type of action manager: gecode, hybrid, direct
-	_goal_manager = parseOption<GoalManagerType>(_root, "goal_manager", {{"gecode", GoalManagerType::Gecode}, {"hybrid", GoalManagerType::Hybrid}, {"basic", GoalManagerType::Direct}});
+	_goal_manager = parseOption<GoalManagerType>(_root, "goal_manager", {{"gecode", GoalManagerType::Gecode}, {"hybrid", GoalManagerType::Hybrid}, {"direct", GoalManagerType::Direct}});
 	
 	_goal_resolution = parseOption<CSPResolutionType>(_root, "goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 	_precondition_resolution = parseOption<CSPResolutionType>(_root, "precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
