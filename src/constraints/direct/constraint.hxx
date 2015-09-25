@@ -53,10 +53,7 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const DirectConstraint& o) { return o.print(os); }
-	virtual std::ostream& print(std::ostream& os) const {
-		os << "<unnamed constraint>";
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const = 0;
 };
 
 

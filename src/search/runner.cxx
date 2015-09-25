@@ -19,8 +19,8 @@ Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator)
 	FINFO("main", "Generating the problem (" << _options.getDataDir() << ")... ");
 	auto data = Loader::loadJSONObject(_options.getDataDir() + "/problem.json");
 	
-	
-	Problem::setInstance(_generator(data, _options.getDataDir()));
+	//! This will generate the problem and set it as the global singleton instance
+	_generator(data, _options.getDataDir());
 }
 
 int Runner::run() {

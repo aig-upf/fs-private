@@ -35,6 +35,8 @@ public:
 	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const {
 		return new CompiledUnaryConstraint(*this);
 	}
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 
@@ -60,6 +62,8 @@ public:
 	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const {
 		return new CompiledBinaryConstraint(*this, problemInfo);
 	}
+	
+	std::ostream& print(std::ostream& os) const;
 };
 
 //! For every action, if any of its effects affects a bounded-domain variable, we want to place

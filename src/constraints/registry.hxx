@@ -30,12 +30,18 @@ public:
 	typedef std::function<fs::AtomicFormula::cptr(const std::vector<fs::Term::cptr>&)> FormulaCreator;
 	
 	//!
+	typedef std::function<fs::Term::cptr(const std::vector<fs::Term::cptr>&)> TermCreator;
+	
+	//!
 	typedef std::function<DirectConstraint::cptr(const fs::AtomicFormula&)> DirectFormulaTranslator;
 	
 	static LogicalComponentRegistry& instance();
 	
 	//! Add a formula creator for formulae with the given symbol to the registry
 	void add(const std::string& symbol, const FormulaCreator& creator);
+	
+	//! Add a formula creator for formulae with the given symbol to the registry
+	void add(const std::string& symbol, const TermCreator& creator);
 	
 	//! Add a Direct Formula translator of the given type to the registry
 	void add(const std::type_info& type, const DirectFormulaTranslator& translator);
@@ -50,6 +56,8 @@ public:
 	void add(const std::type_info& type, const gecode::AtomicFormulaTranslator::cptr translator);
 	
 	fs::AtomicFormula::cptr instantiate_formula(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
+	
+	fs::Term::cptr instantiate_term(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
 	
 	DirectConstraint::cptr instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
 	
@@ -69,6 +77,8 @@ protected:
 	void registerGecodeTranslators();
 	
 	std::map<std::string, FormulaCreator> _formula_creators;
+	
+	std::map<std::string, TermCreator> _term_creators;
 	
 	typedef std::unordered_map<std::type_index, DirectFormulaTranslator> DirectTranslatorsTable;
 	DirectTranslatorsTable _direct_formula_translators;

@@ -16,7 +16,6 @@ public:
 	}
 };
 
-
 //! A statically-headed term that performs some arithmetic operation to its two subterms
 class ArithmeticTerm : public StaticHeadedNestedTerm {
 public:
@@ -34,10 +33,10 @@ public:
 	
 	AdditionTerm* clone() const { return new AdditionTerm(*this); }
 	
-	std::pair<int, int> getBounds() const;
-	
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
+	
+	std::pair<int, int> getBounds() const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
@@ -55,7 +54,7 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
 	
-	virtual std::pair<int, int> getBounds() const;
+	std::pair<int, int> getBounds() const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
@@ -73,12 +72,11 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
 	
-	virtual std::pair<int, int> getBounds() const;
+	std::pair<int, int> getBounds() const;
 	
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 };
-
 
 class ExternallyDefinedFormula : public AtomicFormula {
 public:

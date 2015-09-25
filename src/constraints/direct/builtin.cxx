@@ -80,6 +80,12 @@ FilteringOutput LTConstraint::filter(unsigned variable) {
 	}
 }
 
+std::ostream& LTConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " < " << info.getVariableName(_scope[1]);
+	return os;
+}
+
 FilteringOutput LEQConstraint::filter(unsigned variable) {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
@@ -97,7 +103,13 @@ FilteringOutput LEQConstraint::filter(unsigned variable) {
 		return filter_geq(y_dom, x_min, x_max);
 	}
 }
-	
+
+std::ostream& LEQConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " <= " << info.getVariableName(_scope[1]);
+	return os;
+}
+
 FilteringOutput EQConstraint::filter(unsigned variable) {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
@@ -121,6 +133,11 @@ FilteringOutput EQConstraint::filter(unsigned variable) {
 	return FilteringOutput::Pruned;
 }
 
+std::ostream& EQConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " = " << info.getVariableName(_scope[1]);
+	return os;
+}
 
 FilteringOutput NEQConstraint::filter(unsigned variable) {
 	assert(projection.size() == 2);
@@ -137,6 +154,12 @@ FilteringOutput NEQConstraint::filter(unsigned variable) {
 	// If we can erase the only value, i.e. it was in the domain, we do it, otherwise the result is an unpruned domain.
 	if (domain.erase(other_val) == 0) return FilteringOutput::Unpruned;
 	return domain.size() > 0 ? FilteringOutput::Pruned : FilteringOutput::Failure;
+}
+
+std::ostream& NEQConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " != " << info.getVariableName(_scope[1]);
+	return os;
 }
 
 // Filtering for a X = c constraint simply consists on pruning from the variable
@@ -159,7 +182,12 @@ FilteringOutput EQXConstraint::filter(const DomainMap& domains) const {
 	return FilteringOutput::Pruned;
 }
 
-	
+std::ostream& EQXConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " = " << _parameters[0];
+	return os;
+}
+
 // Filtering for a X <> c constraint simply consists on pruning from the variable
 // domain value 'c', if available.
 FilteringOutput NEQXConstraint::filter(const DomainMap& domains) const {
@@ -170,10 +198,21 @@ FilteringOutput NEQXConstraint::filter(const DomainMap& domains) const {
 	else return (domain.size() == 0) ? FilteringOutput::Failure : FilteringOutput::Pruned;
 }
 
+std::ostream& NEQXConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " != " << _parameters[0];
+	return os;
+}
 
 FilteringOutput LTXConstraint::filter(const DomainMap& domains) const {
 	assert(_scope.size() == 1);
 	return filter_lt(*(domains.at(_scope[0])), _parameters[0], _parameters[0]);
+}
+
+std::ostream& LTXConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " < " << _parameters[0];
+	return os;
 }
 
 FilteringOutput LEQXConstraint::filter(const DomainMap& domains) const {
@@ -181,9 +220,21 @@ FilteringOutput LEQXConstraint::filter(const DomainMap& domains) const {
 	return filter_leq(*(domains.at(_scope[0])), _parameters[0], _parameters[0]);
 }
 
+std::ostream& LEQXConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " <= " << _parameters[0];
+	return os;
+}
+
 FilteringOutput GTXConstraint::filter(const DomainMap& domains) const {
 	assert(_scope.size() == 1);
 	return filter_gt(*(domains.at(_scope[0])), _parameters[0], _parameters[0]);
+}
+
+std::ostream& GTXConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " > " << _parameters[0];
+	return os;
 }
 
 FilteringOutput GEQXConstraint::filter(const DomainMap& domains) const {
@@ -191,6 +242,11 @@ FilteringOutput GEQXConstraint::filter(const DomainMap& domains) const {
 	return filter_geq(*(domains.at(_scope[0])), _parameters[0], _parameters[0]);
 }
 
+std::ostream& GEQXConstraint::print(std::ostream& os) const {
+	const ProblemInfo& info = Problem::getInfo();
+	os << info.getVariableName(_scope[0]) << " >= " << _parameters[0];
+	return os;
+}
 
 ValueAssignmentEffect::ValueAssignmentEffect(VariableIdx affected, ObjectIdx value)
 	: ZeroaryDirectEffect(affected, {value})

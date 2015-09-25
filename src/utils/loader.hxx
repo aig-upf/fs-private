@@ -23,7 +23,7 @@ class Loader
 public:
 	
 	//!
-	static void loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory, Problem& problem);
+	static void loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
 	

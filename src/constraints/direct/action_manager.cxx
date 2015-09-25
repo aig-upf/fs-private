@@ -74,6 +74,7 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 			auto hint = rpg.getInsertionHint(atom);
 
 			if (hint.first) {
+				FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 				completeAtomSupport(_scope, actionProjection, effectScope, support);
 				rpg.add(atom, actionIdx, support, hint.second);
@@ -88,6 +89,7 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 				auto hint = rpg.getInsertionHint(atom);
 
 				if (hint.first) {
+					FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 					Atom::vctrp support = std::make_shared<Atom::vctr>();
 					support->push_back(Atom(effectScope[0], value));// Just insert the only value
 					completeAtomSupport(_scope, actionProjection, effectScope, support);

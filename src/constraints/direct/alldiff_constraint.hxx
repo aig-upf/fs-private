@@ -47,6 +47,8 @@ public:
 	
 	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
+	std::ostream& print(std::ostream& os) const;
+	
 protected:
 	//! Invert a domain, e.g. from D = {3, 4, 7} to D = {-7, -4, -3}
 	Domain invertDomain(const Domain& domain) const;

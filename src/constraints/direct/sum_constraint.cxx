@@ -1,6 +1,8 @@
 
 #include <cassert>
 #include <constraints/direct/sum_constraint.hxx>
+#include <problem.hxx>
+#include <utils/printers/helper.hxx>
 #include <algorithm>
 
 namespace fs0 {
@@ -63,6 +65,17 @@ FilteringOutput SumConstraint::filter() {
 		}
 	}
 	return output;
+}
+
+std::ostream& SumConstraint::print(std::ostream& os) const {
+	const auto& names = print::Helper::name_variables(_scope);
+	for (unsigned i = 0; i < names.size() - 1; ++i) {
+		const auto& varname = names[i];
+		os << varname;
+		if (i < names.size() - 2) os << " + ";
+	}
+	os << " = " << names[names.size()-1];
+	return os;
 }
 
 } // namespaces

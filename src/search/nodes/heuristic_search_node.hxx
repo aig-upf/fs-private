@@ -52,7 +52,7 @@ public:
 
 	bool has_parent() const { return parent != nullptr; }
 
-	void print( std::ostream& os ) const { os << "{@ = " << this << ", s = " << state << ", h = " << h << ", parent = " << parent << "}";  }
+	void print( std::ostream& os ) const { os << "{@ = " << this << ", s = " << state << ", h = " << h << ", parent = " << parent << ", action: " << action << "}";  }
 
 	//! Forward the comparison to the planning state.
 	bool operator==(const HeuristicSearchNode<State>& o) const { return state == o.state; }
