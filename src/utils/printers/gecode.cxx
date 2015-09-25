@@ -6,7 +6,7 @@ namespace fs0 { namespace print {
 
 std::ostream& tupleset::print(std::ostream& os) const {
 	unsigned arity = _tupleset.arity();
-	for (unsigned i = 0; i < _tupleset.tuples(); ++i) {
+	for (unsigned i = 0; i < (unsigned)_tupleset.tuples(); ++i) {
 		os << "<";
 		for (unsigned j = 0; j < arity; ++j) {
 			os << _tupleset[i][j];
