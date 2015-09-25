@@ -38,10 +38,10 @@ public:
 	static LogicalComponentRegistry& instance();
 	
 	//! Add a formula creator for formulae with the given symbol to the registry
-	void add(const std::string& symbol, const FormulaCreator& creator);
+	void addFormulaCreator(const std::string& symbol, const FormulaCreator& creator);
 	
 	//! Add a formula creator for formulae with the given symbol to the registry
-	void add(const std::string& symbol, const TermCreator& creator);
+	void addTermCreator(const std::string& symbol, const TermCreator& creator);
 	
 	//! Add a Direct Formula translator of the given type to the registry
 	void add(const std::type_info& type, const DirectFormulaTranslator& translator);

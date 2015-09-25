@@ -17,23 +17,23 @@ LogicalComponentRegistry& LogicalComponentRegistry::instance() {
 
 void LogicalComponentRegistry::registerLogicalElementCreators() {
 	// Standard relational formulae
-	add("=",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::EQAtomicFormula(subterms); });
-	add("!=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::NEQAtomicFormula(subterms); });
-	add("<",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::LTAtomicFormula(subterms); });
-	add("<=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::LEQAtomicFormula(subterms); });
-	add(">",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::GTAtomicFormula(subterms); });
-	add(">=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::GEQAtomicFormula(subterms); });
+	addFormulaCreator("=",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::EQAtomicFormula(subterms); });
+	addFormulaCreator("!=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::NEQAtomicFormula(subterms); });
+	addFormulaCreator("<",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::LTAtomicFormula(subterms); });
+	addFormulaCreator("<=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::LEQAtomicFormula(subterms); });
+	addFormulaCreator(">",  [](const std::vector<fs::Term::cptr>& subterms){ return new fs::GTAtomicFormula(subterms); });
+	addFormulaCreator(">=", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::GEQAtomicFormula(subterms); });
 	
 	// Register the builtin global constraints
-	add("@alldiff", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::AlldiffFormula(subterms); });
-	add("@sum",     [](const std::vector<fs::Term::cptr>& subterms){ return new fs::SumFormula(subterms); });
+	addFormulaCreator("@alldiff", [](const std::vector<fs::Term::cptr>& subterms){ return new fs::AlldiffFormula(subterms); });
+	addFormulaCreator("@sum",     [](const std::vector<fs::Term::cptr>& subterms){ return new fs::SumFormula(subterms); });
 }
 
 
 
 void LogicalComponentRegistry::registerDirectTranslators() {
 	add(typeid(fs::Constant),           new ConstantRhsTranslator());
-	add(typeid(fs::IntConstant),           new ConstantRhsTranslator());
+	add(typeid(fs::IntConstant),        new ConstantRhsTranslator());
 	add(typeid(fs::StateVariable),      new StateVariableRhsTranslator());
 	add(typeid(fs::AdditionTerm),       new AdditiveTermRhsTranslator());
 	add(typeid(fs::SubtractionTerm),    new SubtractiveTermRhsTranslator());
@@ -85,12 +85,12 @@ LogicalComponentRegistry::~LogicalComponentRegistry() {
 	for (const auto elem:_direct_effect_translators) delete elem.second;
 }
 
-void LogicalComponentRegistry::add(const std::string& symbol, const FormulaCreator& creator) {
+void LogicalComponentRegistry::addFormulaCreator(const std::string& symbol, const FormulaCreator& creator) {
 	auto res = _formula_creators.insert(std::make_pair(symbol, creator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of formula creator for symbol " + symbol);
 }
 
-void LogicalComponentRegistry::add(const std::string& symbol, const TermCreator& creator) {
+void LogicalComponentRegistry::addTermCreator(const std::string& symbol, const TermCreator& creator) {
 	auto res = _term_creators.insert(std::make_pair(symbol, creator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of term creator for symbol " + symbol);
 }
