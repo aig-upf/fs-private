@@ -28,8 +28,12 @@ bool GecodeCSPVariableTranslator::isPosted(const fs::Term::cptr term, CSPVariabl
 }
 
 void GecodeCSPVariableTranslator::setPosted(const fs::Term::cptr term, CSPVariableType type) {
+	#ifdef DEBUG
 	auto res = _posted.insert(TranslationKey(term, type));
 	assert(res.second); // If the element had already been posted, there is some bug.
+	#else
+	_posted.insert(TranslationKey(term,type));
+	#endif
 }
 
 bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
@@ -50,12 +54,12 @@ bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr 
 	TranslationKey key(variable, type);
 	auto it = _registered.find(key);
 	if (it!=_registered.end()) return false; // The element was already registered
-	
+
 	unsigned variable_id = variable->getValue();
-	
+
 	//  TODO we need to think what to do in these cases where a derived state variable is also used as a primary state variable in some other expression.
-	assert(_derived.find(variable_id) == _derived.end()); 
-	
+	assert(_derived.find(variable_id) == _derived.end());
+
 	unsigned id = variables.size();
 	variables << Helper::createPlanningVariable(csp, variable_id);
 
@@ -75,12 +79,12 @@ bool GecodeCSPVariableTranslator::registerDerivedStateVariable(VariableIdx varia
 	auto sv = new StateVariable(variable);
 	assert(_registered.find(TranslationKey(sv, type)) == _registered.end());
 	delete sv; // Yes, this is ugly, but temporary
-	
-	
+
+
 	// TODO we need to think what to do in these cases where two derived state variables come into play at the same time.
-	assert(_derived.find(variable) == _derived.end()); 
-	
-	
+	assert(_derived.find(variable) == _derived.end());
+
+
 	unsigned id = variables.size();
 	variables << Helper::createPlanningVariable(csp, variable, true);
 
@@ -122,13 +126,13 @@ void GecodeCSPVariableTranslator::registerNestedFluent(fs::NestedTerm::cptr term
 
 	unsigned index_var_idx = intvars.size();
 	intvars << Helper::createTemporaryIntVariable(csp, 0, table_size-1);
-	
+
 	unsigned bool_var_idx = boolvars.size();
 	// We create one boolean variable for each of the elements of the disjunction IDX=i \lor TABLE_i = DONT_CARE
 	for (unsigned i = 0; i < table_size*2; ++i) {
 		boolvars << Helper::createBoolVariable(csp);
 	}
-	
+
 	element_constraint_data.insert(std::make_pair(key, NestedFluentData(index_var_idx, bool_var_idx, table_size)));
 }
 
@@ -174,12 +178,12 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 		if (it.first.getType() == CSPVariableType::Output) os << "'"; // We simply mark output variables with a "'"
 		os << ": " << csp._intvars[it.second] << std::endl;
 	}
-	
+
 	os << std::endl << "Plus the following derived state variables: " << std::endl;
 	for (auto it:_derived) {
 		os << "\t " << info.getVariableName(it.first) << ": " << csp._intvars[it.second] << std::endl;
 	}
-	
+
 	os << std::endl << "Plus \"index\" and reification variables for the following terms: " << std::endl;
 	for (auto it:element_constraint_data) {
 		os << "\t ";
@@ -187,7 +191,7 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 		if (it.first.getType() == CSPVariableType::Output) os << "'"; // We simply mark output variables with a "'"
 		os << ": " << it.second.getIndex(csp) << std::endl;
 	}
-	
+
 	return os;
 }
 
@@ -199,7 +203,7 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 		const DomainPtr& domain = layer.getValues(variable);
 		Helper::constrainCSPVariable(csp, csp_variable_id, domain);
 	}
-	
+
 	// Now constrain the derived variables, but not excluding the DONT_CARE value
 	for (const auto& it:_derived) {
 		VariableIdx variable = it.first;

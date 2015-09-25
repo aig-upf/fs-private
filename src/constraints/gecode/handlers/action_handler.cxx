@@ -27,10 +27,13 @@ GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action)
 	Helper::postBranchingStrategy(_base_csp);
 
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
-	Gecode::SpaceStatus st = _base_csp.status();
+	#ifdef DEBUG
+	Gecode::SpaceStatus st =
+	#endif
+	_base_csp.status();
 
 	assert(st != Gecode::SpaceStatus::SS_FAILED); // This should never happen, as it means that the action is (statically) unapplicable.
-	
+
 	index_scopes();
 }
 
@@ -38,28 +41,28 @@ void GecodeActionCSPHandler::index_scopes() {
 	auto scope = ScopeUtils::computeActionDirectScope(_action);
 	std::set<VariableIdx> action_support(scope.begin(), scope.end());
 	auto effects = _action.getEffects();
-	
+
 	effect_support_variables.resize(effects.size());
 	effect_nested_fluents.resize(effects.size());
-	
+
 	for (unsigned i = 0; i < effects.size(); ++i) {
 		// Insert first the variables relevant to the particular effect and only then the variables relevant to the
 		// action which were not already inserted
 		effect_support_variables[i] = ScopeUtils::computeDirectScope(effects[i]);
 		std::set<VariableIdx> effect_support(effect_support_variables[i].begin(), effect_support_variables[i].end());
-		
+
 		std::set_difference(
 			action_support.begin(), action_support.end(),
 			effect_support.begin(), effect_support.end(),
 			std::inserter(effect_support_variables[i], effect_support_variables[i].begin()));
-		
+
 		ScopeUtils::TermSet nested;
-		
+
 		// Order matters - we first insert the nested fluents from the particular effect
 		ScopeUtils::computeIndirectScope(effects[i], nested);
 		effect_nested_fluents[i] = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
-		
-		
+
+
 		// And only then the nested fluents from the action preconditions
 		// Actually we don't care that much about repetitions between the two sets of terms, since they are checked anyway when
 		// transformed into state variables
@@ -85,7 +88,7 @@ void GecodeActionCSPHandler::createCSPVariables() {
 	for (const auto effect:_action.getEffects()) {
 		registerEffectVariables(effect, intvars, boolvars);
 	}
-	
+
 	Helper::update_csp(_base_csp, intvars, boolvars);
 }
 
@@ -120,15 +123,15 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData& rpg) const {
 	unsigned num_solutions = 0;
 	DFS<SimpleCSP> engine(csp);
-	
+
 	auto effects = _action.getEffects();
-	
+
 	FFDEBUG("heuristic", "Computing supports for action " << _action.getFullName());
 	while (SimpleCSP* solution = engine.next()) {
 		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
 
 		PartialAssignment solution_assignment = _translator.buildAssignment(*solution);
-		
+
 		// We compute, effect by effect, the atom produced by the effect for the given solution, as well as its supports
 		for (unsigned i = 0; i < effects.size(); ++i) {
 			ActionEffect::cptr effect = effects[i];
@@ -137,7 +140,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 			auto hint = rpg.getInsertionHint(atom);
 			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 
-			
+
 			if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 
@@ -152,7 +155,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 				for (auto fluent:effect_nested_fluents[i]) {
 					const NestedFluentData& nested_translator = _translator.resolveNestedFluent(fluent);
 					VariableIdx variable = nested_translator.resolveStateVariable(*solution);
-					
+
 					if (inserted.find(variable) == inserted.end()) { // Don't push twice to the support the same atom
 						ObjectIdx value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
 						support->push_back(Atom(variable, value));
