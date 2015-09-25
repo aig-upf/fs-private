@@ -135,11 +135,11 @@ def compile_translation(translation_dir, planner, debug=False, predstate=False):
     debug_flag = "edebug={0}".format(1 if debug else 0)
     predstate_flag = "predstate=1" if predstate else ''
 
-    planner_dir = os.path.abspath('../planners/' + planner)
+    planner_dir = os.path.abspath(os.path.join('../planners', planner))
 
-    shutil.copy(planner_dir + '/main.cxx', translation_dir)
-    shutil.copy(planner_dir + '/config.json', translation_dir)
-    shutil.copy(planner_dir + '/SConstruct', translation_dir + '/SConstruct')
+    shutil.copy( os.path.join( planner_dir, 'main.cxx'), translation_dir)
+    shutil.copy( os.path.join( planner_dir, 'default.config.json'), os.path.join(translation_dir, 'config.json') )
+    shutil.copy( os.path.join( planner_dir, 'SConstruct'), os.path.join( translation_dir, 'SConstruct') )
 
     command = "scons {} {}".format(debug_flag, predstate_flag)
 
@@ -316,9 +316,6 @@ class Generator(object):
     def dump_type_data(self):
         """ Dumps a map of types to corresponding objects"""
         data = []
-
-        if 'object' not in self.task.type_map:
-            self.task.type_map['object'] = []
 
         type_map = self.task.type_map
         _sorted = sorted(self.index.types.items(), key=operator.itemgetter(1))  # all types, sorted by type ID

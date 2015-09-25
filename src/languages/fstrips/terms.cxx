@@ -10,17 +10,6 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
-
-//! A helper to interpret a vector of terms
-template <typename T>
-ObjectIdxVector NestedTerm::interpret_subterms(const std::vector<Term::cptr>& subterms, const T& assignment) {
-	ObjectIdxVector interpreted;
-	for (Term::cptr subterm:subterms) {
-		interpreted.push_back(subterm->interpret(assignment));
-	}
-	return interpreted;
-}
-
 std::ostream& LogicalElement::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {

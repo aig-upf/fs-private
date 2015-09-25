@@ -11,8 +11,8 @@
 
 
 namespace fs0 { namespace gecode {
-	
-	
+
+
 Gecode::IntVar Helper::createPlanningVariable(Gecode::Space& csp, VariableIdx variable, bool nullable) {
 	const ProblemInfo& info = Problem::getInfo();
 	return createVariable(csp, info.getVariableType(variable), nullable);
@@ -33,7 +33,7 @@ Gecode::BoolVar Helper::createBoolVariable(Gecode::Space& csp) {
 Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool nullable) {
 	const ProblemInfo& info = Problem::getInfo();
 	auto generic_type = info.getGenericType(typeId);
-	
+
 	if ( generic_type == ProblemInfo::ObjectType::INT ) {
 		const auto& bounds = info.getTypeBounds(typeId);
 		if (!nullable) {
@@ -58,13 +58,13 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool n
 
 void Helper::constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain, bool include_dont_care) {
 	const Gecode::IntVar& variable = csp._intvars[csp_variable_id];
-	
+
 	if (!include_dont_care && domain->size() == 1 ) { // The simplest case
 		Gecode::rel(csp, variable, Gecode::IRT_EQ, *(domain->cbegin()));
 	} else {
 		ObjectIdx lb = *(domain->cbegin());
 		ObjectIdx ub = *(domain->crbegin());
-		
+
 		if (!include_dont_care && domain->size() == static_cast<unsigned>(ub - lb) + 1 ) { // MRJ: Check this is a safe assumption - We can guarantee it is unsigned, since the elements in the domain are ordered
 			Gecode::dom(csp, variable, lb, ub); // MRJ: lb <= variable <= ub
 		} else { // TODO - MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
@@ -89,9 +89,9 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr t
 	auto f_data = info.getFunctionData(term->getSymbolId());
 	const Signature& signature = f_data.getSignature();
 	const auto& functor = f_data.getFunction();
-	
+
 	Gecode::TupleSet tuples;
-	
+
 	utils::cartesian_iterator all_values(info.getSignatureValues(signature));
 	for (; !all_values.ended(); ++all_values) {
 		try {
@@ -99,7 +99,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr t
 			tuples.add(Gecode::IntArgs(*all_values) << out); // Add the term value as the last element
 		} catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 	}
-	
+
 	tuples.finalize();
 	return tuples;
 }
@@ -111,7 +111,7 @@ void Helper::postBranchingStrategy(SimpleCSP& csp) {
 
 int Helper::selectValueIfExists(IntVarValues& value_set, int value) {
 	assert(value_set());
-	int arbitrary_element;
+	int arbitrary_element = 0;
 	for (; value_set(); ++value_set) {
 		arbitrary_element = value_set.val();
 		if (arbitrary_element == value) return value;
@@ -122,9 +122,9 @@ int Helper::selectValueIfExists(IntVarValues& value_set, int value) {
 void Helper::update_csp(SimpleCSP& csp, const IntVarArgs& intvars, const BoolVarArgs& boolvars) {
 	IntVarArray intarray(csp, intvars);
 	csp._intvars.update(csp, false, intarray);
-	
+
 	BoolVarArray boolarray(csp, boolvars);
-	csp._boolvars.update(csp, false, boolarray);	
+	csp._boolvars.update(csp, false, boolarray);
 }
 
 int Helper::computeDontCareValue() {

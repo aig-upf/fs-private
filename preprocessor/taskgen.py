@@ -144,8 +144,10 @@ def process_types(instance, bounds):
 
     bounded_types = process_bounds(bounds)
 
-    # Always add the bool type
+    # Always add the bool, object and number types
     type_map['_bool_'] = ['_false_', '_true_']
+    type_map['object'] = []
+    type_map['number'] = []
 
     # for every type we append the corresponding object
     for o in instance.objects:
@@ -182,4 +184,3 @@ def process_type_hierarchy(types):
             pending.append(t)
 
     return supertypes
-
