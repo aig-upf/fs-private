@@ -22,17 +22,13 @@ namespace fs0 {
 
 namespace fs0 { namespace gecode {
 
-
 /**
  * This exception is thrown whenever a variable cannot be resolved
  */
 class UnregisteredStateVariableError : public std::runtime_error {
 public:
-	UnregisteredStateVariableError( const char* what_msg );
-	UnregisteredStateVariableError( const std::string& what_msg );
-
-	virtual ~UnregisteredStateVariableError();
-
+	UnregisteredStateVariableError( const char* what_msg ) : std::runtime_error( what_msg ) {}
+	UnregisteredStateVariableError( const std::string& what_msg ) : std::runtime_error( what_msg ) {}
 };
 
 /**

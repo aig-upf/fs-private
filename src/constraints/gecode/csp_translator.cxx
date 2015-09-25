@@ -9,16 +9,6 @@
 
 namespace fs0 { namespace gecode {
 
-UnregisteredStateVariableError::UnregisteredStateVariableError( const char* what_msg )
-	: std::runtime_error( what_msg ) {}
-
-UnregisteredStateVariableError::UnregisteredStateVariableError( const std::string& what_msg )
-	: std::runtime_error( what_msg ) {}
-
-UnregisteredStateVariableError::~UnregisteredStateVariableError() {
-
-}
-
 bool GecodeCSPVariableTranslator::isRegistered(const fs::Term::cptr term, CSPVariableType type) const {
 	return _registered.find(TranslationKey(term, type)) != _registered.end();
 }
