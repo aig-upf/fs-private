@@ -28,12 +28,8 @@ bool GecodeCSPVariableTranslator::isPosted(const fs::Term::cptr term, CSPVariabl
 }
 
 void GecodeCSPVariableTranslator::setPosted(const fs::Term::cptr term, CSPVariableType type) {
-	#ifdef DEBUG
 	auto res = _posted.insert(TranslationKey(term, type));
 	assert(res.second); // If the element had already been posted, there is some bug.
-	#else
-	_posted.insert(TranslationKey(term,type));
-	#endif
 }
 
 bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
