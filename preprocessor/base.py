@@ -184,7 +184,6 @@ class PredicativeExpression(Expression):
         return '{}{}'.format("not " if self.negated else "", p)
 
     def dump(self, objects, parameters):
-        assert len(self.arguments) == 2
         subterms = [elem.dump(objects, parameters) for elem in self.arguments]
         return dict(type='atom', symbol=self.process_symbol(), subterms=subterms)
 
