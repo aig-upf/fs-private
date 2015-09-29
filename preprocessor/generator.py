@@ -40,7 +40,7 @@ import pddl  # This should be imported from a custom-set PYTHONPATH containing t
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Parse a given problem instance from a given benchmark set.')
-    parser.add_argument('--set', required=True, help="The name of the benchmark set.")
+    parser.add_argument('--tag', required=True, help="The name of the generation tag.")
     parser.add_argument('--instance', required=True,
                         help="The problem instance filename (heuristics are used to determine domain filename).")
     parser.add_argument('--domain', required=False, help="The problem domain filename.", default=None)
@@ -265,7 +265,7 @@ class Generator(object):
         else:
             dir_end = translation_dir
 
-        o_dir = args.output if args.output is not None else (args.output_base + '/' + args.set + '/' + dir_end)
+        o_dir = args.output if args.output is not None else (args.output_base + '/' + args.tag + '/' + dir_end)
         self.out_dir = os.path.abspath(o_dir)
 
         if not os.path.isdir(self.out_dir):
