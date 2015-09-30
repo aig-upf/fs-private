@@ -21,51 +21,37 @@ bool SearchUtils::check_plan(const std::vector<GroundAction::IdType>& plan) {
 
 float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Problem& problem, const std::string& out_dir) {
 
-	std::ofstream out(out_dir + "/searchlog.out");
+	std::cout << "Writing results to " << out_dir << std::endl;
 	std::ofstream plan_out(out_dir + "/first.plan");
 	std::ofstream json_out( out_dir + "/results.json" );
-
-	std::cout << "Writing results to " << out_dir + "/searchlog.out" << std::endl;
 
 	std::vector<GroundAction::IdType> plan;
 	float t0 = aptk::time_used();
 	bool solved = engine.solve_model( plan );
 	float total_time = aptk::time_used() - t0;
 
-
 	bool valid = check_plan(plan);
 	if ( solved ) {
-		PlanPrinter::printPlan(plan, problem, out);
 		PlanPrinter::printPlan(plan, problem, plan_out);
 	}
-
-	out << "Plan length : " << plan.size() << std::endl;
-	out << "Total time: " << total_time << std::endl;
-	out << "Nodes generated during search: " << engine.generated << std::endl;
-	out << "Nodes expanded during search: " << engine.expanded << std::endl;
-
-	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated / total_time) : "-";
-	out << "Heuristic evaluations per second: " <<  eval_speed << std::endl;
-
-	out.close();
 	plan_out.close();
 
+	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated / total_time) : "-";
 	json_out << "{" << std::endl;
-	json_out << "\tsearch_time : " << total_time << "," << std::endl;
-	json_out << "\tgenerated : " << engine.generated << "," << std::endl;
-	json_out << "\texpanded : " << engine.expanded << "," << std::endl;
-	json_out << "\teval_per_second : " << eval_speed << "," << std::endl;
-	json_out << "\tsolved : " << ( solved ? "true" : "false" ) << "," << std::endl;
-	json_out << "\tvalid : " << ( valid ? "true" : "false" ) << "," << std::endl;
-	json_out << "\tplan_length : " << plan.size() << "," << std::endl;
-	json_out << "\tplan : ";
+	json_out << "\t\"search_time\": " << total_time << "," << std::endl;
+	json_out << "\t\"generated\": " << engine.generated << "," << std::endl;
+	json_out << "\t\"expanded\": " << engine.expanded << "," << std::endl;
+	json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
+	json_out << "\t\"solved\": " << ( solved ? "true" : "false" ) << "," << std::endl;
+	json_out << "\t\"valid\": " << ( valid ? "true" : "false" ) << "," << std::endl;
+	json_out << "\t\"plan_length\": " << plan.size() << "," << std::endl;
+	json_out << "\t\"plan\": ";
 	if ( solved )
 		PlanPrinter::printPlanJSON( plan, problem, json_out);
 	else
 		json_out << "null";
 	json_out << std::endl;
 	json_out << "}" << std::endl;
-
 	json_out.close();
 
 	return total_time;
