@@ -1,11 +1,11 @@
 {
 	"engine": {
-		"tag_comment": "Possible pre-configured engines include:
-							* gbfs_chff:  Greedy Best-First Search with the Constrained h_FF heuristic
-							* gbfs_chmax: Greedy Best-First Search with the Constrained h_MAX heuristic
-							* iterated_width: The IW algorithm (Breadth-First Search with novelty pruning)
-							* breadth_first_search: A plain and blind Breadth-First Search.
-						",
+		"tag_comment": ["Possible pre-configured engines include:",
+							"* gbfs_chff:  Greedy Best-First Search with the Constrained h_FF heuristic",
+							"* gbfs_chmax: Greedy Best-First Search with the Constrained h_MAX heuristic",
+							"* iterated_width: The IW algorithm (Breadth-First Search with novelty pruning)",
+							"* breadth_first_search: A plain and blind Breadth-First Search."
+						],
 		"tag": "gbfs_chff"
 	},
 	

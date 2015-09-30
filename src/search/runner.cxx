@@ -13,8 +13,8 @@ namespace fs0 { namespace engines {
 Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator) 
 	: _options(options), _generator(generator)
 {
-	Logger::init("./logs");
-	Config::init("config.json");
+	Logger::init(_options.getOutputDir() + "/logs");
+	Config::init(_options.getConfig());
 
 	FINFO("main", "Generating the problem (" << _options.getDataDir() << ")... ");
 	auto data = Loader::loadJSONObject(_options.getDataDir() + "/problem.json");

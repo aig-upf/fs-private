@@ -13,14 +13,18 @@ public:
 
 	unsigned getTimeout() const { return _timeout; }
 	
-	std::string getDataDir() const { return _data_dir; }
+	const std::string& getDataDir() const { return _data_dir; }
 	
-	std::string getOutputDir() const { return _output_dir; }
+	const std::string& getOutputDir() const { return _output_dir; }
+	
+	const std::string& getConfig() const { return _config; }
 	
 protected:
 	unsigned _timeout;
 	
 	std::string _data_dir;
+	
+	std::string _config;
 	
 	std::string _output_dir;
 };
