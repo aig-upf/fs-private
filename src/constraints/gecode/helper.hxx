@@ -40,6 +40,9 @@ public:
 	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
 	//! that underlies the static term in all interpretations.
 	static Gecode::TupleSet extensionalize(const fs::StaticHeadedNestedTerm::cptr term);
+	
+	// Build an extensional gecode tupleset with all those tuples that render a certain symbol true
+	static Gecode::TupleSet extensionalize(const std::string& symbol);
 
 	//! Builds a gecode tupleset from the values contained in a state variable domain
 	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain, bool include_dont_care = false);

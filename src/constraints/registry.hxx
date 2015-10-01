@@ -90,4 +90,17 @@ protected:
 	std::unordered_map<std::type_index, gecode::AtomicFormulaTranslator::cptr> _gecode_formula_translators;
 };
 
+class UnregisteredGecodeTranslator : public std::runtime_error {
+public:
+	template <typename T>
+	UnregisteredGecodeTranslator(const T& element) : std::runtime_error(message(element)) {}
+	
+	template <typename T>
+	static std::string message(const T& element) {
+		std::ostringstream stream;
+		stream << "A Gecode translator is required for element \""<< element << "\", but none was registered";
+		return stream.str();
+	}
+};
+
 } // namespaces

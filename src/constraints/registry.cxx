@@ -6,6 +6,7 @@
 #include <constraints/direct/alldiff_constraint.hxx>
 #include <constraints/direct/sum_constraint.hxx>
 #include <utils/printers/printers.hxx>
+#include <utils/printers/helper.hxx>
 
 
 namespace fs0 {
@@ -142,13 +143,17 @@ EffectTranslator::cptr LogicalComponentRegistry::getDirectEffectTranslator(const
 
 gecode::TermTranslator::cptr LogicalComponentRegistry::getGecodeTranslator(const fs::Term& term) const {
 	auto it = _gecode_term_translators.find(std::type_index(typeid(term)));
-	if (it == _gecode_term_translators.end()) return nullptr;
+	if (it == _gecode_term_translators.end()) {
+		throw UnregisteredGecodeTranslator(term);
+	}
 	return it->second;
 }
 
 gecode::AtomicFormulaTranslator::cptr LogicalComponentRegistry::getGecodeTranslator(const fs::AtomicFormula& formula) const {
 	auto it = _gecode_formula_translators.find(std::type_index(typeid(formula)));
-	if (it == _gecode_formula_translators.end()) return nullptr;
+	if (it == _gecode_formula_translators.end()) {
+		throw UnregisteredGecodeTranslator(formula);
+	}
 	return it->second;
 }
 

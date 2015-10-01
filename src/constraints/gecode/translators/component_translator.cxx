@@ -15,23 +15,23 @@
 
 namespace fs0 { namespace gecode {
 
-	typedef fs::RelationalFormula::Symbol AFSymbol;
-	const std::map<AFSymbol, Gecode::IntRelType> RelationalFormulaTranslator::symbol_to_gecode = {
-		{AFSymbol::EQ, Gecode::IRT_EQ}, {AFSymbol::NEQ, Gecode::IRT_NQ}, {AFSymbol::LT, Gecode::IRT_LE},
-		{AFSymbol::LEQ, Gecode::IRT_LQ}, {AFSymbol::GT, Gecode::IRT_GR}, {AFSymbol::GEQ, Gecode::IRT_GQ}
-	};
+typedef fs::RelationalFormula::Symbol AFSymbol;
+const std::map<AFSymbol, Gecode::IntRelType> RelationalFormulaTranslator::symbol_to_gecode = {
+	{AFSymbol::EQ, Gecode::IRT_EQ}, {AFSymbol::NEQ, Gecode::IRT_NQ}, {AFSymbol::LT, Gecode::IRT_LE},
+	{AFSymbol::LEQ, Gecode::IRT_LQ}, {AFSymbol::GT, Gecode::IRT_GR}, {AFSymbol::GEQ, Gecode::IRT_GQ}
+};
 
-	Gecode::IntRelType RelationalFormulaTranslator::gecode_symbol(fs::RelationalFormula::cptr formula) { return symbol_to_gecode.at(formula->symbol()); }
+Gecode::IntRelType RelationalFormulaTranslator::gecode_symbol(fs::RelationalFormula::cptr formula) { return symbol_to_gecode.at(formula->symbol()); }
 
 
-	const std::map<Gecode::IntRelType, Gecode::IntRelType> RelationalFormulaTranslator::operator_inversions = {
-		{Gecode::IRT_EQ, Gecode::IRT_EQ}, {Gecode::IRT_NQ, Gecode::IRT_NQ}, {Gecode::IRT_LE, Gecode::IRT_GQ},
-		{Gecode::IRT_LQ, Gecode::IRT_GR}, {Gecode::IRT_GR, Gecode::IRT_LQ}, {Gecode::IRT_GQ, Gecode::IRT_LE}
-	};
+const std::map<Gecode::IntRelType, Gecode::IntRelType> RelationalFormulaTranslator::operator_inversions = {
+	{Gecode::IRT_EQ, Gecode::IRT_EQ}, {Gecode::IRT_NQ, Gecode::IRT_NQ}, {Gecode::IRT_LE, Gecode::IRT_GQ},
+	{Gecode::IRT_LQ, Gecode::IRT_GR}, {Gecode::IRT_GR, Gecode::IRT_LQ}, {Gecode::IRT_GQ, Gecode::IRT_LE}
+};
 
-	Gecode::IntRelType RelationalFormulaTranslator::invert_operator(Gecode::IntRelType op) {
-		return operator_inversions.at(op);
-	}
+Gecode::IntRelType RelationalFormulaTranslator::invert_operator(Gecode::IntRelType op) {
+	return operator_inversions.at(op);
+}
 
 
 void ConstantTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) const {
@@ -289,5 +289,16 @@ void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr form
 	Gecode::linear(csp, coefficients, variables, Gecode::IRT_EQ, 0, Gecode::ICL_DOM);
 }
 
+void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const {
+	// Register possible nested constraints recursively by calling the parent registrar
+	AtomicFormulaTranslator::registerConstraints(formula, csp, translator);
+
+	// We post an extensional constraint on the CSP variables modeling the value of each of the subterms formula
+	Gecode::IntVarArgs variables = translator.resolveVariables(formula->getSubterms(), CSPVariableType::Input, csp);
+	Gecode::TupleSet extension = Helper::extensionalize(_symbol);
+	Gecode::extensional(csp, variables, extension);
+	
+	FDEBUG("translation", "Registered a Gecode extensional constraint of arity " << extension.arity() << " and size " << extension.tuples() << " for formula \"" << *formula << ":\n" << print::extensional(variables, extension));
+}
 
 } } // namespaces

@@ -104,6 +104,28 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr t
 	return tuples;
 }
 
+Gecode::TupleSet Helper::extensionalize(const std::string& symbol) {
+	const ProblemInfo& info = Problem::getInfo();
+	
+	auto f_data = info.getFunctionData(info.getFunctionId(symbol));
+	const Signature& signature = f_data.getSignature();
+	const auto& functor = f_data.getFunction();
+
+	Gecode::TupleSet tuples;
+
+	utils::cartesian_iterator all_values(info.getSignatureValues(signature));
+	for (; !all_values.ended(); ++all_values) {
+		try {
+			if (functor(*all_values)) {
+				tuples.add(Gecode::IntArgs(*all_values));
+			}
+		} catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
+	}
+
+	tuples.finalize();
+	return tuples;
+}
+
 void Helper::postBranchingStrategy(SimpleCSP& csp) {
 	branch(csp, csp._intvars, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 	branch(csp, csp._boolvars, INT_VAR_SIZE_MIN(), INT_VAL_MIN());

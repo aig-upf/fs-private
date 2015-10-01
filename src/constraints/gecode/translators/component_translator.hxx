@@ -171,4 +171,14 @@ public:
 	void registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const;
 };
 
+class ExtensionalTranslator : public AtomicFormulaTranslator {
+public:
+	ExtensionalTranslator(const std::string& symbol) : _symbol(symbol) {}
+
+	void registerConstraints(const fs::AtomicFormula::cptr formula, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) const;
+
+protected:
+	const std::string _symbol;
+};
+
 } } // namespaces
