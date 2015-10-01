@@ -51,10 +51,11 @@ std::ostream& Problem::print(std::ostream& os) const {
 	}
 	os << std::endl;
 	
-	os << "Ground Actions" << std::endl << "------------------" << std::endl;
-	for (const GroundAction::cptr elem:_ground) {
-		os << *elem << std::endl;
-	}
+	os << "Ground Actions: " << _ground.size();
+	// os << std::endl << "------------------" << std::endl;
+	// for (const GroundAction::cptr elem:_ground) {
+	// 	os << *elem << std::endl;
+	// }
 	os << std::endl;
 	
 	return os;
