@@ -107,11 +107,12 @@ bool AlldiffFormula::_satisfied(const ObjectIdxVector& values) const {
 }
 
 
-
 bool SumFormula::_satisfied(const ObjectIdxVector& values) const {
-	int expected_sum_value = values.back();
-	int total_sum  = std::accumulate(values.begin(), values.end(), 0);
-	return expected_sum_value*2 == total_sum;
+	// sum(x_1, ..., x_n) meaning x_1 + ... + x_{n-1} = x_n
+	assert(values.size() > 1);
+	int expected_sum = values.back();
+	int addends_sum  = std::accumulate(values.begin(), values.end() - 1, 0);
+	return addends_sum == expected_sum;
 }
 
 
