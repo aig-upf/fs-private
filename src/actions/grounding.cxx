@@ -58,13 +58,13 @@ std::vector<GroundAction::cptr> ActionGrounder::ground(const std::vector<ActionS
 }
 
 void ActionGrounder::ground(ActionSchema::cptr schema, const std::vector<ObjectIdx>& binding, const ProblemInfo& info, std::vector<GroundAction::cptr>& grounded) {
-	FINFO("grounding", "Binding: " << print::binding(binding, schema->getSignature()));
+	FDEBUG("grounding", "Binding: " << print::binding(binding, schema->getSignature()));
 	GroundAction* ground = schema->process(binding, info);
 	if (ground) {
-		FINFO("grounding", "Binding " << print::binding(binding, schema->getSignature()) << " generated grounded action:\n" << *ground);
+		FDEBUG("grounding", "Binding " << print::binding(binding, schema->getSignature()) << " generated grounded action:\n" << *ground);
 		grounded.push_back(ground);
 	} else {
-		FINFO("grounding", "Binding " << print::binding(binding, schema->getSignature()) << " generates a statically non-applicable grounded action");
+		FDEBUG("grounding", "Binding " << print::binding(binding, schema->getSignature()) << " generates a statically non-applicable grounded action");
 	}	
 }
 
