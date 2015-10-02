@@ -36,7 +36,7 @@ float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Pro
 	}
 	plan_out.close();
 
-	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated / total_time) : "-";
+	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated / total_time) : "0";
 	json_out << "{" << std::endl;
 	json_out << "\t\"search_time\": " << total_time << "," << std::endl;
 	json_out << "\t\"generated\": " << engine.generated << "," << std::endl;
