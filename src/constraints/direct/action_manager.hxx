@@ -25,10 +25,10 @@ public:
 	
 	const GroundAction& getAction() const { return _action; }
 
-	virtual void process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg);
+	void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, RPGData& rpg);
 
 	//!
-	virtual bool checkPreconditionApplicability(const DomainMap& domains) const;
+	bool checkPreconditionApplicability(const DomainMap& domains) const;
 
 protected:
 	

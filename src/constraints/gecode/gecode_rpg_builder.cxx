@@ -6,6 +6,7 @@
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
 #include <state.hxx>
+#include <heuristics/relaxed_plan/gecode_rpg_layer.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -22,7 +23,7 @@ GecodeRPGBuilder::~GecodeRPGBuilder() {
 	delete _state_constraint_handler;
 }
 
-FilteringOutput GecodeRPGBuilder::pruneUsingStateConstraints(RelaxedState& layer) const {
+FilteringOutput GecodeRPGBuilder::pruneUsingStateConstraints(GecodeRPGLayer& layer) const {
 	if (!_state_constraint_handler) return FilteringOutput::Unpruned;
 	
 	SimpleCSP* csp = _state_constraint_handler->instantiate_csp(layer);

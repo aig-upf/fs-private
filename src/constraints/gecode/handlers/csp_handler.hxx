@@ -11,7 +11,7 @@
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
-	class GroundAction; class RPGData; class RelaxedState;
+	class GroundAction; class RPGData; class GecodeRPGLayer;
 }
 
 
@@ -66,7 +66,7 @@ public:
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const RelaxedState& layer) const;
+	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const;
@@ -104,7 +104,7 @@ public:
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const RelaxedState& layer) const;
+	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
 
 	const GroundAction& getAction() const { return _action; }
 
@@ -130,9 +130,6 @@ protected:
 
 	// Constraint registration methods
 	void registerEffectConstraints(const fs::ActionEffect::cptr effect);
-
-	//! Prevents the affected variables to take values already achieved in the previous layer
-	// void addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp);
 	
 	//! Preprocess the action to store the IDs of direct and indirect state variables
 	void index_scopes();

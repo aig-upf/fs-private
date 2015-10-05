@@ -47,7 +47,7 @@ VariableIdxVector DirectActionManager::extractAllRelevant() const {
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 
-void DirectActionManager::process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg) {
+void DirectActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, const GecodeRPGLayer& gecode_layer, fs0::RPGData& rpg) {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
 	DomainMap actionProjection = Projections::projectCopy(layer, _allRelevant);

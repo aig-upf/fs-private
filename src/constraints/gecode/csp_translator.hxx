@@ -17,7 +17,7 @@ namespace fs = fs0::language::fstrips;
 
 
 namespace fs0 {
-	class RelaxedState;
+	class GecodeRPGLayer;
 }
 
 namespace fs0 { namespace gecode {
@@ -91,7 +91,7 @@ public:
 
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
-	void updateStateVariableDomains(SimpleCSP& csp, const RelaxedState& layer) const;
+	void updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const;
 
 	//! Returns the CSP variable that corresponds to the given input state variable, in the given CSP.
 	const Gecode::IntVar&  resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {

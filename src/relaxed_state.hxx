@@ -43,7 +43,7 @@ public:
 		return possibleValues->find(fact.getValue()) != possibleValues->end();
 	}
 	
-	DomainVector& getDomains() { return _domains; }
+	const DomainVector& getDomains() const { return _domains; }
 	
 	//! Const and non-const accessors
 	const DomainPtr& getValues(const VariableIdx& variable) const { return _domains.at(variable); }

@@ -9,6 +9,7 @@
 #include <utils/printers/actions.hxx>
 #include <relaxed_state.hxx>
 #include <heuristics/relaxed_plan/action_managers/base_action_manager.hxx>
+#include "gecode_rpg_layer.hxx"
 #include <state_model.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
@@ -40,11 +41,16 @@ long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty),
 	// or we get to a goal graph layer.
 	while(true) {
+		
+		GecodeRPGLayer gecode_layer(relaxed);
+		
 		// Apply all the actions to the RPG layer
 		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
 			std::shared_ptr<BaseActionManager> manager = _managers[idx];
 			FFDEBUG("heuristic", "Processing ground action #" << idx << ": " << print::action_name(manager->getAction()));
-			manager->process(idx, relaxed, rpgData);
+			
+			
+			manager->process(idx, relaxed, gecode_layer, rpgData);
 		}
 		
 		FFDEBUG("heuristic", "The last layer of the RPG contains " << rpgData.getNovelAtoms().size() << " novel atoms." << std::endl << rpgData);

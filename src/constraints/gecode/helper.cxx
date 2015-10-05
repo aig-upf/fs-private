@@ -56,21 +56,18 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool n
 	}
 }
 
-void Helper::constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain, bool include_dont_care) {
+void Helper::constrainCSPVariable(fs0::gecode::SimpleCSP& csp, unsigned int csp_variable_id, const IntSet& domain, bool include_dont_care) {
 	const Gecode::IntVar& variable = csp._intvars[csp_variable_id];
-
-	if (!include_dont_care && domain->size() == 1 ) { // The simplest case
-		Gecode::rel(csp, variable, Gecode::IRT_EQ, *(domain->cbegin()));
+	
+	if (include_dont_care) {
+		assert(0); // TODO 
+// 		Gecode::extensional(csp, IntVarArgs() << variable, buildTupleset(*domain, include_dont_care));
+		Gecode::dom(csp, variable, domain);
 	} else {
-		ObjectIdx lb = *(domain->cbegin());
-		ObjectIdx ub = *(domain->crbegin());
-
-		if (!include_dont_care && domain->size() == static_cast<unsigned>(ub - lb) + 1 ) { // MRJ: Check this is a safe assumption - We can guarantee it is unsigned, since the elements in the domain are ordered
-			Gecode::dom(csp, variable, lb, ub); // MRJ: lb <= variable <= ub
-		} else { // TODO - MRJ: worst case (performance wise) yet I think it can be optimised in a number of ways
-			// We constraint the variable through an extensional constraint
-			Gecode::extensional(csp, IntVarArgs() << variable, buildTupleset(*domain, include_dont_care));
+		if (domain.size() ==  static_cast<unsigned>(domain.max() - domain.min()) + 1) { // A micro-optimization
+			Gecode::dom(csp, variable, domain.min(), domain.max());
 		}
+		Gecode::dom(csp, variable, domain);
 	}
 }
 

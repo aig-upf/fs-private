@@ -5,7 +5,7 @@
 #include <heuristics/relaxed_plan/action_managers/base_action_manager.hxx>
 #include <constraints/gecode/handlers/csp_handler.hxx>
 
-namespace fs0 { class RPGData; }
+namespace fs0 { class RPGData; class GecodeRPGLayer; }
 
 namespace fs0 { namespace gecode {
 
@@ -17,7 +17,7 @@ public:
 	~GecodeActionManager() { delete _handler; }
 
 	//!
-	void process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg);
+	void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, RPGData& rpg);
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const;

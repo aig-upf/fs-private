@@ -3,9 +3,9 @@
 #include <problem_info.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
-#include "translators/nested_fluent.hxx"
-#include <relaxed_state.hxx>
+#include <constraints/gecode/translators/nested_fluent.hxx>
 #include <utils/logging.hxx>
+#include <heuristics/relaxed_plan/gecode_rpg_layer.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -182,21 +182,19 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 	return os;
 }
 
-void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const RelaxedState& layer) const {
+void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
 	// Iterate over all the input state variables and constrain them accodrding to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
 		unsigned csp_variable_id = it.second;
-		const DomainPtr& domain = layer.getValues(variable);
-		Helper::constrainCSPVariable(csp, csp_variable_id, domain);
+		Helper::constrainCSPVariable(csp, csp_variable_id, layer.get_domain(variable));
 	}
 
 	// Now constrain the derived variables, but not excluding the DONT_CARE value
 	for (const auto& it:_derived) {
 		VariableIdx variable = it.first;
 		unsigned csp_variable_id = it.second;
-		const DomainPtr& domain = layer.getValues(variable);
-		Helper::constrainCSPVariable(csp, csp_variable_id, domain, true);
+		Helper::constrainCSPVariable(csp, csp_variable_id, layer.get_domain(variable), true);
 	}
 }
 

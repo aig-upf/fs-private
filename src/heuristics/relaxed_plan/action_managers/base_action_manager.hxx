@@ -5,7 +5,7 @@
 
 namespace fs0 {
 
-class RPGData; class RelaxedState; class GroundAction;
+class RPGData; class RelaxedState; class GroundAction; class GecodeRPGLayer;
 
 //! Base interface for an action manager.
 class BaseActionManager {
@@ -15,7 +15,7 @@ public:
 	virtual ~BaseActionManager() {};
 
 	//! Process the given action in the given layer of the RPG, adding newly-achievable atoms and their supoprts to the rpg data structure.
-	virtual void process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg) = 0;
+	virtual void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, RPGData& rpg) = 0;
 	
 	virtual const GroundAction& getAction() const = 0;
 	

@@ -10,7 +10,7 @@
 
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { class State; class RelaxedState; }
+namespace fs0 { class State; class RelaxedState; class GecodeRPGLayer; }
 
 namespace fs0 { namespace gecode {
 	
@@ -25,7 +25,7 @@ public:
 	~GecodeRPGBuilder();
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
-	FilteringOutput pruneUsingStateConstraints(RelaxedState& state) const;
+	FilteringOutput pruneUsingStateConstraints(GecodeRPGLayer& state) const;
 	
 	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
 	//! Besides, return the causes of the goal to be later processed by the RPG heuristic backchaining procedure.

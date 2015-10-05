@@ -73,7 +73,7 @@ void GecodeActionCSPHandler::index_scopes() {
 }
 
 
-SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const RelaxedState& layer) const {
+SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
 	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(_base_csp.clone());
 	assert(csp);
 	_translator.updateStateVariableDomains(*csp, layer);
@@ -174,16 +174,5 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 	FDEBUG("main", "Solving the Action CSP completely produced " << num_solutions << " solutions"  << std::endl);
 }
 
-
-
-/*
-void GecodeActionCSPHandler::addNoveltyConstraints(const VariableIdx variable, const RelaxedState& layer, SimpleCSP& csp) {
-	// TODO - This could be built incrementally to incorporate values added in this layer by previous actions in the iteration!
-	auto& csp_var = translator.resolveVariable(csp, variable, CSPVariableType::Output);
-	for (ObjectIdx value:*(layer.getValues(variable))) {
-		rel( csp, csp_var, IRT_NQ, value ); // v != value
-	}
-}
-*/
 
 } } // namespaces

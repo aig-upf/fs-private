@@ -35,7 +35,7 @@ public:
 	static Gecode::BoolVar createBoolVariable(Gecode::Space& csp);
 	
 	//! Constrains the given CSP variable to have values in the given domain
-	static void constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const DomainPtr& domain, bool include_dont_care = false);
+	static void constrainCSPVariable(SimpleCSP& csp, unsigned csp_variable_id, const Gecode::IntSet& domain, bool include_dont_care = false);
 	
 	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
 	//! that underlies the static term in all interpretations.
