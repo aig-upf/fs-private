@@ -182,8 +182,8 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 	return os;
 }
 
-void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
-	// Iterate over all the input state variables and constrain them accodrding to the RPG layer
+void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const {
+	// Iterate over all the input state variables and constrain them according to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
 		unsigned csp_variable_id = it.second;

@@ -26,10 +26,11 @@ public:
 
 protected:
 	//! This keeps a reference to the novel atoms that have been inserted in the most recent layer of the RPG.
-	std::vector<const Atom*> novelAtoms;
+	std::vector<std::vector<ObjectIdx>> _novel;
+	unsigned _num_novel;
 
 	//! The current number of layers.
-	unsigned currentLayerIdx;
+	unsigned _current_layer;
 
 	/**
 	 * A map mapping every atom X=x reached in the RPG layer represented by this changeset to a pair < L, A, V >, where:
@@ -46,8 +47,9 @@ public:
 	typedef std::shared_ptr<RPGData> ptr;
 
 	RPGData(const RelaxedState& referenceState) :
-		novelAtoms(),
-		currentLayerIdx(0),
+		_novel(referenceState.width()),
+		_num_novel(0),
+		_current_layer(0),
 		_effects(),
 		_referenceState(referenceState)
 	{};
@@ -55,15 +57,17 @@ public:
 	~RPGData() {};
 
 	//! Returns the number of layers of the RPG.
-	unsigned getNumLayers() const  {return currentLayerIdx + 1; } // 0-indexed!
+	unsigned getNumLayers() const  {return _current_layer + 1; } // 0-indexed!
 	
 	//! Returns the current layer index
-	unsigned getCurrentLayerIdx() const  {return currentLayerIdx; }
+	unsigned getCurrentLayerIdx() const  {return _current_layer; }
 
 	//! Closes the last RPG layer and opens up a new one
 	void advanceLayer() {
-		novelAtoms.clear();
-		++currentLayerIdx;
+		_num_novel= 0;
+		_novel = std::vector<std::vector<ObjectIdx>>(_referenceState.width());
+		
+		++_current_layer;
 	}
 
 	//! Returns the support for the given atom
@@ -75,13 +79,18 @@ public:
 
 	//! Accumulates all the atoms contained *in the last layer* of the given RPG into the given relaxed state.
 	static void accumulate(RelaxedState& state, const RPGData& rpg) {
-		for (const Atom* atom:rpg.novelAtoms) {
-			state.set(*atom);
+		for (VariableIdx variable = 0; variable < rpg._novel.size(); ++variable) {
+			for (ObjectIdx value:rpg._novel[variable])  {
+				state.set(variable, value);
+			}
 		}
 	}
 
-	//! Get the set of new atoms in the last RPG layer
-	const std::vector<const Atom*>& getNovelAtoms() const { return novelAtoms; }
+	//! Get the number of novel atoms in the last layer of the RPG
+	unsigned getNumNovelAtoms() const { return _num_novel; }
+	
+	const std::vector<std::vector<ObjectIdx>>& getNovelAtoms() const { return _novel; }
+
 
 	//! Returns true iff the given atom is not already tracked by the RPG. In that case, it returns an insertion hint too.
 	std::pair<bool, SupportMap::iterator> getInsertionHint(const Atom& atom) {
@@ -96,13 +105,9 @@ public:
 
 	//! The version with hint assumes that the atom needs to be inserted.
 	void add(const Atom& atom, ActionIdx action, Atom::vctrp support, SupportMap::iterator hint) {
-		// updateEffectMapSimple(fact, RelaxedPlanExtractor::pruneSeedSupporters(extraCauses, _seed));
-		auto it = _effects.insert(hint, std::make_pair(atom, std::make_tuple(currentLayerIdx, action, support)));
-		
-		// Keep a pointer to the inserted atom. Since the current strategy guarantees that we only insert one atom the first time we encounter it,
-		// we can be sure that pointers in the 'novelAtoms' will always be valid and that no pointer will be intended to point to the same atom twice.
-		// BEWARE that if we change the update strategy, this might no longer hold.
-		novelAtoms.push_back(&(it->first));
+		_effects.insert(hint, std::make_pair(atom, std::make_tuple(_current_layer, action, support)));
+		_novel[atom.getVariable()].push_back(atom.getValue());
+		++_num_novel;
 	}
 	
 	//! Add an atom to the set of newly-reached atoms, only if it is indeed new.

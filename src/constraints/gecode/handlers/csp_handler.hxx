@@ -66,7 +66,7 @@ public:
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
+	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const;
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const;
@@ -104,7 +104,7 @@ public:
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
+	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const;
 
 	const GroundAction& getAction() const { return _action; }
 

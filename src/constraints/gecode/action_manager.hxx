@@ -17,7 +17,7 @@ public:
 	~GecodeActionManager() { delete _handler; }
 
 	//!
-	void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, RPGData& rpg);
+	void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, RPGData& rpg);
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const;

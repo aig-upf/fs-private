@@ -25,7 +25,7 @@ public:
 	
 	const GroundAction& getAction() const { return _action; }
 
-	void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, RPGData& rpg);
+	void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, RPGData& rpg);
 
 	//!
 	bool checkPreconditionApplicability(const DomainMap& domains) const;

@@ -14,10 +14,10 @@ GecodeActionManager::ptr GecodeActionManager::create(const GroundAction& action)
 	return new GecodeActionManager(csp_handler);
 }
 
-void GecodeActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, const GecodeRPGLayer& gecode_layer, fs0::RPGData& rpg) {
+void GecodeActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, const fs0::GecodeRPGLayer& gecode_layer, const fs0::GecodeRPGLayer& delta_layer, fs0::RPGData& rpg) {
 	FDEBUG("main", "Processing action " << _handler->getAction());
 
-	SimpleCSP* csp = _handler->instantiate_csp(gecode_layer);
+	SimpleCSP* csp = _handler->instantiate_csp(gecode_layer, delta_layer);
 
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 

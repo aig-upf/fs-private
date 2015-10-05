@@ -6,6 +6,13 @@
 
 namespace fs0 {
 
+GecodeRPGLayer::GecodeRPGLayer(const std::vector<std::vector<int>>& domains) {
+	for (VariableIdx variable = 0; variable < domains.size(); ++variable) {
+		const auto& domain = domains[variable];
+		_domains.push_back(Gecode::IntSet(domain.data(), domain.size()));
+	}
+}
+
 GecodeRPGLayer::GecodeRPGLayer(const RelaxedState& layer) {
 	auto layer_domains = layer.getDomains();
 	for (auto layer_domain:layer_domains) {

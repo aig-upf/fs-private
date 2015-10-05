@@ -73,7 +73,7 @@ void GecodeActionCSPHandler::index_scopes() {
 }
 
 
-SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
+SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const {
 	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(_base_csp.clone());
 	assert(csp);
 	_translator.updateStateVariableDomains(*csp, layer);

@@ -34,8 +34,12 @@ public:
 	RelaxedState& operator=(const RelaxedState& rhs) = delete;
 	bool operator==(const RelaxedState& rhs) = delete;
 	
-	void set(const Atom& fact) {
-		_domains.at(fact.getVariable())->insert(fact.getValue());
+	void set(const Atom& atom) {
+		set(atom.getVariable(), atom.getValue());
+	}
+	
+	void set(VariableIdx variable, ObjectIdx value) {
+		_domains.at(variable)->insert(value);
 	}
 	
 	bool contains(const Atom& fact) const {
@@ -57,6 +61,9 @@ public:
 		}
 		return total;
 	}
+	
+	//!
+	unsigned width() const { return _domains.size(); }
 	
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const RelaxedState&  state) { return state.print(os); }

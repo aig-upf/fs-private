@@ -15,13 +15,14 @@ protected:
 	std::vector<Gecode::IntSet> _domains;
 
 public:
-	GecodeRPGLayer(const RelaxedState& layer);
+	explicit GecodeRPGLayer(const std::vector<std::vector<int>>& domains);
+	explicit GecodeRPGLayer(const RelaxedState& layer);
 	
 	const Gecode::IntSet& get_domain(VariableIdx variable) const { return _domains.at(variable); }
 
 	//! The only way to construct a relaxed state is from a non-relaxed state.
 	GecodeRPGLayer(const GecodeRPGLayer& state)  = delete;
-	GecodeRPGLayer& operator=(const GecodeRPGLayer& rhs) = delete;
+// 	GecodeRPGLayer& operator=(const GecodeRPGLayer& rhs) = delete;
 	bool operator==(const GecodeRPGLayer& rhs) = delete;
 	
 	//! Prints a representation of the state to the given stream.
