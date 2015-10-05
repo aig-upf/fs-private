@@ -13,7 +13,7 @@ public:
 	virtual ~ConstrainedHMaxHeuristic() {}
 	
 	//! The hmax heuristic only cares about the size of the RP graph.
-	long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpg);
+	long computeHeuristic(const State& seed, const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, const RPGData& rpg);
 };
 
 } // namespaces

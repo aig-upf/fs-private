@@ -25,14 +25,14 @@ public:
 	~GecodeRPGBuilder();
 	
 	//! Prunes the domains contained in the state by filtering them with the state constraints.
-	FilteringOutput pruneUsingStateConstraints(GecodeRPGLayer& state) const;
+	// FilteringOutput pruneUsingStateConstraints(GecodeRPGLayer& state) const;
 	
 	//! Returns true iff the given RelaxedState is a goal according to the goal, state and goal constraints.
 	//! Besides, return the causes of the goal to be later processed by the RPG heuristic backchaining procedure.
-	bool isGoal(const State& seed, const RelaxedState& state, Atom::vctr& causes) const;
+	bool isGoal(const State& seed, const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, Atom::vctr& causes) const;
 	
 	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
-	bool isGoal(const RelaxedState& state) const;
+	bool isGoal(const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer) const;
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeRPGBuilder& o) { return o.print(os); }

@@ -43,7 +43,7 @@ void ConstantTermTranslator::registerVariables(const fs::Term::cptr term, CSPVar
 void StateVariableTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) const {
 	auto variable = dynamic_cast<fs::StateVariable::cptr>(term);
 	assert(variable);
-	translator.registerStateVariable(variable, type, csp, intvars);
+	translator.registerStateVariable(variable, type, csp, intvars, boolvars);
 }
 
 NestedTermTranslator::~NestedTermTranslator() {
@@ -79,7 +79,7 @@ void FluentNestedTermTranslator::do_root_registration(const fs::NestedTerm::cptr
 	for (; !it.ended(); ++it) {
 		VariableIdx variable = it.getDerivedStateVariable();
 		FDEBUG( "translation", "Registering derived state variable " << Problem::getInfo().getVariableName(variable) << std::endl);
-		translator.registerDerivedStateVariable(variable, type, csp, intvars);
+		translator.registerDerivedStateVariable(variable, type, csp, intvars, boolvars);
 	}
 	
 	// We also register the pointer variable in the csp

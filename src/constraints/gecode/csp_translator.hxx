@@ -64,10 +64,10 @@ public:
 	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)
 	bool registerConstant(fs::Constant::cptr constant, SimpleCSP& csp, Gecode::IntVarArgs& variables);
 	
-	bool registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
+	bool registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
 	
 	//! Register a state variable which is derived from a nested fluent
-	bool registerDerivedStateVariable(VariableIdx variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
+	bool registerDerivedStateVariable(VariableIdx variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
 	
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
 	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, TypeIdx domain_type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
@@ -97,7 +97,7 @@ public:
 	const Gecode::IntVar&  resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);
 		if (it == _input_state_variables.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered input state variable");
-		return csp._intvars[it->second];
+		return csp._intvars[it->second.first];
 	}
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
@@ -121,11 +121,11 @@ public:
 	const Gecode::IntVar& resolveDerivedStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
 		const auto& it = _derived.find(variable);
 		if (it == _derived.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered derived state variable");
-		return csp._intvars[it->second];
+		return csp._intvars[it->second.first];
 	}
 	
 
-	const std::unordered_map<VariableIdx, unsigned>& getAllInputVariables() const { return _input_state_variables; }
+	const std::unordered_map<VariableIdx, std::pair<unsigned, unsigned>>& getAllInputVariables() const { return _input_state_variables; }
 	
 	//! Returns a partial assignment of values to the input state variables of the CSP managed by this translator, built from the given solution.
 	PartialAssignment buildAssignment(SimpleCSP& solution) const;
@@ -138,7 +138,7 @@ protected:
 	std::unordered_map<TranslationKey, unsigned> _registered;
 	
 	//! A map from terms representing derived state variables to the ID of their corresponding CSP variable
-	std::unordered_map<VariableIdx, unsigned> _derived;
+	std::unordered_map<VariableIdx, std::pair<unsigned, unsigned>> _derived;
 	
 	//! A set marking all terms whose corresponding constraints have already been posted.
 	std::unordered_set<TranslationKey> _posted;
@@ -146,7 +146,7 @@ protected:
 	//! Some data structures to keep track of all registered state variables, so that we can update their domains and parse their values efficiently.
 	//! In particular, these maps the index of state variables that have been registered under different input/output roles to
 	//! the ID of the corresponding CSP variable
-	std::unordered_map<VariableIdx, unsigned> _input_state_variables;
+	std::unordered_map<VariableIdx, std::pair<unsigned, unsigned>> _input_state_variables;
 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
 
 	//! A table keeping track of auxiliary data for the element constraint that is necessary for the given term / type.

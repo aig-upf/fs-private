@@ -13,7 +13,7 @@
 	"precondition_resolution": "full",
 
 	"goal_manager": "gecode",
-	"goal_resolution": "approximate",
+	"goal_resolution": "full",
 	
 	"heuristics": {
 		"plan_extraction": "propositional"

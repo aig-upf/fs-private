@@ -44,7 +44,7 @@ FilteringOutput DirectRPGBuilder::pruneUsingStateConstraints(RelaxedState& state
 	return _stateConstraintsHandler.filter(domains);
 }
 
-bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, Atom::vctr& causes) const {
+bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, Atom::vctr& causes) const {
 	assert(causes.empty());
 	DomainMap domains = Projections::projectCopy(state, _goalConstraintsHandler.getAllRelevantVariables());  // This makes a copy of the domain.
 	if (!checkGoal(domains)) return false;
@@ -58,7 +58,7 @@ bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, Atom
 	return true;
 }
 
-bool DirectRPGBuilder::isGoal(const RelaxedState& state) const {
+bool DirectRPGBuilder::isGoal(const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer) const {
 	DomainMap domains = Projections::projectCopy(state, _goalConstraintsHandler.getAllRelevantVariables());  // This makes a copy of the domain.
 	return checkGoal(domains);
 }

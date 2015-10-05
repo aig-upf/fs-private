@@ -36,7 +36,7 @@ long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 	RelaxedState relaxed(seed);
 	RPGData rpgData(relaxed);
 	GecodeRPGLayer gecode_layer(relaxed);
-	GecodeRPGLayer delta_layer(rpgData.getNovelAtoms());
+	GecodeRPGLayer delta_layer(relaxed); // Initially all atoms are new
 	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
@@ -47,7 +47,7 @@ long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
 			std::shared_ptr<BaseActionManager> manager = _managers[idx];
 			FFDEBUG("heuristic", "Processing ground action #" << idx << ": " << print::action_name(manager->getAction()));
-			
+			FFDEBUG("heuristic", "Gecode and Delta Layers are: " << gecode_layer << ", " << delta_layer);
 			manager->process(idx, relaxed, gecode_layer, delta_layer, rpgData);
 		}
 		
@@ -58,13 +58,16 @@ long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 			return -1;
 		}
 		
-// 		unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
+		// 		unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
 		RPGData::accumulate(relaxed, rpgData);
-		rpgData.advanceLayer();
 		
 		gecode_layer = GecodeRPGLayer(relaxed);
+// 		std::cout << "Delta Layer: " << delta_layer << std::endl;
 		delta_layer = GecodeRPGLayer(rpgData.getNovelAtoms());
-
+// 		std::cout << "Delta Layer': " << delta_layer << std::endl;		
+		
+		
+		rpgData.advanceLayer();
 /*
  * RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THE CSP MODEL
  		
@@ -85,10 +88,10 @@ long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::evaluate(const State& seed) {
 }
 
 template <typename RPGBuilder>
-long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, const RPGData& rpgData) {
+long ConstrainedRelaxedPlanHeuristic<RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, const RPGData& rpg) {
 	Atom::vctr causes;
-	if (_builder->isGoal(seed, state, causes)) {
-		BaseRelaxedPlanExtractor* extractor = RelaxedPlanExtractorFactory::create(seed, rpgData);
+	if (_builder->isGoal(seed, state, gecode_layer, delta_layer, causes)) {
+		BaseRelaxedPlanExtractor* extractor = RelaxedPlanExtractorFactory::create(seed, rpg);
 		long cost = extractor->computeRelaxedPlanCost(causes);
 		delete extractor;
 		return cost;

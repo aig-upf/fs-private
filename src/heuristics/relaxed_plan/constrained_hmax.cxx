@@ -15,8 +15,8 @@ ConstrainedHMaxHeuristic<RPGBuilder>::ConstrainedHMaxHeuristic(const FS0StateMod
 {}
 		
 template <typename RPGBuilder>
-long ConstrainedHMaxHeuristic<RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpg) {
-		if (this->_builder->isGoal(state)) return rpg.getCurrentLayerIdx();
+long ConstrainedHMaxHeuristic<RPGBuilder>::computeHeuristic(const State& seed, const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, const RPGData& rpg) {
+		if (this->_builder->isGoal(state, gecode_layer, delta_layer)) return rpg.getCurrentLayerIdx();
 		return -1;
 }
 

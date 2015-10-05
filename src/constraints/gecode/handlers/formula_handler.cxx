@@ -93,7 +93,7 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 	// First process the direct state variables
 	for (const auto& it:_translator.getAllInputVariables()) {
 		VariableIdx planning_variable = it.first;
-		const Gecode::IntVar& csp_var = csp->_intvars[it.second];
+		const Gecode::IntVar& csp_var = csp->_intvars[it.second.first];
 		IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
 		assert(values()); // Otherwise the CSP would be inconsistent!
 		

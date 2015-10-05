@@ -5,7 +5,7 @@
 
 namespace fs0 {
 
-class GroundAction; class FS0StateModel; class Problem; class State; class RelaxedState; class RPGData; class BaseActionManager;
+class GroundAction; class FS0StateModel; class Problem; class State; class RelaxedState; class RPGData; class BaseActionManager; class GecodeRPGLayer;
 
 template <typename RPGBuilder>
 class ConstrainedRelaxedPlanHeuristic {
@@ -22,7 +22,7 @@ public:
 	//! The computation of the heuristic value. Returns -1 if the RPG layer encoded in the relaxed state is not a goal,
 	//! otherwise returns h_{FF}.
 	//! To be subclassed in other RPG-based heuristics such as h_max
-	virtual long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& rpgData);
+	virtual long computeHeuristic(const State& seed, const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, const RPGData& rpg);
 	
 protected:
 	//! The actual planning problem

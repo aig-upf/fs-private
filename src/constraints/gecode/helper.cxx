@@ -56,9 +56,7 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool n
 	}
 }
 
-void Helper::constrainCSPVariable(fs0::gecode::SimpleCSP& csp, unsigned int csp_variable_id, const IntSet& domain, bool include_dont_care) {
-	const Gecode::IntVar& variable = csp._intvars[csp_variable_id];
-	
+void Helper::constrainCSPVariable(fs0::gecode::SimpleCSP& csp, const Gecode::IntVar& variable, const IntSet& domain, bool include_dont_care) {
 	if (include_dont_care) {
 		assert(0); // TODO 
 // 		Gecode::extensional(csp, IntVarArgs() << variable, buildTupleset(*domain, include_dont_care));

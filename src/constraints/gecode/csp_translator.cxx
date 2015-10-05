@@ -37,7 +37,7 @@ bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant, 
 	return true;
 }
 
-bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
+bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
 	TranslationKey key(variable, type);
 	auto it = _registered.find(key);
 	if (it!=_registered.end()) return false; // The element was already registered
@@ -47,21 +47,24 @@ bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr 
 	//  TODO we need to think what to do in these cases where a derived state variable is also used as a primary state variable in some other expression.
 	assert(_derived.find(variable_id) == _derived.end());
 
-	unsigned id = variables.size();
-	variables << Helper::createPlanningVariable(csp, variable_id);
+	unsigned id = intvars.size();
+	intvars << Helper::createPlanningVariable(csp, variable_id);
+	
+	unsigned reified_id = boolvars.size();
+	boolvars << Helper::createBoolVariable(csp);
 
 	_registered.insert(it, std::make_pair(key, id));
 
 	// We now cache state variables in different data structures to allow for a more performant subsequent retrieval
 	if (type == CSPVariableType::Input) {
-		_input_state_variables.insert(std::make_pair(variable_id, id));
+		_input_state_variables.insert(std::make_pair(variable_id, std::make_pair(id, reified_id)));
 	} else if (type == CSPVariableType::Output) {
 		_output_state_variables.insert(std::make_pair(variable_id, id));
 	}
 	return true;
 }
 
-bool GecodeCSPVariableTranslator::registerDerivedStateVariable(VariableIdx variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables) {
+bool GecodeCSPVariableTranslator::registerDerivedStateVariable(VariableIdx variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
 	// TODO We need to check that the state variable wasn't alread registered as a primary state variable
 	auto sv = new StateVariable(variable);
 	assert(_registered.find(TranslationKey(sv, type)) == _registered.end());
@@ -72,10 +75,13 @@ bool GecodeCSPVariableTranslator::registerDerivedStateVariable(VariableIdx varia
 	assert(_derived.find(variable) == _derived.end());
 
 
-	unsigned id = variables.size();
-	variables << Helper::createPlanningVariable(csp, variable, true);
-
-	_derived.insert(std::make_pair(variable, id));
+	unsigned id = intvars.size();
+	intvars << Helper::createPlanningVariable(csp, variable, true);
+	
+	unsigned reified_id = boolvars.size();
+	boolvars << Helper::createBoolVariable(csp);
+	
+	_derived.insert(std::make_pair(variable, std::make_pair(id, reified_id)));
 	return true;
 }
 
@@ -168,7 +174,7 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 
 	os << std::endl << "Plus the following derived state variables: " << std::endl;
 	for (auto it:_derived) {
-		os << "\t " << info.getVariableName(it.first) << ": " << csp._intvars[it.second] << std::endl;
+		os << "\t " << info.getVariableName(it.first) << ": " << csp._intvars[it.second.first] << std::endl;
 	}
 
 	os << std::endl << "Plus \"index\" and reification variables for the following terms: " << std::endl;
@@ -183,26 +189,54 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 }
 
 void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const {
+	
+	Gecode::BoolVarArgs delta_reification_variables;
+
+	
 	// Iterate over all the input state variables and constrain them according to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
-		unsigned csp_variable_id = it.second;
-		Helper::constrainCSPVariable(csp, csp_variable_id, layer.get_domain(variable));
+		unsigned csp_variable_id = it.second.first;
+		unsigned reified_variable_id = it.second.second;
+		
+		const Gecode::IntVar& csp_variable = csp._intvars[csp_variable_id];
+		
+		Helper::constrainCSPVariable(csp, csp_variable, layer.get_domain(variable));
+		
+		// Post the "novelty constraint"
+		auto& novelty_reification_variable = csp._boolvars[reified_variable_id];
+		delta_reification_variables << novelty_reification_variable;
+		
+		Gecode::dom(csp, csp_variable, delta.get_domain(variable), novelty_reification_variable);
 	}
 
 	// Now constrain the derived variables, but not excluding the DONT_CARE value
 	for (const auto& it:_derived) {
 		VariableIdx variable = it.first;
-		unsigned csp_variable_id = it.second;
-		Helper::constrainCSPVariable(csp, csp_variable_id, layer.get_domain(variable), true);
+		unsigned csp_variable_id = it.second.first;
+		
+		unsigned reified_variable_id = it.second.second;
+		
+		const Gecode::IntVar& csp_variable = csp._intvars[csp_variable_id];
+
+		Helper::constrainCSPVariable(csp, csp_variable, layer.get_domain(variable), true);
+		
+		// Post the "novelty constraint"
+		auto& novelty_reification_variable = csp._boolvars[reified_variable_id];
+		delta_reification_variables << novelty_reification_variable;
+		assert(0); // Need to take the DONT_CARE hack into account
+		Gecode::dom(csp, csp_variable, delta.get_domain(variable), novelty_reification_variable);
 	}
+	
+	// Now post the global novelty constraint OR: X1 is new, or X2 is new, or...
+	Gecode::rel(csp, Gecode::BOT_OR, delta_reification_variables, 1);
 }
 
 PartialAssignment GecodeCSPVariableTranslator::buildAssignment(SimpleCSP& solution) const {
 	PartialAssignment assignment;
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
-		auto& csp_variable = solution._intvars[it.second];
+		auto& csp_variable = solution._intvars[it.second.first];
 		assignment.insert(std::make_pair(variable, csp_variable.val()));
 	}
 	return assignment;
