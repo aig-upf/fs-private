@@ -145,11 +145,7 @@ protected:
 	}
 	
 	long buildRelaxedPlan() {
-#ifndef DEBUG
-		return (long) supporters.size();
-#endif
-
-		FDEBUG("heuristic" , "Relaxed plan found with length " << supporters.size() << std::endl << SupportedPlanPrinter(supporters));
+		FFDEBUG("heuristic" , "Relaxed plan found with length " << supporters.size() << std::endl << SupportedPlanPrinter(supporters));
 		return (long) supporters.size();
 	}
 };
@@ -198,7 +194,7 @@ protected:
 
 		// Note that computing the relaxed heuristic by using some form of local consistency might yield plans that are not correct for the relaxation
 		// assert(ActionManager::checkRelaxedPlanSuccessful(Problem::getInstance(), plan, _seed));
-		FDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << PlanPrinter(plan));
+		FFDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << PlanPrinter(plan));
 
 		return (long) plan.size();
 	}

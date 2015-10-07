@@ -26,14 +26,14 @@ std::vector<std::shared_ptr<GecodeActionManager>> GecodeActionManager::create(co
 
 
 void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& layer, fs0::RPGData<GecodeRPGLayer>& rpg) const {
-	FDEBUG("main", "Processing action " << _handler->getAction());
+	FFDEBUG("main", "Processing action " << _handler->getAction());
 
 	SimpleCSP* csp = _handler->instantiate_csp(layer);
 
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 
 	if (!locallyConsistent) {
-		FDEBUG("main", "The action CSP is locally inconsistent: " << print::csp(_handler->getTranslator(), *csp));
+		FFDEBUG("main", "The action CSP is locally inconsistent: " << print::csp(_handler->getTranslator(), *csp));
 	} else {
 		if (true) {  // Solve the CSP completely
 			_handler->compute_support(csp, actionIdx, rpg);

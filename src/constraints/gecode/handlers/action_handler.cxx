@@ -75,8 +75,7 @@ void GecodeActionCSPHandler::index_scopes() {
 
 
 SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
-	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(_base_csp.clone());
-	assert(csp);
+	SimpleCSP* csp = static_cast<SimpleCSP::ptr>(_base_csp.clone());
 	_translator.updateStateVariableDomains(*csp, layer);
 	return csp;
 }
@@ -172,7 +171,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 		delete solution;
 	}
 
-	FDEBUG("main", "Solving the Action CSP completely produced " << num_solutions << " solutions"  << std::endl);
+	FFDEBUG("main", "Solving the Action CSP completely produced " << num_solutions << " solutions"  << std::endl);
 }
 
 

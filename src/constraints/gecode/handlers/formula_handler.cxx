@@ -32,7 +32,7 @@ GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const std::vector<AtomicFormula
 
 
 SimpleCSP::ptr GecodeFormulaCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
-	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(_base_csp.clone());
+	SimpleCSP* csp = static_cast<SimpleCSP::ptr>(_base_csp.clone());
 	_translator.updateStateVariableDomains(*csp, layer);
 	return csp;
 }

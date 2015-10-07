@@ -41,18 +41,18 @@ public:
 	//! Getter/setter for the associated ProblemInfo object.
 	void setProblemInfo(ProblemInfo* info) { _problemInfo = info; }
 	const ProblemInfo& getProblemInfo() const {
-		if (!_problemInfo) throw std::runtime_error("ProblemInfo object has not been set yet");
+		assert(_problemInfo);
 		return *_problemInfo;
 	}
 
 	static void setInstance(std::unique_ptr<Problem>&& problem) {
-		if (_instance) throw std::runtime_error("Problem instance has already been set");
+		assert(!_instance);
 		_instance = std::move(problem);
 	}
 	
 	//! const version of the singleton accessor
 	static const Problem& getInstance() {
-		if (!_instance) throw std::runtime_error("Problem has not been instantiated yet");
+		assert(_instance);
 		return *_instance;
 	}
 	
