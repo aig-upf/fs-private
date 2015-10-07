@@ -9,13 +9,17 @@
 		"tag": "gbfs_chff"
 	},
 	
-	"action_manager": "hybrid",
+	"csp_manager_comment": ["The CSP manager to use: either 'gecode', 'direct', 'or direct_if_possible'"],
+	"csp_manager": "gecode",
+	
+	"precondition_resolution_comment": ["Either 'full' or 'approximate': whether to fully or only approximately solve the action precondition CSPs"],
 	"precondition_resolution": "full",
-
-	"goal_manager": "gecode",
+	
+	"goal_resolution_comment": ["Either 'full' or 'approximate': whether to fully or only approximately solve the goal CSPs"],
 	"goal_resolution": "full",
 	
 	"heuristics": {
+		"plan_extraction_comment": ["Either 'propositional' or 'extended' - The type of plan extraction procedure"],
 		"plan_extraction": "propositional"
 	}
 }

@@ -16,11 +16,8 @@ public:
 	//! The type of relaxed plan extraction
 	enum class RPGExtractionType {Propositional, Supported};
 	
-	//! The type of action manager
-	enum class ActionManagerType {Gecode, Hybrid};
-	
-	//! The type of goal manager
-	enum class GoalManagerType {Gecode, Hybrid, Direct};
+	//! The type of CSP manager
+	enum class CSPManagerType {Gecode, Direct, DirectIfPossible};
 	
 	//! The possible types of CSP resolutions we consider
 	enum class CSPResolutionType {Full, Approximate};
@@ -49,9 +46,7 @@ protected:
 	
 	RPGExtractionType _rpg_extraction;
 	
-	ActionManagerType _action_manager;
-	
-	GoalManagerType _goal_manager;
+	CSPManagerType _csp_manager;
 	
 	CSPResolutionType _goal_resolution;
 	
@@ -66,8 +61,7 @@ public:
 	
 	const std::string& getEngineTag() const { return _engine_tag; }
 	const RPGExtractionType& getRPGExtractionType() const { return _rpg_extraction; }
-	const ActionManagerType& getActionManagerType() const { return _action_manager; }
-	const GoalManagerType& getGoalManagerType() const { return _goal_manager; }
+	const CSPManagerType& getCSPManagerType() const { return _csp_manager; }
 	const CSPResolutionType& getGoalResolutionType() const { return _goal_resolution; }
 	const CSPResolutionType& getActionPreconditionResolutionType() const { return _precondition_resolution; }
 

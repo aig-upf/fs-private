@@ -5,8 +5,10 @@
 #include <search/engines/iterated_width.hxx>
 #include <search/engines/breadth_first_search.hxx>
 #include "gbfs_novelty.hxx"
-#include <heuristics/relaxed_plan/constrained_relaxed_plan_heuristic.hxx>
-#include <heuristics/relaxed_plan/constrained_hmax.hxx>
+#include <heuristics/relaxed_plan/direct_crpg.hxx>
+#include <heuristics/relaxed_plan/direct_chmax.hxx>
+#include <heuristics/relaxed_plan/gecode_crpg.hxx>
+#include <heuristics/relaxed_plan/gecode_chmax.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 
@@ -21,8 +23,8 @@ EngineRegistry& EngineRegistry::instance() {
 
 EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search engines on the instantiation of the singleton
-	add("gbfs_chff",  new GBFSConstrainedHeuristicsCreator<ConstrainedRelaxedPlanHeuristic<GecodeRPGBuilder>, ConstrainedRelaxedPlanHeuristic<DirectRPGBuilder>>());
-	add("gbfs_chmax",  new GBFSConstrainedHeuristicsCreator<ConstrainedHMaxHeuristic<GecodeRPGBuilder>, ConstrainedHMaxHeuristic<DirectRPGBuilder>>());
+	add("gbfs_chff",  new GBFSConstrainedHeuristicsCreator<GecodeCRPG, DirectCRPG>());
+	add("gbfs_chmax",  new GBFSConstrainedHeuristicsCreator<GecodeCHMax, DirectCHMax>());
 	add("iterated_width",  new IteratedWidthEngineCreator());
 	add("gbfs_novelty",  new GBFSNoveltyEngineCreator());
 	add("breadth_first_search",  new BreadthFirstSearchEngineCreator());

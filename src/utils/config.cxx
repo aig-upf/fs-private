@@ -45,14 +45,11 @@ Config::Config(const std::string& filename)
 	
 	_engine_tag = getOption<std::string>("engine.tag");
 	
-	// Parse the type of relaxed plan extraction: propositional or supported
-	_rpg_extraction = parseOption<RPGExtractionType>(_root, "heuristics.plan_extraction", {{"propositional", RPGExtractionType::Propositional}, {"supported", RPGExtractionType::Supported}});
+	// Parse the type of relaxed plan extraction: propositional or extended
+	_rpg_extraction = parseOption<RPGExtractionType>(_root, "heuristics.plan_extraction", {{"propositional", RPGExtractionType::Propositional}, {"extended", RPGExtractionType::Supported}});
 	
-	// Parse the type of action manager: gecode or hybrid
-	_action_manager = parseOption<ActionManagerType>(_root, "action_manager", {{"hybrid", ActionManagerType::Hybrid}, {"gecode", ActionManagerType::Gecode}});
-	
-	// Parse the type of action manager: gecode, hybrid, direct
-	_goal_manager = parseOption<GoalManagerType>(_root, "goal_manager", {{"gecode", GoalManagerType::Gecode}, {"hybrid", GoalManagerType::Hybrid}, {"direct", GoalManagerType::Direct}});
+	// Parse the type of action manager: gecode, direct-if-possible, direct
+	_csp_manager = parseOption<CSPManagerType>(_root, "csp_manager", {{"gecode", CSPManagerType::Gecode}, {"direct_if_possible", CSPManagerType::DirectIfPossible}, {"direct", CSPManagerType::Direct}});
 	
 	_goal_resolution = parseOption<CSPResolutionType>(_root, "goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 	_precondition_resolution = parseOption<CSPResolutionType>(_root, "precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
@@ -64,7 +61,7 @@ Config::~Config() {}
 
 // Some basic checks for invalid combinations of configuration options
 void Config::validateConfig(const Config& config) {
-	if (config.getGoalManagerType() != GoalManagerType::Gecode && config.getGoalResolutionType() == CSPResolutionType::Full) {
+	if (config.getCSPManagerType() != CSPManagerType::Gecode && config.getGoalResolutionType() == CSPResolutionType::Full) {
 		throw InvalidConfiguration("Full Goal CSP resolution can only be performed with a Gecode Goal Manager");
 	}
 	
@@ -74,11 +71,10 @@ void Config::validateConfig(const Config& config) {
 }
 
 std::ostream& Config::print(std::ostream& os) const {
-	os << "Action Manager:\t\t" << ((_action_manager == ActionManagerType::Gecode) ? "Gecode" : "Hybrid") << std::endl;
 	os << "Action Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
-	os << "Goal Manager:\t\t" << (_goal_manager == GoalManagerType::Gecode ? "Gecode" : (_goal_manager == GoalManagerType::Hybrid ? "Hybrid" : "Direct")) << std::endl;
+	os << "CSP Manager:\t\t" << (_csp_manager == CSPManagerType::Gecode ? "Gecode" : (_csp_manager == CSPManagerType::DirectIfPossible ? "Direct-If-Possible" : "Direct")) << std::endl;
 	os << "Goal Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
-	os << "Plan Extraction:\t" << ((_rpg_extraction == RPGExtractionType::Propositional) ? "Propositional" : "Supported") << std::endl;
+	os << "Plan Extraction:\t" << ((_rpg_extraction == RPGExtractionType::Propositional) ? "Propositional" : "Extended") << std::endl;
 	return os;
 }
 

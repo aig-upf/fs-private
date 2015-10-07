@@ -8,10 +8,11 @@
 #include <constraints/direct/compiled.hxx>
 #include <constraints/direct/translators/translator.hxx>
 #include <utils/logging.hxx>
+#include <relaxed_state.hxx>
 
 namespace fs0 {
 
-DirectRPGBuilder::cptr DirectRPGBuilder::create(const std::vector<fs::AtomicFormula::cptr>& goalConditions, const std::vector<fs::AtomicFormula::cptr>& stateConstraints) {
+std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const std::vector<fs::AtomicFormula::cptr>& goalConditions, const std::vector<fs::AtomicFormula::cptr>& stateConstraints) {
 	auto directStateConstraints = DirectTranslator::generate(stateConstraints);
 	ConstraintCompiler::compileConstraints(directStateConstraints);
 	
@@ -19,7 +20,7 @@ DirectRPGBuilder::cptr DirectRPGBuilder::create(const std::vector<fs::AtomicForm
 	ConstraintCompiler::compileConstraints(directGoalConstraints);
 	
 	auto allGoalConstraints = Utils::merge(directGoalConstraints, directStateConstraints);
-	return new DirectRPGBuilder(std::move(allGoalConstraints), std::move(directStateConstraints));
+	return std::make_shared<DirectRPGBuilder>(std::move(allGoalConstraints), std::move(directStateConstraints));
 }
 	
 // Note that we use both types of constraints as goal constraints
@@ -44,7 +45,7 @@ FilteringOutput DirectRPGBuilder::pruneUsingStateConstraints(RelaxedState& state
 	return _stateConstraintsHandler.filter(domains);
 }
 
-bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, Atom::vctr& causes) const {
+bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, Atom::vctr& causes) const {
 	assert(causes.empty());
 	DomainMap domains = Projections::projectCopy(state, _goalConstraintsHandler.getAllRelevantVariables());  // This makes a copy of the domain.
 	if (!checkGoal(domains)) return false;
@@ -58,7 +59,7 @@ bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, cons
 	return true;
 }
 
-bool DirectRPGBuilder::isGoal(const RelaxedState& state, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer) const {
+bool DirectRPGBuilder::isGoal(const RelaxedState& state) const {
 	DomainMap domains = Projections::projectCopy(state, _goalConstraintsHandler.getAllRelevantVariables());  // This makes a copy of the domain.
 	return checkGoal(domains);
 }

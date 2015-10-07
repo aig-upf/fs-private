@@ -6,16 +6,17 @@
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <languages/fstrips/language.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 
 
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 {
-	class GroundAction; class RPGData; class GecodeRPGLayer;
-}
+namespace fs0 { class GroundAction; }
 
 
 namespace fs0 { namespace gecode {
+
+class GecodeRPGLayer;
 
 //! The base interface class for all gecode CSP handlers
 class GecodeCSPHandler {
@@ -66,16 +67,16 @@ public:
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const;
+	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
-	bool compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const;
+	bool compute_support(SimpleCSP* csp, std::vector<Atom>& support, const State& seed) const;
 
 	//! Simply checks if the given CSP has at least one solution
 	bool check_solution_exists(SimpleCSP* csp) const;
 
 	//! Recovers an approximate support for the goal
-	void recoverApproximateSupport(SimpleCSP* csp, Atom::vctr& support, const State& seed) const;
+	void recoverApproximateSupport(SimpleCSP* csp, std::vector<Atom>& support, const State& seed) const;
 
 
 protected:
@@ -104,11 +105,11 @@ public:
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const;
+	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
 
 	const GroundAction& getAction() const { return _action; }
 
-	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData& rpg) const;
+	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData<GecodeRPGLayer>& rpg) const;
 
 protected:
 	const GroundAction& _action;

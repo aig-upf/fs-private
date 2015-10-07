@@ -42,9 +42,9 @@ public:
 		_domains.at(variable)->insert(value);
 	}
 	
-	bool contains(const Atom& fact) const {
-		const auto& possibleValues = getValues(fact.getVariable());
-		return possibleValues->find(fact.getValue()) != possibleValues->end();
+	bool contains(const Atom& atom) const {
+		const auto& possibleValues = getValues(atom.getVariable());
+		return possibleValues->find(atom.getValue()) != possibleValues->end();
 	}
 	
 	const DomainVector& getDomains() const { return _domains; }
@@ -62,7 +62,7 @@ public:
 		return total;
 	}
 	
-	//!
+	//! Return the number of state variables handled by the layer
 	unsigned width() const { return _domains.size(); }
 	
 	//! Prints a representation of the state to the given stream.

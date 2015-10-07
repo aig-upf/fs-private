@@ -6,15 +6,15 @@
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
 #include <state.hxx>
-#include <heuristics/relaxed_plan/gecode_rpg_layer.hxx>
+#include <constraints/gecode/rpg_layer.hxx>
 
 
 namespace fs0 { namespace gecode {
 
-GecodeRPGBuilder::cptr GecodeRPGBuilder::create(const std::vector<AtomicFormula::cptr>& goal_conditions, const std::vector<AtomicFormula::cptr>& state_constraints) {
+std::shared_ptr<GecodeRPGBuilder> GecodeRPGBuilder::create(const std::vector<AtomicFormula::cptr>& goal_conditions, const std::vector<AtomicFormula::cptr>& state_constraints) {
 	auto goal_handler = new GecodeFormulaCSPHandler(Utils::merge(goal_conditions, state_constraints));
 	auto state_constraint_handler = state_constraints.empty() ? nullptr : new GecodeFormulaCSPHandler(state_constraints);
-	return new GecodeRPGBuilder(goal_handler, state_constraint_handler);
+	return std::make_shared<GecodeRPGBuilder>(goal_handler, state_constraint_handler);
 }
 	
 
@@ -38,19 +38,16 @@ FilteringOutput GecodeRPGBuilder::pruneUsingStateConstraints(GecodeRPGLayer& lay
 
 */
 //! Don't care about supports, etc.
-bool GecodeRPGBuilder::isGoal(const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer) const {
+bool GecodeRPGBuilder::isGoal(const GecodeRPGLayer& layer) const {
 	Atom::vctr dummy;
-	State dummy_state(0 ,dummy);
-	return isGoal(dummy_state, layer, gecode_layer, delta_layer, dummy);
+	State dummy_state(0, dummy);
+	return isGoal(dummy_state, layer, dummy);
 }
 
-bool GecodeRPGBuilder::isGoal(const State& seed, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, Atom::vctr& support) const {
+bool GecodeRPGBuilder::isGoal(const State& seed, const GecodeRPGLayer& layer, Atom::vctr& support) const {
 	assert(support.empty());
 	
-	FDEBUG("heuristic", "Checking goal with Gecode Layer: " << gecode_layer);
-	FDEBUG("heuristic", "Checking goal with Delta Layer: " << delta_layer);
-	
-	SimpleCSP* csp = _goal_handler->instantiate_csp(gecode_layer, delta_layer);
+	SimpleCSP* csp = _goal_handler->instantiate_csp(layer);
 	bool is_goal = false;
 	
 	if (csp->checkConsistency()) {
@@ -75,8 +72,6 @@ std::ostream& GecodeRPGBuilder::print(std::ostream& os) const {
 	os  << std::endl;
 	return os;
 }
-
-
 
 } } // namespaces
 

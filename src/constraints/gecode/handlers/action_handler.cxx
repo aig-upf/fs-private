@@ -2,6 +2,7 @@
 #include <constraints/gecode/handlers/csp_handler.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/helper.hxx>
+#include <constraints/gecode/rpg_layer.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/gecode.hxx>
@@ -73,10 +74,10 @@ void GecodeActionCSPHandler::index_scopes() {
 }
 
 
-SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const {
+SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
 	SimpleCSP* csp = dynamic_cast<SimpleCSP::ptr>(_base_csp.clone());
 	assert(csp);
-	_translator.updateStateVariableDomains(*csp, layer, delta);
+	_translator.updateStateVariableDomains(*csp, layer);
 	return csp;
 }
 
@@ -120,7 +121,7 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 }
 
 
-void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData& rpg) const {
+void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData<GecodeRPGLayer>& rpg) const {
 	unsigned num_solutions = 0;
 	DFS<SimpleCSP> engine(csp);
 

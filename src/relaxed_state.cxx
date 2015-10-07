@@ -19,10 +19,10 @@ bool RelaxedState::checkPointerOwnershipIsCorrect() const {
 }
 
 RelaxedState::RelaxedState(const State& state) {
-	_domains.reserve(state._values.size());
+	_domains.reserve(state.numAtoms());
 	
 	// For each vector index, we construct a new domain containing only the value from the non-relaxed state.
-	for (ObjectIdx value:state._values) {
+	for (ObjectIdx value:state.getValues()) {
 		DomainPtr domain = std::make_shared<Domain>();
 		domain->insert(value);
 		_domains.push_back(domain);

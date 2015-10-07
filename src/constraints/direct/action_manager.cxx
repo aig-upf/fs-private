@@ -9,10 +9,23 @@
 #include <utils/projections.hxx>
 #include <utils/logging.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <relaxed_state.hxx>
 
 namespace fs0 {
 
-DirectActionManager* DirectActionManager::create(const GroundAction& action) {
+std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(const std::vector<GroundAction::cptr>& actions) {
+	std::vector<std::shared_ptr<DirectActionManager>> managers;
+	managers.reserve(actions.size());
+	for (const auto action:actions) {
+		auto manager = create(*action);
+		FDEBUG("main", "Generated a DirectActionManager for action " << *action << std::endl << *manager << std::endl);
+		managers.push_back(std::move(manager));
+	}
+	return managers;
+}
+
+std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAction& action) {
+	assert(is_supported(action));
 	std::vector<DirectConstraint::cptr> constraints = DirectTranslator::generate(action.getConditions());
 	std::vector<DirectEffect::cptr> effects = DirectTranslator::generate(action.getEffects());
 	
@@ -22,11 +35,28 @@ DirectActionManager* DirectActionManager::create(const GroundAction& action) {
 	// Compile constraints if necessary
 	ConstraintCompiler::compileConstraints(constraints);
 	
-	return new DirectActionManager(action, std::move(constraints), std::move(effects));
+	return std::make_shared<DirectActionManager>(action, std::move(constraints), std::move(effects));
 }
 
+bool DirectActionManager::is_supported(const GroundAction& action) {
+	for (const AtomicFormula::cptr condition:action.getConditions()) {
+		if (condition->nestedness() > 0) return false;
+		
+		unsigned arity = ScopeUtils::computeDirectScope(condition).size();
+		if (arity == 0) throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
+		else if(arity > 1) return false;
+	}
+	
+	for (const ActionEffect::cptr effect:action.getEffects()) {
+		if (effect->lhs()->nestedness() > 0 || effect->rhs()->nestedness() > 0 || ScopeUtils::computeDirectScope(effect).size() > 1) return false;
+	}
+	
+	return true;
+}
+
+
 DirectActionManager::DirectActionManager(const GroundAction& action, std::vector<DirectConstraint::cptr>&& constraints, std::vector<DirectEffect::cptr>&& effects)
-	: BaseActionManager(),
+	: 
 	  _action(action),
 	  _constraints(constraints),
 	  _effects(effects),
@@ -47,7 +77,7 @@ VariableIdxVector DirectActionManager::extractAllRelevant() const {
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 
-void DirectActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, const fs0::GecodeRPGLayer& gecode_layer, const fs0::GecodeRPGLayer& delta_layer, fs0::RPGData& rpg) {
+void DirectActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, fs0::RPGData<RelaxedState>& rpg) const {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
 	DomainMap actionProjection = Projections::projectCopy(layer, _allRelevant);
@@ -63,7 +93,7 @@ bool DirectActionManager::checkPreconditionApplicability(const DomainMap& domain
 	return o != FilteringOutput::Failure && DirectCSPHandler::checkConsistency(domains);
 }
 
-void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const {
+void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData<RelaxedState>& rpg) const {
 	for (const DirectEffect::cptr effect:_effects) {
 		const VariableIdxVector& effectScope = effect->getScope();
 

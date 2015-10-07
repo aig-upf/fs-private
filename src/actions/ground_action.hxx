@@ -8,7 +8,6 @@
 namespace fs0 {
 
 class ApplicableActionSet;
-class BaseActionManager;
 
 class GroundAction {
 protected:

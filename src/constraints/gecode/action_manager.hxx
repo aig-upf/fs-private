@@ -2,35 +2,35 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <heuristics/relaxed_plan/action_managers/base_action_manager.hxx>
 #include <constraints/gecode/handlers/csp_handler.hxx>
-
-namespace fs0 { class RPGData; class GecodeRPGLayer; }
+#include <actions/ground_action.hxx>
 
 namespace fs0 { namespace gecode {
+	
+class GecodeRPGLayer;
 
 //! An action manager based on modeling the action preconditions and effects as a CSP and solving it approximately / completely with Gecode.
-class GecodeActionManager : public BaseActionManager {
+class GecodeActionManager {
 public:
 	typedef GecodeActionManager* ptr;
 	
+	//! Factory methods
+	static std::shared_ptr<GecodeActionManager> create(const GroundAction& action);
+	static std::vector<std::shared_ptr<GecodeActionManager>> create(const std::vector<GroundAction::cptr>& actions);
+	
+	GecodeActionManager(GecodeActionCSPHandler::ptr handler) : _handler(handler) {}
 	~GecodeActionManager() { delete _handler; }
 
 	//!
-	void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, RPGData& rpg);
+	void process(unsigned actionIdx, const GecodeRPGLayer& layer, RPGData<GecodeRPGLayer>& rpg) const;
 
 	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const GecodeActionManager& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
-	
-	//! Factory method - ownership of the pointer belongs to the caller
-	static GecodeActionManager::ptr create(const GroundAction& action);
 	
 	const GroundAction& getAction() const;
 
 protected:
-	//! Private constructor, use factory method instead
-	GecodeActionManager(GecodeActionCSPHandler::ptr handler) : _handler(handler) {}
-	
 	GecodeActionCSPHandler::ptr _handler;
 };
 

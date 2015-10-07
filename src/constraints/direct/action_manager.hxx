@@ -1,42 +1,40 @@
 
 #pragma once
 
-#include <heuristics/relaxed_plan/action_managers/base_action_manager.hxx>
 #include <constraints/direct/csp_handler.hxx>
 #include <constraints/direct/effect.hxx>
+#include <actions/ground_action.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 
 namespace fs0 {
-
-class GroundAction;
-
 
 /**
  * A constraint manager capable only of dealing with actions whose constraints are at most unary,
  * in which case the handling is much simpler and more efficient.
  * Note that this restriction in particular excludes nested-fluent terms.
  */
-class DirectActionManager : public BaseActionManager
-{
+class DirectActionManager {
 public:
-	//! Constructs a manager handling the given set of constraints
-	static DirectActionManager* create(const GroundAction& action);
+	//! Factory methods
+	static std::shared_ptr<DirectActionManager> create(const GroundAction& action);
+	static std::vector<std::shared_ptr<DirectActionManager>> create(const std::vector<GroundAction::cptr>& actions);
+
+	//! Returns true ifff the given action is supported by a direct manager
+	static bool is_supported(const GroundAction& action);
 	
+	DirectActionManager(const GroundAction& action, std::vector<DirectConstraint::cptr>&& constraints, std::vector<DirectEffect::cptr>&& effects);
 	~DirectActionManager();
 	
 	const GroundAction& getAction() const { return _action; }
 
-	void process(unsigned actionIdx, const RelaxedState& layer, const GecodeRPGLayer& gecode_layer, const GecodeRPGLayer& delta_layer, RPGData& rpg);
+	void process(unsigned actionIdx, const RelaxedState& layer, RPGData<RelaxedState>& rpg) const;
 
 	//!
 	bool checkPreconditionApplicability(const DomainMap& domains) const;
 
 protected:
-	
-	//! Private constructor
-	DirectActionManager(const GroundAction& action, std::vector<DirectConstraint::cptr>&& constraints, std::vector<DirectEffect::cptr>&& effects);
-	
 	//!
-	void processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const;
+	void processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData<RelaxedState>& rpg) const;
 	
 	//! The action being managed
 	const GroundAction& _action;
@@ -60,6 +58,7 @@ protected:
 	//! Extracts all the (direct) state variables that are relevant to the action
 	VariableIdxVector extractAllRelevant() const;
 	
+	friend std::ostream& operator<<(std::ostream &os, const DirectActionManager& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
 };
 

@@ -21,10 +21,12 @@ public:
 	
 protected:
 	
-	//! Check whether a Gecode RPG builder is imperative
-	static bool needsGecodeRPGBuilder(const std::vector<fs::AtomicFormula::cptr>& goal_conditions, const std::vector<fs::AtomicFormula::cptr>& state_constraints);
+	static Config::CSPManagerType decide_csp_type(const Problem& problem);
 	
-	static Config::GoalManagerType decideRPGBuilderType(const Problem& problem);
+	static Config::CSPManagerType decide_action_manager_type(const std::vector< fs0::GroundAction::cptr >& actions);
+	
+	static Config::CSPManagerType decide_builder_type(const std::vector<fs::AtomicFormula::cptr>& goal_conditions, const std::vector<fs::AtomicFormula::cptr>& state_constraints);
+
 };
 
 } } // namespaces

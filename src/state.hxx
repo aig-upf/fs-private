@@ -23,8 +23,6 @@ protected:
 	std::size_t _hash;
 
 public:
-	friend class RelaxedState;
-	
 	typedef std::shared_ptr<State> ptr;
 	typedef std::shared_ptr<const State> cptr;
 
@@ -75,6 +73,8 @@ public:
 	ObjectIdx getValue(const VariableIdx& variable) const {
 		return _values.at(variable);
 	}
+	
+	const std::vector<ObjectIdx>& getValues() const { return _values; }
 
 	unsigned numAtoms() const { return _values.size(); }
 	

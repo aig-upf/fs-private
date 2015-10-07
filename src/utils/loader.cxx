@@ -8,7 +8,6 @@
 #include <actions/grounding.hxx>
 #include <component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
-#include <heuristics/relaxed_plan/action_managers/action_manager_factory.hxx>
 #include <utils/logging.hxx>
 #include <constraints/gecode/base.hxx>
 #include <constraints/gecode/helper.hxx>

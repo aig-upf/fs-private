@@ -1,7 +1,7 @@
 
 #include <constraints/gecode/action_manager.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
-#include <heuristics/relaxed_plan/gecode_rpg_layer.hxx>
+#include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/gecode.hxx>
@@ -9,15 +9,26 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeActionManager::ptr GecodeActionManager::create(const GroundAction& action) {
-	auto csp_handler = new GecodeActionCSPHandler(action);
-	return new GecodeActionManager(csp_handler);
+std::shared_ptr<GecodeActionManager> GecodeActionManager::create(const GroundAction& action) {
+	return std::make_shared<GecodeActionManager>(new GecodeActionCSPHandler(action));
 }
 
-void GecodeActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, const fs0::GecodeRPGLayer& gecode_layer, const fs0::GecodeRPGLayer& delta_layer, fs0::RPGData& rpg) {
+std::vector<std::shared_ptr<GecodeActionManager>> GecodeActionManager::create(const std::vector<GroundAction::cptr>& actions) {
+	std::vector<std::shared_ptr<GecodeActionManager>> managers;
+	managers.reserve(actions.size());
+	for (const auto action:actions) {
+		auto manager = create(*action);
+		FDEBUG("main", "Generated CSP for action " << *action << std::endl <<  *manager << std::endl);
+		managers.push_back(manager);
+	}
+	return managers;
+}
+
+
+void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& layer, fs0::RPGData<GecodeRPGLayer>& rpg) const {
 	FDEBUG("main", "Processing action " << _handler->getAction());
 
-	SimpleCSP* csp = _handler->instantiate_csp(gecode_layer, delta_layer);
+	SimpleCSP* csp = _handler->instantiate_csp(layer);
 
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 

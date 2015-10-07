@@ -5,7 +5,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/translators/nested_fluent.hxx>
 #include <utils/logging.hxx>
-#include <heuristics/relaxed_plan/gecode_rpg_layer.hxx>
+#include <constraints/gecode/rpg_layer.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -188,7 +188,7 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 	return os;
 }
 
-void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer, const fs0::GecodeRPGLayer& delta) const {
+void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
 	
 	Gecode::BoolVarArgs delta_reification_variables;
 
@@ -207,7 +207,7 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 		auto& novelty_reification_variable = csp._boolvars[reified_variable_id];
 		delta_reification_variables << novelty_reification_variable;
 		
-		Gecode::dom(csp, csp_variable, delta.get_domain(variable), novelty_reification_variable);
+		Gecode::dom(csp, csp_variable, layer.get_delta(variable), novelty_reification_variable);
 	}
 
 	// Now constrain the derived variables, but not excluding the DONT_CARE value
@@ -225,7 +225,7 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 		auto& novelty_reification_variable = csp._boolvars[reified_variable_id];
 		delta_reification_variables << novelty_reification_variable;
 		assert(0); // Need to take the DONT_CARE hack into account
-		Gecode::dom(csp, csp_variable, delta.get_domain(variable), novelty_reification_variable);
+		Gecode::dom(csp, csp_variable, layer.get_delta(variable), novelty_reification_variable);
 	}
 	
 	// Now post the global novelty constraint OR: X1 is new, or X2 is new, or...

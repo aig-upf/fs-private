@@ -12,6 +12,7 @@
 #include <utils/printers/printers.hxx>
 
 #include <utils/logging.hxx>
+#include <utils/config.hxx>
 
 namespace fs0 {
 
@@ -50,12 +51,13 @@ public:
  * an already existing RPG data structure. Two different subclasses exist differing
  * in the way in which the repeated application of the same actions is treated.
  */
+template <typename RPGBookkeeping>
 class BaseRelaxedPlanExtractor {
 protected:
 	const State& _seed;
 	
 	//! The book-keeping RPG data.
-	const RPGData& _data;
+	const RPGBookkeeping& _data;
 	
 	std::set<Atom> processed;
 	std::queue<Atom> pending;
@@ -66,7 +68,7 @@ public:
 	 * @param seed The original, non-relaxed state.
  	 * @param data The data structure representing the planning graph
 	 */
-	BaseRelaxedPlanExtractor(const State& seed, const RPGData& data) :
+	BaseRelaxedPlanExtractor(const State& seed, const RPGBookkeeping& data) :
 		_seed(seed), _data(data), processed(), pending()
 	{}
 	
@@ -100,14 +102,14 @@ protected:
 		if (_seed.contains(atom)) return; // The atom was already on the seed state, thus has empty support.
 		if (processed.find(atom) != processed.end()) return; // The atom has already been processed
 		
-		const RPGData::AtomSupport& support = _data.getAtomSupport(atom);
+		const typename RPGBookkeeping::AtomSupport& support = _data.getAtomSupport(atom);
 		
 		registerPlanAction(support);
 		enqueueAtoms(*(std::get<2>(support))); // Push the full support of the atom
 		processed.insert(atom); // Tag the atom as processed.
 	}
 	
-	virtual void registerPlanAction(const RPGData::AtomSupport& support) = 0;
+	virtual void registerPlanAction(const typename RPGBookkeeping::AtomSupport& support) = 0;
 	
 	virtual long buildRelaxedPlan() = 0;
 };
@@ -120,7 +122,8 @@ protected:
  * "move(right), when the current position is (1, 3)"
  * This yields longer relaxed plans.
  */
-class SupportedRelaxedPlanExtractor : public BaseRelaxedPlanExtractor {
+template <typename RPGBookkeeping>
+class SupportedRelaxedPlanExtractor : public BaseRelaxedPlanExtractor<RPGBookkeeping> {
 protected:
 	std::set<SupportedAction> supporters;
 
@@ -129,14 +132,14 @@ public:
 	 * @param seed The original, non-relaxed state.
  	 * @param data The data structure representing the planning graph
 	 */
-	SupportedRelaxedPlanExtractor(const State& seed, const RPGData& data) :
-		BaseRelaxedPlanExtractor(seed, data), supporters()
+	SupportedRelaxedPlanExtractor(const State& seed, const RPGBookkeeping& data) :
+		BaseRelaxedPlanExtractor<RPGBookkeeping>(seed, data), supporters()
 	{}
 
 protected:
 
 	
-	void registerPlanAction(const RPGData::AtomSupport& support) {
+	void registerPlanAction(const typename RPGBookkeeping::AtomSupport& support) {
 		// Push the action along the full support of the particular atom
 		supporters.insert(SupportedAction(std::get<1>(support), std::get<2>(support)));
 	}
@@ -156,7 +159,8 @@ protected:
  * not making any distinction with respect to the values of variables relevant for the action effects
  * under which the action is undertaken.
  */
-class PropositionalRelaxedPlanExtractor : public BaseRelaxedPlanExtractor {
+template <typename RPGBookkeeping>
+class PropositionalRelaxedPlanExtractor : public BaseRelaxedPlanExtractor<RPGBookkeeping> {
 protected:
 		std::vector<std::set<ActionIdx>> perLayerSupporters;
 
@@ -165,13 +169,13 @@ public:
 	 * @param seed The original, non-relaxed state.
  	 * @param data The data structure representing the planning graph
 	 */
-	PropositionalRelaxedPlanExtractor(const State& seed, const RPGData& data) :
-		BaseRelaxedPlanExtractor(seed, data), perLayerSupporters(data.getNumLayers())
+	PropositionalRelaxedPlanExtractor(const State& seed, const RPGBookkeeping& data) :
+		BaseRelaxedPlanExtractor<RPGBookkeeping>(seed, data), perLayerSupporters(data.getNumLayers())
 	{}
 
 protected:
 
-	void registerPlanAction(const RPGData::AtomSupport& support) {
+	void registerPlanAction(const typename RPGBookkeeping::AtomSupport& support) {
 		// We ignore the particular atom support and take only into account the action
 		perLayerSupporters[std::get<0>(support)].insert(std::get<1>(support));
 	}
@@ -200,9 +204,17 @@ protected:
 	}
 };
 
+template <typename RPGBookkeeping>
 class RelaxedPlanExtractorFactory {
 public:
-	static BaseRelaxedPlanExtractor* create(const State& seed, const RPGData& data);
+	static BaseRelaxedPlanExtractor<RPGBookkeeping>* create(const State& seed, const RPGBookkeeping& data) {
+		const Config& config = Config::instance();
+		if (config.getRPGExtractionType() == Config::RPGExtractionType::Propositional) {
+			return new PropositionalRelaxedPlanExtractor<RPGBookkeeping>(seed, data);
+		} else {
+			return new SupportedRelaxedPlanExtractor<RPGBookkeeping>(seed, data);
+		}
+	}
 };
 
 } // namespaces
