@@ -54,8 +54,8 @@ std::ostream& GecodeRPGLayer::print(std::ostream& os) const {
 		if (i < _index.size() - 1) os << ", ";
 	}
 	
-	os << "IntSets:" << std::endl << "\t" << print_intsets(os, info, _domains);
-	os << "Deltas:" << std::endl << "\t" << print_intsets(os, info, _deltas);
+	os << std::endl << "IntSets:" << std::endl << "\t" << print_intsets(os, info, _domains);
+	os << std::endl << "Deltas:" << std::endl << "\t" << print_intsets(os, info, _deltas);
 	os << std::endl;
 	return os;
 }
