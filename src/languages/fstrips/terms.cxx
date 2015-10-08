@@ -27,6 +27,9 @@ std::vector<Term::cptr> NestedTerm::flatten() const {
 	return res;
 }
 
+TypeIdx NestedTerm::getType() const {
+	return Problem::getInfo().getFunctionData(_symbol_id).getCodomainType();
+}
 
 std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	return printFunction(os, info, _symbol_id, _subterms);
@@ -42,10 +45,13 @@ UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vect
 	_function(Problem::getInfo().getFunctionData(symbol_id))
 {}
 
+TypeIdx UserDefinedStaticTerm::getType() const {
+	return _function.getCodomainType();
+}
+
 std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
 	const ProblemInfo& info = Problem::getInfo();
-	auto type = _function.getCodomainType();
-	return info.getTypeBounds(type);
+	return info.getTypeBounds(getType());
 }
 
 ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment) const {
@@ -83,6 +89,10 @@ std::pair<int, int> FluentHeadedNestedTerm::getBounds() const {
 
 ObjectIdx StateVariable::interpret(const State& state) const {
 	return state.getValue(_variable_id);
+}
+
+TypeIdx StateVariable::getType() const {
+	return Problem::getInfo().getVariableType(_variable_id);
 }
 
 std::pair<int, int> StateVariable::getBounds() const {

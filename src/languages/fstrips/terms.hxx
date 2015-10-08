@@ -48,6 +48,8 @@ public:
 	virtual VariableIdx interpretVariable(const PartialAssignment& assignment) const = 0;
 	virtual VariableIdx interpretVariable(const State& state) const = 0;
 
+	virtual TypeIdx getType() const = 0;
+	
 	virtual std::pair<int, int> getBounds() const = 0;
 
 	//! Prints a representation of the object to the given stream.
@@ -83,6 +85,8 @@ public:
 	bool flat() const { return false; }
 
 	std::vector<Term::cptr> flatten() const;
+	
+	virtual TypeIdx getType() const;
 
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
@@ -157,6 +161,7 @@ public:
 
 	UserDefinedStaticTerm* clone() const { return new UserDefinedStaticTerm(*this); }
 
+	virtual TypeIdx getType() const;
 	virtual std::pair<int, int> getBounds() const;
 
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
@@ -203,6 +208,8 @@ public:
 	virtual unsigned nestedness() const { return 0; }
 
 	bool flat() const { return true; }
+	
+	virtual TypeIdx getType() const;
 
 	std::vector<Term::cptr> flatten() const { return std::vector<Term::cptr>(1, this); }
 
@@ -241,6 +248,10 @@ public:
 	virtual unsigned nestedness() const { return 0; }
 
 	bool flat() const { return true; }
+	
+	virtual TypeIdx getType() const {
+		throw std::runtime_error("Unimplemented");
+	}
 
 	std::vector<Term::cptr> flatten() const { return std::vector<Term::cptr>(1, this); }
 
