@@ -33,7 +33,7 @@ void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& 
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 
 	if (!locallyConsistent) {
-		FFDEBUG("main", "The action CSP is locally inconsistent: " << print::csp(_handler->getTranslator(), *csp));
+		FFDEBUG("heuristic", "The action CSP is locally inconsistent: " << print::csp(_handler->getTranslator(), *csp));
 	} else {
 		if (true) {  // Solve the CSP completely
 			_handler->compute_support(csp, actionIdx, rpg);

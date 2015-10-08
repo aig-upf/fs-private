@@ -26,16 +26,7 @@ public:
 	const Gecode::IntSet& get_domain(VariableIdx variable) const { return _domains.at(variable); }
 	const Gecode::IntSet& get_delta(VariableIdx variable) const { return _deltas.at(variable); }
 	
-	void set(VariableIdx variable, ObjectIdx value) {
-		_index.at(variable).insert(value);
-	}
-	
-	//! Return the number of state variables handled by the layer
-	unsigned width() const { return _domains.size(); }
-	
-	void rebuild_domains(const std::vector<std::vector<ObjectIdx>>& novel_atoms);
-	
-	bool contains(const Atom& atom) const;
+	void accumulate(const std::vector<std::vector<ObjectIdx>>& novel_atoms);
 	
 	GecodeRPGLayer(const GecodeRPGLayer& state)  = delete;
 	GecodeRPGLayer& operator=(const GecodeRPGLayer& rhs) = delete;

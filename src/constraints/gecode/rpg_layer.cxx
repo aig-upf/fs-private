@@ -22,7 +22,7 @@ GecodeRPGLayer::GecodeRPGLayer(const State& seed)
 }
 
 
-void GecodeRPGLayer::rebuild_domains(const std::vector<std::vector<ObjectIdx>>& novel_atoms) {
+void GecodeRPGLayer::accumulate(const std::vector<std::vector<ObjectIdx>>& novel_atoms) {
 	assert(novel_atoms.size() == _domains.size());
 	
 	for (VariableIdx variable = 0; variable < novel_atoms.size(); ++variable) {
@@ -30,17 +30,20 @@ void GecodeRPGLayer::rebuild_domains(const std::vector<std::vector<ObjectIdx>>& 
 		const auto& delta = novel_atoms[variable];
 		_deltas[variable] = Gecode::IntSet(delta.data(), delta.size());
 		
-		// Rebuild the full domain with all indexed atoms
+		// Update the index and rebuild the full domain with all indexed atoms
 		// An intermediate IntArgs object seems to be necessary, since IntSets do not accept std-like range constructors.
-		const auto& domain = _index[variable];
+		Domain& domain = _index[variable];
+		domain.insert(delta.cbegin(), delta.cend());
 		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(domain.cbegin(), domain.cend()));
 	}
 }
 
+/*
 bool GecodeRPGLayer::contains(const Atom& atom) const {
 	const Domain& domain = _index.at(atom.getVariable());
 	return domain.find(atom.getValue()) != domain.end();
 }
+*/
 
 std::ostream& GecodeRPGLayer::print(std::ostream& os) const {
 	const ProblemInfo& info = Problem::getInfo();

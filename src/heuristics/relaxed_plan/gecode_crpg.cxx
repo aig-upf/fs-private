@@ -30,7 +30,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 	
 	
 	GecodeRPGLayer layer(seed);
-	RPGData bookkeeping(seed.numAtoms());
+	RPGData bookkeeping(seed);
 	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
@@ -49,8 +49,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 		if (bookkeeping.getNumNovelAtoms() == 0) return -1;
 		
 		// unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
-		bookkeeping.accumulate_to(layer);
-		layer.rebuild_domains(bookkeeping.getNovelAtoms());
+		layer.accumulate(bookkeeping.getNovelAtoms());
 		bookkeeping.advanceLayer();
 /*
  * RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THE CSP MODEL

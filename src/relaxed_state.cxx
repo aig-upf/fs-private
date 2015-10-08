@@ -29,6 +29,13 @@ RelaxedState::RelaxedState(const State& state) {
 	}
 }
 
+void RelaxedState::accumulate(const std::vector<std::vector<ObjectIdx>>& atoms) {
+	for (VariableIdx variable = 0; variable < atoms.size(); ++variable) {
+		const auto& var_atoms = atoms[variable];
+		_domains.at(variable)->insert(var_atoms.cbegin(), var_atoms.cend());
+	}
+}
+
 std::ostream& RelaxedState::print(std::ostream& os) const {
 	const ProblemInfo& problemInfo = Problem::getInfo();
 	os << "RelaxedState[";

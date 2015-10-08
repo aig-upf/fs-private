@@ -42,12 +42,19 @@ protected:
 public:
 	typedef std::shared_ptr<RPGData> ptr;
 
-	RPGData(unsigned num_atoms) :
-		_novel(num_atoms),
+	RPGData(const State& seed) :
+		_novel(seed.numAtoms()),
 		_num_novel(0),
 		_current_layer(0),
 		_effects()
-	{};
+	{
+		// Initially, all domains and deltas are set to contain exactly the values from the seed state
+		for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
+			ObjectIdx value = seed.getValue(variable);
+			_effects.insert(std::make_pair(Atom(variable, value),
+							std::make_tuple(_current_layer, GroundAction::invalid_action_id, std::make_shared<std::vector<Atom>>())));
+		}
+	};
 
 	~RPGData() {};
 
@@ -69,16 +76,6 @@ public:
 		auto it = _effects.find(atom);
 		assert(it != _effects.end());
 		return it->second;
-	}
-
-	//! Accumulates all the atoms contained *in the last layer* of the given RPG into the given relaxed state.
-	template <typename LayerT>
-	void accumulate_to(LayerT& layer) {
-		for (VariableIdx variable = 0; variable < _novel.size(); ++variable) {
-			for (ObjectIdx value:_novel[variable])  {
-				layer.set(variable, value);
-			}
-		}
 	}
 
 	//! Get the number of novel atoms in the last layer of the RPG

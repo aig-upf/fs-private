@@ -34,6 +34,7 @@ public:
 	RelaxedState& operator=(const RelaxedState& rhs) = delete;
 	bool operator==(const RelaxedState& rhs) = delete;
 	
+	/*
 	void set(const Atom& atom) {
 		set(atom.getVariable(), atom.getValue());
 	}
@@ -46,6 +47,9 @@ public:
 		const auto& possibleValues = getValues(atom.getVariable());
 		return possibleValues->find(atom.getValue()) != possibleValues->end();
 	}
+	*/
+	
+	void accumulate(const std::vector<std::vector<ObjectIdx>>& atoms);
 	
 	const DomainVector& getDomains() const { return _domains; }
 	

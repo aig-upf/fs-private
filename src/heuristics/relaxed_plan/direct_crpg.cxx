@@ -30,7 +30,7 @@ long DirectCRPG::evaluate(const State& seed) {
 	
 	
 	RelaxedState relaxed(seed);
-	RPGData bookkeeping(seed.numAtoms());
+	RPGData bookkeeping(seed);
 	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
@@ -52,7 +52,7 @@ long DirectCRPG::evaluate(const State& seed) {
 		}
 		
 		// unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
-		bookkeeping.accumulate_to(relaxed);
+		relaxed.accumulate(bookkeeping.getNovelAtoms());
 		bookkeeping.advanceLayer();
 /*
  * RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THE CSP MODEL
