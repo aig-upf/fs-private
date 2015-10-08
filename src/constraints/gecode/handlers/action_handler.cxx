@@ -46,6 +46,9 @@ void GecodeActionCSPHandler::index_scopes() {
 	effect_support_variables.resize(effects.size());
 	effect_nested_fluents.resize(effects.size());
 	effect_rhs_variables.resize(effects.size());
+	effect_lhs_variables.resize(effects.size());
+	
+	_has_nested_lhs = false;
 
 	for (unsigned i = 0; i < effects.size(); ++i) {
 		// Insert first the variables relevant to the particular effect and only then the variables relevant to the
@@ -73,6 +76,16 @@ void GecodeActionCSPHandler::index_scopes() {
 		effect_nested_fluents[i].insert(effect_nested_fluents[i].end(), nested.cbegin(), nested.cend());
 		
 		effect_rhs_variables[i] = _translator.resolveVariableIndex(effects[i]->rhs(), CSPVariableType::Input);
+		
+		if (!effects[i]->lhs()->flat()) {
+			_has_nested_lhs = true;
+		} else {
+			effect_lhs_variables[i] = effects[i]->lhs()->interpretVariable({});
+		}
+	}
+	
+	if (_has_nested_lhs) {
+		effect_lhs_variables = {}; // Just in case
 	}
 }
 
@@ -142,12 +155,13 @@ void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned acti
 	
 		auto effects = _action.getEffects();
 
-		PartialAssignment solution_assignment = _translator.buildAssignment(*solution);
-
+		PartialAssignment solution_assignment;
+		if (_has_nested_lhs) solution_assignment = _translator.buildAssignment(*solution);
+		
 		// We compute, effect by effect, the atom produced by the effect for the given solution, as well as its supports
 		for (unsigned i = 0; i < effects.size(); ++i) {
 			ActionEffect::cptr effect = effects[i];
-			VariableIdx affected = effect->lhs()->interpretVariable(solution_assignment);
+			VariableIdx affected = _has_nested_lhs ? effect->lhs()->interpretVariable(solution_assignment) : effect_lhs_variables[i];
 			Atom atom(affected, _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution));
 			
 			auto hint = bookkeeping.getInsertionHint(atom);

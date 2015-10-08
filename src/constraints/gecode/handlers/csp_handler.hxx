@@ -125,6 +125,11 @@ protected:
 	//! 'effect_rhs_variables[i]' contains the index of the CSP variable that models the value of the RHS of the i-th effect.
 	std::vector<unsigned> effect_rhs_variables;
 	
+	//! Whether the action has any effect with a LHS that contains nested fluents.
+	bool _has_nested_lhs;
+	
+	//! When _has_nested_lhs is true, we store here the VariableIdx referred to by the LHS of each effect, which can be deduced statically
+	std::vector<VariableIdx> effect_lhs_variables;
 
 	//! Creates the SimpleCSP that corresponds to a given action.
 	void createCSPVariables();
