@@ -122,6 +122,9 @@ protected:
 	//! in that particular order
 	std::vector<std::vector<fs::FluentHeadedNestedTerm::cptr>> effect_nested_fluents;
 	
+	//! 'effect_rhs_variables[i]' contains the index of the CSP variable that models the value of the RHS of the i-th effect.
+	std::vector<unsigned> effect_rhs_variables;
+	
 
 	//! Creates the SimpleCSP that corresponds to a given action.
 	void createCSPVariables();
@@ -134,6 +137,10 @@ protected:
 	
 	//! Preprocess the action to store the IDs of direct and indirect state variables
 	void index_scopes();
+	
+	//! Process the given solution arising from the given solution of the action CSP
+	void process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData<GecodeRPGLayer>& bookkeeping) const;
+
 };
 
 //! A CSP modeling and solving the progression between two RPG layers

@@ -45,6 +45,7 @@ void GecodeActionCSPHandler::index_scopes() {
 
 	effect_support_variables.resize(effects.size());
 	effect_nested_fluents.resize(effects.size());
+	effect_rhs_variables.resize(effects.size());
 
 	for (unsigned i = 0; i < effects.size(); ++i) {
 		// Insert first the variables relevant to the particular effect and only then the variables relevant to the
@@ -70,6 +71,8 @@ void GecodeActionCSPHandler::index_scopes() {
 		nested.clear();
 		for (AtomicFormula::cptr formula:_action.getConditions()) ScopeUtils::computeIndirectScope(formula, nested);
 		effect_nested_fluents[i].insert(effect_nested_fluents[i].end(), nested.cbegin(), nested.cend());
+		
+		effect_rhs_variables[i] = _translator.resolveVariableIndex(effects[i]->rhs(), CSPVariableType::Input);
 	}
 }
 
@@ -120,15 +123,24 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 }
 
 
-void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData<GecodeRPGLayer>& rpg) const {
-	unsigned num_solutions = 0;
-	DFS<SimpleCSP> engine(csp);
-
-	auto effects = _action.getEffects();
-
+void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData<GecodeRPGLayer>& bookkeeping) const {
+	
 	FFDEBUG("heuristic", "Computing supports for action " << _action.getFullName());
+	DFS<SimpleCSP> engine(csp);
+	unsigned num_solutions = 0;
 	while (SimpleCSP* solution = engine.next()) {
 		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
+		process_solution(solution, actionIdx, bookkeeping);
+		++num_solutions;
+		delete solution;
+	}
+
+	FFDEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
+}
+
+void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData<GecodeRPGLayer>& bookkeeping) const {
+	
+		auto effects = _action.getEffects();
 
 		PartialAssignment solution_assignment = _translator.buildAssignment(*solution);
 
@@ -136,8 +148,9 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 		for (unsigned i = 0; i < effects.size(); ++i) {
 			ActionEffect::cptr effect = effects[i];
 			VariableIdx affected = effect->lhs()->interpretVariable(solution_assignment);
-			Atom atom(affected, _translator.resolveValue(effect->rhs(), CSPVariableType::Input, *solution));// TODO - this might be optimized and factored out of the loop?
-			auto hint = rpg.getInsertionHint(atom);
+			Atom atom(affected, _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution));
+			
+			auto hint = bookkeeping.getInsertionHint(atom);
 			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 
 
@@ -164,14 +177,11 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 				}
 
 				// Once the support is computed, we insert the new atom into the RPG data structure
-				rpg.add(atom, actionIdx, support, hint.second);
+				bookkeeping.add(atom, actionIdx, support, hint.second);
 			}
 		}
-		++num_solutions;
-		delete solution;
-	}
-
-	FFDEBUG("main", "Solving the Action CSP completely produced " << num_solutions << " solutions"  << std::endl);
+	
+	
 }
 
 

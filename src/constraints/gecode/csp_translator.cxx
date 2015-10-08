@@ -140,18 +140,25 @@ const NestedFluentData& GecodeCSPVariableTranslator::resolveNestedFluent(fs::Ter
 	return it->second;
 }
 
-const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
+unsigned GecodeCSPVariableTranslator::resolveVariableIndex(fs::Term::cptr term, CSPVariableType type) const {
 	auto it = _registered.find(TranslationKey(term, type));
 	if(it == _registered.end()) {
 		throw UnregisteredStateVariableError("Trying to translate a non-existing CSP variable");
 	}
-	return csp._intvars[it->second];
+	return it->second;
+}
+
+const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
+	return csp._intvars[resolveVariableIndex(term, type)];
 }
 
 ObjectIdx GecodeCSPVariableTranslator::resolveValue(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
 	return resolveVariable(term, type, csp).val();
 }
 
+ObjectIdx GecodeCSPVariableTranslator::resolveValueFromIndex(unsigned variable_index, const SimpleCSP& csp) const {
+	return csp._intvars[variable_index].val();
+}
 
 
 Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const {
