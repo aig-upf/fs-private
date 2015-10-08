@@ -153,7 +153,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 
 void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData<GecodeRPGLayer>& bookkeeping) const {
 	
-		auto effects = _action.getEffects();
+		const auto& effects = _action.getEffects();
 
 		PartialAssignment solution_assignment;
 		if (_has_nested_lhs) solution_assignment = _translator.buildAssignment(*solution);
