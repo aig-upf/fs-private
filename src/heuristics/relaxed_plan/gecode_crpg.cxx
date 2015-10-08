@@ -30,7 +30,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 	
 	
 	GecodeRPGLayer layer(seed);
-	RPGData<GecodeRPGLayer> bookkeeping(layer);
+	RPGData bookkeeping(seed.numAtoms());
 	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
@@ -69,10 +69,10 @@ long GecodeCRPG::evaluate(const State& seed) {
 	}
 }
 
-long GecodeCRPG::computeHeuristic(const State& seed, const GecodeRPGLayer& layer, const RPGData<GecodeRPGLayer>& rpg) {
+long GecodeCRPG::computeHeuristic(const State& seed, const GecodeRPGLayer& layer, const RPGData& rpg) {
 	std::vector<Atom> causes;
 	if (_builder->isGoal(seed, layer, causes)) {
-		auto extractor = RelaxedPlanExtractorFactory<RPGData<GecodeRPGLayer>>::create(seed, rpg);
+		auto extractor = RelaxedPlanExtractorFactory<RPGData>::create(seed, rpg);
 		long cost = extractor->computeRelaxedPlanCost(causes);
 		delete extractor;
 		return cost;

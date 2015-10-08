@@ -22,7 +22,7 @@ public:
 	~GecodeActionManager() { delete _handler; }
 
 	//!
-	void process(unsigned actionIdx, const GecodeRPGLayer& layer, RPGData<GecodeRPGLayer>& rpg) const;
+	void process(unsigned int actionIdx, const fs0::gecode::GecodeRPGLayer& layer, fs0::RPGData& rpg) const;
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeActionManager& o) { return o.print(os); }

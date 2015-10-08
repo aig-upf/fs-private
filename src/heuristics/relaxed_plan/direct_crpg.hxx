@@ -23,7 +23,7 @@ public:
 	//! The computation of the heuristic value. Returns -1 if the RPG layer encoded in the relaxed state is not a goal,
 	//! otherwise returns h_{FF}.
 	//! To be subclassed in other RPG-based heuristics such as h_max
-	virtual long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData<RelaxedState>& bookkeeping);
+	virtual long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping);
 	
 protected:
 	//! The actual planning problem

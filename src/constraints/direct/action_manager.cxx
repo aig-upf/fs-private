@@ -77,7 +77,7 @@ VariableIdxVector DirectActionManager::extractAllRelevant() const {
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 
-void DirectActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, fs0::RPGData<RelaxedState>& rpg) const {
+void DirectActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, fs0::RPGData& rpg) const {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
 	DomainMap actionProjection = Projections::projectCopy(layer, _allRelevant);
@@ -93,7 +93,7 @@ bool DirectActionManager::checkPreconditionApplicability(const DomainMap& domain
 	return o != FilteringOutput::Failure && DirectCSPHandler::checkConsistency(domains);
 }
 
-void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData<RelaxedState>& rpg) const {
+void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const {
 	for (const DirectEffect::cptr effect:_effects) {
 		const VariableIdxVector& effectScope = effect->getScope();
 

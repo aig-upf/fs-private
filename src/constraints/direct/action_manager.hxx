@@ -27,14 +27,14 @@ public:
 	
 	const GroundAction& getAction() const { return _action; }
 
-	void process(unsigned actionIdx, const RelaxedState& layer, RPGData<RelaxedState>& rpg) const;
+	void process(unsigned actionIdx, const RelaxedState& layer, RPGData& rpg) const;
 
 	//!
 	bool checkPreconditionApplicability(const DomainMap& domains) const;
 
 protected:
 	//!
-	void processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData<RelaxedState>& rpg) const;
+	void processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const;
 	
 	//! The action being managed
 	const GroundAction& _action;

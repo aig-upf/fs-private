@@ -13,7 +13,7 @@ public:
 	virtual ~GecodeCHMax() {}
 	
 	//! The hmax heuristic only cares about the size of the RP graph.
-	long computeHeuristic(const State& seed, const GecodeRPGLayer& state, const RPGData<GecodeRPGLayer>& bookkeeping);
+	long computeHeuristic(const State& seed, const GecodeRPGLayer& state, const RPGData& bookkeeping);
 
 };
 

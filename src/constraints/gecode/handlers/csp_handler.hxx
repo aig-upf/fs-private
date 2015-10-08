@@ -109,7 +109,7 @@ public:
 
 	const GroundAction& getAction() const { return _action; }
 
-	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData<GecodeRPGLayer>& rpg) const;
+	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData& rpg) const;
 
 protected:
 	const GroundAction& _action;
@@ -144,7 +144,7 @@ protected:
 	void index_scopes();
 	
 	//! Process the given solution arising from the given solution of the action CSP
-	void process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData<GecodeRPGLayer>& bookkeeping) const;
+	void process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const;
 
 };
 

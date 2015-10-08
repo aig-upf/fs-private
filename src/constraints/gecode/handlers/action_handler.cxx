@@ -136,7 +136,7 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 }
 
 
-void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData<GecodeRPGLayer>& bookkeeping) const {
+void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData& bookkeeping) const {
 	
 	FFDEBUG("heuristic", "Computing supports for action " << _action.getFullName());
 	DFS<SimpleCSP> engine(csp);
@@ -151,7 +151,7 @@ void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned ac
 	FFDEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
 }
 
-void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData<GecodeRPGLayer>& bookkeeping) const {
+void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const {
 	
 		const auto& effects = _action.getEffects();
 

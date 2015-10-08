@@ -13,7 +13,7 @@ DirectCHMax::DirectCHMax(const FS0StateModel& model, std::vector<std::shared_ptr
 	: DirectCRPG(model, std::move(managers), std::move(builder))
 {}
 
-long DirectCHMax::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData<RelaxedState>& bookkeeping) {
+long DirectCHMax::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping) {
 		if (this->_builder->isGoal(state)) return bookkeeping.getCurrentLayerIdx();
 		return -1;
 }

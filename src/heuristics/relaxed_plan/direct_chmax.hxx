@@ -12,7 +12,7 @@ public:
 	virtual ~DirectCHMax() {}
 	
 	//! The hmax heuristic only cares about the size of the RP graph.
-	long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData<RelaxedState>& bookkeeping);
+	long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping);
 };
 
 } // namespaces

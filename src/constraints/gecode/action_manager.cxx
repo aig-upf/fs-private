@@ -25,7 +25,7 @@ std::vector<std::shared_ptr<GecodeActionManager>> GecodeActionManager::create(co
 }
 
 
-void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& layer, fs0::RPGData<GecodeRPGLayer>& rpg) const {
+void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& layer, fs0::RPGData& rpg) const {
 	FFDEBUG("main", "Processing action " << _handler->getAction());
 
 	SimpleCSP* csp = _handler->instantiate_csp(layer);

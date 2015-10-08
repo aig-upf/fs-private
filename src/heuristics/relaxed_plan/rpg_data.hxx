@@ -17,7 +17,6 @@ namespace fs0 {
  * atoms that make a particular effect reachable, i.e. those related to the relevant
  * variables of the effect procedure that achieves the effect.
  */
-template <typename LayerT>
 class RPGData {
 public:
 	//! <layer ID, Action ID, support>
@@ -40,18 +39,14 @@ protected:
 	 */
 	SupportMap _effects;
 
-	//! We keep a pointer to the previous RPG layer to ensure that we only add novel atoms.
-	const LayerT& _reference_layer;
-
 public:
 	typedef std::shared_ptr<RPGData> ptr;
 
-	RPGData(const LayerT& reference_layer) :
-		_novel(reference_layer.width()),
+	RPGData(unsigned num_atoms) :
+		_novel(num_atoms),
 		_num_novel(0),
 		_current_layer(0),
-		_effects(),
-		_reference_layer(reference_layer)
+		_effects()
 	{};
 
 	~RPGData() {};
@@ -65,8 +60,7 @@ public:
 	//! Closes the last RPG layer and opens up a new one
 	void advanceLayer() {
 		_num_novel= 0;
-		_novel = std::vector<std::vector<ObjectIdx>>(_reference_layer.width());
-		
+		_novel = std::vector<std::vector<ObjectIdx>>(_novel.size()); // completely clear the vector of novel atoms
 		++_current_layer;
 	}
 
@@ -78,10 +72,11 @@ public:
 	}
 
 	//! Accumulates all the atoms contained *in the last layer* of the given RPG into the given relaxed state.
-	void accumulate_to(LayerT& state) {
+	template <typename LayerT>
+	void accumulate_to(LayerT& layer) {
 		for (VariableIdx variable = 0; variable < _novel.size(); ++variable) {
 			for (ObjectIdx value:_novel[variable])  {
-				state.set(variable, value);
+				layer.set(variable, value);
 			}
 		}
 	}
@@ -94,9 +89,6 @@ public:
 
 	//! Returns true iff the given atom is not already tracked by the RPG. In that case, it returns an insertion hint too.
 	std::pair<bool, SupportMap::iterator> getInsertionHint(const Atom& atom) {
-		if (_reference_layer.contains(atom)) 
-			return std::make_pair(false, _effects.end()); // Make sure that the atom is novel and relevant
-
 		SupportMap::iterator lb = _effects.lower_bound(atom); // @see http://stackoverflow.com/a/101980
 		bool keyInMap = lb != _effects.end() && !(_effects.key_comp()(atom, lb->first));
 		if (keyInMap) return std::make_pair(false, _effects.end());
@@ -117,7 +109,7 @@ public:
 		add(atom, action, support, hint.second);
 	}
 
-	friend std::ostream& operator<<(std::ostream &os, const RPGData<LayerT>& data) { return data.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const RPGData& data) { return data.print(os); }
 
 	//! Prints a representation of the RPG data to the given stream.
 	std::ostream& print(std::ostream& os) const {

@@ -30,7 +30,7 @@ long DirectCRPG::evaluate(const State& seed) {
 	
 	
 	RelaxedState relaxed(seed);
-	RPGData<RelaxedState> bookkeeping(relaxed);
+	RPGData bookkeeping(seed.numAtoms());
 	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
@@ -71,10 +71,10 @@ long DirectCRPG::evaluate(const State& seed) {
 	}
 }
 
-long DirectCRPG::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData<RelaxedState>& bookkeeping) {
+long DirectCRPG::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping) {
 	Atom::vctr causes;
 	if (_builder->isGoal(seed, state, causes)) {
-		auto extractor = RelaxedPlanExtractorFactory<RPGData<RelaxedState>>::create(seed, bookkeeping);
+		auto extractor = RelaxedPlanExtractorFactory<RPGData>::create(seed, bookkeeping);
 		long cost = extractor->computeRelaxedPlanCost(causes);
 		delete extractor;
 		return cost;

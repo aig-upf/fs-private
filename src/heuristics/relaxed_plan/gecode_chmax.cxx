@@ -13,7 +13,7 @@ GecodeCHMax::GecodeCHMax(const FS0StateModel& model, std::vector<std::shared_ptr
 	: GecodeCRPG(model, std::move(managers), std::move(builder))
 {}
 		
-long GecodeCHMax::computeHeuristic(const State& seed, const GecodeRPGLayer& state, const RPGData<GecodeRPGLayer>& bookkeeping) {
+long GecodeCHMax::computeHeuristic(const State& seed, const GecodeRPGLayer& state, const RPGData& bookkeeping) {
 		if (this->_builder->isGoal(state)) return bookkeeping.getCurrentLayerIdx();
 		return -1;
 }
