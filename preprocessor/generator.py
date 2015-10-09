@@ -51,6 +51,7 @@ def parse_arguments():
     parser.add_argument('--output', help="The final directory (without any added subdirectories)"
                                          " where the compiled planner will be left.")
     parser.add_argument('--debug', action='store_true', help="Flag to compile in debug mode.")
+    parser.add_argument('--edebug', action='store_true', help="Flag to compile in extreme debug mode.")
 
     args = parser.parse_args()
     args.instance_dir = os.path.dirname(args.instance)
@@ -123,19 +124,19 @@ def translate_and_compile(instance, translation_dir, args):
     gen = Generator(instance, args, translation_dir)
     translation_dir = gen.translate()
     move_files_around(args.instance_dir, args.instance, args.domain, translation_dir)
-    compile_translation(translation_dir, args.planner, args.debug, gen.task.domain.is_predicative())
+    compile_translation(translation_dir, args, gen.task.domain.is_predicative())
     return gen.get_normalized_task_name(), translation_dir
 
 
-def compile_translation(translation_dir, planner, debug=False, predstate=False):
+def compile_translation(translation_dir, args, predstate=False):
     """
     Copies the relevant files from the BFS directory to the newly-created translation directory,
      and then calls scons to compile the problem there.
     """
-    debug_flag = "edebug={0}".format(1 if debug else 0)
+    debug_flag = "edebug=1" if args.edebug else ("debug=1" if args.debug else "")
     predstate_flag = "predstate=1" if predstate else ''
 
-    planner_dir = os.path.abspath(os.path.join('../planners', planner))
+    planner_dir = os.path.abspath(os.path.join('../planners', args.planner))
 
     shutil.copy( os.path.join( planner_dir, 'main.cxx'), translation_dir)
     shutil.copy( os.path.join( planner_dir, 'default.config.json'), os.path.join(translation_dir, 'config.json') )
