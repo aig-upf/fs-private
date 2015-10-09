@@ -40,8 +40,11 @@ std::vector<std::shared_ptr<GecodeActionManager>> GecodeActionManager::createEff
 }
 
 void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& layer, fs0::RPGData& rpg) const {
+	unsigned i = 0;
 	for (auto handler:_handlers) {
+		FFDEBUG("heuristic", "Processing effect: " << *(handler->getAction().getEffects().at(i)));
 		process_handler(handler, actionIdx, layer, rpg);
+		i++;
 	}
 }
 
@@ -51,7 +54,7 @@ void GecodeActionManager::process_handler(GecodeActionCSPHandler::ptr handler, u
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 
 	if (!locallyConsistent) {
-		FFDEBUG("heuristic", "The action CSP is locally inconsistent: " << print::csp(handler->getTranslator(), *csp));
+		FFDEBUG("heuristic", "The action CSP is locally inconsistent "); // << print::csp(handler->getTranslator(), *csp));
 	} else {
 		if (true) {  // Solve the CSP completely
 			handler->compute_support(csp, actionIdx, rpg);
