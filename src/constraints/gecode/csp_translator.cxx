@@ -239,6 +239,15 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 	Gecode::rel(csp, Gecode::BOT_OR, delta_reification_variables, 1);
 }
 
+/*
+void GecodeCSPVariableTranslator::postCachingConstraint(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
+	
+
+
+}
+*/
+
+
 PartialAssignment GecodeCSPVariableTranslator::buildAssignment(SimpleCSP& solution) const {
 	PartialAssignment assignment;
 	for (const auto& it:_input_state_variables) {

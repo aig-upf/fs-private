@@ -19,6 +19,8 @@ public:
 	//! The type of CSP manager
 	enum class CSPManagerType {Gecode, Direct, DirectIfPossible};
 	
+	enum class CSPModel {ActionCSP, EffectCSP};
+	
 	//! The possible types of CSP resolutions we consider
 	enum class CSPResolutionType {Full, Approximate};
 	
@@ -48,6 +50,8 @@ protected:
 	
 	CSPManagerType _csp_manager;
 	
+	CSPModel _csp_model;
+	
 	CSPResolutionType _goal_resolution;
 	
 	CSPResolutionType _precondition_resolution;
@@ -62,6 +66,7 @@ public:
 	const std::string& getEngineTag() const { return _engine_tag; }
 	const RPGExtractionType& getRPGExtractionType() const { return _rpg_extraction; }
 	const CSPManagerType& getCSPManagerType() const { return _csp_manager; }
+	const CSPModel& getCSPModel() const { return _csp_model; }
 	const CSPResolutionType& getGoalResolutionType() const { return _goal_resolution; }
 	const CSPResolutionType& getActionPreconditionResolutionType() const { return _precondition_resolution; }
 

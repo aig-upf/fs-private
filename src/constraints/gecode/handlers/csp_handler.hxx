@@ -101,7 +101,8 @@ public:
 
 	//!
 	GecodeActionCSPHandler(const GroundAction& action);
-	~GecodeActionCSPHandler() {}
+	GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects);
+	virtual ~GecodeActionCSPHandler() {}
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
@@ -113,6 +114,10 @@ public:
 
 protected:
 	const GroundAction& _action;
+	
+	//! The effects of the action that we want to take into account in the CSP (by default, all)
+	//! Note that we store a copy of the vector to facilitate creating subsets of effects to the subclasses.
+	const std::vector<ActionEffect::cptr> _effects;
 	
 	//! 'effect_support_variables[i]' contains the scope of the i-th effect of the action plus the scope of the action, without repetitions
 	//! and in that particular order.
@@ -146,6 +151,20 @@ protected:
 	//! Process the given solution arising from the given solution of the action CSP
 	void process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const;
 
+};
+
+//! A CSP modeling and solving the effect of an action effect on a certain RPG layer
+class GecodeEffectCSPHandler : public GecodeActionCSPHandler {
+public:
+	typedef GecodeEffectCSPHandler* ptr;
+	typedef const GecodeEffectCSPHandler* cptr;
+
+	GecodeEffectCSPHandler(const GroundAction& action, unsigned effect_idx)
+	 : GecodeActionCSPHandler(action, {action.getEffects().at(effect_idx)}), _effect_idx(effect_idx) {}
+	~GecodeEffectCSPHandler() {}
+
+protected:
+	unsigned _effect_idx;
 };
 
 //! A CSP modeling and solving the progression between two RPG layers

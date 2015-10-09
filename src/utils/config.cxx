@@ -49,10 +49,11 @@ Config::Config(const std::string& filename)
 	_rpg_extraction = parseOption<RPGExtractionType>(_root, "heuristics.plan_extraction", {{"propositional", RPGExtractionType::Propositional}, {"extended", RPGExtractionType::Supported}});
 	
 	// Parse the type of action manager: gecode, direct-if-possible, direct
-	_csp_manager = parseOption<CSPManagerType>(_root, "csp_manager", {{"gecode", CSPManagerType::Gecode}, {"direct_if_possible", CSPManagerType::DirectIfPossible}, {"direct", CSPManagerType::Direct}});
+	_csp_manager = parseOption<CSPManagerType>(_root, "csp.manager", {{"gecode", CSPManagerType::Gecode}, {"direct_if_possible", CSPManagerType::DirectIfPossible}, {"direct", CSPManagerType::Direct}});
+	_csp_model = parseOption<CSPModel>(_root, "csp.model", {{"action", CSPModel::ActionCSP}, {"effect", CSPModel::EffectCSP}});
 	
-	_goal_resolution = parseOption<CSPResolutionType>(_root, "goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
-	_precondition_resolution = parseOption<CSPResolutionType>(_root, "precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
+	_goal_resolution = parseOption<CSPResolutionType>(_root, "csp.goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
+	_precondition_resolution = parseOption<CSPResolutionType>(_root, "csp.precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 
 }
 

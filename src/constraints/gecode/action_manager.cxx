@@ -5,19 +5,18 @@
 #include <constraints/gecode/helper.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/gecode.hxx>
+#include <utils/printers/actions.hxx>
 
 
 namespace fs0 { namespace gecode {
 
-std::shared_ptr<GecodeActionManager> GecodeActionManager::create(const GroundAction& action) {
-	return std::make_shared<GecodeActionManager>(new GecodeActionCSPHandler(action));
-}
 
-std::vector<std::shared_ptr<GecodeActionManager>> GecodeActionManager::create(const std::vector<GroundAction::cptr>& actions) {
+std::vector<std::shared_ptr<GecodeActionManager>> GecodeActionManager::createActionCSPs(const std::vector<GroundAction::cptr>& actions) {
 	std::vector<std::shared_ptr<GecodeActionManager>> managers;
 	managers.reserve(actions.size());
 	for (const auto action:actions) {
-		auto manager = create(*action);
+		std::vector<GecodeActionCSPHandler::ptr> handlers{new GecodeActionCSPHandler(*action)};
+		auto manager = std::make_shared<GecodeActionManager>(std::move(handlers));
 		FDEBUG("main", "Generated CSP for action " << *action << std::endl <<  *manager << std::endl);
 		managers.push_back(manager);
 	}
@@ -25,18 +24,37 @@ std::vector<std::shared_ptr<GecodeActionManager>> GecodeActionManager::create(co
 }
 
 
-void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& layer, fs0::RPGData& rpg) const {
-	FFDEBUG("main", "Processing action " << _handler->getAction());
+std::vector<std::shared_ptr<GecodeActionManager>> GecodeActionManager::createEffectCSPs(const std::vector<GroundAction::cptr>& actions) {
+	std::vector<std::shared_ptr<GecodeActionManager>> managers;
+	for (const auto action:actions) {
+		std::vector<GecodeActionCSPHandler::ptr> handlers;
+		
+		for (unsigned idx = 0; idx < action->getEffects().size(); ++idx) {
+			auto handler = new GecodeEffectCSPHandler(*action, idx);
+			handlers.push_back(handler);
+			FDEBUG("main", "Generated CSP for the effect #" << idx << " of action " << print::action_name(*action) << std::endl <<  *handler << std::endl);
+		}
+		managers.push_back(std::make_shared<GecodeActionManager>(std::move(handlers)));
+	}
+	return managers;
+}
 
-	SimpleCSP* csp = _handler->instantiate_csp(layer);
+void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& layer, fs0::RPGData& rpg) const {
+	for (auto handler:_handlers) {
+		process_handler(handler, actionIdx, layer, rpg);
+	}
+}
+
+void GecodeActionManager::process_handler(GecodeActionCSPHandler::ptr handler, unsigned int actionIdx, const GecodeRPGLayer& layer, fs0::RPGData& rpg) const {
+	SimpleCSP* csp = handler->instantiate_csp(layer);
 
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
 
 	if (!locallyConsistent) {
-		FFDEBUG("heuristic", "The action CSP is locally inconsistent: " << print::csp(_handler->getTranslator(), *csp));
+		FFDEBUG("heuristic", "The action CSP is locally inconsistent: " << print::csp(handler->getTranslator(), *csp));
 	} else {
 		if (true) {  // Solve the CSP completely
-			_handler->compute_support(csp, actionIdx, rpg);
+			handler->compute_support(csp, actionIdx, rpg);
 		} else { // Check only local consistency
 			// TODO - Don't forget to delete the CSP in case of premature exit
 			assert(0); // TODO Unimplemented
@@ -45,12 +63,8 @@ void GecodeActionManager::process(unsigned int actionIdx, const GecodeRPGLayer& 
 	delete csp;
 }
 
-const GroundAction& GecodeActionManager::getAction() const {
-	return _handler->getAction();
-}
-
 std::ostream& GecodeActionManager::print(std::ostream& os) const {
-	return _handler->print(os);
+	return _handlers[0]->print(os); // TODO
 }
 
 

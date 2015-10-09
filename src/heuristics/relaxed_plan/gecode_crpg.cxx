@@ -28,7 +28,6 @@ long GecodeCRPG::evaluate(const State& seed) {
 	
 	if (ApplicabilityManager::checkFormulaHolds(_problem.getGoalConditions(), seed)) return 0; // The seed state is a goal
 	
-	
 	GecodeRPGLayer layer(seed);
 	RPGData bookkeeping(seed);
 	
