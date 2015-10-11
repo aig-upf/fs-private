@@ -72,6 +72,10 @@ public:
 	const CSPResolutionType& getGoalResolutionType() const { return _goal_resolution; }
 	const CSPResolutionType& getActionPreconditionResolutionType() const { return _precondition_resolution; }
 	const bool useNoveltyConstraint() const { return _novelty_constraint; }
+	
+	const bool useApproximateActionResolution() const {
+		return getActionPreconditionResolutionType() == CSPResolutionType::Approximate;
+	}
 
 	//! A generic getter
 	template <typename T>

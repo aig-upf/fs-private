@@ -9,7 +9,7 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeCHMax::GecodeCHMax(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeActionManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
+GecodeCHMax::GecodeCHMax(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
 	: GecodeCRPG(model, std::move(managers), std::move(builder))
 {}
 		

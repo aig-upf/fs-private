@@ -14,7 +14,7 @@ class GecodeCRPG {
 public:
 	typedef GroundAction Action;
 
-	GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeActionManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
+	GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
 	
 	virtual ~GecodeCRPG() {}
 	
@@ -31,7 +31,7 @@ protected:
 	const Problem& _problem;
 	
 	//! The set of action managers, one per every action
-	const std::vector<std::shared_ptr<GecodeActionManager>> _managers;
+	const std::vector<std::shared_ptr<GecodeManager>> _managers;
 	
 	//! The RPG building helper
 	const std::shared_ptr<GecodeRPGBuilder> _builder;

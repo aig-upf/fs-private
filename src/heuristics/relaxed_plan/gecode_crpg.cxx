@@ -16,7 +16,7 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeCRPG::GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeActionManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
+GecodeCRPG::GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
 	: _problem(model.getTask()), _managers(std::move(managers)), _builder(std::move(builder))
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
@@ -36,10 +36,8 @@ long GecodeCRPG::evaluate(const State& seed) {
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
 	while(true) {
 		// Apply all the actions to the RPG layer
-		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
-			const auto manager = _managers[idx];
-			FFDEBUG("heuristic", "Processing ground action #" << idx << ": " << print::action_name(manager->getAction()));
-			manager->process(idx, layer, bookkeeping);
+		for (const auto manager:_managers) {
+			manager->process(layer, bookkeeping);
 		}
 		
 		FFDEBUG("heuristic", "The last layer of the RPG contains " << bookkeeping.getNumNovelAtoms() << " novel atoms." << std::endl << bookkeeping);

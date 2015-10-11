@@ -27,11 +27,11 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		FINFO("main", "Chosen CSP Manager: Gecode");
 		auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 		
-		std::vector<std::shared_ptr<GecodeActionManager>> managers;
+		std::vector<std::shared_ptr<GecodeManager>> managers;
 		if (Config::instance().getCSPModel() == Config::CSPModel::ActionCSP) {
-			managers = GecodeActionManager::createActionCSPs(actions);
+			managers = GecodeActionManager::create(actions);
 		} else {
-			managers = GecodeActionManager::createEffectCSPs(actions);
+			managers = GecodeActionEffectManager::create(actions);
 		}
 		GecodeHeuristic gecode_builder_heuristic(model, std::move(managers), std::move(gecode_builder));
 		engine = new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic));
