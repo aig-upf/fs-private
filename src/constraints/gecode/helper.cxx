@@ -56,11 +56,18 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool n
 	}
 }
 
+IntSet Helper::add_dont_care(const IntSet& domain) {
+	std::vector<int> values;
+	for (Gecode::IntSetValues it(domain); it(); ++it) {
+		values.push_back(it.val());
+	}
+	values.push_back(DONT_CARE::get());
+	return Gecode::IntSet(Gecode::IntArgs(values.cbegin(), values.cend()));
+}
+
 void Helper::constrainCSPVariable(fs0::gecode::SimpleCSP& csp, const Gecode::IntVar& variable, const IntSet& domain, bool include_dont_care) {
 	if (include_dont_care) {
-		assert(0); // TODO 
-// 		Gecode::extensional(csp, IntVarArgs() << variable, buildTupleset(*domain, include_dont_care));
-		Gecode::dom(csp, variable, domain);
+		Gecode::dom(csp, variable, add_dont_care(domain)); // TODO - This is highly inefficient, we should keep a different IntSet with the DONT_CARE value inside of the GecodeRPGLayer
 	} else {
 		if (domain.size() ==  static_cast<unsigned>(domain.max() - domain.min()) + 1) { // A micro-optimization
 			Gecode::dom(csp, variable, domain.min(), domain.max());

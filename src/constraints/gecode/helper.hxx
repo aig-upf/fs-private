@@ -56,6 +56,8 @@ public:
 	
 	//! Computes a proper DONT_CARE value which is as close as possible to zero but not used as the ID of any object.
 	static int computeDontCareValue();
+	
+	static Gecode::IntSet add_dont_care(const IntSet& domain);
 };
 
 } } // namespaces
