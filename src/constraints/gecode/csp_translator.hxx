@@ -8,7 +8,7 @@
 #include <problem_info.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/utils/translation.hxx>
-#include "translators/nested_fluent.hxx"
+#include <constraints/gecode/translators/nested_fluent.hxx>
 #include <languages/fstrips/language.hxx>
 
 #include <gecode/int.hh>
@@ -40,8 +40,7 @@ public:
 class GecodeCSPVariableTranslator {
 public:
 
-
-	GecodeCSPVariableTranslator() {};
+	GecodeCSPVariableTranslator(SimpleCSP& base_csp) : _base_csp(base_csp) {};
 	virtual ~GecodeCSPVariableTranslator() {}
 
 	//! Forbid copy constructor
@@ -57,19 +56,21 @@ public:
 	//! Marks the given pair of term / type as with its corresponding constraint having been posted
 	void setPosted(const fs::Term::cptr term, CSPVariableType type);
 	
+	//! This updates the actual variables of the given CSP with all the CSP variables that have been registered in the translator so far
+	void perform_registration();
 
 	//! Register the given term (under the give role/type) by creating a corresponding CSP variable.
 	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)
-	bool registerConstant(fs::Constant::cptr constant, SimpleCSP& csp, Gecode::IntVarArgs& variables);
+	bool registerConstant(fs::Constant::cptr constant);
 	
-	bool registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	bool registerStateVariable(fs::StateVariable::cptr variable, CSPVariableType type);
 	
 	//! Register a state variable which is derived from a nested fluent
-	bool registerDerivedStateVariable(VariableIdx variable, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	bool registerDerivedStateVariable(VariableIdx variable, CSPVariableType type);
 	
-	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
-	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, TypeIdx domain_type, SimpleCSP& csp, Gecode::IntVarArgs& variables);
-	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, int min, int max, SimpleCSP& csp, Gecode::IntVarArgs& variables);
+	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type);
+	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, TypeIdx domain_type);
+	bool registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, int min, int max);
 
 	//! Returns the index of the CSP variable corresponding to the given term under the given role.
 	unsigned resolveVariableIndex(fs::Term::cptr term, CSPVariableType type) const;
@@ -86,7 +87,7 @@ public:
 	Gecode::IntVarArgs resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const;
 
 	//! Registers auxiliary data necessary for the element constraint that corresponds to the given term
-	void registerNestedFluent(fs::NestedTerm::cptr term, unsigned table_size, SimpleCSP& csp, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	void registerNestedFluent(fs::NestedTerm::cptr term, unsigned table_size);
 	
 	//! Returns auxiliary data necessary for the element constraint that corresponds to the given term. Const and non-const versions
 	NestedFluentData& resolveNestedFluent(fs::Term::cptr term);
@@ -96,11 +97,15 @@ public:
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const;
 
-	//! Returns the CSP variable that corresponds to the given input state variable, in the given CSP.
-	const Gecode::IntVar&  resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
+	const unsigned resolveInputVariableIndex(VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);
 		if (it == _input_state_variables.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered input state variable");
-		return csp._intvars[it->second.first];
+		return it->second;
+	}
+	
+	//! Returns the CSP variable that corresponds to the given input state variable, in the given CSP.
+	const Gecode::IntVar& resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
+		return csp._intvars[resolveInputVariableIndex(variable)];
 	}
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
@@ -120,28 +125,45 @@ public:
 		return resolveOutputStateVariable(csp, variable).val();
 	}
 	
-	//! Returns the CSP variable that corresponds to the given derived state variable, in the given CSP.
-	const Gecode::IntVar& resolveDerivedStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
+	const unsigned resolveDerivedVariableIndex(VariableIdx variable) const {
 		const auto& it = _derived.find(variable);
 		if (it == _derived.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered derived state variable");
-		return csp._intvars[it->second.first];
+		return it->second;
 	}
 	
+	//! Returns the CSP variable that corresponds to the given derived state variable, in the given CSP.
+	const Gecode::IntVar& resolveDerivedStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
+		return csp._intvars[resolveDerivedVariableIndex(variable)];
+	}
+	
+	//! Creates a new boolean CSP variable and returns its index
+	unsigned create_bool_variable();
+	
 
-	const std::unordered_map<VariableIdx, std::pair<unsigned, unsigned>>& getAllInputVariables() const { return _input_state_variables; }
+	const std::unordered_map<VariableIdx, unsigned>& getAllInputVariables() const { return _input_state_variables; }
 	
 	//! Returns a partial assignment of values to the input state variables of the CSP managed by this translator, built from the given solution.
 	PartialAssignment buildAssignment(SimpleCSP& solution) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
+	
+	SimpleCSP& getBaseCSP() { return _base_csp; }
 
 protected:
+	//! The base CSP object upon which static variable and constraint registration processes act.
+	SimpleCSP& _base_csp;
+	
+	// The list of integer and boolean CSP variables that is created during the variable registration state
+	Gecode::IntVarArgs _intvars;
+	Gecode::BoolVarArgs _boolvars;
+	
+	
 	//! A map mapping terms that have already been processed (under a certain role, e.g. input/output) to the ID of their corresponding CSP variable
 	std::unordered_map<TranslationKey, unsigned> _registered;
 	
 	//! A map from terms representing derived state variables to the ID of their corresponding CSP variable
-	std::unordered_map<VariableIdx, std::pair<unsigned, unsigned>> _derived;
+	std::unordered_map<VariableIdx, unsigned> _derived;
 	
 	//! A set marking all terms whose corresponding constraints have already been posted.
 	std::unordered_set<TranslationKey> _posted;
@@ -149,7 +171,7 @@ protected:
 	//! Some data structures to keep track of all registered state variables, so that we can update their domains and parse their values efficiently.
 	//! In particular, these maps the index of state variables that have been registered under different input/output roles to
 	//! the ID of the corresponding CSP variable
-	std::unordered_map<VariableIdx, std::pair<unsigned, unsigned>> _input_state_variables;
+	std::unordered_map<VariableIdx, unsigned> _input_state_variables;
 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
 
 	//! A table keeping track of auxiliary data for the element constraint that is necessary for the given term / type.

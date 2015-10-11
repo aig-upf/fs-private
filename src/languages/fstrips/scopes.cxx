@@ -79,5 +79,4 @@ void ScopeUtils::computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<V
 	scope.insert(possible_variables.cbegin(), possible_variables.cend());
 }
 
-
 } } } // namespaces

@@ -54,7 +54,8 @@ Config::Config(const std::string& filename)
 	
 	_goal_resolution = parseOption<CSPResolutionType>(_root, "csp.goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 	_precondition_resolution = parseOption<CSPResolutionType>(_root, "csp.precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
-
+	
+	_novelty_constraint = parseOption<bool>(_root, "csp.novelty_constraint", {{"yes", true}, {"no", false}});
 }
 
 
@@ -74,8 +75,10 @@ void Config::validateConfig(const Config& config) {
 std::ostream& Config::print(std::ostream& os) const {
 	os << "Action Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
 	os << "CSP Manager:\t\t" << (_csp_manager == CSPManagerType::Gecode ? "Gecode" : (_csp_manager == CSPManagerType::DirectIfPossible ? "Direct-If-Possible" : "Direct")) << std::endl;
+	os << "CSP Model:\t" << ((_csp_model == CSPModel::ActionCSP) ? "1 CSP per action" : "1 CSP per effect") << std::endl;
 	os << "Goal Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
 	os << "Plan Extraction:\t" << ((_rpg_extraction == RPGExtractionType::Propositional) ? "Propositional" : "Extended") << std::endl;
+	os << "Using Novelty Constraint?:\t" << ((_novelty_constraint) ? "Yes" : "No") << std::endl;
 	return os;
 }
 

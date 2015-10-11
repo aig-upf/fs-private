@@ -5,6 +5,7 @@
 #include <gecode/int.hh>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
+#include <constraints/gecode/utils/novelty_constraint.hxx>
 #include <languages/fstrips/language.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 
@@ -24,7 +25,7 @@ public:
 	typedef GecodeCSPHandler* ptr;
 	typedef const GecodeCSPHandler* cptr;
 
-	GecodeCSPHandler() : _base_csp() {}
+	GecodeCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(_translator) {}
 	virtual ~GecodeCSPHandler() {}
 
 	//! Prints a representation of the object to the given stream.
@@ -33,13 +34,17 @@ public:
 		return _translator.print(os, _base_csp);
 	}
 	
+	//! Create a new action CSP constraint by the given RPG layer domains
+	//! Ownership of the generated pointer belongs to the caller
+	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
+	
 	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 
-	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
-	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator);
+	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, GecodeCSPVariableTranslator& translator);
 
-	static void registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator);
-	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator);
+	static void registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator);
+	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, GecodeCSPVariableTranslator& translator);
 
 protected:
 	//! The base Gecode CSP
@@ -47,12 +52,16 @@ protected:
 
 	//! A translator to map planning variables with gecode variables
 	GecodeCSPVariableTranslator _translator;
-
-	void registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
-	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	
+	NoveltyConstraint _novelty;
+	
+	void registerFormulaVariables(const fs::AtomicFormula::cptr condition);
+	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions);
 
 	void registerFormulaConstraints(const fs::AtomicFormula::cptr condition);
 	void registerFormulaConstraints(const std::vector<fs::AtomicFormula::cptr>& conditions);
+	
+	virtual void create_novelty_constraint() = 0;
 };
 
 
@@ -64,10 +73,6 @@ public:
 
 	GecodeFormulaCSPHandler(const std::vector<fs::AtomicFormula::cptr>& conditions);
 	~GecodeFormulaCSPHandler() {}
-
-	//! Create a new action CSP constraint by the given RPG layer domains
-	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(SimpleCSP* csp, std::vector<Atom>& support, const State& seed) const;
@@ -91,6 +96,8 @@ protected:
 	
 	//! Preprocess the action to store the IDs of direct and indirect state variables
 	void index_scopes();
+	
+	void create_novelty_constraint();
 };
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
@@ -103,10 +110,6 @@ public:
 	GecodeActionCSPHandler(const GroundAction& action);
 	GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects);
 	virtual ~GecodeActionCSPHandler() {}
-
-	//! Create a new action CSP constraint by the given RPG layer domains
-	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
 
 	const GroundAction& getAction() const { return _action; }
 
@@ -140,7 +143,7 @@ protected:
 	void createCSPVariables();
 
 	// Variable registration methods
-	void registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars);
+	void registerEffectVariables(const fs::ActionEffect::cptr effect);
 
 	// Constraint registration methods
 	void registerEffectConstraints(const fs::ActionEffect::cptr effect);
@@ -150,7 +153,8 @@ protected:
 	
 	//! Process the given solution arising from the given solution of the action CSP
 	void process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const;
-
+	
+	void create_novelty_constraint();
 };
 
 //! A CSP modeling and solving the effect of an action effect on a certain RPG layer

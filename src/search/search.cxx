@@ -10,6 +10,8 @@
 #include <utils/config.hxx>
 #include <utils/logging.hxx>
 
+#include <time.h>
+
 namespace fs0 { namespace engines {
 
 bool SearchUtils::check_plan(const std::vector<GroundAction::IdType>& plan) {
@@ -27,8 +29,10 @@ float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Pro
 
 	std::vector<GroundAction::IdType> plan;
 	float t0 = aptk::time_used();
+	double _t0 = (double) clock() / CLOCKS_PER_SEC;
 	bool solved = engine.solve_model( plan );
 	float total_time = aptk::time_used() - t0;
+	double _total_time = (double) clock() / CLOCKS_PER_SEC - _t0;
 
 	bool valid = check_plan(plan);
 	if ( solved ) {
@@ -39,6 +43,7 @@ float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Pro
 	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated / total_time) : "0";
 	json_out << "{" << std::endl;
 	json_out << "\t\"search_time\": " << total_time << "," << std::endl;
+	json_out << "\t\"search_time_alt\": " << _total_time << "," << std::endl;
 	json_out << "\t\"generated\": " << engine.generated << "," << std::endl;
 	json_out << "\t\"expanded\": " << engine.expanded << "," << std::endl;
 	json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;

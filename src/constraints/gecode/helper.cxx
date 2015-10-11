@@ -136,13 +136,6 @@ int Helper::selectValueIfExists(IntVarValues& value_set, int value) {
 	return arbitrary_element;
 }
 
-void Helper::update_csp(SimpleCSP& csp, const IntVarArgs& intvars, const BoolVarArgs& boolvars) {
-	IntVarArray intarray(csp, intvars);
-	csp._intvars.update(csp, false, intarray);
-
-	BoolVarArray boolarray(csp, boolvars);
-	csp._boolvars.update(csp, false, boolarray);
-}
 
 int Helper::computeDontCareValue() {
 	const ProblemInfo& info = Problem::getInfo();

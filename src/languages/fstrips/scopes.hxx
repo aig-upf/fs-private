@@ -2,10 +2,10 @@
 #pragma once
 #include <fs0_types.hxx>
 #include <languages/fstrips/language.hxx>
+#include <constraints/gecode/utils/nested_fluent_iterator.hxx>
 
-namespace fs0 { 
-	class GroundAction;
-}
+
+namespace fs0 {  class GroundAction; }
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -42,6 +42,28 @@ public:
 	// TODO - Check if really necessary
 	static void computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<VariableIdx>& scope);
 
+	//!
+	static void computeIndirectTermScope(Term::cptr term, std::set<VariableIdx>& scope);
+
+	//!
+	static std::vector<VariableIdx> compute_rhs_complete_scope(ActionEffect::cptr effect);
+	static void compute_rhs_complete_scope(ActionEffect::cptr effect, std::set<VariableIdx>& scope);
+	
+	template <typename T>
+	static void computeVariables(const T& element, std::set<VariableIdx>& direct, std::set<VariableIdx>& derived) {
+		for (Term::cptr term:element->flatten()) {
+			
+			if (auto sv = dynamic_cast<StateVariable::cptr>(term)) {
+				direct.insert(sv->getValue());
+			}
+			else if (auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
+				for (gecode::nested_fluent_iterator it(fluent); !it.ended(); ++it) {
+					VariableIdx variable = it.getDerivedStateVariable();
+					derived.insert(variable);
+				}
+			}
+		}
+	}
 
 };
 

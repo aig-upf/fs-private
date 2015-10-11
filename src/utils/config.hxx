@@ -56,6 +56,8 @@ protected:
 	
 	CSPResolutionType _precondition_resolution;
 	
+	bool _novelty_constraint;
+	
 	Config(const std::string& filename);
 	
 	
@@ -69,6 +71,7 @@ public:
 	const CSPModel& getCSPModel() const { return _csp_model; }
 	const CSPResolutionType& getGoalResolutionType() const { return _goal_resolution; }
 	const CSPResolutionType& getActionPreconditionResolutionType() const { return _precondition_resolution; }
+	const bool useNoveltyConstraint() const { return _novelty_constraint; }
 
 	//! A generic getter
 	template <typename T>

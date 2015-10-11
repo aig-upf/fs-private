@@ -11,46 +11,56 @@
 namespace fs0 { namespace gecode {
 
 
-void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
+void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
-	component_translator->registerVariables(term, type, csp, translator, intvars, boolvars);
+	component_translator->registerVariables(term, type, translator);
 }
 
-void GecodeCSPHandler::registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
-	for (const auto term:terms) registerTermVariables(term, type, csp, translator, intvars, boolvars);
+void GecodeCSPHandler::registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
+	for (const auto term:terms) registerTermVariables(term, type, translator);
 }
 
-void GecodeCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
+void GecodeCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*condition);
 	assert(component_translator);
-	component_translator->registerVariables(condition, _base_csp, _translator, intvars, boolvars);
+	component_translator->registerVariables(condition, _translator);
 }
 
-void GecodeCSPHandler::registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
-	for (const auto condition:conditions) registerFormulaVariables(condition, intvars, boolvars);
+void GecodeCSPHandler::registerFormulaVariables(const std::vector< AtomicFormula::cptr >& conditions) {
+	for (const auto condition:conditions) registerFormulaVariables(condition);
 }
 
 
-void GecodeCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) {
+void GecodeCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
-	component_translator->registerConstraints(term, type, csp, translator);
+	component_translator->registerConstraints(term, type, translator);
 }
 
-void GecodeCSPHandler::registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, SimpleCSP& csp, GecodeCSPVariableTranslator& translator) {
-	for (const auto term:terms) registerTermConstraints(term, type,  csp, translator);
+void GecodeCSPHandler::registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
+	for (const auto term:terms) registerTermConstraints(term, type,  translator);
 }
 
 
 void GecodeCSPHandler::registerFormulaConstraints(const fs::AtomicFormula::cptr formula) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*formula);
 	assert(component_translator);
-	component_translator->registerConstraints(formula, _base_csp, _translator);
+	component_translator->registerConstraints(formula, _translator);
 }
 
 void GecodeCSPHandler::registerFormulaConstraints(const std::vector<fs::AtomicFormula::cptr>& conditions) {
 	for (const auto condition:conditions) registerFormulaConstraints(condition);
+}
+
+SimpleCSP::ptr GecodeCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
+	SimpleCSP* csp = static_cast<SimpleCSP::ptr>(_base_csp.clone());
+	_translator.updateStateVariableDomains(*csp, layer);
+	
+	// Post the novelty constraint
+	_novelty.post_constraint(*csp, layer);
+	
+	return csp;
 }
 
 

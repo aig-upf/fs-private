@@ -6,6 +6,7 @@
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/gecode.hxx>
+#include <utils/config.hxx>
 #include <languages/fstrips/scopes.hxx>
 
 #include <gecode/driver.hh>
@@ -91,32 +92,44 @@ void GecodeActionCSPHandler::index_scopes() {
 }
 
 
-SimpleCSP::ptr GecodeActionCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
-	SimpleCSP* csp = static_cast<SimpleCSP::ptr>(_base_csp.clone());
-	_translator.updateStateVariableDomains(*csp, layer);
-	return csp;
+void GecodeActionCSPHandler::create_novelty_constraint() {
+	// First we collect both the sets of state variables and derived variables which are present in the RHS of the effects.
+	std::set<VariableIdx> direct;
+	std::set<VariableIdx> derived;
+
+	for (auto condition:_action.getConditions()) {
+		ScopeUtils::computeVariables(condition, direct, derived);
+	}
+	
+	for (auto effect:_effects) {
+		ScopeUtils::computeVariables(effect->rhs(), direct, derived);
+	}
+	
+	// Now we register the adequate variables through the NoveltyConstraint object
+	_novelty.register_variables(direct, derived);
 }
+
 
 void GecodeActionCSPHandler::createCSPVariables() {
-	IntVarArgs intvars;
-	BoolVarArgs boolvars;
-
-	registerFormulaVariables(_action.getConditions(), intvars, boolvars);
+	registerFormulaVariables(_action.getConditions());
 	for (const auto effect:_effects) {
-		registerEffectVariables(effect, intvars, boolvars);
+		registerEffectVariables(effect);
 	}
-
-	Helper::update_csp(_base_csp, intvars, boolvars);
+	
+	if (Config::instance().useNoveltyConstraint()) {
+		create_novelty_constraint();
+	}
+	_translator.perform_registration();
 }
 
-void GecodeActionCSPHandler::registerEffectVariables(const fs::ActionEffect::cptr effect, Gecode::IntVarArgs& intvars, Gecode::BoolVarArgs& boolvars) {
+void GecodeActionCSPHandler::registerEffectVariables(const fs::ActionEffect::cptr effect) {
 	// Register first the RHS variables as input variables
-	registerTermVariables(effect->rhs(), CSPVariableType::Input, _base_csp, _translator, intvars, boolvars);
+	registerTermVariables(effect->rhs(), CSPVariableType::Input, _translator);
 
 	// As for the LHS variable, ATM we only register the subterms (if any) recursively as input CSP variables
 	auto nested_lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs());
 	if (nested_lhs) {
-		registerTermVariables(nested_lhs->getSubterms(), CSPVariableType::Input, _base_csp, _translator, intvars, boolvars);
+		registerTermVariables(nested_lhs->getSubterms(), CSPVariableType::Input, _translator);
 	}
 }
 
@@ -126,9 +139,9 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 	// GecodeCSPHandler::registerTermConstraints(effect->lhs(), CSPVariableType::Output, _base_csp, _translator);
 	auto nested_lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs());
 	if (nested_lhs) {
-		GecodeCSPHandler::registerTermConstraints(nested_lhs->getSubterms(), CSPVariableType::Input, _base_csp, _translator);
+		GecodeCSPHandler::registerTermConstraints(nested_lhs->getSubterms(), CSPVariableType::Input, _translator);
 	}
-	GecodeCSPHandler::registerTermConstraints(effect->rhs(), CSPVariableType::Input, _base_csp, _translator);
+	GecodeCSPHandler::registerTermConstraints(effect->rhs(), CSPVariableType::Input, _translator);
 
 	// And now equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
 // 	const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _base_csp);

@@ -3,6 +3,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
+#include <utils/config.hxx>
 #include <languages/fstrips/scopes.hxx>
 
 #include <gecode/driver.hh>
@@ -31,20 +32,12 @@ GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const std::vector<AtomicFormula
 }
 
 
-SimpleCSP::ptr GecodeFormulaCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
-	SimpleCSP* csp = static_cast<SimpleCSP::ptr>(_base_csp.clone());
-	_translator.updateStateVariableDomains(*csp, layer);
-	return csp;
-}
-
-
 void GecodeFormulaCSPHandler::createCSPVariables() {
-	IntVarArgs intvars;
-	BoolVarArgs boolvars;
-
-	registerFormulaVariables(_conditions,  intvars, boolvars);
-	
-	Helper::update_csp(_base_csp, intvars, boolvars);	
+	registerFormulaVariables(_conditions);
+	if (Config::instance().useNoveltyConstraint()) {
+		create_novelty_constraint();
+	}
+	_translator.perform_registration();
 }
 
 bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
@@ -93,7 +86,7 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 	// First process the direct state variables
 	for (const auto& it:_translator.getAllInputVariables()) {
 		VariableIdx planning_variable = it.first;
-		const Gecode::IntVar& csp_var = csp->_intvars[it.second.first];
+		const Gecode::IntVar& csp_var = csp->_intvars[it.second];
 		IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
 		assert(values()); // Otherwise the CSP would be inconsistent!
 		
@@ -135,6 +128,19 @@ void GecodeFormulaCSPHandler::index_scopes() {
 		ScopeUtils::computeIndirectScope(_conditions[i], nested);
 	}
 	formula_nested_fluents = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
+}
+
+void GecodeFormulaCSPHandler::create_novelty_constraint() {
+	// First we collect both the sets of state variables and derived variables which are present in the RHS of the effects.
+	std::set<VariableIdx> direct;
+	std::set<VariableIdx> derived;
+	
+	for (auto condition:_conditions) {
+		ScopeUtils::computeVariables(condition, direct, derived);
+	}
+	
+	// Now we register the adequate variables through the NoveltyConstraint object
+	_novelty.register_variables(direct, derived);
 }
 
 
