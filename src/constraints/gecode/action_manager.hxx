@@ -19,8 +19,8 @@ public:
 	virtual ~GecodeManager() { }
 
 	//!
-	virtual void process(const fs0::gecode::GecodeRPGLayer& layer, fs0::RPGData& rpg) const = 0;
-	void process_handler(GecodeActionCSPHandler::ptr handler, const GecodeRPGLayer& layer, fs0::RPGData& rpg) const;
+	virtual void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const = 0;
+	void process_handler(const State& seed, GecodeActionCSPHandler::ptr handler, const GecodeRPGLayer& layer, RPGData& rpg) const;
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeManager& o) { return o.print(os); }
@@ -49,7 +49,7 @@ public:
 		delete _handler;
 	}
 
-	void process(const fs0::gecode::GecodeRPGLayer& layer, fs0::RPGData& rpg) const;
+	void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const;
@@ -74,7 +74,7 @@ public:
 	}
 
 	//!
-	void process(const fs0::gecode::GecodeRPGLayer& layer, fs0::RPGData& rpg) const;
+	void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const;

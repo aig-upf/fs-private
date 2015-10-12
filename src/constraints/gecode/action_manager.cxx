@@ -42,22 +42,22 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionEffectManager::create(co
 	return managers;
 }
 
-void GecodeActionManager::process(const GecodeRPGLayer& layer, fs0::RPGData& rpg) const {
+void GecodeActionManager::process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
 	FFDEBUG("heuristic", "Processing action #" << _action_idx << ": " << print::action_name(getAction()));
-	process_handler(_handler, layer, rpg);
+	process_handler(seed, _handler, layer, rpg);
 }
 
-void GecodeActionEffectManager::process(const GecodeRPGLayer& layer, fs0::RPGData& rpg) const {
+void GecodeActionEffectManager::process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
 	unsigned i = 0;
 	FFDEBUG("heuristic", "Processing action #" << _action_idx << ": " << print::action_name(getAction()));
 	for (auto handler:_handlers) {
 		FFDEBUG("heuristic", "Processing effect: " << *(handler->getAction().getEffects().at(i)));
-		process_handler(handler, layer, rpg);
+		process_handler(seed, handler, layer, rpg);
 		++i;
 	}
 }
 
-void GecodeManager::process_handler(GecodeActionCSPHandler::ptr handler, const GecodeRPGLayer& layer, fs0::RPGData& rpg) const {
+void GecodeManager::process_handler(const State& seed, GecodeActionCSPHandler::ptr handler, const GecodeRPGLayer& layer, RPGData& rpg) const {
 	SimpleCSP* csp = handler->instantiate_csp(layer);
 
 	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
@@ -66,10 +66,9 @@ void GecodeManager::process_handler(GecodeActionCSPHandler::ptr handler, const G
 		FFDEBUG("heuristic", "The action CSP is locally inconsistent "); // << print::csp(handler->getTranslator(), *csp));
 	} else {
 		if (!_approximate) {  // Solve the CSP completely
-			handler->compute_support(csp, _action_idx, rpg);
+			handler->compute_support(csp, _action_idx, rpg, seed);
 		} else { // Check only local consistency
-			// TODO - Don't forget to delete the CSP in case of premature exit
-			assert(0); // TODO Unimplemented
+			handler->compute_approximate_support(csp, _action_idx, rpg, seed);
 		}
 	}
 	delete csp;

@@ -156,19 +156,24 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 }
 
 
-void GecodeActionCSPHandler::compute_support(gecode::SimpleCSP* csp, unsigned actionIdx, RPGData& bookkeeping) const {
-	FFDEBUG("heuristic", "Computing supports for action " << _action.getFullName());
+void GecodeActionCSPHandler::compute_support(SimpleCSP* csp, unsigned int actionIdx, RPGData& rpg, const State& seed) const {
+	FFDEBUG("heuristic", "Computing full support for action " << _action.getFullName());
 	DFS<SimpleCSP> engine(csp);
 	unsigned num_solutions = 0;
 	while (SimpleCSP* solution = engine.next()) {
 		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
-		process_solution(solution, actionIdx, bookkeeping);
+		process_solution(solution, actionIdx, rpg);
 		++num_solutions;
 		delete solution;
 	}
 
 	FFDEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
 }
+
+void GecodeActionCSPHandler::compute_approximate_support(SimpleCSP* csp, unsigned int action_idx, RPGData rpg, const State& seed) {
+	assert(0); // TODO - Unimplemented, but now sure it makes a lot of sense to solve the action CSPs approximately as of now
+}
+
 
 void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const {
 	

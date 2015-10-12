@@ -22,6 +22,9 @@
 		"goal_resolution_comment": ["Either 'full' or 'approximate': whether to fully or only approximately solve the goal CSPs"],
 		"goal_resolution": "full",
 		
+		"enhanced_goal_resolution_comment": "Whether to use ('yes') or not ('no') the enhanced goal support identification procedure",
+		"enhanced_goal_resolution": "yes",
+		
 		"novelty_constraint_comment": "Whether to use ('yes') or not ('no') the novelty constraint",
 		"novelty_constraint": "yes"
 	},

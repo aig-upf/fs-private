@@ -98,6 +98,12 @@ protected:
 	void index_scopes();
 	
 	void create_novelty_constraint();
+	
+	SimpleCSP* constrain_solutions(SimpleCSP* base, const State& seed, std::vector<VariableIdx>& unprocessed) const;
+	
+	std::pair<SimpleCSP*, SimpleCSP*> try_restriction(SimpleCSP* base, VariableIdx variable, ObjectIdx value) const;
+	
+
 };
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
@@ -113,7 +119,8 @@ public:
 
 	const GroundAction& getAction() const { return _action; }
 
-	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData& rpg) const;
+	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData& rpg, const State& seed) const;
+	void compute_approximate_support(SimpleCSP* csp, unsigned int action_idx, RPGData rpg, const State& seed);
 
 protected:
 	const GroundAction& _action;

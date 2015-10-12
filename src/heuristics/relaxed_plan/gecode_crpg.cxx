@@ -37,7 +37,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 	while(true) {
 		// Apply all the actions to the RPG layer
 		for (const auto manager:_managers) {
-			manager->process(layer, bookkeeping);
+			manager->process(seed, layer, bookkeeping);
 		}
 		
 		FFDEBUG("heuristic", "The last layer of the RPG contains " << bookkeeping.getNumNovelAtoms() << " novel atoms." << std::endl << bookkeeping);

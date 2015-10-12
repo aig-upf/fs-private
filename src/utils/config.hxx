@@ -58,6 +58,8 @@ protected:
 	
 	bool _novelty_constraint;
 	
+	bool _enhanced_goal_resolution;
+	
 	Config(const std::string& filename);
 	
 	
@@ -71,9 +73,11 @@ public:
 	const CSPModel& getCSPModel() const { return _csp_model; }
 	const CSPResolutionType& getGoalResolutionType() const { return _goal_resolution; }
 	const CSPResolutionType& getActionPreconditionResolutionType() const { return _precondition_resolution; }
-	const bool useNoveltyConstraint() const { return _novelty_constraint; }
+	bool useNoveltyConstraint() const { return _novelty_constraint; }
 	
-	const bool useApproximateActionResolution() const {
+	bool useEnhancedGoalResolution() const { return _enhanced_goal_resolution; }
+	
+	bool useApproximateActionResolution() const {
 		return getActionPreconditionResolutionType() == CSPResolutionType::Approximate;
 	}
 
