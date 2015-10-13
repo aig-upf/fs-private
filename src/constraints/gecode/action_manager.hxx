@@ -28,6 +28,9 @@ public:
 	
 	virtual const GroundAction& getAction() const = 0;
 	
+	//! Initialize the value selector of the underlying CSPs
+	virtual void init_value_selector(const RPGData* bookkeeping) = 0;
+	
 	
 protected:
 	//! The index of the action managed by this manager
@@ -56,6 +59,11 @@ public:
 	
 	const GroundAction& getAction() const { return _handler->getAction(); }
 	
+	//! Initialize the value selector of the underlying CSPs
+	void init_value_selector(const RPGData* bookkeeping) {
+		_handler->init(bookkeeping);
+	}
+	
 protected:
 	//! The action handler that correspond to this action
 	GecodeActionCSPHandler::ptr _handler;
@@ -81,6 +89,10 @@ public:
 	
 	const GroundAction& getAction() const { return _handlers[0]->getAction(); }
 	
+	//! Initialize the value selector of the underlying CSPs
+	void init_value_selector(const RPGData* bookkeeping) {
+		for (auto handler:_handlers) handler->init(bookkeeping);
+	}
 	
 protected:
 	//! The set of (action / effect) handlers that correspond to this action

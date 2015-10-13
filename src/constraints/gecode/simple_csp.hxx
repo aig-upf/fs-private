@@ -2,11 +2,11 @@
 #pragma once
 
 #include <fs0_types.hxx>
+#include <constraints/gecode/utils/value_selection.hxx>
 #include <gecode/int.hh>
 
-namespace fs0 { namespace gecode {
 
-class GecodeCSPVariableTranslator;
+namespace fs0 { namespace gecode {
 
 /**
  * A SimpleCSP is a Gecode CSP with a single set of integer variables.
@@ -16,13 +16,12 @@ class SimpleCSP : public Gecode::Space {
 public:
 	typedef   SimpleCSP* ptr;
 
-	SimpleCSP() : _translator(nullptr) {};
-// 	virtual ~SimpleCSP() {}
+	SimpleCSP() : _value_selector() {};
 
 	//! Cloning constructor, required by Gecode
 	SimpleCSP( bool share, SimpleCSP& other ) :
 		Gecode::Space(share, other),
-		_translator(other._translator)
+		_value_selector(other._value_selector)
 	{
 		_intvars.update( *this, share, other._intvars );
 		_boolvars.update( *this, share, other._boolvars );
@@ -48,17 +47,16 @@ public:
 		return os;
 	}
 	
-	void init(GecodeCSPVariableTranslator* translator) {
-		_translator = translator;
+	void init(EarliestLayerValueSelector&& value_selector) {
+		_value_selector = std::move(value_selector);
 	}
 
 	//! CSP variables that correspond to the planning problem state variables that are relevant to the goal formula + state constraints
 	Gecode::IntVarArray _intvars;
-	
 	Gecode::BoolVarArray _boolvars;
 	
-	//! A handle to translators
-	GecodeCSPVariableTranslator* _translator;
+	//! A value selector for the branching strategy
+	EarliestLayerValueSelector _value_selector;
 };
 
 } } // namespaces

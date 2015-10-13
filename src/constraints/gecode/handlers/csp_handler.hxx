@@ -30,7 +30,7 @@ public:
 		delete _novelty;
 	}
 	
-	void init();
+	void init(const RPGData* bookkeeping);
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller

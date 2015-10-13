@@ -10,8 +10,8 @@
 
 namespace fs0 { namespace gecode {
 
-void GecodeCSPHandler::init() {
-	_base_csp.init(&_translator);
+void GecodeCSPHandler::init(const RPGData* bookkeeping) {
+	_base_csp.init(EarliestLayerValueSelector(&_translator, bookkeeping));
 }
 
 void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {

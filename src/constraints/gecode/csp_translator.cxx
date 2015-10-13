@@ -31,6 +31,13 @@ void GecodeCSPVariableTranslator::perform_registration() {
 	_base_csp._boolvars.update(_base_csp, false, boolarray);	
 }
 
+unsigned GecodeCSPVariableTranslator::add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable) {
+	assert(_intvars.size() == _intvars_idx.size());
+	unsigned id = _intvars.size();
+	_intvars << csp_variable;
+	_intvars_idx.push_back(planning_variable);
+	return id;
+}
 
 bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant) {
 	TranslationKey key(constant, CSPVariableType::Input); // Constants are always considered as input variables
@@ -38,9 +45,8 @@ bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant) 
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
 
-	unsigned id = _intvars.size();
 	int value = constant->getValue();
-	_intvars << Gecode::IntVar(_base_csp, value, value);
+	unsigned id = add_intvar(Gecode::IntVar(_base_csp, value, value));
 
 	_registered.insert(it, std::make_pair(key, id));
 	return true;
@@ -56,8 +62,7 @@ bool GecodeCSPVariableTranslator::registerStateVariable(fs::StateVariable::cptr 
 	//  TODO we need to think what to do in these cases where a derived state variable is also used as a primary state variable in some other expression.
 	assert(_derived.find(variable_id) == _derived.end());
 
-	unsigned id = _intvars.size();
-	_intvars << Helper::createPlanningVariable(_base_csp, variable_id);
+	unsigned id = add_intvar(Helper::createPlanningVariable(_base_csp, variable_id), variable_id);
 
 	_registered.insert(it, std::make_pair(key, id));
 
@@ -80,8 +85,7 @@ bool GecodeCSPVariableTranslator::registerDerivedStateVariable(VariableIdx varia
 	// TODO we need to think what to do in these cases where two derived state variables come into play at the same time.
 	assert(_derived.find(variable) == _derived.end());
 
-	unsigned id = _intvars.size();
-	_intvars << Helper::createPlanningVariable(_base_csp, variable, true);
+	unsigned id = add_intvar(Helper::createPlanningVariable(_base_csp, variable, true), variable);
 	
 	_derived.insert(std::make_pair(variable, id));
 	return true;
@@ -97,9 +101,9 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
 
-	_intvars << Helper::createTemporaryVariable(_base_csp, domain_type);
+	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, domain_type));
 
-	_registered.insert(it, std::make_pair(key, _intvars.size()-1));
+	_registered.insert(it, std::make_pair(key, id));
 	return true;
 }
 
@@ -108,9 +112,9 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	auto it = _registered.find(key);
 	if (it!= _registered.end()) return false; // The element was already registered
 
-	_intvars << Helper::createTemporaryIntVariable(_base_csp, min, max);
+	unsigned id = add_intvar(Helper::createTemporaryIntVariable(_base_csp, min, max));
 
-	_registered.insert(it, std::make_pair(key, _intvars.size()-1));
+	_registered.insert(it, std::make_pair(key, id));
 	return true;
 }
 
@@ -119,8 +123,7 @@ void GecodeCSPVariableTranslator::registerNestedFluent(fs::NestedTerm::cptr term
 	auto it = element_constraint_data.find(key);
 	if (it != element_constraint_data.end()) return; // We already registered an index variable for this particular nested term
 
-	unsigned index_var_idx = _intvars.size();
-	_intvars << Helper::createTemporaryIntVariable(_base_csp, 0, table_size-1);
+	unsigned index_var_idx = add_intvar(Helper::createTemporaryIntVariable(_base_csp, 0, table_size-1));
 
 	unsigned bool_var_idx = _boolvars.size();
 	// We create one boolean variable for each of the elements of the disjunction IDX=i \lor TABLE_i = DONT_CARE
@@ -229,6 +232,10 @@ PartialAssignment GecodeCSPVariableTranslator::buildAssignment(SimpleCSP& soluti
 		assignment.insert(std::make_pair(variable, csp_variable.val()));
 	}
 	return assignment;
+}
+
+VariableIdx GecodeCSPVariableTranslator::getPlanningVariable(unsigned csp_var_idx) const {
+	return _intvars_idx[csp_var_idx];
 }
 
 } } // namespaces

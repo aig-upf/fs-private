@@ -36,8 +36,8 @@ public:
 	//! This is a simplified version in which we don't care about causes, etc. but only about whether the layer is a goal or not.
 	bool isGoal(const GecodeRPGLayer& layer) const;
 	
-	//! Signal the start of a state evaluation
-	void start_evaluation();
+	//! Initialize the value selector of the underlying CSPs
+	void init_value_selector(const RPGData* bookkeeping);
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeRPGBuilder& o) { return o.print(os); }

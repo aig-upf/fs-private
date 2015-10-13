@@ -35,6 +35,7 @@ namespace fs0 {
 
 	//! The index identifying a state variable.
 	typedef unsigned VariableIdx;
+	const VariableIdx INVALID_VARIABLE = std::numeric_limits<unsigned>::max();
 
 	typedef std::vector<VariableIdx> VariableIdxVector;
 	typedef std::set<VariableIdx> VariableIdxSet;

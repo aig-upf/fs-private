@@ -58,6 +58,9 @@ public:
 	static int computeDontCareValue();
 	
 	static Gecode::IntSet add_dont_care(const IntSet& domain);
+	
+	//! A helper method to install our desired value-selection brancher
+	static int value_selector(const Space& home, IntVar x, int csp_var_idx);
 };
 
 } } // namespaces

@@ -23,7 +23,7 @@
 		"goal_resolution": "full",
 		
 		"enhanced_goal_resolution_comment": "Whether to use ('yes') or not ('no') the enhanced goal support identification procedure",
-		"enhanced_goal_resolution": "yes",
+		"enhanced_goal_resolution": "no",
 		
 		"novelty_constraint_comment": "Whether to use ('yes') or not ('no') the novelty constraint",
 		"novelty_constraint": "yes"

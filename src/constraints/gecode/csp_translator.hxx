@@ -46,6 +46,7 @@ public:
 	//! Forbid copy constructor
 	explicit GecodeCSPVariableTranslator(GecodeCSPVariableTranslator& other);
 
+	unsigned add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable = INVALID_VARIABLE);
 
 	//! Returns true iff the given term has already an associated CSP variable
 	bool isRegistered(const fs::Term::cptr term, CSPVariableType type) const;
@@ -149,6 +150,8 @@ public:
 	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
 	
 	SimpleCSP& getBaseCSP() { return _base_csp; }
+	
+	VariableIdx getPlanningVariable(unsigned csp_var_idx) const;
 
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.
@@ -157,6 +160,9 @@ protected:
 	// The list of integer and boolean CSP variables that is created during the variable registration state
 	Gecode::IntVarArgs _intvars;
 	Gecode::BoolVarArgs _boolvars;
+	
+	//! An index - _intvars_idx[x] is the VariableIdx of the CSP variable with index 'x'
+	std::vector<VariableIdx> _intvars_idx;
 	
 	
 	//! A map mapping terms that have already been processed (under a certain role, e.g. input/output) to the ID of their corresponding CSP variable

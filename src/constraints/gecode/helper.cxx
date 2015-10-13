@@ -129,7 +129,8 @@ Gecode::TupleSet Helper::extensionalize(const std::string& symbol) {
 }
 
 void Helper::postBranchingStrategy(SimpleCSP& csp) {
-	Gecode::branch(csp, csp._intvars, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+// 	Gecode::branch(csp, csp._intvars, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+	Gecode::branch(csp, csp._intvars, INT_VAR_SIZE_MIN(), INT_VAL(&Helper::value_selector));
 	Gecode::branch(csp, csp._boolvars, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 }
 
@@ -157,28 +158,9 @@ int Helper::computeDontCareValue() {
 	return -1*max < min ? min : max;
 }
 
-/*
-int Helper::value_selector(const Space& home, IntVar x, int) {
+int Helper::value_selector(const Space& home, IntVar x, int csp_var_idx) {
 	const SimpleCSP& csp = static_cast<const SimpleCSP&>(home);
-	
-	int best_value = Int::Limits::max+1;
-	unsigned smallest_layer = std::numeric_limits<unsigned>::max();
-	
-	IntVarValues values(x);
-	assert(values()); // We require at least one value, so that 'best_value' gets set at least once.
-	
-	for (; values(); ++values) {
-		int current = values.val();
-		int value_layer = get_achieved_layer(current); // TODO - The RPG layer on which this value was first achieved for this variable
-
-		if (value_layer == 0) return current; // If we found a seed-state value, return it!
-		if (value_layer < smallest_layer) {
-			smallest_layer = value_layer;
-			best_value = current;
-		}
-	}
-	return best_value;
+	return csp._value_selector.select(x, csp_var_idx);
 }
-*/
 
 } } // namespaces

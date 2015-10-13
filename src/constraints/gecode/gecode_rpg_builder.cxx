@@ -64,8 +64,8 @@ bool GecodeRPGBuilder::isGoal(const State& seed, const GecodeRPGLayer& layer, At
 	return is_goal;
 }
 
-void GecodeRPGBuilder::start_evaluation() {
-	_goal_handler->init();
+void GecodeRPGBuilder::init_value_selector(const RPGData* bookkeeping) {
+	_goal_handler->init(bookkeeping);
 // 	_state_constraint_handler->init();
 }
 

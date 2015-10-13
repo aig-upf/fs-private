@@ -31,13 +31,15 @@ long GecodeCRPG::evaluate(const State& seed) {
 	GecodeRPGLayer layer(seed);
 	RPGData bookkeeping(seed);
 	
+	_builder->init_value_selector(&bookkeeping);
 	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
-	while(true) {
+	for (unsigned i = 0; ; ++i) {
 		// Apply all the actions to the RPG layer
 		for (const auto manager:_managers) {
+			if (i == 0) manager->init_value_selector(&bookkeeping); // We update the value selector of the CSPs once.
 			manager->process(seed, layer, bookkeeping);
 		}
 		
