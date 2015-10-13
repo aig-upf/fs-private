@@ -92,6 +92,8 @@ SimpleCSP* GecodeFormulaCSPHandler::constrain_solutions(SimpleCSP* base, const S
 		most_constrained = csps.second;
 	}
 	
+	if (current != base) delete current;
+	
 	return most_constrained;
 }
 
