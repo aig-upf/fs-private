@@ -93,20 +93,7 @@ void GecodeActionCSPHandler::index_scopes() {
 
 
 void GecodeActionCSPHandler::create_novelty_constraint() {
-	// First we collect both the sets of state variables and derived variables which are present in the RHS of the effects.
-	std::set<VariableIdx> direct;
-	std::set<VariableIdx> derived;
-
-	for (auto condition:_action.getConditions()) {
-		ScopeUtils::computeVariables(condition, direct, derived);
-	}
-	
-	for (auto effect:_effects) {
-		ScopeUtils::computeVariables(effect->rhs(), direct, derived);
-	}
-	
-	// Now we register the adequate variables through the NoveltyConstraint object
-	_novelty.register_variables(direct, derived);
+	_novelty = NoveltyConstraint::createFromEffects(_translator, _action.getConditions(), _effects);
 }
 
 

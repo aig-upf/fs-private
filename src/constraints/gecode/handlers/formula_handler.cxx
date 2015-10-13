@@ -191,7 +191,7 @@ void GecodeFormulaCSPHandler::create_novelty_constraint() {
 	}
 	
 	// Now we register the adequate variables through the NoveltyConstraint object
-	_novelty.register_variables(direct, derived);
+	_novelty = WeakNoveltyConstraint::create(_translator, _conditions, {});
 }
 
 

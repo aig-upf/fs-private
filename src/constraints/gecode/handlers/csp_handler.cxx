@@ -58,7 +58,7 @@ SimpleCSP::ptr GecodeCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) co
 	_translator.updateStateVariableDomains(*csp, layer);
 	
 	// Post the novelty constraint
-	_novelty.post_constraint(*csp, layer);
+	if (_novelty) _novelty->post_constraint(*csp, layer);
 	
 	return csp;
 }

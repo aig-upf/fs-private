@@ -5,7 +5,7 @@
 #include <gecode/int.hh>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
-#include <constraints/gecode/utils/novelty_constraint.hxx>
+#include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <languages/fstrips/language.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 
@@ -25,8 +25,10 @@ public:
 	typedef GecodeCSPHandler* ptr;
 	typedef const GecodeCSPHandler* cptr;
 
-	GecodeCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(_translator) {}
-	virtual ~GecodeCSPHandler() {}
+	GecodeCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(nullptr) {}
+	virtual ~GecodeCSPHandler() {
+		delete _novelty;
+	}
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeCSPHandler& o) { return o.print(os); }
@@ -53,7 +55,7 @@ protected:
 	//! A translator to map planning variables with gecode variables
 	GecodeCSPVariableTranslator _translator;
 	
-	NoveltyConstraint _novelty;
+	NoveltyConstraint* _novelty;
 	
 	void registerFormulaVariables(const fs::AtomicFormula::cptr condition);
 	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions);
