@@ -31,6 +31,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 	GecodeRPGLayer layer(seed);
 	RPGData bookkeeping(seed);
 	
+	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
@@ -47,7 +48,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 		
 		// unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
 		layer.accumulate(bookkeeping.getNovelAtoms());
-		bookkeeping.advanceLayer();
+		FFDEBUG("heuristic", "RPG Layer #" << bookkeeping.getCurrentLayerIdx() << ": " << layer);
 /*
  * RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THE CSP MODEL
  		
@@ -58,10 +59,10 @@ long GecodeCRPG::evaluate(const State& seed) {
 		if (o == FilteringOutput::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 */
 		
-		FFDEBUG("heuristic", "RPG Layer #" << bookkeeping.getCurrentLayerIdx() << ": " << layer);
-		
 		long h = computeHeuristic(seed, layer, bookkeeping);
 		if (h > -1) return h;
+		
+		bookkeeping.advanceLayer();
 	}
 }
 

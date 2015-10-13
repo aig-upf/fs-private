@@ -7,6 +7,7 @@
 #include <fs0_types.hxx>
 #include <atom.hxx>
 #include <problem.hxx>
+#include <utils/logging.hxx>
 
 namespace fs0 {
 
@@ -48,12 +49,14 @@ public:
 		_current_layer(0),
 		_effects()
 	{
-		// Initially, all domains and deltas are set to contain exactly the values from the seed state
+		// Initially we insert the seed state atoms
 		for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 			ObjectIdx value = seed.getValue(variable);
 			_effects.insert(std::make_pair(Atom(variable, value),
 							std::make_tuple(_current_layer, GroundAction::invalid_action_id, std::make_shared<std::vector<Atom>>())));
 		}
+		FFDEBUG("heuristic", "RPG Layer #" << getCurrentLayerIdx() << ": " << *this);
+		advanceLayer();
 	};
 
 	~RPGData() {};

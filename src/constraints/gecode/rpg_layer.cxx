@@ -38,12 +38,6 @@ void GecodeRPGLayer::accumulate(const std::vector<std::vector<ObjectIdx>>& novel
 	}
 }
 
-/*
-bool GecodeRPGLayer::contains(const Atom& atom) const {
-	const Domain& domain = _index.at(atom.getVariable());
-	return domain.find(atom.getValue()) != domain.end();
-}
-*/
 
 std::ostream& GecodeRPGLayer::print(std::ostream& os) const {
 	const ProblemInfo& info = Problem::getInfo();

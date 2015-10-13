@@ -6,6 +6,8 @@
 
 namespace fs0 { namespace gecode {
 
+class GecodeCSPVariableTranslator;
+
 /**
  * A SimpleCSP is a Gecode CSP with a single set of integer variables.
  * Should be enough for most of our needs.
@@ -14,12 +16,14 @@ class SimpleCSP : public Gecode::Space {
 public:
 	typedef   SimpleCSP* ptr;
 
-	SimpleCSP( ) {};
+	SimpleCSP() : _translator(nullptr) {};
 // 	virtual ~SimpleCSP() {}
 
 	//! Cloning constructor, required by Gecode
 	SimpleCSP( bool share, SimpleCSP& other ) :
-		Gecode::Space( share, other ) {
+		Gecode::Space(share, other),
+		_translator(other._translator)
+	{
 		_intvars.update( *this, share, other._intvars );
 		_boolvars.update( *this, share, other._boolvars );
 	}
@@ -43,12 +47,18 @@ public:
 		os << _boolvars; 
 		return os;
 	}
+	
+	void init(GecodeCSPVariableTranslator* translator) {
+		_translator = translator;
+	}
 
-// protected:
 	//! CSP variables that correspond to the planning problem state variables that are relevant to the goal formula + state constraints
 	Gecode::IntVarArray _intvars;
 	
 	Gecode::BoolVarArray _boolvars;
+	
+	//! A handle to translators
+	GecodeCSPVariableTranslator* _translator;
 };
 
 } } // namespaces

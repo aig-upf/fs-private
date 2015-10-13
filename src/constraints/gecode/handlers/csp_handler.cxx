@@ -10,6 +10,9 @@
 
 namespace fs0 { namespace gecode {
 
+void GecodeCSPHandler::init() {
+	_base_csp.init(&_translator);
+}
 
 void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);

@@ -53,7 +53,8 @@ long DirectCRPG::evaluate(const State& seed) {
 		
 		// unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
 		relaxed.accumulate(bookkeeping.getNovelAtoms());
-		bookkeeping.advanceLayer();
+		FFDEBUG("heuristic", "RPG Layer #" << bookkeeping.getCurrentLayerIdx() << ": " << relaxed);
+		
 /*
  * RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THE CSP MODEL
  		
@@ -64,10 +65,12 @@ long DirectCRPG::evaluate(const State& seed) {
 		if (o == FilteringOutput::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 */
 		
-		FFDEBUG("heuristic", "RPG Layer #" << bookkeeping.getCurrentLayerIdx() << ": " << relaxed);
+		
 		
 		long h = computeHeuristic(seed, relaxed, bookkeeping);
 		if (h > -1) return h;
+		
+		bookkeeping.advanceLayer();
 	}
 }
 

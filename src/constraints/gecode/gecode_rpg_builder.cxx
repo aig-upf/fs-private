@@ -64,6 +64,12 @@ bool GecodeRPGBuilder::isGoal(const State& seed, const GecodeRPGLayer& layer, At
 	return is_goal;
 }
 
+void GecodeRPGBuilder::start_evaluation() {
+	_goal_handler->init();
+// 	_state_constraint_handler->init();
+}
+
+
 std::ostream& GecodeRPGBuilder::print(std::ostream& os) const {
 	os  << std::endl << "GecodeRPGBuilder" << std::endl;
 	os << "----------------" << std::endl;

@@ -29,13 +29,9 @@ public:
 	virtual ~GecodeCSPHandler() {
 		delete _novelty;
 	}
-
-	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const GecodeCSPHandler& o) { return o.print(os); }
-	virtual std::ostream& print(std::ostream& os) const {
-		return _translator.print(os, _base_csp);
-	}
 	
+	void init();
+
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
 	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
@@ -48,6 +44,12 @@ public:
 	static void registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator);
 	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, GecodeCSPVariableTranslator& translator);
 
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const GecodeCSPHandler& o) { return o.print(os); }
+	virtual std::ostream& print(std::ostream& os) const {
+		return _translator.print(os, _base_csp);
+	}
+	
 protected:
 	//! The base Gecode CSP
 	SimpleCSP _base_csp;
