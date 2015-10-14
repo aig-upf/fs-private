@@ -129,7 +129,9 @@ Gecode::TupleSet Helper::extensionalize(const std::string& symbol) {
 }
 
 void Helper::postBranchingStrategy(SimpleCSP& csp) {
-// 	Gecode::branch(csp, csp._intvars, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+	// Beware that the order in which the branching strategies are posted matters.
+	// For the integer variables, we post an unitialized value selector that will act as a default INT_VAL_MIN selector
+	// until it is instructed (depending on the planner configuration) in order to favor lower-h_max atoms.
 	Gecode::branch(csp, csp._intvars, INT_VAR_SIZE_MIN(), INT_VAL(&Helper::value_selector));
 	Gecode::branch(csp, csp._boolvars, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
 }

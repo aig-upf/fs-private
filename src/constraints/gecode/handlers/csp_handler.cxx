@@ -11,7 +11,7 @@
 namespace fs0 { namespace gecode {
 
 void GecodeCSPHandler::init(const RPGData* bookkeeping) {
-	_base_csp.init(EarliestLayerValueSelector(&_translator, bookkeeping));
+	_base_csp.init(MinHMaxValueSelector(&_translator, bookkeeping));
 }
 
 void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {

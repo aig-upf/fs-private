@@ -10,20 +10,23 @@ namespace fs0 { namespace gecode {
 class GecodeCSPVariableTranslator;
 
 //! A value selector for Gecode variables that favors those values of the given variable
-//! that were achieved earliest in the relaxed planning graph
-class EarliestLayerValueSelector {
+//! that were achieved earliest in the relaxed planning graph.
+//! By default, however (when the selector is constructed with no parameters), the selected value
+//! is the minimum one.
+class MinHMaxValueSelector {
 public:
-	//! Parameter-less constructor, creates a selector in an invalid state
-	EarliestLayerValueSelector();
+	//! Parameter-less constructor, creates a selector in an "default" state that simply applies a min-value selection policy
+	MinHMaxValueSelector();
 	
 	//! The proper constructor
-	EarliestLayerValueSelector(const GecodeCSPVariableTranslator* translator, const RPGData* bookkeeping);
+	MinHMaxValueSelector(const GecodeCSPVariableTranslator* translator, const RPGData* bookkeeping);
 
-	EarliestLayerValueSelector(const EarliestLayerValueSelector&) = default;
-	EarliestLayerValueSelector(EarliestLayerValueSelector&&) = default;
-	EarliestLayerValueSelector& operator=(const EarliestLayerValueSelector&) = default;
-	EarliestLayerValueSelector& operator=(EarliestLayerValueSelector&&) = default;
+	MinHMaxValueSelector(const MinHMaxValueSelector&) = default;
+	MinHMaxValueSelector(MinHMaxValueSelector&&) = default;
+	MinHMaxValueSelector& operator=(const MinHMaxValueSelector&) = default;
+	MinHMaxValueSelector& operator=(MinHMaxValueSelector&&) = default;
 	
+	//! The actual value selection policy method
 	int select(const Gecode::IntVar& x, unsigned csp_var_idx) const;
 
 protected:

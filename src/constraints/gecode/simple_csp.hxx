@@ -47,7 +47,7 @@ public:
 		return os;
 	}
 	
-	void init(EarliestLayerValueSelector&& value_selector) {
+	void init(MinHMaxValueSelector&& value_selector) {
 		_value_selector = std::move(value_selector);
 	}
 
@@ -56,7 +56,7 @@ public:
 	Gecode::BoolVarArray _boolvars;
 	
 	//! A value selector for the branching strategy
-	EarliestLayerValueSelector _value_selector;
+	MinHMaxValueSelector _value_selector;
 };
 
 } } // namespaces

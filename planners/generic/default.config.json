@@ -22,8 +22,9 @@
 		"goal_resolution_comment": ["Either 'full' or 'approximate': whether to fully or only approximately solve the goal CSPs"],
 		"goal_resolution": "full",
 		
-		"enhanced_goal_resolution_comment": "Whether to use ('yes') or not ('no') the enhanced goal support identification procedure",
-		"enhanced_goal_resolution": "no",
+		"value_selection_comment": "The type of CSP value selection to use in goal and action CSPs. Currently accepted values are 'min_val' and 'min_hmax'",
+		"goal_value_selection": "min_hmax",
+		"action_value_selection": "min_val",
 		
 		"novelty_constraint_comment": "Whether to use ('yes') or not ('no') the novelty constraint",
 		"novelty_constraint": "yes"

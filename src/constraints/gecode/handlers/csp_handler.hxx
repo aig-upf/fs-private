@@ -102,11 +102,6 @@ protected:
 	void index_scopes();
 	
 	void create_novelty_constraint();
-	
-	SimpleCSP* constrain_solutions(SimpleCSP* base, const State& seed, std::vector<VariableIdx>& unprocessed) const;
-	
-	std::pair<SimpleCSP*, SimpleCSP*> try_restriction(SimpleCSP* base, VariableIdx variable, ObjectIdx value) const;
-	
 
 };
 

@@ -7,16 +7,16 @@
 
 namespace fs0 { namespace gecode {
 
-EarliestLayerValueSelector::EarliestLayerValueSelector()
+MinHMaxValueSelector::MinHMaxValueSelector()
 	: _translator(nullptr), _bookkeeping(nullptr)
 {}
 
-EarliestLayerValueSelector::EarliestLayerValueSelector(const GecodeCSPVariableTranslator* translator, const RPGData* bookkeeping)
+MinHMaxValueSelector::MinHMaxValueSelector(const GecodeCSPVariableTranslator* translator, const RPGData* bookkeeping)
 	: _translator(translator), _bookkeeping(bookkeeping)
 {}
 
-int EarliestLayerValueSelector::select(const Gecode::IntVar& x, unsigned csp_var_idx) const {
-	assert(_translator && _bookkeeping);
+int MinHMaxValueSelector::select(const Gecode::IntVar& x, unsigned csp_var_idx) const {
+	if(!_translator || !_bookkeeping) return x.min(); // If the value selector has not been initialized, we simply fall back to a min-value selection policy
 	
 	VariableIdx variable = _translator->getPlanningVariable(csp_var_idx);
 	

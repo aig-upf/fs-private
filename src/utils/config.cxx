@@ -57,7 +57,9 @@ Config::Config(const std::string& filename)
 	
 	_novelty_constraint = parseOption<bool>(_root, "csp.novelty_constraint", {{"yes", true}, {"no", false}});
 	
-	_enhanced_goal_resolution = parseOption<bool>(_root, "csp.enhanced_goal_resolution", {{"yes", true}, {"no", false}});
+	_goal_value_selection = parseOption<ValueSelection>(_root, "csp.goal_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});
+	_action_value_selection = parseOption<ValueSelection>(_root, "csp.action_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});
+	
 }
 
 

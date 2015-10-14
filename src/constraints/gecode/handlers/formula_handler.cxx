@@ -40,72 +40,18 @@ void GecodeFormulaCSPHandler::createCSPVariables() {
 	_translator.perform_registration();
 }
 
-std::pair<SimpleCSP*, SimpleCSP*> GecodeFormulaCSPHandler::try_restriction(SimpleCSP* csp, VariableIdx variable, ObjectIdx value) const {
-	
-		SimpleCSP* restricted = static_cast<SimpleCSP::ptr>(csp->clone());
-		
-		auto& csp_variable = _translator.resolveInputStateVariable(*restricted, variable);
-		Gecode::rel(*restricted, csp_variable, Gecode::IRT_EQ, value);
-		Gecode::SpaceStatus st = restricted->status(); // Propagate until fixpoint
-		if (st == Gecode::SpaceStatus::SS_FAILED) {
-			delete restricted;
-			return std::make_pair(nullptr, nullptr);
-		}
-		
-		DFS<SimpleCSP> engine(restricted);
-		SimpleCSP* solution = engine.next();
-		if (!solution) {
-			delete restricted;
-			return std::make_pair(nullptr, nullptr);
-		}
-		
-		return std::make_pair(restricted, solution);
-}
-
-SimpleCSP* GecodeFormulaCSPHandler::constrain_solutions(SimpleCSP* base, const State& seed, std::vector<VariableIdx>& unprocessed) const {
-	assert(unprocessed.empty());
-
-	SimpleCSP* current = base;
-	DFS<SimpleCSP> engine(current);
-	SimpleCSP* most_constrained = engine.next();
-	if (!most_constrained) return nullptr;
-	
-	if (!Config::instance().useEnhancedGoalResolution()) {
-		for (const auto& it:_translator.getAllInputVariables()) unprocessed.push_back(it.first);
-		return most_constrained;
-	}
-	
-	for (const auto& it:_translator.getAllInputVariables()) {
-		VariableIdx variable = it.first;
-		
-		auto csps = try_restriction(current, variable, seed.getValue(variable));
-		if (!csps.first) {
-			unprocessed.push_back(variable);
-			continue;
-		}
-		
-		// Otherwise, we were able to constraint the value of a variable to its seed value and still have a solution,
-		// now we keep trying forward with other variables
-		if (current != base) delete current;
-		current = csps.first;
-		delete most_constrained;
-		most_constrained = csps.second;
-	}
-	
-	if (current != base) delete current;
-	
-	return most_constrained;
-}
 
 bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
-	std::vector<VariableIdx> unprocessed;
-	SimpleCSP* solution = constrain_solutions(csp, seed, unprocessed);
+	
+	DFS<SimpleCSP> engine(csp);
+	SimpleCSP* solution = engine.next();
 	if (!solution) return false;
 	
-	FFDEBUG("heuristic", "Most constrained formula solution found: " << *solution);
+	FFDEBUG("heuristic", "Formula CSP solution found: " << *solution);
 	
 	// First process the direct state variables
-	for (VariableIdx variable:unprocessed) {
+	for (const auto& it:_translator.getAllInputVariables()) {
+		VariableIdx variable = it.first;
 		support.push_back(Atom(variable, _translator.resolveInputStateVariableValue(*solution, variable)));
 	}
 	
