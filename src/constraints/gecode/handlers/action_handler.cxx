@@ -14,7 +14,7 @@
 namespace fs0 { namespace gecode {
 
 GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects)
-	:  GecodeCSPHandler(), _action(action), _effects(effects)
+	:  GecodeCSPHandler(), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
 	FDEBUG( "translation", "Gecode Action Handler: Processing Action " << _action.getFullName() << std::endl);
 	createCSPVariables();
@@ -172,39 +172,72 @@ void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned acti
 			ActionEffect::cptr effect = _effects[i];
 			VariableIdx affected = _has_nested_lhs ? effect->lhs()->interpretVariable(solution_assignment) : effect_lhs_variables[i];
 			Atom atom(affected, _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution));
-			
-			auto hint = bookkeeping.getInsertionHint(atom);
-			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
-
-
-			if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
-				Atom::vctrp support = std::make_shared<Atom::vctr>();
-
-				// First extract the supports of the "direct" state variables
-				for (VariableIdx variable:effect_support_variables[i]) {
-					support->push_back(Atom(variable, _translator.resolveInputStateVariableValue(*solution, variable)));
-				}
-
-				// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
-				// the CSP solution resolves to prevent repetitions
-				std::set<VariableIdx> inserted;
-				for (auto fluent:effect_nested_fluents[i]) {
-					const NestedFluentData& nested_translator = _translator.resolveNestedFluent(fluent);
-					VariableIdx variable = nested_translator.resolveStateVariable(*solution);
-
-					if (inserted.find(variable) == inserted.end()) { // Don't push twice to the support the same atom
-						ObjectIdx value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
-						support->push_back(Atom(variable, value));
-						inserted.insert(variable);
-					}
-				}
-
-				// Once the support is computed, we insert the new atom into the RPG data structure
-				bookkeeping.add(atom, actionIdx, support, hint.second);
-			}
+			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\"");
+			if (_hmaxsum_priority) hmax_based_atom_processing(solution, actionIdx, bookkeeping, atom, i);
+			else simple_atom_processing(solution, actionIdx, bookkeeping, atom, i);
 		}
 }
 
+void GecodeActionCSPHandler::simple_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const {
+	auto hint = bookkeeping.getInsertionHint(atom);
+	FFDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
 
+	if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
+		Atom::vctrp support = extract_support_from_solution(solution, effect_idx);
+		bookkeeping.add(atom, actionIdx, support, hint.second);
+	}
+}
+
+void GecodeActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const {
+	auto hint = bookkeeping.getInsertionHint(atom);
+	FFDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
+	
+	Atom::vctrp support = extract_support_from_solution(solution, effect_idx);
+	
+	if (hint.first) { // If the atom is new, we simply insert it
+		bookkeeping.add(atom, actionIdx, support, hint.second);
+	} else { // Otherwise, we overwrite the previous atom support only as long as it has been reached in the current RPG layer and the sum of h_max values of the new one is lower
+		RPGData::AtomSupport& previous_support = hint.second->second;
+		
+		unsigned layer = std::get<0>(previous_support); // The layer at which the atom had already been achieved
+		if (layer < bookkeeping.getCurrentLayerIdx()) return; // Don't overwrite the atom support if it had been reached in a previous layer.
+		
+		const std::vector<Atom>& previous_support_atoms = *(std::get<2>(previous_support));
+		
+		if (bookkeeping.compute_hmax_sum(*support) < bookkeeping.compute_hmax_sum(previous_support_atoms)) {
+			FFDEBUG("heuristic", "Atom " << atom << " inserted anyway because of lower sum of h_max values");
+			previous_support = bookkeeping.createAtomSupport(actionIdx, support); // Simply update the element with the assignment operator
+		}
+	}
+}
+
+
+Atom::vctrp GecodeActionCSPHandler::extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx) const {
+	
+	Atom::vctrp support = std::make_shared<Atom::vctr>();
+
+	// First extract the supports of the "direct" state variables
+	for (VariableIdx variable:effect_support_variables[effect_idx]) {
+		support->push_back(Atom(variable, _translator.resolveInputStateVariableValue(*solution, variable)));
+	}
+	
+	if (effect_nested_fluents.empty()) return support; // We can spare the creation of the inserted set if no nested fluents are present.
+
+	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
+	// the CSP solution resolves to prevent repetitions
+	std::set<VariableIdx> inserted;
+	for (auto fluent:effect_nested_fluents[effect_idx]) {
+		const NestedFluentData& nested_translator = _translator.resolveNestedFluent(fluent);
+		VariableIdx variable = nested_translator.resolveStateVariable(*solution);
+
+		if (inserted.find(variable) == inserted.end()) { // Don't push twice to the support the same atom
+			ObjectIdx value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
+			support->push_back(Atom(variable, value));
+			inserted.insert(variable);
+		}
+	}
+	
+	return support;
+}
 
 } } // namespaces

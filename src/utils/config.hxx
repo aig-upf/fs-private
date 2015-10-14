@@ -28,6 +28,9 @@ public:
 	//! The CSP value selection heuristic
 	enum class ValueSelection {MinVal, MinHMax};
 	
+	//! The type of support sets that should be given priority
+	enum class SupportPriority {First, MinHMaxSum};
+	
 	//! Explicit initizalition of the singleton
 	static void init(const std::string& filename);
 	
@@ -64,6 +67,8 @@ protected:
 	ValueSelection _goal_value_selection;
 	ValueSelection _action_value_selection;
 	
+	SupportPriority _support_priority;
+	
 	bool _novelty_constraint;
 	
 	//! Private constructor
@@ -92,6 +97,8 @@ public:
 	bool useMinHMaxGoalValueSelector() const { return _goal_value_selection == ValueSelection::MinHMax; }
 	
 	bool useMinHMaxActionValueSelector() const { return _action_value_selection == ValueSelection::MinHMax; }
+	
+	bool useMinHMaxSumSupportPriority() const { return _support_priority == SupportPriority::MinHMaxSum; }
 	
 	bool useNoveltyConstraint() const { return _novelty_constraint; }
 	

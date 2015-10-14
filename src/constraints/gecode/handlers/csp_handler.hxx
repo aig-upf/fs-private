@@ -142,6 +142,9 @@ protected:
 	//! Whether the action has any effect with a LHS that contains nested fluents.
 	bool _has_nested_lhs;
 	
+	//! Whether to use the min-hmax-sum policy to prioritize the different supports of the same atom
+	bool _hmaxsum_priority;
+	
 	//! When _has_nested_lhs is true, we store here the VariableIdx referred to by the LHS of each effect, which can be deduced statically
 	std::vector<VariableIdx> effect_lhs_variables;
 
@@ -160,6 +163,16 @@ protected:
 	//! Process the given solution arising from the given solution of the action CSP
 	void process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const;
 	
+	//!
+	void simple_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const;
+	
+	void hmax_based_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const;
+
+	
+	//! Extracts the full support of a given effect corresponding to the given solution
+	Atom::vctrp extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx) const;
+	
+	//!
 	void create_novelty_constraint();
 };
 

@@ -26,6 +26,9 @@
 		"goal_value_selection": "min_hmax",
 		"action_value_selection": "min_val",
 		
+		"support_priority_comment": "Which support sets should be given priority: currently either 'first' or 'min_hmaxsum' ",
+		"support_priority": "first",
+		
 		"novelty_constraint_comment": "Whether to use ('yes') or not ('no') the novelty constraint",
 		"novelty_constraint": "yes"
 	},

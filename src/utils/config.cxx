@@ -60,6 +60,7 @@ Config::Config(const std::string& filename)
 	_goal_value_selection = parseOption<ValueSelection>(_root, "csp.goal_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});
 	_action_value_selection = parseOption<ValueSelection>(_root, "csp.action_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});
 	
+	_support_priority = parseOption<SupportPriority>(_root, "csp.support_priority", {{"min_hmaxsum", SupportPriority::MinHMaxSum}, {"first", SupportPriority::First}});
 }
 
 
@@ -82,6 +83,10 @@ std::ostream& Config::print(std::ostream& os) const {
 	os << "CSP Model:\t" << ((_csp_model == CSPModel::ActionCSP) ? "1 CSP per action" : "1 CSP per effect") << std::endl;
 	os << "Goal Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
 	os << "Plan Extraction:\t" << ((_rpg_extraction == RPGExtractionType::Propositional) ? "Propositional" : "Extended") << std::endl;
+	
+	os << "Goal CSP Value Selection:\t" << ((_goal_value_selection == ValueSelection::MinHMax) ? "Value with minimum h_max value" : "Minimum value") << std::endl;
+	os << "Action CSP Value Selection:\t" << ((_action_value_selection == ValueSelection::MinHMax) ? "Value with minimum h_max value" : "Minimum value") << std::endl;
+	os << "Support Priority:\t" << ((_support_priority == SupportPriority::MinHMaxSum) ? "Support minimizing the sum of h_max values" : "First support found") << std::endl;
 	os << "Using Novelty Constraint?:\t" << ((_novelty_constraint) ? "Yes" : "No") << std::endl;
 	return os;
 }

@@ -53,7 +53,7 @@ public:
 		for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 			ObjectIdx value = seed.getValue(variable);
 			_effects.insert(std::make_pair(Atom(variable, value),
-							std::make_tuple(_current_layer, GroundAction::invalid_action_id, std::make_shared<std::vector<Atom>>())));
+							createAtomSupport(GroundAction::invalid_action_id, std::make_shared<std::vector<Atom>>())));
 		}
 		FFDEBUG("heuristic", "RPG Layer #" << getCurrentLayerIdx() << ": " << *this);
 		advanceLayer();
@@ -73,6 +73,11 @@ public:
 		_novel = std::vector<std::vector<ObjectIdx>>(_novel.size()); // completely clear the vector of novel atoms
 		++_current_layer;
 	}
+	
+	//! Creates an atom support data structure with the given data and taking into account the current RPG layer
+	AtomSupport createAtomSupport(ActionIdx action, Atom::vctrp support) const {
+		return std::make_tuple(_current_layer, action, support);
+	}
 
 	//! Returns the support for the given atom
 	const AtomSupport& getAtomSupport(const Atom& atom) const {
@@ -87,17 +92,19 @@ public:
 	const std::vector<std::vector<ObjectIdx>>& getNovelAtoms() const { return _novel; }
 
 
-	//! Returns true iff the given atom is not already tracked by the RPG. In that case, it returns an insertion hint too.
+	//! Returns a pair "<b, it>" such that b is true iff the given atom is not already tracked by the RPG.
+	//! In that case, 'it' is an iterator that can be used as an insertion hint
+	//! If, on the other hand, b is false, 'it' is a valid iterator pointing to the atom support
 	std::pair<bool, SupportMap::iterator> getInsertionHint(const Atom& atom) {
 		SupportMap::iterator lb = _effects.lower_bound(atom); // @see http://stackoverflow.com/a/101980
 		bool keyInMap = lb != _effects.end() && !(_effects.key_comp()(atom, lb->first));
-		if (keyInMap) return std::make_pair(false, _effects.end());
+		if (keyInMap) return std::make_pair(false, lb);
 		else return std::make_pair(true, lb);
 	}
 
 	//! The version with hint assumes that the atom needs to be inserted.
 	void add(const Atom& atom, ActionIdx action, Atom::vctrp support, SupportMap::iterator hint) {
-		_effects.insert(hint, std::make_pair(atom, std::make_tuple(_current_layer, action, support)));
+		_effects.insert(hint, std::make_pair(atom, createAtomSupport(action, support)));
 		_novel[atom.getVariable()].push_back(atom.getValue());
 		++_num_novel;
 	}
@@ -107,6 +114,15 @@ public:
 		auto hint = getInsertionHint(atom);
 		if (!hint.first) return; // Don't insert the atom if it was already tracked by the RPG
 		add(atom, action, support, hint.second);
+	}
+	
+	//! Compute the sum of h_max values of all the given atoms, assuming that they have already been reached in the RPG data structure
+	unsigned compute_hmax_sum(const std::vector<Atom>& atoms) const {
+		unsigned sum = 0;
+		for (const Atom& atom:atoms) {
+			sum += std::get<0>(getAtomSupport(atom));
+		}
+		return sum;
 	}
 
 	friend std::ostream& operator<<(std::ostream &os, const RPGData& data) { return data.print(os); }
