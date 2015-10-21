@@ -298,14 +298,18 @@ public:
 } } } // namespaces
 
 
-// std::hash specialization for terms
+// std specializations for terms and term pointers that will allow us to use them in hash-table-like structures
 namespace fs = fs0::language::fstrips;
 namespace std {
     template<> struct hash<fs::Term> {
         std::size_t operator()(const fs::Term& term) const { return term.hash_code(); }
     };
 
-    template<> struct hash<fs::Term*> {
-        std::size_t operator()(const fs::Term* term) const { return hash<fs::Term>()(*term); }
+    template<> struct hash<fs::Term::cptr> {
+        std::size_t operator()(const fs::Term::cptr term) const { return hash<fs::Term>()(*term); }
+    };
+	
+    template<> struct equal_to<fs::Term::cptr> {
+        std::size_t operator()(const fs::Term::cptr t1, const fs::Term::cptr t2) const { return equal_to<fs::Term>()(*t1, *t2); }
     };
 }
