@@ -160,7 +160,7 @@ FilteringOutput CompiledBinaryConstraint::filter(unsigned variable) {
 }
 
 std::ostream& CompiledBinaryConstraint::print(std::ostream& os) const {
-	os << "CompiledBinaryConstraint[" << print::vector(print::Helper::name_variables(_scope)) << "] = {" << std::endl;
+	os << "CompiledBinaryConstraint[" << print::container(print::Helper::name_variables(_scope)) << "] = {" << std::endl;
 	os << "First view: " << std::endl;
 	for (const auto& elem:_extension1) {
 		os << "\t" << elem.first << ": [";

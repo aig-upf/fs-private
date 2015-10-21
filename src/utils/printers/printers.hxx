@@ -53,20 +53,6 @@ namespace print {
 template <typename T>
 std::string type_info_name(const T& type) { return boost::units::detail::demangle(type.name()); }
 
-template <typename T>
-class Vector {
-	protected:
-		const std::vector<T*>& _object;
-	public:
-		Vector(const std::vector<T*>& object) : _object(object) {}
-		
-		friend std::ostream& operator<<(std::ostream &os, const Vector& o) { return o.print(os); }
-		std::ostream& print(std::ostream& os) const;
-};
-
-//! A helper to allow for automatic template argument deduction
-template <typename T>
-const Vector<T> vector(const std::vector<T>& object) { return Vector<T>(object); }
 }
 
 } // namespaces

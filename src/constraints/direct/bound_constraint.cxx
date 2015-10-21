@@ -57,7 +57,7 @@ void BoundsConstraintsGenerator::generate(const GroundAction& action, const std:
 }
 
 std::ostream& BinaryDomainBoundsConstraint::print(std::ostream& os) const {
-	os << "BinaryDomainBoundsConstraint[" << print::vector(print::Helper::name_variables(_scope)) << "]";
+	os << "BinaryDomainBoundsConstraint[" << print::container(print::Helper::name_variables(_scope)) << "]";
 	return os;
 }
 

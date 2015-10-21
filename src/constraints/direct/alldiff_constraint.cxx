@@ -143,7 +143,7 @@ FilteringOutput AlldiffConstraint::bounds_consistency(const DomainVector& domain
 }
 
 std::ostream& AlldiffConstraint::print(std::ostream& os) const {
-	os << "alldiff(" << print::vector(print::Helper::name_variables(_scope)) << ")";
+	os << "alldiff(" << print::container(print::Helper::name_variables(_scope)) << ")";
 	return os;
 }
 
