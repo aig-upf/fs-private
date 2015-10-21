@@ -35,8 +35,11 @@ ObjectIdx AdditionTerm::interpret(const State& state) const {
 }
 
 std::pair<int, int> AdditionTerm::getBounds() const {
-	auto min = _subterms[0]->getBounds().first + _subterms[1]->getBounds().first; 
-	auto max = _subterms[0]->getBounds().second + _subterms[1]->getBounds().second; 
+	// see https://en.wikipedia.org/wiki/Interval_arithmetic
+	auto b0 = _subterms[0]->getBounds();
+	auto b1 = _subterms[1]->getBounds();
+	auto min = b0.first + b1.first; 
+	auto max = b0.second + b1.second; 
 	return std::make_pair(min, max);
 }
 
@@ -57,8 +60,11 @@ ObjectIdx SubtractionTerm::interpret(const State& state) const {
 }
 
 std::pair<int, int> SubtractionTerm::getBounds() const {
-	auto min = _subterms[0]->getBounds().first + _subterms[1]->getBounds().second; 
-	auto max = _subterms[0]->getBounds().second + _subterms[1]->getBounds().first; 
+	// see https://en.wikipedia.org/wiki/Interval_arithmetic
+	auto b0 = _subterms[0]->getBounds();
+	auto b1 = _subterms[1]->getBounds();
+	auto min = b0.first - b1.second; 
+	auto max = b0.second - b1.first; 
 	return std::make_pair(min, max);
 }
 
@@ -80,9 +86,12 @@ ObjectIdx MultiplicationTerm::interpret(const State& state) const {
 }
 
 std::pair<int, int> MultiplicationTerm::getBounds() const {
-	auto min = _subterms[0]->getBounds().first * _subterms[1]->getBounds().first; 
-	auto max = _subterms[0]->getBounds().second * _subterms[1]->getBounds().second; 
-	return std::make_pair(min, max);
+	// see https://en.wikipedia.org/wiki/Interval_arithmetic
+	auto b0 = _subterms[0]->getBounds();
+	auto b1 = _subterms[1]->getBounds();
+	auto all{b0.first * b1.first, b0.first * b1.second, b0.second * b1.first, b0.second * b1.second};
+	auto minmax = std::minmax_element(all.begin(), all.end());
+	return std::make_pair(*minmax.first, *minmax.second);
 }
 
 std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
