@@ -6,8 +6,11 @@
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
+#include <constraints/gecode/utils/variable_counter.hxx>
+#include <constraints/gecode/utils/nested_fluent_element_translator.hxx>
 #include <languages/fstrips/language.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
+#include <utils/config.hxx>
 
 
 namespace fs = fs0::language::fstrips;
@@ -25,7 +28,7 @@ public:
 	typedef GecodeCSPHandler* ptr;
 	typedef const GecodeCSPHandler* cptr;
 
-	GecodeCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(nullptr) {}
+	GecodeCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(nullptr), _counter(Config::instance().useElementDontCareOptimization()) {}
 	virtual ~GecodeCSPHandler() {
 		delete _novelty;
 	}
@@ -39,16 +42,13 @@ public:
 	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 
 	static void registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator);
-	static void registerTermVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, GecodeCSPVariableTranslator& translator);
-
 	static void registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator);
-	static void registerTermConstraints(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, GecodeCSPVariableTranslator& translator);
+	static void registerFormulaVariables(const fs::AtomicFormula::cptr condition, GecodeCSPVariableTranslator& translator);
+	static void registerFormulaConstraints(const fs::AtomicFormula::cptr condition, GecodeCSPVariableTranslator& translator);
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeCSPHandler& o) { return o.print(os); }
-	virtual std::ostream& print(std::ostream& os) const {
-		return _translator.print(os, _base_csp);
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 	
 protected:
 	//! The base Gecode CSP
@@ -59,13 +59,45 @@ protected:
 	
 	NoveltyConstraint* _novelty;
 	
-	void registerFormulaVariables(const fs::AtomicFormula::cptr condition);
-	void registerFormulaVariables(const std::vector<fs::AtomicFormula::cptr>& conditions);
-
-	void registerFormulaConstraints(const fs::AtomicFormula::cptr condition);
-	void registerFormulaConstraints(const std::vector<fs::AtomicFormula::cptr>& conditions);
+	VariableCounter _counter;
+	
+	// All (distinct) FSTRIPS terms that participate in the CSP
+	std::unordered_set<Term::cptr> _all_terms;
+	
+	// All (distinct) FSTRIPS formulas that participate in the CSP
+	std::unordered_set<AtomicFormula::cptr> _all_formulas;
+	
+	//! The set of nested fluent translators, one for each nested fluent in the set of terms modeled by this CSP
+	std::vector<NestedFluentElementTranslator> _nested_fluent_translators;
+	
+	//! An index from the actual term to the position of the translator in the vector '_nested_fluent_translators'
+	//! Note that we need to use the hash and equality specializations of the parent class Term pointer
+	std::unordered_map<FluentHeadedNestedTerm::cptr, unsigned, std::hash<Term::cptr>, std::equal_to<Term::cptr>> _nested_fluent_translators_idx;
+	
+	//! Return the nested fluent translator that corresponds to the given term
+	const NestedFluentElementTranslator& getNestedFluentTranslator(FluentHeadedNestedTerm::cptr fluent) const { 
+		auto it = _nested_fluent_translators_idx.find(fluent);
+		assert(it != _nested_fluent_translators_idx.end());
+		const NestedFluentElementTranslator& translator = _nested_fluent_translators.at(it->second);
+		assert(*translator.getTerm() == *fluent);
+		return translator;
+	}
 	
 	virtual void create_novelty_constraint() = 0;
+	
+	virtual void index() = 0;
+
+	void setup();
+	
+	//!
+	void count_variables();
+	
+	void register_csp_variables();
+
+	void register_csp_constraints();
+	
+	//! Registers the variables of the CSP into the CSP translator
+	void createCSPVariables();
 };
 
 
@@ -92,17 +124,11 @@ protected:
 	//! The formula being translated
 	const std::vector<fs::AtomicFormula::cptr>& _conditions;
 	
-	//! 'formula_nested_fluents' contains all the nested-fluent terms of the formula
-	std::vector<fs::FluentHeadedNestedTerm::cptr> formula_nested_fluents;
-
-	//! Creates the SimpleCSP that corresponds to a certain amount of relevant variables
-	void createCSPVariables();
-	
-	//! Preprocess the action to store the IDs of direct and indirect state variables
-	void index_scopes();
+	void index_scopes() {}
 	
 	void create_novelty_constraint();
-
+	
+	void index();
 };
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
@@ -148,12 +174,6 @@ protected:
 	//! When _has_nested_lhs is true, we store here the VariableIdx referred to by the LHS of each effect, which can be deduced statically
 	std::vector<VariableIdx> effect_lhs_variables;
 
-	//! Creates the SimpleCSP that corresponds to a given action.
-	void createCSPVariables();
-
-	// Variable registration methods
-	void registerEffectVariables(const fs::ActionEffect::cptr effect);
-
 	// Constraint registration methods
 	void registerEffectConstraints(const fs::ActionEffect::cptr effect);
 	
@@ -174,6 +194,9 @@ protected:
 	
 	//!
 	void create_novelty_constraint();
+	
+	void index();
+	
 };
 
 //! A CSP modeling and solving the effect of an action effect on a certain RPG layer
@@ -183,11 +206,8 @@ public:
 	typedef const GecodeEffectCSPHandler* cptr;
 
 	GecodeEffectCSPHandler(const GroundAction& action, unsigned effect_idx)
-	 : GecodeActionCSPHandler(action, {action.getEffects().at(effect_idx)}), _effect_idx(effect_idx) {}
+	 : GecodeActionCSPHandler(action, {action.getEffects().at(effect_idx)}) {}
 	~GecodeEffectCSPHandler() {}
-
-protected:
-	unsigned _effect_idx;
 };
 
 //! A CSP modeling and solving the progression between two RPG layers

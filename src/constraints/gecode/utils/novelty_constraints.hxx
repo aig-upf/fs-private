@@ -33,33 +33,26 @@ class WeakNoveltyConstraint : public NoveltyConstraint {
 public:
 	
 	static WeakNoveltyConstraint* create(GecodeCSPVariableTranslator& translator, const std::vector<fs::AtomicFormula::cptr>& conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
-		std::set<VariableIdx> direct;
-		std::set<VariableIdx> derived;
+		std::set<VariableIdx> relevant;
 
 		for (auto condition:conditions) {
-			ScopeUtils::computeVariables(condition, direct, derived);
+			ScopeUtils::computeVariables(condition, relevant, relevant);
 		}
 		
 		for (auto effect:effects) {
-			ScopeUtils::computeVariables(effect->rhs(), direct, derived);
+			ScopeUtils::computeVariables(effect->rhs(), relevant, relevant);
 		}
 		
-		return new WeakNoveltyConstraint(translator, direct, derived);
+		return new WeakNoveltyConstraint(translator, relevant);
 	}	
 	
 	//! Register the necessary variables for a novelty constraint to be posted upon two sets of variables, those
 	//! that are directly present as relevant state variables ('direct'), and those that are present as part of
 	//! a nested fluent ('derived').
-	WeakNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::set<VariableIdx>& direct, const std::set<VariableIdx>& derived) {
-		for (VariableIdx variable:direct) {
+	WeakNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::set<VariableIdx>& relevant) {
+		for (VariableIdx variable:relevant) {
 			// We assume here that the state variable CSP var has already been registered
 			unsigned csp_var_id = translator.resolveInputVariableIndex(variable);
-			unsigned reified_id = translator.create_bool_variable();
-			_variables.push_back(std::make_tuple(variable, csp_var_id, reified_id));
-		}
-		
-		for (VariableIdx variable:derived) {
-			unsigned csp_var_id = translator.resolveDerivedVariableIndex(variable);
 			unsigned reified_id = translator.create_bool_variable();
 			_variables.push_back(std::make_tuple(variable, csp_var_id, reified_id));
 		}
@@ -79,7 +72,7 @@ public:
 			const Gecode::IntVar& csp_variable = csp._intvars[csp_variable_id];
 			auto& novelty_reification_variable = csp._boolvars[reified_variable_id];
 			delta_reification_variables << novelty_reification_variable;
-			Gecode::dom(csp, csp_variable, layer.get_delta(variable), novelty_reification_variable);
+			Gecode::dom(csp, csp_variable, layer.get_delta(variable), novelty_reification_variable);  // X_i in delta(i) (i.e. X_i is new)
 		}
 		
 		// Now post the global novelty constraint OR: X1 is new, or X2 is new, or...

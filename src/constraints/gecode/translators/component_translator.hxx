@@ -33,56 +33,20 @@ public:
 
 	void registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
 
-	void registerConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
-		// Constants produce no particular constraint, since the domain constraint was already posted during creation of the variable
-	}
+	// Constants produce no particular constraint, since the domain constraint was already posted during creation of the variable
+	void registerConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {}
 };
 
-class StateVariableTermTranslator : public TermTranslator {
+class StaticNestedTermTranslator : public TermTranslator {
 public:
-	StateVariableTermTranslator() {}
-
 	void registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
-
-	void registerConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
-		// State variables produce no particular constraints during registration time
-	}
-};
-
-class NestedTermTranslator : public TermTranslator {
-public:
-	NestedTermTranslator() {}
-
-	virtual ~NestedTermTranslator();
-	//! The registration of variables is common to both static- and fluent- headed terms
-	virtual void registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
-
-protected:
-	//! Do the actual registration on the translator. Can be overriden if a particular logic is necessary
-	virtual void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, GecodeCSPVariableTranslator& translator) const = 0;
-};
-
-class StaticNestedTermTranslator : public NestedTermTranslator {
-public:
-	StaticNestedTermTranslator() {}
-
-	void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
 	
 	void registerConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
 };
 
-class FluentNestedTermTranslator : public NestedTermTranslator {
+class ArithmeticTermTranslator : public TermTranslator {
 public:
-	FluentNestedTermTranslator() {}
-
-	void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
-	
-	void registerConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
-};
-
-class ArithmeticTermTranslator : public NestedTermTranslator {
-public:
-	ArithmeticTermTranslator() {}
+	void registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
 
 	void registerConstraints(const fs::Term::cptr formula, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
 
@@ -93,9 +57,6 @@ protected:
 	virtual Gecode::IntArgs getLinearCoefficients() const = 0;
 
 	virtual void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const = 0;
-
-	//! Arithmetic terms do a special type of registration for the temporary variable
-	void do_root_registration(const fs::NestedTerm::cptr nested, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
 };
 
 class AdditionTermTranslator : public ArithmeticTermTranslator {
@@ -127,11 +88,11 @@ public:
 	virtual ~AtomicFormulaTranslator() {}
 
 	//! Most atomic formulae simply need all their subterms to have their variables registered
-	virtual void registerVariables(const fs0::language::fstrips::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const;
+	virtual void registerVariables(const fs0::language::fstrips::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const {}
 
 	//! For constraint registration, each particular subclass translator will probably want to add to the common functionality here,
 	//! which simply performs the recursive registration of each subterm's own constraints
-	virtual void registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const;
+	virtual void registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const {}
 };
 
 class RelationalFormulaTranslator : public AtomicFormulaTranslator {

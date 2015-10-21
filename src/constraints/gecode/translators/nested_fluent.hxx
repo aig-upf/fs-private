@@ -11,32 +11,29 @@ namespace fs0 { namespace gecode {
 
 	class NestedFluentData {
 	public:
-		NestedFluentData(unsigned index_position, unsigned first_boolean_position, unsigned table_size)
-			: _index_position(index_position), _first_boolean_position(first_boolean_position), _table_variables(table_size)
-		{}
+		NestedFluentData() {}
+		
+		void addTableReificationVariable(unsigned csp_variable_index) {
+			_table_reification_variables.push_back(csp_variable_index);
+		}
+		
+		void addIndexReificationVariable(unsigned csp_variable_index) {
+			_index_reification_variables.push_back(csp_variable_index);
+		}
+		
+		void setIndex(unsigned index) { _index_position = index; }
 		
 		//! Returns the Gecode temporary variable for the index of the element constraint
 		const Gecode::IntVar& getIndex(const SimpleCSP& csp) const {
 			return csp._intvars[_index_position];
 		}
 		
-		//! Returns the Gecode boolean variables for the reification of the index variables
-		Gecode::BoolVarArgs getIndexReificationVariables(const SimpleCSP& csp) const {
-			Gecode::BoolVarArgs variables;
-			for (unsigned i = 0; i < 2 * _table_variables.size(); i += 2) {
-				variables << csp._boolvars[_first_boolean_position + i];
-			}
-			return variables;
+		const Gecode::BoolVar& getIndexReificationVariable(const SimpleCSP& csp, unsigned iteration_index) const {
+			return csp._boolvars[_index_reification_variables[iteration_index]];
 		}
 		
-		//! Returns the Gecode boolean variables for the reification of the table variables
-		Gecode::BoolVarArgs getTableReificationVariables(const SimpleCSP& csp) const {
-			Gecode::BoolVarArgs variables;
-			for (unsigned i = 0; i < 2 * _table_variables.size(); i += 2) {
-				// We recover the boolean variables previously created, interleaved
-				variables << csp._boolvars[_first_boolean_position + i + 1];
-			}
-			return variables;
+		const Gecode::BoolVar& getTableReificationVariable(const SimpleCSP& csp, unsigned iteration_index) const {
+			return csp._boolvars[_table_reification_variables[iteration_index]];
 		}
 		
 		std::vector<VariableIdx>& getTableVariables() { return _table_variables; }
@@ -51,8 +48,11 @@ namespace fs0 { namespace gecode {
 		//! The index (within the CSP _intvars array) of the element constraint index variable;
 		unsigned _index_position;
 		
-		//! The index (within the CSP _boolvars array) of the first boolean variable of the set of variables that we use for reification purposes,
-		unsigned _first_boolean_position;
+		//! The positions in the CSP boolean variables vector of the table reification variables corresponding to each index in the element table
+		std::vector<unsigned> _table_reification_variables;
+		
+		//! The positions in the CSP boolean variables vector of the index reification variables corresponding to each index in the element table
+		std::vector<unsigned> _index_reification_variables;
 		
 		// A mapping between the implicit index of the array and the actual derived variable in the element constraint table
 		std::vector<VariableIdx> _table_variables;

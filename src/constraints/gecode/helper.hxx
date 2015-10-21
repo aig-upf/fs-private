@@ -23,7 +23,7 @@ public:
 	static Gecode::IntVar createVariable(Gecode::Space& csp, TypeIdx typeId, bool nullable = false);
 	
 	//! Creates a CSP variable constraining its domain based on the planning problem variable type
-	static Gecode::IntVar createPlanningVariable(Gecode::Space& csp, VariableIdx var, bool nullable = false);
+	static Gecode::IntVar createPlanningVariable(Gecode::Space& csp, VariableIdx var, bool nullable);
 	
 	//! Creates a CSP variable constraining its domain based on the given domain type
 	static Gecode::IntVar createTemporaryVariable(Gecode::Space& csp, TypeIdx typeId);

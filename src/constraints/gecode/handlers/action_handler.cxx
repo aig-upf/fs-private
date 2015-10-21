@@ -16,29 +16,61 @@ namespace fs0 { namespace gecode {
 GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects)
 	:  GecodeCSPHandler(), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
-	FDEBUG( "translation", "Gecode Action Handler: Processing Action " << _action.getFullName() << std::endl);
+	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.getFullName());
+	
+	setup();
+	
 	createCSPVariables();
-
-	registerFormulaConstraints(_action.getConditions());
+	Helper::postBranchingStrategy(_base_csp);
+	
+// 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: no constraints): " << _translator); // Uncomment for extreme debugging
 
 	for (const auto effect:_effects) {
 		registerEffectConstraints(effect);
 	}
+	
+// 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
+	
+	register_csp_constraints();
 
-	Helper::postBranchingStrategy(_base_csp);
-
+	FDEBUG("translation", "Action " << _action.getFullName() << " results in CSP handler:" << std::endl << *this);
+	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
 	Gecode::SpaceStatus st = _base_csp.status();
 	_unused(st);
 	assert(st != Gecode::SpaceStatus::SS_FAILED); // This should never happen, as it means that the action is (statically) unapplicable.
 	
-	index_scopes();
+	index_scopes(); // This needs to be _after_ the CSP variable registration
 }
 
 // If no set of effects is provided, we'll take all of them into account
 GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action)
 	:  GecodeActionCSPHandler(action, action.getEffects()) {}
 
+
+void GecodeActionCSPHandler::index() {
+	
+	auto conditions = _action.getConditions();
+	_all_formulas.insert(conditions.cbegin(), conditions.cend());
+	
+	for (const AtomicFormula::cptr formula:conditions) {
+		const auto terms = formula->flatten();
+		_all_terms.insert(terms.cbegin(), terms.cend());
+	}
+	
+	for (const ActionEffect::cptr effect:_effects) {
+		const auto terms = effect->rhs()->flatten();
+		_all_terms.insert(terms.cbegin(), terms.cend());
+		
+		// As for the LHS of the effect, ATM we only register the LHS subterms (if any)
+		if (auto lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs())) {
+			for (Term::cptr term:lhs->getSubterms()) {
+				auto subterms = term->flatten();
+				_all_terms.insert(subterms.cbegin(), subterms.cend());
+			}
+		}
+	}
+}
 
 
 void GecodeActionCSPHandler::index_scopes() {
@@ -96,47 +128,16 @@ void GecodeActionCSPHandler::create_novelty_constraint() {
 	_novelty = NoveltyConstraint::createFromEffects(_translator, _action.getConditions(), _effects);
 }
 
-
-void GecodeActionCSPHandler::createCSPVariables() {
-	registerFormulaVariables(_action.getConditions());
-	for (const auto effect:_effects) {
-		registerEffectVariables(effect);
-	}
-	
-	if (Config::instance().useNoveltyConstraint()) {
-		create_novelty_constraint();
-	}
-	_translator.perform_registration();
-}
-
-void GecodeActionCSPHandler::registerEffectVariables(const fs::ActionEffect::cptr effect) {
-	// Register first the RHS variables as input variables
-	registerTermVariables(effect->rhs(), CSPVariableType::Input, _translator);
-
-	// As for the LHS variable, ATM we only register the subterms (if any) recursively as input CSP variables
-	auto nested_lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs());
-	if (nested_lhs) {
-		registerTermVariables(nested_lhs->getSubterms(), CSPVariableType::Input, _translator);
-	}
-}
-
-
 void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cptr effect) {
-	// Register the constraints that correspond to both the LHS and RHS of the effect, excluding the LHS root, if it exists.
-	// GecodeCSPHandler::registerTermConstraints(effect->lhs(), CSPVariableType::Output, _base_csp, _translator);
-	auto nested_lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs());
-	if (nested_lhs) {
-		GecodeCSPHandler::registerTermConstraints(nested_lhs->getSubterms(), CSPVariableType::Input, _translator);
-	}
-	GecodeCSPHandler::registerTermConstraints(effect->rhs(), CSPVariableType::Input, _translator);
-
-	// And now equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
-// 	const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _base_csp);
-	const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, _base_csp);
-// 	Gecode::rel(_base_csp, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
+	// Note: we no longer use output variables, etc.
+	// Equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
+	// const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _base_csp);
+	// const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, _base_csp);
+	// Gecode::rel(_base_csp, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
 	
 	// Impose a bound on the RHS based on the type of the LHS
 	if (Problem::getInfo().isBoundedType(effect->lhs()->getType())) {
+		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, _base_csp);
 		const auto& lhs_bounds = effect->lhs()->getBounds();
 		Gecode::dom(_base_csp, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
 	}
@@ -221,13 +222,14 @@ Atom::vctrp GecodeActionCSPHandler::extract_support_from_solution(SimpleCSP* sol
 		support->push_back(Atom(variable, _translator.resolveInputStateVariableValue(*solution, variable)));
 	}
 	
-	if (effect_nested_fluents.empty()) return support; // We can spare the creation of the inserted set if no nested fluents are present.
+	if (effect_nested_fluents[effect_idx].empty()) return support; // We can spare the creation of the inserted set if no nested fluents are present.
 
 	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
 	// the CSP solution resolves to prevent repetitions
 	std::set<VariableIdx> inserted;
+
 	for (auto fluent:effect_nested_fluents[effect_idx]) {
-		const NestedFluentData& nested_translator = _translator.resolveNestedFluent(fluent);
+		const NestedFluentData& nested_translator = getNestedFluentTranslator(fluent).getNestedFluentData();
 		VariableIdx variable = nested_translator.resolveStateVariable(*solution);
 
 		if (inserted.find(variable) == inserted.end()) { // Don't push twice to the support the same atom
