@@ -56,11 +56,13 @@ Config::Config(const std::string& filename)
 	_precondition_resolution = parseOption<CSPResolutionType>(_root, "csp.precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 	
 	_novelty_constraint = parseOption<bool>(_root, "csp.novelty_constraint", {{"yes", true}, {"no", false}});
+	_element_dont_care_optimization = parseOption<bool>(_root, "csp.dont_care_optimization", {{"yes", true}, {"no", false}});
 	
 	_goal_value_selection = parseOption<ValueSelection>(_root, "csp.goal_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});
 	_action_value_selection = parseOption<ValueSelection>(_root, "csp.action_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});
 	
 	_support_priority = parseOption<SupportPriority>(_root, "csp.support_priority", {{"min_hmaxsum", SupportPriority::MinHMaxSum}, {"first", SupportPriority::First}});
+	
 }
 
 
@@ -88,6 +90,7 @@ std::ostream& Config::print(std::ostream& os) const {
 	os << "Action CSP Value Selection:\t" << ((_action_value_selection == ValueSelection::MinHMax) ? "Value with minimum h_max value" : "Minimum value") << std::endl;
 	os << "Support Priority:\t" << ((_support_priority == SupportPriority::MinHMaxSum) ? "Support minimizing the sum of h_max values" : "First support found") << std::endl;
 	os << "Using Novelty Constraint?:\t" << ((_novelty_constraint) ? "Yes" : "No") << std::endl;
+	os << "Using Element Don't Care Optimization?:\t" << ((_element_dont_care_optimization) ? "Yes" : "No") << std::endl;
 	return os;
 }
 

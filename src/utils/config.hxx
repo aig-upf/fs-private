@@ -71,6 +71,8 @@ protected:
 	
 	bool _novelty_constraint;
 	
+	bool _element_dont_care_optimization;
+	
 	//! Private constructor
 	Config(const std::string& filename);
 	
@@ -101,6 +103,8 @@ public:
 	bool useMinHMaxSumSupportPriority() const { return _support_priority == SupportPriority::MinHMaxSum; }
 	
 	bool useNoveltyConstraint() const { return _novelty_constraint; }
+	
+	bool useElementDontCareOptimization() const { return _element_dont_care_optimization; }
 	
 	bool useApproximateActionResolution() const {
 		return getActionPreconditionResolutionType() == CSPResolutionType::Approximate;

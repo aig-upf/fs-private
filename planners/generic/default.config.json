@@ -30,7 +30,10 @@
 		"support_priority": "first",
 		
 		"novelty_constraint_comment": "Whether to use ('yes') or not ('no') the novelty constraint",
-		"novelty_constraint": "yes"
+		"novelty_constraint": "yes",
+		
+		"dont_care_optimization_comment": "Whether to use ('yes') or not ('no') the DON'T CARE optimization for element constraints deriving from nested fluents",
+		"dont_care_optimization": "yes"
 	},
 	
 	"heuristics": {
