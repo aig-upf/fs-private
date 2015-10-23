@@ -40,10 +40,15 @@ class _container {
 		}
 };
 
-//! A helper to allow for automatic template argument deduction
+//! A helper to allow for automatic template argument deduction, both with and without printer function
 template <typename Container, typename R = _container<typename Container::const_iterator>>
-const R container(const Container& object, typename R::PrinterT printer = [](const typename R::ValT& t, std::ostream& os) { os << t; }) {
+const R container(const Container& object, typename R::PrinterT printer) {
 	return R(object.cbegin(), object.cend(), printer);
+}
+
+template <typename Container, typename R = _container<typename Container::const_iterator>>
+const R container(const Container& object) {
+	return R(object.cbegin(), object.cend());
 }
 
 } } // namespaces
