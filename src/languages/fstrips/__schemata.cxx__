@@ -119,7 +119,7 @@ AtomicFormula::cptr AtomicFormulaSchema::process(const Signature& signature, con
 	
 	// Check if we can resolve the value of the formula statically
 	if (constant_values.size() == _subterms.size()) {
-		auto resolved = processed->interpret({}) ? static_cast<AtomicFormula::cptr>(new TrueFormula) : static_cast<AtomicFormula::cptr>(new FalseFormula);
+		auto resolved = processed->interpret({}) ? static_cast<AtomicFormula::cptr>(new Tautology) : static_cast<AtomicFormula::cptr>(new Contradiction);
 		delete processed;
 		return resolved;
 	}

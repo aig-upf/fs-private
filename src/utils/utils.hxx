@@ -21,7 +21,7 @@ public:
 	
 	//! Flattens a container of containers
 	template <typename T>
-	static std::vector<T> flatten(const std::vector<std::vector<T>>& vector) {
+	static std::vector<T> all_terms(const std::vector<std::vector<T>>& vector) {
 		std::vector<T> result;
 		for(const std::vector<T>& sub:vector) {
 			for(T var:sub) {

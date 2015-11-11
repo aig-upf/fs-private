@@ -11,8 +11,8 @@ std::unique_ptr<Problem> Problem::_instance = nullptr;
 
 Problem::Problem() :
 	_problemInfo(nullptr),
-	_stateConstraints(),
-	_goalConditions()
+	_state_constraint_formula(),
+	_goal_formula()
 {
 }
 
@@ -20,8 +20,8 @@ Problem::~Problem() {
 	delete _problemInfo;
 	for (const auto pointer:_schemata) delete pointer;
 	for (const auto pointer:_ground) delete pointer;
-	for (const auto pointer:_stateConstraints) delete pointer;
-	for (const auto pointer:_goalConditions) delete pointer;
+	delete _state_constraint_formula;
+	delete _goal_formula;
 }
 
 ApplicableActionSet Problem::getApplicableActions(const State& s) const {
@@ -38,11 +38,11 @@ std::ostream& Problem::print(std::ostream& os) const {
 	os << "Planning Problem [domain: " << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;
 	
 	os << "Goal Conditions:" << std::endl << "------------------" << std::endl;
-	for (const auto formula:getGoalConditions()) os << "\t" << print::formula(*formula) << std::endl;
+	os << "\t" << print::formula(*getGoalConditions()) << std::endl;
 	os << std::endl;
 	
 	os << "State Constraints:" << std::endl << "------------------" << std::endl;
-	for (const auto formula:getStateConstraints()) os << "\t" << print::formula(*formula) << std::endl;
+	os << "\t" << print::formula(*getStateConstraints()) << std::endl;
 	os << std::endl;
 	
 	os << "Action schemata" << std::endl << "------------------" << std::endl;

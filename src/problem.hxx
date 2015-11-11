@@ -31,10 +31,10 @@ public:
 	
 	ApplicableActionSet getApplicableActions(const State& s) const;
 	
-	void setStateConstraints(const std::vector<AtomicFormula::cptr>& constraints) { _stateConstraints = constraints;}
-	const std::vector<AtomicFormula::cptr>& getStateConstraints() const { return _stateConstraints; }
-	void setGoalConditions(const std::vector<AtomicFormula::cptr>& conditions) { _goalConditions = conditions;}
-	const std::vector<AtomicFormula::cptr>& getGoalConditions() const { return _goalConditions; }
+	void setStateConstraints(const Formula::cptr formula) { _state_constraint_formula = formula;}
+	const Formula::cptr getStateConstraints() const { return _state_constraint_formula; }
+	void setGoalConditions(const Formula::cptr formula) { _goal_formula = formula;}
+	const Formula::cptr getGoalConditions() const { return _goal_formula; }
 
 	std::string get_action_name(unsigned action) const;
 
@@ -77,8 +77,8 @@ protected:
 	ProblemInfo* _problemInfo;
 	
 	//! Pointers to the different problem constraints. This class owns the pointers.
-	std::vector<AtomicFormula::cptr> _stateConstraints;
-	std::vector<AtomicFormula::cptr> _goalConditions;
+	Formula::cptr _state_constraint_formula;
+	Formula::cptr _goal_formula;
 
 	//! The singleton instance
 	static std::unique_ptr<Problem> _instance;

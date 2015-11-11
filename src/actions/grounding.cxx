@@ -37,9 +37,7 @@ std::vector<GroundAction::cptr> ActionGrounder::ground(const std::vector<ActionS
 		utils::cartesian_iterator cross_product(std::move(values));
 		unsigned i = 0;
 		for (; !cross_product.ended(); ++cross_product) {
-			const std::vector<ObjectIdx>& binding = *cross_product;
-		
-			ground(schema, binding, info, grounded);
+			ground(schema, Binding(*cross_product), info, grounded);
 			++i;
 			
 			// Print 5%, 10%, 15%, ... progress indicators
@@ -57,9 +55,9 @@ std::vector<GroundAction::cptr> ActionGrounder::ground(const std::vector<ActionS
 	return grounded;
 }
 
-void ActionGrounder::ground(ActionSchema::cptr schema, const std::vector<ObjectIdx>& binding, const ProblemInfo& info, std::vector<GroundAction::cptr>& grounded) {
+void ActionGrounder::ground(ActionSchema::cptr schema, const Binding& binding, const ProblemInfo& info, std::vector<GroundAction::cptr>& grounded) {
 	FDEBUG("grounding", "Binding: " << print::binding(binding, schema->getSignature()));
-	GroundAction* ground = schema->process(binding, info);
+	GroundAction* ground = schema->bind(binding, info);
 	if (ground) {
 		FDEBUG("grounding", "Binding " << print::binding(binding, schema->getSignature()) << " generated grounded action:\n" << *ground);
 		grounded.push_back(ground);

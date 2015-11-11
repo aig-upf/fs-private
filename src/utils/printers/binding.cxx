@@ -9,7 +9,8 @@ namespace fs0 { namespace print {
 std::ostream& binding::print(std::ostream& os) const {
 	const ProblemInfo& info = Problem::getInfo();
 	for (unsigned i = 0; i < _binding.size(); ++i) {
-		os << info.deduceObjectName(_binding[i], _signature[i]);
+		if (!_binding.binds(i)) continue;
+		os << info.deduceObjectName(_binding.value(i), _signature[i]);
 		if (i < _binding.size() - 1) os << ", ";
 	}
 	return os;

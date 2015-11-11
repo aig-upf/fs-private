@@ -2,66 +2,101 @@
 #include <languages/fstrips/loader.hxx>
 #include "builtin.hxx"
 #include <problem.hxx>
+#include <constraints/registry.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips {
 
-AtomicFormulaSchema::cptr Loader::parseAtomicFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
+AtomicFormula::cptr Loader::parseAtomicFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
 	std::string term_type = tree["type"].GetString();
 	
 	if (term_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
-		std::vector<TermSchema::cptr> subterms = parseTermList(tree["subterms"], info);
-		return new AtomicFormulaSchema(symbol, subterms);
+		std::vector<Term::cptr> subterms = parseTermList(tree["subterms"], info);
+		return LogicalComponentRegistry::instance().instantiate_formula(symbol, subterms);
 	}
-	
 	else throw std::runtime_error("Unknown node type " + term_type);
 }
 
-std::vector<AtomicFormulaSchema::cptr> Loader::parseAtomicFormulaList(const rapidjson::Value& tree, const ProblemInfo& info) {
-	std::vector<AtomicFormulaSchema::cptr> list;
+Formula::cptr Loader::parseFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
+	// As of now we only accept either conjunctions of atoms or existentially quantified conjunctions
+	std::string formula_type = tree["type"].GetString();
+	
+	
+	if (formula_type == "conjunction") {
+		std::vector<AtomicFormula::cptr> list;
+		const rapidjson::Value& elements = tree["elements"];
+		for (unsigned i = 0; i < elements.Size(); ++i) {
+			list.push_back(parseAtomicFormula(elements[i], info));
+		}
+		return new Conjunction(list);
+	
+		
+	} else if (formula_type == "existential") {
+		auto subformula = parseFormula(tree["elements"], info);
+		auto subformula_conjunction = dynamic_cast<Conjunction::cptr>(subformula);
+		if (!subformula_conjunction) {
+			throw std::runtime_error("Only existentially quantified conjunctions are supported so far");
+		}
+		std::vector<BoundVariable> variables = parseVariables(tree["elements"], info);
+		return new ExistentiallyQuantifiedFormula(variables, subformula_conjunction);
+	
+		
+	} else if (formula_type == "tautology") {
+		return new Tautology;
+	} else if (formula_type == "contradiction") {
+		return new Contradiction;
+	}
+	
+	throw std::runtime_error("Unknown formula type " + formula_type);
+}
+
+std::vector<BoundVariable> Loader::parseVariables(const rapidjson::Value& tree, const ProblemInfo& info) {
+	std::vector<BoundVariable> list;
 	for (unsigned i = 0; i < tree.Size(); ++i) {
-		list.push_back(parseAtomicFormula(tree[i], info));
+		const rapidjson::Value& node = tree[i];
+		unsigned id = node[0].GetUint();
+// 		std::string name = node[1].GetString();
+		std::string type_name = node[2].GetString();
+		TypeIdx type = info.getTypeId(type_name);
+		list.push_back(BoundVariable(id, type));
 	}
 	return list;
 }
 
-TermSchema::cptr Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& info) {
+Term::cptr Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& info) {
 	std::string term_type = tree["type"].GetString();
 	
 	if (term_type == "constant") {
-		return new ConstantSchema(tree["value"].GetInt());
+		return new Constant(tree["value"].GetInt());
 	} else if (term_type == "int_constant") {
-		return new IntConstantSchema(tree["value"].GetInt());
+		return new IntConstant(tree["value"].GetInt());
 	} else if (term_type == "parameter") {
-		return new ActionSchemaParameter(tree["position"].GetInt(), tree["name"].GetString());
+		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["type"].GetString()));
 	} else if (term_type == "nested") {
 		std::string symbol = tree["symbol"].GetString();
-		std::vector<TermSchema::cptr> subterms = parseTermList(tree["subterms"], info);
-		
-		if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return new ArithmeticTermSchema(symbol, subterms);
-		else return new NestedTermSchema(info.getFunctionId(symbol), subterms);
-		
+		std::vector<Term::cptr> subterms = parseTermList(tree["subterms"], info);
+		return NestedTerm::create(symbol, subterms);
 	} else throw std::runtime_error("Unknown node type " + term_type);
 }
 
-std::vector<TermSchema::cptr> Loader::parseTermList(const rapidjson::Value& tree, const ProblemInfo& info) {
-	std::vector<TermSchema::cptr> list;
+std::vector<Term::cptr> Loader::parseTermList(const rapidjson::Value& tree, const ProblemInfo& info) {
+	std::vector<Term::cptr> list;
 	for (unsigned i = 0; i < tree.Size(); ++i) {
 		list.push_back(parseTerm(tree[i], info));
 	}
 	return list;
 }
 
-ActionEffectSchema::cptr Loader::parseAtomicEffect(const rapidjson::Value& tree, const ProblemInfo& info) {
+ActionEffect::cptr Loader::parseEffect(const rapidjson::Value& tree, const ProblemInfo& info) {
 	assert(tree.Size() == 2);
-	return new ActionEffectSchema(parseTerm(tree[0], info), parseTerm(tree[1], info));
+	return new ActionEffect(parseTerm(tree[0], info), parseTerm(tree[1], info));
 }
 
-std::vector<ActionEffectSchema::cptr> Loader::parseAtomicEffectList(const rapidjson::Value& tree, const ProblemInfo& info) {
-	std::vector<ActionEffectSchema::cptr> list;
+std::vector<ActionEffect::cptr> Loader::parseEffectList(const rapidjson::Value& tree, const ProblemInfo& info) {
+	std::vector<ActionEffect::cptr> list;
 	for (unsigned i = 0; i < tree.Size(); ++i) {
-		list.push_back(parseAtomicEffect(tree[i], info));
+		list.push_back(parseEffect(tree[i], info));
 	}
 	return list;
 }

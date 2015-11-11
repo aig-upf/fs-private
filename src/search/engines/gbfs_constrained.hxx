@@ -25,7 +25,7 @@ protected:
 	
 	static Config::CSPManagerType decide_action_manager_type(const std::vector< fs0::GroundAction::cptr >& actions);
 	
-	static Config::CSPManagerType decide_builder_type(const std::vector<fs::AtomicFormula::cptr>& goal_conditions, const std::vector<fs::AtomicFormula::cptr>& state_constraints);
+	static Config::CSPManagerType decide_builder_type(const fs::Formula::cptr goal_formula, const fs::Formula::cptr state_constraints);
 
 };
 

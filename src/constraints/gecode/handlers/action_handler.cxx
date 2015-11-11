@@ -49,23 +49,22 @@ GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action)
 
 
 void GecodeActionCSPHandler::index() {
-	
-	auto conditions = _action.getConditions();
+	auto conditions = _action.getPrecondition()->all_atoms();
 	_all_formulas.insert(conditions.cbegin(), conditions.cend());
 	
 	for (const AtomicFormula::cptr formula:conditions) {
-		const auto terms = formula->flatten();
+		const auto terms = formula->all_terms();
 		_all_terms.insert(terms.cbegin(), terms.cend());
 	}
 	
 	for (const ActionEffect::cptr effect:_effects) {
-		const auto terms = effect->rhs()->flatten();
+		const auto terms = effect->rhs()->all_terms();
 		_all_terms.insert(terms.cbegin(), terms.cend());
 		
 		// As for the LHS of the effect, ATM we only register the LHS subterms (if any)
 		if (auto lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs())) {
 			for (Term::cptr term:lhs->getSubterms()) {
-				auto subterms = term->flatten();
+				auto subterms = term->all_terms();
 				_all_terms.insert(subterms.cbegin(), subterms.cend());
 			}
 		}
@@ -106,7 +105,7 @@ void GecodeActionCSPHandler::index_scopes() {
 		// Actually we don't care that much about repetitions between the two sets of terms, since they are checked anyway when
 		// transformed into state variables
 		nested.clear();
-		for (AtomicFormula::cptr formula:_action.getConditions()) ScopeUtils::computeIndirectScope(formula, nested);
+		ScopeUtils::computeIndirectScope(_action.getPrecondition(), nested);
 		effect_nested_fluents[i].insert(effect_nested_fluents[i].end(), nested.cbegin(), nested.cend());
 		
 		effect_rhs_variables[i] = _translator.resolveVariableIndex(_effects[i]->rhs(), CSPVariableType::Input);
@@ -125,7 +124,7 @@ void GecodeActionCSPHandler::index_scopes() {
 
 
 void GecodeActionCSPHandler::create_novelty_constraint() {
-	_novelty = NoveltyConstraint::createFromEffects(_translator, _action.getConditions(), _effects);
+	_novelty = NoveltyConstraint::createFromEffects(_translator, _action.getPrecondition(), _effects);
 }
 
 void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cptr effect) {

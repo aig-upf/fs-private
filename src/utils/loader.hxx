@@ -39,8 +39,8 @@ protected:
 	
 	static ActionSchema::cptr loadActionSchema(const rapidjson::Value& data, const ProblemInfo& info);
 	
-	//! Load a set of already-grounded atomic formulae
-	static std::vector<AtomicFormula::cptr> loadGroundedConditions(const rapidjson::Value& data, Problem& problem);
+	//! Load a formula and process it
+	static Formula::cptr loadGroundedFormula(const rapidjson::Value& data, Problem& problem);
 	
 	// Conversion to a C++ vector of values.
 	template<typename T>

@@ -20,7 +20,7 @@ class GecodeRPGLayer;
 class GecodeRPGBuilder {
 public:
 	//! Factory method - pointer ownership corresponds to the caller.
-	static std::shared_ptr<GecodeRPGBuilder> create(const std::vector<fs::AtomicFormula::cptr>& goal_conditions, const std::vector<fs::AtomicFormula::cptr>& state_constraints);
+	static std::shared_ptr<GecodeRPGBuilder> create(const Formula::cptr goal_formula, const Formula::cptr state_constraints);
 	
 	GecodeRPGBuilder(gecode::GecodeFormulaCSPHandler::ptr goal_handler, gecode::GecodeFormulaCSPHandler::ptr state_constraint_handler)
 		: _goal_handler(goal_handler), _state_constraint_handler(state_constraint_handler) {}

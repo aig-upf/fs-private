@@ -12,7 +12,7 @@ std::vector<VariableIdx> ScopeUtils::computeDirectScope(Term::cptr term) {
 }
 
 void ScopeUtils::computeDirectScope(Term::cptr term, std::set<VariableIdx>& scope) {
-	for (Term::cptr subterm:term->flatten()) {
+	for (Term::cptr subterm:term->all_terms()) {
 		if (auto sv = dynamic_cast<StateVariable::cptr>(subterm)) {
 			scope.insert(sv->getValue());
 		}
@@ -26,7 +26,7 @@ std::vector<FluentHeadedNestedTerm::cptr> ScopeUtils::computeIndirectScope(Actio
 }
 
 void ScopeUtils::computeIndirectScope(ActionEffect::cptr effect, TermSet& scope) {
-	for (Term::cptr term:effect->flatten()) {
+	for (Term::cptr term:effect->all_terms()) {
 		if (term == effect->lhs()) continue; // Don't register the LHS root
 		if (auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
 			scope.insert(fluent);
@@ -49,18 +49,18 @@ void ScopeUtils::computeDirectScope(ActionEffect::cptr effect, std::set<Variable
 	computeDirectScope(effect->rhs(), scope);
 }
 
-std::vector<VariableIdx> ScopeUtils::computeDirectScope(AtomicFormula::cptr formula) {
+std::vector<VariableIdx> ScopeUtils::computeDirectScope(Formula::cptr formula) {
 	std::set<VariableIdx> set;
 	computeDirectScope(formula, set);
 	return std::vector<VariableIdx>(set.cbegin(), set.cend());
 }
 
-void ScopeUtils::computeDirectScope(AtomicFormula::cptr formula, std::set<VariableIdx>& scope) {
-	for (Term::cptr subterm:formula->getSubterms()) ScopeUtils::computeDirectScope(subterm, scope);
+void ScopeUtils::computeDirectScope(Formula::cptr formula, std::set<VariableIdx>& scope) {
+	for (Term::cptr subterm:formula->all_terms()) ScopeUtils::computeDirectScope(subterm, scope);
 }
 
-void ScopeUtils::computeIndirectScope(AtomicFormula::cptr formula, TermSet& scope) {
-	for (Term::cptr term:formula->flatten()) {
+void ScopeUtils::computeIndirectScope(Formula::cptr formula, TermSet& scope) {
+	for (Term::cptr term:formula->all_terms()) {
 		if (auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
 			scope.insert(fluent);
 		}
@@ -68,9 +68,7 @@ void ScopeUtils::computeIndirectScope(AtomicFormula::cptr formula, TermSet& scop
 }
 
 std::vector<VariableIdx> ScopeUtils::computeActionDirectScope(const GroundAction& action) {
-	std::set<VariableIdx> unique;
-	for (const AtomicFormula::cptr formula:action.getConditions()) computeDirectScope(formula, unique);
-	return std::vector<VariableIdx>(unique.cbegin(), unique.cend());
+	return computeDirectScope(action.getPrecondition());
 }
 
 void ScopeUtils::computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<VariableIdx>& scope) {

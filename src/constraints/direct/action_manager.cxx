@@ -26,7 +26,9 @@ std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(co
 
 std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAction& action) {
 	assert(is_supported(action));
-	std::vector<DirectConstraint::cptr> constraints = DirectTranslator::generate(action.getConditions());
+	auto precondition = dynamic_cast<Conjunction::cptr>(action.getPrecondition());
+	assert(precondition);
+	std::vector<DirectConstraint::cptr> constraints = DirectTranslator::generate(precondition->getConjuncts());
 	std::vector<DirectEffect::cptr> effects = DirectTranslator::generate(action.getEffects());
 	
 	// Add the necessary bound-constraints
@@ -39,7 +41,12 @@ std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAct
 }
 
 bool DirectActionManager::is_supported(const GroundAction& action) {
-	for (const AtomicFormula::cptr condition:action.getConditions()) {
+	auto precondition = dynamic_cast<Conjunction::cptr>(action.getPrecondition());
+	
+	// Only conjunctions of atoms are supported by the direct translator
+	if (!precondition) return false; 
+	
+	for (const AtomicFormula::cptr condition:precondition->getConjuncts()) {
 		if (condition->nestedness() > 0) return false;
 		
 		unsigned arity = ScopeUtils::computeDirectScope(condition).size();

@@ -7,13 +7,14 @@
 #include <utils/config.hxx>
 #include <state.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
+#include <languages/fstrips/formulae.hxx>
 
 
 namespace fs0 { namespace gecode {
 
-std::shared_ptr<GecodeRPGBuilder> GecodeRPGBuilder::create(const std::vector<AtomicFormula::cptr>& goal_conditions, const std::vector<AtomicFormula::cptr>& state_constraints) {
-	auto goal_handler = new GecodeFormulaCSPHandler(Utils::merge(goal_conditions, state_constraints));
-	auto state_constraint_handler = state_constraints.empty() ? nullptr : new GecodeFormulaCSPHandler(state_constraints);
+std::shared_ptr<GecodeRPGBuilder> GecodeRPGBuilder::create(const Formula::cptr goal_formula, const Formula::cptr state_constraints) {
+	auto goal_handler = new GecodeFormulaCSPHandler(goal_formula->conjunction(state_constraints));
+	auto state_constraint_handler = state_constraints->is_tautology() ? nullptr : new GecodeFormulaCSPHandler(state_constraints);
 	return std::make_shared<GecodeRPGBuilder>(goal_handler, state_constraint_handler);
 }
 	

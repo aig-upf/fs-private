@@ -32,7 +32,7 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 
 	if ( feature_configuration.useGoal() ) {
 		ConditionSetFeature* feature = new ConditionSetFeature;
-		for ( AtomicFormula::cptr condition : problem.getGoalConditions() ) {
+		for ( AtomicFormula::cptr condition : problem.getGoalConditions()->all_atoms() ) {
 			feature->addCondition(condition);
 			const auto scope = ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
 			relevantVars.insert(scope.cbegin(), scope.cend());
@@ -43,14 +43,15 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 	for ( GroundAction::cptr action : problem.getGroundActions() ) {
 		ConditionSetFeature*  feature = new ConditionSetFeature;
 
-		for ( AtomicFormula::cptr condition : action->getConditions() ) {
+		// TODO Need to rethink that to do with indirect scopes and in particular with existentially quantified variables
+		for ( AtomicFormula::cptr condition : action->getPrecondition()->all_atoms() ) {
 			if ( feature_configuration.useStateVars() ) {
 				const auto scope = ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
 				relevantVars.insert(scope.cbegin(), scope.cend());
 			}
 			if ( feature_configuration.useActions() ) feature->addCondition(condition);
 		}
-
+		
 		if (feature_configuration.useActions()) _features.push_back(feature);
 		else delete feature;
 	}

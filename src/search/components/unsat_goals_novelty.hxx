@@ -32,9 +32,13 @@ public:
 
 	UnsatGoalsNoveltyComponent(const FS0StateModel& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
 		: Base(max_novelty), 
-		  _novelty_evaluators(model.getTask().getGoalConditions().size()+1, GenericNoveltyEvaluator(model.getTask(), max_novelty, feature_configuration)), // We set up k+1 identical evaluators
+		  _novelty_evaluators(model.getTask().getGoalConditions()->all_atoms().size()+1, GenericNoveltyEvaluator(model.getTask(), max_novelty, feature_configuration)), // We set up k+1 identical evaluators
 		  _unsat_goal_atoms_heuristic(model)
-	{}
+	{
+		if (!dynamic_cast<Conjunction::cptr>(model.getTask().getGoalConditions())) {
+			throw std::runtime_error("NoveltyComponent available only for goal conjunctions");
+		}
+	}
 	
 	~UnsatGoalsNoveltyComponent() {
 		for (unsigned j = 0; j < _novelty_evaluators.size(); j++)

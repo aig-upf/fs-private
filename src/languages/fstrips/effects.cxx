@@ -8,9 +8,9 @@
 namespace fs0 { namespace language { namespace fstrips {
 
 	
-std::vector<Term::cptr> ActionEffect::flatten() const {
-	std::vector<Term::cptr> res = _lhs->flatten();
-	auto rhsf = _rhs->flatten();
+std::vector<Term::cptr> ActionEffect::all_terms() const {
+	std::vector<Term::cptr> res = _lhs->all_terms();
+	auto rhsf = _rhs->all_terms();
 	res.insert(res.end(), rhsf.cbegin(), rhsf.cend());
 	return res;
 }
@@ -31,6 +31,10 @@ std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, Pro
 std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_lhs << " := " << *_rhs;
 	return os;
+}
+
+ActionEffect::cptr ActionEffect::bind(const Binding& binding, const ProblemInfo& info) const {
+	return new ActionEffect(_lhs->bind(binding, info), _rhs->bind(binding, info));
 }
 
 

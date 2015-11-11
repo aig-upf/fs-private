@@ -12,11 +12,17 @@
 
 namespace fs0 {
 
-std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const std::vector<fs::AtomicFormula::cptr>& goalConditions, const std::vector<fs::AtomicFormula::cptr>& stateConstraints) {
-	auto directStateConstraints = DirectTranslator::generate(stateConstraints);
+std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const Formula::cptr goal_formula, const Formula::cptr state_constraints) {
+	auto goal_conjunction = dynamic_cast<Conjunction::cptr>(goal_formula);
+	auto sc_conjunction = dynamic_cast<Conjunction::cptr>(state_constraints);
+	assert(goal_conjunction);
+	assert(sc_conjunction);
+	
+	
+	auto directStateConstraints = DirectTranslator::generate(sc_conjunction->all_atoms());
 	ConstraintCompiler::compileConstraints(directStateConstraints);
 	
-	auto directGoalConstraints = DirectTranslator::generate(goalConditions);
+	auto directGoalConstraints = DirectTranslator::generate(goal_conjunction->all_atoms());
 	ConstraintCompiler::compileConstraints(directGoalConstraints);
 	
 	auto allGoalConstraints = Utils::merge(directGoalConstraints, directStateConstraints);

@@ -27,11 +27,14 @@ public:
 		delete _lhs; delete _rhs;
 	}
 	
-	//! Checks that the 
+	//! Checks that the effect is well formed
 	bool isWellFormed() const;
 	
+	ActionEffect::cptr bind(const Binding& binding, const ProblemInfo& info) const;
+
+
 	//! Returns a vector with all the terms involved in the effect (possibly with repetitions)
-	std::vector<Term::cptr> flatten() const;
+	std::vector<Term::cptr> all_terms() const;
 	
 	//! Applies the effect to the given state and returns the resulting atom
 	Atom apply(const State& state) const;

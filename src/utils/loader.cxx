@@ -42,11 +42,11 @@ void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFac
 
 	/* Load the state and goal constraints */
 	std::cout << "\tDefining state and goal constraints..." << std::endl;
-	problem->setStateConstraints(loadGroundedConditions(data["state_constraints"], *problem));
+	problem->setStateConstraints(loadGroundedFormula(data["state_constraints"], *problem));
 
 	/* Generate goal constraints from the goal evaluator */
-	std::cout << "\tGenerating goal constraints..." << std::endl;
-	problem->setGoalConditions(loadGroundedConditions(data["goal"], *problem));
+	std::cout << "\tLoading goal formula..." << std::endl;
+	problem->setGoalConditions(loadGroundedFormula(data["goal"], *problem));
 	
 	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 	
@@ -87,19 +87,18 @@ ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const 
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	
-	const std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(node["conditions"], info);
-	const std::vector<ActionEffectSchema::cptr> effects = fs::Loader::parseAtomicEffectList(node["effects"], info);
+	const Formula::cptr precondition = fs::Loader::parseFormula(node["conditions"], info);
+	const std::vector<ActionEffect::cptr> effects = fs::Loader::parseEffectList(node["effects"], info);
 	
-	return new ActionSchema(name, signature, parameters, conditions, effects);
+	return new ActionSchema(name, signature, parameters, precondition, effects);
 }
 
-std::vector<AtomicFormula::cptr> Loader::loadGroundedConditions(const rapidjson::Value& data, Problem& problem) {
-	std::vector<AtomicFormula::cptr> processed;
-	std::vector<AtomicFormulaSchema::cptr> conditions = fs::Loader::parseAtomicFormulaList(data["conditions"], problem.getProblemInfo());
-	for (const AtomicFormulaSchema::cptr condition:conditions) {
-		processed.push_back(condition->process({}, {}, problem.getProblemInfo())); // The conditions are by definition already grounded, thus we need no binding
-		delete condition;
-	}
+Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, Problem& problem) {
+	const Formula::cptr unprocessed = fs::Loader::parseFormula(data["conditions"], problem.getProblemInfo());
+	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
+	// to detect tautologies, contradictions, etc., and to consolidate state variables
+	auto processed = unprocessed->bind(Binding(), problem.getProblemInfo());
+	delete unprocessed;
 	return processed;
 }
 

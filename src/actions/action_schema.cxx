@@ -8,15 +8,15 @@ namespace fs0 {
 
 ActionSchema::ActionSchema(const std::string& name,
 						   const Signature& signature, const std::vector<std::string>& parameters,
-						   const std::vector<AtomicFormulaSchema::cptr>& conditions, const std::vector<ActionEffectSchema::cptr>& effects)
-	: _name(name), _signature(signature), _parameters(parameters), _conditions(conditions), _effects(effects)
+						   const Formula::cptr precondition, const std::vector<ActionEffect::cptr>& effects)
+	: _name(name), _signature(signature), _parameters(parameters), _precondition(precondition), _effects(effects)
 {
 	assert(parameters.size() == signature.size());
 }
 
 
 ActionSchema::~ActionSchema() {
-	for (const auto ptr:_conditions) delete ptr;
+	delete _precondition;
 	for (const auto ptr:_effects) delete ptr;
 }
 
@@ -25,38 +25,22 @@ std::ostream& ActionSchema::print(std::ostream& os) const { return print(os, Pro
 std::ostream& ActionSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
 	os <<  _name << "(" << print::signature(_parameters, getSignature()) << ")" << std::endl;
 	
-	os << "Preconditions:" << std::endl;
-	for (auto elem:_conditions) os << "\t" << *elem << std::endl;
+	os << "Precondition:" << *_precondition << std::endl;
 	
 	os << "Effects:" << std::endl;
 	for (auto elem:_effects) os << "\t" << *elem << std::endl;
 	return os;
 }
 
-GroundAction* ActionSchema::process(const ObjectIdxVector& binding, const ProblemInfo& info) const {
-	std::vector<AtomicFormula::cptr> conditions;
-	for (const AtomicFormulaSchema::cptr condition:_conditions) {
-		AtomicFormula::cptr processed = condition->process(_signature, binding, info);
-		
-		// Static checks
-		if (processed->is_tautology()) { // No need to add the condition, which is always true
-			delete processed;
-			continue; 
-		} else if (processed->is_contradiction()) { // The action is statically non-applicable
-			delete processed;
-			for (const auto c:conditions) delete c;
-			return nullptr;
-		}
-		
-		conditions.push_back(processed);
-	}
+GroundAction* ActionSchema::bind(const Binding& binding, const ProblemInfo& info) const {
+	Formula::cptr precondition = _precondition->bind(binding, info);
 	
 	std::vector<ActionEffect::cptr> effects;
-	for (const ActionEffectSchema::cptr effect:_effects) {
-		effects.push_back(effect->process(_signature, binding, info));
+	for (const ActionEffect::cptr effect:_effects) {
+		effects.push_back(effect->bind(binding, info));
 	}
 	
-	return new GroundAction(this, binding, conditions, effects);
+	return new GroundAction(this, binding, precondition, effects);
 }
 
 } // namespaces

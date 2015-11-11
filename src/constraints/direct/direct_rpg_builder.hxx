@@ -19,7 +19,7 @@ class State; class RelaxedState;
 class DirectRPGBuilder {
 public:
 	//! Factory method to create Direct RPG builders
-	static std::shared_ptr<DirectRPGBuilder> create(const std::vector<fs::AtomicFormula::cptr>& goalConditions, const std::vector<fs::AtomicFormula::cptr>& stateConstraints);
+	static std::shared_ptr<DirectRPGBuilder> create(const fs::Formula::cptr goal_formula, const fs::Formula::cptr state_constraints);
 	
 	DirectRPGBuilder(const std::vector<DirectConstraint::cptr>&& goalConstraints, const std::vector<DirectConstraint::cptr>&& stateConstraints);
 	~DirectRPGBuilder();

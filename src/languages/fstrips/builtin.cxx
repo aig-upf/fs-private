@@ -16,22 +16,15 @@ StaticHeadedNestedTerm::cptr ArithmeticTermFactory::create(const std::string& sy
 }
 
 
-
-ArithmeticTerm::ArithmeticTerm(const std::vector<Term::cptr>& subterms)
-	: StaticHeadedNestedTerm(-1, subterms)
-{
-	assert(subterms.size() == 2);
-}
-
 AdditionTerm::AdditionTerm(const std::vector<Term::cptr>& subterms)
 	: ArithmeticTerm(subterms) {}
 
-ObjectIdx AdditionTerm::interpret(const PartialAssignment& assignment) const {
-	return _subterms[0]->interpret(assignment) + _subterms[1]->interpret(assignment);
+ObjectIdx AdditionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	return _subterms[0]->interpret(assignment, binding) + _subterms[1]->interpret(assignment, binding);
 }
 
-ObjectIdx AdditionTerm::interpret(const State& state) const {
-	return _subterms[0]->interpret(state) + _subterms[1]->interpret(state);
+ObjectIdx AdditionTerm::interpret(const State& state, const Binding& binding) const {
+	return _subterms[0]->interpret(state, binding) + _subterms[1]->interpret(state, binding);
 }
 
 std::pair<int, int> AdditionTerm::getBounds() const {
@@ -51,12 +44,12 @@ std::ostream& AdditionTerm::print(std::ostream& os, const fs0::ProblemInfo& info
 SubtractionTerm::SubtractionTerm(const std::vector<Term::cptr>& subterms)
 	: ArithmeticTerm(subterms) {}
 
-ObjectIdx SubtractionTerm::interpret(const PartialAssignment& assignment) const {
-	return _subterms[0]->interpret(assignment) - _subterms[1]->interpret(assignment);
+ObjectIdx SubtractionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	return _subterms[0]->interpret(assignment, binding) - _subterms[1]->interpret(assignment, binding);
 }
 
-ObjectIdx SubtractionTerm::interpret(const State& state) const {
-	return _subterms[0]->interpret(state) - _subterms[1]->interpret(state);
+ObjectIdx SubtractionTerm::interpret(const State& state, const Binding& binding) const {
+	return _subterms[0]->interpret(state, binding) - _subterms[1]->interpret(state, binding);
 }
 
 std::pair<int, int> SubtractionTerm::getBounds() const {
@@ -77,12 +70,12 @@ std::ostream& SubtractionTerm::print(std::ostream& os, const fs0::ProblemInfo& i
 MultiplicationTerm::MultiplicationTerm(const std::vector<Term::cptr>& subterms)
 	: ArithmeticTerm(subterms) {}
 
-ObjectIdx MultiplicationTerm::interpret(const PartialAssignment& assignment) const {
-	return _subterms[0]->interpret(assignment) * _subterms[1]->interpret(assignment);
+ObjectIdx MultiplicationTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	return _subterms[0]->interpret(assignment, binding) * _subterms[1]->interpret(assignment, binding);
 }
 
-ObjectIdx MultiplicationTerm::interpret(const State& state) const {
-	return _subterms[0]->interpret(state) * _subterms[1]->interpret(state);
+ObjectIdx MultiplicationTerm::interpret(const State& state, const Binding& binding) const {
+	return _subterms[0]->interpret(state, binding) * _subterms[1]->interpret(state, binding);
 }
 
 std::pair<int, int> MultiplicationTerm::getBounds() const {

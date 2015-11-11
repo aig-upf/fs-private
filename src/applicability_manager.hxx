@@ -16,7 +16,7 @@ class GroundAction; class State;
 class ApplicabilityManager
 {
 public:
-	ApplicabilityManager(const std::vector<AtomicFormula::cptr>& state_constraints);
+	ApplicabilityManager(const Formula::cptr state_constraints);
 		
 	//! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
 	bool isApplicable(const State& state, const GroundAction& action) const;
@@ -24,14 +24,14 @@ public:
 	//! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
 	Atom::vctr computeEffects(const State& state, const GroundAction& action) const;
 	
-	static bool checkFormulaHolds(const std::vector<AtomicFormula::cptr>& formula, const State& state);
+	static bool checkFormulaHolds(const Formula::cptr formula, const State& state);
 	
 	//! Checks that all of the given new atoms do not violate domain bounds
 	static bool checkAtomsWithinBounds(const std::vector<Atom>& atoms);
 	
 protected:
 	//! The state constraints
-	const std::vector<AtomicFormula::cptr>& _state_constraints;
+	const Formula::cptr _state_constraints;
 };
 
 } // namespaces

@@ -1,7 +1,7 @@
 """
     A class to dump the information relevant to action schemata
 """
-from compilation.component_processor import BaseComponentProcessor
+from compilation.component_processor import BaseComponentProcessor, BindingUnit
 from pddl import Truth, Effect, Atom, NegatedAtom
 from pddl.f_expression import FunctionalTerm
 from pddl.effects import AssignmentEffect
@@ -11,23 +11,20 @@ class ActionSchemaProcessor(BaseComponentProcessor):
     def __init__(self, task, action):
         self.index = task.index
         self.action = action
-        self.parameters = {p.name: i for i, p in enumerate(action.parameters)}
         super().__init__(task)
+        self.binding_unit = BindingUnit.from_parameters(action.parameters)
 
     def init_data(self):
         name = self.action.name
-        params = list(self.parameters.keys())
+        param_names = [p.name for p in self.action.parameters]
         signature = [self.index.types[p.type] for p in self.action.parameters]
-        return dict(name=name, signature=signature, parameters=params,
-                    conditions=[], effects=[])
+        return dict(name=name, signature=signature, parameters=param_names,
+                    conditions={}, effects=[])
 
     def process(self):
         self.process_conditions(self.action.precondition)
         self.process_effects()
         return self.data
-
-    def get_parameters(self):
-        return self.parameters
 
     def process_effects(self):
         """  Generates the actual effects from the PDDL parser effect list"""
@@ -46,5 +43,5 @@ class ActionSchemaProcessor(BaseComponentProcessor):
             expression = AssignmentEffect(lhs, rhs)
 
         elems = [self.parser.process_expression(elem) for elem in (expression.lhs, expression.rhs)]
-        return [elem.dump(self.index.objects, self.parameters) for elem in elems]
+        return [elem.dump(self.index.objects, self.binding_unit) for elem in elems]
 

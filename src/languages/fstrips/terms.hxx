@@ -3,25 +3,16 @@
 
 #include <fs0_types.hxx>
 #include <problem_info.hxx>
+#include <utils/binding.hxx>
+
 
 namespace fs0 { class State; }
 
 namespace fs0 { namespace language { namespace fstrips {
 
-//! A common base class for both terms and formulas
-//! This is necessary in order to be able to use both types of entities in a common registry
-class LogicalElement {
-public:
-	typedef const LogicalElement* cptr;
-
-	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const LogicalElement& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const;
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
-};
 
 //! A logical term in FSTRIPS
-class Term : public LogicalElement {
+class Term {
 public:
 	typedef const Term* cptr;
 
@@ -31,6 +22,10 @@ public:
 	//! Clone idiom
 	virtual Term* clone() const = 0;
 
+	//! Processes a term possibly containing bound variables and non-consolidated state variables,
+	//! consolidating all possible state variables and performing the bindings according to the given variable binding
+	virtual Term::cptr bind(const Binding& binding, const ProblemInfo& info) const = 0;
+	
 	//! Returns the level of nestedness of the term.
 	virtual unsigned nestedness() const = 0;
 
@@ -38,11 +33,13 @@ public:
 	virtual bool flat() const = 0;
 
 	// Returns a list with all terms contained in this term's tree, including itself (possibly with repetitions)
-	virtual std::vector<Term::cptr> flatten() const = 0;
+	virtual std::vector<Term::cptr> all_terms() const = 0;
 
 	//! Returns the value of the current term under the given (possibly partial) interpretation
-	virtual ObjectIdx interpret(const PartialAssignment& assignment) const = 0;
-	virtual ObjectIdx interpret(const State& state) const = 0;
+	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
+	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
+	ObjectIdx interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
+	ObjectIdx interpret(const State& state) const  { return interpret(state, Binding()); }	
 
 	//! Returns the index of the state variable to which the current term resolves under the given state.
 	virtual VariableIdx interpretVariable(const PartialAssignment& assignment) const = 0;
@@ -53,6 +50,8 @@ public:
 	virtual std::pair<int, int> getBounds() const = 0;
 
 	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const Term& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 
 	virtual bool operator==(const Term& other) const = 0;
@@ -66,6 +65,9 @@ public:
 class NestedTerm : public Term {
 public:
 	typedef const NestedTerm* cptr;
+	
+	//! Factory method to create a nested term of the appropriate type
+	static Term::cptr create(const std::string& symbol, const std::vector<Term::cptr>& subterms);
 
 	NestedTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
 		: _symbol_id(symbol_id), _subterms(subterms)
@@ -74,17 +76,19 @@ public:
 	virtual ~NestedTerm() {
 		for (Term::cptr term:_subterms) delete term;
 	}
-
+	
 	NestedTerm(const NestedTerm& term)
 		: _symbol_id(term._symbol_id) {
 		for (const Term* subterm:term._subterms) {
 			_subterms.push_back(subterm->clone());
 		}
 	}
+	
+	virtual Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
 
 	bool flat() const { return false; }
 
-	std::vector<Term::cptr> flatten() const;
+	std::vector<Term::cptr> all_terms() const;
 	
 	virtual TypeIdx getType() const;
 
@@ -105,10 +109,10 @@ public:
 
 	//! A helper to interpret a vector of terms
 	template <typename T>
-	static ObjectIdxVector interpret_subterms(const std::vector<Term::cptr>& subterms, const T& assignment) {
+	static ObjectIdxVector interpret_subterms(const std::vector<Term::cptr>& subterms, const T& assignment, const Binding& binding) {
 		ObjectIdxVector interpreted;
 		for (Term::cptr subterm:subterms) {
-			interpreted.push_back(subterm->interpret(assignment));
+			interpreted.push_back(subterm->interpret(assignment, binding));
 		}
 		return interpreted;
 	}
@@ -119,6 +123,10 @@ public:
 
 	bool operator==(const Term& other) const;
 	virtual std::size_t hash_code() const;
+
+	//! A helper to process lists of subterms
+	static std::vector<Term::cptr> bind_subterms(std::vector<Term::cptr> subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants);
+
 
 protected:
 	//! The ID of the function or predicate symbol, e.g. in the state variable loc(A), the id of 'loc'
@@ -142,14 +150,35 @@ public:
 
 	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms);
 
-	virtual ObjectIdx interpret(const PartialAssignment& assignment) const = 0;
-	virtual ObjectIdx interpret(const State& state) const = 0;
+	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
+	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
 
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
-
+	
 	// A nested term headed by a static symbol has as many levels of nestedness as the maximum of its subterms
 	unsigned nestedness() const { return maxSubtermNestedness(); }
+};
+
+//! A statically-headed term that performs some arithmetic operation to its two subterms
+class ArithmeticTerm : public StaticHeadedNestedTerm {
+public:
+	typedef const ArithmeticTerm* cptr;
+	
+	ArithmeticTerm(const std::vector<Term::cptr>& subterms);
+	
+	ArithmeticTerm* clone() const = 0;
+	
+	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
+	
+	//! Creates an arithmetic term of the same type than the current one but with the given subterms
+	// TODO - This is ATM somewhat inefficient because of the redundancy of cloning the whole array of subterms only to delete it.
+	Term::cptr create(const std::vector<Term::cptr>& subterms) const {
+		ArithmeticTerm* term = clone();
+		for (const auto ptr:term->_subterms) delete ptr;
+		term->_subterms = subterms;
+		return term;
+	}
 };
 
 //! A statically-headed term defined extensionally or otherwise by the concrete planning instance
@@ -164,8 +193,10 @@ public:
 	virtual TypeIdx getType() const;
 	virtual std::pair<int, int> getBounds() const;
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
+	ObjectIdx interpret(const State& state, const Binding& binding) const;
+	
+	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
 
 protected:
 	// The (static) logical function implementation
@@ -183,16 +214,61 @@ public:
 
 	FluentHeadedNestedTerm* clone() const { return new FluentHeadedNestedTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
+	ObjectIdx interpret(const State& state, const Binding& binding) const;
 
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const;
 	VariableIdx interpretVariable(const State& state) const;
 
 	virtual std::pair<int, int> getBounds() const;
+	
+	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
 
 	// A nested term headed by a fluent symbol has as many levels of nestedness as the maximum of its subterms plus one (standing for itself)
 	unsigned nestedness() const { return maxSubtermNestedness() + 1; }
+};
+
+//! A logical variable bound to some existential or universal quantifier
+class BoundVariable : public Term {
+public:
+	typedef const BoundVariable* cptr;
+
+	BoundVariable(unsigned id, TypeIdx type) : _id(id), _type(type) {}
+
+	BoundVariable* clone() const { return new BoundVariable(*this); }
+	
+	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
+
+	virtual unsigned nestedness() const { return 1; }
+
+	bool flat() const { return true; }
+	
+	virtual TypeIdx getType() const;
+
+	std::vector<Term::cptr> all_terms() const { return std::vector<Term::cptr>(1, this); }
+
+	//! Returns the unique quantified variable ID
+	unsigned getVariableId() const { return _id; }
+
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
+	ObjectIdx interpret(const State& state, const Binding& binding) const;
+
+	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("Bound variables cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("Bound variables terms cannot resolve to an state variable"); }
+
+	std::pair<int, int> getBounds() const;
+
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+
+	bool operator==(const Term& other) const;
+	virtual std::size_t hash_code() const;
+
+protected:
+	//! The ID of the variable, which will be unique throughout the whole binding unit (maybe
+	unsigned _id;
+	
+	TypeIdx _type;
 };
 
 //! A state variable is a term 'f(t)', where f is a fluent symbol and t is a tuple of fixed constant symbols.
@@ -204,6 +280,9 @@ public:
 	StateVariable(VariableIdx variable_id) : _variable_id(variable_id) {}
 
 	StateVariable* clone() const { return new StateVariable(*this); }
+	
+	//! Nothing to be done for binding, simply return a clone of the element
+	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }	
 
 	virtual unsigned nestedness() const { return 0; }
 
@@ -211,13 +290,13 @@ public:
 	
 	virtual TypeIdx getType() const;
 
-	std::vector<Term::cptr> flatten() const { return std::vector<Term::cptr>(1, this); }
+	std::vector<Term::cptr> all_terms() const { return std::vector<Term::cptr>(1, this); }
 
 	//! Returns the index of the state variable
 	VariableIdx getValue() const { return _variable_id; }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const { return assignment.at(_variable_id); }
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const { return assignment.at(_variable_id); }
+	ObjectIdx interpret(const State& state, const Binding& binding) const;
 
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const { return _variable_id; }
 	VariableIdx interpretVariable(const State& state) const { return _variable_id; }
@@ -244,6 +323,9 @@ public:
 	Constant(ObjectIdx value)  : _value(value) {}
 
 	Constant* clone() const { return new Constant(*this); }
+	
+	//! Nothing to be done for binding, simply return a clone of the element
+	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }	
 
 	virtual unsigned nestedness() const { return 0; }
 
@@ -253,14 +335,14 @@ public:
 		throw std::runtime_error("Unimplemented");
 	}
 
-	std::vector<Term::cptr> flatten() const { return std::vector<Term::cptr>(1, this); }
+	std::vector<Term::cptr> all_terms() const { return std::vector<Term::cptr>(1, this); }
 
 	//! Returns the actual value of the constant
 	ObjectIdx getValue() const { return _value; }
 
 	// The value of a constant is independent of the assignment
-	ObjectIdx interpret(const PartialAssignment& assignment) const { return _value; }
-	ObjectIdx interpret(const State& state) const { { return _value; }}
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const { return _value; }
+	ObjectIdx interpret(const State& state, const Binding& binding) const { { return _value; }}
 
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }

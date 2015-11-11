@@ -159,13 +159,13 @@ class Expression(object):
     def is_tree_static(self):
         return self.is_static() and self.is_subtree_static()
 
-    def dump(self, object_index, parameter_index):
+    def dump(self, object_index, binding_unit):
         raise RuntimeError("Needs to be subclassed")
 
 
 class FunctionalExpression(Expression):
-    def dump(self, objects, parameters):
-        subterms = [elem.dump(objects, parameters) for elem in self.arguments]
+    def dump(self, objects, binding_unit):
+        subterms = [elem.dump(objects, binding_unit) for elem in self.arguments]
         return dict(type='nested', symbol=self.symbol, subterms=subterms)
 
 
@@ -183,8 +183,8 @@ class PredicativeExpression(Expression):
         p = Expression.__str__(self)
         return '{}{}'.format("not " if self.negated else "", p)
 
-    def dump(self, objects, parameters):
-        subterms = [elem.dump(objects, parameters) for elem in self.arguments]
+    def dump(self, objects, binding_unit):
+        subterms = [elem.dump(objects, binding_unit) for elem in self.arguments]
         return dict(type='atom', symbol=self.process_symbol(), subterms=subterms)
 
     def process_symbol(self):
@@ -217,7 +217,7 @@ class VariableExpression(Expression):
     def __str__(self):
         return str(self.variable)
 
-    def dump(self, objects, parameters):
+    def dump(self, objects, binding_unit):
         raise RuntimeError("dump() should never be called on VariableExpressions!")
 
 
@@ -225,17 +225,17 @@ class ParameterExpression(Expression):
     def __init__(self, name):
         super().__init__(name)
 
-    def dump(self, objects, parameters):
-        return dict(type='parameter', position=parameters[self.symbol], name=self.symbol)
+    def dump(self, objects, binding_unit):
+        return dict(type='parameter', position=binding_unit.id(self.symbol), name=self.symbol)
 
 
 class ObjectExpression(Expression):
-    def dump(self, objects, parameters):
+    def dump(self, objects, binding_unit):
         return dict(type='constant', value=objects.get_index(self.symbol))
 
 
 class NumericExpression(Expression):
-    def dump(self, objects, parameters):
+    def dump(self, objects, binding_unit):
         return dict(type='int_constant', value=int(self.symbol))
 
 

@@ -9,6 +9,7 @@
 #include <gecode/int.hh>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/formulae.hxx>
 
 namespace fs = fs0::language::fstrips;
 
@@ -21,7 +22,7 @@ public:
 	virtual void post_constraint(SimpleCSP& csp, const GecodeRPGLayer& layer) const = 0;
 	
 	//! Creates a suitable novelty constraint (strong if possible, weak if not) from a set of action preconditions and effects
-	static NoveltyConstraint* createFromEffects(GecodeCSPVariableTranslator& translator, const std::vector<fs::AtomicFormula::cptr>& conditions, const std::vector<fs::ActionEffect::cptr>& effects);
+	static NoveltyConstraint* createFromEffects(GecodeCSPVariableTranslator& translator, const fs::Formula::cptr precondition, const std::vector<fs::ActionEffect::cptr>& effects);
 };
 
 
@@ -32,12 +33,10 @@ public:
 class WeakNoveltyConstraint : public NoveltyConstraint {
 public:
 	
-	static WeakNoveltyConstraint* create(GecodeCSPVariableTranslator& translator, const std::vector<fs::AtomicFormula::cptr>& conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
+	static WeakNoveltyConstraint* create(GecodeCSPVariableTranslator& translator, const Formula::cptr conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
 		std::set<VariableIdx> relevant;
 
-		for (auto condition:conditions) {
-			ScopeUtils::computeVariables(condition, relevant, relevant);
-		}
+		ScopeUtils::computeVariables(conditions, relevant, relevant);
 		
 		for (auto effect:effects) {
 			ScopeUtils::computeVariables(effect->rhs(), relevant, relevant);

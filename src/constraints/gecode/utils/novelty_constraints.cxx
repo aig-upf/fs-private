@@ -4,10 +4,13 @@
 
 namespace fs0 { namespace gecode {
 	
-NoveltyConstraint* NoveltyConstraint::createFromEffects(GecodeCSPVariableTranslator& translator, const std::vector<fs::AtomicFormula::cptr>& conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
+NoveltyConstraint* NoveltyConstraint::createFromEffects(GecodeCSPVariableTranslator& translator, const fs::Formula::cptr precondition, const std::vector<fs::ActionEffect::cptr>& effects) {
 	if (StrongNoveltyConstraint::applicable(effects)) {
 		return new StrongNoveltyConstraint(translator, effects);
-	} else return WeakNoveltyConstraint::create(translator, conditions, effects);
+	} else {
+		// Weak novelty constraints are only applicable for plain conjunctions or existentially quantified conjunctions
+		return WeakNoveltyConstraint::create(translator, precondition, effects);
+	}
 }
 
 } } // namespaces

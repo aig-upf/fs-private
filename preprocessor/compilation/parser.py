@@ -2,7 +2,7 @@
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
 from pddl.f_expression import FunctionalTerm
-from pddl import Atom, NegatedAtom
+from pddl import Atom, NegatedAtom, ExistentialCondition
 
 from base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
     ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression
@@ -32,6 +32,8 @@ class Parser(object):
         elif isinstance(exp, (Atom, NegatedAtom)):
             self.check_declared(exp.predicate)
             return self.process_predicative_expression(exp)
+        elif isinstance(exp, ExistentialCondition):
+            return self.process_existential_expression(exp)
         elif isinstance(exp, str):
             if exp[0] == '?':
                 return ParameterExpression(exp)
@@ -52,6 +54,12 @@ class Parser(object):
 
     def is_static(self, symbol):
         return symbol in self.static or symbol in BASE_SYMBOLS or is_external(symbol)
+
+    def process_existential_expression(self, exp):
+        """  Parse an existentially-quantified expression """
+        assert isinstance(exp, ExistentialCondition)
+        assert False
+
 
     def process_functional_expression(self, exp):
         """  Parse a functional expression """

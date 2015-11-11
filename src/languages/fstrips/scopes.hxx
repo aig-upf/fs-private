@@ -27,11 +27,11 @@ public:
 	static void computeIndirectScope(ActionEffect::cptr effect, TermSet& scope);
 	
 	//! Computes the direct scope of a formula
-	static std::vector<VariableIdx> computeDirectScope(AtomicFormula::cptr formula);
-	static void computeDirectScope(AtomicFormula::cptr formula, std::set<VariableIdx>& scope);
+	static std::vector<VariableIdx> computeDirectScope(Formula::cptr formula);
+	static void computeDirectScope(Formula::cptr formula, std::set< fs0::VariableIdx >& scope);
 	
 	//! Computes the indirect scope of a formula
-	static void computeIndirectScope(AtomicFormula::cptr formula, TermSet& scope);
+	static void computeIndirectScope(Formula::cptr formula, ScopeUtils::TermSet& scope);
 	
 	//! Returns the direct scope of an action, i.e. the set of all the state variables that are directly relevant
 	//! to either the preconditions or some effect of the action.
@@ -51,7 +51,7 @@ public:
 	
 	template <typename T>
 	static void computeVariables(const T& element, std::set<VariableIdx>& direct, std::set<VariableIdx>& derived) {
-		for (Term::cptr term:element->flatten()) {
+		for (Term::cptr term:element->all_terms()) {
 			
 			if (auto sv = dynamic_cast<StateVariable::cptr>(term)) {
 				direct.insert(sv->getValue());

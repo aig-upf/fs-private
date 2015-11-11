@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <languages/fstrips/schemata.hxx>
+#include <languages/fstrips/language.hxx>
 
 
 using namespace fs0::language::fstrips;
@@ -16,16 +16,14 @@ protected:
 	const std::string _name;
 	const Signature _signature;
 	const std::vector<std::string> _parameters;
-	const std::vector<AtomicFormulaSchema::cptr> _conditions;
-	const std::vector<ActionEffectSchema::cptr> _effects;
-	
-	
+	const Formula::cptr _precondition;
+	const std::vector<ActionEffect::cptr> _effects;
 
 public:
 	typedef const ActionSchema* cptr;
 	ActionSchema(const std::string& name,
 				 const Signature& signature, const std::vector<std::string>& parameters,
-			     const std::vector<AtomicFormulaSchema::cptr>& conditions, const std::vector<ActionEffectSchema::cptr>& effects);
+			     const Formula::cptr precondition, const std::vector<ActionEffect::cptr>& effects);
 	~ActionSchema();
 	
 	inline const std::string& getName() const { return _name; }
@@ -39,7 +37,7 @@ public:
 	
 	//! Process the action schema with a given parameter binding and return the corresponding GroundAction
 	//! A nullptr is returned if the action is detected to be statically non-applicable
-	GroundAction* process(const ObjectIdxVector& binding, const ProblemInfo& info) const;
+	GroundAction* bind(const Binding& binding, const ProblemInfo& info) const;
 };
 
 

@@ -4,15 +4,16 @@
 #include <vector>
 #include <ostream>
 #include <fs0_types.hxx>
+#include <utils/binding.hxx>
 
 namespace fs0 { namespace print {
 
 class binding {
 	protected:
-		const std::vector<int>& _binding;
+		const Binding& _binding;
 		const Signature& _signature;
 	public:
-		binding(const std::vector<int>& binding, const Signature& signature) : _binding(binding), _signature(signature) {
+		binding(const Binding& binding, const Signature& signature) : _binding(binding), _signature(signature) {
 			assert(binding.size() == signature.size());
 		}
 		

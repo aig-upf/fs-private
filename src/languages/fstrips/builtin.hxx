@@ -2,6 +2,7 @@
 #pragma once
 
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/utils.hxx>
 
 namespace fs0 { class State; }
 
@@ -16,14 +17,6 @@ public:
 	}
 };
 
-//! A statically-headed term that performs some arithmetic operation to its two subterms
-class ArithmeticTerm : public StaticHeadedNestedTerm {
-public:
-	typedef const ArithmeticTerm* cptr;
-	
-	ArithmeticTerm(const std::vector<Term::cptr>& subterms);
-};
-
 //! A statically-headed term that adds up the values of the two subterms
 class AdditionTerm : public ArithmeticTerm {
 public:
@@ -33,8 +26,8 @@ public:
 	
 	AdditionTerm* clone() const { return new AdditionTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
+	ObjectIdx interpret(const State& state, const Binding& binding) const;
 	
 	std::pair<int, int> getBounds() const;
 	
@@ -51,8 +44,8 @@ public:
 	
 	SubtractionTerm* clone() const { return new SubtractionTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
+	ObjectIdx interpret(const State& state, const Binding& binding) const;
 	
 	std::pair<int, int> getBounds() const;
 	
@@ -69,8 +62,8 @@ public:
 	
 	MultiplicationTerm* clone() const { return new MultiplicationTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
+	ObjectIdx interpret(const State& state, const Binding& binding) const;
 	
 	std::pair<int, int> getBounds() const;
 	
@@ -95,8 +88,12 @@ public:
 	typedef const AlldiffFormula* cptr;
 	
 	AlldiffFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
+	AlldiffFormula(const AlldiffFormula& formula) : AlldiffFormula(FStripsUtils::clone(formula._subterms)) {}
 	
-	virtual std::string name() const { return "alldiff"; }
+	AlldiffFormula* clone() const { return new AlldiffFormula(*this); }
+	AlldiffFormula* clone(const std::vector<Term::cptr>& subterms) const { return new AlldiffFormula(subterms); }
+
+	std::string name() const { return "alldiff"; }
 	
 protected:
 	bool _satisfied(const ObjectIdxVector& values) const;
@@ -107,8 +104,12 @@ public:
 	typedef const SumFormula* cptr;
 	
 	SumFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
+	SumFormula(const SumFormula& formula) : SumFormula(FStripsUtils::clone(formula._subterms)) {}
 	
-	virtual std::string name() const { return "sum"; }
+	SumFormula* clone() const { return new SumFormula(*this); }	
+	SumFormula* clone(const std::vector<Term::cptr>& subterms) const { return new SumFormula(subterms); }
+	
+	std::string name() const { return "sum"; }
 	
 protected:
 	bool _satisfied(const ObjectIdxVector& values) const;

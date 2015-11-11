@@ -1,6 +1,6 @@
 """
 """
-from compilation.component_processor import BaseComponentProcessor
+from compilation.component_processor import BaseComponentProcessor, BindingUnit
 
 
 class FormulaProcessor(BaseComponentProcessor):
@@ -9,11 +9,8 @@ class FormulaProcessor(BaseComponentProcessor):
         self.formula = formula
 
     def init_data(self):
-        return dict(conditions=[])
+        return dict(conditions={})
 
     def process(self):
         self.process_conditions(self.formula)
         return self.data
-
-    def get_parameters(self):
-        return dict()

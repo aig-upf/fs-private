@@ -107,8 +107,10 @@ public:
 	typedef GecodeFormulaCSPHandler* ptr;
 	typedef const GecodeFormulaCSPHandler* cptr;
 
-	GecodeFormulaCSPHandler(const std::vector<fs::AtomicFormula::cptr>& conditions);
-	~GecodeFormulaCSPHandler() {}
+	GecodeFormulaCSPHandler(const Formula::cptr formula);
+	~GecodeFormulaCSPHandler() {
+		delete _formula;
+	}
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(SimpleCSP* csp, std::vector<Atom>& support, const State& seed) const;
@@ -122,7 +124,7 @@ public:
 
 protected:
 	//! The formula being translated
-	const std::vector<fs::AtomicFormula::cptr>& _conditions;
+	const Formula::cptr _formula;
 	
 	void index_scopes() {}
 	

@@ -15,10 +15,10 @@ protected:
 	ActionSchema::cptr _schema;
 	
 	//! The indexes of the action binding, if any.
-	const ObjectIdxVector _binding;
+	const Binding _binding;
 	
 	//! The action preconditions  and effects
-	const std::vector<AtomicFormula::cptr> _conditions;
+	const Formula::cptr _precondition;
 	const std::vector<ActionEffect::cptr> _effects;
 
 public:
@@ -30,7 +30,7 @@ public:
 
 	static const ActionIdx invalid_action_id;
 	
-	GroundAction(ActionSchema::cptr schema, const ObjectIdxVector& binding, const std::vector<AtomicFormula::cptr>& conditions, const std::vector<ActionEffect::cptr>& effects);
+	GroundAction(ActionSchema::cptr schema, const Binding& binding, const Formula::cptr precondition, const std::vector<ActionEffect::cptr>& effects);
 	~GroundAction();
 	
 	//! Returns the name of the action, e.g. 'move'
@@ -43,11 +43,11 @@ public:
 	const Signature& getSignature() const { return _schema->getSignature(); }
 	
 	//! Returns the concrete binding that created this action from its action schema
-	const ObjectIdxVector& getBinding() const { return _binding; }
+	const Binding& getBinding() const { return _binding; }
 	
-	inline const std::vector<AtomicFormula::cptr>& getConditions() const { return _conditions; }
+	const Formula::cptr getPrecondition() const { return _precondition; }
 	
-	inline const std::vector<ActionEffect::cptr>& getEffects() const { return _effects; }
+	const std::vector<ActionEffect::cptr>& getEffects() const { return _effects; }
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GroundAction&  entity) { return entity.print(os); }

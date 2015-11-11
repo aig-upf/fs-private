@@ -10,6 +10,7 @@ namespace fs0 { namespace language { namespace fstrips {
 
 //! A term that has not yet been processed, meaning that it might possibly contain references to yet-unresolved values of action parameters,
 //! non-consolidated state variables, etc.
+// DONE
 class TermSchema {
 public:
 	typedef const TermSchema* cptr;
@@ -29,7 +30,7 @@ public:
 	virtual std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
 };
 
-
+// DONE
 class NestedTermSchema : public TermSchema {
 public:
 	NestedTermSchema(unsigned symbol_id, const std::vector<TermSchema::cptr>& subterms)
@@ -64,6 +65,7 @@ protected:
 	std::vector<TermSchema::cptr> _subterms;
 };
 
+// DONE
 class ArithmeticTermSchema : public TermSchema {
 public:
 	ArithmeticTermSchema(const std::string& symbol, const std::vector<TermSchema::cptr>& subterms)

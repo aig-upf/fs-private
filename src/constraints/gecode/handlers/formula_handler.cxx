@@ -10,9 +10,9 @@
 
 namespace fs0 { namespace gecode {
 	
-GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const std::vector<AtomicFormula::cptr>& conditions)
+GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const Formula::cptr formula)
 	:  GecodeCSPHandler(),
-	  _conditions(conditions)
+	  _formula(formula)
 {
 	setup();
 	
@@ -118,24 +118,16 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 }
 
 void GecodeFormulaCSPHandler::create_novelty_constraint() {
-	// First we collect both the sets of state variables and derived variables which are present in the RHS of the effects.
-	std::set<VariableIdx> direct;
-	std::set<VariableIdx> derived;
-	
-	for (auto condition:_conditions) {
-		ScopeUtils::computeVariables(condition, direct, derived);
-	}
-	
-	// Now we register the adequate variables through the NoveltyConstraint object
-	_novelty = WeakNoveltyConstraint::create(_translator, _conditions, {});
+	// We register the adequate variables through the NoveltyConstraint object
+	_novelty = WeakNoveltyConstraint::create(_translator, _formula, {});
 }
 
 void GecodeFormulaCSPHandler::index() {
+	const auto atoms =  _formula->all_atoms();
+	_all_formulas.insert(atoms.cbegin(), atoms.cend());
 	
-	_all_formulas.insert(_conditions.cbegin(), _conditions.cend());
-	
-	for (const AtomicFormula::cptr formula:_conditions) {
-		const auto terms = formula->flatten();
+	for (const AtomicFormula::cptr formula:atoms) {
+		const auto terms = formula->all_terms();
 		_all_terms.insert(terms.cbegin(), terms.cend());
 	}
 }

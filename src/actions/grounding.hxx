@@ -15,7 +15,7 @@ public:
 	
 protected:
 	//! Helper to ground a schema with a single binding
-	static void ground(ActionSchema::cptr schema, const std::vector<ObjectIdx>& binding, const ProblemInfo& info, std::vector<GroundAction::cptr>& grounded);
+	static void ground(fs0::ActionSchema::cptr schema, const Binding& binding, const fs0::ProblemInfo& info, std::vector< fs0::GroundAction::cptr >& grounded);
 };
 
 } // namespaces

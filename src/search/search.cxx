@@ -86,8 +86,8 @@ void SearchUtils::report_stats(const Problem& problem) {
 		") is too high for our current applicable action strategy to perform well." << std::endl;
 	}
 
-	std::cout << "Number of state constraints: " << problem.getStateConstraints().size() << std::endl;
-	std::cout << "Number of goal conditions: " << problem.getGoalConditions().size() << std::endl;
+	std::cout << "Number of state constraints: " << problem.getStateConstraints()->all_atoms().size() << std::endl;
+	std::cout << "Number of goal conditions: " << problem.getGoalConditions()->all_atoms().size() << std::endl;
 }
 
 } } // namespaces
