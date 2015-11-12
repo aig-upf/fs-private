@@ -171,21 +171,21 @@ ObjectIdx UserDefinedStaticTerm::interpret(const State& state, const Binding& bi
 }
 
 ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	return assignment.at(interpretVariable(assignment));
+	return assignment.at(interpretVariable(assignment, binding));
 }
 
 ObjectIdx FluentHeadedNestedTerm::interpret(const State& state, const Binding& binding) const {
-	return state.getValue(interpretVariable(state));
+	return state.getValue(interpretVariable(state, binding));
 }
 
-VariableIdx FluentHeadedNestedTerm::interpretVariable(const PartialAssignment& assignment) const {
+VariableIdx FluentHeadedNestedTerm::interpretVariable(const PartialAssignment& assignment, const Binding& binding) const {
 	const ProblemInfo& info = Problem::getInfo();
-	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, assignment, Binding()));
+	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, assignment, binding));
 	return variable;
 }
-VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state) const {
+VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state, const Binding& binding) const {
 	const ProblemInfo& info = Problem::getInfo();
-	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, state, Binding()));
+	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, state, binding));
 	return variable;
 }
 

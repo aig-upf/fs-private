@@ -53,7 +53,7 @@ public:
 	void add(const std::type_info& type, const gecode::TermTranslator::cptr translator);
 	
 	//! Add a Gecode Formula translator for the given type to the registry
-	void add(const std::type_info& type, const gecode::AtomicFormulaTranslator::cptr translator);
+	void add(const std::type_info& type, const gecode::FormulaTranslator::cptr translator);
 	
 	fs::AtomicFormula::cptr instantiate_formula(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
 	
@@ -65,7 +65,7 @@ public:
 	
 	gecode::TermTranslator::cptr getGecodeTranslator(const fs::Term& term) const;
 	
-	gecode::AtomicFormulaTranslator::cptr getGecodeTranslator(const fs::AtomicFormula& formula) const;
+	gecode::FormulaTranslator::cptr getGecodeTranslator(const fs::AtomicFormula& formula) const;
 
 	friend class print::logical_registry; // Grant access to the corresponding printer class
 	
@@ -87,7 +87,7 @@ protected:
 	std::unordered_map<std::type_index, EffectTranslator::cptr> _direct_effect_translators;
 	
 	std::unordered_map<std::type_index, gecode::TermTranslator::cptr> _gecode_term_translators;
-	std::unordered_map<std::type_index, gecode::AtomicFormulaTranslator::cptr> _gecode_formula_translators;
+	std::unordered_map<std::type_index, gecode::FormulaTranslator::cptr> _gecode_formula_translators;
 };
 
 class UnregisteredGecodeTranslator : public std::runtime_error {

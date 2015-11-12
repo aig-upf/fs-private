@@ -40,6 +40,12 @@ void ConstantTermTranslator::registerVariables(const fs::Term::cptr term, CSPVar
 	translator.registerConstant(constant);
 }
 
+void BoundVariableTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
+	auto variable = dynamic_cast<fs::BoundVariable::cptr>(term);
+	assert(variable);
+	translator.registerExistentialVariable(variable);
+}
+
 void StaticNestedTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
 	auto nested = dynamic_cast<fs::NestedTerm::cptr>(term);
 	assert(nested);

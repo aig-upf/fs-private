@@ -29,8 +29,14 @@ public:
 
 class ConstantTermTranslator : public TermTranslator {
 public:
-	ConstantTermTranslator() {}
+	void registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
 
+	// Constants produce no particular constraint, since the domain constraint was already posted during creation of the variable
+	void registerConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {}
+};
+
+class BoundVariableTermTranslator : public TermTranslator {
+public:
 	void registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
 
 	// Constants produce no particular constraint, since the domain constraint was already posted during creation of the variable
@@ -80,12 +86,12 @@ public:
 	void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
 };
 
-class AtomicFormulaTranslator {
+class FormulaTranslator {
 public:
-	typedef const AtomicFormulaTranslator* cptr;
+	typedef const FormulaTranslator* cptr;
 
-	AtomicFormulaTranslator() {}
-	virtual ~AtomicFormulaTranslator() {}
+	FormulaTranslator() {}
+	virtual ~FormulaTranslator() {}
 
 	//! Most atomic formulae simply need all their subterms to have their variables registered
 	virtual void registerVariables(const fs0::language::fstrips::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const {}
@@ -95,7 +101,24 @@ public:
 	virtual void registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const {}
 };
 
-class RelationalFormulaTranslator : public AtomicFormulaTranslator {
+class ExistentiallyQuantifiedFormulaTranslator : public FormulaTranslator {
+public:
+	typedef const ExistentiallyQuantifiedFormulaTranslator* cptr;
+	
+	// The translator for existentially quantified formulas doesn't need to do anything,
+	// since the CSP variables will get registered by the BoundVariable translator
+};
+
+class ConjunctionTranslator : public FormulaTranslator {
+public:
+	typedef const ConjunctionTranslator* cptr;
+	
+	// ATM the translator for conjunctions does not need to do anything, since all atomic formulas are extracted anyway and their variables
+	// and constraints translated.
+	// If we ever want to implement arbitrary boolean formulas, this will need to change.
+};
+
+class RelationalFormulaTranslator : public FormulaTranslator {
 protected:
 	//! A helper data structure to help translate language relational symbols to gecode relational operators
 	const static std::map<fs::RelationalFormula::Symbol, Gecode::IntRelType> symbol_to_gecode;
@@ -118,21 +141,21 @@ public:
 	void registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const;
 };
 
-class AlldiffGecodeTranslator : public AtomicFormulaTranslator {
+class AlldiffGecodeTranslator : public FormulaTranslator {
 public:
 	AlldiffGecodeTranslator() {}
 
 	void registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const;
 };
 
-class SumGecodeTranslator : public AtomicFormulaTranslator {
+class SumGecodeTranslator : public FormulaTranslator {
 public:
 	SumGecodeTranslator() {}
 
 	void registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const;
 };
 
-class ExtensionalTranslator : public AtomicFormulaTranslator {
+class ExtensionalTranslator : public FormulaTranslator {
 public:
 	ExtensionalTranslator(const std::string& symbol) : _symbol(symbol) {}
 

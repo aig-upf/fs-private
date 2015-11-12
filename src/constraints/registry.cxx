@@ -51,11 +51,16 @@ void LogicalComponentRegistry::registerGecodeTranslators() {
 	add(typeid(fs::IntConstant), new gecode::ConstantTermTranslator());
 	add(typeid(fs::StaticHeadedNestedTerm), new gecode::StaticNestedTermTranslator());
 	add(typeid(fs::UserDefinedStaticTerm), new gecode::StaticNestedTermTranslator()); // user-defined terms can be translated with the "parent" static translator
+	add(typeid(fs::BoundVariable), new gecode::BoundVariableTermTranslator());
 	
 	add(typeid(fs::AdditionTerm), new gecode::AdditionTermTranslator());
 	add(typeid(fs::SubtractionTerm), new gecode::SubtractionTermTranslator());
 	add(typeid(fs::MultiplicationTerm), new gecode::MultiplicationTermTranslator());
 	
+	
+	
+	add(typeid(fs::ExistentiallyQuantifiedFormula), new gecode::ExistentiallyQuantifiedFormulaTranslator());
+	add(typeid(fs::Conjunction), new gecode::ConjunctionTranslator());
 	add(typeid(fs::RelationalFormula), new gecode::RelationalFormulaTranslator());
 	add(typeid(fs::EQAtomicFormula), new gecode::RelationalFormulaTranslator());
 	add(typeid(fs::NEQAtomicFormula), new gecode::RelationalFormulaTranslator());
@@ -110,7 +115,7 @@ void LogicalComponentRegistry::add(const std::type_info& type, const gecode::Ter
 	if (!res.second) throw new std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
 }
 
-void LogicalComponentRegistry::add(const std::type_info& type, const gecode::AtomicFormulaTranslator::cptr translator) {
+void LogicalComponentRegistry::add(const std::type_info& type, const gecode::FormulaTranslator::cptr translator) {
 	auto res = _gecode_formula_translators.insert(std::make_pair(std::type_index(type), translator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
 }
@@ -147,7 +152,7 @@ gecode::TermTranslator::cptr LogicalComponentRegistry::getGecodeTranslator(const
 	return it->second;
 }
 
-gecode::AtomicFormulaTranslator::cptr LogicalComponentRegistry::getGecodeTranslator(const fs::AtomicFormula& formula) const {
+gecode::FormulaTranslator::cptr LogicalComponentRegistry::getGecodeTranslator(const fs::AtomicFormula& formula) const {
 	auto it = _gecode_formula_translators.find(std::type_index(typeid(formula)));
 	if (it == _gecode_formula_translators.end()) {
 		throw UnregisteredGecodeTranslator(formula);

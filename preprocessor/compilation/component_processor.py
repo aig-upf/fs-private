@@ -1,6 +1,7 @@
 """
 """
 from collections import namedtuple
+from base import PredicativeExpression
 import pddl
 from .helper import get_formula_parts
 from compilation.parser import Parser
@@ -67,23 +68,15 @@ class BaseComponentProcessor(object):
             self.data['unit'] = self.binding_unit.dump()
 
     def process_formula(self, node):
-        if isinstance(node, pddl.conditions.Conjunction):
-            elems = []
-            for part in get_formula_parts(node):
-                exp = self.parser.process_expression(part)
-                elems.append(exp.dump(self.index.objects, self.binding_unit))
 
-            processed = {'type': 'conjunction', 'elements': elems}
-
-        elif isinstance(node, pddl.conditions.ExistentialCondition):
+        # ATM we treat existential expressions differently to be able to properly compose the binding unit
+        if isinstance(node, pddl.conditions.ExistentialCondition):
             assert len(node.parts) == 1, "An existentially quantified formula can have one only subformula"
             subformula = node.parts[0]
-
             self.binding_unit.merge(BindingUnit.from_parameters(node.parameters))
-            processed = {'type': 'existential',
-                         'variables': self.binding_unit.dump_selected(node.parameters),
-                         'subformula': self.process_formula(subformula)}
+            return {'type': 'existential',
+                     'variables': self.binding_unit.dump_selected(node.parameters),
+                     'subformula': self.process_formula(subformula)}
         else:
-            raise RuntimeError("Unknown formula type {}".format(node))
-
-        return processed
+            exp = self.parser.process_expression(node)
+            return exp.dump(self.index.objects, self.binding_unit)

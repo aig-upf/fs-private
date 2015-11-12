@@ -21,9 +21,12 @@ public:
 	//! Construct a binding from a given vector with all variables set
 	Binding(const std::vector<ObjectIdx>& values) : _values(values), _set(values.size(), true) {}
 	
+	//! Default copy constructor
+	Binding(const Binding& other) = default;
+	
 	
 	//! Returns true iff the current binding contains a binding for the given variable
-	bool binds(unsigned variable) const { return _set.at(variable); }
+	bool binds(unsigned variable) const { return variable < _set.size() && _set.at(variable); }
 	
 	ObjectIdx value(unsigned variable) const {
 		assert(binds(variable));

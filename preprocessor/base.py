@@ -175,9 +175,10 @@ class StaticFunctionalExpression(FunctionalExpression):
 
 
 class PredicativeExpression(Expression):
-    def __init__(self, symbol, negated, arguments=None):
+    def __init__(self, symbol, negated, arguments=None, type_='atom'):
         super().__init__(symbol, arguments)
         self.negated = negated
+        self.type = type_
 
     def __str__(self):
         p = Expression.__str__(self)
@@ -185,7 +186,7 @@ class PredicativeExpression(Expression):
 
     def dump(self, objects, binding_unit):
         subterms = [elem.dump(objects, binding_unit) for elem in self.arguments]
-        return dict(type='atom', symbol=self.process_symbol(), subterms=subterms)
+        return dict(type=self.type, symbol=self.process_symbol(), subterms=subterms)
 
     def process_symbol(self):
         return _process_symbol(self.symbol, self.negated)
@@ -194,6 +195,29 @@ class PredicativeExpression(Expression):
 class StaticPredicativeExpression(PredicativeExpression):
     def is_static(self):
         return True
+
+
+# class ExistentialFormula(PredicativeExpression):
+#     # Currently unused
+#
+#     def __init__(self, parameters, subformula):
+#         self.parameters = parameters
+#         self.subformula = subformula
+#         self.binding_unit = BindingUnit.from_parameters(parameters)
+#         super().__init__('exists', False, None, 'existential')
+#
+#     def dump(self, objects, binding_unit):
+#         subformula = self.subformula.dump(objects, binding_unit)
+#         return dict(type=self.type, variables=binding_unit.dump_selected(self.parameters), subformula=subformula)
+
+
+class ConjunctivePredicate(PredicativeExpression):
+    def __init__(self, conjuncts):
+        super().__init__('conjunction', False, conjuncts, 'conjunction')
+
+    def dump(self, objects, binding_unit):
+        conjuncts = [elem.dump(objects, binding_unit) for elem in self.arguments]
+        return dict(type=self.type, elements=conjuncts)
 
 
 class RelationalExpression(StaticPredicativeExpression):

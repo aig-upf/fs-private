@@ -64,7 +64,7 @@ protected:
 	// All (distinct) FSTRIPS terms that participate in the CSP
 	std::unordered_set<Term::cptr> _all_terms;
 	
-	// All (distinct) FSTRIPS formulas that participate in the CSP
+	// All (distinct) FSTRIPS atomic formulas that participate in the CSP
 	std::unordered_set<AtomicFormula::cptr> _all_formulas;
 	
 	//! The set of nested fluent translators, one for each nested fluent in the set of terms modeled by this CSP

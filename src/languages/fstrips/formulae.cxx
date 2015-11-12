@@ -138,14 +138,14 @@ std::vector<AtomicFormula::cptr> Conjunction::all_atoms() const {
 }
 
 Formula::cptr ExistentiallyQuantifiedFormula::bind(const Binding& binding, const ProblemInfo& info) const {
+	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
 	for (const BoundVariable& var:_variables) {
 		if (binding.binds(var.getVariableId())) throw std::runtime_error("Wrong binding - Duplicated variable");
 	}
 	// TODO Check if the binding is a complete binding and thus we can directly return the (variable-free) conjunction 
 	// TODO Redesign this mess
 	auto bound_subformula = _subformula->bind(binding, info);
-	if (dynamic_cast<Tautology::cptr>(bound_subformula)) return bound_subformula;
-	else if (dynamic_cast<Contradiction::cptr>(bound_subformula)) return bound_subformula;
+	if (dynamic_cast<Tautology::cptr>(bound_subformula) || dynamic_cast<Contradiction::cptr>(bound_subformula)) return bound_subformula;
 	
 	auto bound_conjunction = dynamic_cast<Conjunction::cptr>(bound_subformula);
 	assert(bound_conjunction);
@@ -161,6 +161,16 @@ std::ostream& ExistentiallyQuantifiedFormula::print(std::ostream& os, const fs0:
 	}
 	os << "(" << *_subformula << ")";
 	return os;
+}
+
+bool ExistentiallyQuantifiedFormula::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	assert(binding.size()==0); // ATM we do not allow for nested quantifications
+	return interpret_rec(assignment, Binding(_variables.size()), 0);
+}
+
+bool ExistentiallyQuantifiedFormula::interpret(const State& state, const Binding& binding) const {
+	assert(binding.size()==0); // ATM we do not allow for nested quantifications
+	return interpret_rec(state, Binding(_variables.size()), 0);
 }
 
 template <typename T>

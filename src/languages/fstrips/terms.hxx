@@ -39,11 +39,13 @@ public:
 	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
 	ObjectIdx interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
-	ObjectIdx interpret(const State& state) const  { return interpret(state, Binding()); }	
+	ObjectIdx interpret(const State& state) const  { return interpret(state, Binding()); }
 
 	//! Returns the index of the state variable to which the current term resolves under the given state.
-	virtual VariableIdx interpretVariable(const PartialAssignment& assignment) const = 0;
-	virtual VariableIdx interpretVariable(const State& state) const = 0;
+	virtual VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const = 0;
+	virtual VariableIdx interpretVariable(const State& state, const Binding& binding) const = 0;
+	VariableIdx interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding()); }
+	VariableIdx interpretVariable(const State& state) const { return interpretVariable(state, Binding()); }
 
 	virtual TypeIdx getType() const = 0;
 	
@@ -153,8 +155,8 @@ public:
 	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	
 	// A nested term headed by a static symbol has as many levels of nestedness as the maximum of its subterms
 	unsigned nestedness() const { return maxSubtermNestedness(); }
@@ -217,8 +219,8 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
 	ObjectIdx interpret(const State& state, const Binding& binding) const;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment) const;
-	VariableIdx interpretVariable(const State& state) const;
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const;
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const;
 
 	virtual std::pair<int, int> getBounds() const;
 	
@@ -253,8 +255,8 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
 	ObjectIdx interpret(const State& state, const Binding& binding) const;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("Bound variables cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("Bound variables terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("Bound variables cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const { throw std::runtime_error("Bound variables terms cannot resolve to an state variable"); }
 
 	std::pair<int, int> getBounds() const;
 
@@ -298,8 +300,8 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const { return assignment.at(_variable_id); }
 	ObjectIdx interpret(const State& state, const Binding& binding) const;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment) const { return _variable_id; }
-	VariableIdx interpretVariable(const State& state) const { return _variable_id; }
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { return _variable_id; }
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const { return _variable_id; }
 
 	virtual std::pair<int, int> getBounds() const;
 
@@ -344,8 +346,8 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const { return _value; }
 	ObjectIdx interpret(const State& state, const Binding& binding) const { { return _value; }}
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 
 	virtual std::pair<int, int> getBounds() const { return std::make_pair(_value, _value); }
 

@@ -56,6 +56,7 @@ public:
 	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)
 	bool registerConstant(fs::Constant::cptr constant);
 	
+	void registerExistentialVariable(fs::BoundVariable::cptr variable);
 	
 	void registerInputStateVariable(VariableIdx variable, bool nullable);
 

@@ -2,10 +2,11 @@
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
 from pddl.f_expression import FunctionalTerm
-from pddl import Atom, NegatedAtom, ExistentialCondition
+from pddl import Atom, NegatedAtom, ExistentialCondition, Conjunction
 
 from base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
-    ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression
+    ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression, \
+    ConjunctivePredicate
 from compilation.exceptions import ParseException
 from compilation.helper import is_external
 from util import is_int
@@ -33,7 +34,10 @@ class Parser(object):
             self.check_declared(exp.predicate)
             return self.process_predicative_expression(exp)
         elif isinstance(exp, ExistentialCondition):
-            return self.process_existential_expression(exp)
+            # return self.process_existential_expression(exp)
+            return exp
+        elif isinstance(exp, Conjunction):
+            return self.process_conjunction(exp)
         elif isinstance(exp, str):
             if exp[0] == '?':
                 return ParameterExpression(exp)
@@ -55,10 +59,18 @@ class Parser(object):
     def is_static(self, symbol):
         return symbol in self.static or symbol in BASE_SYMBOLS or is_external(symbol)
 
-    def process_existential_expression(self, exp):
-        """  Parse an existentially-quantified expression """
-        assert isinstance(exp, ExistentialCondition)
-        assert False
+    # def process_existential_expression(self, exp):
+    #     """  Parse an existentially-quantified expression """
+    #     assert isinstance(exp, ExistentialCondition)
+    #
+    #     assert len(exp.parts) == 1, "An existentially quantified formula can have one only subformula"
+    #     subformula = exp.parts[0]
+    #     return ExistentialFormula(exp.parameters)
+
+    def process_conjunction(self, exp):
+        """  Parse a conjunction of atoms """
+        assert isinstance(exp, Conjunction)
+        return ConjunctivePredicate(self.process_argument_list(exp.parts))
 
 
     def process_functional_expression(self, exp):

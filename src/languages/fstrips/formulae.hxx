@@ -228,8 +228,8 @@ public:
 	
 	const Conjunction::cptr getSubformula() const { return _subformula; }
 	
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const { return interpret_rec(assignment, Binding(), 0); }
-	bool interpret(const State& state, const Binding& binding) const { return interpret_rec(state, Binding(), 0); }
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const;
+	bool interpret(const State& state, const Binding& binding) const;
 	
 	unsigned nestedness() const { return _subformula->nestedness(); }
 	

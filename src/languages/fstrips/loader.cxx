@@ -33,12 +33,12 @@ Formula::cptr Loader::parseFormula(const rapidjson::Value& tree, const ProblemIn
 	
 		
 	} else if (formula_type == "existential") {
-		auto subformula = parseFormula(tree["elements"], info);
+		auto subformula = parseFormula(tree["subformula"], info);
 		auto subformula_conjunction = dynamic_cast<Conjunction::cptr>(subformula);
 		if (!subformula_conjunction) {
 			throw std::runtime_error("Only existentially quantified conjunctions are supported so far");
 		}
-		std::vector<BoundVariable> variables = parseVariables(tree["elements"], info);
+		std::vector<BoundVariable> variables = parseVariables(tree["variables"], info);
 		return new ExistentiallyQuantifiedFormula(variables, subformula_conjunction);
 	
 		
