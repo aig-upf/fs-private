@@ -72,7 +72,7 @@ Term::cptr Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& in
 	} else if (term_type == "int_constant") {
 		return new IntConstant(tree["value"].GetInt());
 	} else if (term_type == "parameter") {
-		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["type"].GetString()));
+		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["typename"].GetString()));
 	} else if (term_type == "nested") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<Term::cptr> subterms = parseTermList(tree["subterms"], info);

@@ -250,7 +250,8 @@ class ParameterExpression(Expression):
         super().__init__(name)
 
     def dump(self, objects, binding_unit):
-        return dict(type='parameter', position=binding_unit.id(self.symbol), name=self.symbol)
+        return dict(type='parameter', position=binding_unit.id(self.symbol),
+                    typename=binding_unit.typename(self.symbol), name=self.symbol)
 
 
 class ObjectExpression(Expression):

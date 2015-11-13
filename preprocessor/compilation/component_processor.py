@@ -1,9 +1,7 @@
 """
 """
 from collections import namedtuple
-from base import PredicativeExpression
 import pddl
-from .helper import get_formula_parts
 from compilation.parser import Parser
 
 
@@ -13,7 +11,7 @@ TypedVar = namedtuple('TypedVar', ['name', 'type'])
 class BindingUnit(object):
     def __init__(self):
         self.typed_vars = []
-        self.index = {}  # An index from variable names to ID
+        self.index = {}  # An index from variable names to (ID, type) tuples
 
     @staticmethod
     def from_parameters(parameters):
@@ -29,7 +27,7 @@ class BindingUnit(object):
         if name in self.index:
             raise RuntimeError("The current binding unit already has a variable with name {}".format(name))
 
-        self.index[name] = len(self.typed_vars)
+        self.index[name] = (len(self.typed_vars), _type)
         self.typed_vars.append(TypedVar(name, _type))
 
     def merge(self, binding):
@@ -39,11 +37,16 @@ class BindingUnit(object):
 
     def id(self, name):
         """ Return the ID (within the current binding unit) of the parameter with given name """
-        return self.index[name]
+        return self.index[name][0]
 
-    def dump_selected(self, variables):
+    def typename(self, name):
+        """ Return the typename of the parameter with given name """
+        return self.index[name][1]
+
+    @staticmethod
+    def dump_selected(variables):
         """ Performs a selective dump, dumping only the info about the given variables"""
-        return [[i, var.name, var.type] for i, var in enumerate(self.typed_vars)]
+        return [[i, var.name, var.type] for i, var in enumerate(variables)]
 
 
 class BaseComponentProcessor(object):
@@ -75,8 +78,8 @@ class BaseComponentProcessor(object):
             subformula = node.parts[0]
             self.binding_unit.merge(BindingUnit.from_parameters(node.parameters))
             return {'type': 'existential',
-                     'variables': self.binding_unit.dump_selected(node.parameters),
-                     'subformula': self.process_formula(subformula)}
+                    'variables': self.binding_unit.dump_selected(node.parameters),
+                    'subformula': self.process_formula(subformula)}
         else:
             exp = self.parser.process_expression(node)
             return exp.dump(self.index.objects, self.binding_unit)

@@ -148,13 +148,11 @@ public:
 	}
 	
 	inline TypeIdx getTypeId(const std::string& type_name) const {
-		// MRJ: Pre-processor guards included for efficiency
-		try {
-			return name_to_type.at(type_name);
-		} catch ( std::out_of_range& ex ) {
-			std::cout << type_name << " not in type dictionary!" << std::endl;
-			return 0;
+		auto it = name_to_type.find(type_name);
+		if (it == name_to_type.end()) {
+			throw std::runtime_error("Unknown object type " + type_name);
 		}
+		return it->second;
 	}
 	
 	inline const std::string& getTypename(TypeIdx type) const { return type_to_name.at(type); }
