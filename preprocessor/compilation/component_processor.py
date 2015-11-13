@@ -64,7 +64,7 @@ class BaseComponentProcessor(object):
 
     def process_conditions(self, conditions):
         """  Generates the actual conditions from the PDDL parser precondition list"""
-        if not conditions:
+        if not conditions or isinstance(conditions, pddl.conditions.Truth):
             self.data['conditions']['type'] = 'tautology'
         else:
             self.data['conditions'] = self.process_formula(conditions)

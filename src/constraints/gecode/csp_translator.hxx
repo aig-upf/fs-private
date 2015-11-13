@@ -81,6 +81,7 @@ public:
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const;
+	void updateStateVariableDomains(SimpleCSP& csp, const State& state) const;
 
 	const unsigned resolveInputVariableIndex(VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);

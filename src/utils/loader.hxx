@@ -31,16 +31,17 @@ protected:
 	
 	 //! Loads a state specification for a given text file.
 	 //! The specification basically consists on an assignation of values to all the state variables.
-	static const State::cptr loadState(const rapidjson::Value& data);
+	static State* loadState(const rapidjson::Value& data);
 	
-	static void loadActionSchemata(const rapidjson::Value& data, Problem& problem);
+	static std::vector<ActionSchema::cptr> loadActionSchemata(const rapidjson::Value& data, const ProblemInfo& info);
 	
-	static void loadFunctions(const BaseComponentFactory& factory, Problem& problem, ProblemInfo& info);
+	//! Load the data related to the problem functions and predicates into the info object
+	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);
 	
 	static ActionSchema::cptr loadActionSchema(const rapidjson::Value& data, const ProblemInfo& info);
 	
 	//! Load a formula and process it
-	static Formula::cptr loadGroundedFormula(const rapidjson::Value& data, Problem& problem);
+	static Formula::cptr loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
 	
 	// Conversion to a C++ vector of values.
 	template<typename T>

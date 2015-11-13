@@ -51,6 +51,13 @@ SimpleCSP::ptr GecodeCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) co
 	return csp;
 }
 
+SimpleCSP::ptr GecodeCSPHandler::instantiate_csp(const State& state) const {
+	SimpleCSP* csp = static_cast<SimpleCSP::ptr>(_base_csp.clone());
+	_translator.updateStateVariableDomains(*csp, state);
+	return csp;
+}
+
+
 void GecodeCSPHandler::setup() {
 	index();
 	count_variables();

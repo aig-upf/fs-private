@@ -9,7 +9,7 @@ State FS0StateModel::init() const {
 	// We need to make a copy so that we can return it as non-const.
 	// Ugly, but this way we make it fit the search engine interface without further changes,
 	// and this is only called once per search.
-	return State(*task.getInitialState());
+	return State(task.getInitialState());
 }
 
 bool FS0StateModel::goal(const State& state) const {

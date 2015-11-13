@@ -23,9 +23,6 @@ protected:
 	std::size_t _hash;
 
 public:
-	typedef std::shared_ptr<State> ptr;
-	typedef std::shared_ptr<const State> cptr;
-
 	~State() {}
 	
 	//! Construct a state specifying the values of all state variables

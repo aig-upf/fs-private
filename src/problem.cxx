@@ -4,20 +4,25 @@
 #include <problem_info.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/language.hxx>
+#include <applicability/csp_formula_satisfiability_manager.hxx>
+#include <applicability/direct_formula_satisfiability_manager.hxx>
 
 namespace fs0 {
 
 std::unique_ptr<Problem> Problem::_instance = nullptr;
+std::unique_ptr<ProblemInfo> Problem::_info = nullptr;
 
-Problem::Problem() :
-	_problemInfo(nullptr),
-	_state_constraint_formula(),
-	_goal_formula()
-{
-}
+
+Problem::Problem(State* init, const std::vector<ActionSchema::cptr>& schemata, const Formula::cptr goal, const Formula::cptr state_constraints) :
+	_init(init),
+	_schemata(schemata),
+	_ground(),
+	_state_constraint_formula(state_constraints),
+	_goal_formula(goal),
+	_goal_sat_manager(FormulaSatisfiabilityManager::create(_goal_formula))
+{}
 
 Problem::~Problem() {
-	delete _problemInfo;
 	for (const auto pointer:_schemata) delete pointer;
 	for (const auto pointer:_ground) delete pointer;
 	delete _state_constraint_formula;

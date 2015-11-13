@@ -38,6 +38,7 @@ public:
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
 	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
+	SimpleCSP::ptr instantiate_csp(const State& state) const;
 	
 	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 
@@ -114,7 +115,7 @@ public:
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(SimpleCSP* csp, std::vector<Atom>& support, const State& seed) const;
-
+	
 	//! Simply checks if the given CSP has at least one solution
 	bool check_solution_exists(SimpleCSP* csp) const;
 

@@ -3,7 +3,7 @@
 
 #include <fs0_types.hxx>
 #include <state.hxx>
-#include <applicability_manager.hxx>
+#include <applicability/applicability_manager.hxx>
 #include <actions/ground_action.hxx>
 
 namespace fs0 {

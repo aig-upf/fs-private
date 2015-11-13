@@ -21,48 +21,43 @@ namespace fs0 {
 
 void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory) {
 	
-	Problem* problem = new Problem;
 	// Load and set the ProblemInfo data structure
 	auto info = new ProblemInfo(data);
-	problem->setProblemInfo(info);
+	loadFunctions(factory, *info);
+	Problem::setInfo(info);
+	
+	FINFO("main", "Loading initial state...");
+	auto init = loadState(data["init"]);
+	
+	FINFO("main", "Loading action schemata...");
+	auto schemata = loadActionSchemata(data["action_schemata"], *info);
+	
+	FINFO("main", "Loading goal formula...");
+	auto goal = loadGroundedFormula(data["goal"], *info);
+	
+	FINFO("main", "Loading state constraints...");
+	auto sc = loadGroundedFormula(data["state_constraints"], *info);
 	
 	//! Set the singleton global instance
+	Problem* problem = new Problem(init, schemata, goal, sc);
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	
-	//! Load the actual static functions
-	loadFunctions(factory, *problem, *info);
-	
-	/* Define the actions */
-	std::cout << "\tDefining actions..." << std::endl;
-	loadActionSchemata(data["action_schemata"], *problem);
-	
-	/* Define the initial state */
-	std::cout << "\tDefining initial state..." << std::endl;
-	problem->setInitialState(loadState(data["init"]));
-
-	/* Load the state and goal constraints */
-	std::cout << "\tDefining state and goal constraints..." << std::endl;
-	problem->setStateConstraints(loadGroundedFormula(data["state_constraints"], *problem));
-
-	/* Generate goal constraints from the goal evaluator */
-	std::cout << "\tLoading goal formula..." << std::endl;
-	problem->setGoalConditions(loadGroundedFormula(data["goal"], *problem));
-	
 	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
-	
+
+	// Ground the actions
 	problem->setGroundActions(ActionGrounder::ground(problem->getActionSchemata(), *info));
 	
 	gecode::DONT_CARE::set(gecode::Helper::computeDontCareValue());
 	FINFO("main", "Selected a Gecode DONT_CARE value of " << gecode::DONT_CARE::get());	
 }
 
-void Loader::loadFunctions(const BaseComponentFactory& factory, Problem& problem, ProblemInfo& info) {
+void Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 	for (auto elem:factory.instantiateFunctions()) {
 		info.setFunction(info.getFunctionId(elem.first), elem.second);
 	}
 }
 
-const State::cptr Loader::loadState(const rapidjson::Value& data) {
+State* Loader::loadState(const rapidjson::Value& data) {
 	// The state is an array of two-sized arrays [x,v], representing atoms x=v
 	unsigned numAtoms = data["variables"].GetInt();
 	Atom::vctr facts;
@@ -70,16 +65,16 @@ const State::cptr Loader::loadState(const rapidjson::Value& data) {
 		const rapidjson::Value& node = data["atoms"][i];
 		facts.push_back(Atom(node[0].GetInt(), node[1].GetInt()));
 	}
-	return std::make_shared<State>(numAtoms, facts);
+	return new State(numAtoms, facts);
 }
 
 
-void Loader::loadActionSchemata(const rapidjson::Value& data, Problem& problem) {
-	assert(problem.getActionSchemata().empty());
-	
+std::vector<ActionSchema::cptr> Loader::loadActionSchemata(const rapidjson::Value& data, const ProblemInfo& info) {
+	std::vector<ActionSchema::cptr> schemata;
 	for (unsigned i = 0; i < data.Size(); ++i) {
- 		problem.addActionSchema(loadActionSchema(data[i], problem.getProblemInfo()));
+ 		schemata.push_back(loadActionSchema(data[i], info));
 	}
+	return schemata;
 }
 
 ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const ProblemInfo& info) {
@@ -93,11 +88,11 @@ ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const 
 	return new ActionSchema(name, signature, parameters, precondition, effects);
 }
 
-Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, Problem& problem) {
-	const Formula::cptr unprocessed = fs::Loader::parseFormula(data["conditions"], problem.getProblemInfo());
+Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
+	const Formula::cptr unprocessed = fs::Loader::parseFormula(data["conditions"], info);
 	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
 	// to detect tautologies, contradictions, etc., and to consolidate state variables
-	auto processed = unprocessed->bind(Binding(), problem.getProblemInfo());
+	auto processed = unprocessed->bind(Binding(), info);
 	delete unprocessed;
 	return processed;
 }

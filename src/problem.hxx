@@ -1,63 +1,69 @@
 
 #pragma once
 
-#include <iosfwd>
-
 #include <fs0_types.hxx>
-#include <state.hxx>
-
 #include <actions/applicable_action_set.hxx>
 #include <actions/action_schema.hxx>
 #include <actions/ground_action.hxx>
 
 namespace fs0 {
 
-class Problem
-{
+class State; class FormulaSatisfiabilityManager;
+
+class Problem {
 public:
-	//! Constructs a problem by loading the problem data from the given directory.
-	Problem();
+
+	Problem(State* init, const std::vector<ActionSchema::cptr>& schemata, const Formula::cptr goal, const Formula::cptr state_constraints);
 	~Problem();
 
-	//! Modify the problem initial state
-	void setInitialState(const State::cptr& state) { _initialState = state; }
-	const State::cptr getInitialState() const { return _initialState; }
+	//! Get the initial state of the problem
+	const State& getInitialState() const { return *_init; }
 
-	void addActionSchema(const ActionSchema::cptr action) { _schemata.push_back(action); }
+	//! Get the set of action schemata of the problem
 	const std::vector<ActionSchema::cptr>& getActionSchemata() const { return _schemata; }
 	
+	//! Get the set of ground actions of the problem
 	const std::vector<GroundAction::cptr>& getGroundActions() const { return _ground; }
 	void setGroundActions(std::vector<GroundAction::cptr>&& ground) { _ground = std::move(ground); }
 	
+	//! Get an iterator on the set of actions that are applicable in the given state
 	ApplicableActionSet getApplicableActions(const State& s) const;
 	
-	void setStateConstraints(const Formula::cptr formula) { _state_constraint_formula = formula;}
-	const Formula::cptr getStateConstraints() const { return _state_constraint_formula; }
-	void setGoalConditions(const Formula::cptr formula) { _goal_formula = formula;}
+	//! Get the problem's goal formula
 	const Formula::cptr getGoalConditions() const { return _goal_formula; }
-
+	
+	//! Get the state constraint formula of the problem
+	const Formula::cptr getStateConstraints() const { return _state_constraint_formula; }
+	
+	//! Get the name of the action with given index
 	std::string get_action_name(unsigned action) const;
 
-	//! Getter/setter for the associated ProblemInfo object.
-	void setProblemInfo(ProblemInfo* info) { _problemInfo = info; }
-	const ProblemInfo& getProblemInfo() const {
-		assert(_problemInfo);
-		return *_problemInfo;
-	}
-
+	//! Set the global singleton problem instance
 	static void setInstance(std::unique_ptr<Problem>&& problem) {
 		assert(!_instance);
 		_instance = std::move(problem);
 	}
 	
-	//! const version of the singleton accessor
+	//! Global singleton object accessor
 	static const Problem& getInstance() {
 		assert(_instance);
 		return *_instance;
 	}
 	
+	//! Get the ProblemInfo object associated to this problem.
+	const ProblemInfo& getProblemInfo() const { return getInfo(); }
+	
 	//! Helper to access the problem info more easily
-	static const ProblemInfo& getInfo() { return getInstance().getProblemInfo(); }
+	
+	static void setInfo(ProblemInfo* info) {
+		assert(!_info);
+		_info = std::unique_ptr<ProblemInfo>(info);
+	}
+	
+	static const ProblemInfo& getInfo() {
+		assert(_info);
+		return *_info;
+	}
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
@@ -65,23 +71,27 @@ public:
 
 protected:
 	//! The initial state of the problem
-	State::cptr _initialState;
+	const std::unique_ptr<State> _init;
 
 	// The set of action schemata
-	std::vector<ActionSchema::cptr> _schemata;
+	const std::vector<ActionSchema::cptr> _schemata;
 	
 	// The set of grounded actions of the problem
 	std::vector<GroundAction::cptr> _ground;
 	
-	//! An object with all sorts of extra book-keeping information
-	ProblemInfo* _problemInfo;
 	
-	//! Pointers to the different problem constraints. This class owns the pointers.
-	Formula::cptr _state_constraint_formula;
-	Formula::cptr _goal_formula;
+	
+	//! Pointers to the goal and state constraints formulas. This class owns the pointers.
+	const Formula::cptr _state_constraint_formula;
+	const Formula::cptr _goal_formula;
 
+	std::unique_ptr<FormulaSatisfiabilityManager> _goal_sat_manager;
+	
 	//! The singleton instance
 	static std::unique_ptr<Problem> _instance;
+	
+	//! An object with all sorts of extra book-keeping information - currently a singleton instance as well :-(
+	static std::unique_ptr<ProblemInfo> _info;
 };
 
 } // namespaces

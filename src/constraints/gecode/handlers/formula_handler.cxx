@@ -34,7 +34,6 @@ GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const Formula::cptr formula)
 	}
 }
 
-
 bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	
 	DFS<SimpleCSP> engine(csp);

@@ -1,9 +1,6 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include <fs0_types.hxx>
 #include <actions/ground_action.hxx>
 #include <state.hxx>
@@ -18,9 +15,9 @@ public:
 	static bool checkPlanSuccessful(const Problem& problem, const ActionPlan& plan, const State& s0);
 	
 protected:
-	static State::ptr applyPlan(const Problem& problem, const ActionPlan& plan, const State& s0);
+	static std::shared_ptr<State> applyPlan(const Problem& problem, const ActionPlan& plan, const State& s0);
 	
-	static State::ptr applyAction(const Problem& problem, const GroundAction& action, const State::ptr& s0);
+	static std::shared_ptr<State> applyAction(const Problem& problem, const GroundAction& action, const std::shared_ptr<State> s0);
 };
 
 

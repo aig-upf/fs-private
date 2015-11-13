@@ -18,7 +18,7 @@ bool SearchUtils::check_plan(const std::vector<GroundAction::IdType>& plan) {
 	const Problem& problem = Problem::getInstance();
 	std::vector<unsigned> p;
 	for (const auto& elem:plan) p.push_back((unsigned) elem);
-	return Checker::checkPlanSuccessful(problem, p, *(problem.getInitialState()));
+	return Checker::checkPlanSuccessful(problem, p, problem.getInitialState());
 }
 
 float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Problem& problem, const std::string& out_dir) {

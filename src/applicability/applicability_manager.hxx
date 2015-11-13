@@ -10,11 +10,8 @@ namespace fs0 {
 
 class GroundAction; class State;
 
-/**
- * A simple manager that only checks applicability of actions in a non-relaxed setting.
- */
-class ApplicabilityManager
-{
+//!A simple manager that only checks applicability of actions in a non-relaxed setting.
+class ApplicabilityManager {
 public:
 	ApplicabilityManager(const Formula::cptr state_constraints);
 		
