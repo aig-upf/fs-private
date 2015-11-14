@@ -7,6 +7,7 @@
 namespace fs0 {
 
 class Problem;
+class State;
 
 class FS0StateModel : public aptk::DetStateModel<State, GroundAction> {
 public:

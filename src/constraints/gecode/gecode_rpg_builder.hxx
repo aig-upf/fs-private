@@ -4,25 +4,26 @@
 #include <fs0_types.hxx>
 #include <atom.hxx>
 #include <constraints/gecode/simple_csp.hxx>
-#include <constraints/gecode/csp_translator.hxx>
-#include <constraints/filtering.hxx>
-#include <constraints/gecode/handlers/csp_handler.hxx>
 
-namespace fs = fs0::language::fstrips;
 
 namespace fs0 { class State; class RelaxedState; }
+
+namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
 class GecodeRPGLayer;
+class GecodeFormulaCSPHandler;
 
 //!
 class GecodeRPGBuilder {
 public:
 	//! Factory method - pointer ownership corresponds to the caller.
-	static std::shared_ptr<GecodeRPGBuilder> create(const Formula::cptr goal_formula, const Formula::cptr state_constraints);
+	static std::shared_ptr<GecodeRPGBuilder> create(const fs::Formula* goal_formula, const fs::Formula* state_constraints);
 	
-	GecodeRPGBuilder(gecode::GecodeFormulaCSPHandler::ptr goal_handler, gecode::GecodeFormulaCSPHandler::ptr state_constraint_handler)
+	GecodeRPGBuilder(GecodeFormulaCSPHandler* goal_handler, GecodeFormulaCSPHandler* state_constraint_handler)
 		: _goal_handler(goal_handler), _state_constraint_handler(state_constraint_handler) {}
 	~GecodeRPGBuilder();
 	
@@ -45,8 +46,8 @@ public:
 	
 protected:
 	//! We need separate Formula CSPs for handling the goal and the state constraints.
-	GecodeFormulaCSPHandler::ptr _goal_handler;
-	GecodeFormulaCSPHandler::ptr _state_constraint_handler;
+	GecodeFormulaCSPHandler* _goal_handler;
+	GecodeFormulaCSPHandler* _state_constraint_handler;
 };
 
 } } // namespaces

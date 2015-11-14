@@ -2,38 +2,40 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <actions/applicable_action_set.hxx>
-#include <actions/action_schema.hxx>
-#include <actions/ground_action.hxx>
+#include <problem_info.hxx>
+
+namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-class State; class FormulaInterpreter;
+class ActionSchema; class GroundAction; class State; class FormulaInterpreter;
+class ApplicableActionSet; class ProblemInfo;
 
 class Problem {
 public:
 
-	Problem(State* init, const std::vector<ActionSchema::cptr>& schemata, const Formula::cptr goal, const Formula::cptr state_constraints);
+	Problem(State* init, const std::vector<const ActionSchema*>& schemata, const fs::Formula* goal, const fs::Formula* state_constraints);
 	~Problem();
 
 	//! Get the initial state of the problem
 	const State& getInitialState() const { return *_init; }
 
 	//! Get the set of action schemata of the problem
-	const std::vector<ActionSchema::cptr>& getActionSchemata() const { return _schemata; }
+	const std::vector<const ActionSchema*>& getActionSchemata() const { return _schemata; }
 	
 	//! Get the set of ground actions of the problem
-	const std::vector<GroundAction::cptr>& getGroundActions() const { return _ground; }
-	void setGroundActions(std::vector<GroundAction::cptr>&& ground) { _ground = std::move(ground); }
+	const std::vector<const GroundAction*>& getGroundActions() const { return _ground; }
+	void setGroundActions(std::vector<const GroundAction*>&& ground) { _ground = std::move(ground); }
 	
 	//! Get an iterator on the set of actions that are applicable in the given state
 	ApplicableActionSet getApplicableActions(const State& s) const;
 	
 	//! Get the problem's goal formula
-	const Formula::cptr getGoalConditions() const { return _goal_formula; }
+	const fs::Formula* getGoalConditions() const { return _goal_formula; }
 	
 	//! Get the state constraint formula of the problem
-	const Formula::cptr getStateConstraints() const { return _state_constraint_formula; }
+	const fs::Formula* getStateConstraints() const { return _state_constraint_formula; }
 	
 	//! Get the name of the action with given index
 	std::string get_action_name(unsigned action) const;
@@ -74,14 +76,14 @@ protected:
 	const std::unique_ptr<State> _init;
 
 	// The set of action schemata
-	const std::vector<ActionSchema::cptr> _schemata;
+	const std::vector<const ActionSchema*> _schemata;
 	
 	// The set of grounded actions of the problem
-	std::vector<GroundAction::cptr> _ground;
+	std::vector<const GroundAction*> _ground;
 	
 	//! Pointers to the goal and state constraints formulas. This class owns the pointers.
-	const Formula::cptr _state_constraint_formula;
-	const Formula::cptr _goal_formula;
+	const fs::Formula* _state_constraint_formula;
+	const fs::Formula* _goal_formula;
 
 	std::unique_ptr<FormulaInterpreter> _goal_sat_manager;
 	

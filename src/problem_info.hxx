@@ -1,14 +1,8 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <unordered_map>
-
-#include <boost/regex.hpp>
-#include <boost/iterator/iterator_concepts.hpp>
 #include <fs0_types.hxx>
-#include <iostream>
+#include <unordered_map>
 
 #include <lib/rapidjson/document.h>
 
@@ -57,8 +51,7 @@ protected:
 /**
   * A ProblemInfo instance holds all the relevant information about the problem, including the names and types of state variables, problem objects, etc.
   */
-class ProblemInfo
-{
+class ProblemInfo {
 public:
 	typedef std::shared_ptr<ProblemInfo> ptr;
 	typedef std::shared_ptr<const ProblemInfo> cptr;
@@ -112,7 +105,6 @@ protected:
 	std::string _instance;
 	
 public:
-
 	ProblemInfo(const rapidjson::Document& data);
 	~ProblemInfo() {}
 	

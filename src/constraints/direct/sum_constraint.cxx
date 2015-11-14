@@ -1,9 +1,8 @@
 
-#include <cassert>
-#include <constraints/direct/sum_constraint.hxx>
-#include <problem.hxx>
-#include <utils/printers/helper.hxx>
 #include <algorithm>
+#include <problem.hxx>
+#include <constraints/direct/sum_constraint.hxx>
+#include <utils/printers/helper.hxx>
 
 namespace fs0 {
 

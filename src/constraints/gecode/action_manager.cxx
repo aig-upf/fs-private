@@ -7,10 +7,30 @@
 #include <utils/printers/gecode.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/config.hxx>
-
+#include <constraints/gecode/handlers/action_handler.hxx>
+#include <constraints/gecode/handlers/effect_handler.hxx>
+#include <actions/ground_action.hxx>
 
 namespace fs0 { namespace gecode {
 
+GecodeActionManager::~GecodeActionManager() {
+	delete _handler;
+}
+
+GecodeActionEffectManager::~GecodeActionEffectManager() {
+	for (auto handler:_handlers) delete handler;
+}
+
+const GroundAction& GecodeActionManager::getAction() const { return _handler->getAction(); }
+const GroundAction& GecodeActionEffectManager::getAction() const { return _handlers[0]->getAction(); }
+
+void GecodeActionManager::init_value_selector(const RPGData* bookkeeping) {
+	_handler->init(bookkeeping);
+}
+
+void GecodeActionEffectManager::init_value_selector(const RPGData* bookkeeping) {
+	for (auto handler:_handlers) handler->init(bookkeeping);
+}
 
 std::vector<std::shared_ptr<GecodeManager>> GecodeActionManager::create(const std::vector<GroundAction::cptr>& actions) {
 	std::vector<std::shared_ptr<GecodeManager>> managers;

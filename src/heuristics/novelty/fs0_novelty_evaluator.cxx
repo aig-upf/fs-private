@@ -3,10 +3,12 @@
 #include <set>
 
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
-#include "novelty_features_configuration.hxx"
+#include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/feature_set.hxx>
+#include <languages/fstrips/scopes.hxx>
+#include <actions/ground_action.hxx>
 
 namespace fs0 {
 
@@ -32,9 +34,9 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 
 	if ( feature_configuration.useGoal() ) {
 		ConditionSetFeature* feature = new ConditionSetFeature;
-		for ( AtomicFormula::cptr condition : problem.getGoalConditions()->all_atoms() ) {
+		for (fs::AtomicFormula::cptr condition : problem.getGoalConditions()->all_atoms() ) {
 			feature->addCondition(condition);
-			const auto scope = ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
+			const auto scope = fs::ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
 			relevantVars.insert(scope.cbegin(), scope.cend());
 		}
 		_features.push_back(feature);
@@ -44,9 +46,9 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 		ConditionSetFeature*  feature = new ConditionSetFeature;
 
 		// TODO Need to rethink that to do with indirect scopes and in particular with existentially quantified variables
-		for ( AtomicFormula::cptr condition : action->getPrecondition()->all_atoms() ) {
+		for (fs::AtomicFormula::cptr condition : action->getPrecondition()->all_atoms() ) {
 			if ( feature_configuration.useStateVars() ) {
-				const auto scope = ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
+				const auto scope = fs::ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
 				relevantVars.insert(scope.cbegin(), scope.cend());
 			}
 			if ( feature_configuration.useActions() ) feature->addCondition(condition);

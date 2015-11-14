@@ -2,11 +2,12 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <constraints/gecode/handlers/csp_handler.hxx>
-#include <actions/ground_action.hxx>
 
-namespace fs0 { namespace gecode {
+namespace fs0 { class State; class GroundAction; class RPGData; }
 	
+namespace fs0 { namespace gecode {
+
+class GecodeActionCSPHandler;
 class GecodeRPGLayer;
 
 //! An action manager based on modeling the action preconditions and effects as a CSP and solving it approximately / completely with Gecode.
@@ -40,49 +41,43 @@ protected:
 	bool _approximate;
 	
 	//! A helper to processes a single CSP handler
-	void process_handler(const State& seed, GecodeActionCSPHandler::ptr handler, const GecodeRPGLayer& layer, RPGData& rpg) const;
+	void process_handler(const State& seed, GecodeActionCSPHandler* handler, const GecodeRPGLayer& layer, RPGData& rpg) const;
 };
 
 class GecodeActionManager : public GecodeManager {
 public:
 	//! Factory methods
-	static std::vector<std::shared_ptr<GecodeManager>> create(const std::vector<GroundAction::cptr>& actions);
+	static std::vector<std::shared_ptr<GecodeManager>> create(const std::vector<const GroundAction*>& actions);
 
-	GecodeActionManager(unsigned action_idx, bool approximate, GecodeActionCSPHandler::ptr handler)
+	GecodeActionManager(unsigned action_idx, bool approximate, GecodeActionCSPHandler* handler)
 		: GecodeManager(action_idx, approximate), _handler(handler) {}
 	
-	~GecodeActionManager() {
-		delete _handler;
-	}
+	~GecodeActionManager();
 
 	void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const;
 	
-	const GroundAction& getAction() const { return _handler->getAction(); }
+	const GroundAction& getAction() const;
 	
 	//! Initialize the value selector of the underlying CSPs
-	void init_value_selector(const RPGData* bookkeeping) {
-		_handler->init(bookkeeping);
-	}
+	void init_value_selector(const RPGData* bookkeeping);
 	
 protected:
 	//! The action handler that correspond to this action
-	GecodeActionCSPHandler::ptr _handler;
+	GecodeActionCSPHandler* _handler;
 };
 
 class GecodeActionEffectManager : public GecodeManager {
 public:
 	//! Factory methods
-	static std::vector<std::shared_ptr<GecodeManager>> create(const std::vector<GroundAction::cptr>& actions);
+	static std::vector<std::shared_ptr<GecodeManager>> create(const std::vector<const GroundAction*>& actions);
 
-	GecodeActionEffectManager(unsigned action_idx, bool approximate, std::vector<GecodeActionCSPHandler::ptr>&& handlers)
+	GecodeActionEffectManager(unsigned action_idx, bool approximate, std::vector<GecodeActionCSPHandler*>&& handlers)
 		: GecodeManager(action_idx, approximate), _handlers(std::move(handlers)) {}
 	
-	~GecodeActionEffectManager() {
-		for (auto handler:_handlers) delete handler;
-	}
+	~GecodeActionEffectManager();
 
 	//!
 	void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const;
@@ -90,16 +85,14 @@ public:
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const;
 	
-	const GroundAction& getAction() const { return _handlers[0]->getAction(); }
+	const GroundAction& getAction() const;
 	
 	//! Initialize the value selector of the underlying CSPs
-	void init_value_selector(const RPGData* bookkeeping) {
-		for (auto handler:_handlers) handler->init(bookkeeping);
-	}
+	void init_value_selector(const RPGData* bookkeeping);
 	
 protected:
 	//! The set of (action / effect) handlers that correspond to this action
-	std::vector<GecodeActionCSPHandler::ptr> _handlers;
+	std::vector<GecodeActionCSPHandler*> _handlers;
 };
 
 

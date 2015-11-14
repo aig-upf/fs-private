@@ -3,14 +3,20 @@
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <problem.hxx>
-#include <utils/utils.hxx>
 #include <state.hxx>
+#include <utils/utils.hxx>
 #include <utils/logging.hxx>
+#include <utils/binding.hxx>
 
 #include <typeinfo>
 
 namespace fs0 { namespace language { namespace fstrips {
 
+ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
+ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding()); }
+VariableIdx Term::interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding()); }
+VariableIdx Term::interpretVariable(const State& state) const { return interpretVariable(state, Binding()); }
+	
 std::ostream& Term::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {

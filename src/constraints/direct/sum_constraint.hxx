@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 #include <constraints/direct/constraint.hxx>
-namespace fs0 {
 
+namespace fs0 {
 
 /**
  * A Sum constraint custom propagator. 

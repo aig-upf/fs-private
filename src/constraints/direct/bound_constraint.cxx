@@ -5,6 +5,7 @@
 #include <problem_info.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/helper.hxx>
+#include <actions/ground_action.hxx>
 
 namespace fs0 {
 

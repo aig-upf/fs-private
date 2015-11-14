@@ -56,7 +56,7 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool n
 	}
 }
 
-IntSet Helper::add_dont_care(const IntSet& domain) {
+Gecode::IntSet Helper::add_dont_care(const Gecode::IntSet& domain) {
 	std::vector<int> values;
 	for (Gecode::IntSetValues it(domain); it(); ++it) {
 		values.push_back(it.val());
@@ -65,7 +65,7 @@ IntSet Helper::add_dont_care(const IntSet& domain) {
 	return Gecode::IntSet(Gecode::IntArgs(values.cbegin(), values.cend()));
 }
 
-void Helper::constrainCSPVariable(fs0::gecode::SimpleCSP& csp, const Gecode::IntVar& variable, const IntSet& domain, bool include_dont_care) {
+void Helper::constrainCSPVariable(SimpleCSP& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain, bool include_dont_care) {
 	if (include_dont_care) {
 		Gecode::dom(csp, variable, add_dont_care(domain)); // TODO - This is highly inefficient, we should keep a different IntSet with the DONT_CARE value inside of the GecodeRPGLayer
 	} else {
@@ -79,9 +79,9 @@ void Helper::constrainCSPVariable(fs0::gecode::SimpleCSP& csp, const Gecode::Int
 Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain, bool include_dont_care) {
 	Gecode::TupleSet tuples;
 	for (auto value:domain) {
-		tuples.add(IntArgs(1, value));
+		tuples.add(Gecode::IntArgs(1, value));
 	}
-	if (include_dont_care) tuples.add(IntArgs(1, DONT_CARE::get()));
+	if (include_dont_care) tuples.add(Gecode::IntArgs(1, DONT_CARE::get()));
 	tuples.finalize();
 	return tuples;
 }
@@ -132,11 +132,11 @@ void Helper::postBranchingStrategy(SimpleCSP& csp) {
 	// Beware that the order in which the branching strategies are posted matters.
 	// For the integer variables, we post an unitialized value selector that will act as a default INT_VAL_MIN selector
 	// until it is instructed (depending on the planner configuration) in order to favor lower-h_max atoms.
-	Gecode::branch(csp, csp._intvars, INT_VAR_SIZE_MIN(), INT_VAL(&Helper::value_selector));
-	Gecode::branch(csp, csp._boolvars, INT_VAR_SIZE_MIN(), INT_VAL_MIN());
+	Gecode::branch(csp, csp._intvars, Gecode::INT_VAR_SIZE_MIN(), Gecode::INT_VAL(&Helper::value_selector));
+	Gecode::branch(csp, csp._boolvars, Gecode::INT_VAR_SIZE_MIN(), Gecode::INT_VAL_MIN());
 }
 
-int Helper::selectValueIfExists(IntVarValues& value_set, int value) {
+int Helper::selectValueIfExists(Gecode::IntVarValues& value_set, int value) {
 	assert(value_set());
 	int arbitrary_element = 0;
 	for (; value_set(); ++value_set) {
@@ -160,7 +160,7 @@ int Helper::computeDontCareValue() {
 	return -1*max < min ? min : max;
 }
 
-int Helper::value_selector(const Space& home, IntVar x, int csp_var_idx) {
+int Helper::value_selector(const Gecode::Space& home, Gecode::IntVar x, int csp_var_idx) {
 	const SimpleCSP& csp = static_cast<const SimpleCSP&>(home);
 	return csp._value_selector.select(x, csp_var_idx);
 }

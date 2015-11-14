@@ -41,8 +41,8 @@ void LogicalComponentRegistry::registerDirectTranslators() {
 	add(typeid(fs::MultiplicationTerm), new MultiplicativeTermRhsTranslator());
 	
 	// builtin global constraints
-	add(typeid(fs::AlldiffFormula), [](const fs::AtomicFormula& formula){ return new AlldiffConstraint(ScopeUtils::computeDirectScope(&formula)); });
-	add(typeid(fs::SumFormula), [](const fs::AtomicFormula& formula){ return new SumConstraint(ScopeUtils::computeDirectScope(&formula)); });
+	add(typeid(fs::AlldiffFormula), [](const fs::AtomicFormula& formula){ return new AlldiffConstraint(fs::ScopeUtils::computeDirectScope(&formula)); });
+	add(typeid(fs::SumFormula), [](const fs::AtomicFormula& formula){ return new SumConstraint(fs::ScopeUtils::computeDirectScope(&formula)); });
 }
 
 void LogicalComponentRegistry::registerGecodeTranslators() {

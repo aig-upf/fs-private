@@ -2,6 +2,7 @@
 #include <applicability/formula_interpreter.hxx>
 #include <applicability/direct_formula_interpreter.hxx>
 #include <applicability/csp_formula_interpreter.hxx>
+#include <languages/fstrips/language.hxx>
 #include <utils/utils.hxx>
 #include <utils/logging.hxx>
 

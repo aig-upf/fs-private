@@ -1,13 +1,12 @@
 
 #include <applicability/csp_formula_interpreter.hxx>
-#include <constraints/gecode/handlers/csp_handler.hxx>
-#include <state.hxx>
-#include <problem.hxx>
+#include <constraints/gecode/handlers/formula_handler.hxx>
+#include <languages/fstrips/language.hxx>
 
 
 namespace fs0 {
 
-CSPFormulaInterpreter::CSPFormulaInterpreter(const Formula::cptr formula) :
+CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula::cptr formula) :
 	_csp_handler(new gecode::GecodeFormulaCSPHandler(formula, false))
 {}
 	

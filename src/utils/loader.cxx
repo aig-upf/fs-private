@@ -4,6 +4,7 @@
 
 #include <problem.hxx>
 #include <utils/loader.hxx>
+#include <actions/action_schema.hxx>
 #include <actions/ground_action.hxx>
 #include <actions/grounding.hxx>
 #include <component_factory.hxx>
@@ -82,14 +83,14 @@ ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const 
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	
-	const Formula::cptr precondition = fs::Loader::parseFormula(node["conditions"], info);
-	const std::vector<ActionEffect::cptr> effects = fs::Loader::parseEffectList(node["effects"], info);
+	const fs::Formula::cptr precondition = fs::Loader::parseFormula(node["conditions"], info);
+	const std::vector<fs::ActionEffect::cptr> effects = fs::Loader::parseEffectList(node["effects"], info);
 	
 	return new ActionSchema(name, signature, parameters, precondition, effects);
 }
 
-Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
-	const Formula::cptr unprocessed = fs::Loader::parseFormula(data["conditions"], info);
+fs::Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
+	const fs::Formula::cptr unprocessed = fs::Loader::parseFormula(data["conditions"], info);
 	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
 	// to detect tautologies, contradictions, etc., and to consolidate state variables
 	auto processed = unprocessed->bind(Binding(), info);

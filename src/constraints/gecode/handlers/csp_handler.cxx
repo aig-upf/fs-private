@@ -7,11 +7,17 @@
 #include <utils/config.hxx>
 #include <utils/printers/vector.hxx>
 #include <constraints/registry.hxx>
-
+#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <gecode/driver.hh>
+#include <constraints/gecode/utils/novelty_constraints.hxx>
+#include <languages/fstrips/language.hxx>
 
 namespace fs0 { namespace gecode {
 
+GecodeCSPHandler::~GecodeCSPHandler() {
+	if (_novelty) delete _novelty;
+}
+	
 void GecodeCSPHandler::init(const RPGData* bookkeeping) {
 	_base_csp.init(MinHMaxValueSelector(&_translator, bookkeeping));
 }
@@ -57,16 +63,23 @@ SimpleCSP::ptr GecodeCSPHandler::instantiate_csp(const State& state) const {
 	return csp;
 }
 
-
+const NestedFluentElementTranslator& GecodeCSPHandler::getNestedFluentTranslator(fs::FluentHeadedNestedTerm::cptr fluent) const { 
+	auto it = _nested_fluent_translators_idx.find(fluent);
+	assert(it != _nested_fluent_translators_idx.end());
+	const NestedFluentElementTranslator& translator = _nested_fluent_translators.at(it->second);
+	assert(*translator.getTerm() == *fluent);
+	return translator;
+}
+	
 void GecodeCSPHandler::setup() {
 	index();
 	count_variables();
 }
 
 void GecodeCSPHandler::count_variables() {
-	for (Term::cptr term:_all_terms) {
-		if (auto sv = dynamic_cast<StateVariable::cptr>(term)) _counter.count_direct(sv->getValue());
-		else if (auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
+	for (fs::Term::cptr term:_all_terms) {
+		if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) _counter.count_direct(sv->getValue());
+		else if (auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
 			// Count all state variables derived from the nested fluent
 			for (nested_fluent_iterator it(fluent); !it.ended(); ++it) _counter.count_derived(it.getDerivedStateVariable());
 		}
@@ -76,7 +89,7 @@ void GecodeCSPHandler::count_variables() {
 void GecodeCSPHandler::register_csp_variables() {
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
-		if (FluentHeadedNestedTerm::cptr fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
+		if (fs::FluentHeadedNestedTerm::cptr fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
 			NestedFluentElementTranslator tr(fluent, _counter);
 			tr.register_variables(CSPVariableType::Input, _translator);
 			_nested_fluent_translators.push_back(std::move(tr));
@@ -111,8 +124,8 @@ void GecodeCSPHandler::register_csp_constraints() {
 	for (const auto term:_all_terms) {
 		
 		// These types of term do not require a custom translator
-		if (dynamic_cast<FluentHeadedNestedTerm::cptr>(term) ||
-			dynamic_cast<StateVariable::cptr>(term)) {
+		if (dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term) ||
+			dynamic_cast<fs::StateVariable::cptr>(term)) {
 			continue;
 		}
 		

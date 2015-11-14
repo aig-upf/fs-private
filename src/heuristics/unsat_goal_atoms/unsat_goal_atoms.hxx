@@ -19,7 +19,7 @@ public:
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& state) const { 
 		unsigned unsatisfied = 0;
-		for (AtomicFormula::cptr condition:_goal_conjunction->getConjuncts()) {
+		for (fs::AtomicFormula::cptr condition:_goal_conjunction->getConjuncts()) {
 			if (!condition->interpret(state)) ++unsatisfied;
 		}
 		return unsatisfied;
@@ -29,10 +29,10 @@ protected:
 	//! The actual planning problem
 	const Problem& _problem;
 	
-	Conjunction::cptr _goal_conjunction;
+	fs::Conjunction::cptr _goal_conjunction;
 	
-	Conjunction::cptr extract_goal_conjunction_or_fail(const Problem& problem) {
-		auto goal_conjunction = dynamic_cast<Conjunction::cptr>(problem.getGoalConditions());
+	fs::Conjunction::cptr extract_goal_conjunction_or_fail(const Problem& problem) {
+		auto goal_conjunction = dynamic_cast<fs::Conjunction::cptr>(problem.getGoalConditions());
 		if (goal_conjunction) throw std::runtime_error("UnsatisfiedGoalAtomsHeuristic valid only if the goal is a conjunction of atoms");
 		return goal_conjunction;
 	}

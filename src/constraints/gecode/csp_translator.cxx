@@ -6,14 +6,17 @@
 #include <constraints/gecode/translators/nested_fluent.hxx>
 #include <utils/logging.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
+#include <state.hxx>
+#include <constraints/gecode/simple_csp.hxx>
+#include <languages/fstrips/language.hxx>
 
 namespace fs0 { namespace gecode {
 
 void GecodeCSPVariableTranslator::perform_registration() {
-	IntVarArray intarray(_base_csp, _intvars);
+	Gecode::IntVarArray intarray(_base_csp, _intvars);
 	_base_csp._intvars.update(_base_csp, false, intarray);
 
-	BoolVarArray boolarray(_base_csp, _boolvars);
+	Gecode::BoolVarArray boolarray(_base_csp, _boolvars);
 	_base_csp._boolvars.update(_base_csp, false, boolarray);	
 }
 
@@ -96,7 +99,7 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 
 
 unsigned GecodeCSPVariableTranslator::resolveVariableIndex(fs::Term::cptr term, CSPVariableType type) const {
-	if (auto sv = dynamic_cast<StateVariable::cptr>(term)) {
+	if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) {
 		assert(type == CSPVariableType::Input);  // We're not supporting Output state variables right now, but adding support for them, if needed, would be straight-forward
 		return resolveInputVariableIndex(sv->getValue());
 	}
@@ -123,7 +126,7 @@ ObjectIdx GecodeCSPVariableTranslator::resolveValueFromIndex(unsigned variable_i
 
 Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const {
 	Gecode::IntVarArgs variables;
-	for (const Term::cptr term:terms) {
+	for (const fs::Term::cptr term:terms) {
 		variables << resolveVariable(term, type, csp);
 	}
 	return variables;

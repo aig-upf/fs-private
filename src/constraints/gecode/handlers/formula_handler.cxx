@@ -1,16 +1,18 @@
 
-#include <constraints/gecode/handlers/csp_handler.hxx>
+#include <constraints/gecode/handlers/formula_handler.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <constraints/gecode/utils/novelty_constraints.hxx>
+#include <state.hxx>
 
 #include <gecode/driver.hh>
 
 namespace fs0 { namespace gecode {
 	
-GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const Formula::cptr formula, bool use_novelty_constraint)
+GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const fs::Formula::cptr formula, bool use_novelty_constraint)
 	:  GecodeCSPHandler(),
 	  _formula(formula)
 {
@@ -36,7 +38,7 @@ GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const Formula::cptr formula, bo
 
 bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	
-	DFS<SimpleCSP> engine(csp);
+	Gecode::DFS<SimpleCSP> engine(csp);
 	SimpleCSP* solution = engine.next();
 	if (!solution) return false;
 	
@@ -65,7 +67,7 @@ bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& suppor
 }
 
 bool GecodeFormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {
-	DFS<SimpleCSP> engine(csp);
+	Gecode::DFS<SimpleCSP> engine(csp);
 	SimpleCSP* solution = engine.next();
 	if (!solution) return false;
 	delete solution;
@@ -79,7 +81,7 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 	for (const auto& it:_translator.getAllInputVariables()) {
 		VariableIdx planning_variable = it.first;
 		const Gecode::IntVar& csp_var = csp->_intvars[it.second.first];
-		IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
+		Gecode::IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
 		assert(values()); // Otherwise the CSP would be inconsistent!
 		
 		// If the original value makes the situation a goal, then we don't need to add anything for this variable.
@@ -99,7 +101,7 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 	for (const NestedFluentElementTranslator& fluent_translator:_nested_fluent_translators) {
 		auto nested_translator = fluent_translator.getNestedFluentData();
 		auto idx_variable = nested_translator.getIndex(*csp);
-		IntVarValues values(idx_variable);
+		Gecode::IntVarValues values(idx_variable);
 		assert(values()); // Otherwise the CSP would be inconsistent!
 		int arbitrary_element = values.val();
 		nested_translator.getTableVariables()[arbitrary_element];
@@ -108,7 +110,7 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 		if (inserted.find(state_variable) == inserted.end()) { // Don't push twice to the support the same atom
 			auto fluent = fluent_translator.getTerm();
 			auto csp_var = _translator.resolveVariable(fluent, CSPVariableType::Input, *csp);
-			IntVarValues values(csp_var);
+			Gecode::IntVarValues values(csp_var);
 			assert(values()); // Otherwise the CSP would be inconsistent!
 			support.push_back(Atom(state_variable, values.val())); // Simply push an arbitrary value
 			inserted.insert(state_variable);
@@ -125,7 +127,7 @@ void GecodeFormulaCSPHandler::index() {
 	const auto atoms =  _formula->all_atoms();
 	_all_formulas.insert(atoms.cbegin(), atoms.cend());
 	
-	for (const AtomicFormula::cptr formula:atoms) {
+	for (const fs::AtomicFormula::cptr formula:atoms) {
 		const auto terms = formula->all_terms();
 		_all_terms.insert(terms.cbegin(), terms.cend());
 	}

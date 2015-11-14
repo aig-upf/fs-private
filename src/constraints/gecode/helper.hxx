@@ -3,13 +3,9 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <problem_info.hxx>
-#include <constraints/direct/compiled.hxx>
-#include <languages/fstrips/language.hxx>
 #include <gecode/int.hh>
 
-using namespace Gecode;
-
+namespace fs0 { namespace language { namespace fstrips { class StaticHeadedNestedTerm; } } }
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
@@ -39,7 +35,7 @@ public:
 	
 	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
 	//! that underlies the static term in all interpretations.
-	static Gecode::TupleSet extensionalize(const fs::StaticHeadedNestedTerm::cptr term);
+	static Gecode::TupleSet extensionalize(const fs::StaticHeadedNestedTerm* term);
 	
 	// Build an extensional gecode tupleset with all those tuples that render a certain symbol true
 	static Gecode::TupleSet extensionalize(const std::string& symbol);
@@ -52,15 +48,15 @@ public:
 	
 	//! Small helper to check whether a Gecode IntVarValues set contains a given value
 	//! Unfortunately, it has linear cost.
-	static int selectValueIfExists(IntVarValues& value_set, int value);
+	static int selectValueIfExists(Gecode::IntVarValues& value_set, int value);
 	
 	//! Computes a proper DONT_CARE value which is as close as possible to zero but not used as the ID of any object.
 	static int computeDontCareValue();
 	
-	static Gecode::IntSet add_dont_care(const IntSet& domain);
+	static Gecode::IntSet add_dont_care(const Gecode::IntSet& domain);
 	
 	//! A helper method to install our desired value-selection brancher
-	static int value_selector(const Space& home, IntVar x, int csp_var_idx);
+	static int value_selector(const Gecode::Space& home, Gecode::IntVar x, int csp_var_idx);
 };
 
 } } // namespaces

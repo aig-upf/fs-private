@@ -2,28 +2,27 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <languages/fstrips/language.hxx>
 
-
-using namespace fs0::language::fstrips;
+namespace fs0 { namespace language { namespace fstrips { class Formula; class ActionEffect; } }}
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-class ProblemInfo; class GroundAction;
+class ProblemInfo; class GroundAction; class Binding;
 
 class ActionSchema {
 protected:
 	const std::string _name;
 	const Signature _signature;
 	const std::vector<std::string> _parameters;
-	const Formula::cptr _precondition;
-	const std::vector<ActionEffect::cptr> _effects;
+	const fs::Formula* _precondition;
+	const std::vector<const fs::ActionEffect*> _effects;
 
 public:
 	typedef const ActionSchema* cptr;
 	ActionSchema(const std::string& name,
 				 const Signature& signature, const std::vector<std::string>& parameters,
-			     const Formula::cptr precondition, const std::vector<ActionEffect::cptr>& effects);
+			     const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	~ActionSchema();
 	
 	inline const std::string& getName() const { return _name; }

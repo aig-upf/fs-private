@@ -67,7 +67,7 @@ void NestedFluentElementTranslator::register_constraints(CSPVariableType type, G
 	correspondence.finalize();
 
 	// Post the extensional constraint relating the value of the subterm variables to that of the temporary 0..m index variable
-	IntVarArgs index_variables = translator.resolveVariables(subterms, CSPVariableType::Input, csp);
+	Gecode::IntVarArgs index_variables = translator.resolveVariables(subterms, CSPVariableType::Input, csp);
 	index_variables << zero_based_index;
 	Gecode::extensional(csp, index_variables, correspondence);
 	FDEBUG("translation", "Fluent-headed term \"" << *_term << "\" produces indexing constraint: " << print::extensional(index_variables, correspondence));

@@ -1,7 +1,4 @@
 
-#include <cassert>
-#include <iosfwd>
-
 #include <constraints/direct/action_manager.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <constraints/direct/translators/translator.hxx>
@@ -26,7 +23,7 @@ std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(co
 
 std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAction& action) {
 	assert(is_supported(action));
-	auto precondition = dynamic_cast<Conjunction::cptr>(action.getPrecondition());
+	auto precondition = dynamic_cast<fs::Conjunction::cptr>(action.getPrecondition());
 	assert(precondition);
 	std::vector<DirectConstraint::cptr> constraints = DirectTranslator::generate(precondition->getConjuncts());
 	std::vector<DirectEffect::cptr> effects = DirectTranslator::generate(action.getEffects());
@@ -41,21 +38,21 @@ std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAct
 }
 
 bool DirectActionManager::is_supported(const GroundAction& action) {
-	auto precondition = dynamic_cast<Conjunction::cptr>(action.getPrecondition());
+	auto precondition = dynamic_cast<fs::Conjunction::cptr>(action.getPrecondition());
 	
 	// Only conjunctions of atoms are supported by the direct translator
 	if (!precondition) return false; 
 	
-	for (const AtomicFormula::cptr condition:precondition->getConjuncts()) {
+	for (const fs::AtomicFormula::cptr condition:precondition->getConjuncts()) {
 		if (condition->nestedness() > 0) return false;
 		
-		unsigned arity = ScopeUtils::computeDirectScope(condition).size();
+		unsigned arity = fs::ScopeUtils::computeDirectScope(condition).size();
 		if (arity == 0) throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
 		else if(arity > 1) return false;
 	}
 	
-	for (const ActionEffect::cptr effect:action.getEffects()) {
-		if (effect->lhs()->nestedness() > 0 || effect->rhs()->nestedness() > 0 || ScopeUtils::computeDirectScope(effect).size() > 1) return false;
+	for (const fs::ActionEffect::cptr effect:action.getEffects()) {
+		if (effect->lhs()->nestedness() > 0 || effect->rhs()->nestedness() > 0 || fs::ScopeUtils::computeDirectScope(effect).size() > 1) return false;
 	}
 	
 	return true;
@@ -67,7 +64,7 @@ DirectActionManager::DirectActionManager(const GroundAction& action, std::vector
 	  _action(action),
 	  _constraints(constraints),
 	  _effects(effects),
-	  _scope(ScopeUtils::computeActionDirectScope(action)),
+	  _scope(fs::ScopeUtils::computeActionDirectScope(action)),
 	  _allRelevant(extractAllRelevant()),
 	  _handler(_constraints)
 {}
@@ -80,7 +77,7 @@ DirectActionManager::~DirectActionManager() {
 
 VariableIdxVector DirectActionManager::extractAllRelevant() const {
 	std::set<VariableIdx> unique(_scope.begin(), _scope.end());
-	for (ActionEffect::cptr effect:_action.getEffects()) ScopeUtils::computeDirectScope(effect, unique);
+	for (fs::ActionEffect::cptr effect:_action.getEffects()) fs::ScopeUtils::computeDirectScope(effect, unique);
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 

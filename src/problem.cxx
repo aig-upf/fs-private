@@ -1,11 +1,12 @@
 
 #include <problem.hxx>
-#include <sstream>
-#include <problem_info.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/language.hxx>
 #include <applicability/csp_formula_interpreter.hxx>
 #include <applicability/direct_formula_interpreter.hxx>
+#include <actions/applicable_action_set.hxx>
+#include <actions/action_schema.hxx>
+#include <actions/ground_action.hxx>
 
 namespace fs0 {
 
@@ -13,7 +14,7 @@ std::unique_ptr<Problem> Problem::_instance = nullptr;
 std::unique_ptr<ProblemInfo> Problem::_info = nullptr;
 
 
-Problem::Problem(State* init, const std::vector<ActionSchema::cptr>& schemata, const Formula::cptr goal, const Formula::cptr state_constraints) :
+Problem::Problem(State* init, const std::vector<ActionSchema::cptr>& schemata, const fs::Formula* goal, const fs::Formula* state_constraints) :
 	_init(init),
 	_schemata(schemata),
 	_ground(),

@@ -11,6 +11,7 @@
 #include <heuristics/relaxed_plan/gecode_chmax.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
+#include <actions/applicable_action_set.hxx>
 
 using namespace fs0::gecode;
 

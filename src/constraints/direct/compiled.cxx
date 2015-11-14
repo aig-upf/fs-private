@@ -186,7 +186,7 @@ CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affec
 	: UnaryDirectEffect(relevant, affected, {}), _extension(extension)
 {}
 	
-CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, const Term& term) 
+CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, const fs::Term& term) 
 	: CompiledUnaryEffect(relevant, affected, compile(term, Problem::getInfo()))
 {}
 	
@@ -210,8 +210,8 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEf
 	return map;
 }
 
-CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const Term& term, const ProblemInfo& info) {
-	VariableIdxVector scope = ScopeUtils::computeDirectScope(&term);
+CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const fs::Term& term, const ProblemInfo& info) {
+	VariableIdxVector scope = fs::ScopeUtils::computeDirectScope(&term);
 	assert(scope.size() == 1);
 	ExtensionT map;
 	
@@ -233,7 +233,7 @@ CompiledBinaryEffect::CompiledBinaryEffect(const VariableIdxVector& scope, Varia
 {}
 
 CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& term, const ProblemInfo& info) {
-	VariableIdxVector scope = ScopeUtils::computeDirectScope(&term);
+	VariableIdxVector scope = fs::ScopeUtils::computeDirectScope(&term);
 	assert(scope.size() == 2);
 	ExtensionT map;
 	

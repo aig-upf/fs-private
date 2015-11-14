@@ -11,6 +11,7 @@
 #include <heuristics/relaxed_plan/direct_chmax.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
+#include <actions/applicable_action_set.hxx>
 
 
 using namespace fs0::gecode;
@@ -73,10 +74,10 @@ Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectH
 }
 
 template <typename GecodeHeuristic, typename DirectHeuristic>
-Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::decide_builder_type(const Formula::cptr goal_formula, const Formula::cptr state_constraints) {
+Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::decide_builder_type(const fs::Formula::cptr goal_formula, const fs::Formula::cptr state_constraints) {
 	// ATM we simply check whether there are nested fluents within the formulae
-	auto goal_conjunction = dynamic_cast<Conjunction::cptr>(goal_formula);
-	auto sc_conjunction = dynamic_cast<Conjunction::cptr>(state_constraints);
+	auto goal_conjunction = dynamic_cast<fs::Conjunction::cptr>(goal_formula);
+	auto sc_conjunction = dynamic_cast<fs::Conjunction::cptr>(state_constraints);
 	// If we have something other than a conjunction, then the gecode manager is required.
 	if (!goal_conjunction || !sc_conjunction) return Config::CSPManagerType::Gecode;
 	if (goal_formula->nestedness() > 0 || state_constraints->nestedness() > 0) return Config::CSPManagerType::Gecode;

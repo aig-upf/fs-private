@@ -9,6 +9,7 @@
 #include <utils/printers/printers.hxx>
 #include <utils/config.hxx>
 #include <utils/logging.hxx>
+#include <languages/fstrips/language.hxx>
 
 #include <time.h>
 

@@ -17,7 +17,7 @@ void DirectTranslator::checkSupported(const fs::Term::cptr lhs, const fs::Term::
 }
 
 
-DirectConstraint::cptr DirectTranslator::generate(const AtomicFormula& formula) {
+DirectConstraint::cptr DirectTranslator::generate(const fs::AtomicFormula& formula) {
 	if (auto relational = dynamic_cast<fs::RelationalFormula::cptr>(&formula)) return generate(*relational);
 	
 	// Else, it must be a built-in, or external condition
@@ -29,19 +29,19 @@ DirectConstraint::cptr DirectTranslator::generate(const AtomicFormula& formula) 
 	return instance;
 }
 
-DirectConstraint::cptr DirectTranslator::generate(const RelationalFormula& formula) {
+DirectConstraint::cptr DirectTranslator::generate(const fs::RelationalFormula& formula) {
 	checkSupported(formula.lhs(), formula.rhs());
 	
-	VariableIdxVector formula_scope = ScopeUtils::computeDirectScope(&formula);
+	VariableIdxVector formula_scope = fs::ScopeUtils::computeDirectScope(&formula);
 	if (formula_scope.size() > 2) throw std::runtime_error("Too high a scope for direct constraints");
 	
 	// Here we can assume that the scope is <= 2 and there are no nested fluents
-	Term::cptr lhs = formula.lhs(), rhs = formula.rhs(); // shortcuts
+	fs::Term::cptr lhs = formula.lhs(), rhs = formula.rhs(); // shortcuts
 	
-	auto lhs_var = dynamic_cast<StateVariable::cptr>(lhs);
-	auto rhs_var = dynamic_cast<StateVariable::cptr>(rhs);
-	auto lhs_const = dynamic_cast<Constant::cptr>(lhs);
-	auto rhs_const = dynamic_cast<Constant::cptr>(rhs);
+	auto lhs_var = dynamic_cast<fs::StateVariable::cptr>(lhs);
+	auto rhs_var = dynamic_cast<fs::StateVariable::cptr>(rhs);
+	auto lhs_const = dynamic_cast<fs::Constant::cptr>(lhs);
+	auto rhs_const = dynamic_cast<fs::Constant::cptr>(rhs);
 	
 	if (lhs_const && rhs_const) { // A comparison between two constants... shouldn't get to this point
 		throw std::runtime_error("Comparison between two constants");
@@ -70,8 +70,8 @@ DirectConstraint::cptr DirectTranslator::generate(const RelationalFormula& formu
 	return extensionalize(formula);
 }
 
-DirectConstraint::cptr DirectTranslator::extensionalize(const AtomicFormula& formula) {
-	VariableIdxVector scope = ScopeUtils::computeDirectScope(&formula);
+DirectConstraint::cptr DirectTranslator::extensionalize(const fs::AtomicFormula& formula) {
+	VariableIdxVector scope = fs::ScopeUtils::computeDirectScope(&formula);
 	
 	if (scope.size() == 1) {
 		return new CompiledUnaryConstraint(scope, [&formula, &scope](ObjectIdx value) {
@@ -86,7 +86,7 @@ DirectConstraint::cptr DirectTranslator::extensionalize(const AtomicFormula& for
 	else return nullptr;
 }
 
-std::vector<DirectConstraint::cptr> DirectTranslator::generate(const std::vector<AtomicFormula::cptr> formulae) {
+std::vector<DirectConstraint::cptr> DirectTranslator::generate(const std::vector<fs::AtomicFormula::cptr> formulae) {
 	std::vector<DirectConstraint::cptr> generated;
 	for (const auto formula:formulae) {
 		auto translated = generate(*formula);
@@ -96,15 +96,15 @@ std::vector<DirectConstraint::cptr> DirectTranslator::generate(const std::vector
 	return generated;
 }
 
-DirectEffect::cptr DirectTranslator::generate(const ActionEffect& effect) {
+DirectEffect::cptr DirectTranslator::generate(const fs::ActionEffect& effect) {
 	checkSupported(effect.lhs(), effect.rhs());
-	auto lhs_var = dynamic_cast<StateVariable::cptr>(effect.lhs());
+	auto lhs_var = dynamic_cast<fs::StateVariable::cptr>(effect.lhs());
 	if (!lhs_var) throw std::runtime_error("Direct effects accept only state variables on the LHS of an effect");
 	VariableIdx affected = lhs_var->getValue();
 	
-	const Term& rhs = *effect.rhs();
+	const fs::Term& rhs = *effect.rhs();
 	
-	VariableIdxVector rhs_scope = ScopeUtils::computeDirectScope(effect.rhs());
+	VariableIdxVector rhs_scope = fs::ScopeUtils::computeDirectScope(effect.rhs());
 	if (rhs_scope.size() > 2) throw std::runtime_error("Too high a scope for direct effects");
 	
 	auto translator = LogicalComponentRegistry::instance().getDirectEffectTranslator(rhs);
@@ -124,7 +124,7 @@ DirectEffect::cptr DirectTranslator::generate(const ActionEffect& effect) {
 	}
 }
 
-std::vector<DirectEffect::cptr> DirectTranslator::generate(const std::vector<ActionEffect::cptr>& effects) {
+std::vector<DirectEffect::cptr> DirectTranslator::generate(const std::vector<fs::ActionEffect::cptr>& effects) {
 	std::vector<DirectEffect::cptr> generated;
 	for (const auto effect:effects) {
 		generated.push_back(generate(*effect));
@@ -133,26 +133,26 @@ std::vector<DirectEffect::cptr> DirectTranslator::generate(const std::vector<Act
 }
 
 
-DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters, bool invert) {
+DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters, bool invert) {
 	
 	// Note that in some cases we might want to "invert" the relation, so that e.g. for c < X we indeed post a X > c constraint.
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
-		case RelationalFormula::Symbol::EQ:
+		case fs::RelationalFormula::Symbol::EQ:
 			return new EQXConstraint(scope, parameters);
 
-		case RelationalFormula::Symbol::NEQ:
+		case fs::RelationalFormula::Symbol::NEQ:
 			return new NEQXConstraint(scope, parameters);
 
-		case RelationalFormula::Symbol::LT:
+		case fs::RelationalFormula::Symbol::LT:
 			return invert ?  static_cast<DirectConstraint::cptr>(new GTXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new LTXConstraint(scope, parameters));
 
-		case RelationalFormula::Symbol::LEQ:
+		case fs::RelationalFormula::Symbol::LEQ:
 			return invert ?  static_cast<DirectConstraint::cptr>(new GEQXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new LEQXConstraint(scope, parameters));
 			
-		case RelationalFormula::Symbol::GT:
+		case fs::RelationalFormula::Symbol::GT:
 			return invert ?  static_cast<DirectConstraint::cptr>(new LTXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new GTXConstraint(scope, parameters));
 			
-		case RelationalFormula::Symbol::GEQ:
+		case fs::RelationalFormula::Symbol::GEQ:
 			return invert ?  static_cast<DirectConstraint::cptr>(new LEQXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new GEQXConstraint(scope, parameters));
 		
 		default:
@@ -160,22 +160,22 @@ DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(RelationalFo
 	}
 }
 
-DirectConstraint::cptr DirectTranslator::instantiateBinaryConstraint(RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
+DirectConstraint::cptr DirectTranslator::instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
 	
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
-		case RelationalFormula::Symbol::EQ:
+		case fs::RelationalFormula::Symbol::EQ:
 			return new EQConstraint(scope, parameters);
 			break;
 			
-		case RelationalFormula::Symbol::NEQ:
+		case fs::RelationalFormula::Symbol::NEQ:
 			return new NEQConstraint(scope, parameters);
 			break;
 			
-		case RelationalFormula::Symbol::LT:
+		case fs::RelationalFormula::Symbol::LT:
 			return new LTConstraint(scope, parameters);
 			break;
 		
-		case RelationalFormula::Symbol::LEQ:
+		case fs::RelationalFormula::Symbol::LEQ:
 			return new LEQConstraint(scope, parameters);
 			break;
 			

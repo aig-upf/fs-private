@@ -4,11 +4,10 @@
 #include <state_model.hxx>
 #include <utils/config.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
+#include <actions/applicable_action_set.hxx>
 
 namespace fs0 { namespace engines {
-	
 
-	
 std::unique_ptr<FS0SearchAlgorithm> IteratedWidthEngineCreator::create(const Config& config, const FS0StateModel& model) const {
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");

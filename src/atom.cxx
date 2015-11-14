@@ -1,6 +1,7 @@
 
 #include <atom.hxx>
 #include <problem.hxx>
+#include <problem_info.hxx>
 
 namespace fs0 {
 

@@ -1,5 +1,5 @@
 
-#include <constraints/gecode/handlers/csp_handler.hxx>
+#include <constraints/gecode/handlers/action_handler.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
@@ -8,12 +8,13 @@
 #include <utils/printers/gecode.hxx>
 #include <utils/config.hxx>
 #include <languages/fstrips/scopes.hxx>
-
+#include <actions/ground_action.hxx>
+#include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <gecode/driver.hh>
 
 namespace fs0 { namespace gecode {
 
-GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects, bool use_novelty_constraint)
+GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool use_novelty_constraint)
 	:  GecodeCSPHandler(), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
 	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.getFullName());
@@ -52,18 +53,18 @@ void GecodeActionCSPHandler::index() {
 	auto conditions = _action.getPrecondition()->all_atoms();
 	_all_formulas.insert(conditions.cbegin(), conditions.cend());
 	
-	for (const AtomicFormula::cptr formula:conditions) {
+	for (const fs::AtomicFormula::cptr formula:conditions) {
 		const auto terms = formula->all_terms();
 		_all_terms.insert(terms.cbegin(), terms.cend());
 	}
 	
-	for (const ActionEffect::cptr effect:_effects) {
+	for (const fs::ActionEffect::cptr effect:_effects) {
 		const auto terms = effect->rhs()->all_terms();
 		_all_terms.insert(terms.cbegin(), terms.cend());
 		
 		// As for the LHS of the effect, ATM we only register the LHS subterms (if any)
 		if (auto lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs())) {
-			for (Term::cptr term:lhs->getSubterms()) {
+			for (fs::Term::cptr term:lhs->getSubterms()) {
 				auto subterms = term->all_terms();
 				_all_terms.insert(subterms.cbegin(), subterms.cend());
 			}
@@ -73,7 +74,7 @@ void GecodeActionCSPHandler::index() {
 
 
 void GecodeActionCSPHandler::index_scopes() {
-	auto scope = ScopeUtils::computeActionDirectScope(_action);
+	auto scope = fs::ScopeUtils::computeActionDirectScope(_action);
 	std::set<VariableIdx> action_support(scope.begin(), scope.end());
 
 	effect_support_variables.resize(_effects.size());
@@ -86,7 +87,7 @@ void GecodeActionCSPHandler::index_scopes() {
 	for (unsigned i = 0; i < _effects.size(); ++i) {
 		// Insert first the variables relevant to the particular effect and only then the variables relevant to the
 		// action which were not already inserted
-		effect_support_variables[i] = ScopeUtils::computeDirectScope(_effects[i]);
+		effect_support_variables[i] = fs::ScopeUtils::computeDirectScope(_effects[i]);
 		std::set<VariableIdx> effect_support(effect_support_variables[i].begin(), effect_support_variables[i].end());
 
 		std::set_difference(
@@ -94,10 +95,10 @@ void GecodeActionCSPHandler::index_scopes() {
 			effect_support.begin(), effect_support.end(),
 			std::inserter(effect_support_variables[i], effect_support_variables[i].begin()));
 
-		ScopeUtils::TermSet nested;
+		fs::ScopeUtils::TermSet nested;
 
 		// Order matters - we first insert the nested fluents from the particular effect
-		ScopeUtils::computeIndirectScope(_effects[i], nested);
+		fs::ScopeUtils::computeIndirectScope(_effects[i], nested);
 		effect_nested_fluents[i] = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
 
 
@@ -105,7 +106,7 @@ void GecodeActionCSPHandler::index_scopes() {
 		// Actually we don't care that much about repetitions between the two sets of terms, since they are checked anyway when
 		// transformed into state variables
 		nested.clear();
-		ScopeUtils::computeIndirectScope(_action.getPrecondition(), nested);
+		fs::ScopeUtils::computeIndirectScope(_action.getPrecondition(), nested);
 		effect_nested_fluents[i].insert(effect_nested_fluents[i].end(), nested.cbegin(), nested.cend());
 		
 		effect_rhs_variables[i] = _translator.resolveVariableIndex(_effects[i]->rhs(), CSPVariableType::Input);
@@ -145,7 +146,7 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 
 void GecodeActionCSPHandler::compute_support(SimpleCSP* csp, unsigned int actionIdx, RPGData& rpg, const State& seed) const {
 	FFDEBUG("heuristic", "Computing full support for action " << _action.getFullName());
-	DFS<SimpleCSP> engine(csp);
+	Gecode::DFS<SimpleCSP> engine(csp);
 	unsigned num_solutions = 0;
 	while (SimpleCSP* solution = engine.next()) {
 		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
@@ -170,7 +171,7 @@ void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned acti
 		
 		// We compute, effect by effect, the atom produced by the effect for the given solution, as well as its supports
 		for (unsigned i = 0; i < _effects.size(); ++i) {
-			ActionEffect::cptr effect = _effects[i];
+			fs::ActionEffect::cptr effect = _effects[i];
 			VariableIdx affected = _has_nested_lhs ? effect->lhs()->interpretVariable(solution_assignment) : effect_lhs_variables[i];
 			Atom atom(affected, _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution));
 			FFDEBUG("heuristic", "Processing effect \"" << *effect << "\"");

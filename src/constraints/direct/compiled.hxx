@@ -8,11 +8,7 @@
 #include <set>
 #include <functional>
 
-
-namespace fs0 { namespace language { namespace fstrips {
-	class Term;
-} } }
-
+namespace fs0 { namespace language { namespace fstrips { class Term; } } }
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {

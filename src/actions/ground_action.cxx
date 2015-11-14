@@ -6,13 +6,16 @@
 #include <utils/utils.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
+#include <languages/fstrips/language.hxx>
+#include <actions/action_schema.hxx>
+#include <sstream>
 
 
 namespace fs0 {
 
 const ActionIdx GroundAction::invalid_action_id = std::numeric_limits<unsigned int>::max();
 
-GroundAction::GroundAction(ActionSchema::cptr schema, const Binding& binding, const Formula::cptr precondition, const std::vector<ActionEffect::cptr>& effects)
+GroundAction::GroundAction(ActionSchema::cptr schema, const Binding& binding, const fs::Formula::cptr precondition, const std::vector<fs::ActionEffect::cptr>& effects)
 	: _schema(schema), _binding(binding), _precondition(precondition), _effects(effects)
 {}
 
@@ -21,6 +24,10 @@ GroundAction::~GroundAction() {
 	delete _precondition;
 	for (const auto pointer:_effects) delete pointer;
 }
+
+const std::string& GroundAction::getName() const { return _schema->getName(); }
+
+const Signature& GroundAction::getSignature() const { return _schema->getSignature(); }
 
 std::string GroundAction::getFullName() const {
      std::ostringstream stream;

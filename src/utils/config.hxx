@@ -3,14 +3,11 @@
 
 #include <stdexcept>
 #include <memory>
-
 #include <boost/property_tree/ptree.hpp>
-
 
 namespace fs0 {
 
-/**
- */
+//! A (singleton) object to load and store different planner configuration objects
 class Config {
 public:
 	//! The type of relaxed plan extraction

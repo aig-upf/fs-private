@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include <languages/fstrips/formulae.hxx>
-
+namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -13,7 +12,7 @@ class State;
 class FormulaInterpreter {
 public:
 	//! Factory method - return a formula satisfiability manager appropriate to the given formula
-	static FormulaInterpreter* create(const fs::Formula::cptr formula);
+	static FormulaInterpreter* create(const fs::Formula* formula);
 	
 	virtual ~FormulaInterpreter() {}
 

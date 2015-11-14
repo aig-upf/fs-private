@@ -3,13 +3,10 @@
 
 #include <fs0_types.hxx>
 #include <problem_info.hxx>
-#include <utils/binding.hxx>
 
-
-namespace fs0 { class State; }
+namespace fs0 { class State; class Binding; }
 
 namespace fs0 { namespace language { namespace fstrips {
-
 
 //! A logical term in FSTRIPS
 class Term {
@@ -38,14 +35,14 @@ public:
 	//! Returns the value of the current term under the given (possibly partial) interpretation
 	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
-	ObjectIdx interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
-	ObjectIdx interpret(const State& state) const  { return interpret(state, Binding()); }
+	ObjectIdx interpret(const PartialAssignment& assignment) const;
+	ObjectIdx interpret(const State& state) const;
 
 	//! Returns the index of the state variable to which the current term resolves under the given state.
 	virtual VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual VariableIdx interpretVariable(const State& state, const Binding& binding) const = 0;
-	VariableIdx interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding()); }
-	VariableIdx interpretVariable(const State& state) const { return interpretVariable(state, Binding()); }
+	VariableIdx interpretVariable(const PartialAssignment& assignment) const;
+	VariableIdx interpretVariable(const State& state) const;
 
 	virtual TypeIdx getType() const = 0;
 	
@@ -54,7 +51,7 @@ public:
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Term& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
 
 	virtual bool operator==(const Term& other) const = 0;
 	inline bool operator!=(const Term& rhs) const { return !this->operator==(rhs); }

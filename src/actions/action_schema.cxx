@@ -2,13 +2,15 @@
 #include <actions/action_schema.hxx>
 #include <problem.hxx>
 #include <actions/ground_action.hxx>
+#include <utils/binding.hxx>
 #include <utils/printers/binding.hxx>
+#include <languages/fstrips/language.hxx>
 
 namespace fs0 {
 
 ActionSchema::ActionSchema(const std::string& name,
 						   const Signature& signature, const std::vector<std::string>& parameters,
-						   const Formula::cptr precondition, const std::vector<ActionEffect::cptr>& effects)
+						   const fs::Formula::cptr precondition, const std::vector<fs::ActionEffect::cptr>& effects)
 	: _name(name), _signature(signature), _parameters(parameters), _precondition(precondition), _effects(effects)
 {
 	assert(parameters.size() == signature.size());
@@ -33,10 +35,10 @@ std::ostream& ActionSchema::print(std::ostream& os, const fs0::ProblemInfo& info
 }
 
 GroundAction* ActionSchema::bind(const Binding& binding, const ProblemInfo& info) const {
-	Formula::cptr precondition = _precondition->bind(binding, info);
+	fs::Formula::cptr precondition = _precondition->bind(binding, info);
 	
-	std::vector<ActionEffect::cptr> effects;
-	for (const ActionEffect::cptr effect:_effects) {
+	std::vector<fs::ActionEffect::cptr> effects;
+	for (const fs::ActionEffect::cptr effect:_effects) {
 		effects.push_back(effect->bind(binding, info));
 	}
 	
