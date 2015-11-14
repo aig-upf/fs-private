@@ -12,6 +12,7 @@ namespace fs0 { namespace print {
 class action_name {
 	protected:
 		const GroundAction& _action;
+
 	public:
 		action_name(const GroundAction& action) : _action(action) {}
 		
