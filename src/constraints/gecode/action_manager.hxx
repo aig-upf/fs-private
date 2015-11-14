@@ -20,7 +20,7 @@ public:
 
 	//!
 	virtual void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const = 0;
-	void process_handler(const State& seed, GecodeActionCSPHandler::ptr handler, const GecodeRPGLayer& layer, RPGData& rpg) const;
+	
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeManager& o) { return o.print(os); }
@@ -38,6 +38,9 @@ protected:
 	
 	//! Whether to solve the action CSPs completely or approximately
 	bool _approximate;
+	
+	//! A helper to processes a single CSP handler
+	void process_handler(const State& seed, GecodeActionCSPHandler::ptr handler, const GecodeRPGLayer& layer, RPGData& rpg) const;
 };
 
 class GecodeActionManager : public GecodeManager {

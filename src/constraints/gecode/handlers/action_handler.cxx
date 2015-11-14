@@ -157,8 +157,9 @@ void GecodeActionCSPHandler::compute_support(SimpleCSP* csp, unsigned int action
 	FFDEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
 }
 
-void GecodeActionCSPHandler::compute_approximate_support(SimpleCSP* csp, unsigned int action_idx, RPGData rpg, const State& seed) {
-	assert(0); // TODO - Unimplemented, but now sure it makes a lot of sense to solve the action CSPs approximately as of now
+void GecodeActionCSPHandler::compute_approximate_support(SimpleCSP* csp, unsigned action_idx, RPGData rpg, const State& seed) {
+	// TODO - Unimplemented, but now sure it makes a lot of sense to solve the action CSPs approximately as of now
+	throw UnimplementedFeatureException("Approximate support not yet implemented in action CSPs");
 }
 
 

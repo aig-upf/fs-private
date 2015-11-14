@@ -17,9 +17,10 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionManager::create(const st
 	managers.reserve(actions.size());
 	
 	bool use_novelty_constraint = Config::instance().useNoveltyConstraint();
+	bool use_approximate_resolution = Config::instance().useApproximateActionResolution();
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
-		auto manager = std::make_shared<GecodeActionManager>(idx, Config::instance().useApproximateActionResolution(), new GecodeActionCSPHandler(*actions[idx], use_novelty_constraint));
+		auto manager = std::make_shared<GecodeActionManager>(idx, use_approximate_resolution, new GecodeActionCSPHandler(*actions[idx], use_novelty_constraint));
 		FDEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
 		managers.push_back(manager);
 	}

@@ -56,7 +56,10 @@ Config::Config(const std::string& filename)
 	_precondition_resolution = parseOption<CSPResolutionType>(_root, "csp.precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 	
 	_novelty_constraint = parseOption<bool>(_root, "csp.novelty_constraint", {{"yes", true}, {"no", false}});
+	
 	_element_dont_care_optimization = parseOption<bool>(_root, "csp.dont_care_optimization", {{"yes", true}, {"no", false}});
+	
+	_lifted_planning = parseOption<bool>(_root, "lifted_planning", {{"yes", true}, {"no", false}});
 	
 	_goal_value_selection = parseOption<ValueSelection>(_root, "csp.goal_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});
 	_action_value_selection = parseOption<ValueSelection>(_root, "csp.action_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});

@@ -73,6 +73,8 @@ protected:
 	
 	bool _element_dont_care_optimization;
 	
+	bool _lifted_planning;
+	
 	//! Private constructor
 	Config(const std::string& filename);
 	
@@ -105,6 +107,8 @@ public:
 	bool useNoveltyConstraint() const { return _novelty_constraint; }
 	
 	bool useElementDontCareOptimization() const { return _element_dont_care_optimization; }
+	
+	bool doLiftedPlanning() const { return _lifted_planning; }
 	
 	bool useApproximateActionResolution() const {
 		return getActionPreconditionResolutionType() == CSPResolutionType::Approximate;
