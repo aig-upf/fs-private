@@ -12,6 +12,7 @@
 #include <state_model.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
+#include <applicability/formula_interpreter.hxx>
 
 
 namespace fs0 {
@@ -26,8 +27,7 @@ DirectCRPG::DirectCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<D
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 long DirectCRPG::evaluate(const State& seed) {
 	
-	if (ApplicabilityManager::checkFormulaHolds(_problem.getGoalConditions(), seed)) return 0; // The seed state is a goal
-	
+	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
 	RelaxedState relaxed(seed);
 	RPGData bookkeeping(seed);

@@ -12,6 +12,8 @@
 #include <state_model.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
+#include <applicability/formula_interpreter.hxx>
+
 
 
 namespace fs0 { namespace gecode {
@@ -26,7 +28,7 @@ GecodeCRPG::GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<G
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 long GecodeCRPG::evaluate(const State& seed) {
 	
-	if (ApplicabilityManager::checkFormulaHolds(_problem.getGoalConditions(), seed)) return 0; // The seed state is a goal
+	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
 	GecodeRPGLayer layer(seed);
 	RPGData bookkeeping(seed);

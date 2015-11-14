@@ -2,13 +2,15 @@
 #include <actions/checker.hxx>
 #include <problem.hxx>
 #include <applicability/applicability_manager.hxx>
+#include <applicability/formula_interpreter.hxx>
+
 
 namespace fs0 {
 
 bool Checker::checkPlanSuccessful(const Problem& problem, const ActionPlan& plan, const State& s0) {
 	auto s1 = applyPlan(problem, plan, s0);
 	// Check first that the plan is valid (pointer not null) and then that leads to a goal state
-	return s1 && ApplicabilityManager::checkFormulaHolds(problem.getGoalConditions(), *s1);
+	return s1 && problem.getGoalSatManager().satisfied(*s1);
 }
 
 std::shared_ptr<State> Checker::applyPlan(const Problem& problem, const ActionPlan& plan, const State& s0) {

@@ -164,7 +164,7 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
 		const Gecode::IntVar& csp_variable = csp._intvars[it.second.first];
-		Gecode::dom(csp, csp_variable,  Gecode::IRT_EQ, state.getValue(variable));
+		Gecode::rel(csp, csp_variable,  Gecode::IRT_EQ, state.getValue(variable));
 	}
 }
 

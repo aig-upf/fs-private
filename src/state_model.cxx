@@ -2,6 +2,7 @@
 #include <state_model.hxx>
 #include <problem.hxx>
 #include <state.hxx>
+#include <applicability/formula_interpreter.hxx>
 
 namespace fs0 {
 
@@ -13,7 +14,7 @@ State FS0StateModel::init() const {
 }
 
 bool FS0StateModel::goal(const State& state) const {
-	return ApplicabilityManager::checkFormulaHolds(task.getGoalConditions(), state);
+	return task.getGoalSatManager().satisfied(state);
 }
 
 State FS0StateModel::next(const State& state, GroundAction::IdType actionIdx) const {

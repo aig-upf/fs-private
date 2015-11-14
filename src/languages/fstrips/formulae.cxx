@@ -6,8 +6,6 @@
 #include <state.hxx>
 #include <utils/logging.hxx>
 
-#include <typeinfo>
-
 namespace fs0 { namespace language { namespace fstrips {
 
 
@@ -28,6 +26,11 @@ std::vector<Term::cptr> Formula::all_terms() const {
 	return res;
 }
 
+std::vector<const AtomicFormula*> Formula::all_atoms() const {
+	return Utils::filter_by_type<AtomicFormula::cptr>(all_formulae());
+}
+
+	
 std::ostream& Formula::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 unsigned AtomicFormula::nestedness() const {
@@ -128,12 +131,19 @@ std::ostream& Conjunction::print(std::ostream& os, const fs0::ProblemInfo& info)
 	return os;
 }
 
-std::vector<AtomicFormula::cptr> Conjunction::all_atoms() const {
-	std::vector<AtomicFormula::cptr> res;
+std::vector<Formula::cptr> Conjunction::all_formulae() const {
+	std::vector<Formula::cptr> res(1, this);
 	for (auto elem:_conjuncts) {
-		auto tmp = elem->all_atoms();
+		auto tmp = elem->all_formulae();
 		res.insert(res.end(), tmp.cbegin(), tmp.cend());
 	}
+	return res;
+}
+
+std::vector<Formula::cptr> ExistentiallyQuantifiedFormula::all_formulae() const {
+	std::vector<Formula::cptr> res(1, this);
+	auto tmp = _subformula->all_formulae();
+	res.insert(res.end(), tmp.cbegin(), tmp.cend());
 	return res;
 }
 

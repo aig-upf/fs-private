@@ -10,13 +10,13 @@
 
 namespace fs0 { namespace gecode {
 	
-GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const Formula::cptr formula)
+GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const Formula::cptr formula, bool use_novelty_constraint)
 	:  GecodeCSPHandler(),
 	  _formula(formula)
 {
 	setup();
 	
-	createCSPVariables();
+	createCSPVariables(use_novelty_constraint);
 	register_csp_constraints();
 	
 	Helper::postBranchingStrategy(_base_csp);

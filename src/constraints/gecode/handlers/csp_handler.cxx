@@ -127,16 +127,14 @@ void GecodeCSPHandler::register_csp_constraints() {
 	}
 }
 
-std::ostream& GecodeCSPHandler::print(std::ostream& os) const {
-	os << "All (unique) terms(" << _all_terms.size() << "): " << print::container(_all_terms, [](const Term::cptr& t, std::ostream& os) { os << *t; }) << std::endl;
-	os << "Variable counts:" << std::endl << _counter << std::endl;
-	return _translator.print(os, _base_csp);
+std::ostream& GecodeCSPHandler::print(std::ostream& os, const SimpleCSP& csp) const {
+	return _translator.print(os, csp);
 }
 
-void GecodeCSPHandler::createCSPVariables() {
+void GecodeCSPHandler::createCSPVariables(bool use_novelty_constraint) {
 	register_csp_variables();
 	
-	if (Config::instance().useNoveltyConstraint()) {
+	if (use_novelty_constraint) {
 		create_novelty_constraint();
 	}
 	_translator.perform_registration();

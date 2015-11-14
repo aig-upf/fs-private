@@ -30,7 +30,7 @@ public:
 
 	GecodeCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(nullptr), _counter(Config::instance().useElementDontCareOptimization()) {}
 	virtual ~GecodeCSPHandler() {
-		delete _novelty;
+		if (_novelty) delete _novelty;
 	}
 	
 	void init(const RPGData* bookkeeping);
@@ -49,7 +49,8 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeCSPHandler& o) { return o.print(os); }
-	virtual std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const { return print(os, _base_csp); }
+	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
 	
 protected:
 	//! The base Gecode CSP
@@ -98,7 +99,7 @@ protected:
 	void register_csp_constraints();
 	
 	//! Registers the variables of the CSP into the CSP translator
-	void createCSPVariables();
+	void createCSPVariables(bool use_novelty_constraint);
 };
 
 
@@ -108,7 +109,7 @@ public:
 	typedef GecodeFormulaCSPHandler* ptr;
 	typedef const GecodeFormulaCSPHandler* cptr;
 
-	GecodeFormulaCSPHandler(const Formula::cptr formula);
+	GecodeFormulaCSPHandler(const Formula::cptr formula, bool use_novelty_constraint);
 	~GecodeFormulaCSPHandler() {
 		delete _formula;
 	}
@@ -141,8 +142,8 @@ public:
 	typedef const GecodeActionCSPHandler* cptr;
 
 	//!
-	GecodeActionCSPHandler(const GroundAction& action);
-	GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects);
+	GecodeActionCSPHandler(const GroundAction& action, bool use_novelty_constraint);
+	GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects, bool use_novelty_constraint);
 	virtual ~GecodeActionCSPHandler() {}
 
 	const GroundAction& getAction() const { return _action; }
@@ -208,8 +209,8 @@ public:
 	typedef GecodeEffectCSPHandler* ptr;
 	typedef const GecodeEffectCSPHandler* cptr;
 
-	GecodeEffectCSPHandler(const GroundAction& action, unsigned effect_idx)
-	 : GecodeActionCSPHandler(action, {action.getEffects().at(effect_idx)}) {}
+	GecodeEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool use_novelty_constraint)
+	 : GecodeActionCSPHandler(action, {action.getEffects().at(effect_idx)}, use_novelty_constraint) {}
 	~GecodeEffectCSPHandler() {}
 };
 

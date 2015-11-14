@@ -16,8 +16,10 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionManager::create(const st
 	std::vector<std::shared_ptr<GecodeManager>> managers;
 	managers.reserve(actions.size());
 	
+	bool use_novelty_constraint = Config::instance().useNoveltyConstraint();
+	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
-		auto manager = std::make_shared<GecodeActionManager>(idx, Config::instance().useApproximateActionResolution(), new GecodeActionCSPHandler(*actions[idx]));
+		auto manager = std::make_shared<GecodeActionManager>(idx, Config::instance().useApproximateActionResolution(), new GecodeActionCSPHandler(*actions[idx], use_novelty_constraint));
 		FDEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
 		managers.push_back(manager);
 	}
@@ -28,12 +30,14 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionManager::create(const st
 std::vector<std::shared_ptr<GecodeManager>> GecodeActionEffectManager::create(const std::vector<GroundAction::cptr>& actions) {
 	std::vector<std::shared_ptr<GecodeManager>> managers;
 	
+	bool use_novelty_constraint = Config::instance().useNoveltyConstraint();
+	
 	for (unsigned action_idx = 0; action_idx < actions.size(); ++action_idx) {
 		const auto action = actions[action_idx];
 		std::vector<GecodeActionCSPHandler::ptr> handlers;
 		
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
-			auto handler = new GecodeEffectCSPHandler(*action, eff_idx);
+			auto handler = new GecodeEffectCSPHandler(*action, eff_idx, use_novelty_constraint);
 			handlers.push_back(handler);
 			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_name(*action) << std::endl <<  *handler << std::endl);
 		}

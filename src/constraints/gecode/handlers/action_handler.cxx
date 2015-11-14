@@ -13,14 +13,14 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects)
+GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const std::vector<ActionEffect::cptr>& effects, bool use_novelty_constraint)
 	:  GecodeCSPHandler(), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
 	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.getFullName());
 	
 	setup();
 	
-	createCSPVariables();
+	createCSPVariables(use_novelty_constraint);
 	Helper::postBranchingStrategy(_base_csp);
 	
 // 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: no constraints): " << _translator); // Uncomment for extreme debugging
@@ -44,8 +44,8 @@ GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const
 }
 
 // If no set of effects is provided, we'll take all of them into account
-GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action)
-	:  GecodeActionCSPHandler(action, action.getEffects()) {}
+GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, bool use_novelty_constraint)
+	:  GecodeActionCSPHandler(action, action.getEffects(), use_novelty_constraint) {}
 
 
 void GecodeActionCSPHandler::index() {

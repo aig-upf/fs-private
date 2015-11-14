@@ -4,6 +4,7 @@
 #include <fs0_types.hxx>
 #include <vector>
 #include <ostream>
+#include <algorithm>
 
 namespace fs0 {
 	
@@ -19,16 +20,17 @@ public:
 		return result;
 	}
 	
-	//! Flattens a container of containers
-	template <typename T>
-	static std::vector<T> all_terms(const std::vector<std::vector<T>>& vector) {
-		std::vector<T> result;
-		for(const std::vector<T>& sub:vector) {
-			for(T var:sub) {
-				result.push_back(var);
+	
+	//! Return a vector with only those elements in the given vector that are exactly of type OutputT
+	template <typename OutputT, typename InputT>
+	static std::vector<OutputT> filter_by_type(const std::vector<InputT>& elements) {
+		std::vector<OutputT> filtered;
+		for (const auto element:elements) {
+			if (auto casted = dynamic_cast<OutputT>(element)) {
+				filtered.push_back(casted);
 			}
 		}
-		return result;
+		return filtered;
 	}
 	
 	//! "Uniquifies" the given vector.

@@ -10,12 +10,12 @@ namespace fs0 {
 class State;
 
 //! A base interface for a formula satisfiability manager
-class FormulaSatisfiabilityManager {
+class FormulaInterpreter {
 public:
 	//! Factory method - return a formula satisfiability manager appropriate to the given formula
-	static FormulaSatisfiabilityManager* create(const fs::Formula::cptr formula);
+	static FormulaInterpreter* create(const fs::Formula::cptr formula);
 	
-	virtual ~FormulaSatisfiabilityManager() {}
+	virtual ~FormulaInterpreter() {}
 
 	//! Returns true if the formula represented by the current object is satisfied in the given state
 	virtual bool satisfied(const State& state) const = 0;

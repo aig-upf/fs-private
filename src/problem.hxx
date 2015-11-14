@@ -8,7 +8,7 @@
 
 namespace fs0 {
 
-class State; class FormulaSatisfiabilityManager;
+class State; class FormulaInterpreter;
 
 class Problem {
 public:
@@ -37,6 +37,8 @@ public:
 	
 	//! Get the name of the action with given index
 	std::string get_action_name(unsigned action) const;
+	
+	const FormulaInterpreter& getGoalSatManager() const { return *_goal_sat_manager; }
 
 	//! Set the global singleton problem instance
 	static void setInstance(std::unique_ptr<Problem>&& problem) {
@@ -52,8 +54,6 @@ public:
 	
 	//! Get the ProblemInfo object associated to this problem.
 	const ProblemInfo& getProblemInfo() const { return getInfo(); }
-	
-	//! Helper to access the problem info more easily
 	
 	static void setInfo(ProblemInfo* info) {
 		assert(!_info);
@@ -79,13 +79,11 @@ protected:
 	// The set of grounded actions of the problem
 	std::vector<GroundAction::cptr> _ground;
 	
-	
-	
 	//! Pointers to the goal and state constraints formulas. This class owns the pointers.
 	const Formula::cptr _state_constraint_formula;
 	const Formula::cptr _goal_formula;
 
-	std::unique_ptr<FormulaSatisfiabilityManager> _goal_sat_manager;
+	std::unique_ptr<FormulaInterpreter> _goal_sat_manager;
 	
 	//! The singleton instance
 	static std::unique_ptr<Problem> _instance;

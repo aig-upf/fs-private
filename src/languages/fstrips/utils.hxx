@@ -5,6 +5,8 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
+class Formula;
+
 //! A number of helper methods
 class FStripsUtils {
 public:

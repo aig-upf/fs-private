@@ -44,8 +44,11 @@ public:
 	//! Returns a vector with all the terms involved in the current formula
 	std::vector<Term::cptr> all_terms() const;
 	
-	//! Returns a vector with all the atomic formulae involved in the current formula
-	virtual std::vector<const AtomicFormula*> all_atoms() const = 0;
+	//! Returns a vector with all the subformulae involved in the current formula
+	virtual std::vector<const Formula*> all_formulae() const = 0;
+	
+	//! A small helper - returns a vector with all the atomic formulae involved in the current formula
+	std::vector<const AtomicFormula*> all_atoms() const;
 	
 	//! By default, formulae are not tautology nor contradiction
 	virtual bool is_tautology() const { return false; }
@@ -86,7 +89,7 @@ public:
 	
 	unsigned nestedness() const;
 	
-	std::vector<const AtomicFormula*> all_atoms() const { return std::vector<AtomicFormula::cptr>(1, this); }
+	std::vector<const Formula*> all_formulae() const { return std::vector<Formula::cptr>(1, this); }
 	
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
@@ -117,7 +120,7 @@ public:
 	
 	unsigned nestedness() const { return 0; }
 	
-	std::vector<const AtomicFormula*> all_atoms() const { return {}; }
+	std::vector<const Formula*> all_formulae() const { return std::vector<Formula::cptr>(1, this); }
 	
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const { return true; }
 	bool interpret(const State& state, const Binding& binding) const { return true; }
@@ -144,7 +147,7 @@ public:
 	
 	unsigned nestedness() const { return 0; }
 	
-	std::vector<const AtomicFormula*> all_atoms() const { return {}; }
+	std::vector<const Formula*> all_formulae() const { return std::vector<Formula::cptr>(1, this); }
 	
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const { return false; }
 	bool interpret(const State& state, const Binding& binding) const { return false; }
@@ -190,7 +193,7 @@ public:
 	
 	unsigned nestedness() const;
 	
-	std::vector<const AtomicFormula*> all_atoms() const;
+	std::vector<const Formula*> all_formulae() const;
 	
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
@@ -233,8 +236,7 @@ public:
 	
 	unsigned nestedness() const { return _subformula->nestedness(); }
 	
-	std::vector<const AtomicFormula*> all_atoms() const { return _subformula->all_atoms(); }
-
+	std::vector<const Formula*> all_formulae() const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
