@@ -6,14 +6,12 @@
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
 
-namespace fs0 { class GroundAction; class FS0StateModel; class Problem; class State;}
+namespace fs0 { class FS0StateModel; class Problem; class State;}
 
 namespace fs0 { namespace gecode {
 
 class GecodeCRPG {
 public:
-	typedef GroundAction Action;
-
 	GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
 	
 	virtual ~GecodeCRPG() {}
