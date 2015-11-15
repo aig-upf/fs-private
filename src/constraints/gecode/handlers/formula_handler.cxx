@@ -12,8 +12,8 @@
 
 namespace fs0 { namespace gecode {
 	
-GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const fs::Formula::cptr formula, bool use_novelty_constraint)
-	:  GecodeCSPHandler(),
+FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool use_novelty_constraint)
+	:  BaseCSPHandler(),
 	  _formula(formula)
 {
 	setup();
@@ -36,7 +36,7 @@ GecodeFormulaCSPHandler::GecodeFormulaCSPHandler(const fs::Formula::cptr formula
 	}
 }
 
-bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
+bool FormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	
 	Gecode::DFS<SimpleCSP> engine(csp);
 	SimpleCSP* solution = engine.next();
@@ -66,7 +66,7 @@ bool GecodeFormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& suppor
 	return true;
 }
 
-bool GecodeFormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {
+bool FormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {
 	Gecode::DFS<SimpleCSP> engine(csp);
 	SimpleCSP* solution = engine.next();
 	if (!solution) return false;
@@ -74,7 +74,7 @@ bool GecodeFormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {
 	return true;
 }
 
-void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
+void FormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
 	
 	// First process the direct state variables
@@ -118,12 +118,12 @@ void GecodeFormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, 
 	}
 }
 
-void GecodeFormulaCSPHandler::create_novelty_constraint() {
+void FormulaCSPHandler::create_novelty_constraint() {
 	// We register the adequate variables through the NoveltyConstraint object
 	_novelty = WeakNoveltyConstraint::create(_translator, _formula, {});
 }
 
-void GecodeFormulaCSPHandler::index() {
+void FormulaCSPHandler::index() {
 	const auto atoms =  _formula->all_atoms();
 	_all_formulas.insert(atoms.cbegin(), atoms.cend());
 	

@@ -46,7 +46,7 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionManager::create(const st
 	}
 	return managers;
 }
-
+/*
 std::vector<std::shared_ptr<GecodeManager>> GecodeActionSchemaManager::create(const std::vector<ActionSchema::cptr>& actions) {
 	std::vector<std::shared_ptr<GecodeManager>> managers;
 	managers.reserve(actions.size());
@@ -61,7 +61,7 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionSchemaManager::create(co
 	}
 	return managers;
 }
-
+*/
 std::vector<std::shared_ptr<GecodeManager>> GecodeActionEffectManager::create(const std::vector<GroundAction::cptr>& actions) {
 	std::vector<std::shared_ptr<GecodeManager>> managers;
 	
@@ -81,10 +81,12 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionEffectManager::create(co
 	return managers;
 }
 
+/*
 void GecodeActionSchemaManager::process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
 	FFDEBUG("heuristic", "Processing action schema #" << _action_idx << ": " << print::action_name(getAction()));
 	process_handler(seed, _handler, layer, rpg);
 }
+*/
 
 void GecodeActionManager::process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
 	FFDEBUG("heuristic", "Processing action #" << _action_idx << ": " << print::action_name(getAction()));

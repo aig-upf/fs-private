@@ -18,8 +18,8 @@ std::shared_ptr<GecodeRPGBuilder> GecodeRPGBuilder::create(const fs::Formula* go
 	bool use_novelty_constraint = Config::instance().useNoveltyConstraint();
 	auto conjuncted = goal_formula->conjunction(state_constraints);
 	FINFO("main", "Initializing goal CSP Handler with formula:\n" << *conjuncted)
-	auto goal_handler = new GecodeFormulaCSPHandler(conjuncted, use_novelty_constraint);
-	auto state_constraint_handler = state_constraints->is_tautology() ? nullptr : new GecodeFormulaCSPHandler(state_constraints, use_novelty_constraint);
+	auto goal_handler = new FormulaCSPHandler(conjuncted, use_novelty_constraint);
+	auto state_constraint_handler = state_constraints->is_tautology() ? nullptr : new FormulaCSPHandler(state_constraints, use_novelty_constraint);
 	return std::make_shared<GecodeRPGBuilder>(goal_handler, state_constraint_handler);
 }
 	

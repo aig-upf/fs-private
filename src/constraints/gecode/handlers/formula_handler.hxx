@@ -1,18 +1,18 @@
 
 #pragma once
 
-#include <constraints/gecode/handlers/csp_handler.hxx>
+#include <constraints/gecode/handlers/base_handler.hxx>
 
 namespace fs0 { namespace gecode {
 
 //! A CSP modeling and solving a logical formula on a certain RPG layer
-class GecodeFormulaCSPHandler : public GecodeCSPHandler {
+class FormulaCSPHandler : public BaseCSPHandler {
 public:
-	typedef GecodeFormulaCSPHandler* ptr;
-	typedef const GecodeFormulaCSPHandler* cptr;
+	typedef FormulaCSPHandler* ptr;
+	typedef const FormulaCSPHandler* cptr;
 
-	GecodeFormulaCSPHandler(const fs::Formula::cptr formula, bool use_novelty_constraint);
-	~GecodeFormulaCSPHandler() {
+	FormulaCSPHandler(const fs::Formula::cptr formula, bool use_novelty_constraint);
+	~FormulaCSPHandler() {
 		delete _formula;
 	}
 

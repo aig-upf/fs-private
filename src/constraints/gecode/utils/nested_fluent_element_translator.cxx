@@ -4,7 +4,7 @@
 #include <utils/printers/gecode.hxx>
 #include <constraints/gecode/utils/nested_fluent_element_translator.hxx>
 #include <constraints/gecode/helper.hxx>
-#include <constraints/gecode/handlers/csp_handler.hxx>
+#include <constraints/gecode/handlers/base_handler.hxx>
 #include <constraints/gecode/base.hxx>
 
 namespace fs0 { namespace gecode {

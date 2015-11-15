@@ -15,7 +15,7 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 { namespace gecode {
 
 class GecodeRPGLayer;
-class GecodeFormulaCSPHandler;
+class FormulaCSPHandler;
 
 //!
 class GecodeRPGBuilder {
@@ -23,7 +23,7 @@ public:
 	//! Factory method - pointer ownership corresponds to the caller.
 	static std::shared_ptr<GecodeRPGBuilder> create(const fs::Formula* goal_formula, const fs::Formula* state_constraints);
 	
-	GecodeRPGBuilder(GecodeFormulaCSPHandler* goal_handler, GecodeFormulaCSPHandler* state_constraint_handler)
+	GecodeRPGBuilder(FormulaCSPHandler* goal_handler, FormulaCSPHandler* state_constraint_handler)
 		: _goal_handler(goal_handler), _state_constraint_handler(state_constraint_handler) {}
 	~GecodeRPGBuilder();
 	
@@ -46,8 +46,8 @@ public:
 	
 protected:
 	//! We need separate Formula CSPs for handling the goal and the state constraints.
-	GecodeFormulaCSPHandler* _goal_handler;
-	GecodeFormulaCSPHandler* _state_constraint_handler;
+	FormulaCSPHandler* _goal_handler;
+	FormulaCSPHandler* _state_constraint_handler;
 };
 
 } } // namespaces

@@ -3,7 +3,7 @@
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
-#include <constraints/gecode/handlers/csp_handler.hxx>
+#include <constraints/gecode/handlers/base_handler.hxx>
 #include <constraints/gecode/base.hxx>
 #include <constraints/gecode/utils/nested_fluent_iterator.hxx>
 #include <problem.hxx>

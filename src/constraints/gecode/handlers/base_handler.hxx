@@ -22,13 +22,13 @@ class GecodeCSPVariableTranslator;
 class NoveltyConstraint;
 
 //! The base interface class for all gecode CSP handlers
-class GecodeCSPHandler {
+class BaseCSPHandler {
 public:
-	typedef GecodeCSPHandler* ptr;
-	typedef const GecodeCSPHandler* cptr;
+	typedef BaseCSPHandler* ptr;
+	typedef const BaseCSPHandler* cptr;
 
-	GecodeCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(nullptr), _counter(Config::instance().useElementDontCareOptimization()) {}
-	virtual ~GecodeCSPHandler();
+	BaseCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(nullptr), _counter(Config::instance().useElementDontCareOptimization()) {}
+	virtual ~BaseCSPHandler();
 	
 	void init(const RPGData* bookkeeping);
 
@@ -45,7 +45,7 @@ public:
 	static void registerFormulaConstraints(const fs::AtomicFormula* condition, GecodeCSPVariableTranslator& translator);
 
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const GecodeCSPHandler& o) { return o.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const BaseCSPHandler& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const { return print(os, _base_csp); }
 	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
 	
@@ -95,7 +95,7 @@ protected:
 
 
 //! A CSP modeling and solving the progression between two RPG layers
-class GecodeLayerCSPHandler : public GecodeCSPHandler { // TODO
+class GecodeLayerCSPHandler : public BaseCSPHandler { // TODO
 public:
 	typedef GecodeLayerCSPHandler* ptr;
 	typedef const GecodeLayerCSPHandler* cptr;

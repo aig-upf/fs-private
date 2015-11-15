@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include <constraints/gecode/handlers/csp_handler.hxx>
+#include <constraints/gecode/handlers/base_handler.hxx>
 
 namespace fs0 { namespace gecode {
 
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
 template <typename ActionT>
-class GecodeElementCSPHandler : public GecodeCSPHandler {
+class GecodeElementCSPHandler : public BaseCSPHandler {
 public:
 	typedef GecodeElementCSPHandler* ptr;
 

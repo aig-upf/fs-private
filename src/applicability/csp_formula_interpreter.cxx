@@ -7,7 +7,7 @@
 namespace fs0 {
 
 CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula::cptr formula) :
-	_csp_handler(new gecode::GecodeFormulaCSPHandler(formula, false))
+	_csp_handler(new gecode::FormulaCSPHandler(formula, false))
 {}
 	
 bool CSPFormulaInterpreter::satisfied(const State& state) const {

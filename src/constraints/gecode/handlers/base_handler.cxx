@@ -1,5 +1,5 @@
 
-#include <constraints/gecode/handlers/csp_handler.hxx>
+#include <constraints/gecode/handlers/base_handler.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
@@ -14,40 +14,40 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeCSPHandler::~GecodeCSPHandler() {
+BaseCSPHandler::~BaseCSPHandler() {
 	if (_novelty) delete _novelty;
 }
 	
-void GecodeCSPHandler::init(const RPGData* bookkeeping) {
+void BaseCSPHandler::init(const RPGData* bookkeeping) {
 	_base_csp.init(MinHMaxValueSelector(&_translator, bookkeeping));
 }
 
-void GecodeCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerVariables(term, type, translator);
 }
 
-void GecodeCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*condition);
 	assert(component_translator);
 	component_translator->registerVariables(condition, translator);
 }
 
-void GecodeCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerConstraints(term, type, translator);
 }
 
 
-void GecodeCSPHandler::registerFormulaConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerFormulaConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*formula);
 	assert(component_translator);
 	component_translator->registerConstraints(formula, translator);
 }
 
-SimpleCSP::ptr GecodeCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
+SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
 	SimpleCSP* csp = static_cast<SimpleCSP::ptr>(_base_csp.clone());
 	_translator.updateStateVariableDomains(*csp, layer);
 	
@@ -57,13 +57,13 @@ SimpleCSP::ptr GecodeCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) co
 	return csp;
 }
 
-SimpleCSP::ptr GecodeCSPHandler::instantiate_csp(const State& state) const {
+SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const State& state) const {
 	SimpleCSP* csp = static_cast<SimpleCSP::ptr>(_base_csp.clone());
 	_translator.updateStateVariableDomains(*csp, state);
 	return csp;
 }
 
-const NestedFluentElementTranslator& GecodeCSPHandler::getNestedFluentTranslator(fs::FluentHeadedNestedTerm::cptr fluent) const { 
+const NestedFluentElementTranslator& BaseCSPHandler::getNestedFluentTranslator(fs::FluentHeadedNestedTerm::cptr fluent) const { 
 	auto it = _nested_fluent_translators_idx.find(fluent);
 	assert(it != _nested_fluent_translators_idx.end());
 	const NestedFluentElementTranslator& translator = _nested_fluent_translators.at(it->second);
@@ -71,12 +71,12 @@ const NestedFluentElementTranslator& GecodeCSPHandler::getNestedFluentTranslator
 	return translator;
 }
 	
-void GecodeCSPHandler::setup() {
+void BaseCSPHandler::setup() {
 	index();
 	count_variables();
 }
 
-void GecodeCSPHandler::count_variables() {
+void BaseCSPHandler::count_variables() {
 	for (fs::Term::cptr term:_all_terms) {
 		if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) _counter.count_direct(sv->getValue());
 		else if (auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
@@ -86,7 +86,7 @@ void GecodeCSPHandler::count_variables() {
 	}
 }
 
-void GecodeCSPHandler::register_csp_variables() {
+void BaseCSPHandler::register_csp_variables() {
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
 		if (fs::FluentHeadedNestedTerm::cptr fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
@@ -110,7 +110,7 @@ void GecodeCSPHandler::register_csp_variables() {
 	for (auto condition:_all_formulas) registerFormulaVariables(condition, _translator);
 }
 
-void GecodeCSPHandler::register_csp_constraints() {
+void BaseCSPHandler::register_csp_constraints() {
 	unsigned i = 0;
 	_unused(i);
 	
@@ -140,11 +140,11 @@ void GecodeCSPHandler::register_csp_constraints() {
 	}
 }
 
-std::ostream& GecodeCSPHandler::print(std::ostream& os, const SimpleCSP& csp) const {
+std::ostream& BaseCSPHandler::print(std::ostream& os, const SimpleCSP& csp) const {
 	return _translator.print(os, csp);
 }
 
-void GecodeCSPHandler::createCSPVariables(bool use_novelty_constraint) {
+void BaseCSPHandler::createCSPVariables(bool use_novelty_constraint) {
 	register_csp_variables();
 	
 	if (use_novelty_constraint) {

@@ -69,7 +69,7 @@ protected:
 };
 
 
-
+/*
 //! A RPG action manager that deals with the one-csp-per-action-schema paradigm
 class GecodeActionSchemaManager : public GecodeManager {
 public:
@@ -97,7 +97,7 @@ protected:
 	//! The action handler that correspond to this action
 	GecodeActionCSPHandler::ptr _handler;
 };
-
+*/
 
 //! A RPG action manager that deals with the one-csp-per-effect paradigm
 class GecodeActionEffectManager : public GecodeManager {

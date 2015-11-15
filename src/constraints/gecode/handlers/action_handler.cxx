@@ -16,7 +16,7 @@ namespace fs0 { namespace gecode {
 
 template <typename ActionT>
 GecodeElementCSPHandler<ActionT>::GecodeElementCSPHandler(const ActionT& action, const std::vector<fs::ActionEffect::cptr>& effects, bool use_novelty_constraint)
-	:  GecodeCSPHandler(), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
+	:  BaseCSPHandler(), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
 	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.fullname());
 	

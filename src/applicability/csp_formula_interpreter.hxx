@@ -4,7 +4,7 @@
 #include <memory>
 #include <applicability/formula_interpreter.hxx>
 
-namespace fs0 { namespace gecode { class GecodeFormulaCSPHandler; }}
+namespace fs0 { namespace gecode { class FormulaCSPHandler; }}
 
 namespace fs0 {
 
@@ -18,7 +18,7 @@ public:
 
 protected:
 	//! The formula handler that will check for CSP applicability
-	std::unique_ptr<gecode::GecodeFormulaCSPHandler> _csp_handler;
+	std::unique_ptr<gecode::FormulaCSPHandler> _csp_handler;
 };
 
 } // namespaces
