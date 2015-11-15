@@ -14,10 +14,11 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool use_novelty_constraint)
+template <typename ActionT>
+GecodeElementCSPHandler<ActionT>::GecodeElementCSPHandler(const ActionT& action, const std::vector<fs::ActionEffect::cptr>& effects, bool use_novelty_constraint)
 	:  GecodeCSPHandler(), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
-	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.getFullName());
+	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.fullname());
 	
 	setup();
 	
@@ -34,7 +35,7 @@ GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const
 	
 	register_csp_constraints();
 
-	FDEBUG("translation", "Action " << _action.getFullName() << " results in CSP handler:" << std::endl << *this);
+	FDEBUG("translation", "Action " << _action.fullname() << " results in CSP handler:" << std::endl << *this);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
 	Gecode::SpaceStatus st = _base_csp.status();
@@ -45,11 +46,12 @@ GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, const
 }
 
 // If no set of effects is provided, we'll take all of them into account
-GecodeActionCSPHandler::GecodeActionCSPHandler(const GroundAction& action, bool use_novelty_constraint)
-	:  GecodeActionCSPHandler(action, action.getEffects(), use_novelty_constraint) {}
+template <typename ActionT>
+GecodeElementCSPHandler<ActionT>::GecodeElementCSPHandler(const ActionT& action, bool use_novelty_constraint)
+	:  GecodeElementCSPHandler(action, action.getEffects(), use_novelty_constraint) {}
 
-
-void GecodeActionCSPHandler::index() {
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::index() {
 	auto conditions = _action.getPrecondition()->all_atoms();
 	_all_formulas.insert(conditions.cbegin(), conditions.cend());
 	
@@ -72,8 +74,8 @@ void GecodeActionCSPHandler::index() {
 	}
 }
 
-
-void GecodeActionCSPHandler::index_scopes() {
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::index_scopes() {
 	auto scope = fs::ScopeUtils::computeActionDirectScope(_action);
 	std::set<VariableIdx> action_support(scope.begin(), scope.end());
 
@@ -123,12 +125,13 @@ void GecodeActionCSPHandler::index_scopes() {
 	}
 }
 
-
-void GecodeActionCSPHandler::create_novelty_constraint() {
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::create_novelty_constraint() {
 	_novelty = NoveltyConstraint::createFromEffects(_translator, _action.getPrecondition(), _effects);
 }
 
-void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cptr effect) {
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::registerEffectConstraints(const fs::ActionEffect::cptr effect) {
 	// Note: we no longer use output variables, etc.
 	// Equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
 	// const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _base_csp);
@@ -143,9 +146,9 @@ void GecodeActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::c
 	}
 }
 
-
-void GecodeActionCSPHandler::compute_support(SimpleCSP* csp, unsigned int actionIdx, RPGData& rpg, const State& seed) const {
-	FFDEBUG("heuristic", "Computing full support for action " << _action.getFullName());
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::compute_support(SimpleCSP* csp, unsigned int actionIdx, RPGData& rpg, const State& seed) const {
+	FFDEBUG("heuristic", "Computing full support for action " << _action.fullname());
 	Gecode::DFS<SimpleCSP> engine(csp);
 	unsigned num_solutions = 0;
 	while (SimpleCSP* solution = engine.next()) {
@@ -158,13 +161,14 @@ void GecodeActionCSPHandler::compute_support(SimpleCSP* csp, unsigned int action
 	FFDEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
 }
 
-void GecodeActionCSPHandler::compute_approximate_support(SimpleCSP* csp, unsigned action_idx, RPGData rpg, const State& seed) {
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::compute_approximate_support(SimpleCSP* csp, unsigned action_idx, RPGData rpg, const State& seed) {
 	// TODO - Unimplemented, but now sure it makes a lot of sense to solve the action CSPs approximately as of now
 	throw UnimplementedFeatureException("Approximate support not yet implemented in action CSPs");
 }
 
-
-void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const {
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const {
 	
 		PartialAssignment solution_assignment;
 		if (_has_nested_lhs) solution_assignment = _translator.buildAssignment(*solution);
@@ -180,7 +184,8 @@ void GecodeActionCSPHandler::process_solution(SimpleCSP* solution, unsigned acti
 		}
 }
 
-void GecodeActionCSPHandler::simple_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const {
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::simple_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const {
 	auto hint = bookkeeping.getInsertionHint(atom);
 	FFDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
 
@@ -190,7 +195,8 @@ void GecodeActionCSPHandler::simple_atom_processing(SimpleCSP* solution, unsigne
 	}
 }
 
-void GecodeActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const {
+template <typename ActionT>
+void GecodeElementCSPHandler<ActionT>::hmax_based_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const {
 	auto hint = bookkeeping.getInsertionHint(atom);
 	FFDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
 	
@@ -213,8 +219,8 @@ void GecodeActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, uns
 	}
 }
 
-
-Atom::vctrp GecodeActionCSPHandler::extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx) const {
+template <typename ActionT>
+Atom::vctrp GecodeElementCSPHandler<ActionT>::extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx) const {
 	
 	Atom::vctrp support = std::make_shared<Atom::vctr>();
 

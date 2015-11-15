@@ -40,7 +40,7 @@ public:
 	const std::string& getName() const;
 	
 	//! Returns the full, grounded name of the action, e.g. 'move(b1, c2)'
-	std::string getFullName() const;
+	std::string fullname() const;
 	
 	//! Returns the signature of the action
 	const Signature& getSignature() const;

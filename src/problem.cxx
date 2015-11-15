@@ -34,11 +34,6 @@ ApplicableActionSet Problem::getApplicableActions(const State& s) const {
 	return ApplicableActionSet(ApplicabilityManager(getStateConstraints()), s, _ground);
 }
 
-std::string Problem::get_action_name(unsigned action) const {
-	return _ground[action]->getFullName();
-}
-
-
 std::ostream& Problem::print(std::ostream& os) const { 
 	const fs0::ProblemInfo& info = getProblemInfo();
 	os << "Planning Problem [domain: " << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;

@@ -7,23 +7,23 @@ namespace fs0 { namespace gecode {
 
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
-class GecodeActionCSPHandler : public GecodeCSPHandler {
+template <typename ActionT>
+class GecodeElementCSPHandler : public GecodeCSPHandler {
 public:
-	typedef GecodeActionCSPHandler* ptr;
-	typedef const GecodeActionCSPHandler* cptr;
+	typedef GecodeElementCSPHandler* ptr;
 
 	//!
-	GecodeActionCSPHandler(const GroundAction& action, bool use_novelty_constraint);
-	GecodeActionCSPHandler(const GroundAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool use_novelty_constraint);
-	virtual ~GecodeActionCSPHandler() {}
+	GecodeElementCSPHandler(const ActionT& action, bool use_novelty_constraint);
+	GecodeElementCSPHandler(const ActionT& action, const std::vector<fs::ActionEffect::cptr>& effects, bool use_novelty_constraint);
+	virtual ~GecodeElementCSPHandler() {}
 
-	const GroundAction& getAction() const { return _action; }
+	const ActionT& getAction() const { return _action; }
 
 	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData& rpg, const State& seed) const;
 	void compute_approximate_support(SimpleCSP* csp, unsigned int action_idx, RPGData rpg, const State& seed);
 
 protected:
-	const GroundAction& _action;
+	const ActionT& _action;
 	
 	//! The effects of the action that we want to take into account in the CSP (by default, all)
 	//! Note that we store a copy of the vector to facilitate creating subsets of effects to the subclasses.
@@ -72,5 +72,7 @@ protected:
 	
 	void index();
 };
+
+typedef GecodeElementCSPHandler<GroundAction> GecodeActionCSPHandler;
 
 } } // namespaces

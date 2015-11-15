@@ -28,6 +28,8 @@ public:
 	inline const std::string& getName() const { return _name; }
 	inline const Signature& getSignature() const { return _signature; }
 	inline const std::vector<std::string>& getParameters() const { return _parameters; }
+	
+	std::string fullname() const;
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionSchema& o) { return o.print(os); }

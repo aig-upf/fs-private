@@ -37,9 +37,6 @@ public:
 	//! Get the state constraint formula of the problem
 	const fs::Formula* getStateConstraints() const { return _state_constraint_formula; }
 	
-	//! Get the name of the action with given index
-	std::string get_action_name(unsigned action) const;
-	
 	const FormulaInterpreter& getGoalSatManager() const { return *_goal_sat_manager; }
 
 	//! Set the global singleton problem instance

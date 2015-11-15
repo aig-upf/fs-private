@@ -29,9 +29,9 @@ const std::string& GroundAction::getName() const { return _schema->getName(); }
 
 const Signature& GroundAction::getSignature() const { return _schema->getSignature(); }
 
-std::string GroundAction::getFullName() const {
+std::string GroundAction::fullname() const {
      std::ostringstream stream;
-     stream << getName() << "(" << print::binding(getBinding(), getSignature()) << ")";
+     stream << print::action_name(*this);
      return stream.str();
 }
 

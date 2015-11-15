@@ -11,14 +11,14 @@ namespace fs0 {
 
 void PlanPrinter::printPlan(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out) {
 	for (auto action:plan) {
-		out << problem.get_action_name(action) << std::endl;
+		out << print::action_name(action) << std::endl;
 	}
 }
 
 void PlanPrinter::printPlanJSON(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out) {
 	out << "[";
 	for ( unsigned k = 0; k < plan.size(); k++ ) {
-		out << "\"" << problem.get_action_name(plan[k]) << "\"";
+		out << "\"" <<  print::action_name(plan[k]) << "\"";
 		if ( k < plan.size() - 1 ) out << ", ";
 	}
 	out << "]";

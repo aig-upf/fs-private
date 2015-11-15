@@ -1,9 +1,11 @@
 
+#include <sstream>
+
 #include <actions/action_schema.hxx>
 #include <problem.hxx>
 #include <actions/ground_action.hxx>
 #include <utils/binding.hxx>
-#include <utils/printers/binding.hxx>
+#include <utils/printers/actions.hxx>
 #include <languages/fstrips/language.hxx>
 
 namespace fs0 {
@@ -25,13 +27,19 @@ ActionSchema::~ActionSchema() {
 std::ostream& ActionSchema::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 std::ostream& ActionSchema::print(std::ostream& os, const fs0::ProblemInfo& info) const { 
-	os <<  _name << "(" << print::signature(_parameters, getSignature()) << ")" << std::endl;
+	os <<  print::schema_name(*this);
 	
 	os << "Precondition:" << *_precondition << std::endl;
 	
 	os << "Effects:" << std::endl;
 	for (auto elem:_effects) os << "\t" << *elem << std::endl;
 	return os;
+}
+
+std::string ActionSchema::fullname() const {
+     std::ostringstream stream;
+     stream << print::schema_name(*this);
+     return stream.str();
 }
 
 GroundAction* ActionSchema::bind(const Binding& binding, const ProblemInfo& info) const {

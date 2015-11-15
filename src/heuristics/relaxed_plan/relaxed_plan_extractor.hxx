@@ -10,7 +10,7 @@
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/printers.hxx>
-
+#include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
 
@@ -39,7 +39,7 @@ public:
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const SupportedAction& o) { return o.print(os); }
 	std::ostream& print(std::ostream& out) const {
-		out << Problem::getInstance().get_action_name(_action) << ", where: ";
+		out << print::action_name(_action) << ", where: ";
 		for (const auto& atom:*(_support))  out << atom << ", ";
 		return out;
 	}

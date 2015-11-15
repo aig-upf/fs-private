@@ -2,12 +2,12 @@
 #pragma once
 
 #include <fs0_types.hxx>
+#include <constraints/gecode/handlers/action_handler.hxx>
 
 namespace fs0 { class State; class GroundAction; class RPGData; }
 	
 namespace fs0 { namespace gecode {
 
-class GecodeActionCSPHandler;
 class GecodeRPGLayer;
 
 //! An action manager based on modeling the action preconditions and effects as a CSP and solving it approximately / completely with Gecode.
