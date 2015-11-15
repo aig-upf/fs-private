@@ -47,6 +47,20 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionManager::create(const st
 	return managers;
 }
 
+std::vector<std::shared_ptr<GecodeManager>> GecodeActionSchemaManager::create(const std::vector<ActionSchema::cptr>& actions) {
+	std::vector<std::shared_ptr<GecodeManager>> managers;
+	managers.reserve(actions.size());
+	
+	bool use_novelty_constraint = Config::instance().useNoveltyConstraint();
+	bool use_approximate_resolution = Config::instance().useApproximateActionResolution();
+	
+	for (unsigned idx = 0; idx < actions.size(); ++idx) {
+		auto manager = std::make_shared<GecodeActionSchemaManager>(idx, use_approximate_resolution, new GecodeActionCSPHandler(*actions[idx], use_novelty_constraint));
+		FDEBUG("main", "Generated CSP for action schema " << *actions[idx] << std::endl <<  *manager << std::endl);
+		managers.push_back(manager);
+	}
+	return managers;
+}
 
 std::vector<std::shared_ptr<GecodeManager>> GecodeActionEffectManager::create(const std::vector<GroundAction::cptr>& actions) {
 	std::vector<std::shared_ptr<GecodeManager>> managers;
@@ -65,6 +79,11 @@ std::vector<std::shared_ptr<GecodeManager>> GecodeActionEffectManager::create(co
 		managers.push_back(std::make_shared<GecodeActionEffectManager>(action_idx, Config::instance().useApproximateActionResolution(), std::move(handlers)));
 	}
 	return managers;
+}
+
+void GecodeActionSchemaManager::process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
+	FFDEBUG("heuristic", "Processing action schema #" << _action_idx << ": " << print::action_name(getAction()));
+	process_handler(seed, _handler, layer, rpg);
 }
 
 void GecodeActionManager::process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
