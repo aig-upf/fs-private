@@ -10,9 +10,9 @@
 
 namespace fs0 {
 
-ActionSchema::ActionSchema(const std::string& name, const Signature& signature, const std::vector<std::string>& parameters,
+ActionSchema::ActionSchema(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameters,
 						   const fs::Formula::cptr precondition, const std::vector<fs::ActionEffect::cptr>& effects)
-	: BaseAction(0, precondition, effects), _name(name), _signature(signature), _parameters(parameters)
+	: BaseAction(id, precondition, effects), _name(name), _signature(signature), _parameters(parameters)
 {
 	assert(parameters.size() == signature.size());
 }

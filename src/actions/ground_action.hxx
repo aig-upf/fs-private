@@ -29,6 +29,8 @@ public:
 	GroundAction(const ActionSchema* schema, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	~GroundAction() {}
 	
+	void set_id(unsigned id) { _id = id; }
+	
 	//! Returns the name of the action, e.g. 'move'
 	const std::string& getName() const;
 	

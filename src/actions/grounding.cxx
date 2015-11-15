@@ -1,6 +1,8 @@
 
 #include <actions/grounding.hxx>
-#include <problem.hxx>
+#include <actions/ground_action.hxx>
+#include <actions/action_schema.hxx>
+#include <problem_info.hxx>
 #include <utils/logging.hxx>
 #include <utils/cartesian_iterator.hxx>
 #include <utils/printers/binding.hxx>
@@ -9,7 +11,7 @@ namespace fs0 {
 
 std::vector<GroundAction::cptr> ActionGrounder::ground(const std::vector<ActionSchema::cptr>& schemata, const ProblemInfo& info) {
 	
-	std::vector<GroundAction::cptr> grounded;
+	std::vector<GroundAction*> grounded;
 	unsigned total_num_bindings = 0;
 	
 	for (const ActionSchema::cptr schema:schemata) {
@@ -52,10 +54,17 @@ std::vector<GroundAction::cptr> ActionGrounder::ground(const std::vector<ActionS
 	
 	FINFO("grounding", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
 	std::cout << "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions" << std::endl;
-	return grounded;
+	
+	// Assign the proper IDs to the actions - while (implicitly) casting to const pointer at the same time
+	std::vector<GroundAction::cptr> const_grounded;
+	for (unsigned i = 0; i < grounded.size(); ++i) {
+		grounded[i]->set_id(i);
+		const_grounded.push_back(grounded[i]);
+	}
+	return const_grounded;
 }
 
-void ActionGrounder::ground(ActionSchema::cptr schema, const Binding& binding, const ProblemInfo& info, std::vector<GroundAction::cptr>& grounded) {
+void ActionGrounder::ground(ActionSchema::cptr schema, const Binding& binding, const ProblemInfo& info, std::vector<GroundAction*>& grounded) {
 	FDEBUG("grounding", "Binding: " << print::binding(binding, schema->getSignature()));
 	GroundAction* ground = schema->bind(binding, info);
 	if (ground) {

@@ -11,7 +11,7 @@ namespace fs0 {
 const ActionIdx GroundAction::invalid_action_id = std::numeric_limits<unsigned int>::max();
 
 GroundAction::GroundAction(ActionSchema::cptr schema, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects)
-	: BaseAction(0, precondition, effects), _schema(schema), _binding(binding)
+	: BaseAction(invalid_action_id, precondition, effects), _schema(schema), _binding(binding)
 {}
 
 

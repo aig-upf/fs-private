@@ -15,7 +15,7 @@ protected:
 
 public:
 	typedef const ActionSchema* cptr;
-	ActionSchema(const std::string& name, const Signature& signature, const std::vector<std::string>& parameters,
+	ActionSchema(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameters,
 			     const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	
 	~ActionSchema() {}

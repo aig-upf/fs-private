@@ -28,7 +28,7 @@ protected:
 	//! Load the data related to the problem functions and predicates into the info object
 	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);
 	
-	static const ActionSchema* loadActionSchema(const rapidjson::Value& data, const ProblemInfo& info);
+	static const ActionSchema* loadActionSchema(const rapidjson::Value& data, unsigned id, const ProblemInfo& info);
 	
 	//! Load a formula and process it
 	static const fs::Formula* loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);

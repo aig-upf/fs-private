@@ -73,12 +73,12 @@ State* Loader::loadState(const rapidjson::Value& data) {
 std::vector<ActionSchema::cptr> Loader::loadActionSchemata(const rapidjson::Value& data, const ProblemInfo& info) {
 	std::vector<ActionSchema::cptr> schemata;
 	for (unsigned i = 0; i < data.Size(); ++i) {
- 		schemata.push_back(loadActionSchema(data[i], info));
+ 		schemata.push_back(loadActionSchema(data[i], i, info));
 	}
 	return schemata;
 }
 
-ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const ProblemInfo& info) {
+ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, unsigned id, const ProblemInfo& info) {
 	const std::string& name = node["name"].GetString();
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
@@ -86,7 +86,7 @@ ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, const 
 	const fs::Formula::cptr precondition = fs::Loader::parseFormula(node["conditions"], info);
 	const std::vector<fs::ActionEffect::cptr> effects = fs::Loader::parseEffectList(node["effects"], info);
 	
-	return new ActionSchema(name, signature, parameters, precondition, effects);
+	return new ActionSchema(id, name, signature, parameters, precondition, effects);
 }
 
 fs::Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
