@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <queue>
+#include <unordered_set>
 
 #include <state.hxx>
 #include <problem.hxx>
@@ -13,15 +14,16 @@
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
+#include <actions/action_id.hxx>
 
 namespace fs0 {
 
 class SupportedAction {
 public:
-	ActionIdx _action;
+	const ActionID* _action;
 	Atom::vctrp _support;
 	
-	SupportedAction(ActionIdx action, Atom::vctrp support) : 
+	SupportedAction(const ActionID* action, Atom::vctrp support) : 
 		_action(action), _support(support) {}
 	
 	inline bool operator==(const SupportedAction& rhs) const { 
@@ -39,7 +41,7 @@ public:
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const SupportedAction& o) { return o.print(os); }
 	std::ostream& print(std::ostream& out) const {
-		out << print::action_name(_action) << ", where: ";
+		out << *_action << ", where: ";
 		for (const auto& atom:*(_support))  out << atom << ", ";
 		return out;
 	}
@@ -104,7 +106,8 @@ protected:
 		
 		const typename RPGBookkeeping::AtomSupport& support = _data.getAtomSupport(atom);
 		
-		assert(std::get<1>(support) != GroundAction::invalid_action_id);
+		const ActionID* action_id = std::get<1>(support);
+		assert(action_id->is_valid());
 		registerPlanAction(support);
 		enqueueAtoms(*(std::get<2>(support))); // Push the full support of the atom
 		processed.insert(atom); // Tag the atom as processed.
@@ -146,7 +149,7 @@ protected:
 	}
 	
 	long buildRelaxedPlan() {
-		FFDEBUG("heuristic" , "Relaxed plan found with length " << supporters.size() << std::endl << SupportedPlanPrinter(supporters));
+		FFDEBUG("heuristic" , "Relaxed plan found with length " << supporters.size() << std::endl << print::supported_plan(supporters));
 		return (long) supporters.size();
 	}
 };
@@ -159,7 +162,7 @@ protected:
 template <typename RPGBookkeeping>
 class PropositionalRelaxedPlanExtractor : public BaseRelaxedPlanExtractor<RPGBookkeeping> {
 protected:
-		std::vector<std::set<ActionIdx>> perLayerSupporters;
+		std::vector<std::unordered_set<const ActionID*>> perLayerSupporters;
 
 public:
 	/**
@@ -188,14 +191,14 @@ protected:
 #endif
 
 		// In debug mode, we build the relaxed plan by flattening the supporters at each layer, so that we can log the actual plan.
-		ActionPlan plan;
+		plan_t plan;
 		for (const auto& supporters:perLayerSupporters) {
 			plan.insert(plan.end(), supporters.cbegin(), supporters.cend());
 		}
 
 		// Note that computing the relaxed heuristic by using some form of local consistency might yield plans that are not correct for the relaxation
 		// assert(ActionManager::checkRelaxedPlanSuccessful(Problem::getInstance(), plan, _seed));
-		FFDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << PlanPrinter(plan));
+		FFDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << print::plan(plan));
 
 		return (long) plan.size();
 	}

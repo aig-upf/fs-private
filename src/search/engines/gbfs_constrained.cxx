@@ -37,7 +37,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
 			managers = GroundEffectCSPHandler::create(actions);
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-// 			managers = ActionSchemaCSPHandler::create(actions);
+			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata());
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
 			throw UnimplementedFeatureException("1-csp-per-effect-schema not yet implemented");
 		} else {

@@ -81,11 +81,12 @@ protected:
 	
 	virtual void create_novelty_constraint() = 0;
 	
+	//! Index all terms and formulas appearing in the formula / actions which will be relevant to the CSP
 	virtual void index() = 0;
 
 	void setup();
 	
-	//!
+	//! Count which state variables appear directly and/or derivedly, so that we can decide what type of don't care constraints we can use, etc.
 	void count_variables();
 	
 	void register_csp_variables();

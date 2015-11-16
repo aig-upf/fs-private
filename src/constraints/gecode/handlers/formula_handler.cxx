@@ -123,14 +123,13 @@ void FormulaCSPHandler::create_novelty_constraint() {
 	_novelty = WeakNoveltyConstraint::create(_translator, _formula, {});
 }
 
+// In the case of a single formula, we just retrieve and index all terms and atoms
 void FormulaCSPHandler::index() {
 	const auto atoms =  _formula->all_atoms();
 	_all_formulas.insert(atoms.cbegin(), atoms.cend());
 	
-	for (const fs::AtomicFormula::cptr formula:atoms) {
-		const auto terms = formula->all_terms();
-		_all_terms.insert(terms.cbegin(), terms.cend());
-	}
+	const auto terms = _formula->all_terms();
+	_all_terms.insert(terms.cbegin(), terms.cend());
 }
 
 } } // namespaces

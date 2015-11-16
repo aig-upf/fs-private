@@ -5,6 +5,7 @@
 #include <ostream>
 #include <problem_info.hxx>
 #include <actions/ground_action.hxx>
+#include <actions/action_id.hxx>
 #include <boost/units/detail/utility.hpp>
 
 namespace fs0 {
@@ -30,14 +31,30 @@ public:
 	static void printPlanJSON(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out);	
 };
 
-class SupportedPlanPrinter {
+
+
+
+namespace print {
+
+class plan {
+	protected:
+		const plan_t& _plan;
+
+	public:
+		plan(const plan_t& plan_) : _plan(plan_) {}
+		
+		friend std::ostream& operator<<(std::ostream &os, const plan& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
+class supported_plan {
 protected:
 	const std::set<SupportedAction>& _plan;
 public:
-	SupportedPlanPrinter(const std::set<SupportedAction>& plan) : _plan(plan) {}
+	supported_plan(const std::set<SupportedAction>& plan) : _plan(plan) {}
 	
 	//! Prints a representation of the state to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const SupportedPlanPrinter& o) { return o.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const supported_plan& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const {
 		printSupportedPlan(_plan, os);
 		return os;
@@ -45,9 +62,6 @@ public:
 	
 	static void printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out);
 };
-
-
-namespace print {
 
 //! Print the proper, demangled name of a std::type_info / std::type_index object
 template <typename T>

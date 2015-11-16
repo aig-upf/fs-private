@@ -16,7 +16,7 @@
 		"manager_comment": ["The CSP manager to use: either 'gecode', 'direct', 'or direct_if_possible'"],
 		"manager": "gecode",
 		
-		"model_comment": ["The CSP model we want to work with. Currently accepted: 'action' and 'effect'"],
+		"model_comment": ["The CSP model we want to work with. Currently accepted: 'action', 'effect', 'action_schema', 'effect_schema'"],
 		"model": "effect",
 		
 		"precondition_resolution_comment": ["Either 'full' or 'approximate': whether to fully or only approximately solve the action precondition CSPs"],

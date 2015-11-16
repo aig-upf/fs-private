@@ -264,7 +264,7 @@ public:
 	virtual std::size_t hash_code() const;
 
 protected:
-	//! The ID of the variable, which will be unique throughout the whole binding unit (maybe
+	//! The ID of the variable, which will be unique throughout the whole binding unit.
 	unsigned _id;
 	
 	TypeIdx _type;

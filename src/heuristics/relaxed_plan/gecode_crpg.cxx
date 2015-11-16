@@ -12,7 +12,7 @@
 #include <state_model.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
-#include <constraints/gecode/handlers/action_base_handler.hxx>
+#include <constraints/gecode/handlers/base_action_handler.hxx>
 
 
 namespace fs0 { namespace gecode {

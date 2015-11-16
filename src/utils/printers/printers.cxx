@@ -29,11 +29,22 @@ std::ostream& PlanPrinter::print(std::ostream& os) const {
 	return os;
 }
 
-void SupportedPlanPrinter::printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out) {
+
+namespace print {
+
+std::ostream& plan::print(std::ostream& os) const {
+	for (const ActionID* action:_plan) {
+		os << *action;
+	}
+	return os;
+}
+
+void supported_plan::printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out) {
 	for (const auto& element:plan) {
 		out << element << std::endl;
 	}
 }
 
+}
 
 } // namespaces

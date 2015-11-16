@@ -20,9 +20,18 @@ public:
 	
 	//! Construct a binding from a given vector with all variables set
 	Binding(const std::vector<ObjectIdx>& values) : _values(values), _set(values.size(), true) {}
+	Binding(std::vector<ObjectIdx>&& values) : _values(std::move(values)), _set(values.size(), true) {}
 	
 	//! Default copy constructor
 	Binding(const Binding& other) = default;
+	
+	//! (Only) if the binding is full, we can obtain the raw vector of integer values 
+	const std::vector<ObjectIdx>& get_full_binding() const {
+		for (bool b:_set) {
+			if (!b) throw std::runtime_error("Attempted to obtain a full binding from a partial binding");
+		}
+		return _values;
+	}
 	
 	
 	//! Returns true iff the current binding contains a binding for the given variable

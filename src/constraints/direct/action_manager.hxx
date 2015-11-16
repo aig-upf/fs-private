@@ -8,6 +8,8 @@
 
 namespace fs0 {
 
+class ActionID;
+
 /**
  * A constraint manager capable only of dealing with actions whose constraints are at most unary,
  * in which case the handling is much simpler and more efficient.
@@ -57,6 +59,8 @@ protected:
 	
 	//! Extracts all the (direct) state variables that are relevant to the action
 	VariableIdxVector extractAllRelevant() const;
+	
+	const ActionID* get_action_id(unsigned action_idx) const;
 	
 	friend std::ostream& operator<<(std::ostream &os, const DirectActionManager& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;

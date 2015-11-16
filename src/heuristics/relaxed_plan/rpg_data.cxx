@@ -3,6 +3,7 @@
 #include <utils/logging.hxx>
 #include <state.hxx>
 #include <actions/ground_action.hxx>
+#include <actions/action_id.hxx>
 
 namespace fs0 {
 
@@ -16,11 +17,19 @@ RPGData::RPGData(const State& seed) :
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 		ObjectIdx value = seed.getValue(variable);
 		_effects.insert(std::make_pair(Atom(variable, value),
-						createAtomSupport(GroundAction::invalid_action_id, std::make_shared<std::vector<Atom>>())));
+						createAtomSupport(ActionID::make_invalid(), std::make_shared<std::vector<Atom>>())));
 	}
 	FFDEBUG("heuristic", "RPG Layer #" << getCurrentLayerIdx() << ": " << *this);
 	advanceLayer();
 }
+
+RPGData::~RPGData() {
+	// delete all the pointers to action IDs, which belong to this container
+	for (auto& effect:_effects) {
+		const ActionID* action_id = std::get<1>(effect.second);
+		delete action_id;
+	}
+};
 
 void RPGData::advanceLayer() {
 	_num_novel= 0;
@@ -28,7 +37,7 @@ void RPGData::advanceLayer() {
 	++_current_layer;
 }
 
-RPGData::AtomSupport RPGData::createAtomSupport(ActionIdx action, Atom::vctrp support) const {
+RPGData::AtomSupport RPGData::createAtomSupport(const ActionID* action, Atom::vctrp support) const {
 	return std::make_tuple(_current_layer, action, support);
 }
 
@@ -45,13 +54,13 @@ std::pair<bool, RPGData::SupportMap::iterator> RPGData::getInsertionHint(const A
 	else return std::make_pair(true, lb);
 }
 
-void RPGData::add(const Atom& atom, ActionIdx action, Atom::vctrp support, SupportMap::iterator hint) {
+void RPGData::add(const Atom& atom, const ActionID* action, Atom::vctrp support, SupportMap::iterator hint) {
 	_effects.insert(hint, std::make_pair(atom, createAtomSupport(action, support)));
 	_novel[atom.getVariable()].push_back(atom.getValue());
 	++_num_novel;
 }
 
-void RPGData::add(const Atom& atom, ActionIdx action, Atom::vctrp support) {
+void RPGData::add(const Atom& atom, const ActionID* action, Atom::vctrp support) {
 	auto hint = getInsertionHint(atom);
 	if (!hint.first) return; // Don't insert the atom if it was already tracked by the RPG
 	add(atom, action, support, hint.second);
@@ -68,7 +77,8 @@ unsigned RPGData::compute_hmax_sum(const std::vector<Atom>& atoms) const {
 std::ostream& RPGData::print(std::ostream& os) const {
 	os << "Relaxed Planning Graph atoms (" << _effects.size() << "): " << std::endl;
 	for (const auto& x:_effects) {
-		os << x.first  << " - action #" << std::get<1>(x.second) << " - layer #" << std::get<0>(x.second) << " - support: ";
+		const ActionID* action_id = std::get<1>(x.second);
+		os << x.first  << " - action: " << *action_id << " - layer #" << std::get<0>(x.second) << " - support: ";
 		printAtoms(std::get<2>(x.second), os);
 		os << std::endl;
 	}

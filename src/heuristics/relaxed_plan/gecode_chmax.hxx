@@ -2,7 +2,6 @@
 #pragma once
 
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <state_model.hxx>
 
 namespace fs0 { namespace gecode {
 

@@ -7,6 +7,7 @@
 #include <utils/logging.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <relaxed_state.hxx>
+#include <actions/action_id.hxx>
 
 namespace fs0 {
 
@@ -111,7 +112,7 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 				FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 				completeAtomSupport(_scope, actionProjection, effectScope, support);
-				rpg.add(atom, actionIdx, support, hint.second);
+				rpg.add(atom, get_action_id(actionIdx), support, hint.second);
 			}
 		}
 
@@ -127,7 +128,7 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 					Atom::vctrp support = std::make_shared<Atom::vctr>();
 					support->push_back(Atom(effectScope[0], value));// Just insert the only value
 					completeAtomSupport(_scope, actionProjection, effectScope, support);
-					rpg.add(atom, actionIdx, support, hint.second);
+					rpg.add(atom, get_action_id(actionIdx), support, hint.second);
 				}
 			}
 		}
@@ -152,5 +153,8 @@ std::ostream& DirectActionManager::print(std::ostream& os) const {
 	return os;
 }
 
+const ActionID* DirectActionManager::get_action_id(unsigned action_idx) const {
+	return new PlainActionID(action_idx);
+}
 
 } // namespaces

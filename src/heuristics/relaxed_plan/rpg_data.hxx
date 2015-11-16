@@ -9,6 +9,7 @@
 namespace fs0 {
 
 class State;
+class ActionID;
 
 /**
  * A data structure containing book-keeping information concerning the actions that support
@@ -20,7 +21,7 @@ class State;
 class RPGData {
 public:
 	//! <layer ID, Action ID, support>
-	typedef std::tuple<unsigned, ActionIdx, Atom::vctrp> AtomSupport;
+	typedef std::tuple<unsigned, const ActionID*, Atom::vctrp> AtomSupport;
 	typedef std::map<Atom, AtomSupport> SupportMap;
 
 protected:
@@ -41,7 +42,7 @@ protected:
 
 public:
 	RPGData(const State& seed);
-	~RPGData() {};
+	~RPGData();
 
 	//! Returns the number of layers of the RPG.
 	unsigned getNumLayers() const  {return _current_layer + 1; } // 0-indexed!
@@ -53,7 +54,7 @@ public:
 	void advanceLayer();
 	
 	//! Creates an atom support data structure with the given data and taking into account the current RPG layer
-	AtomSupport createAtomSupport(ActionIdx action, Atom::vctrp support) const;
+	AtomSupport createAtomSupport(const ActionID* action, Atom::vctrp support) const;
 
 	//! Returns the support for the given atom
 	const AtomSupport& getAtomSupport(const Atom& atom) const;
@@ -70,10 +71,10 @@ public:
 	std::pair<bool, SupportMap::iterator> getInsertionHint(const Atom& atom);
 	
 	//! The version with hint assumes that the atom needs to be inserted.
-	void add(const Atom& atom, ActionIdx action, Atom::vctrp support, SupportMap::iterator hint);
+	void add(const Atom& atom, const ActionID* action, Atom::vctrp support, SupportMap::iterator hint);
 	
 	//! Add an atom to the set of newly-reached atoms, only if it is indeed new.
-	void add(const Atom& atom, ActionIdx action, Atom::vctrp support);
+	void add(const Atom& atom, const ActionID* action, Atom::vctrp support);
 	
 	//! Compute the sum of h_max values of all the given atoms, assuming that they have already been reached in the RPG data structure
 	unsigned compute_hmax_sum(const std::vector<Atom>& atoms) const;

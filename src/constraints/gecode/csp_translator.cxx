@@ -52,7 +52,7 @@ bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant) 
 }
 
 void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable::cptr variable) {
-	TranslationKey key(variable, CSPVariableType::Input); // Constants are always considered as input variables
+	TranslationKey key(variable, CSPVariableType::Input); // Bound variables are always considered as input variables
 	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, variable->getType()));
 	auto res = _registered.insert(std::make_pair(key, id));
 	assert(res.second); // Make sure the element was not there before
