@@ -26,6 +26,10 @@ std::string ActionSchema::fullname() const {
 
 GroundAction* ActionSchema::bind(const Binding& binding, const ProblemInfo& info) const {
 	fs::Formula::cptr precondition = _precondition->bind(binding, info);
+	if (precondition->is_contradiction()) {
+		delete precondition;
+		return nullptr;
+	}
 	
 	std::vector<fs::ActionEffect::cptr> effects;
 	for (const fs::ActionEffect::cptr effect:_effects) {
