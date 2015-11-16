@@ -25,7 +25,8 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 }
 
 GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool use_novelty_constraint)
-	: GroundActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, use_novelty_constraint) {}
+	: GroundActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, use_novelty_constraint)
+{}
 
 void GroundEffectCSPHandler::log() const {
 	assert(_effects.size() == 1);

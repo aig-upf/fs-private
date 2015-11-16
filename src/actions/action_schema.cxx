@@ -39,6 +39,21 @@ GroundAction* ActionSchema::bind(const Binding& binding, const ProblemInfo& info
 	return new GroundAction(this, binding, precondition, effects);
 }
 
+ActionSchema* ActionSchema::process(const ProblemInfo& info) const {
+	Binding binding; // An empty binding
+	auto precondition = _precondition->bind(binding, info);
+	if (precondition->is_contradiction()) {
+		throw std::runtime_error("The precondition of the action schema is (statically) unsatisfiable!");
+	}
+	
+	std::vector<fs::ActionEffect::cptr> effects;
+	for (const fs::ActionEffect::cptr effect:_effects) {
+		effects.push_back(effect->bind(binding, info));
+	}
+	return new ActionSchema(_id, _name, _signature, _parameters, precondition, effects);
+}
+
+
 std::ostream& ActionSchema::print(std::ostream& os) const { 
 	os <<  print::schema_name(*this);
 	return BaseAction::print(os);

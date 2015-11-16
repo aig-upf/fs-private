@@ -35,7 +35,8 @@ GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const
 
 // If no set of effects is provided, we'll take all of them into account
 GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action,  bool approximate, bool use_novelty_constraint)
-	:  GroundActionCSPHandler(action, action.getEffects(), approximate, use_novelty_constraint) {}
+	:  GroundActionCSPHandler(action, action.getEffects(), approximate, use_novelty_constraint)
+{}
 
 const ActionID* GroundActionCSPHandler::get_action_id(SimpleCSP* solution) const {
 	return new PlainActionID(_action.getId());

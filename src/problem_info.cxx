@@ -1,7 +1,8 @@
 
-#include <problem_info.hxx>
-
+#include <iostream>
 #include <fstream>
+
+#include <problem_info.hxx>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <atom.hxx>

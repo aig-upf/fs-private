@@ -86,7 +86,12 @@ ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, unsign
 	const fs::Formula::cptr precondition = fs::Loader::parseFormula(node["conditions"], info);
 	const std::vector<fs::ActionEffect::cptr> effects = fs::Loader::parseEffectList(node["effects"], info);
 	
-	return new ActionSchema(id, name, signature, parameters, precondition, effects);
+	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
+	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it
+	auto schema = new ActionSchema(id, name, signature, parameters, precondition, effects);
+	auto processed = schema->process(info);
+	delete schema;
+	return processed;
 }
 
 fs::Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {

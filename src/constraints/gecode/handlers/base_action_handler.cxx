@@ -12,7 +12,7 @@ namespace fs0 { namespace gecode {
 
 
 BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool use_novelty_constraint)
-	: BaseCSPHandler(approximate), _action(action), _effects(action.getEffects()), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
+	: BaseCSPHandler(approximate), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
 	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.fullname());
 	

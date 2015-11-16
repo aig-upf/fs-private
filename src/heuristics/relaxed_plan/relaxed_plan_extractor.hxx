@@ -107,6 +107,7 @@ protected:
 		const typename RPGBookkeeping::AtomSupport& support = _data.getAtomSupport(atom);
 		
 		const ActionID* action_id = std::get<1>(support);
+		_unused(action_id);
 		assert(action_id->is_valid());
 		registerPlanAction(support);
 		enqueueAtoms(*(std::get<2>(support))); // Push the full support of the atom

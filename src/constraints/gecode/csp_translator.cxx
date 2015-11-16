@@ -55,6 +55,7 @@ void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable:
 	TranslationKey key(variable, CSPVariableType::Input); // Bound variables are always considered as input variables
 	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, variable->getType()));
 	auto res = _registered.insert(std::make_pair(key, id));
+	_unused(res);
 	assert(res.second); // Make sure the element was not there before
 }
 

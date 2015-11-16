@@ -34,6 +34,9 @@ public:
 	//! Process the action schema with a given parameter binding and return the corresponding GroundAction
 	//! A nullptr is returned if the action is detected to be statically non-applicable
 	GroundAction* bind(const Binding& binding, const ProblemInfo& info) const;
+	
+	//! This processes in-place the schema to consolidate state variables, etc.
+	ActionSchema* process(const ProblemInfo& info) const;
 };
 
 

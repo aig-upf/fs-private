@@ -81,5 +81,8 @@ class BaseComponentProcessor(object):
                     'variables': self.binding_unit.dump_selected(node.parameters),
                     'subformula': self.process_formula(subformula)}
         else:
+            if isinstance(node, (pddl.conditions.Atom, pddl.conditions.NegatedAtom)):
+                # In case we have a single atom, we wrap it on a conjunction
+                node = pddl.conditions.Conjunction([node])
             exp = self.parser.process_expression(node)
             return exp.dump(self.index.objects, self.binding_unit)
