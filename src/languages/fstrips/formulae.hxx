@@ -4,7 +4,6 @@
 #include <fs0_types.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <utils/binding.hxx>
-#include <languages/fstrips/utils.hxx>
 
 namespace fs0 { class State; class ProblemInfo; }
 
@@ -74,10 +73,9 @@ public:
 		for (const auto ptr:_subterms) delete ptr;
 	}
 	
-	virtual AtomicFormula* clone() const = 0;
-	
 	//! Clone the type of formula assigning the given subterms
 	virtual AtomicFormula* clone(const std::vector<Term::cptr>& subterms) const = 0;
+	AtomicFormula* clone() const;
 	
 	Formula::cptr bind(const fs0::Binding& binding, const fs0::ProblemInfo& info) const;
 
@@ -273,11 +271,6 @@ public:
 	virtual Symbol symbol() const = 0;
 
 	virtual RelationalFormula* clone(const std::vector<Term::cptr>& subterms) const = 0;
-	
-	RelationalFormula* clone() const {
-		return clone(FStripsUtils::clone(_subterms));
-	}
-
 	
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;	

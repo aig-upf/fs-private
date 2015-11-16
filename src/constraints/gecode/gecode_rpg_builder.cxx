@@ -18,8 +18,8 @@ std::shared_ptr<GecodeRPGBuilder> GecodeRPGBuilder::create(const fs::Formula* go
 	bool use_novelty_constraint = Config::instance().useNoveltyConstraint();
 	auto conjuncted = goal_formula->conjunction(state_constraints);
 	FINFO("main", "Initializing goal CSP Handler with formula:\n" << *conjuncted)
-	auto goal_handler = new FormulaCSPHandler(conjuncted, use_novelty_constraint);
-	auto state_constraint_handler = state_constraints->is_tautology() ? nullptr : new FormulaCSPHandler(state_constraints, use_novelty_constraint);
+	auto goal_handler = new FormulaCSPHandler(conjuncted, Config::instance().useApproximateGoalResolution(), use_novelty_constraint);
+	auto state_constraint_handler = state_constraints->is_tautology() ? nullptr : new FormulaCSPHandler(state_constraints, false, use_novelty_constraint);
 	return std::make_shared<GecodeRPGBuilder>(goal_handler, state_constraint_handler);
 }
 	
@@ -58,7 +58,7 @@ bool GecodeRPGBuilder::isGoal(const State& seed, const GecodeRPGLayer& layer, At
 	
 	if (csp->checkConsistency()) {
 		FFDEBUG("heuristic", "Formula CSP found to be consistent: " << *csp);
-		if (Config::instance().getGoalResolutionType() == Config::CSPResolutionType::Full) {  // Solve the CSP completely
+		if (!Config::instance().useApproximateGoalResolution()) {  // Solve the CSP completely
 			is_goal = _goal_handler->compute_support(csp, support, seed);
 		} else { // Check only local consistency
 			is_goal = true;

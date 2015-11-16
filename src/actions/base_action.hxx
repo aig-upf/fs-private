@@ -29,6 +29,8 @@ public:
 	//! Returns the name of the action, e.g. 'move'
 	virtual const std::string& getName() const = 0;
 	
+	unsigned getId() const { return _id; }
+	
 	//! Returns the full, grounded name of the action, e.g. 'move(b1, c2)'
 	virtual std::string fullname() const = 0;
 	

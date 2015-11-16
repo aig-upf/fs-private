@@ -2,17 +2,18 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <constraints/gecode/action_manager.hxx>
-#include <constraints/gecode/gecode_rpg_builder.hxx>
-#include <constraints/gecode/rpg_layer.hxx>
 
-namespace fs0 { class FS0StateModel; class Problem; class State;}
+namespace fs0 { class FS0StateModel; class Problem; class State; class RPGData; }
 
 namespace fs0 { namespace gecode {
 
+class BaseActionCSPHandler;
+class GecodeRPGBuilder;
+class GecodeRPGLayer;
+
 class GecodeCRPG {
 public:
-	GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
+	GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
 	
 	virtual ~GecodeCRPG() {}
 	
@@ -29,7 +30,7 @@ protected:
 	const Problem& _problem;
 	
 	//! The set of action managers, one per every action
-	const std::vector<std::shared_ptr<GecodeManager>> _managers;
+	const std::vector<std::shared_ptr<BaseActionCSPHandler>> _managers;
 	
 	//! The RPG building helper
 	const std::shared_ptr<GecodeRPGBuilder> _builder;

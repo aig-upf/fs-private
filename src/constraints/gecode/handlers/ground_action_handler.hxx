@@ -1,29 +1,29 @@
 
 #pragma once
 
-#include <constraints/gecode/handlers/base_handler.hxx>
+#include <constraints/gecode/handlers/action_base_handler.hxx>
 
 namespace fs0 { namespace gecode {
 
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
-template <typename ActionT>
-class GecodeElementCSPHandler : public BaseCSPHandler {
+class GroundActionCSPHandler : public BaseActionCSPHandler {
 public:
-	typedef GecodeElementCSPHandler* ptr;
+	typedef GroundActionCSPHandler* ptr;
+	
+	//! Factory methods
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions);
 
 	//!
-	GecodeElementCSPHandler(const ActionT& action, bool use_novelty_constraint);
-	GecodeElementCSPHandler(const ActionT& action, const std::vector<fs::ActionEffect::cptr>& effects, bool use_novelty_constraint);
-	virtual ~GecodeElementCSPHandler() {}
+	GroundActionCSPHandler(const GroundAction& action, bool approximate, bool use_novelty_constraint);
+	GroundActionCSPHandler(const GroundAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool use_novelty_constraint);
+	virtual ~GroundActionCSPHandler() {}
 
-	const ActionT& getAction() const { return _action; }
-
-	void compute_support(SimpleCSP* csp, unsigned actionIdx, RPGData& rpg, const State& seed) const;
-	void compute_approximate_support(SimpleCSP* csp, unsigned int action_idx, RPGData rpg, const State& seed);
+// 	const GroundAction& getAction() const { return _action; }
 
 protected:
-	const ActionT& _action;
+	void compute_support(SimpleCSP* csp, RPGData& rpg, const State& seed) const;
+	
 	
 	//! The effects of the action that we want to take into account in the CSP (by default, all)
 	//! Note that we store a copy of the vector to facilitate creating subsets of effects to the subclasses.
@@ -56,12 +56,12 @@ protected:
 	void index_scopes();
 	
 	//! Process the given solution of the action CSP
-	void process_solution(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping) const;
+	void process_solution(SimpleCSP* solution, RPGData& bookkeeping) const;
 	
 	//!
-	void simple_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const;
+	void simple_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const;
 	
-	void hmax_based_atom_processing(SimpleCSP* solution, unsigned actionIdx, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const;
+	void hmax_based_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const;
 
 	
 	//! Extracts the full support of a given effect corresponding to the given solution
@@ -71,8 +71,8 @@ protected:
 	void create_novelty_constraint();
 	
 	void index();
+	
+	virtual void log() const;
 };
-
-typedef GecodeElementCSPHandler<GroundAction> GecodeActionCSPHandler;
 
 } } // namespaces

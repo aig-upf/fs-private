@@ -12,8 +12,8 @@
 
 namespace fs0 { namespace gecode {
 	
-FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool use_novelty_constraint)
-	:  BaseCSPHandler(),
+FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool approximate, bool use_novelty_constraint)
+	:  BaseCSPHandler(approximate),
 	  _formula(formula)
 {
 	setup();

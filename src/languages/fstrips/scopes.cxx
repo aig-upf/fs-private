@@ -67,7 +67,7 @@ void ScopeUtils::computeIndirectScope(Formula::cptr formula, TermSet& scope) {
 	}
 }
 
-std::vector<VariableIdx> ScopeUtils::computeActionDirectScope(const GroundAction& action) {
+std::vector<VariableIdx> ScopeUtils::computeActionDirectScope(const BaseAction& action) {
 	return computeDirectScope(action.getPrecondition());
 }
 

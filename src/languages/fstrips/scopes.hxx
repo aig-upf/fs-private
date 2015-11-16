@@ -5,7 +5,7 @@
 #include <constraints/gecode/utils/nested_fluent_iterator.hxx>
 
 
-namespace fs0 {  class GroundAction; }
+namespace fs0 {  class BaseAction; }
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -36,7 +36,7 @@ public:
 	//! Returns the direct scope of an action, i.e. the set of all the state variables that are directly relevant
 	//! to either the preconditions or some effect of the action.
 	//! This excludes indirect relevant actions produced by nested fluents.
-	static std::vector<VariableIdx> computeActionDirectScope(const GroundAction& action);
+	static std::vector<VariableIdx> computeActionDirectScope(const BaseAction& action);
 	
 	//! Computes all the (indirect) state variables in which a nested fluent might result
 	// TODO - Check if really necessary

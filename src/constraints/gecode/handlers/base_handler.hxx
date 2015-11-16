@@ -27,7 +27,7 @@ public:
 	typedef BaseCSPHandler* ptr;
 	typedef const BaseCSPHandler* cptr;
 
-	BaseCSPHandler() : _base_csp(), _translator(_base_csp), _novelty(nullptr), _counter(Config::instance().useElementDontCareOptimization()) {}
+	BaseCSPHandler(bool approximate) : _base_csp(), _approximate(approximate), _translator(_base_csp), _novelty(nullptr), _counter(Config::instance().useElementDontCareOptimization()) {}
 	virtual ~BaseCSPHandler();
 	
 	void init(const RPGData* bookkeeping);
@@ -52,6 +52,9 @@ public:
 protected:
 	//! The base Gecode CSP
 	SimpleCSP _base_csp;
+	
+	//! Whether to solve the CSPs completely or approximately
+	bool _approximate;
 
 	//! A translator to map planning variables with gecode variables
 	GecodeCSPVariableTranslator _translator;

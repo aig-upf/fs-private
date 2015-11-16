@@ -1,6 +1,7 @@
 
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <languages/fstrips/utils.hxx>
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>
@@ -47,6 +48,8 @@ std::vector<Term::cptr> AtomicFormula::all_terms() const {
 	}
 	return res;
 }
+
+AtomicFormula* AtomicFormula::clone() const { return clone(FStripsUtils::clone(_subterms)); }
 
 bool AtomicFormula::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	return _satisfied(NestedTerm::interpret_subterms(_subterms, assignment, binding));

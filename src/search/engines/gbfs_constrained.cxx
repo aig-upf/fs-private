@@ -11,6 +11,8 @@
 #include <heuristics/relaxed_plan/direct_chmax.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
+#include <constraints/gecode/handlers/ground_action_handler.hxx>
+#include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <actions/applicable_action_set.hxx>
 
 
@@ -28,11 +30,11 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		FINFO("main", "Chosen CSP Manager: Gecode");
 		auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 		
-		std::vector<std::shared_ptr<GecodeManager>> managers;
+		std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 		if (Config::instance().getCSPModel() == Config::CSPModel::ActionCSP) {
-			managers = GecodeActionManager::create(actions);
+			managers = GroundActionCSPHandler::create(actions);
 		} else {
-			managers = GecodeActionEffectManager::create(actions);
+			managers = GroundEffectCSPHandler::create(actions);
 		}
 		GecodeHeuristic gecode_builder_heuristic(model, std::move(managers), std::move(gecode_builder));
 		engine = new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic));

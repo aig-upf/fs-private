@@ -110,6 +110,10 @@ public:
 	bool useApproximateActionResolution() const {
 		return getActionPreconditionResolutionType() == CSPResolutionType::Approximate;
 	}
+	
+	bool useApproximateGoalResolution() const {
+		return getGoalResolutionType() == CSPResolutionType::Approximate;
+	}
 
 	//! A generic getter
 	template <typename T>

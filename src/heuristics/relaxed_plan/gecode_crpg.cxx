@@ -10,15 +10,14 @@
 #include <relaxed_state.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
 #include <state_model.hxx>
-#include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
-
+#include <constraints/gecode/handlers/action_base_handler.hxx>
 
 
 namespace fs0 { namespace gecode {
 
-GecodeCRPG::GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<GecodeManager>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
+GecodeCRPG::GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
 	: _problem(model.getTask()), _managers(std::move(managers)), _builder(std::move(builder))
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
@@ -42,7 +41,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
 	for (unsigned i = 0; ; ++i) {
 		// Apply all the actions to the RPG layer
-		for (const std::shared_ptr<GecodeManager>& manager:_managers) {
+		for (const std::shared_ptr<BaseActionCSPHandler>& manager:_managers) {
 			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
 				manager->init_value_selector(&bookkeeping);
 			}
