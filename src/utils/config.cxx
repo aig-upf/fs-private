@@ -50,7 +50,12 @@ Config::Config(const std::string& filename)
 	
 	// Parse the type of action manager: gecode, direct-if-possible, direct
 	_csp_manager = parseOption<CSPManagerType>(_root, "csp.manager", {{"gecode", CSPManagerType::Gecode}, {"direct_if_possible", CSPManagerType::DirectIfPossible}, {"direct", CSPManagerType::Direct}});
-	_csp_model = parseOption<CSPModel>(_root, "csp.model", {{"action", CSPModel::ActionCSP}, {"effect", CSPModel::EffectCSP}});
+	_csp_model = parseOption<CSPModel>(_root, "csp.model", {
+									{"action", CSPModel::GroundedActionCSP},
+									{"effect", CSPModel::GroundedEffectCSP},
+									{"action_schema", CSPModel::ActionSchemaCSP},
+									{"effect_schema", CSPModel::EffectSchemaCSP},
+				});
 	
 	_goal_resolution = parseOption<CSPResolutionType>(_root, "csp.goal_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
 	_precondition_resolution = parseOption<CSPResolutionType>(_root, "csp.precondition_resolution", {{"full", CSPResolutionType::Full}, {"approximate", CSPResolutionType::Approximate}});
@@ -83,9 +88,17 @@ void Config::validateConfig(const Config& config) {
 }
 
 std::ostream& Config::print(std::ostream& os) const {
+	
+	std::map<CSPModel, std::string> model_str =  {
+	{CSPModel::GroundedActionCSP, "1 CSP per action"},
+	{CSPModel::GroundedEffectCSP, "1 CSP per effect"},
+	{CSPModel::ActionSchemaCSP, "1 CSP per action schema"},
+	{CSPModel::EffectSchemaCSP, "1 CSP per effect schema"}
+	};
+	
 	os << "Action Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
 	os << "CSP Manager:\t\t" << (_csp_manager == CSPManagerType::Gecode ? "Gecode" : (_csp_manager == CSPManagerType::DirectIfPossible ? "Direct-If-Possible" : "Direct")) << std::endl;
-	os << "CSP Model:\t" << ((_csp_model == CSPModel::ActionCSP) ? "1 CSP per action" : "1 CSP per effect") << std::endl;
+	os << "CSP Model:\t" << model_str[_csp_model] << std::endl;
 	os << "Goal Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
 	os << "Plan Extraction:\t" << ((_rpg_extraction == RPGExtractionType::Propositional) ? "Propositional" : "Extended") << std::endl;
 	

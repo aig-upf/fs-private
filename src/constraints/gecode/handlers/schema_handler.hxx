@@ -8,9 +8,9 @@ namespace fs0 { namespace gecode {
 
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
-class GecodeSchemaCSPHandler : public BaseActionCSPHandler {
+class ActionSchemaCSPHandler : public BaseActionCSPHandler {
 public:
-	typedef GecodeSchemaCSPHandler* ptr;
+	typedef ActionSchemaCSPHandler* ptr;
 
 protected:
 

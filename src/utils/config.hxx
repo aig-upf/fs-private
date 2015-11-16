@@ -17,7 +17,7 @@ public:
 	enum class CSPManagerType {Gecode, Direct, DirectIfPossible};
 	
 	//! The type of CSP model (gecode manager only)
-	enum class CSPModel {ActionCSP, EffectCSP};
+	enum class CSPModel {GroundedActionCSP, GroundedEffectCSP, ActionSchemaCSP, EffectSchemaCSP};
 	
 	//! The possible types of CSP resolutions we consider
 	enum class CSPResolutionType {Full, Approximate};

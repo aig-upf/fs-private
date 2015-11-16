@@ -13,6 +13,7 @@
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
+#include <constraints/gecode/handlers/schema_handler.hxx>
 #include <actions/applicable_action_set.hxx>
 
 
@@ -31,11 +32,19 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 		
 		std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
-		if (Config::instance().getCSPModel() == Config::CSPModel::ActionCSP) {
+		if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
 			managers = GroundActionCSPHandler::create(actions);
-		} else {
+		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
 			managers = GroundEffectCSPHandler::create(actions);
+		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
+// 			managers = ActionSchemaCSPHandler::create(actions);
+		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
+			throw UnimplementedFeatureException("1-csp-per-effect-schema not yet implemented");
+		} else {
+			throw std::runtime_error("Unknown CSP model type");
 		}
+		
+		
 		GecodeHeuristic gecode_builder_heuristic(model, std::move(managers), std::move(gecode_builder));
 		engine = new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic));
 		
