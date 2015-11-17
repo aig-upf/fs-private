@@ -45,21 +45,39 @@ public:
 		assert(subterms.size() == signature.size());
 		assert(signature.size() > 0); // Cannot be 0, or we'd have instead a StateVariable term
 		
-		auto objects = info.getTypeObjects(signature[0]);
-		std::vector<const std::vector<ObjectIdx>*> possible_values = info.getSignatureValues(signature);
+		// possible_values[i] will be a vector (pointer) with all possible values for the i-th subterm
+		// of the given nested fluent, __according to the signature of the fluent function declaration__
+		// But we can optimize this in at least two ways:
+		//   - If an actual subterm is a constant, there is no need to consider all possible values for that positional argument
+		//   - If an actual subterm is a bound variable, we can only consider the values for the concrete type of the variable, which
+		//     might be different (i.e. a subtype, to be more specific) from the generic type of the function declaration.
+		// As an example, consider a function f(thing, thing): int
+		// If our actual nested fluent term is f(?p, table), where ?p is a variable (think e.g. an action parameter) of type "person" (a subtype of thing),
+		// and table is a constant, the only possible values we will want to iterate through are [person1, person2] for the first parameter, and [table] for the second,
+		// but none of the other "thing" objects.
+		std::vector<const std::vector<ObjectIdx>*> possible_values;
 		
-		// If a subterm is a constant, there is no need to iterate through all possible values for that type
-		for (unsigned i = 0; i < subterms.size(); ++i) {
-			if (auto constant = dynamic_cast<fs::Constant::cptr>(term)) {
+		for (unsigned i = 0; i < signature.size(); ++i) {
+			fs::Term::cptr subterm = subterms[i];
+			TypeIdx type = signature[i];
+			
+			if (auto constant = dynamic_cast<fs::Constant::cptr>(subterm)) {
 				auto v = new std::vector<ObjectIdx>(1, constant->getValue()); // Create a temporary vector with the constant value as the only value
-				possible_values[i] = v;
-				_temporary_vectors.push_back(v);
+				possible_values.push_back(v);
+				_temporary_vectors.push_back(v); // store the pointer so that we can delete it later
+				continue;
+			} 
+			
+			// By default, consider all types according to the signature, but in the case of bound variables, trust the type of the bound variable,
+			// which might a subtype of that of the signature
+			if (auto variable = dynamic_cast<fs::BoundVariable::cptr>(subterm)) {
+				type = variable->getType();
 			}
+			possible_values.push_back(&(info.getTypeObjects(type)));
 		}
 		
 		return possible_values;
 	}
-	
 
 public:
 	const nested_fluent_iterator& operator++() {
