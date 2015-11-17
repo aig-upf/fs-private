@@ -10,7 +10,7 @@
 	},
 	
 	"lifted_planning_comment": "Whether to perform lifted planning, i.e. planning without grounding any action",
-	"lifted_planning": "yes",
+	"lifted_planning": "no",
 	
 	"csp": {
 		"manager_comment": ["The CSP manager to use: either 'gecode', 'direct', 'or direct_if_possible'"],

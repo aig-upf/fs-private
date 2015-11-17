@@ -12,6 +12,8 @@
 namespace fs0 { namespace gecode {
 
 //! An iterator that models action schema applicability as an action CSP.
+//! The iterator receives an (ordered) set of lifted-action CSP handlers, and upon iteration
+//! returns, chainedly, each of the lifted-action IDs that are applicable.
 class LiftedActionIterator {
 protected:
 	const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& _handlers;
@@ -58,15 +60,8 @@ public:
 			for (;_current_handler_idx != _handlers.size(); ++_current_handler_idx) {
 				ActionSchemaCSPHandler& handler = *_handlers[_current_handler_idx];
 				
-				std::cout << "Schema: " << handler.get_action().fullname() << std::endl;
-				std::cout << "Analyzing applicability of handler: " << handler << std::endl;
-				
 				if (!_csp) {
 					_csp = handler.instantiate_csp(_state);
-					
-					std::cout << "CSP after instantiation: " << std::endl;
-					handler.print(std::cout, *_csp);
-					std::cout << std::endl;
 					
 					if (!_csp->checkConsistency()) { // The CSP is not even locally consistent, thus let's move to the next handler
 						delete _csp; _csp = nullptr;
@@ -89,6 +84,7 @@ public:
 				
 				_element = handler.get_lifted_action_id(solution);
 				delete solution;
+				break;
 			}
 		}
 
@@ -101,6 +97,7 @@ public:
 
 		const LiftedActionID& operator*() const { return *_element; }
 		
+		//! This is not really true... but will work for the purpose of comparing with the end iterator.
 		bool operator==(const Iterator &other) const { return _current_handler_idx == other._current_handler_idx; }
 		bool operator!=(const Iterator &other) const { return !(this->operator==(other)); }
 	};

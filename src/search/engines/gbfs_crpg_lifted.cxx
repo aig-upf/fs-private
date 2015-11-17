@@ -26,7 +26,7 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 	
 	
 	if (Config::instance().getCSPModel() != Config::CSPModel::ActionSchemaCSP) {
-		throw std::runtime_error("Lifted planning currently only available with the action-schema CSP model");
+		std::cout << "WARNING: Lifted planning overrides the CSP model option. Enforcing the action-schema CSP model." << std::endl;
 	}
 	
 	bool novelty = Config::instance().useNoveltyConstraint();

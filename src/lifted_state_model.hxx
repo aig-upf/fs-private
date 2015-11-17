@@ -15,7 +15,7 @@ class ActionSchema;
 class GroundAction;
 
 
-
+//! A state model that works with lifted actions instead of grounded actions
 class LiftedStateModel : public aptk::DetStateModel<State, LiftedActionID> {
 public:
 	LiftedStateModel(const Problem& problem) : task(problem) {}
