@@ -14,6 +14,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <constraints/registry.hxx>
 #include <utils/printers/registry.hxx>
+#include "config.hxx"
 
 
 namespace fs = fs0::language::fstrips;
@@ -46,7 +47,9 @@ void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFac
 	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
 	// Ground the actions
-	problem->setGroundActions(ActionGrounder::ground(problem->getActionSchemata(), *info));
+	if (!Config::instance().doLiftedPlanning()) {
+		problem->setGroundActions(ActionGrounder::ground(problem->getActionSchemata(), *info));
+	}
 	
 	gecode::DONT_CARE::set(gecode::Helper::computeDontCareValue());
 	FINFO("main", "Selected a Gecode DONT_CARE value of " << gecode::DONT_CARE::get());	
