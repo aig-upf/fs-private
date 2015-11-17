@@ -28,6 +28,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
+	bool dont_care = Config::instance().useElementDontCareOptimization();
 	
 	FS0SearchAlgorithm* engine = nullptr;
 	if (decide_csp_type(problem) == Config::CSPManagerType::Gecode) {
@@ -36,11 +37,11 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		
 		std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 		if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
-			managers = GroundActionCSPHandler::create(actions);
+			managers = GroundActionCSPHandler::create(actions, approximate, novelty, dont_care);
 		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
-			managers = GroundEffectCSPHandler::create(actions);
+			managers = GroundEffectCSPHandler::create(actions, approximate, novelty, dont_care);
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
+			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
 			throw UnimplementedFeatureException("1-csp-per-effect-schema not yet implemented");
 		} else {

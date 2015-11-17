@@ -15,11 +15,13 @@
 namespace fs0 { namespace gecode {
 
 std::shared_ptr<GecodeRPGBuilder> GecodeRPGBuilder::create(const fs::Formula* goal_formula, const fs::Formula* state_constraints) {
-	bool use_novelty_constraint = Config::instance().useNoveltyConstraint();
+	bool novelty = Config::instance().useNoveltyConstraint();
+	bool approximate = Config::instance().useApproximateActionResolution();
+	bool dont_care = Config::instance().useElementDontCareOptimization();
 	auto conjuncted = goal_formula->conjunction(state_constraints);
 	FINFO("main", "Initializing goal CSP Handler with formula:\n" << *conjuncted)
-	auto goal_handler = new FormulaCSPHandler(conjuncted, Config::instance().useApproximateGoalResolution(), use_novelty_constraint);
-	auto state_constraint_handler = state_constraints->is_tautology() ? nullptr : new FormulaCSPHandler(state_constraints, false, use_novelty_constraint);
+	auto goal_handler = new FormulaCSPHandler(conjuncted, novelty, approximate, dont_care);
+	auto state_constraint_handler = state_constraints->is_tautology() ? nullptr : new FormulaCSPHandler(state_constraints, false, novelty, dont_care);
 	return std::make_shared<GecodeRPGBuilder>(goal_handler, state_constraint_handler);
 }
 	

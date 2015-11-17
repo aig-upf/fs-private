@@ -11,7 +11,7 @@ public:
 	typedef FormulaCSPHandler* ptr;
 	typedef const FormulaCSPHandler* cptr;
 
-	FormulaCSPHandler(const fs::Formula::cptr formula, bool approximate, bool use_novelty_constraint);
+	FormulaCSPHandler(const fs::Formula::cptr formula, bool approximate, bool use_novelty_constraint, bool dont_care);
 	~FormulaCSPHandler() {
 		delete _formula;
 	}

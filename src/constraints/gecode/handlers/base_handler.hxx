@@ -27,7 +27,7 @@ public:
 	typedef BaseCSPHandler* ptr;
 	typedef const BaseCSPHandler* cptr;
 
-	BaseCSPHandler(bool approximate) : _base_csp(), _approximate(approximate), _translator(_base_csp), _novelty(nullptr), _counter(Config::instance().useElementDontCareOptimization()) {}
+	BaseCSPHandler(bool approximate, bool dont_care) : _base_csp(), _approximate(approximate), _translator(_base_csp), _novelty(nullptr), _counter(dont_care) {}
 	virtual ~BaseCSPHandler();
 	
 	void init(const RPGData* bookkeeping);

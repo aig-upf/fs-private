@@ -7,7 +7,8 @@
 namespace fs0 {
 
 CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula::cptr formula) :
-	_csp_handler(new gecode::FormulaCSPHandler(formula, true, false))
+	// Note that we don't need any of the optimizations, since we will be instantiating the CSP on a state, not a RPG layer
+	_csp_handler(new gecode::FormulaCSPHandler(formula, false, false, false))
 {}
 	
 bool CSPFormulaInterpreter::satisfied(const State& state) const {
