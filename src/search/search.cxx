@@ -1,35 +1,28 @@
 
 
+#include <time.h>
+
 #include <aptk2/tools/resources_control.hxx>
 
 #include <problem.hxx>
 #include <search/search.hxx>
 #include <search/engines/registry.hxx>
-#include "engines/gbfs_crpg_lifted.hxx"
+#include <search/engines/gbfs_crpg_lifted.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/config.hxx>
 #include <utils/logging.hxx>
 #include <languages/fstrips/language.hxx>
 #include <lifted_state_model.hxx>
+#include <state.hxx>
 
-#include <time.h>
 
 namespace fs0 { namespace engines {
 
-bool SearchUtils::check_plan(const std::vector<GroundAction::IdType>& plan) {
-	const Problem& problem = Problem::getInstance();
-	std::vector<unsigned> p;
-	for (const auto& elem:plan) p.push_back((unsigned) elem);
-	return Checker::checkPlanSuccessful(problem, p, problem.getInitialState());
-}
-
-bool SearchUtils::check_plan(const std::vector<LiftedActionID>& plan) {
-	return true; // TODO
-}
 
 template <typename StateModelT, typename SearchAlgorithmT>
 float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir) {
+	const Problem& problem = model.getTask();
 
 	std::cout << "Writing results to " << out_dir << std::endl;
 	std::ofstream plan_out(out_dir + "/first.plan");
@@ -42,7 +35,8 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 	float total_time = aptk::time_used() - t0;
 	double _total_time = (double) clock() / CLOCKS_PER_SEC - _t0;
 
-	bool valid = check_plan(plan);
+	bool valid = Checker::check_correctness(problem, plan, problem.getInitialState());
+	
 	if ( solved ) {
 		PlanPrinter::print(plan, plan_out);
 	}
@@ -66,6 +60,8 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 	json_out << std::endl;
 	json_out << "}" << std::endl;
 	json_out.close();
+	
+	if (!valid) throw std::runtime_error("The plan output by the planner is not correct!");
 
 	return total_time;
 }

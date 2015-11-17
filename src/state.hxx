@@ -75,10 +75,10 @@ public:
 
 	unsigned numAtoms() const { return _values.size(); }
 	
-protected:
 	//! "Applies" the given atoms into the current state.
 	void accumulate(const std::vector<Atom>& atoms);
-	
+
+protected:
 	void updateHash() { _hash = computeHash(); }
 	
 	std::size_t computeHash() const { return boost::hash_range(_values.begin(), _values.end()); };
