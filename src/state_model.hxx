@@ -15,21 +15,21 @@ public:
 	~FS0StateModel() {}
 
 	//! Returns initial state of the problem
-	virtual State init() const;
+	State init() const;
 
 	//! Returns true if state is a goal state
-	virtual bool goal(const State& state) const;
+	bool goal(const State& state) const;
 
 	//! Returns applicable action set object
-	virtual typename GroundAction::ApplicableSet applicable_actions(const State& state) const;
+	typename GroundAction::ApplicableSet applicable_actions(const State& state) const;
 
 	//! Returns the state resulting from applying the given action action on the given state
-	virtual State next(const State& state, GroundAction::IdType id) const;
-	virtual State next(const State& state, const GroundAction& a) const;
+	State next(const State& state, const GroundAction::IdType& id) const;
+	State next(const State& state, const GroundAction& a) const;
 
-	virtual void print(std::ostream &os) const;
+	void print(std::ostream &os) const;
 	
-	virtual const Problem& getTask() const { return task; }
+	const Problem& getTask() const { return task; }
 
 protected:
 	// The underlying planning problem.

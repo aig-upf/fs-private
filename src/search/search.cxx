@@ -5,11 +5,13 @@
 #include <problem.hxx>
 #include <search/search.hxx>
 #include <search/engines/registry.hxx>
+#include "engines/gbfs_crpg_lifted.hxx"
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/config.hxx>
 #include <utils/logging.hxx>
 #include <languages/fstrips/language.hxx>
+#include <lifted_state_model.hxx>
 
 #include <time.h>
 
@@ -22,13 +24,18 @@ bool SearchUtils::check_plan(const std::vector<GroundAction::IdType>& plan) {
 	return Checker::checkPlanSuccessful(problem, p, problem.getInitialState());
 }
 
-float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Problem& problem, const std::string& out_dir) {
+bool SearchUtils::check_plan(const std::vector<LiftedActionID>& plan) {
+	return true; // TODO
+}
+
+template <typename StateModelT, typename SearchAlgorithmT>
+float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir) {
 
 	std::cout << "Writing results to " << out_dir << std::endl;
 	std::ofstream plan_out(out_dir + "/first.plan");
 	std::ofstream json_out( out_dir + "/results.json" );
 
-	std::vector<GroundAction::IdType> plan;
+	std::vector<typename StateModelT::ActionType::IdType> plan;
 	float t0 = aptk::time_used();
 	double _t0 = (double) clock() / CLOCKS_PER_SEC;
 	bool solved = engine.solve_model( plan );
@@ -37,7 +44,7 @@ float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Pro
 
 	bool valid = check_plan(plan);
 	if ( solved ) {
-		PlanPrinter::printPlan(plan, problem, plan_out);
+		PlanPrinter::print(plan, plan_out);
 	}
 	plan_out.close();
 
@@ -53,7 +60,7 @@ float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Pro
 	json_out << "\t\"plan_length\": " << plan.size() << "," << std::endl;
 	json_out << "\t\"plan\": ";
 	if ( solved )
-		PlanPrinter::printPlanJSON( plan, problem, json_out);
+		PlanPrinter::print_json( plan, json_out);
 	else
 		json_out << "null";
 	json_out << std::endl;
@@ -66,10 +73,23 @@ float SearchUtils::do_search(fs0::engines::FS0SearchAlgorithm& engine, const Pro
 void SearchUtils::instantiate_seach_engine_and_run(const Problem& problem, const Config& config, int timeout, const std::string& out_dir) {
 	float timer = 0.0;
 	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
-	FS0StateModel model(problem);
-	auto creator = fs0::engines::EngineRegistry::instance().get(config.getEngineTag());
-	auto engine = creator->create(config, model);
-	timer = do_search(*engine, problem, out_dir);
+	
+	// The engine and search model for lifted planning are different!
+	if (config.doLiftedPlanning()) {
+
+		fs0::LiftedStateModel model(problem);
+		GBFSLiftedPlannerCreator creator;
+		auto engine = creator.create(config, model);
+		timer = do_search<>(*engine, model, out_dir);
+
+	} else {
+		// Standard, grounded planning
+		FS0StateModel model(problem);
+		auto creator = fs0::engines::EngineRegistry::instance().get(config.getEngineTag());
+		auto engine = creator->create(config, model);
+		timer = do_search(*engine, model, out_dir);
+	}
+	
 	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }
 
@@ -77,14 +97,13 @@ void SearchUtils::report_stats(const Problem& problem) {
 	auto actions = problem.getGroundActions();
 	unsigned n_actions = actions.size();
 	
-// 	std::cout << "Number of object types: " << st.get_num_types() << std::endl;
 	std::cout << "Number of objects: " << problem.getProblemInfo().getNumObjects() << std::endl;
 	std::cout << "Number of state variables: " << problem.getProblemInfo().getNumVariables() << std::endl;
-
+	std::cout << "Number of action schemata: " << problem.getActionSchemata().size() << std::endl;
 	std::cout << "Number of ground actions: " << n_actions << std::endl;
+	
 	if (n_actions > 1000) {
-		std::cout << "WARNING: The number of ground actions (" << n_actions <<
-		") is too high for our current applicable action strategy to perform well." << std::endl;
+		std::cout << "WARNING: The number of ground actions (" << n_actions << ") is too high for our applicable action strategy to perform well." << std::endl;
 	}
 
 	std::cout << "Number of state constraints: " << problem.getStateConstraints()->all_atoms().size() << std::endl;

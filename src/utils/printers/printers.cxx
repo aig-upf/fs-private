@@ -5,27 +5,56 @@
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
+#include <sstream>
 
 namespace fs0 {
 
 
-void PlanPrinter::printPlan(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out) {
+void PlanPrinter::print(const std::vector<GroundAction::IdType>& plan, std::ostream& out) {
 	for (auto action:plan) {
 		out << print::action_name(action) << std::endl;
 	}
 }
 
-void PlanPrinter::printPlanJSON(const std::vector<GroundAction::IdType>& plan, const Problem& problem, std::ostream& out) {
+void PlanPrinter::print(const std::vector<LiftedActionID>& plan, std::ostream& out) {
+	// This ideally should be conflated with print::plan, but currently we have different plan types :-(
+	for (const auto& element:plan) {
+		out << element << std::endl;
+	}
+}
+
+void PlanPrinter::print_json(const std::vector<LiftedActionID>& plan, std::ostream& out) {
+	std::vector<std::string> names;
+	for (const auto& elem:plan) {
+		std::ostringstream stream;
+		stream << elem;
+		names.push_back(stream.str());
+	}
+	print_json(names, out);
+}
+
+void PlanPrinter::print_json(const std::vector<GroundAction::IdType>& plan, std::ostream& out) {
+	std::vector<std::string> names;
+	for (const auto& elem:plan) {
+		std::ostringstream stream;
+		stream << print::action_name(elem);
+		names.push_back(stream.str());
+	}
+	print_json(names, out);
+}
+
+void PlanPrinter::print_json(const std::vector<std::string>& action_names, std::ostream& out) {
 	out << "[";
-	for ( unsigned k = 0; k < plan.size(); k++ ) {
-		out << "\"" <<  print::action_name(plan[k]) << "\"";
-		if ( k < plan.size() - 1 ) out << ", ";
+	for ( unsigned k = 0; k < action_names.size(); k++ ) {
+		out << "\"" <<  action_names[k] << "\"";
+		if ( k < action_names.size() - 1 ) out << ", ";
 	}
 	out << "]";
 }
 
+
 std::ostream& PlanPrinter::print(std::ostream& os) const {
-	printPlan(_plan, Problem::getInstance(), os);
+	print(_plan, os);
 	return os;
 }
 

@@ -7,13 +7,13 @@
 
 namespace fs0 {
 
-class GroundAction; class FS0StateModel; class Problem; class State; class RelaxedState;
+class GroundAction; class Problem; class State; class RelaxedState;
 
 class DirectCRPG {
 public:
 	typedef GroundAction Action;
 
-	DirectCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
+	DirectCRPG(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
 	
 	virtual ~DirectCRPG() {}
 	

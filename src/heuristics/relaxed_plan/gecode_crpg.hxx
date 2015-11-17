@@ -3,7 +3,7 @@
 
 #include <fs0_types.hxx>
 
-namespace fs0 { class FS0StateModel; class Problem; class State; class RPGData; }
+namespace fs0 { class Problem; class State; class RPGData; }
 
 namespace fs0 { namespace gecode {
 
@@ -13,7 +13,7 @@ class GecodeRPGLayer;
 
 class GecodeCRPG {
 public:
-	GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
+	GecodeCRPG(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
 	
 	virtual ~GecodeCRPG() {}
 	

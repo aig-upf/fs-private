@@ -9,7 +9,6 @@
 #include <utils/printers/actions.hxx>
 #include <relaxed_state.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
-#include <state_model.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
@@ -17,8 +16,8 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeCRPG::GecodeCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
-	: _problem(model.getTask()), _managers(std::move(managers)), _builder(std::move(builder))
+GecodeCRPG::GecodeCRPG(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
+	: _problem(problem), _managers(std::move(managers)), _builder(std::move(builder))
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }

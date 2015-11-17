@@ -23,6 +23,8 @@ public:
 	//! Initialize the value selector of the underlying CSPs
 	virtual void init_value_selector(const RPGData* bookkeeping) { init(bookkeeping);} // TODO - No need to have two different names for the same method
 	
+	const BaseAction& get_action() const { return _action; }
+	
 protected:
 	//! The index of the action managed by this manager
 	const BaseAction& _action;

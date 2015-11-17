@@ -26,6 +26,9 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	const Problem& problem = model.getTask();
 	const std::vector<GroundAction::cptr>& actions = problem.getGroundActions();
 	
+	bool novelty = Config::instance().useNoveltyConstraint();
+	bool approximate = Config::instance().useApproximateActionResolution();
+	
 	FS0SearchAlgorithm* engine = nullptr;
 	if (decide_csp_type(problem) == Config::CSPManagerType::Gecode) {
 		FINFO("main", "Chosen CSP Manager: Gecode");
@@ -37,7 +40,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
 			managers = GroundEffectCSPHandler::create(actions);
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata());
+			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
 			throw UnimplementedFeatureException("1-csp-per-effect-schema not yet implemented");
 		} else {
@@ -45,14 +48,14 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		}
 		
 		
-		GecodeHeuristic gecode_builder_heuristic(model, std::move(managers), std::move(gecode_builder));
+		GecodeHeuristic gecode_builder_heuristic(problem, std::move(managers), std::move(gecode_builder));
 		engine = new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic));
 		
 	} else {
 		FINFO("main", "Chosen CSP Manager: Direct");
 		auto direct_builder = DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 		auto managers = DirectActionManager::create(actions);
-		DirectHeuristic direct_builder_heuristic(model, std::move(managers), std::move(direct_builder));
+		DirectHeuristic direct_builder_heuristic(problem, std::move(managers), std::move(direct_builder));
 		engine = new aptk::StlBestFirstSearch<SearchNode, DirectHeuristic, FS0StateModel>(model, std::move(direct_builder_heuristic));
 	}
 	

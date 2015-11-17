@@ -15,6 +15,8 @@ const ActionID* ActionID::make_invalid() {
 	return new PlainActionID(std::numeric_limits<unsigned int>::max());
 }
 
+const LiftedActionID LiftedActionID::invalid_action_id = LiftedActionID(std::numeric_limits<unsigned int>::max(), std::vector<ObjectIdx>());
+
 LiftedActionID::LiftedActionID(unsigned schema_id, const std::vector<ObjectIdx>& binding)
 	: ActionID(schema_id), _binding(binding)
 {}
@@ -77,8 +79,8 @@ std::size_t PlainActionID::hash_code() const {
 
 std::ostream& LiftedActionID::print(std::ostream& os) const {
 	if (is_valid()) {
-		ActionSchema::cptr schema = Problem::getInstance().getActionSchemata()[_id];
-		os << schema->getName() << "(" << print::binding(getBinding(), schema->getSignature()) << ")";
+		ActionSchema::cptr schema_ = schema();
+		os << schema_->getName() << "(" << print::binding(getBinding(), schema_->getSignature()) << ")";
 	} else {
 		os << "[INVALID-ACTION]";
 	}	
@@ -93,6 +95,13 @@ std::ostream& PlainActionID::print(std::ostream& os) const {
 		os << "[INVALID-ACTION]";
 	}
 	return os;
+}
+
+const ActionSchema* LiftedActionID::schema() const { return Problem::getInstance().getActionSchemata()[_id]; }
+
+GroundAction* LiftedActionID::generate() const {
+	const ProblemInfo& info = Problem::getInfo();
+	return schema()->bind(Binding(_binding), info);
 }
 
 

@@ -5,7 +5,8 @@
 #include <search/nodes/heuristic_search_node.hxx>
 #include <utils/config.hxx>
 
-namespace fs0 { class FS0StateModel; }
+namespace fs0 { class FS0StateModel;}
+
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
 namespace fs = fs0::language::fstrips;
 
@@ -16,10 +17,10 @@ namespace fs0 { namespace engines {
 template <typename GecodeHeuristic, typename DirectHeuristic>
 class GBFSConstrainedHeuristicsCreator : public EngineCreator {
 protected:
-	typedef HeuristicSearchNode<State> SearchNode;
+	typedef HeuristicSearchNode<State, GroundAction> SearchNode;
 	
 public:
-	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const FS0StateModel& model) const;
+	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const FS0StateModel& problem) const;
 	
 protected:
 	
@@ -28,7 +29,6 @@ protected:
 	static Config::CSPManagerType decide_action_manager_type(const std::vector< const GroundAction*>& actions);
 	
 	static Config::CSPManagerType decide_builder_type(const fs::Formula* goal_formula, const fs::Formula* state_constraints);
-
 };
 
 } } // namespaces

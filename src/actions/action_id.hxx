@@ -4,6 +4,8 @@
 #include <fs0_types.hxx>
 #include <actions/action_schema.hxx>
 
+namespace fs0 { namespace gecode { class LiftedActionIterator; }}
+
 namespace fs0 {
 
 class ActionID {
@@ -30,6 +32,12 @@ public:
 	
 	virtual std::size_t hash_code() const = 0;
 	
+	//! Default copy constructors and assignment operators
+	ActionID(const ActionID& other) = default;
+	ActionID(ActionID&& other) = default;
+	ActionID& operator=(const ActionID& other) = default;
+	ActionID& operator=(ActionID&& other) = default;	
+	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionID&  entity) { return entity.print(os); }
 	virtual std::ostream& print(std::ostream& os) const = 0;
@@ -40,20 +48,38 @@ public:
 class LiftedActionID : public ActionID  {
 protected:
 	//! The indexes of the action binding.
-	const std::vector<ObjectIdx> _binding;
+	std::vector<ObjectIdx> _binding; // TODO This should be const, but then we cannot have assignment operator
+	
 	
 public:
+	//! Type aliases required for the lifted state model
+	typedef LiftedActionID IdType;
+	typedef gecode::LiftedActionIterator ApplicableSet;
+	
+	static const LiftedActionID invalid_action_id;
+	
 	LiftedActionID(unsigned schema_id, const std::vector<ObjectIdx>& binding);
 	LiftedActionID(unsigned schema_id, const Binding& binding);
 	LiftedActionID(unsigned schema_id, std::vector<ObjectIdx>&& binding);
+	
+	//! Default copy constructors and assignment operators
+	LiftedActionID(const LiftedActionID& other) = default;
+	LiftedActionID(LiftedActionID&& other) = default;
+	LiftedActionID& operator=(const LiftedActionID& other) = default;
+	LiftedActionID& operator=(LiftedActionID&& other) = default;
+
+	//! Returns the concrete binding that created this action from its action schema
+	const std::vector<ObjectIdx>& getBinding() const { return _binding; }
 	
 	bool operator==(const ActionID& rhs) const;
 	bool operator< (const ActionID& rhs) const;
 	
 	std::size_t hash_code() const;
 	
-	//! Returns the concrete binding that created this action from its action schema
-	const std::vector<ObjectIdx>& getBinding() const { return _binding; }
+	const ActionSchema* schema() const;
+	
+	//! Generates the ground action actually represented by this lifted ID
+	GroundAction* generate() const;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const;

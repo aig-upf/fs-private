@@ -4,6 +4,8 @@
 #include <constraints/gecode/handlers/base_action_handler.hxx>
 #include <actions/action_schema.hxx>
 
+namespace fs0 { class LiftedActionID; }
+
 namespace fs0 { namespace gecode {
 
 
@@ -13,11 +15,17 @@ public:
 	typedef ActionSchemaCSPHandler* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata);
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
+	//! HACK
+	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool use_novelty_constraint);
-	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool use_novelty_constraint);
+	ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool novelty);
+	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool novelty);
 	virtual ~ActionSchemaCSPHandler() {}
+	
+	//! Return the (Lifted) ActionID corresponding to the given solution
+	LiftedActionID* get_lifted_action_id(SimpleCSP* solution) const;
+	
 protected:
 
 	//! '_parameter_variables[i]' contains the index of the CSP variable that models the value of i-th parameter of the action schema

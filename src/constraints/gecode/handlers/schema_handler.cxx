@@ -5,28 +5,35 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::create(const std::vector<const ActionSchema*>& schemata) {
+std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty) {
+	// Simply upcast the shared_ptrs
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
-	
-	bool use_novelty_constraint = Config::instance().useNoveltyConstraint();
-	bool approximate = Config::instance().useApproximateActionResolution();
+	for (const auto& element:create_derived(schemata, approximate, novelty)) {
+		managers.push_back(std::static_pointer_cast<BaseActionCSPHandler>(element));
+	}
+	return managers;
+}
+
+std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty) {
+	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> managers;
 	
 	for (auto schema:schemata) {
-		auto manager = std::make_shared<ActionSchemaCSPHandler>(*schema, approximate, use_novelty_constraint);
+		auto manager = std::make_shared<ActionSchemaCSPHandler>(*schema, approximate, novelty);
 		FDEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *manager << std::endl);
 		managers.push_back(manager);
 	}
 	return managers;
 }
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool use_novelty_constraint)
-:  BaseActionCSPHandler(action, effects, approximate, use_novelty_constraint)
+
+ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool novelty)
+:  BaseActionCSPHandler(action, effects, approximate, novelty)
 {
 	index_parameters();
 }
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool use_novelty_constraint)
-:  ActionSchemaCSPHandler(action,  action.getEffects(), approximate, use_novelty_constraint)
+ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool novelty)
+:  ActionSchemaCSPHandler(action,  action.getEffects(), approximate, novelty)
 {}
 
 
@@ -50,7 +57,12 @@ Binding ActionSchemaCSPHandler::build_binding_from_solution(SimpleCSP* solution)
 	return Binding(values);
 }
 
+// Simply forward to the more concrete method
 const ActionID* ActionSchemaCSPHandler::get_action_id(SimpleCSP* solution) const {
+	return get_lifted_action_id(solution);
+}
+
+LiftedActionID* ActionSchemaCSPHandler::get_lifted_action_id(SimpleCSP* solution) const {
 	return new LiftedActionID(_action.getId(), build_binding_from_solution(solution));
 }
 

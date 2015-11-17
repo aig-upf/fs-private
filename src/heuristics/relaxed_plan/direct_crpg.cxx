@@ -9,7 +9,6 @@
 #include <utils/printers/actions.hxx>
 #include <relaxed_state.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
-#include <state_model.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
@@ -17,8 +16,8 @@
 
 namespace fs0 {
 
-DirectCRPG::DirectCRPG(const FS0StateModel& model, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
-	_problem(model.getTask()), _managers(managers), _builder(builder)
+DirectCRPG::DirectCRPG(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
+	_problem(problem), _managers(managers), _builder(builder)
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }
