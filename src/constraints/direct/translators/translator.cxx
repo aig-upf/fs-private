@@ -156,7 +156,7 @@ DirectConstraint::cptr DirectTranslator::instantiateUnaryConstraint(fs::Relation
 			return invert ?  static_cast<DirectConstraint::cptr>(new LEQXConstraint(scope, parameters)) : static_cast<DirectConstraint::cptr>(new GEQXConstraint(scope, parameters));
 		
 		default:
-			assert(0);
+			throw std::runtime_error("Unknown Relational formula type");
 	}
 }
 

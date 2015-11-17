@@ -127,7 +127,7 @@ void BaseActionCSPHandler::index_scopes() {
 		if (!_effects[i]->lhs()->flat()) {
 			_has_nested_lhs = true;
 		} else {
-			effect_lhs_variables[i] = _effects[i]->lhs()->interpretVariable({});
+			effect_lhs_variables[i] = _effects[i]->lhs()->interpretVariable(PartialAssignment());
 		}
 	}
 	

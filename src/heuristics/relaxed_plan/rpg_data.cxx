@@ -29,7 +29,7 @@ RPGData::~RPGData() {
 		const ActionID* action_id = std::get<1>(effect.second);
 		delete action_id;
 	}
-};
+}
 
 void RPGData::advanceLayer() {
 	_num_novel= 0;
