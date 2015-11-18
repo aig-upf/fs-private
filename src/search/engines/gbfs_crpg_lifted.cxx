@@ -5,11 +5,10 @@
 #include <utils/logging.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
-#include <constraints/gecode/handlers/ground_action_handler.hxx>
-#include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
+#include <constraints/gecode/handlers/effect_schema_handler.hxx>
+
 #include <state.hxx>
 #include <actions/lifted_action_iterator.hxx>
 
@@ -24,9 +23,8 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 	// and we need full resolution
 	model.set_handlers(ActionSchemaCSPHandler::create_derived(problem.getActionSchemata(), false, false, false));
 	
-	
-	if (Config::instance().getCSPModel() != Config::CSPModel::ActionSchemaCSP) {
-		std::cout << "WARNING: Lifted planning overrides the CSP model option. Enforcing the action-schema CSP model." << std::endl;
+	if (Config::instance().getCSPModel() != Config::CSPModel::ActionSchemaCSP && Config::instance().getCSPModel() != Config::CSPModel::EffectSchemaCSP) {
+		throw std::runtime_error("WARNING: Lifted planning needs a lifted CSP model.");
 	}
 	
 	bool novelty = Config::instance().useNoveltyConstraint();
@@ -35,11 +33,15 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 	
 	auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 	
-	std::vector<std::shared_ptr<BaseActionCSPHandler>> csp_handlers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
+	std::vector<std::shared_ptr<BaseActionCSPHandler>> csp_handlers;
+	if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
+		csp_handlers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
+	} else { // EffectSchemaCSP
+		csp_handlers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
+	}
 	
 	GecodeCRPG gecode_builder_heuristic(problem, std::move(csp_handlers), std::move(gecode_builder));
-	LiftedEngine* engine = new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, LiftedStateModel>(model, std::move(gecode_builder_heuristic));
-	return std::unique_ptr<LiftedEngine>(engine);
+	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, LiftedStateModel>(model, std::move(gecode_builder_heuristic)));
 }
 
 

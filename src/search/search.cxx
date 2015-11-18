@@ -24,7 +24,7 @@ template <typename StateModelT, typename SearchAlgorithmT>
 float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir) {
 	const Problem& problem = model.getTask();
 
-	std::cout << "Writing results to " << out_dir << std::endl;
+	std::cout << "Writing results to directory: " << out_dir << std::endl;
 	std::ofstream plan_out(out_dir + "/first.plan");
 	std::ofstream json_out( out_dir + "/results.json" );
 
@@ -35,10 +35,11 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 	float total_time = aptk::time_used() - t0;
 	double _total_time = (double) clock() / CLOCKS_PER_SEC - _t0;
 
-	bool valid = Checker::check_correctness(problem, plan, problem.getInitialState());
+	bool valid = false;
 	
 	if ( solved ) {
 		PlanPrinter::print(plan, plan_out);
+		valid = Checker::check_correctness(problem, plan, problem.getInitialState());
 	}
 	plan_out.close();
 
@@ -61,7 +62,14 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 	json_out << "}" << std::endl;
 	json_out.close();
 	
-	if (!valid) throw std::runtime_error("The plan output by the planner is not correct!");
+	if (solved) {
+		if (!valid) throw std::runtime_error("The plan output by the planner is not correct!");
+		std::cout << "Search Result: Found plan of length " << plan.size() << std::endl;
+	} else {
+		std::cout << "Search Result: No plan was found " << std::endl;
+		// TODO - Make distinction btw all nodes explored and no plan found, and no plan found in the given time.
+	}
+	
 
 	return total_time;
 }

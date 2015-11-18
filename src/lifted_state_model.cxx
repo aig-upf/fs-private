@@ -4,7 +4,7 @@
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <actions/applicable_action_set.hxx>
-#include "actions/lifted_action_iterator.hxx"
+#include <actions/lifted_action_iterator.hxx>
 #include <applicability/applicability_manager.hxx>
 
 namespace fs0 {
