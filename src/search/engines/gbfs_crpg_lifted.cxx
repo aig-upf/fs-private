@@ -9,7 +9,7 @@
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
-#include <constraints/gecode/handlers/schema_handler.hxx>
+#include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <state.hxx>
 #include <actions/lifted_action_iterator.hxx>
 

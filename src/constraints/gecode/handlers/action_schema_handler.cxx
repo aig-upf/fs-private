@@ -1,5 +1,5 @@
 
-#include <constraints/gecode/handlers/schema_handler.hxx>
+#include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <utils/logging.hxx>
 #include <actions/action_id.hxx>
 
@@ -7,22 +7,22 @@ namespace fs0 { namespace gecode {
 
 std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty, bool dont_care) {
 	// Simply upcast the shared_ptrs
-	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
+	std::vector<std::shared_ptr<BaseActionCSPHandler>> handlers;
 	for (const auto& element:create_derived(schemata, approximate, novelty, dont_care)) {
-		managers.push_back(std::static_pointer_cast<BaseActionCSPHandler>(element));
+		handlers.push_back(std::static_pointer_cast<BaseActionCSPHandler>(element));
 	}
-	return managers;
+	return handlers;
 }
 
 std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty, bool dont_care) {
-	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> managers;
+	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> handlers;
 	
 	for (auto schema:schemata) {
-		auto manager = std::make_shared<ActionSchemaCSPHandler>(*schema, approximate, novelty, dont_care);
-		FDEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *manager << std::endl);
-		managers.push_back(manager);
+		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, approximate, novelty, dont_care);
+		FDEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *handler << std::endl);
+		handlers.push_back(handler);
 	}
-	return managers;
+	return handlers;
 }
 
 

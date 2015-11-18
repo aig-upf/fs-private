@@ -4,7 +4,7 @@
 #include <fs0_types.hxx>
 #include <state.hxx>
 #include <actions/action_id.hxx>
-#include <constraints/gecode/handlers/schema_handler.hxx>
+#include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <utils/logging.hxx>
 
 #include <gecode/driver.hh>

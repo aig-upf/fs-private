@@ -13,7 +13,8 @@
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
-#include <constraints/gecode/handlers/schema_handler.hxx>
+#include <constraints/gecode/handlers/action_schema_handler.hxx>
+#include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <actions/applicable_action_set.hxx>
 
 
@@ -43,7 +44,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
 			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
-			throw UnimplementedFeatureException("1-csp-per-effect-schema not yet implemented");
+			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
 		} else {
 			throw std::runtime_error("Unknown CSP model type");
 		}
