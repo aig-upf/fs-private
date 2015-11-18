@@ -32,6 +32,10 @@ public:
 		typedef Gecode::DFS<SimpleCSP> engine_t;
 		// typedef std::pair<LiftedActionID*, State*> element_t;
 		
+		~Iterator() {
+			if (_element) delete _element;
+		}
+		
 	protected:
 		Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers, unsigned currentIdx) :
 			_handlers(handlers),
@@ -43,6 +47,8 @@ public:
 		{
 			advance();
 		}
+		
+
 
 		const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& _handlers;
 		
@@ -82,6 +88,7 @@ public:
 					continue; // The CSP is consistent but has no solution
 				}
 				
+				if (_element) delete _element;
 				_element = handler.get_lifted_action_id(solution);
 				delete solution;
 				break;
