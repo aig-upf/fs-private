@@ -5,6 +5,7 @@
 #include <problem.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include "base.hxx"
+#include "utils/nested_fluent_iterator.hxx"
 #include <constraints/gecode/csp_translator.hxx>
 #include <relaxed_state.hxx>
 #include <utils/cartesian_iterator.hxx>
@@ -89,16 +90,17 @@ Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain, bool include_d
 Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
 	const ProblemInfo& info = Problem::getInfo();
 	auto f_data = info.getFunctionData(term->getSymbolId());
-	const Signature& signature = f_data.getSignature();
+// 	const Signature& signature = f_data.getSignature();
 	const auto& functor = f_data.getFunction();
 
 	Gecode::TupleSet tuples;
 
-	utils::cartesian_iterator all_values(info.getSignatureValues(signature));
-	for (; !all_values.ended(); ++all_values) {
+	for (nested_fluent_iterator it(term); !it.ended(); ++it) {
+// 	utils::cartesian_iterator all_values(info.getSignatureValues(signature));
+// 	for (; !all_values.ended(); ++all_values) {
 		try {
-			ObjectIdx out = functor(*all_values);
-			tuples.add(Gecode::IntArgs(*all_values) << out); // Add the term value as the last element
+			ObjectIdx out = functor(it.arguments());
+			tuples.add(it.getIntArgsElement(out)); // Add the term value as the last element
 		} catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 	}
 

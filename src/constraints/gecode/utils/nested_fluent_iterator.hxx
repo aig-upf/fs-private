@@ -15,7 +15,7 @@ namespace fs0 { namespace gecode {
 class nested_fluent_iterator {
 protected:
 	//! The nested fluent
-	fs::FluentHeadedNestedTerm::cptr _term;
+	fs::NestedTerm::cptr _term;
 	
 	// We store the temporary vectors to delete them afterwards
 	std::vector<const std::vector<ObjectIdx>*> _temporary_vectors;
@@ -28,7 +28,7 @@ protected:
 
 
 public:
-	nested_fluent_iterator(fs::FluentHeadedNestedTerm::cptr term) :
+	nested_fluent_iterator(fs::NestedTerm::cptr term) :
 		_term(term),
 		_iterator(compute_possible_values(term)),
 		_index(0)
@@ -38,7 +38,8 @@ public:
 		for (auto vector:_temporary_vectors) delete vector;
 	}
 	
-	std::vector<const std::vector<ObjectIdx>*> compute_possible_values(fs::FluentHeadedNestedTerm::cptr term) {
+protected:
+	std::vector<const std::vector<ObjectIdx>*> compute_possible_values(fs::NestedTerm::cptr term) {
 		const ProblemInfo& info = Problem::getInfo();
 		const Signature& signature = info.getFunctionData(term->getSymbolId()).getSignature();
 		const std::vector<fs::Term::cptr>& subterms = term->getSubterms();
@@ -97,12 +98,17 @@ public:
 		return info.resolveStateVariable(_term->getSymbolId(), point);
 	}
 	
-	Gecode::IntArgs getIntArgsElement() const {
-		std::vector<ObjectIdx> point = *_iterator; // We copy the vector to be able to add an extra element
-		point.push_back(getIndex());
-		return Gecode::IntArgs(point);
-
+	Gecode::IntArgs getIndexedIntArgsElement() const {
+		return getIntArgsElement(getIndex());
 	}
+	
+	Gecode::IntArgs getIntArgsElement(int element) const {
+		std::vector<ObjectIdx> point = arguments(); // We copy the vector to be able to add an extra element
+		point.push_back(element);
+		return Gecode::IntArgs(point);
+	}	
+	
+	const std::vector<ObjectIdx>& arguments() const { return *_iterator; }
 
 };
 

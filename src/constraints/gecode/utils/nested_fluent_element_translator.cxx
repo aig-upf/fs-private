@@ -62,7 +62,7 @@ void NestedFluentElementTranslator::register_constraints(CSPVariableType type, G
 		table << translator.resolveInputStateVariable(csp, variable);
 		table_variables.push_back(variable);
 
-		correspondence.add(it.getIntArgsElement());
+		correspondence.add(it.getIndexedIntArgsElement());
 	}
 	correspondence.finalize();
 
