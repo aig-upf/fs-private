@@ -54,10 +54,7 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 	json_out << "\t\"valid\": " << ( valid ? "true" : "false" ) << "," << std::endl;
 	json_out << "\t\"plan_length\": " << plan.size() << "," << std::endl;
 	json_out << "\t\"plan\": ";
-	if ( solved )
-		PlanPrinter::print_json( plan, json_out);
-	else
-		json_out << "null";
+	PlanPrinter::print_json( plan, json_out);
 	json_out << std::endl;
 	json_out << "}" << std::endl;
 	json_out.close();
