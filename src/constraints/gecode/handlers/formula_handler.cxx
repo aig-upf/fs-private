@@ -70,6 +70,7 @@ bool FormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {
 	Gecode::DFS<SimpleCSP> engine(csp);
 	SimpleCSP* solution = engine.next();
 	if (!solution) return false;
+// 	std::cout << "Formula solution: " << std::endl; print(std::cout, *solution); std::cout << std::endl;
 	delete solution;
 	return true;
 }
