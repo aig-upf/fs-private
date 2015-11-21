@@ -102,10 +102,10 @@ void NestedFluentElementTranslator::register_dont_care_constraints(GecodeCSPVari
 		auto& idx_reification = _fluent_data.getIndexReificationVariable(csp, iteration_index);
 		auto& tab_reification = _fluent_data.getTableReificationVariable(csp, iteration_index);
 		
-		// Post the necessary reification constraints to achieve the expression IDX = i \lor f(IDX) = DONT_CARE
+		// Post the necessary reification constraints to achieve the expression IDX = i <=> f(IDX) != DONT_CARE
 		Gecode::rel(csp, zero_based_index, Gecode::IRT_EQ, iteration_index, idx_reification); // IDX = i <=> b0
-		Gecode::rel(csp, gecode_variable, Gecode::IRT_EQ, DONT_CARE::get(), tab_reification); // f(IDX) = DONT_CARE <=> b1
-		Gecode::rel(csp, idx_reification, Gecode::BOT_OR, tab_reification, 1); // b0 \lor b1
+		Gecode::rel(csp, gecode_variable, Gecode::IRT_NQ, DONT_CARE::get(), tab_reification); // f(IDX) != DONT_CARE <=> b1
+		Gecode::rel(csp, idx_reification, Gecode::BOT_EQV, tab_reification, 1); // b0 <=> b1
 	}
 }
 
