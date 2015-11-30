@@ -99,12 +99,12 @@ public:
 	virtual Formula* conjunction(const Conjunction* 						other) const { throw std::runtime_error("Unimplemented"); }
 	virtual Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const { throw std::runtime_error("Unimplemented"); }
 	
+	//! A helper to recursively evaluate the formula - must be subclassed
+	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
+	
 protected:
 	//! The formula subterms
 	std::vector<Term::cptr> _subterms;
-	
-	//! A helper to recursively evaluate the formula - must be subclassed
-	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
 };
 
 

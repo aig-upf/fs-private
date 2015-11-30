@@ -4,8 +4,8 @@
 #include <constraints/gecode/csp_translator.hxx>
 #include <problem.hxx>
 #include <constraints/gecode/simple_csp.hxx>
-#include "base.hxx"
-#include "utils/nested_fluent_iterator.hxx"
+#include <constraints/gecode/base.hxx>
+#include <constraints/gecode/utils/term_list_iterator.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <relaxed_state.hxx>
 #include <utils/cartesian_iterator.hxx>
@@ -90,14 +90,11 @@ Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain, bool include_d
 Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
 	const ProblemInfo& info = Problem::getInfo();
 	auto f_data = info.getFunctionData(term->getSymbolId());
-// 	const Signature& signature = f_data.getSignature();
 	const auto& functor = f_data.getFunction();
 
 	Gecode::TupleSet tuples;
 
-	for (nested_fluent_iterator it(term); !it.ended(); ++it) {
-// 	utils::cartesian_iterator all_values(info.getSignatureValues(signature));
-// 	for (; !all_values.ended(); ++all_values) {
+	for (term_list_iterator it(term->getSubterms()); !it.ended(); ++it) {
 		try {
 			ObjectIdx out = functor(it.arguments());
 			tuples.add(it.getIntArgsElement(out)); // Add the term value as the last element
@@ -108,20 +105,13 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr t
 	return tuples;
 }
 
-Gecode::TupleSet Helper::extensionalize(const std::string& symbol) {
-	const ProblemInfo& info = Problem::getInfo();
-	
-	auto f_data = info.getFunctionData(info.getFunctionId(symbol));
-	const Signature& signature = f_data.getSignature();
-	const auto& functor = f_data.getFunction();
-
+Gecode::TupleSet Helper::extensionalize(const fs::AtomicFormula* formula) {
 	Gecode::TupleSet tuples;
 
-	utils::cartesian_iterator all_values(info.getSignatureValues(signature));
-	for (; !all_values.ended(); ++all_values) {
+	for (term_list_iterator it(formula->getSubterms()); !it.ended(); ++it) {
 		try {
-			if (functor(*all_values)) {
-				tuples.add(Gecode::IntArgs(*all_values));
+			if (formula->_satisfied(it.arguments())) {
+				tuples.add(it.getIntArgsElement()); // Add the term value as the last element
 			}
 		} catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 	}

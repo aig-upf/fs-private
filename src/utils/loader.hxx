@@ -12,8 +12,11 @@ class State;
 
 class Loader {
 public:
-	//!
-	static void loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory);
+	//! Load and set the singleton problem instance
+	static void loadProblem(const rapidjson::Document& data);
+	
+	//! Load and set the singleton problemInfo instance
+	static void loadProblemInfo(const rapidjson::Document& data, const BaseComponentFactory& factory);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
 	

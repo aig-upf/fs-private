@@ -170,7 +170,7 @@ void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula::cptr fo
 	SimpleCSP& csp = translator.getBaseCSP();
 	// We post an extensional constraint on the CSP variables modeling the value of each of the subterms formula
 	Gecode::IntVarArgs variables = translator.resolveVariables(formula->getSubterms(), CSPVariableType::Input, csp);
-	Gecode::TupleSet extension = Helper::extensionalize(_symbol);
+	Gecode::TupleSet extension = Helper::extensionalize(formula);
 	Gecode::extensional(csp, variables, extension);
 	
 	FDEBUG("translation", "Registered a Gecode extensional constraint of arity " << extension.arity() << " and size " << extension.tuples() << " for formula \"" << *formula << ":\n" << print::extensional(variables, extension));

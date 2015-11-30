@@ -5,7 +5,7 @@
 #include <fs0_types.hxx>
 #include <gecode/int.hh>
 
-namespace fs0 { namespace language { namespace fstrips { class StaticHeadedNestedTerm; } } }
+namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; class StaticHeadedNestedTerm; } } }
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
@@ -37,8 +37,8 @@ public:
 	//! that underlies the static term in all interpretations.
 	static Gecode::TupleSet extensionalize(const fs::StaticHeadedNestedTerm* term);
 	
-	// Build an extensional gecode tupleset with all those tuples that render a certain symbol true
-	static Gecode::TupleSet extensionalize(const std::string& symbol);
+	//! Extensionalize any given formula
+	static Gecode::TupleSet extensionalize(const fs::AtomicFormula* formula);
 
 	//! Builds a gecode tupleset from the values contained in a state variable domain
 	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain, bool include_dont_care = false);

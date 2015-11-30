@@ -155,14 +155,12 @@ public:
 	void registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const;
 };
 
+//! A Gecode translator that converts whatever arbitrary formula into an equivalent extensional constraint.
 class ExtensionalTranslator : public FormulaTranslator {
 public:
-	ExtensionalTranslator(const std::string& symbol) : _symbol(symbol) {}
+	ExtensionalTranslator() {}
 
 	void registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const;
-
-protected:
-	const std::string _symbol;
 };
 
 } } // namespaces

@@ -21,24 +21,20 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFactory& factory) {
-	
-	// Load and set the ProblemInfo data structure
-	auto info = new ProblemInfo(data);
-	loadFunctions(factory, *info);
-	Problem::setInfo(info);
+void Loader::loadProblem(const rapidjson::Document& data) {
+	const ProblemInfo& info = Problem::getInfo();
 	
 	FINFO("main", "Loading initial state...");
 	auto init = loadState(data["init"]);
 	
 	FINFO("main", "Loading action schemata...");
-	auto schemata = loadActionSchemata(data["action_schemata"], *info);
+	auto schemata = loadActionSchemata(data["action_schemata"], info);
 	
 	FINFO("main", "Loading goal formula...");
-	auto goal = loadGroundedFormula(data["goal"], *info);
+	auto goal = loadGroundedFormula(data["goal"], info);
 	
 	FINFO("main", "Loading state constraints...");
-	auto sc = loadGroundedFormula(data["state_constraints"], *info);
+	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
 	Problem* problem = new Problem(init, schemata, goal, sc);
@@ -48,7 +44,7 @@ void Loader::loadProblem(const rapidjson::Document& data, const BaseComponentFac
 
 	// Ground the actions
 	if (!Config::instance().doLiftedPlanning()) {
-		problem->setGroundActions(ActionGrounder::ground(problem->getActionSchemata(), *info));
+		problem->setGroundActions(ActionGrounder::ground(problem->getActionSchemata(), info));
 	}
 	
 	gecode::DONT_CARE::set(gecode::Helper::computeDontCareValue());
@@ -59,6 +55,13 @@ void Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& inf
 	for (auto elem:factory.instantiateFunctions()) {
 		info.setFunction(info.getFunctionId(elem.first), elem.second);
 	}
+}
+
+void Loader::loadProblemInfo(const rapidjson::Document& data, const BaseComponentFactory& factory) {
+	// Load and set the ProblemInfo data structure
+	auto info = new ProblemInfo(data);
+	loadFunctions(factory, *info);
+	Problem::setInfo(info);
 }
 
 State* Loader::loadState(const rapidjson::Value& data) {
