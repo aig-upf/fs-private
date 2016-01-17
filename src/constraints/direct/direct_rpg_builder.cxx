@@ -14,16 +14,18 @@ namespace fs0 {
 
 std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula::cptr goal_formula, const fs::Formula::cptr state_constraints) {
 	auto goal_conjunction = dynamic_cast<fs::Conjunction::cptr>(goal_formula);
-	auto sc_conjunction = dynamic_cast<fs::Conjunction::cptr>(state_constraints);
 	assert(goal_conjunction);
-	assert(sc_conjunction);
-	
-	
-	auto directStateConstraints = DirectTranslator::generate(sc_conjunction->all_atoms());
-	ConstraintCompiler::compileConstraints(directStateConstraints);
-	
 	auto directGoalConstraints = DirectTranslator::generate(goal_conjunction->all_atoms());
 	ConstraintCompiler::compileConstraints(directGoalConstraints);
+
+	// Process the state constraints, if any
+	std::vector<DirectConstraint::cptr> directStateConstraints;
+	if (!state_constraints->is_tautology()) {
+		auto sc_conjunction = dynamic_cast<fs::Conjunction::cptr>(state_constraints);
+		assert(sc_conjunction);
+		directStateConstraints = DirectTranslator::generate(sc_conjunction->all_atoms());
+		ConstraintCompiler::compileConstraints(directStateConstraints);
+	}
 	
 	auto allGoalConstraints = Utils::merge(directGoalConstraints, directStateConstraints);
 	return std::make_shared<DirectRPGBuilder>(std::move(allGoalConstraints), std::move(directStateConstraints));

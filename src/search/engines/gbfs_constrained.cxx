@@ -16,6 +16,7 @@
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <actions/applicable_action_set.hxx>
+#include <asp/asp_rpg.hxx>
 
 
 using namespace fs0::gecode;
@@ -32,7 +33,8 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	bool dont_care = Config::instance().useElementDontCareOptimization();
 	
 	FS0SearchAlgorithm* engine = nullptr;
-	if (decide_csp_type(problem) == Config::CSPManagerType::Gecode) {
+	auto csp_type = decide_csp_type(problem);
+	if (csp_type == Config::CSPManagerType::Gecode) {
 		FINFO("main", "Chosen CSP Manager: Gecode");
 		auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 		
@@ -54,11 +56,21 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		engine = new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic));
 		
 	} else {
-		FINFO("main", "Chosen CSP Manager: Direct");
 		auto direct_builder = DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 		auto managers = DirectActionManager::create(actions);
 		DirectHeuristic direct_builder_heuristic(problem, std::move(managers), std::move(direct_builder));
-		engine = new aptk::StlBestFirstSearch<SearchNode, DirectHeuristic, FS0StateModel>(model, std::move(direct_builder_heuristic));
+		
+		if (csp_type == Config::CSPManagerType::Direct) {
+			FINFO("main", "Chosen CSP Manager: Direct");
+			engine = new aptk::StlBestFirstSearch<SearchNode, DirectHeuristic, FS0StateModel>(model, std::move(direct_builder_heuristic));
+		} else {
+			assert(csp_type == Config::CSPManagerType::ASP);
+			bool optimize = Config::instance().optimizeASPSolution();
+			FINFO("main", "Chosen CSP Manager: ASP");
+			FINFO("main", "ASP Optimization: " << optimize);
+			engine = new aptk::StlBestFirstSearch<SearchNode, asp::ASPRPG<DirectHeuristic>, FS0StateModel>(model, asp::ASPRPG<DirectHeuristic>(problem, std::move(direct_builder_heuristic), optimize));
+		}
+		
 	}
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(engine);
@@ -68,7 +80,7 @@ template <typename GecodeHeuristic, typename DirectHeuristic>
 Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::decide_csp_type(const Problem& problem) {
 	
 	if (Config::instance().getCSPManagerType() == Config::CSPManagerType::Gecode) return Config::CSPManagerType::Gecode;
-
+	if (Config::instance().getCSPManagerType() == Config::CSPManagerType::ASP) return Config::CSPManagerType::ASP; // TODO - Probably we'll need to have some extra checks here
 
 	auto type_required_by_actions = decide_action_manager_type(problem.getGroundActions());
 	auto type_required_by_goal    = decide_builder_type(problem.getGoalConditions(), problem.getStateConstraints());
