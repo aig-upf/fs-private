@@ -13,7 +13,7 @@
 	"lifted_planning": "no",
 	
 	"csp": {
-		"manager_comment": ["The CSP manager to use: either 'gecode', 'direct', 'or direct_if_possible'"],
+		"manager_comment": ["The CSP manager to use: either 'gecode', 'asp', 'direct', 'or direct_if_possible'"],
 		"manager": "gecode",
 		
 		"model_comment": ["The CSP model we want to work with. Currently accepted: 'action', 'effect', 'action_schema', 'effect_schema'"],
@@ -37,6 +37,11 @@
 		
 		"dont_care_optimization_comment": "Whether to use ('yes') or not ('no') the DON'T CARE optimization for element constraints deriving from nested fluents",
 		"dont_care_optimization": "yes"
+	},
+	
+	"asp": {
+		"optimize_comment": ["Whether to use the optimal ASP model ('yes') or not ('no')."],
+		"optimize": "no"
 	},
 	
 	"heuristics": {

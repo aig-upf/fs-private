@@ -49,7 +49,7 @@ Config::Config(const std::string& filename)
 	_rpg_extraction = parseOption<RPGExtractionType>(_root, "heuristics.plan_extraction", {{"propositional", RPGExtractionType::Propositional}, {"extended", RPGExtractionType::Supported}});
 	
 	// Parse the type of action manager: gecode, direct-if-possible, direct
-	_csp_manager = parseOption<CSPManagerType>(_root, "csp.manager", {{"gecode", CSPManagerType::Gecode}, {"direct_if_possible", CSPManagerType::DirectIfPossible}, {"direct", CSPManagerType::Direct}});
+	_csp_manager = parseOption<CSPManagerType>(_root, "csp.manager", {{"gecode", CSPManagerType::Gecode}, {"asp", CSPManagerType::ASP}, {"direct_if_possible", CSPManagerType::DirectIfPossible}, {"direct", CSPManagerType::Direct}});
 	_csp_model = parseOption<CSPModel>(_root, "csp.model", {
 									{"action", CSPModel::GroundedActionCSP},
 									{"effect", CSPModel::GroundedEffectCSP},
@@ -71,6 +71,7 @@ Config::Config(const std::string& filename)
 	
 	_support_priority = parseOption<SupportPriority>(_root, "csp.support_priority", {{"min_hmaxsum", SupportPriority::MinHMaxSum}, {"first", SupportPriority::First}});
 	
+	_asp_optimization = parseOption<bool>(_root, "asp.optimize", {{"yes", true}, {"no", false}});
 }
 
 
@@ -97,7 +98,7 @@ std::ostream& Config::print(std::ostream& os) const {
 	};
 	
 	os << "Action Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
-	os << "CSP Manager:\t\t" << (_csp_manager == CSPManagerType::Gecode ? "Gecode" : (_csp_manager == CSPManagerType::DirectIfPossible ? "Direct-If-Possible" : "Direct")) << std::endl;
+	os << "CSP Manager:\t\t" << (_csp_manager == CSPManagerType::Gecode ? "Gecode" : (_csp_manager == CSPManagerType::ASP ? "ASP" : (_csp_manager == CSPManagerType::DirectIfPossible ? "Direct-If-Possible" : "Direct"))) << std::endl;
 	os << "CSP Model:\t" << model_str[_csp_model] << std::endl;
 	os << "Goal Resolution:\t" << ((_goal_resolution == CSPResolutionType::Approximate) ? "Approximate" : "Full") << std::endl;
 	os << "Plan Extraction:\t" << ((_rpg_extraction == RPGExtractionType::Propositional) ? "Propositional" : "Extended") << std::endl;

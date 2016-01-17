@@ -11,6 +11,10 @@ vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
 # The LAPKT path can be optionally specified, otherwise we fetch it from the corresponding environment variable.
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT_PATH', ''), PathVariable.PathIsDir))
 
+clingo_path = os.getenv('CLINGO_PATH', '')
+if not clingo_path:
+	raise RuntimeError("You need to specify the path where Clingo is installed in the environment variable CLINGO_PATH")
+
 def which(program):
 	""" Helper function emulating unix 'which' command """
 	for path in os.environ["PATH"].split(os.pathsep):
@@ -27,7 +31,9 @@ def locate_source_files(base_dir, pattern):
 			matches.append(os.path.join(root, filename))
 	return matches
 
-env = Environment(variables=vars, ENV=os.environ, CXX='clang' if which('clang') else 'g++')
+
+gcc = 'clang' if which('clang') and ARGUMENTS.get('gcc', 'g++') == 'clang' else 'g++'
+env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 
 if env['edebug']:
 	build_dirname = 'build/edebug'
@@ -63,17 +69,25 @@ aptk_heuristics_objs = SConscript(  os.path.join( env['lapkt'], 'aptk2/heuristic
 aptk_heuristics_objs += SConscript( os.path.join( env['lapkt'], 'aptk2/heuristics/novelty/SConscript' ) )
 aptk_tools_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/tools/SConscript' ) )
 
+# Base include directories
+include_paths = ['src', env['lapkt']]
+isystem_paths = []
+	
 # Gecode tweaks
-gecode_include_path = '/usr/local/include'  # MRJ: This probably should be acquired from an environment variable
-include_paths = [ gecode_include_path ]
-env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
+isystem_paths += ['/usr/local/include'] # MRJ: This probably should be acquired from an environment variable
 
+# Clingo paths
+isystem_paths += [clingo_path + '/' + subdir for subdir in ["libclasp", "libprogram_opts", "libclingo", "libgringo"]]
+env.Append( CCFLAGS = [ '-DWITH_THREADS=0'] )  # Needed by Clingo
+
+env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
+env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
+
+# Determine all the build files
 build_files = [build_dirname + '/' + src for src in locate_source_files('src', '*.cxx')]
 build_files += aptk_search_interface_objs
 build_files += aptk_tools_objs
 build_files += aptk_heuristics_objs
-
-env.Append(CPPPATH = ['src', env['lapkt']])
 
 shared_lib = env.SharedLibrary('lib/' + lib_name, build_files)
 static_lib = env.Library('lib/' + lib_name, build_files)

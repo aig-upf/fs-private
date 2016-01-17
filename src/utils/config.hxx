@@ -14,7 +14,7 @@ public:
 	enum class RPGExtractionType {Propositional, Supported};
 	
 	//! The type of CSP manager
-	enum class CSPManagerType {Gecode, Direct, DirectIfPossible};
+	enum class CSPManagerType {Gecode, Direct, ASP, DirectIfPossible};
 	
 	//! The type of CSP model (gecode manager only)
 	enum class CSPModel {GroundedActionCSP, GroundedEffectCSP, ActionSchemaCSP, EffectSchemaCSP};
@@ -72,6 +72,8 @@ protected:
 	
 	bool _lifted_planning;
 	
+	bool _asp_optimization;
+	
 	//! Private constructor
 	Config(const std::string& filename);
 	
@@ -114,6 +116,8 @@ public:
 	bool useApproximateGoalResolution() const {
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
+	
+	bool optimizeASPSolution() const { return _asp_optimization; }
 
 	//! A generic getter
 	template <typename T>
