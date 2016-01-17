@@ -17,7 +17,8 @@ template <typename RPGBaseHeuristic>
 ASPRPG<RPGBaseHeuristic>::ASPRPG(const Problem& problem, RPGBaseHeuristic&& heuristic, bool optimize) :
 	_clingo(std::make_shared<Clingo>()),
 	_model(std::make_shared<Model>(problem, optimize)),
-	_optimize(optimize)
+	_optimize(optimize),
+	_heuristic(std::move(heuristic))
 {
 	_model->build_base();
 }
@@ -40,11 +41,8 @@ long ASPRPG<RPGBaseHeuristic>::evaluate(const State& seed) {
 	// Otherwise, we want to obtain the set of ground actions that are part of the relaxed plan 
 	// and then build the RPG taking those ground actions into account only.
 	FDEBUG("asp", "ASP model:" << std::endl << fs0::print::asp_model(res.second));
-	auto actions = _model->get_action_set(res.second);
-
-	assert(0); // TO IMPLEMENT
-	
-	return res.second.size();
+	auto whitelist = _model->get_action_set(res.second);
+	return _heuristic.evaluate(seed, whitelist);
 }
 
 

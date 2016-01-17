@@ -79,8 +79,8 @@ Config::~Config() {}
 
 // Some basic checks for invalid combinations of configuration options
 void Config::validateConfig(const Config& config) {
-	if (config.getCSPManagerType() != CSPManagerType::Gecode && config.getGoalResolutionType() == CSPResolutionType::Full) {
-		throw InvalidConfiguration("Full Goal CSP resolution can only be performed with a Gecode Goal Manager");
+	if (config.getCSPManagerType() == CSPManagerType::Direct && config.getGoalResolutionType() == CSPResolutionType::Full) {
+		throw InvalidConfiguration("Full Goal CSP resolution can't be performed with a Direct Goal Manager");
 	}
 	
 	if (config.getActionPreconditionResolutionType() == CSPResolutionType::Approximate) {

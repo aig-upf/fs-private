@@ -20,6 +20,9 @@ public:
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	long evaluate(const State& seed);
 	
+	//! A version where only certain actions are allowed
+	long evaluate(const State& seed, const std::vector<ActionIdx>& whitelist);
+	
 	//! The computation of the heuristic value. Returns -1 if the RPG layer encoded in the relaxed state is not a goal,
 	//! otherwise returns h_{FF}.
 	//! To be subclassed in other RPG-based heuristics such as h_max
@@ -31,6 +34,9 @@ protected:
 	
 	//! The set of action managers, one per every action
 	const std::vector<std::shared_ptr<DirectActionManager>> _managers;
+	
+	//! A whitelist including all possible actions
+	std::vector<unsigned> all_whitelist;
 	
 	//! The RPG building helper
 	const std::shared_ptr<DirectRPGBuilder> _builder;

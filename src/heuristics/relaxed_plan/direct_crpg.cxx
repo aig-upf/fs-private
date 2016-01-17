@@ -17,14 +17,19 @@
 namespace fs0 {
 
 DirectCRPG::DirectCRPG(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
-	_problem(problem), _managers(managers), _builder(builder)
+	_problem(problem), _managers(managers), all_whitelist(managers.size()), _builder(builder)
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
+    std::iota(all_whitelist.begin(), all_whitelist.end(), 0);
 }
 
 
-//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 long DirectCRPG::evaluate(const State& seed) {
+	return evaluate(seed, all_whitelist); // If no whitelist is provided, all actions are considered.
+}
+
+//! The actual evaluation of the heuristic value for any given non-relaxed state s.
+long DirectCRPG::evaluate(const State& seed, const std::vector<ActionIdx>& whitelist) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
@@ -37,7 +42,8 @@ long DirectCRPG::evaluate(const State& seed) {
 	// or we get to a goal graph layer.
 	while(true) {
 		// Apply all the actions to the RPG layer
-		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
+		for (unsigned idx:whitelist) {
+// 		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
 			const auto& manager = _managers[idx];
 			FFDEBUG("heuristic", "Processing ground action #" << idx << ": " << print::action_name(manager->getAction()));
 			manager->process(idx, relaxed, bookkeeping);

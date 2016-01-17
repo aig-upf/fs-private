@@ -21,6 +21,8 @@ protected:
 	//! Whether we are using ASP optimization or not
 	bool _optimize;
 	
+	RPGBaseHeuristic _heuristic;
+	
 public:
 	ASPRPG(const Problem& problem, RPGBaseHeuristic&& heuristic, bool optimize);
 

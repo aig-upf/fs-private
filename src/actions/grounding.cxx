@@ -30,7 +30,7 @@ std::vector<GroundAction::cptr> ActionGrounder::ground(const std::vector<ActionS
 		std::vector<const ObjectIdxVector*> values = info.getSignatureValues(signature);
 		int num_bindings = std::accumulate(values.begin(), values.end(), 1, [](int a, const ObjectIdxVector* b) { return a * b->size(); });
 		
-		std::cout <<  "Grounding action schema '" << schema->getName() << "' with " << num_bindings << " possible bindings:" << std::endl << "\t" << std::flush;
+		std::cout <<  "Grounding action schema '" << schema->getName() << "' with " << num_bindings << " possible bindings:" << "\t\t" << std::flush;
 		FINFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:\n" << *schema << "\n");
 		
 		float onepercent = ((float)num_bindings / 100);
