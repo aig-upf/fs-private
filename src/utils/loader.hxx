@@ -4,6 +4,8 @@
 #include <fs0_types.hxx>
 #include <lib/rapidjson/document.h>
 
+namespace fs0 { namespace asp { class LPHandler; }}
+
 namespace fs0 {
 
 class BaseComponentFactory;
@@ -13,7 +15,7 @@ class State;
 class Loader {
 public:
 	//! Load and set the singleton problem instance
-	static void loadProblem(const rapidjson::Document& data);
+	static void loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler);
 	
 	//! Load and set the singleton problemInfo instance
 	static void loadProblemInfo(const rapidjson::Document& data, const BaseComponentFactory& factory);

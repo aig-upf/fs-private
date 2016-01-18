@@ -7,6 +7,7 @@
 #include <heuristics/relaxed_plan/direct_chmax.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/asp.hxx>
+#include <utils/printers/vector.hxx>
 
 
 namespace fs0 { namespace asp {
@@ -21,6 +22,9 @@ ASPRPG<RPGBaseHeuristic>::ASPRPG(const Problem& problem, RPGBaseHeuristic&& heur
 	_heuristic(std::move(heuristic))
 {
 	_model->build_base();
+	FDEBUG("asp", "Setting up ASP-based RPG builder. See log file 'asp-domain' for the complete ASP model corresponding to the planning domain");
+	FDEBUG("asp-domain", "ASP model for the planning domain:" << std::endl << fs0::print::container(_model->get_base_rules(), "\n"));
+	FDEBUG("asp-init", "ASP model for the initial state:" << std::endl << fs0::print::container(_model->build_state_rules(problem.getInitialState()), "\n"));
 }
 
 template <typename RPGBaseHeuristic>

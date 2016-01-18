@@ -1,6 +1,7 @@
 
 #include <asp/model.hxx>
 #include <asp/clingo.hxx>
+#include <asp/lp_handler.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 #include <actions/ground_action.hxx>
@@ -27,8 +28,8 @@ Model::Model(const Problem& problem, bool optimize) :
 	 _optimize(optimize),
 	 _base_rules(),
 	 _goal_atoms(problem.getGoalConditions()->all_atoms()),
-	 _actions(problem.getGroundActions()),
-	 _action_index(compute_action_index(problem))
+	 _action_index(compute_action_index(problem)),
+	 _problem(problem)
 {
 	if (!dynamic_cast<fs::Conjunction::cptr>(problem.getGoalConditions())) {
 		throw std::runtime_error("ASP heuristic available only for goals which are conjunctions of atoms");
@@ -36,6 +37,17 @@ Model::Model(const Problem& problem, bool optimize) :
 }
 
 void Model::build_base() {
+	const ProblemInfo& info = _problem.getProblemInfo();
+	
+	// Types
+	auto types = info.getTypeObjects();
+	for (unsigned type_id = 0; type_id < types.size(); ++type_id) {
+		std::string type_name = info.getTypename(type_id);
+		for (unsigned object_id:types.at(type_id)) {
+			std::string object_name = info.deduceObjectName(object_id, type_id);
+			_base_rules.push_back(type_name + "(" + object_name + ").");
+		}
+	}
 	
 	// The seed atoms
 	_base_rules.push_back("{ supported(P) } :- seed(P).");
@@ -48,10 +60,9 @@ void Model::build_base() {
 	}
 	
 	// Action rules
-	for (auto action:_actions) {
+	for (auto action:_problem.getGroundActions()) {
 		process_ground_action(*action);
 	}
-	
 	
 	// Standard directives
 	if (_optimize) {
@@ -60,16 +71,15 @@ void Model::build_base() {
 	_base_rules.push_back("#show.");
 	_base_rules.push_back("#show A : asupported(A).");
 	
-	
-// 	std::cout << "Rules: " << std::endl;
-// 	for (auto rule:_base_rules) {
-// 		std::cout << rule << std::endl;
-// 	}
+	// Register additional, domain-dependent rules
+	if (_problem.getLPHandler()) {
+		_problem.getLPHandler()->on_domain_rules(_problem, _base_rules);
+	}
 }
 
 std::vector<std::string> Model::build_state_rules(const State& state) const {
 	std::vector<std::string> atoms;
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = _problem.getProblemInfo();
 	const auto& values = state.getValues();
 	for (unsigned i = 0; i < values.size(); ++i) {
 		if (values.at(i) == 1) {
@@ -77,6 +87,10 @@ std::vector<std::string> Model::build_state_rules(const State& state) const {
 			atoms.push_back("seed(" + normalize(atom_name) + ").");
 			
 		}
+	}
+	
+	if (_problem.getLPHandler()) {
+		_problem.getLPHandler()->on_state_rules(_problem, state, atoms);
 	}
 	return atoms;
 }

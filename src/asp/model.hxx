@@ -21,6 +21,8 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace asp {
 
+class LPHandler;
+
 class Model {
 protected:
 	
@@ -33,10 +35,10 @@ protected:
 	std::vector<const fs::AtomicFormula*> _goal_atoms;
 	
 	//!
-	const std::vector<const GroundAction*>& _actions;
-
-	//!
 	std::unordered_map<std::string, unsigned> _action_index;
+	
+	//!
+	const Problem& _problem;
 	
 	//!
 	void process_ground_action(const GroundAction& action);

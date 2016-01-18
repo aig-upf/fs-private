@@ -7,6 +7,8 @@
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
 namespace fs = fs0::language::fstrips;
 
+namespace fs0 { namespace asp { class LPHandler; }}
+
 namespace fs0 {
 
 class ActionSchema; class GroundAction; class State; class FormulaInterpreter;
@@ -38,6 +40,9 @@ public:
 	const fs::Formula* getStateConstraints() const { return _state_constraint_formula; }
 	
 	const FormulaInterpreter& getGoalSatManager() const { return *_goal_sat_manager; }
+	
+	void setLPHandler(asp::LPHandler* handler) { _lp_handler = handler; }
+	const asp::LPHandler* getLPHandler() const { return _lp_handler; }
 
 	//! Set the global singleton problem instance
 	static void setInstance(std::unique_ptr<Problem>&& problem) {
@@ -83,6 +88,8 @@ protected:
 	const fs::Formula* _goal_formula;
 
 	std::unique_ptr<FormulaInterpreter> _goal_sat_manager;
+	
+	asp::LPHandler* _lp_handler = nullptr;
 	
 	//! The singleton instance
 	static std::unique_ptr<Problem> _instance;

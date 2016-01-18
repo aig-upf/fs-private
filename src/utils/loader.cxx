@@ -14,6 +14,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <constraints/registry.hxx>
 #include <utils/printers/registry.hxx>
+#include <asp/lp_handler.hxx>
 #include "config.hxx"
 
 
@@ -21,7 +22,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-void Loader::loadProblem(const rapidjson::Document& data) {
+void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler) {
 	const ProblemInfo& info = Problem::getInfo();
 	
 	FINFO("main", "Loading initial state...");
@@ -39,6 +40,7 @@ void Loader::loadProblem(const rapidjson::Document& data) {
 	//! Set the singleton global instance
 	Problem* problem = new Problem(init, schemata, goal, sc);
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
+	problem->setLPHandler(lp_handler);
 	
 	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
