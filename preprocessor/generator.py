@@ -363,8 +363,8 @@ class Generator(object):
     def get_function_instantiations(self):
         tpl = tplManager.get('function_instantiation')
         extensional = [
-            tpl.substitute(name=elem.name, accessor=elem.accessor)
-            for elem in self.task.static_data.values() if isinstance(elem, DataElement)
+            tpl.substitute(name=name, accessor=elem.accessor)
+            for name, elem in self.task.static_data.items() if isinstance(elem, DataElement)
         ]
         external = [tpl.substitute(
             name=symbol, accessor=symbol[1:]) for symbol in self.task.static_symbols if is_external(symbol)]
