@@ -49,8 +49,13 @@ public:
 	unsigned num_unsat;
 	
 public:
-	// Kill default constructors
-	explicit GBFSNoveltyNode();
+	GBFSNoveltyNode() = delete;
+	~GBFSNoveltyNode() {}
+	
+	GBFSNoveltyNode(const GBFSNoveltyNode& other) = delete;
+	GBFSNoveltyNode(const GBFSNoveltyNode&& other) = delete;
+	GBFSNoveltyNode& operator=(const GBFSNoveltyNode& rhs) = delete;
+	GBFSNoveltyNode& operator=(GBFSNoveltyNode&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
 	GBFSNoveltyNode(const State& s)
@@ -59,10 +64,8 @@ public:
 
 	//! Constructor with move of the state (cheaper)
 	GBFSNoveltyNode(State&& _state, GroundAction::IdType _action, std::shared_ptr< GBFSNoveltyNode<State> > _parent) :
-		state(_state), action(_action), parent(_parent), g(_parent->g + 1), novelty(0), num_unsat(0)
+		state(std::move(_state)), action(_action), parent(_parent), g(_parent->g + 1), novelty(0), num_unsat(0)
 	{}
-
-	virtual ~GBFSNoveltyNode() {}
 
 	bool has_parent() const { return parent != nullptr; }
 

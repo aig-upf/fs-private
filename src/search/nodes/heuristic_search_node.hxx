@@ -33,8 +33,7 @@ template <typename StateT, typename ActionT>
 class HeuristicSearchNode {
 public:
 	HeuristicSearchNode() = delete;
-	
-	virtual ~HeuristicSearchNode() {}
+	~HeuristicSearchNode() {}
 	
 	HeuristicSearchNode(const HeuristicSearchNode& other) = delete;
 	HeuristicSearchNode(const HeuristicSearchNode&& other) = delete;
@@ -47,7 +46,7 @@ public:
 	{}
 
 	HeuristicSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<HeuristicSearchNode<StateT ,ActionT>> parent_) :
-		state(state_), action(action_), parent(parent_), g(parent_->g + 1), h(0)
+		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(0)
 	{}
 
 	bool has_parent() const { return parent != nullptr; }

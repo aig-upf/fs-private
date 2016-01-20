@@ -38,8 +38,13 @@ public:
 	std::shared_ptr<BlindSearchNode<State>> parent;
 
 public:
-	// Kill default constructors
-	explicit BlindSearchNode();
+	BlindSearchNode() = delete;
+	~BlindSearchNode() {}
+	
+	BlindSearchNode(const BlindSearchNode& other) = delete;
+	BlindSearchNode(const BlindSearchNode&& other) = delete;
+	BlindSearchNode& operator=(const BlindSearchNode& rhs) = delete;
+	BlindSearchNode& operator=(BlindSearchNode&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
 	BlindSearchNode( const State& s )
@@ -48,12 +53,10 @@ public:
 
 	//! Constructor with move of the state (cheaper)
 	BlindSearchNode( State&& _state, fs0::GroundAction::IdType _action, std::shared_ptr< BlindSearchNode<State> > _parent ) :
-		state(_state) {
+		state(std::move(_state)) {
 		action = _action;
 		parent = _parent;
 	}
-
-	virtual ~BlindSearchNode() {}
 
 	bool has_parent() const { return parent != nullptr; }
 
