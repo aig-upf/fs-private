@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <vector>
 #include <clingo/clingocontrol.hh>
 
 namespace fs0 { namespace asp {
@@ -8,20 +9,21 @@ namespace fs0 { namespace asp {
 class Clingo {
 protected:
 	
-	std::vector<char const *> _args;
+// 	std::vector<char const *> _args;
 	
-	DefaultGringoModule _module;
+// 	DefaultGringoModule _module;
 	
-	Gringo::Scripts _scripts;
+// 	Gringo::Scripts _scripts;
 	
-	ClingoLib _lib;
+// 	ClingoLib _lib;
 	
 public:
+	typedef std::vector<Gringo::Value> Solution;
 	Clingo();
 	
-	std::pair<Gringo::SolveResult, std::vector<Gringo::Value>> solve(const std::vector<std::string>& base, const std::vector<std::string>& state);
+	std::pair<Gringo::SolveResult, Solution> solve(const std::vector<std::string>& base, const std::vector<std::string>& state);
 
-	void test();
+// 	void test();
 
 };
 

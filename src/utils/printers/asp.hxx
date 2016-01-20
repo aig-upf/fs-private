@@ -4,7 +4,7 @@
 #include <fs0_types.hxx>
 #include <ostream>
 
-namespace Gringo { class Value; }
+namespace Gringo { struct Value; }
 
 namespace fs0 { namespace print {
 

@@ -1,54 +1,31 @@
 
 #include <asp/asp_rpg.hxx>
-#include <asp/model.hxx>
-#include <state.hxx>
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/direct_chmax.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/asp.hxx>
-#include <utils/printers/vector.hxx>
 
 
 namespace fs0 { namespace asp {
 
 
-
 template <typename RPGBaseHeuristic>
-ASPRPG<RPGBaseHeuristic>::ASPRPG(const Problem& problem, RPGBaseHeuristic&& heuristic, bool optimize) :
-	_clingo(std::make_shared<Clingo>()),
-	_model(std::make_shared<Model>(problem, optimize)),
-	_optimize(optimize),
+ASPRPG<RPGBaseHeuristic>::ASPRPG(const Problem& problem, RPGBaseHeuristic&& heuristic) :
+	_handler(problem, false), // There is no sense in using Clingo's optimization mode if we'll re-compute the RPG afterwards
 	_heuristic(std::move(heuristic))
-{
-	_model->build_base();
-	FDEBUG("asp", "Setting up ASP-based RPG builder. See log file 'asp-domain' for the complete ASP model corresponding to the planning domain");
-	FDEBUG("asp-domain", "ASP model for the planning domain:" << std::endl << fs0::print::container(_model->get_base_rules(), "\n"));
-	FDEBUG("asp-init", "ASP model for the initial state:" << std::endl << fs0::print::container(_model->build_state_rules(problem.getInitialState()), "\n"));
-}
+{}
 
 template <typename RPGBaseHeuristic>
 long ASPRPG<RPGBaseHeuristic>::evaluate(const State& seed) {
-	FDEBUG("asp", "Computing ASP model for state " << seed);
-	auto res = _clingo->solve(_model->get_base_rules(), _model->build_state_rules(seed));
+	auto solution = _handler.process(seed);
 	
-	if (res.first == Gringo::SolveResult::UNKNOWN) throw std::runtime_error("Clingo returned UNKNOWN solve status");
-	if (res.first == Gringo::SolveResult::UNSAT) return -1;
-	assert(res.first == Gringo::SolveResult::SAT);
-	
-	// If using optimization, we know that the obtained relaxed plan is optimal and therefore don't need to do anything else
-	if (_optimize) {
-		FDEBUG("asp", "Optimal model:" << std::endl << fs0::print::asp_model(res.second));
-		return res.second.size();
-	}
-	
-	// Otherwise, we want to obtain the set of ground actions that are part of the relaxed plan 
+	// We want to obtain the set of ground actions that are part of the relaxed plan 
 	// and then build the RPG taking those ground actions into account only.
-	FDEBUG("asp", "ASP model:" << std::endl << fs0::print::asp_model(res.second));
-	auto whitelist = _model->get_action_set(res.second);
+	FDEBUG("asp", "ASP solution:" << std::endl << fs0::print::asp_model(solution.second));
+	auto whitelist = _handler.get_action_set(solution.second);
 	return _heuristic.evaluate(seed, whitelist);
 }
-
 
 
 // explicit instantiations

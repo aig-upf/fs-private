@@ -72,8 +72,6 @@ protected:
 	
 	bool _lifted_planning;
 	
-	bool _asp_optimization;
-	
 	//! Private constructor
 	Config(const std::string& filename);
 	
@@ -117,8 +115,6 @@ public:
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
 	
-	bool optimizeASPSolution() const { return _asp_optimization; }
-
 	//! A generic getter
 	template <typename T>
 	T getOption(const std::string& key) const {

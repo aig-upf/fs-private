@@ -24,9 +24,7 @@ std::unordered_map<std::string, unsigned> compute_action_index(const Problem& pr
 	return index;
 }
 
-Model::Model(const Problem& problem, bool optimize) :
-	 _optimize(optimize),
-	 _base_rules(),
+Model::Model(const Problem& problem) :
 	 _goal_atoms(problem.getGoalConditions()->all_atoms()),
 	 _action_index(compute_action_index(problem)),
 	 _problem(problem)
@@ -36,44 +34,80 @@ Model::Model(const Problem& problem, bool optimize) :
 	}
 }
 
-void Model::build_base() {
+std::vector<std::string> Model::build_domain_rules(bool optimize) const {
+	std::vector<std::string> rules;
 	const ProblemInfo& info = _problem.getProblemInfo();
 	
 	// Types
 	auto types = info.getTypeObjects();
 	for (unsigned type_id = 0; type_id < types.size(); ++type_id) {
-		std::string type_name = info.getTypename(type_id);
+		std::string type_name = normalize(info.getTypename(type_id));
 		for (unsigned object_id:types.at(type_id)) {
-			std::string object_name = info.deduceObjectName(object_id, type_id);
-			_base_rules.push_back(type_name + "(" + object_name + ").");
+			std::string object_name = normalize(info.deduceObjectName(object_id, type_id));
+			rules.push_back(type_name + "(" + object_name + ").");
 		}
 	}
 	
 	// The seed atoms
-	_base_rules.push_back("{ supported(P) } :- seed(P).");
+	rules.push_back("{ supported(P) } :- seed(P).");
 
 	// The goal integrity constraints:
 	for (auto atom:_goal_atoms) {
 		auto processed = process_atom(atom);
 		if (!processed.second) throw std::runtime_error("Negated atoms not yet supported");
-		_base_rules.push_back(":- not supported(" +  processed.first + ").");
+		rules.push_back(":- not supported(" +  processed.first + ").");
 	}
 	
 	// Action rules
 	for (auto action:_problem.getGroundActions()) {
-		process_ground_action(*action);
+		process_ground_action(*action, rules);
 	}
 	
 	// Standard directives
 	if (_optimize) {
-		_base_rules.push_back("#minimize {1, A : asupported(A)}.");
+		rules.push_back("#minimize {1, A : asupported(A)}.");
 	}
-	_base_rules.push_back("#show.");
-	_base_rules.push_back("#show A : asupported(A).");
+	rules.push_back("#show.");
+	rules.push_back("#show A : asupported(A).");
 	
 	// Register additional, domain-dependent rules
 	if (_problem.getLPHandler()) {
-		_problem.getLPHandler()->on_domain_rules(_problem, _base_rules);
+		_problem.getLPHandler()->on_domain_rules(_problem, rules);
+	}
+	return rules;
+}
+
+void Model::process_ground_action(const GroundAction& action, std::vector<std::string>& rules) const {
+	auto precondition = action.getPrecondition();
+	std::string action_name = normalize(fs0::print::action_name(action));
+	
+	if (!dynamic_cast<fs::Conjunction::cptr>(precondition)) { // TODO - Perform this only once
+		throw std::runtime_error("ASP heuristic available only for goals which are conjunctions of atoms");
+	}
+	
+	std::string prec_body;
+	auto atoms = precondition->all_atoms();
+	for (unsigned i = 0; i < atoms.size(); ++i) { // TODO - This, in general, should be performed only once
+		
+		auto processed = process_atom(atoms[i]);
+		if (!processed.second) throw std::runtime_error("Negated atoms not yet supported");
+		
+		prec_body += "supported(" + processed.first + ")";
+		if (i < atoms.size() - 1) prec_body += ", ";
+	}
+	
+	// Action precondition rules
+	std::string rule = "{ asupported(" + action_name  + ") } :- " + prec_body + ".";
+	rules.push_back(rule);
+	
+	
+	// action (add-) effect rules
+	for (auto effect:action.getEffects()) {
+		auto processed = process_effect(effect);
+		if (processed.second) { // we have a positive ADD effect
+			std::string rule = "supported(" + processed.first  + ") :- asupported(" + action_name + ").";
+			rules.push_back(rule);
+		}
 	}
 }
 
@@ -95,39 +129,6 @@ std::vector<std::string> Model::build_state_rules(const State& state) const {
 	return atoms;
 }
 
-void Model::process_ground_action(const GroundAction& action) {
-	auto precondition = action.getPrecondition();
-	std::string action_name = normalize(fs0::print::action_name(action));
-	
-	if (!dynamic_cast<fs::Conjunction::cptr>(precondition)) { // TODO - Perform this only once
-		throw std::runtime_error("ASP heuristic available only for goals which are conjunctions of atoms");
-	}
-	
-	std::string prec_body;
-	auto atoms = precondition->all_atoms();
-	for (unsigned i = 0; i < atoms.size(); ++i) { // TODO - This, in general, should be performed only once
-		
-		auto processed = process_atom(atoms[i]);
-		if (!processed.second) throw std::runtime_error("Negated atoms not yet supported");
-		
-		prec_body += "supported(" + processed.first + ")";
-		if (i < atoms.size() - 1) prec_body += ", ";
-	}
-	
-	// Action precondition rules
-	std::string rule = "{ asupported(" + action_name  + ") } :- " + prec_body + ".";
-	_base_rules.push_back(rule);
-	
-	
-	// action (add-) effect rules
-	for (auto effect:action.getEffects()) {
-		auto processed = process_effect(effect);
-		if (processed.second) { // we have a positive ADD effect
-			std::string rule = "supported(" + processed.first  + ") :- asupported(" + action_name + ").";
-			_base_rules.push_back(rule);
-		}
-	}
-}
 
 std::pair<std::string, bool> Model::process_atom(const fs::AtomicFormula* atom) const {
 	auto eq_atom = dynamic_cast<fs::EQAtomicFormula::cptr>(atom);
@@ -136,7 +137,7 @@ std::pair<std::string, bool> Model::process_atom(const fs::AtomicFormula* atom) 
 	auto rhs = dynamic_cast<fs::IntConstant::cptr>(eq_atom->rhs());
 	if (!lhs || !rhs) throw std::runtime_error("ASP heuristic available only for simple atoms and effects");
 	
-	if (!rhs->getValue() == 1) throw std::runtime_error("ASP heuristic available only for simple preconditions");
+	if (rhs->getValue() != 1) throw std::runtime_error("ASP heuristic available only for simple preconditions");
 	
 	return std::make_pair(normalize(*lhs), rhs->getValue() == 1);
 }

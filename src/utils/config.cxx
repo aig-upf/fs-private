@@ -70,8 +70,6 @@ Config::Config(const std::string& filename)
 	_action_value_selection = parseOption<ValueSelection>(_root, "csp.action_value_selection", {{"min_hmax", ValueSelection::MinHMax}, {"min_val", ValueSelection::MinVal}});
 	
 	_support_priority = parseOption<SupportPriority>(_root, "csp.support_priority", {{"min_hmaxsum", SupportPriority::MinHMaxSum}, {"first", SupportPriority::First}});
-	
-	_asp_optimization = parseOption<bool>(_root, "asp.optimize", {{"yes", true}, {"no", false}});
 }
 
 

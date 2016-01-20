@@ -6,8 +6,7 @@
 #include <unordered_map>
 
 
-namespace Gringo { class Value; }
-
+namespace Gringo { struct Value; }
 
 namespace fs0 {
 	class Problem; class GroundAction; class State;
@@ -29,9 +28,6 @@ protected:
 	bool _optimize;
 	
 	//!
-	std::vector<std::string> _base_rules;
-	
-	//!
 	std::vector<const fs::AtomicFormula*> _goal_atoms;
 	
 	//!
@@ -41,7 +37,7 @@ protected:
 	const Problem& _problem;
 	
 	//!
-	void process_ground_action(const GroundAction& action);
+	void process_ground_action(const GroundAction& action, std::vector<std::string>& rules) const;
 	
 	std::pair<std::string, bool> process_atom(const fs::AtomicFormula* atom) const;
 	std::pair<std::string, bool> process_effect(const fs::ActionEffect* effect) const;
@@ -49,13 +45,11 @@ protected:
 
 
 public:
-	Model(const Problem& problem, bool optimize);
+	Model(const Problem& problem);
 	
-	void build_base();
+	std::vector<std::string> build_domain_rules(bool optimize) const;
 	
 	std::vector<std::string> build_state_rules(const State& state) const;
-	
-	const std::vector<std::string>& get_base_rules() const { return _base_rules; }
 	
 	//! Returns the set of ground action IDs which are part of the relaxed plan
 	//! represented by a given ASP solution

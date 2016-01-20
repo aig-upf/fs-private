@@ -30,24 +30,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace fs0 { namespace engines {
 
 template <typename StateT, typename ActionT>
-class HeuristicSearchNode {
+class AStarSearchNode {
 public:
-	HeuristicSearchNode() = delete;
+	AStarSearchNode() = delete;
+	virtual ~AStarSearchNode() {}
 	
-	virtual ~HeuristicSearchNode() {}
-	
-	HeuristicSearchNode(const HeuristicSearchNode& other) = delete;
-	HeuristicSearchNode(const HeuristicSearchNode&& other) = delete;
-	HeuristicSearchNode& operator=(const HeuristicSearchNode& rhs) = delete;
-	HeuristicSearchNode& operator=(HeuristicSearchNode&& rhs) = delete;
+	AStarSearchNode(const AStarSearchNode& other) = delete;
+	AStarSearchNode(const AStarSearchNode&& other) = delete;
+	AStarSearchNode& operator=(const AStarSearchNode& rhs) = delete;
+	AStarSearchNode& operator=(AStarSearchNode&& rhs) = delete;
 	
 	
-	HeuristicSearchNode(const StateT& state_)
+	AStarSearchNode(const StateT& state_)
 		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(0)
 	{}
 
-	HeuristicSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<HeuristicSearchNode<StateT ,ActionT>> parent_) :
-		state(state_), action(action_), parent(parent_), g(parent_->g + 1), h(0)
+	AStarSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<AStarSearchNode<StateT ,ActionT>> parent_) :
+		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(0)
 	{}
 
 	bool has_parent() const { return parent != nullptr; }
@@ -56,7 +55,7 @@ public:
 	void print( std::ostream& os ) const { os << "{@ = " << this << ", s = " << state << ", g = " << g << ", h = " << h << ", parent = " << parent << ", action: " << action << "}";  }
 
 	//! Forward the comparison and hash function to the search state.
-	bool operator==(const HeuristicSearchNode<StateT, ActionT>& o) const { return state == o.state; }
+	bool operator==(const AStarSearchNode<StateT, ActionT>& o) const { return state == o.state; }
 	std::size_t hash() const { return state.hash(); }
 
 	// MRJ: This is part of the required interface of the Heuristic
@@ -66,8 +65,8 @@ public:
 		FDEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
 	}
 
-	//! This effectively implements Greedy Best First search
-	bool operator>( const HeuristicSearchNode<StateT, ActionT>& other ) const { return h > other.h; }
+	//! This effectively implements A* search
+	bool operator>( const AStarSearchNode<StateT, ActionT>& other ) const { return this->g + this->h > other.g + other.h; }
 
 	bool dead_end() const { return h == -1; }
 
@@ -75,7 +74,7 @@ public:
 	
 	typename ActionT::IdType action;
 	
-	std::shared_ptr<HeuristicSearchNode<StateT, ActionT>> parent;
+	std::shared_ptr<AStarSearchNode<StateT, ActionT>> parent;
 	
 	unsigned g;
 	

@@ -4,7 +4,8 @@
 #include <search/engines/gbfs_constrained.hxx>
 #include <search/engines/iterated_width.hxx>
 #include <search/engines/breadth_first_search.hxx>
-#include "gbfs_novelty.hxx"
+#include <search/engines/gbfs_novelty.hxx>
+#include <search/engines/astar_asprpg.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/direct_chmax.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
@@ -27,6 +28,7 @@ EngineRegistry::EngineRegistry() {
 	add("gbfs_chff",  new GBFSConstrainedHeuristicsCreator<GecodeCRPG, DirectCRPG>());
 	add("gbfs_chmax",  new GBFSConstrainedHeuristicsCreator<GecodeCHMax, DirectCHMax>());
 	add("iterated_width",  new IteratedWidthEngineCreator());
+	add("astar_asphplus",  new AStarASPRPG());
 	add("gbfs_novelty",  new GBFSNoveltyEngineCreator());
 	add("breadth_first_search",  new BreadthFirstSearchEngineCreator());
 	

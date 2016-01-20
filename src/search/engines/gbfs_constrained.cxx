@@ -65,10 +65,8 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 			engine = new aptk::StlBestFirstSearch<SearchNode, DirectHeuristic, FS0StateModel>(model, std::move(direct_builder_heuristic));
 		} else {
 			assert(csp_type == Config::CSPManagerType::ASP);
-			bool optimize = Config::instance().optimizeASPSolution();
 			FINFO("main", "Chosen CSP Manager: ASP");
-			FINFO("main", "ASP Optimization: " << optimize);
-			engine = new aptk::StlBestFirstSearch<SearchNode, asp::ASPRPG<DirectHeuristic>, FS0StateModel>(model, asp::ASPRPG<DirectHeuristic>(problem, std::move(direct_builder_heuristic), optimize));
+			engine = new aptk::StlBestFirstSearch<SearchNode, asp::ASPRPG<DirectHeuristic>, FS0StateModel>(model, asp::ASPRPG<DirectHeuristic>(problem, std::move(direct_builder_heuristic)));
 		}
 		
 	}

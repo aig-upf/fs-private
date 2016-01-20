@@ -13,7 +13,7 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 { namespace engines {
 
 //! An engine creator for the Greedy Best-First Search engines coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
-//! The choice of the heuristic is done thrugh template instantiation
+//! The choice of the heuristic is done through template instantiation
 template <typename GecodeHeuristic, typename DirectHeuristic>
 class GBFSConstrainedHeuristicsCreator : public EngineCreator {
 protected:
