@@ -64,7 +64,7 @@ std::vector<std::string> Model::build_domain_rules(bool optimize) const {
 	}
 	
 	// Standard directives
-	if (_optimize) {
+	if (optimize) {
 		rules.push_back("#minimize {1, A : asupported(A)}.");
 	}
 	rules.push_back("#show.");

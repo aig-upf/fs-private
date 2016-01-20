@@ -25,8 +25,6 @@ class LPHandler;
 class Model {
 protected:
 	
-	bool _optimize;
-	
 	//!
 	std::vector<const fs::AtomicFormula*> _goal_atoms;
 	
