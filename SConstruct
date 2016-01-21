@@ -95,4 +95,5 @@ shared_lib = env.SharedLibrary('lib/' + lib_name, build_files)
 static_lib = env.Library('lib/' + lib_name, build_files)
 
 #Default([static_lib, shared_lib])
-Default([static_lib])
+#Default([static_lib])
+Default([shared_lib])

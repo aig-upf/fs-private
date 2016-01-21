@@ -10,7 +10,7 @@ doc
 
 # Build files
 build
-./lib
+lib
 
 # Compiled Object files
 *.slo
