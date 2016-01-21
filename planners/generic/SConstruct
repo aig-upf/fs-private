@@ -58,7 +58,7 @@ clingo_build = 'release'
 lib_paths += [clingo_path + '/build/' + clingo_build]
 
 # Note: order matters. If A depends on B, A should go _before_ B.
-env.Append(LIBS=[fs0_libname, 'clingo', 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
+env.Append(LIBS=[fs0_libname, 'clingo', 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm', 'Judy'])
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
 Export('env')
 SConscript( os.path.join(env['fs0'], 'gecode_dependencies') )
