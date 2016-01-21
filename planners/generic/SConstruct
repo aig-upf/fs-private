@@ -55,7 +55,7 @@ src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both t
 
 #clingo_build = 'debug' if env['debug'] or env['edebug'] else 'release'
 clingo_build = 'release'
-env.Append(LIBPATH = [ os.path.abspath(clingo_path + '/build/' + clingo_build) ])
+lib_paths += [clingo_path + '/build/' + clingo_build]
 
 # Note: order matters. If A depends on B, A should go _before_ B.
 env.Append(LIBS=[fs0_libname, 'clingo', 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])

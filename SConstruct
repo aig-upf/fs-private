@@ -76,6 +76,7 @@ isystem_paths = []
 	
 # Gecode tweaks
 isystem_paths += ['/usr/local/include'] # MRJ: This probably should be acquired from an environment variable
+isystem_paths += [os.environ['HOME'] + '/local/include']
 
 # Clingo paths
 isystem_paths += [clingo_path + '/' + subdir for subdir in ["libclasp", "libprogram_opts", "libclingo", "libgringo"]]

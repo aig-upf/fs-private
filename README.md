@@ -17,7 +17,7 @@ In order to install and run the `FS` planner, you need the following software co
 
 1. The [Gecode](http://www.gecode.org/) CSP Solver (Tested with version 4.4.0 only). The recommended way to install it is on `~/local`, i.e. by running `./configure --prefix=~/local` before the actual compilation.
 
-1. The Clingo ASP Solver, from [Potassco](http://potassco.sourceforge.net/), the Potsdam Answer Set Solving Collection.
+1. The Clingo ASP Solver, from [Potassco](http://potassco.sourceforge.net/), the Potsdam Answer Set Solving Collection. Clingo seems to require at least `gcc` > 4.8; in order to build the C++ library you need to run `scons libclingo`.
 
 
 Once you have installed these projects locally, your system needs to be configured with the following environment variables, e.g. by setting them up in your  `~/.bashrc` configuration file:
@@ -33,11 +33,7 @@ export CLINGO_PATH="${HOME}/lib/clingo-4.5.4-source"
 # Local C++ library installations
 export LD_LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
 if [[ -d ${HOME}/local/lib ]]; then
-	export LIBRARY_PATH=$LIBRARY_PATH:${HOME}/local/lib
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/local/lib
-fi
-if [[ -d ${HOME}/local/include ]]; then
-	export CPATH=$CPATH:${HOME}/local/include
 fi
 
 # AIG Fast Downward PDDL Parser
@@ -47,7 +43,6 @@ fi
 
 # Clingo C++ Library
 if [[ -d ${CLINGO_PATH}/build/release ]]; then
-	export LIBRARY_PATH=$LIBRARY_PATH:${CLINGO_PATH}/build/release
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CLINGO_PATH}/build/release
 fi
 
@@ -61,7 +56,7 @@ cd $FS0_PATH
 scons
 ```
 
-You can run `scons debug=1` to build the debug version of the library, or `scons debug=1 fdebug=1` to build an extremely-verbose debug version.
+You can run `scons debug=1` to build the debug version of the library, or `scons edebug=1` to build an extremely-verbose debug version.
 
 
 Solving planning instances
@@ -86,6 +81,7 @@ cd $FS0_PATH/generated/test/fn-simple-sokoban/instance_6
 ./solver.bin
 ```
 
-Note that only the non-debug executable is built by default, but you can run `scons debug=1` or `scons edebug=1` from the previous directory to generate debug solvers as well.
+Note that only the non-debug executable is built by default, but you can invoke the `generator.py` script with flags `--debug` and `--edebug` to control the debug level
+of the resulting executable.
 
 
