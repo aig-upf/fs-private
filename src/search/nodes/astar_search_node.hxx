@@ -52,7 +52,7 @@ public:
 	bool has_parent() const { return parent != nullptr; }
 
 	//! Print the node into the given stream
-	void print( std::ostream& os ) const { os << "{@ = " << this << ", s = " << state << ", g = " << g << ", h = " << h << ", parent = " << parent << ", action: " << action << "}";  }
+	void print( std::ostream& os ) const { os << "{@ = " << this << ", s = " << state << ", g = " << g << ", h = " << h <<  ", g+h = " << g+h << ", parent = " << parent << ", action: " << action << "}";  }
 
 	//! Forward the comparison and hash function to the search state.
 	bool operator==(const AStarSearchNode<StateT, ActionT>& o) const { return state == o.state; }

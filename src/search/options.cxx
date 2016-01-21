@@ -40,7 +40,7 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 
 	if (vm.count("help")) {
 		std::cout << description << "\n";
-		throw std::runtime_error("Wrong engine options");
+		exit(0);
 	}
 
 	_timeout = vm["timeout"].as<int>();

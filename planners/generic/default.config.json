@@ -4,10 +4,16 @@
 							"* gbfs_chff:  Greedy Best-First Search with the Constrained h_FF heuristic",
 							"* gbfs_chmax: Greedy Best-First Search with the Constrained h_MAX heuristic",
 							"* iterated_width: The IW algorithm (Breadth-First Search with novelty pruning)",
-							"* astar_asphplus: An A* search using the optimal h+ computed by searching for an optimal ASP model."
+							"* asp_engine: An ASP-based engine with search strategy determined by the 'search' and 'heuristic' options below.",
 							"* breadth_first_search: A plain and blind Breadth-First Search."
 						],
-		"tag": "gbfs_chff"
+		"tag": "gbfs_chff",
+		
+		"search_comment": "The search strategy. Either 'gbfs' or 'astar'",
+		"search": "gbfs",
+		
+		"heuristic_comment": "The heuristic to be used. Currently only 'h+_asp'",
+		"search": "h+_asp"
 	},
 	
 	"lifted_planning_comment": "Whether to perform lifted planning, i.e. planning without grounding any action",
