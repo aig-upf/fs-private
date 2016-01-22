@@ -65,8 +65,13 @@ public:
 		FDEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
 	}
 
-	//! This effectively implements A* search
-	bool operator>( const AStarSearchNode<StateT, ActionT>& other ) const { return this->g + this->h > other.g + other.h; }
+	//! This effectively implements A* search with tie-breaking based on h
+	bool operator>(const AStarSearchNode<StateT, ActionT>& other) const {
+		long this_f = this->g + this->h, other_f = other.g + other.h;
+		if (this_f > other_f) return true;
+		if (this_f == other_f) return this->h > other.h;
+		return false;
+	}
 
 	bool dead_end() const { return h == -1; }
 
