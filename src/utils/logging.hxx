@@ -28,7 +28,7 @@ protected:
 	boost::timer::cpu_timer _timer;
 
 	//! Singleton
-	static Logger* _instance;
+	static std::unique_ptr<Logger> _instance;
 
 	//! Basic version of the logging: returns a stream to write a message to the given filename
 	std::ofstream& log(const std::string& fileName);
@@ -39,7 +39,7 @@ public:
 
 	//! Explicit initizalition of the singleton
 	static void init(const std::string& logDirectory) {
-		_instance = new Logger(logDirectory);
+		_instance = std::unique_ptr<Logger>(new Logger(logDirectory));
 	}
 
 	//! Retrieve the singleton instance, which has been previously initialized

@@ -5,7 +5,7 @@
 
 namespace fs0 {
 	
-Logger* Logger::_instance = nullptr;
+std::unique_ptr<Logger> Logger::_instance = nullptr;
 
 Logger::Logger(const std::string& logDirectory)
 	: _logDirectory(logDirectory) , _timer()
