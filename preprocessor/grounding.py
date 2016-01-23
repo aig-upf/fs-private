@@ -34,7 +34,7 @@ class Grounder(object):
         init = self.task.init
         assert isinstance(init, base.State)
         facts = []
-        for inst in init.instantiations.values():
+        for name, inst in init.instantiations.items():
             # assert isinstance(inst, (base.PredicateInstantiation, base.FunctionInstantiation))
             if isinstance(inst, static.UnarySet):  # A predicate
                 # symbol = self.task.domain.symbols[inst.symbol]
@@ -44,10 +44,10 @@ class Grounder(object):
                 for args in inst.elems:
                     # TODO - We should initialize the points not in the set to 0, although that'll be done
                     # TODO - by default by the compiler.
-                    facts.append(Atom(base.Variable(inst.name, args), 1))
+                    facts.append(Atom(base.Variable(name, args), 1))
             else:  # A function
                 for args, val in inst.elems.items():
-                    facts.append(Atom(base.Variable(inst.name, args), val))
+                    facts.append(Atom(base.Variable(name, args), val))
         return facts
 
     def is_variable(self, name):

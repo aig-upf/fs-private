@@ -17,8 +17,7 @@ class ActionSchemaProcessor(BaseComponentProcessor):
         name = self.action.name
         param_names = [p.name for p in self.action.parameters]
         signature = [self.index.types[p.type] for p in self.action.parameters]
-        return dict(name=name, signature=signature, parameters=param_names,
-                    conditions={}, effects=[])
+        return dict(name=name, signature=signature, parameters=param_names, conditions={}, effects=[])
 
     def process(self):
         self.process_conditions(self.action.precondition)

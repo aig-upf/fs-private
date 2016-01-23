@@ -55,23 +55,26 @@ class Translator(object):
         init, static = self.init_data_structures(symbols)
 
         def check_symbol(s):  # A small helper
+            if s == 'total-cost':
+                return False
             if s not in symbols:
                 raise ParseException("Unknown symbol: '{}'".format(s))
+            return True
 
         for atom in self.task.init:
             if isinstance(atom, pddl.Assign):
                 name = atom.fluent.symbol
-                check_symbol(name)
-                var = init if name in self.task.fluent_symbols else static
-                args = tuple(int(a) if is_int(a) else a for a in atom.fluent.args)
-                val = self.parse_value(atom.expression)
-                var[name].add(args, val)
+                if check_symbol(name):
+                    var = init if name in self.task.fluent_symbols else static
+                    args = tuple(int(a) if is_int(a) else a for a in atom.fluent.args)
+                    val = self.parse_value(atom.expression)
+                    var[name].add(args, val)
             elif isinstance(atom, pddl.Atom):
                 assert not atom.negated, "No negations allowed in the initialization of atoms"
                 name = atom.predicate
-                check_symbol(name)
-                var = init if name in self.task.fluent_symbols else static
-                var[name].add(atom.args)
+                if check_symbol(name):
+                    var = init if name in self.task.fluent_symbols else static
+                    var[name].add(atom.args)
             else:
                 raise ValueError("Unexpected atom {}".format(atom))
 

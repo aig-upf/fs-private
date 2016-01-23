@@ -14,7 +14,7 @@ from generic_translator import Translator
 
 try:
     val = int(os.environ['PYTHONHASHSEED'])
-except Exception as e:
+except KeyError as e:
     val = None
 
 if val != 1:
@@ -125,9 +125,9 @@ def compile_translation(translation_dir, args, predstate=False):
 
     planner_dir = os.path.abspath(os.path.join('../planners', args.planner))
 
-    shutil.copy( os.path.join( planner_dir, 'main.cxx'), translation_dir)
-    shutil.copy( os.path.join( planner_dir, 'default.config.json'), os.path.join(translation_dir, 'config.json') )
-    shutil.copy( os.path.join( planner_dir, 'SConstruct'), os.path.join( translation_dir, 'SConstruct') )
+    shutil.copy(os.path.join(planner_dir, 'main.cxx'), translation_dir)
+    shutil.copy(os.path.join(planner_dir, 'default.config.json'), os.path.join(translation_dir, 'config.json'))
+    shutil.copy(os.path.join(planner_dir, 'SConstruct'), os.path.join( translation_dir, 'SConstruct'))
 
     command = "scons {} {}".format(debug_flag, predstate_flag)
 
@@ -281,7 +281,7 @@ class Generator(object):
 
     def dump_state_variable(self, var):
         head = self.symbol_index[var.symbol]
-        constants = [arg if  util.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
+        constants = [arg if util.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
         return [head, constants]
 
     def dump_object_data(self):
