@@ -27,13 +27,6 @@ class Translator(object):
     def get_domain_name(self):
         return self.task.domain_name
 
-    def get_types(self):
-        elements = []
-        for t in self.task.types:
-            if t.name != 'object':
-                elements.append(base.ObjectType(t.name, t.basetype_name))
-        return elements
-
     def get_symbols(self):
         elements = []
         for s in self.task.predicates:

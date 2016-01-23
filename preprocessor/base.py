@@ -100,9 +100,10 @@ class State(object):
 
 
 class ProblemDomain(object):
-    def __init__(self, name, types, symbols):
+    def __init__(self, name, types, supertypes, symbols):
         self.name = name
         self.types = types
+        self.supertypes = supertypes
         self.symbols = self.index_by_name(symbols)
 
     def index_by_name(self, objects):

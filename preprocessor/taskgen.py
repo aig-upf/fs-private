@@ -24,10 +24,10 @@ def process_symbol_types(symbols):
     return types
 
 
-def create_problem_domain(name, types, symbols):
+def create_problem_domain(task, name, symbols):
     """ Create a problem domain and perform the appropriate validity checks """
-    domain = ProblemDomain(name, types, symbols)
-    domain.supertypes = process_type_hierarchy(types)
+    types, supertypes = process_type_hierarchy(task.types)
+    domain = ProblemDomain(name, types, supertypes, symbols)
     domain.symbol_types = process_symbol_types(symbols)
     return domain
 
@@ -128,6 +128,7 @@ def process_bounds(bounds):
         bounded_types[bound.typename] = list(range(lower, upper + 1))
     return bounded_types
 
+
 def process_types(instance, bounds):
     """
     Returns (1) a map from each type to its objects.
@@ -166,10 +167,22 @@ def process_types(instance, bounds):
     return type_map, object_type
 
 
-def process_type_hierarchy(types):
+def process_type_hierarchy(task_types):
     """
     Return a map mapping each type name to all of its parents.
     """
+    types = []
+    all_t = set()
+    correctly_declared = set()
+    for t in task_types:
+        if t.name != 'object':
+            all_t.update([t.name, t.basetype_name])
+            correctly_declared.add(t.name)
+            types.append(base.ObjectType(t.name, t.basetype_name))
+
+    # Add missing types: Some types declared without trailing " - object" sometimes are not recognized by the FD parser
+    types += (base.ObjectType(t, "object") for t in all_t.difference(correctly_declared, ['object']))
+
     # Build a map from any type to all its direct children types.
     parent_to_children = defaultdict(list)
     for t in types:
@@ -183,4 +196,4 @@ def process_type_hierarchy(types):
             supertypes[t] = [current] + supertypes[current]
             pending.append(t)
 
-    return supertypes
+    return types, supertypes

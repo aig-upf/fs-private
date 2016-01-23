@@ -65,10 +65,9 @@ def parse_pddl_task(domain, instance):
     return task
 
 
-def create_domain(name, translator):
-    types = translator.get_types()
+def create_domain(task, name, translator):
     symbols = translator.get_symbols()
-    domain = taskgen.create_problem_domain(name, types, symbols)
+    domain = taskgen.create_problem_domain(task, name, symbols)
     domain.schemata = translator.get_action_schemata()
     return domain
 
@@ -101,7 +100,7 @@ def main():
 
     translator = Translator(task)
     instance_name, domain_name = extract_names(args.instance, args.domain)
-    domain = create_domain(domain_name, translator)
+    domain = create_domain(task, domain_name, translator)
     instance = create_instance(instance_name, translator, domain)
     _, trans_dir = translate_pddl(instance, args)
 
