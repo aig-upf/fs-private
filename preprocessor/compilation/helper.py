@@ -27,14 +27,5 @@ def get_effect_symbol(effect):
         raise UnimplementedFeature('TODO - Effect type not yet supported')
 
 
-def parse_value(expression):
-    if isinstance(expression, PrimitiveNumericExpression):
-        return expression.symbol
-    elif isinstance(expression, NumericConstant):
-        return int(expression.value)
-    else:
-        raise UnimplementedFeature("Unsupported expression type for '{}'".format(expression))
-
-
 def is_external(symbol):
     return symbol[0] == '@'

@@ -33,7 +33,6 @@ sys.path.append(os.path.abspath('..'))
 from grounding import Grounder
 from index import CompilationIndex
 from templates import tplManager
-from compilation.static import classify_symbols
 from static import DataElement
 import pddl  # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
 
@@ -65,17 +64,9 @@ def parse_pddl_task(domain, instance):
     return task
 
 
-def create_domain(task, name, translator):
-    symbols = translator.get_symbols()
-    domain = taskgen.create_problem_domain(task, name, symbols)
-    domain.schemata = translator.get_action_schemata()
-    return domain
-
-
 def create_instance(name, translator, domain):
     objects = translator.get_objects()
-    translator.process_initial_state()
-    init = translator.get_initial_state()
+    init = translator.process_initial_state(domain.symbols)
     data = translator.get_static_data()
     instance = taskgen.create_problem_instance(name, translator.task, domain, objects, init, data)
     instance.goal_formula = translator.get_goal_formula()
@@ -83,10 +74,11 @@ def create_instance(name, translator, domain):
     return instance
 
 
-def extract_names(instance, domain_filename):
-    inst = os.path.splitext(os.path.basename(instance))[0]
-    dom = os.path.basename(os.path.dirname(domain_filename))
-    return inst, dom
+def extract_names(domain_filename, instance_filename):
+    """ Extract the canonical domain and instance names from the corresponding filenames """
+    domain = os.path.basename(os.path.dirname(domain_filename))
+    instance = os.path.splitext(os.path.basename(instance_filename))[0]
+    return domain, instance
 
 
 def main():
@@ -94,14 +86,10 @@ def main():
     if args.domain is None:
         args.domain = pddl.pddl_file.extract_domain_name(args.instance)
     task = parse_pddl_task(args.domain, args.instance)
+    domain_name, instance_name = extract_names(args.domain, args.instance)
 
-    classify_symbols(task)
-    task.index = CompilationIndex(task)
-
-    translator = Translator(task)
-    instance_name, domain_name = extract_names(args.instance, args.domain)
-    domain = create_domain(task, domain_name, translator)
-    instance = create_instance(instance_name, translator, domain)
+    domain = taskgen.create_problem_domain(task, domain_name)
+    instance = create_instance(instance_name, Translator(task), domain)
     _, trans_dir = translate_pddl(instance, args)
 
 
@@ -182,7 +170,8 @@ def move_files_around(base_dir, instance, domain, target_dir):
 class Generator(object):
     def __init__(self, instance, args, translation_dir=None):
         self.task = instance
-        self.index = CompilationIndex(instance)
+        # self.index = CompilationIndex(instance)
+        self.index = instance.task.index
         self.grounder = Grounder(instance, self.index)
         self.out_dir = ''
         self.init_filenames(args, translation_dir)

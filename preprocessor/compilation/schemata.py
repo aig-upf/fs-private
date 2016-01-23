@@ -9,7 +9,6 @@ from pddl.effects import AssignmentEffect
 
 class ActionSchemaProcessor(BaseComponentProcessor):
     def __init__(self, task, action):
-        self.index = task.index
         self.action = action
         super().__init__(task)
         self.binding_unit = BindingUnit.from_parameters(action.parameters)

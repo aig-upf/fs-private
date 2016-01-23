@@ -16,7 +16,6 @@ class CompilationIndex(object):
 
         self.index_types(self.task)
         self.index_objects(self.task)
-        # self.index_symbols(self.task)
 
     def index_types(self, task):
         self.types['object'] = 0
@@ -32,8 +31,3 @@ class CompilationIndex(object):
         for o in task.objects:
             self.objects.index(o.name)
 
-    def index_symbols(self, task):
-        self.symbols['_eq_'] = 0
-        for symbol_name in task.symbols.keys():
-            if symbol_name not in self.symbols:
-                self.symbols[symbol_name] = len(self.symbols)

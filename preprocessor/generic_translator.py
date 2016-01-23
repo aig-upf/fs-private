@@ -2,7 +2,6 @@
 This is a generic PDDL-to-VPM translator.
 """
 from compilation.formula_processor import FormulaProcessor
-from compilation.schemata import ActionSchemaProcessor
 
 import pddl  # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
 from pddl.f_expression import NumericConstant
@@ -18,7 +17,6 @@ class Translator(object):
     def __init__(self, task):
         assert(isinstance(task, pddl.tasks.Task))
         self.task = task
-        self.init = None
         self.static = None
 
     def get_instance_name(self):
@@ -26,20 +24,6 @@ class Translator(object):
 
     def get_domain_name(self):
         return self.task.domain_name
-
-    def get_symbols(self):
-        elements = []
-        for s in self.task.predicates:
-            argtypes = [t.type for t in s.arguments]
-            elements.append(base.Predicate(s.name, argtypes))
-
-        for s in self.task.functions:
-            argtypes = [t.type for t in s.arguments]
-            elements.append(base.Function(s.name, argtypes, s.type))
-        return elements
-
-    def get_action_schemata(self):
-        return [ActionSchemaProcessor(self.task, action).process() for action in self.task.actions]
 
     def get_goal_formula(self):
         return FormulaProcessor(self.task, self.task.goal).process()
@@ -54,38 +38,45 @@ class Translator(object):
     def get_objects(self):
         return [base.ProblemObject(o.name, o.type) for o in self.task.objects]
 
-    def get_initial_state(self):
-        return self.init
-
-    def init_data_structures(self):
+    def init_data_structures(self, symbols):
         init, static = {}, {}
-        for f in (f for f in self.task.functions if not is_external(f.name)):
-            var = init if f.name in self.task.fluent_symbols else static
-            var[f.name] = instantiate_function(f.name, len(f.arguments))
-        for p in (p for p in self.task.predicates if not is_external(p.name)):
-            var = init if p.name in self.task.fluent_symbols else static
-            var[p.name] = instantiate_predicate(p.name, len(p.arguments))
+        for s in symbols.values():
+            if is_external(s.name):
+                continue
+
+            var = init if s.name in self.task.fluent_symbols else static
+            if isinstance(s, base.Predicate):
+                var[s.name] = instantiate_predicate(s.name, len(s.arguments))
+            else:  # We have a function
+                var[s.name] = instantiate_function(s.name, len(s.arguments))
         return init, static
 
-    def process_initial_state(self):
-        init, static = self.init_data_structures()
+    def process_initial_state(self, symbols):
+        init, static = self.init_data_structures(symbols)
+
+        def check_symbol(s):  # A small helper
+            if s not in symbols:
+                raise ParseException("Unknown symbol: '{}'".format(s))
 
         for atom in self.task.init:
             if isinstance(atom, pddl.Assign):
                 name = atom.fluent.symbol
+                check_symbol(name)
                 var = init if name in self.task.fluent_symbols else static
                 args = tuple(int(a) if is_int(a) else a for a in atom.fluent.args)
                 val = self.parse_value(atom.expression)
                 var[name].add(args, val)
             elif isinstance(atom, pddl.Atom):
+                assert not atom.negated, "No negations allowed in the initialization of atoms"
                 name = atom.predicate
+                check_symbol(name)
                 var = init if name in self.task.fluent_symbols else static
                 var[name].add(atom.args)
             else:
                 raise ValueError("Unexpected atom {}".format(atom))
 
         self.static = static
-        self.init = base.State(init)
+        return base.State(init)
 
     def parse_value(self, expression):
         if isinstance(expression, NumericConstant):

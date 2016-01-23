@@ -7,28 +7,26 @@ from functools import reduce
 import re
 
 import base
-from base import ProblemDomain, ProblemInstance, Function, Predicate
+from base import ProblemDomain, ProblemInstance
 from compilation.exceptions import TypeException
+from compilation.schemata import ActionSchemaProcessor
+from compilation.symbols import process_symbols
+from index import CompilationIndex
 
 
-def process_symbol_types(symbols):
-    types = {}
-    for symbol in symbols:
-        if isinstance(symbol, Function):
-            types[symbol.name] = symbol.codomain
-        elif isinstance(symbol, Predicate):
-            types[symbol.name] = '_bool_'
-        else:
-            raise RuntimeError("Unkown symbol type")
-
-    return types
+def process_action_schemata(task):
+    return [ActionSchemaProcessor(task, action).process() for action in task.actions]
 
 
-def create_problem_domain(task, name, symbols):
+def create_problem_domain(task, domain_name):
     """ Create a problem domain and perform the appropriate validity checks """
     types, supertypes = process_type_hierarchy(task.types)
-    domain = ProblemDomain(name, types, supertypes, symbols)
-    domain.symbol_types = process_symbol_types(symbols)
+    symbols, symbol_types = process_symbols(task)
+
+    task.index = CompilationIndex(task)
+
+    schemata = process_action_schemata(task)
+    domain = ProblemDomain(domain_name, types, supertypes, symbols, symbol_types, schemata)
     return domain
 
 
@@ -107,6 +105,7 @@ def create_problem_instance(name, task, domain, objects, init, static_data):
     instance.symbols = instance.domain.symbols
     instance.static_symbols = task.static_symbols
     instance.fluent_symbols = task.fluent_symbols
+    instance.task = task
 
     # TODO - check_state_complete(instance, init)
 
