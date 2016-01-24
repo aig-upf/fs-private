@@ -1,6 +1,6 @@
 
-#include <asp/model.hxx>
-#include <asp/clingo.hxx>
+#include <asp/models/simple_model.hxx>
+#include <asp/models/helper.hxx>
 #include <asp/lp_handler.hxx>
 #include <problem.hxx>
 #include <state.hxx>
@@ -14,27 +14,17 @@ namespace fs0 { namespace asp {
 
 using fs0::print::normalize;
 
-//! A quick helper to compute an index of ground action names to action IDs
-std::unordered_map<std::string, unsigned> compute_action_index(const Problem& problem) {
-	std::unordered_map<std::string, unsigned> index;
-	for (const GroundAction* action:problem.getGroundActions()) {
-		std::string action_name = normalize(fs0::print::action_name(*action));
-		index.insert(std::make_pair(action_name, action->getId()));
-	}
-	return index;
-}
-
-Model::Model(const Problem& problem) :
+SimpleModel::SimpleModel(const Problem& problem) :
+	BaseModel(problem),
 	 _goal_atoms(problem.getGoalConditions()->all_atoms()),
-	 _action_index(compute_action_index(problem)),
-	 _problem(problem)
+	 _action_index(ModelHelper::compute_action_index(problem))
 {
 	if (!dynamic_cast<fs::Conjunction::cptr>(problem.getGoalConditions())) {
 		throw std::runtime_error("ASP heuristic available only for goals which are conjunctions of atoms");
 	}
 }
 
-std::vector<std::string> Model::build_domain_rules(bool optimize) const {
+std::vector<std::string> SimpleModel::build_domain_rules(bool optimize) const {
 	std::vector<std::string> rules;
 	const ProblemInfo& info = _problem.getProblemInfo();
 	
@@ -77,7 +67,7 @@ std::vector<std::string> Model::build_domain_rules(bool optimize) const {
 	return rules;
 }
 
-void Model::process_ground_action(const GroundAction& action, std::vector<std::string>& rules) const {
+void SimpleModel::process_ground_action(const GroundAction& action, std::vector<std::string>& rules) const {
 	auto precondition = action.getPrecondition();
 	std::string action_name = normalize(fs0::print::action_name(action));
 	
@@ -111,7 +101,7 @@ void Model::process_ground_action(const GroundAction& action, std::vector<std::s
 	}
 }
 
-std::vector<std::string> Model::build_state_rules(const State& state) const {
+std::vector<std::string> SimpleModel::build_state_rules(const State& state) const {
 	std::vector<std::string> atoms;
 	const ProblemInfo& info = _problem.getProblemInfo();
 	const auto& values = state.getValues();
@@ -130,7 +120,7 @@ std::vector<std::string> Model::build_state_rules(const State& state) const {
 }
 
 
-std::pair<std::string, bool> Model::process_atom(const fs::AtomicFormula* atom) const {
+std::pair<std::string, bool> SimpleModel::process_atom(const fs::AtomicFormula* atom) const {
 	auto eq_atom = dynamic_cast<fs::EQAtomicFormula::cptr>(atom);
 	if (!eq_atom) throw std::runtime_error("ASP heuristic available only for simple atoms");
 	auto lhs = dynamic_cast<fs::StateVariable::cptr>(eq_atom->lhs());
@@ -142,22 +132,11 @@ std::pair<std::string, bool> Model::process_atom(const fs::AtomicFormula* atom) 
 	return std::make_pair(normalize(*lhs), rhs->getValue() == 1);
 }
 
-std::pair<std::string, bool> Model::process_effect(const fs::ActionEffect* effect) const {
+std::pair<std::string, bool> SimpleModel::process_effect(const fs::ActionEffect* effect) const {
 	auto lhs = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
 	auto rhs = dynamic_cast<fs::IntConstant::cptr>(effect->rhs());
 	if (!lhs || !rhs) throw std::runtime_error("ASP heuristic available only for simple atoms and effects");
 	return std::make_pair(normalize(*lhs), rhs->getValue() == 1);
-}
-
-std::vector<unsigned> Model::get_action_set(const std::vector<Gringo::Value>& model) const {
-	std::vector<unsigned> actions;
-	for (auto &atom : model) {
-		std::string action_name = fs0::print::to_string(atom);
-		auto it = _action_index.find(action_name);
-		assert(it != _action_index.end());
-		actions.push_back(it->second);
-	}
-	return actions;
 }
 
 } } // namespaces

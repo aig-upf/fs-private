@@ -1,6 +1,8 @@
 
 #include <asp/model_handler.hxx>
-#include <asp/model.hxx>
+#include <asp/models/base_model.hxx>
+#include <asp/models/choice_rule_model.hxx>
+#include <asp/models/helper.hxx>
 #include <state.hxx>
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
@@ -15,7 +17,7 @@ namespace fs0 { namespace asp {
 
 ModelHandler::ModelHandler(const Problem& problem, bool optimize) :
 	_clingo(std::make_shared<Clingo>()),
-	_model(std::make_shared<Model>(problem)),
+	_model(std::make_shared<ChoiceRuleModel>(problem)),
 	_domain_rules(_model->build_domain_rules(optimize))
 {
 	FDEBUG("asp", "Setting up ASP-based RPG builder. See log files 'asp-domain.log' and 'asp-init.log' for a complete ASP model.");
@@ -31,7 +33,7 @@ std::pair<Gringo::SolveResult, Clingo::Solution> ModelHandler::process(const Sta
 }
 
 std::vector<unsigned> ModelHandler::get_action_set(const Clingo::Solution& model) const {
-	return _model->get_action_set(model);
+	return ModelHelper::compute_action_set(model, _model->get_action_idx());
 }
 
 
