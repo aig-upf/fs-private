@@ -46,10 +46,10 @@ std::vector<std::string> SimpleModel::build_domain_rules(bool optimize) const {
 	
 	// Standard directives
 	if (optimize) {
-		rules.push_back("#minimize {1, A : asupported(A)}.");
+		rules.push_back("#minimize {1, A : _applicable(A)}.");
 	}
 	rules.push_back("#show.");
-	rules.push_back("#show A : asupported(A).");
+	rules.push_back("#show A : _applicable(A).");
 	
 	// Register additional, domain-dependent rules
 	if (_problem.getLPHandler()) {
@@ -76,8 +76,8 @@ void SimpleModel::process_ground_action(const GroundAction& action, std::vector<
 		prec_body += processed.first + ", ";
 	}
 	
-	rules.push_back("{ asupported(" + action_name  + ") }.");
-	prec_body += "asupported(" + action_name  + ").";
+	rules.push_back("{ _applicable(" + action_name  + ") }.");
+	prec_body += "_applicable(" + action_name  + ").";
 	
 	// action (add-) effect rules
 	for (auto effect:action.getEffects()) {

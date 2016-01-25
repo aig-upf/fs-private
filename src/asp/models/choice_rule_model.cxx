@@ -46,10 +46,10 @@ std::vector<std::string> ChoiceRuleModel::build_domain_rules(bool optimize) cons
 	
 	// Standard directives
 	if (optimize) {
-		rules.push_back("#minimize {1, A : asupported(A)}.");
+		rules.push_back("#minimize {1, A : _applicable(A)}.");
 	}
 	rules.push_back("#show.");
-	rules.push_back("#show A : asupported(A).");
+	rules.push_back("#show A : _applicable(A).");
 	
 	// Register additional, domain-dependent rules
 	if (_problem.getLPHandler()) {
@@ -69,7 +69,6 @@ void ChoiceRuleModel::process_ground_action(const GroundAction& action, std::vec
 	std::string prec_body;
 	auto atoms = precondition->all_atoms();
 	for (unsigned i = 0; i < atoms.size(); ++i) { // TODO - This, in general, should be performed only once
-		
 		auto processed = ModelHelper::process_atom(atoms[i]);
 		if (!processed.second) throw std::runtime_error("Negated atoms not yet supported");
 		
@@ -78,7 +77,7 @@ void ChoiceRuleModel::process_ground_action(const GroundAction& action, std::vec
 	}
 	
 	// Action precondition rules
-	std::string rule = "{ asupported(" + action_name  + ") } :- " + prec_body + ".";
+	std::string rule = "{ _applicable(" + action_name  + ") } :- " + prec_body + ".";
 	rules.push_back(rule);
 	
 	
@@ -86,7 +85,7 @@ void ChoiceRuleModel::process_ground_action(const GroundAction& action, std::vec
 	for (auto effect:action.getEffects()) {
 		auto processed = ModelHelper::process_effect(effect);
 		if (processed.second) { // we have a positive ADD effect
-			std::string rule = "supported(" + processed.first  + ") :- asupported(" + action_name + ").";
+			std::string rule = "supported(" + processed.first  + ") :- _applicable(" + action_name + ").";
 			rules.push_back(rule);
 		}
 	}
