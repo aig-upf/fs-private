@@ -20,7 +20,7 @@ public:
 	typedef std::unordered_map<std::string, unsigned> ActionIdx;
 	
 	BaseModel(const Problem& problem) : _problem(problem) {}
-	virtual ~BaseModel() = 0;
+	virtual ~BaseModel() {};
 	
 	//! Build the LP rules that correspond to the problem domain & goal
 	virtual std::vector<std::string> build_domain_rules(bool optimize) const = 0;

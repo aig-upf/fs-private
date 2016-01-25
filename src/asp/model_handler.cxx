@@ -2,6 +2,7 @@
 #include <asp/model_handler.hxx>
 #include <asp/models/base_model.hxx>
 #include <asp/models/choice_rule_model.hxx>
+#include <asp/models/simple_model.hxx>
 #include <asp/models/helper.hxx>
 #include <state.hxx>
 #include <problem.hxx>
@@ -17,7 +18,8 @@ namespace fs0 { namespace asp {
 
 ModelHandler::ModelHandler(const Problem& problem, bool optimize) :
 	_clingo(std::make_shared<Clingo>()),
-	_model(std::make_shared<ChoiceRuleModel>(problem)),
+// 	_model(std::make_shared<ChoiceRuleModel>(problem)),
+	_model(std::make_shared<SimpleModel>(problem)),
 	_domain_rules(_model->build_domain_rules(optimize))
 {
 	FDEBUG("asp", "Setting up ASP-based RPG builder. See log files 'asp-domain.log' and 'asp-init.log' for a complete ASP model.");

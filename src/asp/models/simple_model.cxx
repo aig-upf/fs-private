@@ -39,13 +39,13 @@ std::vector<std::string> SimpleModel::build_domain_rules(bool optimize) const {
 	}
 	
 	// The seed atoms
-	rules.push_back("{ supported(P) } :- seed(P).");
+// 	rules.push_back("P :- seed(P).");
 
 	// The goal integrity constraints:
 	for (auto atom:_goal_atoms) {
 		auto processed = process_atom(atom);
 		if (!processed.second) throw std::runtime_error("Negated atoms not yet supported");
-		rules.push_back(":- not supported(" +  processed.first + ").");
+		rules.push_back(":- not " +  processed.first + ".");
 	}
 	
 	// Action rules
@@ -75,27 +75,24 @@ void SimpleModel::process_ground_action(const GroundAction& action, std::vector<
 		throw std::runtime_error("ASP heuristic available only for goals which are conjunctions of atoms");
 	}
 	
+	// For each (add) effect 'p' of the given action 'a', we build a rule of the form 'p :- pre(a), a.'
+	
 	std::string prec_body;
 	auto atoms = precondition->all_atoms();
 	for (unsigned i = 0; i < atoms.size(); ++i) { // TODO - This, in general, should be performed only once
-		
 		auto processed = process_atom(atoms[i]);
 		if (!processed.second) throw std::runtime_error("Negated atoms not yet supported");
-		
-		prec_body += "supported(" + processed.first + ")";
-		if (i < atoms.size() - 1) prec_body += ", ";
+		prec_body += processed.first + ", ";
 	}
 	
-	// Action precondition rules
-	std::string rule = "{ asupported(" + action_name  + ") } :- " + prec_body + ".";
-	rules.push_back(rule);
-	
+	rules.push_back("{ asupported(" + action_name  + ") }.");
+	prec_body += "asupported(" + action_name  + ").";
 	
 	// action (add-) effect rules
 	for (auto effect:action.getEffects()) {
 		auto processed = process_effect(effect);
 		if (processed.second) { // we have a positive ADD effect
-			std::string rule = "supported(" + processed.first  + ") :- asupported(" + action_name + ").";
+			std::string rule = processed.first + " :- " + prec_body;
 			rules.push_back(rule);
 		}
 	}
@@ -108,7 +105,7 @@ std::vector<std::string> SimpleModel::build_state_rules(const State& state) cons
 	for (unsigned i = 0; i < values.size(); ++i) {
 		if (values.at(i) == 1) {
 			const std::string& atom_name = info.getVariableName(i);
-			atoms.push_back("seed(" + normalize(atom_name) + ").");
+			atoms.push_back(normalize(atom_name) + ".");
 			
 		}
 	}
