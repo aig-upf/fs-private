@@ -2,6 +2,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 
 #include <fs0_types.hxx>
 #include <constraints/gecode/utils/translation.hxx>
@@ -55,7 +56,18 @@ public:
 	
 	void registerExistentialVariable(const fs::BoundVariable* variable);
 	
-	void registerInputStateVariable(VariableIdx variable, bool nullable);
+	//! Register an input variable, i.e. a CSP variable directly related to a planning state variable.
+	//! The variable can be registered as a "direct" variable, i.e. a variable appearing directly in some formula,
+	//! or as an derived variable, i.e. a variable that derives from some nested fluent expression
+	//! e.g. for a term loc(chosen-car()), chosen-car will be a direct variable, and loc(c1), ..., loc(cn) will be derived variables.
+	//! This distinction mostly affects the way in which the supports are extracted; in the previous example,
+	//! the value of chosen-car will be part of the support, but only ONE of the values of loc(c1), ..., loc(cn)
+	//! will be, namely, that for which c_i = chosen_car.
+	//!
+	//! Additionally, a variable can be declared 'nullable' if (according to the characteristics
+	//! of the particular CSP linked to this translator) it can be assigned a DONT_CARE value
+	//! whenever the DONT_CARE optimization is active.
+	void registerInputStateVariable(VariableIdx variable, bool is_direct, bool nullable);
 
 	
 	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type);
@@ -113,6 +125,9 @@ public:
 
 	const std::unordered_map<VariableIdx, std::pair<unsigned, bool>>& getAllInputVariables() const { return _input_state_variables; }
 	
+	const std::unordered_set<VariableIdx>& getDirectInputVariables() const { return _direct_variables; }
+
+	
 	//! Returns a partial assignment of values to the input state variables of the CSP managed by this translator, built from the given solution.
 	PartialAssignment buildAssignment(SimpleCSP& solution) const;
 
@@ -144,6 +159,9 @@ protected:
 	//! the ID of the corresponding CSP variable
 	std::unordered_map<VariableIdx, std::pair<unsigned, bool>> _input_state_variables;
 // 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
+	
+	//! For faster access, this contains the subset of _input_state_variables that appear directly on a formula
+	std::unordered_set<VariableIdx> _direct_variables;
 };
 
 

@@ -45,8 +45,7 @@ bool FormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, con
 	FFDEBUG("heuristic", "Formula CSP solution found: " << *solution);
 	
 	// First process the direct state variables
-	for (const auto& it:_translator.getAllInputVariables()) {
-		VariableIdx variable = it.first;
+	for (const VariableIdx variable:_translator.getDirectInputVariables()) {
 		support.push_back(Atom(variable, _translator.resolveInputStateVariableValue(*solution, variable)));
 	}
 	

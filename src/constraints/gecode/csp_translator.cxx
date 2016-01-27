@@ -60,11 +60,17 @@ void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable:
 }
 
 
-void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variable, bool nullable) {
+void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variable,  bool is_direct, bool nullable) {
 	auto it = _input_state_variables.find(variable);
 	if (it != _input_state_variables.end()) { // The state variable was already registered, no need to register it again
-		assert(nullable == it->second.second); // We just check that we're not trying to register it with a different 'nullable' value, which should never happen
-		return; 
+		if (nullable != it->second.second) { // We just check that we're not trying to register it with a different 'nullable' value, which should never happen
+			throw std::runtime_error("Same input state variable cannot be registered as both nullable and non-nullable");
+		}
+		return;
+	}
+	
+	if (is_direct) { // If the variable is declared as direct, we register it as such.
+		_direct_variables.insert(variable);
 	}
 
 	unsigned id = add_intvar(Helper::createPlanningVariable(_base_csp, variable, nullable), variable);

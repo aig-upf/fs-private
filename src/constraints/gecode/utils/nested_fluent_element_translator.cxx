@@ -24,7 +24,7 @@ void NestedFluentElementTranslator::register_variables(CSPVariableType type, Gec
 	for (nested_fluent_iterator it(_term); !it.ended(); ++it) {
 		VariableIdx variable = it.getDerivedStateVariable();
 		FDEBUG( "translation", "Registering derived state variable " << Problem::getInfo().getVariableName(variable));
-		translator.registerInputStateVariable(variable, _counter.is_nullable(variable));
+		translator.registerInputStateVariable(variable, false, _counter.is_nullable(variable));
 		
 		if (_counter.is_nullable(variable)) {
 			_fluent_data.addTableReificationVariable(translator.create_bool_variable());

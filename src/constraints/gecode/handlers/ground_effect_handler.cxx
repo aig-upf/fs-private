@@ -13,7 +13,7 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 		const auto action = actions[action_idx];
 		
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
-			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, eff_idx, approximate, novelty ,dont_care);
+			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, eff_idx, approximate, novelty, dont_care);
 			managers.push_back(handler);
 			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_name(*action) << std::endl <<  *handler << std::endl);
 		}

@@ -98,7 +98,7 @@ void BaseCSPHandler::register_csp_variables() {
 			
 		} else if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) {
 			VariableIdx variable = sv->getValue();
-			_translator.registerInputStateVariable(variable, _counter.is_nullable(variable));
+			_translator.registerInputStateVariable(variable, true, _counter.is_nullable(variable));
 		}
 		
 		else {
