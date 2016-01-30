@@ -78,17 +78,16 @@ void FormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
 	
 	// First process the direct state variables
-	for (const auto& it:_translator.getAllInputVariables()) {
-		VariableIdx planning_variable = it.first;
-		const Gecode::IntVar& csp_var = csp->_intvars[it.second.first];
+	for (const VariableIdx variable:_translator.getDirectInputVariables()) {
+		const Gecode::IntVar& csp_var = _translator.resolveInputStateVariable(*csp, variable);
 		Gecode::IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
 		assert(values()); // Otherwise the CSP would be inconsistent!
 		
 		// If the original value makes the situation a goal, then we don't need to add anything for this variable.
-		int seed_value = seed.getValue(planning_variable);
+		int seed_value = seed.getValue(variable);
 		int selected = Helper::selectValueIfExists(values, seed_value);
 		if (selected == seed_value) continue;
-		support.push_back(Atom(planning_variable, selected)); // It not, we simply pick the first consistent value
+		support.push_back(Atom(variable, selected)); // It not, we simply pick the first consistent value
 	}
 	
 	// Now process the indirect state variables
