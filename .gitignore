@@ -6,7 +6,7 @@ config.json
 generated
 
 # Automatically-generated documentation
-doc
+# doc
 
 # Build files
 build
