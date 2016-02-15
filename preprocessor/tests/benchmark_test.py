@@ -1,5 +1,5 @@
 """
- This test suites performs an across-the-board compilation for a number of selected instances.
+ This test suite performs an across-the-board compilation for a number of selected instances.
  Expensive, but necessary.
 """
 

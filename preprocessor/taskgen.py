@@ -1,17 +1,14 @@
 """
-Several methods for generating VPM tasks.
+Several methods for generating tasks.
 """
 from collections import deque, defaultdict
-import operator
-from functools import reduce
 import re
-
 import base
 from base import ProblemDomain, ProblemInstance
 from compilation.exceptions import TypeException
 from compilation.schemata import ActionSchemaProcessor
 from compilation.symbols import process_symbols
-from extra import CompilationIndex
+from index import CompilationIndex
 
 
 def process_action_schemata(task):
@@ -22,12 +19,9 @@ def create_problem_domain(task, domain_name):
     """ Create a problem domain and perform the appropriate validity checks """
     types, supertypes = process_type_hierarchy(task.types)
     symbols, symbol_types = process_symbols(task)
-
     task.index = CompilationIndex(task)
-
     schemata = process_action_schemata(task)
-    domain = ProblemDomain(domain_name, types, supertypes, symbols, symbol_types, schemata)
-    return domain
+    return ProblemDomain(domain_name, types, supertypes, symbols, symbol_types, schemata)
 
 
 def check_type(instance, expected, value):
@@ -48,55 +42,13 @@ def check_type(instance, expected, value):
                             .format(immediate_type, value, expected))
 
 
-def check_state_complete(instance, state):
-    """ Check the state is complete, i.e. that has a properly defined value for all possible state variables. """
-    domain = instance.domain
-    for instantiation in state.instantiations.values():
-        assert isinstance(instantiation, (base.PredicateInstantiation, base.FunctionInstantiation))
-        if not instantiation.symbol in domain.symbols:
-            raise Exception("Unkown symbol '{}'".format(instantiation.symbol))
-        symbol = domain.symbols[instantiation.symbol]
-        argument_types = symbol.arguments  # The types of the arguments of the symbol
-        argument_arities = (len(instance.type_map[argtype]) for argtype in argument_types)
-        num_expected_instantiations = reduce(operator.mul, argument_arities, 1)  # The total arity of the symbol domain
-
-        if isinstance(instantiation, base.PredicateInstantiation):
-            # Check that the predicate arguments are all of the right type
-            for args in instantiation.set:
-                for i, arg in enumerate(args):
-                    try:
-                        check_type(instance, argument_types[i], arg)
-                    except TypeException as e:
-                        raise TypeException("Type exception  while checking positional argument #{} of symbol {}: {}"
-                                            .format(i, symbol.name, str(e)))
-
-        else:  # We have a FunctionInstantiation
-            if len(instantiation.mapping) != num_expected_instantiations:
-                raise Exception("Symbol '{}' is not correctly instantiated in the given state,"
-                                " since the value of some domain points is missing".format(symbol.name))
-
-            for args, val in instantiation.mapping.items():
-                # Check that the function arguments are all of the right type
-                for i, arg in enumerate(args):
-                    try:
-                        check_type(instance, argument_types[i], arg)
-                    except TypeException as e:
-                        raise TypeException("Type exception  while checking positional argument #{} of symbol {}: {}"
-                                            .format(i, symbol.name, str(e)))
-
-                # Check that the function codomain is of the right type
-                try:
-                    check_type(instance, symbol.codomain, val)
-                except TypeException as e:
-                    raise TypeException("Type exception while checking codomain of symbol {}: {}"
-                                        .format(symbol.name, str(e)))
-
-
-def create_problem_instance(name, task, domain, objects, init, static_data):
-    """
-
-    """
-    instance = ProblemInstance(name, domain, objects, init, static_data)
+def create_problem_instance(name, domain, translator):
+    # TODO - This is extremely messy
+    objects = translator.get_objects()
+    init = translator.process_initial_state(domain.symbols)
+    data = translator.get_static_data()
+    task = translator.task
+    instance = ProblemInstance(name, domain, objects, init, data)
 
     instance.type_map, instance.object_type = process_types(instance, task.bounds)
 
@@ -106,8 +58,8 @@ def create_problem_instance(name, task, domain, objects, init, static_data):
     instance.static_symbols = task.static_symbols
     instance.fluent_symbols = task.fluent_symbols
     instance.task = task
-
-    # TODO - check_state_complete(instance, init)
+    instance.goal_formula = translator.get_goal_formula()
+    instance.state_constraints = translator.get_state_constraints()
 
     return instance
 
@@ -169,10 +121,14 @@ def process_types(instance, bounds):
 def process_type_hierarchy(task_types):
     """
     Return a map mapping each type name to all of its parents.
+    :param task_types: The list of task types as returned by the FD PDDL parser
     """
     types = []
     all_t = set()
     correctly_declared = set()
+
+    types.append(base.ObjectType('object', None))  # The base object type is always there :-)
+
     for t in task_types:
         if t.name != 'object':
             all_t.update([t.name, t.basetype_name])
@@ -182,7 +138,7 @@ def process_type_hierarchy(task_types):
     # Add missing types: Some types declared without trailing " - object" sometimes are not recognized by the FD parser
     types += (base.ObjectType(t, "object") for t in all_t.difference(correctly_declared, ['object']))
 
-    # Build a map from any type to all its direct children types.
+    # Build a temporary map from any type to all its direct children types.
     parent_to_children = defaultdict(list)
     for t in types:
         parent_to_children[t.parent].append(t.name)

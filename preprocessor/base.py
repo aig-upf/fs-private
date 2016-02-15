@@ -48,6 +48,11 @@ class ObjectType(object):
         self.name = name
         self.parent = parent
 
+    def __str__(self):
+        return "{name}({parent})".format(**self.__dict__)
+
+    __repr__ = __str__
+
 
 class Symbol(object):
     def __init__(self, name, arguments):

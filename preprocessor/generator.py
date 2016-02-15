@@ -43,16 +43,6 @@ def parse_pddl_task(domain, instance):
     return task
 
 
-def create_instance(name, translator, domain):
-    objects = translator.get_objects()
-    init = translator.process_initial_state(domain.symbols)
-    data = translator.get_static_data()
-    instance = taskgen.create_problem_instance(name, translator.task, domain, objects, init, data)
-    instance.goal_formula = translator.get_goal_formula()
-    instance.state_constraints = translator.get_state_constraints()
-    return instance
-
-
 def extract_names(domain_filename, instance_filename):
     """ Extract the canonical domain and instance names from the corresponding filenames """
     domain = os.path.basename(os.path.dirname(domain_filename))
@@ -66,13 +56,11 @@ def main(args):
     task = parse_pddl_task(args.domain, args.instance)
     domain_name, instance_name = extract_names(args.domain, args.instance)
     domain = taskgen.create_problem_domain(task, domain_name)
-    instance = create_instance(instance_name, Translator(task), domain)
+    instance = taskgen.create_problem_instance(instance_name, domain, Translator(task))
     _, trans_dir = translate_pddl(instance, args)
 
 
 def translate_pddl(instance, args):
-    """
-    """
     print("{0:<30}{1}".format("Problem instance:", instance.name))
     print("{0:<30}{1}".format("Chosen Planner:", args.planner))
 
@@ -85,7 +73,7 @@ def translate_pddl(instance, args):
 def translate_and_compile(instance, translation_dir, args):
     gen = Generator(instance, args, translation_dir)
     translation_dir = gen.translate()
-    move_files_around(args.instance_dir, args.instance, args.domain, translation_dir)
+    move_files(args.instance_dir, args.instance, args.domain, translation_dir)
     compile_translation(translation_dir, args)
     return gen.get_normalized_task_name(), translation_dir
 
@@ -112,7 +100,7 @@ def compile_translation(translation_dir, args):
         raise RuntimeError('Error compiling problem at {0}'.format(translation_dir))
 
 
-def move_files_around(base_dir, instance, domain, target_dir):
+def move_files(base_dir, instance, domain, target_dir):
     """ Moves the domain and instance description files plus additional data files to the translation directory """
     definition_dir = target_dir + '/definition'
     data_dir = target_dir + '/data'
@@ -144,7 +132,6 @@ def move_files_around(base_dir, instance, domain, target_dir):
 class Generator(object):
     def __init__(self, instance, args, translation_dir=None):
         self.task = instance
-        # self.index = CompilationIndex(instance)
         self.index = instance.task.index
         self.grounder = Grounder(instance, self.index)
         self.out_dir = ''

@@ -33,15 +33,14 @@ class IndexDictionary(object):
 
 class CompilationIndex(object):
     def __init__(self, task):
-        self.task = task
         self.types = {}  # Type name to type ID.
         self.objects = IndexDictionary()  # object name to object ID.
         self.typed_objects = {}
         self.symbols = {}  # symbol name to symbol ID.
         self.variables = {}  # A state variable index.
 
-        self.index_types(self.task)
-        self.index_objects(self.task)
+        self.index_types(task)
+        self.index_objects(task)
 
     def index_types(self, task):
         self.types['object'] = 0
