@@ -11,8 +11,6 @@ import util
 from compilation.helper import is_external
 from generic_translator import Translator
 
-util.fix_seed()
-
 sys.path.append(os.path.abspath('..'))
 
 from grounding import Grounder
@@ -21,7 +19,7 @@ from static import DataElement
 import pddl  # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
 
 
-def parse_arguments():
+def parse_arguments(args):
     parser = argparse.ArgumentParser(description='Parse a given problem instance from a given benchmark set.')
     parser.add_argument('--tag', required=True, help="The name of the generation tag.")
     parser.add_argument('--instance', required=True,
@@ -36,7 +34,7 @@ def parse_arguments():
     parser.add_argument('--debug', action='store_true', help="Flag to compile in debug mode.")
     parser.add_argument('--edebug', action='store_true', help="Flag to compile in extreme debug mode.")
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     args.instance_dir = os.path.dirname(args.instance)
     return args
 
@@ -65,13 +63,14 @@ def extract_names(domain_filename, instance_filename):
     return domain, instance
 
 
-def main():
-    args = parse_arguments()
+def main(args):
+    if util.fix_seed_and_possibly_rerun():
+        return
+
     if args.domain is None:
         args.domain = pddl.pddl_file.extract_domain_name(args.instance)
     task = parse_pddl_task(args.domain, args.instance)
     domain_name, instance_name = extract_names(args.domain, args.instance)
-
     domain = taskgen.create_problem_domain(task, domain_name)
     instance = create_instance(instance_name, Translator(task), domain)
     _, trans_dir = translate_pddl(instance, args)
@@ -339,4 +338,4 @@ class Generator(object):
         return extensional + external
 
 if __name__ == "__main__":
-    main()
+    main(parse_arguments(sys.argv[1:]))
