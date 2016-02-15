@@ -64,9 +64,6 @@ def extract_names(domain_filename, instance_filename):
 
 
 def main(args):
-    if util.fix_seed_and_possibly_rerun():
-        return
-
     if args.domain is None:
         args.domain = pddl.pddl_file.extract_domain_name(args.instance)
     task = parse_pddl_task(args.domain, args.instance)
@@ -338,4 +335,6 @@ class Generator(object):
         return extensional + external
 
 if __name__ == "__main__":
-    main(parse_arguments(sys.argv[1:]))
+    # Run only if the hash seed has been set
+    if not util.fix_seed_and_possibly_rerun():
+        main(parse_arguments(sys.argv[1:]))
