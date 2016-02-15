@@ -1,4 +1,5 @@
 import os
+import sys
 import unicodedata
 import re
 
@@ -84,3 +85,20 @@ def is_int(s):
 
 def bool_string(value):
     return '_true_' if value else '_false_'
+
+
+def fix_seed():
+    try:
+        val = int(os.environ['PYTHONHASHSEED'])
+    except KeyError as e:
+        val = None
+    if val != 1:
+        print('\n' + "*" * 80)
+        print("- WARNING -\n Automatically setting PYTHONHASHSEED to 1 to obtain more reliable results")
+        print("*" * 80 + '\n')
+        # We simply set the environment variable and re-call ourselves.
+        from subprocess import call
+
+        os.environ["PYTHONHASHSEED"] = '1'
+        call(["python3", "-OO"] + sys.argv)
+        sys.exit(1)

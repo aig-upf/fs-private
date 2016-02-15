@@ -2,6 +2,8 @@
  This file contains all the necessary entities to define P3R domains and problems.
 """
 from collections import OrderedDict
+
+import util
 from util import is_action_parameter, is_int
 
 
@@ -119,10 +121,6 @@ class ProblemDomain(object):
         """ Small helper to iterate through the predicates """
         return (s for s in self.symbols.values() if isinstance(s, Predicate))
 
-    def is_predicative(self):
-        """ A domain is predicative if it has no functions, only predicates"""
-        return all(isinstance(s, Predicate) for s in self.symbols.values())
-
 
 class ProblemInstance(object):
     def __init__(self, name, domain, objects, init, static_data):
@@ -131,9 +129,6 @@ class ProblemInstance(object):
         self.objects = objects
         self.init = init
         self.static_data = static_data
-
-    def get_complete_name(self):
-        return self.domain.name + '/' + self.name
 
 
 class Expression(object):
@@ -274,3 +269,44 @@ def _process_symbol(symbol, negated):
     if not negated:
         return symbol
     return _NEGATED_SYMBOLS[symbol]
+
+
+class Atom(object):
+    """ A generic (possibly functional) fact """
+    def __init__(self, var, value):  # TODO - Maybe use indexes directly?
+        self.var = var
+        self.value = value
+
+    def normalize(self):
+        return self
+
+    def is_predicate(self):
+        return isinstance(self.value, bool)
+
+    def is_equality(self):
+        return self.symbol == '='
+
+    def __hash__(self):
+        return hash((self.var, self.value))
+
+    def __eq__(self, other):
+        return (self.var, self.value) == (other.var, other.value)
+
+    def ground(self, binding):
+        self.var.ground(binding)
+        if util.is_action_parameter(self.value):
+            self.value = binding[self.value]
+        return self
+
+    def __str__(self):
+        return '{} {} {}'.format(self.var, self.OP, self.value)
+    __repr__ = __str__
+    OP = '='
+
+    @property
+    def symbol(self):
+        return self.var.symbol
+
+    @property
+    def args(self):
+        return self.var.args

@@ -3,7 +3,8 @@ from string import Template
 
 # some basic templates
 _base = dict(
-    function_instantiation='{"${name}", [](const ObjectIdxVector& parameters){ return external->${accessor}(parameters); }}',
+    function_instantiation=
+    '{"${name}", [](const ObjectIdxVector& parameters){ return external->${accessor}(parameters); }}',
 )
 
 

@@ -11,7 +11,7 @@ from base import ProblemDomain, ProblemInstance
 from compilation.exceptions import TypeException
 from compilation.schemata import ActionSchemaProcessor
 from compilation.symbols import process_symbols
-from index import CompilationIndex
+from extra import CompilationIndex
 
 
 def process_action_schemata(task):

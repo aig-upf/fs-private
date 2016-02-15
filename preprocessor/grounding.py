@@ -1,7 +1,8 @@
 
 
 import itertools
-from extra import IndexDictionary, Atom
+from extra import IndexDictionary
+from base import Atom
 import base
 from compilation.helper import is_external
 import static

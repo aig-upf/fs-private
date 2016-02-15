@@ -1,37 +1,21 @@
 import argparse
 import glob
 import json
+import operator
 import os
+import shutil
 import subprocess
 import sys
-import shutil
-
 import taskgen
 import util
-import operator
 from compilation.helper import is_external
 from generic_translator import Translator
 
-try:
-    val = int(os.environ['PYTHONHASHSEED'])
-except KeyError as e:
-    val = None
-
-if val != 1:
-    print('\n' + "*" * 80)
-    print("- WARNING -\n Automatically setting PYTHONHASHSEED to 1 to obtain more reliable results")
-    print("*" * 80 + '\n')
-    # We simply set the environment variable and re-call ourselves.
-    from subprocess import call
-
-    os.environ["PYTHONHASHSEED"] = '1'
-    call(["python3", "-OO"] + sys.argv)
-    sys.exit(1)
+util.fix_seed()
 
 sys.path.append(os.path.abspath('..'))
 
 from grounding import Grounder
-from index import CompilationIndex
 from templates import tplManager
 from static import DataElement
 import pddl  # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
@@ -96,13 +80,11 @@ def main():
 def translate_pddl(instance, args):
     """
     """
-    print("Parsing problem instance {}...".format(instance.name))
+    print("{0:<30}{1}".format("Problem instance:", instance.name))
+    print("{0:<30}{1}".format("Chosen Planner:", args.planner))
 
     domain = instance.domain
     translation_dir = domain.name + '/' + instance.name
-
-    print("Translating instance {} and compiling it with planner '{}'...".format(instance.name, args.planner))
-
     inst_name, translation_dir = translate_and_compile(instance, translation_dir, args)
     return inst_name, translation_dir
 
@@ -111,17 +93,16 @@ def translate_and_compile(instance, translation_dir, args):
     gen = Generator(instance, args, translation_dir)
     translation_dir = gen.translate()
     move_files_around(args.instance_dir, args.instance, args.domain, translation_dir)
-    compile_translation(translation_dir, args, gen.task.domain.is_predicative())
+    compile_translation(translation_dir, args)
     return gen.get_normalized_task_name(), translation_dir
 
 
-def compile_translation(translation_dir, args, predstate=False):
+def compile_translation(translation_dir, args):
     """
     Copies the relevant files from the BFS directory to the newly-created translation directory,
      and then calls scons to compile the problem there.
     """
     debug_flag = "edebug=1" if args.edebug else ("debug=1" if args.debug else "")
-    predstate_flag = "predstate=1" if predstate else ''
 
     planner_dir = os.path.abspath(os.path.join('../planners', args.planner))
 
@@ -129,9 +110,9 @@ def compile_translation(translation_dir, args, predstate=False):
     shutil.copy(os.path.join(planner_dir, 'default.config.json'), os.path.join(translation_dir, 'config.json'))
     shutil.copy(os.path.join(planner_dir, 'SConstruct'), os.path.join( translation_dir, 'SConstruct'))
 
-    command = "scons {} {}".format(debug_flag, predstate_flag)
+    command = "scons {}".format(debug_flag)
 
-    print("Executing '{0}' on directory '{1}'\n".format(command, translation_dir))
+    print("{0:<30}{1}\n".format("Compilation command:", command))
     sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
     output = subprocess.call(command.split(), cwd=translation_dir)
     if not output == 0:
@@ -194,9 +175,7 @@ class Generator(object):
                 'problem': {'domain': self.task.domain.name, 'instance': self.task.name}
                 }
 
-        print("Problem '{problem}' translated to directory '{dir}'".format(
-            problem=self.task.get_complete_name(), dir=self.out_dir)
-        )
+        print("{0:<30}{1}".format("Translation directory:", self.out_dir))
 
         self.dump_data('problem', json.dumps(data), ext='json')
 
