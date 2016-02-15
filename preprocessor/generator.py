@@ -10,9 +10,6 @@ import taskgen
 import util
 from compilation.helper import is_external
 from generic_translator import Translator
-
-sys.path.append(os.path.abspath('..'))
-
 from grounding import Grounder
 from templates import tplManager
 from static import DataElement
