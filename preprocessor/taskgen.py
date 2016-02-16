@@ -7,8 +7,7 @@ import base
 from base import ProblemDomain, ProblemInstance
 from compilation.exceptions import TypeException
 from compilation.schemata import ActionSchemaProcessor
-from compilation.symbols import process_symbols
-from index import CompilationIndex
+from index import CompilationIndex, index_symbols
 
 
 def process_action_schemata(task):
@@ -18,8 +17,8 @@ def process_action_schemata(task):
 def create_problem_domain(task, domain_name):
     """ Create a problem domain and perform the appropriate validity checks """
     types, supertypes = process_type_hierarchy(task.types)
-    symbols, symbol_types = process_symbols(task)
-    task.index = CompilationIndex(task)
+    symbols, symbol_types = index_symbols(task)
+    task.index = CompilationIndex(task.objects, types)
     schemata = process_action_schemata(task)
     return ProblemDomain(domain_name, types, supertypes, symbols, symbol_types, schemata)
 
@@ -43,7 +42,7 @@ def check_type(instance, expected, value):
 
 
 def create_problem_instance(name, domain, translator):
-    # TODO - This is extremely messy
+    # TODO - This is extremely messy - CLEAN UP, PLEASE!
     objects = translator.get_objects()
     init = translator.process_initial_state(domain.symbols)
     data = translator.get_static_data()
@@ -127,7 +126,10 @@ def process_type_hierarchy(task_types):
     all_t = set()
     correctly_declared = set()
 
-    types.append(base.ObjectType('object', None))  # The base object type is always there :-)
+    # The base 'object' and '_bool_' type are always there.
+    # Warning: the position in the list of types is important.
+    types.append(base.ObjectType('object', None))
+    types.append(base.ObjectType('_bool_', 'object'))
 
     for t in task_types:
         if t.name != 'object':

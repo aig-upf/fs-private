@@ -28,25 +28,8 @@ def make_type_varname(obj):
     return normalize(obj) + '_t'
 
 
-def make_extension_varname(extension):
-    return normalize(filter_extension_name(extension)) + '_ext'
-
-
-def make_extension_idxname(extension):
-    return make_extension_varname(filter_extension_name(extension)) + '_idx'
-
-
-def make_param_name(param):
-    return normalize(param[1:]) + '_idx'  # we get rid of the '?' in the variable name
-
-
 def is_action_parameter(name):
     return isinstance(name, str) and name[0] == '?'
-
-
-def filter_extension_name(extension):
-    # We substitute the predicate '=' for a syntactically acceptable predicate '_eq_'
-    return '_eq_' if extension == '=' else extension
 
 
 def mkdirp(directory):

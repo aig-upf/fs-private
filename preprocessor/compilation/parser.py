@@ -5,18 +5,15 @@ from pddl.f_expression import FunctionalTerm
 from pddl import Atom, NegatedAtom, ExistentialCondition, Conjunction
 
 from base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
-    ArithmeticExpression, StaticPredicativeExpression, FunctionalExpression, StaticFunctionalExpression, \
-    ConjunctivePredicate
+    ArithmeticExpression, FunctionalExpression, StaticFunctionalExpression, \
+    ConjunctivePredicate, PredicativeExpression
 from compilation.exceptions import ParseException
 from compilation.helper import is_external
 from util import is_int
 
 
-BASE_SYMBOLS = ("=", "!=", "*", "+", "-", ">", "<", ">=", "<=")
-
-
-def is_basic_symbol(symbol):
-    return symbol in BASE_SYMBOLS
+def is_relational_operator(symbol):
+    return symbol in {"=", "!=", "*", "+", "-", ">", "<", ">=", "<="}
 
 
 class Parser(object):
@@ -37,7 +34,7 @@ class Parser(object):
             # return self.process_existential_expression(exp)
             return exp
         elif isinstance(exp, Conjunction):
-            return self.process_conjunction(exp)
+            return ConjunctivePredicate(self.process_arguments(exp.parts))
         elif isinstance(exp, str):
             if exp[0] == '?':
                 return ParameterExpression(exp)
@@ -48,16 +45,12 @@ class Parser(object):
         else:
             raise ParseException("Unknown expression type for expression '{}'".format(exp))
 
-    def process_relational_operator(self, exp):
-        """ Process a relational operator such as =, <=, ... """
-        return RelationalExpression(exp.predicate, exp.negated, self.process_argument_list(exp.args))
-
     def process_arithmetic_operator(self, exp):
         """ Process an arithmetic operator such as +, -, ... """
-        return ArithmeticExpression(exp.symbol, self.process_argument_list(exp.args))
+        return ArithmeticExpression(exp.symbol, self.process_arguments(exp.args))
 
     def is_static(self, symbol):
-        return symbol in self.static or symbol in BASE_SYMBOLS or is_external(symbol)
+        return symbol in self.static or is_relational_operator(symbol) or is_external(symbol)
 
     # def process_existential_expression(self, exp):
     #     """  Parse an existentially-quantified expression """
@@ -67,49 +60,33 @@ class Parser(object):
     #     subformula = exp.parts[0]
     #     return ExistentialFormula(exp.parameters)
 
-    def process_conjunction(self, exp):
-        """  Parse a conjunction of atoms """
-        assert isinstance(exp, Conjunction)
-        return ConjunctivePredicate(self.process_argument_list(exp.parts))
-
-
     def process_functional_expression(self, exp):
         """  Parse a functional expression """
         assert isinstance(exp, FunctionalTerm)
 
-        if is_basic_symbol(exp.symbol):  # A relational operator
+        if is_relational_operator(exp.symbol):  # A relational operator
             return self.process_arithmetic_operator(exp)
 
         c = StaticFunctionalExpression if self.is_static(exp.symbol) else FunctionalExpression
-        return c(exp.symbol, self.process_argument_list(exp.args))
+        return c(exp.symbol, self.process_arguments(exp.args))
 
     def process_predicative_expression(self, exp):
         assert isinstance(exp, (Atom, NegatedAtom))
-        if is_basic_symbol(exp.predicate):  # A relational operator
-            result = self.process_relational_operator(exp)
+        name = exp.predicate
+        args = self.process_arguments(exp.args)
 
-        else:  # A "standard" predicate
-            # if self.is_static(exp.predicate):
-            #     result = StaticPredicativeExpression(exp.predicate, exp.negated, self.process_argument_list(exp.args))
-            # else:  # an atom p is equivalent to a relation p = 1; and similarly for a negated atom, but with p = 0
-            if is_external(exp.predicate):
-                assert not exp.negated, "Negated external symbols still unimplemented"
-                if not self.is_static(exp.predicate):
-                    raise RuntimeError("External symbols cannot be fluent")
-                result = StaticPredicativeExpression(exp.predicate, exp.negated, self.process_argument_list(exp.args))
-            else:
-                value = "1" if not exp.negated else "0"
-                atom = Atom("=", [FunctionalTerm(exp.predicate, exp.args), value])
-                result = self.process_relational_operator(atom)
+        if is_external(name) and (exp.negated or not self.is_static(name)):
+            raise RuntimeError("External symbols cannot be fluent nor negated")
 
-        return result
+        if is_relational_operator(name):
+            return RelationalExpression(exp.predicate, exp.negated, args)
+        else:
+            return PredicativeExpression(name, exp.negated, args, static=self.is_static(name))
 
-    def process_argument_list(self, args):
+    def process_arguments(self, args):
         """ Parses a list of predicate / function arguments """
         return [self.process_expression(arg) for arg in args]
 
     def check_declared(self, symbol):
-        if not is_basic_symbol(symbol) and \
-           symbol not in self.all and \
-           not is_external(symbol):
+        if not is_relational_operator(symbol) and symbol not in self.all and not is_external(symbol):
             raise ParseException("Undeclared symbol '{0}'".format(symbol))

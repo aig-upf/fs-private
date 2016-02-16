@@ -32,7 +32,7 @@ class Translator(object):
         return FormulaProcessor(self.task, self.task.constraints).process()
 
     def get_var_from_term(self, term):
-        assert all(isinstance(arg, str) and arg in self.task.index.objects.obj_to_idx for arg in term.args)
+        assert all(isinstance(arg, str) and arg in self.task.index.objects for arg in term.args)
         return base.Variable(term.symbol, term.args)
 
     def get_objects(self):
@@ -85,7 +85,7 @@ class Translator(object):
         if isinstance(expression, NumericConstant):
             return expression.value
         else:
-            if expression.symbol not in self.task.index.objects.obj_to_idx:
+            if expression.symbol not in self.task.index.objects:
                 raise ParseException("Functions need to be instantiated to plain objects")
             return expression.symbol
 

@@ -139,7 +139,6 @@ class Generator(object):
         self.symbol_index = {}
 
     def translate(self):
-        self.preprocess_task()
         self.grounder.ground_state_variables(self.index)
         self.generate_components_code()
         self.symbol_index = {name: i for i, name in enumerate(self.task.symbols.keys())}
@@ -180,7 +179,7 @@ class Generator(object):
         self.serialize_external_data()
 
     def process_data_code(self, method):
-        processed = [getattr(elem, method)(self.index.objects.obj_to_idx) for elem in self.task.static_data.values()
+        processed = [getattr(elem, method)(self.index.objects.data) for elem in self.task.static_data.values()
                      if isinstance(elem, DataElement)]
         return '\n\t'.join(processed)
 
@@ -198,7 +197,7 @@ class Generator(object):
     def serialize_external_data(self):
         for elem in self.task.static_data.values():
             assert isinstance(elem, DataElement)
-            serialized = elem.serialize_data(self.index.objects.obj_to_idx)
+            serialized = elem.serialize_data(self.index.objects.data)
             self.dump_data(elem.name, serialized)
 
     def get_normalized_task_name(self):
@@ -233,7 +232,7 @@ class Generator(object):
 
     def dump_variable_data(self):
         res = []
-        for i, var in enumerate(self.index.variables.idx_to_obj):
+        for i, var in enumerate(self.index.variables):
             data = self.dump_state_variable(var)
             res.append({'id': i, 'name': str(var), 'type': self.task.domain.symbol_types[var.symbol], 'data': data})
         return res
@@ -244,7 +243,7 @@ class Generator(object):
         return [head, constants]
 
     def dump_object_data(self):
-        return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump_index(print_index=False))]
+        return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump())]
 
     def dump_function_data(self):
         res = []
@@ -252,7 +251,7 @@ class Generator(object):
             i = self.symbol_index[name]
 
             # Collect the list of variables that arise from this particular symbol
-            f_variables = [(i, str(v)) for i, v in enumerate(self.index.variables.idx_to_obj) if v.symbol == name]
+            f_variables = [(i, str(v)) for i, v in enumerate(self.index.variables) if v.symbol == name]
 
             static = name in self.task.static_symbols
 
@@ -276,13 +275,6 @@ class Generator(object):
                 data.append([i, t, object_idxs])
 
         return data
-
-    def preprocess_task(self):
-        # We substitute the predicate '=' for a syntactically acceptable predicate '_eq_'
-        for pred in self.task.domain.get_predicates():
-            if pred.name == '_eq_':
-                raise RuntimeError('_eq_ is a reserved predicate name')
-            pred.name = util.filter_extension_name(pred.name)
 
     def save_translation(self, name, translation):
         with open(self.out_dir + '/' + name, "w") as f:

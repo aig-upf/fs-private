@@ -1,10 +1,45 @@
 """
- This file contains all the necessary entities to define P3R domains and problems.
+ This file contains all the necessary entities to define FSTRIPS domains and problems.
 """
 from collections import OrderedDict
-
-import util
 from util import is_action_parameter, is_int
+
+
+class Atom(object):
+    """ A generic (possibly functional) fact """
+    def __init__(self, var, value):  # TODO - Maybe use indexes directly?
+        self.var = var
+        self.value = value
+
+    def normalize(self):
+        return self
+
+    def is_equality(self):
+        return self.symbol == '='
+
+    def __hash__(self):
+        return hash((self.var, self.value))
+
+    def __eq__(self, other):
+        return (self.var, self.value) == (other.var, other.value)
+
+    def ground(self, binding):
+        self.var.ground(binding)
+        if is_action_parameter(self.value):
+            self.value = binding[self.value]
+        return self
+
+    def __str__(self):
+        return '{} = {}'.format(self.var, self.value)
+    __repr__ = __str__
+
+    @property
+    def symbol(self):
+        return self.var.symbol
+
+    @property
+    def args(self):
+        return self.var.args
 
 
 class Variable(object):
@@ -115,16 +150,13 @@ class ProblemDomain(object):
         self.symbol_types = symbol_types
         self.schemata = schemata
 
-    def index_by_name(self, objects):
+    @staticmethod
+    def index_by_name(objects):
         """ Index the given objects by their name """
-        ordered = OrderedDict()
+        ordered = OrderedDict()  # TODO - Replace by an IndexDictionary
         for obj in objects:
             ordered[obj.name] = obj
         return ordered
-
-    def get_predicates(self):
-        """ Small helper to iterate through the predicates """
-        return (s for s in self.symbols.values() if isinstance(s, Predicate))
 
 
 class ProblemInstance(object):
@@ -178,26 +210,48 @@ class StaticFunctionalExpression(FunctionalExpression):
 
 
 class PredicativeExpression(Expression):
-    def __init__(self, symbol, negated, arguments=None, type_='atom'):
+    def __init__(self, symbol, negated, arguments=None, static=False, type_='atom'):
         super().__init__(symbol, arguments)
         self.negated = negated
+        self.static = static
         self.type = type_
 
     def __str__(self):
         p = Expression.__str__(self)
         return '{}{}'.format("not " if self.negated else "", p)
 
+    def dump_arguments(self, objects, binding_unit):
+        elements = [elem.dump(objects, binding_unit) for elem in self.arguments]
+        return dict(type=self.type, elements=elements)
+
     def dump(self, objects, binding_unit):
-        subterms = [elem.dump(objects, binding_unit) for elem in self.arguments]
-        return dict(type=self.type, symbol=self.process_symbol(), subterms=subterms)
+        d = self.dump_arguments(objects, binding_unit)
+        d.update(dict(symbol=self.process_symbol(), negated=self.negated))
+        return d
 
     def process_symbol(self):
-        return _process_symbol(self.symbol, self.negated)
+        return self.symbol
 
-
-class StaticPredicativeExpression(PredicativeExpression):
     def is_static(self):
-        return True
+        return self.static
+
+
+class ConjunctivePredicate(PredicativeExpression):
+    def __init__(self, conjuncts):
+        super().__init__(symbol='conjunction', negated=False, arguments=conjuncts, static=True, type_='conjunction')
+
+    def dump(self, objects, binding_unit):
+        return self.dump_arguments(objects, binding_unit)
+
+
+class RelationalExpression(PredicativeExpression):
+    def __init__(self, symbol, negated, arguments):
+        assert len(arguments) == 2
+        super().__init__(symbol, negated, arguments, static=True)
+
+    def process_symbol(self):
+        negation_map = {"=": "!=", "<": ">=", "<=": ">", ">": "<=", ">=": "<"}
+        return self.symbol if not self.negated else negation_map[self.symbol]
 
 
 # class ExistentialFormula(PredicativeExpression):
@@ -212,21 +266,6 @@ class StaticPredicativeExpression(PredicativeExpression):
 #     def dump(self, objects, binding_unit):
 #         subformula = self.subformula.dump(objects, binding_unit)
 #         return dict(type=self.type, variables=binding_unit.dump_selected(self.parameters), subformula=subformula)
-
-
-class ConjunctivePredicate(PredicativeExpression):
-    def __init__(self, conjuncts):
-        super().__init__('conjunction', False, conjuncts, 'conjunction')
-
-    def dump(self, objects, binding_unit):
-        conjuncts = [elem.dump(objects, binding_unit) for elem in self.arguments]
-        return dict(type=self.type, elements=conjuncts)
-
-
-class RelationalExpression(StaticPredicativeExpression):
-    def __init__(self, symbol, negated, arguments):
-        assert len(arguments) == 2
-        super().__init__(symbol, negated, arguments)
 
 
 class ArithmeticExpression(StaticFunctionalExpression):
@@ -265,53 +304,3 @@ class ObjectExpression(Expression):
 class NumericExpression(Expression):
     def dump(self, objects, binding_unit):
         return dict(type='int_constant', value=int(self.symbol))
-
-
-_NEGATED_SYMBOLS = {"=": "!=", "<": ">=", "<=": ">", ">": "<=", ">=": "<"}
-
-
-def _process_symbol(symbol, negated):
-    if not negated:
-        return symbol
-    return _NEGATED_SYMBOLS[symbol]
-
-
-class Atom(object):
-    """ A generic (possibly functional) fact """
-    def __init__(self, var, value):  # TODO - Maybe use indexes directly?
-        self.var = var
-        self.value = value
-
-    def normalize(self):
-        return self
-
-    def is_predicate(self):
-        return isinstance(self.value, bool)
-
-    def is_equality(self):
-        return self.symbol == '='
-
-    def __hash__(self):
-        return hash((self.var, self.value))
-
-    def __eq__(self, other):
-        return (self.var, self.value) == (other.var, other.value)
-
-    def ground(self, binding):
-        self.var.ground(binding)
-        if util.is_action_parameter(self.value):
-            self.value = binding[self.value]
-        return self
-
-    def __str__(self):
-        return '{} {} {}'.format(self.var, self.OP, self.value)
-    __repr__ = __str__
-    OP = '='
-
-    @property
-    def symbol(self):
-        return self.var.symbol
-
-    @property
-    def args(self):
-        return self.var.args

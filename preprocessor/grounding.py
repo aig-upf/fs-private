@@ -26,7 +26,7 @@ class Grounder(object):
                 continue
             instantiations = [self.task.type_map[t] for t in symbol.arguments]
             for instantiation in itertools.product(*instantiations):
-                variables.index(Variable(symbol.name, instantiation))
+                variables.add(Variable(symbol.name, instantiation))
         return variables
 
     def get_relevant_init_facts(self):
