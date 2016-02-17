@@ -4,8 +4,9 @@
 """
 import pytest
 
-from .common import process_types, generate_objects, MockTask
-# This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
+from fs_task import FSTaskIndex
+from .common import process_types, generate_fd_objects, generate_fd_function, \
+    generate_fd_predicate, generate_fd_dummy_action
 from pddl.conditions import Conjunction, Atom
 from pddl.f_expression import FunctionalTerm
 from language_processor import FormulaProcessor
@@ -39,9 +40,21 @@ def unwrap_function(element):
 
 
 def generate_base_bw_instance():
-    types, supertypes = process_types([('block', 'object')])
-    objects = generate_objects(dict(b1='block', b2='block'))
-    return MockTask(types=types, supertypes=supertypes, objects=objects, fluent_symbols=['on', 'loc', 'val'])
+    task = FSTaskIndex("test_domain", "test_task")
+    fd_objects = generate_fd_objects(dict(b1='block', b2='block'))
+    types, type_map = process_types([('block', 'object')], fd_objects)
+
+    task.process_types(types, type_map)
+    task.process_objects(fd_objects)
+
+    loc = generate_fd_function(('loc', {'?b': 'block'}, 'location'))
+    val = generate_fd_function(('val', {'?c': 'counter'}, 'value'))
+    on = generate_fd_predicate(('on', {'?b1': 'block', '?b2': 'block'}))
+
+    actions = [generate_fd_dummy_action()]
+    task.process_symbols(actions, [on], [loc, val])
+
+    return task
 
 
 def test_predicate(bw_task):
@@ -79,7 +92,8 @@ def test_function(bw_task):
 
     symbol, subterms = unwrap_function(elements[0])  # loc(a)
     check_type(elements[1], 'constant')  # b
-    assert symbol == 'loc' and check_type(elements[0], 'constant')
+    assert symbol == 'loc' and len(subterms) == 1
+    check_type(subterms[0], 'constant')
 
 
 def test_relational_expression(bw_task):
@@ -96,6 +110,5 @@ def test_relational_expression(bw_task):
     _, _ = unwrap_function(elements[1])
 
 
-def test_existential():
-    assert False
-
+# def test_existential():
+#     assert False

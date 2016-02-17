@@ -22,14 +22,10 @@ def process_types(objects, supertypes, fd_bounds):
     of a subtype is a specialization of a specific type. We have
     to put this object into the set of the supertype, too.
     """
-    type_map = defaultdict(list)
-
-    bounded_types = process_bounds(fd_bounds)
+    type_map = {k: list() for k in supertypes.keys()}
 
     # Always add the bool, object and int types
     type_map['_bool_'] = ['_false_', '_true_']
-    type_map['object'] = []
-    type_map['int'] = []
 
     # for every type we append the corresponding object
     for o in objects:
@@ -42,8 +38,9 @@ def process_types(objects, supertypes, fd_bounds):
             for t in supertypes[o.type]:
                 type_map[t].append(o.name)
 
-    type_map = dict(list(type_map.items()) + list(bounded_types.items()))  # merge the two dictionaries
-
+    # Add the elements corresponding to bounded types and return all types together
+    bounded_types = process_bounds(fd_bounds)
+    type_map.update(bounded_types)
     return type_map
 
 

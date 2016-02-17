@@ -19,16 +19,16 @@ from state_variables import create_all_possible_state_variables
 def create_fs_task(fd_task, domain_name, instance_name):
     """ Create a problem domain and instance and perform the appropriate validity checks """
     types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
-    index = FSTaskIndex(domain_name, instance_name)
-    index.process_objects(fd_task.objects)
-    index.process_types(types, type_map)
-    index.process_symbols(fd_task.actions, fd_task.predicates, fd_task.functions)
-    index.process_state_variables(create_all_possible_state_variables(index.symbols, index.static_symbols, type_map))
-    index.process_initial_state(fd_task.init)
-    index.process_actions(fd_task.actions)
-    index.process_goal(fd_task.goal)
-    index.process_state_constraints(fd_task.constraints)
-    return index
+    task = FSTaskIndex(domain_name, instance_name)
+    task.process_objects(fd_task.objects)
+    task.process_types(types, type_map)
+    task.process_symbols(fd_task.actions, fd_task.predicates, fd_task.functions)
+    task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
+    task.process_initial_state(fd_task.init)
+    task.process_actions(fd_task.actions)
+    task.process_goal(fd_task.goal)
+    task.process_state_constraints(fd_task.constraints)
+    return task
 
 
 def _process_fluent_atoms(fd_initial_fluent_atoms):
