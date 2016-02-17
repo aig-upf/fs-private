@@ -2,20 +2,28 @@
     This module contains a number of classes and routines to handle the static (external) data, including its
     declaration and serialization.
 """
+import base
 import util
+
+
+def instantiate_extension(symbol):
+    if isinstance(symbol, base.Predicate):
+        return instantiate_predicate(symbol.name, len(symbol.arguments))
+    else:  # We have a function
+        return instantiate_function(symbol.name, len(symbol.arguments))
 
 
 def instantiate_function(name, arity):
     classes = {0: Arity0Element, 1: UnaryMap, 2: BinaryMap, 3: Arity3Map, 4: Arity4Map}
     if arity not in classes:
-        raise RuntimeError("Currently only up to arity-2 functions are supported")
+        raise RuntimeError("Currently only up to arity-4 functions are supported")
     return (classes[arity])(name)
 
 
 def instantiate_predicate(name, arity):
-    classes = {0: BinaryVariable, 1: UnarySet, 2: BinarySet, 3: Arity3Set, 4: Arity4Set}
+    classes = {0: ZeroarySet, 1: UnarySet, 2: BinarySet, 3: Arity3Set, 4: Arity4Set}
     if arity not in classes:
-        raise RuntimeError("Currently only up to arity-3 predicates are supported")
+        raise RuntimeError("Currently only up to arity-4 predicates are supported")
     return (classes[arity])(name)
 
 
@@ -157,7 +165,6 @@ class Arity4Map(BinaryMap):
         )[name]
 
 
-
 class UnarySet(DataElement):
     DESERIALIZER = 'deserializeUnarySet'
     ARITY = 1
@@ -173,7 +180,8 @@ class UnarySet(DataElement):
         super().__init__(name)
         self.elems = set()
 
-    def add(self, elem):
+    def add(self, elem, value=None):
+        assert value is None
         self.validate(elem)
         self.elems.add(elem)
 
@@ -186,7 +194,7 @@ class UnarySet(DataElement):
                 self.name, self.name, elem))
 
 
-class BinaryVariable(UnarySet):
+class ZeroarySet(UnarySet):
     DESERIALIZER = 'deserialize0AryElement'
     ARITY = 2
 
@@ -201,7 +209,8 @@ class BinaryVariable(UnarySet):
         super().__init__(name)
         self.elems = {}
 
-    def add(self, value):
+    def add(self, value, _=None):
+        assert _ is None
         self.elems[()] = value
 
     def get_declaration(self, symbols):
@@ -209,6 +218,7 @@ class BinaryVariable(UnarySet):
 
     def serialize_data(self, symbols):
         return [serialize_symbol(self.elems[()], symbols)]  # We simply print the only element
+
 
 class BinarySet(UnarySet):
     DESERIALIZER = 'deserializeBinarySet'

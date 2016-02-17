@@ -1,26 +1,30 @@
 """
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
-from pddl.f_expression import FunctionalTerm
-from pddl import Atom, NegatedAtom, ExistentialCondition, Conjunction
-
 from base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
     ArithmeticExpression, FunctionalExpression, StaticFunctionalExpression, \
     ConjunctivePredicate, PredicativeExpression
-from compilation.exceptions import ParseException
-from compilation.helper import is_external
-from util import is_int
+from exceptions import ParseException
+from pddl import Atom, NegatedAtom, ExistentialCondition, Conjunction
+from pddl.f_expression import FunctionalTerm
+from util import is_int, is_external
 
 
 def is_relational_operator(symbol):
-    return symbol in {"=", "!=", "*", "+", "-", ">", "<", ">=", "<="}
+    return symbol in {"=", "!=", ">", "<", ">=", "<="}
+
+
+def is_arithmetic_operator(symbol):
+    return symbol in {"*", "+", "-", "/"}
+
+
+def is_builtin_operator(symbol):
+    return is_relational_operator(symbol) or is_arithmetic_operator(symbol)
 
 
 class Parser(object):
-    def __init__(self, task):
-        self.all = task.all_symbols
-        self.static = task.static_symbols
-        self.fluent = task.fluent_symbols
+    def __init__(self, index):
+        self.index = index
 
     def process_expression(self, exp):
         """  Process an arbitrary expression """
@@ -45,12 +49,8 @@ class Parser(object):
         else:
             raise ParseException("Unknown expression type for expression '{}'".format(exp))
 
-    def process_arithmetic_operator(self, exp):
-        """ Process an arithmetic operator such as +, -, ... """
-        return ArithmeticExpression(exp.symbol, self.process_arguments(exp.args))
-
     def is_static(self, symbol):
-        return symbol in self.static or is_relational_operator(symbol) or is_external(symbol)
+        return symbol in self.index.static_symbols or is_builtin_operator(symbol) or is_external(symbol)
 
     # def process_existential_expression(self, exp):
     #     """  Parse an existentially-quantified expression """
@@ -64,8 +64,8 @@ class Parser(object):
         """  Parse a functional expression """
         assert isinstance(exp, FunctionalTerm)
 
-        if is_relational_operator(exp.symbol):  # A relational operator
-            return self.process_arithmetic_operator(exp)
+        if is_arithmetic_operator(exp.symbol):
+            return ArithmeticExpression(exp.symbol, self.process_arguments(exp.args))
 
         c = StaticFunctionalExpression if self.is_static(exp.symbol) else FunctionalExpression
         return c(exp.symbol, self.process_arguments(exp.args))
@@ -88,5 +88,5 @@ class Parser(object):
         return [self.process_expression(arg) for arg in args]
 
     def check_declared(self, symbol):
-        if not is_relational_operator(symbol) and symbol not in self.all and not is_external(symbol):
+        if not is_builtin_operator(symbol) and symbol not in self.index.all_symbols and not is_external(symbol):
             raise ParseException("Undeclared symbol '{0}'".format(symbol))

@@ -73,7 +73,7 @@ Term::cptr Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& in
 		return new IntConstant(tree["value"].GetInt());
 	} else if (term_type == "parameter") {
 		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["typename"].GetString()));
-	} else if (term_type == "nested") {
+	} else if (term_type == "function") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<Term::cptr> subterms = parseTermList(tree["subterms"], info);
 		return NestedTerm::create(symbol, subterms);

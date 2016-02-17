@@ -1,21 +1,15 @@
 """
- This file contains all the necessary entities to define FSTRIPS domains and problems.
+ This module contains a number of basic methods and data structures
+ which are necessary to define FSTRIPS domains and problems.
 """
-from collections import OrderedDict
-from util import is_action_parameter, is_int
+from util import is_int
 
 
 class Atom(object):
     """ A generic (possibly functional) fact """
-    def __init__(self, var, value):  # TODO - Maybe use indexes directly?
+    def __init__(self, var, value):
         self.var = var
         self.value = value
-
-    def normalize(self):
-        return self
-
-    def is_equality(self):
-        return self.symbol == '='
 
     def __hash__(self):
         return hash((self.var, self.value))
@@ -23,30 +17,15 @@ class Atom(object):
     def __eq__(self, other):
         return (self.var, self.value) == (other.var, other.value)
 
-    def ground(self, binding):
-        self.var.ground(binding)
-        if is_action_parameter(self.value):
-            self.value = binding[self.value]
-        return self
-
     def __str__(self):
         return '{} = {}'.format(self.var, self.value)
     __repr__ = __str__
-
-    @property
-    def symbol(self):
-        return self.var.symbol
-
-    @property
-    def args(self):
-        return self.var.args
 
 
 class Variable(object):
     """
     A state variable, made up of a symbol and a number of arguments.
     """
-
     def __init__(self, symbol, args):
         self.symbol = symbol
         self.args = tuple(int(a) if is_int(a) else a for a in args)
@@ -59,32 +38,6 @@ class Variable(object):
 
     def __str__(self):
         return '{}{}'.format(self.symbol, "(" + ', '.join(map(str, self.args)) + ")")
-
-    __repr__ = __str__
-
-    def ground(self, binding):
-        args = []
-        for a in self.args:
-            if is_action_parameter(a):
-                args.append(binding[a])
-            else:  # Assume it is a constant
-                args.append(a)
-        return Variable(self.symbol, args)
-
-
-class ProblemObject(object):
-    def __init__(self, name, typename):
-        self.name = name
-        self.typename = typename
-
-
-class ObjectType(object):
-    def __init__(self, name, parent):
-        self.name = name
-        self.parent = parent
-
-    def __str__(self):
-        return "{name}({parent})".format(**self.__dict__)
 
     __repr__ = __str__
 
@@ -113,7 +66,7 @@ class FunctionInstantiation(object):
         self.mapping = mapping if mapping else {}
 
     def add(self, point, value):
-        assert not point in self.mapping
+        assert point not in self.mapping
         self.mapping[point] = value
 
 
@@ -123,7 +76,7 @@ class PredicateInstantiation(object):
         self.set = mapping if mapping else set()
 
     def add(self, point):
-        assert not point in self.set
+        assert point not in self.set
         self.set.add(point)
 
 
@@ -134,38 +87,6 @@ class Parameter(object):
 
     def __str__(self):
         return '{}: {}'.format(self.name, self.typename)
-
-
-class State(object):
-    def __init__(self, instantiations):
-        self.instantiations = instantiations
-
-
-class ProblemDomain(object):
-    def __init__(self, name, types, supertypes, symbols, symbol_types, schemata):
-        self.name = name
-        self.types = types
-        self.supertypes = supertypes
-        self.symbols = self.index_by_name(symbols)
-        self.symbol_types = symbol_types
-        self.schemata = schemata
-
-    @staticmethod
-    def index_by_name(objects):
-        """ Index the given objects by their name """
-        ordered = OrderedDict()  # TODO - Replace by an IndexDictionary
-        for obj in objects:
-            ordered[obj.name] = obj
-        return ordered
-
-
-class ProblemInstance(object):
-    def __init__(self, name, domain, objects, init, static_data):
-        self.name = name
-        self.domain = domain
-        self.objects = objects
-        self.init = init
-        self.static_data = static_data
 
 
 class Expression(object):
@@ -186,7 +107,7 @@ class Expression(object):
     def is_subtree_static(self, arguments=None):
         arguments = (self.arguments if self.arguments is not None else []) if arguments is None else arguments
         for arg in arguments:
-            if isinstance(arg, (FunctionalExpression, VariableExpression)):
+            if isinstance(arg, FunctionalExpression):
                 if not arg.is_static() or not self.is_subtree_static(arg.arguments):
                     return False
         return True
@@ -201,7 +122,7 @@ class Expression(object):
 class FunctionalExpression(Expression):
     def dump(self, objects, binding_unit):
         subterms = [elem.dump(objects, binding_unit) for elem in self.arguments]
-        return dict(type='nested', symbol=self.symbol, subterms=subterms)
+        return dict(type='function', symbol=self.symbol, subterms=subterms)
 
 
 class StaticFunctionalExpression(FunctionalExpression):
@@ -272,19 +193,6 @@ class ArithmeticExpression(StaticFunctionalExpression):
     def __init__(self, symbol, arguments):
         assert len(arguments) == 2
         super().__init__(symbol, arguments)
-
-
-class VariableExpression(Expression):
-    def __init__(self, variable):
-        assert isinstance(variable, Variable)
-        super().__init__(variable.symbol, None)
-        self.variable = variable
-
-    def __str__(self):
-        return str(self.variable)
-
-    def dump(self, objects, binding_unit):
-        raise RuntimeError("dump() should never be called on VariableExpressions!")
 
 
 class ParameterExpression(Expression):

@@ -1,15 +1,14 @@
 """
- Some helper methods.
+ Some helper methods related to FD's parser PDDL representation
 """
 import pddl
-from pddl.f_expression import NumericConstant, PrimitiveNumericExpression, FunctionalTerm
-
-from compilation.exceptions import UnimplementedFeature
+from exceptions import UnimplementedFeature
+from pddl.f_expression import FunctionalTerm
+from pddl import conditions, effects
 
 
 def get_formula_parts(formula):
-    assert (isinstance(formula, (pddl.conditions.Conjunction, pddl.conditions.Atom, pddl.conditions.NegatedAtom,
-                                 pddl.conditions.Truth)))
+    assert isinstance(formula, (conditions.Conjunction, conditions.Atom, conditions.NegatedAtom, conditions.Truth))
     if isinstance(formula, pddl.conditions.Truth):
         return []
     return formula.parts if isinstance(formula, pddl.conditions.Conjunction) else [formula]
@@ -19,13 +18,9 @@ def get_effect_symbol(effect):
     """ Returns the symbol affected by a singular effect. """
     if isinstance(effect.literal, (pddl.Atom, pddl.NegatedAtom)):
         return effect.literal.predicate
-    elif isinstance(effect.literal, pddl.effects.AssignmentEffect):
+    elif isinstance(effect.literal, effects.AssignmentEffect):
         lhs = effect.literal.lhs
-        assert(isinstance(lhs, pddl.f_expression.FunctionalTerm))
+        assert isinstance(lhs, pddl.f_expression.FunctionalTerm)
         return lhs.symbol
     else:
         raise UnimplementedFeature('TODO - Effect type not yet supported')
-
-
-def is_external(symbol):
-    return symbol[0] == '@'

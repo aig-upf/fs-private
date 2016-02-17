@@ -1,9 +1,15 @@
 """
+  A number of classes to deal with FSTRIPS language actions and formulas and compile them into suitable data structures
+  that can be afterwards exported to JSON.
 """
 from collections import namedtuple
-import pddl
-from compilation.parser import Parser
 
+import pddl
+from pddl import conditions
+from pddl import Effect, Truth, Atom, NegatedAtom
+from pddl.effects import AssignmentEffect
+from pddl.f_expression import FunctionalTerm
+from parser import Parser
 
 TypedVar = namedtuple('TypedVar', ['name', 'type'])
 
@@ -50,9 +56,9 @@ class BindingUnit(object):
 
 
 class BaseComponentProcessor(object):
-    def __init__(self, task):
-        self.parser = Parser(task)
-        self.index = task.index
+    def __init__(self, index):
+        self.parser = Parser(index)
+        self.index = index
         self.data = self.init_data()
         self.binding_unit = BindingUnit()
 
@@ -62,12 +68,12 @@ class BaseComponentProcessor(object):
     def process(self):
         raise RuntimeError("Must subclass")
 
-    def process_conditions(self, conditions):
+    def process_conditions(self, the_conditions):
         """  Generates the actual conditions from the PDDL parser precondition list"""
-        if not conditions or isinstance(conditions, pddl.conditions.Truth):
+        if not the_conditions or isinstance(the_conditions, pddl.conditions.Truth):
             self.data['conditions']['type'] = 'tautology'
         else:
-            self.data['conditions'] = self.process_formula(conditions)
+            self.data['conditions'] = self.process_formula(the_conditions)
             self.data['unit'] = self.binding_unit.dump()
 
     def process_formula(self, node):
@@ -86,3 +92,54 @@ class BaseComponentProcessor(object):
                 node = pddl.conditions.Conjunction([node])
             exp = self.parser.process_expression(node)
             return exp.dump(self.index.objects, self.binding_unit)
+
+
+class FormulaProcessor(BaseComponentProcessor):
+    def __init__(self, index, formula):
+        super().__init__(index)
+        self.formula = formula
+
+    def init_data(self):
+        return dict(conditions={})
+
+    def process(self):
+        self.process_conditions(self.formula)
+        return self.data
+
+
+class ActionSchemaProcessor(BaseComponentProcessor):
+    """ A class to dump the information relevant to action schemata """
+    def __init__(self, index, action):
+        self.action = action
+        super().__init__(index)
+        self.binding_unit = BindingUnit.from_parameters(action.parameters)
+
+    def init_data(self):
+        name = self.action.name
+        param_names = [p.name for p in self.action.parameters]
+        signature = [self.index.types[p.type] for p in self.action.parameters]
+        return dict(name=name, signature=signature, parameters=param_names, conditions={}, effects=[])
+
+    def process(self):
+        self.process_conditions(self.action.precondition)
+        self.process_effects()
+        return self.data
+
+    def process_effects(self):
+        """  Generates the actual effects from the PDDL parser effect list"""
+        for effect in self.action.effects:
+            assert isinstance(effect, Effect) and isinstance(effect.condition, Truth) and not effect.parameters
+            effect = self.process_effect(effect.literal)
+            self.data['effects'].append(effect)
+
+    def process_effect(self, expression):
+        assert isinstance(expression, (AssignmentEffect, Atom, NegatedAtom))
+
+        if isinstance(expression, (Atom, NegatedAtom)):
+            # The effect has form visited(c), and we want to give it functional form visited(c) := true
+            lhs = FunctionalTerm(expression.predicate, expression.args)
+            rhs = "0" if expression.negated else "1"
+            expression = AssignmentEffect(lhs, rhs)
+
+        elems = [self.parser.process_expression(elem) for elem in (expression.lhs, expression.rhs)]
+        return [elem.dump(self.index.objects, self.binding_unit) for elem in elems]

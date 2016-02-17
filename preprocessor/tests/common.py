@@ -3,8 +3,8 @@
 """
 from pddl import Type
 from pddl.pddl_types import set_supertypes, TypedObject
-from taskgen import process_type_hierarchy
-from index import CompilationIndex
+from object_types import process_type_hierarchy
+from fs_task import FSTaskIndex
 
 
 def process_types(types):
@@ -13,7 +13,7 @@ def process_types(types):
     :param types: The types in a straight-forward {'typename': 'parent_typename'} dictionary format
     :return: The types as processed by our preprocessor from the corresponding FD PDDL parser format
     """
-    processed = [Type(name, parent) for name, parent in types.items()]
+    processed = [Type(name, parent) for name, parent in types]
     set_supertypes(processed)
     return process_type_hierarchy(processed)
 
@@ -36,4 +36,4 @@ class MockTask(object):
         for name, default in defaults.items():
             object.__setattr__(self, name, kwargs[name] if name in kwargs else default)
         self.all_symbols = self.static_symbols + self.fluent_symbols
-        self.index = CompilationIndex(self.objects, self.types)
+        self.index = FSTaskIndex(self.objects, self.types)
