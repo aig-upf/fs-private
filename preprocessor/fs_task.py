@@ -135,7 +135,7 @@ class FSTaskIndex(object):
 
         # Distinguish fluent from static atoms, since we'll treat them differently
         fd_initial_fluent_atoms = [elem for elem in fd_initial_atoms if self.is_fluent(elem[0])]
-        fd_initial_static_atoms = [elem for elem in fd_initial_atoms if self.is_fluent(elem[0])]
+        fd_initial_static_atoms = [elem for elem in fd_initial_atoms if not self.is_fluent(elem[0])]
 
         self.initial_fluent_atoms = _process_fluent_atoms(fd_initial_fluent_atoms)
         self.initial_static_data = self._process_static_atoms(fd_initial_static_atoms)
@@ -172,7 +172,7 @@ class FSTaskIndex(object):
             else:
                 raise RuntimeError("Unrecognized type of atom '{}'".format(atom))
 
-            return names
+        return names
 
     def parse_value(self, expression):
         if isinstance(expression, NumericConstant):

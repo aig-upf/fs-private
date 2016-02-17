@@ -4,20 +4,26 @@
 """
 import pytest
 
-from fs_task import FSTaskIndex
-from .common import process_types, generate_fd_objects, generate_fd_function, \
-    generate_fd_predicate, generate_fd_dummy_action
+from language_processor import FormulaProcessor
 from pddl.conditions import Conjunction, Atom
 from pddl.f_expression import FunctionalTerm
-from language_processor import FormulaProcessor
+from .common import generate_base_fs_task, generate_fd_function, generate_fd_predicate, generate_fd_dummy_action
 
 
 @pytest.fixture(scope="module")
 def bw_task():
     """ This effectively generates a single BW instance per test module and allows it to be reused in different tests
-        simply by declaring that the test has a 'bw_task' parameter. See https://pytest.org/latest/fixture.html.
-    """
-    return generate_base_bw_instance()
+        simply by declaring that the test has a 'bw_task' parameter. See https://pytest.org/latest/fixture.html. """
+    task = generate_base_fs_task(objects=[('b1', 'block'), ('b2', 'block')], types=[('block', 'object')])
+
+    loc = generate_fd_function(('loc', [('?b', 'block')], 'location'))
+    val = generate_fd_function(('val', [('?c', 'counter')], 'value'))
+    on = generate_fd_predicate(('on', [('?b1', 'block'), ('?b2', 'block')]))
+
+    actions = [generate_fd_dummy_action()]
+    task.process_symbols(actions, [on], [loc, val])
+
+    return task
 
 
 def check_type(element, type_):
@@ -37,24 +43,6 @@ def unwrap_predicate(element):
 def unwrap_function(element):
     check_type(element, 'function')
     return element['symbol'], element['subterms']
-
-
-def generate_base_bw_instance():
-    task = FSTaskIndex("test_domain", "test_task")
-    fd_objects = generate_fd_objects(dict(b1='block', b2='block'))
-    types, type_map = process_types([('block', 'object')], fd_objects)
-
-    task.process_types(types, type_map)
-    task.process_objects(fd_objects)
-
-    loc = generate_fd_function(('loc', {'?b': 'block'}, 'location'))
-    val = generate_fd_function(('val', {'?c': 'counter'}, 'value'))
-    on = generate_fd_predicate(('on', {'?b1': 'block', '?b2': 'block'}))
-
-    actions = [generate_fd_dummy_action()]
-    task.process_symbols(actions, [on], [loc, val])
-
-    return task
 
 
 def test_predicate(bw_task):

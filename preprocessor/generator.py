@@ -112,7 +112,7 @@ def main(args):
     # Determine the appropriate output directory for the problem solver, and create it, if necessary
     translation_dir = args.output
     if not translation_dir:
-        components = [args.output_base, args.tag, util.normalize(domain_name), util.normalize(instance_name)]
+        components = [args.output_base, args.tag, domain_name, instance_name]
         translation_dir = os.path.abspath(os.path.join(*components))
     util.mkdirp(translation_dir)
 

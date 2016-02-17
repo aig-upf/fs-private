@@ -14,7 +14,7 @@ def test_empty_type():
 
 
 def test_simple_type():
-    fd_objects = generate_fd_objects(dict(b1='block', b2='block'))
+    fd_objects = generate_fd_objects([('b1', 'block'), ('b2', 'block')])
     types, type_map = process_types([('block', 'object'), ('object', None)], fd_objects)
     assert len(type_map) == len(types) == 4, "Types should be: object, bool, int and block"
     assert type_map['object'] == type_map['block'] == ['b1', 'b2']
@@ -29,7 +29,7 @@ def test_int_type():
 
 
 def test_hierarchy():
-    fd_objects = generate_fd_objects(dict(b1='me', b2='dad', b3='grand', b4='object'))
+    fd_objects = generate_fd_objects([('b1', 'me'), ('b2', 'dad'), ('b3', 'grand'), ('b4', 'object')])
     types, t_map = process_types([('dad', 'grand'), ('object', None), ('grand', 'object'), ('me', 'dad')], fd_objects)
     assert len(t_map) == len(types) == 6
     assert len(t_map['me']) == 1 and len(t_map['dad']) == 2 and len(t_map['grand']) == 3 and len(t_map['object']) == 4
