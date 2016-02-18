@@ -127,7 +127,7 @@ def main(args):
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance
-    ProblemRepresentation(fs_task, translation_dir).generate()
+    ProblemRepresentation(fs_task, translation_dir, args.edebug).generate()
     move_files(args.instance_dir, args.instance, args.domain, translation_dir)
     compile_translation(translation_dir, args)
 

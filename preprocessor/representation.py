@@ -12,9 +12,10 @@ from util import is_external
 
 class ProblemRepresentation(object):
 
-    def __init__(self, index, translation_dir):
+    def __init__(self, index, translation_dir, edebug):
         self.index = index
         self.translation_dir = translation_dir
+        self.edebug = edebug
 
     def generate(self):
 
@@ -30,6 +31,7 @@ class ProblemRepresentation(object):
                 }
 
         self.dump_data('problem', json.dumps(data), ext='json')
+        self.print_debug_data(data)
 
         self.generate_components_code()
 
@@ -135,11 +137,15 @@ class ProblemRepresentation(object):
         with open(self.translation_dir + '/' + name, "w") as f:
             f.write(translation)
 
-    def dump_data(self, name, data, ext='data'):
+    def dump_data(self, name, data, ext='data', subdir=None):
         if not isinstance(data, list):
             data = [data]
 
         basedir = self.translation_dir + '/data'
+
+        if subdir:
+            basedir += '/' + subdir
+
         util.mkdirp(basedir)
         with open(basedir + '/' + name + '.' + ext, "w") as f:
             for l in data:
@@ -165,3 +171,18 @@ class ProblemRepresentation(object):
             name=symbol, accessor=symbol[1:]) for symbol in self.index.static_symbols if is_external(symbol)]
 
         return extensional + external
+
+    def print_debug_data(self, data):
+        if not self.edebug:
+            return
+
+        self.dump_data('debug.problem', json.dumps(data, indent=2), ext='json', subdir='debug')
+        # self.dump_data('debug.problem', pprint.pformat(data, width=30, indent=2), ext='txt', subdir='debug')
+
+        # For ease of inspection we dump each component into a separate JSON file
+        for k, elem in data.items():
+            self.dump_data("{}".format(k), json.dumps(elem, indent=2), ext='json', subdir='debug')
+
+        # And further separate each action into a different file:
+        for action in data['action_schemata']:
+            self.dump_data("action.{}".format(action['name']), json.dumps(action, indent=2), ext='json', subdir='debug')
