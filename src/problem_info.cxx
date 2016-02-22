@@ -17,8 +17,8 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	std::cout << "\t Loading Object index..." << std::endl;
 	loadObjectIndex(data["objects"]);
 
-	std::cout << "\t Loading Function index..." << std::endl;
-	loadFunctionIndex(data["functions"]);
+	std::cout << "\t Loading Symbol index..." << std::endl;
+	loadSymbolIndex(data["symbols"]);
 	
 	std::cout << "\t Loading Variable index..." << std::endl;
 	loadVariableIndex(data["variables"]);
@@ -96,37 +96,42 @@ VariableIdx ProblemInfo::getVariableId(unsigned symbol_id, const std::vector<Obj
 	return variableDataToId.at(std::make_pair(symbol_id, subterms));
 }
 
-void ProblemInfo::loadFunctionIndex(const rapidjson::Value& data) {
-	assert(functionIds.empty());
+void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
+	assert(symbolIds.empty());
 	
 
-	// Function data is stored as: <function_id, function_name, <function_domain>, function_codomain, state_variables, static_flag>
+	// Symbol data is stored as: # <symbol_id, symbol_name, symbol_type, <function_domain>, function_codomain, state_variables, static?>
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		const unsigned id = data[i][0].GetInt();
 		const std::string name(data[i][1].GetString());
-		assert(id == functionIds.size()); // Check values are decoded in the proper order
-		functionIds.insert(std::make_pair(name, id));
-		functionNames.push_back(name);
+		assert(id == symbolIds.size()); // Check values are decoded in the proper order
+		symbolIds.insert(std::make_pair(name, id));
+		symbolNames.push_back(name);
+
+		// Parse the symbol type: function or predicate
+		const std::string symbol_type = data[i][2].GetString();
+		assert (symbol_type == "function" || symbol_type == "predicate");
+		const SymbolData::Type type = (symbol_type == "function") ? SymbolData::Type::FUNCTION : SymbolData::Type::PREDICATE;
 		
 		// Parse the domain IDs
-		const auto& domains = data[i][2];
+		const auto& domains = data[i][3];
 		Signature domain;
 		for (unsigned j = 0; j < domains.Size(); ++j) {
 			domain.push_back(getTypeId(domains[j].GetString()));
 		}
 		
 		// Parse the codomain ID
-		TypeIdx codomain = getTypeId(data[i][3].GetString());
+		TypeIdx codomain = getTypeId(data[i][4].GetString());
 		
 		// Parse the function variables
 		std::vector<VariableIdx> variables;
-		const auto& list = data[i][4];
+		const auto& list = data[i][5];
 		for (unsigned j = 0; j < list.Size(); ++j) {
 			variables.push_back(list[j][0].GetInt());
 		}
 		
-		bool is_static = data[i][5].GetBool();
-		functionData.push_back(FunctionData(domain, codomain, variables, is_static));
+		bool is_static = data[i][6].GetBool();
+		functionData.push_back(SymbolData(type, domain, codomain, variables, is_static));
 	}
 }
 

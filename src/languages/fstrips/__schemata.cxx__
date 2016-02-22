@@ -35,7 +35,7 @@ Term::cptr NestedTermSchema::process(const Signature& signature, const ObjectIdx
 	process_subterms(signature, binding, info, _subterms, st, constant_values);
 	
 	// We process the 4 different possible cases separately:
-	const auto& function = info.getFunctionData(_symbol_id);
+	const auto& function = info.getSymbolData(_symbol_id);
 	if (function.isStatic() && constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:st) delete ptr;
 		auto value = function.getFunction()(constant_values);

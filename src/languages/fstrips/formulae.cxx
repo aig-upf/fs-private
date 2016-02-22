@@ -15,7 +15,7 @@ typedef RelationalFormula::Symbol AFSymbol;
 const std::map<AFSymbol, std::string> RelationalFormula::symbol_to_string{
 	{AFSymbol::EQ, "="}, {AFSymbol::NEQ, "!="}, {AFSymbol::LT, "<"}, {AFSymbol::LEQ, "<="}, {AFSymbol::GT, ">"}, {AFSymbol::GEQ, ">="}
 };
-const std::map<std::string, AFSymbol> RelationalFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
+// const std::map<std::string, AFSymbol> RelationalFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
 
 
 std::vector<Term::cptr> Formula::all_terms() const {

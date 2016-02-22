@@ -256,6 +256,27 @@ protected:
 	bool interpret_rec(const T& assignment, const Binding& binding, unsigned i) const;
 };
 
+
+//! A formula such as 'clear(b)', where clear is one of the problem's fluents.
+class FluentAtom : public AtomicFormula {
+public:
+	typedef const FluentAtom* cptr;
+	
+	FluentAtom(unsigned symbol_id, const std::vector<Term::cptr>& subterms) : AtomicFormula(subterms), _symbol_id(symbol_id)
+	{}
+
+	FluentAtom* clone(const std::vector<Term::cptr>& subterms) const = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	
+protected:
+	bool _satisfied(const ObjectIdxVector& values) const;
+	
+	unsigned _symbol_id;
+};
+
+
 //! A formula of the form t_1 <op> t_2, where t_i are terms and <op> is a basic relational
 //! operator such as =, !=, >, etc.
 class RelationalFormula : public AtomicFormula {
@@ -273,11 +294,11 @@ public:
 	virtual RelationalFormula* clone(const std::vector<Term::cptr>& subterms) const = 0;
 	
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;	
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 	
 	
 	const static std::map<RelationalFormula::Symbol, std::string> symbol_to_string;
-	const static std::map<std::string, RelationalFormula::Symbol> string_to_symbol;
+// 	const static std::map<std::string, RelationalFormula::Symbol> string_to_symbol;
 	
 	const Term::cptr lhs() const { return _subterms[0]; }
 	const Term::cptr rhs() const { return _subterms[1]; }

@@ -97,7 +97,7 @@ public:
 	//! A small helper
 	template <typename T>
 	static std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {
-		os << info.getFunctionName(symbol_id) << "(";
+		os << info.getSymbolName(symbol_id) << "(";
 		for (unsigned i = 0; i < subterms.size(); ++i) {
 			os << *subterms[i];
 			if (i < subterms.size() - 1) os << ", ";
@@ -199,7 +199,7 @@ public:
 
 protected:
 	// The (static) logical function implementation
-	const FunctionData& _function;
+	const SymbolData& _function;
 };
 
 

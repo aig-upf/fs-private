@@ -13,6 +13,18 @@ AtomicFormula::cptr Loader::parseAtomicFormula(const rapidjson::Value& tree, con
 	if (term_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<Term::cptr> subterms = parseTermList(tree["elements"], info);
+		
+		// TODO - This is a temporary hack to parse predicates 'p(x)' as if they were
+		// equality predicates 'p(x) = 1' with 'p' being a binary function.
+		try {
+			unsigned symbol_id = info.getSymbolId(symbol);
+			if (info.isPredicate(symbol_id)) {
+				// 
+				subterms = {NestedTerm::create(symbol, subterms), new IntConstant(1)};
+				symbol = "=";
+			}
+		} catch(std::out_of_range& ex) {} // The symbol might be built-in, and thus not registered.
+		
 		return LogicalComponentRegistry::instance().instantiate_formula(symbol, subterms);
 	}
 	else throw std::runtime_error("Unknown node type " + term_type);

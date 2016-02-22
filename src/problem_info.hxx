@@ -10,12 +10,14 @@ namespace fs0 {
 
 class Atom;
 
-//! Data related to the functional symbols
-class FunctionData {
+//! Data related to function and predicate symbols
+class SymbolData {
 public:
 	
-	FunctionData(const Signature& signature, TypeIdx codomain, std::vector<VariableIdx>& variables, bool stat):
-		_signature(signature), _codomain(codomain), _variables(variables), _static(stat) {}
+	enum class Type {PREDICATE, FUNCTION};
+	
+	SymbolData(Type type, const Signature& signature, TypeIdx codomain, std::vector<VariableIdx>& variables, bool stat):
+		_type(type), _signature(signature), _codomain(codomain), _variables(variables), _static(stat) {}
 	
 	//! Returns the state variables derived from the given function (e.g. for a function "f", f(1), f(2), ...)
 	const std::vector<VariableIdx>& getStateVariables() const {
@@ -23,6 +25,7 @@ public:
 		return _variables;
 	}
 	
+	Type getType() const { return _type; }
 	const Signature& getSignature() const { return _signature; }
 	const TypeIdx& getCodomainType() const { return _codomain; }
 	
@@ -39,6 +42,7 @@ public:
 	}
 
 protected:
+	Type _type;
 	Signature _signature;
 	TypeIdx _codomain;
 	std::vector<VariableIdx> _variables;
@@ -56,8 +60,8 @@ public:
 	typedef std::shared_ptr<ProblemInfo> ptr;
 	typedef std::shared_ptr<const ProblemInfo> cptr;
 	
-	enum class ObjectType {INT, BOOL, OBJECT}; 
-
+	enum class ObjectType {INT, BOOL, OBJECT};
+	
 protected:
 	//! A map from state variable ID to state variable name
 	std::vector<std::string> variableNames;
@@ -91,14 +95,12 @@ protected:
 	std::unordered_map<std::string, TypeIdx> name_to_type;
 	std::vector<std::string> type_to_name;
 	
-	//! A map from function ID to function name
-	std::vector<std::string> functionNames;
-	
-	//! A map from function name to function ID
-	std::map<std::string, unsigned> functionIds;
+	//! Maps between predicate and function symbols names and IDs.
+	std::vector<std::string> symbolNames;
+	std::map<std::string, unsigned> symbolIds;
 	
 	//! A map from function ID to the function data
-	std::vector<FunctionData> functionData;
+	std::vector<SymbolData> functionData;
 	
 	//! The names of the problem domain and instance
 	std::string _domain;
@@ -122,12 +124,15 @@ public:
 	inline ObjectIdx getObjectId(const std::string& name) const { return objectIds.at(name); }
 	
 	//! Return the ID of the function with given name
-	inline unsigned getFunctionId(const std::string& name) const { return functionIds.at(name); }
-	const std::string& getFunctionName(unsigned function_id) const { return functionNames.at(function_id); }
+	inline unsigned getSymbolId(const std::string& name) const { return symbolIds.at(name); }
+	const std::string& getSymbolName(unsigned symbol_id) const { return symbolNames.at(symbol_id); }
+	bool isPredicate(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::PREDICATE; }
+	bool isFunction(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::FUNCTION; }
+	
 	void setFunction(unsigned functionId, const Function& function) {
 		functionData.at(functionId).setFunction(function);
 	}
-	inline const FunctionData& getFunctionData(unsigned functionId) const { return functionData.at(functionId); }
+	inline const SymbolData& getSymbolData(unsigned functionId) const { return functionData.at(functionId); }
 	
 	//! Returns all the objects of the given type _or of a descendant type_
 	inline const std::vector<ObjectIdxVector>& getTypeObjects() const { return typeObjects; }
@@ -154,7 +159,7 @@ public:
 	VariableIdx resolveStateVariable(unsigned symbol_id, const std::vector<ObjectIdx>& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
 	
 	//! Resolves a function ID to all state variables in which the function can result
-	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return getFunctionData(symbol_id).getStateVariables(); }
+	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return getSymbolData(symbol_id).getStateVariables(); }
 	
 	
 	const std::string& getCustomObjectName(ObjectIdx objIdx) const;
@@ -191,7 +196,7 @@ public:
 protected:
 	
 	//! Load all the function-related data 
-	void loadFunctionIndex(const rapidjson::Value& data);
+	void loadSymbolIndex(const rapidjson::Value& data);
 	
 	//! Load the names of the state variables
 	void loadVariableIndex(const rapidjson::Value& data);

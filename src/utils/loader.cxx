@@ -55,7 +55,7 @@ void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_han
 
 void Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 	for (auto elem:factory.instantiateFunctions()) {
-		info.setFunction(info.getFunctionId(elem.first), elem.second);
+		info.setFunction(info.getSymbolId(elem.first), elem.second);
 	}
 }
 

@@ -1,6 +1,7 @@
 """
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
+import exceptions
 from base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
     ArithmeticExpression, FunctionalExpression, StaticFunctionalExpression, \
     ConjunctivePredicate, PredicativeExpression
@@ -89,4 +90,4 @@ class Parser(object):
 
     def check_declared(self, symbol):
         if not is_builtin_operator(symbol) and symbol not in self.index.all_symbols and not is_external(symbol):
-            raise ParseException("Undeclared symbol '{0}'".format(symbol))
+            raise exceptions.UndeclaredSymbol("Undeclared symbol '{0}'".format(symbol))

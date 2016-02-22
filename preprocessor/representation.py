@@ -4,6 +4,7 @@
 import json
 import operator
 
+import base
 import util
 from static import DataElement
 from templates import tplManager
@@ -26,7 +27,7 @@ class ProblemRepresentation(object):
                 'state_constraints': self.index.state_constraints,
                 'init': self.dump_init_data(),
                 'goal': self.index.goal,
-                'functions': self.dump_function_data(),
+                'symbols': self.dump_symbol_data(),
                 'problem': {'domain': self.index.domain_name, 'instance': self.index.instance_name}
                 }
 
@@ -104,19 +105,21 @@ class ProblemRepresentation(object):
     def dump_object_data(self):
         return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump())]
 
-    def dump_function_data(self):
+    def dump_symbol_data(self):
         res = []
         for name, symbol in self.index.symbols.items():
             i = self.index.symbol_index[name]
+
+            type_ = "predicate" if isinstance(symbol, base.Predicate) else "function"
 
             # Collect the list of variables that arise from this particular symbol
             f_variables = [(i, str(v)) for i, v in enumerate(self.index.state_variables) if v.symbol == name]
 
             static = name in self.index.static_symbols
 
-            # Store the function info as a tuple:
-            # <function_id, function_name, <function_domain>, function_codomain, state_variables>
-            res.append([i, name, symbol.arguments, symbol.codomain, f_variables, static])
+            # Store the symbol info as a tuple:
+            # <symbol_id, symbol_name, symbol_type, <function_domain>, function_codomain, state_variables, static?>
+            res.append([i, name, type_, symbol.arguments, symbol.codomain, f_variables, static])
         return res
 
     def dump_type_data(self):

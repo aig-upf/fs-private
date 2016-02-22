@@ -55,8 +55,8 @@ Term::cptr NestedTerm::create(const std::string& symbol, const std::vector<Term:
 	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
 	if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return ArithmeticTermFactory::create(symbol, subterms);
 	
-	unsigned symbol_id = info.getFunctionId(symbol);
-	const auto& function = info.getFunctionData(symbol_id);
+	unsigned symbol_id = info.getSymbolId(symbol);
+	const auto& function = info.getSymbolData(symbol_id);
 	if (function.isStatic()) {
 		return new UserDefinedStaticTerm(symbol_id, subterms);
 	} else {
@@ -69,7 +69,7 @@ Term::cptr NestedTerm::bind(const Binding& binding, const ProblemInfo& info) con
 	std::vector<Term::cptr> st = bind_subterms(_subterms, binding, info, constant_values);
 	
 	// We process the 4 different possible cases separately:
-	const auto& function = info.getFunctionData(_symbol_id);
+	const auto& function = info.getSymbolData(_symbol_id);
 	if (function.isStatic() && constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:st) delete ptr;
 		auto value = function.getFunction()(constant_values);
@@ -109,7 +109,7 @@ Term::cptr UserDefinedStaticTerm::bind(const Binding& binding, const ProblemInfo
 	if (constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:processed) delete ptr;
 		
-		const auto& function = info.getFunctionData(_symbol_id);
+		const auto& function = info.getSymbolData(_symbol_id);
 		auto value = function.getFunction()(constant_values);
 		return info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
 	}
@@ -136,7 +136,7 @@ Term::cptr ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info)
 
 
 TypeIdx NestedTerm::getType() const {
-	return Problem::getInfo().getFunctionData(_symbol_id).getCodomainType();
+	return Problem::getInfo().getSymbolData(_symbol_id).getCodomainType();
 }
 
 std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -156,7 +156,7 @@ ArithmeticTerm::ArithmeticTerm(const std::vector<Term::cptr>& subterms)
 
 UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
 	: StaticHeadedNestedTerm(symbol_id, subterms),
-	_function(Problem::getInfo().getFunctionData(symbol_id))
+	_function(Problem::getInfo().getSymbolData(symbol_id))
 {}
 
 TypeIdx UserDefinedStaticTerm::getType() const {
@@ -197,7 +197,7 @@ VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state, const 
 
 std::pair<int, int> FluentHeadedNestedTerm::getBounds() const {
 	const ProblemInfo& info = Problem::getInfo();
-	auto type = Problem::getInfo().getFunctionData(_symbol_id).getCodomainType();
+	auto type = Problem::getInfo().getSymbolData(_symbol_id).getCodomainType();
 	return info.getTypeBounds(type);
 }
 

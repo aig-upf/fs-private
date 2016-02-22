@@ -135,11 +135,12 @@ class ActionSchemaProcessor(BaseComponentProcessor):
     def process_effect(self, expression):
         assert isinstance(expression, (AssignmentEffect, Atom, NegatedAtom))
 
-        if isinstance(expression, (Atom, NegatedAtom)):
+        if isinstance(expression, AssignmentEffect):
+            lhs, rhs = expression.lhs, expression.rhs
+        else:
             # The effect has form visited(c), and we want to give it functional form visited(c) := true
             lhs = FunctionalTerm(expression.predicate, expression.args)
             rhs = "0" if expression.negated else "1"
-            expression = AssignmentEffect(lhs, rhs)
 
-        elems = [self.parser.process_expression(elem) for elem in (expression.lhs, expression.rhs)]
+        elems = [self.parser.process_expression(elem) for elem in (lhs, rhs)]
         return [elem.dump(self.index.objects, self.binding_unit) for elem in elems]

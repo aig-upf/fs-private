@@ -89,7 +89,7 @@ Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain, bool include_d
 
 Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
 	const ProblemInfo& info = Problem::getInfo();
-	auto f_data = info.getFunctionData(term->getSymbolId());
+	auto f_data = info.getSymbolData(term->getSymbolId());
 	const auto& functor = f_data.getFunction();
 
 	Gecode::TupleSet tuples;

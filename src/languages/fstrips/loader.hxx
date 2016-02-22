@@ -34,7 +34,6 @@ public:
 	
 	//! Parse a list of atomic formulae from a JSON node
 	static std::vector<ActionEffect::cptr> parseEffectList(const rapidjson::Value& tree, const ProblemInfo& info);
-	
 };
 
 } } } // namespaces

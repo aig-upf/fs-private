@@ -78,7 +78,7 @@ void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variabl
 }
 
 bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type) {
-	TypeIdx domain_type = Problem::getInfo().getFunctionData(nested->getSymbolId()).getCodomainType();
+	TypeIdx domain_type = Problem::getInfo().getSymbolData(nested->getSymbolId()).getCodomainType();
 	return registerNestedTerm(nested, type, domain_type);
 }
 
