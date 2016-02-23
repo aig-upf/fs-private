@@ -38,7 +38,7 @@ FilteringOutput GecodeRPGBuilder::pruneUsingStateConstraints(GecodeRPGLayer& lay
 	if (!_state_constraint_handler) return FilteringOutput::Unpruned;
 	
 	SimpleCSP* csp = _state_constraint_handler->instantiate_csp(layer);
-	bool consistent = csp->checkConsistency();
+	bool consistent = csp && csp->checkConsistency();
 	
 	delete csp;
 	
@@ -58,10 +58,10 @@ bool GecodeRPGBuilder::isGoal(const GecodeRPGLayer& layer) const {
 bool GecodeRPGBuilder::isGoal(const State& seed, const GecodeRPGLayer& layer, Atom::vctr& support) const {
 	assert(support.empty());
 	
-	SimpleCSP* csp = _goal_handler->instantiate_csp(layer);
 	bool is_goal = false;
+	SimpleCSP* csp = _goal_handler->instantiate_csp(layer);
 	
-	if (csp->checkConsistency()) {
+	if (csp && csp->checkConsistency()) {
 		FFDEBUG("heuristic", "Formula CSP found to be consistent: " << *csp);
 		if (!Config::instance().useApproximateGoalResolution()) {  // Solve the CSP completely
 			is_goal = _goal_handler->compute_support(csp, support, seed);

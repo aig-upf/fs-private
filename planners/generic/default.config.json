@@ -24,7 +24,7 @@
 		"manager": "gecode",
 		
 		"model_comment": ["The CSP model we want to work with. Currently accepted: 'action', 'effect', 'action_schema', 'effect_schema'"],
-		"model": "effect",
+		"model": "action",
 		
 		"precondition_resolution_comment": ["Either 'full' or 'approximate': whether to fully or only approximately solve the action precondition CSPs"],
 		"precondition_resolution": "full",

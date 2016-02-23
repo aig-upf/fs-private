@@ -7,6 +7,7 @@
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/utils/variable_counter.hxx>
 #include <constraints/gecode/utils/nested_fluent_element_translator.hxx>
+#include <constraints/gecode/utils/extensional_constraint.hxx>
 #include <utils/config.hxx>
 
 
@@ -69,8 +70,15 @@ protected:
 	// All (distinct) FSTRIPS atomic formulas that participate in the CSP
 	std::unordered_set<const fs::AtomicFormula*> _all_formulas;
 	
+	//! All (distinct) FSTRIPS atoms that participate in the CSP
+	std::unordered_set<const fs::FluentHeadedNestedTerm*> _all_atoms;
+	
+	//! The Ids of the state variables that are relevant to some formula via a (predicative) atom.
+	std::set<Atom> _atom_state_variables;
+	
 	//! The set of nested fluent translators, one for each nested fluent in the set of terms modeled by this CSP
 	std::vector<NestedFluentElementTranslator> _nested_fluent_translators;
+	std::vector<ExtensionalConstraint> _extensional_constraints;
 	
 	//! An index from the actual term to the position of the translator in the vector '_nested_fluent_translators'
 	//! Note that we need to use the hash and equality specializations of the parent class Term pointer
@@ -95,6 +103,10 @@ protected:
 	
 	//! Registers the variables of the CSP into the CSP translator
 	void createCSPVariables(bool use_novelty_constraint);
+	
+	//! Common indexing routine - places all conditions and terms appearing in formulas into their right place
+	void index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<fs::Term::cptr>& terms);
+
 };
 
 

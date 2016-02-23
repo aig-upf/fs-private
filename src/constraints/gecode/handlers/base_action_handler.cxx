@@ -6,6 +6,7 @@
 #include <utils/logging.hxx>
 #include <gecode/driver.hh>
 #include <utils/printers/gecode.hxx>
+#include <utils/utils.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 
 namespace fs0 { namespace gecode {
@@ -47,9 +48,7 @@ void BaseActionCSPHandler::process(const State& seed, const GecodeRPGLayer& laye
 	
 	SimpleCSP* csp = instantiate_csp(layer);
 
-	bool locallyConsistent = csp->checkConsistency(); // This enforces propagation of constraints
-
-	if (!locallyConsistent) {
+	if (!csp || !csp->checkConsistency()) { // This colaterally enforces propagation of constraints
 		FFDEBUG("heuristic", "The action CSP is locally inconsistent "); // << print::csp(handler->getTranslator(), *csp));
 	} else {
 		if (_approximate) {  // Check only local consistency
@@ -66,12 +65,21 @@ void BaseActionCSPHandler::process(const State& seed, const GecodeRPGLayer& laye
 //! In the case of grounded actions and action schemata, we need to retrieve both the atoms and terms
 //! appearing in the precondition, _and_ the terms appearing in the effects, except the root LHS atom.
 void BaseActionCSPHandler::index() {
-	auto conditions = _action.getPrecondition()->all_atoms();
-	_all_formulas.insert(conditions.cbegin(), conditions.cend());
-	
+	const auto conditions = _action.getPrecondition()->all_atoms();
 	const auto terms = _action.getPrecondition()->all_terms();
-	_all_terms.insert(terms.cbegin(), terms.cend());	
 	
+	// Index formula elements
+	index_formula_elements(conditions, terms);
+	
+	// Index the variables IDs that are relevant for the preconditions
+	assert(_action_support.size() == 0);
+	for (auto term:_all_terms) {
+		if (auto casted = dynamic_cast<fs::StateVariable::cptr>(term)) {
+			_action_support.insert(casted->getValue());
+		}
+	}
+	
+	// Index effect elements
 	for (const fs::ActionEffect::cptr effect:_effects) {
 		const auto terms = effect->rhs()->all_terms();
 		_all_terms.insert(terms.cbegin(), terms.cend());
@@ -86,10 +94,8 @@ void BaseActionCSPHandler::index() {
 	}
 }
 
-void BaseActionCSPHandler::index_scopes() {
-	auto scope = fs::ScopeUtils::computeActionDirectScope(_action);
-	std::set<VariableIdx> action_support(scope.begin(), scope.end());
 
+void BaseActionCSPHandler::index_scopes() {
 	effect_support_variables.resize(_effects.size());
 	effect_nested_fluents.resize(_effects.size());
 	effect_rhs_variables.resize(_effects.size());
@@ -104,7 +110,7 @@ void BaseActionCSPHandler::index_scopes() {
 		std::set<VariableIdx> effect_support(effect_support_variables[i].begin(), effect_support_variables[i].end());
 
 		std::set_difference(
-			action_support.begin(), action_support.end(),
+			_action_support.begin(), _action_support.end(),
 			effect_support.begin(), effect_support.end(),
 			std::inserter(effect_support_variables[i], effect_support_variables[i].begin()));
 
@@ -231,6 +237,9 @@ Atom::vctrp BaseActionCSPHandler::extract_support_from_solution(SimpleCSP* solut
 	for (VariableIdx variable:effect_support_variables[effect_idx]) {
 		support->push_back(Atom(variable, _translator.resolveInputStateVariableValue(*solution, variable)));
 	}
+	
+	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
+	support->insert(support->end(), _atom_state_variables.begin(), _atom_state_variables.end());
 	
 	if (effect_nested_fluents[effect_idx].empty()) return support; // We can spare the creation of the inserted set if no nested fluents are present.
 

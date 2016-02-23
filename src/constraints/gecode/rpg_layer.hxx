@@ -9,6 +9,7 @@ namespace fs0 { class ProblemInfo; class State; class Atom; }
 
 namespace fs0 { namespace gecode {
 
+
 class GecodeRPGLayer {
 protected:
 	//! The set of possible value for every state variable
@@ -20,11 +21,17 @@ protected:
 	//! The set of variable deltas, i.e. only those values that were newly achieved in the previous RPG layer
 	std::vector<Gecode::IntSet> _deltas;
 	
+	//! The allowed values in the relation that corresponds to every predicate
+	std::vector<Gecode::TupleSet> _predicate_extensions;
+	
 public:
 	explicit GecodeRPGLayer(const State& seed);
 	
+	const Domain& get_index_domain(VariableIdx variable) const { return _index.at(variable); }
 	const Gecode::IntSet& get_domain(VariableIdx variable) const { return _domains.at(variable); }
 	const Gecode::IntSet& get_delta(VariableIdx variable) const { return _deltas.at(variable); }
+	const Gecode::TupleSet& get_extension(unsigned symbol_id) const { return _predicate_extensions.at(symbol_id); }
+	
 	
 	void accumulate(const std::vector<std::vector<ObjectIdx>>& novel_atoms);
 	

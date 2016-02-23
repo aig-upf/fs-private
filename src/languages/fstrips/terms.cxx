@@ -79,9 +79,9 @@ Term::cptr NestedTerm::bind(const Binding& binding, const ProblemInfo& info) con
 		return new UserDefinedStaticTerm(_symbol_id, st);
 	}
 	else if (!function.isStatic() && constant_values.size() == _subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
-		VariableIdx id = info.getVariableId(_symbol_id, constant_values);
-		for (const auto ptr:st) delete ptr;
-		return new StateVariable(id);
+		VariableIdx id = info.resolveStateVariable(_symbol_id, constant_values);
+// 		for (const auto ptr:st) delete ptr;
+		return new StateVariable(id, new FluentHeadedNestedTerm(_symbol_id, st));
 	}
 	else {
 		return new FluentHeadedNestedTerm(_symbol_id, st);
@@ -93,10 +93,10 @@ Term::cptr FluentHeadedNestedTerm::bind(const Binding& binding, const ProblemInf
 	std::vector<Term::cptr> processed = bind_subterms(_subterms, binding, info, constant_values);
 	
 	if (constant_values.size() == _subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
-		for (const auto ptr:processed) delete ptr;
+// 		for (const auto ptr:processed) delete ptr;
 		
-		VariableIdx id = info.getVariableId(_symbol_id, constant_values);
-		return new StateVariable(id);
+		VariableIdx id = info.resolveStateVariable(_symbol_id, constant_values);
+		return new StateVariable(id, new FluentHeadedNestedTerm(_symbol_id, processed));
 	}
 	return new FluentHeadedNestedTerm(_symbol_id, processed);
 }

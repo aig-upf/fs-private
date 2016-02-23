@@ -276,12 +276,23 @@ class StateVariable : public Term {
 public:
 	typedef const StateVariable* cptr;
 
-	StateVariable(VariableIdx variable_id) : _variable_id(variable_id) {}
+	StateVariable(VariableIdx variable_id, FluentHeadedNestedTerm::cptr origin) 
+		: _variable_id(variable_id), _origin(origin)
+	{}
+	
+	virtual ~StateVariable() {
+		delete _origin;
+	}
+
+	StateVariable(const StateVariable& variable)
+		: _variable_id(variable._variable_id), 
+		  _origin(variable._origin->clone())
+	{}
 
 	StateVariable* clone() const { return new StateVariable(*this); }
 	
 	//! Nothing to be done for binding, simply return a clone of the element
-	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }	
+	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }
 
 	virtual unsigned nestedness() const { return 0; }
 
@@ -299,6 +310,8 @@ public:
 
 	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { return _variable_id; }
 	VariableIdx interpretVariable(const State& state, const Binding& binding) const { return _variable_id; }
+	
+	FluentHeadedNestedTerm::cptr getOrigin() const { return _origin; }
 
 	virtual std::pair<int, int> getBounds() const;
 
@@ -311,6 +324,9 @@ public:
 protected:
 	//! The ID of the state variable
 	VariableIdx _variable_id;
+
+	//! The originating symbol ID and subterms
+	FluentHeadedNestedTerm::cptr _origin;
 };
 
 
@@ -324,7 +340,7 @@ public:
 	Constant* clone() const { return new Constant(*this); }
 	
 	//! Nothing to be done for binding, simply return a clone of the element
-	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }	
+	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }
 
 	virtual unsigned nestedness() const { return 0; }
 

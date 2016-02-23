@@ -81,6 +81,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		}
 		
 		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, constants),  id));
+		variableIdToData.push_back(std::make_pair(symbol_id, constants));
 	}
 }
 
@@ -92,9 +93,6 @@ std::vector<const ObjectIdxVector*> ProblemInfo::getSignatureValues(const Signat
 	return res;
 }
 
-VariableIdx ProblemInfo::getVariableId(unsigned symbol_id, const std::vector<ObjectIdx>& subterms) const {
-	return variableDataToId.at(std::make_pair(symbol_id, subterms));
-}
 
 void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 	assert(symbolIds.empty());

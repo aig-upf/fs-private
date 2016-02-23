@@ -71,6 +71,7 @@ protected:
 	
 	//! A map from the actual data "f(t1, t2, ..., tn)" to the assigned variable ID
 	std::map<std::pair<unsigned, std::vector<ObjectIdx>>, VariableIdx> variableDataToId;
+	std::vector<std::pair<unsigned, std::vector<ObjectIdx>>> variableIdToData;
 	
 	//! A map from state variable index to the type of the state variable
 	std::vector<ObjectType> variableGenericTypes;
@@ -112,7 +113,7 @@ public:
 	
 	const std::string& getVariableName(VariableIdx index) const;
 	inline VariableIdx getVariableId(const std::string& name) const { return variableIds.at(name); }
-	VariableIdx getVariableId(unsigned symbol_id, const std::vector<ObjectIdx>& subterms) const;
+	
 	
 	const TypeIdx getVariableType(VariableIdx index) const { return variableTypes.at(index); }
 	const ObjectType getVariableGenericType(VariableIdx index) const { return variableGenericTypes.at(index); }
@@ -126,6 +127,7 @@ public:
 	//! Return the ID of the function with given name
 	inline unsigned getSymbolId(const std::string& name) const { return symbolIds.at(name); }
 	const std::string& getSymbolName(unsigned symbol_id) const { return symbolNames.at(symbol_id); }
+	unsigned getNumLogicalSymbols() const { return symbolIds.size(); }
 	bool isPredicate(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::PREDICATE; }
 	bool isFunction(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::FUNCTION; }
 	
@@ -154,9 +156,15 @@ public:
 	
 	inline const std::string& getTypename(TypeIdx type) const { return type_to_name.at(type); }
 	
+	
 	//! Resolves a pair of function ID + an assignment of values to their parameters to the corresponding state variable.
 	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<ObjectIdx>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
 	VariableIdx resolveStateVariable(unsigned symbol_id, const std::vector<ObjectIdx>& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
+	
+	//! Return the data that originated a state variable
+	const std::pair<unsigned, std::vector<ObjectIdx>>& getVariableData(VariableIdx variable) const { return variableIdToData.at(variable); }
+	
+	
 	
 	//! Resolves a function ID to all state variables in which the function can result
 	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return getSymbolData(symbol_id).getStateVariables(); }

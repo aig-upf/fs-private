@@ -3,6 +3,6 @@
 
 namespace fs0 { namespace gecode {
 
-	int DONT_CARE::_value;
-	
+int DONT_CARE::_value;
+
 } } // namespaces

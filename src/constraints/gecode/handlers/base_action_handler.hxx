@@ -61,6 +61,7 @@ protected:
 	
 	void compute_support(SimpleCSP* csp, RPGData& rpg, const State& seed) const;
 	
+	std::set<VariableIdx> _action_support;
 	
 	// Constraint registration methods
 	void registerEffectConstraints(const fs::ActionEffect::cptr effect);

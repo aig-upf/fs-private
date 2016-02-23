@@ -12,14 +12,14 @@ namespace fs0 {
 
 void PlanPrinter::print(const std::vector<GroundAction::IdType>& plan, std::ostream& out) {
 	for (auto action:plan) {
-		out << print::action_name(action) << std::endl;
+		out << print::action_name(action) << " " << std::endl;
 	}
 }
 
 void PlanPrinter::print(const std::vector<LiftedActionID>& plan, std::ostream& out) {
 	// This ideally should be conflated with print::plan, but currently we have different plan types :-(
 	for (const auto& element:plan) {
-		out << element << std::endl;
+		out << element << " " << std::endl;
 	}
 }
 
@@ -63,14 +63,14 @@ namespace print {
 
 std::ostream& plan::print(std::ostream& os) const {
 	for (const ActionID* action:_plan) {
-		os << *action;
+		os << *action << " ";
 	}
 	return os;
 }
 
 void supported_plan::printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out) {
 	for (const auto& element:plan) {
-		out << element << std::endl;
+		out << element << " " << std::endl;
 	}
 }
 

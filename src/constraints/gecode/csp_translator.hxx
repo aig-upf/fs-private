@@ -73,7 +73,7 @@ public:
 	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type);
 	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type, TypeIdx domain_type);
 	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type, int min, int max);
-
+	
 	//! Returns the index of the CSP variable corresponding to the given term under the given role.
 	unsigned resolveVariableIndex(const fs::Term* term, CSPVariableType type) const;
 	
@@ -83,6 +83,7 @@ public:
 	//! Returns the value of the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
 	ObjectIdx resolveValue(const fs::Term* term, CSPVariableType type, const SimpleCSP& csp) const;
 	
+	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const SimpleCSP& csp) const;
 	ObjectIdx resolveValueFromIndex(unsigned variable_index, const SimpleCSP& csp) const;
 
 	//! Handy helper to resolve a number of variables at the same time

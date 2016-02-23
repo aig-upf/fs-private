@@ -13,6 +13,7 @@ CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula::cptr formula) :
 	
 bool CSPFormulaInterpreter::satisfied(const State& state) const {
 	gecode::SimpleCSP* csp = _csp_handler->instantiate_csp(state);
+	if (!csp) return false;
 	csp->checkConsistency();
 	return _csp_handler->check_solution_exists(csp);
 }

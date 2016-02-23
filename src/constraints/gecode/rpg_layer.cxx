@@ -3,14 +3,46 @@
 #include <constraints/gecode/rpg_layer.hxx>
 #include <problem.hxx>
 #include <state.hxx>
+#include <utils/printers/gecode.hxx>
+#include <boost/concept_check.hpp>
 
 namespace fs0 { namespace gecode {
+
+//! A small helper class to generate the Gecode tuplesets.
+class Extension {
+protected:
+	std::vector<std::vector<int>> _tuples;
+	
+public:
+	void add_tuple(const std::vector<int> tuple) {
+		_tuples.push_back(tuple);
+	}
+	
+	bool is_tautology() const {
+		return _tuples.size() == 1 and _tuples[0].empty();
+	}
+	
+	Gecode::TupleSet generate() {
+		Gecode::TupleSet ts;
+		if (is_tautology()) return ts; // We return an empty extension, since the symbol will be dealt with differently
+		
+		for (auto& elem:_tuples) {
+			ts.add(elem);
+		}
+		ts.finalize();
+		return ts;
+	}
+};
+
 
 GecodeRPGLayer::GecodeRPGLayer(const State& seed)
 	: _index(seed.numAtoms())
 {
+	const ProblemInfo& info = Problem::getInfo();
 	_domains.reserve(seed.numAtoms());
 	_deltas.reserve(seed.numAtoms());
+	
+	std::vector<Extension> extensions(info.getNumLogicalSymbols());
 	
 	// Initially, all domains and deltas are set to contain exactly the values from the seed state
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
@@ -18,12 +50,29 @@ GecodeRPGLayer::GecodeRPGLayer(const State& seed)
 		_index[variable].insert(value);
 		_domains.push_back(Gecode::IntSet(value, value));
 		_deltas.push_back(Gecode::IntSet(value, value));
+		
+		// Build the predicate symbol extensions
+		const auto& vardata = info.getVariableData(variable);
+		if (info.isPredicate(vardata.first)) {
+			if (value) { // The predicate is true - add the tuple to the extension
+				extensions.at(vardata.first).add_tuple(vardata.second);
+			}
+		}
+	}
+	
+	// Generate the tuplesets
+	_predicate_extensions.clear();
+	for (auto& generator:extensions) {
+		_predicate_extensions.push_back(generator.generate());
 	}
 }
 
 
 void GecodeRPGLayer::accumulate(const std::vector<std::vector<ObjectIdx>>& novel_atoms) {
+	const ProblemInfo& info = Problem::getInfo();
 	assert(novel_atoms.size() == _domains.size());
+	
+	std::vector<Extension> extensions(info.getNumLogicalSymbols());
 	
 	for (VariableIdx variable = 0; variable < novel_atoms.size(); ++variable) {
 		// Rebuild the delta only with the novel atoms
@@ -35,6 +84,21 @@ void GecodeRPGLayer::accumulate(const std::vector<std::vector<ObjectIdx>>& novel
 		Domain& domain = _index[variable];
 		domain.insert(delta.cbegin(), delta.cend());
 		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(domain.cbegin(), domain.cend()));
+		
+		
+		// Build (from scratch, ATM!) the predicate symbol extensions
+		const auto& vardata = info.getVariableData(variable);
+		if (info.isPredicate(vardata.first)) {
+			if (domain.find(1) != domain.end()) { // The predicate is true - add the tuple to the extension
+				extensions.at(vardata.first).add_tuple(vardata.second);
+			}
+		}
+		
+		// Generate the tuplesets
+		_predicate_extensions.clear();
+		for (auto& generator:extensions) {
+			_predicate_extensions.push_back(generator.generate());
+		}
 	}
 }
 

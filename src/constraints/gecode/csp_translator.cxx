@@ -21,7 +21,7 @@ void GecodeCSPVariableTranslator::perform_registration() {
 }
 
 unsigned GecodeCSPVariableTranslator::add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable) {
-	assert(_intvars.size() == _intvars_idx.size());
+	assert((unsigned) _intvars.size() == _intvars_idx.size());
 	unsigned id = _intvars.size();
 	_intvars << csp_variable;
 	_intvars_idx.push_back(planning_variable);
@@ -61,6 +61,8 @@ void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable:
 
 
 void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variable,  bool is_direct, bool nullable) {
+	const fs0::ProblemInfo& info = Problem::getInfo();
+	std::cout << "Registering state variable " << info.getVariableName(variable) << std::endl;
 	auto it = _input_state_variables.find(variable);
 	if (it != _input_state_variables.end()) { // The state variable was already registered, no need to register it again
 		if (nullable != it->second.second) { // We just check that we're not trying to register it with a different 'nullable' value, which should never happen
@@ -126,8 +128,12 @@ ObjectIdx GecodeCSPVariableTranslator::resolveValue(fs::Term::cptr term, CSPVari
 	return resolveVariable(term, type, csp).val();
 }
 
+const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariableFromIndex(unsigned variable_index, const SimpleCSP& csp) const {
+	return csp._intvars[variable_index];
+}
+
 ObjectIdx GecodeCSPVariableTranslator::resolveValueFromIndex(unsigned variable_index, const SimpleCSP& csp) const {
-	return csp._intvars[variable_index].val();
+	return resolveVariableFromIndex(variable_index, csp).val();
 }
 
 

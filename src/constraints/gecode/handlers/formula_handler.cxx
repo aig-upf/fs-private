@@ -49,6 +49,9 @@ bool FormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, con
 		support.push_back(Atom(variable, _translator.resolveInputStateVariableValue(*solution, variable)));
 	}
 	
+	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
+	support.insert(support.end(), _atom_state_variables.begin(), _atom_state_variables.end());
+	
 	// Now process the indirect state variables
 	std::set<VariableIdx> inserted;
 	for (const NestedFluentElementTranslator& fluent_translator:_nested_fluent_translators) {
@@ -124,11 +127,11 @@ void FormulaCSPHandler::create_novelty_constraint() {
 
 // In the case of a single formula, we just retrieve and index all terms and atoms
 void FormulaCSPHandler::index() {
-	const auto atoms =  _formula->all_atoms();
-	_all_formulas.insert(atoms.cbegin(), atoms.cend());
-	
+	const auto conditions =  _formula->all_atoms();
 	const auto terms = _formula->all_terms();
-	_all_terms.insert(terms.cbegin(), terms.cend());
+	
+	// Index formula elements
+	index_formula_elements(conditions, terms);	
 }
 
 } } // namespaces

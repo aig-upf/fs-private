@@ -19,6 +19,8 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
+// 		auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty, dont_care);
+// 		std::cout << *x << std::endl;
 		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], approximate, novelty, dont_care);
 		FDEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
 		managers.push_back(manager);
