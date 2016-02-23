@@ -2,7 +2,8 @@
     Some generators to generate components from the standard blocksworld domain.
 """
 from pddl import Atom, NegatedAtom
-from .common import generate_fd_predicate, generate_fd_action, generate_fd_objects, generate_fd_effect
+from .common import generate_fd_predicate, generate_fd_action, generate_fd_objects, \
+    generate_fd_effect, generate_base_fs_task
 
 
 def generate_fd_bw_predicates():
@@ -10,7 +11,8 @@ def generate_fd_bw_predicates():
     clear = generate_fd_predicate(('clear', [('?b', 'block')]))
     ontable = generate_fd_predicate(('ontable', [('?b', 'block')]))
     h_empty = generate_fd_predicate(('handempty', []))
-    return [clear, h_empty, on, ontable]
+    holding = generate_fd_predicate(('holding', [('?b', 'block')]))
+    return [clear, h_empty, on, ontable, holding]
 
 
 def generate_fd_bw_actions():
@@ -54,3 +56,7 @@ def generate_fd_bw_actions():
     us = generate_fd_action(('unstack', generate_fd_objects([('?x', 'block'), ('?y', 'block')]), precs, effects))
 
     return [pu, pd, st, us]
+
+
+def generate_small_bw_instance():
+    return generate_base_fs_task(objects=[('b1', 'block'), ('b2', 'block')], types=[('block', 'object')])

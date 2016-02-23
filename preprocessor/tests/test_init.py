@@ -3,8 +3,7 @@
 """
 import pytest
 
-from .common import generate_base_fs_task
-from .blocksworld import generate_fd_bw_predicates, generate_fd_bw_actions
+from .blocksworld import generate_fd_bw_predicates, generate_fd_bw_actions, generate_small_bw_instance
 from pddl.conditions import Atom
 
 
@@ -12,7 +11,7 @@ from pddl.conditions import Atom
 def bw_task():
     """ This effectively generates a single BW instance per test module and allows it to be reused in different tests
         simply by declaring that the test has a 'bw_task' parameter. See https://pytest.org/latest/fixture.html. """
-    task = generate_base_fs_task(objects=[('b1', 'block'), ('b2', 'block')], types=[('block', 'object')])
+    task = generate_small_bw_instance()
     predicates = generate_fd_bw_predicates()
     actions = generate_fd_bw_actions()
     task.process_symbols(actions, predicates, [])
