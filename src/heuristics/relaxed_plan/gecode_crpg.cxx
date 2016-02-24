@@ -17,7 +17,7 @@
 namespace fs0 { namespace gecode {
 
 GecodeCRPG::GecodeCRPG(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
-	: _problem(problem), _managers(std::move(managers)), _builder(std::move(builder))
+	: _problem(problem), _managers(std::move(managers)), _builder(std::move(builder)), _extension_handler()
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }
@@ -28,7 +28,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
-	GecodeRPGLayer layer(seed);
+	GecodeRPGLayer layer(_extension_handler, seed);
 	RPGData bookkeeping(seed);
 	
 	if (Config::instance().useMinHMaxGoalValueSelector()) {

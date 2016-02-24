@@ -61,8 +61,6 @@ void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable:
 
 
 void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variable,  bool is_direct, bool nullable) {
-	const fs0::ProblemInfo& info = Problem::getInfo();
-	std::cout << "Registering state variable " << info.getVariableName(variable) << std::endl;
 	auto it = _input_state_variables.find(variable);
 	if (it != _input_state_variables.end()) { // The state variable was already registered, no need to register it again
 		if (nullable != it->second.second) { // We just check that we're not trying to register it with a different 'nullable' value, which should never happen

@@ -102,6 +102,7 @@ void BaseActionCSPHandler::index_scopes() {
 	effect_lhs_variables.resize(_effects.size());
 	
 	_has_nested_lhs = false;
+	_has_nested_relevant_terms = false;
 
 	for (unsigned i = 0; i < _effects.size(); ++i) {
 		// Insert first the variables relevant to the particular effect and only then the variables relevant to the
@@ -114,21 +115,17 @@ void BaseActionCSPHandler::index_scopes() {
 			effect_support.begin(), effect_support.end(),
 			std::inserter(effect_support_variables[i], effect_support_variables[i].begin()));
 
+
+		// We index all the nested terms that appear both in the precondition and in the relevant parts of the effect
 		fs::ScopeUtils::TermSet nested;
-
-		// Order matters - we first insert the nested fluents from the particular effect
 		fs::ScopeUtils::computeIndirectScope(_effects[i], nested);
-		effect_nested_fluents[i] = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
-
-
-		// And only then the nested fluents from the action preconditions
-		// Actually we don't care that much about repetitions between the two sets of terms, since they are checked anyway when
-		// transformed into state variables
-		nested.clear();
 		fs::ScopeUtils::computeIndirectScope(_action.getPrecondition(), nested);
-		effect_nested_fluents[i].insert(effect_nested_fluents[i].end(), nested.cbegin(), nested.cend());
+		effect_nested_fluents[i] = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
+		
 		
 		effect_rhs_variables[i] = _translator.resolveVariableIndex(_effects[i]->rhs(), CSPVariableType::Input);
+		
+		_has_nested_relevant_terms = _has_nested_relevant_terms || !effect_nested_fluents[i].empty();
 		
 		if (!_effects[i]->lhs()->flat()) {
 			_has_nested_lhs = true;
@@ -178,39 +175,39 @@ void BaseActionCSPHandler::compute_support(SimpleCSP* csp, RPGData& rpg, const S
 
 
 void BaseActionCSPHandler::process_solution(SimpleCSP* solution, RPGData& bookkeeping) const {
-	PartialAssignment solution_assignment;
+	PartialAssignment assignment;
 	Binding binding;
-	if (_has_nested_lhs) {
-		solution_assignment = _translator.buildAssignment(*solution);
+	if (_has_nested_lhs || _has_nested_relevant_terms) {
+		assignment = _translator.buildAssignment(*solution);
 		binding = build_binding_from_solution(solution);
 	}
 	
 	// We compute, effect by effect, the atom produced by the effect for the given solution, as well as its supports
 	for (unsigned i = 0; i < _effects.size(); ++i) {
 		fs::ActionEffect::cptr effect = _effects[i];
-		VariableIdx affected = _has_nested_lhs ? effect->lhs()->interpretVariable(solution_assignment, binding) : effect_lhs_variables[i];
+		VariableIdx affected = _has_nested_lhs ? effect->lhs()->interpretVariable(assignment, binding) : effect_lhs_variables[i];
 		Atom atom(affected, _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution));
 		FFDEBUG("heuristic", "Processing effect \"" << *effect << "\"");
-		if (_hmaxsum_priority) hmax_based_atom_processing(solution, bookkeeping, atom, i);
-		else simple_atom_processing(solution, bookkeeping, atom, i);
+		if (_hmaxsum_priority) hmax_based_atom_processing(solution, bookkeeping, atom, i, assignment, binding);
+		else simple_atom_processing(solution, bookkeeping, atom, i, assignment, binding);
 	}
 }
 
-void BaseActionCSPHandler::simple_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const {
+void BaseActionCSPHandler::simple_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	auto hint = bookkeeping.getInsertionHint(atom);
 	FFDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
 
 	if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
-		Atom::vctrp support = extract_support_from_solution(solution, effect_idx);
+		Atom::vctrp support = extract_support_from_solution(solution, effect_idx, assignment, binding);
 		bookkeeping.add(atom, get_action_id(solution), support, hint.second);
 	}
 }
 
-void BaseActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const {
+void BaseActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	auto hint = bookkeeping.getInsertionHint(atom);
 	FFDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
 	
-	Atom::vctrp support = extract_support_from_solution(solution, effect_idx);
+	Atom::vctrp support = extract_support_from_solution(solution, effect_idx, assignment, binding);
 	
 	if (hint.first) { // If the atom is new, we simply insert it
 		bookkeeping.add(atom, get_action_id(solution), support, hint.second);
@@ -229,7 +226,7 @@ void BaseActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, RPGDa
 	}
 }
 
-Atom::vctrp BaseActionCSPHandler::extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx) const {
+Atom::vctrp BaseActionCSPHandler::extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	
 	Atom::vctrp support = std::make_shared<Atom::vctr>();
 
@@ -241,23 +238,24 @@ Atom::vctrp BaseActionCSPHandler::extract_support_from_solution(SimpleCSP* solut
 	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
 	support->insert(support->end(), _atom_state_variables.begin(), _atom_state_variables.end());
 	
-	if (effect_nested_fluents[effect_idx].empty()) return support; // We can spare the creation of the inserted set if no nested fluents are present.
+	// And finally the support derived from nested terms
+	if (effect_nested_fluents[effect_idx].empty()) return support;
 
 	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
 	// the CSP solution resolves to prevent repetitions
 	std::set<VariableIdx> inserted;
 
-	for (auto fluent:effect_nested_fluents[effect_idx]) {
-		const NestedFluentData& nested_translator = getNestedFluentTranslator(fluent).getNestedFluentData();
-		VariableIdx variable = nested_translator.resolveStateVariable(*solution);
-
-		if (inserted.find(variable) == inserted.end()) { // Don't push twice to the support the same atom
+	for (fs::FluentHeadedNestedTerm::cptr fluent:effect_nested_fluents[effect_idx]) {
+		
+		VariableIdx variable = fluent->interpretVariable(assignment, binding);
+		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
+			// ObjectIdx value = fluent->interpret(assignment, binding);
 			ObjectIdx value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
 			support->push_back(Atom(variable, value));
 			inserted.insert(variable);
 		}
 	}
-	
+
 	return support;
 }
 

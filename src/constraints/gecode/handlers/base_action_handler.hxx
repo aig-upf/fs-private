@@ -47,6 +47,9 @@ protected:
 	//! Whether the action has any effect with a LHS that contains nested fluents.
 	bool _has_nested_lhs;
 	
+	//! Whether the action has any nested relevant term.
+	bool _has_nested_relevant_terms;
+	
 	//! Whether to use the min-hmax-sum policy to prioritize the different supports of the same atom
 	bool _hmaxsum_priority;
 	
@@ -70,12 +73,12 @@ protected:
 	void process_solution(SimpleCSP* solution, RPGData& bookkeeping) const;
 	
 	//!
-	void simple_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const;
+	void simple_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
-	void hmax_based_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx) const;
+	void hmax_based_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 
 	//! Extracts the full support of a given effect corresponding to the given solution
-	Atom::vctrp extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx) const;
+	Atom::vctrp extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
 	//!
 	void create_novelty_constraint();

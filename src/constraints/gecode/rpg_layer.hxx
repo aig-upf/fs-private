@@ -9,6 +9,7 @@ namespace fs0 { class ProblemInfo; class State; class Atom; }
 
 namespace fs0 { namespace gecode {
 
+class ExtensionHandler;
 
 class GecodeRPGLayer {
 protected:
@@ -24,8 +25,10 @@ protected:
 	//! The allowed values in the relation that corresponds to every predicate
 	std::vector<Gecode::TupleSet> _predicate_extensions;
 	
+	ExtensionHandler& _extension_handler;
+	
 public:
-	explicit GecodeRPGLayer(const State& seed);
+	explicit GecodeRPGLayer(ExtensionHandler& extension_handler, const State& seed);
 	
 	const Domain& get_index_domain(VariableIdx variable) const { return _index.at(variable); }
 	const Gecode::IntSet& get_domain(VariableIdx variable) const { return _domains.at(variable); }
@@ -49,4 +52,3 @@ protected:
 };
 
 } } // namespaces
-

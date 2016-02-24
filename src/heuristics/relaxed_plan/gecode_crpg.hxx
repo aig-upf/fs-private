@@ -2,6 +2,7 @@
 #pragma once
 
 #include <fs0_types.hxx>
+#include <constraints/gecode/extensions.hxx>
 
 namespace fs0 { class Problem; class State; class RPGData; }
 
@@ -34,6 +35,9 @@ protected:
 	
 	//! The RPG building helper
 	const std::shared_ptr<GecodeRPGBuilder> _builder;
+	
+	//!
+	ExtensionHandler _extension_handler;
 };
 
 } } // namespaces
