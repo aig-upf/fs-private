@@ -4,22 +4,20 @@
 #include <unordered_set>
 
 #include <fs0_types.hxx>
+#include <atom.hxx>
 #include <constraints/gecode/simple_csp.hxx>
-#include <constraints/gecode/utils/variable_counter.hxx>
-#include <constraints/gecode/utils/nested_fluent_element_translator.hxx>
 #include <constraints/gecode/utils/extensional_constraint.hxx>
-#include <utils/config.hxx>
+#include <constraints/gecode/csp_translator.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class AtomicFormula; class FluentHeadedNestedTerm; } }}
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { class GroundAction; class RPGData; }
+namespace fs0 { class GroundAction; class RPGData; class Binding; }
 
 namespace fs0 { namespace gecode {
 
 class GecodeRPGLayer;
-class GecodeCSPVariableTranslator;
 class NoveltyConstraint;
 
 //! The base interface class for all gecode CSP handlers
@@ -28,7 +26,7 @@ public:
 	typedef BaseCSPHandler* ptr;
 	typedef const BaseCSPHandler* cptr;
 
-	BaseCSPHandler(bool approximate, bool dont_care) : _base_csp(), _approximate(approximate), _translator(_base_csp), _novelty(nullptr), _counter(dont_care) {}
+	BaseCSPHandler(bool approximate) : _base_csp(), _approximate(approximate), _translator(_base_csp), _novelty(nullptr) {}
 	virtual ~BaseCSPHandler();
 	
 	void init(const RPGData* bookkeeping);
@@ -62,8 +60,6 @@ protected:
 	
 	NoveltyConstraint* _novelty;
 	
-	VariableCounter _counter;
-	
 	// All (distinct) FSTRIPS terms that participate in the CSP
 	std::unordered_set<const fs::Term*> _all_terms;
 	
@@ -76,16 +72,8 @@ protected:
 	//! The Ids of the state variables that are relevant to some formula via a (predicative) atom.
 	std::set<Atom> _atom_state_variables;
 	
-	//! The set of nested fluent translators, one for each nested fluent in the set of terms modeled by this CSP
-	std::vector<NestedFluentElementTranslator> _nested_fluent_translators;
+	//!
 	std::vector<ExtensionalConstraint> _extensional_constraints;
-	
-	//! An index from the actual term to the position of the translator in the vector '_nested_fluent_translators'
-	//! Note that we need to use the hash and equality specializations of the parent class Term pointer
-	std::unordered_map<const fs::FluentHeadedNestedTerm*, unsigned, std::hash<const fs::Term*>, std::equal_to<const fs::Term*>> _nested_fluent_translators_idx;
-	
-	//! Return the nested fluent translator that corresponds to the given term
-	const NestedFluentElementTranslator& getNestedFluentTranslator(const fs::FluentHeadedNestedTerm* fluent) const;
 	
 	virtual void create_novelty_constraint() = 0;
 	
@@ -93,9 +81,6 @@ protected:
 	virtual void index() = 0;
 
 	void setup();
-	
-	//! Count which state variables appear directly and/or derivedly, so that we can decide what type of don't care constraints we can use, etc.
-	void count_variables();
 	
 	void register_csp_variables();
 
@@ -105,19 +90,10 @@ protected:
 	void createCSPVariables(bool use_novelty_constraint);
 	
 	//! Common indexing routine - places all conditions and terms appearing in formulas into their right place
-	void index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<fs::Term::cptr>& terms);
-
-};
-
-
-//! A CSP modeling and solving the progression between two RPG layers
-class GecodeLayerCSPHandler : public BaseCSPHandler { // TODO
-public:
-	typedef GecodeLayerCSPHandler* ptr;
-	typedef const GecodeLayerCSPHandler* cptr;
-
-protected:
-
+	void index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms);
+	
+	//!
+	void extract_nested_term_support(const SimpleCSP* solution, std::vector<const fs::FluentHeadedNestedTerm*> nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const;
 };
 
 } } // namespaces

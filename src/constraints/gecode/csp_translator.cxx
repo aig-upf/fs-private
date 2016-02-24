@@ -3,7 +3,6 @@
 #include <problem_info.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
-#include <constraints/gecode/translators/nested_fluent.hxx>
 #include <utils/logging.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
 #include <state.hxx>
@@ -60,21 +59,12 @@ void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable:
 }
 
 
-void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variable,  bool is_direct, bool nullable) {
+void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variable) {
 	auto it = _input_state_variables.find(variable);
-	if (it != _input_state_variables.end()) { // The state variable was already registered, no need to register it again
-		if (nullable != it->second.second) { // We just check that we're not trying to register it with a different 'nullable' value, which should never happen
-			throw std::runtime_error("Same input state variable cannot be registered as both nullable and non-nullable");
-		}
-		return;
-	}
+	if (it != _input_state_variables.end()) return; // The state variable was already registered, no need to register it again
 	
-	if (is_direct) { // If the variable is declared as direct, we register it as such.
-		_direct_variables.insert(variable);
-	}
-
-	unsigned id = add_intvar(Helper::createPlanningVariable(_base_csp, variable, nullable), variable);
-	_input_state_variables.insert(std::make_pair(variable, std::make_pair(id, nullable)));
+	unsigned id = add_intvar(Helper::createPlanningVariable(_base_csp, variable), variable);
+	_input_state_variables.insert(std::make_pair(variable, id));
 }
 
 bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type) {
@@ -134,6 +124,9 @@ ObjectIdx GecodeCSPVariableTranslator::resolveValueFromIndex(unsigned variable_i
 	return resolveVariableFromIndex(variable_index, csp).val();
 }
 
+const Gecode::IntVar& GecodeCSPVariableTranslator::resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
+	return csp._intvars[resolveInputVariableIndex(variable)];
+}
 
 Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const {
 	Gecode::IntVarArgs variables;
@@ -147,9 +140,9 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 	const fs0::ProblemInfo& info = Problem::getInfo();
 	os << "Gecode CSP with " << _registered.size() + _input_state_variables.size() << " variables" << std::endl;
 	
-	os << std::endl << "State Variables (direct and derived): " << std::endl;
+	os << std::endl << "State Variables: " << std::endl;
 	for (auto it:_input_state_variables) {
-		os << "\t " << info.getVariableName(it.first) << (it.second.second ? " (nullable)": "") << ": " << csp._intvars[it.second.first] << std::endl;
+		os << "\t " << info.getVariableName(it.first) << ": " << csp._intvars[it.second] << std::endl;
 	}
 	
 	os << std::endl << "CSP Variables corresponding to other terms: " << std::endl;
@@ -167,9 +160,8 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 	// Iterate over all the input state variables and constrain them according to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
-		const Gecode::IntVar& csp_variable = csp._intvars[it.second.first];
-		bool nullable = it.second.second;
-		Helper::constrainCSPVariable(csp, csp_variable, layer.get_domain(variable), nullable);
+		const Gecode::IntVar& csp_variable = csp._intvars[it.second];
+		Helper::constrainCSPVariable(csp, csp_variable, layer.get_domain(variable));
 	}
 }
 
@@ -177,7 +169,7 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 	// Iterate over all the input state variables and assign them the only possible value dictated by the state.
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
-		const Gecode::IntVar& csp_variable = csp._intvars[it.second.first];
+		const Gecode::IntVar& csp_variable = csp._intvars[it.second];
 		Gecode::rel(csp, csp_variable,  Gecode::IRT_EQ, state.getValue(variable));
 	}
 }
@@ -186,7 +178,7 @@ PartialAssignment GecodeCSPVariableTranslator::buildAssignment(SimpleCSP& soluti
 	PartialAssignment assignment;
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
-		const Gecode::IntVar& csp_variable = solution._intvars[it.second.first];
+		const Gecode::IntVar& csp_variable = solution._intvars[it.second];
 		assignment.insert(std::make_pair(variable, csp_variable.val()));
 	}
 	return assignment;

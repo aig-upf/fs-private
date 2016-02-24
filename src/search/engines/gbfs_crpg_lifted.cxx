@@ -21,7 +21,7 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 	
 	// The CSP handlers for applicable action iteration: we do not need novelty constraints (because they are instantiated on a standard state, not on a RPG layer),
 	// and we need full resolution
-	model.set_handlers(ActionSchemaCSPHandler::create_derived(problem.getActionSchemata(), false, false, false));
+	model.set_handlers(ActionSchemaCSPHandler::create_derived(problem.getActionSchemata(), false, false));
 	
 	if (Config::instance().getCSPModel() != Config::CSPModel::ActionSchemaCSP && Config::instance().getCSPModel() != Config::CSPModel::EffectSchemaCSP) {
 		throw std::runtime_error("WARNING: Lifted planning needs a lifted CSP model.");
@@ -29,15 +29,14 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 	
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
-	bool dont_care = Config::instance().useElementDontCareOptimization();
 	
 	auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 	
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> csp_handlers;
 	if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-		csp_handlers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
+		csp_handlers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
 	} else { // EffectSchemaCSP
-		csp_handlers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
+		csp_handlers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
 	}
 	
 	GecodeCRPG gecode_builder_heuristic(problem, std::move(csp_handlers), std::move(gecode_builder));

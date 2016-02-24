@@ -1,4 +1,5 @@
 
+#include <languages/fstrips/terms.hxx>
 #include <actions/base_action.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
 #include <constraints/gecode/helper.hxx>
@@ -8,12 +9,14 @@
 #include <utils/printers/gecode.hxx>
 #include <utils/utils.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
+#include <languages/fstrips/scopes.hxx>
+#include <utils/config.hxx>
 
 namespace fs0 { namespace gecode {
 
 
-BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool use_novelty_constraint, bool dont_care)
-	: BaseCSPHandler(approximate, dont_care), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
+BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool use_novelty_constraint)
+	: BaseCSPHandler(approximate), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
 	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.fullname());
 	
@@ -227,7 +230,6 @@ void BaseActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, RPGDa
 }
 
 Atom::vctrp BaseActionCSPHandler::extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
-	
 	Atom::vctrp support = std::make_shared<Atom::vctr>();
 
 	// First extract the supports of the "direct" state variables
@@ -239,21 +241,8 @@ Atom::vctrp BaseActionCSPHandler::extract_support_from_solution(SimpleCSP* solut
 	support->insert(support->end(), _atom_state_variables.begin(), _atom_state_variables.end());
 	
 	// And finally the support derived from nested terms
-	if (effect_nested_fluents[effect_idx].empty()) return support;
-
-	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
-	// the CSP solution resolves to prevent repetitions
-	std::set<VariableIdx> inserted;
-
-	for (fs::FluentHeadedNestedTerm::cptr fluent:effect_nested_fluents[effect_idx]) {
-		
-		VariableIdx variable = fluent->interpretVariable(assignment, binding);
-		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
-			// ObjectIdx value = fluent->interpret(assignment, binding);
-			ObjectIdx value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
-			support->push_back(Atom(variable, value));
-			inserted.insert(variable);
-		}
+	if (!effect_nested_fluents[effect_idx].empty()) {
+		extract_nested_term_support(solution, effect_nested_fluents[effect_idx], assignment, binding, *support);
 	}
 
 	return support;

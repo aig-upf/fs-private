@@ -30,7 +30,6 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
-	bool dont_care = Config::instance().useElementDontCareOptimization();
 	
 	FS0SearchAlgorithm* engine = nullptr;
 	auto csp_type = decide_csp_type(problem);
@@ -40,13 +39,13 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		
 		std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 		if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
-			managers = GroundActionCSPHandler::create(actions, approximate, novelty, dont_care);
+			managers = GroundActionCSPHandler::create(actions, approximate, novelty);
 		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
-			managers = GroundEffectCSPHandler::create(actions, approximate, novelty, dont_care);
+			managers = GroundEffectCSPHandler::create(actions, approximate, novelty);
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
+			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
-			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty, dont_care);
+			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
 		} else {
 			throw std::runtime_error("Unknown CSP model type");
 		}

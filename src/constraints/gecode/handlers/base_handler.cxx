@@ -1,4 +1,6 @@
 
+#include <problem.hxx>
+#include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/base_handler.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/helper.hxx>
@@ -10,7 +12,6 @@
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <gecode/driver.hh>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
-#include <languages/fstrips/language.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -78,44 +79,19 @@ SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const State& state) const {
 	return instantiate(_base_csp, _translator, _extensional_constraints, state);
 }
 
-const NestedFluentElementTranslator& BaseCSPHandler::getNestedFluentTranslator(fs::FluentHeadedNestedTerm::cptr fluent) const { 
-	auto it = _nested_fluent_translators_idx.find(fluent);
-	assert(it != _nested_fluent_translators_idx.end());
-	const NestedFluentElementTranslator& translator = _nested_fluent_translators.at(it->second);
-	assert(*translator.getTerm() == *fluent);
-	return translator;
-}
-	
 void BaseCSPHandler::setup() {
 	index();
-	count_variables();
-}
-
-void BaseCSPHandler::count_variables() {
-	for (fs::Term::cptr term:_all_terms) {
-		if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) _counter.count_direct(sv->getValue());
-		else if (auto fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
-			// Count all state variables derived from the nested fluent
-			for (nested_fluent_iterator it(fluent); !it.ended(); ++it) _counter.count_derived(it.getDerivedStateVariable());
-		}
-	}
 }
 
 void BaseCSPHandler::register_csp_variables() {
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
 		if (fs::FluentHeadedNestedTerm::cptr fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
-//  			NestedFluentElementTranslator tr(fluent, _counter);
-//  			tr.register_variables(CSPVariableType::Input, _translator);
-// 			_nested_fluent_translators.push_back(std::move(tr));
-// 			_nested_fluent_translators_idx.insert(std::make_pair(fluent, _nested_fluent_translators.size() - 1));
-			
 			_translator.registerNestedTerm(fluent, CSPVariableType::Input);
 			_extensional_constraints.push_back(ExtensionalConstraint(fluent, true));
 			
-		} else if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) {
-			VariableIdx variable = sv->getValue();
-			_translator.registerInputStateVariable(variable, true, _counter.is_nullable(variable));
+		} else if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(term)) {
+			_translator.registerInputStateVariable(statevar->getValue());
 		}
 		
 		else {
@@ -135,12 +111,6 @@ void BaseCSPHandler::register_csp_variables() {
 void BaseCSPHandler::register_csp_constraints() {
 	unsigned i = 0;
 	_unused(i);
-	
-	for (NestedFluentElementTranslator& tr:_nested_fluent_translators) {
-		tr.register_constraints(CSPVariableType::Input, _translator);
-// 		FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *tr.getTerm() << "): " << _translator); // Uncomment for extreme debugging
-	}
-	
 	
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
@@ -229,5 +199,22 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 				 [&inserted_terms] (const fs::Term* term) { return inserted_terms.find(term) == inserted_terms.end(); });
 }
 
+void BaseCSPHandler::extract_nested_term_support(const SimpleCSP* solution, std::vector<fs::FluentHeadedNestedTerm::cptr> nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const {
+	if (nested_terms.empty()) return;
+
+	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
+	// the CSP solution resolves to prevent repetitions
+	std::set<VariableIdx> inserted;
+
+	for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
+		VariableIdx variable = fluent->interpretVariable(assignment, binding);
+		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
+			// ObjectIdx value = fluent->interpret(assignment, binding);
+			ObjectIdx value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
+			support.push_back(Atom(variable, value));
+			inserted.insert(variable);
+		}
+	}
+}
 
 } } // namespaces

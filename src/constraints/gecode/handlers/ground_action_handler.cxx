@@ -1,4 +1,5 @@
 
+#include <languages/fstrips/terms.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/helper.hxx>
@@ -15,26 +16,25 @@
 
 namespace fs0 { namespace gecode {
 	
-std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::create(const std::vector<GroundAction::cptr>& actions, bool approximate, bool novelty, bool dont_care) {
+std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::create(const std::vector<GroundAction::cptr>& actions, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
-		auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty, dont_care);
-		std::cout << *x << std::endl;
-		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], approximate, novelty, dont_care);
+		// auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty); std::cout << *x << std::endl;
+		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], approximate, novelty);
 		FDEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
 		managers.push_back(manager);
 	}
 	return managers;
 }
 
-GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool novelty, bool dont_care)
-	:  BaseActionCSPHandler(action, effects, approximate, novelty, dont_care)
+GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool novelty)
+	:  BaseActionCSPHandler(action, effects, approximate, novelty)
 {}
 
 // If no set of effects is provided, we'll take all of them into account
-GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action,  bool approximate, bool novelty, bool dont_care)
-	:  GroundActionCSPHandler(action, action.getEffects(), approximate, novelty, dont_care)
+GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action,  bool approximate, bool novelty)
+	:  GroundActionCSPHandler(action, action.getEffects(), approximate, novelty)
 {}
 
 const ActionID* GroundActionCSPHandler::get_action_id(SimpleCSP* solution) const {

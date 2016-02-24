@@ -1,24 +1,27 @@
 
+#include <languages/fstrips/terms.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
+#include <actions/action_schema.hxx>
 #include <utils/logging.hxx>
 #include <actions/action_id.hxx>
+#include <utils/binding.hxx>
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty, bool dont_care) {
+std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty) {
 	// Simply upcast the shared_ptrs
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> handlers;
-	for (const auto& element:create_derived(schemata, approximate, novelty, dont_care)) {
+	for (const auto& element:create_derived(schemata, approximate, novelty)) {
 		handlers.push_back(std::static_pointer_cast<BaseActionCSPHandler>(element));
 	}
 	return handlers;
 }
 
-std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty, bool dont_care) {
+std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> handlers;
 	
 	for (auto schema:schemata) {
-		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, approximate, novelty, dont_care);
+		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, approximate, novelty);
 		FDEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
 	}
@@ -26,14 +29,14 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 }
 
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool novelty, bool dont_care)
-:  BaseActionCSPHandler(action, effects, approximate, novelty, dont_care)
+ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate, bool novelty)
+:  BaseActionCSPHandler(action, effects, approximate, novelty)
 {
 	index_parameters();
 }
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool novelty, bool dont_care)
-:  ActionSchemaCSPHandler(action,  action.getEffects(), approximate, novelty, dont_care)
+ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool novelty)
+:  ActionSchemaCSPHandler(action,  action.getEffects(), approximate, novelty)
 {}
 
 

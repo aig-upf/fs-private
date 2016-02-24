@@ -2,7 +2,6 @@
 
 #include <constraints/gecode/utils/value_selection.hxx>
 #include <constraints/gecode/csp_translator.hxx>
-#include <constraints/gecode/base.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 
 namespace fs0 { namespace gecode {
@@ -32,8 +31,6 @@ int MinHMaxValueSelector::select(const Gecode::IntVar& x, unsigned csp_var_idx) 
 	
 	for (; values(); ++values) {
 		int value = values.val();
-		if (value == DONT_CARE::get()) continue; // Don't ever select dont_care values
-		
 		const auto& support = _bookkeeping->getAtomSupport(Atom(variable, value));
 		unsigned layer = std::get<0>(support); // The RPG layer on which this value was first achieved for this variable
 

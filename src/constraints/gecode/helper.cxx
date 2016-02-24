@@ -4,19 +4,19 @@
 #include <constraints/gecode/csp_translator.hxx>
 #include <problem.hxx>
 #include <constraints/gecode/simple_csp.hxx>
-#include <constraints/gecode/base.hxx>
 #include <constraints/gecode/utils/term_list_iterator.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <relaxed_state.hxx>
 #include <utils/cartesian_iterator.hxx>
+#include <languages/fstrips/formulae.hxx>
 
 
 namespace fs0 { namespace gecode {
 
 
-Gecode::IntVar Helper::createPlanningVariable(Gecode::Space& csp, VariableIdx variable, bool nullable) {
+Gecode::IntVar Helper::createPlanningVariable(Gecode::Space& csp, VariableIdx variable) {
 	const ProblemInfo& info = Problem::getInfo();
-	return createVariable(csp, info.getVariableType(variable), nullable);
+	return createVariable(csp, info.getVariableType(variable));
 }
 
 Gecode::IntVar Helper::createTemporaryVariable(Gecode::Space& csp, TypeIdx typeId) {
@@ -31,60 +31,29 @@ Gecode::BoolVar Helper::createBoolVariable(Gecode::Space& csp) {
 	return Gecode::BoolVar(csp, 0, 1);
 }
 
-Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId, bool nullable) {
+Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
 	const ProblemInfo& info = Problem::getInfo();
 	auto generic_type = info.getGenericType(typeId);
 
 	if ( generic_type == ProblemInfo::ObjectType::INT ) {
 		const auto& bounds = info.getTypeBounds(typeId);
-		if (!nullable) {
-			return Gecode::IntVar(csp, bounds.first, bounds.second);
-		} else {
-			// We specify to possible ranges: the "normal" integer range plus a second range only with the DONT_CARE value
-			const int ranges[2][2] = {{bounds.first, bounds.second}, {DONT_CARE::get(), DONT_CARE::get()}};
-			return Gecode::IntVar(csp, Gecode::IntSet(ranges, 2));
-		}
+		return Gecode::IntVar(csp, bounds.first, bounds.second);
 	}
 	else if ( generic_type == ProblemInfo::ObjectType::BOOL ) {
-		assert(!nullable);
 		return Gecode::IntVar( csp, 0, 1 );
 	}
 	else {
 		assert(generic_type == ProblemInfo::ObjectType::OBJECT);
-		ObjectIdxVector values = info.getTypeObjects(typeId); // We copy the vector so that we can add a DONT_CARE value if necessary
-		if (nullable) values.push_back(DONT_CARE::get());
+		const ObjectIdxVector& values = info.getTypeObjects(typeId);
 		return Gecode::IntVar(csp, Gecode::IntSet(values.data(), values.size())); // TODO - Check if we can change this for a range-like domain creation
 	}
 }
 
-Gecode::IntSet Helper::add_dont_care(const Gecode::IntSet& domain) {
-	std::vector<int> values;
-	for (Gecode::IntSetValues it(domain); it(); ++it) {
-		values.push_back(it.val());
+void Helper::constrainCSPVariable(SimpleCSP& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain) {
+	if (domain.size() ==  static_cast<unsigned>(domain.max() - domain.min()) + 1) { // A micro-optimization
+		Gecode::dom(csp, variable, domain.min(), domain.max());
 	}
-	values.push_back(DONT_CARE::get());
-	return Gecode::IntSet(Gecode::IntArgs(values.cbegin(), values.cend()));
-}
-
-void Helper::constrainCSPVariable(SimpleCSP& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain, bool include_dont_care) {
-	if (include_dont_care) {
-		Gecode::dom(csp, variable, add_dont_care(domain)); // TODO - This is highly inefficient, we should keep a different IntSet with the DONT_CARE value inside of the GecodeRPGLayer
-	} else {
-		if (domain.size() ==  static_cast<unsigned>(domain.max() - domain.min()) + 1) { // A micro-optimization
-			Gecode::dom(csp, variable, domain.min(), domain.max());
-		}
-		Gecode::dom(csp, variable, domain);
-	}
-}
-
-Gecode::TupleSet Helper::buildTupleset(const fs0::Domain& domain, bool include_dont_care) {
-	Gecode::TupleSet tuples;
-	for (auto value:domain) {
-		tuples.add(Gecode::IntArgs(1, value));
-	}
-	if (include_dont_care) tuples.add(Gecode::IntArgs(1, DONT_CARE::get()));
-	tuples.finalize();
-	return tuples;
+	Gecode::dom(csp, variable, domain);
 }
 
 Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
@@ -138,19 +107,6 @@ int Helper::selectValueIfExists(Gecode::IntVarValues& value_set, int value) {
 	return arbitrary_element;
 }
 
-
-int Helper::computeDontCareValue() {
-	const ProblemInfo& info = Problem::getInfo();
-	int min = -1;
-	int max = std::numeric_limits<int>::min();
-	for (std::vector<ObjectIdx> objs:info.getTypeObjects()) {
-		if (objs.empty()) continue;
-		min = std::min(min, *std::min_element( std::begin(objs), std::end(objs) ));
-		max = std::max(max, *std::max_element( std::begin(objs), std::end(objs) ));
-	}
-	// We select the closest value to zero which is not being used as the ID of some object / range integer
-	return -1*max < min ? min : max;
-}
 
 int Helper::value_selector(const Gecode::Space& home, Gecode::IntVar x, int csp_var_idx) {
 	const SimpleCSP& csp = static_cast<const SimpleCSP&>(home);

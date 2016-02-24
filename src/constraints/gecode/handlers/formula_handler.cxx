@@ -1,10 +1,11 @@
 
+#include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/scopes.hxx>
 #include <constraints/gecode/handlers/formula_handler.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
-#include <languages/fstrips/scopes.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <state.hxx>
 
@@ -12,8 +13,8 @@
 
 namespace fs0 { namespace gecode {
 	
-FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool approximate, bool use_novelty_constraint, bool dont_care)
-	:  BaseCSPHandler(approximate, dont_care),
+FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool approximate, bool use_novelty_constraint)
+	:  BaseCSPHandler(approximate),
 	  _formula(formula)
 {
 	setup();
@@ -36,6 +37,8 @@ FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool appro
 	}
 }
 
+FormulaCSPHandler::~FormulaCSPHandler() { delete _formula; }
+
 bool FormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
 	
 	Gecode::DFS<SimpleCSP> engine(csp);
@@ -45,23 +48,18 @@ bool FormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, con
 	FFDEBUG("heuristic", "Formula CSP solution found: " << *solution);
 	
 	// First process the direct state variables
-	for (const VariableIdx variable:_translator.getDirectInputVariables()) {
-		support.push_back(Atom(variable, _translator.resolveInputStateVariableValue(*solution, variable)));
+	for (const auto& element:_translator.getAllInputVariables()) {
+		VariableIdx variable = element.first;
+		ObjectIdx value = _translator.resolveVariableFromIndex(element.second, *solution).val();
+		support.push_back(Atom(variable, value));
 	}
 	
 	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
 	support.insert(support.end(), _atom_state_variables.begin(), _atom_state_variables.end());
 	
-	// Now process the indirect state variables
-	std::set<VariableIdx> inserted;
-	for (const NestedFluentElementTranslator& fluent_translator:_nested_fluent_translators) {
-		VariableIdx variable = fluent_translator.getNestedFluentData().resolveStateVariable(*solution);
-		
-		if (inserted.find(variable) == inserted.end()) { // Don't push twice to the support the same atom
-			ObjectIdx value = _translator.resolveValue(fluent_translator.getTerm(), CSPVariableType::Input, *solution);
-			support.push_back(Atom(variable, value));
-			inserted.insert(variable);
-		}
+	// And finally the support derived from nested terms
+	if (!_nested_fluents.empty()) {
+		extract_nested_term_support(csp, _nested_fluents, _translator.buildAssignment(*solution), Binding(), support);
 	}
 	
 	delete solution;
@@ -78,8 +76,10 @@ bool FormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {
 }
 
 void FormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::vctr& support, const State& seed) const {
+	throw UnimplementedFeatureException("Approximate formula processing needs to be rethought after the redesign to move to extensional constraints");
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
 	
+	/*
 	// First process the direct state variables
 	for (const VariableIdx variable:_translator.getDirectInputVariables()) {
 		const Gecode::IntVar& csp_var = _translator.resolveInputStateVariable(*csp, variable);
@@ -92,7 +92,7 @@ void FormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::
 		if (selected == seed_value) continue;
 		support.push_back(Atom(variable, selected)); // It not, we simply pick the first consistent value
 	}
-	
+	*/
 	// Now process the indirect state variables
 	// TODO - This part on approximate recovery of values for nested term fluents is a bit iffy.
 	// For state variables acting as nested fluent indexes, we are not ensuring that the same value is selected for them
@@ -100,6 +100,9 @@ void FormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::
 	// so I don't think it is worth the extra effort refactoring this now.
 	std::set<VariableIdx> inserted;
 	
+	
+	
+	/*
 	for (const NestedFluentElementTranslator& fluent_translator:_nested_fluent_translators) {
 		auto nested_translator = fluent_translator.getNestedFluentData();
 		auto idx_variable = nested_translator.getIndex(*csp);
@@ -118,6 +121,7 @@ void FormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::
 			inserted.insert(state_variable);
 		}
 	}
+	*/
 }
 
 void FormulaCSPHandler::create_novelty_constraint() {

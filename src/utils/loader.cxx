@@ -10,7 +10,6 @@
 #include <component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
 #include <utils/logging.hxx>
-#include <constraints/gecode/base.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/registry.hxx>
 #include <utils/printers/registry.hxx>
@@ -48,9 +47,6 @@ void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_han
 	if (!Config::instance().doLiftedPlanning()) {
 		problem->setGroundActions(ActionGrounder::ground(problem->getActionSchemata(), info));
 	}
-	
-	gecode::DONT_CARE::set(gecode::Helper::computeDontCareValue());
-	FINFO("main", "Selected a Gecode DONT_CARE value of " << gecode::DONT_CARE::get());	
 }
 
 void Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {

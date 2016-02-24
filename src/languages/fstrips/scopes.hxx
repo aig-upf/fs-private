@@ -50,16 +50,16 @@ public:
 	static void compute_rhs_complete_scope(ActionEffect::cptr effect, std::set<VariableIdx>& scope);
 	
 	template <typename T>
-	static void computeVariables(const T& element, std::set<VariableIdx>& direct, std::set<VariableIdx>& derived) {
+	static void computeVariables(const T& element, std::set<VariableIdx>& variables) {
 		for (Term::cptr term:element->all_terms()) {
 			
 			if (auto sv = dynamic_cast<StateVariable::cptr>(term)) {
-				direct.insert(sv->getValue());
+				variables.insert(sv->getValue());
 			}
 			else if (auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
 				for (gecode::nested_fluent_iterator it(fluent); !it.ended(); ++it) {
 					VariableIdx variable = it.getDerivedStateVariable();
-					derived.insert(variable);
+					variables.insert(variable);
 				}
 			}
 		}

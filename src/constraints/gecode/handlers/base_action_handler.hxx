@@ -5,6 +5,9 @@
 
 namespace fs0 { class BaseAction; class ActionID; }
 
+namespace fs0 { namespace language { namespace fstrips { class ActionEffect; }}}
+
+
 namespace fs0 { namespace gecode {
 
 
@@ -14,7 +17,7 @@ public:
 	typedef BaseActionCSPHandler* ptr;
 
 	//! Constructor / Destructor
-	BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool use_novelty_constraint, bool dont_care);
+	BaseActionCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate, bool use_novelty_constraint);
 	virtual ~BaseActionCSPHandler() {}
 	
 	//!
@@ -31,7 +34,7 @@ protected:
 	
 	//! The effects of the action that we want to take into account in the CSP (by default, all)
 	//! Note that we store a copy of the vector to facilitate creating subsets of effects to the subclasses.
-	const std::vector<fs::ActionEffect::cptr> _effects;
+	const std::vector<const fs::ActionEffect*> _effects;
 	
 	//! 'effect_support_variables[i]' contains the scope of the i-th effect of the action plus the scope of the action, without repetitions
 	//! and in that particular order.
@@ -39,7 +42,7 @@ protected:
 	
 	//! 'effect_nested_fluents[i]' contains all the nested-fluent terms of the RHS of the i-th effect plus those of the action precondition,
 	//! in that particular order
-	std::vector<std::vector<fs::FluentHeadedNestedTerm::cptr>> effect_nested_fluents;
+	std::vector<std::vector<const fs::FluentHeadedNestedTerm*>> effect_nested_fluents;
 	
 	//! 'effect_rhs_variables[i]' contains the index of the CSP variable that models the value of the RHS of the i-th effect.
 	std::vector<unsigned> effect_rhs_variables;
@@ -67,7 +70,7 @@ protected:
 	std::set<VariableIdx> _action_support;
 	
 	// Constraint registration methods
-	void registerEffectConstraints(const fs::ActionEffect::cptr effect);
+	void registerEffectConstraints(const fs::ActionEffect* effect);
 	
 	//! Process the given solution of the action CSP
 	void process_solution(SimpleCSP* solution, RPGData& bookkeeping) const;

@@ -16,10 +16,10 @@ class SimpleCSP; class GecodeCSPVariableTranslator; enum class CSPVariableType;
 class Helper {
 public:
 	//! Creates a CSP variable constraining its domain according to the given type
-	static Gecode::IntVar createVariable(Gecode::Space& csp, TypeIdx typeId, bool nullable = false);
+	static Gecode::IntVar createVariable(Gecode::Space& csp, TypeIdx typeId);
 	
 	//! Creates a CSP variable constraining its domain based on the planning problem variable type
-	static Gecode::IntVar createPlanningVariable(Gecode::Space& csp, VariableIdx var, bool nullable);
+	static Gecode::IntVar createPlanningVariable(Gecode::Space& csp, VariableIdx var);
 	
 	//! Creates a CSP variable constraining its domain based on the given domain type
 	static Gecode::IntVar createTemporaryVariable(Gecode::Space& csp, TypeIdx typeId);
@@ -31,7 +31,7 @@ public:
 	static Gecode::BoolVar createBoolVariable(Gecode::Space& csp);
 	
 	//! Constrains the given CSP variable to have values in the given domain
-	static void constrainCSPVariable(SimpleCSP& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain, bool include_dont_care = false);
+	static void constrainCSPVariable(SimpleCSP& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain);
 	
 	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
 	//! that underlies the static term in all interpretations.
@@ -40,20 +40,12 @@ public:
 	//! Extensionalize any given formula
 	static Gecode::TupleSet extensionalize(const fs::AtomicFormula* formula);
 
-	//! Builds a gecode tupleset from the values contained in a state variable domain
-	static Gecode::TupleSet buildTupleset(const fs0::Domain& domain, bool include_dont_care = false);
-	
 	//! A simple helper to post a certain Gecode branching strategy to the CSP
 	static void postBranchingStrategy(SimpleCSP& csp);
 	
 	//! Small helper to check whether a Gecode IntVarValues set contains a given value
 	//! Unfortunately, it has linear cost.
 	static int selectValueIfExists(Gecode::IntVarValues& value_set, int value);
-	
-	//! Computes a proper DONT_CARE value which is as close as possible to zero but not used as the ID of any object.
-	static int computeDontCareValue();
-	
-	static Gecode::IntSet add_dont_care(const Gecode::IntSet& domain);
 	
 	//! A helper method to install our desired value-selection brancher
 	static int value_selector(const Gecode::Space& home, Gecode::IntVar x, int csp_var_idx);

@@ -6,6 +6,7 @@
 #include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <gecode/int.hh>
+#include <constraints/gecode/simple_csp.hxx>
 
 namespace fs0 { namespace gecode {
 	
@@ -22,10 +23,10 @@ NoveltyConstraint* NoveltyConstraint::createFromEffects(GecodeCSPVariableTransla
 WeakNoveltyConstraint* WeakNoveltyConstraint::create(GecodeCSPVariableTranslator& translator, const fs::Formula::cptr conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
 	std::set<VariableIdx> relevant;
 
-	fs::ScopeUtils::computeVariables(conditions, relevant, relevant);
+	fs::ScopeUtils::computeVariables(conditions, relevant);
 	
 	for (auto effect:effects) {
-		fs::ScopeUtils::computeVariables(effect->rhs(), relevant, relevant);
+		fs::ScopeUtils::computeVariables(effect->rhs(), relevant);
 	}
 	
 	return new WeakNoveltyConstraint(translator, relevant);

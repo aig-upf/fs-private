@@ -1,10 +1,9 @@
 
-
 #pragma once
 
-#include <languages/fstrips/terms.hxx>
-#include <boost/functional/hash.hpp>
+#include <functional>
 
+namespace fs0 { namespace language { namespace fstrips { class Term; }}}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
@@ -16,31 +15,21 @@ enum class CSPVariableType {
 };
 
 
-//!
 struct TranslationKey {
 
-	TranslationKey(fs::Term::cptr term, CSPVariableType _type)
-		: _term(term), _type(_type) {}
+	TranslationKey(const fs::Term* term, CSPVariableType _type);
 
-	inline bool operator==(const TranslationKey& rhs) const {
-		return _type == rhs._type && *_term == *rhs._term;
-	}
+	bool operator==(const TranslationKey& rhs) const;
+	bool operator!=(const TranslationKey& rhs) const;
 
-	inline bool operator!=(const TranslationKey& rhs) const { return ! this->operator==(rhs); }
+	std::size_t hash_code() const;
 
-	std::size_t hash_code() const {
-		std::size_t hash = 0;
-		boost::hash_combine(hash, _type);
-		boost::hash_combine(hash, _term->hash_code());
-		return hash;
-	}
-
-	const fs::Term::cptr getTerm() const { return _term; }
+	const fs::Term* getTerm() const { return _term; }
 	CSPVariableType getType() const { return _type; }
 
 protected:
 	//! The actual term being indexed
-	fs::Term::cptr _term;
+	const fs::Term* _term;
 
 	//! The role under which the term is indexed
 	CSPVariableType _type;
@@ -52,8 +41,8 @@ protected:
 // std::hash specialization for TranslationKey.
 namespace std {
 	template<> struct hash<fs0::gecode::TranslationKey> {
-		typedef std::size_t        result_type;
-		typedef fs0::gecode::TranslationKey  argument_type;
+		typedef std::size_t result_type;
+		typedef fs0::gecode::TranslationKey argument_type;
 
 		std::size_t operator()(const fs0::gecode::TranslationKey& elem) const noexcept { return elem.hash_code(); }
 	};

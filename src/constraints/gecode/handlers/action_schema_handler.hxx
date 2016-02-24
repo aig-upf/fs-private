@@ -2,9 +2,11 @@
 #pragma once
 
 #include <constraints/gecode/handlers/base_action_handler.hxx>
-#include <actions/action_schema.hxx>
 
-namespace fs0 { class LiftedActionID; }
+namespace fs0 { class LiftedActionID; class ActionSchema; }
+
+namespace fs0 { namespace language { namespace fstrips { class ActionEffect; }}}
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
@@ -15,12 +17,12 @@ public:
 	typedef ActionSchemaCSPHandler* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty, bool dont_care);
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
 	//! HACK
-	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty, bool dont_care);
+	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool novelty, bool dont_care);
-	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool novelty, bool dont_care);
+	ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool novelty);
+	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate, bool novelty);
 	virtual ~ActionSchemaCSPHandler() {}
 	
 	//! Return the (Lifted) ActionID corresponding to the given solution

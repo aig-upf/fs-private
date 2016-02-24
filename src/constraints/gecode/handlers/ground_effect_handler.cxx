@@ -1,4 +1,5 @@
 
+#include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <actions/ground_action.hxx>
 #include <utils/printers/actions.hxx>
@@ -6,14 +7,14 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, bool approximate, bool novelty, bool dont_care) {
+std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	
 	for (unsigned action_idx = 0; action_idx < actions.size(); ++action_idx) {
 		const auto action = actions[action_idx];
 		
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
-			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, eff_idx, approximate, novelty, dont_care);
+			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, eff_idx, approximate, novelty);
 			managers.push_back(handler);
 			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_name(*action) << std::endl <<  *handler << std::endl);
 		}
@@ -21,8 +22,8 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 	return managers;
 }
 
-GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool novelty, bool dont_care)
-	: GroundActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, novelty, dont_care)
+GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool novelty)
+	: GroundActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, novelty)
 {}
 
 void GroundEffectCSPHandler::log() const {

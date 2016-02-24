@@ -402,11 +402,11 @@ namespace std {
         std::size_t operator()(const fs::Term& term) const { return term.hash_code(); }
     };
 
-    template<> struct hash<fs::Term::cptr> {
-        std::size_t operator()(const fs::Term::cptr term) const { return hash<fs::Term>()(*term); }
+    template<> struct hash<const fs::Term*> {
+        std::size_t operator()(const fs::Term* term) const { return hash<fs::Term>()(*term); }
     };
 	
-    template<> struct equal_to<fs::Term::cptr> {
-        std::size_t operator()(const fs::Term::cptr t1, const fs::Term::cptr t2) const { return equal_to<fs::Term>()(*t1, *t2); }
+    template<> struct equal_to<const fs::Term*> {
+        std::size_t operator()(const fs::Term* t1, const fs::Term* t2) const { return equal_to<fs::Term>()(*t1, *t2); }
     };
 }

@@ -11,11 +11,11 @@ public:
 	typedef EffectSchemaCSPHandler* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty, bool dont_care);
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
 	//! HACK
-	static std::vector<std::shared_ptr<EffectSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty, bool dont_care);
+	static std::vector<std::shared_ptr<EffectSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
 
-	EffectSchemaCSPHandler(const ActionSchema& action, unsigned effect_idx, bool approximate, bool novelty, bool dont_care);
+	EffectSchemaCSPHandler(const ActionSchema& action, unsigned effect_idx, bool approximate, bool novelty);
 	 
 	~EffectSchemaCSPHandler() {}
 	

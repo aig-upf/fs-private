@@ -23,7 +23,7 @@ class tupleset {
 		std::ostream& print(std::ostream& os) const;
 };
 
-//! Prints a Gecode varoable set along with its currently assigned domains
+//! Prints a Gecode variable set along with its currently assigned domains
 class varset {
 	protected:
 		const Gecode::IntVarArgs& _vars;
@@ -43,19 +43,6 @@ class extensional {
 		extensional(const Gecode::IntVarArgs& vars, const Gecode::TupleSet& tset) : _vars(vars), _tupleset(tset) {}
 		
 		friend std::ostream& operator<<(std::ostream &os, const extensional& o) { return o.print(os); }
-		std::ostream& print(std::ostream& os) const;
-};
-
-class element {
-	protected:
-		const Gecode::IntVarArgs& _table;
-		const Gecode::IntVar& _index;
-		const Gecode::IntVar& _output;
-		
-	public:
-		element(const Gecode::IntVarArgs& table, const Gecode::IntVar& index, const Gecode::IntVar& output) : _table(table), _index(index), _output(output) {}
-		
-		friend std::ostream& operator<<(std::ostream &os, const element& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
 

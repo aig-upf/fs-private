@@ -6,9 +6,10 @@
 
 #include <fs0_types.hxx>
 #include <constraints/gecode/utils/translation.hxx>
-#include <constraints/gecode/translators/nested_fluent.hxx>
 
 #include <gecode/int.hh>
+
+namespace fs0 { class State; }
 
 namespace fs0 { namespace language { namespace fstrips { class Constant; class NestedTerm; class BoundVariable; class Term; } }}
 namespace fs = fs0::language::fstrips;
@@ -57,17 +58,7 @@ public:
 	void registerExistentialVariable(const fs::BoundVariable* variable);
 	
 	//! Register an input variable, i.e. a CSP variable directly related to a planning state variable.
-	//! The variable can be registered as a "direct" variable, i.e. a variable appearing directly in some formula,
-	//! or as an derived variable, i.e. a variable that derives from some nested fluent expression
-	//! e.g. for a term loc(chosen-car()), chosen-car will be a direct variable, and loc(c1), ..., loc(cn) will be derived variables.
-	//! This distinction mostly affects the way in which the supports are extracted; in the previous example,
-	//! the value of chosen-car will be part of the support, but only ONE of the values of loc(c1), ..., loc(cn)
-	//! will be, namely, that for which c_i = chosen_car.
-	//!
-	//! Additionally, a variable can be declared 'nullable' if (according to the characteristics
-	//! of the particular CSP linked to this translator) it can be assigned a DONT_CARE value
-	//! whenever the DONT_CARE optimization is active.
-	void registerInputStateVariable(VariableIdx variable, bool is_direct, bool nullable);
+	void registerInputStateVariable(VariableIdx variable);
 
 	
 	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type);
@@ -96,38 +87,22 @@ public:
 	const unsigned resolveInputVariableIndex(VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);
 		if (it == _input_state_variables.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered input state variable");
-		return it->second.first;
+		return it->second;
 	}
 	
 	//! Returns the CSP variable that corresponds to the given input state variable, in the given CSP.
-	const Gecode::IntVar& resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
-		return csp._intvars[resolveInputVariableIndex(variable)];
-	}
+	const Gecode::IntVar& resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const;
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
 	const ObjectIdx resolveInputStateVariableValue(const SimpleCSP& csp, VariableIdx variable) const {
 		return resolveInputStateVariable(csp, variable).val();
 	}
 
-// 	//! Returns the CSP variable that corresponds to the given output state variable, in the given CSP.
-// 	const Gecode::IntVar& resolveOutputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
-// 		const auto& it = _output_state_variables.find(variable);
-// 		if (it == _output_state_variables.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered output state variable");
-// 		return csp._intvars[it->second];
-// 	}
-// 
-// 	//! Returns the value of the CSP variable that corresponds to the given output state variable, in the given CSP.
-// 	const ObjectIdx resolveOutputStateVariableValue(const SimpleCSP& csp, VariableIdx variable) const {
-// 		return resolveOutputStateVariable(csp, variable).val();
-// 	}
-	
 	//! Creates a new boolean CSP variable and returns its index
 	unsigned create_bool_variable();
 
-	const std::unordered_map<VariableIdx, std::pair<unsigned, bool>>& getAllInputVariables() const { return _input_state_variables; }
+	const std::unordered_map<VariableIdx, unsigned>& getAllInputVariables() const { return _input_state_variables; }
 	
-	const std::unordered_set<VariableIdx>& getDirectInputVariables() const { return _direct_variables; }
-
 	
 	//! Returns a partial assignment of values to the input state variables of the CSP managed by this translator, built from the given solution.
 	PartialAssignment buildAssignment(SimpleCSP& solution) const;
@@ -151,18 +126,14 @@ protected:
 	//! An index - _intvars_idx[x] is the VariableIdx of the CSP variable with index 'x'
 	std::vector<VariableIdx> _intvars_idx;
 	
-	
 	//! A map mapping terms that have already been processed (under a certain role, e.g. input/output) to the ID of their corresponding CSP variable
 	std::unordered_map<TranslationKey, unsigned> _registered;
 	
 	//! Some data structures to keep track of all registered state variables, so that we can update their domains and parse their values efficiently.
 	//! In particular, these map the index of state variables that have been registered under different input/output roles to
 	//! the ID of the corresponding CSP variable
-	std::unordered_map<VariableIdx, std::pair<unsigned, bool>> _input_state_variables;
+	std::unordered_map<VariableIdx, unsigned> _input_state_variables;
 // 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
-	
-	//! For faster access, this contains the subset of _input_state_variables that appear directly on a formula
-	std::unordered_set<VariableIdx> _direct_variables;
 };
 
 

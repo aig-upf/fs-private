@@ -3,6 +3,10 @@
 
 #include <constraints/gecode/handlers/base_handler.hxx>
 
+namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
+namespace fs = fs0::language::fstrips;
+
+
 namespace fs0 { namespace gecode {
 
 //! A CSP modeling and solving a logical formula on a certain RPG layer
@@ -11,10 +15,8 @@ public:
 	typedef FormulaCSPHandler* ptr;
 	typedef const FormulaCSPHandler* cptr;
 
-	FormulaCSPHandler(const fs::Formula::cptr formula, bool approximate, bool use_novelty_constraint, bool dont_care);
-	~FormulaCSPHandler() {
-		delete _formula;
-	}
+	FormulaCSPHandler(const fs::Formula* formula, bool approximate, bool use_novelty_constraint);
+	~FormulaCSPHandler();
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(SimpleCSP* csp, std::vector<Atom>& support, const State& seed) const;
@@ -28,7 +30,10 @@ public:
 
 protected:
 	//! The formula being translated
-	const fs::Formula::cptr _formula;
+	const fs::Formula* _formula;
+	
+	//! A list with all nested fluents in the formula
+	std::vector<const fs::FluentHeadedNestedTerm*> _nested_fluents;
 	
 	void index_scopes() {}
 	
