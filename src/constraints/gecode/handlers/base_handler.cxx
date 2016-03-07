@@ -54,7 +54,6 @@ SimpleCSP::ptr instantiate(const SimpleCSP& csp,
 						   const GecodeCSPVariableTranslator& translator,
 						   const std::vector<ExtensionalConstraint>& extensional_constraints,
 						   const T& layer) {
-							   
 	SimpleCSP* clone = static_cast<SimpleCSP::ptr>(csp.clone());
 	translator.updateStateVariableDomains(*clone, layer);
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {
@@ -66,6 +65,7 @@ SimpleCSP::ptr instantiate(const SimpleCSP& csp,
 }
 
 SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
+	if (_failed) return nullptr;
 	SimpleCSP* csp = instantiate(_base_csp, _translator, _extensional_constraints, layer);
 	if (!csp) return csp; // The CSP was detected unsatisfiable even before propagating anything
 	
@@ -76,6 +76,7 @@ SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) cons
 }
 
 SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const State& state) const {
+	if (_failed) return nullptr;
 	return instantiate(_base_csp, _translator, _extensional_constraints, state);
 }
 

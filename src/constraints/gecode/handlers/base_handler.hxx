@@ -26,7 +26,7 @@ public:
 	typedef BaseCSPHandler* ptr;
 	typedef const BaseCSPHandler* cptr;
 
-	BaseCSPHandler(bool approximate) : _base_csp(), _approximate(approximate), _translator(_base_csp), _novelty(nullptr) {}
+	BaseCSPHandler(bool approximate) : _base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _novelty(nullptr) {}
 	virtual ~BaseCSPHandler();
 	
 	void init(const RPGData* bookkeeping);
@@ -51,6 +51,9 @@ public:
 protected:
 	//! The base Gecode CSP
 	SimpleCSP _base_csp;
+	
+	//! Whether the underlying CSP gecode space has already been detected as failed.
+	bool _failed;
 	
 	//! Whether to solve the CSPs completely or approximately
 	bool _approximate;

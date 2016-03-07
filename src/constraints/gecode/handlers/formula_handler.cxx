@@ -29,9 +29,9 @@ FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool appro
 	
 	if (st == Gecode::SpaceStatus::SS_SOLVED) {
 		FINFO("main", "Formula CSP was statically solved:" << std::endl <<  *this);
-	} else if (st == Gecode::SpaceStatus::SS_FAILED) { // This should never happen, as it'd mean that the action is (statically) unapplicable.
+	} else if (st == Gecode::SpaceStatus::SS_FAILED) {
 		FINFO("main", "Formula CSP statically failed:" << *this);
-		throw std::runtime_error("Formula CSP statically failed");
+		_failed = true;
 	} else {
 		FINFO("main", "Formula CSP after the initial, static propagation: " << *this);
 	}
