@@ -62,6 +62,7 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 	if (solved) {
 		if (!valid) throw std::runtime_error("The plan output by the planner is not correct!");
 		std::cout << "Search Result: Found plan of length " << plan.size() << std::endl;
+		std::cout << "Expanded / Evaluated / Eval. rate: " << engine.expanded << " / " << engine.generated << " / " << eval_speed << std::endl;
 	} else {
 		std::cout << "Search Result: No plan was found " << std::endl;
 		// TODO - Make distinction btw all nodes explored and no plan found, and no plan found in the given time.

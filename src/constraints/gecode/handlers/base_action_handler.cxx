@@ -25,13 +25,13 @@ BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::
 	createCSPVariables(use_novelty_constraint);
 	Helper::postBranchingStrategy(_base_csp);
 	
-// 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: no constraints): " << _translator); // Uncomment for extreme debugging
+// 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: no constraints): " << _translator); // Uncomment for extreme debugging
 
 	for (const auto effect:_effects) {
 		registerEffectConstraints(effect);
 	}
 	
-// 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
+// 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
 	
 	register_csp_constraints();
 

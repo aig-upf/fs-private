@@ -27,7 +27,7 @@ void ExtensionalConstraint::register_constraints(GecodeCSPVariableTranslator& tr
 		_subterm_variable_indexes.push_back(translator.resolveVariableIndex(subterm, CSPVariableType::Input));
 	}
 	
-	if (_predicate) _term_variable_index = translator.resolveVariableIndex(_term, CSPVariableType::Input);
+	if (!_predicate) _term_variable_index = translator.resolveVariableIndex(_term, CSPVariableType::Input);
 	
 	if (_term->getSubterms().empty()) {
 		_variable_idx = info.resolveStateVariable(_term->getSymbolId(), {});
@@ -55,7 +55,7 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTransl
 		variables << translator.resolveVariableFromIndex(csp_var_index, csp);
 	}
 	
-	if (_predicate) {
+	if (!_predicate) {
 		variables << translator.resolveVariableFromIndex(_term_variable_index, csp);
 	}
 

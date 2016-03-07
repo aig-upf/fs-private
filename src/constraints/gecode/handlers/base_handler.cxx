@@ -88,7 +88,7 @@ void BaseCSPHandler::register_csp_variables() {
 	for (const auto term:_all_terms) {
 		if (fs::FluentHeadedNestedTerm::cptr fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
 			_translator.registerNestedTerm(fluent, CSPVariableType::Input);
-			_extensional_constraints.push_back(ExtensionalConstraint(fluent, true));
+			_extensional_constraints.push_back(ExtensionalConstraint(fluent, false));
 			
 		} else if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(term)) {
 			_translator.registerInputStateVariable(statevar->getValue());
@@ -109,8 +109,7 @@ void BaseCSPHandler::register_csp_variables() {
 }
 
 void BaseCSPHandler::register_csp_constraints() {
-	unsigned i = 0;
-	_unused(i);
+// 	unsigned i = 0; _unused(i);
 	
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
@@ -156,9 +155,6 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 	
 	for (auto condition:conditions) {
 		if (auto relational = dynamic_cast<const fs::RelationalFormula*>(condition)) {
-			if (relational->symbol() == fs::RelationalFormula::Symbol::NEQ) {
-				throw UnimplementedFeatureException("Cannot handle negated atoms yet");
-			}
 			
 			if (relational->symbol() == fs::RelationalFormula::Symbol::EQ) {
 				auto nested = dynamic_cast<const fs::NestedTerm*>(relational->lhs()); // TODO - CHECK SYMMETRICALLY FOR RHS()!!
@@ -171,6 +167,13 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 				if (statevar) {
 					auto origin = statevar->getOrigin();
 					if (info.isPredicate(origin->getSymbolId())) {
+						// e.g. we had a condition clear(b) = 1, which we'll want to transform into an extensional constraint on the
+						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
+						
+						auto value = dynamic_cast<const fs::IntConstant*>(relational->rhs());
+						if (!value || value->getValue() != 1) {
+							throw UnimplementedFeatureException("Only non-negated relational atoms are supported ATM");
+						}
 						
 						// Mark the condition and term as inserted, so we do not need to insert it again!
 						inserted_conditions.insert(condition);
