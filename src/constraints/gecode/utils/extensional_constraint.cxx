@@ -7,6 +7,7 @@
 #include <constraints/gecode/csp_translator.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
+#include <constraints/gecode/extensions.hxx>
 #include <utils/logging.hxx>
 
 namespace fs0 { namespace gecode {
@@ -30,9 +31,16 @@ void ExtensionalConstraint::register_constraints(GecodeCSPVariableTranslator& tr
 	}
 }
 
+// Updating the CSP from a non-relaxed state is necessary to efficiently implement satisfiability tests on states
+// with formulas involving existential variables
 bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const State& state) const {
-	assert(0); // We need to obtain the actual extension from the state - is this method necessary, though??
-// 	update(csp, translator, layer.get_extension(_term->getSymbolId()));
+	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
+		return state.getValue(_variable_idx) == 1;
+	} else {
+		ExtensionHandler handler;
+		GecodeRPGLayer layer(handler, state);
+		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
+	}
 }
 
 bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const GecodeRPGLayer& layer) const {
