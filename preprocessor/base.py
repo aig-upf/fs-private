@@ -51,7 +51,7 @@ class Symbol(object):
 class Predicate(Symbol):
     def __init__(self, name, domain):
         super().__init__(name, domain)
-        self.codomain = '_bool_'
+        self.codomain = 'bool'
 
 
 class Function(Symbol):

@@ -65,7 +65,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		variableNames.push_back(name);
 		variableIds.insert(std::make_pair(name, id));
 		
-		variableGenericTypes.push_back(getGenericType(getTypeId(type)));
+		variableGenericTypes.push_back(getGenericType(type));
 		try {
 			variableTypes.push_back(name_to_type.at(type));
 		} catch( std::out_of_range& ex ) {
@@ -138,6 +138,11 @@ ProblemInfo::ObjectType ProblemInfo::getGenericType(TypeIdx typeId) const {
 	if (isTypeBounded[typeId]) return ObjectType::INT;
 // 	else if (type == "_bool_" || type == "bool") return ObjectType::BOOL;
 	else return ObjectType::OBJECT;
+}
+
+ProblemInfo::ObjectType ProblemInfo::getGenericType(const std::string& type) const {
+	if (type == "bool") return ObjectType::BOOL;
+	return getGenericType(getTypeId(type));
 }
 
 //! Load the names of the problem objects from the specified file.

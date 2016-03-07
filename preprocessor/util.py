@@ -63,7 +63,7 @@ def is_int(s):
 
 
 def bool_string(value):
-    return '_true_' if value else '_false_'
+    return 'true' if value else 'false'
 
 
 def fix_seed_and_possibly_rerun():

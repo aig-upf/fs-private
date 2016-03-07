@@ -120,7 +120,7 @@ class FSTaskIndex(object):
         for s in predicates:
             argtypes = [t.type for t in s.arguments]
             symbols[s.name] = base.Predicate(s.name, argtypes)
-            symbol_types[s.name] = '_bool_'
+            symbol_types[s.name] = 'bool'
 
         for s in functions:
             if s.name != 'total-cost':  # Ignore the "fake" total-cost function

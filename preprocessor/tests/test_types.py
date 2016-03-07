@@ -47,7 +47,7 @@ def test_no_object_types():
     types, type_map = process_types([], [])
     assert len(type_map) == len(types) == 3, check
     assert type_map['object'] == type_map['int'] == [], check
-    assert type_map['_bool_'] == ['_false_', '_true_'], "The Bool type has always exactly the two expected objects"
+    assert type_map['bool'] == ['false', 'true'], "The Bool type has always exactly the two expected objects"
 
 
 def test_duplicate_declaration():

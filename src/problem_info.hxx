@@ -196,6 +196,7 @@ public:
 	
 	//! Returns the generic type (object, int, bool, etc.) corresponding to a concrete type
 	ObjectType getGenericType(TypeIdx typeId) const;
+	ObjectType getGenericType(const std::string& type) const;
 	
 	//! Returns a vector 'v' such that 'v[i]' contains all posible values for the type 'signature[i]'
 	std::vector<const ObjectIdxVector*> getSignatureValues(const Signature& signature) const;
