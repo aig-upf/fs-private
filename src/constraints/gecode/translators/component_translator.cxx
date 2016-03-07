@@ -4,7 +4,6 @@
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/handlers/base_handler.hxx>
-#include <constraints/gecode/utils/nested_fluent_iterator.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <utils/logging.hxx>
@@ -109,7 +108,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 	SimpleCSP& csp = translator.getBaseCSP();
 	
 	// Assume we have a static term s(t_1, ..., t_n), where t_i are the subterms.
-	// We have registered a termporary variable Z for the whole term, plus temporaries Z_i accounting for each subterm t_i
+	// We have registered a temporary variable Z for the whole term, plus temporaries Z_i accounting for each subterm t_i
 	// Now we need to post an extensional constraint on all temporary variables <Z_1, Z_2, ..., Z_n, Z> such that
 	// the tuples <z_1, ..., z_n, z> satisfying the constraints are exactly those such that z = s(z_1, ..., z_n)
 	

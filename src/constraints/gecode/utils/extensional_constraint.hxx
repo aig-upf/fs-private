@@ -20,7 +20,7 @@ public:
 	
 	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, bool predicate);
 	
-	void register_variables(GecodeCSPVariableTranslator& translator); // TODO - REMOVE IF NOT NEEDED
+	void register_variables(GecodeCSPVariableTranslator& translator) {} // TODO - REMOVE IF NOT NEEDED
 	
 	void register_constraints(GecodeCSPVariableTranslator& translator);
 	

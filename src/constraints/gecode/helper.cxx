@@ -80,7 +80,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::AtomicFormula* formula) {
 	for (term_list_iterator it(formula->getSubterms()); !it.ended(); ++it) {
 		try {
 			if (formula->_satisfied(it.arguments())) {
-				tuples.add(it.getIntArgsElement()); // Add the term value as the last element
+				tuples.add(it.getIntArgsElement());
 			}
 		} catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 	}

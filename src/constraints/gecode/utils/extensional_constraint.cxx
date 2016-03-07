@@ -15,10 +15,6 @@ ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* t
 	: _predicate(predicate), _term(term), _variable_idx(-1)
 {}
 
-void ExtensionalConstraint::register_variables(GecodeCSPVariableTranslator& translator) {
-	// No variables as of now
-}
-
 void ExtensionalConstraint::register_constraints(GecodeCSPVariableTranslator& translator) {
 	FDEBUG("translation", "Preprocessing extensional constraints for term " << *_term);
 	const ProblemInfo& info = Problem::getInfo();

@@ -66,9 +66,6 @@ protected:
 	// All (distinct) FSTRIPS atomic formulas that participate in the CSP
 	std::unordered_set<const fs::AtomicFormula*> _all_formulas;
 	
-	//! All (distinct) FSTRIPS atoms that participate in the CSP
-	std::unordered_set<const fs::FluentHeadedNestedTerm*> _all_atoms;
-	
 	//! The Ids of the state variables that are relevant to some formula via a (predicative) atom.
 	std::set<Atom> _atom_state_variables;
 	
@@ -93,7 +90,7 @@ protected:
 	void index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms);
 	
 	//!
-	void extract_nested_term_support(const SimpleCSP* solution, std::vector<const fs::FluentHeadedNestedTerm*> nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const;
+	void extract_nested_term_support(const SimpleCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const;
 };
 
 } } // namespaces

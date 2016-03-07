@@ -84,11 +84,17 @@ void BaseCSPHandler::setup() {
 }
 
 void BaseCSPHandler::register_csp_variables() {
+	const ProblemInfo& info = Problem::getInfo();
+	
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
 		if (fs::FluentHeadedNestedTerm::cptr fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
-			_translator.registerNestedTerm(fluent, CSPVariableType::Input);
-			_extensional_constraints.push_back(ExtensionalConstraint(fluent, false));
+			bool is_predicate = info.isPredicate(fluent->getSymbolId());
+			_extensional_constraints.push_back(ExtensionalConstraint(fluent, is_predicate));
+			
+			if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
+				_translator.registerNestedTerm(fluent, CSPVariableType::Input);
+			}
 			
 		} else if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(term)) {
 			_translator.registerInputStateVariable(statevar->getValue());
@@ -97,11 +103,6 @@ void BaseCSPHandler::register_csp_variables() {
 		else {
 			registerTermVariables(term, CSPVariableType::Input, _translator);
 		}
-	}
-	
-	// We'll have one extensional constraint per predicate appearing on the condition / formula.
-	for (const auto atom:_all_atoms) {
-		_extensional_constraints.push_back(ExtensionalConstraint(atom, true));
 	}
 	
 	//! Register any possible CSP variable that arises from the logical formulas
@@ -157,15 +158,16 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 		if (auto relational = dynamic_cast<const fs::RelationalFormula*>(condition)) {
 			
 			if (relational->symbol() == fs::RelationalFormula::Symbol::EQ) {
-				auto nested = dynamic_cast<const fs::NestedTerm*>(relational->lhs()); // TODO - CHECK SYMMETRICALLY FOR RHS()!!
-				auto statevar = dynamic_cast<const fs::StateVariable*>(relational->lhs());
 				
-				if (nested && info.isPredicate(nested->getSymbolId())) {
-					throw UnimplementedFeatureException("To implement");
-				}
+				const fs::Term* candidate = relational->lhs(); // TODO - CHECK SYMMETRICALLY FOR RHS()!!
 				
-				if (statevar) {
-					auto origin = statevar->getOrigin();
+// 				auto nested = dynamic_cast<const fs::NestedTerm*>(candidate);
+				auto statevar = dynamic_cast<const fs::StateVariable*>(candidate);
+				auto nested_fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(candidate);
+
+				
+				if (statevar || nested_fluent) {
+					const fs::FluentHeadedNestedTerm* origin = statevar ? statevar->getOrigin() : nested_fluent;
 					if (info.isPredicate(origin->getSymbolId())) {
 						// e.g. we had a condition clear(b) = 1, which we'll want to transform into an extensional constraint on the
 						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
@@ -177,24 +179,31 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 						
 						// Mark the condition and term as inserted, so we do not need to insert it again!
 						inserted_conditions.insert(condition);
-						inserted_terms.insert(statevar);
 						
-						_all_atoms.insert(origin);
-						
-						// TODO - Perhaps StateVariable::all_terms should already return these terms?
-						for (auto term:origin->getSubterms()) {
-							auto tmp = term->all_terms();
-							_all_terms.insert(tmp.cbegin(), tmp.cend()); // TODO These should go away once we deal with constants separately
+						if (statevar) {
+							// For _predicate_ state variables, we don't need an actual CSP variable modeling it, so we spare it.
+							inserted_terms.insert(candidate);
+							
+							// We'll have one extensional constraint per predicate appearing on the condition / formula.
+							_extensional_constraints.push_back(ExtensionalConstraint(origin, true));
+							
+							// Insert subterms properly - TODO - Perhaps StateVariable::all_terms should already return these terms?
+							for (auto term:origin->getSubterms()) {
+								auto tmp = term->all_terms();
+								_all_terms.insert(tmp.cbegin(), tmp.cend()); // TODO These should go away once we deal with constants separately
+							}
+							
+							// Mark the state variable to allow the later support recovery
+							_atom_state_variables.insert(Atom(statevar->getValue(), 1));
 						}
-						
-						_atom_state_variables.insert(Atom(statevar->getValue(), 1));
-						continue;
 					}
 				}
 			}
 		}
 	}
 	
+	// Insert into all_formulas and all_terms all those elements in 'conditions' or 'terms' which have not been 
+	// deemed to deserve a particular treatment such as the one given to e.g. a condition "clear(b) = 1"
 	std::copy_if(conditions.begin(), conditions.end(), std::inserter(_all_formulas, _all_formulas.begin()),
 				 [&inserted_conditions] (const fs::AtomicFormula* atom) { return inserted_conditions.find(atom) == inserted_conditions.end(); });
 	
@@ -202,7 +211,7 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 				 [&inserted_terms] (const fs::Term* term) { return inserted_terms.find(term) == inserted_terms.end(); });
 }
 
-void BaseCSPHandler::extract_nested_term_support(const SimpleCSP* solution, std::vector<fs::FluentHeadedNestedTerm::cptr> nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const {
+void BaseCSPHandler::extract_nested_term_support(const SimpleCSP* solution, const std::vector<fs::FluentHeadedNestedTerm::cptr>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const {
 	if (nested_terms.empty()) return;
 
 	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which

@@ -241,9 +241,7 @@ Atom::vctrp BaseActionCSPHandler::extract_support_from_solution(SimpleCSP* solut
 	support->insert(support->end(), _atom_state_variables.begin(), _atom_state_variables.end());
 	
 	// And finally the support derived from nested terms
-	if (!effect_nested_fluents[effect_idx].empty()) {
-		extract_nested_term_support(solution, effect_nested_fluents[effect_idx], assignment, binding, *support);
-	}
+	extract_nested_term_support(solution, effect_nested_fluents[effect_idx], assignment, binding, *support);
 
 	return support;
 }

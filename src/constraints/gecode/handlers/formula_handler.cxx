@@ -35,6 +35,8 @@ FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool appro
 	} else {
 		FINFO("main", "Formula CSP after the initial, static propagation: " << *this);
 	}
+	
+	index_scopes(); // This needs to be _after_ the CSP variable registration
 }
 
 FormulaCSPHandler::~FormulaCSPHandler() { delete _formula; }
@@ -58,12 +60,18 @@ bool FormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, con
 	support.insert(support.end(), _atom_state_variables.begin(), _atom_state_variables.end());
 	
 	// And finally the support derived from nested terms
-	if (!_nested_fluents.empty()) {
-		extract_nested_term_support(csp, _nested_fluents, _translator.buildAssignment(*solution), Binding(), support);
-	}
+	extract_nested_term_support(csp, _nested_fluents, _translator.buildAssignment(*solution), Binding(), support);
 	
 	delete solution;
 	return true;
+}
+
+
+void FormulaCSPHandler::index_scopes() {
+	// We index all the nested fluents appearing in the formula
+	fs::ScopeUtils::TermSet nested;
+	fs::ScopeUtils::computeIndirectScope(_formula, nested);
+	_nested_fluents = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
 }
 
 bool FormulaCSPHandler::check_solution_exists(SimpleCSP* csp) const {

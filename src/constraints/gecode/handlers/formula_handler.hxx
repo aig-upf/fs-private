@@ -35,7 +35,7 @@ protected:
 	//! A list with all nested fluents in the formula
 	std::vector<const fs::FluentHeadedNestedTerm*> _nested_fluents;
 	
-	void index_scopes() {}
+	void index_scopes();
 	
 	void create_novelty_constraint();
 	
