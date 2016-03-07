@@ -136,6 +136,14 @@ Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vect
 	return variables;
 }
 
+std::vector<ObjectIdx> GecodeCSPVariableTranslator::resolveValues(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const {
+	std::vector<ObjectIdx> values;
+	for (const fs::Term::cptr term:terms) {
+		values.push_back(resolveValue(term, type, csp));
+	}
+	return values;
+}
+
 std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
 	const fs0::ProblemInfo& info = Problem::getInfo();
 	os << "Gecode CSP with " << _registered.size() + _input_state_variables.size() << " variables" << std::endl;

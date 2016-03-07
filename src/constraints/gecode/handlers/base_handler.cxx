@@ -219,11 +219,20 @@ void BaseCSPHandler::extract_nested_term_support(const SimpleCSP* solution, cons
 	// the CSP solution resolves to prevent repetitions
 	std::set<VariableIdx> inserted;
 
+	
+	const ProblemInfo& info = Problem::getInfo();
+	
 	for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
-		VariableIdx variable = fluent->interpretVariable(assignment, binding);
+		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), CSPVariableType::Input, *solution));
+//		VariableIdx variable = fluent->interpretVariable(assignment, binding);
 		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
 			// ObjectIdx value = fluent->interpret(assignment, binding);
-			ObjectIdx value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
+			
+			ObjectIdx value = 1; // i.e. assuming that there are no negated atoms on conditions.
+			if (!info.isPredicate(fluent->getSymbolId())) {
+				value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
+			}
+			
 			support.push_back(Atom(variable, value));
 			inserted.insert(variable);
 		}

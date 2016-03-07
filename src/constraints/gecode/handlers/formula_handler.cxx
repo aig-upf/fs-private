@@ -60,7 +60,7 @@ bool FormulaCSPHandler::compute_support(SimpleCSP* csp, Atom::vctr& support, con
 	support.insert(support.end(), _atom_state_variables.begin(), _atom_state_variables.end());
 	
 	// And finally the support derived from nested terms
-	extract_nested_term_support(csp, _nested_fluents, _translator.buildAssignment(*solution), Binding(), support);
+	extract_nested_term_support(solution, _nested_fluents, _translator.buildAssignment(*solution), Binding(), support);
 	
 	delete solution;
 	return true;

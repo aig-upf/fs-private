@@ -77,8 +77,9 @@ public:
 	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const SimpleCSP& csp) const;
 	ObjectIdx resolveValueFromIndex(unsigned variable_index, const SimpleCSP& csp) const;
 
-	//! Handy helper to resolve a number of variables at the same time
+	//! Helper to resolve several variables at the same time
 	Gecode::IntVarArgs resolveVariables(const std::vector<const fs::Term*>& terms, CSPVariableType type, const SimpleCSP& csp) const;
+	std::vector<ObjectIdx> resolveValues(const std::vector<const fs::Term*>& terms, CSPVariableType type, const SimpleCSP& csp) const;
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const;
