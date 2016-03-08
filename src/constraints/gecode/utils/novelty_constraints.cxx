@@ -7,6 +7,7 @@
 #include <constraints/gecode/csp_translator.hxx>
 #include <gecode/int.hh>
 #include <constraints/gecode/simple_csp.hxx>
+#include <utils/utils.hxx>
 
 namespace fs0 { namespace gecode {
 	
@@ -21,19 +22,22 @@ NoveltyConstraint* NoveltyConstraint::createFromEffects(GecodeCSPVariableTransla
 
 
 WeakNoveltyConstraint* WeakNoveltyConstraint::create(GecodeCSPVariableTranslator& translator, const fs::Formula::cptr conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
-	std::set<VariableIdx> relevant;
+	std::set<VariableIdx> variables;
+	std::set<unsigned> symbols;
 
-	fs::ScopeUtils::computeVariables(conditions, relevant);
+	fs::ScopeUtils::computeRelevantElements(conditions, variables, symbols);
 	
 	for (auto effect:effects) {
-		fs::ScopeUtils::computeVariables(effect->rhs(), relevant);
+		fs::ScopeUtils::computeRelevantElements(effect->rhs(), variables, symbols);
 	}
 	
-	return new WeakNoveltyConstraint(translator, relevant);
+	return new WeakNoveltyConstraint(translator, variables, std::vector<unsigned>(symbols.cbegin(), symbols.cend()));
 }
 
-WeakNoveltyConstraint::WeakNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::set<VariableIdx>& relevant) {
-	for (VariableIdx variable:relevant) {
+WeakNoveltyConstraint::WeakNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols) 
+	: _symbols(symbols)
+{
+	for (VariableIdx variable:variables) {
 		// We assume here that the state variable CSP var has already been registered
 		unsigned csp_var_id = translator.resolveInputVariableIndex(variable);
 		unsigned reified_id = translator.create_bool_variable();
@@ -42,6 +46,16 @@ WeakNoveltyConstraint::WeakNoveltyConstraint(GecodeCSPVariableTranslator& transl
 }
 
 void WeakNoveltyConstraint::post_constraint(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
+	// If we have relevant predicative symbols, and the denotation of some of them has changed in the last
+	// RPG layer, then we don't need to post the actual novelty constraint, since it might already be the case
+	// that e.g. some atom that was false is now true, and thus we need to check all possible values, old and new,
+	// of the state variables.
+	const auto& modified = layer.get_modified_symbols();
+	if (!_symbols.empty() && !Utils::empty_intersection(_symbols.cbegin(), _symbols.cend(), modified.begin(), modified.end())) {
+		return;
+	}
+	
+	// If there are no relevant state variables, then we are done.
 	if (_variables.empty()) return;
 	
 	Gecode::BoolVarArgs delta_reification_variables;

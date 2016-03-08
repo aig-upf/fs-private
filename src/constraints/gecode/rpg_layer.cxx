@@ -28,12 +28,17 @@ GecodeRPGLayer::GecodeRPGLayer(ExtensionHandler& extension_handler, const State&
 		_extension_handler.process_atom(variable, value);
 	}
 	
-	_predicate_extensions = _extension_handler.generate_extensions();
+	_extensions = _extension_handler.generate_extensions();
 }
 
+const std::set<unsigned>& GecodeRPGLayer::get_modified_symbols() const {
+	return _extension_handler.get_modified_symbols();
+}
 
-void GecodeRPGLayer::accumulate(const std::vector<std::vector<ObjectIdx>>& novel_atoms) {
+void GecodeRPGLayer::advance(const std::vector<std::vector<ObjectIdx>>& novel_atoms) {
 	assert(novel_atoms.size() == _domains.size());
+	
+	_extension_handler.advance();
 	
 	for (VariableIdx variable = 0; variable < novel_atoms.size(); ++variable) {
 		// Rebuild the delta only with the novel atoms
@@ -47,11 +52,11 @@ void GecodeRPGLayer::accumulate(const std::vector<std::vector<ObjectIdx>>& novel
 		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(domain.cbegin(), domain.cend()));
 		
 		
-		// Build (from scratch, ATM!) the predicate symbol extensions
+		// Add the new atoms to the symbol extensions
 		_extension_handler.process_delta(variable, delta);
 	}
 	
-	_predicate_extensions = _extension_handler.generate_extensions();
+	_extensions = _extension_handler.generate_extensions();
 }
 
 

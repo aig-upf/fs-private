@@ -36,7 +36,11 @@ class ExtensionHandler {
 protected:
 	const ProblemInfo& _info;
 	
+	//! _extensions[i] contains the extension of logical symbol 'i'
 	std::vector<Extension> _extensions;
+	
+	//! _modified[i] is true iff the denotation of logical symbol 'i' changed on the last layer
+	std::set<unsigned> _modified;
 public:
 	ExtensionHandler();
 	
@@ -46,6 +50,9 @@ public:
 	
 	void process_delta(VariableIdx variable, const std::vector<ObjectIdx>& delta);
 	
+	void advance();
+	
+	const std::set<unsigned>& get_modified_symbols() const { return _modified; }
 	
 	std::vector<Gecode::TupleSet> generate_extensions() const;
 	

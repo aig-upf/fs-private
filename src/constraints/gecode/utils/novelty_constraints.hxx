@@ -36,7 +36,7 @@ public:
 	//! Register the necessary variables for a novelty constraint to be posted upon two sets of variables, those
 	//! that are directly present as relevant state variables ('direct'), and those that are present as part of
 	//! a nested fluent ('derived').
-	WeakNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::set<VariableIdx>& relevant);
+	WeakNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols);
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
 	void post_constraint(SimpleCSP& csp, const GecodeRPGLayer& layer) const;
@@ -48,9 +48,16 @@ protected:
 	//! - Index of the corresponding CSP variable
 	//! - Index of the corresponding boolean CSP reification variable
 	std::vector<std::tuple<VariableIdx, unsigned, unsigned>> _variables;
+	
+	//! A list of the logical symbols (e.g. "clear", "loc", etc.) that are relevant to the satisfiability of the CSP-
+	std::vector<unsigned> _symbols;
 };
 
-
+//! A strong novelty constraint works only for actions, ans basically states that in any solution
+//! at least one of the effects of the action produces a value which is new with respect to the state
+//! variable where it will be assigned.
+//! Thus, when the LHS of some effect has nested fluents, we cannot apply this type of novelty constraint,
+//! since we cannot know in advance which is the affected state variable.
 class StrongNoveltyConstraint : public NoveltyConstraint {
 public:
 	//! Returns true iff the constraint is applicable to the set of given effects

@@ -49,17 +49,38 @@ public:
 	static std::vector<VariableIdx> compute_rhs_complete_scope(ActionEffect::cptr effect);
 	static void compute_rhs_complete_scope(ActionEffect::cptr effect, std::set<VariableIdx>& scope);
 	
+	//! Adds to 'variables' all those state variables that can be derived from the given element (formula / term),
+	//! including variables which are directly present and those that are present through nested terms.
+	//! It DOES NOT take into account "predicative" state variables, since these are not considered state variables anymore.
 	template <typename T>
-	static void computeVariables(const T& element, std::set<VariableIdx>& variables) {
+	static void computeRelevantElements(const T& element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
+		const ProblemInfo& info = Problem::getInfo();
 		for (Term::cptr term:element->all_terms()) {
+			auto statevar = dynamic_cast<StateVariable::cptr>(term);
+			auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term);
 			
-			if (auto sv = dynamic_cast<StateVariable::cptr>(term)) {
-				variables.insert(sv->getValue());
+			if (!statevar && !fluent) continue;
+			
+			if (statevar) {
+				unsigned symbol = statevar->getOrigin()->getSymbolId();
+				
+				if (info.isPredicate(symbol)) {
+					symbols.insert(symbol);
+				} else {
+					variables.insert(statevar->getValue());
+				}
 			}
-			else if (auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
-				for (gecode::nested_fluent_iterator it(fluent); !it.ended(); ++it) {
-					VariableIdx variable = it.getDerivedStateVariable();
-					variables.insert(variable);
+			
+			if (fluent) {
+				unsigned symbol = fluent->getSymbolId();
+				
+				if (info.isPredicate(symbol)) {
+					symbols.insert(symbol);
+				} else {
+					for (gecode::nested_fluent_iterator it(fluent); !it.ended(); ++it) {
+						VariableIdx variable = it.getDerivedStateVariable();
+						variables.insert(variable);
+					}
 				}
 			}
 		}

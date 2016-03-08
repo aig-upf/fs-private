@@ -23,9 +23,11 @@ protected:
 	std::vector<Gecode::IntSet> _deltas;
 	
 	//! The allowed values in the relation that corresponds to every predicate
-	std::vector<Gecode::TupleSet> _predicate_extensions;
+	std::vector<Gecode::TupleSet> _extensions;
 	
 	ExtensionHandler& _extension_handler;
+	
+	
 	
 public:
 	explicit GecodeRPGLayer(ExtensionHandler& extension_handler, const State& seed);
@@ -33,10 +35,12 @@ public:
 	const Domain& get_index_domain(VariableIdx variable) const { return _index.at(variable); }
 	const Gecode::IntSet& get_domain(VariableIdx variable) const { return _domains.at(variable); }
 	const Gecode::IntSet& get_delta(VariableIdx variable) const { return _deltas.at(variable); }
-	const Gecode::TupleSet& get_extension(unsigned symbol_id) const { return _predicate_extensions.at(symbol_id); }
+	const Gecode::TupleSet& get_extension(unsigned symbol_id) const { return _extensions.at(symbol_id); }
 	
+	const std::set<unsigned>& get_modified_symbols() const;
 	
-	void accumulate(const std::vector<std::vector<ObjectIdx>>& novel_atoms);
+	//! Signals the advance to the next RPG layer by accumulaing all the given newly supported atoms
+	void advance(const std::vector<std::vector<ObjectIdx>>& novel_atoms);
 	
 	GecodeRPGLayer(const GecodeRPGLayer& state)  = delete;
 	GecodeRPGLayer& operator=(const GecodeRPGLayer& rhs) = delete;
