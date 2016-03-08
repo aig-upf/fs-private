@@ -19,7 +19,7 @@ std::shared_ptr<GecodeRPGBuilder> GecodeRPGBuilder::create(const fs::Formula* go
 	bool approximate = Config::instance().useApproximateActionResolution();
 	auto conjuncted = goal_formula->conjunction(state_constraints);
 	FINFO("main", "Initializing goal CSP Handler with formula:\n" << *conjuncted)
-	auto goal_handler = new FormulaCSPHandler(conjuncted, novelty, approximate);
+	auto goal_handler = new FormulaCSPHandler(conjuncted, approximate, novelty);
 	
 	// Currently we're make no use of this, but if we do, the state-constraint formula needs to be deep-cloned
 // 	auto state_constraint_handler = state_constraints->is_tautology() ? nullptr : new FormulaCSPHandler(state_constraints->clone(), false, novelty);
