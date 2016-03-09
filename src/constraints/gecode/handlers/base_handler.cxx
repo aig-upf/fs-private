@@ -82,6 +82,11 @@ SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const State& state) const {
 
 void BaseCSPHandler::setup() {
 	index();
+	
+// 	std::cout << "Terms: " << std::endl;
+// 	for (auto term:_all_terms) std::cout << *term << std::endl;
+// 	std::cout << "Formulas: " << std::endl;
+// 	for (auto formula:_all_formulas) std::cout << *formula << std::endl;
 }
 
 void BaseCSPHandler::register_csp_variables() {

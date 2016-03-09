@@ -69,4 +69,9 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTransl
 	return true;
 }
 
+std::ostream& ExtensionalConstraint::print(std::ostream& os) const {
+	os << "Extensional Constraint on term \"" << *_term << "\"" << std::endl;
+	return os;
+}
+
 } } // namespaces

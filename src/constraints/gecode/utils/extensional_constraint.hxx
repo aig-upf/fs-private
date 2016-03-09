@@ -1,6 +1,7 @@
 
 #pragma once
 #include <vector>
+#include <ostream> 
 
 
 namespace fs0 { namespace language { namespace fstrips { class FluentHeadedNestedTerm; } }}
@@ -27,6 +28,10 @@ public:
 	//! Constraint-posting routines
 	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const State& state) const;
 	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const GecodeRPGLayer& layer) const;
+	
+	//! Prints a representation of the state to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const ExtensionalConstraint&  o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
 	
 protected:
 	//!
