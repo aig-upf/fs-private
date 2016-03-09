@@ -134,7 +134,7 @@ void FormulaCSPHandler::recoverApproximateSupport(gecode::SimpleCSP* csp, Atom::
 
 void FormulaCSPHandler::create_novelty_constraint() {
 	// We register the adequate variables through the NoveltyConstraint object
-	_novelty = WeakNoveltyConstraint::create(_translator, _formula, {});
+// 	_novelty = WeakNoveltyConstraint::create(_translator, _formula, {});
 }
 
 // In the case of a single formula, we just retrieve and index all terms and atoms
