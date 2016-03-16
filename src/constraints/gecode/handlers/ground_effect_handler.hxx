@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include <constraints/gecode/handlers/ground_action_handler.hxx>
+#include <constraints/gecode/handlers/base_action_handler.hxx>
 
 namespace fs0 { namespace gecode {
 
 //! A CSP modeling and solving the effect of an action effect on a certain RPG layer
-class GroundEffectCSPHandler : public GroundActionCSPHandler {
+class GroundEffectCSPHandler : public BaseActionCSPHandler {
 public:
 	typedef GroundEffectCSPHandler* ptr;
 	typedef const GroundEffectCSPHandler* cptr;
@@ -19,6 +19,8 @@ public:
 	~GroundEffectCSPHandler() {}
 	
 protected:
+	const ActionID* get_action_id(SimpleCSP* solution) const;
+
 	void log() const;
 };
 

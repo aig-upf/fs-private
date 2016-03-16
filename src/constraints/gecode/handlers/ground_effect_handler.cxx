@@ -4,6 +4,7 @@
 #include <actions/ground_action.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
+#include <actions/action_id.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -23,12 +24,16 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 }
 
 GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool novelty)
-	: GroundActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, novelty)
+	: BaseActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, novelty)
 {}
 
 void GroundEffectCSPHandler::log() const {
 	assert(_effects.size() == 1);
 	FFDEBUG("heuristic", "Processing effect \"" << *_effects.at(0) << " of action " << _action.fullname());
+}
+
+const ActionID* GroundEffectCSPHandler::get_action_id(SimpleCSP* solution) const {
+	return new PlainActionID(_action.getId());
 }
 
 } } // namespaces

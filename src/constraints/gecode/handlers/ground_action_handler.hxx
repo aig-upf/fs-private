@@ -16,7 +16,6 @@ public:
 
 	//! Constructors / Destructor
 	GroundActionCSPHandler(const GroundAction& action, bool approximate, bool novelty);
-	GroundActionCSPHandler(const GroundAction& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate, bool novelty);
 	virtual ~GroundActionCSPHandler() {}
 
 protected:
