@@ -45,7 +45,6 @@ BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::
 	index_scopes(); // This needs to be _after_ the CSP variable registration
 }
 
-
 void BaseActionCSPHandler::process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
 	log();
 	
@@ -64,6 +63,64 @@ void BaseActionCSPHandler::process(const State& seed, const GecodeRPGLayer& laye
 	}
 	delete csp;
 }
+
+bool BaseActionCSPHandler::find_atom_support(const Atom& atom, const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
+	log();
+	
+	SimpleCSP* csp = instantiate_csp(layer);
+	
+	if (!csp) {
+		FFDEBUG("heuristic", "Action CSP inconsistent => not applicable");
+		return false;
+	}
+	
+	post(*csp, atom);
+
+	if (!csp->checkConsistency()) { // This colaterally enforces propagation of constraints
+		FFDEBUG("heuristic", "Action CSP inconsistent => atom " << atom << " cannot be derived through it");
+		delete csp;
+		return false;
+	} 
+	
+	// Else, the CSP is locally consistent
+	
+	if (_approximate) {  // Check only local consistency
+		//compute_approximate_support(csp, _action_idx, rpg, seed);
+		// TODO - Unimplemented, but now sure it makes a lot of sense to solve the action CSPs approximately as of now
+		throw UnimplementedFeatureException("Approximate support not yet implemented in action CSPs");
+		delete csp;
+	}
+	
+	// Else, we want a full solution of the CSP
+	Gecode::DFS<SimpleCSP> engine(csp);
+	SimpleCSP* solution = engine.next();
+	if (!solution) { // The CSP has no solution at all
+		return false;
+		delete csp;
+	}
+	
+	// TODO - This is not optimal, but for the moment being it saves us a lot of code duplication
+	process_solution(solution, rpg);
+
+	delete solution;
+	delete csp;
+	return true;
+}
+
+
+void BaseActionCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {
+	assert(_effects.size() == 1);
+	const auto& effect = _effects[0];
+	auto statevar = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
+	assert(statevar);
+	VariableIdx variable = statevar->getValue();
+	assert(variable == atom.getVariable()); // Otherwise we shouldn't be considering this effect as a potential achiever of atom.
+	
+	// TODO Pre-cache elsewhere by calling _translator.resolveVariableIndex(effect->rhs(), CSPVariableType::Input);
+	auto& rhs_term = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, csp);
+	Gecode::rel(csp, rhs_term,  Gecode::IRT_EQ, atom.getValue());
+}
+
 
 //! In the case of grounded actions and action schemata, we need to retrieve both the atoms and terms
 //! appearing in the precondition, _and_ the terms appearing in the effects, except the root LHS atom.

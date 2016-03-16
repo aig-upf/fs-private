@@ -6,6 +6,7 @@
 #include <utils/logging.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
+#include <heuristics/relaxed_plan/gecode_crpg2.hxx>
 #include <heuristics/relaxed_plan/gecode_chmax.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/direct_chmax.hxx>
@@ -121,6 +122,7 @@ Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectH
 
 // explicit instantiations
 template class GBFSConstrainedHeuristicsCreator<GecodeCRPG, DirectCRPG>;
+template class GBFSConstrainedHeuristicsCreator<ConstrainedRPG, DirectCRPG>;
 template class GBFSConstrainedHeuristicsCreator<GecodeCHMax, DirectCHMax>;
 
 

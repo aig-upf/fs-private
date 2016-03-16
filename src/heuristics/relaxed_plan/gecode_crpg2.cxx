@@ -24,8 +24,8 @@ ConstrainedRPG::ConstrainedRPG(const Problem& problem, std::vector<ActionHandler
 	_managers(std::move(managers)),
 	_builder(std::move(builder)),
 	_extension_handler(),
-	_atom_idx(index_atoms(problem.getProblemInfo())),
-	_atom_achievers(build_achievers_index(_managers, _atom_idx))
+	_atom_table(index_atoms(problem.getProblemInfo())),
+	_atom_achievers(build_achievers_index(_managers, _atom_table))
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }
@@ -36,6 +36,8 @@ long ConstrainedRPG::evaluate(const State& seed) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
+	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
+	
 	GecodeRPGLayer layer(_extension_handler, seed);
 	RPGData bookkeeping(seed);
 	
@@ -43,17 +45,36 @@ long ConstrainedRPG::evaluate(const State& seed) {
 		_builder->init_value_selector(&bookkeeping);
 	}
 	
-	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
+	
+	auto unachieved = layer.unachieved_atoms(_atom_table);
+	
+	
 	
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
 	for (unsigned i = 0; ; ++i) {
-		// Apply all the actions to the RPG layer
-		for (const ActionHandlerPtr& manager:_managers) {
-			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
-				manager->init_value_selector(&bookkeeping);
+	
+		for (auto it = unachieved.begin(); it != unachieved.end(); ) {
+			unsigned atom_idx = *it;
+			const Atom& atom = _atom_table.element(atom_idx);
+			
+			// Check for a potential support
+			bool atom_supported = false;
+			for (unsigned manager_idx:_atom_achievers.at(atom_idx)) {
+				const ActionHandlerPtr& manager = _managers[manager_idx];
+				atom_supported = manager->find_atom_support(atom, seed, layer, bookkeeping);
+				if (atom_supported) break; // No need to keep iterating
 			}
-			manager->process(seed, layer, bookkeeping);
+			
+			// If a support was found, no need to check for that particular atom anymore.
+			if (atom_supported) {
+				FFDEBUG("heuristic", "Found support for atom " << atom);
+				it = unachieved.erase(it);
+			} else {
+				++it;
+			}
 		}
+		
+		// TODO - RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THIS CSP MODEL
 		
 		FFDEBUG("heuristic", "The last layer of the RPG contains " << bookkeeping.getNumNovelAtoms() << " novel atoms." << std::endl << bookkeeping);
 		
@@ -63,20 +84,12 @@ long ConstrainedRPG::evaluate(const State& seed) {
 		// unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
 		layer.advance(bookkeeping.getNovelAtoms());
 		FFDEBUG("heuristic", "RPG Layer #" << bookkeeping.getCurrentLayerIdx() << ": " << layer);
-/*
- * RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THE CSP MODEL
- 		
-		// Prune using state constraints - TODO - Would be nicer if the whole state constraint pruning was refactored into a single line
-		FilteringOutput o = _builder->pruneUsingStateConstraints(relaxed);
-		FFDEBUG("heuristic", "State Constraint pruning output: " <<  static_cast<std::underlying_type<FilteringOutput>::type>(o));
-		if (o == FilteringOutput::Failure) return std::numeric_limits<unsigned>::infinity();
-		if (o == FilteringOutput::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
-*/
 		
 		long h = computeHeuristic(seed, layer, bookkeeping);
 		if (h > -1) return h;
 		
 		bookkeeping.advanceLayer();
+		
 	}
 }
 
@@ -107,7 +120,8 @@ ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::v
 	
 	FINFO("main", "Building index of potential atom achievers");
 	
-	for (const ActionHandlerPtr& manager:managers) {
+	for (unsigned manager_idx = 0; manager_idx < managers.size(); ++manager_idx) {
+		const ActionHandlerPtr& manager = managers[manager_idx];
 		auto effect_manager = std::dynamic_pointer_cast<GroundEffectCSPHandler>(manager);
 		if (!effect_manager) throw std::runtime_error("Currently only ground effect managers accepted");
 		
@@ -122,7 +136,7 @@ ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::v
 		
 		for (const auto& atom:fs::ScopeUtils::compute_affected_atoms(effect)) {
 			unsigned idx = atom_idx.index(atom);
-			index.at(idx).push_back(manager);
+			index.at(idx).push_back(manager_idx);
 		}
 	}
 	

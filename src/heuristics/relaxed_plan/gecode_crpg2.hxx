@@ -32,7 +32,7 @@ public:
 	virtual long computeHeuristic(const State& seed, const GecodeRPGLayer& layer, const RPGData& rpg);
 	
 protected:
-	typedef std::vector<std::vector<ActionHandlerPtr>> AchieverIndex;
+	typedef std::vector<std::vector<unsigned>> AchieverIndex;
 	
 	
 	//! The actual planning problem
@@ -48,9 +48,11 @@ protected:
 	ExtensionHandler _extension_handler;
 	
 	//! An index of all the problem atoms.
-	Index<Atom> _atom_idx;
+	Index<Atom> _atom_table;
 	
 	//! a map from atom index to the set of action / effect managers that can (potentially) achieve that atom.
+	//! let L = _atom_achievers[i] be the vector of all potential achievers of atom with index 'i'.
+	//! Then each element j in L is the index of an effect manager in '_managers'.
 	const AchieverIndex _atom_achievers;
 	
 	//! A helper to index all of the problem's atoms.

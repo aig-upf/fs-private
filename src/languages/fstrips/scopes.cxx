@@ -95,7 +95,8 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(ActionEffect::cptr effect) 
 	// that all values for that variable (consistent with the RHS type) can be achieved.
 	const ProblemInfo& info = Problem::getInfo();
 	std::vector<Atom> affected;
-	TypeIdx type = effect->rhs()->getType();
+// 	TypeIdx type = effect->rhs()->getType(); // This doesn't work for RHS such as X + 1
+	TypeIdx type = effect->lhs()->getType();
 	for (auto value:info.getTypeObjects(type)) {
 		affected.push_back(Atom(variable, value));
 	}

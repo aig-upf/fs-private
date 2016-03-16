@@ -58,6 +58,7 @@ SimpleCSP::ptr instantiate(const SimpleCSP& csp,
 	translator.updateStateVariableDomains(*clone, layer);
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {
 		if (!constraint.update(*clone, translator, layer)) {
+			delete clone;
 			return nullptr;
 		}
 	}

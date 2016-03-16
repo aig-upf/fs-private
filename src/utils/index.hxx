@@ -29,6 +29,8 @@ public:
 		return it->second;
 	}
 	
+	const T& element(unsigned index) const { return _elements.at(index); }
+	
 	std::size_t size() const { return _elements.size(); }
 	
 	const std::vector<T>& elements() const { return _elements; }

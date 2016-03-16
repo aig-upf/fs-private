@@ -30,6 +30,10 @@ public:
 	
 	const std::vector<const fs::ActionEffect*>& get_effects() const { return _effects; }
 	
+	virtual bool find_atom_support(const Atom& atom, const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const;
+	
+	virtual void post(SimpleCSP& csp, const Atom& atom) const;
+	
 	
 protected:
 	//! The index of the action managed by this manager
