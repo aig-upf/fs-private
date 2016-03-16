@@ -5,6 +5,7 @@
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
 #include <actions/action_id.hxx>
+#include <problem.hxx>
 #include <gecode/driver.hh>
 
 namespace fs0 { namespace gecode {
@@ -24,8 +25,9 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 	return managers;
 }
 
-GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool novelty)
-	: BaseActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, novelty)
+GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool novelty) :
+	BaseActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, novelty),
+	_lhs_subterm_variables(index_lhs_subterms())
 {}
 
 void GroundEffectCSPHandler::log() const {
@@ -82,17 +84,37 @@ bool GroundEffectCSPHandler::find_atom_support(const Atom& atom, const State& se
 
 
 void GroundEffectCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {
+	const ProblemInfo& info = Problem::getInfo();
 	assert(_effects.size() == 1);
 	const auto& effect = _effects[0];
-	auto statevar = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
-	assert(statevar);
-	assert(statevar->getValue() == atom.getVariable()); // Otherwise we shouldn't be considering this effect as a potential achiever of atom.
+	if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(effect->lhs())) {
+		assert(statevar->getValue() == atom.getVariable()); // Otherwise we shouldn't be considering this effect as a potential achiever of atom.
+	} else if (auto nested = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs())) {
+		const auto& data = info.getVariableData(atom.getVariable());
+		assert(nested->getSymbolId() == data.first);
+		assert(_lhs_subterm_variables.size() == data.second.size());
+		for (unsigned i = 0; i < _lhs_subterm_variables.size(); ++i) {
+			auto subterm_variable = _translator.resolveVariableFromIndex(_lhs_subterm_variables[i], csp);
+			Gecode::rel(csp, subterm_variable,  Gecode::IRT_EQ, data.second[i]);
+		}
+		
+	} else throw std::runtime_error("Unknown effect type");
 	
 	// This is equivalent, but faster, to _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, csp);
 	assert(effect_rhs_variables.size()==1);
 	auto& rhs_term =_translator.resolveVariableFromIndex(effect_rhs_variables[0], csp);
-	
 	Gecode::rel(csp, rhs_term,  Gecode::IRT_EQ, atom.getValue());
+}
+
+std::vector<unsigned> GroundEffectCSPHandler::index_lhs_subterms() {
+	std::vector<unsigned> subterm_variables;
+	auto lhs = get_effect()->lhs();
+	if (auto nested = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(lhs)) {
+		for (auto subterm:nested->getSubterms()) {
+			subterm_variables.push_back(_translator.resolveVariableIndex(subterm, CSPVariableType::Input));
+		}
+	}
+	return subterm_variables;
 }
 
 } } // namespaces

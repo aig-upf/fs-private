@@ -25,10 +25,16 @@ public:
 	
 	bool find_atom_support(const Atom& atom, const State& seed, SimpleCSP& csp, RPGData& rpg) const;
 	
-	void post(SimpleCSP& csp, const Atom& atom) const;	
+	void post(SimpleCSP& csp, const Atom& atom) const;
 	
 protected:
 	const ActionID* get_action_id(SimpleCSP* solution) const;
+
+	//! Index the CSP variables corresponding the the effect LHS.
+	std::vector<unsigned> index_lhs_subterms();
+	
+	//! '_lhs_subterm_variables[i]' is the index of the CSP variable corresponding to the i-th subterm of the effect LHS.
+	std::vector<unsigned> _lhs_subterm_variables;
 
 	void log() const;
 };

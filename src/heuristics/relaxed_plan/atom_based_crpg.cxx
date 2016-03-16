@@ -25,7 +25,8 @@ ConstrainedRPG::ConstrainedRPG(const Problem& problem, const std::vector<ActionH
 	_builder(std::move(builder)),
 	_extension_handler(),
 	_atom_table(index_atoms(problem.getProblemInfo())),
-	_atom_achievers(build_achievers_index(_managers, _atom_table))
+	_atom_achievers(build_achievers_index(_managers, _atom_table)),
+	_atom_variable_tuples(index_variable_tuples(problem.getProblemInfo(), _atom_table))
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }
@@ -135,6 +136,14 @@ Index<Atom> ConstrainedRPG::index_atoms(const ProblemInfo& info) {
 	return index;
 }
 
+std::vector<std::vector<ObjectIdx>> ConstrainedRPG::index_variable_tuples(const ProblemInfo& info, const Index<Atom>& index) {
+	std::vector<std::vector<ObjectIdx>> tuples;
+	for (const Atom& atom:index.elements()) {
+		const auto& data = info.getVariableData(atom.getVariable());
+		tuples.push_back(data.second);
+	}
+	return tuples;
+}
 
 ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::vector<EffectHandlerPtr>& managers, const Index<Atom>& atom_idx) {
 	AchieverIndex index(atom_idx.size()); // Create an index as large as the number of atoms

@@ -79,26 +79,34 @@ void ScopeUtils::computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<V
 }
 
 std::vector<Atom> ScopeUtils::compute_affected_atoms(ActionEffect::cptr effect) {
-	if (dynamic_cast<FluentHeadedNestedTerm::cptr>(effect->lhs())) {
-		throw std::runtime_error("Nested LHS terms not yet supported");
-	}
-	auto statevar = dynamic_cast<StateVariable::cptr>(effect->lhs());
-	assert(statevar);
-	
-	VariableIdx variable = statevar->getValue();
-	
-	if (Constant::cptr rhs_const = dynamic_cast<Constant::cptr>(effect->rhs())) {
-		return { Atom(variable, rhs_const->getValue()) };
-	}
-	
-	// Otherwise, ATM we simply overapproximate the set of all potentially affected atoms by considering
-	// that all values for that variable (consistent with the RHS type) can be achieved.
 	const ProblemInfo& info = Problem::getInfo();
+	std::vector<VariableIdx> lhs_variables;
 	std::vector<Atom> affected;
-// 	TypeIdx type = effect->rhs()->getType(); // This doesn't work for RHS such as X + 1
-	TypeIdx type = effect->lhs()->getType();
-	for (auto value:info.getTypeObjects(type)) {
-		affected.push_back(Atom(variable, value));
+	
+	if (auto statevar = dynamic_cast<StateVariable::cptr>(effect->lhs())) {
+		lhs_variables.push_back(statevar->getValue());
+	} else if (auto nested = dynamic_cast<FluentHeadedNestedTerm::cptr>(effect->lhs())) {
+		lhs_variables = info.resolveStateVariable(nested->getSymbolId()); // TODO - This is a gross overapproximation
+	} else throw std::runtime_error("Unsupported effect type");
+	
+	// Now gather, for each possible variables, all possible values
+	for (VariableIdx variable:lhs_variables) {
+	
+		if (Constant::cptr rhs_const = dynamic_cast<Constant::cptr>(effect->rhs())) {
+			affected.push_back(Atom(variable, rhs_const->getValue()));
+			
+		} else {
+		
+			// Otherwise, ATM we simply overapproximate the set of all potentially affected atoms by considering
+			// that all values for that variable (consistent with the RHS type) can be achieved.
+			const ProblemInfo& info = Problem::getInfo();
+			
+		// 	TypeIdx type = effect->rhs()->getType(); // This doesn't work for RHS such as X + 1
+			TypeIdx type = effect->lhs()->getType();
+			for (auto value:info.getTypeObjects(type)) {
+				affected.push_back(Atom(variable, value));
+			}
+		}
 	}
 	return affected;
 }

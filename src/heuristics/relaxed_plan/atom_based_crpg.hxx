@@ -57,6 +57,11 @@ protected:
 	//! Then each element j in L is the index of an effect manager in '_managers'.
 	const AchieverIndex _atom_achievers;
 	
+	//! If atom with index 'i' has state variable f(t_1, ..., t_n), then '_atom_variable_tuples[i]' is the vector {t_1, ..., t_n}
+	const std::vector<std::vector<ObjectIdx>> _atom_variable_tuples;
+	
+	static std::vector<std::vector<ObjectIdx>> index_variable_tuples(const ProblemInfo& info, const Index<Atom>& index);
+	
 	//! A helper to index all of the problem's atoms.
 	static Index<Atom> index_atoms(const ProblemInfo& info);
 	
