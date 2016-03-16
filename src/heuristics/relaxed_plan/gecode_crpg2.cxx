@@ -24,8 +24,7 @@ ConstrainedRPG::ConstrainedRPG(const Problem& problem, std::vector<ActionHandler
 	_managers(std::move(managers)),
 	_builder(std::move(builder)),
 	_extension_handler(),
-	_all_atoms(collect_atoms(problem.getProblemInfo())),
-	_atom_idx(Utils::index(_all_atoms)),
+	_atom_idx(index_atoms(problem.getProblemInfo())),
 	_atom_achievers(build_achievers_index(_managers, _atom_idx))
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
@@ -91,19 +90,19 @@ long ConstrainedRPG::computeHeuristic(const State& seed, const GecodeRPGLayer& l
 	} else return -1;
 }
 
-std::vector<Atom> ConstrainedRPG::collect_atoms(const ProblemInfo& info) {
+Index<Atom> ConstrainedRPG::index_atoms(const ProblemInfo& info) {
 	// TODO Take into account ONLY those atoms which are reachable !!!
-	std::vector<Atom> index;
+	Index<Atom> index;
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 		for (ObjectIdx value:info.getVariableObjects(var)) {
-			index.push_back(Atom(var, value));
+			index.add(Atom(var, value));
 		}
 	}
 	return index;
 }
 
 
-ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::vector<ActionHandlerPtr>& managers, const AtomIdx& atom_idx) {
+ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::vector<ActionHandlerPtr>& managers, const Index<Atom>& atom_idx) {
 	AchieverIndex index(atom_idx.size()); // Create an index as large as the number of atoms
 	
 	FINFO("main", "Building index of potential atom achievers");
@@ -122,12 +121,9 @@ ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::v
 		// that are reached by the CSP in some layer of the RPG.
 		
 		for (const auto& atom:fs::ScopeUtils::compute_affected_atoms(effect)) {
-			auto it = atom_idx.find(atom);
-			assert(it != atom_idx.end());
-			unsigned atom_idx = it->second;
-			index.at(atom_idx).push_back(manager);
+			unsigned idx = atom_idx.index(atom);
+			index.at(idx).push_back(manager);
 		}
-		
 	}
 	
 	return index;

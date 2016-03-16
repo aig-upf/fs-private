@@ -4,6 +4,7 @@
 #include <fs0_types.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <atom.hxx>
+#include <utils/index.hxx>
 
 namespace fs0 { class Problem; class State; class RPGData; }
 
@@ -31,7 +32,6 @@ public:
 	virtual long computeHeuristic(const State& seed, const GecodeRPGLayer& layer, const RPGData& rpg);
 	
 protected:
-	typedef std::map<Atom, unsigned> AtomIdx;
 	typedef std::vector<std::vector<ActionHandlerPtr>> AchieverIndex;
 	
 	
@@ -48,17 +48,16 @@ protected:
 	ExtensionHandler _extension_handler;
 	
 	//! An index of all the problem atoms.
-	const std::vector<Atom> _all_atoms;
-	const AtomIdx _atom_idx;
+	Index<Atom> _atom_idx;
 	
 	//! a map from atom index to the set of action / effect managers that can (potentially) achieve that atom.
 	const AchieverIndex _atom_achievers;
 	
 	//! A helper to index all of the problem's atoms.
-	static std::vector<Atom> collect_atoms(const ProblemInfo& info);
+	static Index<Atom> index_atoms(const ProblemInfo& info);
 	
 	//! A helper to build the index of atom achievers.
-	static AchieverIndex build_achievers_index(const std::vector<ActionHandlerPtr>& managers, const AtomIdx& atom_idx);
+	static AchieverIndex build_achievers_index(const std::vector<ActionHandlerPtr>& managers, const Index<Atom>& atom_idx);
 };
 
 } } // namespaces

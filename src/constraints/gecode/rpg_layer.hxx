@@ -3,6 +3,7 @@
 
 #include <gecode/int.hh>
 #include <fs0_types.hxx>
+#include <utils/index.hxx>
 
 
 namespace fs0 { class ProblemInfo; class State; class Atom; }
@@ -27,10 +28,12 @@ protected:
 	
 	ExtensionHandler& _extension_handler;
 	
-	
-	
 public:
 	explicit GecodeRPGLayer(ExtensionHandler& extension_handler, const State& seed);
+	
+	GecodeRPGLayer(const GecodeRPGLayer& state)  = delete;
+	GecodeRPGLayer& operator=(const GecodeRPGLayer& rhs) = delete;
+	bool operator==(const GecodeRPGLayer& rhs) = delete;	
 	
 	const Domain& get_index_domain(VariableIdx variable) const { return _index.at(variable); }
 	const Gecode::IntSet& get_domain(VariableIdx variable) const { return _domains.at(variable); }
@@ -39,12 +42,11 @@ public:
 	
 	const std::set<unsigned>& get_modified_symbols() const;
 	
+	//! Returns, for all the atoms in the given index, a set with all those which have NOT been achieved in the current layer.
+	std::set<unsigned> unachieved_atoms(const Index<Atom>& atom_idx) const;
+	
 	//! Signals the advance to the next RPG layer by accumulaing all the given newly supported atoms
 	void advance(const std::vector<std::vector<ObjectIdx>>& novel_atoms);
-	
-	GecodeRPGLayer(const GecodeRPGLayer& state)  = delete;
-	GecodeRPGLayer& operator=(const GecodeRPGLayer& rhs) = delete;
-	bool operator==(const GecodeRPGLayer& rhs) = delete;
 	
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const GecodeRPGLayer&  state) { return state.print(os); }

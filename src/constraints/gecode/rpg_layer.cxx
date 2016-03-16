@@ -92,5 +92,16 @@ std::ostream& GecodeRPGLayer::print_intsets(std::ostream& os, const ProblemInfo&
 	return os;
 }
 
+std::set<unsigned> GecodeRPGLayer::unachieved_atoms(const Index<Atom>& atom_idx) const {
+	std::set<unsigned> unachieved;
+	
+	for (const Atom& atom:atom_idx.elements()) {
+		const auto& domain = _index.at(atom.getVariable());
+		if (domain.find(atom.getValue()) == domain.end()) {
+			unachieved.insert(atom_idx.index(atom));
+		}
+	}
+	return unachieved;
+}
 
 } } // namespaces
