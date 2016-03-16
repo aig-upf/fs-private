@@ -8,15 +8,24 @@ namespace fs0 { namespace gecode {
 //! A CSP modeling and solving the effect of an action effect on a certain RPG layer
 class GroundEffectCSPHandler : public BaseActionCSPHandler {
 public:
-	typedef GroundEffectCSPHandler* ptr;
-	typedef const GroundEffectCSPHandler* cptr;
-	
 	//! Factory method
 	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, bool approximate, bool novelty);
 
 	GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool novelty);
 	 
 	~GroundEffectCSPHandler() {}
+	
+	const fs::ActionEffect* get_effect() const { 
+		assert(_effects.size() == 1);
+		return _effects[0];
+	}
+	
+	//! Preinstantiate the CSP
+	SimpleCSP* preinstantiate(const GecodeRPGLayer& layer) const;
+	
+	bool find_atom_support(const Atom& atom, const State& seed, SimpleCSP& csp, RPGData& rpg) const;
+	
+	void post(SimpleCSP& csp, const Atom& atom) const;	
 	
 protected:
 	const ActionID* get_action_id(SimpleCSP* solution) const;

@@ -11,15 +11,17 @@ namespace fs0 { class Problem; class State; class RPGData; }
 namespace fs0 { namespace gecode {
 
 class BaseActionCSPHandler;
+class GroundEffectCSPHandler;
 class GecodeRPGBuilder;
 class GecodeRPGLayer;
 
 class ConstrainedRPG {
 protected:
 	typedef std::shared_ptr<BaseActionCSPHandler> ActionHandlerPtr;
+	typedef std::shared_ptr<GroundEffectCSPHandler> EffectHandlerPtr;
 	
 public:
-	ConstrainedRPG(const Problem& problem, std::vector<ActionHandlerPtr>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
+	ConstrainedRPG(const Problem& problem, const std::vector<ActionHandlerPtr>& managers, std::shared_ptr<GecodeRPGBuilder> builder);
 	
 	virtual ~ConstrainedRPG() {}
 	
@@ -39,7 +41,7 @@ protected:
 	const Problem& _problem;
 	
 	//! The set of action managers, one per every action
-	const std::vector<ActionHandlerPtr> _managers;
+	const std::vector<EffectHandlerPtr> _managers;
 	
 	//! The RPG building helper
 	const std::shared_ptr<GecodeRPGBuilder> _builder;
@@ -59,7 +61,10 @@ protected:
 	static Index<Atom> index_atoms(const ProblemInfo& info);
 	
 	//! A helper to build the index of atom achievers.
-	static AchieverIndex build_achievers_index(const std::vector<ActionHandlerPtr>& managers, const Index<Atom>& atom_idx);
+	static AchieverIndex build_achievers_index(const std::vector<EffectHandlerPtr>& managers, const Index<Atom>& atom_idx);
+	
+	//! Check that all the given managers are indeed effect managers, and downcast them
+	static std::vector<EffectHandlerPtr> downcast_managers(const std::vector<ActionHandlerPtr>& managers);
 };
 
 } } // namespaces

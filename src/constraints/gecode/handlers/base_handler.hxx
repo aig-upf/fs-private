@@ -33,8 +33,8 @@ public:
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP::ptr instantiate_csp(const GecodeRPGLayer& layer) const;
-	SimpleCSP::ptr instantiate_csp(const State& state) const;
+	SimpleCSP* instantiate_csp(const GecodeRPGLayer& layer) const;
+	SimpleCSP* instantiate_csp(const State& state) const;
 	
 	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 

@@ -65,7 +65,7 @@ SimpleCSP::ptr instantiate(const SimpleCSP& csp,
 	return clone;
 }
 
-SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
+SimpleCSP* BaseCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
 	if (_failed) return nullptr;
 	SimpleCSP* csp = instantiate(_base_csp, _translator, _extensional_constraints, layer);
 	if (!csp) return csp; // The CSP was detected unsatisfiable even before propagating anything
@@ -76,7 +76,7 @@ SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) cons
 	return csp;
 }
 
-SimpleCSP::ptr BaseCSPHandler::instantiate_csp(const State& state) const {
+SimpleCSP* BaseCSPHandler::instantiate_csp(const State& state) const {
 	if (_failed) return nullptr;
 	return instantiate(_base_csp, _translator, _extensional_constraints, state);
 }
