@@ -2,6 +2,7 @@
 #include <problem.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <actions/ground_action.hxx>
+#include <boost/concept_check.hpp>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -76,5 +77,30 @@ void ScopeUtils::computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<V
 	const std::vector<VariableIdx>& possible_variables = info.resolveStateVariable(nested.getSymbolId());
 	scope.insert(possible_variables.cbegin(), possible_variables.cend());
 }
+
+std::vector<Atom> ScopeUtils::compute_affected_atoms(ActionEffect::cptr effect) {
+	if (dynamic_cast<FluentHeadedNestedTerm::cptr>(effect->lhs())) {
+		throw std::runtime_error("Nested LHS terms not yet supported");
+	}
+	auto statevar = dynamic_cast<StateVariable::cptr>(effect->lhs());
+	assert(statevar);
+	
+	VariableIdx variable = statevar->getValue();
+	
+	if (Constant::cptr rhs_const = dynamic_cast<Constant::cptr>(effect->rhs())) {
+		return { Atom(variable, rhs_const->getValue()) };
+	}
+	
+	// Otherwise, ATM we simply overapproximate the set of all potentially affected atoms by considering
+	// that all values for that variable (consistent with the RHS type) can be achieved.
+	const ProblemInfo& info = Problem::getInfo();
+	std::vector<Atom> affected;
+	TypeIdx type = effect->rhs()->getType();
+	for (auto value:info.getTypeObjects(type)) {
+		affected.push_back(Atom(variable, value));
+	}
+	return affected;
+}
+
 
 } } } // namespaces

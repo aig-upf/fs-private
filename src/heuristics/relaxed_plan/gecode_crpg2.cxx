@@ -1,6 +1,7 @@
 
 #include <limits>
 
+#include <languages/fstrips/effects.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg2.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
@@ -12,16 +13,20 @@
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
+#include <constraints/gecode/handlers/ground_effect_handler.hxx>
+#include <languages/fstrips/scopes.hxx>
 
 
 namespace fs0 { namespace gecode {
 
-ConstrainedRPG::ConstrainedRPG(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder) :
+ConstrainedRPG::ConstrainedRPG(const Problem& problem, std::vector<ActionHandlerPtr>&& managers, std::shared_ptr<GecodeRPGBuilder> builder) :
 	_problem(problem),
 	_managers(std::move(managers)),
 	_builder(std::move(builder)),
 	_extension_handler(),
-	_atom_idx(build_atom_index(problem.getProblemInfo()))
+	_all_atoms(collect_atoms(problem.getProblemInfo())),
+	_atom_idx(Utils::index(_all_atoms)),
+	_atom_achievers(build_achievers_index(_managers, _atom_idx))
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }
@@ -44,7 +49,7 @@ long ConstrainedRPG::evaluate(const State& seed) {
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
 	for (unsigned i = 0; ; ++i) {
 		// Apply all the actions to the RPG layer
-		for (const std::shared_ptr<BaseActionCSPHandler>& manager:_managers) {
+		for (const ActionHandlerPtr& manager:_managers) {
 			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
 				manager->init_value_selector(&bookkeeping);
 			}
@@ -86,14 +91,45 @@ long ConstrainedRPG::computeHeuristic(const State& seed, const GecodeRPGLayer& l
 	} else return -1;
 }
 
-std::vector<Atom> ConstrainedRPG::build_atom_index(const ProblemInfo& info) {
-	// TODO Take into account ONLY those atoms which are reachable
+std::vector<Atom> ConstrainedRPG::collect_atoms(const ProblemInfo& info) {
+	// TODO Take into account ONLY those atoms which are reachable !!!
 	std::vector<Atom> index;
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 		for (ObjectIdx value:info.getVariableObjects(var)) {
 			index.push_back(Atom(var, value));
 		}
 	}
+	return index;
+}
+
+
+ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::vector<ActionHandlerPtr>& managers, const AtomIdx& atom_idx) {
+	AchieverIndex index(atom_idx.size()); // Create an index as large as the number of atoms
+	
+	FINFO("main", "Building index of potential atom achievers");
+	
+	for (const ActionHandlerPtr& manager:managers) {
+		auto effect_manager = std::dynamic_pointer_cast<GroundEffectCSPHandler>(manager);
+		if (!effect_manager) throw std::runtime_error("Currently only ground effect managers accepted");
+		
+		auto effects = manager->get_effects();
+		assert(effects.size() == 1);
+		const fs::ActionEffect* effect = effects[0];
+		
+		// TODO - This uses a very rough overapproximation of the set of potentially affected atoms.
+		// A better approach would be to build once, from the initial state, the full RPG, 
+		// and extract from there, for each action / effect CSP, the set of atoms
+		// that are reached by the CSP in some layer of the RPG.
+		
+		for (const auto& atom:fs::ScopeUtils::compute_affected_atoms(effect)) {
+			auto it = atom_idx.find(atom);
+			assert(it != atom_idx.end());
+			unsigned atom_idx = it->second;
+			index.at(atom_idx).push_back(manager);
+		}
+		
+	}
+	
 	return index;
 }
 

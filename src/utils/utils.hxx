@@ -5,6 +5,7 @@
 #include <vector>
 #include <ostream>
 #include <algorithm>
+// #include <utility>
 
 namespace fs0 {
 	
@@ -67,6 +68,16 @@ public:
 		}
 		return output;
 	}
+	
+	//! Reverse-indexes any given vector of objects into a map from object to (vector) index
+	template <typename T>
+	static std::map<T, unsigned> index(const std::vector<T>& elements) {
+		std::map<T, unsigned> index;
+		for (unsigned i = 0; i < elements.size(); ++i) {
+			index.insert(std::make_pair(elements[i], i));
+		}
+		return index;
+	}	
 };
 
 

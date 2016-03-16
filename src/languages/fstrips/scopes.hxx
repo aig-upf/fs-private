@@ -46,8 +46,7 @@ public:
 	static void computeIndirectTermScope(Term::cptr term, std::set<VariableIdx>& scope);
 
 	//!
-	static std::vector<VariableIdx> compute_rhs_complete_scope(ActionEffect::cptr effect);
-	static void compute_rhs_complete_scope(ActionEffect::cptr effect, std::set<VariableIdx>& scope);
+	static std::vector<Atom> compute_affected_atoms(ActionEffect::cptr effect);
 	
 	//! Adds to 'variables' all those state variables that can be derived from the given element (formula / term),
 	//! including variables which are directly present and those that are present through nested terms.

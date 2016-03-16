@@ -14,8 +14,11 @@ class GecodeRPGBuilder;
 class GecodeRPGLayer;
 
 class ConstrainedRPG {
+protected:
+	typedef std::shared_ptr<BaseActionCSPHandler> ActionHandlerPtr;
+	
 public:
-	ConstrainedRPG(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
+	ConstrainedRPG(const Problem& problem, std::vector<ActionHandlerPtr>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
 	
 	virtual ~ConstrainedRPG() {}
 	
@@ -28,11 +31,15 @@ public:
 	virtual long computeHeuristic(const State& seed, const GecodeRPGLayer& layer, const RPGData& rpg);
 	
 protected:
+	typedef std::map<Atom, unsigned> AtomIdx;
+	typedef std::vector<std::vector<ActionHandlerPtr>> AchieverIndex;
+	
+	
 	//! The actual planning problem
 	const Problem& _problem;
 	
 	//! The set of action managers, one per every action
-	const std::vector<std::shared_ptr<BaseActionCSPHandler>> _managers;
+	const std::vector<ActionHandlerPtr> _managers;
 	
 	//! The RPG building helper
 	const std::shared_ptr<GecodeRPGBuilder> _builder;
@@ -41,10 +48,17 @@ protected:
 	ExtensionHandler _extension_handler;
 	
 	//! An index of all the problem atoms.
-	std::vector<Atom> _atom_idx;
+	const std::vector<Atom> _all_atoms;
+	const AtomIdx _atom_idx;
+	
+	//! a map from atom index to the set of action / effect managers that can (potentially) achieve that atom.
+	const AchieverIndex _atom_achievers;
 	
 	//! A helper to index all of the problem's atoms.
-	static std::vector<Atom> build_atom_index(const ProblemInfo& info);
+	static std::vector<Atom> collect_atoms(const ProblemInfo& info);
+	
+	//! A helper to build the index of atom achievers.
+	static AchieverIndex build_achievers_index(const std::vector<ActionHandlerPtr>& managers, const AtomIdx& atom_idx);
 };
 
 } } // namespaces

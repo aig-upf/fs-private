@@ -28,6 +28,9 @@ public:
 	
 	const BaseAction& get_action() const { return _action; }
 	
+	const std::vector<const fs::ActionEffect*>& get_effects() const { return _effects; }
+	
+	
 protected:
 	//! The index of the action managed by this manager
 	const BaseAction& _action;
