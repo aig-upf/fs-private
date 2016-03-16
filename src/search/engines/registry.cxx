@@ -12,7 +12,7 @@
 #include <heuristics/relaxed_plan/gecode_chmax.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
-#include <heuristics/relaxed_plan/gecode_crpg2.hxx>
+#include <heuristics/relaxed_plan/atom_based_crpg.hxx>
 #include <actions/applicable_action_set.hxx>
 
 using namespace fs0::gecode;
@@ -27,7 +27,7 @@ EngineRegistry& EngineRegistry::instance() {
 EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search engines on the instantiation of the singleton
 	add("gbfs_chff",  new GBFSConstrainedHeuristicsCreator<GecodeCRPG, DirectCRPG>());
-	add("gbfs_chff2",  new GBFSConstrainedHeuristicsCreator<ConstrainedRPG, DirectCRPG>());
+	add("gbfs_abchff",  new GBFSConstrainedHeuristicsCreator<ConstrainedRPG, DirectCRPG>());
 	add("gbfs_chmax",  new GBFSConstrainedHeuristicsCreator<GecodeCHMax, DirectCHMax>());
 	add("iterated_width",  new IteratedWidthEngineCreator());
 	add("asp_engine",  new ASPEngine());

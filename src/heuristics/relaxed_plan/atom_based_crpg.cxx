@@ -2,7 +2,7 @@
 #include <limits>
 
 #include <languages/fstrips/effects.hxx>
-#include <heuristics/relaxed_plan/gecode_crpg2.hxx>
+#include <heuristics/relaxed_plan/atom_based_crpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <constraints/filtering.hxx>
