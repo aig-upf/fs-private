@@ -1,4 +1,6 @@
 
+#include <aptk2/tools/resources_control.hxx>
+
 #include <problem.hxx>
 #include <utils/loader.hxx>
 #include <search/search.hxx>
@@ -11,7 +13,7 @@
 namespace fs0 { namespace engines {
 
 Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator) 
-	: _options(options), _generator(generator)
+	: _options(options), _generator(generator), _start_time(aptk::time_used())
 {
 	Logger::init(_options.getOutputDir() + "/logs");
 	Config::init(_options.getConfig());
@@ -31,7 +33,7 @@ int Runner::run() {
 	SearchUtils::report_stats(problem);
 	
 	FINFO("main", "Planner configuration: " << std::endl << config);
-	SearchUtils::instantiate_seach_engine_and_run(problem, config, _options.getTimeout(), _options.getOutputDir());
+	SearchUtils::instantiate_seach_engine_and_run(problem, config, _options.getOutputDir(), _start_time);
 	return 0;
 }
 

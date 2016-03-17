@@ -11,10 +11,10 @@ class SearchUtils {
 public:
 	
 	template <typename StateModelT, typename SearchAlgorithmT>
-	static float do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir);
+	static void do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time);
 
 	//! Instantiate 
-	static void instantiate_seach_engine_and_run(const Problem& problem, const Config& config, int timeout, const std::string& out_dir);
+	static void instantiate_seach_engine_and_run(const Problem& problem, const Config& config, const std::string& out_dir, float start_time);
 	
 	//! Print out some information about the characteristics of the problem
 	static void report_stats(const Problem& problem);

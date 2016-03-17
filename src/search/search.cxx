@@ -21,7 +21,7 @@ namespace fs0 { namespace engines {
 
 
 template <typename StateModelT, typename SearchAlgorithmT>
-float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir) {
+void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time) {
 	const Problem& problem = model.getTask();
 
 	std::cout << "Writing results to directory: " << out_dir << std::endl;
@@ -31,9 +31,12 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 	std::vector<typename StateModelT::ActionType::IdType> plan;
 	float t0 = aptk::time_used();
 	double _t0 = (double) clock() / CLOCKS_PER_SEC;
+	
 	bool solved = engine.solve_model( plan );
-	float total_time = aptk::time_used() - t0;
-	double _total_time = (double) clock() / CLOCKS_PER_SEC - _t0;
+	
+	float search_time = aptk::time_used() - t0;
+	double _search_time = (double) clock() / CLOCKS_PER_SEC - _t0;
+	float total_planning_time = aptk::time_used() - start_time;
 
 	bool valid = false;
 	
@@ -43,10 +46,11 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 	}
 	plan_out.close();
 
-	std::string eval_speed = (total_time > 0) ? std::to_string((float) engine.generated / total_time) : "0";
+	std::string eval_speed = (search_time > 0) ? std::to_string((float) engine.generated / search_time) : "0";
 	json_out << "{" << std::endl;
-	json_out << "\t\"search_time\": " << total_time << "," << std::endl;
-	json_out << "\t\"search_time_alt\": " << _total_time << "," << std::endl;
+	json_out << "\t\"total_time\": " << total_planning_time << "," << std::endl;
+	json_out << "\t\"search_time\": " << search_time << "," << std::endl;
+	json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
 	json_out << "\t\"generated\": " << engine.generated << "," << std::endl;
 	json_out << "\t\"expanded\": " << engine.expanded << "," << std::endl;
 	json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
@@ -67,14 +71,13 @@ float SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model,
 		std::cout << "Search Result: No plan was found " << std::endl;
 		// TODO - Make distinction btw all nodes explored and no plan found, and no plan found in the given time.
 	}
-	
 
-	return total_time;
+	std::cout << "Total Planning Time: " << total_planning_time << " s." << std::endl;
+	std::cout << "Actual Search Time: " << search_time << " s." << std::endl;
 }
 
-void SearchUtils::instantiate_seach_engine_and_run(const Problem& problem, const Config& config, int timeout, const std::string& out_dir) {
-	float timer = 0.0;
-	std::cout << "Starting search with Relaxed Plan Heuristic and GBFS (time budget is " << timeout << " secs)..." << std::endl;
+void SearchUtils::instantiate_seach_engine_and_run(const Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	std::cout << "Starting search..." << std::endl;
 	
 	// The engine and search model for lifted planning are different!
 	if (config.doLiftedPlanning()) {
@@ -82,17 +85,15 @@ void SearchUtils::instantiate_seach_engine_and_run(const Problem& problem, const
 		fs0::LiftedStateModel model(problem);
 		GBFSLiftedPlannerCreator creator;
 		auto engine = creator.create(config, model);
-		timer = do_search<>(*engine, model, out_dir);
+		do_search(*engine, model, out_dir, start_time);
 
 	} else {
 		// Standard, grounded planning
 		FS0StateModel model(problem);
 		auto creator = fs0::engines::EngineRegistry::instance().get(config.getEngineTag());
 		auto engine = creator->create(config, model);
-		timer = do_search(*engine, model, out_dir);
+		do_search(*engine, model, out_dir, start_time);
 	}
-	
-	std::cout << "Search completed in " << timer << " secs" << std::endl;
 }
 
 void SearchUtils::report_stats(const Problem& problem) {

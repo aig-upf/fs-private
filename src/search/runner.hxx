@@ -26,6 +26,9 @@ protected:
 	
 	//! The concrete instance generator
 	ProblemGeneratorType _generator;
+	
+	//! The runner starting time
+	float _start_time;
 };
 
 } } // namespaces
