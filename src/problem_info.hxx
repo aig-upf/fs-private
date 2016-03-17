@@ -131,7 +131,7 @@ public:
 	bool isPredicate(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::PREDICATE; }
 	bool isFunction(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::FUNCTION; }
 	
-	bool isPredicativeVariable(VariableIdx variable) const { return isPredicate(getVariableData(variable).first); }
+	bool isPredicativeVariable(VariableIdx variable) const { return _predicative_variables.at(variable); }
 	bool isNegatedPredicativeAtom(const Atom& atom) const;
 	
 	void setFunction(unsigned functionId, const Function& function) {
@@ -204,9 +204,7 @@ public:
 	//! Returns a vector 'v' such that 'v[i]' contains all posible values for the type 'signature[i]'
 	std::vector<const ObjectIdxVector*> getSignatureValues(const Signature& signature) const;
 	
-
 protected:
-	
 	//! Load all the function-related data 
 	void loadSymbolIndex(const rapidjson::Value& data);
 	
@@ -220,6 +218,8 @@ protected:
 	void loadTypeIndex(const rapidjson::Value& data);
 	
 	void loadProblemMetadata(const rapidjson::Value& data);
+	
+	std::vector<bool> _predicative_variables;
 };
 
 } // namespaces

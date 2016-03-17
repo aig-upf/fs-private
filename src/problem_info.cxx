@@ -6,26 +6,34 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <atom.hxx>
+#include <utils/logging.hxx>
 
 namespace fs0 {
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	
-	std::cout << "\t Loading Type index..." << std::endl;
+	FINFO("main", "Loading Type index...");
 	loadTypeIndex(data["types"]); // Order matters
 	
-	std::cout << "\t Loading Object index..." << std::endl;
+	FINFO("main", "Loading Object index...");
 	loadObjectIndex(data["objects"]);
 
-	std::cout << "\t Loading Symbol index..." << std::endl;
+	FINFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
 	
-	std::cout << "\t Loading Variable index..." << std::endl;
+	FINFO("main", "Loading Variable index...");
 	loadVariableIndex(data["variables"]);
 	
+	FINFO("main", "Loading Metadata...");
 	loadProblemMetadata(data["problem"]);
 	
-	std::cout << "\t All indexes loaded!" << std::endl;
+	FINFO("main", "All indexes loaded");
+	
+	// Load the cached map of predicative variables for more performant access
+	for (unsigned variable = 0; variable < getNumVariables(); ++variable) {
+		_predicative_variables.push_back(isPredicate(getVariableData(variable).first));
+	}
+	
 }
 
 const std::string& ProblemInfo::getVariableName(VariableIdx index) const { return variableNames.at(index); }
