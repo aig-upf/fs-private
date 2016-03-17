@@ -30,6 +30,8 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 
 const std::string& ProblemInfo::getVariableName(VariableIdx index) const { return variableNames.at(index); }
 
+bool ProblemInfo::isNegatedPredicativeAtom(const Atom& atom) const { return isPredicativeVariable(atom.getVariable()) && atom.getValue() == 0; }
+
 unsigned ProblemInfo::getNumVariables() const { return variableNames.size(); }
 
 const std::string ProblemInfo::getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const {

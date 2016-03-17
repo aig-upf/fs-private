@@ -131,6 +131,9 @@ public:
 	bool isPredicate(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::PREDICATE; }
 	bool isFunction(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::FUNCTION; }
 	
+	bool isPredicativeVariable(VariableIdx variable) const { return isPredicate(getVariableData(variable).first); }
+	bool isNegatedPredicativeAtom(const Atom& atom) const;
+	
 	void setFunction(unsigned functionId, const Function& function) {
 		functionData.at(functionId).setFunction(function);
 	}

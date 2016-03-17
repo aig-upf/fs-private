@@ -71,9 +71,7 @@ bool GroundEffectCSPHandler::find_atom_support(const Atom& atom, const State& se
 	// Else, we want a full solution of the CSP
 	Gecode::DFS<SimpleCSP> engine(csp.get());
 	SimpleCSP* solution = engine.next();
-	if (!solution) { // The CSP has no solution at all
-		return false;
-	}
+	if (!solution) return false; // The CSP has no solution at all
 	
 	// TODO - This is not optimal, but for the moment being it saves us a lot of code duplication
 	process_solution(solution, rpg);
@@ -88,8 +86,10 @@ void GroundEffectCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {
 	assert(_effects.size() == 1);
 	const auto& effect = _effects[0];
 	if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(effect->lhs())) {
+		_unused(statevar);
 		assert(statevar->getValue() == atom.getVariable()); // Otherwise we shouldn't be considering this effect as a potential achiever of atom.
 	} else if (auto nested = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs())) {
+		_unused(nested);
 		const auto& data = info.getVariableData(atom.getVariable());
 		assert(nested->getSymbolId() == data.first);
 		assert(_lhs_subterm_variables.size() == data.second.size());
