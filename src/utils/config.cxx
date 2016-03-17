@@ -78,10 +78,6 @@ void Config::validateConfig(const Config& config) {
 	if (config.getCSPManagerType() == CSPManagerType::Direct && config.getGoalResolutionType() == CSPResolutionType::Full) {
 		throw InvalidConfiguration("Full Goal CSP resolution can't be performed with a Direct Goal Manager");
 	}
-	
-	if (config.getActionPreconditionResolutionType() == CSPResolutionType::Approximate) {
-		throw InvalidConfiguration("Action CSP approximate resolution not yet implemented");
-	}	
 }
 
 std::ostream& Config::print(std::ostream& os) const {

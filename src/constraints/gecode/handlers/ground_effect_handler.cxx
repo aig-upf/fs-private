@@ -1,11 +1,14 @@
 
 #include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
+#include <constraints/gecode/helper.hxx>
 #include <actions/ground_action.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
 #include <actions/action_id.hxx>
 #include <problem.hxx>
+#include <heuristics/relaxed_plan/rpg_data.hxx>
+#include <state.hxx>
 #include <gecode/driver.hh>
 
 namespace fs0 { namespace gecode {
@@ -63,22 +66,79 @@ bool GroundEffectCSPHandler::find_atom_support(const Atom& atom, const State& se
 	} 
 	
 	// Else, the CSP is locally consistent
-	
 	if (_approximate) {  // Check only local consistency
-		throw UnimplementedFeatureException("Approximate support not yet implemented in action CSPs");
+		solve_approximately(atom, csp.get(), rpg, seed);
+		return true;
+	} else { // Else, we want a full solution of the CSP
+		return solve_completely(csp.get(), rpg);
 	}
-	
-	// Else, we want a full solution of the CSP
-	Gecode::DFS<SimpleCSP> engine(csp.get());
+}
+
+bool GroundEffectCSPHandler::solve_completely(gecode::SimpleCSP* csp, RPGData& rpg) const {
+	// We just want to search for one solution an extract the support from it
+	Gecode::DFS<SimpleCSP> engine(csp);
 	SimpleCSP* solution = engine.next();
 	if (!solution) return false; // The CSP has no solution at all
 	
-	// TODO - This is not optimal, but for the moment being it saves us a lot of code duplication
-	process_solution(solution, rpg);
+	process_solution(solution, rpg); // TODO - This is not optimal, but for the moment being it saves us a lot of code duplication
 
 	delete solution;
 	return true;
 }
+
+void GroundEffectCSPHandler::solve_approximately(const Atom& atom, gecode::SimpleCSP* csp, RPGData& rpg, const State& seed) const {
+	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
+	
+	Atom::vctrp support = std::make_shared<Atom::vctr>();
+
+	// First process the direct state variables
+	for (const auto& element:_translator.getAllInputVariables()) {
+		VariableIdx variable = element.first;
+		const Gecode::IntVar& csp_var = _translator.resolveVariableFromIndex(element.second, *csp);
+		Gecode::IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
+		assert(values()); // Otherwise the CSP would be inconsistent!
+		
+		// If the original value makes the situation a goal, then we don't need to add anything for this variable.
+		int seed_value = seed.getValue(variable);
+		int selected = Helper::selectValueIfExists(values, seed_value);
+		if (selected == seed_value) continue;
+		support->push_back(Atom(variable, selected)); // It not, we simply pick the first consistent value
+	}
+	
+	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
+	support->insert(support->end(), _atom_state_variables.begin(), _atom_state_variables.end());
+	
+	// TODO - This needs further thinking - ATM we simply ignore nested fluents, which will make the approximation approach work quite bad when the problem has them.
+	const auto& nested_terms = effect_nested_fluents[0];
+	if (0 && !nested_terms.empty()) {
+
+		// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
+		// the CSP solution resolves to prevent repetitions
+		std::set<VariableIdx> inserted;
+
+		
+		const ProblemInfo& info = Problem::getInfo();
+		
+		for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
+			VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), CSPVariableType::Input, *csp));
+	//		VariableIdx variable = fluent->interpretVariable(assignment, binding);
+			if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
+				// ObjectIdx value = fluent->interpret(assignment, binding);
+				
+				ObjectIdx value = 1; // i.e. assuming that there are no negated atoms on conditions.
+				if (!info.isPredicate(fluent->getSymbolId())) {
+					value = _translator.resolveValue(fluent, CSPVariableType::Input, *csp);
+				}
+				
+				support->push_back(Atom(variable, value));
+				inserted.insert(variable);
+			}
+		}
+	}
+	
+	rpg.add(atom, get_action_id(csp), support);
+}
+
 
 
 void GroundEffectCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {

@@ -37,6 +37,9 @@ protected:
 	std::vector<unsigned> _lhs_subterm_variables;
 
 	void log() const;
+	
+	bool solve_completely(gecode::SimpleCSP* csp, RPGData& rpg) const;
+	void solve_approximately(const Atom& atom, gecode::SimpleCSP* csp, RPGData& rpg, const State& seed) const;
 };
 
 
