@@ -40,7 +40,9 @@ long ConstrainedRPG::evaluate(const State& seed) {
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
 	GecodeRPGLayer layer(_extension_handler, seed);
-	RPGData bookkeeping(seed);
+	// TODO - We would ideally ignore negated atoms in the construction of the RPGData object by setting the second parameter to true,
+	// but it seems that checking for each variable whether it is predicative or not... doesn't pay off (!)
+	RPGData bookkeeping(seed, false);
 	
 	if (Config::instance().useMinHMaxGoalValueSelector()) {
 		_builder->init_value_selector(&bookkeeping);
@@ -129,6 +131,11 @@ Index<Atom> ConstrainedRPG::index_atoms(const ProblemInfo& info) {
 	// TODO Take into account ONLY those atoms which are reachable !!!
 	Index<Atom> index;
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
+		if (info.isPredicativeVariable(var)) {
+			index.add(Atom(var, 1)); // We don't need the negated atom, since the RPG ignores delete effects.
+			continue;
+		}
+		
 		for (ObjectIdx value:info.getVariableObjects(var)) {
 			index.add(Atom(var, value));
 		}

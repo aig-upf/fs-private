@@ -12,7 +12,7 @@ GecodeRPGLayer::GecodeRPGLayer(ExtensionHandler& extension_handler, const State&
 	: _index(seed.numAtoms()),
 	  _extension_handler(extension_handler)
 {
-	
+	const ProblemInfo& info = Problem::getInfo();
 	_domains.reserve(seed.numAtoms());
 	_deltas.reserve(seed.numAtoms());
 	
@@ -21,11 +21,16 @@ GecodeRPGLayer::GecodeRPGLayer(ExtensionHandler& extension_handler, const State&
 	// Initially, all domains and deltas are set to contain exactly the values from the seed state
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 		ObjectIdx value = seed.getValue(variable);
-		_index[variable].insert(value);
-		_domains.push_back(Gecode::IntSet(value, value));
-		_deltas.push_back(Gecode::IntSet(value, value));
 		
-		_extension_handler.process_atom(variable, value);
+		if (info.isPredicativeVariable(variable) && value == 0) { // TODO This check is expensive and should be optimized out
+			_domains.push_back(Gecode::IntSet());
+			_deltas.push_back(Gecode::IntSet());
+		} else {
+			_index[variable].insert(value);
+			_domains.push_back(Gecode::IntSet(value, value));
+			_deltas.push_back(Gecode::IntSet(value, value));
+			_extension_handler.process_atom(variable, value);
+		}
 	}
 	
 	_extensions = _extension_handler.generate_extensions();

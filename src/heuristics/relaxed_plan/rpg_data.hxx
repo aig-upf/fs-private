@@ -41,7 +41,7 @@ protected:
 	SupportMap _effects;
 
 public:
-	RPGData(const State& seed);
+	RPGData(const State& seed, bool ignore_negated = false);
 	~RPGData();
 
 	//! Returns the number of layers of the RPG.

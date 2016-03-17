@@ -91,8 +91,20 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(ActionEffect::cptr effect) 
 	
 	// Now gather, for each possible variables, all possible values
 	for (VariableIdx variable:lhs_variables) {
-	
-		if (Constant::cptr rhs_const = dynamic_cast<Constant::cptr>(effect->rhs())) {
+		Constant::cptr rhs_const = dynamic_cast<Constant::cptr>(effect->rhs());
+		
+		// TODO - All this should be greatly simplified when we have a proper distinction between functional effects
+		// and predicative add/del effects
+		if (info.isPredicativeVariable(variable)){
+			if (!rhs_const) throw std::runtime_error("A predicative effect cannot be assigned anything other than a constant");
+			if (rhs_const->getValue() == 1) { // Push only non-negated effects
+				affected.push_back(Atom(variable, 1));
+			}
+			continue;
+		}
+		
+		// If we reached this point we surely have a non-predicative effect.
+		if (rhs_const) {
 			affected.push_back(Atom(variable, rhs_const->getValue()));
 			
 		} else {

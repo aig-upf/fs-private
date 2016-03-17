@@ -4,18 +4,26 @@
 #include <state.hxx>
 #include <actions/ground_action.hxx>
 #include <actions/action_id.hxx>
+#include <problem.hxx>
 
 namespace fs0 {
 
-RPGData::RPGData(const State& seed) :
+RPGData::RPGData(const State& seed, bool ignore_negated) :
 	_novel(seed.numAtoms()),
 	_num_novel(0),
 	_current_layer(0),
 	_effects()
 {
+	const ProblemInfo& info = Problem::getInfo();
+	
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 		ObjectIdx value = seed.getValue(variable);
+		
+		if (ignore_negated && info.isPredicativeVariable(variable) && value == 0) { // TODO This check is expensive and should be optimized out
+			continue; // If requested, we ignore negated predicative atoms.
+		}
+		
 		_effects.insert(std::make_pair(Atom(variable, value),
 						createAtomSupport(ActionID::make_invalid(), std::make_shared<std::vector<Atom>>())));
 	}
