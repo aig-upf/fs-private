@@ -15,11 +15,13 @@
 namespace fs0 { namespace gecode {
 
 
-BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate, bool use_novelty_constraint)
+BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate)
 	: BaseCSPHandler(approximate), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
+}
+
+void BaseActionCSPHandler::init(bool use_novelty_constraint) {
 	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.fullname());
-	
 	setup();
 	
 	createCSPVariables(use_novelty_constraint);
@@ -42,8 +44,9 @@ BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::
 	_unused(st);
 	assert(st != Gecode::SpaceStatus::SS_FAILED); // This should never happen, as it means that the action is (statically) unapplicable.
 	
-	index_scopes(); // This needs to be _after_ the CSP variable registration
+	index_scopes(); // This needs to be _after_ the CSP variable registration	
 }
+
 
 void BaseActionCSPHandler::process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const {
 	log();

@@ -58,6 +58,10 @@ void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable:
 	assert(res.second); // Make sure the element was not there before
 }
 
+unsigned GecodeCSPVariableTranslator::registerIntVariable(int min, int max) {
+	return add_intvar(Helper::createTemporaryIntVariable(_base_csp, min, max));
+}
+
 
 void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variable) {
 	auto it = _input_state_variables.find(variable);

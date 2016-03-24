@@ -10,6 +10,7 @@
 #include <heuristics/relaxed_plan/gecode_chmax.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/direct_chmax.hxx>
+#include <heuristics/relaxed_plan/lifted_crpg.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
@@ -46,7 +47,8 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
 			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
-			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
+			std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(problem.getProblemInfo());
+			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), symbol_tuplesets, approximate, novelty);
 		} else {
 			throw std::runtime_error("Unknown CSP model type");
 		}

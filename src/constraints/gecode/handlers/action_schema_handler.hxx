@@ -21,9 +21,11 @@ public:
 	//! HACK
 	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool novelty);
-	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate, bool novelty);
+	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, bool approximat);
 	virtual ~ActionSchemaCSPHandler() {}
+	
+	virtual void init(bool use_novelty_constraint);
+
 	
 	//! Return the (Lifted) ActionID corresponding to the given solution
 	LiftedActionID* get_lifted_action_id(SimpleCSP* solution) const;

@@ -20,7 +20,8 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 		const auto action = actions[action_idx];
 		
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
-			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, eff_idx, approximate, novelty);
+			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, eff_idx, approximate);
+			handler->init(novelty);
 			managers.push_back(handler);
 			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_name(*action) << std::endl <<  *handler << std::endl);
 		}
@@ -28,10 +29,14 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 	return managers;
 }
 
-GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool novelty) :
-	BaseActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate, novelty),
-	_lhs_subterm_variables(index_lhs_subterms())
+GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate) :
+	BaseActionCSPHandler(action, { action.getEffects().at(effect_idx) }, approximate)
 {}
+
+void GroundEffectCSPHandler::init(bool use_novelty_constraint) {
+	BaseActionCSPHandler::init(use_novelty_constraint);
+	_lhs_subterm_variables = index_lhs_subterms();
+}
 
 void GroundEffectCSPHandler::log() const {
 	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" of action " << _action.fullname());

@@ -17,9 +17,11 @@ public:
 	typedef BaseActionCSPHandler* ptr;
 
 	//! Constructor / Destructor
-	BaseActionCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate, bool use_novelty_constraint);
+	BaseActionCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate);
 	virtual ~BaseActionCSPHandler() {}
 	
+	virtual void init(bool use_novelty_constraint);
+
 	//!
 	virtual void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const;
 

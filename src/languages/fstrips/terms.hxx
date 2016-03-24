@@ -312,6 +312,10 @@ public:
 	VariableIdx interpretVariable(const State& state, const Binding& binding) const { return _variable_id; }
 	
 	FluentHeadedNestedTerm::cptr getOrigin() const { return _origin; }
+	
+	unsigned getSymbolId() const { return _origin->getSymbolId(); }
+ 
+	virtual const std::vector<Term::cptr>& getSubterms() const { return _origin->getSubterms(); }
 
 	virtual std::pair<int, int> getBounds() const;
 

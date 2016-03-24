@@ -15,7 +15,7 @@ public:
 	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, bool approximate, bool novelty);
 
 	//! Constructors / Destructor
-	GroundActionCSPHandler(const GroundAction& action, bool approximate, bool novelty);
+	GroundActionCSPHandler(const GroundAction& action, bool approximate);
 	virtual ~GroundActionCSPHandler() {}
 
 protected:

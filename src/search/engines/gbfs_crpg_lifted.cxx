@@ -5,6 +5,7 @@
 #include <utils/logging.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
+#include <heuristics/relaxed_plan/lifted_crpg.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
@@ -36,7 +37,8 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 	if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
 		csp_handlers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
 	} else { // EffectSchemaCSP
-		csp_handlers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
+		std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(problem.getProblemInfo());
+		csp_handlers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), symbol_tuplesets, approximate, novelty);
 	}
 	
 	GecodeCRPG gecode_builder_heuristic(problem, std::move(csp_handlers), std::move(gecode_builder));

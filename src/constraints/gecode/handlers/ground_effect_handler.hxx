@@ -11,9 +11,11 @@ public:
 	//! Factory method
 	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, bool approximate, bool novelty);
 
-	GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate, bool novelty);
+	GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate);
 	 
 	~GroundEffectCSPHandler() {}
+	
+	virtual void init(bool use_novelty_constraint);
 	
 	const fs::ActionEffect* get_effect() const { 
 		assert(_effects.size() == 1);

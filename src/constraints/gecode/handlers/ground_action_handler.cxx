@@ -11,7 +11,8 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
 		// auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty); std::cout << *x << std::endl;
-		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], approximate, novelty);
+		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], approximate);
+		manager->init(novelty);
 		FDEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
 		managers.push_back(manager);
 	}
@@ -19,8 +20,8 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 }
 
 // If no set of effects is provided, we'll take all of them into account
-GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action,  bool approximate, bool novelty)
-	:  BaseActionCSPHandler(action, action.getEffects(), approximate, novelty)
+GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action,  bool approximate)
+	:  BaseActionCSPHandler(action, action.getEffects(), approximate)
 {}
 
 const ActionID* GroundActionCSPHandler::get_action_id(SimpleCSP* solution) const {

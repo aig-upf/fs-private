@@ -59,7 +59,9 @@ public:
 	
 	//! Register an input variable, i.e. a CSP variable directly related to a planning state variable.
 	void registerInputStateVariable(VariableIdx variable);
-
+	
+	//! Register an int variable not boud to any particular term, and return its index.
+	unsigned registerIntVariable(int min, int max);
 	
 	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type);
 	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type, TypeIdx domain_type);

@@ -21,7 +21,8 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> handlers;
 	
 	for (auto schema:schemata) {
-		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, approximate, novelty);
+		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, schema->getEffects(), approximate);
+		handler->init(novelty);
 		FDEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
 	}
@@ -29,15 +30,15 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 }
 
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate, bool novelty)
-:  BaseActionCSPHandler(action, effects, approximate, novelty)
-{
+ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate)
+:  BaseActionCSPHandler(action, effects, approximate)
+{}
+
+
+void ActionSchemaCSPHandler::init(bool use_novelty_constraint) {
+	BaseActionCSPHandler::init(use_novelty_constraint);
 	index_parameters();
 }
-
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const ActionSchema& action, bool approximate, bool novelty)
-:  ActionSchemaCSPHandler(action,  action.getEffects(), approximate, novelty)
-{}
 
 
 void ActionSchemaCSPHandler::index_parameters() {
