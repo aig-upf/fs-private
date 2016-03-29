@@ -96,6 +96,9 @@ protected:
 	
 	//!
 	std::vector<std::set<unsigned>> compute_reached_tuples(const State& seed) const;
+	
+	void reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::set<unsigned>>& reached) const;
+
 };
 
 } } // namespaces

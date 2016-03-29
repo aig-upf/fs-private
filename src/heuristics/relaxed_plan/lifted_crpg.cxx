@@ -61,6 +61,7 @@ long LiftedCRPG::evaluate(const State& seed) {
 		
 		// Build a new layer of the RPG.
 
+		
 		for (const EffectHandlerPtr manager:_managers) {
 			unsigned affected_symbol = manager->get_lhs_symbol();
 // 			IndexedTupleset& tupleset = _symbol_tuplesets.at(affected_symbol);
@@ -68,9 +69,8 @@ long LiftedCRPG::evaluate(const State& seed) {
 			
 			std::set<unsigned>& reached = reached_by_symbol.at(affected_symbol);  // We want a reference because we'll want to add newly-reached atoms.
 			manager->seek_novel_tuples(layer, reached, bookkeeping, seed); // This will update 'reached' with newly-reached atoms
-			
 		}
-	
+		
 		
 		// TODO - RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THIS CSP MODEL
 		
@@ -227,25 +227,32 @@ std::vector<std::set<unsigned>> LiftedCRPG::compute_reached_tuples(const State& 
 	std::vector<std::set<unsigned>> reached_by_symbol(_info.getNumLogicalSymbols());
 	
 	for (VariableIdx var = 0; var < _info.getNumVariables(); ++var) {
-		const auto& data = _info.getVariableData(var);
+		reach_atom(var, seed.getValue(var), reached_by_symbol);
+	}
+	
+	return reached_by_symbol;
+}
+
+
+void LiftedCRPG::reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::set<unsigned>>& reached) const {
+		const auto& data = _info.getVariableData(variable);
 		
 		const IndexedTupleset& tupleset = _symbol_tuplesets.at(data.first);
-		std::set<unsigned>& set = reached_by_symbol.at(data.first); // The set of reached symbols corresponding to the symbol index
+		std::set<unsigned>& set = reached.at(data.first); // The set of reached symbols corresponding to the symbol index
 		
-		if (_info.isPredicativeVariable(var)) {
-			if (seed.getValue(var)) { // We're just interested in non-negated atoms
+		if (_info.isPredicativeVariable(variable)) {
+			if (value) { // We're just interested in non-negated atoms
 				const auto& tuple = data.second;
 				set.insert(tupleset.get_index(tuple));
 			}
 		} else {
 			std::vector<int> tuple(data.second); // Copy the vector
-			tuple.push_back(seed.getValue(var));
+			tuple.push_back(value);
 			set.insert(tupleset.get_index(tuple));
 		}
-	}
-	
-	return reached_by_symbol;
 }
+
+
 
 } } // namespaces
 

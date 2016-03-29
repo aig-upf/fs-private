@@ -194,6 +194,29 @@ int EffectSchemaCSPHandler::seek_single_solution(SimpleCSP& csp, RPGData& bookke
 	
 	process_solution(solution, bookkeeping); // TODO - This is not optimal, but for the moment being it saves us a lot of code duplication
 	
+	/*
+	PartialAssignment assignment = _translator.buildAssignment(*solution);
+	Binding binding = build_binding_from_solution(solution);
+	auto all_effects = _action.getEffects();
+	for (unsigned i = 0; i < all_effects.size(); ++i) {
+		auto eff = all_effects[i];
+		if (get_effect() == eff) continue;
+		VariableIdx affected = eff->lhs()->interpretVariable(assignment, binding);
+		ObjectIdx value = eff->rhs()->interpret(assignment, binding);
+		Atom atom(affected, value);
+// 		std::cout << "Derived novel atom: " << Atom(affected, value) << std::endl;
+// 		simple_atom_processing(solution, bookkeeping, atom, i, assignment, binding);
+		auto hint = bookkeeping.getInsertionHint(atom);
+
+		if (hint.first) { // The value is actually new - let us compute the supports, i.e. the CSP solution values for each variable relevant to the effect.
+			Atom::vctrp support = extract_support_from_solution(solution, 0, assignment, binding);
+			bookkeeping.add(atom, get_action_id(solution), support, hint.second);
+		}		
+		
+		extra.push_back(std::move(atom));
+	}
+	*/
+	
 	// Retrieve the index of the newly foung tuple
 	int tuple_idx = _translator.resolveValueFromIndex(_tuple_index_var, *solution);
 	delete solution;
