@@ -34,7 +34,7 @@ public:
 // 	bool solve(const State& seed, SimpleCSP& csp, RPGData& bookkeeping, Tupleset& extension);
 
 
-	void seek_novel_tuples(const GecodeRPGLayer& layer, std::set<unsigned>& reached, RPGData& rpg, const State& seed) const;
+	void seek_novel_tuples(const GecodeRPGLayer& layer, std::unordered_set<unsigned>& reached, RPGData& rpg, const State& seed) const;
 
 
 	int seek_single_solution(SimpleCSP& csp, RPGData& bookkeeping, const State& seed) const;

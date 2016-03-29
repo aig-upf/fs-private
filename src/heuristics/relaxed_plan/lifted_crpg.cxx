@@ -55,19 +55,14 @@ long LiftedCRPG::evaluate(const State& seed) {
 // 	std::vector<Tupleset> tuplesets(_all_tuples_by_symbol);
 // 	prune_tuplesets(seed, tuplesets);
 	
-	std::vector<std::set<unsigned>> reached_by_symbol = compute_reached_tuples(seed);
+	std::vector<std::unordered_set<unsigned>> reached_by_symbol = compute_reached_tuples(seed);
 	
 	while (true) {
 		
 		// Build a new layer of the RPG.
-
-		
 		for (const EffectHandlerPtr manager:_managers) {
 			unsigned affected_symbol = manager->get_lhs_symbol();
-// 			IndexedTupleset& tupleset = _symbol_tuplesets.at(affected_symbol);
-			
-			
-			std::set<unsigned>& reached = reached_by_symbol.at(affected_symbol);  // We want a reference because we'll want to add newly-reached atoms.
+			auto& reached = reached_by_symbol.at(affected_symbol);  // We want a reference because we'll want to add newly-reached atoms.
 			manager->seek_novel_tuples(layer, reached, bookkeeping, seed); // This will update 'reached' with newly-reached atoms
 		}
 		
@@ -223,8 +218,8 @@ std::vector<IndexedTupleset> LiftedCRPG::index_tuplesets(const ProblemInfo& info
 	return tuplesets;
 }
 
-std::vector<std::set<unsigned>> LiftedCRPG::compute_reached_tuples(const State& seed) const {
-	std::vector<std::set<unsigned>> reached_by_symbol(_info.getNumLogicalSymbols());
+std::vector<std::unordered_set<unsigned>> LiftedCRPG::compute_reached_tuples(const State& seed) const {
+	std::vector<std::unordered_set<unsigned>> reached_by_symbol(_info.getNumLogicalSymbols());
 	
 	for (VariableIdx var = 0; var < _info.getNumVariables(); ++var) {
 		reach_atom(var, seed.getValue(var), reached_by_symbol);
@@ -234,11 +229,11 @@ std::vector<std::set<unsigned>> LiftedCRPG::compute_reached_tuples(const State& 
 }
 
 
-void LiftedCRPG::reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::set<unsigned>>& reached) const {
+void LiftedCRPG::reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::unordered_set<unsigned>>& reached) const {
 		const auto& data = _info.getVariableData(variable);
 		
 		const IndexedTupleset& tupleset = _symbol_tuplesets.at(data.first);
-		std::set<unsigned>& set = reached.at(data.first); // The set of reached symbols corresponding to the symbol index
+		std::unordered_set<unsigned>& set = reached.at(data.first); // The set of reached symbols corresponding to the symbol index
 		
 		if (_info.isPredicativeVariable(variable)) {
 			if (value) { // We're just interested in non-negated atoms

@@ -151,7 +151,7 @@ bool EffectSchemaCSPHandler::solve(const State& seed, SimpleCSP& csp, RPGData& b
 */
 
 
-void EffectSchemaCSPHandler::seek_novel_tuples(const GecodeRPGLayer& layer, std::set<unsigned>& reached, RPGData& bookkeeping, const State& seed) const {
+void EffectSchemaCSPHandler::seek_novel_tuples(const GecodeRPGLayer& layer, std::unordered_set<unsigned>& reached, RPGData& bookkeeping, const State& seed) const {
 	
 	SimpleCSP* csp = instantiate_csp(layer);
 	if (!csp || !csp->checkConsistency()) return; // The effect CSP is not applicable

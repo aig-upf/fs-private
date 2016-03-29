@@ -6,6 +6,7 @@
 #include <constraints/gecode/utils/indexed_tupleset.hxx>
 #include <atom.hxx>
 #include <utils/index.hxx>
+#include <unordered_set>
 
 namespace fs0 { class Problem; class State; class RPGData; }
 
@@ -95,9 +96,9 @@ protected:
 	static std::vector<IndexedTupleset::TupleVector> compute_all_reachable_tuples(const ProblemInfo& info);
 	
 	//!
-	std::vector<std::set<unsigned>> compute_reached_tuples(const State& seed) const;
+	std::vector<std::unordered_set<unsigned>> compute_reached_tuples(const State& seed) const;
 	
-	void reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::set<unsigned>>& reached) const;
+	void reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::unordered_set<unsigned>>& reached) const;
 
 };
 
