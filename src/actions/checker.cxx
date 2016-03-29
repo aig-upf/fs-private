@@ -18,7 +18,11 @@ bool Checker::check_correctness(const Problem& problem, const ActionPlan& plan, 
 	State state(s0);
 	for (unsigned idx:plan) {
 		const GroundAction& action = *actions[idx];
-		if (!manager.isApplicable(state, action)) return false;
+// 		std::cout << "Action: " << action << std::endl;
+		if (!manager.isApplicable(state, action)) {
+// 			std::cout << "Action not applicable on state " << state << std::endl;
+			return false;
+		}
 		state.accumulate(manager.computeEffects(state, action)); // Accumulate the newly-produced atoms
 	}
 	
