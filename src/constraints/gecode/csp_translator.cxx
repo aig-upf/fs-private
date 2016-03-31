@@ -169,11 +169,15 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 }
 
 void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
+	updateStateVariableDomains(csp, layer.get_domains());
+}
+
+void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const std::vector<Gecode::IntSet>& domains) const {
 	// Iterate over all the input state variables and constrain them according to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
 		const Gecode::IntVar& csp_variable = csp._intvars[it.second];
-		Helper::constrainCSPVariable(csp, csp_variable, layer.get_domain(variable));
+		Helper::constrainCSPVariable(csp, csp_variable, domains.at(variable));
 	}
 }
 
@@ -199,5 +203,29 @@ PartialAssignment GecodeCSPVariableTranslator::buildAssignment(SimpleCSP& soluti
 VariableIdx GecodeCSPVariableTranslator::getPlanningVariable(unsigned csp_var_idx) const {
 	return _intvars_idx[csp_var_idx];
 }
+
+std::vector<std::pair<unsigned, std::vector<unsigned>>> GecodeCSPVariableTranslator::index_fluents(std::unordered_set<const fs::Term*> terms) {
+	const ProblemInfo& info = Problem::getInfo();
+	std::vector<std::pair<unsigned, std::vector<unsigned>>> tuple_indexes;
+	// Register all fluent symbols involved
+	for (auto term:terms) {
+		if (const fs::FluentHeadedNestedTerm* nested = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
+			unsigned symbol = nested->getSymbolId();
+			std::vector<unsigned> indexes;
+			for (const fs::Term* subterm:nested->getSubterms()) {
+				indexes.push_back(resolveVariableIndex(subterm, CSPVariableType::Input));
+			}
+			
+			if (!info.isPredicate(symbol)) { // If we have a functional symbol, we add the value of the term to the end of the tuple
+				indexes.push_back(resolveVariableIndex(nested, CSPVariableType::Input));
+			}
+			tuple_indexes.push_back(std::make_pair(nested->getSymbolId(), indexes));
+		}
+	}
+	return tuple_indexes;
+}
+
+
+
 
 } } // namespaces

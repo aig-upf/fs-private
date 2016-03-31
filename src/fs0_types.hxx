@@ -41,7 +41,13 @@ namespace fs0 {
 	typedef std::set<VariableIdx> VariableIdxSet;
 
 	typedef std::vector<ObjectIdx> ObjectIdxVector;
-
+	
+	//! A tuple of values
+	typedef std::vector<ObjectIdx> ValueTuple;
+	
+	//! The index of a tuple of a FSTRIPS logical symbol, unique across all symbols.
+	typedef unsigned TupleIdx;
+	const TupleIdx INVALID_TUPLE = std::numeric_limits<unsigned int>::max();
 
 	//! A domain is a set of values (of a state variable)
  	typedef boost::container::flat_set<ObjectIdx> Domain;

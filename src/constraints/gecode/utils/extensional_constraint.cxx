@@ -9,11 +9,12 @@
 #include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <utils/logging.hxx>
+#include <heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {
 
-ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, bool predicate)
-	: _predicate(predicate), _term(term), _variable_idx(-1)
+ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const TupleIndex& tuple_index, bool predicate)
+	: _predicate(predicate), _term(term), _variable_idx(-1), _tuple_index(tuple_index)
 {}
 
 void ExtensionalConstraint::register_constraints(GecodeCSPVariableTranslator& translator) {
@@ -37,16 +38,23 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTransl
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
 		return state.getValue(_variable_idx) == 1;
 	} else {
-		ExtensionHandler handler;
-		GecodeRPGLayer layer(handler, state);
+		ExtensionHandler handler(_tuple_index);
+		GecodeRPGLayer layer(handler, state); // TODO - This is perhaps too expensive
 		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
 	}
 }
 
 bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const GecodeRPGLayer& layer) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
-		const auto& domain = layer.get_index_domain(_variable_idx);
-		return (domain.find(1) != domain.end()); // return true iff the constraint is satisfied, otherwise the CSP is unsolvable
+		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable	
+	} else {
+		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
+	}
+}
+
+bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const RPGIndex& layer) const {
+	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
+		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable	
 	} else {
 		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
 	}

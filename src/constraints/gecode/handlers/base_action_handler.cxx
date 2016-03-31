@@ -15,8 +15,8 @@
 namespace fs0 { namespace gecode {
 
 
-BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, bool approximate)
-	: BaseCSPHandler(approximate), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
+BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, const TupleIndex& tuple_index, bool approximate)
+	: BaseCSPHandler(tuple_index, approximate), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
 }
 

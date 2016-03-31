@@ -6,7 +6,7 @@
 #include <constraints/gecode/simple_csp.hxx>
 
 
-namespace fs0 { class State; class RelaxedState; }
+namespace fs0 { class State; class RelaxedState; class TupleIndex; }
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
 
@@ -21,7 +21,7 @@ class FormulaCSPHandler;
 class GecodeRPGBuilder {
 public:
 	//! Factory method - pointer ownership corresponds to the caller.
-	static std::shared_ptr<GecodeRPGBuilder> create(const fs::Formula* goal_formula, const fs::Formula* state_constraints);
+	static std::shared_ptr<GecodeRPGBuilder> create(const fs::Formula* goal_formula, const fs::Formula* state_constraints, const TupleIndex& tuple_index);
 	
 	GecodeRPGBuilder(FormulaCSPHandler* goal_handler, FormulaCSPHandler* state_constraint_handler)
 		: _goal_handler(goal_handler), _state_constraint_handler(state_constraint_handler) {}

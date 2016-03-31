@@ -9,9 +9,9 @@ namespace fs0 { namespace gecode {
 class GroundEffectCSPHandler : public BaseActionCSPHandler {
 public:
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	GroundEffectCSPHandler(const GroundAction& action, unsigned effect_idx, bool approximate);
+	GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, unsigned effect_idx, bool approximate);
 	 
 	~GroundEffectCSPHandler() {}
 	

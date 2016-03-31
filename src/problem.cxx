@@ -14,13 +14,14 @@ std::unique_ptr<Problem> Problem::_instance = nullptr;
 std::unique_ptr<ProblemInfo> Problem::_info = nullptr;
 
 
-Problem::Problem(State* init, const std::vector<ActionSchema::cptr>& schemata, const fs::Formula* goal, const fs::Formula* state_constraints) :
+Problem::Problem(State* init, const std::vector<ActionSchema::cptr>& schemata, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index) :
+	_tuple_index(std::move(tuple_index)),
 	_init(init),
 	_schemata(schemata),
 	_ground(),
 	_state_constraint_formula(state_constraints),
 	_goal_formula(goal),
-	_goal_sat_manager(FormulaInterpreter::create(_goal_formula))
+	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index()))
 {}
 
 Problem::~Problem() {

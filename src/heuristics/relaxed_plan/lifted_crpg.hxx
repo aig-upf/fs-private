@@ -4,27 +4,27 @@
 #include <fs0_types.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <constraints/gecode/utils/indexed_tupleset.hxx>
-#include <atom.hxx>
 #include <utils/index.hxx>
+#include <utils/tuple_index.hxx>
 #include <unordered_set>
 
 namespace fs0 { class Problem; class State; class RPGData; }
 
+namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs = fs0::language::fstrips;
+
 namespace fs0 { namespace gecode {
 
 class EffectSchemaCSPHandler;
-class GecodeRPGBuilder;
-class GecodeRPGLayer;
+class RPGIndex;
+class LiftedFormulaHandler;
 
 class LiftedCRPG {
 protected:
-// 	typedef std::shared_ptr<BaseActionCSPHandler> ActionHandlerPtr;
 	typedef std::shared_ptr<EffectSchemaCSPHandler> EffectHandlerPtr;
 	
 public:
-	LiftedCRPG(const Problem& problem, std::vector<EffectHandlerPtr>&& managers, std::vector<IndexedTupleset>&& symbol_tuplesets, std::shared_ptr<GecodeRPGBuilder> builder);
-
-	
+	LiftedCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints);
 	virtual ~LiftedCRPG() {}
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
@@ -33,11 +33,14 @@ public:
 	//! The computation of the heuristic value. Returns -1 if the RPG layer encoded in the relaxed state is not a goal,
 	//! otherwise returns h_{FF}.
 	//! To be subclassed in other RPG-based heuristics such as h_max
-	virtual long computeHeuristic(const State& seed, const GecodeRPGLayer& layer, const RPGData& rpg);
+	virtual long computeHeuristic(const State& seed, const RPGIndex& graph);
 	
 	
-	//!
-	static std::vector<IndexedTupleset> index_tuplesets(const ProblemInfo& info);
+	const TupleIndex& get_tuple_index() const { return _tuple_index; }
+	
+	const std::vector<IndexedTupleset>& get_symbol_tuplesets() const { return _symbol_tuplesets; }
+	
+	void set_managers(std::vector<EffectHandlerPtr>&& managers) { _managers = std::move(managers); }
 
 protected:
 	typedef std::vector<std::vector<unsigned>> AchieverIndex;
@@ -47,11 +50,10 @@ protected:
 	const Problem& _problem;
 	const ProblemInfo& _info;
 	
-	//! The set of action managers, one per every action
-	const std::vector<EffectHandlerPtr> _managers;
+	const TupleIndex& _tuple_index;
 	
-	//! The RPG building helper
-	const std::shared_ptr<GecodeRPGBuilder> _builder;
+	//! The set of action managers, one per every action
+	std::vector<EffectHandlerPtr> _managers;
 	
 	//!
 	ExtensionHandler _extension_handler;
@@ -61,6 +63,8 @@ protected:
 	//! that might belong to symbol i's underlying relation.
 	// TODO - IS THIS NEEDED?	
 	std::vector<IndexedTupleset> _symbol_tuplesets;
+	
+	const LiftedFormulaHandler* _goal_handler;
 	
 	//! An index of all the problem atoms.
 // 	Index<Atom> _atom_table;
@@ -91,15 +95,14 @@ protected:
 // 	static void prune_tuplesets(const State& seed, std::vector<Tupleset>& tuplesets);
 	
 	
-	
-	//!
-	static std::vector<IndexedTupleset::TupleVector> compute_all_reachable_tuples(const ProblemInfo& info);
-	
 	//!
 	std::vector<std::unordered_set<unsigned>> compute_reached_tuples(const State& seed) const;
 	
 	void reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::unordered_set<unsigned>>& reached) const;
-
+	
+	//!
+	static std::vector<IndexedTupleset> index_tuplesets(const ProblemInfo& info);
+	
 };
 
 } } // namespaces

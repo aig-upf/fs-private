@@ -3,11 +3,11 @@
 
 #include <fs0_types.hxx>
 #include <problem_info.hxx>
-
-namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
-namespace fs = fs0::language::fstrips;
+#include <utils/tuple_index.hxx>
 
 namespace fs0 { namespace asp { class LPHandler; }}
+namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
@@ -17,7 +17,7 @@ class ApplicableActionSet; class ProblemInfo;
 class Problem {
 public:
 
-	Problem(State* init, const std::vector<const ActionSchema*>& schemata, const fs::Formula* goal, const fs::Formula* state_constraints);
+	Problem(State* init, const std::vector<const ActionSchema*>& schemata, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index);
 	~Problem();
 
 	//! Get the initial state of the problem
@@ -68,12 +68,18 @@ public:
 		assert(_info);
 		return *_info;
 	}
+	
+	const TupleIndex& get_tuple_index() const { return _tuple_index; }
+
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
 
 protected:
+	//! An index of tuples and atoms
+	TupleIndex _tuple_index;
+	
 	//! The initial state of the problem
 	const std::unique_ptr<State> _init;
 

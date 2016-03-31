@@ -24,11 +24,11 @@ GecodeRPGLayer::GecodeRPGLayer(ExtensionHandler& extension_handler, const State&
 		
 		if (info.isPredicativeVariable(variable) && value == 0) { // TODO This check is expensive and should be optimized out
 			_domains.push_back(Gecode::IntSet());
-// 			_deltas.push_back(Gecode::IntSet());
+			_deltas.push_back(Gecode::IntSet());
 		} else {
 			_index[variable].insert(value);
 			_domains.push_back(Gecode::IntSet(value, value));
-// 			_deltas.push_back(Gecode::IntSet(value, value));
+			_deltas.push_back(Gecode::IntSet(value, value));
 			_extension_handler.process_atom(variable, value);
 		}
 	}
@@ -48,7 +48,7 @@ void GecodeRPGLayer::advance(const std::vector<std::vector<ObjectIdx>>& novel_at
 	for (VariableIdx variable = 0; variable < novel_atoms.size(); ++variable) {
 		// Rebuild the delta only with the novel atoms
 		const auto& delta = novel_atoms[variable];
-// 		_deltas[variable] = Gecode::IntSet(delta.data(), delta.size());
+		_deltas[variable] = Gecode::IntSet(delta.data(), delta.size());
 		
 		// Update the index and rebuild the full domain with all indexed atoms
 		// An intermediate IntArgs object seems to be necessary, since IntSets do not accept std-like range constructors.
@@ -62,6 +62,12 @@ void GecodeRPGLayer::advance(const std::vector<std::vector<ObjectIdx>>& novel_at
 	}
 	
 	_extensions = _extension_handler.generate_extensions();
+}
+
+
+bool GecodeRPGLayer::is_true(VariableIdx variable) const {
+	const auto& domain = _index.at(variable);
+	return domain.find(1) != domain.end();
 }
 
 
@@ -79,8 +85,8 @@ std::ostream& GecodeRPGLayer::print(std::ostream& os) const {
 	
 	os << std::endl << "IntSets:" << std::endl << "\t";
 	print_intsets(os, info, _domains);
-// 	os << std::endl << "Deltas:" << std::endl << "\t";
-// 	print_intsets(os, info, _deltas);
+	os << std::endl << "Deltas:" << std::endl << "\t";
+	print_intsets(os, info, _deltas);
 	os << std::endl;
 	return os;
 }

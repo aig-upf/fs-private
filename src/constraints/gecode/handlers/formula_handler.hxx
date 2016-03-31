@@ -15,7 +15,7 @@ public:
 	typedef FormulaCSPHandler* ptr;
 	typedef const FormulaCSPHandler* cptr;
 
-	FormulaCSPHandler(const fs::Formula* formula, bool approximate, bool use_novelty_constraint);
+	FormulaCSPHandler(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate, bool use_novelty_constraint);
 	~FormulaCSPHandler();
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution

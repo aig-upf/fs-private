@@ -17,7 +17,7 @@ public:
 	typedef BaseActionCSPHandler* ptr;
 
 	//! Constructor / Destructor
-	BaseActionCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, bool approximate);
+	BaseActionCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
 	virtual ~BaseActionCSPHandler() {}
 	
 	virtual void init(bool use_novelty_constraint);

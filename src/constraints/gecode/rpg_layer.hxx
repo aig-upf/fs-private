@@ -35,7 +35,8 @@ public:
 	GecodeRPGLayer& operator=(const GecodeRPGLayer& rhs) = delete;
 	bool operator==(const GecodeRPGLayer& rhs) = delete;	
 	
-	const Domain& get_index_domain(VariableIdx variable) const { return _index.at(variable); }
+	bool is_true(VariableIdx variable) const;
+	const std::vector<Gecode::IntSet>& get_domains() const { return _domains; }
 	const Gecode::IntSet& get_domain(VariableIdx variable) const { return _domains.at(variable); }
 	const Gecode::IntSet& get_delta(VariableIdx variable) const { return _deltas.at(variable); }
 	const Gecode::TupleSet& get_extension(unsigned symbol_id) const { return _extensions.at(symbol_id); }

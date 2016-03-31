@@ -1,25 +1,25 @@
 
 #pragma once
+
 #include <vector>
 #include <ostream> 
 
-
-namespace fs0 { namespace language { namespace fstrips { class FluentHeadedNestedTerm; } }}
-namespace fs = fs0::language::fstrips;
-
 namespace Gecode { class TupleSet; }
-namespace fs0 { class State; }
+namespace fs0 { class State; class TupleIndex; }
+namespace fs0 { namespace language { namespace fstrips { class FluentHeadedNestedTerm; } } }
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
 class SimpleCSP;
 class GecodeCSPVariableTranslator;
 class GecodeRPGLayer;
+class RPGIndex;
 
 class ExtensionalConstraint {
 public:
 	
-	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, bool predicate);
+	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const TupleIndex& tuple_index, bool predicate);
 	
 	void register_variables(GecodeCSPVariableTranslator& translator) {} // TODO - REMOVE IF NOT NEEDED
 	
@@ -28,6 +28,7 @@ public:
 	//! Constraint-posting routines
 	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const State& state) const;
 	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const GecodeRPGLayer& layer) const;
+	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const RPGIndex& layer) const;
 	
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ExtensionalConstraint&  o) { return o.print(os); }
@@ -53,6 +54,9 @@ protected:
 	//! Gecode cannot handle 0-ary extensional constraints (they don't make much sense anyway)
 	//! If the predicate is not 0-ary, '_variable_idx' will be -1.
 	int _variable_idx;
+	
+	//!
+	const TupleIndex& _tuple_index;
 };
 
 

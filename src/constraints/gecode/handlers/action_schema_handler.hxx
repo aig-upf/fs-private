@@ -17,11 +17,11 @@ public:
 	typedef ActionSchemaCSPHandler* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 	//! HACK
-	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, bool approximat);
+	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
 	virtual ~ActionSchemaCSPHandler() {}
 	
 	virtual void init(bool use_novelty_constraint);

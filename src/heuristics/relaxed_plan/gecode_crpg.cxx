@@ -17,7 +17,7 @@
 namespace fs0 { namespace gecode {
 
 GecodeCRPG::GecodeCRPG(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
-	: _problem(problem), _managers(std::move(managers)), _builder(std::move(builder)), _extension_handler()
+	: _problem(problem), _managers(std::move(managers)), _builder(std::move(builder)), _extension_handler(problem.get_tuple_index())
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }

@@ -12,10 +12,10 @@ public:
 	typedef GroundActionCSPHandler* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
 	//! Constructors / Destructor
-	GroundActionCSPHandler(const GroundAction& action, bool approximate);
+	GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate);
 	virtual ~GroundActionCSPHandler() {}
 
 protected:

@@ -3,14 +3,14 @@
 
 #include <gecode/int.hh>
 #include <map>
+#include <fs0_types.hxx>
 
 namespace fs0 { namespace gecode {
 
 //! 
 class IndexedTupleset {
 public:
-	typedef std::vector<int> Tuple;
-	typedef std::vector<Tuple> TupleVector;
+	typedef std::vector<ValueTuple> TupleVector;
 	
 	//! Construct a tupleset out of the given tuples
 	IndexedTupleset(const TupleVector& tuples);
@@ -28,25 +28,25 @@ public:
 	unsigned size() const;
 	
 	//! Returns true iff the tupleset contains the given tuple
-	bool contains(const Tuple& tuple) const;
+	bool contains(const ValueTuple& tuple) const;
 	
 	Gecode::TupleSet get_tupleset() const;
 	
-	unsigned get_index(const Tuple& tuple) const;
+	unsigned get_index(const ValueTuple& tuple) const;
 
 protected:
 	
 	//! An index of each possible tuple
-	std::map<Tuple, unsigned> _tuples;
+	std::map<ValueTuple, unsigned> _tuples;
 	
 	//! The gecode tupleset of all tuples + their index
 	Gecode::TupleSet _tupleset;
 
 	//! Helper to index all tuples according to their position in the given vector
-	static std::map<Tuple, unsigned> index_tuples(const TupleVector& tuples);
+	static std::map<ValueTuple, unsigned> index_tuples(const TupleVector& tuples);
 	
 	//! Helper to construct the actual Gecode tuplesets.
-	static Gecode::TupleSet compute_tupleset(const std::map<Tuple, unsigned>& tuple_index);
+	static Gecode::TupleSet compute_tupleset(const std::map<ValueTuple, unsigned>& tuple_index);
 };
 
 

@@ -85,6 +85,7 @@ public:
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const;
+	void updateStateVariableDomains(SimpleCSP& csp, const std::vector<Gecode::IntSet>& domains) const;
 	void updateStateVariableDomains(SimpleCSP& csp, const State& state) const;
 
 	const unsigned resolveInputVariableIndex(VariableIdx variable) const {
@@ -117,7 +118,9 @@ public:
 	SimpleCSP& getBaseCSP() { return _base_csp; }
 	
 	VariableIdx getPlanningVariable(unsigned csp_var_idx) const;
-
+	
+	std::vector<std::pair<unsigned, std::vector<unsigned>>> index_fluents(std::unordered_set<const fs::Term*> terms);
+	
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.
 	SimpleCSP& _base_csp;

@@ -13,8 +13,8 @@
 
 namespace fs0 { namespace gecode {
 	
-FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, bool approximate, bool use_novelty_constraint)
-	:  BaseCSPHandler(approximate),
+FormulaCSPHandler::FormulaCSPHandler(const fs::Formula::cptr formula, const TupleIndex& tuple_index, bool approximate, bool use_novelty_constraint)
+	:  BaseCSPHandler(tuple_index, approximate),
 	  _formula(formula)
 {
 	setup();

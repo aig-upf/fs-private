@@ -26,7 +26,7 @@ public:
 	typedef BaseCSPHandler* ptr;
 	typedef const BaseCSPHandler* cptr;
 
-	BaseCSPHandler(bool approximate) : _base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _novelty(nullptr) {}
+	BaseCSPHandler(const TupleIndex& tuple_index, bool approximate) : _base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _novelty(nullptr), _tuple_index(tuple_index) {}
 	virtual ~BaseCSPHandler();
 	
 	void init(const RPGData* bookkeeping);
@@ -71,6 +71,8 @@ protected:
 	
 	//! The Ids of the state variables that are relevant to some formula via a (predicative) atom.
 	std::set<Atom> _atom_state_variables;
+	
+	const TupleIndex& _tuple_index;
 	
 	//!
 	std::vector<ExtensionalConstraint> _extensional_constraints;

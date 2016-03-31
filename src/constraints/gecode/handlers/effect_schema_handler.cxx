@@ -5,29 +5,22 @@
 #include <constraints/gecode/utils/indexed_tupleset.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
-#include <heuristics/relaxed_plan/rpg_data.hxx>
+#include <utils/tuple_index.hxx>
+#include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <problem.hxx>
 #include <gecode/int.hh>
 #include <gecode/search.hh>
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<BaseActionCSPHandler>> EffectSchemaCSPHandler::create(const std::vector<const ActionSchema*>& schemata, const std::vector<IndexedTupleset>& symbol_tuplesets, bool approximate, bool novelty) {
-	// Simply upcast the shared_ptrs
-	std::vector<std::shared_ptr<BaseActionCSPHandler>> handlers;
-	for (const auto& element:create_derived(schemata, symbol_tuplesets, approximate, novelty)) {
-		handlers.push_back(std::static_pointer_cast<BaseActionCSPHandler>(element));
-	}
-	return handlers;
-}
 
-std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::create_derived(const std::vector<const ActionSchema*>& schemata, const std::vector<IndexedTupleset>& symbol_tuplesets, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::create(const std::vector<const ActionSchema*>& schemata, const TupleIndex& tuple_index, const std::vector<IndexedTupleset>& symbol_tuplesets, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> handlers;
 	
 	for (const ActionSchema* schema:schemata) {
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {
 			const fs::ActionEffect* effect = schema->getEffects().at(eff_idx);
-			auto handler = std::make_shared<EffectSchemaCSPHandler>(*schema, effect, approximate);
+			auto handler = std::make_shared<EffectSchemaCSPHandler>(*schema, effect, tuple_index, approximate);
 			handler->init(novelty, symbol_tuplesets.at(index_lhs_symbol(effect)));
 			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << schema->fullname() << std::endl <<  *handler << std::endl);
 			handlers.push_back(handler);
@@ -36,8 +29,8 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 	return handlers;
 }
 
-EffectSchemaCSPHandler::EffectSchemaCSPHandler(const ActionSchema& action, const fs::ActionEffect* effect, bool approximate) :
-	ActionSchemaCSPHandler(action, { effect }, approximate)
+EffectSchemaCSPHandler::EffectSchemaCSPHandler(const ActionSchema& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
+	ActionSchemaCSPHandler(action, { effect }, tuple_index, approximate)
 {}
 
 void EffectSchemaCSPHandler::init(bool use_novelty_constraint, const IndexedTupleset& tupleset) {
@@ -50,6 +43,9 @@ void EffectSchemaCSPHandler::init(bool use_novelty_constraint, const IndexedTupl
 	_lhs_symbol = index_lhs_symbol(get_effect());
 	_lhs_argument_variables = index_lhs_variables(get_effect());
 	_rhs_variable = index_rhs_term(get_effect());
+	
+	// Register all fluent symbols involved
+	_tuple_indexes = _translator.index_fluents(_all_terms);
 	
 	// Register the indexing constraint itself
 	register_indexing_constraint(tupleset.get_tupleset());
@@ -151,9 +147,9 @@ bool EffectSchemaCSPHandler::solve(const State& seed, SimpleCSP& csp, RPGData& b
 */
 
 
-void EffectSchemaCSPHandler::seek_novel_tuples(const GecodeRPGLayer& layer, std::unordered_set<unsigned>& reached, RPGData& bookkeeping, const State& seed) const {
+void EffectSchemaCSPHandler::seek_novel_tuples(std::unordered_set<unsigned>& reached, RPGIndex& rpg, const State& seed) const {
 	
-	SimpleCSP* csp = instantiate_csp(layer);
+	SimpleCSP* csp = instantiate_effect_csp(rpg);
 	if (!csp || !csp->checkConsistency()) return; // The effect CSP is not applicable
 	
 	
@@ -174,25 +170,63 @@ void EffectSchemaCSPHandler::seek_novel_tuples(const GecodeRPGLayer& layer, std:
 	
 	unsigned num_solutions = 0;
 	
-	int novel_tuple_idx = seek_single_solution(*csp, bookkeeping, seed);
+	int novel_tuple_idx = seek_single_solution(*csp, rpg, seed);
 	while (novel_tuple_idx != -1) {
 // 		assert(reached.find(novel_tuple_idx) != reached.end());
 		Gecode::rel(*csp, index_var, Gecode::IRT_NQ, novel_tuple_idx); // I != index of the tuple we just found
 		reached.insert(novel_tuple_idx);
-		novel_tuple_idx = seek_single_solution(*csp, bookkeeping, seed);
+		novel_tuple_idx = seek_single_solution(*csp, rpg, seed);
 		++num_solutions;
 	}
 	
 	FFDEBUG("heuristic", "The Effect CSP produced " << num_solutions << " novel tuples");	
 }
 
+SimpleCSP::ptr EffectSchemaCSPHandler::instantiate_effect_csp(const RPGIndex& rpg) const {
+	if (_failed) return nullptr;
+	SimpleCSP* clone = static_cast<SimpleCSP::ptr>(_base_csp.clone());
+	_translator.updateStateVariableDomains(*clone, rpg.get_domains());
+	for (const ExtensionalConstraint& constraint:_extensional_constraints) {
+		if (!constraint.update(*clone, _translator, rpg)) {
+			delete clone;
+			return nullptr;
+		}
+	}
+	return clone;
+}
 
-int EffectSchemaCSPHandler::seek_single_solution(SimpleCSP& csp, RPGData& bookkeeping, const State& seed) const {
+int EffectSchemaCSPHandler::seek_single_solution(SimpleCSP& csp, RPGIndex& rpg, const State& seed) const {
 	Gecode::DFS<SimpleCSP> engine(&csp);
 	SimpleCSP* solution = engine.next();
 	if (!solution) return -1; // The CSP has no solution at all
 	
-	process_solution(solution, bookkeeping); // TODO - This is not optimal, but for the moment being it saves us a lot of code duplication
+
+	// Retrieve the index of the newly generated tuple. E.g. if the effect is val(?c) := val(?c) + 1, 
+	// this might be the (unsigned) index of a tuple <4, 5> for symbol 'val'
+	int tuple_idx = _translator.resolveValueFromIndex(_tuple_index_var, *solution);
+	
+	auto hint = rpg.getInsertionHint(tuple_idx);
+	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" produces " << (hint.first ? "new" : "repeated") << " tuple " << tuple_idx);
+
+	if (hint.first) { // The value is actually new - let us compute the supports
+		
+		// We extract the actual support from the solution
+		std::vector<TupleIdx> support;
+		
+		for (const auto& tuple_info:_tuple_indexes) {
+			unsigned symbol = tuple_info.first;
+			
+			ValueTuple tuple;
+			for (unsigned subterm_idx:tuple_info.second) {
+				tuple.push_back(_translator.resolveValueFromIndex(subterm_idx, *solution));
+			}
+			
+			unsigned tuple_idx = _tuple_index.to_index(symbol, tuple);
+			support.push_back(tuple_idx);
+		}
+		
+		rpg.add(tuple_idx, get_action_id(solution), std::move(support), hint.second);
+	}
 	
 	/*
 	PartialAssignment assignment = _translator.buildAssignment(*solution);
@@ -217,8 +251,6 @@ int EffectSchemaCSPHandler::seek_single_solution(SimpleCSP& csp, RPGData& bookke
 	}
 	*/
 	
-	// Retrieve the index of the newly foung tuple
-	int tuple_idx = _translator.resolveValueFromIndex(_tuple_index_var, *solution);
 	delete solution;
 	return tuple_idx;
 }
@@ -238,11 +270,13 @@ void EffectSchemaCSPHandler::register_indexing_constraint(const Gecode::TupleSet
 	
 	variables << _translator.resolveVariableFromIndex(_tuple_index_var, _base_csp);
 	
+// 	Gecode::extensional(_base_csp, variables, index_extension, Gecode::EPK_SPEED); // This is actually slower, not faster!
 	Gecode::extensional(_base_csp, variables, index_extension);
 	
 	Gecode::SpaceStatus st = _base_csp.status();
 	_unused(st);
 	assert(st != Gecode::SpaceStatus::SS_FAILED); // This should never happen, as the indexing constraint should not restrict any possible solution
 }
+
 
 } } // namespaces

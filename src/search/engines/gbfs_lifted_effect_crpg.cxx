@@ -23,13 +23,11 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSLiftedEffectCRPG::create(const Config& c
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
-	auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
-	
-	std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(problem.getProblemInfo());
-	
-	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create_derived(problem.getActionSchemata(), symbol_tuplesets, approximate, novelty);
-	
-	LiftedCRPG lifted_crpg(problem, std::move(managers), std::move(symbol_tuplesets), gecode_builder);
+	LiftedCRPG lifted_crpg(problem, problem.getGoalConditions(), problem.getStateConstraints());
+	const TupleIndex& tuple_index = problem.get_tuple_index();
+	const std::vector<IndexedTupleset>& symbol_tuplesets = lifted_crpg.get_symbol_tuplesets();
+	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), tuple_index, symbol_tuplesets, approximate, novelty);
+	lifted_crpg.set_managers(std::move(managers)); // TODO Probably we don't need this to be shared_ptr's anymore
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, LiftedCRPG, FS0StateModel>(model, std::move(lifted_crpg)));
 }

@@ -16,7 +16,6 @@
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
-#include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <actions/applicable_action_set.hxx>
 #include <asp/asp_rpg.hxx>
 
@@ -37,18 +36,19 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	auto csp_type = decide_csp_type(problem);
 	if (csp_type == Config::CSPManagerType::Gecode) {
 		FINFO("main", "Chosen CSP Manager: Gecode");
-		auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
+		auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints(), problem.get_tuple_index());
 		
 		std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 		if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
-			managers = GroundActionCSPHandler::create(actions, approximate, novelty);
+			managers = GroundActionCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
 		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
-			managers = GroundEffectCSPHandler::create(actions, approximate, novelty);
+			managers = GroundEffectCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), approximate, novelty);
+			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), problem.get_tuple_index(), approximate, novelty);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
-			std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(problem.getProblemInfo());
-			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), symbol_tuplesets, approximate, novelty);
+			assert(false); // Currently disabled
+// 			std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(problem.getProblemInfo());
+// 			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), problem.get_tuple_index(), symbol_tuplesets, approximate, novelty);
 		} else {
 			throw std::runtime_error("Unknown CSP model type");
 		}

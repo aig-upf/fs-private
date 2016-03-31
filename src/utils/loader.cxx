@@ -15,6 +15,7 @@
 #include <utils/printers/registry.hxx>
 #include <asp/lp_handler.hxx>
 #include "config.hxx"
+#include "tuple_index.hxx"
 
 
 namespace fs = fs0::language::fstrips;
@@ -37,7 +38,7 @@ void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_han
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
-	Problem* problem = new Problem(init, schemata, goal, sc);
+	Problem* problem = new Problem(init, schemata, goal, sc, TupleIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	problem->setLPHandler(lp_handler);
 	
