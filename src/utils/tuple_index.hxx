@@ -2,15 +2,26 @@
 #pragma once
 
 #include <atom.hxx>
+#include <unordered_map>
+#include <boost/functional/hash.hpp>
 
 namespace fs0 {
 
 class ProblemInfo;
 
+template <typename Container> // we can make this generic for any container [1]
+struct container_hash {
+    std::size_t operator()(Container const& c) const {
+        return boost::hash_range(c.begin(), c.end());
+    }
+};
+
 class TupleIndex {
 protected:
 	
-	std::map<std::pair<unsigned, ValueTuple>, TupleIdx> _inverse;
+// 	std::unordered_map<std::pair<unsigned, ValueTuple>, TupleIdx> _inverse;
+	std::vector<std::unordered_map<ValueTuple, TupleIdx, container_hash<ValueTuple>>> _inverse;
+	
 	std::vector<ValueTuple> _index;
 	std::vector<unsigned> _symbol_index;
 	
@@ -33,11 +44,12 @@ public:
 	
 	const Atom& to_atom(TupleIdx tuple) const { return _tuple_atoms.at(tuple); }
 	
-	TupleIdx to_index(unsigned symbol, const ValueTuple& tuple) const { return to_index(std::make_pair(symbol, tuple)); }
+	TupleIdx to_index(const std::pair<unsigned, ValueTuple>& tuple) const { return to_index(tuple.first, tuple.second); }
 	
-	TupleIdx to_index(const std::pair<unsigned, ValueTuple>& tuple) const { 
-		auto it = _inverse.find(tuple);
-		assert(it != _inverse.end());
+	TupleIdx to_index(unsigned symbol, const ValueTuple& tuple) const {
+		const auto& map = _inverse.at(symbol);
+		auto it = map.find(tuple);
+		assert(it != map.end());
 		return it->second;
 	}
 	

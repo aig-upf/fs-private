@@ -72,6 +72,7 @@ protected:
 	//! is the index of the symbol, then come the indexes of the subterms (Indexes are CSP variable indexes).
 	std::vector<std::pair<unsigned, std::vector<unsigned>>> _tuple_indexes;
 	
+	std::vector<unsigned> _effect_tuple_indexes;
 };
 
 

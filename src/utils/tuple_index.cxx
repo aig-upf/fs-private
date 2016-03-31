@@ -7,8 +7,9 @@
 
 namespace fs0 {
 
-TupleIndex::TupleIndex(const ProblemInfo& info) {
-	
+TupleIndex::TupleIndex(const ProblemInfo& info) :
+	_inverse(info.getNumLogicalSymbols())
+{
 	std::vector<std::vector<ValueTuple>> tuples_by_symbol = compute_all_reachable_tuples(info);
 	
 	std::vector<std::pair<unsigned, unsigned>> symbol_ranges;
@@ -47,7 +48,8 @@ void TupleIndex::add(unsigned symbol, const ValueTuple& tuple, unsigned idx, con
 	assert(_symbol_index.size() == idx);
 	_symbol_index.push_back(symbol);
 	
-	_inverse.insert(std::make_pair(std::make_pair(symbol, tuple), idx));
+// 	_inverse.insert(std::make_pair(std::make_pair(symbol, tuple), idx));
+	_inverse.at(symbol).insert(std::make_pair(tuple, idx));
 	
 	assert(_tuple_atoms.size() == idx);
 	_tuple_atoms.push_back(atom);
