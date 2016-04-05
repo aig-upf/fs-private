@@ -1,6 +1,6 @@
 
 #include <languages/fstrips/terms.hxx>
-#include <actions/base_action.hxx>
+#include <actions/actions.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
@@ -249,6 +249,6 @@ Atom::vctrp BaseActionCSPHandler::extract_support_from_solution(SimpleCSP* solut
 	return support;
 }
 
-Binding BaseActionCSPHandler::build_binding_from_solution(SimpleCSP* solution) const { return Binding(); }
+Binding BaseActionCSPHandler::build_binding_from_solution(const SimpleCSP* solution) const { return Binding(); }
 
 } } // namespaces

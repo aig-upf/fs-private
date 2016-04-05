@@ -161,7 +161,7 @@ std::ostream& DirectActionManager::print(std::ostream& os) const {
 }
 
 const ActionID* DirectActionManager::get_action_id(unsigned action_idx) const {
-	return new PlainActionID(action_idx);
+	return new PlainActionID(&_action);
 }
 
 } // namespaces

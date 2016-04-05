@@ -3,7 +3,7 @@
 
 #include <fs0_types.hxx>
 #include <constraints/gecode/extensions.hxx>
-#include <constraints/gecode/utils/indexed_tupleset.hxx>
+#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 #include <utils/index.hxx>
 #include <utils/tuple_index.hxx>
 #include <unordered_set>
@@ -17,7 +17,6 @@ namespace fs0 { namespace gecode {
 
 class EffectSchemaCSPHandler;
 class RPGIndex;
-class LiftedFormulaHandler;
 
 class LiftedCRPG {
 protected:
@@ -25,7 +24,13 @@ protected:
 	
 public:
 	LiftedCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints);
-	virtual ~LiftedCRPG() {}
+	virtual ~LiftedCRPG();
+	
+	// Disallow copies of the object, as they will be expensive, but allow moves.
+	LiftedCRPG(const LiftedCRPG&) = delete;
+	LiftedCRPG(LiftedCRPG&&) = default;
+	LiftedCRPG& operator=(const LiftedCRPG& other) = delete;
+	LiftedCRPG& operator=(LiftedCRPG&& other) = default;
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	long evaluate(const State& seed);
@@ -38,14 +43,9 @@ public:
 	
 	const TupleIndex& get_tuple_index() const { return _tuple_index; }
 	
-	const std::vector<IndexedTupleset>& get_symbol_tuplesets() const { return _symbol_tuplesets; }
-	
 	void set_managers(std::vector<EffectHandlerPtr>&& managers) { _managers = std::move(managers); }
 
 protected:
-	typedef std::vector<std::vector<unsigned>> AchieverIndex;
-	
-	
 	//! The actual planning problem
 	const Problem& _problem;
 	const ProblemInfo& _info;
@@ -58,14 +58,10 @@ protected:
 	//!
 	ExtensionHandler _extension_handler;
 	
-	//! For each logical symbol with index 'i', '_symbol_tuple_indexes[i]' contains a gecode extension (table) with all tuples
-	//! <t1, ..., tn, j>, where j is the unique index (unique across all tuples of that symbol) of the tuple <t1, ..., tn>
-	//! that might belong to symbol i's underlying relation.
-	// TODO - IS THIS NEEDED?	
-	std::vector<IndexedTupleset> _symbol_tuplesets;
-	
-	const LiftedFormulaHandler* _goal_handler;
-	
+	std::unique_ptr<const LiftedFormulaHandler> _goal_handler;
+
+// typedef std::vector<std::vector<unsigned>> AchieverIndex;
+
 	//! An index of all the problem atoms.
 // 	Index<Atom> _atom_table;
 	
@@ -76,9 +72,7 @@ protected:
 	
 	//! If atom with index 'i' has state variable f(t_1, ..., t_n), then '_atom_variable_tuples[i]' is the vector {t_1, ..., t_n}
 // 	const std::vector<std::vector<ObjectIdx>> _atom_variable_tuples;
-	
 
-	
 // 	static std::vector<std::vector<ObjectIdx>> index_variable_tuples(const ProblemInfo& info, const Index<Atom>& index);
 	
 	//! A helper to index all of the problem's atoms.
@@ -94,14 +88,8 @@ protected:
 	//! Remove from the set of given tuplesets all those tuples implicitly contained in the given seed state
 // 	static void prune_tuplesets(const State& seed, std::vector<Tupleset>& tuplesets);
 	
-	
 	//!
-	std::vector<std::unordered_set<unsigned>> compute_reached_tuples(const State& seed) const;
-	
-	void reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::unordered_set<unsigned>>& reached) const;
-	
-	//!
-	static std::vector<IndexedTupleset> index_tuplesets(const ProblemInfo& info);
+// 	static std::vector<IndexedTupleset> index_tuplesets(const ProblemInfo& info);
 	
 };
 

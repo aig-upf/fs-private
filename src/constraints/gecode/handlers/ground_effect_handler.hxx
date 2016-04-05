@@ -30,7 +30,7 @@ public:
 	void post(SimpleCSP& csp, const Atom& atom) const;
 	
 protected:
-	const ActionID* get_action_id(SimpleCSP* solution) const;
+	const ActionID* get_action_id(const SimpleCSP* solution) const;
 
 	//! Index the CSP variables corresponding the the effect LHS.
 	std::vector<unsigned> index_lhs_subterms();

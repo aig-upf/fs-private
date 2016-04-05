@@ -90,10 +90,10 @@ protected:
 	void create_novelty_constraint();
 	
 	//! Return the ActionID that corresponds to the current action / action schema, for some given solution
-	virtual const ActionID* get_action_id(SimpleCSP* solution) const = 0;
+	virtual const ActionID* get_action_id(const SimpleCSP* solution) const = 0;
 	
 	//! Return the action binding that corresponds to the given solution - by default, return an empty binding
-	virtual Binding build_binding_from_solution(SimpleCSP* solution) const;
+	virtual Binding build_binding_from_solution(const SimpleCSP* solution) const;
 	
 	//! A simple helper to log the processing message
 	virtual void log() const = 0;

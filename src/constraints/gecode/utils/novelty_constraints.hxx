@@ -11,6 +11,7 @@ namespace fs0 { namespace gecode {
 
 class SimpleCSP;
 class GecodeRPGLayer;
+class RPGIndex;
 class GecodeCSPVariableTranslator;
 
 //! A common baseclass for novelty constraints
@@ -79,6 +80,25 @@ protected:
 };
 
 
+//! 
+class EffectNoveltyConstraint {
+public:
+	//! Returns true iff the constraint is applicable to the given effect, i.e. if the effect head is not nested.
+	static bool applicable(const fs::ActionEffect* effect);
+	
+	//! Create the constraint and register the necessary variables for the constraint
+	EffectNoveltyConstraint(GecodeCSPVariableTranslator& translator, const fs::ActionEffect* effect);
+	
+	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
+	void post_constraint(SimpleCSP& csp, const RPGIndex& rpg) const;
+	
+protected:
+	//! contains a size-3 tuple with:
+	//! - ID of the LHS planning variable
+	//! - Index of the corresponding RHS CSP variable
+	//! - Index of the corresponding boolean CSP reification variable	
+	std::tuple<VariableIdx, unsigned, unsigned> _variable;
+};
 } } // namespaces
 
 

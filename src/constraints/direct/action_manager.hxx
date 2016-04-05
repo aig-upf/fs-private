@@ -3,7 +3,7 @@
 
 #include <constraints/direct/csp_handler.hxx>
 #include <constraints/direct/effect.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 
 namespace fs0 {

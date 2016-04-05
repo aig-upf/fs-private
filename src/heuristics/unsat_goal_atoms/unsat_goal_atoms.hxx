@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <state_model.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/formulae.hxx>

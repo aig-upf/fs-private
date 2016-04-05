@@ -39,6 +39,8 @@ public:
 	TupleIndex& operator=(const TupleIndex& other) = delete;
 	TupleIndex& operator=(TupleIndex&& other) = default;
 	
+	//! Return the number of tuples of the index
+	unsigned size() const { return _index.size(); }
 	
 	void add(unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom);
 	

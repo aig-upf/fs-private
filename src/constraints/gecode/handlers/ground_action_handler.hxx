@@ -20,7 +20,7 @@ public:
 
 protected:
 
-	const ActionID* get_action_id(SimpleCSP* solution) const;
+	const ActionID* get_action_id(const SimpleCSP* solution) const;
 	
 	//! Log some handler-related into
 	virtual void log() const;

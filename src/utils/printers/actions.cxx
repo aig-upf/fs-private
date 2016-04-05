@@ -1,8 +1,7 @@
 
 #include <utils/printers/actions.hxx>
 #include <utils/printers/binding.hxx>
-#include <actions/ground_action.hxx>
-#include <actions/action_schema.hxx>
+#include <actions/actions.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
 

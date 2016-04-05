@@ -5,8 +5,7 @@
 #include <applicability/csp_formula_interpreter.hxx>
 #include <applicability/direct_formula_interpreter.hxx>
 #include <actions/applicable_action_set.hxx>
-#include <actions/action_schema.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 
 namespace fs0 {
 

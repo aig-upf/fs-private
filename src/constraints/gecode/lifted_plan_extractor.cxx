@@ -41,7 +41,8 @@ void LiftedPlanExtractor::processTuple(TupleIdx tuple) {
 	const RPGIndex::TupleSupport& support = _graph.getTupleSupport(tuple);
 	
 	const ActionID* action_id = std::get<1>(support);
-	assert(action_id->is_valid());
+	assert(action_id);
+// 	std::cout << "Inserting: " << *action_id << " on layer #" << std::get<0>(support) << ", support size: " << std::get<2>(support).size() << std::endl;
 	perLayerSupporters[std::get<0>(support)].insert(action_id);
 	enqueueTuples(std::get<2>(support)); // Push the full support of the atom
 	processed.insert(tuple); // Tag the atom as processed.

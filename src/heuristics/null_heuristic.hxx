@@ -2,7 +2,7 @@
 #pragma once
 
 #include <state.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <state_model.hxx>
 
 namespace fs0 {

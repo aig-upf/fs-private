@@ -2,7 +2,7 @@
 #include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <constraints/gecode/helper.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
 #include <actions/action_id.hxx>
@@ -42,8 +42,8 @@ void GroundEffectCSPHandler::log() const {
 	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" of action " << _action.fullname());
 }
 
-const ActionID* GroundEffectCSPHandler::get_action_id(SimpleCSP* solution) const {
-	return new PlainActionID(_action.getId());
+const ActionID* GroundEffectCSPHandler::get_action_id(const SimpleCSP* solution) const {
+	return new PlainActionID(&_action);
 }
 
 SimpleCSP* GroundEffectCSPHandler::preinstantiate(const GecodeRPGLayer& layer) const {

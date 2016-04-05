@@ -1,6 +1,6 @@
 
 #include <applicability/applicability_manager.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <state.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/language.hxx>

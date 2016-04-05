@@ -17,8 +17,9 @@ public:
 	static std::vector<const GroundAction*> ground(const std::vector<const ActionSchema*>& schemata, const ProblemInfo& info);
 	
 protected:
-	//! Helper to ground a schema with a single binding
-	static void ground(const ActionSchema* schema, const Binding& binding, const ProblemInfo& info, std::vector<GroundAction*>& grounded);
+	//! Helper to ground a schema with a single binding. Returns the expected next action ID, which might be the same
+	//! ID that was received, if the grounding was unsuccessful, or a consecutive one, otherwise.
+	static unsigned ground(unsigned id, const ActionSchema* schema, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded);
 };
 
 } // namespaces

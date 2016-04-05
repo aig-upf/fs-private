@@ -1,7 +1,7 @@
 
 #include <cassert>
 #include <utils/projections.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 #include <relaxed_state.hxx>

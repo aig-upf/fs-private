@@ -17,6 +17,7 @@
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <actions/applicable_action_set.hxx>
+#include <actions/actions.hxx>
 #include <asp/asp_rpg.hxx>
 
 
@@ -44,7 +45,9 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
 			managers = GroundEffectCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-			managers = ActionSchemaCSPHandler::create(problem.getActionSchemata(), problem.get_tuple_index(), approximate, novelty);
+			const std::vector<const ActionSchema*>& schemata = problem.getActionSchemata();
+			std::vector<const BaseAction*> base_actions(schemata.begin(),schemata.end()); // Convert the vector to a vector of BaseActions
+			managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
 			assert(false); // Currently disabled
 // 			std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(problem.getProblemInfo());

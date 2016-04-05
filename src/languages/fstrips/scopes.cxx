@@ -1,7 +1,7 @@
 
 #include <problem.hxx>
 #include <languages/fstrips/scopes.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <boost/concept_check.hpp>
 
 namespace fs0 { namespace language { namespace fstrips {

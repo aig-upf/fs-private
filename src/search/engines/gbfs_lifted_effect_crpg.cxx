@@ -12,6 +12,7 @@
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <asp/asp_rpg.hxx>
 #include <actions/applicable_action_set.hxx>
+#include <actions/actions.hxx>
 
 using namespace fs0::gecode;
 
@@ -25,8 +26,10 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSLiftedEffectCRPG::create(const Config& c
 	
 	LiftedCRPG lifted_crpg(problem, problem.getGoalConditions(), problem.getStateConstraints());
 	const TupleIndex& tuple_index = problem.get_tuple_index();
-	const std::vector<IndexedTupleset>& symbol_tuplesets = lifted_crpg.get_symbol_tuplesets();
-	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), tuple_index, symbol_tuplesets, approximate, novelty);
+	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
+// 	const std::vector<const ActionSchema*>& schemata = problem.getActionSchemata();
+	std::vector<const BaseAction*> base_actions(actions.begin(),actions.end()); // Convert the vector to a vector of BaseActions
+	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create(base_actions, tuple_index, approximate, novelty);
 	lifted_crpg.set_managers(std::move(managers)); // TODO Probably we don't need this to be shared_ptr's anymore
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, LiftedCRPG, FS0StateModel>(model, std::move(lifted_crpg)));

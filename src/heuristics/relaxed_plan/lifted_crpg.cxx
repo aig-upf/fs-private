@@ -23,8 +23,8 @@ LiftedCRPG::LiftedCRPG(const Problem& problem, const fs::Formula* goal_formula, 
 	_tuple_index(problem.get_tuple_index()),
 	_managers(),
 	_extension_handler(_tuple_index),
-	_symbol_tuplesets(index_tuplesets(_info)),
-	_goal_handler(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false))
+// 	_symbol_tuplesets(index_tuplesets(_info)),
+	_goal_handler(std::unique_ptr<const LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 // 	_atom_table(index_atoms(_info)),
 // 	_atom_achievers(build_achievers_index(_managers, _atom_table)),
 // 	_atom_variable_tuples(index_variable_tuples(_info, _atom_table)),
@@ -32,6 +32,8 @@ LiftedCRPG::LiftedCRPG(const Problem& problem, const fs::Formula* goal_formula, 
 	FINFO("heuristic", "LiftedCRPG heuristic initialized");
 }
 
+LiftedCRPG::~LiftedCRPG() {
+}
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 long LiftedCRPG::evaluate(const State& seed) {
@@ -51,8 +53,6 @@ long LiftedCRPG::evaluate(const State& seed) {
 // 	std::vector<Tupleset> tuplesets(_all_tuples_by_symbol);
 // 	prune_tuplesets(seed, tuplesets);
 	
-	std::vector<std::unordered_set<unsigned>> reached_by_symbol = compute_reached_tuples(seed);
-	
 	while (true) {
 		
 		// Build a new layer of the RPG.
@@ -61,9 +61,15 @@ long LiftedCRPG::evaluate(const State& seed) {
 // 			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
 // 				manager->init_value_selector(&bookkeeping);
 // 			}	
-			unsigned affected_symbol = manager->get_lhs_symbol();
-			auto& reached = reached_by_symbol.at(affected_symbol);  // We want a reference because we'll want to add newly-reached atoms.
-			manager->seek_novel_tuples(reached, graph, seed); // This will update 'reached' with newly-reached atoms
+// 			unsigned affected_symbol = manager->get_lhs_symbol();
+			
+			// If the effect has a fixed achievable tuple (e.g. because it is of the form X := c), and this tuple has already
+			// been reached in the RPG, we can safely skip it.
+			TupleIdx achievable = manager->get_achievable_tuple();
+			if (achievable != INVALID_TUPLE && graph.reached(achievable)) continue;
+			
+			// Otherwise, we process the effect to derive the new tuples that it can produce on the current RPG layer
+			manager->seek_novel_tuples(graph, seed);
 		}
 		
 		
@@ -85,17 +91,19 @@ long LiftedCRPG::evaluate(const State& seed) {
 }
 
 long LiftedCRPG::computeHeuristic(const State& seed, const RPGIndex& graph) {
-	
-	SimpleCSP* csp = _goal_handler->instantiate(graph);
-	if (csp && csp->checkConsistency()) {
-		FFDEBUG("heuristic", "Goal formula CSP is consistent: " << *csp);
-		std::vector<TupleIdx> causes;
-		if (_goal_handler->compute_support(csp, causes, seed)) {
-			LiftedPlanExtractor extractor(seed, graph, _tuple_index);
-			return extractor.computeRelaxedPlanCost(causes);
+	long cost = -1;
+	if (SimpleCSP* csp = _goal_handler->instantiate(graph)) {
+		if (csp->checkConsistency()) { // ATM we only take into account full goal resolution
+			FFDEBUG("heuristic", "Goal formula CSP is consistent: " << *csp);
+			std::vector<TupleIdx> causes;
+			if (_goal_handler->compute_support(csp, causes, seed)) {
+				LiftedPlanExtractor extractor(seed, graph, _tuple_index);
+				cost = extractor.computeRelaxedPlanCost(causes);
+			}
 		}
+		delete csp;
 	}
-	return -1;
+	return cost;
 }
 
 /*
@@ -188,7 +196,7 @@ void LiftedCRPG::prune_tuplesets(const State& seed, std::vector<gecode::Tupleset
 }
 */
 
-
+/*
 std::vector<IndexedTupleset> LiftedCRPG::index_tuplesets(const ProblemInfo& info) {
 	auto all_tuples = TupleIndex::compute_all_reachable_tuples(info);
 	std::vector<IndexedTupleset> tuplesets;
@@ -197,35 +205,7 @@ std::vector<IndexedTupleset> LiftedCRPG::index_tuplesets(const ProblemInfo& info
 	}
 	return tuplesets;
 }
-
-std::vector<std::unordered_set<unsigned>> LiftedCRPG::compute_reached_tuples(const State& seed) const {
-	std::vector<std::unordered_set<unsigned>> reached_by_symbol(_info.getNumLogicalSymbols());
-	
-	for (VariableIdx var = 0; var < _info.getNumVariables(); ++var) {
-		reach_atom(var, seed.getValue(var), reached_by_symbol);
-	}
-	
-	return reached_by_symbol;
-}
-
-
-void LiftedCRPG::reach_atom(VariableIdx variable, ObjectIdx value, std::vector<std::unordered_set<unsigned>>& reached) const {
-		const auto& data = _info.getVariableData(variable);
-		
-		const IndexedTupleset& tupleset = _symbol_tuplesets.at(data.first);
-		std::unordered_set<unsigned>& set = reached.at(data.first); // The set of reached symbols corresponding to the symbol index
-		
-		if (_info.isPredicativeVariable(variable)) {
-			if (value) { // We're just interested in non-negated atoms
-				const auto& tuple = data.second;
-				set.insert(tupleset.get_index(tuple));
-			}
-		} else {
-			std::vector<int> tuple(data.second); // Copy the vector
-			tuple.push_back(value);
-			set.insert(tupleset.get_index(tuple));
-		}
-}
+*/
 
 
 

@@ -1,6 +1,6 @@
 
 #include <actions/checker.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <actions/action_id.hxx>
 #include <problem.hxx>
 #include <applicability/applicability_manager.hxx>

@@ -8,6 +8,7 @@
 #include <utils/config.hxx>
 #include <utils/tuple_index.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
+#include <constraints/gecode/supports.hxx>
 #include <state.hxx>
 
 #include <gecode/driver.hh>
@@ -43,36 +44,13 @@ LiftedFormulaHandler::LiftedFormulaHandler(const fs::Formula::cptr formula, cons
 LiftedFormulaHandler::~LiftedFormulaHandler() { delete _formula; }
 
 bool LiftedFormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>& support, const State& seed) const {
-	assert(support.empty());
 	Gecode::DFS<SimpleCSP> engine(csp);
 	SimpleCSP* solution = engine.next();
 	if (!solution) return false;
 	
 	FFDEBUG("heuristic", "Formula CSP solution found: " << *solution);
-	
-	// We extract the actual support from the solution // TODO - This code is duplicated in EffectSchemaCSPHandler
-	
-	// First process the direct state variables
-	for (const auto& element:_translator.getAllInputVariables()) {
-		VariableIdx variable = element.first;
-		ObjectIdx value = _translator.resolveVariableFromIndex(element.second, *solution).val();
-		
-		unsigned tuple_idx = _tuple_index.to_index(Atom(variable, value));
-		support.push_back(tuple_idx);
-	}
-	
-	// Now the rest of fluent elements
-	for (const auto& tuple_info:_tuple_indexes) {
-		unsigned symbol = tuple_info.first;
-		
-		ValueTuple tuple;
-		for (unsigned subterm_idx:tuple_info.second) {
-			tuple.push_back(_translator.resolveValueFromIndex(subterm_idx, *solution));
-		}
-		
-		unsigned tuple_idx = _tuple_index.to_index(symbol, tuple);
-		support.push_back(tuple_idx);
-	}
+	assert(support.empty());
+	support = Supports::extract_support(solution, _translator, _tuple_indexes);
 	
 	delete solution;
 	return true;
@@ -100,7 +78,7 @@ void LiftedFormulaHandler::index() {
 	const auto terms = _formula->all_terms();
 	
 	// Index formula elements
-	index_formula_elements(conditions, terms);	
+	index_formula_elements(conditions, terms);
 }
 
 // TODO CODE DUPLICATION WITH EffectSchemaCSPHandler

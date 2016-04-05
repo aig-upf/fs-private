@@ -17,18 +17,18 @@ public:
 	typedef ActionSchemaCSPHandler* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const ActionSchema*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const BaseAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 	//! HACK
-	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const ActionSchema*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const BaseAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const ActionSchema& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
+	ActionSchemaCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
 	virtual ~ActionSchemaCSPHandler() {}
 	
 	virtual void init(bool use_novelty_constraint);
 
 	
 	//! Return the (Lifted) ActionID corresponding to the given solution
-	LiftedActionID* get_lifted_action_id(SimpleCSP* solution) const;
+	LiftedActionID* get_lifted_action_id(const SimpleCSP* solution) const;
 	
 protected:
 
@@ -40,10 +40,10 @@ protected:
 	void index_parameters();
 
 	//! Return the action binding that corresponds to the given solution
-	Binding build_binding_from_solution(SimpleCSP* solution) const;
+	Binding build_binding_from_solution(const SimpleCSP* solution) const;
 
 	//! Return the (Lifted) ActionID corresponding to the given solution
-	const ActionID* get_action_id(SimpleCSP* solution) const;
+	const ActionID* get_action_id(const SimpleCSP* solution) const;
 	
 	//! Log some handler-related into
 	virtual void log() const;

@@ -2,7 +2,7 @@
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
 #include <state.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <actions/action_id.hxx>
 #include <problem.hxx>
 
@@ -25,7 +25,7 @@ RPGData::RPGData(const State& seed, bool ignore_negated) :
 		}
 		
 		_effects.insert(std::make_pair(Atom(variable, value),
-						createAtomSupport(ActionID::make_invalid(), std::make_shared<std::vector<Atom>>())));
+						createAtomSupport(nullptr, std::make_shared<std::vector<Atom>>())));
 	}
 	FFDEBUG("heuristic", "RPG Layer #" << getCurrentLayerIdx() << ": " << *this);
 	advanceLayer();
@@ -86,7 +86,9 @@ std::ostream& RPGData::print(std::ostream& os) const {
 	os << "Relaxed Planning Graph atoms (" << _effects.size() << "): " << std::endl;
 	for (const auto& x:_effects) {
 		const ActionID* action_id = std::get<1>(x.second);
-		os << x.first  << " - action: " << *action_id << " - layer #" << std::get<0>(x.second) << " - support: ";
+		os << x.first  << " - action: ";
+		(action_id ? os << *action_id : os << "[INVALID-ACTION]");
+		os << " - layer #" << std::get<0>(x.second) << " - support: ";
 		printAtoms(std::get<2>(x.second), os);
 		os << std::endl;
 	}

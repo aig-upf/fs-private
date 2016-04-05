@@ -8,6 +8,7 @@
 #include <gecode/int.hh>
 #include <constraints/gecode/simple_csp.hxx>
 #include <utils/utils.hxx>
+#include <heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {
 	
@@ -120,5 +121,30 @@ void StrongNoveltyConstraint::post_constraint(SimpleCSP& csp, const GecodeRPGLay
 	Gecode::rel(csp, Gecode::BOT_AND, reification_variables, 0);
 }
 
+
+bool EffectNoveltyConstraint::applicable(const fs::ActionEffect* effect) { return effect->lhs()->flat(); }
+
+EffectNoveltyConstraint::EffectNoveltyConstraint(GecodeCSPVariableTranslator& translator, const fs::ActionEffect* effect)  {
+	assert(applicable(effect));
+	auto variable = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
+	assert(variable);
+	unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs(), CSPVariableType::Input);
+	unsigned reified_id = translator.create_bool_variable();
+	_variable = std::make_tuple(variable->getValue(), csp_var_id, reified_id);
+}
+
+void EffectNoveltyConstraint::post_constraint(SimpleCSP& csp, const RPGIndex& layer) const {
+	VariableIdx variable = std::get<0>(_variable);
+	unsigned csp_variable_id = std::get<1>(_variable);
+	unsigned reified_variable_id = std::get<2>(_variable);
+	
+	const Gecode::IntVar& csp_variable = csp._intvars[csp_variable_id];
+	const Gecode::BoolVar& reification_variable = csp._boolvars[reified_variable_id];
+	
+	// Now post the effect novelty constraint: NOT w is OLD,
+	// i.e. the LHS is new wrt to the already-accumulated values of the LHS
+	Gecode::dom(csp, csp_variable, layer.get_domain(variable), reification_variable);
+	Gecode::rel(csp, reification_variable, Gecode::IRT_EQ, 0);
+}
 
 } } // namespaces

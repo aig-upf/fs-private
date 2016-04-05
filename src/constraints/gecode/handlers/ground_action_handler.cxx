@@ -1,7 +1,7 @@
 
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <utils/logging.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <actions/action_id.hxx>
 
 namespace fs0 { namespace gecode {
@@ -24,8 +24,8 @@ GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const
 	:  BaseActionCSPHandler(action, action.getEffects(), tuple_index, approximate)
 {}
 
-const ActionID* GroundActionCSPHandler::get_action_id(SimpleCSP* solution) const {
-	return new PlainActionID(_action.getId());
+const ActionID* GroundActionCSPHandler::get_action_id(const SimpleCSP* solution) const {
+	return new PlainActionID(&_action);
 }
 
 void GroundActionCSPHandler::log() const {

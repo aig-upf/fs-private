@@ -28,7 +28,8 @@ public:
 	typedef std::tuple<unsigned, const ActionID*, std::vector<TupleIdx>> TupleSupport;
 	
 	//! A map from the index of a logical symbol tuple to its support in the RPG
-	typedef std::unordered_map<TupleIdx, TupleSupport> SupportMap;
+// 	typedef std::unordered_map<TupleIdx, TupleSupport> SupportMap;
+	typedef std::vector<TupleSupport*> SupportMap;
 
 protected:
 	/**
@@ -55,23 +56,25 @@ protected:
 	std::vector<std::set<ObjectIdx>> _domains_raw;
 	
 	const TupleIndex& _tuple_index;
+	
 
 public:
 	explicit RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHandler& extension_handler);
 	~RPGIndex();
 	
+	//! Returns true if the given tuple has already been reached in the current graph.
+	bool reached(TupleIdx tuple) const;
+	
 	bool is_true(VariableIdx variable) const;
 	const Gecode::TupleSet& get_extension(unsigned symbol_id) const { return _extensions.at(symbol_id); }
 	const std::vector<Gecode::IntSet>& get_domains() const { return _domains; }
+	const Gecode::IntSet& get_domain(VariableIdx variable) const { return _domains.at(variable); }
 
 	//! Returns the number of layers of the RPG.
 	unsigned getNumLayers() const  {return _current_layer + 1; } // 0-indexed!
 	
 	//! Returns the current layer index
 	unsigned getCurrentLayerIdx() const  {return _current_layer; }
-
-	//! Creates an atom support data structure with the given data and taking into account the current RPG layer
-	TupleSupport createTupleSupport(const ActionID* action, std::vector<TupleIdx>&& support) const;
 
 	//! Returns the support for the given atom
 	const TupleSupport& getTupleSupport(TupleIdx tuple) const;
@@ -87,13 +90,6 @@ public:
 	//!
 	void advance();
 	
-	//! Returns a pair "<b, it>" such that b is true iff the given atom is not already tracked by the RPG.
-	//! In that case, 'it' is an iterator that can be used as an insertion hint
-	//! If, on the other hand, b is false, 'it' is a valid iterator pointing to the atom support
-	std::pair<bool, SupportMap::iterator> getInsertionHint(TupleIdx tuple);
-	
-	//! The version with hint assumes that the atom needs to be inserted.
-	void add(TupleIdx tuple, const ActionID* action, std::vector<TupleIdx>&& support, SupportMap::iterator hint);
 	
 	//! Add an atom to the set of newly-reached atoms, only if it is indeed new.
 	void add(TupleIdx tuple, const ActionID* action, std::vector<TupleIdx>&& support);
@@ -105,6 +101,10 @@ public:
 	friend std::ostream& operator<<(std::ostream &os, const RPGIndex& data) { return data.print(os); }
 	std::ostream& print(std::ostream& os) const;
 
+protected:
+	//! Creates an atom support data structure with the given data and taking into account the current RPG layer
+	TupleSupport* createTupleSupport(const ActionID* action, std::vector<TupleIdx>&& support) const;
+	
 	void printAtoms(const std::vector<TupleIdx>& vector, std::ostream& os) const;
 };
 

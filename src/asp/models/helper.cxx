@@ -3,7 +3,7 @@
 
 #include <asp/models/helper.hxx>
 #include <problem.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <utils/printers/helper.hxx>
 #include <utils/printers/actions.hxx>
 #include <languages/fstrips/formulae.hxx>

@@ -4,7 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <problem_info.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <actions/action_id.hxx>
 #include <boost/units/detail/utility.hpp>
 

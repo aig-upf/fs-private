@@ -2,7 +2,7 @@
 #pragma once
 
 #include <aptk2/search/interfaces/det_state_model.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 
 namespace fs0 {
 

@@ -4,8 +4,7 @@
 
 #include <problem.hxx>
 #include <utils/loader.hxx>
-#include <actions/action_schema.hxx>
-#include <actions/ground_action.hxx>
+#include <actions/actions.hxx>
 #include <actions/grounding.hxx>
 #include <component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
