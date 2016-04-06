@@ -10,126 +10,111 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-class ActionSchema;
 class ApplicableActionSet;
 class ProblemInfo;
-class GroundAction;
 class Binding;
+
+//! All the data that fully characterizes a lifted action
+class ActionData {
+protected:
+	//! The ID of the original action schema (not to be confused with the ID of resulting fully-grounded actions)
+	unsigned _id;
+	
+	const std::string _name;
+	const Signature _signature;
+	const std::vector<std::string> _parameter_names;
+	const fs::Formula* _precondition;
+	const std::vector<const fs::ActionEffect*> _effects;	
+
+public:
+	ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names,
+			   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
+	
+	~ActionData();
+	
+	unsigned getId() const { return _id; }
+	const std::string& getName() const { return _name; }
+	const Signature& getSignature() const { return _signature; }
+	const std::vector<std::string>& getParameterNames() const { return _parameter_names; }
+	const fs::Formula* getPrecondition() const { return _precondition; }
+	const std::vector<const fs::ActionEffect*>& getEffects() const { return _effects; }
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const ActionData&  entity) { return entity.print(os); }
+	std::ostream& print(std::ostream& os) const;
+};
+
 
 //! A base interface for the different types of actions that the planners deals with:
 //! lifted and grounded actions
-class BaseAction {
+class ActionBase {
 protected:
-	//! The id that identifies the concrete action within the set of actions of the same type
-	//! (i.e. a grounded and a lifted action might have the same ID and yet be different entities)
-	unsigned _id;
+	//! The data of the action schema that has originated this action
+	const ActionData& _data;
+
+	//! The action binding (which will be an empty binding for fully-lifted actions, 
+	//! and a full binding for fully-grounded actions, all steps in between being possible).
+	const Binding _binding;
 	
-	//! The action preconditions  and effects
+	//! The action preconditions and effects, perhaps partially grounded
 	const fs::Formula* _precondition;
 	const std::vector<const fs::ActionEffect*> _effects;
 
 public:
-	typedef const BaseAction* cptr;
 	
-	BaseAction(unsigned id, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
-	virtual ~BaseAction();
+	ActionBase(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
+	virtual ~ActionBase();
 	
-	//! Returns the name of the action, e.g. 'move'
-	virtual const std::string& getName() const = 0;
+	const ActionData& getActionData() const { return _data; };
 	
-	unsigned getId() const { return _id; }
-	
-	//! Returns the full, grounded name of the action, e.g. 'move(b1, c2)'
-	virtual std::string fullname() const = 0;
-	
-	//! Returns the signature of the action
-	virtual const Signature& getSignature() const = 0;
-	
-	//! Return true iff the i-th action parameter is bound
-	virtual bool isBound(unsigned i) const = 0;
+	//! Some method redirections
+	unsigned getOriginId() const { return _data.getId(); }
+	const std::string& getName() const { return _data.getName(); }
+	const Signature& getSignature() const { return _data.getSignature(); }
+	const std::vector<std::string>& getParameterNames() const { return _data.getParameterNames(); }
 	
 	const fs::Formula* getPrecondition() const { return _precondition; }
-	
 	const std::vector<const fs::ActionEffect*>& getEffects() const { return _effects; }
 	
+	//!
+	const Binding& getBinding() const { return _binding; }
+	
+	//! Return true iff the i-th action parameter is bound
+	bool isBound(unsigned i) const { return _binding.binds(i); }
+	
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const BaseAction&  entity) { return entity.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const ActionBase&  entity) { return entity.print(os); }
 	virtual std::ostream& print(std::ostream& os) const;
 };
 
-
-class ActionSchema : public BaseAction {
-protected:
-	const std::string _name;
-	const Signature _signature;
-	const std::vector<std::string> _parameters;
-
+//! An action that can be partially grounded (or fully lifted)
+class PartiallyGroundedAction : public ActionBase {
 public:
-	typedef const ActionSchema* cptr;
-	ActionSchema(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameters,
-			     const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
-	
-	~ActionSchema() {}
-	
-	const std::string& getName() const { return _name; }
-	
-	const Signature& getSignature() const { return _signature; }
-	
-	const std::vector<std::string>& getParameters() const { return _parameters; }
-	
-	std::string fullname() const;
-	
-	bool isBound(unsigned i) const { return false; } // On an ActionSchema, all parameters are unbound.
-
-	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os) const;
-	
-	//! Process the action schema with a given parameter binding and return the corresponding GroundAction
-	//! A nullptr is returned if the action is detected to be statically non-applicable
-	GroundAction* bind(unsigned id, const Binding& binding, const ProblemInfo& info) const;
-	GroundAction* bind(const Binding& binding, const ProblemInfo& info) const;
-	
-	//! This processes in-place the schema to consolidate state variables, etc.
-	ActionSchema* process(const ProblemInfo& info) const;
+	PartiallyGroundedAction(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
+	~PartiallyGroundedAction() {}
 };
 
-class GroundAction : public BaseAction {
+
+//! A fully-grounded action can get an integer ID for more performant lookups
+class GroundAction : public ActionBase {
 protected:
-	//! The schema from which the action was grounded
-	const ActionSchema* _schema;
-	
-	//! The indexes of the action binding, if any.
-	const Binding _binding;
-	
+	//! The id that identifies the concrete action within the whole set of ground actions
+	unsigned _id;
+
 public:
-	typedef const GroundAction* cptr;
-	
 	//! Trait required by aptk::DetStateModel
 	typedef ActionIdx IdType;
 	typedef ApplicableActionSet ApplicableSet;
 
 	static const ActionIdx invalid_action_id;
 	
-	GroundAction(unsigned id, const ActionSchema* schema, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
-	~GroundAction() {}
+	GroundAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
+	~GroundAction();
 	
-	//! Returns the name of the action, e.g. 'move'
-	const std::string& getName() const;
-	
-	//! Returns the full, grounded name of the action, e.g. 'move(b1, c2)'
-	std::string fullname() const;
-	
-	bool isBound(unsigned i) const;
-	
-	//! Returns the signature of the action
-	const Signature& getSignature() const;
-	
-	//! Returns the concrete binding that created this action from its action schema
-	const Binding& getBinding() const { return _binding; }
-	
-	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os) const;
+	unsigned getId() const { return _id; }
 };
+
+
 
 
 

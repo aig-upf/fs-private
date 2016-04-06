@@ -3,7 +3,7 @@
 
 #include <constraints/gecode/handlers/base_handler.hxx>
 
-namespace fs0 { class BaseAction; class ActionID; }
+namespace fs0 { class ActionBase; class ActionID; }
 
 namespace fs0 { namespace language { namespace fstrips { class ActionEffect; }}}
 
@@ -17,7 +17,7 @@ public:
 	typedef BaseActionCSPHandler* ptr;
 
 	//! Constructor / Destructor
-	BaseActionCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
+	BaseActionCSPHandler(const ActionBase& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
 	virtual ~BaseActionCSPHandler() {}
 	
 	virtual void init(bool use_novelty_constraint);
@@ -28,12 +28,12 @@ public:
 	//! Initialize the value selector of the underlying CSPs
 	virtual void init_value_selector(const RPGData* bookkeeping) { init(bookkeeping);} // TODO - No need to have two different names for the same method
 	
-	const BaseAction& get_action() const { return _action; }
+	const ActionBase& get_action() const { return _action; }
 	
 	
 protected:
 	//! The index of the action managed by this manager
-	const BaseAction& _action;
+	const ActionBase& _action;
 	
 	//! The effects of the action that we want to take into account in the CSP (by default, all)
 	//! Note that we store a copy of the vector to facilitate creating subsets of effects to the subclasses.

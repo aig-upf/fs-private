@@ -68,7 +68,7 @@ long ConstrainedRPG::evaluate(const State& seed) {
 			for (unsigned manager_idx:_atom_achievers.at(atom_idx)) {
 				const EffectHandlerPtr& manager = _managers[manager_idx];
 				if (failure_cache[manager_idx]) {
-					FFDEBUG("heuristic", "Found cached unapplicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action().fullname() << "\"");
+					FFDEBUG("heuristic", "Found cached unapplicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
 					continue; // The effect CSP has already been instantiated and found unapplicable on this very same layer
 				}
 				
@@ -76,12 +76,12 @@ long ConstrainedRPG::evaluate(const State& seed) {
 					SimpleCSP* raw = manager->preinstantiate(layer);
 					if (!raw) { // We are instantiating the CSP for the first time in this layer and find that it is not applicable.
 						failure_cache[manager_idx] = true;
-						FFDEBUG("heuristic", "Effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action().fullname() << "\" inconsistent => not applicable");
+						FFDEBUG("heuristic", "Effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\" inconsistent => not applicable");
 						continue;
 					}
 					cache[manager_idx] = std::unique_ptr<SimpleCSP>(raw);
 				} else {
-					FFDEBUG("heuristic", "Found cached & applicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action().fullname() << "\"");
+					FFDEBUG("heuristic", "Found cached & applicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
 				}
 				
 				atom_supported = manager->find_atom_support(atom, seed, *cache[manager_idx], bookkeeping);

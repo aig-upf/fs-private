@@ -60,7 +60,7 @@ std::vector<std::string> SimpleModel::build_domain_rules(bool optimize) const {
 
 void SimpleModel::process_ground_action(const GroundAction& action, std::vector<std::string>& rules) const {
 	auto precondition = action.getPrecondition();
-	std::string action_name = normalize(fs0::print::action_name(action));
+	std::string action_name = normalize(fs0::print::action_header(action));
 	
 	if (!dynamic_cast<fs::Conjunction::cptr>(precondition)) { // TODO - Perform this only once
 		throw std::runtime_error("ASP heuristic available only for goals which are conjunctions of atoms");

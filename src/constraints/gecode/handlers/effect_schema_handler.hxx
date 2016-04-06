@@ -21,9 +21,9 @@ public:
 	
 	//! Factory method
 	using ActionSchemaCSPHandler::create;
-	static std::vector<std::shared_ptr<EffectSchemaCSPHandler>> create(const std::vector<const BaseAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<EffectSchemaCSPHandler>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	EffectSchemaCSPHandler(const BaseAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate);
+	EffectSchemaCSPHandler(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate);
 	 
 	~EffectSchemaCSPHandler();
 	

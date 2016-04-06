@@ -9,19 +9,17 @@
 namespace fs0 {
 
 
-/**
- * A simple iterator strategy to iterate over the actions applicable in a given state.
- */
+//! A simple iterator strategy to iterate over the actions applicable in a given state.
 class ApplicableActionSet {
 protected:
 	const ApplicabilityManager _actionManager;
 	
-	const std::vector<GroundAction::cptr>& _actions;
+	const std::vector<const GroundAction*>& _actions;
 	
 	const State& _state;
 	
 public:
-	ApplicableActionSet(const ApplicabilityManager& actionManager, const State& state, const std::vector<GroundAction::cptr>& actions) :
+	ApplicableActionSet(const ApplicabilityManager& actionManager, const State& state, const std::vector<const GroundAction*>& actions) :
 		_actionManager(actionManager), _actions(actions), _state(state)
 	{}
 	
@@ -29,7 +27,7 @@ public:
 		friend class ApplicableActionSet;
 		
 	protected:
-		Iterator(const State& state, const std::vector<GroundAction::cptr>& actions, const ApplicabilityManager& actionManager, unsigned currentIdx) :
+		Iterator(const State& state, const std::vector<const GroundAction*>& actions, const ApplicabilityManager& actionManager, unsigned currentIdx) :
 			_actionManager(actionManager),
 			_actions(actions),
 			_state(state),
@@ -40,7 +38,7 @@ public:
 
 		const ApplicabilityManager& _actionManager;
 		
-		const std::vector<GroundAction::cptr>& _actions;
+		const std::vector<const GroundAction*>& _actions;
 		
 		const State& _state;
 		

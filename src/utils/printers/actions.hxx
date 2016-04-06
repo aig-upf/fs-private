@@ -4,33 +4,56 @@
 #include <fs0_types.hxx>
 #include <ostream>
 
-namespace fs0 { class GroundAction; class ActionSchema; }
+namespace fs0 { class ActionData; class ActionBase; }
 
 namespace fs0 { namespace print {
 
-//! Prints only the name + binding of an action, e.g. "move(b1, c2)"
-class action_name {
+//! Print only the header (e.g. "move(b: block, to: place)") of a lifted action
+class action_data_name {
 	protected:
-		const GroundAction& _action;
+		const ActionData& _action;
 
 	public:
-		action_name(const GroundAction& action) : _action(action) {}
-		action_name(unsigned action_idx);
+		action_data_name(const ActionData& action) : _action(action) {}
 		
-		friend std::ostream& operator<<(std::ostream &os, const action_name& o) { return o.print(os); }
+		friend std::ostream& operator<<(std::ostream &os, const action_data_name& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
 
-//! Prints only the name + binding of an action schema, e.g. "move(?b, ?to)"
-class schema_name {
+//! Print a full lifted action data, including preconditions and effects
+class action_data {
 	protected:
-		const ActionSchema& _schema;
+		const ActionData& _action;
 
 	public:
-		schema_name(const ActionSchema& action) : _schema(action) {}
-		schema_name(unsigned schema_idx);
+		action_data(const ActionData& action) : _action(action) {}
 		
-		friend std::ostream& operator<<(std::ostream &os, const schema_name& o) { return o.print(os); }
+		friend std::ostream& operator<<(std::ostream &os, const action_data& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
+
+//! Print the header of a possibly partially grounded action (e.g. "move(b, ?to)")
+class action_header {
+	protected:
+		const ActionBase& _action;
+
+	public:
+		action_header(const ActionBase& action) : _action(action) {}
+		
+		friend std::ostream& operator<<(std::ostream &os, const action_header& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
+//! Print the header of a possibly partially grounded action (e.g. "move(b, ?to)")
+class full_action {
+	protected:
+		const ActionBase& _action;
+
+	public:
+		full_action(const ActionBase& action) : _action(action) {}
+		
+		friend std::ostream& operator<<(std::ostream &os, const full_action& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
 } } // namespaces

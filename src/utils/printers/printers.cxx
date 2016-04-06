@@ -11,8 +11,10 @@ namespace fs0 {
 
 
 void PlanPrinter::print(const std::vector<GroundAction::IdType>& plan, std::ostream& out) {
-	for (auto action:plan) {
-		out << print::action_name(action) << " " << std::endl;
+	const auto& actions = Problem::getInstance().getGroundActions();
+	for (auto action_id:plan) {
+		const GroundAction& action = *actions.at(action_id);
+		out << print::action_header(action) << " " << std::endl;
 	}
 }
 
@@ -35,9 +37,10 @@ void PlanPrinter::print_json(const std::vector<LiftedActionID>& plan, std::ostre
 
 void PlanPrinter::print_json(const std::vector<GroundAction::IdType>& plan, std::ostream& out) {
 	std::vector<std::string> names;
-	for (const auto& elem:plan) {
+	const auto& actions = Problem::getInstance().getGroundActions();
+	for (const auto& action_id:plan) {
 		std::ostringstream stream;
-		stream << print::action_name(elem);
+		stream << print::action_header(*actions.at(action_id));
 		names.push_back(stream.str());
 	}
 	print_json(names, out);

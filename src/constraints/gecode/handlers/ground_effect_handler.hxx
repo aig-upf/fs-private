@@ -3,6 +3,10 @@
 
 #include <constraints/gecode/handlers/base_action_handler.hxx>
 
+namespace fs0 {
+class GroundAction;
+}
+
 namespace fs0 { namespace gecode {
 
 //! A CSP modeling and solving the effect of an action effect on a certain RPG layer

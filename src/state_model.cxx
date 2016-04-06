@@ -28,13 +28,12 @@ State FS0StateModel::next(const State& state, const GroundAction& a) const {
 	return State(state, manager.computeEffects(state, a)); // Copy everything into the new state and apply the changeset
 }
 
-
 void FS0StateModel::print(std::ostream& os) const {
 	os << task;
 }
 
 GroundAction::ApplicableSet FS0StateModel::applicable_actions(const State& state) const {
-	return task.getApplicableActions(state);
+	return ApplicableActionSet(ApplicabilityManager(task.getStateConstraints()), state, task.getGroundActions());
 }
 
 } // namespaces

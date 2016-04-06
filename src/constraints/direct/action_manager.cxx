@@ -11,7 +11,7 @@
 
 namespace fs0 {
 
-std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(const std::vector<GroundAction::cptr>& actions) {
+std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(const std::vector<const GroundAction*>& actions) {
 	std::vector<std::shared_ptr<DirectActionManager>> managers;
 	managers.reserve(actions.size());
 	for (const auto action:actions) {

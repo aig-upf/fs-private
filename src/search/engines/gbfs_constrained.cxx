@@ -28,7 +28,7 @@ namespace fs0 { namespace engines {
 template <typename GecodeHeuristic, typename DirectHeuristic>
 std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::create(const Config& config, const FS0StateModel& model) const {
 	const Problem& problem = model.getTask();
-	const std::vector<GroundAction::cptr>& actions = problem.getGroundActions();
+	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
 	
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
@@ -45,8 +45,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
 			managers = GroundEffectCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-			const std::vector<const ActionSchema*>& schemata = problem.getActionSchemata();
-			std::vector<const BaseAction*> base_actions(schemata.begin(),schemata.end()); // Convert the vector to a vector of BaseActions
+			const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
 			managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
 			assert(false); // Currently disabled
@@ -115,7 +114,7 @@ Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectH
 }
 
 template <typename GecodeHeuristic, typename DirectHeuristic>
-Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::decide_action_manager_type(const std::vector<GroundAction::cptr>& actions) {
+Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::decide_action_manager_type(const std::vector<const GroundAction*>& actions) {
 	if (Config::instance().getCSPManagerType() == Config::CSPManagerType::Gecode) return Config::CSPManagerType::Gecode;
 	
 	// If at least one action requires gecode, we'll use gecode throughout

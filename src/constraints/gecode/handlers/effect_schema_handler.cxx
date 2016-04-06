@@ -15,22 +15,22 @@
 namespace fs0 { namespace gecode {
 
 
-std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::create(const std::vector<const BaseAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> handlers;
 	
-	for (const BaseAction* schema:schemata) {
+	for (const PartiallyGroundedAction* schema:schemata) {
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {
 			const fs::ActionEffect* effect = schema->getEffects().at(eff_idx);
 			auto handler = std::make_shared<EffectSchemaCSPHandler>(*schema, effect, tuple_index, approximate);
 			handler->init(novelty);
-			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << schema->fullname() << std::endl <<  *handler << std::endl);
+			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << *schema << std::endl <<  *handler << std::endl);
 			handlers.push_back(handler);
 		}
 	}
 	return handlers;
 }
 
-EffectSchemaCSPHandler::EffectSchemaCSPHandler(const BaseAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
+EffectSchemaCSPHandler::EffectSchemaCSPHandler(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
 	ActionSchemaCSPHandler(action, { effect }, tuple_index, approximate), _achievable_tuple_idx(INVALID_TUPLE)
 {}
 
@@ -84,7 +84,7 @@ ValueTuple EffectSchemaCSPHandler::index_tuple_indexes(const fs::ActionEffect* e
 
 void EffectSchemaCSPHandler::log() const {
 	assert(_effects.size() == 1);
-	FFDEBUG("heuristic", "Processing effect schema \"" << *get_effect() << " of action " << _action.fullname());
+	FFDEBUG("heuristic", "Processing effect schema \"" << *get_effect() << " of action " << _action);
 }
 
 const fs::ActionEffect* EffectSchemaCSPHandler::get_effect() const { 

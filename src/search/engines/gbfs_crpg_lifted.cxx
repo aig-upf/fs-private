@@ -21,8 +21,7 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 	
 	// The CSP handlers for applicable action iteration: we do not need novelty constraints (because they are instantiated on a standard state, not on a RPG layer),
 	// and we need full CSP resolution
-	const auto& schemata = problem.getActionSchemata();
-	std::vector<const BaseAction*> base_actions(schemata.begin(),schemata.end());
+	const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
 
 	model.set_handlers(ActionSchemaCSPHandler::create_derived(base_actions, problem.get_tuple_index(), false, false));
 	

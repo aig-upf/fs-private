@@ -102,8 +102,8 @@ void SearchUtils::report_stats(const Problem& problem) {
 	
 	std::cout << "Number of objects: " << problem.getProblemInfo().getNumObjects() << std::endl;
 	std::cout << "Number of state variables: " << problem.getProblemInfo().getNumVariables() << std::endl;
-	std::cout << "Number of action schemata: " << problem.getActionSchemata().size() << std::endl;
-	std::cout << "Number of ground actions: " << n_actions << std::endl;
+	std::cout << "Number of action schemata: " << problem.getActionData().size() << std::endl;
+	std::cout << "Number of (perhaps partially) ground actions: " << n_actions << std::endl;
 	
 	if (n_actions > 1000) {
 		std::cout << "WARNING: The number of ground actions (" << n_actions << ") is too high for our applicable action strategy to perform well." << std::endl;

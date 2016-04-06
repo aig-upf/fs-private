@@ -15,13 +15,13 @@
 namespace fs0 { namespace gecode {
 
 
-BaseActionCSPHandler::BaseActionCSPHandler(const BaseAction& action, const std::vector<fs::ActionEffect::cptr>& effects, const TupleIndex& tuple_index, bool approximate)
+BaseActionCSPHandler::BaseActionCSPHandler(const ActionBase& action, const std::vector<fs::ActionEffect::cptr>& effects, const TupleIndex& tuple_index, bool approximate)
 	: BaseCSPHandler(tuple_index, approximate), _action(action), _effects(effects), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
 {
 }
 
 void BaseActionCSPHandler::init(bool use_novelty_constraint) {
-	FDEBUG("translation", "Gecode Action Handler: processing action " << _action.fullname());
+	FDEBUG("translation", "Gecode Action Handler: processing action " << _action);
 	setup();
 	
 	createCSPVariables(use_novelty_constraint);
@@ -37,7 +37,7 @@ void BaseActionCSPHandler::init(bool use_novelty_constraint) {
 	
 	register_csp_constraints();
 
-	FDEBUG("translation", "Action " << _action.fullname() << " results in CSP handler:" << std::endl << *this);
+	FDEBUG("translation", "Action " << _action << " results in CSP handler:" << std::endl << *this);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
 	Gecode::SpaceStatus st = _base_csp.status();
@@ -166,7 +166,7 @@ void BaseActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cpt
 }
 
 void BaseActionCSPHandler::compute_support(SimpleCSP* csp, RPGData& rpg, const State& seed) const {
-	FFDEBUG("heuristic", "Computing full support for action " << _action.fullname());
+	FFDEBUG("heuristic", "Computing full support for action " << _action);
 	Gecode::DFS<SimpleCSP> engine(csp);
 	unsigned num_solutions = 0;
 	while (SimpleCSP* solution = engine.next()) {

@@ -25,11 +25,16 @@ public:
 	//! Default copy constructor
 	Binding(const Binding& other) = default;
 	
+	bool is_complete() const {
+		for (bool b:_set) {
+			if (!b) return false;
+		}
+		return true;
+	}
+	
 	//! (Only) if the binding is full, we can obtain the raw vector of integer values 
 	const std::vector<ObjectIdx>& get_full_binding() const {
-		for (bool b:_set) {
-			if (!b) throw std::runtime_error("Attempted to obtain a full binding from a partial binding");
-		}
+		if (!is_complete()) throw std::runtime_error("Attempted to obtain a full binding from a partial binding");
 		return _values;
 	}
 	
@@ -47,9 +52,9 @@ public:
 		_set[variable] = true;
 	}
 	
-	void unset(unsigned variable) { _set[variable] = false; }
-	
 	std::size_t size() const { return _values.size(); }
+
+	friend bool operator==(const Binding&, const Binding&);
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Binding& o) { return o.print(os); }
@@ -64,5 +69,10 @@ public:
 		return os;
 	}
 };
+
+//! Comparison operators
+inline bool operator==(const Binding& lhs, const Binding& rhs){ return lhs._set == rhs._set && lhs._values == rhs._values; }
+inline bool operator!=(const Binding& lhs, const Binding& rhs){ return !operator==(lhs, rhs); }
+
 
 } // namespaces

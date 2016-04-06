@@ -8,7 +8,7 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::create(const std::vector<const BaseAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	// Simply upcast the shared_ptrs
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> handlers;
 	for (const auto& element:create_derived(schemata, tuple_index, approximate, novelty)) {
@@ -17,7 +17,7 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::creat
 	return handlers;
 }
 
-std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::create_derived(const std::vector<const BaseAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> handlers;
 	
 	for (auto schema:schemata) {
@@ -30,7 +30,7 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 }
 
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate)
+ActionSchemaCSPHandler::ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate)
 :  BaseActionCSPHandler(action, effects, tuple_index, approximate)
 {}
 
@@ -67,10 +67,11 @@ const ActionID* ActionSchemaCSPHandler::get_action_id(const SimpleCSP* solution)
 }
 
 LiftedActionID* ActionSchemaCSPHandler::get_lifted_action_id(const SimpleCSP* solution) const {
-	return new LiftedActionID(&_action, build_binding_from_solution(solution));
+	// TODO - VERY UGLY
+	return new LiftedActionID(static_cast<const PartiallyGroundedAction*>(&_action), build_binding_from_solution(solution));
 }
 
 void ActionSchemaCSPHandler::log() const {
-	FFDEBUG("heuristic", "Processing action schema #" << _action.getId() << ": " << _action.fullname());
+	FFDEBUG("heuristic", "Processing action schema #" << _action.getId() << ": " << _action);
 }
 } } // namespaces

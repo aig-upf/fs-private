@@ -13,7 +13,7 @@
 namespace fs0 { namespace language { namespace fstrips { class Term; class AtomicFormula; class FluentHeadedNestedTerm; } }}
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { class GroundAction; class RPGData; class Binding; }
+namespace fs0 { class RPGData; class Binding; }
 
 namespace fs0 { namespace gecode {
 

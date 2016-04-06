@@ -45,7 +45,7 @@ long DirectCRPG::evaluate(const State& seed, const std::vector<ActionIdx>& white
 		for (unsigned idx:whitelist) {
 // 		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
 			const auto& manager = _managers[idx];
-			FFDEBUG("heuristic", "Processing ground action #" << idx << ": " << print::action_name(manager->getAction()));
+			FFDEBUG("heuristic", "Processing ground action #" << idx << ": " << print::action_header(manager->getAction()));
 			manager->process(idx, relaxed, bookkeeping);
 		}
 		

@@ -19,7 +19,7 @@ class DirectActionManager {
 public:
 	//! Factory methods
 	static std::shared_ptr<DirectActionManager> create(const GroundAction& action);
-	static std::vector<std::shared_ptr<DirectActionManager>> create(const std::vector<GroundAction::cptr>& actions);
+	static std::vector<std::shared_ptr<DirectActionManager>> create(const std::vector<const GroundAction*>& actions);
 
 	//! Returns true ifff the given action is supported by a direct manager
 	static bool is_supported(const GroundAction& action);

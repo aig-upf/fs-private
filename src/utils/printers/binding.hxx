@@ -21,6 +21,21 @@ class binding {
 		std::ostream& print(std::ostream& os) const;
 };
 
+class partial_binding {
+	protected:
+		const std::vector<std::string>& _parameter_names;
+		const Binding& _binding;
+		const Signature& _signature;
+		
+	public:
+		partial_binding(const std::vector<std::string>& parameter_names, const Binding& binding, const Signature& signature) : _parameter_names(parameter_names), _binding(binding), _signature(signature) {
+			assert(parameter_names.size() == binding.size());
+		}
+		
+		friend std::ostream& operator<<(std::ostream &os, const partial_binding& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
 class signature {
 	protected:
 		const std::vector<std::string>& _parameter_names;

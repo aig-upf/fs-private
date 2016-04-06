@@ -42,7 +42,7 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 		_features.push_back(feature);
 	}
 
-	for ( GroundAction::cptr action : problem.getGroundActions() ) {
+	for ( const GroundAction* action : problem.getGroundActions() ) {
 		ConditionSetFeature*  feature = new ConditionSetFeature;
 
 		// TODO Need to rethink that to do with indirect scopes and in particular with existentially quantified variables

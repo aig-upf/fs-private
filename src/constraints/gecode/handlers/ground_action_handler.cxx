@@ -6,7 +6,7 @@
 
 namespace fs0 { namespace gecode {
 	
-std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::create(const std::vector<GroundAction::cptr>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
@@ -25,11 +25,11 @@ GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const
 {}
 
 const ActionID* GroundActionCSPHandler::get_action_id(const SimpleCSP* solution) const {
-	return new PlainActionID(&_action);
+	return new PlainActionID(static_cast<const GroundAction*>(&_action)); // TODO Ugly
 }
 
 void GroundActionCSPHandler::log() const {
-	FFDEBUG("heuristic", "Processing action #" << _action.getId() << ": " << _action.fullname());
+	FFDEBUG("heuristic", "Processing action #" << _action.getId() << ": " << _action);
 }
 
 } } // namespaces

@@ -10,7 +10,7 @@ namespace fs0 {
 
 class GroundAction; class State; class Atom;
 
-//!A simple manager that only checks applicability of actions in a non-relaxed setting.
+//! A simple manager that only checks applicability of actions in a non-relaxed setting.
 class ApplicabilityManager {
 public:
 	ApplicabilityManager(const fs::Formula* state_constraints);

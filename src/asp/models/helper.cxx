@@ -16,7 +16,7 @@ using fs0::print::normalize;
 std::unordered_map<std::string, unsigned> ModelHelper::compute_action_index(const Problem& problem) {
 	std::unordered_map<std::string, unsigned> index;
 	for (const GroundAction* action:problem.getGroundActions()) {
-		std::string action_name = normalize(fs0::print::action_name(*action));
+		std::string action_name = normalize(fs0::print::action_header(*action));
 		index.insert(std::make_pair(action_name, action->getId()));
 	}
 	return index;

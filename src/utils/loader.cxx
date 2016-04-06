@@ -13,8 +13,8 @@
 #include <constraints/registry.hxx>
 #include <utils/printers/registry.hxx>
 #include <asp/lp_handler.hxx>
-#include "config.hxx"
-#include "tuple_index.hxx"
+#include <utils/config.hxx>
+#include <utils/tuple_index.hxx>
 
 
 namespace fs = fs0::language::fstrips;
@@ -27,8 +27,8 @@ void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_han
 	FINFO("main", "Loading initial state...");
 	auto init = loadState(data["init"]);
 	
-	FINFO("main", "Loading action schemata...");
-	auto schemata = loadActionSchemata(data["action_schemata"], info);
+	FINFO("main", "Loading action data...");
+	auto action_data = loadAllActionData(data["action_schemata"], info);
 	
 	FINFO("main", "Loading goal formula...");
 	auto goal = loadGroundedFormula(data["goal"], info);
@@ -37,16 +37,14 @@ void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_han
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
-	Problem* problem = new Problem(init, schemata, goal, sc, TupleIndex(info));
+	Problem* problem = new Problem(init, action_data, goal, sc, TupleIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	problem->setLPHandler(lp_handler);
 	
 	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
-	// Ground the actions
-	if (!Config::instance().doLiftedPlanning()) {
-		problem->setGroundActions(ActionGrounder::ground(problem->getActionSchemata(), info));
-	}
+	// Ground the actions intelligently
+	ActionGrounder::selective_grounding(action_data, info, *problem);
 }
 
 void Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
@@ -74,15 +72,15 @@ State* Loader::loadState(const rapidjson::Value& data) {
 }
 
 
-std::vector<ActionSchema::cptr> Loader::loadActionSchemata(const rapidjson::Value& data, const ProblemInfo& info) {
-	std::vector<ActionSchema::cptr> schemata;
+std::vector<const ActionData*> Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info) {
+	std::vector<const ActionData*> schemata;
 	for (unsigned i = 0; i < data.Size(); ++i) {
- 		schemata.push_back(loadActionSchema(data[i], i, info));
+ 		schemata.push_back(loadActionData(data[i], i, info));
 	}
 	return schemata;
 }
 
-ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, unsigned id, const ProblemInfo& info) {
+const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemInfo& info) {
 	const std::string& name = node["name"].GetString();
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
@@ -92,10 +90,7 @@ ActionSchema::cptr Loader::loadActionSchema(const rapidjson::Value& node, unsign
 	
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
 	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it
-	auto schema = new ActionSchema(id, name, signature, parameters, precondition, effects);
-	auto processed = schema->process(info);
-	delete schema;
-	return processed;
+	return ActionGrounder::process_action_data(ActionData(id, name, signature, parameters, precondition, effects), info);
 }
 
 fs::Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {

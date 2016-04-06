@@ -11,7 +11,6 @@ namespace fs0 {
 
 class Problem;
 class State;
-class ActionSchema;
 class GroundAction;
 
 

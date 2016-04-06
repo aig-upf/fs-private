@@ -3,7 +3,7 @@
 
 #include <constraints/gecode/handlers/base_action_handler.hxx>
 
-namespace fs0 { class LiftedActionID; class ActionSchema; }
+namespace fs0 { class LiftedActionID; class PartiallyGroundedAction; }
 
 namespace fs0 { namespace language { namespace fstrips { class ActionEffect; }}}
 namespace fs = fs0::language::fstrips;
@@ -17,11 +17,11 @@ public:
 	typedef ActionSchemaCSPHandler* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const BaseAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 	//! HACK
-	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const BaseAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const BaseAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
+	ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
 	virtual ~ActionSchemaCSPHandler() {}
 	
 	virtual void init(bool use_novelty_constraint);

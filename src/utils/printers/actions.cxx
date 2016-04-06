@@ -1,23 +1,37 @@
 
+#include <problem.hxx>
+#include <problem_info.hxx>
+#include <languages/fstrips/language.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/printers/binding.hxx>
 #include <actions/actions.hxx>
-#include <problem.hxx>
-#include <problem_info.hxx>
+
 
 namespace fs0 { namespace print {
 
-action_name::action_name(unsigned action_idx) : action_name(*Problem::getInstance().getGroundActions().at(action_idx)) {}
-
-std::ostream& action_name::print(std::ostream& os) const {
-	os << _action.getName() << "(" << print::binding(_action.getBinding(), _action.getSignature()) << ")";
+std::ostream& action_data_name::print(std::ostream& os) const {
+	os << _action.getName() << "(" << print::signature(_action.getParameterNames(), _action.getSignature()) << ")";
 	return os;
 }
 
-schema_name::schema_name(unsigned schema_idx) : schema_name(*Problem::getInstance().getActionSchemata().at(schema_idx)) {}
+std::ostream& action_data::print(std::ostream& os) const {
+	os << action_data_name(_action) << std::endl;
+	os << "\t" << "Precondition:" << *_action.getPrecondition() << std::endl;
+	os << "\t" << "Effects:" << std::endl;
+	for (auto elem:_action.getEffects()) os << "\t\t" << *elem << std::endl;
+	return os;
+}
 
-std::ostream& schema_name::print(std::ostream& os) const {
-	os << _schema.getName() << "(" << print::signature(_schema.getParameters(), _schema.getSignature()) << ")" << std::endl;
+std::ostream& action_header::print(std::ostream& os) const {
+	os << _action.getName() << "(" << print::partial_binding(_action.getParameterNames(), _action.getBinding(), _action.getSignature()) << ")";
+	return os;
+}
+
+std::ostream& full_action::print(std::ostream& os) const {
+	os << action_header(_action) << std::endl;
+	os << "\t" << "Precondition:" << *_action.getPrecondition() << std::endl;
+	os << "\t" << "Effects:" << std::endl;
+	for (auto elem:_action.getEffects()) os << "\t\t" << *elem << std::endl;
 	return os;
 }
 

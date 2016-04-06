@@ -11,27 +11,32 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-class ActionSchema; class GroundAction; class State; class FormulaInterpreter;
-class ApplicableActionSet; class ProblemInfo;
+class State;
+class FormulaInterpreter;
+class ProblemInfo;
+class ActionData;
+class ActionBase;
+class PartiallyGroundedAction;
+class GroundAction;
 
 class Problem {
 public:
 
-	Problem(State* init, const std::vector<const ActionSchema*>& schemata, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index);
+	Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index);
 	~Problem();
 
 	//! Get the initial state of the problem
 	const State& getInitialState() const { return *_init; }
 
 	//! Get the set of action schemata of the problem
-	const std::vector<const ActionSchema*>& getActionSchemata() const { return _schemata; }
+	const std::vector<const ActionData*>& getActionData() const { return _action_data; }
 	
 	//! Get the set of ground actions of the problem
 	const std::vector<const GroundAction*>& getGroundActions() const { return _ground; }
 	void setGroundActions(std::vector<const GroundAction*>&& ground) { _ground = std::move(ground); }
 	
-	//! Get an iterator on the set of actions that are applicable in the given state
-	ApplicableActionSet getApplicableActions(const State& s) const;
+	const std::vector<const PartiallyGroundedAction*>& getPartiallyGroundedActions() const { return _partials; }
+	void setPartiallyGroundedActions(std::vector<const PartiallyGroundedAction*>&& actions) { _partials = std::move(actions); }
 	
 	//! Get the problem's goal formula
 	const fs::Formula* getGoalConditions() const { return _goal_formula; }
@@ -83,11 +88,13 @@ protected:
 	//! The initial state of the problem
 	const std::unique_ptr<State> _init;
 
-	// The set of action schemata
-	const std::vector<const ActionSchema*> _schemata;
+	const std::vector<const ActionData*> _action_data;
 	
 	// The set of grounded actions of the problem
 	std::vector<const GroundAction*> _ground;
+	
+	// The possible set of partially grounded actions of the problem
+	std::vector<const PartiallyGroundedAction*> _partials;
 	
 	//! Pointers to the goal and state constraints formulas. This class owns the pointers.
 	const fs::Formula* _state_constraint_formula;

@@ -23,7 +23,7 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, tuple_index, eff_idx, approximate);
 			handler->init(novelty);
 			managers.push_back(handler);
-			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_name(*action) << std::endl <<  *handler << std::endl);
+			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
 		}
 	}
 	return managers;
@@ -39,11 +39,11 @@ void GroundEffectCSPHandler::init(bool use_novelty_constraint) {
 }
 
 void GroundEffectCSPHandler::log() const {
-	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" of action " << _action.fullname());
+	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" of action " << _action);
 }
 
 const ActionID* GroundEffectCSPHandler::get_action_id(const SimpleCSP* solution) const {
-	return new PlainActionID(&_action);
+	return new PlainActionID(static_cast<const GroundAction*>(&_action)); // TODO Ugly
 }
 
 SimpleCSP* GroundEffectCSPHandler::preinstantiate(const GecodeRPGLayer& layer) const {
