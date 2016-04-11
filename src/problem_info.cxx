@@ -68,7 +68,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 	
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		unsigned id = variableNames.size();
-		assert(data[i]["id"].GetInt() == id); // Check values are decoded in the proper order
+		assert(data[i]["id"].GetInt() > 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == id); // Check values are decoded in the proper order
 		
 		const std::string type(data[i]["type"].GetString());
 		const std::string name(data[i]["name"].GetString());
@@ -151,7 +151,7 @@ void ProblemInfo::loadObjectIndex(const rapidjson::Value& data) {
 	assert(objectNames.empty());
 	
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		assert(data[i]["id"].GetInt() == objectNames.size()); // Check values are decoded in the proper order
+		assert(data[i]["id"].GetInt() > 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == objectNames.size()); // Check values are decoded in the proper order
 		const std::string& name = data[i]["name"].GetString();
 		objectIds.insert(std::make_pair(name, objectNames.size()));
 		objectNames.push_back(name);
