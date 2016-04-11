@@ -20,7 +20,8 @@ public:
 	BaseActionCSPHandler(const ActionBase& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
 	virtual ~BaseActionCSPHandler() {}
 	
-	virtual void init(bool use_novelty_constraint);
+	//! Returns false iff the induced CSP is inconsistent, i.e. the action is not applicable
+	virtual bool init(bool use_novelty_constraint);
 
 	//!
 	virtual void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const;

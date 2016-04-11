@@ -20,7 +20,7 @@ BaseActionCSPHandler::BaseActionCSPHandler(const ActionBase& action, const std::
 {
 }
 
-void BaseActionCSPHandler::init(bool use_novelty_constraint) {
+bool BaseActionCSPHandler::init(bool use_novelty_constraint) {
 	FDEBUG("translation", "Gecode Action Handler: processing action " << _action);
 	setup();
 	
@@ -41,10 +41,10 @@ void BaseActionCSPHandler::init(bool use_novelty_constraint) {
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
 	Gecode::SpaceStatus st = _base_csp.status();
-	_unused(st);
-	assert(st != Gecode::SpaceStatus::SS_FAILED); // This should never happen, as it means that the action is (statically) unapplicable.
+	if (st == Gecode::SpaceStatus::SS_FAILED) return false;
 	
-	index_scopes(); // This needs to be _after_ the CSP variable registration	
+	index_scopes(); // This needs to be _after_ the CSP variable registration
+	return true;
 }
 
 

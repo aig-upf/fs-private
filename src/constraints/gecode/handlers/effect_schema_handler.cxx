@@ -37,9 +37,12 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 				}
 				
 				auto handler = std::make_shared<EffectSchemaCSPHandler>(*flattened, flattened->getEffects().at(eff_idx), tuple_index, approximate);
-				handler->init(novelty);
-				FDEBUG("main", "Smart grounding of effect \"" << *effect << " results in partially grounded action " << *flattened);
-				handlers.push_back(handler);
+				if (handler->init(novelty)) {
+					FDEBUG("main", "Smart grounding of effect \"" << *effect << " results in partially grounded action " << *flattened);
+					handlers.push_back(handler);
+				} else {
+					FDEBUG("main", "Smart grounding of effect \"" << *effect << " results in non-applicable CSP");
+				}
 			}
 		}
 	}
@@ -59,8 +62,8 @@ EffectSchemaCSPHandler::~EffectSchemaCSPHandler() {
 	delete &_action;
 }
 
-void EffectSchemaCSPHandler::init(bool use_novelty_constraint) {
-	ActionSchemaCSPHandler::init(use_novelty_constraint);
+bool EffectSchemaCSPHandler::init(bool use_novelty_constraint) {
+	if (!ActionSchemaCSPHandler::init(use_novelty_constraint)) return false;
 	
 	_lhs_symbol = index_lhs_symbol(get_effect());
 	_rhs_variable = _translator.resolveVariableIndex(get_effect()->rhs(), CSPVariableType::Input);
@@ -69,6 +72,8 @@ void EffectSchemaCSPHandler::init(bool use_novelty_constraint) {
 
 	// Register all fluent symbols involved
 	_tuple_indexes = _translator.index_fluents(_all_terms);
+	
+	return true;
 }
 
 TupleIdx EffectSchemaCSPHandler::detect_achievable_tuple() const {

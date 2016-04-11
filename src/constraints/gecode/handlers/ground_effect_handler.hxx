@@ -19,7 +19,7 @@ public:
 	 
 	~GroundEffectCSPHandler() {}
 	
-	virtual void init(bool use_novelty_constraint);
+	bool init(bool use_novelty_constraint) override;
 	
 	const fs::ActionEffect* get_effect() const { 
 		assert(_effects.size() == 1);

@@ -35,9 +35,12 @@ ActionSchemaCSPHandler::ActionSchemaCSPHandler(const PartiallyGroundedAction& ac
 {}
 
 
-void ActionSchemaCSPHandler::init(bool use_novelty_constraint) {
-	BaseActionCSPHandler::init(use_novelty_constraint);
-	index_parameters();
+bool ActionSchemaCSPHandler::init(bool use_novelty_constraint) {
+	if (BaseActionCSPHandler::init(use_novelty_constraint)) {
+		index_parameters();
+		return true;
+	}
+	return false;
 }
 
 

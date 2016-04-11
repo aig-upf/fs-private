@@ -21,9 +21,12 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::creat
 		
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
 			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, tuple_index, eff_idx, approximate);
-			handler->init(novelty);
-			managers.push_back(handler);
-			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
+			if (handler->init(novelty)) {
+				managers.push_back(handler);
+				FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
+			} else {
+				FDEBUG("main", "CSP for action effect " << action->getEffects().at(eff_idx) << " is inconsistent ==> the action is not applicable");
+			}
 		}
 	}
 	return managers;
@@ -33,9 +36,10 @@ GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, const
 	BaseActionCSPHandler(action, { action.getEffects().at(effect_idx) }, tuple_index, approximate)
 {}
 
-void GroundEffectCSPHandler::init(bool use_novelty_constraint) {
-	BaseActionCSPHandler::init(use_novelty_constraint);
+bool GroundEffectCSPHandler::init(bool use_novelty_constraint) {
+	if (!BaseActionCSPHandler::init(use_novelty_constraint)) return false;
 	_lhs_subterm_variables = index_lhs_subterms();
+	return true;
 }
 
 void GroundEffectCSPHandler::log() const {

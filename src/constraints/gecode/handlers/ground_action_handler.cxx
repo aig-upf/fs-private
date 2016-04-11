@@ -12,9 +12,12 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
 		// auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty); std::cout << *x << std::endl;
 		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], tuple_index, approximate);
-		manager->init(novelty);
-		FDEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
-		managers.push_back(manager);
+		if (manager->init(novelty)) {
+			FDEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
+			managers.push_back(manager);
+		} else {
+			FDEBUG("main", "CSP for action " << *actions[idx] << " is inconsistent ==> the action is not applicable");
+		}
 	}
 	return managers;
 }

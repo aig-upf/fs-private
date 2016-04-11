@@ -24,7 +24,7 @@ public:
 	ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
 	virtual ~ActionSchemaCSPHandler() {}
 	
-	virtual void init(bool use_novelty_constraint);
+	bool init(bool use_novelty_constraint) override;
 
 	
 	//! Return the (Lifted) ActionID corresponding to the given solution
