@@ -16,6 +16,7 @@
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <actions/applicable_action_set.hxx>
 #include <actions/actions.hxx>
+#include <languages/fstrips/formulae.hxx>
 
 
 using namespace fs0::gecode;

@@ -104,7 +104,7 @@ void LogicalComponentRegistry::add(const std::type_info& type, const DirectFormu
 	if (!res.second) throw new std::runtime_error("Duplicate registration of formula translator for class " + print::type_info_name(type));
 }
 
-void LogicalComponentRegistry::add(const std::type_info& type, EffectTranslator::cptr translator) {
+void LogicalComponentRegistry::add(const std::type_info& type, const EffectTranslator* translator) {
 	auto res = _direct_effect_translators.insert(std::make_pair(std::type_index(type), translator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of effect translator for class " + print::type_info_name(type));	
 }
@@ -138,7 +138,7 @@ DirectConstraint* LogicalComponentRegistry::instantiate_direct_constraint(const 
 	return it->second(formula);
 }
 
-EffectTranslator::cptr LogicalComponentRegistry::getDirectEffectTranslator(const fs::Term& term) const {
+const EffectTranslator* LogicalComponentRegistry::getDirectEffectTranslator(const fs::Term& term) const {
 	auto it = _direct_effect_translators.find(std::type_index(typeid(term)));
 	if (it == _direct_effect_translators.end()) return nullptr;
 	return it->second;

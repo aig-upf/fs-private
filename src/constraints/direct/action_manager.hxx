@@ -2,10 +2,10 @@
 #pragma once
 
 #include <constraints/direct/csp_handler.hxx>
-#include <atom.hxx>
 
 namespace fs0 {
 
+class Atom;
 class GroundAction;
 class RPGData;
 class ActionID;
@@ -57,7 +57,7 @@ protected:
 	const DirectCSPHandler _handler;
 	
 	//!
-	void completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const;
+	void completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, std::shared_ptr<std::vector<Atom>> support) const;
 	
 	//! Extracts all the (direct) state variables that are relevant to the action
 	VariableIdxVector extractAllRelevant() const;

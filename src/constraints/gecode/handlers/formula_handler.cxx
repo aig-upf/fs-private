@@ -6,6 +6,7 @@
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
+#include <utils/binding.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <state.hxx>
 

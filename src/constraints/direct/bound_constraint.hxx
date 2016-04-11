@@ -2,8 +2,6 @@
 #pragma once
 
 #include <constraints/direct/constraint.hxx>
-#include <constraints/direct/effect.hxx>
-#include <constraints/direct/compiled.hxx>
 
 
 namespace fs0 {
@@ -12,6 +10,7 @@ class ProblemInfo;
 class UnaryDirectEffect;
 class BinaryDirectEffect;
 class GroundAction;
+class DirectEffect;
 
 
 /**
@@ -35,9 +34,7 @@ public:
 
 	bool isSatisfied(ObjectIdx o) const;
 	
-	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const {
-		return new CompiledUnaryConstraint(*this);
-	}
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const override;
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -62,9 +59,7 @@ public:
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const;
 	
-	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const {
-		return new CompiledBinaryConstraint(*this, problemInfo);
-	}
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const override;
 	
 	std::ostream& print(std::ostream& os) const;
 };

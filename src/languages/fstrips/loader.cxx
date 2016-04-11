@@ -12,7 +12,7 @@ AtomicFormula::cptr Loader::parseAtomicFormula(const rapidjson::Value& tree, con
 	
 	if (term_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
-		std::vector<Term::cptr> subterms = parseTermList(tree["elements"], info);
+		std::vector<const Term*> subterms = parseTermList(tree["elements"], info);
 		
 		// TODO - This is a temporary hack to parse predicates 'p(x)' as if they were
 		// equality predicates 'p(x) = 1' with 'p' being a binary function.
@@ -50,7 +50,7 @@ Formula::cptr Loader::parseFormula(const rapidjson::Value& tree, const ProblemIn
 		if (!subformula_conjunction) {
 			throw std::runtime_error("Only existentially quantified conjunctions are supported so far");
 		}
-		std::vector<BoundVariable> variables = parseVariables(tree["variables"], info);
+		std::vector<const BoundVariable*> variables = parseVariables(tree["variables"], info);
 		return new ExistentiallyQuantifiedFormula(variables, subformula_conjunction);
 	
 		
@@ -63,20 +63,20 @@ Formula::cptr Loader::parseFormula(const rapidjson::Value& tree, const ProblemIn
 	throw std::runtime_error("Unknown formula type " + formula_type);
 }
 
-std::vector<BoundVariable> Loader::parseVariables(const rapidjson::Value& tree, const ProblemInfo& info) {
-	std::vector<BoundVariable> list;
+std::vector<const BoundVariable*> Loader::parseVariables(const rapidjson::Value& tree, const ProblemInfo& info) {
+	std::vector<const BoundVariable*> list;
 	for (unsigned i = 0; i < tree.Size(); ++i) {
 		const rapidjson::Value& node = tree[i];
 		unsigned id = node[0].GetUint();
 // 		std::string name = node[1].GetString();
 		std::string type_name = node[2].GetString();
 		TypeIdx type = info.getTypeId(type_name);
-		list.push_back(BoundVariable(id, type));
+		list.push_back(new BoundVariable(id, type));
 	}
 	return list;
 }
 
-Term::cptr Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& info) {
+const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& info) {
 	std::string term_type = tree["type"].GetString();
 	
 	if (term_type == "constant") {
@@ -87,26 +87,26 @@ Term::cptr Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& in
 		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["typename"].GetString()));
 	} else if (term_type == "function") {
 		std::string symbol = tree["symbol"].GetString();
-		std::vector<Term::cptr> subterms = parseTermList(tree["subterms"], info);
+		std::vector<const Term*> subterms = parseTermList(tree["subterms"], info);
 		return NestedTerm::create(symbol, subterms);
 	} else throw std::runtime_error("Unknown node type " + term_type);
 }
 
-std::vector<Term::cptr> Loader::parseTermList(const rapidjson::Value& tree, const ProblemInfo& info) {
-	std::vector<Term::cptr> list;
+std::vector<const Term*> Loader::parseTermList(const rapidjson::Value& tree, const ProblemInfo& info) {
+	std::vector<const Term*> list;
 	for (unsigned i = 0; i < tree.Size(); ++i) {
 		list.push_back(parseTerm(tree[i], info));
 	}
 	return list;
 }
 
-ActionEffect::cptr Loader::parseEffect(const rapidjson::Value& tree, const ProblemInfo& info) {
+const ActionEffect* Loader::parseEffect(const rapidjson::Value& tree, const ProblemInfo& info) {
 	assert(tree.Size() == 2);
 	return new ActionEffect(parseTerm(tree[0], info), parseTerm(tree[1], info));
 }
 
-std::vector<ActionEffect::cptr> Loader::parseEffectList(const rapidjson::Value& tree, const ProblemInfo& info) {
-	std::vector<ActionEffect::cptr> list;
+std::vector<const ActionEffect*> Loader::parseEffectList(const rapidjson::Value& tree, const ProblemInfo& info) {
+	std::vector<const ActionEffect*> list;
 	for (unsigned i = 0; i < tree.Size(); ++i) {
 		list.push_back(parseEffect(tree[i], info));
 	}

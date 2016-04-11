@@ -2,10 +2,12 @@
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/utils.hxx>
+#include "terms.hxx"
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>
 #include <utils/logging.hxx>
+#include <utils/binding.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -31,7 +33,10 @@ std::vector<const AtomicFormula*> Formula::all_atoms() const {
 	return Utils::filter_by_type<AtomicFormula::cptr>(all_formulae());
 }
 
+bool Formula::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
+bool Formula::interpret(const State& state) const  { return interpret(state, Binding()); }
 	
+
 std::ostream& Formula::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
 
 unsigned AtomicFormula::nestedness() const {
@@ -40,6 +45,10 @@ unsigned AtomicFormula::nestedness() const {
 	return max;
 }
 
+AtomicFormula::~AtomicFormula() {
+	for (const auto ptr:_subterms) delete ptr;
+}
+	
 std::vector<Term::cptr> AtomicFormula::all_terms() const {
 	std::vector<Term::cptr> res;
 	for (Term::cptr term:_subterms) {
@@ -143,6 +152,10 @@ std::vector<Formula::cptr> Conjunction::all_formulae() const {
 	return res;
 }
 
+ExistentiallyQuantifiedFormula::ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula& other) :
+_variables(Utils::clone(other._variables)), _subformula(other._subformula->clone())
+{}
+
 std::vector<Formula::cptr> ExistentiallyQuantifiedFormula::all_formulae() const {
 	std::vector<Formula::cptr> res(1, this);
 	auto tmp = _subformula->all_formulae();
@@ -152,8 +165,8 @@ std::vector<Formula::cptr> ExistentiallyQuantifiedFormula::all_formulae() const 
 
 Formula::cptr ExistentiallyQuantifiedFormula::bind(const Binding& binding, const ProblemInfo& info) const {
 	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
-	for (const BoundVariable& var:_variables) {
-		if (binding.binds(var.getVariableId())) throw std::runtime_error("Wrong binding - Duplicated variable");
+	for (const BoundVariable* var:_variables) {
+		if (binding.binds(var->getVariableId())) throw std::runtime_error("Wrong binding - Duplicated variable");
 	}
 	// TODO Check if the binding is a complete binding and thus we can directly return the (variable-free) conjunction 
 	// TODO Redesign this mess
@@ -169,8 +182,8 @@ Formula::cptr ExistentiallyQuantifiedFormula::bind(const Binding& binding, const
 //! Prints a representation of the object to the given stream.
 std::ostream& ExistentiallyQuantifiedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << "Exists ";
-	for (const BoundVariable& var:_variables) {
-		os << var << ": " << info.getTypename(var.getType()) << ", ";
+	for (const BoundVariable* var:_variables) {
+		os << *var << ": " << info.getTypename(var->getType()) << ", ";
 	}
 	os << "(" << *_subformula << ")";
 	return os;
@@ -192,11 +205,11 @@ bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, const Bi
 	if (i == _variables.size()) return _subformula->interpret(assignment, binding);
 	
 	const ProblemInfo& info = Problem::getInfo();
-	BoundVariable variable = _variables.at(i);
+	const BoundVariable* variable = _variables.at(i);
 	Binding copy(binding);
 	//! Otherwise, iterate through all possible assignments to the currently analyzed variable 'i'
-	for (ObjectIdx elem:info.getTypeObjects(variable.getType())) {
-		copy.set(variable.getVariableId(), elem);
+	for (ObjectIdx elem:info.getTypeObjects(variable->getType())) {
+		copy.set(variable->getVariableId(), elem);
 		if (interpret_rec(assignment, copy, i + 1)) return true;
 	}
 	return false;

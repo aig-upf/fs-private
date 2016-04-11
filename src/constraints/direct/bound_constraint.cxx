@@ -26,6 +26,11 @@ std::ostream& UnaryDomainBoundsConstraint::print(std::ostream& os) const {
 	return os;
 }
 
+DirectConstraint* UnaryDomainBoundsConstraint::compile(const ProblemInfo& problemInfo) const {
+	return new CompiledUnaryConstraint(*this);
+}
+	
+
 
 BinaryDomainBoundsConstraint::BinaryDomainBoundsConstraint(const BinaryDirectEffect* effect, const ProblemInfo& problemInfo) :
 	BinaryDirectConstraint(effect->getScope(), {}), _problemInfo(problemInfo), _effect(effect)
@@ -33,6 +38,10 @@ BinaryDomainBoundsConstraint::BinaryDomainBoundsConstraint(const BinaryDirectEff
 
 bool BinaryDomainBoundsConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 		return _effect->applicable(o1, o2) &&  _problemInfo.checkValueIsValid(_effect->apply(o1, o2));
+}
+
+DirectConstraint* BinaryDomainBoundsConstraint::compile(const ProblemInfo& problemInfo) const {
+	return new CompiledBinaryConstraint(*this, problemInfo);
 }
 
 void BoundsConstraintsGenerator::generate(const GroundAction& action, const std::vector<const DirectEffect*>& effects, std::vector<DirectConstraint*>& constraints) {

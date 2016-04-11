@@ -3,6 +3,7 @@
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <constraints/direct/translators/translator.hxx>
 #include <constraints/direct/bound_constraint.hxx>
+#include "compiled.hxx"
 #include <utils/projections.hxx>
 #include <utils/logging.hxx>
 #include <languages/fstrips/scopes.hxx>

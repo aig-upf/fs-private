@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
 #include <constraints/filtering.hxx>
 #include <constraints/direct/component.hxx>
 

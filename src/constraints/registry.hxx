@@ -47,7 +47,7 @@ public:
 	void add(const std::type_info& type, const DirectFormulaTranslator& translator);
 	
 	//! Add a Direct effect translator for effects with RHS of the given type
-	void add(const std::type_info& type, EffectTranslator::cptr translator);
+	void add(const std::type_info& type, const EffectTranslator* translator);
 	
 	//! Add a Gecode Term translator for the given type to the registry
 	void add(const std::type_info& type, const gecode::TermTranslator::cptr translator);
@@ -61,7 +61,7 @@ public:
 	
 	DirectConstraint* instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
 	
-	EffectTranslator::cptr getDirectEffectTranslator(const fs::Term& term) const;
+	const EffectTranslator* getDirectEffectTranslator(const fs::Term& term) const;
 	
 	gecode::TermTranslator::cptr getGecodeTranslator(const fs::Term& term) const;
 	
@@ -84,7 +84,7 @@ protected:
 	DirectTranslatorsTable _direct_formula_translators;
 	
 	
-	std::unordered_map<std::type_index, EffectTranslator::cptr> _direct_effect_translators;
+	std::unordered_map<std::type_index, const EffectTranslator*> _direct_effect_translators;
 	
 	std::unordered_map<std::type_index, gecode::TermTranslator::cptr> _gecode_term_translators;
 	std::unordered_map<std::type_index, gecode::FormulaTranslator::cptr> _gecode_formula_translators;

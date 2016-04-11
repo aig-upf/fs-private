@@ -2,10 +2,9 @@
 #pragma once
 
 #include <fs0_types.hxx>
-#include <atom.hxx>
 #include <constraints/direct/csp_handler.hxx>
-#include <languages/fstrips/language.hxx>
 
+namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
 namespace fs = fs0::language::fstrips;
 
 
@@ -13,6 +12,7 @@ namespace fs0 {
 
 class State;
 class RelaxedState;
+class Atom;
 
 /**
  * 
@@ -20,7 +20,7 @@ class RelaxedState;
 class DirectRPGBuilder {
 public:
 	//! Factory method to create Direct RPG builders
-	static std::shared_ptr<DirectRPGBuilder> create(const fs::Formula::cptr goal_formula, const fs::Formula::cptr state_constraints);
+	static std::shared_ptr<DirectRPGBuilder> create(const fs::Formula* goal_formula, const fs::Formula* state_constraints);
 	
 	DirectRPGBuilder(std::vector<DirectConstraint*>&& goalConstraints, std::vector<DirectConstraint*>&& stateConstraints);
 	~DirectRPGBuilder();

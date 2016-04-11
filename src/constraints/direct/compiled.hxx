@@ -1,12 +1,14 @@
 
 #pragma once
 
-#include <constraints/direct/constraint.hxx>
-#include <constraints/direct/effect.hxx>
-#include <boost/container/flat_map.hpp>
 #include <unordered_map>
 #include <set>
 #include <functional>
+#include <boost/container/flat_map.hpp>
+
+#include <constraints/direct/constraint.hxx>
+#include <constraints/direct/effect.hxx>
+
 
 namespace fs0 { namespace language { namespace fstrips { class Term; } } }
 namespace fs = fs0::language::fstrips;

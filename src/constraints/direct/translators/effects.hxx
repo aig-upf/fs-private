@@ -1,18 +1,20 @@
 
 #pragma once
 
-#include <languages/fstrips/language.hxx>
-#include <constraints/direct/effect.hxx>
+namespace fs0 { namespace language { namespace fstrips {
 
+class Term;
+class StateVariable; 
 
+}}}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
+class DirectEffect;
+
 class EffectTranslator {
 public:
-	typedef const EffectTranslator* cptr;
-	
 	EffectTranslator() {}
 	virtual ~EffectTranslator() {}
 

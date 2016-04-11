@@ -41,6 +41,16 @@ public:
 		return std::vector<T>(unique.cbegin(), unique.cend());
 	}
 	
+	//! Clones a vector of elements possessing a clone method.
+	template <typename T>
+	static std::vector<T> clone(const std::vector<T>& vector) {
+		std::vector<T> cloned;
+		for (const auto* element:vector) {
+			cloned.push_back(element->clone());
+		}
+		return cloned;
+	}
+
 	//! Returns true iff the intersection of the first container (first1-last1) with the second container (first2-last2) is not empty.
 	//! Complexity: O(min(n1, n2)), where n1 and n2 are the sizes of the first and second containers.
 	template<class InputIt1, class InputIt2>
