@@ -89,5 +89,15 @@ long DirectCRPG::computeHeuristic(const State& seed, const RelaxedState& state, 
 	} else return -1;
 }
 
+
+
+DirectCHMax::DirectCHMax(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder)
+	: DirectCRPG(problem, std::move(managers), std::move(builder))
+{}
+
+long DirectCHMax::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping) {
+		if (this->_builder->isGoal(state)) return bookkeeping.getCurrentLayerIdx();
+		return -1;
+}
 } // namespaces
 

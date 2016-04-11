@@ -2,7 +2,6 @@
 #include <asp/asp_rpg.hxx>
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
-#include <heuristics/relaxed_plan/direct_chmax.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/asp.hxx>
 

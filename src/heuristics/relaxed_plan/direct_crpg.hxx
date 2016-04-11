@@ -42,4 +42,15 @@ protected:
 	const std::shared_ptr<DirectRPGBuilder> _builder;
 };
 
+//! The h_max version
+class DirectCHMax : public DirectCRPG {
+public:
+
+ 	DirectCHMax(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
+	virtual ~DirectCHMax() {}
+	
+	//! The hmax heuristic only cares about the size of the RP graph.
+	long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping);
+};
+
 } // namespaces

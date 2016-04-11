@@ -7,9 +7,7 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <heuristics/relaxed_plan/atom_based_crpg.hxx>
-#include <heuristics/relaxed_plan/gecode_chmax.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
-#include <heuristics/relaxed_plan/direct_chmax.hxx>
 #include <heuristics/relaxed_plan/lifted_crpg.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>

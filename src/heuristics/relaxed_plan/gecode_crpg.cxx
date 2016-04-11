@@ -82,5 +82,16 @@ long GecodeCRPG::computeHeuristic(const State& seed, const GecodeRPGLayer& layer
 	} else return -1;
 }
 
+
+
+GecodeCHMax::GecodeCHMax(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
+	: GecodeCRPG(problem, std::move(managers), std::move(builder))
+{}
+		
+long GecodeCHMax::computeHeuristic(const State& seed, const GecodeRPGLayer& state, const RPGData& bookkeeping) {
+		if (this->_builder->isGoal(state)) return bookkeeping.getCurrentLayerIdx();
+		return -1;
+}
+
 } } // namespaces
 
