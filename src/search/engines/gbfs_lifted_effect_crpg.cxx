@@ -13,6 +13,7 @@
 #include <asp/asp_rpg.hxx>
 #include <actions/applicable_action_set.hxx>
 #include <actions/actions.hxx>
+#include <actions/grounding.hxx>
 
 using namespace fs0::gecode;
 
@@ -24,6 +25,8 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSLiftedEffectCRPG::create(const Config& c
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
+	// problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), Problem::getInfo()));
+	
 	LiftedCRPG lifted_crpg(problem, problem.getGoalConditions(), problem.getStateConstraints());
 	const TupleIndex& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
@@ -31,6 +34,11 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSLiftedEffectCRPG::create(const Config& c
 	lifted_crpg.set_managers(std::move(managers)); // TODO Probably we don't need this to be shared_ptr's anymore
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, LiftedCRPG, FS0StateModel>(model, std::move(lifted_crpg)));
+}
+
+void GBFSLiftedEffectCRPG::setup(const Config& config, Problem& problem) const {
+	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), Problem::getInfo()));
+	// etc.
 }
 
 

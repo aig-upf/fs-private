@@ -21,7 +21,7 @@ protected:
 public:
 	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const FS0StateModel& problem) const;
 	
-protected:
+	void setup(const Config& config, Problem& problem) const;
 	
 };
 

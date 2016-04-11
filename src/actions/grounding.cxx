@@ -11,28 +11,16 @@
 #include <utils/binding_iterator.hxx>
 #include <utils/utils.hxx>
 #include <languages/fstrips/language.hxx>
+#include <unordered_set>
 
 namespace fs0 {
 
 
 
 void ActionGrounder::selective_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info, Problem& problem) {
-	bool do_smart_grounding = true; // TODO This decision should be made at the engine level.
-	
-	if (Config::instance().doLiftedPlanning()) {
-// 		problem.setPartiallyGroundedActions(fully_lifted(action_data, info));
-	} else {
-		problem.setGroundActions(full_grounding(action_data, info));
-	}
-	
-	if (do_smart_grounding) {
-		problem.setPartiallyGroundedActions(fully_lifted(action_data, info));
-// 		if (Config::instance().doLiftedPlanning()) {
-// 			problem.setPartiallyGroundedActions(fully_lifted(action_data, info));
-// 		} else {
-// 			problem.setPartiallyGroundedActions(smart_grounding(action_data, info));
-// 		}
-	}
+	// ATM we simply generate all grounded and all lifted actions, but TODO this decision should be made at the engine level.
+	if (!Config::instance().doLiftedPlanning()) problem.setGroundActions(fully_ground(action_data, info));
+	problem.setPartiallyGroundedActions(fully_lifted(action_data, info));
 }
 
 
@@ -47,7 +35,7 @@ std::vector<const PartiallyGroundedAction*> ActionGrounder::fully_lifted(const s
 }
 
 
-std::vector<const GroundAction*> ActionGrounder::full_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
+std::vector<const GroundAction*> ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
 	std::vector<const GroundAction*> grounded;
 	unsigned total_num_bindings = 0;
 	
@@ -165,7 +153,65 @@ std::vector<const PartiallyGroundedAction*> ActionGrounder::flatten_effect_head(
 		grounded.push_back(partial_binding(schema->getActionData(), binding, info));
 	}
 	
+// 	return compile_nested_fluents_away(grounded, info);
 	return grounded;
+}
+
+/*
+std::vector<const PartiallyGroundedAction*> ActionGrounder::compile_nested_fluents_away(const std::vector<const PartiallyGroundedAction*>& actions, const ProblemInfo& info) {
+	
+	// We re-write the actions to compile away nested fluents in the effects' heads into additional action parameters.
+	// Thus, an effect "tile(blank) := t" with both 'tile' and 'blank' being fluent function symbols will get rewritten
+	// into k actions with an extra parameter param_blank, extra precondition param_blank = blank, and effect tile(param_blank) := t
+	std::vector<const PartiallyGroundedAction*> rewritten;
+
+	for (const PartiallyGroundedAction* action:actions) {
+		
+		std::vector<const fs::StateVariable*> subvars = collect_effect_head_variables(action);
+		if (subvars.empty()) {
+			rewritten.push_back(action);
+			continue; // No need for further processing of the action
+		}
+		
+		
+		PartiallyGroundedAction* processed = new PartiallyGroundedAction(*action);
+		
+		unsigned num_params = processed->numParameters();
+		
+		
+		std::unordered_set<const fs::StateVariable*> unique_subvars(subvars.begin(), subvars.end());
+		for (const fs::StateVariable* statevar:unique_subvars) {
+			// We have a state variable f(c) in some subterm of the effect LHS
+			auto extra_param = new fs::BoundVariable(num_params++, statevar->getType());
+			processed->addParameter(extra_param);
+			processed->replaceTerm(statevar, extra_param);
+			
+			std::vector<const fs::Term*> subterms{statevar->clone(), extra_param};
+			auto extra_precondition = new fs::EQAtomicFormula(subterms);
+			processed->addPrecondition(extra_precondition);
+		}
+		
+		rewritten.push_back(processed);
+		delete action; // ???
+	}
+	
+	WORK_IN_PROGRESS("Still to be though out: how to dynamically add parameters so that afterwards the comparisons between lifted action IDs are correct");
+	
+	return rewritten;
+}
+*/
+
+std::vector<const fs::StateVariable*> ActionGrounder::collect_effect_head_variables(const PartiallyGroundedAction* action) {
+	std::vector<const fs::StateVariable*> statevars;
+		
+	for (const fs::ActionEffect* effect:action->getEffects()) {
+		
+		for (const fs::StateVariable* statevar:Utils::filter_by_type<const fs::StateVariable*>(effect->lhs()->all_terms())) {
+			if (statevar == effect->lhs()) continue; // We just want to collect subterms' state variables
+			statevars.push_back(statevar);
+		}
+	}
+	return statevars;
 }
 
 PartiallyGroundedAction* ActionGrounder::partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {

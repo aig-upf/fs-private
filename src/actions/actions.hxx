@@ -5,7 +5,7 @@
 #include <utils/binding.hxx>
 
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; class ActionEffect; } }}
+namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class ActionEffect; } }}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -74,6 +74,7 @@ public:
 	const std::string& getName() const { return _data.getName(); }
 	const Signature& getSignature() const { return _data.getSignature(); }
 	const std::vector<std::string>& getParameterNames() const { return _data.getParameterNames(); }
+	unsigned numParameters() const { return getSignature().size(); }
 	
 	const fs::Formula* getPrecondition() const { return _precondition; }
 	const std::vector<const fs::ActionEffect*>& getEffects() const { return _effects; }
@@ -83,6 +84,12 @@ public:
 	
 	//! Return true iff the i-th action parameter is bound
 	bool isBound(unsigned i) const { return _binding.binds(i); }
+	
+// 	void addPrecondition(const fs::Formula* precondition);
+	
+// 	void replaceTerm(const fs::Term* before, const fs::Term* after);
+	
+// 	void addParameter(fs::BoundVariable* parameter);
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionBase&  entity) { return entity.print(os); }
