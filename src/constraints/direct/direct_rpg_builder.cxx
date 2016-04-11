@@ -8,6 +8,7 @@
 #include <constraints/direct/compiled.hxx>
 #include <constraints/direct/translators/translator.hxx>
 #include <utils/logging.hxx>
+#include <state.hxx>
 #include <relaxed_state.hxx>
 
 namespace fs0 {
@@ -19,7 +20,7 @@ std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula::cp
 	ConstraintCompiler::compileConstraints(directGoalConstraints);
 
 	// Process the state constraints, if any
-	std::vector<DirectConstraint::cptr> directStateConstraints;
+	std::vector<DirectConstraint*> directStateConstraints;
 	if (!state_constraints->is_tautology()) {
 		auto sc_conjunction = dynamic_cast<fs::Conjunction::cptr>(state_constraints);
 		assert(sc_conjunction);
@@ -32,9 +33,9 @@ std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula::cp
 }
 	
 // Note that we use both types of constraints as goal constraints
-DirectRPGBuilder::DirectRPGBuilder(const std::vector<DirectConstraint::cptr>&& goalConstraints, const std::vector<DirectConstraint::cptr>&& stateConstraints) :
-	_stateConstraints(stateConstraints),
-	_allGoalConstraints(goalConstraints), // Goal constraints include state constraints as well
+DirectRPGBuilder::DirectRPGBuilder(std::vector<DirectConstraint*>&& goalConstraints, std::vector<DirectConstraint*>&& stateConstraints) :
+	_stateConstraints(std::move(stateConstraints)),
+	_allGoalConstraints(std::move(goalConstraints)), // Goal constraints include state constraints as well
 	_stateConstraintsHandler(_stateConstraints),
 	_goalConstraintsHandler(_allGoalConstraints) // We store all the constraints in a new vector so that we can pass a const reference 
 	                                            // - we're strongly interested in the ConstraintManager having only a reference, not the actual value,
@@ -53,7 +54,7 @@ FilteringOutput DirectRPGBuilder::pruneUsingStateConstraints(RelaxedState& state
 	return _stateConstraintsHandler.filter(domains);
 }
 
-bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, Atom::vctr& causes) const {
+bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, std::vector<Atom>& causes) const {
 	assert(causes.empty());
 	DomainMap domains = Projections::projectCopy(state, _goalConstraintsHandler.getAllRelevantVariables());  // This makes a copy of the domain.
 	if (!checkGoal(domains)) return false;
@@ -78,7 +79,7 @@ bool DirectRPGBuilder::checkGoal(const DomainMap& domains) const {
 }
 
 //! Note that here we can guarantee that we'll always insert different atoms in `causes`, since all the inserted atoms have a different variable
-void DirectRPGBuilder::extractGoalCauses(const State& seed, const DomainMap& domains, const DomainMap& clone, Atom::vctr& causes, std::vector<bool>& set, unsigned num_set) const {
+void DirectRPGBuilder::extractGoalCauses(const State& seed, const DomainMap& domains, const DomainMap& clone, std::vector<Atom>& causes, std::vector<bool>& set, unsigned num_set) const {
 	
 	// 0. Base case
 	if (num_set == domains.size()) return;
@@ -126,7 +127,7 @@ void DirectRPGBuilder::extractGoalCauses(const State& seed, const DomainMap& dom
 	}
 }
 
-void DirectRPGBuilder::extractGoalCausesArbitrarily(const State& seed, const DomainMap& domains, Atom::vctr& causes, std::vector<bool>& set) const {
+void DirectRPGBuilder::extractGoalCausesArbitrarily(const State& seed, const DomainMap& domains, std::vector<Atom>& causes, std::vector<bool>& set) const {
 	for (const auto& domain:domains) {
 		VariableIdx variable = domain.first;
 		

@@ -133,7 +133,7 @@ CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::index(const Compi
 }
 
 
-FilteringOutput CompiledBinaryConstraint::filter(unsigned variable) {
+FilteringOutput CompiledBinaryConstraint::filter(unsigned variable) const {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
 	unsigned other = (variable == 0) ? 1 : 0;
@@ -254,12 +254,12 @@ Atom CompiledBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
 }
 
 
-unsigned ConstraintCompiler::compileConstraints(std::vector<DirectConstraint::cptr>& constraints) {
+unsigned ConstraintCompiler::compileConstraints(std::vector<DirectConstraint*>& constraints) {
 	const ProblemInfo& info = Problem::getInfo();
 	
 	unsigned num_compiled = 0;
 	for (unsigned i = 0; i < constraints.size(); ++i) {
-		DirectConstraint::cptr compiled = constraints[i]->compile(info);
+		DirectConstraint* compiled = constraints[i]->compile(info);
 		if (compiled) { // The constraint type requires pre-compilation
 			delete constraints[i];
 			constraints[i] = compiled;

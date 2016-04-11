@@ -33,7 +33,7 @@ public:
 	typedef std::function<fs::Term::cptr(const std::vector<fs::Term::cptr>&)> TermCreator;
 	
 	//!
-	typedef std::function<DirectConstraint::cptr(const fs::AtomicFormula&)> DirectFormulaTranslator;
+	typedef std::function<DirectConstraint*(const fs::AtomicFormula&)> DirectFormulaTranslator;
 	
 	static LogicalComponentRegistry& instance();
 	
@@ -59,7 +59,7 @@ public:
 	
 	fs::Term::cptr instantiate_term(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
 	
-	DirectConstraint::cptr instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
+	DirectConstraint* instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
 	
 	EffectTranslator::cptr getDirectEffectTranslator(const fs::Term& term) const;
 	

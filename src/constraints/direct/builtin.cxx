@@ -64,7 +64,7 @@ FilteringOutput filter_geq(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 	return FilteringOutput::Pruned;	
 }
 
-FilteringOutput LTConstraint::filter(unsigned variable) {
+FilteringOutput LTConstraint::filter(unsigned variable) const {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
 	
@@ -86,7 +86,7 @@ std::ostream& LTConstraint::print(std::ostream& os) const {
 	return os;
 }
 
-FilteringOutput LEQConstraint::filter(unsigned variable) {
+FilteringOutput LEQConstraint::filter(unsigned variable) const {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
 	
@@ -110,7 +110,7 @@ std::ostream& LEQConstraint::print(std::ostream& os) const {
 	return os;
 }
 
-FilteringOutput EQConstraint::filter(unsigned variable) {
+FilteringOutput EQConstraint::filter(unsigned variable) const {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
 	unsigned other = (variable == 0) ? 1 : 0;
@@ -139,7 +139,7 @@ std::ostream& EQConstraint::print(std::ostream& os) const {
 	return os;
 }
 
-FilteringOutput NEQConstraint::filter(unsigned variable) {
+FilteringOutput NEQConstraint::filter(unsigned variable) const {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
 	unsigned other = (variable == 0) ? 1 : 0;

@@ -10,7 +10,6 @@
 #include <heuristics/relaxed_plan/lifted_crpg.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
-#include <asp/asp_rpg.hxx>
 #include <actions/applicable_action_set.hxx>
 #include <actions/actions.hxx>
 #include <actions/grounding.hxx>

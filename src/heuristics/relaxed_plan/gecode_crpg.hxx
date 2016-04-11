@@ -15,8 +15,7 @@ class GecodeRPGLayer;
 class GecodeCRPG {
 public:
 	GecodeCRPG(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
-	
-	virtual ~GecodeCRPG() {}
+	virtual ~GecodeCRPG() = default;
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	long evaluate(const State& seed);
@@ -43,12 +42,11 @@ protected:
 //! The h_max version
 class GecodeCHMax : public GecodeCRPG {
 public:
-
 	GecodeCHMax(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder);
-	virtual ~GecodeCHMax() {}
+	~GecodeCHMax() = default;
 	
 	//! The hmax heuristic only cares about the size of the RP graph.
-	long computeHeuristic(const State& seed, const GecodeRPGLayer& state, const RPGData& bookkeeping);
+	long computeHeuristic(const State& seed, const GecodeRPGLayer& state, const RPGData& bookkeeping) override;
 };
 
 } } // namespaces

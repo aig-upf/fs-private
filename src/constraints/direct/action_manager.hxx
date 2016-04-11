@@ -2,13 +2,15 @@
 #pragma once
 
 #include <constraints/direct/csp_handler.hxx>
-#include <constraints/direct/effect.hxx>
-#include <actions/actions.hxx>
-#include <heuristics/relaxed_plan/rpg_data.hxx>
+#include <atom.hxx>
 
 namespace fs0 {
 
+class GroundAction;
+class RPGData;
 class ActionID;
+class DirectEffect;
+class RelaxedState;
 
 /**
  * A constraint manager capable only of dealing with actions whose constraints are at most unary,
@@ -24,7 +26,7 @@ public:
 	//! Returns true ifff the given action is supported by a direct manager
 	static bool is_supported(const GroundAction& action);
 	
-	DirectActionManager(const GroundAction& action, std::vector<DirectConstraint::cptr>&& constraints, std::vector<DirectEffect::cptr>&& effects);
+	DirectActionManager(const GroundAction& action, std::vector<DirectConstraint*>&& constraints, std::vector<const DirectEffect*>&& effects);
 	~DirectActionManager();
 	
 	const GroundAction& getAction() const { return _action; }
@@ -41,9 +43,9 @@ protected:
 	//! The action being managed
 	const GroundAction& _action;
 	
-	const std::vector<DirectConstraint::cptr> _constraints;
+	const std::vector<DirectConstraint*> _constraints;
 	
-	const std::vector<DirectEffect::cptr> _effects;
+	const std::vector<const DirectEffect*> _effects;
 	
 		
 	//! The indexes of only those variables relevant to the applicability procedures of the action.

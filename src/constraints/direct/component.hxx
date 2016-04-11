@@ -5,7 +5,6 @@
 
 namespace fs0 {
 
-
 //! A common base class for operative conditions / effects
 class DirectComponent {
 protected:
@@ -13,17 +12,13 @@ protected:
 	const VariableIdxVector _scope;
 	
 	//! A vector of arbitrary parameters of the component
-	const std::vector<int> _parameters;
-
+	const ValueTuple _parameters;
 
 public:
-	typedef DirectComponent* ptr;
-	typedef const DirectComponent* cptr;
-
-	DirectComponent(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+	DirectComponent(const VariableIdxVector& scope, const ValueTuple& parameters) :
 		_scope(scope), _parameters(parameters) {}
 
-	virtual ~DirectComponent() {}
+	virtual ~DirectComponent() = default;
 
 	//! Getter for the component scope
 	inline const VariableIdxVector& getScope() const { return _scope; }
@@ -32,7 +27,7 @@ public:
 	inline unsigned getArity () const { return _scope.size(); }
 	
 	//! Getter for the component binding
-	inline const std::vector<int>& getParameters() const { return _parameters; }
+	inline const ValueTuple& getParameters() const { return _parameters; }
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const DirectComponent& o) { return o.print(os); }
@@ -41,5 +36,5 @@ public:
 		return os;
 	}
 };
-	
+
 } // namespaces

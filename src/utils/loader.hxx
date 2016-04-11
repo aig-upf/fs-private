@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <vector>
 #include <lib/rapidjson/document.h>
 
 namespace fs0 { namespace asp { class LPHandler; }}
@@ -9,7 +9,7 @@ namespace fs0 { namespace asp { class LPHandler; }}
 namespace fs0 {
 
 class BaseComponentFactory;
-class Problem;
+class ProblemInfo;
 class State;
 class ActionData;
 

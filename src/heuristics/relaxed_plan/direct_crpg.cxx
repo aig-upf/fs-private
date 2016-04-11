@@ -12,6 +12,7 @@
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
+#include <relaxed_state.hxx>
 
 
 namespace fs0 {

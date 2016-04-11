@@ -8,7 +8,10 @@
 
 namespace fs0 {
 
-class ProblemInfo; class UnaryDirectEffect; class BinaryDirectEffect;
+class ProblemInfo;
+class UnaryDirectEffect;
+class BinaryDirectEffect;
+class GroundAction;
 
 
 /**
@@ -32,7 +35,7 @@ public:
 
 	bool isSatisfied(ObjectIdx o) const;
 	
-	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const {
+	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const {
 		return new CompiledUnaryConstraint(*this);
 	}
 	
@@ -59,7 +62,7 @@ public:
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const;
 	
-	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const {
+	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const {
 		return new CompiledBinaryConstraint(*this, problemInfo);
 	}
 	
@@ -72,7 +75,7 @@ public:
 class BoundsConstraintsGenerator {
 public:
 	//! Generates the necessary bound-constraints for the given effects (if any), and adds them to the given constraints vector
-	static void generate(const GroundAction& action, const std::vector<DirectEffect::cptr>& effects, std::vector<DirectConstraint::cptr>& constraints);
+	static void generate(const GroundAction& action, const std::vector<const DirectEffect*>& effects, std::vector<DirectConstraint*>& constraints);
 };
 
 } // namespaces

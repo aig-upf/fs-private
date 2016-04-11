@@ -14,7 +14,7 @@ DirectConstraint::DirectConstraint(const VariableIdxVector& scope, const std::ve
 	: DirectComponent(scope, parameters) {}
 
 
-void DirectConstraint::loadDomains(const DomainMap& domains) {
+void DirectConstraint::loadDomains(const DomainMap& domains) const {
 	projection = Projections::project(domains, _scope);
 }
 
@@ -41,7 +41,7 @@ FilteringOutput UnaryDirectConstraint::filter(const DomainMap& domains) const {
 
 
 //! This actually arc-reduces the constraint with respect to the relevant variable given by the index
-FilteringOutput BinaryDirectConstraint::filter(unsigned variable) {
+FilteringOutput BinaryDirectConstraint::filter(unsigned variable) const {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
 
@@ -74,7 +74,7 @@ UnaryDirectConstraint::UnaryDirectConstraint(const VariableIdxVector& scope, con
 	assert(scope.size() == 1);
 }
 
-DirectConstraint::cptr UnaryDirectConstraint::compile(const ProblemInfo& problemInfo) const {
+DirectConstraint* UnaryDirectConstraint::compile(const ProblemInfo& problemInfo) const {
 	return nullptr;
 }
 
@@ -83,7 +83,7 @@ BinaryDirectConstraint::BinaryDirectConstraint(const VariableIdxVector& scope, c
 	assert(scope.size() == 2);
 }
 	
-DirectConstraint::cptr BinaryDirectConstraint::compile(const ProblemInfo& problemInfo) const {
+DirectConstraint* BinaryDirectConstraint::compile(const ProblemInfo& problemInfo) const {
 	return nullptr;
 }
 

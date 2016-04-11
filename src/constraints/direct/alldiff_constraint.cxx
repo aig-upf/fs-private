@@ -12,7 +12,7 @@ AlldiffConstraint::AlldiffConstraint(const VariableIdxVector& scope, const std::
 	: AlldiffConstraint(scope) {}
 
 AlldiffConstraint::AlldiffConstraint(const VariableIdxVector& scope) 
-	: DirectConstraint(scope), _arity(scope.size()), min(_arity), max(_arity), sorted_vars(_arity), u(_arity)
+	: DirectConstraint(scope), _arity(scope.size()), min(_arity), max(_arity), _sorted_vars(_arity), u(_arity)
 {}
 
 // Computing bound consistent domains is done in two passes. The algorithm that computes new
@@ -50,9 +50,9 @@ void AlldiffConstraint::invertDomains(const DomainVector& domains) {
 }
 
 
-//! Sort the variables in increasing order of the max value of their domain, leaving them in the `sorted_vars` attribute.
+//! Sort the variables in increasing order of the max value of their domain, leaving them in the `_sorted_vars` attribute.
 void AlldiffConstraint::sortVariables(const DomainVector& domains) {
-	std::iota(std::begin(sorted_vars), std::end(sorted_vars), 0); // fill the index vector with the range [0..num_vars-1]
+	std::iota(std::begin(_sorted_vars), std::end(_sorted_vars), 0); // fill the index vector with the range [0..num_vars-1]
 	
 	// A lambda function to sort based on the max domain value.
 // 		const DomainVector& doms = domains; // To allow capture from the lambda expression
@@ -61,12 +61,12 @@ void AlldiffConstraint::sortVariables(const DomainVector& domains) {
 		const int max_y = *(domains[y]->crbegin());
 		return max_x < max_y; 
 	};
-	std::sort(sorted_vars.begin(), sorted_vars.end(), sorter);
+	std::sort(_sorted_vars.begin(), _sorted_vars.end(), sorter);
 }
 
 void AlldiffConstraint::updateBounds(const DomainVector& domains) {
 	for (unsigned i = 0; i < _arity; ++i) {
-		const unsigned var = sorted_vars[i];
+		const unsigned var = _sorted_vars[i];
 		min[i] = *(domains[var]->cbegin());
 		max[i] = *(domains[var]->crbegin());
 	}
@@ -79,7 +79,7 @@ FilteringOutput AlldiffConstraint::incrMin(const DomainVector& domains, int a, i
 	for (unsigned j = i+1; j < _arity; ++j) {
 		if (min[j] >= a) {
 			// post x[j] >= b + 1
-			const unsigned var = sorted_vars[j];
+			const unsigned var = _sorted_vars[j];
 			Domain& old_domain = *(domains[var]);
 			Domain new_domain;
 			for (int val:old_domain) {

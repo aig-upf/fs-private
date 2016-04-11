@@ -1,12 +1,12 @@
 
 
 #include <constraints/direct/csp_handler.hxx>
-
+#include <constraints/direct/constraint.hxx>
 
 namespace fs0 {
 
 
-DirectCSPHandler::DirectCSPHandler(const std::vector<DirectConstraint::cptr>& constraints)
+DirectCSPHandler::DirectCSPHandler(const std::vector<DirectConstraint*>& constraints)
 	: _constraints(constraints), _relevant(indexRelevantVariables(constraints)) {
 	initialize();
 }
@@ -22,7 +22,7 @@ void DirectCSPHandler::initialize() {
 
 //! Indexes pointers to the constraints in three different vectors: unary, binary and n-ary constraints.
 void DirectCSPHandler::indexConstraintsByArity() {
-	for (const DirectConstraint::cptr ctr:_constraints) {
+	for (DirectConstraint* ctr:_constraints) {
 		FilteringType filtering = ctr->filteringType();
 		if (filtering == FilteringType::Unary) {
 			unary_constraints.push_back(ctr);
@@ -35,8 +35,8 @@ void DirectCSPHandler::indexConstraintsByArity() {
 }
 
 //! Initializes a worklist. `constraints` is expected to have only binary constraints.
-void DirectCSPHandler::initializeAC3Worklist(const std::vector<DirectConstraint::cptr>& constraints, ArcSet& worklist) {
-	for (DirectConstraint::cptr ctr:constraints) {
+void DirectCSPHandler::initializeAC3Worklist(const std::vector<DirectConstraint*>& constraints, ArcSet& worklist) {
+	for (DirectConstraint* ctr:constraints) {
 		assert(ctr->getArity() == 2);
 		worklist.insert(std::make_pair(ctr, 0));
 		worklist.insert(std::make_pair(ctr, 1));
@@ -99,14 +99,14 @@ FilteringOutput DirectCSPHandler::filter(const DomainMap& domains) const {
 }
 
 
-void DirectCSPHandler::emptyConstraintDomains(const std::vector<DirectConstraint::cptr>& constraints) const {
-	for (DirectConstraint::cptr constraint:constraints) {
+void DirectCSPHandler::emptyConstraintDomains(const std::vector<DirectConstraint*>& constraints) const {
+	for (DirectConstraint* constraint:constraints) {
 		constraint->emptyDomains();
 	}
 }
 
-void DirectCSPHandler::loadConstraintDomains(const DomainMap& domains, const std::vector<DirectConstraint::cptr>& constraints) const {
-	for (DirectConstraint::cptr constraint:constraints) {
+void DirectCSPHandler::loadConstraintDomains(const DomainMap& domains, const std::vector<DirectConstraint*>& constraints) const {
+	for (DirectConstraint* constraint:constraints) {
 		constraint->loadDomains(domains);
 	}
 }
@@ -115,10 +115,10 @@ FilteringOutput DirectCSPHandler::unaryFiltering(const DomainMap& domains) const
 	return unaryFiltering(unary_constraints, domains);
 }
 
-FilteringOutput DirectCSPHandler::unaryFiltering(const std::vector<DirectConstraint::cptr>& constraints, const DomainMap& domains) {
+FilteringOutput DirectCSPHandler::unaryFiltering(const std::vector<DirectConstraint*>& constraints, const DomainMap& domains) {
 	FilteringOutput output = FilteringOutput::Unpruned;
 
-	for (DirectConstraint::cptr ctr:constraints) {
+	for (DirectConstraint* ctr:constraints) {
 		assert(ctr->getArity() == 1);
 		FilteringOutput o = ctr->filter(domains);
 		if (o == FilteringOutput::Pruned) {
@@ -138,7 +138,7 @@ FilteringOutput DirectCSPHandler::binaryFiltering(ArcSet& worklist) const {
 	// 1. Analyse pending arcs until the worklist is empty
 	while (!worklist.empty()) {
 		Arc a = select(worklist);
-		DirectConstraint::cptr constraint = a.first;
+		const DirectConstraint* constraint = a.first;
 		unsigned variable = a.second;  // The index 0 or 1 of the relevant variable.
 		assert(variable == 0 || variable == 1);
 
@@ -151,7 +151,7 @@ FilteringOutput DirectCSPHandler::binaryFiltering(ArcSet& worklist) const {
 		if (o == FilteringOutput::Pruned) {
 			result = FilteringOutput::Pruned;
 			VariableIdx pruned = constraint->getScope()[variable];  // This is the index of the state variable whose domain we have pruned
-			for (DirectConstraint::cptr ctr:binary_constraints) {
+			for (const DirectConstraint* ctr:binary_constraints) {
 				if (ctr == constraint) continue;  // No need to reinsert the same constraint we just used.
 
 				// Only if the constraint has overlapping scope, we insert in the worklist the constraint paired with _the other_ variable, to be analysed later.
@@ -171,7 +171,7 @@ FilteringOutput DirectCSPHandler::binaryFiltering(ArcSet& worklist) const {
 
 FilteringOutput DirectCSPHandler::globalFiltering() const {
 	FilteringOutput output = FilteringOutput::Unpruned;
-	for (DirectConstraint::cptr constraint:n_ary_constraints) {
+	for (DirectConstraint* constraint:n_ary_constraints) {
 		FilteringOutput o = constraint->filter();
 		if (o == FilteringOutput::Failure) return o;
 		else if (o == FilteringOutput::Pruned) output = o;
@@ -199,9 +199,9 @@ DirectCSPHandler::Arc DirectCSPHandler::select(ArcSet& worklist) const {
 	return elem;
 }
 
-VariableIdxVector DirectCSPHandler::indexRelevantVariables(const std::vector<DirectConstraint::cptr>& constraints) {
+VariableIdxVector DirectCSPHandler::indexRelevantVariables(const std::vector<DirectConstraint*>& constraints) {
 	boost::container::flat_set<VariableIdx> relevant;
-	for (const DirectConstraint::cptr constraint:constraints) {
+	for (DirectConstraint* constraint:constraints) {
 		for (VariableIdx variable:constraint->getScope()) {
 			relevant.insert(variable);
 		}

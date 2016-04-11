@@ -41,7 +41,7 @@ public:
 	FilteringOutput filter(const DomainMap& domains) const;
 	
 	//! Compiled constraints cannot be compiled again!
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	//! Returns a set with all tuples for the given scope that satisfy the the given state
 	static std::set<ElementT> compile(const VariableIdxVector& scope, const Tester& tester);
@@ -91,10 +91,10 @@ public:
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const;
 	
-	FilteringOutput filter(unsigned variable);
+	FilteringOutput filter(unsigned variable) const override;
 	
 	//! Compiled constraints cannot be compiled again!
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	static TupleExtension compile(const VariableIdxVector& scope, const CompiledBinaryConstraint::Tester& tester);
 	
@@ -159,7 +159,7 @@ public:
 class ConstraintCompiler {
 public:
 	// In-place compilation of a set of constraints. Returns the number of compiled constraints.
-	static unsigned compileConstraints(std::vector<DirectConstraint::cptr>& constraints);
+	static unsigned compileConstraints(std::vector<DirectConstraint*>& constraints);
 };
 
 

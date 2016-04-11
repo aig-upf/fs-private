@@ -26,7 +26,7 @@ protected:
 	std::vector<int> min, max;
 	
 	//! The variables sorted by increasing max domain value
-	std::vector<VariableIdx> sorted_vars;
+	std::vector<VariableIdx> _sorted_vars;
 	
 	//! The variables sorted by increasing max domain value
 	std::vector<int> u;
@@ -37,15 +37,15 @@ public:
 	
 	virtual ~AlldiffConstraint() {}
 	
-	virtual FilteringType filteringType() { return FilteringType::Custom; };
+	virtual FilteringType filteringType() const override { return FilteringType::Custom; };
 	
 	//! Filters from the set of currently loaded projections
 	// Computing bound consistent domains is done in two passes. The algorithm that computes new
 	// min is applied twice: first to the original problem, resulting into new min bounds, second to the problem
 	// where variables are replaced by their inverse, deducing max bounds.
-	FilteringOutput filter();
+	FilteringOutput filter() override;
 	
-	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 	
@@ -56,7 +56,7 @@ protected:
 	//! Invert all the variable domains.
 	void invertDomains(const DomainVector& domains);
 	
-	//! Sort the variables in increasing order of the max value of their domain, leaving them in the `sorted_vars` attribute.
+	//! Sort the variables in increasing order of the max value of their domain, leaving them in the `_sorted_vars` attribute.
 	void sortVariables(const DomainVector& domains);
 	
 	void updateBounds(const DomainVector& domains);

@@ -19,12 +19,12 @@ public:
 	
 	virtual ~SumConstraint() {}
 	
-	virtual FilteringType filteringType() { return FilteringType::Custom; };
+	virtual FilteringType filteringType() const override { return FilteringType::Custom; };
 	
 	//! Filters from the set of currently loaded projections
-	FilteringOutput filter();
+	FilteringOutput filter() override;
 	
-	virtual DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };

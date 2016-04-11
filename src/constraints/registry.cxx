@@ -132,7 +132,7 @@ fs::Term::cptr LogicalComponentRegistry::instantiate_term(const std::string symb
 	return it->second(subterms);
 }
 
-DirectConstraint::cptr LogicalComponentRegistry::instantiate_direct_constraint(const fs::AtomicFormula& formula) const {
+DirectConstraint* LogicalComponentRegistry::instantiate_direct_constraint(const fs::AtomicFormula& formula) const {
 	auto it = _direct_formula_translators.find(std::type_index(typeid(formula)));
 	if (it == _direct_formula_translators.end()) return nullptr;
 	return it->second(formula);

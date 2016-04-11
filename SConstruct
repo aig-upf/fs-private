@@ -2,7 +2,7 @@
 import fnmatch
 import os
 
-CLINGO = True
+CLINGO = False
 
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
@@ -29,7 +29,7 @@ def locate_source_files(base_dir, pattern):
 	return matches
 
 
-gcc = 'clang' if which('clang') and ARGUMENTS.get('gcc', 'g++') == 'clang' else 'g++'
+gcc = 'clang' if which('clang') and ARGUMENTS.get('gcc', 'clang') != 'g++' else 'g++'
 env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 
 if env['edebug']:
@@ -84,14 +84,15 @@ if CLINGO:
 	# Clingo paths
 	isystem_paths += [clingo_path + '/' + subdir for subdir in ["libclasp", "libprogram_opts", "libclingo", "libgringo"]]
 	env.Append( CCFLAGS = [ '-DWITH_THREADS=0'] )  # Needed by Clingo
-	
-	sources = [s for s in sources if not s.startswith('src/asp')]  # Filter out clingo-specific sources
+else:
+	forbidden = ['src/search/engines/asp_engine.cxx', 'src/utils/printers/asp.cxx']
+	sources = [s for s in sources if (not s.startswith('src/asp') and s not in forbidden)]  # Filter out clingo-specific sources
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
 
 # Determine all the build files
-build_files = [build_dirname + '/' + src for src in locate_source_files('src', '*.cxx')]
+build_files = [build_dirname + '/' + src for src in sources]
 build_files += aptk_search_interface_objs
 #build_files += aptk_tools_objs
 build_files += aptk_heuristics_objs

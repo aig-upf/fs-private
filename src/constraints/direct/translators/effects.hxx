@@ -17,7 +17,7 @@ public:
 	virtual ~EffectTranslator() {}
 
 	//! Translate an effect of the form affected := rhs, where affected is constrained to be a state variable
-	virtual DirectEffect::cptr translate(const fs::StateVariable& affected, const fs::Term& rhs) const = 0;
+	virtual const DirectEffect* translate(const fs::StateVariable& affected, const fs::Term& rhs) const = 0;
 };
 
 
@@ -26,7 +26,7 @@ class ConstantRhsTranslator : public EffectTranslator {
 public:
 	ConstantRhsTranslator() {}
 
-	DirectEffect::cptr translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
+	const DirectEffect* translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
 };
 
 //! Translates effects where the RHS is a state variable
@@ -34,7 +34,7 @@ class StateVariableRhsTranslator : public EffectTranslator {
 public:
 	StateVariableRhsTranslator() {}
 
-	DirectEffect::cptr translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
+	const DirectEffect* translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
 };
 
 //! Translates effects where the RHS is an addition
@@ -42,7 +42,7 @@ class AdditiveTermRhsTranslator : public EffectTranslator {
 public:
 	AdditiveTermRhsTranslator() {}
 
-	DirectEffect::cptr translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
+	const DirectEffect* translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
 };
 
 //! Translates effects where the RHS is a subtraction
@@ -50,7 +50,7 @@ class SubtractiveTermRhsTranslator : public EffectTranslator {
 public:
 	SubtractiveTermRhsTranslator() {}
 
-	DirectEffect::cptr translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
+	const DirectEffect* translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
 };
 
 
@@ -59,7 +59,7 @@ class MultiplicativeTermRhsTranslator : public EffectTranslator {
 public:
 	MultiplicativeTermRhsTranslator() {}
 
-	DirectEffect::cptr translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
+	const DirectEffect* translate(const fs::StateVariable& affected, const fs::Term& rhs) const;
 };
 
 

@@ -6,17 +6,17 @@
 namespace fs0 { 
 	
 	
-DirectEffect::cptr ConstantRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
+const DirectEffect* ConstantRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
 	const auto& constant = dynamic_cast<const fs::Constant&>(rhs);
 	return new ValueAssignmentEffect(affected.getValue(), constant.getValue());
 }
 
-DirectEffect::cptr StateVariableRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
+const DirectEffect* StateVariableRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
 	const auto& variable = dynamic_cast<const fs::StateVariable&>(rhs);
 	return new VariableAssignmentEffect(variable.getValue(), affected.getValue());
 }
 
-DirectEffect::cptr AdditiveTermRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
+const DirectEffect* AdditiveTermRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
 	const auto& addition = dynamic_cast<const fs::AdditionTerm&>(rhs);
 	auto& subterms = addition.getSubterms();
 	auto sum_lhs = subterms[0], sum_rhs = subterms[1];
@@ -35,7 +35,7 @@ DirectEffect::cptr AdditiveTermRhsTranslator::translate(const fs::StateVariable&
 	else throw std::runtime_error("Constant expression should have been compiled earlier");
 }
 
-DirectEffect::cptr SubtractiveTermRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
+const DirectEffect* SubtractiveTermRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
 	const auto& addition = dynamic_cast<const fs::SubtractionTerm&>(rhs);
 	auto& subterms = addition.getSubterms();
 	auto sum_lhs = subterms[0], sum_rhs = subterms[1];
@@ -54,7 +54,7 @@ DirectEffect::cptr SubtractiveTermRhsTranslator::translate(const fs::StateVariab
 	else throw std::runtime_error("Constant expression should have been compiled earlier");
 }
 
-DirectEffect::cptr MultiplicativeTermRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
+const DirectEffect* MultiplicativeTermRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
 	const auto& addition = dynamic_cast<const fs::MultiplicationTerm&>(rhs);
 	auto& subterms = addition.getSubterms();
 	auto sum_lhs = subterms[0], sum_rhs = subterms[1];

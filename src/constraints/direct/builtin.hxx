@@ -17,9 +17,9 @@ public:
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 < o2; }
 	
-	FilteringOutput filter(unsigned variable);
+	FilteringOutput filter(unsigned variable) const override;
 	
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -32,9 +32,9 @@ public:
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 <= o2; }
 	
-	FilteringOutput filter(unsigned variable);
+	FilteringOutput filter(unsigned variable) const override;
 	
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -48,9 +48,9 @@ public:
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 == o2; }
 	
-	FilteringOutput filter(unsigned variable);
+	FilteringOutput filter(unsigned variable) const override;
 	
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -63,9 +63,9 @@ public:
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 != o2; }
 	
-	FilteringOutput filter(unsigned variable);
+	FilteringOutput filter(unsigned variable) const override;
 	
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -78,10 +78,10 @@ public:
 
 	bool isSatisfied(ObjectIdx o) const { return o == _parameters[0]; }
 	
-	FilteringOutput filter(const DomainMap& domains) const;
+	FilteringOutput filter(const DomainMap& domains) const override;
 	
 	// No compilation
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -94,10 +94,10 @@ public:
 
 	bool isSatisfied(ObjectIdx o) const { return o != _parameters[0]; }
 	
-	FilteringOutput filter(const DomainMap& domains) const;
+	FilteringOutput filter(const DomainMap& domains) const override;
 	
 	// No compilation
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -110,10 +110,10 @@ public:
 
 	bool isSatisfied(ObjectIdx o) const { return o < _parameters[0]; }
 	
-	FilteringOutput filter(const DomainMap& domains) const;
+	FilteringOutput filter(const DomainMap& domains) const override;
 	
 	// No compilation
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -127,10 +127,10 @@ public:
 
 	bool isSatisfied(ObjectIdx o) const { return o <= _parameters[0]; }
 	
-	FilteringOutput filter(const DomainMap& domains) const;
+	FilteringOutput filter(const DomainMap& domains) const override;
 	
 	// No compilation
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -143,10 +143,10 @@ public:
 
 	bool isSatisfied(ObjectIdx o) const { return o > _parameters[0]; }
 	
-	FilteringOutput filter(const DomainMap& domains) const;
+	FilteringOutput filter(const DomainMap& domains) const override;
 	
 	// No compilation
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };
@@ -159,10 +159,10 @@ public:
 
 	bool isSatisfied(ObjectIdx o) const { return o >= _parameters[0]; }
 	
-	FilteringOutput filter(const DomainMap& domains) const;
+	FilteringOutput filter(const DomainMap& domains) const override;
 	
 	// No compilation
-	DirectConstraint::cptr compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
 	
 	std::ostream& print(std::ostream& os) const;
 };

@@ -14,8 +14,7 @@ public:
 	typedef GroundAction Action;
 
 	DirectCRPG(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
-	
-	virtual ~DirectCRPG() {}
+	virtual ~DirectCRPG() = default;
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	long evaluate(const State& seed);
@@ -45,12 +44,11 @@ protected:
 //! The h_max version
 class DirectCHMax : public DirectCRPG {
 public:
-
  	DirectCHMax(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
-	virtual ~DirectCHMax() {}
+	~DirectCHMax() = default;
 	
 	//! The hmax heuristic only cares about the size of the RP graph.
-	long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping);
+	long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping) override;
 };
 
 } // namespaces

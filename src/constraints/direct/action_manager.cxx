@@ -8,6 +8,7 @@
 #include <languages/fstrips/scopes.hxx>
 #include <relaxed_state.hxx>
 #include <actions/action_id.hxx>
+#include <actions/actions.hxx>
 
 namespace fs0 {
 
@@ -25,7 +26,7 @@ std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(co
 std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAction& action) {
 	assert(is_supported(action));
 	
-	std::vector<DirectConstraint::cptr> constraints;
+	std::vector<DirectConstraint*> constraints;
 	
 	if (!dynamic_cast<fs::Tautology::cptr>(action.getPrecondition())) { // If the precondition is a tautology, we'll have no constraints
 		auto precondition = dynamic_cast<fs::Conjunction::cptr>(action.getPrecondition());
@@ -33,7 +34,7 @@ std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAct
 		constraints = DirectTranslator::generate(precondition->getConjuncts());
 	}
 	
-	std::vector<DirectEffect::cptr> effects = DirectTranslator::generate(action.getEffects());
+	std::vector<const DirectEffect*> effects = DirectTranslator::generate(action.getEffects());
 	
 	// Add the necessary bound-constraints
 	BoundsConstraintsGenerator::generate(action, effects, constraints);
@@ -67,10 +68,10 @@ bool DirectActionManager::is_supported(const GroundAction& action) {
 }
 
 
-DirectActionManager::DirectActionManager(const GroundAction& action, std::vector<DirectConstraint::cptr>&& constraints, std::vector<DirectEffect::cptr>&& effects)
+DirectActionManager::DirectActionManager(const GroundAction& action, std::vector<DirectConstraint*>&& constraints, std::vector<const DirectEffect*>&& effects)
 	: 
 	  _action(action),
-	  _constraints(constraints),
+	  _constraints(std::move(constraints)),
 	  _effects(effects),
 	  _scope(fs::ScopeUtils::computeActionDirectScope(action)),
 	  _allRelevant(extractAllRelevant()),
@@ -106,7 +107,7 @@ bool DirectActionManager::checkPreconditionApplicability(const DomainMap& domain
 }
 
 void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const {
-	for (const DirectEffect::cptr effect:_effects) {
+	for (const DirectEffect* effect:_effects) {
 		const VariableIdxVector& effectScope = effect->getScope();
 
 		/***** 0-ary Effects *****/

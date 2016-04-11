@@ -15,6 +15,7 @@
 #include <asp/lp_handler.hxx>
 #include <utils/config.hxx>
 #include <utils/tuple_index.hxx>
+#include <state.hxx>
 
 
 namespace fs = fs0::language::fstrips;

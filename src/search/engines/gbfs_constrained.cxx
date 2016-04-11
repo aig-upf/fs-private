@@ -16,7 +16,6 @@
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <actions/applicable_action_set.hxx>
 #include <actions/actions.hxx>
-#include <asp/asp_rpg.hxx>
 
 
 using namespace fs0::gecode;
@@ -66,9 +65,10 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 			FINFO("main", "Chosen CSP Manager: Direct");
 			engine = new aptk::StlBestFirstSearch<SearchNode, DirectHeuristic, FS0StateModel>(model, std::move(direct_builder_heuristic));
 		} else {
-			assert(csp_type == Config::CSPManagerType::ASP);
-			FINFO("main", "Chosen CSP Manager: ASP");
-			engine = new aptk::StlBestFirstSearch<SearchNode, asp::ASPRPG<DirectHeuristic>, FS0StateModel>(model, asp::ASPRPG<DirectHeuristic>(problem, std::move(direct_builder_heuristic)));
+			assert(0);
+// 			assert(csp_type == Config::CSPManagerType::ASP);
+// 			FINFO("main", "Chosen CSP Manager: ASP");
+// 			engine = new aptk::StlBestFirstSearch<SearchNode, asp::ASPRPG<DirectHeuristic>, FS0StateModel>(model, asp::ASPRPG<DirectHeuristic>(problem, std::move(direct_builder_heuristic)));
 		}
 		
 	}
