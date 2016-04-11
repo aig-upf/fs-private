@@ -9,7 +9,7 @@ namespace fs0 { namespace gecode {
 Extension::Extension(const TupleIndex& tuple_index) : _tuple_index(tuple_index), _tuples() {}
 
 bool Extension::is_tautology() const {
-	return _tuples.size() == 1 && _tuple_index.from_index(_tuples[0]).empty();
+	return _tuples.size() == 1 && _tuple_index.to_tuple(_tuples[0]).empty();
 }
 
 void Extension::add_tuple(TupleIdx tuple) {
@@ -22,7 +22,7 @@ Gecode::TupleSet Extension::generate() const {
 	if (is_tautology()) return ts; // We return an empty extension, since the symbol will be dealt with differently
 	
 	for (TupleIdx index:_tuples) {
-		ts.add(_tuple_index.from_index(index));
+		ts.add(_tuple_index.to_tuple(index));
 	}
 	ts.finalize();
 	return ts;

@@ -1,19 +1,16 @@
 
 #include <utils/tuple_index.hxx>
-#include <actions/actions.hxx>
-#include <problem.hxx>
-#include <state.hxx>
-#include <relaxed_state.hxx>
+#include <problem_info.hxx>
 
 namespace fs0 {
 
 TupleIndex::TupleIndex(const ProblemInfo& info) :
-	_inverse(info.getNumLogicalSymbols())
+	_tuple_index_inv(info.getNumLogicalSymbols()),
+	_atom_index_inv(info.getNumVariables())
 {
 	std::vector<std::vector<ValueTuple>> tuples_by_symbol = compute_all_reachable_tuples(info);
 	
 	std::vector<std::pair<unsigned, unsigned>> symbol_ranges;
-	
 	unsigned idx = 0;
 	for (unsigned symbol = 0; symbol < info.getNumLogicalSymbols(); ++symbol) {
 		std::pair<unsigned, unsigned> range{idx, 0};
@@ -38,23 +35,35 @@ TupleIndex::TupleIndex(const ProblemInfo& info) :
 		range.second = idx - 1;
 		symbol_ranges.push_back(range);
 	}
-	
 }
 
 void TupleIndex::add(unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom) {
-	assert(_index.size() == idx);
-	_index.push_back(tuple);
+	assert(_tuple_index.size() == idx);
+	_tuple_index.push_back(tuple);
 	
 	assert(_symbol_index.size() == idx);
 	_symbol_index.push_back(symbol);
 	
-// 	_inverse.insert(std::make_pair(std::make_pair(symbol, tuple), idx));
-	_inverse.at(symbol).insert(std::make_pair(tuple, idx));
+	_tuple_index_inv.at(symbol).insert(std::make_pair(tuple, idx));
 	
-	assert(_tuple_atoms.size() == idx);
-	_tuple_atoms.push_back(atom);
+	assert(_atom_index.size() == idx);
+	_atom_index.push_back(atom);
 	
-	_tuple_atoms_inv.insert(std::make_pair(atom, idx));
+	_atom_index_inv.at(atom.getVariable()).insert(std::make_pair(atom.getValue(), idx));
+}
+
+TupleIdx TupleIndex::to_index(unsigned symbol, const ValueTuple& tuple) const {
+	const auto& map = _tuple_index_inv.at(symbol);
+	auto it = map.find(tuple);
+	assert(it != map.end());
+	return it->second;
+}
+
+TupleIdx TupleIndex::to_index(const Atom& atom) const {
+	const auto& map = _atom_index_inv.at(atom.getVariable());
+	auto it = map.find(atom.getValue());
+	assert(it != map.end());
+	return it->second;
 }
 
 // TODO - We should be applying some reachability analysis here to prune out tuples that will never be reachable at all.
