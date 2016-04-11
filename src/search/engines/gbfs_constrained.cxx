@@ -1,6 +1,7 @@
 
 #include <search/engines/gbfs_constrained.hxx>
 #include <problem.hxx>
+#include <state.hxx>
 #include <state_model.hxx>
 #include <utils/config.hxx>
 #include <utils/logging.hxx>

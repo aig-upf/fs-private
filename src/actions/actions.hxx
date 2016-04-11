@@ -12,7 +12,6 @@ namespace fs0 {
 
 class ApplicableActionSet;
 class ProblemInfo;
-class Binding;
 
 //! All the data that fully characterizes a lifted action
 class ActionData {
