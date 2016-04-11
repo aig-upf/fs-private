@@ -26,6 +26,7 @@ namespace fs0 {
 
 	// A unique identifier for any of the domain data types.
 	typedef unsigned TypeIdx;
+	const TypeIdx INVALID_TYPE = std::numeric_limits<unsigned>::max();
 
 	// A unique identifier for any of the problem objects (might be an integer)
 	typedef int ObjectIdx;

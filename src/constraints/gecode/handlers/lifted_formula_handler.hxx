@@ -24,6 +24,8 @@ public:
 	bool check_solution_exists(SimpleCSP* csp) const;
 
 	SimpleCSP::ptr instantiate(const RPGIndex& rpg) const;
+	
+	void init_value_selector(const RPGIndex* graph);
 
 protected:
 	//! The formula being managed

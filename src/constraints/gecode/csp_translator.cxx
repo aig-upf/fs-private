@@ -16,7 +16,7 @@ void GecodeCSPVariableTranslator::perform_registration() {
 	_base_csp._intvars.update(_base_csp, false, intarray);
 
 	Gecode::BoolVarArray boolarray(_base_csp, _boolvars);
-	_base_csp._boolvars.update(_base_csp, false, boolarray);	
+	_base_csp._boolvars.update(_base_csp, false, boolarray);
 }
 
 unsigned GecodeCSPVariableTranslator::add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable) {

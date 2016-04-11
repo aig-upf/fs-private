@@ -109,8 +109,9 @@ int Helper::selectValueIfExists(Gecode::IntVarValues& value_set, int value) {
 
 
 int Helper::value_selector(const Gecode::Space& home, Gecode::IntVar x, int csp_var_idx) {
-	const SimpleCSP& csp = static_cast<const SimpleCSP&>(home);
-	return csp._value_selector.select(x, csp_var_idx);
+	// "A branch value function takes a constant reference to a space, a variable, and the variable’s
+	// position and returns a value, where the type of the value depends on the variable type."
+	return static_cast<const SimpleCSP&>(home).select_value(x, csp_var_idx);
 }
 
 } } // namespaces

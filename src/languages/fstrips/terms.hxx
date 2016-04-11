@@ -124,7 +124,7 @@ public:
 	virtual std::size_t hash_code() const;
 
 	//! A helper to process lists of subterms
-	static std::vector<Term::cptr> bind_subterms(std::vector<Term::cptr> subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants);
+	static std::vector<Term::cptr> bind_subterms(const std::vector<Term::cptr>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants);
 
 
 protected:

@@ -28,6 +28,9 @@ public:
 	//! The type of support sets that should be given priority
 	enum class SupportPriority {First, MinHMaxSum};
 	
+	//! Different types of grounding we might consider
+	enum class Grounding {FullyLifted, SmartGrounding, FullyGrounded};
+	
 	//! Explicit initizalition of the singleton
 	static void init(const std::string& filename);
 	
@@ -67,7 +70,6 @@ protected:
 	SupportPriority _support_priority;
 	
 	bool _novelty_constraint;
-	
 	
 	bool _lifted_planning;
 	

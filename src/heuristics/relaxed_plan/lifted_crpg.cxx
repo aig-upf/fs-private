@@ -12,6 +12,7 @@
 #include <languages/fstrips/scopes.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/actions.hxx>
+#include <utils/config.hxx>
 
 #include <gecode/int.hh>
 
@@ -24,7 +25,7 @@ LiftedCRPG::LiftedCRPG(const Problem& problem, const fs::Formula* goal_formula, 
 	_managers(),
 	_extension_handler(_tuple_index),
 // 	_symbol_tuplesets(index_tuplesets(_info)),
-	_goal_handler(std::unique_ptr<const LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
+	_goal_handler(std::unique_ptr<LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 // 	_atom_table(index_atoms(_info)),
 // 	_atom_achievers(build_achievers_index(_managers, _atom_table)),
 // 	_atom_variable_tuples(index_variable_tuples(_info, _atom_table)),
@@ -44,10 +45,9 @@ long LiftedCRPG::evaluate(const State& seed) {
 	
 	RPGIndex graph(seed, _tuple_index, _extension_handler);
 	
-	// TODO - RETHINK
-// 	if (Config::instance().useMinHMaxGoalValueSelector()) {
-// 		_builder->init_value_selector(&bookkeeping);
-// 	}
+	if (Config::instance().useMinHMaxGoalValueSelector()) {
+		_goal_handler->init_value_selector(&graph);
+	}
 	
 	// Copy the sets of possible tuples and prune the ones corresponding to the seed state
 // 	std::vector<Tupleset> tuplesets(_all_tuples_by_symbol);

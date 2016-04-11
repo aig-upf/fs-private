@@ -14,7 +14,7 @@ namespace fs0 { namespace gecode {
 RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHandler& extension_handler) :
 	_reached(tuple_index.size(), nullptr),
 	_novel_tuples(),
-	_current_layer(1),
+	_current_layer(0),
 	_extension_handler(extension_handler),
 	_tuple_index(tuple_index)
 {
@@ -39,6 +39,7 @@ RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHa
 	}
 	
 	_extensions = _extension_handler.generate_extensions();
+	++_current_layer;
 }
 
 
@@ -72,7 +73,7 @@ void RPGIndex::add(TupleIdx tuple, const ActionID* action, std::vector<TupleIdx>
 	auto& it = _reached.at(tuple);
 	if (it != nullptr) return; // Don't insert the atom if it was already tracked by the RPG
 	it = createTupleSupport(action, std::move(support));
-	_novel_tuples.push_back(tuple);	
+	_novel_tuples.push_back(tuple);
 }
 
 /*

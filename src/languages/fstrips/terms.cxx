@@ -35,7 +35,7 @@ std::vector<Term::cptr> NestedTerm::all_terms() const {
 }
 
 
-std::vector<Term::cptr> NestedTerm::bind_subterms(std::vector<Term::cptr> subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants) {
+std::vector<Term::cptr> NestedTerm::bind_subterms(const std::vector<Term::cptr>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants) {
 	assert(constants.empty());
 	std::vector<Term::cptr> result;
 	for (auto unprocessed:subterms) {

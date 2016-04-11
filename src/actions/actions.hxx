@@ -65,6 +65,8 @@ public:
 	ActionBase(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	virtual ~ActionBase();
 	
+	ActionBase(const ActionBase& o);
+	
 	const ActionData& getActionData() const { return _data; };
 	
 	//! Some method redirections
@@ -92,6 +94,8 @@ class PartiallyGroundedAction : public ActionBase {
 public:
 	PartiallyGroundedAction(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	~PartiallyGroundedAction() {}
+	
+	PartiallyGroundedAction(const PartiallyGroundedAction& o) : ActionBase(o) {}
 };
 
 

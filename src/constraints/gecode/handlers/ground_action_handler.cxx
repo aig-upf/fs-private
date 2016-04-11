@@ -29,7 +29,7 @@ const ActionID* GroundActionCSPHandler::get_action_id(const SimpleCSP* solution)
 }
 
 void GroundActionCSPHandler::log() const {
-	FFDEBUG("heuristic", "Processing action #" << _action.getId() << ": " << _action);
+	FFDEBUG("heuristic", "Processing action: " << _action);
 }
 
 } } // namespaces

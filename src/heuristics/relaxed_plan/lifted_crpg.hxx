@@ -58,7 +58,7 @@ protected:
 	//!
 	ExtensionHandler _extension_handler;
 	
-	std::unique_ptr<const LiftedFormulaHandler> _goal_handler;
+	std::unique_ptr<LiftedFormulaHandler> _goal_handler;
 
 // typedef std::vector<std::vector<unsigned>> AchieverIndex;
 

@@ -19,7 +19,7 @@ LiftedActionID::LiftedActionID(const PartiallyGroundedAction* action, Binding&& 
 	: _action(action), _binding(std::move(binding)), _hash(0), _hashed(false)
 {
 	// The binding of the PartiallyGroundedAction might be incomplete, but the binding of the LiftedActionID must be complete.
-	assert(_binding.is_complete());
+	assert(_action == nullptr || get_full_binding().is_complete());
 }
 
 bool LiftedActionID::operator==(const ActionID& rhs) const {
@@ -48,7 +48,7 @@ std::size_t LiftedActionID::hash() const {
 
 std::size_t LiftedActionID::generate_hash() const {
 	std::size_t hash = 0;
-	const std::vector<ObjectIdx>& binding_data = _binding.get_full_binding();
+	const std::vector<ObjectIdx>& binding_data = get_full_binding().get_full_binding(); // TODO This is rather suboptimal
 	boost::hash_combine(hash, typeid(*this).hash_code());
 	boost::hash_combine(hash, _action->getOriginId());
 	boost::hash_combine(hash, boost::hash_range(binding_data.begin(), binding_data.end()));
@@ -63,18 +63,24 @@ std::size_t PlainActionID::hash() const {
 }
 
 std::ostream& LiftedActionID::print(std::ostream& os) const {
-	os << _action;
+	os << *generate();
 	return os;
 }
 
 std::ostream& PlainActionID::print(std::ostream& os) const {
-	os << _action;
+	os << *_action;
 	return os;
 }
 
 GroundAction* LiftedActionID::generate() const {
 	const ProblemInfo& info = Problem::getInfo();
 	return ActionGrounder::bind(*_action, _binding, info);
+}
+
+Binding LiftedActionID::get_full_binding() const {
+	Binding full(_action->getBinding());
+	full.merge_with(_binding);
+	return full;
 }
 
 } // namespaces

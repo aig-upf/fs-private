@@ -18,9 +18,9 @@ namespace fs0 { namespace gecode {
 BaseCSPHandler::~BaseCSPHandler() {
 	if (_novelty) delete _novelty;
 }
-	
+
 void BaseCSPHandler::init(const RPGData* bookkeeping) {
-	_base_csp.init(MinHMaxValueSelector(&_translator, bookkeeping));
+	_base_csp.init_value_selector(std::make_shared<AtomMinHMaxValueSelector>(&_translator, bookkeeping));
 }
 
 void BaseCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {

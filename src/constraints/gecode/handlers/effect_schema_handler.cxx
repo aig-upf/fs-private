@@ -2,6 +2,7 @@
 #include <languages/fstrips/language.hxx>
 #include <problem.hxx>
 #include <actions/actions.hxx>
+#include <actions/grounding.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
@@ -15,20 +16,35 @@
 namespace fs0 { namespace gecode {
 
 
-std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+	const ProblemInfo& info = Problem::getInfo();
 	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> handlers;
 	
 	for (const PartiallyGroundedAction* schema:schemata) {
+		FDEBUG("main", "Smart grounding of action " << *schema << "...");
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {
-			const fs::ActionEffect* effect = schema->getEffects().at(eff_idx);
-			auto handler = std::make_shared<EffectSchemaCSPHandler>(*schema, effect, tuple_index, approximate);
-			handler->init(novelty);
-			FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << *schema << std::endl <<  *handler << std::endl);
-			handlers.push_back(handler);
+			for (const PartiallyGroundedAction* flattened:ActionGrounder::flatten_effect_head(schema, eff_idx, info)) {
+				const fs::ActionEffect* effect = schema->getEffects().at(eff_idx);
+				
+				
+				// Ignore delete effects. 
+				// TODO - Refactor this into a hierarchy of effects, a delete effect should be an object of a particular type, or at least effect should have a method is_delete()
+				bool is_predicate = (dynamic_cast<const fs::StateVariable*>(effect->lhs()) && info.isPredicate(dynamic_cast<const fs::StateVariable*>(effect->lhs())->getSymbolId())) ||
+					(dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs()) && info.isPredicate(dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs())->getSymbolId()));
+				if (is_predicate && dynamic_cast<const fs::Constant*>(effect->rhs()) && dynamic_cast<const fs::Constant*>(effect->rhs())->getValue() == 0) {
+					continue;
+				}
+				
+				auto handler = std::make_shared<EffectSchemaCSPHandler>(*flattened, flattened->getEffects().at(eff_idx), tuple_index, approximate);
+				handler->init(novelty);
+				FDEBUG("main", "Smart grounding of effect \"" << *effect << " results in partially grounded action " << *flattened);
+				handlers.push_back(handler);
+			}
 		}
 	}
 	return handlers;
 }
+
 
 EffectSchemaCSPHandler::EffectSchemaCSPHandler(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
 	ActionSchemaCSPHandler(action, { effect }, tuple_index, approximate), _achievable_tuple_idx(INVALID_TUPLE)
@@ -36,6 +52,10 @@ EffectSchemaCSPHandler::EffectSchemaCSPHandler(const PartiallyGroundedAction& ac
 
 EffectSchemaCSPHandler::~EffectSchemaCSPHandler() {
 	delete _effect_novelty;
+	
+	// Note that we delete the _action pointer here because we know we have cloned the original action when creating the current object.
+	// TODO - TOO UGLY
+	delete &_action;
 }
 
 void EffectSchemaCSPHandler::init(bool use_novelty_constraint) {

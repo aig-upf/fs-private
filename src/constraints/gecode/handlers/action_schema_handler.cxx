@@ -45,20 +45,32 @@ void ActionSchemaCSPHandler::index_parameters() {
 	// Index in '_parameter_variables' the (ordered) CSP variables that correspond to the action parameters
 	const Signature& signature = _action.getSignature();
 	for (unsigned i = 0; i < signature.size(); ++i) {
-		if (_action.isBound(i)) continue; // The parameter is bound
-		// We here assume that the parameter IDs are always 0..k-1, where k is the number of parameters
-		fs::BoundVariable variable(i, signature[i]);
-		_parameter_variables.push_back(_translator.resolveVariableIndex(&variable, CSPVariableType::Input));
+		if (_action.isBound(i)) {
+			// If the parameter is bound, we mark it specially so that we know the value cannot be retrieved from the CSP,
+			// because there will be no CSP variable modelling that parameter
+			_parameter_variables.push_back(std::numeric_limits<unsigned int>::max());
+		} else {
+			// We here assume that the parameter IDs are always 0..k-1, where k is the number of parameters
+			fs::BoundVariable variable(i, signature[i]);
+			_parameter_variables.push_back(_translator.resolveVariableIndex(&variable, CSPVariableType::Input));
+		}
 	}
 }
 
 Binding ActionSchemaCSPHandler::build_binding_from_solution(const SimpleCSP* solution) const {
 	std::vector<int> values;
+	std::vector<bool> valid;
 	values.reserve(_parameter_variables.size());
 	for (unsigned csp_var_idx:_parameter_variables) {
-		values.push_back(_translator.resolveValueFromIndex(csp_var_idx, *solution));
+		if (csp_var_idx == std::numeric_limits<unsigned int>::max()) {
+			values.push_back(0);
+			valid.push_back(false);
+		} else {
+			values.push_back(_translator.resolveValueFromIndex(csp_var_idx, *solution));
+			valid.push_back(true);
+		}
 	}
-	return Binding(values);
+	return Binding(values, valid);
 }
 
 // Simply forward to the more concrete method
@@ -72,6 +84,6 @@ LiftedActionID* ActionSchemaCSPHandler::get_lifted_action_id(const SimpleCSP* so
 }
 
 void ActionSchemaCSPHandler::log() const {
-	FFDEBUG("heuristic", "Processing action schema #" << _action.getId() << ": " << _action);
+	FFDEBUG("heuristic", "Processing action schema " << _action);
 }
 } } // namespaces

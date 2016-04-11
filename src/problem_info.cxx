@@ -95,15 +95,6 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 	}
 }
 
-std::vector<const ObjectIdxVector*> ProblemInfo::getSignatureValues(const Signature& signature) const {
-	std::vector<const ObjectIdxVector*> res;
-	for (TypeIdx type:signature) {
-		res.push_back(&getTypeObjects(type));
-	}
-	return res;
-}
-
-
 void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 	assert(symbolIds.empty());
 	

@@ -8,6 +8,8 @@
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/config.hxx>
+#include <utils/binding_iterator.hxx>
+#include <utils/utils.hxx>
 #include <languages/fstrips/language.hxx>
 
 namespace fs0 {
@@ -15,15 +17,26 @@ namespace fs0 {
 
 
 void ActionGrounder::selective_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info, Problem& problem) {
+	bool do_smart_grounding = true; // TODO This decision should be made at the engine level.
+	
 	if (Config::instance().doLiftedPlanning()) {
-		problem.setPartiallyGroundedActions(no_grounding(action_data, info));
+// 		problem.setPartiallyGroundedActions(fully_lifted(action_data, info));
 	} else {
 		problem.setGroundActions(full_grounding(action_data, info));
+	}
+	
+	if (do_smart_grounding) {
+		problem.setPartiallyGroundedActions(fully_lifted(action_data, info));
+// 		if (Config::instance().doLiftedPlanning()) {
+// 			problem.setPartiallyGroundedActions(fully_lifted(action_data, info));
+// 		} else {
+// 			problem.setPartiallyGroundedActions(smart_grounding(action_data, info));
+// 		}
 	}
 }
 
 
-std::vector<const PartiallyGroundedAction*> ActionGrounder::no_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
+std::vector<const PartiallyGroundedAction*> ActionGrounder::fully_lifted(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
 	std::vector<const PartiallyGroundedAction*> lifted;
 	// We simply pass an empty binding to each action schema to obtain a fully-lifted PartiallyGroundedAction
 	for (const ActionData* data:action_data) {
@@ -51,20 +64,17 @@ std::vector<const GroundAction*> ActionGrounder::full_grounding(const std::vecto
 			continue;
 		}
 		
-		
-		std::vector<const ObjectIdxVector*> values = info.getSignatureValues(signature);
-		int num_bindings = std::accumulate(values.begin(), values.end(), 1, [](int a, const ObjectIdxVector* b) { return a * b->size(); });
+		utils::binding_iterator binding_generator(signature, info);
+		int num_bindings = binding_generator.num_bindings();
 		
 		std::cout <<  "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:\n\t" << std::flush;
 		FINFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:\n" << print::action_data_name(*data) << "\n");
 		
 		float onepercent = ((float)num_bindings / 100);
 		int progress = 0;
-		
-		utils::cartesian_iterator cross_product(std::move(values));
 		unsigned i = 0;
-		for (; !cross_product.ended(); ++cross_product) {
-			id = ground(id, data, Binding(*cross_product), info, grounded);
+		for (; !binding_generator.ended(); ++binding_generator) {
+			id = ground(id, data, *binding_generator, info, grounded);
 			++i;
 			
 			// Print 5%, 10%, 15%, ... progress indicators
@@ -113,7 +123,7 @@ ActionData* ActionGrounder::process_action_data(const ActionData& action_data, c
 
 
 GroundAction* ActionGrounder::full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
-	assert(binding.is_complete()); // Grounding only possible for full bingdings
+	assert(binding.is_complete()); // Grounding only possible for full bindings
 	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
@@ -128,8 +138,37 @@ GroundAction* ActionGrounder::full_binding(unsigned id, const ActionData& action
 	return new GroundAction(id, action_data, binding, precondition, effects);
 }
 
+
+std::vector<const PartiallyGroundedAction*> ActionGrounder::flatten_effect_head(const PartiallyGroundedAction* schema, unsigned effect_idx, const ProblemInfo& info) {
+	const fs::ActionEffect* effect = schema->getEffects().at(effect_idx);
+	
+	auto head_parameters = Utils::filter_by_type<const fs::BoundVariable*>(effect->lhs()->all_terms());
+	
+	// If there are no parameters on the effect head, we simply return a vector with a clone of the action
+	if (head_parameters.empty()) {
+		return { new PartiallyGroundedAction(*schema) };
+	}
+	
+	// Otherwise, we ground the whole effect wrt the head parameters, and return all the resulting effects
+	std::vector<const PartiallyGroundedAction*> grounded;
+	std::vector<TypeIdx> types(schema->getSignature().size(), INVALID_TYPE); // Initialize a type vector with all types being invalid
+	for (const fs::BoundVariable* parameter:head_parameters) {
+		types.at(parameter->getVariableId()) = parameter->getType();
+	}
+	
+	utils::binding_iterator binding_generator(types, info);
+	for (; !binding_generator.ended(); ++binding_generator) {
+		// We generate the binding that results from merging the binding of the partially grounded action with the one
+		// that we create to turn the head of the given effect into a state variable
+		Binding binding = schema->getBinding(); // Copy the object
+		binding.merge_with(*binding_generator);
+		grounded.push_back(partial_binding(schema->getActionData(), binding, info));
+	}
+	
+	return grounded;
+}
+
 PartiallyGroundedAction* ActionGrounder::partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
-	assert(!binding.is_complete()); // Grounding only possible for full bingdings
 	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
@@ -145,7 +184,9 @@ PartiallyGroundedAction* ActionGrounder::partial_binding(const ActionData& actio
 }
 
 GroundAction* ActionGrounder::bind(const PartiallyGroundedAction& action, const Binding& binding, const ProblemInfo& info) {
-	return full_binding(GroundAction::invalid_action_id, action.getActionData(), binding, info);
+	Binding full(action.getBinding());
+	full.merge_with(binding); // TODO We should bind not from the action data but from the partially bound action itself.
+	return full_binding(GroundAction::invalid_action_id, action.getActionData(), full, info);
 }
 
 

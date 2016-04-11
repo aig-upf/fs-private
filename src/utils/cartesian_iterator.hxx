@@ -21,57 +21,18 @@ protected:
 	bool _ended;
 
 public:
-	cartesian_iterator(std::vector<const ObjectIdxVector*>&& values) :
-		_values(values),
-		_iterators(),
-		_element(),
-		_ended(_values.empty())
-	{
-		// Initialize the iterator vector and check that all the sets of the cartesian product have at least one element (otherwise the product will be empty)
-		_iterators.reserve(_values.size());
-		_element.reserve(_values.size());
-		for (const auto& domain:_values) {
-			if (domain->size() == 0) {
-				_ended = true;
-				break;
-			}
-			auto it = domain->begin();
-			_iterators.push_back(it);
-			_element.push_back(*it);
-		}
-	}
+	cartesian_iterator(std::vector<const ObjectIdxVector*>&& values);
 
-	cartesian_iterator( const cartesian_iterator& o ) 
-	:	_values ( o._values ),
-		_iterators( o._iterators ),
-		_element( o._element ),
-		_ended( o._ended )
-	{}
+	cartesian_iterator(const cartesian_iterator& o) = default;
+	
+	//! Compute the size of the cartesian product
+	unsigned size() const;
 	
 	//! Advances the iterator at position 'idx' or, if it has reached the end, resets its and tries with the one at the left, recursively.
-	void advanceIterator(unsigned idx) {
-		assert(idx < _iterators.size());
-		if (++_iterators[idx] != _values[idx]->end()) {
-			updateElement(idx);
-		} else {
-			if (idx == 0) { // Base case: We're done with all the elements in the cartesian product.
-				_ended = true;
-				return;
-			}
-			
-			// otherwise: reset the current idx to zero and try incrementing the previous one.
-			_iterators[idx] = _values[idx]->begin();
-			updateElement(idx);
-			advanceIterator(idx-1);
-		}
-	}
+	void advanceIterator(unsigned idx);
 	
-	inline void updateElement(unsigned idx) {
-		assert(_iterators[idx] != _values[idx]->end());
-		_element[idx] = *(_iterators[idx]);
-	}
+	void updateElement(unsigned idx);
 
-public:
 	const std::vector<ObjectIdx>& operator*() const { return _element; }
 	
 	const cartesian_iterator& operator++() {

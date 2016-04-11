@@ -8,22 +8,36 @@ namespace fs0 {
 //! A (possibly partial) binding of quantified variables / action parameters to actual values
 class Binding {
 protected:
-	std::vector<ObjectIdx> _values;
 	std::vector<bool> _set;
+	ValueTuple _values;
 	
 public:
 	//! Construct an empty binding
 	Binding() {}
 	
 	//! Construct a binding of given size with all variables unset
-	Binding(std::size_t size) : _values(size), _set(size, false) {}
+	Binding(std::size_t size) : _set(size, false), _values(size) {}
 	
-	//! Construct a binding from a given vector with all variables set
-	Binding(const std::vector<ObjectIdx>& values) : _values(values), _set(values.size(), true) {}
-	Binding(std::vector<ObjectIdx>&& values) : _values(std::move(values)), _set(values.size(), true) {}
+	//! Construct a complete binding from a given vector with all variables set
+	Binding(const ValueTuple& values) : Binding(ValueTuple(values)) {}
+	Binding(ValueTuple&& values) : _set(values.size(), true), _values(std::move(values)) {}
+	
+	Binding(const ValueTuple& values, const std::vector<bool>& set) : _set(set), _values(values) {}
 	
 	//! Default copy constructor
 	Binding(const Binding& other) = default;
+	
+	//! Merge in-place the current binding with the given one. If the two bindings overlap, i.e. both bind
+	//! one same variable, throws an exception
+	void merge_with(const Binding& other) {
+		assert(size() == other.size());
+		for (unsigned i = 0; i < _values.size(); ++i) {
+			if (other.binds(i)) {
+				if (this->binds(i)) throw std::runtime_error("Attempting to merge to overlapping bindings");
+				set(i, other.value(i));
+			}
+		}
+	}
 	
 	bool is_complete() const {
 		for (bool b:_set) {
@@ -33,7 +47,7 @@ public:
 	}
 	
 	//! (Only) if the binding is full, we can obtain the raw vector of integer values 
-	const std::vector<ObjectIdx>& get_full_binding() const {
+	const ValueTuple& get_full_binding() const {
 		if (!is_complete()) throw std::runtime_error("Attempted to obtain a full binding from a partial binding");
 		return _values;
 	}

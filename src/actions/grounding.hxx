@@ -27,6 +27,10 @@ public:
 	
 	//! Binds a partially grounded action with a full binding, disregarding the ID of the resulting grounded action
 	static GroundAction* bind(const PartiallyGroundedAction& action, const Binding& binding, const ProblemInfo& info);
+	
+	//!
+	static std::vector<const PartiallyGroundedAction*> flatten_effect_head(const PartiallyGroundedAction* schema, unsigned effect_idx, const ProblemInfo& info);
+
 
 protected:
 	//! Helper to ground a schema with a single binding. Returns the expected next action ID, which might be the same
@@ -35,10 +39,10 @@ protected:
 	
 	static std::vector<const GroundAction*> full_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);
 	
-	static std::vector<const PartiallyGroundedAction*> smart_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);
+// 	static std::vector<const PartiallyGroundedAction*> smart_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);
 	
 	//! Generate fully-lifted actions from the action schema data
-	static std::vector<const PartiallyGroundedAction*> no_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);
+	static std::vector<const PartiallyGroundedAction*> fully_lifted(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);
 	
 	
 	//! Process the action schema with a given parameter binding and return the corresponding GroundAction

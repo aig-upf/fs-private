@@ -16,8 +16,10 @@ class SimpleCSP : public Gecode::Space {
 public:
 	typedef   SimpleCSP* ptr;
 
-	SimpleCSP() : _value_selector() {};
+	SimpleCSP() : _value_selector(nullptr) {};
 
+	~SimpleCSP() {}
+	
 	//! Cloning constructor, required by Gecode
 	SimpleCSP( bool share, SimpleCSP& other ) :
 		Gecode::Space(share, other),
@@ -47,16 +49,26 @@ public:
 		return os;
 	}
 	
-	void init(MinHMaxValueSelector&& value_selector) {
-		_value_selector = std::move(value_selector);
+	void init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector) {
+		_value_selector = value_selector;
 	}
 
 	//! CSP variables that correspond to the planning problem state variables that are relevant to the goal formula + state constraints
 	Gecode::IntVarArray _intvars;
 	Gecode::BoolVarArray _boolvars;
+
 	
+	int select_value(Gecode::IntVar& x, int csp_var_idx) const {
+		// If the value selector has not been initialized, we simply fall back to a min-value selection policy
+		if (_value_selector == nullptr) return x.min();
+		
+		// Otherwise we forward the call to the appropriate value selector
+		return _value_selector->select(x, csp_var_idx);
+	}
+	
+protected:
 	//! A value selector for the branching strategy
-	MinHMaxValueSelector _value_selector;
+	std::shared_ptr<MinHMaxValueSelector> _value_selector;
 };
 
 } } // namespaces

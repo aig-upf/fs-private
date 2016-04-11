@@ -27,7 +27,7 @@ protected:
 	
 	//! The atom corresponding to each tuple index
 	std::vector<Atom> _tuple_atoms;
-	std::map<Atom, TupleIdx> _tuple_atoms_inv;
+	std::map<Atom, TupleIdx> _tuple_atoms_inv; // TODO - Optimization: should be a vector of maps, one per each VariableIdx
 	
 public:
 	//! Constructs a full tuple index

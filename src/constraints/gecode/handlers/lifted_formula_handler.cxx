@@ -95,5 +95,9 @@ SimpleCSP::ptr LiftedFormulaHandler::instantiate(const RPGIndex& rpg) const {
 	return clone;
 }
 
+void LiftedFormulaHandler::init_value_selector(const RPGIndex* graph) {
+	_base_csp.init_value_selector(std::make_shared<TupleMinHMaxValueSelector>(&_tuple_index, &_translator, graph));
+}
+
 
 } } // namespaces

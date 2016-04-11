@@ -27,7 +27,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSLiftedEffectCRPG::create(const Config& c
 	LiftedCRPG lifted_crpg(problem, problem.getGoalConditions(), problem.getStateConstraints());
 	const TupleIndex& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
-	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create(base_actions, tuple_index, approximate, novelty);
+	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create_smart(base_actions, tuple_index, approximate, novelty);
 	lifted_crpg.set_managers(std::move(managers)); // TODO Probably we don't need this to be shared_ptr's anymore
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, LiftedCRPG, FS0StateModel>(model, std::move(lifted_crpg)));

@@ -28,6 +28,7 @@ Problem::Problem(State* init, const std::vector<const ActionData*>& action_data,
 Problem::~Problem() {
 	for (const auto pointer:_action_data) delete pointer;
 	for (const auto pointer:_ground) delete pointer;
+	for (const auto pointer:_partials) delete pointer;
 	delete _state_constraint_formula;
 	delete _goal_formula;
 }

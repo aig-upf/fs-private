@@ -75,6 +75,9 @@ public:
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const;
+
+protected:
+	Binding get_full_binding() const;
 };
 
 //! A plain action ID is just the unsigned integer that identifies the action within the whole vector of grounded actions
