@@ -5,8 +5,7 @@
 #include <utils/logging.hxx>
 #include <utils/printers/language.hxx>
 #include <utils/printers/actions.hxx>
-#include <applicability/csp_formula_interpreter.hxx>
-#include <applicability/direct_formula_interpreter.hxx>
+#include <applicability/formula_interpreter.hxx>
 
 namespace fs0 {
 

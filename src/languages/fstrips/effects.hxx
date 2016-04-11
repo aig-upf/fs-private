@@ -18,14 +18,15 @@ class ActionEffect {
 public:
 	typedef const ActionEffect* cptr;
 	
-	ActionEffect(Term::cptr lhs_, Term::cptr rhs_)
-		: _lhs(lhs_), _rhs(rhs_) {
-		if (!isWellFormed()) throw std::runtime_error("Ill-formed effect");
-	}
+	ActionEffect(Term::cptr lhs_, Term::cptr rhs_);
 	
-	virtual ~ActionEffect() {
-		delete _lhs; delete _rhs;
-	}
+	virtual ~ActionEffect();
+	
+	ActionEffect(const ActionEffect& other);
+	ActionEffect(const ActionEffect&& other) = delete;
+	ActionEffect& operator=(const ActionEffect& rhs) = delete;
+	ActionEffect& operator=(ActionEffect&& rhs) = delete;
+	
 	
 	//! Checks that the effect is well formed
 	bool isWellFormed() const;

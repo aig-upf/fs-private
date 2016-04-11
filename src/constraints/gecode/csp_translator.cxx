@@ -204,7 +204,8 @@ VariableIdx GecodeCSPVariableTranslator::getPlanningVariable(unsigned csp_var_id
 	return _intvars_idx[csp_var_idx];
 }
 
-std::vector<std::pair<unsigned, std::vector<unsigned>>> GecodeCSPVariableTranslator::index_fluents(std::unordered_set<const fs::Term*> terms) {
+std::vector<std::pair<unsigned, std::vector<unsigned>>>
+GecodeCSPVariableTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
 	const ProblemInfo& info = Problem::getInfo();
 	std::vector<std::pair<unsigned, std::vector<unsigned>>> tuple_indexes;
 	// Register all fluent symbols involved

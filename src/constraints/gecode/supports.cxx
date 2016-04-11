@@ -7,7 +7,8 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<TupleIdx> Supports::extract_support(const SimpleCSP* solution, const GecodeCSPVariableTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes) {
+std::vector<TupleIdx>
+Supports::extract_support(const SimpleCSP* solution, const GecodeCSPVariableTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes) {
 	const auto& tuple_index = Problem::getInstance().get_tuple_index();
 	std::vector<TupleIdx> support;
 	

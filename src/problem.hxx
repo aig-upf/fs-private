@@ -24,6 +24,12 @@ public:
 
 	Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index);
 	~Problem();
+	
+	Problem(const Problem& other) = delete;
+	Problem& operator=(const Problem& other) = delete;
+	Problem(const Problem&& other) = delete;
+	bool operator==(const Problem& other) = delete;
+	Problem& operator=(Problem&& rhs) = delete;
 
 	//! Get the initial state of the problem
 	const State& getInitialState() const { return *_init; }

@@ -6,6 +6,29 @@
 
 namespace fs0 { namespace gecode {
 
+Extension::Extension(const TupleIndex& tuple_index) : _tuple_index(tuple_index), _tuples() {}
+
+bool Extension::is_tautology() const {
+	return _tuples.size() == 1 && _tuple_index.from_index(_tuples[0]).empty();
+}
+
+void Extension::add_tuple(TupleIdx tuple) {
+// 	assert(std::find(_tuples.begin(), _tuples.end(), tuple) == _tuples.end()); // This is an expensive assert
+	_tuples.push_back(tuple);
+}
+
+Gecode::TupleSet Extension::generate() const {
+	Gecode::TupleSet ts;
+	if (is_tautology()) return ts; // We return an empty extension, since the symbol will be dealt with differently
+	
+	for (TupleIdx index:_tuples) {
+		ts.add(_tuple_index.from_index(index));
+	}
+	ts.finalize();
+	return ts;
+}
+
+
 ExtensionHandler::ExtensionHandler(const TupleIndex& tuple_index) :
 	_info(Problem::getInfo()),
 	_tuple_index(tuple_index)
@@ -30,7 +53,7 @@ TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 	if (is_predicate && value == 1) {
 		TupleIdx index = _tuple_index.to_index(tuple_data);
 		extension.add_tuple(index);
-		return (int) index;
+		return index;
 	}
 	
 	if (!is_predicate) {
@@ -38,7 +61,7 @@ TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 		tuple.push_back(value);
 		TupleIdx index = _tuple_index.to_index(symbol, tuple);
 		extension.add_tuple(index);
-		return (int) index;
+		return index;
 	}
 	
 	return INVALID_TUPLE;
@@ -46,9 +69,8 @@ TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 
 void ExtensionHandler::process_tuple(TupleIdx tuple) {
 	unsigned symbol_idx = _tuple_index.symbol(tuple);
-	Extension& extension = _extensions.at(symbol_idx);
 	_modified.insert(symbol_idx);  // Mark the extension as modified
-	extension.add_tuple(tuple);
+	_extensions.at(symbol_idx).add_tuple(tuple);
 }
 
 void ExtensionHandler::process_delta(VariableIdx variable, const std::vector<ObjectIdx>& delta) {

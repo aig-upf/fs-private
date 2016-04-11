@@ -26,6 +26,9 @@ public:
 	
 	//! Default copy constructor
 	Binding(const Binding& other) = default;
+	Binding(Binding&& other) = default;
+	Binding& operator=(const Binding& rhs) = default;
+	Binding& operator=(Binding&& rhs) = default;
 	
 	//! Merge in-place the current binding with the given one. If the two bindings overlap, i.e. both bind
 	//! one same variable, throws an exception

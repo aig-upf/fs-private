@@ -32,6 +32,7 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 				bool is_predicate = (dynamic_cast<const fs::StateVariable*>(effect->lhs()) && info.isPredicate(dynamic_cast<const fs::StateVariable*>(effect->lhs())->getSymbolId())) ||
 					(dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs()) && info.isPredicate(dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs())->getSymbolId()));
 				if (is_predicate && dynamic_cast<const fs::Constant*>(effect->rhs()) && dynamic_cast<const fs::Constant*>(effect->rhs())->getValue() == 0) {
+					delete flattened;
 					continue;
 				}
 				
@@ -47,11 +48,11 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 
 
 EffectSchemaCSPHandler::EffectSchemaCSPHandler(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
-	ActionSchemaCSPHandler(action, { effect }, tuple_index, approximate), _achievable_tuple_idx(INVALID_TUPLE)
+	ActionSchemaCSPHandler(action, { effect }, tuple_index, approximate), _achievable_tuple_idx(INVALID_TUPLE), _effect_novelty(nullptr)
 {}
 
 EffectSchemaCSPHandler::~EffectSchemaCSPHandler() {
-	delete _effect_novelty;
+	if (_effect_novelty) delete _effect_novelty;
 	
 	// Note that we delete the _action pointer here because we know we have cloned the original action when creating the current object.
 	// TODO - TOO UGLY
@@ -164,6 +165,10 @@ void EffectSchemaCSPHandler::process_effect_solution(const SimpleCSP* solution, 
 	
 	// Otherwise, the value is actually new - we extract the actual support from the solution
 	std::vector<TupleIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes);
+	
+	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
+	support.insert(support.end(), _necessary_tuples.begin(), _necessary_tuples.end());
+	
 	rpg.add(tuple_idx, get_action_id(solution), std::move(support));
 }
 

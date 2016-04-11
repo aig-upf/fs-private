@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
-#include <constraints/gecode/utils/value_selection.hxx>
+#include <memory>
 #include <gecode/int.hh>
+#include <constraints/gecode/utils/value_selection.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -14,57 +14,35 @@ namespace fs0 { namespace gecode {
  */
 class SimpleCSP : public Gecode::Space {
 public:
-	typedef   SimpleCSP* ptr;
+	typedef SimpleCSP* ptr;
 
-	SimpleCSP() : _value_selector(nullptr) {};
-
-	~SimpleCSP() {}
+	SimpleCSP();
+	~SimpleCSP();
 	
 	//! Cloning constructor, required by Gecode
-	SimpleCSP( bool share, SimpleCSP& other ) :
-		Gecode::Space(share, other),
-		_value_selector(other._value_selector)
-	{
-		_intvars.update( *this, share, other._intvars );
-		_boolvars.update( *this, share, other._boolvars );
-	}
+	SimpleCSP(bool share, SimpleCSP& other);
 
 	//! Shallow copy operator, see notes on search in Gecode to
 	//! get an idea of what is being "actually" copied
-	virtual Gecode::Space* copy( bool share ) { return new SimpleCSP( share, *this ); }
+	virtual Gecode::Space* copy(bool share);
 
 	//! Standard copy constructor
-	explicit SimpleCSP(SimpleCSP& other);
+	SimpleCSP(SimpleCSP& other) = delete;
 
-	bool checkConsistency(){
-		Gecode::SpaceStatus st = status();
-		return st != Gecode::SpaceStatus::SS_FAILED;
-	}
+	bool checkConsistency();
 
 	//! Prints a representation of a CSP. Mostly for debugging purposes
 	friend std::ostream& operator<<(std::ostream &os, const SimpleCSP&  csp) { return csp.print(os); }
-	std::ostream& print(std::ostream& os) const {
-		os << _intvars << std::endl;
-		os << _boolvars; 
-		return os;
-	}
+	std::ostream& print(std::ostream& os) const;
 	
-	void init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector) {
-		_value_selector = value_selector;
-	}
+	void init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector);
 
+	int select_value(Gecode::IntVar& x, int csp_var_idx) const;
+	
+	
 	//! CSP variables that correspond to the planning problem state variables that are relevant to the goal formula + state constraints
 	Gecode::IntVarArray _intvars;
 	Gecode::BoolVarArray _boolvars;
-
-	
-	int select_value(Gecode::IntVar& x, int csp_var_idx) const {
-		// If the value selector has not been initialized, we simply fall back to a min-value selection policy
-		if (_value_selector == nullptr) return x.min();
-		
-		// Otherwise we forward the call to the appropriate value selector
-		return _value_selector->select(x, csp_var_idx);
-	}
 	
 protected:
 	//! A value selector for the branching strategy

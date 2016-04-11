@@ -15,6 +15,10 @@
 
 namespace fs0 { namespace gecode {
 
+BaseCSPHandler::BaseCSPHandler(const TupleIndex& tuple_index, bool approximate) :
+	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _novelty(nullptr), _tuple_index(tuple_index)
+{}
+
 BaseCSPHandler::~BaseCSPHandler() {
 	if (_novelty) delete _novelty;
 }
@@ -160,6 +164,8 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 	const ProblemInfo& info = Problem::getInfo();
 	std::unordered_set<const fs::Term*> inserted_terms;
 	std::unordered_set<const fs::AtomicFormula*> inserted_conditions;
+	std::unordered_set<TupleIdx> true_tuples;
+	
 	
 	for (auto condition:conditions) {
 		if (auto relational = dynamic_cast<const fs::RelationalFormula*>(condition)) {
@@ -201,7 +207,9 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 							}
 							
 							// Mark the state variable to allow the later support recovery
-							_atom_state_variables.insert(Atom(statevar->getValue(), 1));
+							Atom atom(statevar->getValue(), 1);
+							_atom_state_variables.insert(atom);
+							true_tuples.insert(_tuple_index.to_index(atom));
 						}
 					}
 				}
@@ -216,6 +224,9 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 	
 	std::copy_if(terms.begin(), terms.end(), std::inserter(_all_terms, _all_terms.begin()),
 				 [&inserted_terms] (const fs::Term* term) { return inserted_terms.find(term) == inserted_terms.end(); });
+	
+	assert(_necessary_tuples.empty());
+	_necessary_tuples.insert(_necessary_tuples.end(), true_tuples.begin(), true_tuples.end());
 }
 
 void BaseCSPHandler::extract_nested_term_support(const SimpleCSP* solution, const std::vector<fs::FluentHeadedNestedTerm::cptr>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const {

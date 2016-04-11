@@ -37,8 +37,31 @@ RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHa
 			_domains.push_back(Gecode::IntSet()); // We simply push an empty domain for those predicative state variables that are set to false.
 		}
 	}
+	next();
+}
+
+void RPGIndex::advance() {
+	_extension_handler.advance();
 	
+	for (TupleIdx tuple:_novel_tuples) {
+		_extension_handler.process_tuple(tuple);
+		const Atom& atom = _tuple_index.to_atom(tuple);
+		_domains_raw[atom.getVariable()].insert(atom.getValue());
+	}
+	
+	// Now update the per-variable domains
+	for (unsigned variable = 0; variable < _domains_raw.size(); ++variable) {
+		const auto& all = _domains_raw[variable];
+		// An intermediate IntArgs object seems to be necessary, since IntSets do not accept std-like range constructors.
+		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(all.cbegin(), all.cend()));
+	}
+	
+	next();
+}
+
+void RPGIndex::next() {
 	_extensions = _extension_handler.generate_extensions();
+	_novel_tuples.clear();
 	++_current_layer;
 }
 
@@ -72,7 +95,7 @@ bool RPGIndex::reached(TupleIdx tuple) const {
 void RPGIndex::add(TupleIdx tuple, const ActionID* action, std::vector<TupleIdx>&& support) {
 	auto& it = _reached.at(tuple);
 	if (it != nullptr) return; // Don't insert the atom if it was already tracked by the RPG
-	it = createTupleSupport(action, std::move(support));
+	it = createTupleSupport(action, std::move(support)); // This effectively inserts the tuple into '_reached'
 	_novel_tuples.push_back(tuple);
 }
 
@@ -93,9 +116,9 @@ std::ostream& RPGIndex::print(std::ostream& os) const {
 		TupleSupport* support = _reached[i];
 		if (support != nullptr) {
 			const ActionID* action_id = std::get<1>(*support);
-			os << "Tuple: " << i  << " (Atom: " << _tuple_index.to_atom(i) << ")" << " - action: ";
+			os << "Tuple: " << i  << "\t(Atom: " << _tuple_index.to_atom(i) << ")\t- action: ";
 			(action_id ? os << *action_id : os << "[INVALID-ACTION]");
-			os << " - layer #" << std::get<0>(*support) << " - support: ";
+			os << "\t- layer #" << std::get<0>(*support) << " - support: ";
 			printAtoms(std::get<2>(*support), os);
 			os << std::endl;
 		}
@@ -114,29 +137,6 @@ void RPGIndex::printAtoms(const std::vector<TupleIdx>& vector, std::ostream& os)
 	for (const auto& element:vector) {
 		os << element << ", ";
 	}
-}
-
-void RPGIndex::advance() {
-	
-	_extension_handler.advance();
-	
-	std::vector<std::vector<ObjectIdx>> novel_values(_domains.size());
-	for (TupleIdx tuple:_novel_tuples) {
-		_extension_handler.process_tuple(tuple);
-		const Atom& atom = _tuple_index.to_atom(tuple);
-		_domains_raw[atom.getVariable()].insert(atom.getValue());
-	}
-	
-	// Now update the per-variable domains
-	for (unsigned variable = 0; variable < _domains_raw.size(); ++variable) {
-		const auto& all = _domains_raw[variable];
-		// An intermediate IntArgs object seems to be necessary, since IntSets do not accept std-like range constructors.
-		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(all.cbegin(), all.cend()));
-	}
-	
-	_extensions = _extension_handler.generate_extensions();
-	_novel_tuples.clear();
-	++_current_layer;
 }
 
 

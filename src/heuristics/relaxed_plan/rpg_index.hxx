@@ -106,6 +106,8 @@ protected:
 	TupleSupport* createTupleSupport(const ActionID* action, std::vector<TupleIdx>&& support) const;
 	
 	void printAtoms(const std::vector<TupleIdx>& vector, std::ostream& os) const;
+	
+	void next();
 };
 
 

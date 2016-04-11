@@ -119,7 +119,7 @@ public:
 	
 	VariableIdx getPlanningVariable(unsigned csp_var_idx) const;
 	
-	std::vector<std::pair<unsigned, std::vector<unsigned>>> index_fluents(std::unordered_set<const fs::Term*> terms);
+	std::vector<std::pair<unsigned, std::vector<unsigned>>> index_fluents(const std::unordered_set<const fs::Term*>& terms);
 	
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.

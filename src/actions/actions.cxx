@@ -83,8 +83,6 @@ GroundAction::GroundAction(unsigned id, const ActionData& action_data, const Bin
 {}
 
 
-GroundAction::~GroundAction() {}
-
 const ActionIdx GroundAction::invalid_action_id = std::numeric_limits<unsigned int>::max();
 
 

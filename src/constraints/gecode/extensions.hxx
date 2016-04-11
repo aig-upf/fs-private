@@ -16,24 +16,13 @@ protected:
 	std::vector<TupleIdx> _tuples;
 	
 public:
-	Extension(const TupleIndex& tuple_index) : _tuple_index(tuple_index), _tuples() {}
+	Extension(const TupleIndex& tuple_index);
 	
-	void add_tuple(TupleIdx tuple) { _tuples.push_back(tuple); }
+	void add_tuple(TupleIdx tuple);
 	
-	bool is_tautology() const {
-		return _tuples.size() == 1 && _tuple_index.from_index(_tuples[0]).empty();
-	}
+	bool is_tautology() const;
 	
-	Gecode::TupleSet generate() const {
-		Gecode::TupleSet ts;
-		if (is_tautology()) return ts; // We return an empty extension, since the symbol will be dealt with differently
-		
-		for (TupleIdx index:_tuples) {
-			ts.add(_tuple_index.from_index(index));
-		}
-		ts.finalize();
-		return ts;
-	}
+	Gecode::TupleSet generate() const;
 };
 
 class ExtensionHandler {

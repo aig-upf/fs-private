@@ -100,9 +100,9 @@ public:
 class PartiallyGroundedAction : public ActionBase {
 public:
 	PartiallyGroundedAction(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
-	~PartiallyGroundedAction() {}
+	~PartiallyGroundedAction() = default;
 	
-	PartiallyGroundedAction(const PartiallyGroundedAction& o) : ActionBase(o) {}
+	PartiallyGroundedAction(const PartiallyGroundedAction& o) = default;
 };
 
 
@@ -120,7 +120,7 @@ public:
 	static const ActionIdx invalid_action_id;
 	
 	GroundAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
-	~GroundAction();
+	~GroundAction() = default;
 	
 	unsigned getId() const { return _id; }
 };

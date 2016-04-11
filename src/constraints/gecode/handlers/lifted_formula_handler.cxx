@@ -51,7 +51,8 @@ bool LiftedFormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>
 	FFDEBUG("heuristic", "Formula CSP solution found: " << *solution);
 	assert(support.empty());
 	support = Supports::extract_support(solution, _translator, _tuple_indexes);
-	
+	support.insert(support.end(), _necessary_tuples.begin(), _necessary_tuples.end());
+
 	delete solution;
 	return true;
 }
