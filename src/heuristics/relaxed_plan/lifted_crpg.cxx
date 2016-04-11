@@ -2,17 +2,18 @@
 #include <limits>
 
 #include <state.hxx>
-#include <languages/fstrips/effects.hxx>
+#include <languages/fstrips/language.hxx>
+#include <languages/fstrips/scopes.hxx>
 #include <heuristics/relaxed_plan/lifted_crpg.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
-#include <languages/fstrips/scopes.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/config.hxx>
+#include <problem.hxx>
 
 #include <gecode/int.hh>
 

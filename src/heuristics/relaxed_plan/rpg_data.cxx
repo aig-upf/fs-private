@@ -5,6 +5,7 @@
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
 #include <problem.hxx>
+#include <problem_info.hxx>
 
 namespace fs0 {
 

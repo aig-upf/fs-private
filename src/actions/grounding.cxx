@@ -4,7 +4,6 @@
 #include <actions/actions.hxx>
 #include <problem_info.hxx>
 #include <utils/logging.hxx>
-#include <utils/cartesian_iterator.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/config.hxx>

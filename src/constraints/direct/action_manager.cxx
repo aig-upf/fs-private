@@ -7,9 +7,11 @@
 #include <utils/projections.hxx>
 #include <utils/logging.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/language.hxx>
 #include <relaxed_state.hxx>
 #include <actions/action_id.hxx>
 #include <actions/actions.hxx>
+
 
 namespace fs0 {
 

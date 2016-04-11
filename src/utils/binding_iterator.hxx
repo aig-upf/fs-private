@@ -2,7 +2,6 @@
 #pragma once
 
 #include <utils/binding.hxx>
-#include <utils/cartesian_iterator.hxx>
 
 namespace fs0 {
 class ProblemInfo;
@@ -10,20 +9,23 @@ class ProblemInfo;
 
 namespace fs0 { namespace utils {
 
-//! A binding_iterator
+class cartesian_iterator;
+
+//! A binding_iterator iterates through all possible bindings of a given signature
 class binding_iterator {
 protected:
 	static const ObjectIdxVector NIL;
 	
 	std::vector<bool> _valid;
 	
-	cartesian_iterator _iterator;
+	cartesian_iterator* _iterator;
 
-	std::vector<const ObjectIdxVector*> generate_values(const std::vector<TypeIdx>& types, const ProblemInfo& info);
+	std::vector<const ObjectIdxVector*> generate_values(const Signature& types, const ProblemInfo& info);
 	
 public:
 	//! Constructor
-	binding_iterator(const std::vector<TypeIdx>& types, const ProblemInfo& info);
+	binding_iterator(const Signature& types, const ProblemInfo& info);
+	~binding_iterator();
 
 	//! Default operators
 	binding_iterator(const binding_iterator&) = default;
@@ -31,20 +33,15 @@ public:
 	binding_iterator& operator=(const binding_iterator&) = default;
 	binding_iterator& operator=(binding_iterator&&) = default;
 	
-	unsigned num_bindings() const { return _iterator.size(); }
+	unsigned num_bindings() const;
 	
 	//! Generates a fresh binding each time it is invoked
-	Binding operator*() const { 
-		return Binding(*_iterator, _valid);
-	}
+	Binding operator*() const;
 	
-	const binding_iterator& operator++() {
-		++_iterator;
-		return *this;
-	}
-	const binding_iterator operator++(int) {binding_iterator tmp(*this); operator++(); return tmp;}
+	const binding_iterator& operator++();
+	const binding_iterator operator++(int);
 	
-	bool ended() const { return _iterator.ended(); }
+	bool ended() const;
 };
 
 

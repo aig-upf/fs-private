@@ -13,7 +13,6 @@ namespace fs0 {
 
 class State;
 class FormulaInterpreter;
-class ProblemInfo;
 class ActionData;
 class ActionBase;
 class PartiallyGroundedAction;

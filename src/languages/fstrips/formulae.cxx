@@ -1,8 +1,7 @@
 
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>
-#include <languages/fstrips/utils.hxx>
-#include "terms.hxx"
+#include <languages/fstrips/terms.hxx>
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>
@@ -58,7 +57,7 @@ std::vector<Term::cptr> AtomicFormula::all_terms() const {
 	return res;
 }
 
-AtomicFormula* AtomicFormula::clone() const { return clone(FStripsUtils::clone(_subterms)); }
+AtomicFormula* AtomicFormula::clone() const { return clone(Utils::clone(_subterms)); }
 
 bool AtomicFormula::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	return _satisfied(NestedTerm::interpret_subterms(_subterms, assignment, binding));
@@ -233,7 +232,7 @@ Formula* ExistentiallyQuantifiedFormula::conjunction(const AtomicFormula* 						
 Formula* ExistentiallyQuantifiedFormula::conjunction(const ExistentiallyQuantifiedFormula*		other) const { throw std::runtime_error("Unimplemented"); }	
 
 Conjunction* Conjunction::conjunction(const Conjunction::cptr other) const {
-	auto all_subterms = Utils::merge(FStripsUtils::clone(_conjuncts), FStripsUtils::clone(other->_conjuncts));
+	auto all_subterms = Utils::merge(Utils::clone(_conjuncts), Utils::clone(other->_conjuncts));
 	return new Conjunction(all_subterms);
 }
 

@@ -1,5 +1,5 @@
 
-#include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 #include <constraints/gecode/helper.hxx>

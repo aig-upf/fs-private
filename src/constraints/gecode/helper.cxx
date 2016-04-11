@@ -1,14 +1,13 @@
 
 #include <constraints/gecode/helper.hxx>
-#include <problem_info.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <problem.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/utils/term_list_iterator.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <relaxed_state.hxx>
-#include <utils/cartesian_iterator.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <languages/fstrips/terms.hxx>
 
 
 namespace fs0 { namespace gecode {

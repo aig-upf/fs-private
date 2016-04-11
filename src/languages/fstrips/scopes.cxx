@@ -1,68 +1,69 @@
 
 #include <problem.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/language.hxx>
 #include <actions/actions.hxx>
-#include <boost/concept_check.hpp>
+#include <constraints/gecode/utils/nested_fluent_iterator.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
-std::vector<VariableIdx> ScopeUtils::computeDirectScope(Term::cptr term) {
+std::vector<VariableIdx> ScopeUtils::computeDirectScope(const Term* term) {
 	std::set<VariableIdx> set;
 	computeDirectScope(term, set);
 	return std::vector<VariableIdx>(set.cbegin(), set.cend());
 }
 
-void ScopeUtils::computeDirectScope(Term::cptr term, std::set<VariableIdx>& scope) {
-	for (Term::cptr subterm:term->all_terms()) {
+void ScopeUtils::computeDirectScope(const Term* term, std::set<VariableIdx>& scope) {
+	for (const Term* subterm:term->all_terms()) {
 		if (auto sv = dynamic_cast<StateVariable::cptr>(subterm)) {
 			scope.insert(sv->getValue());
 		}
 	}
 }
 
-std::vector<FluentHeadedNestedTerm::cptr> ScopeUtils::computeIndirectScope(ActionEffect::cptr effect) {
+std::vector<const FluentHeadedNestedTerm*> ScopeUtils::computeIndirectScope(const ActionEffect* effect) {
 	TermSet set;
 	computeIndirectScope(effect, set);
-	return std::vector<FluentHeadedNestedTerm::cptr>(set.cbegin(), set.cend());
+	return std::vector<const FluentHeadedNestedTerm*>(set.cbegin(), set.cend());
 }
 
-void ScopeUtils::computeIndirectScope(ActionEffect::cptr effect, TermSet& scope) {
-	for (Term::cptr term:effect->all_terms()) {
+void ScopeUtils::computeIndirectScope(const ActionEffect* effect, TermSet& scope) {
+	for (const Term* term:effect->all_terms()) {
 		if (term == effect->lhs()) continue; // Don't register the LHS root
-		if (auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
+		if (auto fluent = dynamic_cast<const FluentHeadedNestedTerm*>(term)) {
 			scope.insert(fluent);
 		}
 	}
 }
 
-std::vector<VariableIdx> ScopeUtils::computeDirectScope(ActionEffect::cptr effect) {
+std::vector<VariableIdx> ScopeUtils::computeDirectScope(const ActionEffect* effect) {
 	std::set<VariableIdx> set;
 	computeDirectScope(effect, set);
 	return std::vector<VariableIdx>(set.cbegin(), set.cend());
 }
 
-void ScopeUtils::computeDirectScope(ActionEffect::cptr effect, std::set<VariableIdx>& scope) {
+void ScopeUtils::computeDirectScope(const ActionEffect* effect, std::set<VariableIdx>& scope) {
 	// The left hand side of the effect only contributes to the set of relevant variables if it itself
 	// is headed by a fluent function containing other state variables.
-	if (FluentHeadedNestedTerm::cptr lhs_fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(effect->lhs())) {
+	if (const FluentHeadedNestedTerm* lhs_fluent = dynamic_cast<const FluentHeadedNestedTerm*>(effect->lhs())) {
 		computeDirectScope(lhs_fluent, scope); // The direct scope of the nested fluent includes only the subterms' scope
 	}
 	computeDirectScope(effect->rhs(), scope);
 }
 
-std::vector<VariableIdx> ScopeUtils::computeDirectScope(Formula::cptr formula) {
+std::vector<VariableIdx> ScopeUtils::computeDirectScope(const Formula* formula) {
 	std::set<VariableIdx> set;
 	computeDirectScope(formula, set);
 	return std::vector<VariableIdx>(set.cbegin(), set.cend());
 }
 
-void ScopeUtils::computeDirectScope(Formula::cptr formula, std::set<VariableIdx>& scope) {
-	for (Term::cptr subterm:formula->all_terms()) ScopeUtils::computeDirectScope(subterm, scope);
+void ScopeUtils::computeDirectScope(const Formula* formula, std::set<VariableIdx>& scope) {
+	for (const Term* subterm:formula->all_terms()) ScopeUtils::computeDirectScope(subterm, scope);
 }
 
-void ScopeUtils::computeIndirectScope(Formula::cptr formula, TermSet& scope) {
-	for (Term::cptr term:formula->all_terms()) {
-		if (auto fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(term)) {
+void ScopeUtils::computeIndirectScope(const Formula* formula, TermSet& scope) {
+	for (const Term* term:formula->all_terms()) {
+		if (auto fluent = dynamic_cast<const FluentHeadedNestedTerm*>(term)) {
 			scope.insert(fluent);
 		}
 	}
@@ -78,14 +79,14 @@ void ScopeUtils::computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<V
 	scope.insert(possible_variables.cbegin(), possible_variables.cend());
 }
 
-std::vector<Atom> ScopeUtils::compute_affected_atoms(ActionEffect::cptr effect) {
+std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect) {
 	const ProblemInfo& info = Problem::getInfo();
 	std::vector<VariableIdx> lhs_variables;
 	std::vector<Atom> affected;
 	
 	if (auto statevar = dynamic_cast<StateVariable::cptr>(effect->lhs())) {
 		lhs_variables.push_back(statevar->getValue());
-	} else if (auto nested = dynamic_cast<FluentHeadedNestedTerm::cptr>(effect->lhs())) {
+	} else if (auto nested = dynamic_cast<const FluentHeadedNestedTerm*>(effect->lhs())) {
 		lhs_variables = info.resolveStateVariable(nested->getSymbolId()); // TODO - This is a gross overapproximation
 	} else throw std::runtime_error("Unsupported effect type");
 	
@@ -123,5 +124,47 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(ActionEffect::cptr effect) 
 	return affected;
 }
 
+template <typename T>
+void _computeRelevantElements(const T& element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
+	const ProblemInfo& info = Problem::getInfo();
+	for (const Term* term:element->all_terms()) {
+		auto statevar = dynamic_cast<StateVariable::cptr>(term);
+		auto fluent = dynamic_cast<const FluentHeadedNestedTerm*>(term);
+		
+		if (!statevar && !fluent) continue;
+		
+		if (statevar) {
+			unsigned symbol = statevar->getOrigin()->getSymbolId();
+			
+			if (info.isPredicate(symbol)) {
+				symbols.insert(symbol);
+			} else {
+				variables.insert(statevar->getValue());
+			}
+		}
+		
+		if (fluent) {
+			unsigned symbol = fluent->getSymbolId();
+			
+			if (info.isPredicate(symbol)) {
+				symbols.insert(symbol);
+			} else {
+				for (gecode::nested_fluent_iterator it(fluent); !it.ended(); ++it) {
+					VariableIdx variable = it.getDerivedStateVariable();
+					variables.insert(variable);
+				}
+			}
+		}
+	}
+}
+
+
+void ScopeUtils::computeRelevantElements(const Term* element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
+	_computeRelevantElements(element, variables, symbols);
+}
+
+void ScopeUtils::computeRelevantElements(const Formula* element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
+	_computeRelevantElements(element, variables, symbols);
+}
 
 } } } // namespaces

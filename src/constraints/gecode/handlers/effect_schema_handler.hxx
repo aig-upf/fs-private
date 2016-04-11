@@ -2,7 +2,6 @@
 #pragma once
 
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
-#include <utils/binding.hxx>
 #include <gecode/int.hh>
 
 namespace fs0 { class TupleIndex; }

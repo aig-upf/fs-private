@@ -99,6 +99,8 @@ std::ostream& ExternallyDefinedFormula::print(std::ostream& os, const fs0::Probl
 	return os;
 }
 
+AlldiffFormula::AlldiffFormula(const AlldiffFormula& formula) : AlldiffFormula(Utils::clone(formula._subterms)) {}
+
 bool AlldiffFormula::_satisfied(const ObjectIdxVector& values) const {
 	std::set<ObjectIdx> distinct;
 	for (ObjectIdx val:values) {
@@ -108,6 +110,7 @@ bool AlldiffFormula::_satisfied(const ObjectIdxVector& values) const {
 	return true;
 }
 
+SumFormula::SumFormula(const SumFormula& formula) : SumFormula(Utils::clone(formula._subterms)) {}
 
 bool SumFormula::_satisfied(const ObjectIdxVector& values) const {
 	// sum(x_1, ..., x_n) meaning x_1 + ... + x_{n-1} = x_n

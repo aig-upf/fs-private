@@ -7,6 +7,7 @@
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/language.hxx>
 
 namespace fs0 {
 

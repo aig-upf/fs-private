@@ -1,5 +1,5 @@
 
-#include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/language.hxx>
 #include <actions/actions.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
 #include <constraints/gecode/helper.hxx>
@@ -11,6 +11,7 @@
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <utils/config.hxx>
+#include <problem.hxx>
 
 namespace fs0 { namespace gecode {
 

@@ -2,7 +2,6 @@
 #pragma once
 
 #include <languages/fstrips/language.hxx>
-#include <languages/fstrips/utils.hxx>
 
 namespace fs0 { class State; }
 
@@ -88,7 +87,7 @@ public:
 	typedef const AlldiffFormula* cptr;
 	
 	AlldiffFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
-	AlldiffFormula(const AlldiffFormula& formula) : AlldiffFormula(FStripsUtils::clone(formula._subterms)) {}
+	AlldiffFormula(const AlldiffFormula& formula);
 	
 	AlldiffFormula* clone() const { return new AlldiffFormula(*this); }
 	AlldiffFormula* clone(const std::vector<Term::cptr>& subterms) const { return new AlldiffFormula(subterms); }
@@ -104,7 +103,7 @@ public:
 	typedef const SumFormula* cptr;
 	
 	SumFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
-	SumFormula(const SumFormula& formula) : SumFormula(FStripsUtils::clone(formula._subterms)) {}
+	SumFormula(const SumFormula& formula);
 	
 	SumFormula* clone() const { return new SumFormula(*this); }	
 	SumFormula* clone(const std::vector<Term::cptr>& subterms) const { return new SumFormula(subterms); }

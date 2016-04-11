@@ -7,6 +7,8 @@
 #include <actions/lifted_action_iterator.hxx>
 #include <applicability/applicability_manager.hxx>
 #include <actions/actions.hxx>
+#include <problem_info.hxx>
+
 
 namespace fs0 {
 

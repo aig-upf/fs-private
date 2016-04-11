@@ -1,13 +1,7 @@
 
 #pragma once
 
-#include <iostream>
-#include <cstdlib>
-#include <memory>
-#include <set>
-#include <vector>
 #include <fs0_types.hxx>
-#include <atom.hxx>
 
 
 namespace fs0 {
@@ -33,21 +27,6 @@ public:
 	RelaxedState(const RelaxedState& state)  = delete;
 	RelaxedState& operator=(const RelaxedState& rhs) = delete;
 	bool operator==(const RelaxedState& rhs) = delete;
-	
-	/*
-	void set(const Atom& atom) {
-		set(atom.getVariable(), atom.getValue());
-	}
-	
-	void set(VariableIdx variable, ObjectIdx value) {
-		_domains.at(variable)->insert(value);
-	}
-	
-	bool contains(const Atom& atom) const {
-		const auto& possibleValues = getValues(atom.getVariable());
-		return possibleValues->find(atom.getValue()) != possibleValues->end();
-	}
-	*/
 	
 	void accumulate(const std::vector<std::vector<ObjectIdx>>& atoms);
 	

@@ -1,19 +1,12 @@
 
 #pragma once
 
-#include <iostream>
-#include <cstdlib>
-#include <memory>
-#include <set>
-#include <vector>
-#include <boost/functional/hash.hpp>
-
 #include <fs0_types.hxx>
-#include <atom.hxx>
 
 namespace fs0 {
 
 class Problem;
+class Atom;
 
 class State {
 protected:
@@ -31,22 +24,11 @@ public:
 	//! TODO - We might want to perform type checking here against the predicate and function signatures.
 	//! TODO - We might also want to ensure here that all symbol extensions have been defined. This won't be expensive, 
 	//! as it will be done only when we create the initial state.
-	State(unsigned numAtoms, const std::vector<Atom>& facts) :
-		_values(numAtoms)
-	{
-		// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
-		for (const auto& fact:facts) { // Insert all the elements of the vector
-			set(fact);
-		}
-		updateHash();
-	};
+	State(unsigned numAtoms, const std::vector<Atom>& facts);
 	
 	//! A constructor that receives a number of atoms and constructs a state that is equal to the received
 	//! state plus the new atoms. Note that we do not check that there are no contradictory atoms.
-	State(const State& state, const std::vector<Atom>& atoms) :
-		State(state) {
-		accumulate(atoms);
-	}
+	State(const State& state, const std::vector<Atom>& atoms);
 	
 	//! Default copy constructors and assignment operators - if ever need a custom version, check the git history!
 	// https://bitbucket.org/gfrances/fs0/src/28ce4119f27a537d8f7628c6ca0487d03d5ed0b1/src/state.hxx?at=gecode_integration
@@ -59,17 +41,11 @@ public:
 	bool operator==(const State &rhs) const { return _hash == rhs._hash && _values == rhs._values; }
 	bool operator!=(const State &rhs) const { return !(this->operator==(rhs));}
 	
-	void set(const Atom& atom) {
-		_values.at(atom.getVariable()) = atom.getValue();
-	}
+	void set(const Atom& atom);
 	
-	bool contains(const Atom& atom) const {
-		return getValue(atom.getVariable()) == atom.getValue();
-	}
+	bool contains(const Atom& atom) const;
 	
-	ObjectIdx getValue(const VariableIdx& variable) const {
-		return _values.at(variable);
-	}
+	ObjectIdx getValue(const VariableIdx& variable) const;
 	
 	const std::vector<ObjectIdx>& getValues() const { return _values; }
 
@@ -81,7 +57,7 @@ public:
 protected:
 	void updateHash() { _hash = computeHash(); }
 	
-	std::size_t computeHash() const { return boost::hash_range(_values.begin(), _values.end()); };
+	std::size_t computeHash() const;
 	
 public:
 	//! Prints a representation of the state to the given stream.

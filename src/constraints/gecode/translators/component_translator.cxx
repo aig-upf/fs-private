@@ -1,4 +1,5 @@
 
+#include <languages/fstrips/language.hxx>
 #include <constraints/gecode/translators/component_translator.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
@@ -13,13 +14,14 @@
 
 namespace fs0 { namespace gecode {
 
+//! A helper data structure to help translate language relational symbols to gecode relational operators
 typedef fs::RelationalFormula::Symbol AFSymbol;
-const std::map<AFSymbol, Gecode::IntRelType> RelationalFormulaTranslator::symbol_to_gecode = {
+const std::map<AFSymbol, Gecode::IntRelType> symbol_to_gecode = {
 	{AFSymbol::EQ, Gecode::IRT_EQ}, {AFSymbol::NEQ, Gecode::IRT_NQ}, {AFSymbol::LT, Gecode::IRT_LE},
 	{AFSymbol::LEQ, Gecode::IRT_LQ}, {AFSymbol::GT, Gecode::IRT_GR}, {AFSymbol::GEQ, Gecode::IRT_GQ}
 };
 
-Gecode::IntRelType RelationalFormulaTranslator::gecode_symbol(fs::RelationalFormula::cptr formula) { return symbol_to_gecode.at(formula->symbol()); }
+Gecode::IntRelType RelationalFormulaTranslator::gecode_symbol(const fs::RelationalFormula* formula) { return symbol_to_gecode.at(formula->symbol()); }
 
 
 const std::map<Gecode::IntRelType, Gecode::IntRelType> RelationalFormulaTranslator::operator_inversions = {
@@ -32,32 +34,32 @@ Gecode::IntRelType RelationalFormulaTranslator::invert_operator(Gecode::IntRelTy
 }
 
 
-void ConstantTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
+void ConstantTermTranslator::registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
 	auto constant = dynamic_cast<fs::Constant::cptr>(term);
 	assert(constant);
 	translator.registerConstant(constant);
 }
 
-void BoundVariableTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
+void BoundVariableTermTranslator::registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
 	auto variable = dynamic_cast<fs::BoundVariable::cptr>(term);
 	assert(variable);
 	translator.registerExistentialVariable(variable);
 }
 
-void StaticNestedTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
+void StaticNestedTermTranslator::registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
 	auto nested = dynamic_cast<fs::NestedTerm::cptr>(term);
 	assert(nested);
 	translator.registerNestedTerm(nested, type);
 }
 
-void ArithmeticTermTranslator::registerVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
+void ArithmeticTermTranslator::registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
 	auto nested = dynamic_cast<fs::NestedTerm::cptr>(term);
 	assert(nested);
 	auto bounds = nested->getBounds();
 	translator.registerNestedTerm(nested, type, bounds.first, bounds.second);
 }
 
-void ArithmeticTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
+void ArithmeticTermTranslator::registerConstraints(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
 	auto arithmetic_term = dynamic_cast<fs::ArithmeticTerm::cptr>(term);
 	assert(arithmetic_term);
 	
@@ -99,7 +101,7 @@ Gecode::IntArgs MultiplicationTermTranslator::getLinearCoefficients() const {
 }
 
 
-void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
+void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {
 	auto stat = dynamic_cast<fs::StaticHeadedNestedTerm::cptr>(term);
 	assert(stat);
 	
@@ -126,8 +128,8 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term::cptr term, 
 }
 
 
-void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const {
-	auto condition = dynamic_cast<fs::RelationalFormula::cptr>(formula);
+void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const {
+	auto condition = dynamic_cast<const fs::RelationalFormula*>(formula);
 	assert(condition);
 
 	// And register the relation constraint itself
@@ -137,7 +139,7 @@ void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula::c
 	Gecode::rel(csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
 }
 
-void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const {
+void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const {
 	auto alldiff = dynamic_cast<fs::AlldiffFormula::cptr>(formula);
 	assert(alldiff);
 
@@ -147,7 +149,7 @@ void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr 
 	Gecode::distinct(csp, variables, Gecode::ICL_DOM);
 }
 
-void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const {
+void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const {
 	auto sum = dynamic_cast<fs::SumFormula::cptr>(formula);
 	assert(sum);
 
@@ -163,7 +165,7 @@ void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula::cptr form
 	Gecode::linear(csp, coefficients, variables, Gecode::IRT_EQ, 0, Gecode::ICL_DOM);
 }
 
-void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) const {
+void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const {
 
 	SimpleCSP& csp = translator.getBaseCSP();
 	// We post an extensional constraint on the CSP variables modeling the value of each of the subterms formula

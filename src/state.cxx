@@ -1,13 +1,40 @@
 
-#include <iostream>
-#include <cassert>
+#include <boost/functional/hash.hpp>
 
 #include <state.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
+#include <atom.hxx>
+
 
 namespace fs0 {
+
+State::State(unsigned numAtoms, const std::vector<Atom>& facts) :
+	_values(numAtoms)
+{
+	// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
+	for (const auto& fact:facts) { // Insert all the elements of the vector
+		set(fact);
+	}
+	updateHash();
+};
+
+State::State(const State& state, const std::vector<Atom>& atoms) :
+	State(state) {
+	accumulate(atoms);
+}
 	
+void State::set(const Atom& atom) {
+	_values.at(atom.getVariable()) = atom.getValue();
+}
+
+bool State::contains(const Atom& atom) const {
+	return getValue(atom.getVariable()) == atom.getValue();
+}
+
+ObjectIdx State::getValue(const VariableIdx& variable) const {
+	return _values.at(variable);
+}
 
 //! Applies the given changeset into the current state.
 void State::accumulate(const std::vector<Atom>& atoms) {
@@ -35,5 +62,7 @@ std::ostream& State::print(std::ostream& os) const {
 	os << "]";
 	return os;
 }
+
+std::size_t State::computeHash() const { return boost::hash_range(_values.begin(), _values.end()); };
 
 } // namespaces

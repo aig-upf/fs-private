@@ -1,13 +1,15 @@
 
 #pragma once
 
-#include <atom.hxx>
 #include <unordered_map>
 #include <boost/functional/hash.hpp>
+
+#include <atom.hxx>
 
 namespace fs0 {
 
 class ProblemInfo;
+class Atom;
 
 template <typename Container>
 struct container_hash {
