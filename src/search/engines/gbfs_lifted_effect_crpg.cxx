@@ -25,8 +25,6 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSLiftedEffectCRPG::create(const Config& c
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
-	// problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), Problem::getInfo()));
-	
 	LiftedCRPG lifted_crpg(problem, problem.getGoalConditions(), problem.getStateConstraints());
 	const TupleIndex& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();

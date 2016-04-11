@@ -9,6 +9,7 @@
 #include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <utils/logging.hxx>
+#include <utils/printers/gecode.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {
@@ -73,7 +74,8 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTransl
 
 	// Post the constraint with the given extension
 	Gecode::extensional(csp, variables, extension);
-	// FDEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
+// 	FDEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
+// 	FDEBUG("translation", "Resulting CSP is: " << csp);
 	return true;
 }
 

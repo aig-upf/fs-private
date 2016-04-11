@@ -23,8 +23,7 @@ Gecode::Space* SimpleCSP::copy( bool share ) { return new SimpleCSP( share, *thi
 
 
 bool SimpleCSP::checkConsistency() {
-	Gecode::SpaceStatus st = status();
-	return st != Gecode::SpaceStatus::SS_FAILED;
+	return status() != Gecode::SpaceStatus::SS_FAILED;
 }
 
 //! Prints a representation of a CSP. Mostly for debugging purposes

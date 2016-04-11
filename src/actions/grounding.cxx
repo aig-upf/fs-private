@@ -150,7 +150,10 @@ std::vector<const PartiallyGroundedAction*> ActionGrounder::flatten_effect_head(
 		// that we create to turn the head of the given effect into a state variable
 		Binding binding = schema->getBinding(); // Copy the object
 		binding.merge_with(*binding_generator);
-		grounded.push_back(partial_binding(schema->getActionData(), binding, info));
+
+		if (PartiallyGroundedAction* grounded_action = partial_binding(schema->getActionData(), binding, info)) {
+			grounded.push_back(grounded_action);
+		}
 	}
 	
 // 	return compile_nested_fluents_away(grounded, info);
