@@ -28,6 +28,8 @@ public:
 	inline VariableIdx getVariable() const { return _variable; }
 	inline ObjectIdx getValue() const { return _value; }
 
+	std::size_t hash() const;
+	
 	std::ostream& print(std::ostream& os) const;
 	friend std::ostream& operator<<(std::ostream &os, const Atom& atom) { return atom.print(os); }
 };
@@ -45,5 +47,11 @@ inline bool operator> (const Atom& lhs, const Atom& rhs){return  operator< (rhs,
 inline bool operator<=(const Atom& lhs, const Atom& rhs){return !operator> (lhs,rhs);}
 inline bool operator>=(const Atom& lhs, const Atom& rhs){return !operator< (lhs,rhs);}
 
-
 } // namespaces
+
+// Specialization of std::hash for atoms
+namespace std {
+	template<> struct hash<fs0::Atom> {
+		std::size_t operator()(const fs0::Atom& element) const { return element.hash(); }
+	};
+}

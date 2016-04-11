@@ -9,7 +9,7 @@ namespace fs0 {
 
 class ProblemInfo;
 
-template <typename Container> // we can make this generic for any container [1]
+template <typename Container>
 struct container_hash {
     std::size_t operator()(Container const& c) const {
         return boost::hash_range(c.begin(), c.end());
@@ -19,7 +19,6 @@ struct container_hash {
 class TupleIndex {
 protected:
 	
-// 	std::unordered_map<std::pair<unsigned, ValueTuple>, TupleIdx> _inverse;
 	std::vector<std::unordered_map<ValueTuple, TupleIdx, container_hash<ValueTuple>>> _inverse;
 	
 	std::vector<ValueTuple> _index;
@@ -27,7 +26,7 @@ protected:
 	
 	//! The atom corresponding to each tuple index
 	std::vector<Atom> _tuple_atoms;
-	std::map<Atom, TupleIdx> _tuple_atoms_inv; // TODO - Optimization: should be a vector of maps, one per each VariableIdx
+	std::unordered_map<Atom, TupleIdx> _tuple_atoms_inv; // TODO - Optimization: should be a vector of maps, one per each VariableIdx
 	
 public:
 	//! Constructs a full tuple index

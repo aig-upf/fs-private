@@ -1,4 +1,6 @@
 
+#include <boost/functional/hash.hpp>
+
 #include <atom.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
@@ -9,6 +11,13 @@ std::ostream& Atom::print(std::ostream& os) const {
 	const ProblemInfo& problemInfo = Problem::getInfo();
 	os << "[" << problemInfo.getVariableName(_variable) << "=" << problemInfo.getObjectName(_variable, _value) << "]";
 	return os;
+}
+
+std::size_t Atom::hash() const {
+        std::size_t hash = 0;
+        boost::hash_combine(hash, _variable);
+        boost::hash_combine(hash, _value);
+        return hash;
 }
 
 } // namespaces
