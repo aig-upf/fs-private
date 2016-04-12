@@ -23,7 +23,7 @@ CompiledUnaryConstraint::CompiledUnaryConstraint(const VariableIdxVector& scope,
 {}
 
 std::set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(const VariableIdxVector& scope, const CompiledUnaryConstraint::Tester& tester) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	assert(scope.size() == 1);
 	
 	std::set<ElementT> ordered;
@@ -67,7 +67,7 @@ FilteringOutput CompiledUnaryConstraint::filter(const DomainMap& domains) const 
 }
 
 std::ostream& CompiledUnaryConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "CompiledUnaryConstraint[" << info.getVariableName(_scope[0]) << "] = {";
 	for (const auto& elem:_extension) {
 		os << elem;
@@ -98,7 +98,7 @@ bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 
 CompiledBinaryConstraint::TupleExtension CompiledBinaryConstraint::compile(const VariableIdxVector& scope, const CompiledBinaryConstraint::Tester& tester) {
 	assert(scope.size()==2);
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	TupleExtension extension;
 	
@@ -187,7 +187,7 @@ CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affec
 {}
 	
 CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, const fs::Term& term) 
-	: CompiledUnaryEffect(relevant, affected, compile(term, Problem::getInfo()))
+	: CompiledUnaryEffect(relevant, affected, compile(term, ProblemInfo::getInstance()))
 {}
 	
 
@@ -229,7 +229,7 @@ CompiledBinaryEffect::CompiledBinaryEffect(const VariableIdxVector& scope, Varia
 {}
 
 CompiledBinaryEffect::CompiledBinaryEffect(const VariableIdxVector& scope, VariableIdx affected, const fs::Term& term)
-	: CompiledBinaryEffect(scope, affected, compile(term, Problem::getInfo()))
+	: CompiledBinaryEffect(scope, affected, compile(term, ProblemInfo::getInstance()))
 {}
 
 CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& term, const ProblemInfo& info) {
@@ -255,7 +255,7 @@ Atom CompiledBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
 
 
 unsigned ConstraintCompiler::compileConstraints(std::vector<DirectConstraint*>& constraints) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	unsigned num_compiled = 0;
 	for (unsigned i = 0; i < constraints.size(); ++i) {

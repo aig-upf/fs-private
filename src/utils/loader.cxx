@@ -22,7 +22,7 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 {
 
 void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	FINFO("main", "Loading initial state...");
 	auto init = loadState(data["init"]);
@@ -55,9 +55,9 @@ void Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& inf
 
 void Loader::loadProblemInfo(const rapidjson::Document& data, const BaseComponentFactory& factory) {
 	// Load and set the ProblemInfo data structure
-	auto info = new ProblemInfo(data);
+	auto info = std::unique_ptr<ProblemInfo>(new ProblemInfo(data));
 	loadFunctions(factory, *info);
-	Problem::setInfo(info);
+	ProblemInfo::setInstance(std::move(info));
 }
 
 State* Loader::loadState(const rapidjson::Value& data) {

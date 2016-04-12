@@ -1,6 +1,6 @@
 
 #include <relaxed_state.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <state.hxx>
 
 namespace fs0 {
@@ -36,7 +36,7 @@ void RelaxedState::accumulate(const std::vector<std::vector<ObjectIdx>>& atoms) 
 }
 
 std::ostream& RelaxedState::print(std::ostream& os) const {
-	const ProblemInfo& problemInfo = Problem::getInfo();
+	const ProblemInfo& problemInfo = ProblemInfo::getInstance();
 	os << "RelaxedState[";
 	for (unsigned i = 0; i < _domains.size(); ++i) { // Iterate through all the sets
 		const DomainPtr& vals = _domains.at(i);

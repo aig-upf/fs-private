@@ -43,7 +43,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 			managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
 			assert(false); // Currently disabled
-// 			std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(problem.getProblemInfo());
+// 			std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(ProblemInfo::getInstance());
 // 			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), problem.get_tuple_index(), symbol_tuplesets, approximate, novelty);
 		} else {
 			throw std::runtime_error("Unknown CSP model type");

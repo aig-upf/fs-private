@@ -5,7 +5,7 @@
 #include <state.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <constraints/gecode/extensions.hxx>
 
 namespace fs0 { namespace gecode {
@@ -110,7 +110,7 @@ unsigned RPGIndex::compute_hmax_sum(const std::vector<Atom>& atoms) const {
 */
 
 std::ostream& RPGIndex::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "RPG Tuples: " << std::endl;
 	for (unsigned i = 0; i < _reached.size(); ++i) {
 		TupleSupport* support = _reached[i];

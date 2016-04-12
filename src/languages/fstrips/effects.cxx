@@ -39,7 +39,7 @@ Atom ActionEffect::apply(const State& state) const {
 }
 
 
-std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
+std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
 std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_lhs << " := " << *_rhs;

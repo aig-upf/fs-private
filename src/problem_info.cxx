@@ -10,6 +10,8 @@
 
 namespace fs0 {
 
+std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
+
 ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	
 	FINFO("main", "Loading Type index...");

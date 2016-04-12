@@ -2,7 +2,8 @@
 #include <boost/functional/hash.hpp>
 
 #include <state.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
+#include <atom.hxx>
 
 
 namespace fs0 {
@@ -43,7 +44,7 @@ void State::accumulate(const std::vector<Atom>& atoms) {
 }
 
 std::ostream& State::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "State";
 	os << "(" << _hash << ")[";
 	for (unsigned i = 0; i < _values.size(); ++i) {

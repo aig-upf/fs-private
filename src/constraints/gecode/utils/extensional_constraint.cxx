@@ -20,7 +20,7 @@ ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* t
 
 void ExtensionalConstraint::register_constraints(GecodeCSPVariableTranslator& translator) {
 	FDEBUG("translation", "Preprocessing extensional constraints for term " << *_term);
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	for (auto subterm:_term->getSubterms()) {
 		_subterm_variable_indexes.push_back(translator.resolveVariableIndex(subterm, CSPVariableType::Input));

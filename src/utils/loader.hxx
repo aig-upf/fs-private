@@ -4,6 +4,9 @@
 #include <vector>
 #include <lib/rapidjson/document.h>
 
+namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs = fs0::language::fstrips;
+
 namespace fs0 { namespace asp { class LPHandler; }}
 
 namespace fs0 {

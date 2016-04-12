@@ -15,7 +15,7 @@ namespace fs0 { namespace gecode {
 
 
 std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> handlers;
 	
 	for (const PartiallyGroundedAction* schema:schemata) {
@@ -75,7 +75,7 @@ bool EffectSchemaCSPHandler::init(bool use_novelty_constraint) {
 }
 
 TupleIdx EffectSchemaCSPHandler::detect_achievable_tuple() const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	TupleIdx achievable_tuple_idx = INVALID_TUPLE;
 	

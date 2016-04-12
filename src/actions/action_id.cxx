@@ -2,8 +2,10 @@
 #include <actions/action_id.hxx>
 #include <actions/actions.hxx>
 #include <actions/grounding.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <utils/printers/actions.hxx>
+#include <boost/functional/hash.hpp>
+
 
 namespace fs0 {
 
@@ -68,7 +70,7 @@ std::ostream& PlainActionID::print(std::ostream& os) const {
 }
 
 GroundAction* LiftedActionID::generate() const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	return ActionGrounder::bind(*_action, _binding, info);
 }
 

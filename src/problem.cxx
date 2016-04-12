@@ -10,8 +10,6 @@
 namespace fs0 {
 
 std::unique_ptr<Problem> Problem::_instance = nullptr;
-std::unique_ptr<ProblemInfo> Problem::_info = nullptr;
-
 
 Problem::Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index) :
 	_tuple_index(std::move(tuple_index)),
@@ -33,7 +31,7 @@ Problem::~Problem() {
 }
 
 std::ostream& Problem::print(std::ostream& os) const { 
-	const fs0::ProblemInfo& info = getProblemInfo();
+	const fs0::ProblemInfo& info = ProblemInfo::getInstance();
 	os << "Planning Problem [domain: " << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;
 	
 	os << "Goal Conditions:" << std::endl << "------------------" << std::endl;

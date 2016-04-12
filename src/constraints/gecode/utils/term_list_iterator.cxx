@@ -19,7 +19,7 @@ term_list_iterator::~term_list_iterator() {
 }
 
 std::vector<const std::vector<ObjectIdx>*> term_list_iterator::compute_possible_values(const std::vector<const fs::Term*>& subterms) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	// possible_values[i] will be a vector (pointer) with all possible values for the i-th subterm
 	// of the given nested fluent, __according to the signature of the fluent function declaration__

@@ -1,6 +1,5 @@
 
 #include <utils/printers/feature_set.hxx>
-#include <problem.hxx>
 
 namespace fs0 { namespace print {
 

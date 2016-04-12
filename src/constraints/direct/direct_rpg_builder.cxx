@@ -3,7 +3,7 @@
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <utils/utils.hxx>
 #include <utils/projections.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <constraints/direct/constraint.hxx>
 #include <constraints/direct/compiled.hxx>
 #include <constraints/direct/translators/translator.hxx>
@@ -59,7 +59,7 @@ bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, std:
 	DomainMap domains = Projections::projectCopy(state, _goalConstraintsHandler.getAllRelevantVariables());  // This makes a copy of the domain.
 	if (!checkGoal(domains)) return false;
 	
-	unsigned numVariables = Problem::getInfo().getNumVariables(); // The total number of state variables
+	unsigned numVariables = ProblemInfo::getInstance().getNumVariables(); // The total number of state variables
 	std::vector<bool> set(numVariables, false); // Variables that have been already set.
 	
 	DomainMap clone = Projections::clone(domains);  // We need a deep copy

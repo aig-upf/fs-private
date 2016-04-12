@@ -74,13 +74,13 @@ std::vector<VariableIdx> ScopeUtils::computeActionDirectScope(const ActionBase& 
 }
 
 void ScopeUtils::computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<VariableIdx>& scope) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	const std::vector<VariableIdx>& possible_variables = info.resolveStateVariable(nested.getSymbolId());
 	scope.insert(possible_variables.cbegin(), possible_variables.cend());
 }
 
 std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<VariableIdx> lhs_variables;
 	std::vector<Atom> affected;
 	
@@ -112,7 +112,7 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 		
 			// Otherwise, ATM we simply overapproximate the set of all potentially affected atoms by considering
 			// that all values for that variable (consistent with the RHS type) can be achieved.
-			const ProblemInfo& info = Problem::getInfo();
+			const ProblemInfo& info = ProblemInfo::getInstance();
 			
 		// 	TypeIdx type = effect->rhs()->getType(); // This doesn't work for RHS such as X + 1
 			TypeIdx type = effect->lhs()->getType();
@@ -126,7 +126,7 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 
 template <typename T>
 void _computeRelevantElements(const T& element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (const Term* term:element->all_terms()) {
 		auto statevar = dynamic_cast<StateVariable::cptr>(term);
 		auto fluent = dynamic_cast<const FluentHeadedNestedTerm*>(term);

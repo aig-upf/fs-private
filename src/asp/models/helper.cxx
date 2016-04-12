@@ -34,7 +34,7 @@ std::vector<unsigned> ModelHelper::compute_action_set(const std::vector<Gringo::
 }
 
 void ModelHelper::add_type_rules(const Problem& problem, std::vector<std::string>& rules) {
-	const ProblemInfo& info = problem.getProblemInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	auto types = info.getTypeObjects();
 	for (unsigned type_id = 0; type_id < types.size(); ++type_id) {
 		std::string type_name = normalize(info.getTypename(type_id));

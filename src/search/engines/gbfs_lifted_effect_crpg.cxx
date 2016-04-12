@@ -1,6 +1,7 @@
 
 #include <search/engines/gbfs_lifted_effect_crpg.hxx>
 #include <problem.hxx>
+#include <problem_info.hxx>
 #include <state.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
@@ -30,7 +31,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSLiftedEffectCRPG::create(const Config& c
 }
 
 void GBFSLiftedEffectCRPG::setup(const Config& config, Problem& problem) const {
-	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), Problem::getInfo()));
+	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	// etc.
 }
 

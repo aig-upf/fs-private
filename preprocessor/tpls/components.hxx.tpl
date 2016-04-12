@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
-#include <problem.hxx>
+#include <lib/rapidjson/document.h>
 #include "external.hxx"
 
 #include <component_factory.hxx>

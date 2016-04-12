@@ -2,7 +2,6 @@
 #pragma once
 
 #include <fs_types.hxx>
-#include <problem_info.hxx>
 #include <utils/tuple_index.hxx>
 
 namespace fs0 { namespace asp { class LPHandler; }}
@@ -66,21 +65,7 @@ public:
 		return *_instance;
 	}
 	
-	//! Get the ProblemInfo object associated to this problem.
-	const ProblemInfo& getProblemInfo() const { return getInfo(); }
-	
-	static void setInfo(ProblemInfo* info) {
-		assert(!_info);
-		_info = std::unique_ptr<ProblemInfo>(info);
-	}
-	
-	static const ProblemInfo& getInfo() {
-		assert(_info);
-		return *_info;
-	}
-	
 	const TupleIndex& get_tuple_index() const { return _tuple_index; }
-
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
@@ -111,9 +96,6 @@ protected:
 	
 	//! The singleton instance
 	static std::unique_ptr<Problem> _instance;
-	
-	//! An object with all sorts of extra book-keeping information - currently a singleton instance as well :-(
-	static std::unique_ptr<ProblemInfo> _info;
 };
 
 } // namespaces

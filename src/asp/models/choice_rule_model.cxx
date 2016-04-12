@@ -93,7 +93,7 @@ void ChoiceRuleModel::process_ground_action(const GroundAction& action, std::vec
 
 std::vector<std::string> ChoiceRuleModel::build_state_rules(const State& state) const {
 	std::vector<std::string> atoms;
-	const ProblemInfo& info = _problem.getProblemInfo();
+	const ProblemInfo& info = _ProblemInfo::getInstance();
 	const auto& values = state.getValues();
 	for (unsigned i = 0; i < values.size(); ++i) {
 		if (values.at(i) == 1) {

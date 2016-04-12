@@ -2,7 +2,6 @@
 #pragma once
 
 #include <unordered_map>
-#include <boost/functional/hash.hpp>
 
 #include <atom.hxx>
 
@@ -13,9 +12,7 @@ class Atom;
 
 template <typename Container>
 struct container_hash {
-    std::size_t operator()(Container const& c) const {
-        return boost::hash_range(c.begin(), c.end());
-    }
+    std::size_t operator()(Container const& c) const;
 };
 
 class TupleIndex {

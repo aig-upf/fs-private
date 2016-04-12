@@ -1,7 +1,7 @@
 
 
 #include <constraints/gecode/rpg_layer.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <state.hxx>
 #include <constraints/gecode/extensions.hxx>
 
@@ -11,7 +11,7 @@ GecodeRPGLayer::GecodeRPGLayer(ExtensionHandler& extension_handler, const State&
 	: _index(seed.numAtoms()),
 	  _extension_handler(extension_handler)
 {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	_domains.reserve(seed.numAtoms());
 	_deltas.reserve(seed.numAtoms());
 	
@@ -71,7 +71,7 @@ bool GecodeRPGLayer::is_true(VariableIdx variable) const {
 
 
 std::ostream& GecodeRPGLayer::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "GecodeRPGLayer:" << std::endl;
 	
 	os << "Indexed atoms:" << std::endl << "\t";

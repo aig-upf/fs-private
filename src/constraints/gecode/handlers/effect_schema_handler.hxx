@@ -17,8 +17,6 @@ class EffectNoveltyConstraint;
 //! A CSP modeling and solving the effect of an action effect on a certain RPG layer
 class EffectSchemaCSPHandler : public ActionSchemaCSPHandler {
 public:
-	typedef EffectSchemaCSPHandler* ptr;
-	
 	//! Factory method
 	static  std::vector<std::shared_ptr<EffectSchemaCSPHandler>> create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 

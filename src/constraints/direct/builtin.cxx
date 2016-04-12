@@ -1,6 +1,6 @@
 
 #include <constraints/direct/builtin.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 
 namespace fs0 {
 
@@ -81,7 +81,7 @@ FilteringOutput LTConstraint::filter(unsigned variable) const {
 }
 
 std::ostream& LTConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " < " << info.getVariableName(_scope[1]);
 	return os;
 }
@@ -105,7 +105,7 @@ FilteringOutput LEQConstraint::filter(unsigned variable) const {
 }
 
 std::ostream& LEQConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " <= " << info.getVariableName(_scope[1]);
 	return os;
 }
@@ -134,7 +134,7 @@ FilteringOutput EQConstraint::filter(unsigned variable) const {
 }
 
 std::ostream& EQConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " = " << info.getVariableName(_scope[1]);
 	return os;
 }
@@ -157,7 +157,7 @@ FilteringOutput NEQConstraint::filter(unsigned variable) const {
 }
 
 std::ostream& NEQConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " != " << info.getVariableName(_scope[1]);
 	return os;
 }
@@ -183,7 +183,7 @@ FilteringOutput EQXConstraint::filter(const DomainMap& domains) const {
 }
 
 std::ostream& EQXConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " = " << _parameters[0];
 	return os;
 }
@@ -199,7 +199,7 @@ FilteringOutput NEQXConstraint::filter(const DomainMap& domains) const {
 }
 
 std::ostream& NEQXConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " != " << _parameters[0];
 	return os;
 }
@@ -210,7 +210,7 @@ FilteringOutput LTXConstraint::filter(const DomainMap& domains) const {
 }
 
 std::ostream& LTXConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " < " << _parameters[0];
 	return os;
 }
@@ -221,7 +221,7 @@ FilteringOutput LEQXConstraint::filter(const DomainMap& domains) const {
 }
 
 std::ostream& LEQXConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " <= " << _parameters[0];
 	return os;
 }
@@ -232,7 +232,7 @@ FilteringOutput GTXConstraint::filter(const DomainMap& domains) const {
 }
 
 std::ostream& GTXConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " > " << _parameters[0];
 	return os;
 }
@@ -243,7 +243,7 @@ FilteringOutput GEQXConstraint::filter(const DomainMap& domains) const {
 }
 
 std::ostream& GEQXConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_scope[0]) << " >= " << _parameters[0];
 	return os;
 }
@@ -258,7 +258,7 @@ Atom ValueAssignmentEffect::apply() const {
 }
 
 std::ostream& ValueAssignmentEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getObjectName(_affected, _parameters[0]);
 	return os;
 }
@@ -274,7 +274,7 @@ Atom VariableAssignmentEffect::apply(ObjectIdx v1) const {
 }
 
 std::ostream& VariableAssignmentEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0]);
 	return os;
 }
@@ -291,7 +291,7 @@ Atom AdditiveUnaryEffect::apply(ObjectIdx v1) const {
 }
 
 std::ostream& AdditiveUnaryEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " + " << _parameters[0];
 	return os;
 }
@@ -306,7 +306,7 @@ Atom AdditiveBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
 }
 
 std::ostream& AdditiveBinaryEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " + " << info.getVariableName(_scope[1]);
 	return os;
 }
@@ -323,7 +323,7 @@ Atom SubtractiveUnaryEffect::apply(ObjectIdx v1) const {
 }
 
 std::ostream& SubtractiveUnaryEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " - " << _parameters[0];
 	return os;
 }
@@ -339,7 +339,7 @@ Atom InvSubtractiveUnaryEffect::apply(ObjectIdx v1) const {
 }
 
 std::ostream& InvSubtractiveUnaryEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << _parameters[0] << " - " << info.getVariableName(_scope[0]);
 	return os;
 }
@@ -355,7 +355,7 @@ Atom SubtractiveBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
 }
 
 std::ostream& SubtractiveBinaryEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " - " << info.getVariableName(_scope[1]);
 	return os;
 }
@@ -371,7 +371,7 @@ Atom MultiplicativeUnaryEffect::apply(ObjectIdx v1) const {
 }
 
 std::ostream& MultiplicativeUnaryEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " * " << _parameters[0];
 	return os;
 }
@@ -386,7 +386,7 @@ Atom MultiplicativeBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
 }
 
 std::ostream& MultiplicativeBinaryEffect::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " * " << info.getVariableName(_scope[1]);
 	return os;
 }

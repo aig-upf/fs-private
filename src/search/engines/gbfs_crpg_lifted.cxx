@@ -37,7 +37,7 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 		csp_handlers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
 	} else { // EffectSchemaCSP
 		assert(false); // Currently disabled
-// 		std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(problem.getProblemInfo());
+// 		std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(ProblemInfo::getInstance());
 // 		csp_handlers = EffectSchemaCSPHandler::create(base_actions, symbol_tuplesets, approximate, novelty);
 	}
 	

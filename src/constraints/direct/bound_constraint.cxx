@@ -1,7 +1,7 @@
 
 #include <constraints/direct/bound_constraint.hxx>
 #include <constraints/direct/compiled.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/helper.hxx>
 #include <actions/actions.hxx>
@@ -20,7 +20,7 @@ bool UnaryDomainBoundsConstraint::isSatisfied(ObjectIdx o) const {
 }
 
 std::ostream& UnaryDomainBoundsConstraint::print(std::ostream& os) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "UnaryDomainBoundsConstraint[" << info.getVariableName(_scope[0]) << "]";
 	return os;
 }
@@ -44,7 +44,7 @@ DirectConstraint* BinaryDomainBoundsConstraint::compile(const ProblemInfo& probl
 }
 
 void BoundsConstraintsGenerator::generate(const GroundAction& action, const std::vector<const DirectEffect*>& effects, std::vector<DirectConstraint*>& constraints) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (const DirectEffect* effect:effects) {
 		VariableIdx affected = effect->getAffected();
 		if (!info.isBoundedVariable(affected)) continue;

@@ -71,7 +71,7 @@ void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variabl
 }
 
 bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type) {
-	TypeIdx domain_type = Problem::getInfo().getSymbolData(nested->getSymbolId()).getCodomainType();
+	TypeIdx domain_type = ProblemInfo::getInstance().getSymbolData(nested->getSymbolId()).getCodomainType();
 	return registerNestedTerm(nested, type, domain_type);
 }
 
@@ -148,7 +148,7 @@ std::vector<ObjectIdx> GecodeCSPVariableTranslator::resolveValues(const std::vec
 }
 
 std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
-	const fs0::ProblemInfo& info = Problem::getInfo();
+	const fs0::ProblemInfo& info = ProblemInfo::getInstance();
 	os << "Gecode CSP with " << _registered.size() + _input_state_variables.size() << " variables" << std::endl;
 	
 	os << std::endl << "State Variables: " << std::endl;
@@ -205,7 +205,7 @@ VariableIdx GecodeCSPVariableTranslator::getPlanningVariable(unsigned csp_var_id
 
 std::vector<std::pair<unsigned, std::vector<unsigned>>>
 GecodeCSPVariableTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::pair<unsigned, std::vector<unsigned>>> tuple_indexes;
 	// Register all fluent symbols involved
 	for (auto term:terms) {

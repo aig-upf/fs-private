@@ -4,7 +4,7 @@
 #include <state.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 
 namespace fs0 {
 
@@ -14,7 +14,7 @@ RPGData::RPGData(const State& seed, bool ignore_negated) :
 	_current_layer(0),
 	_effects()
 {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {

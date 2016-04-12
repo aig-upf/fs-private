@@ -28,7 +28,7 @@ bool nested_fluent_iterator::ended() const { return _iterator->ended(); }
 unsigned nested_fluent_iterator::getIndex() const { return _index; }
 
 VariableIdx nested_fluent_iterator::getDerivedStateVariable() const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	return info.resolveStateVariable(_term->getSymbolId(), _iterator->arguments());
 }
 

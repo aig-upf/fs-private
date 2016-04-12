@@ -1,8 +1,9 @@
 
+#include <boost/functional/hash.hpp>
+
 #include <problem_info.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/builtin.hxx>
-#include <problem.hxx>
 #include <state.hxx>
 #include <utils/utils.hxx>
 #include <utils/logging.hxx>
@@ -15,7 +16,7 @@ ObjectIdx Term::interpret(const State& state) const  { return interpret(state, B
 VariableIdx Term::interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding()); }
 VariableIdx Term::interpretVariable(const State& state) const { return interpretVariable(state, Binding()); }
 	
-std::ostream& Term::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
+std::ostream& Term::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
 std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << "<unnamed term>";
@@ -48,7 +49,7 @@ std::vector<Term::cptr> NestedTerm::bind_subterms(const std::vector<Term::cptr>&
 }
 
 Term::cptr NestedTerm::create(const std::string& symbol, const std::vector<Term::cptr>& subterms) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
 	if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return ArithmeticTermFactory::create(symbol, subterms);
@@ -134,7 +135,7 @@ Term::cptr ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info)
 
 
 TypeIdx NestedTerm::getType() const {
-	return Problem::getInfo().getSymbolData(_symbol_id).getCodomainType();
+	return ProblemInfo::getInstance().getSymbolData(_symbol_id).getCodomainType();
 }
 
 std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -154,7 +155,7 @@ ArithmeticTerm::ArithmeticTerm(const std::vector<Term::cptr>& subterms)
 
 UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
 	: StaticHeadedNestedTerm(symbol_id, subterms),
-	_function(Problem::getInfo().getSymbolData(symbol_id))
+	_function(ProblemInfo::getInstance().getSymbolData(symbol_id))
 {}
 
 TypeIdx UserDefinedStaticTerm::getType() const {
@@ -162,7 +163,7 @@ TypeIdx UserDefinedStaticTerm::getType() const {
 }
 
 std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	return info.getTypeBounds(getType());
 }
 
@@ -183,19 +184,19 @@ ObjectIdx FluentHeadedNestedTerm::interpret(const State& state, const Binding& b
 }
 
 VariableIdx FluentHeadedNestedTerm::interpretVariable(const PartialAssignment& assignment, const Binding& binding) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, assignment, binding));
 	return variable;
 }
 VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state, const Binding& binding) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, state, binding));
 	return variable;
 }
 
 std::pair<int, int> FluentHeadedNestedTerm::getBounds() const {
-	const ProblemInfo& info = Problem::getInfo();
-	auto type = Problem::getInfo().getSymbolData(_symbol_id).getCodomainType();
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	auto type = ProblemInfo::getInstance().getSymbolData(_symbol_id).getCodomainType();
 	return info.getTypeBounds(type);
 }
 
@@ -205,11 +206,11 @@ ObjectIdx StateVariable::interpret(const State& state, const Binding& binding) c
 }
 
 TypeIdx StateVariable::getType() const {
-	return Problem::getInfo().getVariableType(_variable_id);
+	return ProblemInfo::getInstance().getVariableType(_variable_id);
 }
 
 std::pair<int, int> StateVariable::getBounds() const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	return info.getVariableBounds(_variable_id);
 }
 
@@ -220,7 +221,7 @@ std::ostream& StateVariable::print(std::ostream& os, const fs0::ProblemInfo& inf
 
 TypeIdx BoundVariable::getType() const { return _type; }
 
-std::pair<int, int> BoundVariable::getBounds() const { return Problem::getInfo().getTypeBounds(_type); }
+std::pair<int, int> BoundVariable::getBounds() const { return ProblemInfo::getInstance().getTypeBounds(_type); }
 
 Term::cptr BoundVariable::bind(const Binding& binding, const ProblemInfo& info) const {
 	if (!binding.binds(_id)) return clone();

@@ -1,8 +1,14 @@
 
+#include <boost/functional/hash.hpp>
+
 #include <utils/tuple_index.hxx>
 #include <problem_info.hxx>
 
+
 namespace fs0 {
+
+template <typename Container>
+std::size_t container_hash<Container>::operator()(Container const& c) const { return boost::hash_range(c.begin(), c.end()); }
 
 TupleIndex::TupleIndex(const ProblemInfo& info) :
 	_tuple_index_inv(info.getNumLogicalSymbols()),

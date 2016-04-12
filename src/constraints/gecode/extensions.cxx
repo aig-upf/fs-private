@@ -1,7 +1,7 @@
 
 
 #include <constraints/gecode/extensions.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <state.hxx>
 
 namespace fs0 { namespace gecode {
@@ -30,7 +30,7 @@ Gecode::TupleSet Extension::generate() const {
 
 
 ExtensionHandler::ExtensionHandler(const TupleIndex& tuple_index) :
-	_info(Problem::getInfo()),
+	_info(ProblemInfo::getInstance()),
 	_tuple_index(tuple_index)
 {}
 

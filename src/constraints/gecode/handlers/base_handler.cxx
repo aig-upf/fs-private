@@ -91,7 +91,7 @@ void BaseCSPHandler::setup() {
 }
 
 void BaseCSPHandler::register_csp_variables() {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
@@ -157,7 +157,7 @@ void BaseCSPHandler::createCSPVariables(bool use_novelty_constraint) {
 }
 
 void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<fs::Term::cptr>& terms) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::unordered_set<const fs::Term*> inserted_terms;
 	std::unordered_set<const fs::AtomicFormula*> inserted_conditions;
 	std::unordered_set<TupleIdx> true_tuples;
@@ -233,7 +233,7 @@ void BaseCSPHandler::extract_nested_term_support(const SimpleCSP* solution, cons
 	std::set<VariableIdx> inserted;
 
 	
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
 		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), CSPVariableType::Input, *solution));

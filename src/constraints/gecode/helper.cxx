@@ -12,7 +12,7 @@ namespace fs0 { namespace gecode {
 
 
 Gecode::IntVar Helper::createPlanningVariable(Gecode::Space& csp, VariableIdx variable) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	return createVariable(csp, info.getVariableType(variable));
 }
 
@@ -29,7 +29,7 @@ Gecode::BoolVar Helper::createBoolVariable(Gecode::Space& csp) {
 }
 
 Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	auto generic_type = info.getGenericType(typeId);
 
 	if ( generic_type == ProblemInfo::ObjectType::INT ) {
@@ -54,7 +54,7 @@ void Helper::constrainCSPVariable(SimpleCSP& csp, const Gecode::IntVar& variable
 }
 
 Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	auto f_data = info.getSymbolData(term->getSymbolId());
 	const auto& functor = f_data.getFunction();
 

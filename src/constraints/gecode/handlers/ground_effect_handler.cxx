@@ -126,7 +126,7 @@ void GroundEffectCSPHandler::solve_approximately(const Atom& atom, gecode::Simpl
 		std::set<VariableIdx> inserted;
 
 		
-		const ProblemInfo& info = Problem::getInfo();
+		const ProblemInfo& info = ProblemInfo::getInstance();
 		
 		for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
 			VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), CSPVariableType::Input, *csp));
@@ -151,7 +151,7 @@ void GroundEffectCSPHandler::solve_approximately(const Atom& atom, gecode::Simpl
 
 
 void GroundEffectCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	assert(_effects.size() == 1);
 	const auto& effect = _effects[0];
 	if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(effect->lhs())) {

@@ -1,7 +1,6 @@
 
 #include <utils/printers/registry.hxx>
 #include <utils/printers/printers.hxx>
-#include <problem.hxx>
 #include <constraints/registry.hxx>
 
 

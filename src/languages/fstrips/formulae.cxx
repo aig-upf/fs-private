@@ -36,7 +36,7 @@ bool Formula::interpret(const PartialAssignment& assignment) const { return inte
 bool Formula::interpret(const State& state) const  { return interpret(state, Binding()); }
 	
 
-std::ostream& Formula::print(std::ostream& os) const { return print(os, Problem::getInfo()); }
+std::ostream& Formula::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
 unsigned AtomicFormula::nestedness() const {
 	unsigned max = 0;
@@ -203,7 +203,7 @@ bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, const Bi
 	// Base case - all existentially quantified variables have been bound
 	if (i == _variables.size()) return _subformula->interpret(assignment, binding);
 	
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	const BoundVariable* variable = _variables.at(i);
 	Binding copy(binding);
 	//! Otherwise, iterate through all possible assignments to the currently analyzed variable 'i'

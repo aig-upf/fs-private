@@ -97,8 +97,8 @@ void SearchUtils::report_stats(const Problem& problem) {
 	auto actions = problem.getGroundActions();
 	unsigned n_actions = actions.size();
 	
-	std::cout << "Number of objects: " << problem.getProblemInfo().getNumObjects() << std::endl;
-	std::cout << "Number of state variables: " << problem.getProblemInfo().getNumVariables() << std::endl;
+	std::cout << "Number of objects: " << ProblemInfo::getInstance().getNumObjects() << std::endl;
+	std::cout << "Number of state variables: " << ProblemInfo::getInstance().getNumVariables() << std::endl;
 	std::cout << "Number of action schemata: " << problem.getActionData().size() << std::endl;
 	std::cout << "Number of (perhaps partially) ground actions: " << n_actions << std::endl;
 	

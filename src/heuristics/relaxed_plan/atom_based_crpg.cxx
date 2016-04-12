@@ -20,9 +20,9 @@ ConstrainedRPG::ConstrainedRPG(const Problem& problem, const std::vector<ActionH
 	_managers(downcast_managers(managers)),
 	_builder(std::move(builder)),
 	_extension_handler(problem.get_tuple_index()),
-	_atom_table(index_atoms(problem.getProblemInfo())),
+	_atom_table(index_atoms(ProblemInfo::getInstance())),
 	_atom_achievers(build_achievers_index(_managers, _atom_table)),
-	_atom_variable_tuples(index_variable_tuples(problem.getProblemInfo(), _atom_table))
+	_atom_variable_tuples(index_variable_tuples(ProblemInfo::getInstance(), _atom_table))
 {
 	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 }

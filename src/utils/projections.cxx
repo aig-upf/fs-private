@@ -2,7 +2,7 @@
 #include <cassert>
 #include <utils/projections.hxx>
 #include <actions/actions.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <state.hxx>
 #include <relaxed_state.hxx>
 
@@ -72,7 +72,7 @@ DomainMap Projections::clone(const DomainMap& domains) {
 }
 
 void Projections::printDomains(const DomainMap& domains) {
-	const ProblemInfo& problemInfo = Problem::getInfo();
+	const ProblemInfo& problemInfo = ProblemInfo::getInstance();
 	for (const auto& domain:domains) {
 		std::cout << problemInfo.getVariableName(domain.first) << "={";
 		for (auto objIdx:*(domain.second)) {

@@ -62,7 +62,22 @@ public:
 	
 	enum class ObjectType {INT, BOOL, OBJECT};
 	
+	//! Set the global singleton problem instance
+	static void setInstance(std::unique_ptr<ProblemInfo>&& problem) {
+		assert(!_instance);
+		_instance = std::move(problem);
+	}
+	
+	//! Global singleton object accessor
+	static const ProblemInfo& getInstance() {
+		assert(_instance);
+		return *_instance;
+	}	
+	
 protected:
+	//! The singleton instance
+	static std::unique_ptr<ProblemInfo> _instance;
+	
 	//! A map from state variable ID to state variable name
 	std::vector<std::string> variableNames;
 	
@@ -105,7 +120,7 @@ protected:
 	
 	//! The names of the problem domain and instance
 	std::string _domain;
-	std::string _instance;
+	std::string _instance_name;
 	
 public:
 	ProblemInfo(const rapidjson::Document& data);
@@ -193,9 +208,9 @@ public:
 	const std::pair<int,int>& getVariableBounds(VariableIdx variable) const { return getTypeBounds(getVariableType(variable)); }
 	
 	void setDomainName(const std::string& domain) { _domain = domain; }
-	void setInstanceName(const std::string& instance) { _instance = instance; }
+	void setInstanceName(const std::string& instance) { _instance_name = instance; }
 	const std::string& getDomainName() const { return _domain; }
-	const std::string& getInstanceName() const { return _instance; }
+	const std::string& getInstanceName() const { return _instance_name; }
 	
 	//! Returns the generic type (object, int, bool, etc.) corresponding to a concrete type
 	ObjectType getGenericType(TypeIdx typeId) const;

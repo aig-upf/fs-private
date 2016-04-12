@@ -39,7 +39,7 @@ bool ApplicabilityManager::checkFormulaHolds(const fs::Formula::cptr formula, co
 }
 
 bool ApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& atoms) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (const auto& atom:atoms) {
 		if (!info.checkValueIsValid(atom)) return false;
 	}

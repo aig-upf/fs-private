@@ -17,7 +17,7 @@ namespace fs0 { namespace gecode {
 
 LiftedCRPG::LiftedCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints) :
 	_problem(problem),
-	_info(problem.getProblemInfo()),
+	_info(ProblemInfo::getInstance()),
 	_tuple_index(problem.get_tuple_index()),
 	_managers(),
 	_extension_handler(_tuple_index),
@@ -172,7 +172,7 @@ std::vector<LiftedCRPG::EffectHandlerPtr> LiftedCRPG::prepare_managers(const std
 
 /*
 void LiftedCRPG::prune_tuplesets(const State& seed, std::vector<gecode::Tupleset>& tuplesets) {
-	const ProblemInfo& info = Problem::getInfo();
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 		const auto& data = info.getVariableData(var);
