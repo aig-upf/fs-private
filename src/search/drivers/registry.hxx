@@ -11,7 +11,7 @@ namespace fs0 {
 	class Config; 
 }
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 typedef aptk::SearchAlgorithm<FS0StateModel> FS0SearchAlgorithm;
 
@@ -27,7 +27,7 @@ public:
 };
 
 
-//! A registry for different types of search engines
+//! A registry for different types of search drivers
 class EngineRegistry {
 public:
 	~EngineRegistry();
@@ -35,7 +35,7 @@ public:
 	//! The singleton accessor
 	static EngineRegistry& instance();
 	
-	//! Register a new engine creator responsible for creating engines with the given engine_name
+	//! Register a new engine creator responsible for creating drivers with the given engine_name
 	void add(const std::string& engine_name, EngineCreator::cptr creator);
 	
 	//! Retrieve the engine creater adequate for the given engine name

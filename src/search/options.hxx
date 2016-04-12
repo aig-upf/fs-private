@@ -5,7 +5,7 @@
 
 namespace fs0 { class Problem; }
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 class EngineOptions {
 public:

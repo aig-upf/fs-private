@@ -1,5 +1,5 @@
 
-#include <search/engines/smart_effect_driver.hxx>
+#include <search/drivers/smart_effect_driver.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <state.hxx>
@@ -11,7 +11,7 @@
 
 using namespace fs0::gecode;
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 std::unique_ptr<FS0SearchAlgorithm> SmartEffectDriver::create(const Config& config, const FS0StateModel& model) const {
 	FINFO("main", "Using the lifted-effect base RPG constructor");

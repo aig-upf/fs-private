@@ -1,5 +1,5 @@
 
-#include <search/engines/gbfs_constrained.hxx>
+#include <search/drivers/gbfs_constrained.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
@@ -16,7 +16,7 @@
 
 using namespace fs0::gecode;
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 template <typename GecodeHeuristic, typename DirectHeuristic>
 std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::create(const Config& config, const FS0StateModel& model) const {

@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include <search/engines/registry.hxx>
+#include <search/drivers/registry.hxx>
 #include <search/nodes/gbfs_novelty_node.hxx>
 #include <search/components/unsat_goals_novelty.hxx>
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
 namespace fs0 { class FS0StateModel; class Config; }
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 //! A creator for the Iterated Width Search FS0 engine
 class GBFSNoveltyEngineCreator : public EngineCreator {

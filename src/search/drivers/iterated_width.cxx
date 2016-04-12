@@ -1,9 +1,9 @@
 
-#include <search/engines/iterated_width.hxx>
+#include <search/drivers/iterated_width.hxx>
 #include <search/algorithms/iterated_width.hxx>
 #include <actions/applicable_action_set.hxx>
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 std::unique_ptr<FS0SearchAlgorithm> IteratedWidthEngineCreator::create(const Config& config, const FS0StateModel& model) const {
 	

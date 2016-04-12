@@ -1,10 +1,10 @@
 
-#include <search/engines/gbfs_novelty.hxx>
+#include <search/drivers/gbfs_novelty.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <actions/applicable_action_set.hxx>
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 	
 std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyEngineCreator::create(const Config& config, const FS0StateModel& model) const {
 	FS0SearchAlgorithm* engine = nullptr;

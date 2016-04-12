@@ -1,13 +1,13 @@
 
 #include <problem.hxx>
-#include <search/engines/registry.hxx>
-#include <search/engines/unreached_atom_driver.hxx>
-#include <search/engines/gbfs_constrained.hxx>
-#include <search/engines/iterated_width.hxx>
-#include <search/engines/breadth_first_search.hxx>
-#include <search/engines/gbfs_novelty.hxx>
-// #include <search/engines/asp_engine.hxx>
-#include <search/engines/smart_effect_driver.hxx>
+#include <search/drivers/registry.hxx>
+#include <search/drivers/unreached_atom_driver.hxx>
+#include <search/drivers/gbfs_constrained.hxx>
+#include <search/drivers/iterated_width.hxx>
+#include <search/drivers/breadth_first_search.hxx>
+#include <search/drivers/gbfs_novelty.hxx>
+// #include <search/drivers/asp_engine.hxx>
+#include <search/drivers/smart_effect_driver.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
@@ -15,7 +15,7 @@
 
 using namespace fs0::gecode;
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 EngineRegistry& EngineRegistry::instance() {
 	static EngineRegistry theInstance;
@@ -23,7 +23,7 @@ EngineRegistry& EngineRegistry::instance() {
 }
 
 EngineRegistry::EngineRegistry() {
-	// We register the pre-configured search engines on the instantiation of the singleton
+	// We register the pre-configured search drivers on the instantiation of the singleton
 	add("gbfs_chff",  new GBFSConstrainedHeuristicsCreator<GecodeCRPG, DirectCRPG>());
 	add("gbfs_unreached_atom",  new UnreachedAtomDriver());
 	add("gbfs_smart",  new SmartEffectDriver());

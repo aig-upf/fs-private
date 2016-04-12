@@ -10,7 +10,7 @@
 #include <utils/logging.hxx>
 
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator) 
 	: _options(options), _generator(generator), _start_time(aptk::time_used())

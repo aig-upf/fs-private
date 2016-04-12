@@ -5,7 +5,7 @@
 
 namespace fs0 { class Problem; class Config; class LiftedActionID; }
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 class SearchUtils {
 public:

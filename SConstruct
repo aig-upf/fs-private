@@ -85,7 +85,7 @@ if CLINGO:
 	isystem_paths += [clingo_path + '/' + subdir for subdir in ["libclasp", "libprogram_opts", "libclingo", "libgringo"]]
 	env.Append( CCFLAGS = [ '-DWITH_THREADS=0'] )  # Needed by Clingo
 else:
-	forbidden = ['src/search/engines/asp_engine.cxx', 'src/utils/printers/asp.cxx']
+	forbidden = ['src/search/drivers/asp_engine.cxx', 'src/utils/printers/asp.cxx']
 	sources = [s for s in sources if (not s.startswith('src/asp') and s not in forbidden)]  # Filter out clingo-specific sources
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )

@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include <search/engines/registry.hxx>
+#include <search/drivers/registry.hxx>
 
 namespace fs0 { class FS0StateModel; class Config; }
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 //! An engine creator for an AStar search coupled with the (optimal) ASP-based h^+ admissible heuristic.
 class ASPEngine : public EngineCreator {

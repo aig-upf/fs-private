@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <utils/logging.hxx>
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 template <typename StateT, typename ActionT>
 class AStarSearchNode {

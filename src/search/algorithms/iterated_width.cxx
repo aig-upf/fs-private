@@ -3,7 +3,7 @@
 #include <actions/applicable_action_set.hxx>
 
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 FS0IWAlgorithm::FS0IWAlgorithm(const FS0StateModel& model, unsigned initial_max_width, unsigned final_max_width, const NoveltyFeaturesConfiguration& feature_configuration)
 	: FS0SearchAlgorithm(model), _current_max_width(initial_max_width), _final_max_width(final_max_width), _feature_configuration(feature_configuration)

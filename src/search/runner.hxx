@@ -6,7 +6,7 @@
 
 namespace fs0 { class Problem; }
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 	
 //! A basic runner script to bootstrap the problem and run the search engine
 class Runner {

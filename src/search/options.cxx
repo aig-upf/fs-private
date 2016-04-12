@@ -10,7 +10,7 @@
 
 namespace po = boost::program_options;
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 EngineOptions::EngineOptions(int argc, char** argv) {
 	po::options_description description("Allowed options");

@@ -6,15 +6,15 @@
 
 #include <problem.hxx>
 #include <search/search.hxx>
-#include <search/engines/registry.hxx>
-#include <search/engines/gbfs_crpg_lifted.hxx>
+#include <search/drivers/registry.hxx>
+#include <search/drivers/gbfs_crpg_lifted.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
 #include <languages/fstrips/language.hxx>
 #include <state.hxx>
 
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 
 template <typename StateModelT, typename SearchAlgorithmT>
@@ -87,7 +87,7 @@ void SearchUtils::instantiate_seach_engine_and_run(const Problem& problem, const
 	} else {
 		// Standard, grounded planning
 		FS0StateModel model(problem);
-		auto creator = fs0::engines::EngineRegistry::instance().get(config.getEngineTag());
+		auto creator = fs0::drivers::EngineRegistry::instance().get(config.getEngineTag());
 		auto engine = creator->create(config, model);
 		do_search(*engine, model, out_dir, start_time);
 	}

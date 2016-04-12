@@ -1,5 +1,5 @@
 
-#include <search/engines/asp_engine.hxx>
+#include <search/drivers/asp_engine.hxx>
 #include <search/nodes/astar_search_node.hxx>
 #include <search/nodes/heuristic_search_node.hxx>
 #include <utils/config.hxx>
@@ -9,7 +9,7 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <asp/asp_hplus.hxx>
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 	
 std::unique_ptr<FS0SearchAlgorithm> ASPEngine::create(const Config& config, const FS0StateModel& model) const {
 	const Problem& problem = model.getTask();

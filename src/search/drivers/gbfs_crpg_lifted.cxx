@@ -1,5 +1,5 @@
 
-#include <search/engines/gbfs_crpg_lifted.hxx>
+#include <search/drivers/gbfs_crpg_lifted.hxx>
 #include <problem.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
@@ -11,7 +11,7 @@
 
 using namespace fs0::gecode;
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreator::create(const Config& config, LiftedStateModel& model) const {
 	
 	const Problem& problem = model.getTask();

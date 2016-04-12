@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include <search/engines/registry.hxx>
+#include <search/drivers/registry.hxx>
 #include <search/nodes/blind_search_node.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
 namespace fs0 { class FS0StateModel; class Config; }
 
-namespace fs0 { namespace engines {
+namespace fs0 { namespace drivers {
 
 //! A creator for an standard Breadth-First Search engine
 class BreadthFirstSearchEngineCreator : public EngineCreator {
