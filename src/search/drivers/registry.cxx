@@ -1,13 +1,14 @@
 
 #include <problem.hxx>
 #include <search/drivers/registry.hxx>
-#include <search/drivers/unreached_atom_driver.hxx>
 #include <search/drivers/gbfs_constrained.hxx>
 #include <search/drivers/iterated_width.hxx>
 #include <search/drivers/breadth_first_search.hxx>
 #include <search/drivers/gbfs_novelty.hxx>
 // #include <search/drivers/asp_engine.hxx>
+#include <search/drivers/unreached_atom_driver.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
+#include <search/drivers/native_driver.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
@@ -25,9 +26,12 @@ EngineRegistry& EngineRegistry::instance() {
 EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search drivers on the instantiation of the singleton
 	add("gbfs_chff",  new GBFSConstrainedHeuristicsCreator<GecodeCRPG, DirectCRPG>());
-	add("gbfs_unreached_atom",  new UnreachedAtomDriver());
-	add("gbfs_smart",  new SmartEffectDriver());
 	add("gbfs_chmax",  new GBFSConstrainedHeuristicsCreator<GecodeCHMax, DirectCHMax>());
+	
+	add("gbfs_native",  new NativeDriver());
+	add("gbfs_unreached_atom",  new UnreachedAtomDriver());
+	add("gbfs_smart",  new SmartEffectDriver());	
+	
 	add("iterated_width",  new IteratedWidthEngineCreator());
 // 	add("asp_engine",  new ASPEngine());
 	add("gbfs_novelty",  new GBFSNoveltyEngineCreator());

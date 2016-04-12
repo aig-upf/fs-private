@@ -26,51 +26,32 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
-	FS0SearchAlgorithm* engine = nullptr;
 	auto csp_type = decide_csp_type(problem);
-	if (csp_type == Config::CSPManagerType::Gecode) {
-		FINFO("main", "Chosen CSP Manager: Gecode");
-		auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints(), problem.get_tuple_index());
-		
-		std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
-		if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
-			managers = GroundActionCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
-		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
-			WORK_IN_PROGRESS("Disabled");
+	assert(csp_type == Config::CSPManagerType::Gecode);
+	
+	FINFO("main", "Chosen CSP Manager: Gecode");
+	auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints(), problem.get_tuple_index());
+	
+	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
+	if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
+		managers = GroundActionCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
+	} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
+		WORK_IN_PROGRESS("Disabled");
 // 			managers = GroundEffectCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
-		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-			const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
-			managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
-		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
-			WORK_IN_PROGRESS("Disabled");
+	}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
+		const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
+		managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
+	}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
+		WORK_IN_PROGRESS("Disabled");
 // 			std::vector<IndexedTupleset> symbol_tuplesets = SmartRPG::index_tuplesets(ProblemInfo::getInstance());
 // 			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), problem.get_tuple_index(), symbol_tuplesets, approximate, novelty);
-		} else {
-			throw std::runtime_error("Unknown CSP model type");
-		}
-		
-		
-		GecodeHeuristic gecode_builder_heuristic(problem, std::move(managers), std::move(gecode_builder));
-		engine = new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic));
-		
 	} else {
-		auto direct_builder = DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
-		auto managers = DirectActionManager::create(actions);
-		DirectHeuristic direct_builder_heuristic(problem, std::move(managers), std::move(direct_builder));
-		
-		if (csp_type == Config::CSPManagerType::Direct) {
-			FINFO("main", "Chosen CSP Manager: Direct");
-			engine = new aptk::StlBestFirstSearch<SearchNode, DirectHeuristic, FS0StateModel>(model, std::move(direct_builder_heuristic));
-		} else {
-			assert(0);
-// 			assert(csp_type == Config::CSPManagerType::ASP);
-// 			FINFO("main", "Chosen CSP Manager: ASP");
-// 			engine = new aptk::StlBestFirstSearch<SearchNode, asp::ASPRPG<DirectHeuristic>, FS0StateModel>(model, asp::ASPRPG<DirectHeuristic>(problem, std::move(direct_builder_heuristic)));
-		}
-		
+		throw std::runtime_error("Unknown CSP model type");
 	}
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(engine);
+	GecodeHeuristic gecode_builder_heuristic(problem, std::move(managers), std::move(gecode_builder));
+	
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic)));
 }
 
 template <typename GecodeHeuristic, typename DirectHeuristic>
