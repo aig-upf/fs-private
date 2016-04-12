@@ -5,7 +5,7 @@
 #include <ostream>
 #include <cassert>
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 
 namespace fs0 { namespace utils {
 

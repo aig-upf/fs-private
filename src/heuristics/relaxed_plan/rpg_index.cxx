@@ -6,7 +6,6 @@
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
 #include <problem.hxx>
-#include <problem_info.hxx>
 #include <constraints/gecode/extensions.hxx>
 
 namespace fs0 { namespace gecode {

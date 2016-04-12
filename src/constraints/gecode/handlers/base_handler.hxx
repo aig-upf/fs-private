@@ -3,7 +3,7 @@
 
 #include <unordered_set>
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <atom.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/utils/extensional_constraint.hxx>

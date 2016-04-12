@@ -2,7 +2,6 @@
 #include <problem.hxx>
 #include <actions/grounding.hxx>
 #include <actions/actions.hxx>
-#include <problem_info.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>

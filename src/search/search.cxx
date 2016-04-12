@@ -10,10 +10,7 @@
 #include <search/engines/gbfs_crpg_lifted.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
-#include <utils/config.hxx>
-#include <utils/logging.hxx>
 #include <languages/fstrips/language.hxx>
-#include <lifted_state_model.hxx>
 #include <state.hxx>
 
 

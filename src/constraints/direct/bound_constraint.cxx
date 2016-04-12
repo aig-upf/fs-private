@@ -2,7 +2,6 @@
 #include <constraints/direct/bound_constraint.hxx>
 #include <constraints/direct/compiled.hxx>
 #include <problem.hxx>
-#include <problem_info.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/helper.hxx>
 #include <actions/actions.hxx>

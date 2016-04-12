@@ -3,12 +3,7 @@
 #include <actions/actions.hxx>
 #include <actions/grounding.hxx>
 #include <problem.hxx>
-#include <problem_info.hxx>
-#include <limits>
-#include <utils/utils.hxx>
-#include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
-#include <boost/functional/hash.hpp>
 
 namespace fs0 {
 

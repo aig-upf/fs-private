@@ -2,7 +2,7 @@
 #pragma once
 
 #include <aptk2/heuristics/novelty/fd_novelty_evaluator.hxx>
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <languages/fstrips/formulae.hxx>
 
 namespace fs = fs0::language::fstrips;

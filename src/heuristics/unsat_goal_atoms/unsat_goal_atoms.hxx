@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <actions/actions.hxx>
 #include <state_model.hxx>
 #include <problem.hxx>

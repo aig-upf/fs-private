@@ -2,14 +2,10 @@
 #include <problem.hxx>
 #include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/base_handler.hxx>
-#include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <utils/logging.hxx>
-#include <utils/config.hxx>
-#include <utils/printers/vector.hxx>
 #include <constraints/registry.hxx>
-#include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <gecode/driver.hh>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 

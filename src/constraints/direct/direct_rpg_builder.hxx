@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <constraints/direct/csp_handler.hxx>
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}

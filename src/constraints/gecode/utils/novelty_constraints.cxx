@@ -5,7 +5,6 @@
 #include <languages/fstrips/scopes.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/csp_translator.hxx>
-#include <gecode/int.hh>
 #include <constraints/gecode/simple_csp.hxx>
 #include <utils/utils.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>

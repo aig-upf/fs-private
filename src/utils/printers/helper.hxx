@@ -4,7 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <sstream>
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 
 
 namespace fs0 { namespace print {

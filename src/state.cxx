@@ -3,8 +3,6 @@
 
 #include <state.hxx>
 #include <problem.hxx>
-#include <problem_info.hxx>
-#include <atom.hxx>
 
 
 namespace fs0 {

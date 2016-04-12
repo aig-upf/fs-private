@@ -8,14 +8,10 @@
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
-#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
 #include <utils/logging.hxx>
-#include <utils/printers/actions.hxx>
 #include <utils/config.hxx>
 #include <problem.hxx>
-
-#include <gecode/int.hh>
 
 namespace fs0 { namespace gecode {
 

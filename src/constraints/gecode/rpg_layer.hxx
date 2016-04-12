@@ -2,7 +2,7 @@
 #pragma once
 
 #include <gecode/int.hh>
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <utils/index.hxx>
 
 

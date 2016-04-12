@@ -1,7 +1,6 @@
 
 #include <relaxed_state.hxx>
 #include <problem.hxx>
-#include <problem_info.hxx>
 #include <state.hxx>
 
 namespace fs0 {

@@ -1,6 +1,6 @@
 
 #pragma once
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <utils/tuple_index.hxx>
 #include <gecode/int.hh>
 

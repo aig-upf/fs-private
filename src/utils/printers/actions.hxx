@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <ostream>
 
 namespace fs0 { class ActionData; class ActionBase; }

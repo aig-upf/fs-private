@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <constraints/gecode/utils/translation.hxx>
 
 #include <gecode/int.hh>
@@ -43,7 +43,10 @@ public:
 	virtual ~GecodeCSPVariableTranslator() {}
 
 	//! Forbid copy constructor
-	explicit GecodeCSPVariableTranslator(GecodeCSPVariableTranslator& other);
+	GecodeCSPVariableTranslator(const GecodeCSPVariableTranslator&) = delete;
+	GecodeCSPVariableTranslator(GecodeCSPVariableTranslator&&) = delete;
+	GecodeCSPVariableTranslator& operator=(const GecodeCSPVariableTranslator& rhs) = delete;
+	GecodeCSPVariableTranslator& operator=(GecodeCSPVariableTranslator&& rhs) = delete;
 
 	unsigned add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable = INVALID_VARIABLE);
 	unsigned add_boolvar(Gecode::BoolVar csp_variable);

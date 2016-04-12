@@ -3,7 +3,6 @@
 #include <constraints/direct/alldiff_constraint.hxx>
 #include <utils/printers/helper.hxx>
 #include <utils/printers/vector.hxx>
-#include <algorithm>
 
 namespace fs0 {
 

@@ -7,8 +7,6 @@
 #include <utils/utils.hxx>
 #include <utils/logging.hxx>
 #include <utils/binding.hxx>
-#include <boost/functional/hash.hpp>
-#include <typeinfo>
 
 namespace fs0 { namespace language { namespace fstrips {
 

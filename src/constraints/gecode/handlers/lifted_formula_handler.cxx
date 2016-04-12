@@ -5,7 +5,6 @@
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <utils/logging.hxx>
-#include <utils/config.hxx>
 #include <utils/tuple_index.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>

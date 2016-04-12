@@ -1,7 +1,6 @@
 
 #include <utils/printers/binding.hxx>
 #include <problem.hxx>
-#include <problem_info.hxx>
 
 namespace fs0 { namespace print {
 

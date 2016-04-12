@@ -2,7 +2,7 @@
 #pragma once
 
 #include <unordered_map>
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <state_model.hxx>
 
 #include <aptk2/search/interfaces/search_algorithm.hxx>

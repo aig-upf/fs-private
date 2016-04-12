@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 #include <utils/index.hxx>

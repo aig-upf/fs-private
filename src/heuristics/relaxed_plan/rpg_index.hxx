@@ -2,7 +2,7 @@
 #pragma once
 
 #include <gecode/int.hh>
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <unordered_map>
 #include <unordered_set>
 #include <boost/concept_check.hpp>

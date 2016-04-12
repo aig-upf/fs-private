@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <atom.hxx>
 #include <utils/index.hxx>

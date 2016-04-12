@@ -6,12 +6,9 @@
 #include <state.hxx>
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include <utils/utils.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
-#include <utils/tuple_index.hxx>
-#include <actions/action_id.hxx>
 
 namespace fs0 { namespace gecode {
 

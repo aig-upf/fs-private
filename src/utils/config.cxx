@@ -1,8 +1,6 @@
 
 #include <utils/config.hxx>
-#include <fs0_types.hxx>
-#include <map>
-#include <boost/property_tree/ptree.hpp>
+#include <fs_types.hxx>
 #include <boost/property_tree/json_parser.hpp>
 
 

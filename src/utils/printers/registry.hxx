@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <ostream>
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 
 namespace fs0 {
 

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <state_model.hxx>
 #include <utils/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>

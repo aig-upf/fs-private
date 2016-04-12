@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <utils/serializer.hxx>
 
 namespace fs0 { namespace asp { class LPHandler; }}

@@ -1,6 +1,5 @@
 
 #include <problem.hxx>
-#include <problem_info.hxx>
 #include <languages/fstrips/language.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/printers/binding.hxx>

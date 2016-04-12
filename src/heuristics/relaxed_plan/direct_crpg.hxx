@@ -1,13 +1,16 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <constraints/direct/action_manager.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 
 namespace fs0 {
 
-class GroundAction; class Problem; class State; class RelaxedState;
+class GroundAction;
+class Problem;
+class State;
+class RelaxedState;
 
 class DirectCRPG {
 public:

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <gecode/int.hh>
 
 namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; class StaticHeadedNestedTerm; } } }

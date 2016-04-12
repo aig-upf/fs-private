@@ -2,7 +2,6 @@
 
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <problem.hxx>
-#include <utils/utils.hxx>
 #include <utils/logging.hxx>
 #include <utils/config.hxx>
 #include <state.hxx>

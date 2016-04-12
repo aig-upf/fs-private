@@ -5,7 +5,7 @@
 #include <queue>
 #include <unordered_set>
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 
 
 namespace fs0 { class State; class ActionID; class TupleIndex; }

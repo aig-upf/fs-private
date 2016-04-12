@@ -8,9 +8,7 @@
 #include <constraints/gecode/supports.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
-#include <utils/tuple_index.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include <gecode/int.hh>
 #include <gecode/search.hh>
 
 namespace fs0 { namespace gecode {

@@ -3,7 +3,6 @@
 #include <constraints/gecode/rpg_layer.hxx>
 #include <problem.hxx>
 #include <state.hxx>
-#include <utils/printers/gecode.hxx>
 #include <constraints/gecode/extensions.hxx>
 
 namespace fs0 { namespace gecode {

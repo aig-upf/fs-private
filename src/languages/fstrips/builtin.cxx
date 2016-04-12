@@ -1,6 +1,5 @@
 
 #include <languages/fstrips/builtin.hxx>
-#include <problem_info.hxx>
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>

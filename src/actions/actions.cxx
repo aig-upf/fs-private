@@ -4,9 +4,6 @@
 
 #include <actions/actions.hxx>
 #include <problem.hxx>
-#include <problem_info.hxx>
-#include <utils/binding.hxx>
-#include <utils/utils.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
 #include <languages/fstrips/language.hxx>

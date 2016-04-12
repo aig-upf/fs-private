@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <utils/binding.hxx>
 
 namespace fs0 { namespace gecode { class LiftedActionIterator; }}

@@ -7,7 +7,6 @@
 #include <languages/fstrips/scopes.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/feature_set.hxx>
-#include <languages/fstrips/scopes.hxx>
 #include <actions/actions.hxx>
 
 namespace fs0 {

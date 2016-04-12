@@ -10,8 +10,6 @@
 #include <utils/logging.hxx>
 #include <utils/printers/gecode.hxx>
 
-#include <gecode/int.hh>
-
 namespace fs0 { namespace gecode {
 
 //! A helper data structure to help translate language relational symbols to gecode relational operators

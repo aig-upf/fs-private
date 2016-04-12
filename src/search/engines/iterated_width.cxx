@@ -1,9 +1,6 @@
 
 #include <search/engines/iterated_width.hxx>
 #include <search/algorithms/iterated_width.hxx>
-#include <state_model.hxx>
-#include <utils/config.hxx>
-#include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <actions/applicable_action_set.hxx>
 
 namespace fs0 { namespace engines {

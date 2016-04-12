@@ -4,7 +4,7 @@
 #include <typeindex>
 #include <typeinfo>
 
-#include <fs0_types.hxx>
+#include <fs_types.hxx>
 #include <languages/fstrips/language.hxx>
 #include <constraints/direct/constraint.hxx>
 #include <constraints/direct/translators/effects.hxx>

@@ -4,8 +4,6 @@
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <actions/applicable_action_set.hxx>
-#include <applicability/applicability_manager.hxx>
-#include <problem_info.hxx>
 
 namespace fs0 {
 

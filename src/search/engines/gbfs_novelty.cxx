@@ -1,7 +1,5 @@
 
 #include <search/engines/gbfs_novelty.hxx>
-#include <state_model.hxx>
-#include <utils/config.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <actions/applicable_action_set.hxx>

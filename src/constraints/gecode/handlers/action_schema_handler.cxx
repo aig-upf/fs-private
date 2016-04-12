@@ -4,7 +4,6 @@
 #include <actions/actions.hxx>
 #include <utils/logging.hxx>
 #include <actions/action_id.hxx>
-#include <utils/binding.hxx>
 
 namespace fs0 { namespace gecode {
 

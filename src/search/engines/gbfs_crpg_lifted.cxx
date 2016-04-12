@@ -1,8 +1,6 @@
 
 #include <search/engines/gbfs_crpg_lifted.hxx>
 #include <problem.hxx>
-#include <utils/config.hxx>
-#include <utils/logging.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <heuristics/relaxed_plan/lifted_crpg.hxx>

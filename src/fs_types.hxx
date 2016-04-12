@@ -43,7 +43,6 @@ namespace fs0 {
 	const VariableIdx INVALID_VARIABLE = std::numeric_limits<unsigned>::max();
 
 	typedef std::vector<VariableIdx> VariableIdxVector;
-	typedef std::set<VariableIdx> VariableIdxSet;
 
 	typedef std::vector<ObjectIdx> ObjectIdxVector;
 	

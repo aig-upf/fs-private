@@ -3,10 +3,6 @@
 
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
-#include <heuristics/relaxed_plan/rpg_data.hxx>
-#include <constraints/filtering.hxx>
-#include <utils/logging.hxx>
-#include <utils/printers/actions.hxx>
 #include <relaxed_state.hxx>
 #include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>

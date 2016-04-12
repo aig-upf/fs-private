@@ -1,8 +1,6 @@
 
 #include <asp/model_handler.hxx>
 #include <asp/models/base_model.hxx>
-#include <asp/models/choice_rule_model.hxx>
-#include <asp/models/simple_model.hxx>
 #include <asp/models/straight_model.hxx>
 #include <asp/models/helper.hxx>
 #include <state.hxx>

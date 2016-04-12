@@ -1,6 +1,5 @@
 
 #include <problem.hxx>
-#include <problem_info.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <utils/logging.hxx>

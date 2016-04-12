@@ -1,7 +1,6 @@
 
 #include <constraints/registry.hxx>
 #include <problem.hxx>
-#include <problem_info.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <constraints/direct/alldiff_constraint.hxx>

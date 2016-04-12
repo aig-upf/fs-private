@@ -7,7 +7,6 @@
 #include <utils/logging.hxx>
 #include <gecode/driver.hh>
 #include <utils/printers/gecode.hxx>
-#include <utils/utils.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <utils/config.hxx>
