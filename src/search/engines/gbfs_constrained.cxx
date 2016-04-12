@@ -4,9 +4,8 @@
 #include <state.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <heuristics/relaxed_plan/atom_based_crpg.hxx>
+#include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
-#include <heuristics/relaxed_plan/lifted_crpg.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
@@ -37,13 +36,14 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
 			managers = GroundActionCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
 		} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
-			managers = GroundEffectCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
+			WORK_IN_PROGRESS("Disabled");
+// 			managers = GroundEffectCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
 		}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
 			const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
 			managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
 		}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
-			assert(false); // Currently disabled
-// 			std::vector<IndexedTupleset> symbol_tuplesets = LiftedCRPG::index_tuplesets(ProblemInfo::getInstance());
+			WORK_IN_PROGRESS("Disabled");
+// 			std::vector<IndexedTupleset> symbol_tuplesets = SmartRPG::index_tuplesets(ProblemInfo::getInstance());
 // 			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), problem.get_tuple_index(), symbol_tuplesets, approximate, novelty);
 		} else {
 			throw std::runtime_error("Unknown CSP model type");
@@ -121,7 +121,6 @@ Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectH
 
 // explicit instantiations
 template class GBFSConstrainedHeuristicsCreator<GecodeCRPG, DirectCRPG>;
-template class GBFSConstrainedHeuristicsCreator<ConstrainedRPG, DirectCRPG>;
 template class GBFSConstrainedHeuristicsCreator<GecodeCHMax, DirectCHMax>;
 
 

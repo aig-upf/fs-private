@@ -1,17 +1,16 @@
 
 #include <problem.hxx>
 #include <search/engines/registry.hxx>
+#include <search/engines/unreached_atom_driver.hxx>
 #include <search/engines/gbfs_constrained.hxx>
 #include <search/engines/iterated_width.hxx>
 #include <search/engines/breadth_first_search.hxx>
 #include <search/engines/gbfs_novelty.hxx>
 // #include <search/engines/asp_engine.hxx>
-#include <search/engines/gbfs_lifted_effect_crpg.hxx>
+#include <search/engines/smart_effect_driver.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
-#include <heuristics/relaxed_plan/atom_based_crpg.hxx>
-#include <heuristics/relaxed_plan/lifted_crpg.hxx>
 #include <actions/applicable_action_set.hxx>
 
 using namespace fs0::gecode;
@@ -26,8 +25,8 @@ EngineRegistry& EngineRegistry::instance() {
 EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search engines on the instantiation of the singleton
 	add("gbfs_chff",  new GBFSConstrainedHeuristicsCreator<GecodeCRPG, DirectCRPG>());
-	add("gbfs_abchff",  new GBFSConstrainedHeuristicsCreator<ConstrainedRPG, DirectCRPG>());
-	add("gbfs_effect_chff",  new GBFSLiftedEffectCRPG());
+	add("gbfs_unreached_atom",  new UnreachedAtomDriver());
+	add("gbfs_smart",  new SmartEffectDriver());
 	add("gbfs_chmax",  new GBFSConstrainedHeuristicsCreator<GecodeCHMax, DirectCHMax>());
 	add("iterated_width",  new IteratedWidthEngineCreator());
 // 	add("asp_engine",  new ASPEngine());

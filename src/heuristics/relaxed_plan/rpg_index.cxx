@@ -145,5 +145,13 @@ bool RPGIndex::is_true(VariableIdx variable) const {
 	return domain.find(1) != domain.end();
 }
 
+std::set<unsigned> RPGIndex::unachieved_atoms(const TupleIndex& tuple_index) const {
+	std::set<unsigned> unachieved;
+	for (TupleIdx tuple = 0; tuple < tuple_index.size(); ++tuple) {
+		if (!reached(tuple)) unachieved.insert(tuple);
+	}
+	return unachieved;
+}
+
 } } // namespaces
 

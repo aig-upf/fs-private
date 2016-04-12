@@ -12,7 +12,7 @@ class SimpleCSP; class GecodeCSPVariableTranslator;
 //! Some helper methods related to the extraction of supports from Gecode models
 class Supports {
 public:
-	static std::vector<TupleIdx> extract_support(const SimpleCSP* solution, const GecodeCSPVariableTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes);
+	static std::vector<TupleIdx> extract_support(const SimpleCSP* solution, const GecodeCSPVariableTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<TupleIdx>& necessary_tuples);
 };
 
 } } // namespaces

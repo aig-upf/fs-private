@@ -8,7 +8,7 @@
 namespace fs0 { namespace gecode {
 
 std::vector<TupleIdx>
-Supports::extract_support(const SimpleCSP* solution, const GecodeCSPVariableTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes) {
+Supports::extract_support(const SimpleCSP* solution, const GecodeCSPVariableTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<TupleIdx>& necessary_tuples) {
 	const auto& tuple_index = Problem::getInstance().get_tuple_index();
 	std::vector<TupleIdx> support;
 	
@@ -34,6 +34,9 @@ Supports::extract_support(const SimpleCSP* solution, const GecodeCSPVariableTran
 		unsigned tuple_idx = tuple_index.to_index(symbol, tuple);
 		support.push_back(tuple_idx);
 	}
+	
+	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
+	support.insert(support.end(), necessary_tuples.begin(), necessary_tuples.end());
 	
 	return support;
 }

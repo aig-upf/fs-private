@@ -100,6 +100,9 @@ public:
 	//! Prints a representation of the RPG data to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const RPGIndex& data) { return data.print(os); }
 	std::ostream& print(std::ostream& os) const;
+	
+	//! Return the set of all tuples that have not been yet reached in the current RPG.
+	std::set<unsigned> unachieved_atoms(const TupleIndex& tuple_index) const;
 
 protected:
 	//! Creates an atom support data structure with the given data and taking into account the current RPG layer

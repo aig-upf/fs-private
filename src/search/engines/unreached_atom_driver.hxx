@@ -14,7 +14,7 @@ namespace fs0 { namespace engines {
 
 //! An engine creator for the Greedy Best-First Search engines coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
 //! The choice of the heuristic is done through template instantiation
-class GBFSLiftedEffectCRPG : public EngineCreator {
+class UnreachedAtomDriver : public EngineCreator {
 protected:
 	typedef HeuristicSearchNode<State, GroundAction> SearchNode;
 	

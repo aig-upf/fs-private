@@ -2,19 +2,20 @@
 #include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <constraints/gecode/helper.hxx>
+#include <constraints/gecode/supports.hxx>
 #include <actions/actions.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/logging.hxx>
 #include <actions/action_id.hxx>
 #include <problem.hxx>
-#include <heuristics/relaxed_plan/rpg_data.hxx>
+#include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <state.hxx>
 #include <gecode/driver.hh>
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
-	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
+std::vector<std::shared_ptr<GroundEffectCSPHandler>> GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+	std::vector<std::shared_ptr<GroundEffectCSPHandler>> managers;
 	
 	for (unsigned action_idx = 0; action_idx < actions.size(); ++action_idx) {
 		const auto action = actions[action_idx];
@@ -39,6 +40,10 @@ GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, const
 bool GroundEffectCSPHandler::init(bool use_novelty_constraint) {
 	if (!BaseActionCSPHandler::init(use_novelty_constraint)) return false;
 	_lhs_subterm_variables = index_lhs_subterms();
+	
+	// Register all fluent symbols involved
+	_tuple_indexes = _translator.index_fluents(_all_terms);
+	
 	return true;
 }
 
@@ -50,8 +55,8 @@ const ActionID* GroundEffectCSPHandler::get_action_id(const SimpleCSP* solution)
 	return new PlainActionID(static_cast<const GroundAction*>(&_action)); // TODO Ugly
 }
 
-SimpleCSP* GroundEffectCSPHandler::preinstantiate(const GecodeRPGLayer& layer) const {
-	SimpleCSP* csp = instantiate_csp(layer);
+SimpleCSP* GroundEffectCSPHandler::preinstantiate(const RPGIndex& rpg) const {
+	SimpleCSP* csp = instantiate_effect_csp(rpg);
 	if (!csp) return nullptr;
 	
 	if (!csp->checkConsistency()) { // This colaterally enforces propagation of constraints
@@ -62,7 +67,22 @@ SimpleCSP* GroundEffectCSPHandler::preinstantiate(const GecodeRPGLayer& layer) c
 	return csp;
 }
 
-bool GroundEffectCSPHandler::find_atom_support(const Atom& atom, const State& seed, SimpleCSP& layer_csp, RPGData& rpg) const {
+SimpleCSP* GroundEffectCSPHandler::instantiate_effect_csp(const RPGIndex& rpg) const {
+	if (_failed) return nullptr;
+	SimpleCSP* clone = static_cast<SimpleCSP*>(_base_csp.clone());
+	_translator.updateStateVariableDomains(*clone, rpg.get_domains());
+	for (const ExtensionalConstraint& constraint:_extensional_constraints) {
+		if (!constraint.update(*clone, _translator, rpg)) {
+			delete clone;
+			return nullptr;
+		}
+	}
+	
+	return clone;
+}
+
+
+bool GroundEffectCSPHandler::find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, SimpleCSP& layer_csp, RPGIndex& rpg) const {
 	log();
 	
 	std::unique_ptr<SimpleCSP> csp = std::unique_ptr<SimpleCSP>(static_cast<SimpleCSP*>(layer_csp.clone()));
@@ -76,25 +96,36 @@ bool GroundEffectCSPHandler::find_atom_support(const Atom& atom, const State& se
 	
 	// Else, the CSP is locally consistent
 	if (_approximate) {  // Check only local consistency
-		solve_approximately(atom, csp.get(), rpg, seed);
+		WORK_IN_PROGRESS("To be implemented");
+// 		solve_approximately(atom, csp.get(), rpg, seed);
 		return true;
 	} else { // Else, we want a full solution of the CSP
-		return solve_completely(csp.get(), rpg);
+		return solve(tuple, csp.get(), rpg);
 	}
 }
 
-bool GroundEffectCSPHandler::solve_completely(gecode::SimpleCSP* csp, RPGData& rpg) const {
+bool GroundEffectCSPHandler::solve(TupleIdx tuple, gecode::SimpleCSP* csp, RPGIndex& graph) const {
 	// We just want to search for one solution an extract the support from it
 	Gecode::DFS<SimpleCSP> engine(csp);
 	SimpleCSP* solution = engine.next();
 	if (!solution) return false; // The CSP has no solution at all
 	
-	process_solution(solution, rpg); // TODO - This is not optimal, but for the moment being it saves us a lot of code duplication
+	bool reached = graph.reached(tuple);
+	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple);
+	
+	if (reached) return true; // The value has already been reached before
+	
+	// Otherwise, the value is actually new - we extract the actual support from the solution
+	std::vector<TupleIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
+	graph.add(tuple, get_action_id(solution), std::move(support));
 
 	delete solution;
 	return true;
 }
 
+
+
+/*
 void GroundEffectCSPHandler::solve_approximately(const Atom& atom, gecode::SimpleCSP* csp, RPGData& rpg, const State& seed) const {
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
 	
@@ -147,7 +178,7 @@ void GroundEffectCSPHandler::solve_approximately(const Atom& atom, gecode::Simpl
 	
 	rpg.add(atom, get_action_id(csp), support);
 }
-
+*/
 
 
 void GroundEffectCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {

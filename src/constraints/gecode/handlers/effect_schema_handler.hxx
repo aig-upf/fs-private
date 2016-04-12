@@ -61,7 +61,6 @@ protected:
 	
 	
 	static unsigned index_lhs_symbol(const fs::ActionEffect* effect);
-
 	
 	//! A list with all tuples that are relevant to the action effect. The first element of the pair
 	//! is the index of the symbol, then come the indexes of the subterms (Indexes are CSP variable indexes).

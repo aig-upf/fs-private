@@ -133,7 +133,6 @@ void EffectSchemaCSPHandler::seek_novel_tuples(RPGIndex& rpg, const State& seed)
 			FFDEBUG("heuristic", "The effect CSP cannot produce any new tuple");
 		}
 		else {
-		
 			Gecode::DFS<SimpleCSP> engine(csp);
 			unsigned num_solutions = 0;
 			while (SimpleCSP* solution = engine.next()) {
@@ -167,11 +166,7 @@ void EffectSchemaCSPHandler::process_effect_solution(const SimpleCSP* solution, 
 	if (reached) return; // The value has already been reached before
 	
 	// Otherwise, the value is actually new - we extract the actual support from the solution
-	std::vector<TupleIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes);
-	
-	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
-	support.insert(support.end(), _necessary_tuples.begin(), _necessary_tuples.end());
-	
+	std::vector<TupleIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
 	rpg.add(tuple_idx, get_action_id(solution), std::move(support));
 }
 
@@ -180,9 +175,9 @@ void EffectSchemaCSPHandler::create_novelty_constraint() {
 	_effect_novelty = new EffectNoveltyConstraint(_translator, get_effect());
 }
 
-SimpleCSP::ptr EffectSchemaCSPHandler::instantiate_effect_csp(const RPGIndex& rpg) const {
+SimpleCSP* EffectSchemaCSPHandler::instantiate_effect_csp(const RPGIndex& rpg) const {
 	if (_failed) return nullptr;
-	SimpleCSP* clone = static_cast<SimpleCSP::ptr>(_base_csp.clone());
+	SimpleCSP* clone = static_cast<SimpleCSP*>(_base_csp.clone());
 	_translator.updateStateVariableDomains(*clone, rpg.get_domains());
 	for (const ExtensionalConstraint& constraint:_extensional_constraints) {
 		if (!constraint.update(*clone, _translator, rpg)) {

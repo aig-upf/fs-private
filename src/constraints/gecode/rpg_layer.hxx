@@ -43,9 +43,6 @@ public:
 	
 	const std::set<unsigned>& get_modified_symbols() const;
 	
-	//! Returns, for all the atoms in the given index, a set with all those which have NOT been achieved in the current layer.
-	std::set<unsigned> unachieved_atoms(const Index<Atom>& atom_idx) const;
-	
 	//! Signals the advance to the next RPG layer by accumulaing all the given newly supported atoms
 	void advance(const std::vector<std::vector<ObjectIdx>>& novel_atoms);
 	

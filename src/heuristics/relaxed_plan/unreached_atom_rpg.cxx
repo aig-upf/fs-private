@@ -1,48 +1,47 @@
 
 #include <limits>
 
-#include <languages/fstrips/effects.hxx>
-#include <heuristics/relaxed_plan/atom_based_crpg.hxx>
+#include <languages/fstrips/language.hxx>
+#include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
+#include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <relaxed_state.hxx>
-#include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
+#include <constraints/gecode/lifted_plan_extractor.hxx>
 #include <languages/fstrips/scopes.hxx>
 
 
 namespace fs0 { namespace gecode {
 
-ConstrainedRPG::ConstrainedRPG(const Problem& problem, const std::vector<ActionHandlerPtr>& managers, std::shared_ptr<GecodeRPGBuilder> builder) :
+UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers) :
 	_problem(problem),
-	_managers(downcast_managers(managers)),
-	_builder(std::move(builder)),
-	_extension_handler(problem.get_tuple_index()),
-	_atom_table(index_atoms(ProblemInfo::getInstance())),
-	_atom_achievers(build_achievers_index(_managers, _atom_table)),
-	_atom_variable_tuples(index_variable_tuples(ProblemInfo::getInstance(), _atom_table))
+	_tuple_index(problem.get_tuple_index()),
+	_managers(std::move(managers)),
+	_goal_handler(std::unique_ptr<LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false))),
+	_extension_handler(_tuple_index),
+	_atom_achievers(build_achievers_index(_managers, _tuple_index))
 {
-	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
+	FINFO("heuristic", "Unreached-Atom-Based heuristic initialized");
 }
 
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
-long ConstrainedRPG::evaluate(const State& seed) {
+long UnreachedAtomRPG::evaluate(const State& seed) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
-	GecodeRPGLayer layer(_extension_handler, seed);
-	RPGData bookkeeping(seed, true); // We ignore negated atoms
-	
+	RPGIndex graph(seed, _tuple_index, _extension_handler);
+
 	if (Config::instance().useMinHMaxGoalValueSelector()) {
-		_builder->init_value_selector(&bookkeeping);
+		_goal_handler->init_value_selector(&graph);
 	}
 	
-	auto unachieved = layer.unachieved_atoms(_atom_table);
+	auto unachieved = graph.unachieved_atoms(_tuple_index);
 	
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
 	while (true) {
@@ -57,7 +56,7 @@ long ConstrainedRPG::evaluate(const State& seed) {
 		
 		for (auto it = unachieved.begin(); it != unachieved.end(); ) {
 			unsigned atom_idx = *it;
-			const Atom& atom = _atom_table.element(atom_idx);
+			const Atom& atom = _tuple_index.to_atom(atom_idx);
 			
 			// Check for a potential support
 			bool atom_supported = false;
@@ -69,7 +68,7 @@ long ConstrainedRPG::evaluate(const State& seed) {
 				}
 				
 				if (cache[manager_idx] == nullptr) {
-					SimpleCSP* raw = manager->preinstantiate(layer);
+					SimpleCSP* raw = manager->preinstantiate(graph);
 					if (!raw) { // We are instantiating the CSP for the first time in this layer and find that it is not applicable.
 						failure_cache[manager_idx] = true;
 						FFDEBUG("heuristic", "Effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\" inconsistent => not applicable");
@@ -80,7 +79,7 @@ long ConstrainedRPG::evaluate(const State& seed) {
 					FFDEBUG("heuristic", "Found cached & applicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
 				}
 				
-				atom_supported = manager->find_atom_support(atom, seed, *cache[manager_idx], bookkeeping);
+				atom_supported = manager->find_atom_support(atom_idx, atom, seed, *cache[manager_idx], graph);
 				if (atom_supported) break; // No need to keep iterating
 			}
 			
@@ -95,59 +94,38 @@ long ConstrainedRPG::evaluate(const State& seed) {
 		
 		// TODO - RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THIS CSP MODEL
 		
-		FFDEBUG("heuristic", "The last layer of the RPG contains " << bookkeeping.getNumNovelAtoms() << " novel atoms." << std::endl << bookkeeping);
-		
 		// If there is no novel fact in the rpg, we reached a fixpoint, thus there is no solution.
-		if (bookkeeping.getNumNovelAtoms() == 0) return -1;
+		if (!graph.hasNovelTuples()) return -1;
 		
-		// unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
-		layer.advance(bookkeeping.getNovelAtoms());
-		FFDEBUG("heuristic", "RPG Layer #" << bookkeeping.getCurrentLayerIdx() << ": " << layer);
 		
-		long h = computeHeuristic(seed, layer, bookkeeping);
+		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
+		FFDEBUG("heuristic", "New RPG Layer: " << graph);
+		
+		long h = computeHeuristic(seed, graph);
 		if (h > -1) return h;
 		
-		bookkeeping.advanceLayer();
 	}
 }
 
-long ConstrainedRPG::computeHeuristic(const State& seed, const GecodeRPGLayer& layer, const RPGData& rpg) {
-	std::vector<Atom> causes;
-	if (_builder->isGoal(seed, layer, causes)) {
-		auto extractor = RelaxedPlanExtractorFactory<RPGData>::create(seed, rpg);
-		long cost = extractor->computeRelaxedPlanCost(causes);
-		delete extractor;
-		return cost;
-	} else return -1;
-}
-
-Index<Atom> ConstrainedRPG::index_atoms(const ProblemInfo& info) {
-	// TODO Take into account ONLY those atoms which are reachable !!!
-	Index<Atom> index;
-	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-		if (info.isPredicativeVariable(var)) {
-			index.add(Atom(var, 1)); // We don't need the negated atom, since the RPG ignores delete effects.
-			continue;
+long UnreachedAtomRPG::computeHeuristic(const State& seed, const RPGIndex& graph) {
+	long cost = -1;
+	if (SimpleCSP* csp = _goal_handler->instantiate(graph)) {
+		if (csp->checkConsistency()) { // ATM we only take into account full goal resolution
+			FFDEBUG("heuristic", "Goal formula CSP is consistent: " << *csp);
+			std::vector<TupleIdx> causes;
+			if (_goal_handler->compute_support(csp, causes, seed)) {
+				LiftedPlanExtractor extractor(seed, graph, _tuple_index);
+				cost = extractor.computeRelaxedPlanCost(causes);
+			}
 		}
-		
-		for (ObjectIdx value:info.getVariableObjects(var)) {
-			index.add(Atom(var, value));
-		}
+		delete csp;
 	}
-	return index;
+	return cost;
 }
 
-std::vector<std::vector<ObjectIdx>> ConstrainedRPG::index_variable_tuples(const ProblemInfo& info, const Index<Atom>& index) {
-	std::vector<std::vector<ObjectIdx>> tuples;
-	for (const Atom& atom:index.elements()) {
-		const auto& data = info.getVariableData(atom.getVariable());
-		tuples.push_back(data.second);
-	}
-	return tuples;
-}
 
-ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::vector<EffectHandlerPtr>& managers, const Index<Atom>& atom_idx) {
-	AchieverIndex index(atom_idx.size()); // Create an index as large as the number of atoms
+UnreachedAtomRPG::AchieverIndex UnreachedAtomRPG::build_achievers_index(const std::vector<EffectHandlerPtr>& managers, const TupleIndex& tuple_index) {
+	AchieverIndex index(tuple_index.size()); // Create an index as large as the number of atoms
 	
 	FINFO("main", "Building index of potential atom achievers");
 	
@@ -162,22 +140,12 @@ ConstrainedRPG::AchieverIndex ConstrainedRPG::build_achievers_index(const std::v
 		// that are reached by the CSP in some layer of the RPG.
 		
 		for (const auto& atom:fs::ScopeUtils::compute_affected_atoms(effect)) {
-			unsigned idx = atom_idx.index(atom);
+			TupleIdx idx = tuple_index.to_index(atom);
 			index.at(idx).push_back(manager_idx);
 		}
 	}
 	
 	return index;
-}
-
-std::vector<ConstrainedRPG::EffectHandlerPtr> ConstrainedRPG::downcast_managers(const std::vector<ActionHandlerPtr>& managers) {
-	std::vector<EffectHandlerPtr> downcasted;
-	for (ActionHandlerPtr manager:managers) {
-		auto effect_manager = std::dynamic_pointer_cast<GroundEffectCSPHandler>(manager);
-		if (!effect_manager) throw std::runtime_error("Currently only ground effect managers accepted");
-		downcasted.push_back(effect_manager);
-	}
-	return downcasted;
 }
 
 

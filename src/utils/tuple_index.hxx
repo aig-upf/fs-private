@@ -63,6 +63,7 @@ public:
 	//! Returns the logical symbol that corresponds to the given tuple index
 	unsigned symbol(TupleIdx tuple) const { return _symbol_index.at(tuple); }
 	
+protected:
 	//! A helper to compute and index all reachable tuples
 	static std::vector<std::vector<ValueTuple>> compute_all_reachable_tuples(const ProblemInfo& info);
 };
