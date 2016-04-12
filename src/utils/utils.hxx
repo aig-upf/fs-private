@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <fs_types.hxx>
 #include <vector>
 #include <ostream>
 #include <algorithm>
@@ -13,6 +12,7 @@ public:
 	typedef std::vector<std::vector<unsigned>*> ValueSet;
 	typedef std::vector<unsigned> Point;
 	
+	//! Merge the two given vectors and return a new one with all the elements from (in order) the first and the second
 	template <typename T>
 	static std::vector<T> merge(const std::vector<T>& vector1, const std::vector<T>& vector2) {
 		std::vector<T> result(vector1);
