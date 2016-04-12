@@ -3,7 +3,6 @@
 
 #include <gecode/int.hh>
 #include <fs_types.hxx>
-#include <utils/index.hxx>
 
 
 namespace fs0 { class ProblemInfo; class State; class Atom; }

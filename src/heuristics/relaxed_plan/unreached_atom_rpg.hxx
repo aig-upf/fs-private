@@ -3,7 +3,6 @@
 
 #include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
-#include <utils/index.hxx>
 #include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 
 

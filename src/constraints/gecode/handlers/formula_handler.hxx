@@ -3,6 +3,7 @@
 
 #include <constraints/gecode/handlers/base_handler.hxx>
 
+
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
 namespace fs = fs0::language::fstrips;
 
@@ -12,8 +13,6 @@ namespace fs0 { namespace gecode {
 //! A CSP modeling and solving a logical formula on a certain RPG layer
 class FormulaCSPHandler : public BaseCSPHandler {
 public:
-	typedef FormulaCSPHandler* ptr;
-	typedef const FormulaCSPHandler* cptr;
 
 	FormulaCSPHandler(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate, bool use_novelty_constraint);
 	~FormulaCSPHandler();
