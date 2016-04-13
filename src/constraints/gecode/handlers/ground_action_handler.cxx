@@ -24,8 +24,17 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 
 // If no set of effects is provided, we'll take all of them into account
 GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate)
-	:  BaseActionCSPHandler(action, action.getEffects(), tuple_index, approximate)
+	:  BaseActionCSPHandler(tuple_index, approximate), _action(action)
 {}
+
+const fs::Formula* GroundActionCSPHandler::get_precondition() const {
+	return _action.getPrecondition();
+}
+
+const std::vector<const fs::ActionEffect*>& GroundActionCSPHandler::get_effects() const {
+	return _action.getEffects();
+}
+
 
 const ActionID* GroundActionCSPHandler::get_action_id(const SimpleCSP* solution) const {
 	return new PlainActionID(static_cast<const GroundAction*>(&_action)); // TODO Ugly

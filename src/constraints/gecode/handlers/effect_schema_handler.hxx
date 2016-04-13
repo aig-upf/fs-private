@@ -36,8 +36,15 @@ public:
 	
 	//! Raises an exception if the given effect is not valid for this type of effect handler, i.e. because it has nested fluents on the effect head.
 	static const fs::StateVariable* check_valid_effect(const fs::ActionEffect* effect);
+	
+	const std::vector<const fs::ActionEffect*>& get_effects() const override;
+
+	const fs::Formula* get_precondition() const override;	
 
 protected:
+	//! This is the only effect managed by this CSP, which we store in a vector to comply with the parents' interfaces, which require
+	//! to return a vector of effects. By construction, we have that _effects.size() == 0
+	const std::vector<const fs::ActionEffect*> _effects;
 	
 	void process_effect_solution(const SimpleCSP* solution, RPGIndex& rpg) const;
 	

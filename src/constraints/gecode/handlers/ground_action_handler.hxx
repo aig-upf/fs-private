@@ -2,6 +2,7 @@
 #pragma once
 
 #include <constraints/gecode/handlers/base_action_handler.hxx>
+#include <actions/actions.hxx> // Necessary so that the return of get_action can be identified as covariant with that of the overriden method
 
 namespace fs0 {
 class GroundAction;
@@ -21,8 +22,16 @@ public:
 	//! Constructors / Destructor
 	GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate);
 	virtual ~GroundActionCSPHandler() {}
+	
+	const GroundAction& get_action() const override { return _action; }
+	
+	const std::vector<const fs::ActionEffect*>& get_effects() const override;
+
+	const fs::Formula* get_precondition() const override;
 
 protected:
+	
+	const GroundAction& _action;
 
 	const ActionID* get_action_id(const SimpleCSP* solution) const;
 	

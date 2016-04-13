@@ -2,6 +2,7 @@
 #pragma once
 
 #include <constraints/gecode/handlers/base_action_handler.hxx>
+#include <actions/actions.hxx> // Necessary so that the return of get_action can be identified as covariant with that of the overriden method
 
 namespace fs0 {
 class GroundAction;
@@ -33,7 +34,20 @@ public:
 	
 	void post(SimpleCSP& csp, const Atom& atom) const;
 	
+	const GroundAction& get_action() const override { return _action; }
+	
+	const std::vector<const fs::ActionEffect*>& get_effects() const override;
+
+	const fs::Formula* get_precondition() const override;	
+	
 protected:
+
+	const GroundAction& _action;
+	
+	//! This is the only effect managed by this CSP, which we store in a vector to comply with the parents' interfaces, which require
+	//! to return a vector of effects. By construction, we have that _effects.size() == 0
+	const std::vector<const fs::ActionEffect*> _effects;	
+	
 	const ActionID* get_action_id(const SimpleCSP* solution) const;
 
 	SimpleCSP* instantiate_effect_csp(const RPGIndex& rpg) const;

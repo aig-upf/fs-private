@@ -35,12 +35,21 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
 		managers = GroundActionCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
+		
+		
 	} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
 		WORK_IN_PROGRESS("Disabled");
 // 			managers = GroundEffectCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
+		
+		
+		
 	}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
 		const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
 		managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
+		
+		
+		
+		
 	}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
 		WORK_IN_PROGRESS("Disabled");
 // 			std::vector<IndexedTupleset> symbol_tuplesets = SmartRPG::index_tuplesets(ProblemInfo::getInstance());

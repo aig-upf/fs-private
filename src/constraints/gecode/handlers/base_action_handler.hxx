@@ -5,7 +5,7 @@
 
 namespace fs0 { class ActionBase; class ActionID; }
 
-namespace fs0 { namespace language { namespace fstrips { class ActionEffect; }}}
+namespace fs0 { namespace language { namespace fstrips { class ActionEffect; class Formula; }}}
 
 
 namespace fs0 { namespace gecode {
@@ -17,7 +17,7 @@ public:
 	typedef BaseActionCSPHandler* ptr;
 
 	//! Constructor / Destructor
-	BaseActionCSPHandler(const ActionBase& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
+	BaseActionCSPHandler(const TupleIndex& tuple_index, bool approximate);
 	virtual ~BaseActionCSPHandler() {}
 	
 	//! Returns false iff the induced CSP is inconsistent, i.e. the action is not applicable
@@ -29,16 +29,19 @@ public:
 	//! Initialize the value selector of the underlying CSPs
 	virtual void init_value_selector(const RPGData* bookkeeping) { init(bookkeeping);} // TODO - No need to have two different names for the same method
 	
-	const ActionBase& get_action() const { return _action; }
+	//! Return the action that gives origin to this CSP manager
+	virtual const ActionBase& get_action() const = 0;
 	
+	//! Return the set of effects (possibly one) managed by this object
+	virtual const std::vector<const fs::ActionEffect*>& get_effects() const = 0;
 	
+	//! Return the precondition managed by this object (which might be the one of the original action, or
+	//! contain some extra / modified conditions e.g. in case of nested fluent processing)
+	virtual const fs::Formula* get_precondition() const = 0;
+
 protected:
-	//! The index of the action managed by this manager
-	const ActionBase& _action;
-	
-	//! The effects of the action that we want to take into account in the CSP (by default, all)
-	//! Note that we store a copy of the vector to facilitate creating subsets of effects to the subclasses.
-	const std::vector<const fs::ActionEffect*> _effects;
+
+
 	
 	//! 'effect_support_variables[i]' contains the scope of the i-th effect of the action plus the scope of the action, without repetitions
 	//! and in that particular order.

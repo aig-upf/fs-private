@@ -34,7 +34,7 @@ std::vector<std::shared_ptr<GroundEffectCSPHandler>> GroundEffectCSPHandler::cre
 }
 
 GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, unsigned effect_idx, bool approximate) :
-	BaseActionCSPHandler(action, { action.getEffects().at(effect_idx) }, tuple_index, approximate)
+	BaseActionCSPHandler(tuple_index, approximate), _action(action), _effects({ action.getEffects().at(effect_idx) })
 {}
 
 bool GroundEffectCSPHandler::init(bool use_novelty_constraint) {
@@ -215,6 +215,14 @@ std::vector<unsigned> GroundEffectCSPHandler::index_lhs_subterms() {
 		}
 	}
 	return subterm_variables;
+}
+
+const fs::Formula* GroundEffectCSPHandler::get_precondition() const {
+	return _action.getPrecondition();
+}
+
+const std::vector<const fs::ActionEffect*>& GroundEffectCSPHandler::get_effects() const {
+	return _effects;
 }
 
 } } // namespaces

@@ -49,7 +49,7 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 
 
 EffectSchemaCSPHandler::EffectSchemaCSPHandler(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
-	ActionSchemaCSPHandler(action, { effect }, tuple_index, approximate), _achievable_tuple_idx(INVALID_TUPLE), _effect_novelty(nullptr)
+	ActionSchemaCSPHandler(action, tuple_index, approximate), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE), _effect_novelty(nullptr)
 {}
 
 EffectSchemaCSPHandler::~EffectSchemaCSPHandler() {
@@ -190,7 +190,12 @@ SimpleCSP* EffectSchemaCSPHandler::instantiate_effect_csp(const RPGIndex& rpg) c
 	return clone;
 }
 
+const std::vector<const fs::ActionEffect*>& EffectSchemaCSPHandler::get_effects() const {
+	return _effects;
+}
 
-
+const fs::Formula* EffectSchemaCSPHandler::get_precondition() const {
+	return _action.getPrecondition();
+}
 
 } } // namespaces

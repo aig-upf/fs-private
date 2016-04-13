@@ -2,6 +2,7 @@
 #pragma once
 
 #include <constraints/gecode/handlers/base_action_handler.hxx>
+#include <actions/actions.hxx> // Necessary so that the return of get_action can be identified as covariant with that of the overriden method
 
 namespace fs0 { class LiftedActionID; class PartiallyGroundedAction; }
 
@@ -18,19 +19,27 @@ public:
 	
 	//! Factory method
 	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	
 	//! HACK
 	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate);
+	ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate);
 	virtual ~ActionSchemaCSPHandler() {}
 	
 	bool init(bool use_novelty_constraint) override;
 
+	const PartiallyGroundedAction& get_action() const override { return _action; }
+	
+	const std::vector<const fs::ActionEffect*>& get_effects() const override;
+
+	const fs::Formula* get_precondition() const override;
 	
 	//! Return the (Lifted) ActionID corresponding to the given solution
 	LiftedActionID* get_lifted_action_id(const SimpleCSP* solution) const;
 	
 protected:
+	//! The action that originates this handler
+	const PartiallyGroundedAction& _action;
 
 	//! '_parameter_variables[i]' contains the index of the CSP variable that models the value of i-th parameter of the action schema
 	std::vector<unsigned> _parameter_variables;

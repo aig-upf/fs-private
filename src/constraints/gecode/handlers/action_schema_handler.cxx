@@ -20,7 +20,7 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> handlers;
 	
 	for (auto schema:schemata) {
-		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, schema->getEffects(), tuple_index, approximate);
+		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, tuple_index, approximate);
 		handler->init(novelty);
 		FDEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
@@ -29,8 +29,8 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 }
 
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate)
-:  BaseActionCSPHandler(action, effects, tuple_index, approximate)
+ActionSchemaCSPHandler::ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate)
+:  BaseActionCSPHandler(tuple_index, approximate), _action(action)
 {}
 
 
@@ -75,14 +75,21 @@ Binding ActionSchemaCSPHandler::build_binding_from_solution(const SimpleCSP* sol
 	return Binding(values, valid);
 }
 
+const std::vector<const fs::ActionEffect*>& ActionSchemaCSPHandler::get_effects() const {
+	return _action.getEffects();
+}
+
+const fs::Formula* ActionSchemaCSPHandler::get_precondition() const {
+	return _action.getPrecondition();
+}
+
 // Simply forward to the more concrete method
 const ActionID* ActionSchemaCSPHandler::get_action_id(const SimpleCSP* solution) const {
 	return get_lifted_action_id(solution);
 }
 
 LiftedActionID* ActionSchemaCSPHandler::get_lifted_action_id(const SimpleCSP* solution) const {
-	// TODO - VERY UGLY
-	return new LiftedActionID(static_cast<const PartiallyGroundedAction*>(&_action), build_binding_from_solution(solution));
+	return new LiftedActionID(&_action, build_binding_from_solution(solution));
 }
 
 void ActionSchemaCSPHandler::log() const {
