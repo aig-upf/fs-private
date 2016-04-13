@@ -17,9 +17,6 @@ namespace fs0 { class RPGData; class Binding; }
 
 namespace fs0 { namespace gecode {
 
-class GecodeRPGLayer;
-class NoveltyConstraint;
-
 //! The base interface class for all gecode CSP handlers
 class BaseCSPHandler {
 public:
@@ -27,14 +24,14 @@ public:
 	typedef const BaseCSPHandler* cptr;
 
 	BaseCSPHandler(const TupleIndex& tuple_index, bool approximate);
-	virtual ~BaseCSPHandler();
+	virtual ~BaseCSPHandler() = default;
 	
 	void init(const RPGData* bookkeeping);
 
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP* instantiate_csp(const GecodeRPGLayer& layer) const;
-	SimpleCSP* instantiate_csp(const State& state) const;
+	SimpleCSP* instantiate(const RPGIndex& graph) const;
+	SimpleCSP* instantiate(const State& state) const;
 	
 	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 
@@ -61,8 +58,6 @@ protected:
 	//! A translator to map planning variables with gecode variables
 	GecodeCSPVariableTranslator _translator;
 	
-	NoveltyConstraint* _novelty;
-	
 	// All (distinct) FSTRIPS terms that participate in the CSP
 	std::unordered_set<const fs::Term*> _all_terms;
 	
@@ -70,15 +65,12 @@ protected:
 	std::unordered_set<const fs::AtomicFormula*> _all_formulas;
 	
 	//! The Ids of the state variables that are relevant to some formula via a (predicative) atom.
-	std::set<Atom> _atom_state_variables;
 	std::vector<TupleIdx> _necessary_tuples;
 	
 	const TupleIndex& _tuple_index;
 	
 	//!
 	std::vector<ExtensionalConstraint> _extensional_constraints;
-	
-	virtual void create_novelty_constraint() = 0;
 	
 	//! Index all terms and formulas appearing in the formula / actions which will be relevant to the CSP
 	virtual void index() = 0;
@@ -95,8 +87,11 @@ protected:
 	//! Common indexing routine - places all conditions and terms appearing in formulas into their right place
 	void index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms);
 	
-	//!
-	void extract_nested_term_support(const SimpleCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const;
+	//! By default, we create no novelty constraint
+	virtual void create_novelty_constraint() {}
+	
+	//! By default, we post no novelty constraint whatsoever
+	virtual void post_novelty_constraint(SimpleCSP& csp, const RPGIndex& rpg) const {}
 };
 
 } } // namespaces

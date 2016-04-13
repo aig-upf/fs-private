@@ -31,7 +31,7 @@ void LiftedActionIterator::Iterator::advance() {
 		// std::cout << std::endl << "applicability CSP: " << handler << std::endl;
 		
 		if (!_csp) {
-			_csp = handler.instantiate_csp(_state);
+			_csp = handler.instantiate(_state);
 			
 			// std::cout << std::endl << "After instantiation: "; handler.print(std::cout, *_csp); std::cout << std::endl;
 			

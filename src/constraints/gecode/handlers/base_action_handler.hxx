@@ -10,6 +10,7 @@ namespace fs0 { namespace language { namespace fstrips { class ActionEffect; cla
 
 namespace fs0 { namespace gecode {
 
+class NoveltyConstraint;
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
 class BaseActionCSPHandler : public BaseCSPHandler {
@@ -18,13 +19,13 @@ public:
 
 	//! Constructor / Destructor
 	BaseActionCSPHandler(const TupleIndex& tuple_index, bool approximate);
-	virtual ~BaseActionCSPHandler() {}
+	virtual ~BaseActionCSPHandler();
 	
 	//! Returns false iff the induced CSP is inconsistent, i.e. the action is not applicable
 	virtual bool init(bool use_novelty_constraint);
 
 	//!
-	virtual void process(const State& seed, const GecodeRPGLayer& layer, RPGData& rpg) const;
+	virtual void process(RPGIndex& graph) const;
 
 	//! Initialize the value selector of the underlying CSPs
 	virtual void init_value_selector(const RPGData* bookkeeping) { init(bookkeeping);} // TODO - No need to have two different names for the same method
@@ -41,7 +42,7 @@ public:
 
 protected:
 
-
+	NoveltyConstraint* _novelty;
 	
 	//! 'effect_support_variables[i]' contains the scope of the i-th effect of the action plus the scope of the action, without repetitions
 	//! and in that particular order.
@@ -72,7 +73,7 @@ protected:
 	//! Preprocess the action to store the IDs of direct and indirect state variables
 	virtual void index_scopes();
 	
-	void compute_support(SimpleCSP* csp, RPGData& rpg, const State& seed) const;
+	void compute_support(SimpleCSP* csp, RPGIndex& graph) const;
 	
 	std::set<VariableIdx> _action_support;
 	
@@ -80,18 +81,16 @@ protected:
 	void registerEffectConstraints(const fs::ActionEffect* effect);
 	
 	//! Process the given solution of the action CSP
-	void process_solution(SimpleCSP* solution, RPGData& bookkeeping) const;
+	void process_solution(SimpleCSP* solution, RPGIndex& graph) const;
 	
 	//!
-	void simple_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+	void simple_atom_processing(SimpleCSP* solution, RPGIndex& graph, TupleIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
-	void hmax_based_atom_processing(SimpleCSP* solution, RPGData& bookkeeping, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+// 	void hmax_based_atom_processing(SimpleCSP* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 
 	//! Extracts the full support of a given effect corresponding to the given solution
-	Atom::vctrp extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+	std::vector<TupleIdx> extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
-	//!
-	void create_novelty_constraint();
 	
 	//! Return the ActionID that corresponds to the current action / action schema, for some given solution
 	virtual const ActionID* get_action_id(const SimpleCSP* solution) const = 0;
@@ -101,6 +100,15 @@ protected:
 	
 	//! A simple helper to log the processing message
 	virtual void log() const = 0;
+	
+	//!
+	void create_novelty_constraint() override;
+	
+	//!
+	void post_novelty_constraint(SimpleCSP& csp, const RPGIndex& rpg) const override;
+	
+	//!
+	void extract_nested_term_support(const SimpleCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<TupleIdx>& support) const;
 };
 
 } } // namespaces

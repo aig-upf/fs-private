@@ -42,9 +42,8 @@ LiftedFormulaHandler::LiftedFormulaHandler(const fs::Formula::cptr formula, cons
 
 LiftedFormulaHandler::~LiftedFormulaHandler() { delete _formula; }
 
-bool LiftedFormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>& support, const State& seed) const {
-	Gecode::DFS<SimpleCSP> engine(csp);
-	SimpleCSP* solution = engine.next();
+bool LiftedFormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>& support) const {
+	SimpleCSP* solution = compute_single_solution(csp);
 	if (!solution) return false;
 	
 	FFDEBUG("heuristic", "Formula CSP solution found: " << *solution);
@@ -54,21 +53,22 @@ bool LiftedFormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>
 	return true;
 }
 
+bool LiftedFormulaHandler::is_satisfiable(SimpleCSP* csp) const {
+	SimpleCSP* solution = compute_single_solution(csp);
+	if (!solution) return false;
+	delete solution;
+	return true;
+}
+
+SimpleCSP* LiftedFormulaHandler::compute_single_solution(SimpleCSP* csp) {
+	Gecode::DFS<SimpleCSP> engine(csp);
+	return engine.next();
+}
 
 void LiftedFormulaHandler::index_scopes() {
 	// Register all fluent symbols involved
 	_tuple_indexes = _translator.index_fluents(_all_terms);
 }
-
-bool LiftedFormulaHandler::check_solution_exists(SimpleCSP* csp) const {
-	Gecode::DFS<SimpleCSP> engine(csp);
-	SimpleCSP* solution = engine.next();
-	if (!solution) return false;
-// 	std::cout << "Formula solution: " << std::endl; print(std::cout, *solution); std::cout << std::endl;
-	delete solution;
-	return true;
-}
-
 
 // In the case of a single formula, we just retrieve and index all terms and atoms
 void LiftedFormulaHandler::index() {
@@ -77,20 +77,6 @@ void LiftedFormulaHandler::index() {
 	
 	// Index formula elements
 	index_formula_elements(conditions, terms);
-}
-
-// TODO CODE DUPLICATION WITH EffectSchemaCSPHandler
-SimpleCSP::ptr LiftedFormulaHandler::instantiate(const RPGIndex& rpg) const {
-	if (_failed) return nullptr;
-	SimpleCSP* clone = static_cast<SimpleCSP::ptr>(_base_csp.clone());
-	_translator.updateStateVariableDomains(*clone, rpg.get_domains());
-	for (const ExtensionalConstraint& constraint:_extensional_constraints) {
-		if (!constraint.update(*clone, _translator, rpg)) {
-			delete clone;
-			return nullptr;
-		}
-	}
-	return clone;
 }
 
 void LiftedFormulaHandler::init_value_selector(const RPGIndex* graph) {

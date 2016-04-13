@@ -32,6 +32,8 @@ public:
 protected:
 	
 	const GroundAction& _action;
+	
+	std::vector<const fs::ActionEffect*> _add_effects;
 
 	const ActionID* get_action_id(const SimpleCSP* solution) const;
 	

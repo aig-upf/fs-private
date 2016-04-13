@@ -20,8 +20,6 @@ class RPGIndex;
  */
 class LiftedPlanExtractor {
 protected:
-	const State& _seed;
-	
 	const RPGIndex& _graph;
 	
 	std::set<TupleIdx> processed;
@@ -33,8 +31,8 @@ protected:
 
 public:
 	
-	LiftedPlanExtractor(const State& seed, const RPGIndex& graph, const TupleIndex& tuple_index);
-	virtual ~LiftedPlanExtractor() {}
+	LiftedPlanExtractor(const RPGIndex& graph, const TupleIndex& tuple_index);
+	virtual ~LiftedPlanExtractor() = default;
 
 
 	/**
@@ -44,7 +42,7 @@ public:
 	 * @param goalAtoms The atoms that allowed the planning graph to reach a goal state.
 	 */
 	long computeRelaxedPlanCost(const std::vector<TupleIdx>& tuples);
-
+	
 protected:
 	//! Put all the atoms in a given vector of atoms in the queue to be processed.
 	inline void enqueueTuples(const std::vector<TupleIdx>& tuples) { for(const auto& tuple:tuples) pending.push(tuple); }

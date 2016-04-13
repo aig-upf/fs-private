@@ -17,7 +17,7 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 { namespace gecode {
 
 class SimpleCSP;
-class GecodeRPGLayer;
+class RPGIndex;
 
 /**
  * This exception is thrown whenever a variable cannot be resolved
@@ -87,7 +87,7 @@ public:
 	std::vector<ObjectIdx> resolveValues(const std::vector<const fs::Term*>& terms, CSPVariableType type, const SimpleCSP& csp) const;
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
-	void updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const;
+	void updateStateVariableDomains(SimpleCSP& csp, const RPGIndex& graph) const;
 	void updateStateVariableDomains(SimpleCSP& csp, const std::vector<Gecode::IntSet>& domains) const;
 	void updateStateVariableDomains(SimpleCSP& csp, const State& state) const;
 

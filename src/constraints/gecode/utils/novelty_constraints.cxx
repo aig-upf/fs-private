@@ -3,7 +3,6 @@
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
-#include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <utils/utils.hxx>
@@ -16,11 +15,13 @@ NoveltyConstraint* NoveltyConstraint::createFromEffects(GecodeCSPVariableTransla
 		return new StrongNoveltyConstraint(translator, effects);
 	} else {
 		// Weak novelty constraints are only applicable for plain conjunctions or existentially quantified conjunctions
-		return WeakNoveltyConstraint::create(translator, precondition, effects);
+		return nullptr;
+// 		return WeakNoveltyConstraint::create(translator, precondition, effects);
 	}
 }
 
-
+// TODO - Weak Novelty constraints ATM disabled, as it is not sure it pays off to compute and keep the whole domain deltas for such a weak constraint.
+/*
 WeakNoveltyConstraint* WeakNoveltyConstraint::create(GecodeCSPVariableTranslator& translator, const fs::Formula::cptr conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
 	std::set<VariableIdx> variables;
 	std::set<unsigned> symbols;
@@ -45,7 +46,7 @@ WeakNoveltyConstraint::WeakNoveltyConstraint(GecodeCSPVariableTranslator& transl
 	}
 }
 
-void WeakNoveltyConstraint::post_constraint(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
+void WeakNoveltyConstraint::post_constraint(SimpleCSP& csp, const RPGIndex& layer) const {
 	// If we have relevant predicative symbols, and the denotation of some of them has changed in the last
 	// RPG layer, then we don't need to post the actual novelty constraint, since it might already be the case
 	// that e.g. some atom that was false is now true, and thus we need to check all possible values, old and new,
@@ -74,6 +75,7 @@ void WeakNoveltyConstraint::post_constraint(SimpleCSP& csp, const GecodeRPGLayer
 	// Now post the global novelty constraint OR: X1 is new, or X2 is new, or...
 	Gecode::rel(csp, Gecode::BOT_OR, delta_reification_variables, 1);
 }
+*/
 
 //! Returns true iff the constraint is applicable to the set of given effects
 //! The constraint is applicable if none of the effects' LHS contains a nested fluent
@@ -96,7 +98,7 @@ StrongNoveltyConstraint::StrongNoveltyConstraint(GecodeCSPVariableTranslator& tr
 }
 
 //! A private helper
-Gecode::BoolVar& post_individual_constraint(SimpleCSP& csp, const GecodeRPGLayer& layer, const std::tuple<VariableIdx, unsigned, unsigned>& element) {
+Gecode::BoolVar& post_individual_constraint(SimpleCSP& csp, const RPGIndex& layer, const std::tuple<VariableIdx, unsigned, unsigned>& element) {
 	VariableIdx variable = std::get<0>(element);
 	unsigned csp_variable_id = std::get<1>(element);
 	unsigned reified_variable_id = std::get<2>(element);
@@ -107,7 +109,7 @@ Gecode::BoolVar& post_individual_constraint(SimpleCSP& csp, const GecodeRPGLayer
 	return reification_variable;
 }
 
-void StrongNoveltyConstraint::post_constraint(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
+void StrongNoveltyConstraint::post_constraint(SimpleCSP& csp, const RPGIndex& layer) const {
 	if (_variables.empty()) return;
 	
 	Gecode::BoolVarArgs reification_variables;

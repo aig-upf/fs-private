@@ -6,6 +6,7 @@
 #include <languages/fstrips/scopes.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
+#include "relaxed_plan.hxx"
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
@@ -59,12 +60,11 @@ long SmartRPG::evaluate(const State& seed) {
 			if (achievable != INVALID_TUPLE && graph.reached(achievable)) continue;
 			
 			// Otherwise, we process the effect to derive the new tuples that it can produce on the current RPG layer
-			manager->seek_novel_tuples(graph, seed);
+			manager->seek_novel_tuples(graph);
 		}
 		
 		
 		// TODO - RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THIS CSP MODEL
-		
 // 		FFDEBUG("heuristic", "The last layer of the RPG contains " << graph.num_novel_tuples() << " novel atoms." << std::endl << graph);
 		
 		// If there is no novel fact in the rpg, we reached a fixpoint, thus there is no solution.
@@ -74,26 +74,14 @@ long SmartRPG::evaluate(const State& seed) {
 		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
 		FFDEBUG("heuristic", "New RPG Layer: " << graph);
 		
-		long h = computeHeuristic(seed, graph);
+		long h = computeHeuristic(graph);
 		if (h > -1) return h;
 		
 	}
 }
 
-long SmartRPG::computeHeuristic(const State& seed, const RPGIndex& graph) {
-	long cost = -1;
-	if (SimpleCSP* csp = _goal_handler->instantiate(graph)) {
-		if (csp->checkConsistency()) { // ATM we only take into account full goal resolution
-			FFDEBUG("heuristic", "Goal formula CSP is consistent: " << *csp);
-			std::vector<TupleIdx> causes;
-			if (_goal_handler->compute_support(csp, causes, seed)) {
-				LiftedPlanExtractor extractor(seed, graph, _tuple_index);
-				cost = extractor.computeRelaxedPlanCost(causes);
-			}
-		}
-		delete csp;
-	}
-	return cost;
+long SmartRPG::computeHeuristic(const RPGIndex& graph) {
+	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler);
 }
 
 } } // namespaces

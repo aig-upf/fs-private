@@ -24,12 +24,7 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 			for (const PartiallyGroundedAction* flattened:ActionGrounder::flatten_effect_head(schema, eff_idx, info)) {
 				const fs::ActionEffect* effect = schema->getEffects().at(eff_idx);
 				
-				
-				// Ignore delete effects. 
-				// TODO - Refactor this into a hierarchy of effects, a delete effect should be an object of a particular type, or at least effect should have a method is_delete()
-				bool is_predicate = (dynamic_cast<const fs::StateVariable*>(effect->lhs()) && info.isPredicate(dynamic_cast<const fs::StateVariable*>(effect->lhs())->getSymbolId())) ||
-					(dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs()) && info.isPredicate(dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs())->getSymbolId()));
-				if (is_predicate && dynamic_cast<const fs::Constant*>(effect->rhs()) && dynamic_cast<const fs::Constant*>(effect->rhs())->getValue() == 0) {
+				if (effect->is_del()) { // Ignore delete effects
 					delete flattened;
 					continue;
 				}
@@ -49,12 +44,10 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 
 
 EffectSchemaCSPHandler::EffectSchemaCSPHandler(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
-	ActionSchemaCSPHandler(action, tuple_index, approximate), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE), _effect_novelty(nullptr)
+	ActionSchemaCSPHandler(action, tuple_index, approximate), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE)
 {}
 
 EffectSchemaCSPHandler::~EffectSchemaCSPHandler() {
-	if (_effect_novelty) delete _effect_novelty;
-	
 	// Note that we delete the _action pointer here because we know we have cloned the original action when creating the current object.
 	// TODO - TOO UGLY
 	delete &_action;
@@ -127,8 +120,8 @@ const fs::StateVariable* EffectSchemaCSPHandler::check_valid_effect(const fs::Ac
 }
 
 
-void EffectSchemaCSPHandler::seek_novel_tuples(RPGIndex& rpg, const State& seed) const {
-	if (SimpleCSP* csp = instantiate_effect_csp(rpg)) {
+void EffectSchemaCSPHandler::seek_novel_tuples(RPGIndex& rpg) const {
+	if (SimpleCSP* csp = instantiate(rpg)) {
 		if (!csp->checkConsistency()) {
 			FFDEBUG("heuristic", "The effect CSP cannot produce any new tuple");
 		}
@@ -172,23 +165,13 @@ void EffectSchemaCSPHandler::process_effect_solution(const SimpleCSP* solution, 
 
 
 void EffectSchemaCSPHandler::create_novelty_constraint() {
-	_effect_novelty = new EffectNoveltyConstraint(_translator, get_effect());
+	_novelty = new EffectNoveltyConstraint(_translator, get_effect());
 }
 
-SimpleCSP* EffectSchemaCSPHandler::instantiate_effect_csp(const RPGIndex& rpg) const {
-	if (_failed) return nullptr;
-	SimpleCSP* clone = static_cast<SimpleCSP*>(_base_csp.clone());
-	_translator.updateStateVariableDomains(*clone, rpg.get_domains());
-	for (const ExtensionalConstraint& constraint:_extensional_constraints) {
-		if (!constraint.update(*clone, _translator, rpg)) {
-			delete clone;
-			return nullptr;
-		}
-	}
-	// Post the novelty constraint
-	if (_effect_novelty) _effect_novelty->post_constraint(*clone, rpg);
-	return clone;
+void EffectSchemaCSPHandler::post_novelty_constraint(SimpleCSP& csp, const RPGIndex& rpg) const {
+	if (_novelty) _novelty->post_constraint(csp, rpg);
 }
+
 
 const std::vector<const fs::ActionEffect*>& EffectSchemaCSPHandler::get_effects() const {
 	return _effects;

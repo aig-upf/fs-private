@@ -6,7 +6,6 @@
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
-#include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
@@ -30,7 +29,6 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	assert(csp_type == Config::CSPManagerType::Gecode);
 	
 	FINFO("main", "Chosen CSP Manager: Gecode");
-	auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints(), problem.get_tuple_index());
 	
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
@@ -58,9 +56,9 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		throw std::runtime_error("Unknown CSP model type");
 	}
 	
-	GecodeHeuristic gecode_builder_heuristic(problem, std::move(managers), std::move(gecode_builder));
+	GecodeHeuristic heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers));
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(gecode_builder_heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(heuristic)));
 }
 
 template <typename GecodeHeuristic, typename DirectHeuristic>

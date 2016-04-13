@@ -3,8 +3,8 @@
 #include <problem.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
+#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 
 #include <state.hxx>
 #include <actions/lifted_action_iterator.hxx>
@@ -29,19 +29,13 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> GBFSLiftedPlannerCreato
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
-	auto gecode_builder = GecodeRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints(), problem.get_tuple_index());
-	
-	std::vector<std::shared_ptr<BaseActionCSPHandler>> csp_handlers;
+	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
-		csp_handlers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
-	} else { // EffectSchemaCSP
-		assert(false); // Currently disabled
-// 		std::vector<IndexedTupleset> symbol_tuplesets = SmartRPG::index_tuplesets(ProblemInfo::getInstance());
-// 		csp_handlers = EffectSchemaCSPHandler::create(base_actions, symbol_tuplesets, approximate, novelty);
+		managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
 	}
 	
-	GecodeCRPG gecode_builder_heuristic(problem, std::move(csp_handlers), std::move(gecode_builder));
-	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, LiftedStateModel>(model, std::move(gecode_builder_heuristic)));
+	GecodeCRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers));
+	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, LiftedStateModel>(model, std::move(heuristic)));
 }
 
 

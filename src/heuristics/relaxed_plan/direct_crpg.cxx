@@ -4,8 +4,6 @@
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <relaxed_state.hxx>
-#include <constraints/gecode/rpg_layer.hxx>
-#include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
 
 

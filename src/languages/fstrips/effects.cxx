@@ -50,5 +50,24 @@ ActionEffect::cptr ActionEffect::bind(const Binding& binding, const ProblemInfo&
 	return new ActionEffect(_lhs->bind(binding, info), _rhs->bind(binding, info));
 }
 
+// TODO - Refactor this into a hierarchy of effects, a delete effect should be an object of a particular type, or at least effect should have a method is_delete()
+bool ActionEffect::is_predicative() const {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	return (dynamic_cast<const fs::StateVariable*>(lhs()) && info.isPredicate(dynamic_cast<const fs::StateVariable*>(lhs())->getSymbolId())) ||
+		   (dynamic_cast<const fs::FluentHeadedNestedTerm*>(lhs()) && info.isPredicate(dynamic_cast<const fs::FluentHeadedNestedTerm*>(lhs())->getSymbolId()));
+}
+
+// TODO - Refactor this into a hierarchy of effects, a delete effect should be an object of a particular type, or at least effect should have a method is_delete()
+bool ActionEffect::is_del() const {
+	if (!is_predicative()) return false;
+	assert(dynamic_cast<const fs::Constant*>(rhs())); // Predicative effects are necessarily bound to a constant (true/false) RHS
+	return dynamic_cast<const fs::Constant*>(rhs())->getValue() == 0;
+}
+
+bool ActionEffect::is_add() const {
+	return is_predicative() && !is_del();
+}
+
+
 
 } } } // namespaces

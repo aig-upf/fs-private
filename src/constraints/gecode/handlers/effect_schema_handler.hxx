@@ -12,7 +12,6 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 { namespace gecode {
 
 class RPGIndex;
-class EffectNoveltyConstraint;
 
 //! A CSP modeling and solving the effect of an action effect on a certain RPG layer
 class EffectSchemaCSPHandler : public ActionSchemaCSPHandler {
@@ -30,7 +29,7 @@ public:
 	
 	unsigned get_lhs_symbol() const { return _lhs_symbol; }
 	
-	void seek_novel_tuples(RPGIndex& rpg, const State& seed) const;
+	void seek_novel_tuples(RPGIndex& rpg) const;
 	
 	TupleIdx get_achievable_tuple() const { return _achievable_tuple_idx; }
 	
@@ -53,8 +52,6 @@ protected:
 
 	static ValueTuple index_tuple_indexes(const fs::ActionEffect* effect);
 	
-	SimpleCSP::ptr instantiate_effect_csp(const RPGIndex& rpg) const;
-
 	void log() const;
 	
 	//! In an effect f(t) := w, '_lhs_symbol' is the index of symbol 'f'
@@ -81,12 +78,12 @@ protected:
 	//! and in this type of effect processor we disallow nested-fluent heads.
 	TupleIdx _achievable_tuple_idx;
 	
-	EffectNoveltyConstraint* _effect_novelty;
-	
-	void create_novelty_constraint();
-	
 	// Returns a tuple index if the current effect has a fixed achievable tuple, or INVALID_TUPLE otherwise.
 	TupleIdx detect_achievable_tuple() const;
+	
+	void create_novelty_constraint() override;
+	
+	void post_novelty_constraint(SimpleCSP& csp, const RPGIndex& rpg) const override;
 
 };
 

@@ -11,7 +11,6 @@
 #include <search/drivers/native_driver.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <actions/applicable_action_set.hxx>
 
 using namespace fs0::gecode;

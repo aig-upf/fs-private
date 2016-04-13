@@ -5,8 +5,8 @@
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
+#include "relaxed_plan.hxx"
 #include <relaxed_state.hxx>
-#include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
@@ -101,26 +101,14 @@ long UnreachedAtomRPG::evaluate(const State& seed) {
 		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
 		FFDEBUG("heuristic", "New RPG Layer: " << graph);
 		
-		long h = computeHeuristic(seed, graph);
+		long h = computeHeuristic(graph);
 		if (h > -1) return h;
 		
 	}
 }
 
-long UnreachedAtomRPG::computeHeuristic(const State& seed, const RPGIndex& graph) {
-	long cost = -1;
-	if (SimpleCSP* csp = _goal_handler->instantiate(graph)) {
-		if (csp->checkConsistency()) { // ATM we only take into account full goal resolution
-			FFDEBUG("heuristic", "Goal formula CSP is consistent: " << *csp);
-			std::vector<TupleIdx> causes;
-			if (_goal_handler->compute_support(csp, causes, seed)) {
-				LiftedPlanExtractor extractor(seed, graph, _tuple_index);
-				cost = extractor.computeRelaxedPlanCost(causes);
-			}
-		}
-		delete csp;
-	}
-	return cost;
+long UnreachedAtomRPG::computeHeuristic(const RPGIndex& graph) {
+	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler);
 }
 
 

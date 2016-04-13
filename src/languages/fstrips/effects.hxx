@@ -49,6 +49,11 @@ public:
 	const Term::cptr lhs() const { return _lhs; }
 	const Term::cptr rhs() const { return _rhs; }
 	
+	
+	bool is_predicative() const;
+	bool is_add() const;
+	bool is_del() const;
+	
 protected:
 	Term::cptr _lhs;
 	Term::cptr _rhs;

@@ -6,7 +6,6 @@
 #include <constraints/gecode/utils/translation.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <languages/fstrips/terms.hxx>
-#include <constraints/gecode/rpg_layer.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/gecode.hxx>
@@ -40,16 +39,8 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTransl
 		return state.getValue(_variable_idx) == 1;
 	} else {
 		ExtensionHandler handler(_tuple_index);
-		GecodeRPGLayer layer(handler, state); // TODO - This is perhaps too expensive
-		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
-	}
-}
-
-bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const GecodeRPGLayer& layer) const {
-	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
-		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable	
-	} else {
-		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
+		RPGIndex graph(state, _tuple_index, handler); // TODO - This is perhaps too expensive
+		return update(csp, translator, graph.get_extension(_term->getSymbolId()));
 	}
 }
 

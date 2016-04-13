@@ -3,7 +3,7 @@
 #include <languages/fstrips/language.hxx>
 #include <utils/utils.hxx>
 #include <utils/logging.hxx>
-#include <constraints/gecode/handlers/formula_handler.hxx>
+#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 
 namespace fs0 {
 
@@ -32,19 +32,19 @@ bool DirectFormulaInterpreter::satisfied(const State& state) const {
 
 
 CSPFormulaInterpreter::~CSPFormulaInterpreter() {
-	delete _csp_handler;
+	delete _formula_handler;
 }
 
 CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula::cptr formula, const TupleIndex& tuple_index) :
 	// Note that we don't need any of the optimizations, since we will be instantiating the CSP on a state, not a RPG layer
-	_csp_handler(new gecode::FormulaCSPHandler(formula, tuple_index, false, false))
+	_formula_handler(new gecode::LiftedFormulaHandler(formula, tuple_index, false))
 {}
 
 bool CSPFormulaInterpreter::satisfied(const State& state) const {
-	gecode::SimpleCSP* csp = _csp_handler->instantiate_csp(state);
+	gecode::SimpleCSP* csp = _formula_handler->instantiate(state);
 	if (!csp) return false;
 	csp->checkConsistency();
-	bool sol = _csp_handler->check_solution_exists(csp);
+	bool sol = _formula_handler->is_satisfiable(csp);
 	delete csp;
 	return sol;
 }

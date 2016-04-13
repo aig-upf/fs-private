@@ -1,8 +1,10 @@
 
+#include <languages/fstrips/effects.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <utils/logging.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
+
 
 namespace fs0 { namespace gecode {
 	
@@ -25,14 +27,20 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 // If no set of effects is provided, we'll take all of them into account
 GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate)
 	:  BaseActionCSPHandler(tuple_index, approximate), _action(action)
-{}
+{
+	// Filter out delete effects
+	for (const fs::ActionEffect* effect:_action.getEffects()) {
+		if (!effect->is_del())
+		_add_effects.push_back(effect);
+	}
+}
 
 const fs::Formula* GroundActionCSPHandler::get_precondition() const {
 	return _action.getPrecondition();
 }
 
 const std::vector<const fs::ActionEffect*>& GroundActionCSPHandler::get_effects() const {
-	return _action.getEffects();
+	return _add_effects;
 }
 
 

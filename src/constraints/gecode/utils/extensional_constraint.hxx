@@ -13,7 +13,6 @@ namespace fs0 { namespace gecode {
 
 class SimpleCSP;
 class GecodeCSPVariableTranslator;
-class GecodeRPGLayer;
 class RPGIndex;
 
 class ExtensionalConstraint {
@@ -27,7 +26,6 @@ public:
 	
 	//! Constraint-posting routines
 	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const State& state) const;
-	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const GecodeRPGLayer& layer) const;
 	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const RPGIndex& layer) const;
 	
 	//! Prints a representation of the state to the given stream.

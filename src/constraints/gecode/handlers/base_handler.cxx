@@ -7,17 +7,13 @@
 #include <utils/logging.hxx>
 #include <constraints/registry.hxx>
 #include <gecode/driver.hh>
-#include <constraints/gecode/utils/novelty_constraints.hxx>
 
 namespace fs0 { namespace gecode {
 
 BaseCSPHandler::BaseCSPHandler(const TupleIndex& tuple_index, bool approximate) :
-	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _novelty(nullptr), _tuple_index(tuple_index)
+	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _tuple_index(tuple_index)
 {}
 
-BaseCSPHandler::~BaseCSPHandler() {
-	if (_novelty) delete _novelty;
-}
 
 void BaseCSPHandler::init(const RPGData* bookkeeping) {
 	_base_csp.init_value_selector(std::make_shared<AtomMinHMaxValueSelector>(&_translator, bookkeeping));
@@ -50,11 +46,11 @@ void BaseCSPHandler::registerFormulaConstraints(const fs::AtomicFormula::cptr fo
 
 //! A helper
 template <typename T>
-SimpleCSP::ptr instantiate(const SimpleCSP& csp,
+SimpleCSP* _instantiate(const SimpleCSP& csp,
 						   const GecodeCSPVariableTranslator& translator,
 						   const std::vector<ExtensionalConstraint>& extensional_constraints,
 						   const T& layer) {
-	SimpleCSP* clone = static_cast<SimpleCSP::ptr>(csp.clone());
+	SimpleCSP* clone = static_cast<SimpleCSP*>(csp.clone());
 	translator.updateStateVariableDomains(*clone, layer);
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {
 		if (!constraint.update(*clone, translator, layer)) {
@@ -65,29 +61,25 @@ SimpleCSP::ptr instantiate(const SimpleCSP& csp,
 	return clone;
 }
 
-SimpleCSP* BaseCSPHandler::instantiate_csp(const GecodeRPGLayer& layer) const {
+SimpleCSP* BaseCSPHandler::instantiate(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	SimpleCSP* csp = instantiate(_base_csp, _translator, _extensional_constraints, layer);
+	SimpleCSP* csp = _instantiate(_base_csp, _translator, _extensional_constraints, graph);
 	if (!csp) return csp; // The CSP was detected unsatisfiable even before propagating anything
 	
 	// Post the novelty constraint
-	if (_novelty) _novelty->post_constraint(*csp, layer);
+	post_novelty_constraint(*csp, graph);
 	
 	return csp;
 }
 
-SimpleCSP* BaseCSPHandler::instantiate_csp(const State& state) const {
+SimpleCSP* BaseCSPHandler::instantiate(const State& state) const {
 	if (_failed) return nullptr;
-	return instantiate(_base_csp, _translator, _extensional_constraints, state);
+	return _instantiate(_base_csp, _translator, _extensional_constraints, state);
 }
+
 
 void BaseCSPHandler::setup() {
 	index();
-	
-// 	std::cout << "Terms: " << std::endl;
-// 	for (auto term:_all_terms) std::cout << *term << std::endl;
-// 	std::cout << "Formulas: " << std::endl;
-// 	for (auto formula:_all_formulas) std::cout << *formula << std::endl;
 }
 
 void BaseCSPHandler::register_csp_variables() {
@@ -204,7 +196,6 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 							
 							// Mark the state variable to allow the later support recovery
 							Atom atom(statevar->getValue(), 1);
-							_atom_state_variables.insert(atom);
 							true_tuples.insert(_tuple_index.to_index(atom));
 						}
 					}
@@ -225,31 +216,5 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 	_necessary_tuples.insert(_necessary_tuples.end(), true_tuples.begin(), true_tuples.end());
 }
 
-void BaseCSPHandler::extract_nested_term_support(const SimpleCSP* solution, const std::vector<fs::FluentHeadedNestedTerm::cptr>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<Atom>& support) const {
-	if (nested_terms.empty()) return;
-
-	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
-	// the CSP solution resolves to prevent repetitions
-	std::set<VariableIdx> inserted;
-
-	
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	
-	for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
-		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), CSPVariableType::Input, *solution));
-//		VariableIdx variable = fluent->interpretVariable(assignment, binding);
-		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
-			// ObjectIdx value = fluent->interpret(assignment, binding);
-			
-			ObjectIdx value = 1; // i.e. assuming that there are no negated atoms on conditions.
-			if (!info.isPredicate(fluent->getSymbolId())) {
-				value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
-			}
-			
-			support.push_back(Atom(variable, value));
-			inserted.insert(variable);
-		}
-	}
-}
 
 } } // namespaces

@@ -50,9 +50,6 @@ protected:
 	
 	const ActionID* get_action_id(const SimpleCSP* solution) const;
 
-	SimpleCSP* instantiate_effect_csp(const RPGIndex& rpg) const;
-
-		
 	//! Index the CSP variables corresponding the the effect LHS.
 	std::vector<unsigned> index_lhs_subterms();
 	

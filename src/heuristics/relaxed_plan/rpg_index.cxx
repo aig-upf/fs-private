@@ -16,7 +16,8 @@ RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHa
 	_novel_tuples(),
 	_current_layer(0),
 	_extension_handler(extension_handler),
-	_tuple_index(tuple_index)
+	_tuple_index(tuple_index),
+	_seed(seed)
 {
 	_domains.reserve(seed.numAtoms());
 	_domains_raw.reserve(seed.numAtoms());
@@ -151,6 +152,10 @@ std::set<unsigned> RPGIndex::unachieved_atoms(const TupleIndex& tuple_index) con
 		if (!reached(tuple)) unachieved.insert(tuple);
 	}
 	return unachieved;
+}
+
+const std::set<unsigned>& RPGIndex::get_modified_symbols() const {
+	return _extension_handler.get_modified_symbols();
 }
 
 } } // namespaces

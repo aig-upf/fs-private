@@ -13,8 +13,8 @@
 namespace fs0 { namespace gecode {
 
 	
-LiftedPlanExtractor::LiftedPlanExtractor(const State& seed, const RPGIndex& graph, const TupleIndex& tuple_index) :
-	_seed(seed), _graph(graph), processed(), pending(), perLayerSupporters(graph.getNumLayers()), _tuple_index(tuple_index)
+LiftedPlanExtractor::LiftedPlanExtractor(const RPGIndex& graph, const TupleIndex& tuple_index) :
+	_graph(graph), processed(), pending(), perLayerSupporters(graph.getNumLayers()), _tuple_index(tuple_index)
 {}
 
 
@@ -32,7 +32,7 @@ long LiftedPlanExtractor::computeRelaxedPlanCost(const std::vector<TupleIdx>& tu
 
 
 void LiftedPlanExtractor::processTuple(TupleIdx tuple) {
-	if (_seed.contains(_tuple_index.to_atom(tuple))) return; // The atom was already on the seed state, thus has empty support.
+	if (_graph.getSeed().contains(_tuple_index.to_atom(tuple))) return; // The atom was already on the seed state, thus has empty support.
 	if (processed.find(tuple) != processed.end()) return; // The atom has already been processed
 	
 	const RPGIndex::TupleSupport& support = _graph.getTupleSupport(tuple);

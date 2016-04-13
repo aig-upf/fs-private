@@ -56,7 +56,7 @@ const ActionID* GroundEffectCSPHandler::get_action_id(const SimpleCSP* solution)
 }
 
 SimpleCSP* GroundEffectCSPHandler::preinstantiate(const RPGIndex& rpg) const {
-	SimpleCSP* csp = instantiate_effect_csp(rpg);
+	SimpleCSP* csp = instantiate(rpg);
 	if (!csp) return nullptr;
 	
 	if (!csp->checkConsistency()) { // This colaterally enforces propagation of constraints
@@ -65,20 +65,6 @@ SimpleCSP* GroundEffectCSPHandler::preinstantiate(const RPGIndex& rpg) const {
 	}
 	
 	return csp;
-}
-
-SimpleCSP* GroundEffectCSPHandler::instantiate_effect_csp(const RPGIndex& rpg) const {
-	if (_failed) return nullptr;
-	SimpleCSP* clone = static_cast<SimpleCSP*>(_base_csp.clone());
-	_translator.updateStateVariableDomains(*clone, rpg.get_domains());
-	for (const ExtensionalConstraint& constraint:_extensional_constraints) {
-		if (!constraint.update(*clone, _translator, rpg)) {
-			delete clone;
-			return nullptr;
-		}
-	}
-	
-	return clone;
 }
 
 

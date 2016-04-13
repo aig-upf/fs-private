@@ -1,21 +1,27 @@
 
 #include <limits>
 
+#include <languages/fstrips/language.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <relaxed_state.hxx>
-#include <constraints/gecode/rpg_layer.hxx>
-#include <constraints/gecode/gecode_rpg_builder.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
-
+#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
+#include <constraints/gecode/lifted_plan_extractor.hxx>
+#include <heuristics/relaxed_plan/relaxed_plan.hxx>
+#include <heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {
 
-GecodeCRPG::GecodeCRPG(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
-	: _problem(problem), _managers(std::move(managers)), _builder(std::move(builder)), _extension_handler(problem.get_tuple_index())
+GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers) :
+	_problem(problem),
+	_tuple_index(problem.get_tuple_index()),
+	_managers(std::move(managers)),
+	_extension_handler(_tuple_index),
+	_goal_handler(std::unique_ptr<LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
-	FDEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
+	FDEBUG("heuristic", "Standard CRPG heuristic initialized");
 }
 
 
@@ -24,12 +30,11 @@ long GecodeCRPG::evaluate(const State& seed) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
-	GecodeRPGLayer layer(_extension_handler, seed);
-	RPGData bookkeeping(seed);
+	RPGIndex graph(seed, _tuple_index, _extension_handler);
 	
 	if (Config::instance().useMinHMaxGoalValueSelector()) {
-		_builder->init_value_selector(&bookkeeping);
-	}
+		_goal_handler->init_value_selector(&graph);
+	}	
 	
 	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
@@ -37,56 +42,33 @@ long GecodeCRPG::evaluate(const State& seed) {
 	for (unsigned i = 0; ; ++i) {
 		// Apply all the actions to the RPG layer
 		for (const std::shared_ptr<BaseActionCSPHandler>& manager:_managers) {
-			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
-				manager->init_value_selector(&bookkeeping);
-			}
-			manager->process(seed, layer, bookkeeping);
+// 			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
+// 				manager->init_value_selector(&bookkeeping);
+// 			}
+			manager->process(graph);
 		}
 		
-		FFDEBUG("heuristic", "The last layer of the RPG contains " << bookkeeping.getNumNovelAtoms() << " novel atoms." << std::endl << bookkeeping);
-		
 		// If there is no novel fact in the rpg, we reached a fixpoint, thus there is no solution.
-		if (bookkeeping.getNumNovelAtoms() == 0) return -1;
+		if (!graph.hasNovelTuples()) return -1;
 		
-		// unsigned prev_number_of_atoms = relaxed.getNumberOfAtoms();
-		layer.advance(bookkeeping.getNovelAtoms());
-		FFDEBUG("heuristic", "RPG Layer #" << bookkeeping.getCurrentLayerIdx() << ": " << layer);
-/*
- * RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THE CSP MODEL
- 		
-		// Prune using state constraints - TODO - Would be nicer if the whole state constraint pruning was refactored into a single line
-		FilteringOutput o = _builder->pruneUsingStateConstraints(relaxed);
-		FFDEBUG("heuristic", "State Constraint pruning output: " <<  static_cast<std::underlying_type<FilteringOutput>::type>(o));
-		if (o == FilteringOutput::Failure) return std::numeric_limits<unsigned>::infinity();
-		if (o == FilteringOutput::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
-*/
 		
-		long h = computeHeuristic(seed, layer, bookkeeping);
+		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
+		FFDEBUG("heuristic", "New RPG Layer: " << graph);
+		
+		long h = computeHeuristic(graph);
 		if (h > -1) return h;
-		
-		bookkeeping.advanceLayer();
 	}
 }
 
-long GecodeCRPG::computeHeuristic(const State& seed, const GecodeRPGLayer& layer, const RPGData& rpg) {
-	std::vector<Atom> causes;
-	if (_builder->isGoal(seed, layer, causes)) {
-		auto extractor = RelaxedPlanExtractorFactory<RPGData>::create(seed, rpg);
-		long cost = extractor->computeRelaxedPlanCost(causes);
-		delete extractor;
-		return cost;
-	} else return -1;
+long GecodeCRPG::computeHeuristic(const RPGIndex& graph) const {
+	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler);
 }
 
-
-
-GecodeCHMax::GecodeCHMax(const Problem& problem, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, std::shared_ptr<GecodeRPGBuilder> builder)
-	: GecodeCRPG(problem, std::move(managers), std::move(builder))
-{}
+GecodeCHMax::GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers) :
+	GecodeCRPG(problem, goal_formula, state_constraints, std::move(managers)) {}
 		
-long GecodeCHMax::computeHeuristic(const State& seed, const GecodeRPGLayer& state, const RPGData& bookkeeping) {
-		if (this->_builder->isGoal(state)) return bookkeeping.getCurrentLayerIdx();
-		return -1;
+long GecodeCHMax::computeHeuristic(const RPGIndex& graph) const {
+	return support::compute_hmax_cost(_tuple_index, graph, *_goal_handler);
 }
 
 } } // namespaces

@@ -18,14 +18,14 @@ public:
 	~LiftedFormulaHandler();
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
-	bool compute_support(SimpleCSP* csp, std::vector<TupleIdx>& support, const State& seed) const;
-	
-	//! Simply checks if the given CSP has at least one solution
-	bool check_solution_exists(SimpleCSP* csp) const;
-
-	SimpleCSP::ptr instantiate(const RPGIndex& rpg) const;
+	bool compute_support(SimpleCSP* csp, std::vector<TupleIdx>& support) const;
 	
 	void init_value_selector(const RPGIndex* graph);
+	
+	//! Return true iff the CSP has at least one solution
+	bool is_satisfiable(SimpleCSP* csp) const;
+
+	static SimpleCSP* compute_single_solution(SimpleCSP* csp);
 
 protected:
 	//! The formula being managed

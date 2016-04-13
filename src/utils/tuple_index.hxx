@@ -56,6 +56,8 @@ public:
 	
 	//! Returns the index corresponding to the given atom
 	TupleIdx to_index(const Atom& atom) const;
+	TupleIdx to_index(VariableIdx variable, ObjectIdx value) const;
+
 	
 	//! Returns the actual value tuple that corresponds to the given tuple index, without the logical symbol 
 	const ValueTuple& to_tuple(TupleIdx tuple) const { return _tuple_index.at(tuple); }

@@ -66,8 +66,12 @@ TupleIdx TupleIndex::to_index(unsigned symbol, const ValueTuple& tuple) const {
 }
 
 TupleIdx TupleIndex::to_index(const Atom& atom) const {
-	const auto& map = _atom_index_inv.at(atom.getVariable());
-	auto it = map.find(atom.getValue());
+	return to_index(atom.getVariable(), atom.getValue());
+}
+
+TupleIdx TupleIndex::to_index(VariableIdx variable, ObjectIdx value) const {
+	const auto& map = _atom_index_inv.at(variable);
+	auto it = map.find(value);
 	assert(it != map.end());
 	return it->second;
 }

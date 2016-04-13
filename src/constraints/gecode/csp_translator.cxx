@@ -3,10 +3,10 @@
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <utils/logging.hxx>
-#include <constraints/gecode/rpg_layer.hxx>
 #include <state.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <languages/fstrips/language.hxx>
+#include <heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -167,8 +167,8 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 	return os;
 }
 
-void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const GecodeRPGLayer& layer) const {
-	updateStateVariableDomains(csp, layer.get_domains());
+void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const RPGIndex& graph) const {
+	updateStateVariableDomains(csp, graph.get_domains());
 }
 
 void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const std::vector<Gecode::IntSet>& domains) const {

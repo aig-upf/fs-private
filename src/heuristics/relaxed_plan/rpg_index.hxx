@@ -5,7 +5,6 @@
 #include <fs_types.hxx>
 #include <unordered_map>
 #include <unordered_set>
-#include <boost/concept_check.hpp>
 
 
 namespace fs0 { class ProblemInfo; class State; class Atom; class ActionID; class TupleIndex; }
@@ -57,6 +56,7 @@ protected:
 	
 	const TupleIndex& _tuple_index;
 	
+	const State& _seed;
 
 public:
 	explicit RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHandler& extension_handler);
@@ -78,6 +78,8 @@ public:
 
 	//! Returns the support for the given atom
 	const TupleSupport& getTupleSupport(TupleIdx tuple) const;
+	
+	const State& getSeed() const { return _seed; }
 
 	//!
 	bool hasNovelTuples() const { return !_novel_tuples.empty(); }
@@ -103,6 +105,9 @@ public:
 	
 	//! Return the set of all tuples that have not been yet reached in the current RPG.
 	std::set<unsigned> unachieved_atoms(const TupleIndex& tuple_index) const;
+	
+	const std::set<unsigned>& get_modified_symbols() const;
+
 
 protected:
 	//! Creates an atom support data structure with the given data and taking into account the current RPG layer
