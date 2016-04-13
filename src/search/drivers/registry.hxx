@@ -16,14 +16,16 @@ namespace fs0 { namespace drivers {
 typedef aptk::SearchAlgorithm<GroundStateModel> FS0SearchAlgorithm;
 
 //! A brief interface for any engine creator
-class EngineCreator {
+class Driver {
 public:
-	typedef const EngineCreator* cptr;
+	typedef const Driver* cptr;
 	
-	virtual ~EngineCreator() {}
+	virtual ~Driver() {}
 	
 	//! Create an engine for the given model as specified by the given configuration
 	virtual std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const = 0;
+	
+	virtual GroundStateModel setup(const Config& config, Problem& problem) const;
 };
 
 
@@ -36,16 +38,16 @@ public:
 	static EngineRegistry& instance();
 	
 	//! Register a new engine creator responsible for creating drivers with the given engine_name
-	void add(const std::string& engine_name, EngineCreator::cptr creator);
+	void add(const std::string& engine_name, Driver::cptr creator);
 	
 	//! Retrieve the engine creater adequate for the given engine name
-	EngineCreator::cptr get(const std::string& engine_name) const;
+	Driver::cptr get(const std::string& engine_name) const;
 	
 	
 protected:
 	EngineRegistry();
 	
-	std::unordered_map<std::string, EngineCreator::cptr> _creators;
+	std::unordered_map<std::string, Driver::cptr> _creators;
 };
 
 } } // namespaces

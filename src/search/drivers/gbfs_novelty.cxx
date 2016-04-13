@@ -6,7 +6,7 @@
 
 namespace fs0 { namespace drivers {
 	
-std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyEngineCreator::create(const Config& config, const GroundStateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyDriver::create(const Config& config, const GroundStateModel& model) const {
 	FS0SearchAlgorithm* engine = nullptr;
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");

@@ -11,7 +11,7 @@ namespace fs0 { class GroundStateModel; class Config; }
 namespace fs0 { namespace drivers {
 
 //! A creator for an standard Breadth-First Search engine
-class BreadthFirstSearchEngineCreator : public EngineCreator {
+class BreadthFirstSearchDriver : public Driver {
 public:
 	//! The Breadth-First Search engine uses a simple blind-search node
 	typedef BlindSearchNode<fs0::State> SearchNode;
@@ -20,6 +20,7 @@ public:
 		FS0SearchAlgorithm* engine = new aptk::StlBreadthFirstSearch<SearchNode, GroundStateModel>(model);
 		return std::unique_ptr<FS0SearchAlgorithm>(engine);
 	}
+	
 };
 
 } } // namespaces

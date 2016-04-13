@@ -53,7 +53,7 @@ public:
 	~GBFSNoveltyNode() {}
 	
 	GBFSNoveltyNode(const GBFSNoveltyNode& other) = delete;
-	GBFSNoveltyNode(const GBFSNoveltyNode&& other) = delete;
+	GBFSNoveltyNode(GBFSNoveltyNode&& other) = delete;
 	GBFSNoveltyNode& operator=(const GBFSNoveltyNode& rhs) = delete;
 	GBFSNoveltyNode& operator=(GBFSNoveltyNode&& rhs) = delete;
 	

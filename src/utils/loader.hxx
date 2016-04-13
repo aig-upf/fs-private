@@ -15,11 +15,12 @@ class BaseComponentFactory;
 class ProblemInfo;
 class State;
 class ActionData;
+class Problem;
 
 class Loader {
 public:
 	//! Load and set the singleton problem instance
-	static void loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler);
+	static Problem* loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler);
 	
 	//! Load and set the singleton problemInfo instance
 	static void loadProblemInfo(const rapidjson::Document& data, const BaseComponentFactory& factory);

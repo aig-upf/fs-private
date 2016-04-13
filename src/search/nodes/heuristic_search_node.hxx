@@ -36,7 +36,7 @@ public:
 	~HeuristicSearchNode() {}
 	
 	HeuristicSearchNode(const HeuristicSearchNode& other) = delete;
-	HeuristicSearchNode(const HeuristicSearchNode&& other) = delete;
+	HeuristicSearchNode(HeuristicSearchNode&& other) = delete;
 	HeuristicSearchNode& operator=(const HeuristicSearchNode& rhs) = delete;
 	HeuristicSearchNode& operator=(HeuristicSearchNode&& rhs) = delete;
 	

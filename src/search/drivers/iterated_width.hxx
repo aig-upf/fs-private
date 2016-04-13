@@ -11,7 +11,7 @@ namespace fs0 { class GroundStateModel; class Config; }
 namespace fs0 { namespace drivers {
 
 //! A creator for a Breadth-First Search with Novelty pruning engine
-class IteratedWidthEngineCreator : public EngineCreator {
+class IteratedWidthDriver : public Driver {
 public:
 	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const;
 };

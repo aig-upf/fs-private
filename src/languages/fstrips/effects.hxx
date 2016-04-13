@@ -23,7 +23,7 @@ public:
 	virtual ~ActionEffect();
 	
 	ActionEffect(const ActionEffect& other);
-	ActionEffect(const ActionEffect&& other) = delete;
+	ActionEffect(ActionEffect&& other) = delete;
 	ActionEffect& operator=(const ActionEffect& rhs) = delete;
 	ActionEffect& operator=(ActionEffect&& rhs) = delete;
 	

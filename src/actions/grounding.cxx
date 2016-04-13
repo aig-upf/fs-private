@@ -1,5 +1,4 @@
 
-#include <problem.hxx>
 #include <actions/grounding.hxx>
 #include <actions/actions.hxx>
 #include <utils/logging.hxx>
@@ -12,13 +11,6 @@
 #include <unordered_set>
 
 namespace fs0 {
-
-
-void ActionGrounder::selective_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info, Problem& problem) {
-	// ATM we simply generate all grounded and all lifted actions, but TODO this decision should be made at the engine level.
-	if (!Config::instance().doLiftedPlanning()) problem.setGroundActions(fully_ground(action_data, info));
-	problem.setPartiallyGroundedActions(fully_lifted(action_data, info));
-}
 
 
 std::vector<const PartiallyGroundedAction*> ActionGrounder::fully_lifted(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {

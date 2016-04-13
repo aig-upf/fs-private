@@ -30,10 +30,10 @@ NativeDriver::create(const Config& config, const GroundStateModel& model) const 
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, DirectCRPG, GroundStateModel>(model, std::move(direct_builder_heuristic)));
 }
 
-void
+GroundStateModel
 NativeDriver::setup(const Config& config, Problem& problem) const {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
-	// etc.
+	return GroundStateModel(problem);
 }
 
 bool

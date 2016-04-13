@@ -36,7 +36,7 @@ public:
 	virtual ~AStarSearchNode() {}
 	
 	AStarSearchNode(const AStarSearchNode& other) = delete;
-	AStarSearchNode(const AStarSearchNode&& other) = delete;
+	AStarSearchNode(AStarSearchNode&& other) = delete;
 	AStarSearchNode& operator=(const AStarSearchNode& rhs) = delete;
 	AStarSearchNode& operator=(AStarSearchNode&& rhs) = delete;
 	

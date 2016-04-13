@@ -12,10 +12,18 @@
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <actions/applicable_action_set.hxx>
+#include <actions/grounding.hxx>
+#include <problem_info.hxx>
 
 using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
+
+GroundStateModel Driver::setup(const Config& config, Problem& problem) const {
+	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
+	return GroundStateModel(problem); // By default we ground all actions and return a model with the problem as it is
+}
+
 
 EngineRegistry& EngineRegistry::instance() {
 	static EngineRegistry theInstance;
@@ -31,10 +39,10 @@ EngineRegistry::EngineRegistry() {
 	add("gbfs_unreached_atom",  new UnreachedAtomDriver());
 	add("gbfs_smart",  new SmartEffectDriver());	
 	
-	add("iterated_width",  new IteratedWidthEngineCreator());
+	add("iterated_width",  new IteratedWidthDriver());
 // 	add("asp_engine",  new ASPEngine());
-	add("gbfs_novelty",  new GBFSNoveltyEngineCreator());
-	add("breadth_first_search",  new BreadthFirstSearchEngineCreator());
+	add("gbfs_novelty",  new GBFSNoveltyDriver());
+	add("breadth_first_search",  new BreadthFirstSearchDriver());
 	
 }
 
@@ -42,13 +50,13 @@ EngineRegistry::~EngineRegistry() {
 	for (const auto elem:_creators) delete elem.second;
 }
 
-void EngineRegistry::add(const std::string& engine_name, EngineCreator::cptr creator) {
+void EngineRegistry::add(const std::string& engine_name, Driver::cptr creator) {
 auto res = _creators.insert(std::make_pair(engine_name, creator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of engine creator for symbol " + engine_name);
 }
 
 
-EngineCreator::cptr EngineRegistry::get(const std::string& engine_name) const {
+Driver::cptr EngineRegistry::get(const std::string& engine_name) const {
 	auto it = _creators.find(engine_name);
 	if (it == _creators.end()) throw std::runtime_error("No engine creator has been registered for given engine name '" + engine_name + "'");
 	return it->second;

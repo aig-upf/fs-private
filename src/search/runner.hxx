@@ -12,7 +12,7 @@ namespace fs0 { namespace drivers {
 class Runner {
 public:
 	//! The type of the concrete instance generator function
-	typedef std::function<void (const rapidjson::Document&, const std::string&)> ProblemGeneratorType;
+	typedef std::function<Problem* (const rapidjson::Document&, const std::string&)> ProblemGeneratorType;
 	
 	//! Set up the runner, loading the problem, the configuration, etc.
 	Runner(const EngineOptions& options, ProblemGeneratorType generator);

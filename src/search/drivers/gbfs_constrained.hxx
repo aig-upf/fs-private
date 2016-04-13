@@ -15,7 +15,7 @@ namespace fs0 { namespace drivers {
 //! An engine creator for the Greedy Best-First Search drivers coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
 //! The choice of the heuristic is done through template instantiation
 template <typename GecodeHeuristic, typename DirectHeuristic>
-class GBFSConstrainedHeuristicsCreator : public EngineCreator {
+class GBFSConstrainedHeuristicsCreator : public Driver {
 protected:
 	typedef HeuristicSearchNode<State, GroundAction> SearchNode;
 	

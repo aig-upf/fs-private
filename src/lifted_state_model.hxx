@@ -18,7 +18,12 @@ class GroundAction;
 class LiftedStateModel : public aptk::DetStateModel<State, LiftedActionID> {
 public:
 	LiftedStateModel(const Problem& problem) : task(problem) {}
-	~LiftedStateModel() {}
+	~LiftedStateModel() = default;
+	
+	LiftedStateModel(const LiftedStateModel& other) = default;
+	LiftedStateModel& operator=(const LiftedStateModel& other) = default;
+	LiftedStateModel(LiftedStateModel&& other) = default;
+	LiftedStateModel& operator=(LiftedStateModel&& rhs) = default;
 
 	//! Returns initial state of the problem
 	State init() const;

@@ -14,14 +14,14 @@ namespace fs0 { namespace drivers {
 
 //! An engine creator for the Greedy Best-First Search drivers coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
 //! The choice of the heuristic is done through template instantiation
-class UnreachedAtomDriver : public EngineCreator {
+class UnreachedAtomDriver : public Driver {
 protected:
 	typedef HeuristicSearchNode<State, GroundAction> SearchNode;
 	
 public:
 	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& problem) const;
 	
-	void setup(const Config& config, Problem& problem) const;
+	GroundStateModel setup(const Config& config, Problem& problem) const override;
 	
 };
 

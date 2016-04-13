@@ -26,10 +26,10 @@ std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& co
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, GroundStateModel>(model, std::move(heuristic)));
 }
 
-void UnreachedAtomDriver::setup(const Config& config, Problem& problem) const {
+GroundStateModel UnreachedAtomDriver::setup(const Config& config, Problem& problem) const {
+	// We ground all actions
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
-	// etc.
+	return GroundStateModel(problem);
 }
-
 
 } } // namespaces

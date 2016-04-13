@@ -7,7 +7,8 @@
 #include <problem.hxx>
 #include <search/search.hxx>
 #include <search/drivers/registry.hxx>
-#include <search/drivers/gbfs_crpg_lifted.hxx>
+#include <search/drivers/fully_lifted_driver.hxx>
+#include "drivers/smart_lifted_driver.hxx"
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
 #include <languages/fstrips/language.hxx>
@@ -73,24 +74,31 @@ void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, 
 	std::cout << "Actual Search Time: " << search_time << " s." << std::endl;
 }
 
-void SearchUtils::instantiate_seach_engine_and_run(const Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	std::cout << "Starting search..." << std::endl;
 	
+	const std::string& driver_tag = config.getEngineTag();
+	
 	// The engine and search model for lifted planning are different!
-	if (config.doLiftedPlanning()) {
-
-		fs0::LiftedStateModel model(problem);
-		GBFSLiftedPlannerCreator driver;
+	// TODO - REFACTOR THIS
+	if (driver_tag == "fully_lifted") {
+		FullyLiftedDriver driver;
+		fs0::LiftedStateModel model = driver.setup(config, problem);
 		auto engine = driver.create(config, model);
 		do_search(*engine, model, out_dir, start_time);
 
+	} else if (driver_tag == "smart_lifted") {
+		
+		SmartLiftedDriver driver;
+		fs0::LiftedStateModel model = driver.setup(config, problem);
+		auto engine = driver.create(config, model);
+		do_search(*engine, model, out_dir, start_time);
+		
 	} else {
 		// Standard, grounded planning
 		
-		auto driver = fs0::drivers::EngineRegistry::instance().get(config.getEngineTag());
-		
-		GroundStateModel model(problem);
-		
+		auto driver = fs0::drivers::EngineRegistry::instance().get(driver_tag);
+		GroundStateModel model = driver->setup(config, problem);
 		auto engine = driver->create(config, model);
 		do_search(*engine, model, out_dir, start_time);
 	}

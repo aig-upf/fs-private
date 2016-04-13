@@ -12,7 +12,12 @@ class State;
 class GroundStateModel : public aptk::DetStateModel<State, GroundAction> {
 public:
 	GroundStateModel(const Problem& problem) : task(problem) {}
-	~GroundStateModel() {}
+	~GroundStateModel() = default;
+	
+	GroundStateModel(const GroundStateModel& other) = default;
+	GroundStateModel& operator=(const GroundStateModel& other) = default;
+	GroundStateModel(GroundStateModel&& other) = default;
+	GroundStateModel& operator=(GroundStateModel&& rhs) = default;
 
 	//! Returns initial state of the problem
 	State init() const;

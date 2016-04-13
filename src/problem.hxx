@@ -25,7 +25,7 @@ public:
 	
 	Problem(const Problem& other) = delete;
 	Problem& operator=(const Problem& other) = delete;
-	Problem(const Problem&& other) = delete;
+	Problem(Problem&& other) = delete;
 	bool operator==(const Problem& other) = delete;
 	Problem& operator=(Problem&& rhs) = delete;
 

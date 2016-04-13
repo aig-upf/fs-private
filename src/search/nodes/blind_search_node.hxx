@@ -42,7 +42,7 @@ public:
 	~BlindSearchNode() {}
 	
 	BlindSearchNode(const BlindSearchNode& other) = delete;
-	BlindSearchNode(const BlindSearchNode&& other) = delete;
+	BlindSearchNode(BlindSearchNode&& other) = delete;
 	BlindSearchNode& operator=(const BlindSearchNode& rhs) = delete;
 	BlindSearchNode& operator=(BlindSearchNode&& rhs) = delete;
 	

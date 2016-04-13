@@ -5,7 +5,7 @@
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FS0SearchAlgorithm> IteratedWidthEngineCreator::create(const Config& config, const GroundStateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm> IteratedWidthDriver::create(const Config& config, const GroundStateModel& model) const {
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
 	NoveltyFeaturesConfiguration feature_configuration(config);

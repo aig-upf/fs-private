@@ -11,7 +11,7 @@ namespace fs0 { class GroundStateModel; class Config; }
 namespace fs0 { namespace drivers {
 
 //! A creator for the Iterated Width Search FS0 engine
-class GBFSNoveltyEngineCreator : public EngineCreator {
+class GBFSNoveltyDriver : public Driver {
 public:
 	//! We use a GBFS heuristic search node
 	typedef GBFSNoveltyNode<fs0::State> SearchNode;

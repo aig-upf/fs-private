@@ -28,9 +28,12 @@ std::unique_ptr<FS0SearchAlgorithm> SmartEffectDriver::create(const Config& conf
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, GroundStateModel>(model, std::move(heuristic)));
 }
 
-void SmartEffectDriver::setup(const Config& config, Problem& problem) const {
+GroundStateModel
+SmartEffectDriver::setup(const Config& config, Problem& problem) const {
+	// We'll use all the ground actions for the search plus the partyally ground actions for the heuristic computations
+	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
-	// etc.
+	return GroundStateModel(problem);
 }
 
 

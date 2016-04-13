@@ -7,6 +7,8 @@
 
 #include <component_factory.hxx>
 
+namespace fs0 { class Problem; }
+
 using namespace fs0;
 
 extern std::unique_ptr<External> external;
@@ -14,4 +16,4 @@ extern std::unique_ptr<External> external;
 $method_factories
 
 /* Generate the whole planning problem */
-void generate(const rapidjson::Document& data, const std::string& data_dir);
+Problem* generate(const rapidjson::Document& data, const std::string& data_dir);

@@ -21,7 +21,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler) {
+Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	FINFO("main", "Loading initial state...");
@@ -43,8 +43,7 @@ void Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_han
 	
 	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
-	// Ground the actions intelligently
-	ActionGrounder::selective_grounding(action_data, info, *problem);
+	return problem;
 }
 
 void Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
