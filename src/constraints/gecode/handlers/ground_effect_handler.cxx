@@ -21,20 +21,22 @@ std::vector<std::shared_ptr<GroundEffectCSPHandler>> GroundEffectCSPHandler::cre
 		const auto action = actions[action_idx];
 		
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
-			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, tuple_index, eff_idx, approximate);
+			const fs::ActionEffect* effect = action->getEffects().at(eff_idx);
+			if (effect->is_del()) continue; // Ignore delete effects
+			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, tuple_index, effect, approximate);
 			if (handler->init(novelty)) {
 				managers.push_back(handler);
 				FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
 			} else {
-				FDEBUG("main", "CSP for action effect " << action->getEffects().at(eff_idx) << " is inconsistent ==> the action is not applicable");
+				FDEBUG("main", "CSP for action effect " << effect << " is inconsistent ==> the action is not applicable");
 			}
 		}
 	}
 	return managers;
 }
 
-GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, unsigned effect_idx, bool approximate) :
-	BaseActionCSPHandler(tuple_index, approximate), _action(action), _effects({ action.getEffects().at(effect_idx) })
+GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate) :
+	BaseActionCSPHandler(tuple_index, approximate), _action(action), _effects({ effect })
 {}
 
 bool GroundEffectCSPHandler::init(bool use_novelty_constraint) {

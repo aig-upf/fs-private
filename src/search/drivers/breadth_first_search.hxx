@@ -6,7 +6,7 @@
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
-namespace fs0 { class FS0StateModel; class Config; }
+namespace fs0 { class GroundStateModel; class Config; }
 
 namespace fs0 { namespace drivers {
 
@@ -16,8 +16,8 @@ public:
 	//! The Breadth-First Search engine uses a simple blind-search node
 	typedef BlindSearchNode<fs0::State> SearchNode;
 	
-	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const FS0StateModel& model) const {
-		FS0SearchAlgorithm* engine = new aptk::StlBreadthFirstSearch<SearchNode, FS0StateModel>(model);
+	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const {
+		FS0SearchAlgorithm* engine = new aptk::StlBreadthFirstSearch<SearchNode, GroundStateModel>(model);
 		return std::unique_ptr<FS0SearchAlgorithm>(engine);
 	}
 };

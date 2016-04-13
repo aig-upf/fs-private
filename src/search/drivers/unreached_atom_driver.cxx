@@ -13,7 +13,7 @@ using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& config, const FS0StateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& config, const GroundStateModel& model) const {
 	FINFO("main", "Using the lifted-effect base RPG constructor");
 	const Problem& problem = model.getTask();
 	bool novelty = Config::instance().useNoveltyConstraint();
@@ -23,7 +23,7 @@ std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& co
 	const std::vector<const GroundAction*>& base_actions = problem.getGroundActions();
 	UnreachedAtomRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), GroundEffectCSPHandler::create(base_actions, tuple_index, approximate, novelty));
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, FS0StateModel>(model, std::move(heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, GroundStateModel>(model, std::move(heuristic)));
 }
 
 void UnreachedAtomDriver::setup(const Config& config, Problem& problem) const {

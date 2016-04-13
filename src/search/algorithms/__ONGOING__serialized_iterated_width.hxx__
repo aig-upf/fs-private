@@ -6,7 +6,7 @@
 #include <search/nodes/blind_search_node.hxx>
 #include <search/components/single_novelty.hxx>
 #include <search/drivers/registry.hxx>
-#include <state_model.hxx>
+#include <ground_state_model.hxx>
 
 #include <aptk2/search/algorithms/generic_search.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
@@ -32,7 +32,7 @@ public:
 	//! The base algorithm for a SIW is the single IW algorithm
 	typedef FS0IWAlgorithm BaseAlgorithm;
 	
-	FS0IWAlgorithm(const FS0StateModel& model, unsigned max_width, const NoveltyFeaturesConfiguration& feature_configuration)
+	FS0IWAlgorithm(const GroundStateModel& model, unsigned max_width, const NoveltyFeaturesConfiguration& feature_configuration)
 		: FS0SearchAlgorithm(model), _max_width(max_width), _feature_configuration(feature_configuration)
 	{
 		setup_base_algorithm(_max_width);

@@ -6,14 +6,14 @@
 
 namespace fs0 { namespace drivers {
 	
-std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyEngineCreator::create(const Config& config, const FS0StateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyEngineCreator::create(const Config& config, const GroundStateModel& model) const {
 	FS0SearchAlgorithm* engine = nullptr;
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	
 	NoveltyHeuristic evaluator(model, max_novelty, feature_configuration);
-	engine = new aptk::StlBestFirstSearch<SearchNode, NoveltyHeuristic, FS0StateModel>(model, std::move(evaluator));
+	engine = new aptk::StlBestFirstSearch<SearchNode, NoveltyHeuristic, GroundStateModel>(model, std::move(evaluator));
 	
 	FINFO("main", "Heuristic options:");
 	FINFO("main", "\tMax novelty: " << max_novelty);

@@ -15,7 +15,7 @@
 namespace fs0 { namespace drivers {
 
 std::unique_ptr<FS0SearchAlgorithm>
-NativeDriver::create(const Config& config, const FS0StateModel& model) const {
+NativeDriver::create(const Config& config, const GroundStateModel& model) const {
 	FINFO("main", "Using the Native-CSP RPG Driver");
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
@@ -27,7 +27,7 @@ NativeDriver::create(const Config& config, const FS0StateModel& model) const {
 	auto direct_builder = DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
 	DirectCRPG direct_builder_heuristic(problem, DirectActionManager::create(actions), std::move(direct_builder));
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, DirectCRPG, FS0StateModel>(model, std::move(direct_builder_heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, DirectCRPG, GroundStateModel>(model, std::move(direct_builder_heuristic)));
 }
 
 void

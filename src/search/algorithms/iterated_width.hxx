@@ -6,7 +6,7 @@
 #include <search/nodes/blind_search_node.hxx>
 #include <search/components/single_novelty.hxx>
 #include <search/drivers/registry.hxx>
-#include <state_model.hxx>
+#include <ground_state_model.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 
 #include <aptk2/search/algorithms/generic_search.hxx>
@@ -30,9 +30,9 @@ public:
 	typedef aptk::StlUnsortedFIFO<SearchNode, SearchNoveltyEvaluator> OpenList;
 	
 	//! The base algorithm for IW is a simple Breadth-First Search
-	typedef aptk::StlBreadthFirstSearch<SearchNode, FS0StateModel, OpenList> BaseAlgorithm;
+	typedef aptk::StlBreadthFirstSearch<SearchNode, GroundStateModel, OpenList> BaseAlgorithm;
 	
-	FS0IWAlgorithm(const FS0StateModel& model, unsigned initial_max_width, unsigned final_max_width, const NoveltyFeaturesConfiguration& feature_configuration);
+	FS0IWAlgorithm(const GroundStateModel& model, unsigned initial_max_width, unsigned final_max_width, const NoveltyFeaturesConfiguration& feature_configuration);
 	
 	virtual ~FS0IWAlgorithm();
 	

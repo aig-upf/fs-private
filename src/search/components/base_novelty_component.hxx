@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
-#include <state_model.hxx>
+#include <ground_state_model.hxx>
 #include <utils/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 

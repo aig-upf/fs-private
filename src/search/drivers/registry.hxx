@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 #include <fs_types.hxx>
-#include <state_model.hxx>
+#include <ground_state_model.hxx>
 
 #include <aptk2/search/interfaces/search_algorithm.hxx>
 
@@ -13,7 +13,7 @@ namespace fs0 {
 
 namespace fs0 { namespace drivers {
 
-typedef aptk::SearchAlgorithm<FS0StateModel> FS0SearchAlgorithm;
+typedef aptk::SearchAlgorithm<GroundStateModel> FS0SearchAlgorithm;
 
 //! A brief interface for any engine creator
 class EngineCreator {
@@ -23,7 +23,7 @@ public:
 	virtual ~EngineCreator() {}
 	
 	//! Create an engine for the given model as specified by the given configuration
-	virtual std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const FS0StateModel& model) const = 0;
+	virtual std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const = 0;
 };
 
 

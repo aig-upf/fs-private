@@ -6,7 +6,7 @@
 #include <search/components/unsat_goals_novelty.hxx>
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
-namespace fs0 { class FS0StateModel; class Config; }
+namespace fs0 { class GroundStateModel; class Config; }
 
 namespace fs0 { namespace drivers {
 
@@ -18,7 +18,7 @@ public:
 	
 	typedef UnsatGoalsNoveltyComponent<SearchNode> NoveltyHeuristic;
 	
-	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const FS0StateModel& model) const;
+	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const;
 };
 
 } } // namespaces

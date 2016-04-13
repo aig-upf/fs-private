@@ -9,10 +9,10 @@ namespace fs0 {
 class Problem;
 class State;
 
-class FS0StateModel : public aptk::DetStateModel<State, GroundAction> {
+class GroundStateModel : public aptk::DetStateModel<State, GroundAction> {
 public:
-	FS0StateModel(const Problem& problem) : task(problem) {}
-	~FS0StateModel() {}
+	GroundStateModel(const Problem& problem) : task(problem) {}
+	~GroundStateModel() {}
 
 	//! Returns initial state of the problem
 	State init() const;

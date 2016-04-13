@@ -18,7 +18,7 @@ using namespace fs0::gecode;
 namespace fs0 { namespace drivers {
 
 template <typename GecodeHeuristic, typename DirectHeuristic>
-std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::create(const Config& config, const FS0StateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::create(const Config& config, const GroundStateModel& model) const {
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
 	
@@ -58,7 +58,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	
 	GecodeHeuristic heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers));
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, FS0StateModel>(model, std::move(heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, GroundStateModel>(model, std::move(heuristic)));
 }
 
 template <typename GecodeHeuristic, typename DirectHeuristic>

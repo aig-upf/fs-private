@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
-#include <state_model.hxx>
+#include <ground_state_model.hxx>
 #include <utils/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
@@ -25,7 +25,7 @@ protected:
 public:
 	typedef BaseNoveltyComponent<SearchNode> Base;
 	
-	SingleNoveltyComponent(const FS0StateModel& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
+	SingleNoveltyComponent(const GroundStateModel& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
 		: Base(max_novelty), _novelty_evaluator(model.getTask(), max_novelty, feature_configuration)
 	{}
 	

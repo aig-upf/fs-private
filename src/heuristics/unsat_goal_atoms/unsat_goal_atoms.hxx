@@ -3,7 +3,7 @@
 
 #include <fs_types.hxx>
 #include <actions/actions.hxx>
-#include <state_model.hxx>
+#include <ground_state_model.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/formulae.hxx>
 
@@ -14,7 +14,7 @@ class UnsatisfiedGoalAtomsHeuristic {
 public:
 	typedef GroundAction Action;
 
-	UnsatisfiedGoalAtomsHeuristic(const FS0StateModel& model) : _problem(model.getTask()), _goal_conjunction(extract_goal_conjunction_or_fail(_problem)) {}
+	UnsatisfiedGoalAtomsHeuristic(const GroundStateModel& model) : _problem(model.getTask()), _goal_conjunction(extract_goal_conjunction_or_fail(_problem)) {}
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& state) const { 

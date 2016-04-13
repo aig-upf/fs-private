@@ -14,7 +14,6 @@
 namespace fs0 {
 
 
-
 void ActionGrounder::selective_grounding(const std::vector<const ActionData*>& action_data, const ProblemInfo& info, Problem& problem) {
 	// ATM we simply generate all grounded and all lifted actions, but TODO this decision should be made at the engine level.
 	if (!Config::instance().doLiftedPlanning()) problem.setGroundActions(fully_ground(action_data, info));

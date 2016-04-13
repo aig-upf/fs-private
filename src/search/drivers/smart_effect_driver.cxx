@@ -13,7 +13,7 @@ using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FS0SearchAlgorithm> SmartEffectDriver::create(const Config& config, const FS0StateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm> SmartEffectDriver::create(const Config& config, const GroundStateModel& model) const {
 	FINFO("main", "Using the lifted-effect base RPG constructor");
 	const Problem& problem = model.getTask();
 	bool novelty = Config::instance().useNoveltyConstraint();
@@ -25,7 +25,7 @@ std::unique_ptr<FS0SearchAlgorithm> SmartEffectDriver::create(const Config& conf
 	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create_smart(base_actions, tuple_index, approximate, novelty);
 	heuristic.set_managers(std::move(managers)); // TODO Probably we don't need this to be shared_ptr's anymore
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, FS0StateModel>(model, std::move(heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, GroundStateModel>(model, std::move(heuristic)));
 }
 
 void SmartEffectDriver::setup(const Config& config, Problem& problem) const {

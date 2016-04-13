@@ -80,15 +80,18 @@ void SearchUtils::instantiate_seach_engine_and_run(const Problem& problem, const
 	if (config.doLiftedPlanning()) {
 
 		fs0::LiftedStateModel model(problem);
-		GBFSLiftedPlannerCreator creator;
-		auto engine = creator.create(config, model);
+		GBFSLiftedPlannerCreator driver;
+		auto engine = driver.create(config, model);
 		do_search(*engine, model, out_dir, start_time);
 
 	} else {
 		// Standard, grounded planning
-		FS0StateModel model(problem);
-		auto creator = fs0::drivers::EngineRegistry::instance().get(config.getEngineTag());
-		auto engine = creator->create(config, model);
+		
+		auto driver = fs0::drivers::EngineRegistry::instance().get(config.getEngineTag());
+		
+		GroundStateModel model(problem);
+		
+		auto engine = driver->create(config, model);
 		do_search(*engine, model, out_dir, start_time);
 	}
 }
