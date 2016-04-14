@@ -5,6 +5,7 @@
 #include <problem_info.hxx>
 #include <state.hxx>
 #include <relaxed_state.hxx>
+#include <iostream>
 
 namespace fs0 {
 
