@@ -63,6 +63,7 @@ Binding ActionSchemaCSPHandler::build_binding_from_solution(const SimpleCSP* sol
 	std::vector<int> values;
 	std::vector<bool> valid;
 	values.reserve(_parameter_variables.size());
+	valid.reserve(_parameter_variables.size());
 	for (unsigned csp_var_idx:_parameter_variables) {
 		if (csp_var_idx == std::numeric_limits<unsigned int>::max()) {
 			values.push_back(0);
