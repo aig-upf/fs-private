@@ -73,7 +73,7 @@ Binding ActionSchemaCSPHandler::build_binding_from_solution(const SimpleCSP* sol
 			valid.push_back(true);
 		}
 	}
-	return Binding(values, valid);
+	return Binding(std::move(values), std::move(valid));
 }
 
 const std::vector<const fs::ActionEffect*>& ActionSchemaCSPHandler::get_effects() const {

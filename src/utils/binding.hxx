@@ -23,6 +23,7 @@ public:
 	Binding(ValueTuple&& values) : _set(values.size(), true), _values(std::move(values)) {}
 	
 	Binding(const ValueTuple& values, const std::vector<bool>& set) : _set(set), _values(values) {}
+	Binding(ValueTuple&& values, std::vector<bool>&& set) : _set(std::move(set)), _values(std::move(values)) {}
 	
 	//! Default copy constructor
 	Binding(const Binding& other) = default;
