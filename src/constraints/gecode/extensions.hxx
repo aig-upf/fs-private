@@ -34,8 +34,11 @@ protected:
 	//! _extensions[i] contains the extension of logical symbol 'i'
 	std::vector<Extension> _extensions;
 	
+	//! _managed[i] tells us whether we need to manage the extension of logical symbol 'i' or not.
+	std::vector<bool> _managed;
+	
 	//! _modified[i] is true iff the denotation of logical symbol 'i' changed on the last layer
-	std::set<unsigned> _modified;
+// 	std::set<unsigned> _modified;
 public:
 	ExtensionHandler(const TupleIndex& tuple_index);
 	
@@ -51,7 +54,7 @@ public:
 	
 	void advance();
 	
-	const std::set<unsigned>& get_modified_symbols() const { return _modified; }
+// 	const std::set<unsigned>& get_modified_symbols() const { return _modified; }
 	
 	std::vector<Gecode::TupleSet> generate_extensions() const;
 	

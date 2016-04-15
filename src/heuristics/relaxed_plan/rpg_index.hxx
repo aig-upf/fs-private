@@ -52,7 +52,9 @@ protected:
 	
 	//! The set of reached values for every state variable
 	std::vector<Gecode::IntSet> _domains;
-	std::vector<std::set<ObjectIdx>> _domains_raw;
+	
+	//! This is the set of all values reached so far for each state variable
+	std::vector<std::vector<ObjectIdx>> _domains_raw;
 	
 	const TupleIndex& _tuple_index;
 	
@@ -106,7 +108,7 @@ public:
 	//! Return the set of all tuples that have not been yet reached in the current RPG.
 	std::set<unsigned> unachieved_atoms(const TupleIndex& tuple_index) const;
 	
-	const std::set<unsigned>& get_modified_symbols() const;
+// 	const std::set<unsigned>& get_modified_symbols() const;
 
 
 protected:

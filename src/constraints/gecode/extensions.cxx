@@ -31,7 +31,8 @@ Gecode::TupleSet Extension::generate() const {
 
 ExtensionHandler::ExtensionHandler(const TupleIndex& tuple_index) :
 	_info(ProblemInfo::getInstance()),
-	_tuple_index(tuple_index)
+	_tuple_index(tuple_index),
+	_managed(_info.getNumLogicalSymbols(), true) // By default we manage all symbols
 {}
 
 void ExtensionHandler::reset() {
@@ -40,7 +41,7 @@ void ExtensionHandler::reset() {
 }
 
 void ExtensionHandler::advance() {
-	_modified.clear(); // Initially all symbols are untouched
+// 	_modified.clear(); // Initially all symbols are untouched
 }
 
 TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
@@ -48,7 +49,7 @@ TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 	unsigned symbol = tuple_data.first;
 	bool is_predicate = _info.isPredicativeVariable(variable); // TODO - MOVE FROM PROBLEM INFO INTO SOME PERFORMANT INDEX
 	Extension& extension = _extensions.at(symbol);
-	_modified.insert(symbol);  // Mark the extension as modified
+// 	_modified.insert(symbol);  // Mark the extension as modified
 	
 	if (is_predicate && value == 1) {
 		TupleIdx index = _tuple_index.to_index(tuple_data);
@@ -69,7 +70,7 @@ TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 
 void ExtensionHandler::process_tuple(TupleIdx tuple) {
 	unsigned symbol_idx = _tuple_index.symbol(tuple);
-	_modified.insert(symbol_idx);  // Mark the extension as modified
+// 	_modified.insert(symbol_idx);  // Mark the extension as modified
 	_extensions.at(symbol_idx).add_tuple(tuple);
 }
 

@@ -20,8 +20,9 @@ RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHa
 	_seed(seed)
 {
 	_domains.reserve(seed.numAtoms());
-	_domains_raw.reserve(seed.numAtoms());
 	_extension_handler.reset();
+	
+	_domains_raw.resize(seed.numAtoms());
 	
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
@@ -29,12 +30,10 @@ RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHa
 		
 		TupleIdx tuple_index = _extension_handler.process_atom(variable, value);
 		if (tuple_index != INVALID_TUPLE) {
-			_domains_raw.push_back({value});
 			_domains.push_back(Gecode::IntSet(value, value));
-			add(tuple_index, nullptr, std::vector<TupleIdx>());
+			add(tuple_index, nullptr, {});
 			
 		} else {
-			_domains_raw.push_back(std::set<ObjectIdx>());
 			_domains.push_back(Gecode::IntSet()); // We simply push an empty domain for those predicative state variables that are set to false.
 		}
 	}
@@ -46,8 +45,6 @@ void RPGIndex::advance() {
 	
 	for (TupleIdx tuple:_novel_tuples) {
 		_extension_handler.process_tuple(tuple);
-		const Atom& atom = _tuple_index.to_atom(tuple);
-		_domains_raw[atom.getVariable()].insert(atom.getValue());
 	}
 	
 	// Now update the per-variable domains
@@ -98,6 +95,10 @@ void RPGIndex::add(TupleIdx tuple, const ActionID* action, std::vector<TupleIdx>
 	if (it != nullptr) return; // Don't insert the atom if it was already tracked by the RPG
 	it = createTupleSupport(action, std::move(support)); // This effectively inserts the tuple into '_reached'
 	_novel_tuples.push_back(tuple);
+	const Atom& atom = _tuple_index.to_atom(tuple);
+	auto& domain = _domains_raw.at(atom.getVariable());
+	// assert(std::find(domain.cbegin(), domain.cend(), atom.getValue()) == domain.end()); // Warning: this is expensive
+	domain.push_back(atom.getValue());
 }
 
 /*
@@ -143,7 +144,11 @@ void RPGIndex::printAtoms(const std::vector<TupleIdx>& vector, std::ostream& os)
 
 bool RPGIndex::is_true(VariableIdx variable) const {
 	const auto& domain = _domains_raw.at(variable);
-	return domain.find(1) != domain.end();
+	 
+	assert(domain.size() <= 1); // The variable must be predicative, thus will contain at most the element true
+	assert(domain.empty() || domain[0] == 1); // If there is one element, it must be the True element
+	return !domain.empty();
+// 	return std::find(domain.cbegin(), domain.cend(), 1) != domain.end();
 }
 
 std::set<unsigned> RPGIndex::unachieved_atoms(const TupleIndex& tuple_index) const {
@@ -154,9 +159,11 @@ std::set<unsigned> RPGIndex::unachieved_atoms(const TupleIndex& tuple_index) con
 	return unachieved;
 }
 
+/*
 const std::set<unsigned>& RPGIndex::get_modified_symbols() const {
 	return _extension_handler.get_modified_symbols();
 }
+*/
 
 } } // namespaces
 
