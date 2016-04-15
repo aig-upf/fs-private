@@ -45,7 +45,8 @@ std::size_t LiftedActionID::hash() const {
 
 std::size_t LiftedActionID::generate_hash() const {
 	std::size_t hash = 0;
-	const std::vector<ObjectIdx>& binding_data = get_full_binding().get_full_binding(); // TODO This is rather suboptimal
+	const Binding binding = get_full_binding();
+	const std::vector<ObjectIdx>& binding_data = binding.get_full_binding(); // TODO This is rather suboptimal
 	boost::hash_combine(hash, typeid(*this).hash_code());
 	boost::hash_combine(hash, _action->getOriginId());
 	boost::hash_combine(hash, boost::hash_range(binding_data.begin(), binding_data.end()));
