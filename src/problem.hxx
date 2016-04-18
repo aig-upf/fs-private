@@ -66,6 +66,9 @@ public:
 	}
 	
 	const TupleIndex& get_tuple_index() const { return _tuple_index; }
+	
+	//! Return true if all the symbols of the problem are predicates
+	bool is_predicative() const { return _is_predicative; }
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
@@ -94,8 +97,13 @@ protected:
 	
 	asp::LPHandler* _lp_handler = nullptr;
 	
+	//! Whether all the symbols of the problem are predicates
+	const bool _is_predicative;
+	
 	//! The singleton instance
 	static std::unique_ptr<Problem> _instance;
+	
+	static bool check_is_predicative();
 };
 
 } // namespaces

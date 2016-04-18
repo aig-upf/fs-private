@@ -18,7 +18,7 @@ namespace fs0 { namespace drivers {
 std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> FullyLiftedDriver::create(const Config& config, LiftedStateModel& model) const {
 	const Problem& problem = model.getTask();
 	
-	bool novelty = Config::instance().useNoveltyConstraint();
+	bool novelty = Config::instance().useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = Config::instance().useApproximateActionResolution();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	auto managers = ActionSchemaCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);

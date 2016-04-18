@@ -17,7 +17,7 @@ namespace fs0 { namespace drivers {
 std::unique_ptr<FS0SearchAlgorithm> SmartEffectDriver::create(const Config& config, const GroundStateModel& model) const {
 	FINFO("main", "Using the lifted-effect base RPG constructor");
 	const Problem& problem = model.getTask();
-	bool novelty = Config::instance().useNoveltyConstraint();
+	bool novelty = Config::instance().useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
 	const auto& tuple_index = problem.get_tuple_index();

@@ -19,8 +19,10 @@ Problem::Problem(State* init, const std::vector<const ActionData*>& action_data,
 	_partials(),
 	_state_constraint_formula(state_constraints),
 	_goal_formula(goal),
-	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index()))
-{}
+	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
+	_is_predicative(check_is_predicative())
+{
+}
 
 Problem::~Problem() {
 	for (const auto pointer:_action_data) delete pointer;
@@ -56,6 +58,14 @@ std::ostream& Problem::print(std::ostream& os) const {
 	os << std::endl;
 	
 	return os;
+}
+
+bool Problem::check_is_predicative() {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	for (unsigned symbol = 0; symbol < info.getNumLogicalSymbols(); ++symbol) {
+		if (!info.isPredicate(symbol)) return false;
+	}
+	return true;
 }
 
 } // namespaces
