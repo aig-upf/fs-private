@@ -8,7 +8,7 @@
 #include <search/search.hxx>
 #include <search/drivers/registry.hxx>
 #include <search/drivers/fully_lifted_driver.hxx>
-#include "drivers/smart_lifted_driver.hxx"
+#include <search/drivers/smart_lifted_driver.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
 #include <languages/fstrips/language.hxx>

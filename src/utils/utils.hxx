@@ -4,6 +4,8 @@
 #include <vector>
 #include <ostream>
 #include <algorithm>
+#include <map>
+#include <boost/container/flat_set.hpp>
 
 namespace fs0 {
 	

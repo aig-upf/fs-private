@@ -8,6 +8,7 @@
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <actions/applicable_action_set.hxx>
 #include <actions/grounding.hxx>
+#include <utils/support.hxx>
 
 using namespace fs0::gecode;
 
@@ -20,8 +21,14 @@ std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& co
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
 	const auto& tuple_index = problem.get_tuple_index();
-	const std::vector<const GroundAction*>& base_actions = problem.getGroundActions();
-	UnreachedAtomRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), GroundEffectCSPHandler::create(base_actions, tuple_index, approximate, novelty));
+	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
+	
+	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
+	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
+	
+	UnreachedAtomRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(),
+							   GroundEffectCSPHandler::create(actions, tuple_index, approximate, novelty),
+							   extension_handler);
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, GroundStateModel>(model, std::move(heuristic)));
 }

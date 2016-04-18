@@ -14,11 +14,11 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers) :
+GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, ExtensionHandler extension_handler) :
 	_problem(problem),
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
-	_extension_handler(_tuple_index),
+	_extension_handler(extension_handler),
 	_goal_handler(std::unique_ptr<LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
 	FDEBUG("heuristic", "Standard CRPG heuristic initialized");
@@ -64,8 +64,8 @@ long GecodeCRPG::computeHeuristic(const RPGIndex& graph) const {
 	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler);
 }
 
-GecodeCHMax::GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers) :
-	GecodeCRPG(problem, goal_formula, state_constraints, std::move(managers)) {}
+GecodeCHMax::GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, ExtensionHandler extension_handler) :
+	GecodeCRPG(problem, goal_formula, state_constraints, std::move(managers), extension_handler) {}
 		
 long GecodeCHMax::computeHeuristic(const RPGIndex& graph) const {
 	return support::compute_hmax_cost(_tuple_index, graph, *_goal_handler);

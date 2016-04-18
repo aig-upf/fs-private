@@ -55,6 +55,8 @@ protected:
 	
 	//!
 	const TupleIndex& _tuple_index;
+	
+	Gecode::TupleSet compute_extension(unsigned symbol_id, const State& state) const;
 };
 
 

@@ -38,9 +38,7 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTransl
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
 		return state.getValue(_variable_idx) == 1;
 	} else {
-		ExtensionHandler handler(_tuple_index);
-		RPGIndex graph(state, _tuple_index, handler); // TODO - This is perhaps too expensive
-		return update(csp, translator, graph.get_extension(_term->getSymbolId()));
+		return update(csp, translator, compute_extension(_term->getSymbolId(), state));
 	}
 }
 
@@ -65,6 +63,8 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const GecodeCSPVariableTransl
 
 	// Post the constraint with the given extension
 	Gecode::extensional(csp, variables, extension);
+// 	Gecode::extensional(csp, variables, extension, Gecode::EPK_SPEED);
+	
 // 	FDEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
 // 	FDEBUG("translation", "Resulting CSP is: " << csp);
 	return true;
@@ -74,5 +74,20 @@ std::ostream& ExtensionalConstraint::print(std::ostream& os) const {
 	os << "Extensional Constraint on term \"" << *_term << "\"" << std::endl;
 	return os;
 }
+
+Gecode::TupleSet ExtensionalConstraint::compute_extension(unsigned symbol_id, const State& state) const {
+	std::vector<bool> managed(ProblemInfo::getInstance().getNumLogicalSymbols(), false);
+	managed.at(symbol_id) = true;
+	ExtensionHandler extension_handler(_tuple_index, managed);
+
+	for (unsigned variable = 0; variable < state.numAtoms(); ++variable) {
+		ObjectIdx value = state.getValue(variable);
+		extension_handler.process_atom(variable, value);
+	}
+	
+	return extension_handler.generate_extension(symbol_id);
+}
+
+
 
 } } // namespaces

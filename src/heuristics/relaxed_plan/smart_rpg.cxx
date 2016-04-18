@@ -6,7 +6,7 @@
 #include <languages/fstrips/scopes.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include "relaxed_plan.hxx"
+#include <heuristics/relaxed_plan/relaxed_plan.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
@@ -16,12 +16,12 @@
 
 namespace fs0 { namespace gecode {
 
-SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints) :
+SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler) :
 	_problem(problem),
 	_info(ProblemInfo::getInstance()),
 	_tuple_index(problem.get_tuple_index()),
-	_managers(),
-	_extension_handler(_tuple_index),
+	_managers(managers),
+	_extension_handler(extension_handler),
 	_goal_handler(std::unique_ptr<LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
 	FINFO("heuristic", "SmartRPG heuristic initialized");

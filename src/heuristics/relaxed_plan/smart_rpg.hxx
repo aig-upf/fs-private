@@ -22,7 +22,7 @@ protected:
 	typedef std::shared_ptr<EffectSchemaCSPHandler> EffectHandlerPtr;
 	
 public:
-	SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints);
+	SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
 	virtual ~SmartRPG() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.
@@ -39,8 +39,6 @@ public:
 	//! To be subclassed in other RPG-based heuristics such as h_max
 	virtual long computeHeuristic(const RPGIndex& graph);
 	
-	void set_managers(std::vector<EffectHandlerPtr>&& managers) { _managers = std::move(managers); }
-
 protected:
 	//! The actual planning problem
 	const Problem& _problem;
@@ -49,7 +47,7 @@ protected:
 	const TupleIndex& _tuple_index;
 	
 	//! The set of action managers, one per every action
-	std::vector<EffectHandlerPtr> _managers;
+	const std::vector<EffectHandlerPtr> _managers;
 	
 	//!
 	ExtensionHandler _extension_handler;

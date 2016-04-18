@@ -17,7 +17,7 @@ protected:
 	typedef std::shared_ptr<GroundEffectCSPHandler> EffectHandlerPtr;
 	
 public:
-	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers);
+	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
 	virtual ~UnreachedAtomRPG() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.

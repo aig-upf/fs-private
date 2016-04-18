@@ -29,10 +29,11 @@ Gecode::TupleSet Extension::generate() const {
 }
 
 
-ExtensionHandler::ExtensionHandler(const TupleIndex& tuple_index) :
+ExtensionHandler::ExtensionHandler(const TupleIndex& tuple_index, std::vector<bool> managed) :
 	_info(ProblemInfo::getInstance()),
 	_tuple_index(tuple_index),
-	_managed(_info.getNumLogicalSymbols(), true) // By default we manage all symbols
+	_extensions(std::vector<Extension>(_info.getNumLogicalSymbols(), Extension(_tuple_index))), // Reset the whole vector
+	_managed(managed)
 {}
 
 void ExtensionHandler::reset() {
@@ -47,13 +48,16 @@ void ExtensionHandler::advance() {
 TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 	const auto& tuple_data = _info.getVariableData(variable); // TODO - MOVE FROM PROBLEM INFO INTO SOME PERFORMANT INDEX
 	unsigned symbol = tuple_data.first;
+	bool managed = _managed.at(symbol);
 	bool is_predicate = _info.isPredicativeVariable(variable); // TODO - MOVE FROM PROBLEM INFO INTO SOME PERFORMANT INDEX
 	Extension& extension = _extensions.at(symbol);
 // 	_modified.insert(symbol);  // Mark the extension as modified
 	
 	if (is_predicate && value == 1) {
 		TupleIdx index = _tuple_index.to_index(tuple_data);
-		extension.add_tuple(index);
+		if (managed) {
+			extension.add_tuple(index);
+		}
 		return index;
 	}
 	
@@ -61,7 +65,9 @@ TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 		ValueTuple tuple = tuple_data.second; // (implicitly copies)
 		tuple.push_back(value);
 		TupleIdx index = _tuple_index.to_index(symbol, tuple);
-		extension.add_tuple(index);
+		if (managed) {
+			extension.add_tuple(index);
+		}
 		return index;
 	}
 	
@@ -69,9 +75,11 @@ TupleIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 }
 
 void ExtensionHandler::process_tuple(TupleIdx tuple) {
-	unsigned symbol_idx = _tuple_index.symbol(tuple);
+	unsigned symbol = _tuple_index.symbol(tuple);
 // 	_modified.insert(symbol_idx);  // Mark the extension as modified
-	_extensions.at(symbol_idx).add_tuple(tuple);
+	if (_managed.at(symbol)) {
+		_extensions.at(symbol).add_tuple(tuple);
+	}
 }
 
 void ExtensionHandler::process_delta(VariableIdx variable, const std::vector<ObjectIdx>& delta) {
@@ -81,10 +89,21 @@ void ExtensionHandler::process_delta(VariableIdx variable, const std::vector<Obj
 
 std::vector<Gecode::TupleSet> ExtensionHandler::generate_extensions() const {
 	std::vector<Gecode::TupleSet> result;
-	for (auto& generator:_extensions) {
-		result.push_back(generator.generate());
+	
+	for (unsigned symbol = 0; symbol < _extensions.size(); ++symbol) {
+		auto& generator = _extensions[symbol];
+		if (_managed.at(symbol)) {
+			result.push_back(generator.generate());
+		} else {
+			result.push_back(Gecode::TupleSet());
+		}
 	}
 	return result;
+}
+
+Gecode::TupleSet ExtensionHandler::generate_extension(unsigned symbol) const {
+	auto& generator = _extensions[symbol];
+	return generator.generate();
 }
 
 } } // namespaces

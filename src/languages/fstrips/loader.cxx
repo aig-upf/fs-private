@@ -1,6 +1,6 @@
 
 #include <languages/fstrips/loader.hxx>
-#include "builtin.hxx"
+#include <languages/fstrips/builtin.hxx>
 #include <problem.hxx>
 #include <constraints/registry.hxx>
 

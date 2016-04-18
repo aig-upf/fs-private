@@ -40,7 +40,13 @@ protected:
 	//! _modified[i] is true iff the denotation of logical symbol 'i' changed on the last layer
 // 	std::set<unsigned> _modified;
 public:
-	ExtensionHandler(const TupleIndex& tuple_index);
+	ExtensionHandler(const TupleIndex& tuple_index, std::vector<bool> managed);
+	
+	//! Default copy constructors and assignment operators
+	ExtensionHandler(const ExtensionHandler& other) = default;
+	ExtensionHandler(ExtensionHandler&& other) = default;
+	ExtensionHandler& operator=(const ExtensionHandler& other) = default;
+	ExtensionHandler& operator=(ExtensionHandler&& other) = default;
 	
 	void reset();
 	
@@ -58,6 +64,7 @@ public:
 	
 	std::vector<Gecode::TupleSet> generate_extensions() const;
 	
+	Gecode::TupleSet generate_extension(unsigned symbol_id) const;
 };
 
 } } // namespaces

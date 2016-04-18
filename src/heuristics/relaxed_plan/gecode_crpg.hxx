@@ -14,7 +14,7 @@ class RPGIndex;
 
 class GecodeCRPG {
 public:
-	GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers);
+	GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, ExtensionHandler extension_handler);
 	virtual ~GecodeCRPG() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.
@@ -49,7 +49,7 @@ protected:
 //! The h_max version
 class GecodeCHMax : public GecodeCRPG {
 public:
-	GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers);
+	GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, ExtensionHandler extension_handler);
 	~GecodeCHMax() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.

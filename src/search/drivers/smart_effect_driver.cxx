@@ -8,6 +8,7 @@
 #include <actions/applicable_action_set.hxx>
 #include <actions/grounding.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
+#include <utils/support.hxx>
 
 using namespace fs0::gecode;
 
@@ -19,11 +20,14 @@ std::unique_ptr<FS0SearchAlgorithm> SmartEffectDriver::create(const Config& conf
 	bool novelty = Config::instance().useNoveltyConstraint();
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
-	SmartRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints());
 	const auto& tuple_index = problem.get_tuple_index();
-	const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
-	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create_smart(base_actions, tuple_index, approximate, novelty);
-	heuristic.set_managers(std::move(managers)); // TODO Probably we don't need this to be shared_ptr's anymore
+	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
+	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create_smart(actions, tuple_index, approximate, novelty); // TODO Probably we don't need this to be shared_ptr's anymore
+	
+	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
+	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
+	
+	SmartRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, GroundStateModel>(model, std::move(heuristic)));
 }

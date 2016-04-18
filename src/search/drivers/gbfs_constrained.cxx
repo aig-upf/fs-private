@@ -11,6 +11,7 @@
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <actions/applicable_action_set.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <utils/support.hxx>
 
 
 using namespace fs0::gecode;
@@ -56,7 +57,9 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 		throw std::runtime_error("Unknown CSP model type");
 	}
 	
-	GecodeHeuristic heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers));
+	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
+	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
+	GecodeHeuristic heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	
 	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, GroundStateModel>(model, std::move(heuristic)));
 }

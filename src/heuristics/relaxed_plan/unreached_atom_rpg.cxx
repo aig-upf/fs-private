@@ -5,7 +5,7 @@
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include "relaxed_plan.hxx"
+#include <heuristics/relaxed_plan/relaxed_plan.hxx>
 #include <relaxed_state.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
@@ -16,12 +16,12 @@
 
 namespace fs0 { namespace gecode {
 
-UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers) :
+UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler) :
 	_problem(problem),
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
 	_goal_handler(std::unique_ptr<LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false))),
-	_extension_handler(_tuple_index),
+	_extension_handler(extension_handler),
 	_atom_achievers(build_achievers_index(_managers, _tuple_index))
 {
 	FINFO("heuristic", "Unreached-Atom-Based heuristic initialized");

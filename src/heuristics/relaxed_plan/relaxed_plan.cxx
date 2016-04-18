@@ -1,6 +1,6 @@
 
 #include <heuristics/relaxed_plan/relaxed_plan.hxx>
-#include "rpg_index.hxx"
+#include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <constraints/gecode/handlers/lifted_formula_handler.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
 #include <utils/logging.hxx>
