@@ -14,10 +14,10 @@ BaseCSPHandler::BaseCSPHandler(const TupleIndex& tuple_index, bool approximate) 
 	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _tuple_index(tuple_index)
 {}
 
-void BaseCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerTermVariables(const fs::Term::cptr term, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
-	component_translator->registerVariables(term, type, translator);
+	component_translator->registerVariables(term, translator);
 }
 
 void BaseCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, GecodeCSPVariableTranslator& translator) {
@@ -26,10 +26,10 @@ void BaseCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr cond
 	component_translator->registerVariables(condition, translator);
 }
 
-void BaseCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerTermConstraints(const fs::Term::cptr term, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
-	component_translator->registerConstraints(term, type, translator);
+	component_translator->registerConstraints(term, translator);
 }
 
 
@@ -87,7 +87,7 @@ void BaseCSPHandler::register_csp_variables() {
 			_extensional_constraints.push_back(ExtensionalConstraint(fluent, _tuple_index, is_predicate));
 			
 			if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
-				_translator.registerNestedTerm(fluent, CSPVariableType::Input);
+				_translator.registerNestedTerm(fluent);
 			}
 			
 		} else if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(term)) {
@@ -95,7 +95,7 @@ void BaseCSPHandler::register_csp_variables() {
 		}
 		
 		else {
-			registerTermVariables(term, CSPVariableType::Input, _translator);
+			registerTermVariables(term,  _translator);
 		}
 	}
 	
@@ -115,7 +115,7 @@ void BaseCSPHandler::register_csp_constraints() {
 			continue;
 		}
 		
-		registerTermConstraints(term, CSPVariableType::Input, _translator);
+		registerTermConstraints(term, _translator);
 // 		FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *term << "): " << _translator); // Uncomment for extreme debugging
 	}
 	

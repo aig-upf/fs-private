@@ -57,7 +57,7 @@ bool EffectSchemaCSPHandler::init(bool use_novelty_constraint) {
 	if (!ActionSchemaCSPHandler::init(use_novelty_constraint)) return false;
 	
 	_lhs_symbol = index_lhs_symbol(get_effect());
-	_rhs_variable = _translator.resolveVariableIndex(get_effect()->rhs(), CSPVariableType::Input);
+	_rhs_variable = _translator.resolveVariableIndex(get_effect()->rhs());
 	_effect_tuple = index_tuple_indexes(get_effect());
 	_achievable_tuple_idx = detect_achievable_tuple();
 

@@ -54,7 +54,7 @@ void ActionSchemaCSPHandler::index_parameters() {
 		} else {
 			// We here assume that the parameter IDs are always 0..k-1, where k is the number of parameters
 			fs::BoundVariable variable(i, signature[i]);
-			_parameter_variables.push_back(_translator.resolveVariableIndex(&variable, CSPVariableType::Input));
+			_parameter_variables.push_back(_translator.resolveVariableIndex(&variable));
 		}
 	}
 }

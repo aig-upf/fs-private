@@ -5,7 +5,6 @@
 #include <unordered_set>
 
 #include <fs_types.hxx>
-#include <constraints/gecode/utils/translation.hxx>
 
 #include <gecode/int.hh>
 
@@ -66,25 +65,25 @@ public:
 	//! Register an int variable not boud to any particular term, and return its index.
 	unsigned registerIntVariable(int min, int max);
 	
-	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type);
-	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type, TypeIdx domain_type);
-	bool registerNestedTerm(const fs::NestedTerm* nested, CSPVariableType type, int min, int max);
+	bool registerNestedTerm(const fs::NestedTerm* nested);
+	bool registerNestedTerm(const fs::NestedTerm* nested, TypeIdx domain_type);
+	bool registerNestedTerm(const fs::NestedTerm* nested, int min, int max);
 	
 	//! Returns the index of the CSP variable corresponding to the given term under the given role.
-	unsigned resolveVariableIndex(const fs::Term* term, CSPVariableType type) const;
+	unsigned resolveVariableIndex(const fs::Term* term) const;
 	
 	//! Returns the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
-	const Gecode::IntVar& resolveVariable(const fs::Term* term, CSPVariableType type, const SimpleCSP& csp) const;
+	const Gecode::IntVar& resolveVariable(const fs::Term* term, const SimpleCSP& csp) const;
 	
 	//! Returns the value of the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
-	ObjectIdx resolveValue(const fs::Term* term, CSPVariableType type, const SimpleCSP& csp) const;
+	ObjectIdx resolveValue(const fs::Term* term, const SimpleCSP& csp) const;
 	
 	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const SimpleCSP& csp) const;
 	ObjectIdx resolveValueFromIndex(unsigned variable_index, const SimpleCSP& csp) const;
 
 	//! Helper to resolve several variables at the same time
-	Gecode::IntVarArgs resolveVariables(const std::vector<const fs::Term*>& terms, CSPVariableType type, const SimpleCSP& csp) const;
-	std::vector<ObjectIdx> resolveValues(const std::vector<const fs::Term*>& terms, CSPVariableType type, const SimpleCSP& csp) const;
+	Gecode::IntVarArgs resolveVariables(const std::vector<const fs::Term*>& terms, const SimpleCSP& csp) const;
+	std::vector<ObjectIdx> resolveValues(const std::vector<const fs::Term*>& terms, const SimpleCSP& csp) const;
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(SimpleCSP& csp, const RPGIndex& graph) const;
@@ -136,7 +135,7 @@ protected:
 	std::vector<VariableIdx> _intvars_idx;
 	
 	//! A map mapping terms that have already been processed (under a certain role, e.g. input/output) to the ID of their corresponding CSP variable
-	std::unordered_map<TranslationKey, unsigned> _registered;
+	std::unordered_map<const fs::Term*, unsigned> _registered;
 	
 	//! Some data structures to keep track of all registered state variables, so that we can update their domains and parse their values efficiently.
 	//! In particular, these map the index of state variables that have been registered under different input/output roles to

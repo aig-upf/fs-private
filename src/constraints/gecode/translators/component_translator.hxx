@@ -10,8 +10,6 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-enum class CSPVariableType;
-
 class SimpleCSP; class GecodeCSPVariableTranslator;
 
 class TermTranslator {
@@ -22,41 +20,41 @@ public:
 	virtual ~TermTranslator() {}
 
 	//! The translator can optionally register any number of (probably temporary) CSP variables.
-	virtual void registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const = 0;
+	virtual void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const = 0;
 
 	//! The translator can register any number of CSP constraints
-	virtual void registerConstraints(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const = 0;
+	virtual void registerConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator) const = 0;
 };
 
 
 class ConstantTermTranslator : public TermTranslator {
 public:
-	void registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
+	void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
 
 	// Constants produce no particular constraint, since the domain constraint was already posted during creation of the variable
-	void registerConstraints(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {}
+	void registerConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator) const {}
 };
 
 class BoundVariableTermTranslator : public TermTranslator {
 public:
-	void registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
+	void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
 
 	// Constants produce no particular constraint, since the domain constraint was already posted during creation of the variable
-	void registerConstraints(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const {}
+	void registerConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator) const {}
 };
 
 class StaticNestedTermTranslator : public TermTranslator {
 public:
-	void registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
+	void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
 	
-	void registerConstraints(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
+	void registerConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
 };
 
 class ArithmeticTermTranslator : public TermTranslator {
 public:
-	void registerVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
+	void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
 
-	void registerConstraints(const fs::Term* formula, CSPVariableType type, GecodeCSPVariableTranslator& translator) const;
+	void registerConstraints(const fs::Term* formula, GecodeCSPVariableTranslator& translator) const;
 
 protected:
 	// Might want to be overriden by some subclass

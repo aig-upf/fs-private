@@ -91,7 +91,7 @@ StrongNoveltyConstraint::StrongNoveltyConstraint(GecodeCSPVariableTranslator& tr
 	for (const auto effect:effects) {
 		auto variable = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
 		assert(variable);
-		unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs(), CSPVariableType::Input);
+		unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs());
 		unsigned reified_id = translator.create_bool_variable();
 		_variables.push_back(std::make_tuple(variable->getValue(), csp_var_id, reified_id));
 	}
@@ -129,7 +129,7 @@ EffectNoveltyConstraint::EffectNoveltyConstraint(GecodeCSPVariableTranslator& tr
 	assert(applicable(effect));
 	auto variable = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
 	assert(variable);
-	unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs(), CSPVariableType::Input);
+	unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs());
 	unsigned reified_id = translator.create_bool_variable();
 	_variable = std::make_tuple(variable->getValue(), csp_var_id, reified_id);
 }

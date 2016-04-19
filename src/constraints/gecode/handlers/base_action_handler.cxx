@@ -137,7 +137,7 @@ void BaseActionCSPHandler::index_scopes() {
 		effect_nested_fluents[i] = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
 		
 		
-		effect_rhs_variables[i] = _translator.resolveVariableIndex(effects[i]->rhs(), CSPVariableType::Input);
+		effect_rhs_variables[i] = _translator.resolveVariableIndex(effects[i]->rhs());
 		
 		_has_nested_relevant_terms = _has_nested_relevant_terms || !effect_nested_fluents[i].empty();
 		
@@ -171,7 +171,7 @@ void BaseActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cpt
 	
 	// Impose a bound on the RHS based on the type of the LHS
 	if (ProblemInfo::getInstance().isBoundedType(effect->lhs()->getType())) {
-		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, _base_csp);
+		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), _base_csp);
 		const auto& lhs_bounds = effect->lhs()->getBounds();
 		Gecode::dom(_base_csp, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
 	}
@@ -261,14 +261,14 @@ void BaseActionCSPHandler::extract_nested_term_support(const SimpleCSP* solution
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
-		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), CSPVariableType::Input, *solution));
+		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), *solution));
 //		VariableIdx variable = fluent->interpretVariable(assignment, binding);
 		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
 			// ObjectIdx value = fluent->interpret(assignment, binding);
 			
 			ObjectIdx value = 1; // i.e. assuming that there are no negated atoms on conditions.
 			if (!info.isPredicate(fluent->getSymbolId())) {
-				value = _translator.resolveValue(fluent, CSPVariableType::Input, *solution);
+				value = _translator.resolveValue(fluent, *solution);
 			}
 			
 			support.push_back(_tuple_index.to_index(variable, value));

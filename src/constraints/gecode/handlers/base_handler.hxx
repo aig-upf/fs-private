@@ -33,8 +33,8 @@ public:
 	
 	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
 
-	static void registerTermVariables(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator);
-	static void registerTermConstraints(const fs::Term* term, CSPVariableType type, GecodeCSPVariableTranslator& translator);
+	static void registerTermVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator);
+	static void registerTermConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator);
 	static void registerFormulaVariables(const fs::AtomicFormula* condition, GecodeCSPVariableTranslator& translator);
 	static void registerFormulaConstraints(const fs::AtomicFormula* condition, GecodeCSPVariableTranslator& translator);
 

@@ -1,11 +1,10 @@
 
+#include <languages/fstrips/terms.hxx>
 #include <constraints/gecode/utils/extensional_constraint.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 #include <constraints/gecode/simple_csp.hxx>
-#include <constraints/gecode/utils/translation.hxx>
 #include <constraints/gecode/csp_translator.hxx>
-#include <languages/fstrips/terms.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <utils/logging.hxx>
 #include <utils/printers/gecode.hxx>
@@ -22,10 +21,10 @@ void ExtensionalConstraint::register_constraints(GecodeCSPVariableTranslator& tr
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	for (auto subterm:_term->getSubterms()) {
-		_subterm_variable_indexes.push_back(translator.resolveVariableIndex(subterm, CSPVariableType::Input));
+		_subterm_variable_indexes.push_back(translator.resolveVariableIndex(subterm));
 	}
 	
-	if (!_predicate) _term_variable_index = translator.resolveVariableIndex(_term, CSPVariableType::Input);
+	if (!_predicate) _term_variable_index = translator.resolveVariableIndex(_term);
 	
 	if (_term->getSubterms().empty()) {
 		_variable_idx = info.resolveStateVariable(_term->getSymbolId(), {});

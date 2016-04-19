@@ -148,14 +148,14 @@ void GroundEffectCSPHandler::solve_approximately(const Atom& atom, gecode::Simpl
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		
 		for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
-			VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), CSPVariableType::Input, *csp));
+			VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), *csp));
 	//		VariableIdx variable = fluent->interpretVariable(assignment, binding);
 			if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
 				// ObjectIdx value = fluent->interpret(assignment, binding);
 				
 				ObjectIdx value = 1; // i.e. assuming that there are no negated atoms on conditions.
 				if (!info.isPredicate(fluent->getSymbolId())) {
-					value = _translator.resolveValue(fluent, CSPVariableType::Input, *csp);
+					value = _translator.resolveValue(fluent, *csp);
 				}
 				
 				support->push_back(Atom(variable, value));
@@ -188,7 +188,7 @@ void GroundEffectCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {
 		
 	} else throw std::runtime_error("Unknown effect type");
 	
-	// This is equivalent, but faster, to _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, csp);
+	// This is equivalent, but faster, to _translator.resolveVariable(effect->rhs(), csp);
 	assert(effect_rhs_variables.size()==1);
 	auto& rhs_term =_translator.resolveVariableFromIndex(effect_rhs_variables[0], csp);
 	Gecode::rel(csp, rhs_term,  Gecode::IRT_EQ, atom.getValue());
@@ -199,7 +199,7 @@ std::vector<unsigned> GroundEffectCSPHandler::index_lhs_subterms() {
 	auto lhs = get_effect()->lhs();
 	if (auto nested = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(lhs)) {
 		for (auto subterm:nested->getSubterms()) {
-			subterm_variables.push_back(_translator.resolveVariableIndex(subterm, CSPVariableType::Input));
+			subterm_variables.push_back(_translator.resolveVariableIndex(subterm));
 		}
 	}
 	return subterm_variables;

@@ -1,11 +1,11 @@
 
+#include <languages/fstrips/language.hxx>
 #include <problem.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <utils/logging.hxx>
 #include <state.hxx>
 #include <constraints/gecode/simple_csp.hxx>
-#include <languages/fstrips/language.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {
@@ -37,22 +37,19 @@ unsigned GecodeCSPVariableTranslator::create_bool_variable() {
 }
 
 bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant) {
-	TranslationKey key(constant, CSPVariableType::Input); // Constants are always considered as input variables
-
-	auto it = _registered.find(key);
+	auto it = _registered.find(constant);
 	if (it!= _registered.end()) return false; // The element was already registered
 
 	int value = constant->getValue();
 	unsigned id = add_intvar(Gecode::IntVar(_base_csp, value, value));
 
-	_registered.insert(it, std::make_pair(key, id));
+	_registered.insert(it, std::make_pair(constant, id));
 	return true;
 }
 
 void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable::cptr variable) {
-	TranslationKey key(variable, CSPVariableType::Input); // Bound variables are always considered as input variables
 	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, variable->getType()));
-	auto res = _registered.insert(std::make_pair(key, id));
+	auto res = _registered.insert(std::make_pair(variable, id));
 	_unused(res);
 	assert(res.second); // Make sure the element was not there before
 }
@@ -70,53 +67,50 @@ void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variabl
 	_input_state_variables.insert(std::make_pair(variable, id));
 }
 
-bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type) {
+bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested) {
 	TypeIdx domain_type = ProblemInfo::getInstance().getSymbolData(nested->getSymbolId()).getCodomainType();
-	return registerNestedTerm(nested, type, domain_type);
+	return registerNestedTerm(nested, domain_type);
 }
 
-bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, TypeIdx domain_type) {
-	TranslationKey key(nested, type);
-	auto it = _registered.find(key);
+bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, TypeIdx domain_type) {
+	auto it = _registered.find(nested);
 	if (it!= _registered.end()) return false; // The element was already registered
 
 	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, domain_type));
 
-	_registered.insert(it, std::make_pair(key, id));
+	_registered.insert(it, std::make_pair(nested, id));
 	return true;
 }
 
-bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, CSPVariableType type, int min, int max) {
-	TranslationKey key(nested, type);
-	auto it = _registered.find(key);
+bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, int min, int max) {
+	auto it = _registered.find(nested);
 	if (it!= _registered.end()) return false; // The element was already registered
 
 	unsigned id = add_intvar(Helper::createTemporaryIntVariable(_base_csp, min, max));
 
-	_registered.insert(it, std::make_pair(key, id));
+	_registered.insert(it, std::make_pair(nested, id));
 	return true;
 }
 
 
-unsigned GecodeCSPVariableTranslator::resolveVariableIndex(fs::Term::cptr term, CSPVariableType type) const {
+unsigned GecodeCSPVariableTranslator::resolveVariableIndex(fs::Term::cptr term) const {
 	if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) {
-		assert(type == CSPVariableType::Input);  // We're not supporting Output state variables right now, but adding support for them, if needed, would be straight-forward
 		return resolveInputVariableIndex(sv->getValue());
 	}
 
-	auto it = _registered.find(TranslationKey(term, type));
+	auto it = _registered.find(term);
 	if(it == _registered.end()) {
 		throw UnregisteredStateVariableError("Trying to translate a non-existing CSP variable");
 	}
 	return it->second;
 }
 
-const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
-	return csp._intvars[resolveVariableIndex(term, type)];
+const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, const SimpleCSP& csp) const {
+	return csp._intvars[resolveVariableIndex(term)];
 }
 
-ObjectIdx GecodeCSPVariableTranslator::resolveValue(fs::Term::cptr term, CSPVariableType type, const SimpleCSP& csp) const {
-	return resolveVariable(term, type, csp).val();
+ObjectIdx GecodeCSPVariableTranslator::resolveValue(fs::Term::cptr term, const SimpleCSP& csp) const {
+	return resolveVariable(term, csp).val();
 }
 
 const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariableFromIndex(unsigned variable_index, const SimpleCSP& csp) const {
@@ -131,18 +125,18 @@ const Gecode::IntVar& GecodeCSPVariableTranslator::resolveInputStateVariable(con
 	return csp._intvars[resolveInputVariableIndex(variable)];
 }
 
-Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const {
+Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, const SimpleCSP& csp) const {
 	Gecode::IntVarArgs variables;
 	for (const fs::Term::cptr term:terms) {
-		variables << resolveVariable(term, type, csp);
+		variables << resolveVariable(term, csp);
 	}
 	return variables;
 }
 
-std::vector<ObjectIdx> GecodeCSPVariableTranslator::resolveValues(const std::vector<fs::Term::cptr>& terms, CSPVariableType type, const SimpleCSP& csp) const {
+std::vector<ObjectIdx> GecodeCSPVariableTranslator::resolveValues(const std::vector<fs::Term::cptr>& terms, const SimpleCSP& csp) const {
 	std::vector<ObjectIdx> values;
 	for (const fs::Term::cptr term:terms) {
-		values.push_back(resolveValue(term, type, csp));
+		values.push_back(resolveValue(term, csp));
 	}
 	return values;
 }
@@ -159,8 +153,7 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 	os << std::endl << "CSP Variables corresponding to other terms: " << std::endl;
 	for (auto it:_registered) {
 		os << "\t ";
-		os << *(it.first.getTerm());
-		if (it.first.getType() == CSPVariableType::Output) os << "'"; // We simply mark output variables with a "'"
+		os << *(it.first);
 		os << ": " << csp._intvars[it.second] << std::endl;
 	}
 
@@ -213,11 +206,11 @@ GecodeCSPVariableTranslator::index_fluents(const std::unordered_set<const fs::Te
 			unsigned symbol = nested->getSymbolId();
 			std::vector<unsigned> indexes;
 			for (const fs::Term* subterm:nested->getSubterms()) {
-				indexes.push_back(resolveVariableIndex(subterm, CSPVariableType::Input));
+				indexes.push_back(resolveVariableIndex(subterm));
 			}
 			
 			if (!info.isPredicate(symbol)) { // If we have a functional symbol, we add the value of the term to the end of the tuple
-				indexes.push_back(resolveVariableIndex(nested, CSPVariableType::Input));
+				indexes.push_back(resolveVariableIndex(nested));
 			}
 			tuple_indexes.push_back(std::make_pair(nested->getSymbolId(), indexes));
 		}
