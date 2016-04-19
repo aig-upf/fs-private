@@ -24,6 +24,8 @@ public:
 	
 	void register_constraints(GecodeCSPVariableTranslator& translator);
 	
+	const fs::FluentHeadedNestedTerm* get_term() const {return _term; }
+	
 	//! Constraint-posting routines
 	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const State& state) const;
 	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const RPGIndex& layer) const;

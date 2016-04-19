@@ -40,6 +40,8 @@ protected:
 	void create_novelty_constraint() {}
 	
 	void index();
+	
+	void index_existential_variable_uses();
 };
 
 } } // namespaces

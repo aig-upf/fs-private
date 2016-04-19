@@ -173,7 +173,7 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 							throw UnimplementedFeatureException("Only non-negated relational atoms are supported ATM");
 						}
 						
-						// Mark the condition and term as inserted, so we do not need to insert it again!
+						// Mark the condition as inserted, so we do not need to insert it again!
 						inserted_conditions.insert(condition);
 						
 						if (statevar) {
@@ -190,8 +190,7 @@ void BaseCSPHandler::index_formula_elements(const std::vector<const fs::AtomicFo
 							}
 							
 							// Mark the state variable to allow the later support recovery
-							Atom atom(statevar->getValue(), 1);
-							true_tuples.insert(_tuple_index.to_index(atom));
+							true_tuples.insert(_tuple_index.to_index(statevar->getValue(), 1));
 						}
 					}
 				}

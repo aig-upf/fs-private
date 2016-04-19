@@ -6,6 +6,7 @@
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <utils/logging.hxx>
 #include <utils/tuple_index.hxx>
+#include <utils/utils.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <state.hxx>
@@ -22,6 +23,7 @@ LiftedFormulaHandler::LiftedFormulaHandler(const fs::Formula::cptr formula, cons
 	
 	createCSPVariables(false);
 	register_csp_constraints();
+	index_existential_variable_uses();
 	
 	Helper::postBranchingStrategy(_base_csp);
 	
@@ -83,5 +85,61 @@ void LiftedFormulaHandler::init_value_selector(const RPGIndex* graph) {
 	_base_csp.init_value_selector(std::make_shared<TupleMinHMaxValueSelector>(&_tuple_index, &_translator, graph));
 }
 
+void LiftedFormulaHandler::index_existential_variable_uses() {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	
+	// This is part of a very preliminary implementation of a goal support selection mechanism that 
+	// selects for existential variables those values that induce goal atoms with minimum sums of hmax values.
+	// That is, if an existential variable Z participates in 2 goal atoms p(Z) and q (Z, c), we will prioritize
+	// the possible values z of Z such that hmax(p(z)) + hmax(q(z,c)) is minimum, i.e. such that the induced
+	// atoms are achieved the earliest possible
+
+	std::vector<std::vector<std::unordered_map<int, TupleIdx>>> existential_data;
+	existential_data.resize(_base_csp._intvars.size());
+	
+	for (const ExtensionalConstraint& extensional: _extensional_constraints) {
+		const fs::FluentHeadedNestedTerm* fluent = extensional.get_term();
+		
+		auto variables = Utils::filter_by_type<const fs::BoundVariable*>(fluent->getSubterms());
+		for (const fs::BoundVariable* variable:variables) {
+			
+			bool rest_subterms_are_constant = true;
+			int ex_var_position = -1;
+			ValueTuple subterm_values;
+			for (unsigned i = 0; i < fluent->getSubterms().size(); ++i) {
+				const fs::Term* term = fluent->getSubterms().at(i);
+				if (*term == *variable) {
+					assert(ex_var_position == -1);
+					ex_var_position = i;
+					subterm_values.push_back(0);
+					continue;
+				}
+				
+				if (const fs::Constant* constant = dynamic_cast<const fs::Constant*>(term)) {
+					subterm_values.push_back(constant->getValue());
+				} else {
+					rest_subterms_are_constant = false;
+					break;
+				}
+			}
+			
+			if (!rest_subterms_are_constant) continue;
+			assert(ex_var_position != -1);
+			
+			std::unordered_map<int, TupleIdx> variable_resolutions;
+			
+			for (ObjectIdx value:info.getTypeObjects(variable->getType())) {
+				subterm_values.at(ex_var_position) = value;
+				TupleIdx tuple_id = _tuple_index.to_index(fluent->getSymbolId(), subterm_values);
+				variable_resolutions.insert(std::make_pair(value, tuple_id));
+			}
+			
+			unsigned variable_idx = _translator.resolveVariableIndex(variable);
+			existential_data.at(variable_idx).push_back(variable_resolutions);
+		}
+	}
+	
+	_translator.set_existential_data(std::move(existential_data));
+}
 
 } } // namespaces

@@ -1,7 +1,11 @@
 
 #pragma once
 
+#include <unordered_map>
+
 #include <gecode/int.hh>
+
+#include <fs_types.hxx>
 
 namespace fs0 { class TupleIndex; }
 
@@ -42,6 +46,10 @@ protected:
 	const TupleIndex* _tuple_index; 
 	const GecodeCSPVariableTranslator* _translator;
 	const RPGIndex* _bookkeeping;
+	
+	int select_state_variable_value(VariableIdx variable, const Gecode::IntVar& x) const;
+	
+	int select_existential_variable_value(const std::vector<std::unordered_map<int, TupleIdx>>& existential_data, const Gecode::IntVar& x) const;
 };
 
 } } // namespaces
