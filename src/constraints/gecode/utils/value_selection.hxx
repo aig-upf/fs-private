@@ -3,7 +3,7 @@
 
 #include <gecode/int.hh>
 
-namespace fs0 { class RPGData; class TupleIndex; }
+namespace fs0 { class TupleIndex; }
 
 namespace fs0 { namespace gecode {
 
@@ -22,25 +22,6 @@ public:
 	virtual int select(const Gecode::IntVar& x, unsigned csp_var_idx) const = 0;
 };
 
-
-class AtomMinHMaxValueSelector : public MinHMaxValueSelector {
-public:
-	//! The proper constructor
-	AtomMinHMaxValueSelector(const GecodeCSPVariableTranslator* translator, const RPGData* bookkeeping);
-
-	AtomMinHMaxValueSelector(const AtomMinHMaxValueSelector&) = default;
-	AtomMinHMaxValueSelector(AtomMinHMaxValueSelector&&) = default;
-	AtomMinHMaxValueSelector& operator=(const AtomMinHMaxValueSelector&) = default;
-	AtomMinHMaxValueSelector& operator=(AtomMinHMaxValueSelector&&) = default;
-	
-	//! The actual value selection policy method
-	int select(const Gecode::IntVar& x, unsigned csp_var_idx) const;
-
-protected:
-	//! Pointers to the necessary data structures to perform the value selection
-	const GecodeCSPVariableTranslator* _translator;
-	const RPGData* _bookkeeping;
-};
 
 //! A tuple-based version 
 class TupleMinHMaxValueSelector : public MinHMaxValueSelector {

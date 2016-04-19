@@ -14,11 +14,6 @@ BaseCSPHandler::BaseCSPHandler(const TupleIndex& tuple_index, bool approximate) 
 	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _tuple_index(tuple_index)
 {}
 
-
-void BaseCSPHandler::init(const RPGData* bookkeeping) {
-	_base_csp.init_value_selector(std::make_shared<AtomMinHMaxValueSelector>(&_translator, bookkeeping));
-}
-
 void BaseCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPVariableType type, GecodeCSPVariableTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);

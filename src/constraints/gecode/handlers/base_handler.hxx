@@ -26,8 +26,6 @@ public:
 	BaseCSPHandler(const TupleIndex& tuple_index, bool approximate);
 	virtual ~BaseCSPHandler() = default;
 	
-	void init(const RPGData* bookkeeping);
-
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
 	SimpleCSP* instantiate(const RPGIndex& graph) const;
