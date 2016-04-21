@@ -31,12 +31,12 @@ public:
 	SimpleCSP* instantiate(const RPGIndex& graph) const;
 	SimpleCSP* instantiate(const State& state) const;
 	
-	const GecodeCSPVariableTranslator& getTranslator() const { return _translator; }
+	const CSPTranslator& getTranslator() const { return _translator; }
 
-	static void registerTermVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator);
-	static void registerTermConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator);
-	static void registerFormulaVariables(const fs::AtomicFormula* condition, GecodeCSPVariableTranslator& translator);
-	static void registerFormulaConstraints(const fs::AtomicFormula* condition, GecodeCSPVariableTranslator& translator);
+	static void registerTermVariables(const fs::Term* term, CSPTranslator& translator);
+	static void registerTermConstraints(const fs::Term* term, CSPTranslator& translator);
+	static void registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator);
+	static void registerFormulaConstraints(const fs::AtomicFormula* condition, CSPTranslator& translator);
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const BaseCSPHandler& o) { return o.print(os); }
@@ -54,7 +54,7 @@ protected:
 	bool _approximate;
 
 	//! A translator to map planning variables with gecode variables
-	GecodeCSPVariableTranslator _translator;
+	CSPTranslator _translator;
 	
 	// All (distinct) FSTRIPS terms that participate in the CSP
 	std::unordered_set<const fs::Term*> _all_terms;

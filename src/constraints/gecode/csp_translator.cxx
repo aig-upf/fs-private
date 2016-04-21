@@ -10,7 +10,7 @@
 
 namespace fs0 { namespace gecode {
 
-void GecodeCSPVariableTranslator::perform_registration() {
+void CSPTranslator::perform_registration() {
 	Gecode::IntVarArray intarray(_base_csp, _intvars);
 	_base_csp._intvars.update(_base_csp, false, intarray);
 
@@ -18,7 +18,7 @@ void GecodeCSPVariableTranslator::perform_registration() {
 	_base_csp._boolvars.update(_base_csp, false, boolarray);
 }
 
-unsigned GecodeCSPVariableTranslator::add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable) {
+unsigned CSPTranslator::add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable) {
 	assert((unsigned) _intvars.size() == _intvars_idx.size());
 	unsigned id = _intvars.size();
 	_intvars << csp_variable;
@@ -26,17 +26,17 @@ unsigned GecodeCSPVariableTranslator::add_intvar(Gecode::IntVar csp_variable, Va
 	return id;
 }
 
-unsigned GecodeCSPVariableTranslator::add_boolvar(Gecode::BoolVar csp_variable) {
+unsigned CSPTranslator::add_boolvar(Gecode::BoolVar csp_variable) {
 	unsigned id = _boolvars.size();
 	_boolvars << csp_variable;
 	return id;
 }
 
-unsigned GecodeCSPVariableTranslator::create_bool_variable() {
+unsigned CSPTranslator::create_bool_variable() {
 	return add_boolvar(Helper::createBoolVariable(_base_csp));
 }
 
-bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant) {
+bool CSPTranslator::registerConstant(fs::Constant::cptr constant) {
 	auto it = _registered.find(constant);
 	if (it!= _registered.end()) return false; // The element was already registered
 
@@ -47,19 +47,19 @@ bool GecodeCSPVariableTranslator::registerConstant(fs::Constant::cptr constant) 
 	return true;
 }
 
-void GecodeCSPVariableTranslator::registerExistentialVariable(fs::BoundVariable::cptr variable) {
+void CSPTranslator::registerExistentialVariable(fs::BoundVariable::cptr variable) {
 	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, variable->getType()));
 	auto res = _registered.insert(std::make_pair(variable, id));
 	_unused(res);
 	assert(res.second); // Make sure the element was not there before
 }
 
-unsigned GecodeCSPVariableTranslator::registerIntVariable(int min, int max) {
+unsigned CSPTranslator::registerIntVariable(int min, int max) {
 	return add_intvar(Helper::createTemporaryIntVariable(_base_csp, min, max));
 }
 
 
-void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variable) {
+void CSPTranslator::registerInputStateVariable(VariableIdx variable) {
 	auto it = _input_state_variables.find(variable);
 	if (it != _input_state_variables.end()) return; // The state variable was already registered, no need to register it again
 	
@@ -67,12 +67,12 @@ void GecodeCSPVariableTranslator::registerInputStateVariable(VariableIdx variabl
 	_input_state_variables.insert(std::make_pair(variable, id));
 }
 
-bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested) {
+bool CSPTranslator::registerNestedTerm(fs::NestedTerm::cptr nested) {
 	TypeIdx domain_type = ProblemInfo::getInstance().getSymbolData(nested->getSymbolId()).getCodomainType();
 	return registerNestedTerm(nested, domain_type);
 }
 
-bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, TypeIdx domain_type) {
+bool CSPTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, TypeIdx domain_type) {
 	auto it = _registered.find(nested);
 	if (it!= _registered.end()) return false; // The element was already registered
 
@@ -82,7 +82,7 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 	return true;
 }
 
-bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, int min, int max) {
+bool CSPTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, int min, int max) {
 	auto it = _registered.find(nested);
 	if (it!= _registered.end()) return false; // The element was already registered
 
@@ -93,7 +93,7 @@ bool GecodeCSPVariableTranslator::registerNestedTerm(fs::NestedTerm::cptr nested
 }
 
 
-unsigned GecodeCSPVariableTranslator::resolveVariableIndex(fs::Term::cptr term) const {
+unsigned CSPTranslator::resolveVariableIndex(fs::Term::cptr term) const {
 	if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) {
 		return resolveInputVariableIndex(sv->getValue());
 	}
@@ -105,27 +105,27 @@ unsigned GecodeCSPVariableTranslator::resolveVariableIndex(fs::Term::cptr term) 
 	return it->second;
 }
 
-const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariable(fs::Term::cptr term, const SimpleCSP& csp) const {
+const Gecode::IntVar& CSPTranslator::resolveVariable(fs::Term::cptr term, const SimpleCSP& csp) const {
 	return csp._intvars[resolveVariableIndex(term)];
 }
 
-ObjectIdx GecodeCSPVariableTranslator::resolveValue(fs::Term::cptr term, const SimpleCSP& csp) const {
+ObjectIdx CSPTranslator::resolveValue(fs::Term::cptr term, const SimpleCSP& csp) const {
 	return resolveVariable(term, csp).val();
 }
 
-const Gecode::IntVar& GecodeCSPVariableTranslator::resolveVariableFromIndex(unsigned variable_index, const SimpleCSP& csp) const {
+const Gecode::IntVar& CSPTranslator::resolveVariableFromIndex(unsigned variable_index, const SimpleCSP& csp) const {
 	return csp._intvars[variable_index];
 }
 
-ObjectIdx GecodeCSPVariableTranslator::resolveValueFromIndex(unsigned variable_index, const SimpleCSP& csp) const {
+ObjectIdx CSPTranslator::resolveValueFromIndex(unsigned variable_index, const SimpleCSP& csp) const {
 	return resolveVariableFromIndex(variable_index, csp).val();
 }
 
-const Gecode::IntVar& GecodeCSPVariableTranslator::resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
+const Gecode::IntVar& CSPTranslator::resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const {
 	return csp._intvars[resolveInputVariableIndex(variable)];
 }
 
-Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, const SimpleCSP& csp) const {
+Gecode::IntVarArgs CSPTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, const SimpleCSP& csp) const {
 	Gecode::IntVarArgs variables;
 	for (const fs::Term::cptr term:terms) {
 		variables << resolveVariable(term, csp);
@@ -133,7 +133,7 @@ Gecode::IntVarArgs GecodeCSPVariableTranslator::resolveVariables(const std::vect
 	return variables;
 }
 
-std::vector<ObjectIdx> GecodeCSPVariableTranslator::resolveValues(const std::vector<fs::Term::cptr>& terms, const SimpleCSP& csp) const {
+std::vector<ObjectIdx> CSPTranslator::resolveValues(const std::vector<fs::Term::cptr>& terms, const SimpleCSP& csp) const {
 	std::vector<ObjectIdx> values;
 	for (const fs::Term::cptr term:terms) {
 		values.push_back(resolveValue(term, csp));
@@ -141,7 +141,7 @@ std::vector<ObjectIdx> GecodeCSPVariableTranslator::resolveValues(const std::vec
 	return values;
 }
 
-std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
+std::ostream& CSPTranslator::print(std::ostream& os, const SimpleCSP& csp) const {
 	const fs0::ProblemInfo& info = ProblemInfo::getInstance();
 	os << "Gecode CSP with " << _registered.size() + _input_state_variables.size() << " variables" << std::endl;
 	
@@ -160,11 +160,11 @@ std::ostream& GecodeCSPVariableTranslator::print(std::ostream& os, const SimpleC
 	return os;
 }
 
-void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const RPGIndex& graph) const {
+void CSPTranslator::updateStateVariableDomains(SimpleCSP& csp, const RPGIndex& graph) const {
 	updateStateVariableDomains(csp, graph.get_domains());
 }
 
-void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const std::vector<Gecode::IntSet>& domains) const {
+void CSPTranslator::updateStateVariableDomains(SimpleCSP& csp, const std::vector<Gecode::IntSet>& domains) const {
 	// Iterate over all the input state variables and constrain them according to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
@@ -173,7 +173,7 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 	}
 }
 
-void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, const State& state) const {
+void CSPTranslator::updateStateVariableDomains(SimpleCSP& csp, const State& state) const {
 	// Iterate over all the input state variables and assign them the only possible value dictated by the state.
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
@@ -182,7 +182,7 @@ void GecodeCSPVariableTranslator::updateStateVariableDomains(SimpleCSP& csp, con
 	}
 }
 
-PartialAssignment GecodeCSPVariableTranslator::buildAssignment(SimpleCSP& solution) const {
+PartialAssignment CSPTranslator::buildAssignment(SimpleCSP& solution) const {
 	PartialAssignment assignment;
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
@@ -192,12 +192,12 @@ PartialAssignment GecodeCSPVariableTranslator::buildAssignment(SimpleCSP& soluti
 	return assignment;
 }
 
-VariableIdx GecodeCSPVariableTranslator::getPlanningVariable(unsigned csp_var_idx) const {
+VariableIdx CSPTranslator::getPlanningVariable(unsigned csp_var_idx) const {
 	return _intvars_idx[csp_var_idx];
 }
 
 std::vector<std::pair<unsigned, std::vector<unsigned>>>
-GecodeCSPVariableTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
+CSPTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::pair<unsigned, std::vector<unsigned>>> tuple_indexes;
 	// Register all fluent symbols involved

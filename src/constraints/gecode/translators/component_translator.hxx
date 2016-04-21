@@ -10,7 +10,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class SimpleCSP; class GecodeCSPVariableTranslator;
+class SimpleCSP; class CSPTranslator;
 
 class TermTranslator {
 public:
@@ -20,41 +20,41 @@ public:
 	virtual ~TermTranslator() {}
 
 	//! The translator can optionally register any number of (probably temporary) CSP variables.
-	virtual void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const = 0;
+	virtual void registerVariables(const fs::Term* term, CSPTranslator& translator) const = 0;
 
 	//! The translator can register any number of CSP constraints
-	virtual void registerConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator) const = 0;
+	virtual void registerConstraints(const fs::Term* term, CSPTranslator& translator) const = 0;
 };
 
 
 class ConstantTermTranslator : public TermTranslator {
 public:
-	void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
+	void registerVariables(const fs::Term* term, CSPTranslator& translator) const;
 
 	// Constants produce no particular constraint, since the domain constraint was already posted during creation of the variable
-	void registerConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator) const {}
+	void registerConstraints(const fs::Term* term, CSPTranslator& translator) const {}
 };
 
 class BoundVariableTermTranslator : public TermTranslator {
 public:
-	void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
+	void registerVariables(const fs::Term* term, CSPTranslator& translator) const;
 
 	// Constants produce no particular constraint, since the domain constraint was already posted during creation of the variable
-	void registerConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator) const {}
+	void registerConstraints(const fs::Term* term, CSPTranslator& translator) const {}
 };
 
 class StaticNestedTermTranslator : public TermTranslator {
 public:
-	void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
+	void registerVariables(const fs::Term* term, CSPTranslator& translator) const;
 	
-	void registerConstraints(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
+	void registerConstraints(const fs::Term* term, CSPTranslator& translator) const;
 };
 
 class ArithmeticTermTranslator : public TermTranslator {
 public:
-	void registerVariables(const fs::Term* term, GecodeCSPVariableTranslator& translator) const;
+	void registerVariables(const fs::Term* term, CSPTranslator& translator) const;
 
-	void registerConstraints(const fs::Term* formula, GecodeCSPVariableTranslator& translator) const;
+	void registerConstraints(const fs::Term* formula, CSPTranslator& translator) const;
 
 protected:
 	// Might want to be overriden by some subclass
@@ -94,11 +94,11 @@ public:
 	virtual ~FormulaTranslator() {}
 
 	//! Most atomic formulae simply need all their subterms to have their variables registered
-	virtual void registerVariables(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const {}
+	virtual void registerVariables(const fs::AtomicFormula* formula, CSPTranslator& translator) const {}
 
 	//! For constraint registration, each particular subclass translator will probably want to add to the common functionality here,
 	//! which simply performs the recursive registration of each subterm's own constraints
-	virtual void registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const {}
+	virtual void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {}
 };
 
 class ExistentiallyQuantifiedFormulaTranslator : public FormulaTranslator {
@@ -128,21 +128,21 @@ protected:
 public:
 	RelationalFormulaTranslator() {}
 
-	void registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
 };
 
 class AlldiffGecodeTranslator : public FormulaTranslator {
 public:
 	AlldiffGecodeTranslator() {}
 
-	void registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
 };
 
 class SumGecodeTranslator : public FormulaTranslator {
 public:
 	SumGecodeTranslator() {}
 
-	void registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
 };
 
 //! A Gecode translator that converts whatever arbitrary formula into an equivalent extensional constraint.
@@ -150,7 +150,7 @@ class ExtensionalTranslator : public FormulaTranslator {
 public:
 	ExtensionalTranslator() {}
 
-	void registerConstraints(const fs::AtomicFormula* formula, GecodeCSPVariableTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
 };
 
 } } // namespaces

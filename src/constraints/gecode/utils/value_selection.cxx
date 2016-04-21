@@ -9,7 +9,7 @@
 namespace fs0 { namespace gecode {
 
 
-TupleMinHMaxValueSelector::TupleMinHMaxValueSelector(const TupleIndex* tuple_index, const GecodeCSPVariableTranslator* translator, const RPGIndex* bookkeeping)
+TupleMinHMaxValueSelector::TupleMinHMaxValueSelector(const TupleIndex* tuple_index, const CSPTranslator* translator, const RPGIndex* bookkeeping)
 	: _tuple_index(tuple_index), _translator(translator), _bookkeeping(bookkeeping)
 {}
 

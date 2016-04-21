@@ -10,7 +10,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class SimpleCSP; class GecodeCSPVariableTranslator;
+class SimpleCSP; class CSPTranslator;
 
 //! Some helper methods related to the construction of Gecode CSPs.
 class Helper {

@@ -12,7 +12,7 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 { namespace gecode {
 
 class SimpleCSP;
-class GecodeCSPVariableTranslator;
+class CSPTranslator;
 class RPGIndex;
 
 class ExtensionalConstraint {
@@ -20,15 +20,15 @@ public:
 	
 	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const TupleIndex& tuple_index, bool predicate);
 	
-	void register_variables(GecodeCSPVariableTranslator& translator) {} // TODO - REMOVE IF NOT NEEDED
+	void register_variables(CSPTranslator& translator) {} // TODO - REMOVE IF NOT NEEDED
 	
-	void register_constraints(GecodeCSPVariableTranslator& translator);
+	void register_constraints(CSPTranslator& translator);
 	
 	const fs::FluentHeadedNestedTerm* get_term() const {return _term; }
 	
 	//! Constraint-posting routines
-	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const State& state) const;
-	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const RPGIndex& layer) const;
+	bool update(SimpleCSP& csp, const CSPTranslator& translator, const State& state) const;
+	bool update(SimpleCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const;
 	
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ExtensionalConstraint&  o) { return o.print(os); }
@@ -36,7 +36,7 @@ public:
 	
 protected:
 	//!
-	bool update(SimpleCSP& csp, const GecodeCSPVariableTranslator& translator, const Gecode::TupleSet& extension) const;
+	bool update(SimpleCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
 	
 	//! This is a hacky, temporary way of knowing if the current extensional constraint models a predicate or not, in which
 	//! case we assume it models a nested fluent.

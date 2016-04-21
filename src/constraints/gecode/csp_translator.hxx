@@ -35,17 +35,17 @@ public:
  *     (e.g. the same state variable 'val(c1)' could appear in a certain CSP as input _and_ output variable of an effect
  *   - 'y' is the identifier of the CSP variable (i.e. implementation-wise, the position in which the variable appears on the '_intvars' IntVarArray of the CSP)
  */
-class GecodeCSPVariableTranslator {
+class CSPTranslator {
 public:
 
-	GecodeCSPVariableTranslator(SimpleCSP& base_csp) : _base_csp(base_csp) {};
-	virtual ~GecodeCSPVariableTranslator() {}
+	CSPTranslator(SimpleCSP& base_csp) : _base_csp(base_csp) {};
+	virtual ~CSPTranslator() {}
 
 	//! Forbid copy constructor
-	GecodeCSPVariableTranslator(const GecodeCSPVariableTranslator&) = delete;
-	GecodeCSPVariableTranslator(GecodeCSPVariableTranslator&&) = delete;
-	GecodeCSPVariableTranslator& operator=(const GecodeCSPVariableTranslator& rhs) = delete;
-	GecodeCSPVariableTranslator& operator=(GecodeCSPVariableTranslator&& rhs) = delete;
+	CSPTranslator(const CSPTranslator&) = delete;
+	CSPTranslator(CSPTranslator&&) = delete;
+	CSPTranslator& operator=(const CSPTranslator& rhs) = delete;
+	CSPTranslator& operator=(CSPTranslator&& rhs) = delete;
 
 	unsigned add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable = INVALID_VARIABLE);
 	unsigned add_boolvar(Gecode::BoolVar csp_variable);
@@ -114,7 +114,7 @@ public:
 	PartialAssignment buildAssignment(SimpleCSP& solution) const;
 
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const GecodeCSPVariableTranslator& o) { return o.print(os, o._base_csp); }
+	friend std::ostream& operator<<(std::ostream &os, const CSPTranslator& o) { return o.print(os, o._base_csp); }
 	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
 	
 	SimpleCSP& getBaseCSP() { return _base_csp; }

@@ -11,7 +11,7 @@ namespace fs0 { namespace gecode {
 
 class SimpleCSP;
 class RPGIndex;
-class GecodeCSPVariableTranslator;
+class CSPTranslator;
 
 //! A common baseclass for novelty constraints
 class NoveltyConstraint {
@@ -20,7 +20,7 @@ public:
 	virtual void post_constraint(SimpleCSP& csp, const RPGIndex& layer) const = 0;
 	
 	//! Creates a suitable novelty constraint (strong if possible, weak if not) from a set of action preconditions and effects
-	static NoveltyConstraint* createFromEffects(GecodeCSPVariableTranslator& translator, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
+	static NoveltyConstraint* createFromEffects(CSPTranslator& translator, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 };
 
 
@@ -34,12 +34,12 @@ public:
 class WeakNoveltyConstraint : public NoveltyConstraint {
 public:
 	
-	static WeakNoveltyConstraint* create(GecodeCSPVariableTranslator& translator, const fs::Formula* conditions, const std::vector<const fs::ActionEffect*>& effects);
+	static WeakNoveltyConstraint* create(CSPTranslator& translator, const fs::Formula* conditions, const std::vector<const fs::ActionEffect*>& effects);
 	
 	//! Register the necessary variables for a novelty constraint to be posted upon two sets of variables, those
 	//! that are directly present as relevant state variables ('direct'), and those that are present as part of
 	//! a nested fluent ('derived').
-	WeakNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols);
+	WeakNoveltyConstraint(CSPTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols);
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
 	void post_constraint(SimpleCSP& csp, const RPGIndex& layer) const;
@@ -69,7 +69,7 @@ public:
 	static bool applicable(const std::vector<const fs::ActionEffect*>& effects);
 	
 	//! Create the constraint and register the necessary variables for the constraint
-	StrongNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::vector<const fs::ActionEffect*>& effects);
+	StrongNoveltyConstraint(CSPTranslator& translator, const std::vector<const fs::ActionEffect*>& effects);
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
 	void post_constraint(SimpleCSP& csp, const RPGIndex& layer) const override;
@@ -90,7 +90,7 @@ public:
 	static bool applicable(const fs::ActionEffect* effect);
 	
 	//! Create the constraint and register the necessary variables for the constraint
-	EffectNoveltyConstraint(GecodeCSPVariableTranslator& translator, const fs::ActionEffect* effect);
+	EffectNoveltyConstraint(CSPTranslator& translator, const fs::ActionEffect* effect);
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
 	void post_constraint(SimpleCSP& csp, const RPGIndex& rpg) const override;

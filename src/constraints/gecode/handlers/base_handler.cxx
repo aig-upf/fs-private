@@ -14,26 +14,26 @@ BaseCSPHandler::BaseCSPHandler(const TupleIndex& tuple_index, bool approximate) 
 	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _tuple_index(tuple_index)
 {}
 
-void BaseCSPHandler::registerTermVariables(const fs::Term::cptr term, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerVariables(term, translator);
 }
 
-void BaseCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*condition);
 	assert(component_translator);
 	component_translator->registerVariables(condition, translator);
 }
 
-void BaseCSPHandler::registerTermConstraints(const fs::Term::cptr term, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerConstraints(term, translator);
 }
 
 
-void BaseCSPHandler::registerFormulaConstraints(const fs::AtomicFormula::cptr formula, GecodeCSPVariableTranslator& translator) {
+void BaseCSPHandler::registerFormulaConstraints(const fs::AtomicFormula::cptr formula, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*formula);
 	assert(component_translator);
 	component_translator->registerConstraints(formula, translator);
@@ -42,7 +42,7 @@ void BaseCSPHandler::registerFormulaConstraints(const fs::AtomicFormula::cptr fo
 //! A helper
 template <typename T>
 SimpleCSP* _instantiate(const SimpleCSP& csp,
-						   const GecodeCSPVariableTranslator& translator,
+						   const CSPTranslator& translator,
 						   const std::vector<ExtensionalConstraint>& extensional_constraints,
 						   const T& layer) {
 	SimpleCSP* clone = static_cast<SimpleCSP*>(csp.clone());

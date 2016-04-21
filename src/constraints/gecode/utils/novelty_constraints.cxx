@@ -10,7 +10,7 @@
 
 namespace fs0 { namespace gecode {
 	
-NoveltyConstraint* NoveltyConstraint::createFromEffects(GecodeCSPVariableTranslator& translator, const fs::Formula::cptr precondition, const std::vector<fs::ActionEffect::cptr>& effects) {
+NoveltyConstraint* NoveltyConstraint::createFromEffects(CSPTranslator& translator, const fs::Formula::cptr precondition, const std::vector<fs::ActionEffect::cptr>& effects) {
 	if (StrongNoveltyConstraint::applicable(effects)) {
 		return new StrongNoveltyConstraint(translator, effects);
 	} else {
@@ -22,7 +22,7 @@ NoveltyConstraint* NoveltyConstraint::createFromEffects(GecodeCSPVariableTransla
 
 // TODO - Weak Novelty constraints ATM disabled, as it is not sure it pays off to compute and keep the whole domain deltas for such a weak constraint.
 /*
-WeakNoveltyConstraint* WeakNoveltyConstraint::create(GecodeCSPVariableTranslator& translator, const fs::Formula::cptr conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
+WeakNoveltyConstraint* WeakNoveltyConstraint::create(CSPTranslator& translator, const fs::Formula::cptr conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
 	std::set<VariableIdx> variables;
 	std::set<unsigned> symbols;
 
@@ -35,7 +35,7 @@ WeakNoveltyConstraint* WeakNoveltyConstraint::create(GecodeCSPVariableTranslator
 	return new WeakNoveltyConstraint(translator, variables, std::vector<unsigned>(symbols.cbegin(), symbols.cend()));
 }
 
-WeakNoveltyConstraint::WeakNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols) 
+WeakNoveltyConstraint::WeakNoveltyConstraint(CSPTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols) 
 	: _symbols(symbols)
 {
 	for (VariableIdx variable:variables) {
@@ -86,7 +86,7 @@ bool StrongNoveltyConstraint::applicable(const std::vector<fs::ActionEffect::cpt
 	return true;
 }
 	
-StrongNoveltyConstraint::StrongNoveltyConstraint(GecodeCSPVariableTranslator& translator, const std::vector<fs::ActionEffect::cptr>& effects)  {
+StrongNoveltyConstraint::StrongNoveltyConstraint(CSPTranslator& translator, const std::vector<fs::ActionEffect::cptr>& effects)  {
 	assert(applicable(effects));
 	for (const auto effect:effects) {
 		auto variable = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
@@ -125,7 +125,7 @@ void StrongNoveltyConstraint::post_constraint(SimpleCSP& csp, const RPGIndex& la
 
 bool EffectNoveltyConstraint::applicable(const fs::ActionEffect* effect) { return effect->lhs()->flat(); }
 
-EffectNoveltyConstraint::EffectNoveltyConstraint(GecodeCSPVariableTranslator& translator, const fs::ActionEffect* effect)  {
+EffectNoveltyConstraint::EffectNoveltyConstraint(CSPTranslator& translator, const fs::ActionEffect* effect)  {
 	assert(applicable(effect));
 	auto variable = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
 	assert(variable);
