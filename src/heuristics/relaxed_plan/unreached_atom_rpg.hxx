@@ -3,7 +3,7 @@
 
 #include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
-#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_handler.hxx>
 
 
 namespace fs0 { class Problem; class State; class RPGData; }
@@ -44,7 +44,7 @@ protected:
 	//! The set of action managers, one per every action
 	const std::vector<EffectHandlerPtr> _managers;
 	
-	std::unique_ptr<LiftedFormulaHandler> _goal_handler;
+	std::unique_ptr<FormulaHandler> _goal_handler;
 	
 	//!
 	ExtensionHandler _extension_handler;

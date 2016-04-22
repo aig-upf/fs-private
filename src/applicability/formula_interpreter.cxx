@@ -3,7 +3,7 @@
 #include <languages/fstrips/language.hxx>
 #include <utils/utils.hxx>
 #include <utils/logging.hxx>
-#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_handler.hxx>
 
 namespace fs0 {
 
@@ -37,7 +37,7 @@ CSPFormulaInterpreter::~CSPFormulaInterpreter() {
 
 CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula* formula, const TupleIndex& tuple_index) :
 	// Note that we don't need any of the optimizations, since we will be instantiating the CSP on a state, not a RPG layer
-	_formula_handler(new gecode::LiftedFormulaHandler(formula, tuple_index, false))
+	_formula_handler(new gecode::FormulaHandler(formula, tuple_index, false))
 {}
 
 bool CSPFormulaInterpreter::satisfied(const State& state) const {

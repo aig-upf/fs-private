@@ -1,7 +1,7 @@
 
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
-#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_handler.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <utils/logging.hxx>
@@ -15,7 +15,7 @@
 
 namespace fs0 { namespace gecode {
 	
-LiftedFormulaHandler::LiftedFormulaHandler(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate)
+FormulaHandler::FormulaHandler(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate)
 	:  BaseCSPHandler(tuple_index, approximate),
 	  _formula(formula)
 {
@@ -42,9 +42,9 @@ LiftedFormulaHandler::LiftedFormulaHandler(const fs::Formula* formula, const Tup
 	index_scopes(); // This needs to be _after_ the CSP variable registration
 }
 
-LiftedFormulaHandler::~LiftedFormulaHandler() { delete _formula; }
+FormulaHandler::~FormulaHandler() { delete _formula; }
 
-bool LiftedFormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>& support) const {
+bool FormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>& support) const {
 	SimpleCSP* solution = compute_single_solution(csp);
 	if (!solution) return false;
 	
@@ -55,25 +55,25 @@ bool LiftedFormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>
 	return true;
 }
 
-bool LiftedFormulaHandler::is_satisfiable(SimpleCSP* csp) const {
+bool FormulaHandler::is_satisfiable(SimpleCSP* csp) const {
 	SimpleCSP* solution = compute_single_solution(csp);
 	if (!solution) return false;
 	delete solution;
 	return true;
 }
 
-SimpleCSP* LiftedFormulaHandler::compute_single_solution(SimpleCSP* csp) {
+SimpleCSP* FormulaHandler::compute_single_solution(SimpleCSP* csp) {
 	Gecode::DFS<SimpleCSP> engine(csp);
 	return engine.next();
 }
 
-void LiftedFormulaHandler::index_scopes() {
+void FormulaHandler::index_scopes() {
 	// Register all fluent symbols involved
 	_tuple_indexes = _translator.index_fluents(_all_terms);
 }
 
 // In the case of a single formula, we just retrieve and index all terms and atoms
-void LiftedFormulaHandler::index() {
+void FormulaHandler::index() {
 	const auto conditions =  _formula->all_atoms();
 	const auto terms = _formula->all_terms();
 	
@@ -81,11 +81,11 @@ void LiftedFormulaHandler::index() {
 	index_formula_elements(conditions, terms);
 }
 
-void LiftedFormulaHandler::init_value_selector(const RPGIndex* graph) {
+void FormulaHandler::init_value_selector(const RPGIndex* graph) {
 	_base_csp.init_value_selector(std::make_shared<TupleMinHMaxValueSelector>(&_tuple_index, &_translator, graph));
 }
 
-void LiftedFormulaHandler::index_existential_variable_uses() {
+void FormulaHandler::index_existential_variable_uses() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	// This is part of a very preliminary implementation of a goal support selection mechanism that 

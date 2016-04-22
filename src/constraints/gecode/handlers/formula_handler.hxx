@@ -11,11 +11,11 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 { namespace gecode {
 	
 //! A CSP modeling and solving a logical formula on a certain RPG layer
-class LiftedFormulaHandler : public BaseCSPHandler {
+class FormulaHandler : public BaseCSPHandler {
 public:
 
-	LiftedFormulaHandler(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate);
-	~LiftedFormulaHandler();
+	FormulaHandler(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate);
+	~FormulaHandler();
 
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(SimpleCSP* csp, std::vector<TupleIdx>& support) const;

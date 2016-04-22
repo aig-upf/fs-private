@@ -7,7 +7,7 @@
 #include <relaxed_state.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/base_action_handler.hxx>
-#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_handler.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
@@ -19,7 +19,7 @@ GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, 
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
 	_extension_handler(extension_handler),
-	_goal_handler(std::unique_ptr<LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
+	_goal_handler(std::unique_ptr<FormulaHandler>(new FormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
 	FDEBUG("heuristic", "Standard CRPG heuristic initialized");
 }

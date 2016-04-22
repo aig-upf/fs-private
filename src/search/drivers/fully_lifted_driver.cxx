@@ -4,7 +4,7 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
-#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_handler.hxx>
 
 #include <state.hxx>
 #include <actions/lifted_action_iterator.hxx>

@@ -3,7 +3,7 @@
 
 #include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
-#include <constraints/gecode/handlers/lifted_formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_handler.hxx>
 #include <utils/tuple_index.hxx>
 #include <unordered_set>
 
@@ -52,7 +52,7 @@ protected:
 	//!
 	ExtensionHandler _extension_handler;
 	
-	std::unique_ptr<LiftedFormulaHandler> _goal_handler;
+	std::unique_ptr<FormulaHandler> _goal_handler;
 };
 
 } } // namespaces

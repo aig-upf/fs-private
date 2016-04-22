@@ -9,7 +9,7 @@ namespace fs0 { class Problem; class State; class RPGData; }
 namespace fs0 { namespace gecode {
 
 class BaseActionCSPHandler;
-class LiftedFormulaHandler;
+class FormulaHandler;
 class RPGIndex;
 
 class GecodeCRPG {
@@ -43,7 +43,7 @@ protected:
 	//!
 	ExtensionHandler _extension_handler;
 	
-	std::unique_ptr<LiftedFormulaHandler> _goal_handler;
+	std::unique_ptr<FormulaHandler> _goal_handler;
 };
 
 //! The h_max version

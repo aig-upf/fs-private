@@ -20,7 +20,7 @@ UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* go
 	_problem(problem),
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
-	_goal_handler(std::unique_ptr<LiftedFormulaHandler>(new LiftedFormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false))),
+	_goal_handler(std::unique_ptr<FormulaHandler>(new FormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false))),
 	_extension_handler(extension_handler),
 	_atom_achievers(build_achievers_index(_managers, _tuple_index))
 {
