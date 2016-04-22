@@ -38,12 +38,12 @@ public:
 	ConditionSetFeature() {}
 	~ConditionSetFeature() {}
 
-	void addCondition(fs::AtomicFormula::cptr condition) { _conditions.push_back(condition); }
+	void addCondition(const fs::AtomicFormula* condition) { _conditions.push_back(condition); }
 
 	aptk::ValueIndex  evaluate( const State& s ) const;
 
 protected:
-	std::vector<fs::AtomicFormula::cptr> _conditions;
+	std::vector<const fs::AtomicFormula*> _conditions;
 };
 
 } // namespaces

@@ -29,7 +29,7 @@ std::vector<Term::cptr> Formula::all_terms() const {
 }
 
 std::vector<const AtomicFormula*> Formula::all_atoms() const {
-	return Utils::filter_by_type<AtomicFormula::cptr>(all_formulae());
+	return Utils::filter_by_type<const AtomicFormula*>(all_formulae());
 }
 
 bool Formula::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
@@ -78,7 +78,7 @@ Formula::cptr AtomicFormula::bind(const Binding& binding, const ProblemInfo& inf
 	std::vector<Term::cptr> processed_subterms = NestedTerm::bind_subterms(_subterms, binding, info, constant_values);
 	
 	// Create the corresponding relational or external formula object, according to the symbol
-	AtomicFormula::cptr processed = clone(processed_subterms);
+	const AtomicFormula* processed = clone(processed_subterms);
 	
 	// Check if we can resolve the value of the formula statically
 	if (constant_values.size() == _subterms.size()) {
@@ -91,8 +91,8 @@ Formula::cptr AtomicFormula::bind(const Binding& binding, const ProblemInfo& inf
 }
 
 Formula::cptr Conjunction::bind(const Binding& binding, const fs0::ProblemInfo& info) const {
-	std::vector<AtomicFormula::cptr> conjuncts;
-	for (AtomicFormula::cptr c:_conjuncts) {
+	std::vector<const AtomicFormula*> conjuncts;
+	for (const AtomicFormula* c:_conjuncts) {
 		auto processed = c->bind(binding, info);
 		// Static checks
 		if (processed->is_tautology()) { // No need to add the condition, which is always true
@@ -103,7 +103,7 @@ Formula::cptr Conjunction::bind(const Binding& binding, const fs0::ProblemInfo& 
 			for (auto elem:conjuncts) delete elem;
 			return new Contradiction;
 		}
-		auto processed_atomic = dynamic_cast<AtomicFormula::cptr>(processed);
+		auto processed_atomic = dynamic_cast<const AtomicFormula*>(processed);
 		assert(processed_atomic);
 		conjuncts.push_back(processed_atomic);
 	}

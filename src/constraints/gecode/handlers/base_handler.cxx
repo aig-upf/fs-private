@@ -20,7 +20,7 @@ void BaseCSPHandler::registerTermVariables(const fs::Term::cptr term, CSPTransla
 	component_translator->registerVariables(term, translator);
 }
 
-void BaseCSPHandler::registerFormulaVariables(const fs::AtomicFormula::cptr condition, CSPTranslator& translator) {
+void BaseCSPHandler::registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*condition);
 	assert(component_translator);
 	component_translator->registerVariables(condition, translator);
@@ -33,7 +33,7 @@ void BaseCSPHandler::registerTermConstraints(const fs::Term::cptr term, CSPTrans
 }
 
 
-void BaseCSPHandler::registerFormulaConstraints(const fs::AtomicFormula::cptr formula, CSPTranslator& translator) {
+void BaseCSPHandler::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*formula);
 	assert(component_translator);
 	component_translator->registerConstraints(formula, translator);

@@ -19,7 +19,7 @@ public:
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& state) const { 
 		unsigned unsatisfied = 0;
-		for (fs::AtomicFormula::cptr condition:_goal_conjunction->getConjuncts()) {
+		for (const fs::AtomicFormula* condition:_goal_conjunction->getConjuncts()) {
 			if (!condition->interpret(state)) ++unsatisfied;
 		}
 		return unsatisfied;

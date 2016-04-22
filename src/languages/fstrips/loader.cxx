@@ -7,7 +7,7 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
-AtomicFormula::cptr Loader::parseAtomicFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
+const AtomicFormula* Loader::parseAtomicFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
 	std::string term_type = tree["type"].GetString();
 	
 	if (term_type == "atom") {
@@ -36,7 +36,7 @@ Formula::cptr Loader::parseFormula(const rapidjson::Value& tree, const ProblemIn
 	
 	
 	if (formula_type == "conjunction") {
-		std::vector<AtomicFormula::cptr> list;
+		std::vector<const AtomicFormula*> list;
 		const rapidjson::Value& elements = tree["elements"];
 		for (unsigned i = 0; i < elements.Size(); ++i) {
 			list.push_back(parseAtomicFormula(elements[i], info));

@@ -27,7 +27,7 @@ public:
 	~LogicalComponentRegistry();
 	
 	//!
-	typedef std::function<fs::AtomicFormula::cptr(const std::vector<fs::Term::cptr>&)> FormulaCreator;
+	typedef std::function<const fs::AtomicFormula*(const std::vector<fs::Term::cptr>&)> FormulaCreator;
 	
 	//!
 	typedef std::function<fs::Term::cptr(const std::vector<fs::Term::cptr>&)> TermCreator;
@@ -55,7 +55,7 @@ public:
 	//! Add a Gecode Formula translator for the given type to the registry
 	void add(const std::type_info& type, const gecode::FormulaTranslator::cptr translator);
 	
-	fs::AtomicFormula::cptr instantiate_formula(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
+	const fs::AtomicFormula* instantiate_formula(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
 	
 	fs::Term::cptr instantiate_term(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
 	

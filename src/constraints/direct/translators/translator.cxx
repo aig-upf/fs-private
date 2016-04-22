@@ -87,7 +87,7 @@ DirectConstraint* DirectTranslator::extensionalize(const fs::AtomicFormula& form
 	else return nullptr;
 }
 
-std::vector<DirectConstraint*> DirectTranslator::generate(const std::vector<fs::AtomicFormula::cptr> formulae) {
+std::vector<DirectConstraint*> DirectTranslator::generate(const std::vector<const fs::AtomicFormula*> formulae) {
 	std::vector<DirectConstraint*> generated;
 	for (const auto formula:formulae) {
 		auto translated = generate(*formula);

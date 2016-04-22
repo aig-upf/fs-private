@@ -55,7 +55,7 @@ bool DirectActionManager::is_supported(const GroundAction& action) {
 	// Only conjunctions of atoms are supported by the direct translator
 	if (!precondition) return false; 
 	
-	for (const fs::AtomicFormula::cptr condition:precondition->getConjuncts()) {
+	for (const fs::AtomicFormula* condition:precondition->getConjuncts()) {
 		if (condition->nestedness() > 0) return false;
 		
 		std::size_t arity = fs::ScopeUtils::computeDirectScope(condition).size();

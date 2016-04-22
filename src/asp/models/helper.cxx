@@ -46,7 +46,7 @@ void ModelHelper::add_type_rules(const Problem& problem, std::vector<std::string
 }
 
 std::pair<std::string, bool> ModelHelper::process_atom(const fs::AtomicFormula* atom) {
-	auto eq_atom = dynamic_cast<fs::EQAtomicFormula::cptr>(atom);
+	auto eq_atom = dynamic_cast<fs::EQconst AtomicFormula*>(atom);
 	if (!eq_atom) throw std::runtime_error("ASP heuristic available only for simple atoms");
 	auto lhs = dynamic_cast<fs::StateVariable::cptr>(eq_atom->lhs());
 	auto rhs = dynamic_cast<fs::IntConstant::cptr>(eq_atom->rhs());

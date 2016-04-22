@@ -73,8 +73,6 @@ public:
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
 class AtomicFormula : public Formula {
 public:
-	typedef const AtomicFormula* cptr;
-	
 	AtomicFormula(const std::vector<const Term*>& subterms) : _subterms(subterms) {}
 	
 	virtual ~AtomicFormula();
