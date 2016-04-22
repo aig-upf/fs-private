@@ -31,8 +31,8 @@ std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAct
 	
 	std::vector<DirectConstraint*> constraints;
 	
-	if (!dynamic_cast<fs::Tautology::cptr>(action.getPrecondition())) { // If the precondition is a tautology, we'll have no constraints
-		auto precondition = dynamic_cast<fs::Conjunction::cptr>(action.getPrecondition());
+	if (!dynamic_cast<const fs::Tautology*>(action.getPrecondition())) { // If the precondition is a tautology, we'll have no constraints
+		auto precondition = dynamic_cast<const fs::Conjunction*>(action.getPrecondition());
 		assert(precondition);
 		constraints = DirectTranslator::generate(precondition->getConjuncts());
 	}
@@ -49,8 +49,8 @@ std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAct
 }
 
 bool DirectActionManager::is_supported(const GroundAction& action) {
-	if (dynamic_cast<fs::Tautology::cptr>(action.getPrecondition())) return true;
-	auto precondition = dynamic_cast<fs::Conjunction::cptr>(action.getPrecondition());
+	if (dynamic_cast<const fs::Tautology*>(action.getPrecondition())) return true;
+	auto precondition = dynamic_cast<const fs::Conjunction*>(action.getPrecondition());
 	
 	// Only conjunctions of atoms are supported by the direct translator
 	if (!precondition) return false; 

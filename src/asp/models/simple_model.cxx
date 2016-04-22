@@ -17,7 +17,7 @@ SimpleModel::SimpleModel(const Problem& problem) :
 	BaseModel(problem),
 	 _action_index(ModelHelper::compute_action_index(problem))
 {
-	if (!dynamic_cast<fs::Conjunction::cptr>(problem.getGoalConditions())) {
+	if (!dynamic_cast<const fs::Conjunction*>(problem.getGoalConditions())) {
 		throw std::runtime_error("ASP heuristic available only for goals which are conjunctions of atoms");
 	}
 }
@@ -62,7 +62,7 @@ void SimpleModel::process_ground_action(const GroundAction& action, std::vector<
 	auto precondition = action.getPrecondition();
 	std::string action_name = normalize(fs0::print::action_header(action));
 	
-	if (!dynamic_cast<fs::Conjunction::cptr>(precondition)) { // TODO - Perform this only once
+	if (!dynamic_cast<const fs::Conjunction*>(precondition)) { // TODO - Perform this only once
 		throw std::runtime_error("ASP heuristic available only for goals which are conjunctions of atoms");
 	}
 	

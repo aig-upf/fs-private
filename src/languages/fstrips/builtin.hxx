@@ -72,8 +72,6 @@ public:
 
 class ExternallyDefinedFormula : public AtomicFormula {
 public:
-	typedef const ExternallyDefinedFormula* cptr;
-	
 	ExternallyDefinedFormula(const std::vector<Term::cptr>& subterms) : AtomicFormula(subterms) {}
 	
 	virtual std::string name() const = 0;
@@ -84,8 +82,6 @@ public:
 
 class AlldiffFormula : public ExternallyDefinedFormula {
 public:
-	typedef const AlldiffFormula* cptr;
-	
 	AlldiffFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
 	AlldiffFormula(const AlldiffFormula& formula);
 	
@@ -100,8 +96,6 @@ protected:
 
 class SumFormula : public ExternallyDefinedFormula {
 public:
-	typedef const SumFormula* cptr;
-	
 	SumFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
 	SumFormula(const SumFormula& formula);
 	

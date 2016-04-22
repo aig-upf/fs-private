@@ -8,7 +8,7 @@
 namespace fs0 {
 
 
-ApplicabilityManager::ApplicabilityManager(const fs::Formula::cptr state_constraints)
+ApplicabilityManager::ApplicabilityManager(const fs::Formula* state_constraints)
 	: _state_constraints(state_constraints) {}
 	
 //! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
@@ -34,7 +34,7 @@ Atom::vctr ApplicabilityManager::computeEffects(const State& state, const Ground
 	return atoms;
 }
 
-bool ApplicabilityManager::checkFormulaHolds(const fs::Formula::cptr formula, const State& state) {
+bool ApplicabilityManager::checkFormulaHolds(const fs::Formula* formula, const State& state) {
 	return formula->interpret(state);
 }
 

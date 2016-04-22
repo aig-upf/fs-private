@@ -7,9 +7,9 @@
 
 namespace fs0 {
 
-FormulaInterpreter* FormulaInterpreter::create(const fs::Formula::cptr formula, const TupleIndex& tuple_index) {
+FormulaInterpreter* FormulaInterpreter::create(const fs::Formula* formula, const TupleIndex& tuple_index) {
 	// If there is some quantified variable in the formula, we will use a CSP-based interpreter
-	auto existential_formulae = Utils::filter_by_type<fs::ExistentiallyQuantifiedFormula::cptr>(formula->all_formulae());
+	auto existential_formulae = Utils::filter_by_type<const fs::ExistentiallyQuantifiedFormula*>(formula->all_formulae());
 	if (!existential_formulae.empty()) {
 		FINFO("main", "Created a CSP sat. manager for formula: " << *formula);
 		// TODO - Note that we are cloning the formula here because otherwise the destructor of the interpreter will attempt to
@@ -22,7 +22,7 @@ FormulaInterpreter* FormulaInterpreter::create(const fs::Formula::cptr formula, 
 }
 
 
-DirectFormulaInterpreter::DirectFormulaInterpreter(const fs::Formula::cptr formula) :
+DirectFormulaInterpreter::DirectFormulaInterpreter(const fs::Formula* formula) :
 	_formula(formula)
 {}
 
@@ -35,7 +35,7 @@ CSPFormulaInterpreter::~CSPFormulaInterpreter() {
 	delete _formula_handler;
 }
 
-CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula::cptr formula, const TupleIndex& tuple_index) :
+CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula* formula, const TupleIndex& tuple_index) :
 	// Note that we don't need any of the optimizations, since we will be instantiating the CSP on a state, not a RPG layer
 	_formula_handler(new gecode::LiftedFormulaHandler(formula, tuple_index, false))
 {}

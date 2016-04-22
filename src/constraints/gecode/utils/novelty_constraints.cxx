@@ -10,7 +10,7 @@
 
 namespace fs0 { namespace gecode {
 	
-NoveltyConstraint* NoveltyConstraint::createFromEffects(CSPTranslator& translator, const fs::Formula::cptr precondition, const std::vector<fs::ActionEffect::cptr>& effects) {
+NoveltyConstraint* NoveltyConstraint::createFromEffects(CSPTranslator& translator, const fs::Formula* precondition, const std::vector<fs::ActionEffect::cptr>& effects) {
 	if (StrongNoveltyConstraint::applicable(effects)) {
 		return new StrongNoveltyConstraint(translator, effects);
 	} else {
@@ -22,7 +22,7 @@ NoveltyConstraint* NoveltyConstraint::createFromEffects(CSPTranslator& translato
 
 // TODO - Weak Novelty constraints ATM disabled, as it is not sure it pays off to compute and keep the whole domain deltas for such a weak constraint.
 /*
-WeakNoveltyConstraint* WeakNoveltyConstraint::create(CSPTranslator& translator, const fs::Formula::cptr conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
+WeakNoveltyConstraint* WeakNoveltyConstraint::create(CSPTranslator& translator, const fs::Formula* conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
 	std::set<VariableIdx> variables;
 	std::set<unsigned> symbols;
 

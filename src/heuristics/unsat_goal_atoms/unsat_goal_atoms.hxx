@@ -29,10 +29,10 @@ protected:
 	//! The actual planning problem
 	const Problem& _problem;
 	
-	fs::Conjunction::cptr _goal_conjunction;
+	const fs::Conjunction* _goal_conjunction;
 	
-	fs::Conjunction::cptr extract_goal_conjunction_or_fail(const Problem& problem) {
-		auto goal_conjunction = dynamic_cast<fs::Conjunction::cptr>(problem.getGoalConditions());
+	const fs::Conjunction* extract_goal_conjunction_or_fail(const Problem& problem) {
+		auto goal_conjunction = dynamic_cast<const fs::Conjunction*>(problem.getGoalConditions());
 		if (goal_conjunction) throw std::runtime_error("UnsatisfiedGoalAtomsHeuristic valid only if the goal is a conjunction of atoms");
 		return goal_conjunction;
 	}

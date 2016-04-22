@@ -22,8 +22,6 @@ class Contradiction;
 //! The base interface for a logic formula
 class Formula {
 public:
-	typedef const Formula* cptr;
-	
 	Formula() {}
 	virtual ~Formula() {}
 	
@@ -32,7 +30,7 @@ public:
 	
 	//! Processes a formula possibly containing bound variables and non-consolidated state variables,
 	//! consolidating all possible state variables and performing the bindings according to the given variable binding
-	virtual Formula::cptr bind(const Binding& binding, const ProblemInfo& info) const = 0;
+	virtual const Formula* bind(const Binding& binding, const ProblemInfo& info) const = 0;
 	
 	//! Return the boolean interpretation of the current formula under the given assignment and binding.
 	virtual bool interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
@@ -81,7 +79,7 @@ public:
 	virtual AtomicFormula* clone(const std::vector<const Term*>& subterms) const = 0;
 	AtomicFormula* clone() const;
 	
-	Formula::cptr bind(const fs0::Binding& binding, const fs0::ProblemInfo& info) const;
+	const Formula* bind(const fs0::Binding& binding, const fs0::ProblemInfo& info) const;
 
 	const std::vector<const Term*>& getSubterms() const { return _subterms; }
 	
@@ -115,14 +113,12 @@ protected:
 //! The True truth value
 class Tautology : public Formula {
 public:
-	typedef const Tautology* cptr;
-	
 	Tautology* bind(const Binding& binding, const ProblemInfo& info) const { return new Tautology; }
 	Tautology* clone() const { return new Tautology; }
 	
 	unsigned nestedness() const { return 0; }
 	
-	std::vector<const Formula*> all_formulae() const { return std::vector<Formula::cptr>(1, this); }
+	std::vector<const Formula*> all_formulae() const { return std::vector<const Formula*>(1, this); }
 	
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const { return true; }
 	bool interpret(const State& state, const Binding& binding) const { return true; }
@@ -141,15 +137,12 @@ public:
 //! The False truth value
 class Contradiction : public Formula {
 public:
-	typedef const Contradiction* cptr;
-	
-	
 	Contradiction* bind(const Binding& binding, const ProblemInfo& info) const { return new Contradiction; }
 	Contradiction* clone() const { return new Contradiction; }
 	
 	unsigned nestedness() const { return 0; }
 	
-	std::vector<const Formula*> all_formulae() const { return std::vector<Formula::cptr>(1, this); }
+	std::vector<const Formula*> all_formulae() const { return std::vector<const Formula*>(1, this); }
 	
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const { return false; }
 	bool interpret(const State& state, const Binding& binding) const { return false; }
@@ -170,8 +163,6 @@ class Conjunction : public Formula {
 public:
 	friend class LogicalOperations;
 	
-	typedef const Conjunction* cptr;
-	
 	Conjunction(const std::vector<const AtomicFormula*>& conjuncts) : _conjuncts(conjuncts) {}
 	
 	Conjunction(const Conjunction& conjunction) {
@@ -186,7 +177,7 @@ public:
 	
 	Conjunction* clone() const { return new Conjunction(*this); }
 	
-	Formula::cptr bind(const Binding& binding, const fs0::ProblemInfo& info) const;
+	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const;
 	
 	const std::vector<const AtomicFormula*>& getConjuncts() const { return _conjuncts; }
 	
@@ -216,9 +207,7 @@ class ExistentiallyQuantifiedFormula : public Formula {
 public:
 	friend class LogicalOperations;
 	
-	typedef const ExistentiallyQuantifiedFormula* cptr;
-	
-	ExistentiallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, Conjunction::cptr subformula) : _variables(variables), _subformula(subformula) {}
+	ExistentiallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : _variables(variables), _subformula(subformula) {}
 	
 	virtual ~ExistentiallyQuantifiedFormula() {
 		delete _subformula;
@@ -228,9 +217,9 @@ public:
 	
 	ExistentiallyQuantifiedFormula* clone() const { return new ExistentiallyQuantifiedFormula(*this); }
 	
-	Formula::cptr bind(const Binding& binding, const fs0::ProblemInfo& info) const;
+	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const;
 	
-	const Conjunction::cptr getSubformula() const { return _subformula; }
+	const Conjunction* getSubformula() const { return _subformula; }
 	
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const;
 	bool interpret(const State& state, const Binding& binding) const;
@@ -252,7 +241,7 @@ protected:
 	std::vector<const BoundVariable*> _variables;
 	
 	//! ATM we only allow quantification of conjunctions
-	Conjunction::cptr _subformula;
+	const Conjunction* _subformula;
 	
 	//! A naive recursive implementation of the interpretation routine
 	template <typename T>
@@ -263,8 +252,6 @@ protected:
 //! A formula such as 'clear(b)', where clear is one of the problem's fluents.
 class FluentAtom : public AtomicFormula {
 public:
-	typedef const FluentAtom* cptr;
-	
 	FluentAtom(unsigned symbol_id, const std::vector<const Term*>& subterms) : AtomicFormula(subterms), _symbol_id(symbol_id)
 	{}
 

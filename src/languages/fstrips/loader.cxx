@@ -30,7 +30,7 @@ const AtomicFormula* Loader::parseAtomicFormula(const rapidjson::Value& tree, co
 	else throw std::runtime_error("Unknown node type " + term_type);
 }
 
-Formula::cptr Loader::parseFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
+const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
 	// As of now we only accept either conjunctions of atoms or existentially quantified conjunctions
 	std::string formula_type = tree["type"].GetString();
 	
@@ -46,7 +46,7 @@ Formula::cptr Loader::parseFormula(const rapidjson::Value& tree, const ProblemIn
 		
 	} else if (formula_type == "existential") {
 		auto subformula = parseFormula(tree["subformula"], info);
-		auto subformula_conjunction = dynamic_cast<Conjunction::cptr>(subformula);
+		auto subformula_conjunction = dynamic_cast<const Conjunction*>(subformula);
 		if (!subformula_conjunction) {
 			throw std::runtime_error("Only existentially quantified conjunctions are supported so far");
 		}

@@ -84,7 +84,7 @@ const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned 
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	
-	const fs::Formula::cptr precondition = fs::Loader::parseFormula(node["conditions"], info);
+	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
 	const std::vector<fs::ActionEffect::cptr> effects = fs::Loader::parseEffectList(node["effects"], info);
 	
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
@@ -92,8 +92,8 @@ const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned 
 	return ActionGrounder::process_action_data(ActionData(id, name, signature, parameters, precondition, effects), info);
 }
 
-fs::Formula::cptr Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
-	const fs::Formula::cptr unprocessed = fs::Loader::parseFormula(data["conditions"], info);
+const fs::Formula* Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
+	const fs::Formula* unprocessed = fs::Loader::parseFormula(data["conditions"], info);
 	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
 	// to detect tautologies, contradictions, etc., and to consolidate state variables
 	auto processed = unprocessed->bind(Binding(), info);

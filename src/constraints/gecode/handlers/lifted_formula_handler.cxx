@@ -15,7 +15,7 @@
 
 namespace fs0 { namespace gecode {
 	
-LiftedFormulaHandler::LiftedFormulaHandler(const fs::Formula::cptr formula, const TupleIndex& tuple_index, bool approximate)
+LiftedFormulaHandler::LiftedFormulaHandler(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate)
 	:  BaseCSPHandler(tuple_index, approximate),
 	  _formula(formula)
 {

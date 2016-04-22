@@ -72,7 +72,7 @@ std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo&
 	return os;
 }
 
-Formula::cptr AtomicFormula::bind(const Binding& binding, const ProblemInfo& info) const {
+const Formula* AtomicFormula::bind(const Binding& binding, const ProblemInfo& info) const {
 	// Process the subterms first
 	std::vector<ObjectIdx> constant_values;
 	std::vector<Term::cptr> processed_subterms = NestedTerm::bind_subterms(_subterms, binding, info, constant_values);
@@ -82,7 +82,7 @@ Formula::cptr AtomicFormula::bind(const Binding& binding, const ProblemInfo& inf
 	
 	// Check if we can resolve the value of the formula statically
 	if (constant_values.size() == _subterms.size()) {
-		auto resolved = processed->interpret({}) ? static_cast<Formula::cptr>(new Tautology) : static_cast<Formula::cptr>(new Contradiction);
+		auto resolved = processed->interpret({}) ? static_cast<const Formula*>(new Tautology) : static_cast<const Formula*>(new Contradiction);
 		delete processed;
 		return resolved;
 	}
@@ -90,7 +90,7 @@ Formula::cptr AtomicFormula::bind(const Binding& binding, const ProblemInfo& inf
 	return processed;
 }
 
-Formula::cptr Conjunction::bind(const Binding& binding, const fs0::ProblemInfo& info) const {
+const Formula* Conjunction::bind(const Binding& binding, const fs0::ProblemInfo& info) const {
 	std::vector<const AtomicFormula*> conjuncts;
 	for (const AtomicFormula* c:_conjuncts) {
 		auto processed = c->bind(binding, info);
@@ -142,8 +142,8 @@ std::ostream& Conjunction::print(std::ostream& os, const fs0::ProblemInfo& info)
 	return os;
 }
 
-std::vector<Formula::cptr> Conjunction::all_formulae() const {
-	std::vector<Formula::cptr> res(1, this);
+std::vector<const Formula*> Conjunction::all_formulae() const {
+	std::vector<const Formula*> res(1, this);
 	for (auto elem:_conjuncts) {
 		auto tmp = elem->all_formulae();
 		res.insert(res.end(), tmp.cbegin(), tmp.cend());
@@ -155,14 +155,14 @@ ExistentiallyQuantifiedFormula::ExistentiallyQuantifiedFormula(const Existential
 _variables(Utils::clone(other._variables)), _subformula(other._subformula->clone())
 {}
 
-std::vector<Formula::cptr> ExistentiallyQuantifiedFormula::all_formulae() const {
-	std::vector<Formula::cptr> res(1, this);
+std::vector<const Formula*> ExistentiallyQuantifiedFormula::all_formulae() const {
+	std::vector<const Formula*> res(1, this);
 	auto tmp = _subformula->all_formulae();
 	res.insert(res.end(), tmp.cbegin(), tmp.cend());
 	return res;
 }
 
-Formula::cptr ExistentiallyQuantifiedFormula::bind(const Binding& binding, const ProblemInfo& info) const {
+const Formula* ExistentiallyQuantifiedFormula::bind(const Binding& binding, const ProblemInfo& info) const {
 	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
 	for (const BoundVariable* var:_variables) {
 		if (binding.binds(var->getVariableId())) throw std::runtime_error("Wrong binding - Duplicated variable");
@@ -170,9 +170,9 @@ Formula::cptr ExistentiallyQuantifiedFormula::bind(const Binding& binding, const
 	// TODO Check if the binding is a complete binding and thus we can directly return the (variable-free) conjunction 
 	// TODO Redesign this mess
 	auto bound_subformula = _subformula->bind(binding, info);
-	if (dynamic_cast<Tautology::cptr>(bound_subformula) || dynamic_cast<Contradiction::cptr>(bound_subformula)) return bound_subformula;
+	if (dynamic_cast<const Tautology*>(bound_subformula) || dynamic_cast<const Contradiction*>(bound_subformula)) return bound_subformula;
 	
-	auto bound_conjunction = dynamic_cast<Conjunction::cptr>(bound_subformula);
+	auto bound_conjunction = dynamic_cast<const Conjunction*>(bound_subformula);
 	assert(bound_conjunction);
 	
 	return new ExistentiallyQuantifiedFormula(_variables, bound_conjunction);
@@ -231,12 +231,12 @@ Formula* ExistentiallyQuantifiedFormula::conjunction(const Formula* 							other
 Formula* ExistentiallyQuantifiedFormula::conjunction(const AtomicFormula* 						other) const { throw std::runtime_error("Unimplemented"); }
 Formula* ExistentiallyQuantifiedFormula::conjunction(const ExistentiallyQuantifiedFormula*		other) const { throw std::runtime_error("Unimplemented"); }	
 
-Conjunction* Conjunction::conjunction(const Conjunction::cptr other) const {
+Conjunction* Conjunction::conjunction(const Conjunction* other) const {
 	auto all_subterms = Utils::merge(Utils::clone(_conjuncts), Utils::clone(other->_conjuncts));
 	return new Conjunction(all_subterms);
 }
 
-Formula* ExistentiallyQuantifiedFormula::conjunction(const Conjunction::cptr other) const {
+Formula* ExistentiallyQuantifiedFormula::conjunction(const Conjunction* other) const {
 	// We simply return the existentially quantified formula that results from conjuncting the LHS subconjunction with the RHS conjunction, with the same quantified variables.
 	return new ExistentiallyQuantifiedFormula(_variables, other->conjunction(_subformula));
 }

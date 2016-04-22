@@ -19,7 +19,7 @@ void DirectTranslator::checkSupported(const fs::Term::cptr lhs, const fs::Term::
 
 
 DirectConstraint* DirectTranslator::generate(const fs::AtomicFormula& formula) {
-	if (auto relational = dynamic_cast<fs::RelationalFormula::cptr>(&formula)) return generate(*relational);
+	if (auto relational = dynamic_cast<const fs::RelationalFormula*>(&formula)) return generate(*relational);
 	
 	// Else, it must be a built-in, or external condition
 	auto instance = LogicalComponentRegistry::instance().instantiate_direct_constraint(formula);

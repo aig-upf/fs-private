@@ -90,11 +90,11 @@ Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectH
 }
 
 template <typename GecodeHeuristic, typename DirectHeuristic>
-Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::decide_builder_type(const fs::Formula::cptr goal_formula, const fs::Formula::cptr state_constraints) {
+Config::CSPManagerType GBFSConstrainedHeuristicsCreator<GecodeHeuristic, DirectHeuristic>::decide_builder_type(const fs::Formula* goal_formula, const fs::Formula* state_constraints) {
 	// ATM we simply check whether there are nested fluents within the formulae
-	auto goal_conjunction = dynamic_cast<fs::Conjunction::cptr>(goal_formula);
+	auto goal_conjunction = dynamic_cast<const fs::Conjunction*>(goal_formula);
 	// If we have something other than a conjunction, then the gecode manager is required.
-	if (!goal_conjunction || (!state_constraints->is_tautology() && !dynamic_cast<fs::Conjunction::cptr>(state_constraints))) return Config::CSPManagerType::Gecode;
+	if (!goal_conjunction || (!state_constraints->is_tautology() && !dynamic_cast<const fs::Conjunction*>(state_constraints))) return Config::CSPManagerType::Gecode;
 	if (goal_formula->nestedness() > 0 || state_constraints->nestedness() > 0) return Config::CSPManagerType::Gecode;
 	return Config::CSPManagerType::Direct;
 }

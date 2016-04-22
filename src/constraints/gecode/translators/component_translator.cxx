@@ -138,7 +138,7 @@ void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula* f
 }
 
 void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
-	auto alldiff = dynamic_cast<fs::AlldiffFormula::cptr>(formula);
+	auto alldiff = dynamic_cast<const fs::AlldiffFormula*>(formula);
 	assert(alldiff);
 
 	SimpleCSP& csp = translator.getBaseCSP();
@@ -148,7 +148,7 @@ void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula* formu
 }
 
 void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
-	auto sum = dynamic_cast<fs::SumFormula::cptr>(formula);
+	auto sum = dynamic_cast<const fs::SumFormula*>(formula);
 	assert(sum);
 
 	SimpleCSP& csp = translator.getBaseCSP();
