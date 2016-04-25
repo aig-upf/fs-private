@@ -1,6 +1,6 @@
 
 #include <search/algorithms/iterated_width.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 
 
 namespace fs0 { namespace drivers {

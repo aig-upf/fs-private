@@ -6,7 +6,7 @@
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <utils/support.hxx>
 

@@ -51,9 +51,6 @@ protected:
 	
 	std::string _filename;
 	
-	//! The tag that identifies the search engine we want to use
-	std::string _engine_tag;
-	
 	RPGExtractionType _rpg_extraction;
 	
 	CSPManagerType _csp_manager;
@@ -79,8 +76,6 @@ protected:
 public:
 	Config(const Config& other) = delete;
 	~Config();
-	
-	const std::string& getEngineTag() const { return _engine_tag; }
 	
 	RPGExtractionType getRPGExtractionType() const { return _rpg_extraction; }
 	

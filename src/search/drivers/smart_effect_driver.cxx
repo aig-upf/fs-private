@@ -5,7 +5,7 @@
 #include <state.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <utils/support.hxx>
@@ -14,7 +14,8 @@ using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FS0SearchAlgorithm> SmartEffectDriver::create(const Config& config, const GroundStateModel& model) const {
+std::unique_ptr<FS0SearchAlgorithm>
+SmartEffectDriver::create(const Config& config, const GroundStateModel& model) const {
 	FINFO("main", "Using the lifted-effect base RPG constructor");
 	const Problem& problem = model.getTask();
 	bool novelty = Config::instance().useNoveltyConstraint() && !problem.is_predicative();

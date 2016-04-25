@@ -2,7 +2,7 @@
 #include <search/drivers/gbfs_novelty.hxx>
 #include <aptk2/search/algorithms/breadth_first_search.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 
 namespace fs0 { namespace drivers {
 	

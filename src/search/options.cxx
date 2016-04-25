@@ -18,6 +18,7 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 		("help,h", "Display this help message")
 		("timeout,t", po::value<int>()->default_value(10),                     "The timeout, in seconds.")
 		("data", po::value<std::string>()->default_value("data"),              "The directory where the input data is stored.")
+		("driver,d", po::value<std::string>()->required(),                     "The desired driver.")
 		("config", po::value<std::string>()->default_value("./config.json"),   "The planner configuration file.")
 		("out", po::value<std::string>()->default_value("."),                  "The directory where the results data is to be output.");
 
@@ -47,6 +48,7 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 	_data_dir = vm["data"].as<std::string>();
 	_config = vm["config"].as<std::string>();
 	_output_dir = vm["out"].as<std::string>();
+	_driver = vm["driver"].as<std::string>();
 }
 
 } } // namespaces

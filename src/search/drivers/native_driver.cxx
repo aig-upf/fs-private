@@ -4,7 +4,7 @@
 #include <problem_info.hxx>
 #include <state.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/direct/action_manager.hxx>

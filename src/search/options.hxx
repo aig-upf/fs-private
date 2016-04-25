@@ -19,6 +19,8 @@ public:
 	
 	const std::string& getConfig() const { return _config; }
 	
+	const std::string& getDriver() const { return _driver; }
+	
 protected:
 	unsigned _timeout;
 	
@@ -27,6 +29,8 @@ protected:
 	std::string _config;
 	
 	std::string _output_dir;
+	
+	std::string _driver;
 };
 
 } } // namespaces

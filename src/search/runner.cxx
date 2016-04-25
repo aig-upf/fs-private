@@ -20,10 +20,9 @@ int Runner::run() {
 	Logger::init(_options.getOutputDir() + "/logs");
 	Config::init(_options.getConfig());
 
-	FINFO("main", "Generating the problem (" << _options.getDataDir() << ")... ");
-	auto data = Loader::loadJSONObject(_options.getDataDir() + "/problem.json");
-	
+	std::cout << "Loading problem data" << std::endl;
 	//! This will generate the problem and set it as the global singleton instance
+	auto data = Loader::loadJSONObject(_options.getDataDir() + "/problem.json");
 	Problem* problem = _generator(data, _options.getDataDir());
 	const Config& config = Config::instance();
 	
@@ -31,7 +30,7 @@ int Runner::run() {
 	SearchUtils::report_stats(*problem);
 	
 	FINFO("main", "Planner configuration: " << std::endl << config);
-	SearchUtils::instantiate_seach_engine_and_run(*problem, config, _options.getOutputDir(), _start_time);
+	SearchUtils::instantiate_seach_engine_and_run(*problem, config, _options.getDriver(), _options.getOutputDir(), _start_time);
 	return 0;
 }
 

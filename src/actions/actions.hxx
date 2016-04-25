@@ -10,7 +10,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-class ApplicableActionSet;
+class GroundActionIterator;
 class ProblemInfo;
 
 //! All the data that fully characterizes a lifted action
@@ -114,7 +114,7 @@ protected:
 public:
 	//! Trait required by aptk::DetStateModel
 	typedef ActionIdx IdType;
-	typedef ApplicableActionSet ApplicableSet;
+	typedef GroundActionIterator ApplicableSet;
 
 	static const ActionIdx invalid_action_id;
 	

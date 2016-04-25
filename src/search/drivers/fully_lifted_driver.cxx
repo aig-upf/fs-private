@@ -16,6 +16,8 @@ using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> FullyLiftedDriver::create(const Config& config, LiftedStateModel& model) const {
+	FINFO("main", "Using the Fully-lifted driver");
+
 	const Problem& problem = model.getTask();
 	
 	bool novelty = Config::instance().useNoveltyConstraint() && !problem.is_predicative();

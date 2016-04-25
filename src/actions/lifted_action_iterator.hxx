@@ -6,10 +6,12 @@
 #include <gecode/driver.hh>
 
 namespace fs0 {
-	
 class State;
 class LiftedActionID;
 }
+
+namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
@@ -25,8 +27,10 @@ protected:
 	
 	const State& _state;
 	
+	const fs::Formula* _state_constraints;
+	
 public:
-	LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers);
+	LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers, const fs::Formula* state_constraints);
 	
 	class Iterator {
 		friend class LiftedActionIterator;
@@ -37,7 +41,7 @@ public:
 		~Iterator();
 		
 	protected:
-		Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers, unsigned currentIdx);
+		Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers, const fs::Formula* state_constraints, unsigned currentIdx);
 
 		const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& _handlers;
 		
@@ -49,9 +53,15 @@ public:
 		
 		SimpleCSP* _csp;
 		
-		LiftedActionID* _element;
+		LiftedActionID* _action;
+		
+		//! The state constraints
+		const fs::Formula* _state_constraints;
 		
 		void advance();
+		
+		//! Returns true iff a new solution has actually been found
+		bool next_solution();
 
 	public:
 		const Iterator& operator++() {
@@ -60,15 +70,15 @@ public:
 		}
 		const Iterator operator++(int) {Iterator tmp(*this); operator++(); return tmp;}
 
-		const LiftedActionID& operator*() const { return *_element; }
+		const LiftedActionID& operator*() const { return *_action; }
 		
 		//! This is not really true... but will work for the purpose of comparing with the end iterator.
 		bool operator==(const Iterator &other) const { return _current_handler_idx == other._current_handler_idx; }
 		bool operator!=(const Iterator &other) const { return !(this->operator==(other)); }
 	};
 	
-	Iterator begin() const { return Iterator(_state, _handlers, 0); }
-	Iterator end() const { return Iterator(_state,_handlers, _handlers.size()); }
+	Iterator begin() const { return Iterator(_state, _handlers, _state_constraints, 0); }
+	Iterator end() const { return Iterator(_state,_handlers, _state_constraints, _handlers.size()); }
 };
 
 

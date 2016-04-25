@@ -14,7 +14,7 @@ public:
 	static void do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time);
 
 	//! Instantiate 
-	static void instantiate_seach_engine_and_run(Problem& problem, const Config& config, const std::string& out_dir, float start_time);
+	static void instantiate_seach_engine_and_run(Problem& problem, const Config& config, const std::string& driver, const std::string& out_dir, float start_time);
 	
 	//! Print out some information about the characteristics of the problem
 	static void report_stats(const Problem& problem);

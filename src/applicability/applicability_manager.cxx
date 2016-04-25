@@ -26,9 +26,9 @@ bool ApplicabilityManager::isApplicable(const State& state, const GroundAction& 
 }
 
 //! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
-Atom::vctr ApplicabilityManager::computeEffects(const State& state, const GroundAction& action) const {
+std::vector<Atom> ApplicabilityManager::computeEffects(const State& state, const GroundAction& action) {
 	Atom::vctr atoms;
-	for (const fs::ActionEffect::cptr effect:action.getEffects()) {
+	for (const fs::ActionEffect* effect:action.getEffects()) {
 		atoms.push_back(effect->apply(state));
 	}
 	return atoms;
