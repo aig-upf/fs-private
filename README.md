@@ -39,7 +39,6 @@ Once you have installed these projects locally, your system needs to be configur
 export LAPKT_PATH="${HOME}/projects/code/lapkt"
 export FD_AIG_PATH="${HOME}/projects/code/downward/downward-aig"
 export FS0_PATH="${HOME}/projects/code/fs0"
-export CLINGO_PATH="${HOME}/lib/clingo-4.5.4-source"
 
 # Local C++ library installations
 export LD_LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
