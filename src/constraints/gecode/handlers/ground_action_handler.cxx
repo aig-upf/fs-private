@@ -45,7 +45,7 @@ const std::vector<const fs::ActionEffect*>& GroundActionCSPHandler::get_effects(
 
 
 const ActionID* GroundActionCSPHandler::get_action_id(const SimpleCSP* solution) const {
-	return new PlainActionID(static_cast<const GroundAction*>(&_action)); // TODO Ugly
+	return new PlainActionID(&_action);
 }
 
 void GroundActionCSPHandler::log() const {
