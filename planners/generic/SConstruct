@@ -24,9 +24,7 @@ def which(program):
 gcc = 'clang' if which('clang') and ARGUMENTS.get('gcc', 'clang') != 'g++' else 'g++'
 env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 
-clingo_path = os.getenv('CLINGO_PATH', '')
-if not clingo_path:
-	raise RuntimeError("You need to specify the path where Clingo is installed in the environment variable CLINGO_PATH")
+lapkt2_dir = env['lapkt'] + '/aptk2'
 
 env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ] )  # Flags common to all options
 env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
@@ -34,33 +32,41 @@ env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compat
 if env['edebug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DFS0_DEBUG' ] )
 	fs0_libname = 'fs0-edebug'
+	lapkt_libname = 'lapkt2-edebug'
 	exe_name = 'solver.edebug.bin'
 elif env['debug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
 	fs0_libname = 'fs0-debug'
+	lapkt_libname = 'lapkt2-debug'
 	exe_name = 'solver.debug.bin'
 else:
 	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
 	fs0_libname = 'fs0'
+	lapkt_libname = 'lapkt2'
 	exe_name = 'solver.bin'
 
 # Header and library directories.
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
-include_paths = ['.', env['fs0'] + '/src', env['lapkt'], env['lapkt'] + '/interfaces/agnostic', HOME + '/local/include']
-lib_paths = [env['fs0'] + '/lib', HOME + '/local/lib']
+include_paths = ['.', env['fs0'] + '/src', HOME + '/local/include']
+lib_paths = [env['fs0'] + '/lib', lapkt2_dir + '/lib', HOME + '/local/lib']
     
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
 
 src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both the main.cxx and the generated code for the particular instance
 
-#clingo_build = 'debug' if env['debug'] or env['edebug'] else 'release'
-clingo_build = 'release'
-lib_paths += [clingo_path + '/build/' + clingo_build]
-
 # Note: order matters. If A depends on B, A should go _before_ B.
-env.Append(LIBS=[fs0_libname, 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
-#env.Append(LIBS=[fs0_libname, 'clingo', 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
+env.Append(LIBS=[fs0_libname, lapkt_libname, 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
+
+# Add necessary Gecode libraries
+gecode_libs = [
+	#'gecodeflatzinc', 'gecodedriver', 'gecodeminimodel', 'gecodeset', 'gecodefloat',
+	'gecodesearch',
+	'gecodeint',
+	'gecodekernel',
+	'gecodesupport'
+]
+env.Append( LIBS = gecode_libs + ['pthread'])
+
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
-Export('env')
-SConscript( os.path.join(env['fs0'], 'gecode_dependencies') )
+
 env.Program(exe_name, src_objs )

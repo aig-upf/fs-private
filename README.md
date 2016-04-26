@@ -32,11 +32,13 @@ In order to install and run the `FS` planner, you need the following software co
 <!-- 1. The Clingo ASP Solver, from [Potassco](http://potassco.sourceforge.net/), the Potsdam Answer Set Solving Collection. Clingo seems to require at least `gcc` > 4.8; in order to build the C++ library you need to run `scons libclingo`. -->
 
 
-Once you have installed these projects locally, your system needs to be configured with the following environment variables, e.g. by setting them up in your  `~/.bashrc` configuration file:
+Once you have installed these projects locally, your system needs to be configured with the following environment variables,
+e.g. by setting them up in your  `~/.bashrc` configuration file:
 
 
 ```shell
 export LAPKT_PATH="${HOME}/projects/code/lapkt"
+export LAPKT2_PATH="${LAPKT_PATH}/aptk2"
 export FD_AIG_PATH="${HOME}/projects/code/downward/downward-aig"
 export FS0_PATH="${HOME}/projects/code/fs0"
 
@@ -45,6 +47,10 @@ export LD_LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
 if [[ -d ${HOME}/local/lib ]]; then
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/local/lib
 fi
+
+# LAPKT and FS libraries
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${FS0_PATH}/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${LAPKT2_PATH}/lib
 
 # AIG Fast Downward PDDL Parser
 if [[ -d ${FD_AIG_PATH}/src/translate ]]; then

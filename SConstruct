@@ -56,16 +56,9 @@ else:
 
 # Additionally, extreme debug implies a different name plus extra compilation flags
 if env['edebug']:
-	env.Append(CCFLAGS = ['-DFS0_DEBUG'])
+	env.Append(CCFLAGS = ['-DEDEBUG'])
 	lib_name = 'fs0-edebug'
 
-
-# Source dependencies from LAPKT search interfaces
-Export('env')
-aptk_search_interface_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/search/interfaces/SConscript' ) )
-aptk_heuristics_objs = SConscript(  os.path.join( env['lapkt'], 'aptk2/heuristics/interfaces/SConscript' ) )
-aptk_heuristics_objs += SConscript( os.path.join( env['lapkt'], 'aptk2/heuristics/novelty/SConscript' ) )
-# aptk_tools_objs = SConscript( os.path.join( env['lapkt'], 'aptk2/tools/SConscript' ) )
 
 # Base include directories
 include_paths = ['src', env['lapkt']]
@@ -93,13 +86,9 @@ env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ]
 
 # Determine all the build files
 build_files = [build_dirname + '/' + src for src in sources]
-build_files += aptk_search_interface_objs
-#build_files += aptk_tools_objs
-build_files += aptk_heuristics_objs
 
 shared_lib = env.SharedLibrary('lib/' + lib_name, build_files)
-static_lib = env.Library('lib/' + lib_name, build_files)
+#static_lib = env.Library('lib/' + lib_name, build_files)
 
-#Default([static_lib, shared_lib])
-#Default([static_lib])
 Default([shared_lib])
+#Default([static_lib, shared_lib])

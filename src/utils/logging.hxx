@@ -73,7 +73,7 @@ public:
 // ************************
 // EXTREME DEBUG MACRO
 // ************************
-#ifdef FS0_DEBUG
+#ifdef EDEBUG
 #define FFDEBUG(file, message) fs0::Logger::instance().log("EDEBUG", file) << message << std::endl;
 #else
 #define FFDEBUG(file, message)
