@@ -27,6 +27,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	bool approximate = Config::instance().useApproximateActionResolution();
 	
 	auto csp_type = decide_csp_type(problem);
+	_unused(csp_type);
 	assert(csp_type == Config::CSPManagerType::Gecode);
 	
 	FINFO("main", "Chosen CSP Manager: Gecode");
