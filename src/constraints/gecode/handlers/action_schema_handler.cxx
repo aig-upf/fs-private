@@ -22,7 +22,7 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 	for (auto schema:schemata) {
 		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, tuple_index, approximate);
 		handler->init(novelty);
-		LPT_DEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *handler << std::endl);
+		LPT_DEBUG("main", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
 	}
 	return handlers;

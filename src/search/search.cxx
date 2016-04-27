@@ -74,10 +74,8 @@ void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, 
 	std::cout << "Actual Search Time: " << search_time << " s." << std::endl;
 }
 
-void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Config& config, const std::string& driver_tag, const std::string& out_dir, float start_time) {
 	std::cout << "Starting search..." << std::endl;
-	
-	const std::string& driver_tag = config.getEngineTag();
 	
 	// The engine and search model for lifted planning are different!
 	// TODO - REFACTOR THIS
@@ -96,7 +94,6 @@ void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Confi
 		
 	} else {
 		// Standard, grounded planning
-		
 		auto driver = fs0::drivers::EngineRegistry::instance().get(driver_tag);
 		GroundStateModel model = driver->setup(config, problem);
 		auto engine = driver->create(config, model);

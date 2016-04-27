@@ -19,7 +19,7 @@ public:
 	bool isApplicable(const State& state, const GroundAction& action) const;
 	
 	//! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
-	std::vector<Atom> computeEffects(const State& state, const GroundAction& action) const;
+	static std::vector<Atom> computeEffects(const State& state, const GroundAction& action);
 	
 	static bool checkFormulaHolds(const fs::Formula* formula, const State& state);
 	

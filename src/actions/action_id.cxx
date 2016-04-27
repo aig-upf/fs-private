@@ -23,6 +23,7 @@ bool LiftedActionID::operator==(const ActionID& rhs) const {
 	// Two lifted actions are equal iff they arise from the same action schema and have the same full binding
 	auto derived = dynamic_cast<const LiftedActionID*>(&rhs);
 	if(!derived) return false;
+	if (!_action  || !derived->_action) return (!_action  && !derived->_action); // If one is the null ptr, both must be null to be equal!
 	if (hash() != rhs.hash()) return false; // For faster non-equality detection
 	return _action->getOriginId() == derived->_action->getOriginId() && _binding == derived->_binding;
 }
@@ -61,12 +62,12 @@ std::size_t PlainActionID::hash() const {
 }
 
 std::ostream& LiftedActionID::print(std::ostream& os) const {
-	os << *generate();
+	(_action? os << *generate() : os << "INVALID-ACTION");
 	return os;
 }
 
 std::ostream& PlainActionID::print(std::ostream& os) const {
-	os << *_action;
+	(_action? os << *_action : os << "INVALID-ACTION");
 	return os;
 }
 

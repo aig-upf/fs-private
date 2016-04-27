@@ -41,8 +41,6 @@ Config::Config(const std::string& filename)
 {
 	pt::json_parser::read_json(filename, _root);
 	
-	_engine_tag = getOption<std::string>("engine.tag");
-	
 	// Parse the type of relaxed plan extraction: propositional or extended
 	_rpg_extraction = parseOption<RPGExtractionType>(_root, "heuristics.plan_extraction", {{"propositional", RPGExtractionType::Propositional}, {"extended", RPGExtractionType::Supported}});
 	

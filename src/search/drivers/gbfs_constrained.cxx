@@ -9,7 +9,7 @@
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
 #include <constraints/gecode/handlers/ground_effect_handler.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <utils/support.hxx>
 

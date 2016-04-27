@@ -9,7 +9,7 @@ class State;
 class GroundAction;
 
 //! A simple iterator strategy to iterate over the actions applicable in a given state.
-class ApplicableActionSet {
+class GroundActionIterator {
 protected:
 	const ApplicabilityManager _actionManager;
 	
@@ -18,10 +18,10 @@ protected:
 	const State& _state;
 	
 public:
-	ApplicableActionSet(const ApplicabilityManager& actionManager, const State& state, const std::vector<const GroundAction*>& actions);
+	GroundActionIterator(const ApplicabilityManager& actionManager, const State& state, const std::vector<const GroundAction*>& actions);
 	
 	class Iterator {
-		friend class ApplicableActionSet;
+		friend class GroundActionIterator;
 		
 	protected:
 		Iterator(const State& state, const std::vector<const GroundAction*>& actions, const ApplicabilityManager& actionManager, unsigned currentIdx);

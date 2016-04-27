@@ -3,7 +3,7 @@
 #include <problem.hxx>
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 #include <actions/lifted_action_iterator.hxx>
 #include <actions/actions.hxx>
 
@@ -28,9 +28,10 @@ State LiftedStateModel::next(const State& state, const LiftedActionID& action) c
 	return s1;
 }
 
-State LiftedStateModel::next(const State& state, const GroundAction& a) const { 
+State LiftedStateModel::next(const State& state, const GroundAction& action) const { 
 	ApplicabilityManager manager(task.getStateConstraints());
-	return State(state, manager.computeEffects(state, a)); // Copy everything into the new state and apply the changeset
+	assert(manager.isApplicable(state, action));
+	return State(state, manager.computeEffects(state, action)); // Copy everything into the new state and apply the changeset
 }
 
 
@@ -39,7 +40,7 @@ void LiftedStateModel::print(std::ostream& os) const {
 }
 
 gecode::LiftedActionIterator LiftedStateModel::applicable_actions(const State& state) const {
-	return gecode::LiftedActionIterator(state, _handlers);
+	return gecode::LiftedActionIterator(state, _handlers, task.getStateConstraints());
 }
 
 } // namespaces

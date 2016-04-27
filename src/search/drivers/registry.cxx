@@ -11,7 +11,7 @@
 #include <search/drivers/native_driver.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <problem_info.hxx>
 
@@ -37,7 +37,8 @@ EngineRegistry::EngineRegistry() {
 	
 	add("gbfs_native",  new NativeDriver());
 	add("gbfs_unreached_atom",  new UnreachedAtomDriver());
-	add("gbfs_smart",  new SmartEffectDriver());	
+	add("smart",  new SmartEffectDriver());
+	
 	
 	add("iterated_width",  new IteratedWidthDriver());
 // 	add("asp_engine",  new ASPEngine());

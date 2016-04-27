@@ -3,7 +3,7 @@
 #include <problem.hxx>
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
-#include <actions/applicable_action_set.hxx>
+#include <actions/ground_action_iterator.hxx>
 
 namespace fs0 {
 
@@ -32,7 +32,7 @@ void GroundStateModel::print(std::ostream& os) const {
 }
 
 GroundAction::ApplicableSet GroundStateModel::applicable_actions(const State& state) const {
-	return ApplicableActionSet(ApplicabilityManager(task.getStateConstraints()), state, task.getGroundActions());
+	return GroundActionIterator(ApplicabilityManager(task.getStateConstraints()), state, task.getGroundActions());
 }
 
 } // namespaces
