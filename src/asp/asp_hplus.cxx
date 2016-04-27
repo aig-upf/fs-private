@@ -2,7 +2,7 @@
 #include <asp/asp_hplus.hxx>
 #include <state.hxx>
 #include <problem.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/printers/asp.hxx>
 
 
@@ -20,7 +20,7 @@ long ASPHPlus::evaluate(const State& seed) {
 	assert(solution.first == Gringo::SolveResult::SAT);
 	
 	// Because we're using Clingo's optimization mode, we know that the obtained relaxed plan is optimal.
-	FDEBUG("asp", "Optimal ASP solution / Relaxed plan:" << std::endl << fs0::print::asp_model(solution.second));
+	LPT_DEBUG("asp", "Optimal ASP solution / Relaxed plan:" << std::endl << fs0::print::asp_model(solution.second));
 	return solution.second.size();
 }
 

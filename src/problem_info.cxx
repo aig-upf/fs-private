@@ -6,7 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <atom.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 
 namespace fs0 {
 
@@ -14,22 +14,22 @@ std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 	
-	FINFO("main", "Loading Type index...");
+	LPT_INFO("main", "Loading Type index...");
 	loadTypeIndex(data["types"]); // Order matters
 	
-	FINFO("main", "Loading Object index...");
+	LPT_INFO("main", "Loading Object index...");
 	loadObjectIndex(data["objects"]);
 
-	FINFO("main", "Loading Symbol index...");
+	LPT_INFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
 	
-	FINFO("main", "Loading Variable index...");
+	LPT_INFO("main", "Loading Variable index...");
 	loadVariableIndex(data["variables"]);
 	
-	FINFO("main", "Loading Metadata...");
+	LPT_INFO("main", "Loading Metadata...");
 	loadProblemMetadata(data["problem"]);
 	
-	FINFO("main", "All indexes loaded");
+	LPT_INFO("main", "All indexes loaded");
 	
 	// Load the cached map of predicative variables for more performant access
 	for (unsigned variable = 0; variable < getNumVariables(); ++variable) {

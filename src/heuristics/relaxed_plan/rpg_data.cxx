@@ -1,6 +1,6 @@
 
 #include <heuristics/relaxed_plan/rpg_data.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <state.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
@@ -27,7 +27,7 @@ RPGData::RPGData(const State& seed, bool ignore_negated) :
 		_effects.insert(std::make_pair(Atom(variable, value),
 						createAtomSupport(nullptr, std::make_shared<std::vector<Atom>>())));
 	}
-	FFDEBUG("heuristic", "RPG Layer #" << getCurrentLayerIdx() << ": " << *this);
+	LPT_EDEBUG("heuristic", "RPG Layer #" << getCurrentLayerIdx() << ": " << *this);
 	advanceLayer();
 }
 

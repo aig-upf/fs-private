@@ -6,7 +6,7 @@
 #include <constraints/gecode/simple_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/extensions.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/printers/gecode.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 
@@ -17,7 +17,7 @@ ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* t
 {}
 
 void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
-	FDEBUG("translation", "Preprocessing extensional constraints for term " << *_term);
+	LPT_DEBUG("translation", "Preprocessing extensional constraints for term " << *_term);
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	for (auto subterm:_term->getSubterms()) {
@@ -64,8 +64,8 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const CSPTranslator& translat
 	Gecode::extensional(csp, variables, extension);
 // 	Gecode::extensional(csp, variables, extension, Gecode::EPK_SPEED);
 	
-// 	FDEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
-// 	FDEBUG("translation", "Resulting CSP is: " << csp);
+// 	LPT_DEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
+// 	LPT_DEBUG("translation", "Resulting CSP is: " << csp);
 	return true;
 }
 

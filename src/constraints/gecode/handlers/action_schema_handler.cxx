@@ -2,7 +2,7 @@
 #include <languages/fstrips/terms.hxx>
 #include <constraints/gecode/handlers/action_schema_handler.hxx>
 #include <actions/actions.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <actions/action_id.hxx>
 
 namespace fs0 { namespace gecode {
@@ -22,7 +22,7 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 	for (auto schema:schemata) {
 		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, tuple_index, approximate);
 		handler->init(novelty);
-		FDEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *handler << std::endl);
+		LPT_DEBUG("main", "Generated CSP for action schema" << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
 	}
 	return handlers;
@@ -94,6 +94,6 @@ LiftedActionID* ActionSchemaCSPHandler::get_lifted_action_id(const SimpleCSP* so
 }
 
 void ActionSchemaCSPHandler::log() const {
-	FFDEBUG("heuristic", "Processing action schema " << _action);
+	LPT_EDEBUG("heuristic", "Processing action schema " << _action);
 }
 } } // namespaces

@@ -12,7 +12,7 @@
 #include <utils/utils.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/printers/actions.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/config.hxx>
 #include <actions/action_id.hxx>
 
@@ -150,7 +150,7 @@ protected:
 	}
 	
 	long buildRelaxedPlan() {
-		FFDEBUG("heuristic" , "Relaxed plan found with length " << supporters.size() << std::endl << print::supported_plan(supporters));
+		LPT_EDEBUG("heuristic" , "Relaxed plan found with length " << supporters.size() << std::endl << print::supported_plan(supporters));
 		return (long) supporters.size();
 	}
 };
@@ -199,7 +199,7 @@ protected:
 
 		// Note that computing the relaxed heuristic by using some form of local consistency might yield plans that are not correct for the relaxation
 		// assert(ActionManager::checkRelaxedPlanSuccessful(Problem::getInstance(), plan, _seed));
-		FFDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << print::plan(plan));
+		LPT_EDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << print::plan(plan));
 
 		return (long) plan.size();
 	}

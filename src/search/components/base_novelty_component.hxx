@@ -3,7 +3,7 @@
 
 #include <fs_types.hxx>
 #include <ground_state_model.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 
 namespace fs0 { class Problem; class Config; }

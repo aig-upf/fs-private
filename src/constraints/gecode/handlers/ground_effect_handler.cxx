@@ -5,7 +5,7 @@
 #include <constraints/gecode/supports.hxx>
 #include <actions/actions.hxx>
 #include <utils/printers/actions.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <actions/action_id.hxx>
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
@@ -26,9 +26,9 @@ std::vector<std::shared_ptr<GroundEffectCSPHandler>> GroundEffectCSPHandler::cre
 			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, tuple_index, effect, approximate);
 			if (handler->init(novelty)) {
 				managers.push_back(handler);
-				FDEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
+				LPT_DEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
 			} else {
-				FDEBUG("main", "CSP for action effect " << effect << " is inconsistent ==> the action is not applicable");
+				LPT_DEBUG("main", "CSP for action effect " << effect << " is inconsistent ==> the action is not applicable");
 			}
 		}
 	}
@@ -50,7 +50,7 @@ bool GroundEffectCSPHandler::init(bool use_novelty_constraint) {
 }
 
 void GroundEffectCSPHandler::log() const {
-	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" of action " << _action);
+	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" of action " << _action);
 }
 
 const ActionID* GroundEffectCSPHandler::get_action_id(const SimpleCSP* solution) const {
@@ -78,7 +78,7 @@ bool GroundEffectCSPHandler::find_atom_support(TupleIdx tuple, const Atom& atom,
 	post(*csp, atom);
 
 	if (!csp->checkConsistency()) { // This colaterally enforces propagation of constraints
-		FFDEBUG("heuristic", "Action CSP inconsistent => atom " << atom << " cannot be derived through it");
+		LPT_EDEBUG("heuristic", "Action CSP inconsistent => atom " << atom << " cannot be derived through it");
 		return false;
 	} 
 	
@@ -99,7 +99,7 @@ bool GroundEffectCSPHandler::solve(TupleIdx tuple, gecode::SimpleCSP* csp, RPGIn
 	if (!solution) return false; // The CSP has no solution at all
 	
 	bool reached = graph.reached(tuple);
-	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple);
+	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple);
 	
 	if (reached) return true; // The value has already been reached before
 	

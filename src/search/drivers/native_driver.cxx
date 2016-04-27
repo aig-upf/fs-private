@@ -16,7 +16,7 @@ namespace fs0 { namespace drivers {
 
 std::unique_ptr<FS0SearchAlgorithm>
 NativeDriver::create(const Config& config, const GroundStateModel& model) const {
-	FINFO("main", "Using the Native-CSP RPG Driver");
+	LPT_INFO("main", "Using the Native-CSP RPG Driver");
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
 	

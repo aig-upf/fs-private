@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 
 namespace fs0 { namespace drivers {
 
@@ -52,7 +52,11 @@ public:
 	bool has_parent() const { return parent != nullptr; }
 
 	//! Print the node into the given stream
-	void print( std::ostream& os ) const { os << "{@ = " << this << ", s = " << state << ", g = " << g << ", h = " << h <<  ", g+h = " << g+h << ", parent = " << parent << ", action: " << action << "}";  }
+	friend std::ostream& operator<<(std::ostream &os, const HeuristicSearchNode<StateT, ActionT>& object) { return object.print(os); }
+	std::ostream& print(std::ostream& os) const { 
+		os << "{@ = " << this << ", s = " << state << ", g = " << g << ", h = " << h <<  ", g+h = " << g+h << ", parent = " << parent << ", action: " << action << "}";
+		return os;
+	}
 	
 	//! Forward the comparison and hash function to the search state.
 	bool operator==(const HeuristicSearchNode<StateT, ActionT>& o) const { return state == o.state; }
@@ -62,7 +66,7 @@ public:
 	template <typename Heuristic>
 	void evaluate_with(Heuristic& heuristic) {
 		h = heuristic.evaluate(state);
-		FDEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
+		LPT_DEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
 	}
 
 	//! This effectively implements Greedy Best First search

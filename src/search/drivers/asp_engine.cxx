@@ -19,12 +19,12 @@ std::unique_ptr<FS0SearchAlgorithm> ASPEngine::create(const Config& config, cons
 	FS0SearchAlgorithm* engine = nullptr;
 	std::string search = config.getOption<std::string>("engine.search");
 	if (search == "astar") {
-		FINFO("main", "Chosen engine: A* with ASP-based h+ computation");
+		LPT_INFO("main", "Chosen engine: A* with ASP-based h+ computation");
 		typedef AStarSearchNode<State, GroundAction> AStarNode;
 		engine = new aptk::StlBestFirstSearch<AStarNode, asp::ASPHPlus, GroundStateModel>(model, asp::ASPHPlus(problem));
 	} else {
 		assert(search == "gbfs");
-		FINFO("main", "Chosen engine: GBFS with ASP-based h+ computation");
+		LPT_INFO("main", "Chosen engine: GBFS with ASP-based h+ computation");
 		typedef HeuristicSearchNode<State, GroundAction> GBFSNode;
 		engine = new aptk::StlBestFirstSearch<GBFSNode, asp::ASPHPlus, GroundStateModel>(model, asp::ASPHPlus(problem));
 	}

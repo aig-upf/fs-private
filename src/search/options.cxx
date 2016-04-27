@@ -6,7 +6,7 @@
 
 #include <search/options.hxx>
 #include <utils/config.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 
 namespace po = boost::program_options;
 

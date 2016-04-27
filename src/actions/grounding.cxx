@@ -1,7 +1,7 @@
 
 #include <actions/grounding.hxx>
 #include <actions/actions.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/config.hxx>
@@ -19,7 +19,7 @@ std::vector<const PartiallyGroundedAction*> ActionGrounder::fully_lifted(const s
 	for (const ActionData* data:action_data) {
 		lifted.push_back(partial_binding(*data, Binding(data->getSignature().size()), info));
 	}
-	FINFO("grounding", "Generated " << lifted.size() << " fully-lifted actions");
+	LPT_INFO("grounding", "Generated " << lifted.size() << " fully-lifted actions");
 	return lifted;
 }
 
@@ -35,7 +35,7 @@ std::vector<const GroundAction*> ActionGrounder::fully_ground(const std::vector<
 		// In case the action schema is directly not-lifted, we simply bind it with an empty binding and continue.
 		if (signature.empty()) { 
 			std::cout <<  "Grounding action schema '" << data->getName() << "' with no binding" << std::endl;
-			FINFO("grounding", "Grounding the following action schema with no binding:\n" << *data << "\n");
+			LPT_INFO("grounding", "Grounding the following action schema with no binding:\n" << *data << "\n");
 			id = ground(id, data, {}, info, grounded);
 			++total_num_bindings;
 			continue;
@@ -45,7 +45,7 @@ std::vector<const GroundAction*> ActionGrounder::fully_ground(const std::vector<
 		int num_bindings = binding_generator.num_bindings();
 		
 		std::cout <<  "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:\n\t" << std::flush;
-		FINFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:\n" << print::action_data_name(*data) << "\n");
+		LPT_INFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:\n" << print::action_data_name(*data) << "\n");
 		
 		float onepercent = ((float)num_bindings / 100);
 		int progress = 0;
@@ -64,21 +64,21 @@ std::vector<const GroundAction*> ActionGrounder::fully_ground(const std::vector<
 		std::cout << std::endl;
 	}
 	
-	FINFO("grounding", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
+	LPT_INFO("grounding", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
 	std::cout << "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions" << std::endl;
 
 	return grounded;
 }
 
 unsigned ActionGrounder::ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded) {
-	FDEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
+	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
 	
 	if (GroundAction* ground = full_binding(id, *data, binding, info)) {
-// 		FDEBUG("grounding", "Binding " << print::binding(binding, data->getSignature()) << " generated grounded action:\n" << *ground);
+// 		LPT_DEBUG("grounding", "Binding " << print::binding(binding, data->getSignature()) << " generated grounded action:\n" << *ground);
 		grounded.push_back(ground);
 		return id + 1;
 	} else {
-		FDEBUG("grounding", "Binding " << print::binding(binding, data->getSignature()) << " generates a statically non-applicable grounded action");
+		LPT_DEBUG("grounding", "Binding " << print::binding(binding, data->getSignature()) << " generates a statically non-applicable grounded action");
 	}
 	return id;
 }

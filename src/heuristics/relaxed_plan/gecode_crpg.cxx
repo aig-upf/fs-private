@@ -21,7 +21,7 @@ GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, 
 	_extension_handler(extension_handler),
 	_goal_handler(std::unique_ptr<FormulaHandler>(new FormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
-	FDEBUG("heuristic", "Standard CRPG heuristic initialized");
+	LPT_DEBUG("heuristic", "Standard CRPG heuristic initialized");
 }
 
 
@@ -36,7 +36,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 		_goal_handler->init_value_selector(&graph);
 	}	
 	
-	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
+	LPT_EDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
 	for (unsigned i = 0; ; ++i) {
@@ -53,7 +53,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 		
 		
 		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
-		FFDEBUG("heuristic", "New RPG Layer: " << graph);
+		LPT_EDEBUG("heuristic", "New RPG Layer: " << graph);
 		
 		long h = computeHeuristic(graph);
 		if (h > -1) return h;

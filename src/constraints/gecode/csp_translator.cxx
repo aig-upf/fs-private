@@ -3,7 +3,7 @@
 #include <problem.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <state.hxx>
 #include <constraints/gecode/simple_csp.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>

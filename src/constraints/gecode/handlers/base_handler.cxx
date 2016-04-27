@@ -4,7 +4,7 @@
 #include <constraints/gecode/handlers/base_handler.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <constraints/registry.hxx>
 #include <gecode/driver.hh>
 
@@ -116,13 +116,13 @@ void BaseCSPHandler::register_csp_constraints() {
 		}
 		
 		registerTermConstraints(term, _translator);
-// 		FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *term << "): " << _translator); // Uncomment for extreme debugging
+// 		LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *term << "): " << _translator); // Uncomment for extreme debugging
 	}
 	
 	//! Register any possible CSP variable that arises from the logical formulas
 	for (auto condition:_all_formulas) {
 		registerFormulaConstraints(condition, _translator);
-// 		FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *condition << "): " << _translator); // Uncomment for extreme debugging		
+// 		LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *condition << "): " << _translator); // Uncomment for extreme debugging		
 	}
 	
 	for (ExtensionalConstraint& constraint:_extensional_constraints) {

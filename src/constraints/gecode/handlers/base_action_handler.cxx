@@ -5,7 +5,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <gecode/driver.hh>
 #include <utils/printers/gecode.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
@@ -28,23 +28,23 @@ BaseActionCSPHandler::~BaseActionCSPHandler() {
 
 
 bool BaseActionCSPHandler::init(bool use_novelty_constraint) {
-	FDEBUG("translation", "Gecode Action Handler: processing action " << get_action());
+	LPT_DEBUG("translation", "Gecode Action Handler: processing action " << get_action());
 	setup();
 	
 	createCSPVariables(use_novelty_constraint);
 	Helper::postBranchingStrategy(_base_csp);
 	
-// 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: no constraints): " << _translator); // Uncomment for extreme debugging
+// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: no constraints): " << _translator); // Uncomment for extreme debugging
 
 	for (const auto effect:get_effects()) {
 		registerEffectConstraints(effect);
 	}
 	
-// 	FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
+// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
 	
 	register_csp_constraints();
 
-	FDEBUG("translation", "Action " << get_action() << " results in CSP handler:" << std::endl << *this);
+	LPT_DEBUG("translation", "Action " << get_action() << " results in CSP handler:" << std::endl << *this);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
 	Gecode::SpaceStatus st = _base_csp.status();
@@ -61,7 +61,7 @@ void BaseActionCSPHandler::process(RPGIndex& graph) const {
 	SimpleCSP* csp = instantiate(graph);
 
 	if (!csp || !csp->checkConsistency()) { // This colaterally enforces propagation of constraints
-		FFDEBUG("heuristic", "The action CSP is locally inconsistent "); // << print::csp(handler->getTranslator(), *csp));
+		LPT_EDEBUG("heuristic", "The action CSP is locally inconsistent "); // << print::csp(handler->getTranslator(), *csp));
 	} else {
 		if (_approximate) {  // Check only local consistency
 			//compute_approximate_support(csp, _action_idx, rpg, seed);
@@ -178,17 +178,17 @@ void BaseActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cpt
 }
 
 void BaseActionCSPHandler::compute_support(SimpleCSP* csp, RPGIndex& graph) const {
-	FFDEBUG("heuristic", "Computing full support for action " << get_action());
+	LPT_EDEBUG("heuristic", "Computing full support for action " << get_action());
 	Gecode::DFS<SimpleCSP> engine(csp);
 	unsigned num_solutions = 0;
 	while (SimpleCSP* solution = engine.next()) {
-		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
+		LPT_EDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
 		process_solution(solution, graph);
 		++num_solutions;
 		delete solution;
 	}
 
-	FFDEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
+	LPT_EDEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
 }
 
 
@@ -206,7 +206,7 @@ void BaseActionCSPHandler::process_solution(SimpleCSP* solution, RPGIndex& graph
 		VariableIdx variable = _has_nested_lhs ? effect->lhs()->interpretVariable(assignment, binding) : effect_lhs_variables[i];
 		ObjectIdx value = _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution);
 		TupleIdx reached_tuple = _tuple_index.to_index(variable, value);
-		FFDEBUG("heuristic", "Processing effect \"" << *effect << "\"");
+		LPT_EDEBUG("heuristic", "Processing effect \"" << *effect << "\"");
 		if (_hmaxsum_priority) WORK_IN_PROGRESS("This hasn't been adapted yet to the new tuple-based data structures"); // hmax_based_atom_processing(solution, graph, atom, i, assignment, binding);
 		else simple_atom_processing(solution, graph, reached_tuple, i, assignment, binding);
 	}
@@ -215,7 +215,7 @@ void BaseActionCSPHandler::process_solution(SimpleCSP* solution, RPGIndex& graph
 void BaseActionCSPHandler::simple_atom_processing(SimpleCSP* solution, RPGIndex& graph, TupleIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	
 	bool reached = graph.reached(tuple);
-	FFDEBUG("heuristic", "Processing effect \"" << *get_effects()[effect_idx] << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple);
+	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effects()[effect_idx] << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple);
 	
 	if (reached) return; // The value has already been reached before
 	
@@ -281,7 +281,7 @@ void BaseActionCSPHandler::extract_nested_term_support(const SimpleCSP* solution
 /* 
 void BaseActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	auto hint = bookkeeping.getInsertionHint(atom);
-	FFDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
+	LPT_EDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
 	
 	Atom::vctrp support = extract_support_from_solution(solution, effect_idx, assignment, binding);
 	
@@ -296,7 +296,7 @@ void BaseActionCSPHandler::hmax_based_atom_processing(SimpleCSP* solution, RPGIn
 		const std::vector<Atom>& previous_support_atoms = *(std::get<2>(previous_support));
 		
 		if (bookkeeping.compute_hmax_sum(*support) < bookkeeping.compute_hmax_sum(previous_support_atoms)) {
-			FFDEBUG("heuristic", "Atom " << atom << " inserted anyway because of lower sum of h_max values");
+			LPT_EDEBUG("heuristic", "Atom " << atom << " inserted anyway because of lower sum of h_max values");
 			previous_support = bookkeeping.createAtomSupport(get_action_id(solution), support); // Simply update the element with the assignment operator
 		}
 	}

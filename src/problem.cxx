@@ -2,7 +2,7 @@
 #include <problem.hxx>
 #include <state.hxx>
 #include <actions/actions.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/printers/language.hxx>
 #include <utils/printers/actions.hxx>
 #include <applicability/formula_interpreter.hxx>

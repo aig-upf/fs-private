@@ -4,7 +4,7 @@
 #include <constraints/gecode/handlers/formula_handler.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/tuple_index.hxx>
 #include <utils/utils.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
@@ -31,12 +31,12 @@ FormulaHandler::FormulaHandler(const fs::Formula* formula, const TupleIndex& tup
 	Gecode::SpaceStatus st = _base_csp.status();
 	
 	if (st == Gecode::SpaceStatus::SS_SOLVED) {
-		FINFO("main", "Formula CSP was statically solved:" << std::endl <<  *this);
+		LPT_INFO("main", "Formula CSP was statically solved:" << std::endl <<  *this);
 	} else if (st == Gecode::SpaceStatus::SS_FAILED) {
-		FINFO("main", "Formula CSP statically failed:" << *this);
+		LPT_INFO("main", "Formula CSP statically failed:" << *this);
 		_failed = true;
 	} else {
-		FINFO("main", "Formula CSP after the initial, static propagation: " << *this);
+		LPT_INFO("main", "Formula CSP after the initial, static propagation: " << *this);
 	}
 	
 	index_scopes(); // This needs to be _after_ the CSP variable registration
@@ -48,7 +48,7 @@ bool FormulaHandler::compute_support(SimpleCSP* csp, std::vector<TupleIdx>& supp
 	SimpleCSP* solution = compute_single_solution(csp);
 	if (!solution) return false;
 	
-	FFDEBUG("heuristic", "Formula CSP solution found: " << *solution);
+	LPT_EDEBUG("heuristic", "Formula CSP solution found: " << *solution);
 	assert(support.empty());
 	support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
 	delete solution;

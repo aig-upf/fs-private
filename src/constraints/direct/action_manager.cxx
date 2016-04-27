@@ -5,7 +5,7 @@
 #include <constraints/direct/bound_constraint.hxx>
 #include <constraints/direct/compiled.hxx>
 #include <utils/projections.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <languages/fstrips/language.hxx>
 #include <relaxed_state.hxx>
@@ -20,7 +20,7 @@ std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(co
 	managers.reserve(actions.size());
 	for (const auto action:actions) {
 		auto manager = create(*action);
-		FDEBUG("main", "Generated a DirectActionManager for action " << *action << std::endl << *manager << std::endl);
+		LPT_DEBUG("main", "Generated a DirectActionManager for action " << *action << std::endl << *manager << std::endl);
 		managers.push_back(std::move(manager));
 	}
 	return managers;
@@ -120,7 +120,7 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 			auto hint = rpg.getInsertionHint(atom);
 
 			if (hint.first) {
-				FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
+				LPT_EDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 				Atom::vctrp support = std::make_shared<Atom::vctr>();
 				completeAtomSupport(_scope, actionProjection, effectScope, support);
 				rpg.add(atom, get_action_id(actionIdx), support, hint.second);
@@ -135,7 +135,7 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 				auto hint = rpg.getInsertionHint(atom);
 
 				if (hint.first) {
-					FFDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
+					LPT_EDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
 					Atom::vctrp support = std::make_shared<Atom::vctr>();
 					support->push_back(Atom(effectScope[0], value));// Just insert the only value
 					completeAtomSupport(_scope, actionProjection, effectScope, support);

@@ -4,7 +4,7 @@
 #include <constraints/direct/compiled.hxx>
 #include <problem.hxx>
 #include <constraints/registry.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/projections.hxx>
 #include <languages/fstrips/scopes.hxx>
 
@@ -91,7 +91,7 @@ std::vector<DirectConstraint*> DirectTranslator::generate(const std::vector<cons
 	std::vector<DirectConstraint*> generated;
 	for (const auto formula:formulae) {
 		auto translated = generate(*formula);
-		FDEBUG("components", "Transformed formula " << *formula << " into DirectConstraint " << *translated);
+		LPT_DEBUG("components", "Transformed formula " << *formula << " into DirectConstraint " << *translated);
 		generated.push_back(translated);
 	}
 	return generated;
@@ -116,7 +116,7 @@ const DirectEffect* DirectTranslator::generate(const fs::ActionEffect& effect) {
 	
 	// If there was no particular translator registered for the type of term, or the registered translator couldn't handle the term,
 	// we fall back to (try to) extensionalize the constraint
-	FDEBUG("components", "Could not find a suitable translator for the following effect, falling back to extensionalization: " << effect);
+	LPT_DEBUG("components", "Could not find a suitable translator for the following effect, falling back to extensionalization: " << effect);
 	if (rhs_scope.size() == 1) {
 		return new CompiledUnaryEffect(rhs_scope[0], affected, rhs);
 	} else {

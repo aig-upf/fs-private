@@ -5,7 +5,7 @@
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/binding.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {

@@ -8,7 +8,7 @@
 #include <actions/grounding.hxx>
 #include <component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/registry.hxx>
 #include <utils/printers/registry.hxx>
@@ -24,16 +24,16 @@ namespace fs0 {
 Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
-	FINFO("main", "Loading initial state...");
+	LPT_INFO("main", "Loading initial state...");
 	auto init = loadState(data["init"]);
 	
-	FINFO("main", "Loading action data...");
+	LPT_INFO("main", "Loading action data...");
 	auto action_data = loadAllActionData(data["action_schemata"], info);
 	
-	FINFO("main", "Loading goal formula...");
+	LPT_INFO("main", "Loading goal formula...");
 	auto goal = loadGroundedFormula(data["goal"], info);
 	
-	FINFO("main", "Loading state constraints...");
+	LPT_INFO("main", "Loading state constraints...");
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
@@ -41,7 +41,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	problem->setLPHandler(lp_handler);
 	
-	FINFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
+	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
 	return problem;
 }

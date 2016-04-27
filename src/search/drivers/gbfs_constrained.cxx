@@ -30,7 +30,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	_unused(csp_type);
 	assert(csp_type == Config::CSPManagerType::Gecode);
 	
-	FINFO("main", "Chosen CSP Manager: Gecode");
+	LPT_INFO("main", "Chosen CSP Manager: Gecode");
 	
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {

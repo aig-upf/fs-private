@@ -7,7 +7,7 @@
 #include <constraints/direct/constraint.hxx>
 #include <constraints/direct/compiled.hxx>
 #include <constraints/direct/translators/translator.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <state.hxx>
 #include <relaxed_state.hxx>
 

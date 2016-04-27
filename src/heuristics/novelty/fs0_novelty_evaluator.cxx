@@ -5,7 +5,7 @@
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <languages/fstrips/scopes.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/printers/feature_set.hxx>
 #include <actions/actions.hxx>
 
@@ -62,7 +62,7 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 			_features.push_back( new StateVariableFeature( x ) );
 		}
 	}
-	FINFO("main", "Novelty From Constraints: # features: " << numFeatures());
+	LPT_INFO("main", "Novelty From Constraints: # features: " << numFeatures());
 }
 
 void GenericStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std::vector<aptk::ValueIndex>& values) const {
@@ -79,7 +79,7 @@ void GenericStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnam
 		values[k] = _featureMap.feature( k )->evaluate( _adapted );
 	}
 
-	FDEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));
+	LPT_DEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));
 }
 
 } // namespaces

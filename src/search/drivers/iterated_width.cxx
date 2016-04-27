@@ -10,9 +10,9 @@ std::unique_ptr<FS0SearchAlgorithm> IteratedWidthDriver::create(const Config& co
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	
-	FINFO("main", "Heuristic options:");
-	FINFO("main", "\tMax novelty: " << max_novelty);
-	FINFO("main", "\tFeatiue extaction: " << feature_configuration);
+	LPT_INFO("main", "Heuristic options:");
+	LPT_INFO("main", "\tMax novelty: " << max_novelty);
+	LPT_INFO("main", "\tFeatiue extaction: " << feature_configuration);
 	
 	FS0SearchAlgorithm* engine = new FS0IWAlgorithm(model, 1, max_novelty, feature_configuration);
 	return std::unique_ptr<FS0SearchAlgorithm>(engine);

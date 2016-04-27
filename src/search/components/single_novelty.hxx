@@ -3,7 +3,7 @@
 
 #include <fs_types.hxx>
 #include <ground_state_model.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
@@ -31,7 +31,7 @@ public:
 	
 	~SingleNoveltyComponent() {
 		for ( unsigned k = 1; k <= Base::novelty_bound(); k++ ) {
-			FINFO("heuristic", "# novelty(s)=" << k << " : " << _novelty_evaluator.get_num_states(k));
+			LPT_INFO("heuristic", "# novelty(s)=" << k << " : " << _novelty_evaluator.get_num_states(k));
 		}
 	}
 

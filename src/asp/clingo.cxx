@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 #include <asp/clingo.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/printers/helper.hxx>
 
 namespace fs0 { namespace asp {

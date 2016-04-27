@@ -8,7 +8,7 @@
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/printers/actions.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -64,7 +64,7 @@ long LiftedPlanExtractor::buildRelaxedPlan() {
 
 	// Note that computing the relaxed heuristic by using some form of local consistency might yield plans that are not correct for the relaxation
 	// assert(ActionManager::checkRelaxedPlanSuccessful(Problem::getInstance(), plan, _seed));
-	FFDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << print::plan(plan));
+	LPT_EDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << print::plan(plan));
 
 	return (long) plan.size();
 }

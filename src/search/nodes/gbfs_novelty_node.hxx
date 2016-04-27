@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <actions/actions.hxx>
 
 namespace fs0 { namespace drivers {
@@ -69,8 +69,12 @@ public:
 
 	bool has_parent() const { return parent != nullptr; }
 
-	void print( std::ostream& os ) const {
+	
+	//! Print the node into the given stream
+	friend std::ostream& operator<<(std::ostream &os, const GBFSNoveltyNode<State>& object) { return object.print(os); }
+	std::ostream& print(std::ostream& os) const { 
 		os << "{@ = " << this << ", s = " << state << ", novelty = " << novelty << ", g = " << g << " unsat = " << num_unsat << ", parent = " << parent << "}";
+		return os;
 	}
 
 	bool operator==( const GBFSNoveltyNode<State>& o ) const { return state == o.state; }

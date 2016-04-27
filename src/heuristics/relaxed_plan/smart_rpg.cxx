@@ -10,7 +10,7 @@
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/effect_schema_handler.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/config.hxx>
 #include <problem.hxx>
 
@@ -24,7 +24,7 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 	_extension_handler(extension_handler),
 	_goal_handler(std::unique_ptr<FormulaHandler>(new FormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
-	FINFO("heuristic", "SmartRPG heuristic initialized");
+	LPT_INFO("heuristic", "SmartRPG heuristic initialized");
 }
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
@@ -32,7 +32,7 @@ long SmartRPG::evaluate(const State& seed) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
-	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
+	LPT_EDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
 	RPGIndex graph(seed, _tuple_index, _extension_handler);
 	
@@ -65,14 +65,14 @@ long SmartRPG::evaluate(const State& seed) {
 		
 		
 		// TODO - RETHINK HOW TO FIT THE STATE CONSTRAINTS INTO THIS CSP MODEL
-// 		FFDEBUG("heuristic", "The last layer of the RPG contains " << graph.num_novel_tuples() << " novel atoms." << std::endl << graph);
+// 		LPT_EDEBUG("heuristic", "The last layer of the RPG contains " << graph.num_novel_tuples() << " novel atoms." << std::endl << graph);
 		
 		// If there is no novel fact in the rpg, we reached a fixpoint, thus there is no solution.
 		if (!graph.hasNovelTuples()) return -1;
 		
 		
 		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
-		FFDEBUG("heuristic", "New RPG Layer: " << graph);
+		LPT_EDEBUG("heuristic", "New RPG Layer: " << graph);
 		
 		long h = computeHeuristic(graph);
 		if (h > -1) return h;

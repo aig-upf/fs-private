@@ -7,7 +7,7 @@
 #include <constraints/gecode/handlers/base_handler.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/printers/gecode.hxx>
 
 namespace fs0 { namespace gecode {
@@ -61,7 +61,7 @@ void ArithmeticTermTranslator::registerConstraints(const fs::Term* term, CSPTran
 	auto arithmetic_term = dynamic_cast<fs::ArithmeticTerm::cptr>(term);
 	assert(arithmetic_term);
 	
-	FDEBUG("translation", "Registering constraints for arithmetic term " << *term);
+	LPT_DEBUG("translation", "Registering constraints for arithmetic term " << *term);
 
 	// Now we assert that the root temporary variable equals the sum of the subterms
 	SimpleCSP& csp = translator.getBaseCSP();
@@ -103,7 +103,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 	auto stat = dynamic_cast<fs::StaticHeadedNestedTerm::cptr>(term);
 	assert(stat);
 	
-	FDEBUG("translation", "Registering constraints for static nested term " << *stat);
+	LPT_DEBUG("translation", "Registering constraints for static nested term " << *stat);
 
 	SimpleCSP& csp = translator.getBaseCSP();
 	
@@ -122,7 +122,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 	// And finally post the constraint
 	Gecode::extensional(csp, variables, extension);
 	
-	FDEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
+	LPT_DEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
 }
 
 
@@ -171,7 +171,7 @@ void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula* formula
 	Gecode::TupleSet extension = Helper::extensionalize(formula);
 	Gecode::extensional(csp, variables, extension);
 	
-	FDEBUG("translation", "Registered a Gecode extensional constraint of arity " << extension.arity() << " and size " << extension.tuples() << " for formula \"" << *formula << ":\n" << print::extensional(variables, extension));
+	LPT_DEBUG("translation", "Registered a Gecode extensional constraint of arity " << extension.arity() << " and size " << extension.tuples() << " for formula \"" << *formula << ":\n" << print::extensional(variables, extension));
 }
 
 } } // namespaces

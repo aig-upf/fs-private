@@ -2,7 +2,7 @@
 #include <asp/asp_rpg.hxx>
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/printers/asp.hxx>
 
 
@@ -21,7 +21,7 @@ long ASPRPG<RPGBaseHeuristic>::evaluate(const State& seed) {
 	
 	// We want to obtain the set of ground actions that are part of the relaxed plan 
 	// and then build the RPG taking those ground actions into account only.
-	FDEBUG("asp", "ASP solution:" << std::endl << fs0::print::asp_model(solution.second));
+	LPT_DEBUG("asp", "ASP solution:" << std::endl << fs0::print::asp_model(solution.second));
 	auto whitelist = _handler.get_action_set(solution.second);
 	return _heuristic.evaluate(seed, whitelist);
 }

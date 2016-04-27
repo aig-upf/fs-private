@@ -7,7 +7,7 @@
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <utils/printers/actions.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <gecode/search.hh>
 
@@ -19,7 +19,7 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> handlers;
 	
 	for (const PartiallyGroundedAction* schema:schemata) {
-		FDEBUG("main", "Smart grounding of action " << *schema << "...");
+		LPT_DEBUG("main", "Smart grounding of action " << *schema << "...");
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {
 			for (const PartiallyGroundedAction* flattened:ActionGrounder::flatten_effect_head(schema, eff_idx, info)) {
 				const fs::ActionEffect* effect = schema->getEffects().at(eff_idx);
@@ -31,10 +31,10 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 				
 				auto handler = std::make_shared<EffectSchemaCSPHandler>(*flattened, flattened->getEffects().at(eff_idx), tuple_index, approximate);
 				if (handler->init(novelty)) {
-					FDEBUG("main", "Smart grounding of effect \"" << *effect << " results in partially grounded action " << *flattened);
+					LPT_DEBUG("main", "Smart grounding of effect \"" << *effect << " results in partially grounded action " << *flattened);
 					handlers.push_back(handler);
 				} else {
-					FDEBUG("main", "Smart grounding of effect \"" << *effect << " results in non-applicable CSP");
+					LPT_DEBUG("main", "Smart grounding of effect \"" << *effect << " results in non-applicable CSP");
 				}
 			}
 		}
@@ -101,7 +101,7 @@ ValueTuple EffectSchemaCSPHandler::index_tuple_indexes(const fs::ActionEffect* e
 
 void EffectSchemaCSPHandler::log() const {
 	assert(_effects.size() == 1);
-	FFDEBUG("heuristic", "Processing effect schema \"" << *get_effect() << " of action " << _action);
+	LPT_EDEBUG("heuristic", "Processing effect schema \"" << *get_effect() << " of action " << _action);
 }
 
 const fs::ActionEffect* EffectSchemaCSPHandler::get_effect() const { 
@@ -123,18 +123,18 @@ const fs::StateVariable* EffectSchemaCSPHandler::check_valid_effect(const fs::Ac
 void EffectSchemaCSPHandler::seek_novel_tuples(RPGIndex& rpg) const {
 	if (SimpleCSP* csp = instantiate(rpg)) {
 		if (!csp->checkConsistency()) {
-			FFDEBUG("heuristic", "The effect CSP cannot produce any new tuple");
+			LPT_EDEBUG("heuristic", "The effect CSP cannot produce any new tuple");
 		}
 		else {
 			Gecode::DFS<SimpleCSP> engine(csp);
 			unsigned num_solutions = 0;
 			while (SimpleCSP* solution = engine.next()) {
-		// 		FFDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
+		// 		LPT_EDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
 				process_effect_solution(solution, rpg);
 				++num_solutions;
 				delete solution;
 			}
-			FFDEBUG("heuristic", "The Effect CSP produced " << num_solutions << " novel tuples");
+			LPT_EDEBUG("heuristic", "The Effect CSP produced " << num_solutions << " novel tuples");
 		}
 		delete csp;
 	}
@@ -154,7 +154,7 @@ void EffectSchemaCSPHandler::process_effect_solution(const SimpleCSP* solution, 
 	TupleIdx tuple_idx = compute_reached_tuple(solution);
 	
 	bool reached = rpg.reached(tuple_idx);
-	FFDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple_idx);
+	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple_idx);
 	
 	if (reached) return; // The value has already been reached before
 	

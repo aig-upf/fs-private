@@ -24,7 +24,7 @@ UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* go
 	_extension_handler(extension_handler),
 	_atom_achievers(build_achievers_index(_managers, _tuple_index))
 {
-	FINFO("heuristic", "Unreached-Atom-Based heuristic initialized");
+	LPT_INFO("heuristic", "Unreached-Atom-Based heuristic initialized");
 }
 
 
@@ -33,7 +33,7 @@ long UnreachedAtomRPG::evaluate(const State& seed) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
-	FFDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
+	LPT_EDEBUG("heuristic", std::endl << "Computing RPG from seed state: " << std::endl << seed << std::endl << "****************************************");
 	
 	RPGIndex graph(seed, _tuple_index, _extension_handler);
 
@@ -63,7 +63,7 @@ long UnreachedAtomRPG::evaluate(const State& seed) {
 			for (unsigned manager_idx:_atom_achievers.at(atom_idx)) {
 				const EffectHandlerPtr& manager = _managers[manager_idx];
 				if (failure_cache[manager_idx]) {
-					FFDEBUG("heuristic", "Found cached unapplicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
+					LPT_EDEBUG("heuristic", "Found cached unapplicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
 					continue; // The effect CSP has already been instantiated and found unapplicable on this very same layer
 				}
 				
@@ -71,12 +71,12 @@ long UnreachedAtomRPG::evaluate(const State& seed) {
 					SimpleCSP* raw = manager->preinstantiate(graph);
 					if (!raw) { // We are instantiating the CSP for the first time in this layer and find that it is not applicable.
 						failure_cache[manager_idx] = true;
-						FFDEBUG("heuristic", "Effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\" inconsistent => not applicable");
+						LPT_EDEBUG("heuristic", "Effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\" inconsistent => not applicable");
 						continue;
 					}
 					cache[manager_idx] = std::unique_ptr<SimpleCSP>(raw);
 				} else {
-					FFDEBUG("heuristic", "Found cached & applicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
+					LPT_EDEBUG("heuristic", "Found cached & applicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
 				}
 				
 				atom_supported = manager->find_atom_support(atom_idx, atom, seed, *cache[manager_idx], graph);
@@ -85,7 +85,7 @@ long UnreachedAtomRPG::evaluate(const State& seed) {
 			
 			// If a support was found, no need to check for that particular atom anymore.
 			if (atom_supported) {
-				FFDEBUG("heuristic", "Found support for atom " << atom);
+				LPT_EDEBUG("heuristic", "Found support for atom " << atom);
 				it = unachieved.erase(it);
 			} else {
 				++it;
@@ -99,7 +99,7 @@ long UnreachedAtomRPG::evaluate(const State& seed) {
 		
 		
 		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
-		FFDEBUG("heuristic", "New RPG Layer: " << graph);
+		LPT_EDEBUG("heuristic", "New RPG Layer: " << graph);
 		
 		long h = computeHeuristic(graph);
 		if (h > -1) return h;
@@ -115,7 +115,7 @@ long UnreachedAtomRPG::computeHeuristic(const RPGIndex& graph) {
 UnreachedAtomRPG::AchieverIndex UnreachedAtomRPG::build_achievers_index(const std::vector<EffectHandlerPtr>& managers, const TupleIndex& tuple_index) {
 	AchieverIndex index(tuple_index.size()); // Create an index as large as the number of atoms
 	
-	FINFO("main", "Building index of potential atom achievers");
+	LPT_INFO("main", "Building index of potential atom achievers");
 	
 	for (unsigned manager_idx = 0; manager_idx < managers.size(); ++manager_idx) {
 		const EffectHandlerPtr& manager = managers[manager_idx];

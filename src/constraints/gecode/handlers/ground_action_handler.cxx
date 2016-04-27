@@ -1,7 +1,7 @@
 
 #include <languages/fstrips/effects.hxx>
 #include <constraints/gecode/handlers/ground_action_handler.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
 
@@ -15,10 +15,10 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 		// auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty); std::cout << *x << std::endl;
 		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], tuple_index, approximate);
 		if (manager->init(novelty)) {
-			FDEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
+			LPT_DEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
 			managers.push_back(manager);
 		} else {
-			FDEBUG("main", "CSP for action " << *actions[idx] << " is inconsistent ==> the action is not applicable");
+			LPT_DEBUG("main", "CSP for action " << *actions[idx] << " is inconsistent ==> the action is not applicable");
 		}
 	}
 	return managers;
@@ -49,7 +49,7 @@ const ActionID* GroundActionCSPHandler::get_action_id(const SimpleCSP* solution)
 }
 
 void GroundActionCSPHandler::log() const {
-	FFDEBUG("heuristic", "Processing action: " << _action);
+	LPT_EDEBUG("heuristic", "Processing action: " << _action);
 }
 
 } } // namespaces

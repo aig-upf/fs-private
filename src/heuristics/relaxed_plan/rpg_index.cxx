@@ -1,6 +1,6 @@
 
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include <utils/logging.hxx>
+#include <aptk2/tools/logging.hxx>
 #include <utils/tuple_index.hxx>
 #include <state.hxx>
 #include <actions/actions.hxx>
