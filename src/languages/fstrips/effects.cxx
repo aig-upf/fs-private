@@ -8,8 +8,8 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
-ActionEffect::ActionEffect(const Term* lhs_, const Term* rhs_)
-	: _lhs(lhs_), _rhs(rhs_) {
+ActionEffect::ActionEffect(const Term* lhs, const Term* rhs)
+	: _lhs(lhs), _rhs(rhs) {
 	if (!isWellFormed()) throw std::runtime_error("Ill-formed effect");
 }
 

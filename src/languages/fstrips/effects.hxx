@@ -16,7 +16,7 @@ class Term;
 //! with the particularity that LHS must be either a state variable or a fluent-headed nested term.
 class ActionEffect {
 public:
-	ActionEffect(const Term* lhs_, const Term* rhs_);
+	ActionEffect(const Term* lhs, const Term* rhs);
 	
 	virtual ~ActionEffect();
 	
