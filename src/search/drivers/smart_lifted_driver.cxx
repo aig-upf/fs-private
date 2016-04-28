@@ -19,8 +19,10 @@ namespace fs0 { namespace drivers {
 std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> SmartLiftedDriver::create(const Config& config, LiftedStateModel& model) const {
 	const Problem& problem = model.getTask();
 	
-	bool novelty = Config::instance().useNoveltyConstraint() && !problem.is_predicative();
-	bool approximate = Config::instance().useApproximateActionResolution();
+	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
+	bool approximate = config.useApproximateActionResolution();
+	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	
@@ -30,9 +32,9 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> SmartLiftedDriver::crea
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
-	SmartRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+	auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	
-	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, LiftedStateModel>(model, std::move(heuristic)));
+	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, LiftedStateModel>(model, heuristic, delayed));
 }
 
 

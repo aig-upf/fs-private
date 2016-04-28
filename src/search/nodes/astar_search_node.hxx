@@ -68,6 +68,10 @@ public:
 		h = heuristic.evaluate(state);
 		LPT_DEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
 	}
+	
+	void inherit_heuristic_estimate() {
+		if (parent) h = parent->h;
+	}
 
 	//! This effectively implements A* search with tie-breaking based on h
 	bool operator>(const AStarSearchNode<StateT, ActionT>& other) const {

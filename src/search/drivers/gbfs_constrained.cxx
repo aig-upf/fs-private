@@ -23,8 +23,9 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
 	
-	bool novelty = Config::instance().useNoveltyConstraint();
-	bool approximate = Config::instance().useApproximateActionResolution();
+	bool novelty = config.useNoveltyConstraint();
+	bool approximate = config.useApproximateActionResolution();
+	bool delayed = config.getOption<bool>("search.delayed_evaluation");
 	
 	auto csp_type = decide_csp_type(problem);
 	_unused(csp_type);
@@ -60,9 +61,9 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
-	GecodeHeuristic heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+	auto heuristic = new GecodeHeuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, GroundStateModel>(model, std::move(heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeHeuristic, GroundStateModel>(model, heuristic, delayed));
 }
 
 template <typename GecodeHeuristic, typename DirectHeuristic>

@@ -18,8 +18,9 @@ std::unique_ptr<FS0SearchAlgorithm>
 SmartEffectDriver::create(const Config& config, const GroundStateModel& model) const {
 	LPT_INFO("main", "Using the lifted-effect base RPG constructor");
 	const Problem& problem = model.getTask();
-	bool novelty = Config::instance().useNoveltyConstraint() && !problem.is_predicative();
-	bool approximate = Config::instance().useApproximateActionResolution();
+	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
+	bool approximate = config.useApproximateActionResolution();
+	bool delayed = config.getOption<bool>("search.delayed_evaluation");
 	
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
@@ -28,9 +29,9 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) c
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
-	SmartRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+	auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, GroundStateModel>(model, std::move(heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, GroundStateModel>(model, heuristic, delayed));
 }
 
 GroundStateModel

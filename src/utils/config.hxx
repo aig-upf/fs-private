@@ -109,6 +109,8 @@ public:
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
 	
+	bool useDelayedEvaluation() const { return true; }
+	
 	//! A generic getter
 	template <typename T>
 	T getOption(const std::string& key) const {

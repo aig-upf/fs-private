@@ -10,10 +10,12 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyDriver::create(const Config& conf
 	FS0SearchAlgorithm* engine = nullptr;
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
+	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	
-	NoveltyHeuristic evaluator(model, max_novelty, feature_configuration);
-	engine = new aptk::StlBestFirstSearch<SearchNode, NoveltyHeuristic, GroundStateModel>(model, std::move(evaluator));
+	auto heuristic = new NoveltyHeuristic(model, max_novelty, feature_configuration);
+	engine = new aptk::StlBestFirstSearch<SearchNode, NoveltyHeuristic, GroundStateModel>(model, heuristic, delayed);
 	
 	LPT_INFO("main", "Heuristic options:");
 	LPT_INFO("main", "\tMax novelty: " << max_novelty);

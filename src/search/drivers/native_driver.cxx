@@ -19,15 +19,16 @@ NativeDriver::create(const Config& config, const GroundStateModel& model) const 
 	LPT_INFO("main", "Using the Native-CSP RPG Driver");
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
-	
+	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+
 	if (!check_supported(problem)) {
 		throw std::runtime_error("The Native Driver cannot process the given problem");
 	}
 	
 	auto direct_builder = DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
-	DirectCRPG direct_builder_heuristic(problem, DirectActionManager::create(actions), std::move(direct_builder));
+	auto heuristic = new DirectCRPG(problem, DirectActionManager::create(actions), std::move(direct_builder));
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, DirectCRPG, GroundStateModel>(model, std::move(direct_builder_heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, DirectCRPG, GroundStateModel>(model, heuristic, delayed));
 }
 
 GroundStateModel

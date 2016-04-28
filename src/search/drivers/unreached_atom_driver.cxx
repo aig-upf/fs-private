@@ -17,8 +17,10 @@ namespace fs0 { namespace drivers {
 std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& config, const GroundStateModel& model) const {
 	LPT_INFO("main", "Using the lifted-effect base RPG constructor");
 	const Problem& problem = model.getTask();
-	bool novelty = Config::instance().useNoveltyConstraint() && !problem.is_predicative();
-	bool approximate = Config::instance().useApproximateActionResolution();
+	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
+	bool approximate = config.useApproximateActionResolution();
+	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+
 	
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
@@ -26,11 +28,11 @@ std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& co
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
-	UnreachedAtomRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(),
-							   GroundEffectCSPHandler::create(actions, tuple_index, approximate, novelty),
-							   extension_handler);
+	UnreachedAtomRPG* heuristic = new UnreachedAtomRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(),
+									GroundEffectCSPHandler::create(actions, tuple_index, approximate, novelty),
+									extension_handler);
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, GroundStateModel>(model, std::move(heuristic)));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, GroundStateModel>(model, heuristic, delayed));
 }
 
 GroundStateModel UnreachedAtomDriver::setup(const Config& config, Problem& problem) const {

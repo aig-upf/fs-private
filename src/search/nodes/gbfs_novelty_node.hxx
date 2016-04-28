@@ -80,10 +80,17 @@ public:
 	bool operator==( const GBFSNoveltyNode<State>& o ) const { return state == o.state; }
 
 	template <typename Heuristic>
-	void	evaluate_with( Heuristic& heuristic ) {
+	void evaluate_with( Heuristic& heuristic ) {
 		novelty = heuristic.novelty( state );
 		if (novelty > heuristic.novelty_bound()) novelty = std::numeric_limits<unsigned>::infinity();
 		num_unsat = heuristic.evaluate_num_unsat_goals( state );
+	}
+	
+	void inherit_heuristic_estimate() {
+		if (parent) {
+			novelty = parent->novelty;
+			num_unsat = parent->num_unsat;
+		}
 	}
 
 	bool dead_end() const { return novelty == std::numeric_limits<unsigned>::infinity(); }

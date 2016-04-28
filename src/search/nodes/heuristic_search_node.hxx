@@ -68,6 +68,10 @@ public:
 		h = heuristic.evaluate(state);
 		LPT_DEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
 	}
+	
+	void inherit_heuristic_estimate() {
+		if (parent) h = parent->h;
+	}
 
 	//! This effectively implements Greedy Best First search
 	bool operator>( const HeuristicSearchNode<StateT, ActionT>& other ) const { return h > other.h; }

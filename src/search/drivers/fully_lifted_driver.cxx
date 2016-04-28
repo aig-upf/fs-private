@@ -20,16 +20,18 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> FullyLiftedDriver::crea
 
 	const Problem& problem = model.getTask();
 	
-	bool novelty = Config::instance().useNoveltyConstraint() && !problem.is_predicative();
-	bool approximate = Config::instance().useApproximateActionResolution();
+	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
+	bool approximate = config.useApproximateActionResolution();
+	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	auto managers = ActionSchemaCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
-	GecodeCRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
-	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, LiftedStateModel>(model, std::move(heuristic)));
+	auto heuristic = new GecodeCRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, LiftedStateModel>(model, heuristic, delayed));
 }
 
 

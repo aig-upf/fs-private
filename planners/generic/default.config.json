@@ -49,5 +49,9 @@
 	"heuristics": {
 		"plan_extraction_comment": ["Either 'propositional' or 'extended' - The type of plan extraction procedure"],
 		"plan_extraction": "propositional"
+	},
+	
+	"search": {
+		"delayed_evaluation": false
 	}
 }
