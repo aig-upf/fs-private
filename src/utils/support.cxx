@@ -7,6 +7,7 @@
 #include <actions/actions.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/effects.hxx>
+#include <languages/fstrips/terms.hxx>
 
 
 namespace fs0 { namespace support {

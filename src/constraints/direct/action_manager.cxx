@@ -63,7 +63,7 @@ bool DirectActionManager::is_supported(const GroundAction& action) {
 		else if(arity > 1) return false;
 	}
 	
-	for (const fs::ActionEffect::cptr effect:action.getEffects()) {
+	for (const fs::ActionEffect* effect:action.getEffects()) {
 		if (effect->lhs()->nestedness() > 0 || effect->rhs()->nestedness() > 0 || fs::ScopeUtils::computeDirectScope(effect).size() > 1) return false;
 	}
 	
@@ -89,7 +89,7 @@ DirectActionManager::~DirectActionManager() {
 
 VariableIdxVector DirectActionManager::extractAllRelevant() const {
 	std::set<VariableIdx> unique(_scope.begin(), _scope.end());
-	for (fs::ActionEffect::cptr effect:_action.getEffects()) fs::ScopeUtils::computeDirectScope(effect, unique);
+	for (const fs::ActionEffect* effect:_action.getEffects()) fs::ScopeUtils::computeDirectScope(effect, unique);
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 

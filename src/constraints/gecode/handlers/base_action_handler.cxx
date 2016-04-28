@@ -93,7 +93,7 @@ void BaseActionCSPHandler::index() {
 	}
 	
 	// Index effect elements
-	for (const fs::ActionEffect::cptr effect:get_effects()) {
+	for (const fs::ActionEffect* effect:get_effects()) {
 		const auto terms = effect->rhs()->all_terms();
 		_all_terms.insert(terms.cbegin(), terms.cend());
 		
@@ -162,7 +162,7 @@ void BaseActionCSPHandler::post_novelty_constraint(SimpleCSP& csp, const RPGInde
 	if (_novelty) _novelty->post_constraint(csp, rpg);
 }
 
-void BaseActionCSPHandler::registerEffectConstraints(const fs::ActionEffect::cptr effect) {
+void BaseActionCSPHandler::registerEffectConstraints(const fs::ActionEffect* effect) {
 	// Note: we no longer use output variables, etc.
 	// Equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
 	// const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _base_csp);
@@ -202,7 +202,7 @@ void BaseActionCSPHandler::process_solution(SimpleCSP* solution, RPGIndex& graph
 	
 	// We compute, effect by effect, the atom produced by the effect for the given solution, as well as its supports
 	for (unsigned i = 0; i < get_effects().size(); ++i) {
-		fs::ActionEffect::cptr effect = get_effects()[i];
+		const fs::ActionEffect* effect = get_effects()[i];
 		VariableIdx variable = _has_nested_lhs ? effect->lhs()->interpretVariable(assignment, binding) : effect_lhs_variables[i];
 		ObjectIdx value = _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution);
 		TupleIdx reached_tuple = _tuple_index.to_index(variable, value);

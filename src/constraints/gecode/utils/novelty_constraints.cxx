@@ -10,7 +10,7 @@
 
 namespace fs0 { namespace gecode {
 	
-NoveltyConstraint* NoveltyConstraint::createFromEffects(CSPTranslator& translator, const fs::Formula* precondition, const std::vector<fs::ActionEffect::cptr>& effects) {
+NoveltyConstraint* NoveltyConstraint::createFromEffects(CSPTranslator& translator, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects) {
 	if (StrongNoveltyConstraint::applicable(effects)) {
 		return new StrongNoveltyConstraint(translator, effects);
 	} else {
@@ -22,7 +22,7 @@ NoveltyConstraint* NoveltyConstraint::createFromEffects(CSPTranslator& translato
 
 // TODO - Weak Novelty constraints ATM disabled, as it is not sure it pays off to compute and keep the whole domain deltas for such a weak constraint.
 /*
-WeakNoveltyConstraint* WeakNoveltyConstraint::create(CSPTranslator& translator, const fs::Formula* conditions, const std::vector<fs::ActionEffect::cptr>& effects) {
+WeakNoveltyConstraint* WeakNoveltyConstraint::create(CSPTranslator& translator, const fs::Formula* conditions, const std::vector<const fs::ActionEffect*>& effects) {
 	std::set<VariableIdx> variables;
 	std::set<unsigned> symbols;
 
@@ -79,14 +79,14 @@ void WeakNoveltyConstraint::post_constraint(SimpleCSP& csp, const RPGIndex& laye
 
 //! Returns true iff the constraint is applicable to the set of given effects
 //! The constraint is applicable if none of the effects' LHS contains a nested fluent
-bool StrongNoveltyConstraint::applicable(const std::vector<fs::ActionEffect::cptr>& effects) {
+bool StrongNoveltyConstraint::applicable(const std::vector<const fs::ActionEffect*>& effects) {
 	for (const auto effect:effects) {
 		if (!effect->lhs()->flat()) return false;
 	}
 	return true;
 }
 	
-StrongNoveltyConstraint::StrongNoveltyConstraint(CSPTranslator& translator, const std::vector<fs::ActionEffect::cptr>& effects)  {
+StrongNoveltyConstraint::StrongNoveltyConstraint(CSPTranslator& translator, const std::vector<const fs::ActionEffect*>& effects)  {
 	assert(applicable(effects));
 	for (const auto effect:effects) {
 		auto variable = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());

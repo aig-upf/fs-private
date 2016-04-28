@@ -125,7 +125,7 @@ const DirectEffect* DirectTranslator::generate(const fs::ActionEffect& effect) {
 	}
 }
 
-std::vector<const DirectEffect*> DirectTranslator::generate(const std::vector<fs::ActionEffect::cptr>& effects) {
+std::vector<const DirectEffect*> DirectTranslator::generate(const std::vector<const fs::ActionEffect*>& effects) {
 	std::vector<const DirectEffect*> generated;
 	for (const auto effect:effects) {
 		generated.push_back(generate(*effect));

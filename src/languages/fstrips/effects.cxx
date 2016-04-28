@@ -1,13 +1,14 @@
 
 #include <problem_info.hxx>
 #include <languages/fstrips/effects.hxx>
+#include <languages/fstrips/terms.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips {
 
-ActionEffect::ActionEffect(Term::cptr lhs_, Term::cptr rhs_)
+ActionEffect::ActionEffect(const Term* lhs_, const Term* rhs_)
 	: _lhs(lhs_), _rhs(rhs_) {
 	if (!isWellFormed()) throw std::runtime_error("Ill-formed effect");
 }
@@ -21,16 +22,16 @@ ActionEffect::ActionEffect(const ActionEffect& other) :
 	_lhs(other._lhs->clone()), _rhs(other._rhs->clone())
 {}
 
-std::vector<Term::cptr> ActionEffect::all_terms() const {
-	std::vector<Term::cptr> res = _lhs->all_terms();
+std::vector<const Term*> ActionEffect::all_terms() const {
+	std::vector<const Term*> res = _lhs->all_terms();
 	auto rhsf = _rhs->all_terms();
 	res.insert(res.end(), rhsf.cbegin(), rhsf.cend());
 	return res;
 }
 
 bool ActionEffect::isWellFormed() const {
-	auto lhs_var = dynamic_cast<StateVariable::cptr>(_lhs);
-	auto lhs_fluent = dynamic_cast<FluentHeadedNestedTerm::cptr>(_lhs);
+	auto lhs_var = dynamic_cast<const StateVariable*>(_lhs);
+	auto lhs_fluent = dynamic_cast<const FluentHeadedNestedTerm*>(_lhs);
 	return lhs_var || lhs_fluent; // The LHS of the effect must be either a state variable or a fluent function.
 }
 
@@ -46,7 +47,7 @@ std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info
 	return os;
 }
 
-ActionEffect::cptr ActionEffect::bind(const Binding& binding, const ProblemInfo& info) const {
+const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo& info) const {
 	return new ActionEffect(_lhs->bind(binding, info), _rhs->bind(binding, info));
 }
 

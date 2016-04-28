@@ -85,7 +85,7 @@ const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned 
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	
 	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
-	const std::vector<fs::ActionEffect::cptr> effects = fs::Loader::parseEffectList(node["effects"], info);
+	const std::vector<const fs::ActionEffect*> effects = fs::Loader::parseEffectList(node["effects"], info);
 	
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
 	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it

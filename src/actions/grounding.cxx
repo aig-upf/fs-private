@@ -90,8 +90,8 @@ ActionData* ActionGrounder::process_action_data(const ActionData& action_data, c
 		throw std::runtime_error("The precondition of the action schema is (statically) unsatisfiable!");
 	}
 	
-	std::vector<fs::ActionEffect::cptr> effects;
-	for (const fs::ActionEffect::cptr effect:action_data.getEffects()) {
+	std::vector<const fs::ActionEffect*> effects;
+	for (const fs::ActionEffect* effect:action_data.getEffects()) {
 		effects.push_back(effect->bind(binding, info));
 	}
 	return new ActionData(action_data.getId(), action_data.getName(), action_data.getSignature(), action_data.getParameterNames(), precondition, effects);
@@ -107,8 +107,8 @@ GroundAction* ActionGrounder::full_binding(unsigned id, const ActionData& action
 		return nullptr;
 	}
 	
-	std::vector<fs::ActionEffect::cptr> effects;
-	for (const fs::ActionEffect::cptr effect:action_data.getEffects()) {
+	std::vector<const fs::ActionEffect*> effects;
+	for (const fs::ActionEffect* effect:action_data.getEffects()) {
 		effects.push_back(effect->bind(binding, info));
 	}
 	
@@ -213,8 +213,8 @@ PartiallyGroundedAction* ActionGrounder::partial_binding(const ActionData& actio
 		return nullptr;
 	}
 	
-	std::vector<fs::ActionEffect::cptr> effects;
-	for (const fs::ActionEffect::cptr effect:action_data.getEffects()) {
+	std::vector<const fs::ActionEffect*> effects;
+	for (const fs::ActionEffect* effect:action_data.getEffects()) {
 		effects.push_back(effect->bind(binding, info));
 	}
 	
