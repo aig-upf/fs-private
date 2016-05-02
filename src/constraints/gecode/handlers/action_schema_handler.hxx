@@ -13,18 +13,18 @@ namespace fs0 { namespace gecode {
 
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
-class ActionSchemaCSPHandler : public BaseActionCSPHandler {
+class LiftedActionCSP : public BaseActionCSP {
 public:
-	typedef ActionSchemaCSPHandler* ptr;
+	typedef LiftedActionCSP* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 	
 	//! HACK
-	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<LiftedActionCSP>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	virtual ~ActionSchemaCSPHandler() {}
+	LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	virtual ~LiftedActionCSP() {}
 	
 	bool init(bool use_novelty_constraint) override;
 
@@ -35,7 +35,7 @@ public:
 	const fs::Formula* get_precondition() const override;
 	
 	//! Return the (Lifted) ActionID corresponding to the given solution
-	LiftedActionID* get_lifted_action_id(const SimpleCSP* solution) const;
+	LiftedActionID* get_lifted_action_id(const GecodeCSP* solution) const;
 	
 protected:
 	//! The action that originates this handler
@@ -49,10 +49,10 @@ protected:
 	void index_parameters();
 
 	//! Return the action binding that corresponds to the given solution
-	Binding build_binding_from_solution(const SimpleCSP* solution) const;
+	Binding build_binding_from_solution(const GecodeCSP* solution) const;
 
 	//! Return the (Lifted) ActionID corresponding to the given solution
-	const ActionID* get_action_id(const SimpleCSP* solution) const;
+	const ActionID* get_action_id(const GecodeCSP* solution) const;
 	
 	//! Log some handler-related into
 	virtual void log() const;

@@ -5,7 +5,7 @@
 #include <actions/action_id.hxx>
 
 
-namespace fs0 { namespace gecode { class LiftedActionIterator; class ActionSchemaCSPHandler; }}
+namespace fs0 { namespace gecode { class LiftedActionIterator; class LiftedActionCSP; }}
 
 namespace fs0 {
 
@@ -41,13 +41,13 @@ public:
 	void print(std::ostream &os) const;
 	
 	const Problem& getTask() const { return task; }
-	void set_handlers(std::vector<std::shared_ptr<gecode::ActionSchemaCSPHandler>>&& handlers) { _handlers = std::move(handlers); }
+	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>>&& handlers) { _handlers = std::move(handlers); }
 
 protected:
 	// The underlying planning problem.
 	const Problem& task;
 	
-	std::vector<std::shared_ptr<gecode::ActionSchemaCSPHandler>> _handlers;
+	std::vector<std::shared_ptr<gecode::LiftedActionCSP>> _handlers;
 };
 
 } // namespaces

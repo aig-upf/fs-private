@@ -11,7 +11,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class SimpleCSP;
+class GecodeCSP;
 class CSPTranslator;
 class RPGIndex;
 
@@ -27,8 +27,8 @@ public:
 	const fs::FluentHeadedNestedTerm* get_term() const {return _term; }
 	
 	//! Constraint-posting routines
-	bool update(SimpleCSP& csp, const CSPTranslator& translator, const State& state) const;
-	bool update(SimpleCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const;
+	bool update(GecodeCSP& csp, const CSPTranslator& translator, const State& state) const;
+	bool update(GecodeCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const;
 	
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ExtensionalConstraint&  o) { return o.print(os); }
@@ -36,7 +36,7 @@ public:
 	
 protected:
 	//!
-	bool update(SimpleCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
+	bool update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
 	
 	//! This is a hacky, temporary way of knowing if the current extensional constraint models a predicate or not, in which
 	//! case we assume it models a nested fluent.

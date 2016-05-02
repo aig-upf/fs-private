@@ -37,11 +37,11 @@ CSPFormulaInterpreter::~CSPFormulaInterpreter() {
 
 CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula* formula, const TupleIndex& tuple_index) :
 	// Note that we don't need any of the optimizations, since we will be instantiating the CSP on a state, not a RPG layer
-	_formula_handler(new gecode::FormulaHandler(formula, tuple_index, false))
+	_formula_handler(new gecode::FormulaCSP(formula, tuple_index, false))
 {}
 
 bool CSPFormulaInterpreter::satisfied(const State& state) const {
-	gecode::SimpleCSP* csp = _formula_handler->instantiate(state);
+	gecode::GecodeCSP* csp = _formula_handler->instantiate(state);
 	if (!csp) return false;
 	csp->checkConsistency();
 	bool sol = _formula_handler->is_satisfiable(csp);

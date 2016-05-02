@@ -10,7 +10,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class SimpleCSP; class CSPTranslator;
+class GecodeCSP; class CSPTranslator;
 
 class TermTranslator {
 public:
@@ -62,28 +62,28 @@ protected:
 
 	virtual Gecode::IntArgs getLinearCoefficients() const = 0;
 
-	virtual void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const = 0;
+	virtual void post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const = 0;
 };
 
 class AdditionTermTranslator : public ArithmeticTermTranslator {
 public:
 	Gecode::IntArgs getLinearCoefficients() const;
 
-	void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
+	void post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
 };
 
 class SubtractionTermTranslator : public ArithmeticTermTranslator {
 public:
 	Gecode::IntArgs getLinearCoefficients() const;
 
-	void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
+	void post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
 };
 
 class MultiplicationTermTranslator : public ArithmeticTermTranslator {
 public:
 	Gecode::IntArgs getLinearCoefficients() const;
 
-	void post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
+	void post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const;
 };
 
 class FormulaTranslator {

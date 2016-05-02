@@ -14,12 +14,12 @@
 
 namespace fs0 { namespace gecode {
 
-GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, ExtensionHandler extension_handler) :
+GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSP>>&& managers, ExtensionHandler extension_handler) :
 	_problem(problem),
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
 	_extension_handler(extension_handler),
-	_goal_handler(std::unique_ptr<FormulaHandler>(new FormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
+	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
 	LPT_DEBUG("heuristic", "Standard CRPG heuristic initialized");
 }
@@ -41,7 +41,7 @@ long GecodeCRPG::evaluate(const State& seed) {
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
 	for (unsigned i = 0; ; ++i) {
 		// Apply all the actions to the RPG layer
-		for (const std::shared_ptr<BaseActionCSPHandler>& manager:_managers) {
+		for (const std::shared_ptr<BaseActionCSP>& manager:_managers) {
 // 			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
 // 				manager->init_value_selector(&bookkeeping);
 // 			}
@@ -64,7 +64,7 @@ long GecodeCRPG::computeHeuristic(const RPGIndex& graph) const {
 	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler);
 }
 
-GecodeCHMax::GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, ExtensionHandler extension_handler) :
+GecodeCHMax::GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSP>>&& managers, ExtensionHandler extension_handler) :
 	GecodeCRPG(problem, goal_formula, state_constraints, std::move(managers), extension_handler) {}
 		
 long GecodeCHMax::computeHeuristic(const RPGIndex& graph) const {

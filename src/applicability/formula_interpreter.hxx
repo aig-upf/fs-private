@@ -7,7 +7,7 @@ namespace fs0 { class TupleIndex; }
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace gecode { class FormulaHandler; }}
+namespace fs0 { namespace gecode { class FormulaCSP; }}
 
 namespace fs0 {
 
@@ -52,7 +52,7 @@ public:
 
 protected:
 	//! The formula handler that will check for CSP applicability
-	const gecode::FormulaHandler* _formula_handler;
+	const gecode::FormulaCSP* _formula_handler;
 };
 
 } // namespaces

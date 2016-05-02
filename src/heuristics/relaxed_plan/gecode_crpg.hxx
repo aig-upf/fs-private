@@ -8,13 +8,13 @@ namespace fs0 { class Problem; class State; class RPGData; }
 
 namespace fs0 { namespace gecode {
 
-class BaseActionCSPHandler;
-class FormulaHandler;
+class BaseActionCSP;
+class FormulaCSP;
 class RPGIndex;
 
 class GecodeCRPG {
 public:
-	GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, ExtensionHandler extension_handler);
+	GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSP>>&& managers, ExtensionHandler extension_handler);
 	virtual ~GecodeCRPG() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.
@@ -38,18 +38,18 @@ protected:
 	const TupleIndex& _tuple_index;
 	
 	//! The set of action managers, one per every action
-	const std::vector<std::shared_ptr<BaseActionCSPHandler>> _managers;
+	const std::vector<std::shared_ptr<BaseActionCSP>> _managers;
 	
 	//!
 	ExtensionHandler _extension_handler;
 	
-	std::unique_ptr<FormulaHandler> _goal_handler;
+	std::unique_ptr<FormulaCSP> _goal_handler;
 };
 
 //! The h_max version
 class GecodeCHMax : public GecodeCRPG {
 public:
-	GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSPHandler>>&& managers, ExtensionHandler extension_handler);
+	GecodeCHMax(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<std::shared_ptr<BaseActionCSP>>&& managers, ExtensionHandler extension_handler);
 	~GecodeCHMax() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.

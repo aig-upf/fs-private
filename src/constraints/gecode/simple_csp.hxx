@@ -9,30 +9,30 @@
 namespace fs0 { namespace gecode {
 
 /**
- * A SimpleCSP is a Gecode CSP with a single set of integer variables.
+ * A GecodeCSP is a Gecode CSP with a single set of integer variables.
  * Should be enough for most of our needs.
  */
-class SimpleCSP : public Gecode::Space {
+class GecodeCSP : public Gecode::Space {
 public:
-	typedef SimpleCSP* ptr;
+	typedef GecodeCSP* ptr;
 
-	SimpleCSP();
-	~SimpleCSP();
+	GecodeCSP();
+	~GecodeCSP();
 	
 	//! Cloning constructor, required by Gecode
-	SimpleCSP(bool share, SimpleCSP& other);
+	GecodeCSP(bool share, GecodeCSP& other);
 
 	//! Shallow copy operator, see notes on search in Gecode to
 	//! get an idea of what is being "actually" copied
 	virtual Gecode::Space* copy(bool share);
 
 	//! Standard copy constructor
-	SimpleCSP(SimpleCSP& other) = delete;
+	GecodeCSP(GecodeCSP& other) = delete;
 
 	bool checkConsistency();
 
 	//! Prints a representation of a CSP. Mostly for debugging purposes
-	friend std::ostream& operator<<(std::ostream &os, const SimpleCSP&  csp) { return csp.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const GecodeCSP&  csp) { return csp.print(os); }
 	std::ostream& print(std::ostream& os) const;
 	
 	void init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector);

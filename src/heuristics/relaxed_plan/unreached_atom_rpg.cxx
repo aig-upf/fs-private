@@ -20,7 +20,7 @@ UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* go
 	_problem(problem),
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
-	_goal_handler(std::unique_ptr<FormulaHandler>(new FormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false))),
+	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(goal_formula->conjunction(state_constraints), _tuple_index, false))),
 	_extension_handler(extension_handler),
 	_atom_achievers(build_achievers_index(_managers, _tuple_index))
 {
@@ -50,7 +50,7 @@ long UnreachedAtomRPG::evaluate(const State& seed) {
 		
 		// cache[i] contains the CSP corresponding to effect 'i' instantiated to the current layer, or nullptr.
 		// We use to avoid instantiating the same effect CSP more than once per layer
-		std::vector<std::unique_ptr<SimpleCSP>> cache(_managers.size());
+		std::vector<std::unique_ptr<GecodeCSP>> cache(_managers.size());
 		std::vector<bool> failure_cache(_managers.size(), false);
 		
 		
@@ -68,13 +68,13 @@ long UnreachedAtomRPG::evaluate(const State& seed) {
 				}
 				
 				if (cache[manager_idx] == nullptr) {
-					SimpleCSP* raw = manager->preinstantiate(graph);
+					GecodeCSP* raw = manager->preinstantiate(graph);
 					if (!raw) { // We are instantiating the CSP for the first time in this layer and find that it is not applicable.
 						failure_cache[manager_idx] = true;
 						LPT_EDEBUG("heuristic", "Effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\" inconsistent => not applicable");
 						continue;
 					}
-					cache[manager_idx] = std::unique_ptr<SimpleCSP>(raw);
+					cache[manager_idx] = std::unique_ptr<GecodeCSP>(raw);
 				} else {
 					LPT_EDEBUG("heuristic", "Found cached & applicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
 				}

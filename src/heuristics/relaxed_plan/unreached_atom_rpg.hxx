@@ -10,11 +10,11 @@ namespace fs0 { class Problem; class State; class RPGData; }
 
 namespace fs0 { namespace gecode {
 
-class GroundEffectCSPHandler;
+class GroundEffectCSP;
 
 class UnreachedAtomRPG {
 protected:
-	typedef std::shared_ptr<GroundEffectCSPHandler> EffectHandlerPtr;
+	typedef std::shared_ptr<GroundEffectCSP> EffectHandlerPtr;
 	
 public:
 	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
@@ -44,7 +44,7 @@ protected:
 	//! The set of action managers, one per every action
 	const std::vector<EffectHandlerPtr> _managers;
 	
-	std::unique_ptr<FormulaHandler> _goal_handler;
+	std::unique_ptr<FormulaCSP> _goal_handler;
 	
 	//!
 	ExtensionHandler _extension_handler;

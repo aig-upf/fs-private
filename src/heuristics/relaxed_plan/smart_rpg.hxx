@@ -14,12 +14,12 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class EffectSchemaCSPHandler;
+class LiftedEffectCSP;
 class RPGIndex;
 
 class SmartRPG {
 protected:
-	typedef std::shared_ptr<EffectSchemaCSPHandler> EffectHandlerPtr;
+	typedef std::shared_ptr<LiftedEffectCSP> EffectHandlerPtr;
 	
 public:
 	SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
@@ -52,7 +52,7 @@ protected:
 	//!
 	ExtensionHandler _extension_handler;
 	
-	std::unique_ptr<FormulaHandler> _goal_handler;
+	std::unique_ptr<FormulaCSP> _goal_handler;
 };
 
 } } // namespaces

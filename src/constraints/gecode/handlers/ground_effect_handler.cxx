@@ -14,9 +14,9 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<GroundEffectCSPHandler>>
-GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
-	std::vector<std::shared_ptr<GroundEffectCSPHandler>> managers;
+std::vector<std::shared_ptr<GroundEffectCSP>>
+GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+	std::vector<std::shared_ptr<GroundEffectCSP>> managers;
 	
 	for (unsigned action_idx = 0; action_idx < actions.size(); ++action_idx) {
 		const auto action = actions[action_idx];
@@ -24,7 +24,7 @@ GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, 
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
 			const fs::ActionEffect* effect = action->getEffects().at(eff_idx);
 			if (effect->is_del()) continue; // Ignore delete effects
-			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, tuple_index, effect, approximate, true);
+			auto handler = std::make_shared<GroundEffectCSP>(*action, tuple_index, effect, approximate, true);
 			if (handler->init(novelty)) {
 				managers.push_back(handler);
 				LPT_DEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
@@ -36,12 +36,12 @@ GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, 
 	return managers;
 }
 
-GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions) :
-	BaseActionCSPHandler(tuple_index, approximate, use_effect_conditions), _action(action), _effects({ effect })
+GroundEffectCSP::GroundEffectCSP(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions) :
+	BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action), _effects({ effect })
 {}
 
-bool GroundEffectCSPHandler::init(bool use_novelty_constraint) {
-	if (!BaseActionCSPHandler::init(use_novelty_constraint)) return false;
+bool GroundEffectCSP::init(bool use_novelty_constraint) {
+	if (!BaseActionCSP::init(use_novelty_constraint)) return false;
 	_lhs_subterm_variables = index_lhs_subterms();
 	
 	// Register all fluent symbols involved
@@ -50,16 +50,16 @@ bool GroundEffectCSPHandler::init(bool use_novelty_constraint) {
 	return true;
 }
 
-void GroundEffectCSPHandler::log() const {
+void GroundEffectCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" of action " << _action);
 }
 
-const ActionID* GroundEffectCSPHandler::get_action_id(const SimpleCSP* solution) const {
+const ActionID* GroundEffectCSP::get_action_id(const GecodeCSP* solution) const {
 	return new PlainActionID(&_action);
 }
 
-SimpleCSP* GroundEffectCSPHandler::preinstantiate(const RPGIndex& rpg) const {
-	SimpleCSP* csp = instantiate(rpg);
+GecodeCSP* GroundEffectCSP::preinstantiate(const RPGIndex& rpg) const {
+	GecodeCSP* csp = instantiate(rpg);
 	if (!csp) return nullptr;
 	
 	if (!csp->checkConsistency()) { // This colaterally enforces propagation of constraints
@@ -71,10 +71,10 @@ SimpleCSP* GroundEffectCSPHandler::preinstantiate(const RPGIndex& rpg) const {
 }
 
 
-bool GroundEffectCSPHandler::find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, SimpleCSP& layer_csp, RPGIndex& rpg) const {
+bool GroundEffectCSP::find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const {
 	log();
 	
-	std::unique_ptr<SimpleCSP> csp = std::unique_ptr<SimpleCSP>(static_cast<SimpleCSP*>(layer_csp.clone()));
+	std::unique_ptr<GecodeCSP> csp = std::unique_ptr<GecodeCSP>(static_cast<GecodeCSP*>(layer_csp.clone()));
 	
 	post(*csp, atom);
 
@@ -93,10 +93,10 @@ bool GroundEffectCSPHandler::find_atom_support(TupleIdx tuple, const Atom& atom,
 	}
 }
 
-bool GroundEffectCSPHandler::solve(TupleIdx tuple, gecode::SimpleCSP* csp, RPGIndex& graph) const {
+bool GroundEffectCSP::solve(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
 	// We just want to search for one solution an extract the support from it
-	Gecode::DFS<SimpleCSP> engine(csp);
-	SimpleCSP* solution = engine.next();
+	Gecode::DFS<GecodeCSP> engine(csp);
+	GecodeCSP* solution = engine.next();
 	if (!solution) return false; // The CSP has no solution at all
 	
 	bool reached = graph.reached(tuple);
@@ -115,7 +115,7 @@ bool GroundEffectCSPHandler::solve(TupleIdx tuple, gecode::SimpleCSP* csp, RPGIn
 
 
 /*
-void GroundEffectCSPHandler::solve_approximately(const Atom& atom, gecode::SimpleCSP* csp, RPGData& rpg, const State& seed) const {
+void GroundEffectCSP::solve_approximately(const Atom& atom, gecode::GecodeCSP* csp, RPGData& rpg, const State& seed) const {
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
 	
 	Atom::vctrp support = std::make_shared<Atom::vctr>();
@@ -170,7 +170,7 @@ void GroundEffectCSPHandler::solve_approximately(const Atom& atom, gecode::Simpl
 */
 
 
-void GroundEffectCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {
+void GroundEffectCSP::post(GecodeCSP& csp, const Atom& atom) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	assert(_effects.size() == 1);
 	const auto& effect = _effects[0];
@@ -195,7 +195,7 @@ void GroundEffectCSPHandler::post(SimpleCSP& csp, const Atom& atom) const {
 	Gecode::rel(csp, rhs_term,  Gecode::IRT_EQ, atom.getValue());
 }
 
-std::vector<unsigned> GroundEffectCSPHandler::index_lhs_subterms() {
+std::vector<unsigned> GroundEffectCSP::index_lhs_subterms() {
 	std::vector<unsigned> subterm_variables;
 	auto lhs = get_effect()->lhs();
 	if (auto nested = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(lhs)) {
@@ -206,11 +206,11 @@ std::vector<unsigned> GroundEffectCSPHandler::index_lhs_subterms() {
 	return subterm_variables;
 }
 
-const fs::Formula* GroundEffectCSPHandler::get_precondition() const {
+const fs::Formula* GroundEffectCSP::get_precondition() const {
 	return _action.getPrecondition();
 }
 
-const std::vector<const fs::ActionEffect*>& GroundEffectCSPHandler::get_effects() const {
+const std::vector<const fs::ActionEffect*>& GroundEffectCSP::get_effects() const {
 	return _effects;
 }
 

@@ -64,22 +64,22 @@ void ArithmeticTermTranslator::registerConstraints(const fs::Term* term, CSPTran
 	LPT_DEBUG("translation", "Registering constraints for arithmetic term " << *term);
 
 	// Now we assert that the root temporary variable equals the sum of the subterms
-	SimpleCSP& csp = translator.getBaseCSP();
+	GecodeCSP& csp = translator.getBaseCSP();
 	const Gecode::IntVar& result = translator.resolveVariable(arithmetic_term, csp);
 	Gecode::IntVarArgs operands = translator.resolveVariables(arithmetic_term->getSubterms(), csp);
 	post(csp, operands, result);
 }
 
 
-void AdditionTermTranslator::post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+void AdditionTermTranslator::post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
 	Gecode::linear(csp, getLinearCoefficients(), operands, getRelationType(), result);
 }
 
-void SubtractionTermTranslator::post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+void SubtractionTermTranslator::post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
 	Gecode::linear(csp, getLinearCoefficients(), operands, getRelationType(), result);
 }
 
-void MultiplicationTermTranslator::post(SimpleCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+void MultiplicationTermTranslator::post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
 	Gecode::mult(csp, operands[0], operands[1], result);
 }
 
@@ -105,7 +105,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 	
 	LPT_DEBUG("translation", "Registering constraints for static nested term " << *stat);
 
-	SimpleCSP& csp = translator.getBaseCSP();
+	GecodeCSP& csp = translator.getBaseCSP();
 	
 	// Assume we have a static term s(t_1, ..., t_n), where t_i are the subterms.
 	// We have registered a temporary variable Z for the whole term, plus temporaries Z_i accounting for each subterm t_i
@@ -131,7 +131,7 @@ void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula* f
 	assert(condition);
 
 	// And register the relation constraint itself
-	SimpleCSP& csp = translator.getBaseCSP();
+	GecodeCSP& csp = translator.getBaseCSP();
 	const Gecode::IntVar& lhs_gec_var = translator.resolveVariable(condition->lhs(), csp);
 	const Gecode::IntVar& rhs_gec_var = translator.resolveVariable(condition->rhs(), csp);
 	Gecode::rel(csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
@@ -141,7 +141,7 @@ void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula* formu
 	auto alldiff = dynamic_cast<const fs::AlldiffFormula*>(formula);
 	assert(alldiff);
 
-	SimpleCSP& csp = translator.getBaseCSP();
+	GecodeCSP& csp = translator.getBaseCSP();
 	
 	Gecode::IntVarArgs variables = translator.resolveVariables(alldiff->getSubterms(), csp);
 	Gecode::distinct(csp, variables, Gecode::ICL_DOM);
@@ -151,7 +151,7 @@ void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, 
 	auto sum = dynamic_cast<const fs::SumFormula*>(formula);
 	assert(sum);
 
-	SimpleCSP& csp = translator.getBaseCSP();
+	GecodeCSP& csp = translator.getBaseCSP();
 	Gecode::IntVarArgs variables = translator.resolveVariables(sum->getSubterms(), csp);
 
 	// The sum constraint is a particular subcase of gecode's linear constraint with all variables' coefficients set to 1
@@ -165,7 +165,7 @@ void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, 
 
 void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
 
-	SimpleCSP& csp = translator.getBaseCSP();
+	GecodeCSP& csp = translator.getBaseCSP();
 	// We post an extensional constraint on the CSP variables modeling the value of each of the subterms formula
 	Gecode::IntVarArgs variables = translator.resolveVariables(formula->getSubterms(), csp);
 	Gecode::TupleSet extension = Helper::extensionalize(formula);

@@ -46,7 +46,7 @@ WeakNoveltyConstraint::WeakNoveltyConstraint(CSPTranslator& translator, const st
 	}
 }
 
-void WeakNoveltyConstraint::post_constraint(SimpleCSP& csp, const RPGIndex& layer) const {
+void WeakNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& layer) const {
 	// If we have relevant predicative symbols, and the denotation of some of them has changed in the last
 	// RPG layer, then we don't need to post the actual novelty constraint, since it might already be the case
 	// that e.g. some atom that was false is now true, and thus we need to check all possible values, old and new,
@@ -98,7 +98,7 @@ StrongNoveltyConstraint::StrongNoveltyConstraint(CSPTranslator& translator, cons
 }
 
 //! A private helper
-Gecode::BoolVar& post_individual_constraint(SimpleCSP& csp, const RPGIndex& layer, const std::tuple<VariableIdx, unsigned, unsigned>& element) {
+Gecode::BoolVar& post_individual_constraint(GecodeCSP& csp, const RPGIndex& layer, const std::tuple<VariableIdx, unsigned, unsigned>& element) {
 	VariableIdx variable = std::get<0>(element);
 	unsigned csp_variable_id = std::get<1>(element);
 	unsigned reified_variable_id = std::get<2>(element);
@@ -109,7 +109,7 @@ Gecode::BoolVar& post_individual_constraint(SimpleCSP& csp, const RPGIndex& laye
 	return reification_variable;
 }
 
-void StrongNoveltyConstraint::post_constraint(SimpleCSP& csp, const RPGIndex& layer) const {
+void StrongNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& layer) const {
 	if (_variables.empty()) return;
 	
 	Gecode::BoolVarArgs reification_variables;
@@ -134,7 +134,7 @@ EffectNoveltyConstraint::EffectNoveltyConstraint(CSPTranslator& translator, cons
 	_variable = std::make_tuple(variable->getValue(), csp_var_id, reified_id);
 }
 
-void EffectNoveltyConstraint::post_constraint(SimpleCSP& csp, const RPGIndex& layer) const {
+void EffectNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& layer) const {
 	VariableIdx variable = std::get<0>(_variable);
 	unsigned csp_variable_id = std::get<1>(_variable);
 	unsigned reified_variable_id = std::get<2>(_variable);

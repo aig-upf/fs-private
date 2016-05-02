@@ -15,35 +15,35 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class SimpleCSP;
-class ActionSchemaCSPHandler;
+class GecodeCSP;
+class LiftedActionCSP;
 
 //! An iterator that models action schema applicability as an action CSP.
 //! The iterator receives an (ordered) set of lifted-action CSP handlers, and upon iteration
 //! returns, chainedly, each of the lifted-action IDs that are applicable.
 class LiftedActionIterator {
 protected:
-	const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& _handlers;
+	const std::vector<std::shared_ptr<LiftedActionCSP>>& _handlers;
 	
 	const State& _state;
 	
 	const fs::Formula* _state_constraints;
 	
 public:
-	LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers, const fs::Formula* state_constraints);
+	LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const fs::Formula* state_constraints);
 	
 	class Iterator {
 		friend class LiftedActionIterator;
 		
 	public:
-		typedef Gecode::DFS<SimpleCSP> engine_t;
+		typedef Gecode::DFS<GecodeCSP> engine_t;
 		
 		~Iterator();
 		
 	protected:
-		Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers, const fs::Formula* state_constraints, unsigned currentIdx);
+		Iterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const fs::Formula* state_constraints, unsigned currentIdx);
 
-		const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& _handlers;
+		const std::vector<std::shared_ptr<LiftedActionCSP>>& _handlers;
 		
 		const State& _state;
 		
@@ -51,7 +51,7 @@ public:
 		
 		engine_t* _engine;
 		
-		SimpleCSP* _csp;
+		GecodeCSP* _csp;
 		
 		LiftedActionID* _action;
 		

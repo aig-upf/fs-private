@@ -8,11 +8,11 @@
 
 namespace fs0 { namespace gecode {
 
-LiftedActionIterator::LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers, const fs::Formula* state_constraints) :
+LiftedActionIterator::LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const fs::Formula* state_constraints) :
 	_handlers(handlers), _state(state), _state_constraints(state_constraints)
 {}
 
-LiftedActionIterator::Iterator::Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaCSPHandler>>& handlers, const fs::Formula* state_constraints, unsigned currentIdx) :
+LiftedActionIterator::Iterator::Iterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const fs::Formula* state_constraints, unsigned currentIdx) :
 	_handlers(handlers),
 	_state(state),
 	_current_handler_idx(currentIdx),
@@ -49,7 +49,7 @@ void LiftedActionIterator::Iterator::advance() {
 
 bool LiftedActionIterator::Iterator::next_solution() {
 	for (;_current_handler_idx < _handlers.size(); ++_current_handler_idx) {
-		ActionSchemaCSPHandler& handler = *_handlers[_current_handler_idx];
+		LiftedActionCSP& handler = *_handlers[_current_handler_idx];
 		
 		// std::cout << std::endl << "applicability CSP: " << handler << std::endl;
 		
@@ -70,7 +70,7 @@ bool LiftedActionIterator::Iterator::next_solution() {
 		}
 		
 		// We have an instantiated engine in '_engine'
-		SimpleCSP* solution = _engine->next();
+		GecodeCSP* solution = _engine->next();
 		if (!solution) {
 			delete _csp; _csp = nullptr;
 			delete _engine; _engine = nullptr;

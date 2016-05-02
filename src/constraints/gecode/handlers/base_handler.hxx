@@ -18,18 +18,18 @@ namespace fs0 { class RPGData; class Binding; }
 namespace fs0 { namespace gecode {
 
 //! The base interface class for all gecode CSP handlers
-class BaseCSPHandler {
+class BaseCSP {
 public:
-	typedef BaseCSPHandler* ptr;
-	typedef const BaseCSPHandler* cptr;
+	typedef BaseCSP* ptr;
+	typedef const BaseCSP* cptr;
 
-	BaseCSPHandler(const TupleIndex& tuple_index, bool approximate);
-	virtual ~BaseCSPHandler() = default;
+	BaseCSP(const TupleIndex& tuple_index, bool approximate);
+	virtual ~BaseCSP() = default;
 	
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	SimpleCSP* instantiate(const RPGIndex& graph) const;
-	SimpleCSP* instantiate(const State& state) const;
+	GecodeCSP* instantiate(const RPGIndex& graph) const;
+	GecodeCSP* instantiate(const State& state) const;
 	
 	const CSPTranslator& getTranslator() const { return _translator; }
 
@@ -39,13 +39,13 @@ public:
 	static void registerFormulaConstraints(const fs::AtomicFormula* condition, CSPTranslator& translator);
 
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const BaseCSPHandler& o) { return o.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const BaseCSP& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const { return print(os, _base_csp); }
-	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
+	std::ostream& print(std::ostream& os, const GecodeCSP& csp) const;
 	
 protected:
 	//! The base Gecode CSP
-	SimpleCSP _base_csp;
+	GecodeCSP _base_csp;
 	
 	//! Whether the underlying CSP gecode space has already been detected as failed.
 	bool _failed;
@@ -87,7 +87,7 @@ protected:
 	virtual void create_novelty_constraint() {}
 	
 	//! By default, we post no novelty constraint whatsoever
-	virtual void post_novelty_constraint(SimpleCSP& csp, const RPGIndex& rpg) const {}
+	virtual void post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const {}
 };
 
 } } // namespaces

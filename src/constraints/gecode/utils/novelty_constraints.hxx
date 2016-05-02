@@ -9,7 +9,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class SimpleCSP;
+class GecodeCSP;
 class RPGIndex;
 class CSPTranslator;
 
@@ -17,7 +17,7 @@ class CSPTranslator;
 class NoveltyConstraint {
 public:
 	virtual ~NoveltyConstraint() = default;
-	virtual void post_constraint(SimpleCSP& csp, const RPGIndex& layer) const = 0;
+	virtual void post_constraint(GecodeCSP& csp, const RPGIndex& layer) const = 0;
 	
 	//! Creates a suitable novelty constraint (strong if possible, weak if not) from a set of action preconditions and effects
 	static NoveltyConstraint* createFromEffects(CSPTranslator& translator, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
@@ -42,7 +42,7 @@ public:
 	WeakNoveltyConstraint(CSPTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols);
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
-	void post_constraint(SimpleCSP& csp, const RPGIndex& layer) const;
+	void post_constraint(GecodeCSP& csp, const RPGIndex& layer) const;
 
 
 protected:
@@ -72,7 +72,7 @@ public:
 	StrongNoveltyConstraint(CSPTranslator& translator, const std::vector<const fs::ActionEffect*>& effects);
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
-	void post_constraint(SimpleCSP& csp, const RPGIndex& layer) const override;
+	void post_constraint(GecodeCSP& csp, const RPGIndex& layer) const override;
 	
 protected:
 	//! contains a list of size-3 tuples, where each tuple contains:
@@ -93,7 +93,7 @@ public:
 	EffectNoveltyConstraint(CSPTranslator& translator, const fs::ActionEffect* effect);
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
-	void post_constraint(SimpleCSP& csp, const RPGIndex& rpg) const override;
+	void post_constraint(GecodeCSP& csp, const RPGIndex& rpg) const override;
 	
 protected:
 	//! contains a size-3 tuple with:

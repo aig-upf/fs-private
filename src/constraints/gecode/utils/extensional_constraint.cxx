@@ -33,7 +33,7 @@ void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
 
 // Updating the CSP from a non-relaxed state is necessary to efficiently implement satisfiability tests on states
 // with formulas involving existential variables
-bool ExtensionalConstraint::update(SimpleCSP& csp, const CSPTranslator& translator, const State& state) const {
+bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const State& state) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
 		return state.getValue(_variable_idx) == 1;
 	} else {
@@ -41,7 +41,7 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const CSPTranslator& translat
 	}
 }
 
-bool ExtensionalConstraint::update(SimpleCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const {
+bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
 		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable	
 	} else {
@@ -49,7 +49,7 @@ bool ExtensionalConstraint::update(SimpleCSP& csp, const CSPTranslator& translat
 	}
 }
 
-bool ExtensionalConstraint::update(SimpleCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const {
+bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const {
 	// Collect the references to the CSP variables
 	Gecode::IntVarArgs variables;
 	for (unsigned csp_var_index:_subterm_variable_indexes) {

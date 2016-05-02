@@ -27,7 +27,7 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> SmartLiftedDriver::crea
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	
 	// We create smart managers by grounding only wrt the effect heads.
-	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> managers = EffectSchemaCSPHandler::create_smart(actions, tuple_index, approximate, novelty); // TODO Probably we don't need this to be shared_ptr's anymore
+	std::vector<std::shared_ptr<LiftedEffectCSP>> managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty); // TODO Probably we don't need this to be shared_ptr's anymore
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
@@ -42,7 +42,7 @@ LiftedStateModel SmartLiftedDriver::setup(const Config& config, Problem& problem
 	// We set up a lifted model with the action schemas
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	LiftedStateModel model(problem);
-	model.set_handlers(ActionSchemaCSPHandler::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
+	model.set_handlers(LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
 	return model;
 }
 

@@ -14,9 +14,9 @@
 namespace fs0 { namespace gecode {
 
 
-std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<LiftedEffectCSP>> LiftedEffectCSP::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	std::vector<std::shared_ptr<EffectSchemaCSPHandler>> handlers;
+	std::vector<std::shared_ptr<LiftedEffectCSP>> handlers;
 	
 	for (const PartiallyGroundedAction* schema:schemata) {
 		LPT_DEBUG("main", "Smart grounding of action " << *schema << "...");
@@ -29,7 +29,7 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 					continue;
 				}
 				
-				auto handler = std::make_shared<EffectSchemaCSPHandler>(*flattened, flattened->getEffects().at(eff_idx), tuple_index, approximate);
+				auto handler = std::make_shared<LiftedEffectCSP>(*flattened, flattened->getEffects().at(eff_idx), tuple_index, approximate);
 				if (handler->init(novelty)) {
 					LPT_DEBUG("main", "Smart grounding of effect \"" << *effect << " results in partially grounded action " << *flattened);
 					handlers.push_back(handler);
@@ -43,18 +43,18 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 }
 
 
-EffectSchemaCSPHandler::EffectSchemaCSPHandler(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
-	ActionSchemaCSPHandler(action, tuple_index, approximate, true), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE)
+LiftedEffectCSP::LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
+	LiftedActionCSP(action, tuple_index, approximate, true), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE)
 {}
 
-EffectSchemaCSPHandler::~EffectSchemaCSPHandler() {
+LiftedEffectCSP::~LiftedEffectCSP() {
 	// Note that we delete the _action pointer here because we know we have cloned the original action when creating the current object.
 	// TODO - TOO UGLY
 	delete &_action;
 }
 
-bool EffectSchemaCSPHandler::init(bool use_novelty_constraint) {
-	if (!ActionSchemaCSPHandler::init(use_novelty_constraint)) return false;
+bool LiftedEffectCSP::init(bool use_novelty_constraint) {
+	if (!LiftedActionCSP::init(use_novelty_constraint)) return false;
 	
 	_lhs_symbol = index_lhs_symbol(get_effect());
 	_rhs_variable = _translator.resolveVariableIndex(get_effect()->rhs());
@@ -67,7 +67,7 @@ bool EffectSchemaCSPHandler::init(bool use_novelty_constraint) {
 	return true;
 }
 
-TupleIdx EffectSchemaCSPHandler::detect_achievable_tuple() const {
+TupleIdx LiftedEffectCSP::detect_achievable_tuple() const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	TupleIdx achievable_tuple_idx = INVALID_TUPLE;
@@ -87,7 +87,7 @@ TupleIdx EffectSchemaCSPHandler::detect_achievable_tuple() const {
 	return achievable_tuple_idx;
 }
 
-ValueTuple EffectSchemaCSPHandler::index_tuple_indexes(const fs::ActionEffect* effect) {
+ValueTuple LiftedEffectCSP::index_tuple_indexes(const fs::ActionEffect* effect) {
 	auto lhs_statevar = check_valid_effect(effect);
 	
 	ValueTuple variables;
@@ -99,36 +99,36 @@ ValueTuple EffectSchemaCSPHandler::index_tuple_indexes(const fs::ActionEffect* e
 	return variables;
 }
 
-void EffectSchemaCSPHandler::log() const {
+void LiftedEffectCSP::log() const {
 	assert(_effects.size() == 1);
 	LPT_EDEBUG("heuristic", "Processing effect schema \"" << *get_effect() << " of action " << _action);
 }
 
-const fs::ActionEffect* EffectSchemaCSPHandler::get_effect() const { 
+const fs::ActionEffect* LiftedEffectCSP::get_effect() const { 
 	assert(_effects.size() == 1);
 	return _effects[0];
 }
 
-unsigned EffectSchemaCSPHandler::index_lhs_symbol(const fs::ActionEffect* effect) {
+unsigned LiftedEffectCSP::index_lhs_symbol(const fs::ActionEffect* effect) {
 	return check_valid_effect(effect)->getSymbolId();
 }
 
-const fs::StateVariable* EffectSchemaCSPHandler::check_valid_effect(const fs::ActionEffect* effect) {
+const fs::StateVariable* LiftedEffectCSP::check_valid_effect(const fs::ActionEffect* effect) {
 	auto lhs_statevar = dynamic_cast<const fs::StateVariable*>(effect->lhs());
-	if (!lhs_statevar) throw std::runtime_error("EffectSchemaCSPHandler accepts only effects with state-variable (fluent-less) heads");
+	if (!lhs_statevar) throw std::runtime_error("LiftedEffectCSP accepts only effects with state-variable (fluent-less) heads");
 	return lhs_statevar;
 }
 
 
-void EffectSchemaCSPHandler::seek_novel_tuples(RPGIndex& rpg) const {
-	if (SimpleCSP* csp = instantiate(rpg)) {
+void LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
+	if (GecodeCSP* csp = instantiate(rpg)) {
 		if (!csp->checkConsistency()) {
 			LPT_EDEBUG("heuristic", "The effect CSP cannot produce any new tuple");
 		}
 		else {
-			Gecode::DFS<SimpleCSP> engine(csp);
+			Gecode::DFS<GecodeCSP> engine(csp);
 			unsigned num_solutions = 0;
-			while (SimpleCSP* solution = engine.next()) {
+			while (GecodeCSP* solution = engine.next()) {
 		// 		LPT_EDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
 				process_effect_solution(solution, rpg);
 				++num_solutions;
@@ -140,7 +140,7 @@ void EffectSchemaCSPHandler::seek_novel_tuples(RPGIndex& rpg) const {
 	}
 }
 
-TupleIdx EffectSchemaCSPHandler::compute_reached_tuple(const SimpleCSP* solution) const {
+TupleIdx LiftedEffectCSP::compute_reached_tuple(const GecodeCSP* solution) const {
 	TupleIdx tuple_idx = _achievable_tuple_idx;
 	if (tuple_idx == INVALID_TUPLE) { // i.e. we have a functional effect, and thus need to factor the function result into the tuple.
 		ValueTuple tuple(_effect_tuple); // Copy the tuple
@@ -150,7 +150,7 @@ TupleIdx EffectSchemaCSPHandler::compute_reached_tuple(const SimpleCSP* solution
 	return tuple_idx;
 }
 
-void EffectSchemaCSPHandler::process_effect_solution(const SimpleCSP* solution, RPGIndex& rpg) const {
+void LiftedEffectCSP::process_effect_solution(const GecodeCSP* solution, RPGIndex& rpg) const {
 	TupleIdx tuple_idx = compute_reached_tuple(solution);
 	
 	bool reached = rpg.reached(tuple_idx);
@@ -164,20 +164,20 @@ void EffectSchemaCSPHandler::process_effect_solution(const SimpleCSP* solution, 
 }
 
 
-void EffectSchemaCSPHandler::create_novelty_constraint() {
+void LiftedEffectCSP::create_novelty_constraint() {
 	_novelty = new EffectNoveltyConstraint(_translator, get_effect());
 }
 
-void EffectSchemaCSPHandler::post_novelty_constraint(SimpleCSP& csp, const RPGIndex& rpg) const {
+void LiftedEffectCSP::post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const {
 	if (_novelty) _novelty->post_constraint(csp, rpg);
 }
 
 
-const std::vector<const fs::ActionEffect*>& EffectSchemaCSPHandler::get_effects() const {
+const std::vector<const fs::ActionEffect*>& LiftedEffectCSP::get_effects() const {
 	return _effects;
 }
 
-const fs::Formula* EffectSchemaCSPHandler::get_precondition() const {
+const fs::Formula* LiftedEffectCSP::get_precondition() const {
 	return _action.getPrecondition();
 }
 

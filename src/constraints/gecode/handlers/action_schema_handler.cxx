@@ -7,23 +7,23 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<BaseActionCSPHandler>>
-ActionSchemaCSPHandler::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<BaseActionCSP>>
+LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	// Simply upcast the shared_ptrs
-	std::vector<std::shared_ptr<BaseActionCSPHandler>> handlers;
+	std::vector<std::shared_ptr<BaseActionCSP>> handlers;
 	for (const auto& element:create_derived(schemata, tuple_index, approximate, novelty)) {
-		handlers.push_back(std::static_pointer_cast<BaseActionCSPHandler>(element));
+		handlers.push_back(std::static_pointer_cast<BaseActionCSP>(element));
 	}
 	return handlers;
 }
 
-std::vector<std::shared_ptr<ActionSchemaCSPHandler>>
-ActionSchemaCSPHandler::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
-	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> handlers;
+std::vector<std::shared_ptr<LiftedActionCSP>>
+LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+	std::vector<std::shared_ptr<LiftedActionCSP>> handlers;
 	
 	for (auto schema:schemata) {
 		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
-		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, tuple_index, approximate, false);
+		auto handler = std::make_shared<LiftedActionCSP>(*schema, tuple_index, approximate, false);
 		handler->init(novelty);
 		LPT_DEBUG("main", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
@@ -32,13 +32,13 @@ ActionSchemaCSPHandler::create_derived(const std::vector<const PartiallyGrounded
 }
 
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
-:  BaseActionCSPHandler(tuple_index, approximate, use_effect_conditions), _action(action)
+LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action)
 {}
 
 
-bool ActionSchemaCSPHandler::init(bool use_novelty_constraint) {
-	if (BaseActionCSPHandler::init(use_novelty_constraint)) {
+bool LiftedActionCSP::init(bool use_novelty_constraint) {
+	if (BaseActionCSP::init(use_novelty_constraint)) {
 		index_parameters();
 		return true;
 	}
@@ -46,7 +46,7 @@ bool ActionSchemaCSPHandler::init(bool use_novelty_constraint) {
 }
 
 
-void ActionSchemaCSPHandler::index_parameters() {
+void LiftedActionCSP::index_parameters() {
 	// Index in '_parameter_variables' the (ordered) CSP variables that correspond to the action parameters
 	const Signature& signature = _action.getSignature();
 	for (unsigned i = 0; i < signature.size(); ++i) {
@@ -62,7 +62,7 @@ void ActionSchemaCSPHandler::index_parameters() {
 	}
 }
 
-Binding ActionSchemaCSPHandler::build_binding_from_solution(const SimpleCSP* solution) const {
+Binding LiftedActionCSP::build_binding_from_solution(const GecodeCSP* solution) const {
 	std::vector<int> values;
 	std::vector<bool> valid;
 	values.reserve(_parameter_variables.size());
@@ -79,24 +79,24 @@ Binding ActionSchemaCSPHandler::build_binding_from_solution(const SimpleCSP* sol
 	return Binding(std::move(values), std::move(valid));
 }
 
-const std::vector<const fs::ActionEffect*>& ActionSchemaCSPHandler::get_effects() const {
+const std::vector<const fs::ActionEffect*>& LiftedActionCSP::get_effects() const {
 	return _action.getEffects();
 }
 
-const fs::Formula* ActionSchemaCSPHandler::get_precondition() const {
+const fs::Formula* LiftedActionCSP::get_precondition() const {
 	return _action.getPrecondition();
 }
 
 // Simply forward to the more concrete method
-const ActionID* ActionSchemaCSPHandler::get_action_id(const SimpleCSP* solution) const {
+const ActionID* LiftedActionCSP::get_action_id(const GecodeCSP* solution) const {
 	return get_lifted_action_id(solution);
 }
 
-LiftedActionID* ActionSchemaCSPHandler::get_lifted_action_id(const SimpleCSP* solution) const {
+LiftedActionID* LiftedActionCSP::get_lifted_action_id(const GecodeCSP* solution) const {
 	return new LiftedActionID(&_action, build_binding_from_solution(solution));
 }
 
-void ActionSchemaCSPHandler::log() const {
+void LiftedActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action schema " << _action);
 }
 } } // namespaces

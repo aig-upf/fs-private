@@ -13,13 +13,13 @@ namespace fs0 { namespace gecode {
 class NoveltyConstraint;
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
-class BaseActionCSPHandler : public BaseCSPHandler {
+class BaseActionCSP : public BaseCSP {
 public:
-	typedef BaseActionCSPHandler* ptr;
+	typedef BaseActionCSP* ptr;
 
 	//! Constructor / Destructor
-	BaseActionCSPHandler(const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	virtual ~BaseActionCSPHandler();
+	BaseActionCSP(const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	virtual ~BaseActionCSP();
 	
 	//! Returns false iff the induced CSP is inconsistent, i.e. the action is not applicable
 	virtual bool init(bool use_novelty_constraint);
@@ -75,7 +75,7 @@ protected:
 	//! Preprocess the action to store the IDs of direct and indirect state variables
 	virtual void index_scopes();
 	
-	void compute_support(SimpleCSP* csp, RPGIndex& graph) const;
+	void compute_support(GecodeCSP* csp, RPGIndex& graph) const;
 	
 	std::set<VariableIdx> _action_support;
 	
@@ -83,22 +83,22 @@ protected:
 	void registerEffectConstraints(const fs::ActionEffect* effect);
 	
 	//! Process the given solution of the action CSP
-	void process_solution(SimpleCSP* solution, RPGIndex& graph) const;
+	void process_solution(GecodeCSP* solution, RPGIndex& graph) const;
 	
 	//!
-	void simple_atom_processing(SimpleCSP* solution, RPGIndex& graph, TupleIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+	void simple_atom_processing(GecodeCSP* solution, RPGIndex& graph, TupleIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
-// 	void hmax_based_atom_processing(SimpleCSP* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+// 	void hmax_based_atom_processing(GecodeCSP* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 
 	//! Extracts the full support of a given effect corresponding to the given solution
-	std::vector<TupleIdx> extract_support_from_solution(SimpleCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+	std::vector<TupleIdx> extract_support_from_solution(GecodeCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
 	
 	//! Return the ActionID that corresponds to the current action / action schema, for some given solution
-	virtual const ActionID* get_action_id(const SimpleCSP* solution) const = 0;
+	virtual const ActionID* get_action_id(const GecodeCSP* solution) const = 0;
 	
 	//! Return the action binding that corresponds to the given solution - by default, return an empty binding
-	virtual Binding build_binding_from_solution(const SimpleCSP* solution) const;
+	virtual Binding build_binding_from_solution(const GecodeCSP* solution) const;
 	
 	//! A simple helper to log the processing message
 	virtual void log() const = 0;
@@ -107,10 +107,10 @@ protected:
 	void create_novelty_constraint() override;
 	
 	//!
-	void post_novelty_constraint(SimpleCSP& csp, const RPGIndex& rpg) const override;
+	void post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const override;
 	
 	//!
-	void extract_nested_term_support(const SimpleCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<TupleIdx>& support) const;
+	void extract_nested_term_support(const GecodeCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<TupleIdx>& support) const;
 };
 
 } } // namespaces

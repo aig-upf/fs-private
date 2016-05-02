@@ -8,13 +8,13 @@
 
 namespace fs0 { namespace gecode {
 	
-std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
-	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
+std::vector<std::shared_ptr<BaseActionCSP>> GroundActionCSP::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+	std::vector<std::shared_ptr<BaseActionCSP>> managers;
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
-		// auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty, false); std::cout << *x << std::endl;
+		// auto x = new GroundActionCSP(*actions[idx], approximate, novelty, false); std::cout << *x << std::endl;
 		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
-		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], tuple_index, approximate, false);
+		auto manager = std::make_shared<GroundActionCSP>(*actions[idx], tuple_index, approximate, false);
 		if (manager->init(novelty)) {
 			LPT_DEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
 			managers.push_back(manager);
@@ -26,8 +26,8 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 }
 
 // If no set of effects is provided, we'll take all of them into account
-GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
-	:  BaseActionCSPHandler(tuple_index, approximate, use_effect_conditions), _action(action)
+GroundActionCSP::GroundActionCSP(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+	:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action)
 {
 	// Filter out delete effects
 	for (const fs::ActionEffect* effect:_action.getEffects()) {
@@ -36,20 +36,20 @@ GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const
 	}
 }
 
-const fs::Formula* GroundActionCSPHandler::get_precondition() const {
+const fs::Formula* GroundActionCSP::get_precondition() const {
 	return _action.getPrecondition();
 }
 
-const std::vector<const fs::ActionEffect*>& GroundActionCSPHandler::get_effects() const {
+const std::vector<const fs::ActionEffect*>& GroundActionCSP::get_effects() const {
 	return _add_effects;
 }
 
 
-const ActionID* GroundActionCSPHandler::get_action_id(const SimpleCSP* solution) const {
+const ActionID* GroundActionCSP::get_action_id(const GecodeCSP* solution) const {
 	return new PlainActionID(&_action);
 }
 
-void GroundActionCSPHandler::log() const {
+void GroundActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action: " << _action);
 }
 

@@ -33,20 +33,20 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	
 	LPT_INFO("main", "Chosen CSP Manager: Gecode");
 	
-	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
+	std::vector<std::shared_ptr<BaseActionCSP>> managers;
 	if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
-		managers = GroundActionCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
+		managers = GroundActionCSP::create(actions, problem.get_tuple_index(), approximate, novelty);
 		
 		
 	} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
 		WORK_IN_PROGRESS("Disabled");
-// 			managers = GroundEffectCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
+// 			managers = GroundEffectCSP::create(actions, problem.get_tuple_index(), approximate, novelty);
 		
 		
 		
 	}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
 		const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
-		managers = ActionSchemaCSPHandler::create(base_actions, problem.get_tuple_index(), approximate, novelty);
+		managers = LiftedActionCSP::create(base_actions, problem.get_tuple_index(), approximate, novelty);
 		
 		
 		
@@ -54,7 +54,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
 		WORK_IN_PROGRESS("Disabled");
 // 			std::vector<IndexedTupleset> symbol_tuplesets = SmartRPG::index_tuplesets(ProblemInfo::getInstance());
-// 			managers = EffectSchemaCSPHandler::create(problem.getActionSchemata(), problem.get_tuple_index(), symbol_tuplesets, approximate, novelty);
+// 			managers = LiftedEffectCSP::create(problem.getActionSchemata(), problem.get_tuple_index(), symbol_tuplesets, approximate, novelty);
 	} else {
 		throw std::runtime_error("Unknown CSP model type");
 	}

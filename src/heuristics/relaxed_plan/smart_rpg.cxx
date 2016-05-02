@@ -22,7 +22,7 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 	_tuple_index(problem.get_tuple_index()),
 	_managers(managers),
 	_extension_handler(extension_handler),
-	_goal_handler(std::unique_ptr<FormulaHandler>(new FormulaHandler(goal_formula->conjunction(state_constraints), _tuple_index, false)))
+	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
 	LPT_INFO("heuristic", "SmartRPG heuristic initialized");
 }

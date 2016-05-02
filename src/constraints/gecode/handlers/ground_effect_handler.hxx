@@ -11,14 +11,14 @@ class GroundAction;
 namespace fs0 { namespace gecode {
 
 //! A CSP modeling and solving the effect of an action effect on a certain RPG layer
-class GroundEffectCSPHandler : public BaseActionCSPHandler {
+class GroundEffectCSP : public BaseActionCSP {
 public:
 	//! Factory method
-	static std::vector<std::shared_ptr<GroundEffectCSPHandler>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<GroundEffectCSP>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions);
+	GroundEffectCSP(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions);
 	 
-	~GroundEffectCSPHandler() {}
+	~GroundEffectCSP() {}
 	
 	bool init(bool use_novelty_constraint) override;
 	
@@ -28,11 +28,11 @@ public:
 	}
 	
 	//! Preinstantiate the CSP
-	SimpleCSP* preinstantiate(const RPGIndex& rpg) const;
+	GecodeCSP* preinstantiate(const RPGIndex& rpg) const;
 	
-	bool find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, SimpleCSP& layer_csp, RPGIndex& rpg) const;
+	bool find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const;
 	
-	void post(SimpleCSP& csp, const Atom& atom) const;
+	void post(GecodeCSP& csp, const Atom& atom) const;
 	
 	const GroundAction& get_action() const override { return _action; }
 	
@@ -48,7 +48,7 @@ protected:
 	//! to return a vector of effects. By construction, we have that _effects.size() == 0
 	const std::vector<const fs::ActionEffect*> _effects;	
 	
-	const ActionID* get_action_id(const SimpleCSP* solution) const;
+	const ActionID* get_action_id(const GecodeCSP* solution) const;
 
 	//! Index the CSP variables corresponding the the effect LHS.
 	std::vector<unsigned> index_lhs_subterms();
@@ -63,8 +63,8 @@ protected:
 	
 	void log() const;
 	
-	bool solve(TupleIdx tuple, gecode::SimpleCSP* csp, RPGIndex& graph) const;
-// 	void solve_approximately(const Atom& atom, gecode::SimpleCSP* csp, RPGData& rpg, const State& seed) const;
+	bool solve(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const;
+// 	void solve_approximately(const Atom& atom, gecode::GecodeCSP* csp, RPGData& rpg, const State& seed) const;
 };
 
 

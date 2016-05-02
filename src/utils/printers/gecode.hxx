@@ -7,7 +7,7 @@
 
 
 namespace fs0 { namespace gecode { 
-	class CSPTranslator; class SimpleCSP;
+	class CSPTranslator; class GecodeCSP;
 }}
 
 namespace fs0 { namespace print {
@@ -49,10 +49,10 @@ class extensional {
 class csp {
 	protected:
 		const gecode::CSPTranslator& _translator;
-		const gecode::SimpleCSP& _csp;
+		const gecode::GecodeCSP& _csp;
 		
 	public:
-		csp(const gecode::CSPTranslator& translator, const gecode::SimpleCSP& csp) : _translator(translator), _csp(csp) {}
+		csp(const gecode::CSPTranslator& translator, const gecode::GecodeCSP& csp) : _translator(translator), _csp(csp) {}
 		
 		friend std::ostream& operator<<(std::ostream &os, const csp& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;

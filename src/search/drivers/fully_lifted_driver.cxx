@@ -25,7 +25,7 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> FullyLiftedDriver::crea
 	bool delayed = config.getOption<bool>("search.delayed_evaluation");
 
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
-	auto managers = ActionSchemaCSPHandler::create(actions, problem.get_tuple_index(), approximate, novelty);
+	auto managers = LiftedActionCSP::create(actions, problem.get_tuple_index(), approximate, novelty);
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
@@ -39,7 +39,7 @@ LiftedStateModel FullyLiftedDriver::setup(const Config& config, Problem& problem
 	// We don't ground any action
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	LiftedStateModel model(problem);
-	model.set_handlers(ActionSchemaCSPHandler::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
+	model.set_handlers(LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
 	return model;
 }
 

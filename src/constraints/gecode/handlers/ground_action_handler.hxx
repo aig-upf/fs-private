@@ -12,16 +12,16 @@ namespace fs0 { namespace gecode {
 
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
-class GroundActionCSPHandler : public BaseActionCSPHandler {
+class GroundActionCSP : public BaseActionCSP {
 public:
-	typedef GroundActionCSPHandler* ptr;
+	typedef GroundActionCSP* ptr;
 	
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
 	//! Constructors / Destructor
-	GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	virtual ~GroundActionCSPHandler() {}
+	GroundActionCSP(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	virtual ~GroundActionCSP() {}
 	
 	const GroundAction& get_action() const override { return _action; }
 	
@@ -35,7 +35,7 @@ protected:
 	
 	std::vector<const fs::ActionEffect*> _add_effects;
 
-	const ActionID* get_action_id(const SimpleCSP* solution) const;
+	const ActionID* get_action_id(const GecodeCSP* solution) const;
 	
 	//! Log some handler-related into
 	virtual void log() const;

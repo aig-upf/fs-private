@@ -15,7 +15,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class SimpleCSP;
+class GecodeCSP;
 class RPGIndex;
 
 /**
@@ -38,7 +38,7 @@ public:
 class CSPTranslator {
 public:
 
-	CSPTranslator(SimpleCSP& base_csp) : _base_csp(base_csp) {};
+	CSPTranslator(GecodeCSP& base_csp) : _base_csp(base_csp) {};
 	virtual ~CSPTranslator() {}
 
 	//! Forbid copy constructor
@@ -73,22 +73,22 @@ public:
 	unsigned resolveVariableIndex(const fs::Term* term) const;
 	
 	//! Returns the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
-	const Gecode::IntVar& resolveVariable(const fs::Term* term, const SimpleCSP& csp) const;
+	const Gecode::IntVar& resolveVariable(const fs::Term* term, const GecodeCSP& csp) const;
 	
 	//! Returns the value of the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
-	ObjectIdx resolveValue(const fs::Term* term, const SimpleCSP& csp) const;
+	ObjectIdx resolveValue(const fs::Term* term, const GecodeCSP& csp) const;
 	
-	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const SimpleCSP& csp) const;
-	ObjectIdx resolveValueFromIndex(unsigned variable_index, const SimpleCSP& csp) const;
+	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
+	ObjectIdx resolveValueFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
 
 	//! Helper to resolve several variables at the same time
-	Gecode::IntVarArgs resolveVariables(const std::vector<const fs::Term*>& terms, const SimpleCSP& csp) const;
-	std::vector<ObjectIdx> resolveValues(const std::vector<const fs::Term*>& terms, const SimpleCSP& csp) const;
+	Gecode::IntVarArgs resolveVariables(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const;
+	std::vector<ObjectIdx> resolveValues(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const;
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
-	void updateStateVariableDomains(SimpleCSP& csp, const RPGIndex& graph) const;
-	void updateStateVariableDomains(SimpleCSP& csp, const std::vector<Gecode::IntSet>& domains) const;
-	void updateStateVariableDomains(SimpleCSP& csp, const State& state) const;
+	void updateStateVariableDomains(GecodeCSP& csp, const RPGIndex& graph) const;
+	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<Gecode::IntSet>& domains) const;
+	void updateStateVariableDomains(GecodeCSP& csp, const State& state) const;
 
 	const unsigned resolveInputVariableIndex(VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);
@@ -97,10 +97,10 @@ public:
 	}
 	
 	//! Returns the CSP variable that corresponds to the given input state variable, in the given CSP.
-	const Gecode::IntVar& resolveInputStateVariable(const SimpleCSP& csp, VariableIdx variable) const;
+	const Gecode::IntVar& resolveInputStateVariable(const GecodeCSP& csp, VariableIdx variable) const;
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
-	const ObjectIdx resolveInputStateVariableValue(const SimpleCSP& csp, VariableIdx variable) const {
+	const ObjectIdx resolveInputStateVariableValue(const GecodeCSP& csp, VariableIdx variable) const {
 		return resolveInputStateVariable(csp, variable).val();
 	}
 
@@ -111,13 +111,13 @@ public:
 	
 	
 	//! Returns a partial assignment of values to the input state variables of the CSP managed by this translator, built from the given solution.
-	PartialAssignment buildAssignment(SimpleCSP& solution) const;
+	PartialAssignment buildAssignment(GecodeCSP& solution) const;
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const CSPTranslator& o) { return o.print(os, o._base_csp); }
-	std::ostream& print(std::ostream& os, const SimpleCSP& csp) const;
+	std::ostream& print(std::ostream& os, const GecodeCSP& csp) const;
 	
-	SimpleCSP& getBaseCSP() { return _base_csp; }
+	GecodeCSP& getBaseCSP() { return _base_csp; }
 	
 	VariableIdx getPlanningVariable(unsigned csp_var_idx) const;
 	
@@ -129,7 +129,7 @@ public:
 	
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.
-	SimpleCSP& _base_csp;
+	GecodeCSP& _base_csp;
 	
 	// The list of integer and boolean CSP variables that is created during the variable registration state
 	Gecode::IntVarArgs _intvars;
