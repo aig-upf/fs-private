@@ -29,7 +29,7 @@ bool FS0IWAlgorithm::search(const State& state, typename FS0SearchAlgorithm::Pla
 void FS0IWAlgorithm::setup_base_algorithm(unsigned max_width) {
 	if (_algorithm) delete _algorithm;
 	std::shared_ptr<SearchNoveltyEvaluator> evaluator = std::make_shared<SearchNoveltyEvaluator>(this->model, _current_max_width, _feature_configuration);
-	_algorithm = new BaseAlgorithm(model, new OpenList(evaluator));
+	_algorithm = new BaseAlgorithm(model, OpenList(evaluator));
 }
 
 } } // namespaces

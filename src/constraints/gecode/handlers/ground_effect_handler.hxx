@@ -16,7 +16,7 @@ public:
 	//! Factory method
 	static std::vector<std::shared_ptr<GroundEffectCSPHandler>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate);
+	GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions);
 	 
 	~GroundEffectCSPHandler() {}
 	

@@ -20,7 +20,7 @@ public:
 	static std::vector<std::shared_ptr<BaseActionCSPHandler>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
 	//! Constructors / Destructor
-	GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate);
+	GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	virtual ~GroundActionCSPHandler() {}
 	
 	const GroundAction& get_action() const override { return _action; }

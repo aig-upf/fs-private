@@ -12,8 +12,9 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> managers;
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
-		// auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty); std::cout << *x << std::endl;
-		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], tuple_index, approximate);
+		// auto x = new GroundActionCSPHandler(*actions[idx], approximate, novelty, false); std::cout << *x << std::endl;
+		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
+		auto manager = std::make_shared<GroundActionCSPHandler>(*actions[idx], tuple_index, approximate, false);
 		if (manager->init(novelty)) {
 			LPT_DEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
 			managers.push_back(manager);
@@ -25,8 +26,8 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> GroundActionCSPHandler::creat
 }
 
 // If no set of effects is provided, we'll take all of them into account
-GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate)
-	:  BaseActionCSPHandler(tuple_index, approximate), _action(action)
+GroundActionCSPHandler::GroundActionCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+	:  BaseActionCSPHandler(tuple_index, approximate, use_effect_conditions), _action(action)
 {
 	// Filter out delete effects
 	for (const fs::ActionEffect* effect:_action.getEffects()) {

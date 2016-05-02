@@ -28,11 +28,11 @@ std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& co
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
-	UnreachedAtomRPG* heuristic = new UnreachedAtomRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(),
+	UnreachedAtomRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(),
 									GroundEffectCSPHandler::create(actions, tuple_index, approximate, novelty),
 									extension_handler);
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, GroundStateModel>(model, heuristic, delayed));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, GroundStateModel>(model, std::move(heuristic), delayed));
 }
 
 GroundStateModel UnreachedAtomDriver::setup(const Config& config, Problem& problem) const {

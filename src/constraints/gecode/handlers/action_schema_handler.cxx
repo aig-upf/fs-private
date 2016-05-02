@@ -7,7 +7,8 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<BaseActionCSPHandler>>
+ActionSchemaCSPHandler::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	// Simply upcast the shared_ptrs
 	std::vector<std::shared_ptr<BaseActionCSPHandler>> handlers;
 	for (const auto& element:create_derived(schemata, tuple_index, approximate, novelty)) {
@@ -16,11 +17,13 @@ std::vector<std::shared_ptr<BaseActionCSPHandler>> ActionSchemaCSPHandler::creat
 	return handlers;
 }
 
-std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<ActionSchemaCSPHandler>>
+ActionSchemaCSPHandler::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<ActionSchemaCSPHandler>> handlers;
 	
 	for (auto schema:schemata) {
-		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, tuple_index, approximate);
+		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
+		auto handler = std::make_shared<ActionSchemaCSPHandler>(*schema, tuple_index, approximate, false);
 		handler->init(novelty);
 		LPT_DEBUG("main", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
@@ -29,8 +32,8 @@ std::vector<std::shared_ptr<ActionSchemaCSPHandler>> ActionSchemaCSPHandler::cre
 }
 
 
-ActionSchemaCSPHandler::ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate)
-:  BaseActionCSPHandler(tuple_index, approximate), _action(action)
+ActionSchemaCSPHandler::ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+:  BaseActionCSPHandler(tuple_index, approximate, use_effect_conditions), _action(action)
 {}
 
 

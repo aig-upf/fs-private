@@ -73,10 +73,6 @@ SimpleCSP* BaseCSPHandler::instantiate(const State& state) const {
 }
 
 
-void BaseCSPHandler::setup() {
-	index();
-}
-
 void BaseCSPHandler::register_csp_variables() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	

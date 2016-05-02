@@ -18,7 +18,7 @@ public:
 	typedef BaseActionCSPHandler* ptr;
 
 	//! Constructor / Destructor
-	BaseActionCSPHandler(const TupleIndex& tuple_index, bool approximate);
+	BaseActionCSPHandler(const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	virtual ~BaseActionCSPHandler();
 	
 	//! Returns false iff the induced CSP is inconsistent, i.e. the action is not applicable
@@ -63,6 +63,8 @@ protected:
 	
 	//! Whether to use the min-hmax-sum policy to prioritize the different supports of the same atom
 	bool _hmaxsum_priority;
+	
+	bool _use_effect_conditions;
 	
 	//! When _has_nested_lhs is false, we store here the VariableIdx referred to by the LHS of each effect, which can be deduced statically
 	std::vector<VariableIdx> effect_lhs_variables;

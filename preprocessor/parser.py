@@ -4,9 +4,9 @@
 import exceptions
 from base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
     ArithmeticExpression, FunctionalExpression, StaticFunctionalExpression, \
-    ConjunctivePredicate, PredicativeExpression
+    ConjunctivePredicate, PredicativeExpression, Truth
 from exceptions import ParseException
-from pddl import Atom, NegatedAtom, ExistentialCondition, Conjunction
+from pddl import Atom, NegatedAtom, ExistentialCondition, Conjunction, conditions
 from pddl.f_expression import FunctionalTerm
 from util import is_int, is_external
 
@@ -40,6 +40,8 @@ class Parser(object):
             return exp
         elif isinstance(exp, Conjunction):
             return ConjunctivePredicate(self.process_arguments(exp.parts))
+        elif isinstance(exp, conditions.Truth):
+            return Truth()
         elif isinstance(exp, str):
             if exp[0] == '?':
                 return ParameterExpression(exp)

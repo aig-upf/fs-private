@@ -32,9 +32,9 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> SmartLiftedDriver::crea
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
-	auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+	SmartRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	
-	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, LiftedStateModel>(model, heuristic, delayed));
+	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, LiftedStateModel>(model, std::move(heuristic), delayed));
 }
 
 

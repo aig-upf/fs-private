@@ -18,10 +18,7 @@ class BoundVariable;
 
 class Loader {
 public:
-	//! Parse an atomic formula from a JSON node
-	static const AtomicFormula* parseAtomicFormula(const rapidjson::Value& tree, const ProblemInfo& info);
-	
-	//! Parse a list of atomic formulae
+	//! Parse a formula from a JSON node
 	static const Formula* parseFormula(const rapidjson::Value& tree, const ProblemInfo& info);
 	
 	//! Parse an (unprocessed) term from a JSON node

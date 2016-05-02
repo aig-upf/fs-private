@@ -14,7 +14,8 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<GroundEffectCSPHandler>> GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<GroundEffectCSPHandler>>
+GroundEffectCSPHandler::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<GroundEffectCSPHandler>> managers;
 	
 	for (unsigned action_idx = 0; action_idx < actions.size(); ++action_idx) {
@@ -23,7 +24,7 @@ std::vector<std::shared_ptr<GroundEffectCSPHandler>> GroundEffectCSPHandler::cre
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
 			const fs::ActionEffect* effect = action->getEffects().at(eff_idx);
 			if (effect->is_del()) continue; // Ignore delete effects
-			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, tuple_index, effect, approximate);
+			auto handler = std::make_shared<GroundEffectCSPHandler>(*action, tuple_index, effect, approximate, true);
 			if (handler->init(novelty)) {
 				managers.push_back(handler);
 				LPT_DEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
@@ -35,8 +36,8 @@ std::vector<std::shared_ptr<GroundEffectCSPHandler>> GroundEffectCSPHandler::cre
 	return managers;
 }
 
-GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate) :
-	BaseActionCSPHandler(tuple_index, approximate), _action(action), _effects({ effect })
+GroundEffectCSPHandler::GroundEffectCSPHandler(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions) :
+	BaseActionCSPHandler(tuple_index, approximate, use_effect_conditions), _action(action), _effects({ effect })
 {}
 
 bool GroundEffectCSPHandler::init(bool use_novelty_constraint) {

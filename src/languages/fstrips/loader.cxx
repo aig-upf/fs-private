@@ -7,10 +7,33 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
-const AtomicFormula* Loader::parseAtomicFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
-	std::string term_type = tree["type"].GetString();
+
+const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
+	// As of now we only accept either conjunctions of atoms or existentially quantified conjunctions
+	std::string formula_type = tree["type"].GetString();
 	
-	if (term_type == "atom") {
+	
+	if (formula_type == "conjunction") {
+		std::vector<const AtomicFormula*> list;
+		const rapidjson::Value& elements = tree["elements"];
+		for (unsigned i = 0; i < elements.Size(); ++i) {
+			const AtomicFormula* atomic = dynamic_cast<const AtomicFormula*>(parseFormula(elements[i], info));
+			assert(atomic); // ATM we only accept conjunctions of atoms.
+			list.push_back(atomic);
+		}
+		return new Conjunction(list);
+	
+		
+	} else if (formula_type == "existential") {
+		auto subformula = parseFormula(tree["subformula"], info);
+		auto subformula_conjunction = dynamic_cast<const Conjunction*>(subformula);
+		if (!subformula_conjunction) {
+			throw std::runtime_error("Only existentially quantified conjunctions are supported so far");
+		}
+		std::vector<const BoundVariable*> variables = parseVariables(tree["variables"], info);
+		return new ExistentiallyQuantifiedFormula(variables, subformula_conjunction);
+	
+	} else if (formula_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<const Term*> subterms = parseTermList(tree["elements"], info);
 		
@@ -26,34 +49,8 @@ const AtomicFormula* Loader::parseAtomicFormula(const rapidjson::Value& tree, co
 		} catch(std::out_of_range& ex) {} // The symbol might be built-in, and thus not registered.
 		
 		return LogicalComponentRegistry::instance().instantiate_formula(symbol, subterms);
-	}
-	else throw std::runtime_error("Unknown node type " + term_type);
-}
 
-const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
-	// As of now we only accept either conjunctions of atoms or existentially quantified conjunctions
-	std::string formula_type = tree["type"].GetString();
-	
-	
-	if (formula_type == "conjunction") {
-		std::vector<const AtomicFormula*> list;
-		const rapidjson::Value& elements = tree["elements"];
-		for (unsigned i = 0; i < elements.Size(); ++i) {
-			list.push_back(parseAtomicFormula(elements[i], info));
-		}
-		return new Conjunction(list);
-	
-		
-	} else if (formula_type == "existential") {
-		auto subformula = parseFormula(tree["subformula"], info);
-		auto subformula_conjunction = dynamic_cast<const Conjunction*>(subformula);
-		if (!subformula_conjunction) {
-			throw std::runtime_error("Only existentially quantified conjunctions are supported so far");
-		}
-		std::vector<const BoundVariable*> variables = parseVariables(tree["variables"], info);
-		return new ExistentiallyQuantifiedFormula(variables, subformula_conjunction);
-	
-		
+
 	} else if (formula_type == "tautology") {
 		return new Tautology;
 	} else if (formula_type == "contradiction") {
@@ -101,8 +98,8 @@ std::vector<const Term*> Loader::parseTermList(const rapidjson::Value& tree, con
 }
 
 const ActionEffect* Loader::parseEffect(const rapidjson::Value& tree, const ProblemInfo& info) {
-	assert(tree.Size() == 2);
-	return new ActionEffect(parseTerm(tree[0], info), parseTerm(tree[1], info));
+	const std::string effect_type = tree["type"].GetString();
+	return new ActionEffect(parseTerm(tree["lhs"], info), parseTerm(tree["rhs"], info), parseFormula(tree["condition"], info));
 }
 
 std::vector<const ActionEffect*> Loader::parseEffectList(const rapidjson::Value& tree, const ProblemInfo& info) {

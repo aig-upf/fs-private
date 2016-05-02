@@ -29,7 +29,9 @@ bool ApplicabilityManager::isApplicable(const State& state, const GroundAction& 
 std::vector<Atom> ApplicabilityManager::computeEffects(const State& state, const GroundAction& action) {
 	Atom::vctr atoms;
 	for (const fs::ActionEffect* effect:action.getEffects()) {
-		atoms.push_back(effect->apply(state));
+		if (effect->applicable(state)) {
+			atoms.push_back(effect->apply(state));
+		}
 	}
 	return atoms;
 }

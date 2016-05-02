@@ -73,8 +73,6 @@ protected:
 	//! Index all terms and formulas appearing in the formula / actions which will be relevant to the CSP
 	virtual void index() = 0;
 
-	void setup();
-	
 	void register_csp_variables();
 
 	void register_csp_constraints();

@@ -55,6 +55,13 @@ class BindingUnit(object):
         return [[i, var.name, var.type] for i, var in enumerate(variables)]
 
 
+def ensure_conjunction(node):
+    # In case we have a single atom, we wrap it on a conjunction
+    if isinstance(node, (pddl.conditions.Atom, pddl.conditions.NegatedAtom)):
+        node = pddl.conditions.Conjunction([node])
+    return node
+
+
 class BaseComponentProcessor(object):
     def __init__(self, index):
         self.parser = Parser(index)
@@ -87,10 +94,7 @@ class BaseComponentProcessor(object):
                     'variables': self.binding_unit.dump_selected(node.parameters),
                     'subformula': self.process_formula(subformula)}
         else:
-            if isinstance(node, (pddl.conditions.Atom, pddl.conditions.NegatedAtom)):
-                # In case we have a single atom, we wrap it on a conjunction
-                node = pddl.conditions.Conjunction([node])
-            exp = self.parser.process_expression(node)
+            exp = self.parser.process_expression(ensure_conjunction(node))
             return exp.dump(self.index.objects, self.binding_unit)
 
 
@@ -128,19 +132,32 @@ class ActionSchemaProcessor(BaseComponentProcessor):
     def process_effects(self):
         """  Generates the actual effects from the PDDL parser effect list"""
         for effect in self.action.effects:
-            assert isinstance(effect, Effect) and isinstance(effect.condition, Truth) and not effect.parameters
-            effect = self.process_effect(effect.literal)
+            assert isinstance(effect, Effect) and not effect.parameters
+            effect = self.process_effect(effect.literal, effect.condition)
             self.data['effects'].append(effect)
 
-    def process_effect(self, expression):
+    def process_effect(self, expression, condition):
         assert isinstance(expression, (AssignmentEffect, Atom, NegatedAtom))
 
+        condition = ensure_conjunction(condition)
         if isinstance(expression, AssignmentEffect):
             lhs, rhs = expression.lhs, expression.rhs
+            type_ = 'functional'
         else:
             # The effect has form visited(c), and we want to give it functional form visited(c) := true
             lhs = FunctionalTerm(expression.predicate, expression.args)
-            rhs = "0" if expression.negated else "1"
 
-        elems = [self.parser.process_expression(elem) for elem in (lhs, rhs)]
-        return [elem.dump(self.index.objects, self.binding_unit) for elem in elems]
+            if expression.negated:
+                rhs = "0"
+                type_ = 'del'
+            else:
+                rhs = "1"
+                type_ = 'add'
+
+        elems = [self.parser.process_expression(elem) for elem in (lhs, rhs, condition)]
+        return dict(
+            lhs=elems[0].dump(self.index.objects, self.binding_unit),
+            rhs=elems[1].dump(self.index.objects, self.binding_unit),
+            condition=elems[2].dump(self.index.objects, self.binding_unit),
+            type=type_
+        )

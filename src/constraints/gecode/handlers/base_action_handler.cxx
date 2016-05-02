@@ -12,13 +12,14 @@
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <utils/config.hxx>
+#include <utils/utils.hxx>
 #include <problem.hxx>
 
 namespace fs0 { namespace gecode {
 
 
-BaseActionCSPHandler::BaseActionCSPHandler(const TupleIndex& tuple_index, bool approximate)
-	: BaseCSPHandler(tuple_index, approximate), _novelty(nullptr), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority())
+BaseActionCSPHandler::BaseActionCSPHandler(const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+	: BaseCSPHandler(tuple_index, approximate), _novelty(nullptr), _hmaxsum_priority(Config::instance().useMinHMaxSumSupportPriority()), _use_effect_conditions(use_effect_conditions)
 {
 }
 
@@ -29,7 +30,7 @@ BaseActionCSPHandler::~BaseActionCSPHandler() {
 
 bool BaseActionCSPHandler::init(bool use_novelty_constraint) {
 	LPT_DEBUG("translation", "Gecode Action Handler: processing action " << get_action());
-	setup();
+	index();
 	
 	createCSPVariables(use_novelty_constraint);
 	Helper::postBranchingStrategy(_base_csp);
@@ -78,8 +79,17 @@ void BaseActionCSPHandler::process(RPGIndex& graph) const {
 //! In the case of grounded actions and action schemata, we need to retrieve both the atoms and terms
 //! appearing in the precondition, _and_ the terms appearing in the effects, except the root LHS atom.
 void BaseActionCSPHandler::index() {
-	const auto conditions = get_precondition()->all_atoms();
-	const auto terms = get_precondition()->all_terms();
+	std::vector<const fs::AtomicFormula*> conditions = get_precondition()->all_atoms();
+	std::vector<const fs::Term*> terms = get_precondition()->all_terms();
+	
+	// If using the effect conditions, we'll want to index their components too
+	if (_use_effect_conditions) {
+		for (const fs::ActionEffect* effect:get_effects()) {
+			auto condition = effect->condition();
+			conditions = Utils::merge(conditions, condition->all_atoms());
+			terms = Utils::merge(terms, condition->all_terms());
+		}
+	}
 	
 	// Index formula elements
 	index_formula_elements(conditions, terms);

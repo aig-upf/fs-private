@@ -44,7 +44,7 @@ std::vector<std::shared_ptr<EffectSchemaCSPHandler>> EffectSchemaCSPHandler::cre
 
 
 EffectSchemaCSPHandler::EffectSchemaCSPHandler(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
-	ActionSchemaCSPHandler(action, tuple_index, approximate), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE)
+	ActionSchemaCSPHandler(action, tuple_index, approximate, true), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE)
 {}
 
 EffectSchemaCSPHandler::~EffectSchemaCSPHandler() {

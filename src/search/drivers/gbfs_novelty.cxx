@@ -14,8 +14,8 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyDriver::create(const Config& conf
 
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	
-	auto heuristic = new NoveltyHeuristic(model, max_novelty, feature_configuration);
-	engine = new aptk::StlBestFirstSearch<SearchNode, NoveltyHeuristic, GroundStateModel>(model, heuristic, delayed);
+	NoveltyHeuristic heuristic(model, max_novelty, feature_configuration);
+	engine = new aptk::StlBestFirstSearch<SearchNode, NoveltyHeuristic, GroundStateModel>(model, std::move(heuristic), delayed);
 	
 	LPT_INFO("main", "Heuristic options:");
 	LPT_INFO("main", "\tMax novelty: " << max_novelty);

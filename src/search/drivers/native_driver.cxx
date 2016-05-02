@@ -26,9 +26,9 @@ NativeDriver::create(const Config& config, const GroundStateModel& model) const 
 	}
 	
 	auto direct_builder = DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
-	auto heuristic = new DirectCRPG(problem, DirectActionManager::create(actions), std::move(direct_builder));
+	DirectCRPG heuristic(problem, DirectActionManager::create(actions), std::move(direct_builder));
 	
-	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, DirectCRPG, GroundStateModel>(model, heuristic, delayed));
+	return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, DirectCRPG, GroundStateModel>(model, std::move(heuristic), delayed));
 }
 
 GroundStateModel

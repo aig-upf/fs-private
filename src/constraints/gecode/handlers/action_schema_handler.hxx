@@ -23,7 +23,7 @@ public:
 	//! HACK
 	static std::vector<std::shared_ptr<ActionSchemaCSPHandler>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
-	ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate);
+	ActionSchemaCSPHandler(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	virtual ~ActionSchemaCSPHandler() {}
 	
 	bool init(bool use_novelty_constraint) override;

@@ -19,7 +19,7 @@ FormulaHandler::FormulaHandler(const fs::Formula* formula, const TupleIndex& tup
 	:  BaseCSPHandler(tuple_index, approximate),
 	  _formula(formula)
 {
-	setup();
+	index();
 	
 	createCSPVariables(false);
 	register_csp_constraints();

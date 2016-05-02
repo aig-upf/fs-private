@@ -212,3 +212,11 @@ class ObjectExpression(Expression):
 class NumericExpression(Expression):
     def dump(self, objects, binding_unit):
         return dict(type='int_constant', value=int(self.symbol))
+
+
+class Truth(Expression):
+    def __init__(self):
+        super().__init__('truth')
+
+    def dump(self, objects, binding_unit):
+        return dict(type='tautology')

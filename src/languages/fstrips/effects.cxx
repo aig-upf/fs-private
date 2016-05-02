@@ -2,14 +2,15 @@
 #include <problem_info.hxx>
 #include <languages/fstrips/effects.hxx>
 #include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/formulae.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips {
 
-ActionEffect::ActionEffect(const Term* lhs, const Term* rhs)
-	: _lhs(lhs), _rhs(rhs) {
+ActionEffect::ActionEffect(const Term* lhs, const Term* rhs, const Formula* condition)
+	: _lhs(lhs), _rhs(rhs), _condition(condition) {
 	if (!isWellFormed()) throw std::runtime_error("Ill-formed effect");
 }
 
@@ -39,6 +40,9 @@ Atom ActionEffect::apply(const State& state) const {
 	return Atom(_lhs->interpretVariable(state), _rhs->interpret(state));
 }
 
+bool ActionEffect::applicable(const State& state) const {
+	return _condition->interpret(state);
+}
 
 std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
@@ -48,7 +52,7 @@ std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info
 }
 
 const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo& info) const {
-	return new ActionEffect(_lhs->bind(binding, info), _rhs->bind(binding, info));
+	return new ActionEffect(_lhs->bind(binding, info), _rhs->bind(binding, info), _condition->bind(binding, info));
 }
 
 // TODO - Refactor this into a hierarchy of effects, a delete effect should be an object of a particular type, or at least effect should have a method is_delete()
