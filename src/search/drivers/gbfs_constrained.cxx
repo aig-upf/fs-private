@@ -1,5 +1,6 @@
 
 #include <search/drivers/gbfs_constrained.hxx>
+#include "validation.hxx"
 #include <problem.hxx>
 #include <state.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
@@ -33,30 +34,17 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator<GecodeHeuri
 	
 	LPT_INFO("main", "Chosen CSP Manager: Gecode");
 	
+	Validation::check_no_conditional_effects(problem);
 	std::vector<std::shared_ptr<BaseActionCSP>> managers;
 	if (Config::instance().getCSPModel() == Config::CSPModel::GroundedActionCSP) {
 		managers = GroundActionCSP::create(actions, problem.get_tuple_index(), approximate, novelty);
-		
-		
-	} else if (Config::instance().getCSPModel() == Config::CSPModel::GroundedEffectCSP) {
-		WORK_IN_PROGRESS("Disabled");
-// 			managers = GroundEffectCSP::create(actions, problem.get_tuple_index(), approximate, novelty);
-		
-		
 		
 	}  else if (Config::instance().getCSPModel() == Config::CSPModel::ActionSchemaCSP) {
 		const std::vector<const PartiallyGroundedAction*>& base_actions = problem.getPartiallyGroundedActions();
 		managers = LiftedActionCSP::create(base_actions, problem.get_tuple_index(), approximate, novelty);
 		
-		
-		
-		
-	}   else if (Config::instance().getCSPModel() == Config::CSPModel::EffectSchemaCSP) {
-		WORK_IN_PROGRESS("Disabled");
-// 			std::vector<IndexedTupleset> symbol_tuplesets = SmartRPG::index_tuplesets(ProblemInfo::getInstance());
-// 			managers = LiftedEffectCSP::create(problem.getActionSchemata(), problem.get_tuple_index(), symbol_tuplesets, approximate, novelty);
 	} else {
-		throw std::runtime_error("Unknown CSP model type");
+		throw std::runtime_error("Incompatible CSP model type");
 	}
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());

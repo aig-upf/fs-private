@@ -23,7 +23,7 @@ protected:
 	const Signature _signature;
 	const std::vector<std::string> _parameter_names;
 	const fs::Formula* _precondition;
-	const std::vector<const fs::ActionEffect*> _effects;	
+	const std::vector<const fs::ActionEffect*> _effects;
 
 public:
 	ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names,
