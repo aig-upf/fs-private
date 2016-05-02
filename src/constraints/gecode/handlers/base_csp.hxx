@@ -5,7 +5,7 @@
 
 #include <fs_types.hxx>
 #include <atom.hxx>
-#include <constraints/gecode/simple_csp.hxx>
+#include <constraints/gecode/gecode_csp.hxx>
 #include <constraints/gecode/utils/extensional_constraint.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 

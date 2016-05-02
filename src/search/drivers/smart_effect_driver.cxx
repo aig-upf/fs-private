@@ -4,7 +4,7 @@
 #include <problem_info.hxx>
 #include <state.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
-#include <constraints/gecode/handlers/effect_schema_handler.hxx>
+#include <constraints/gecode/handlers/lifted_effect_csp.hxx>
 #include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>

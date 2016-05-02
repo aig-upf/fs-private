@@ -1,6 +1,6 @@
 
 #include <languages/fstrips/terms.hxx>
-#include <constraints/gecode/handlers/action_schema_handler.hxx>
+#include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <actions/actions.hxx>
 #include <aptk2/tools/logging.hxx>
 #include <actions/action_id.hxx>

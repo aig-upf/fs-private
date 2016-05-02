@@ -1,7 +1,7 @@
 
 #include <languages/fstrips/language.hxx>
 #include <actions/actions.hxx>
-#include <constraints/gecode/handlers/base_action_handler.hxx>
+#include <constraints/gecode/handlers/base_action_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>

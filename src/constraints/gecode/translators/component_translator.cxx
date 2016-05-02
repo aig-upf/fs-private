@@ -1,10 +1,10 @@
 
 #include <languages/fstrips/language.hxx>
 #include <constraints/gecode/translators/component_translator.hxx>
-#include <constraints/gecode/simple_csp.hxx>
+#include <constraints/gecode/gecode_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
-#include <constraints/gecode/handlers/base_handler.hxx>
+#include <constraints/gecode/handlers/base_csp.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <aptk2/tools/logging.hxx>

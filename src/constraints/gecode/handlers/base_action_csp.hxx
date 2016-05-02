@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <constraints/gecode/handlers/base_handler.hxx>
+#include <constraints/gecode/handlers/base_csp.hxx>
 
 namespace fs0 { class ActionBase; class ActionID; }
 

@@ -1,6 +1,6 @@
 
 #include <languages/fstrips/language.hxx>
-#include <constraints/gecode/handlers/ground_effect_handler.hxx>
+#include <constraints/gecode/handlers/ground_effect_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <actions/actions.hxx>

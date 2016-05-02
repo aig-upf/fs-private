@@ -1,7 +1,7 @@
 
 #include <constraints/gecode/supports.hxx>
 #include <constraints/gecode/csp_translator.hxx>
-#include <constraints/gecode/simple_csp.hxx>
+#include <constraints/gecode/gecode_csp.hxx>
 #include <utils/tuple_index.hxx>
 #include <problem.hxx>
 

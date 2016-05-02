@@ -1,7 +1,7 @@
 
 #include <problem.hxx>
 #include <languages/fstrips/language.hxx>
-#include <constraints/gecode/handlers/base_handler.hxx>
+#include <constraints/gecode/handlers/base_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <aptk2/tools/logging.hxx>

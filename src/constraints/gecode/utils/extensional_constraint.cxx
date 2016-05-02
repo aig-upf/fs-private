@@ -3,7 +3,7 @@
 #include <constraints/gecode/utils/extensional_constraint.hxx>
 #include <problem.hxx>
 #include <state.hxx>
-#include <constraints/gecode/simple_csp.hxx>
+#include <constraints/gecode/gecode_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <aptk2/tools/logging.hxx>

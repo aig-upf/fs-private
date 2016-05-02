@@ -3,7 +3,7 @@
 #include <problem.hxx>
 #include <actions/actions.hxx>
 #include <actions/grounding.hxx>
-#include <constraints/gecode/handlers/effect_schema_handler.hxx>
+#include <constraints/gecode/handlers/lifted_effect_csp.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <utils/printers/actions.hxx>

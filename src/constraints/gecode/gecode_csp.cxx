@@ -1,5 +1,5 @@
 
-#include <constraints/gecode/simple_csp.hxx>
+#include <constraints/gecode/gecode_csp.hxx>
 
 
 namespace fs0 { namespace gecode {

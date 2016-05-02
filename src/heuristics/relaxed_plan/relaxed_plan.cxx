@@ -1,7 +1,7 @@
 
 #include <heuristics/relaxed_plan/relaxed_plan.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include <constraints/gecode/handlers/formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_csp.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
 #include <aptk2/tools/logging.hxx>
 

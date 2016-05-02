@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <constraints/gecode/handlers/base_action_handler.hxx>
+#include <constraints/gecode/handlers/base_action_csp.hxx>
 #include <actions/actions.hxx> // Necessary so that the return of get_action can be identified as covariant with that of the overriden method
 
 namespace fs0 { class LiftedActionID; class PartiallyGroundedAction; }

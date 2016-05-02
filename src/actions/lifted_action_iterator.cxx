@@ -2,7 +2,7 @@
 #include <state.hxx>
 #include <actions/lifted_action_iterator.hxx>
 #include <actions/action_id.hxx>
-#include <constraints/gecode/handlers/action_schema_handler.hxx>
+#include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <applicability/applicability_manager.hxx>
 

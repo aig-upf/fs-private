@@ -5,7 +5,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <aptk2/tools/logging.hxx>
 #include <state.hxx>
-#include <constraints/gecode/simple_csp.hxx>
+#include <constraints/gecode/gecode_csp.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {

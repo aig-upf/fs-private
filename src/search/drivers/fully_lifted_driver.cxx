@@ -3,8 +3,8 @@
 #include <problem.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <constraints/gecode/handlers/action_schema_handler.hxx>
-#include <constraints/gecode/handlers/formula_handler.hxx>
+#include <constraints/gecode/handlers/lifted_action_csp.hxx>
+#include <constraints/gecode/handlers/formula_csp.hxx>
 
 #include <state.hxx>
 #include <actions/lifted_action_iterator.hxx>

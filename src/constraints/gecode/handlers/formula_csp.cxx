@@ -1,7 +1,7 @@
 
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
-#include <constraints/gecode/handlers/formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <aptk2/tools/logging.hxx>

@@ -3,7 +3,7 @@
 
 #include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
-#include <constraints/gecode/handlers/formula_handler.hxx>
+#include <constraints/gecode/handlers/formula_csp.hxx>
 
 
 namespace fs0 { class Problem; class State; class RPGData; }

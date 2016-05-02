@@ -6,9 +6,9 @@
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
-#include <constraints/gecode/handlers/ground_action_handler.hxx>
-#include <constraints/gecode/handlers/ground_effect_handler.hxx>
-#include <constraints/gecode/handlers/action_schema_handler.hxx>
+#include <constraints/gecode/handlers/ground_action_csp.hxx>
+#include <constraints/gecode/handlers/ground_effect_csp.hxx>
+#include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <actions/ground_action_iterator.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <utils/support.hxx>

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <constraints/gecode/handlers/action_schema_handler.hxx>
+#include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <gecode/int.hh>
 
 namespace fs0 { class TupleIndex; }

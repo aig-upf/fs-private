@@ -8,8 +8,8 @@
 #include <heuristics/relaxed_plan/relaxed_plan.hxx>
 #include <relaxed_state.hxx>
 #include <applicability/formula_interpreter.hxx>
-#include <constraints/gecode/handlers/base_action_handler.hxx>
-#include <constraints/gecode/handlers/ground_effect_handler.hxx>
+#include <constraints/gecode/handlers/base_action_csp.hxx>
+#include <constraints/gecode/handlers/ground_effect_csp.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
 #include <languages/fstrips/scopes.hxx>
 

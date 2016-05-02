@@ -52,7 +52,7 @@ public:
 
 protected:
 	//! The formula handler that will check for CSP applicability
-	const gecode::FormulaCSP* _formula_handler;
+	const gecode::FormulaCSP* _formula_csp;
 };
 
 } // namespaces
