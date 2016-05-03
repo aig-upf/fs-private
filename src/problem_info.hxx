@@ -57,9 +57,6 @@ protected:
   */
 class ProblemInfo {
 public:
-	typedef std::shared_ptr<ProblemInfo> ptr;
-	typedef std::shared_ptr<const ProblemInfo> cptr;
-	
 	enum class ObjectType {INT, BOOL, OBJECT};
 	
 	//! Set the global singleton problem instance

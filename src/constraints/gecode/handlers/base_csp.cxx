@@ -7,6 +7,8 @@
 #include <aptk2/tools/logging.hxx>
 #include <constraints/registry.hxx>
 #include <gecode/driver.hh>
+#include <constraints/gecode/translators/component_translator.hxx>
+
 
 namespace fs0 { namespace gecode {
 

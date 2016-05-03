@@ -14,8 +14,6 @@ class GecodeCSP; class CSPTranslator;
 
 class TermTranslator {
 public:
-	typedef const TermTranslator* cptr;
-
 	TermTranslator() {}
 	virtual ~TermTranslator() {}
 
@@ -88,8 +86,6 @@ public:
 
 class FormulaTranslator {
 public:
-	typedef const FormulaTranslator* cptr;
-
 	FormulaTranslator() {}
 	virtual ~FormulaTranslator() {}
 

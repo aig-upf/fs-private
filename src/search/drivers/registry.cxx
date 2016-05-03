@@ -51,13 +51,13 @@ EngineRegistry::~EngineRegistry() {
 	for (const auto elem:_creators) delete elem.second;
 }
 
-void EngineRegistry::add(const std::string& engine_name, Driver::cptr creator) {
+void EngineRegistry::add(const std::string& engine_name, const Driver* creator) {
 auto res = _creators.insert(std::make_pair(engine_name, creator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of engine creator for symbol " + engine_name);
 }
 
 
-Driver::cptr EngineRegistry::get(const std::string& engine_name) const {
+const Driver* EngineRegistry::get(const std::string& engine_name) const {
 	auto it = _creators.find(engine_name);
 	if (it == _creators.end()) throw std::runtime_error("No engine creator has been registered for given engine name '" + engine_name + "'");
 	return it->second;

@@ -7,6 +7,9 @@
 #include <constraints/direct/sum_constraint.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/printers/helper.hxx>
+#include <constraints/direct/constraint.hxx>
+#include <constraints/direct/translators/effects.hxx>
+#include <constraints/gecode/translators/component_translator.hxx>
 
 
 namespace fs0 {
@@ -110,12 +113,12 @@ void LogicalComponentRegistry::add(const std::type_info& type, const EffectTrans
 }
 
 
-void LogicalComponentRegistry::add(const std::type_info& type, const gecode::TermTranslator::cptr translator) {
+void LogicalComponentRegistry::add(const std::type_info& type, const gecode::TermTranslator* translator) {
 	auto res = _gecode_term_translators.insert(std::make_pair(std::type_index(type), translator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
 }
 
-void LogicalComponentRegistry::add(const std::type_info& type, const gecode::FormulaTranslator::cptr translator) {
+void LogicalComponentRegistry::add(const std::type_info& type, const gecode::FormulaTranslator* translator) {
 	auto res = _gecode_formula_translators.insert(std::make_pair(std::type_index(type), translator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
 }
@@ -144,7 +147,7 @@ const EffectTranslator* LogicalComponentRegistry::getDirectEffectTranslator(cons
 	return it->second;
 }
 
-gecode::TermTranslator::cptr LogicalComponentRegistry::getGecodeTranslator(const fs::Term& term) const {
+const gecode::TermTranslator* LogicalComponentRegistry::getGecodeTranslator(const fs::Term& term) const {
 	auto it = _gecode_term_translators.find(std::type_index(typeid(term)));
 	if (it == _gecode_term_translators.end()) {
 		throw UnregisteredGecodeTranslator(term);
@@ -152,7 +155,7 @@ gecode::TermTranslator::cptr LogicalComponentRegistry::getGecodeTranslator(const
 	return it->second;
 }
 
-gecode::FormulaTranslator::cptr LogicalComponentRegistry::getGecodeTranslator(const fs::AtomicFormula& formula) const {
+const gecode::FormulaTranslator* LogicalComponentRegistry::getGecodeTranslator(const fs::AtomicFormula& formula) const {
 	auto it = _gecode_formula_translators.find(std::type_index(typeid(formula)));
 	if (it == _gecode_formula_translators.end()) {
 		throw UnregisteredGecodeTranslator(formula);

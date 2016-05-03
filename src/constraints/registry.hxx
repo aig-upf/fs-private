@@ -3,19 +3,22 @@
 
 #include <typeindex>
 #include <typeinfo>
+#include <unordered_map>
+#include <sstream>
 
 #include <fs_types.hxx>
-#include <languages/fstrips/language.hxx>
-#include <constraints/direct/constraint.hxx>
-#include <constraints/direct/translators/effects.hxx>
-#include <constraints/gecode/translators/component_translator.hxx>
 
-
+namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; class Term; }}}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace print { class logical_registry; } }
 
+namespace fs0 { namespace gecode { class TermTranslator; class FormulaTranslator; } }
+
 namespace fs0 {
+
+class DirectConstraint;
+class EffectTranslator;
 
 //! The LogicalComponentRegistry is a singleton object that provides access to a number of classes and methods
 //! that know how to translate from and into FSTRIPS logical elements (terms, formulae).
@@ -50,10 +53,10 @@ public:
 	void add(const std::type_info& type, const EffectTranslator* translator);
 	
 	//! Add a Gecode Term translator for the given type to the registry
-	void add(const std::type_info& type, const gecode::TermTranslator::cptr translator);
+	void add(const std::type_info& type, const gecode::TermTranslator* translator);
 	
 	//! Add a Gecode Formula translator for the given type to the registry
-	void add(const std::type_info& type, const gecode::FormulaTranslator::cptr translator);
+	void add(const std::type_info& type, const gecode::FormulaTranslator* translator);
 	
 	const fs::AtomicFormula* instantiate_formula(const std::string symbol, const std::vector<const fs::Term*>& subterms) const;
 	
@@ -63,9 +66,9 @@ public:
 	
 	const EffectTranslator* getDirectEffectTranslator(const fs::Term& term) const;
 	
-	gecode::TermTranslator::cptr getGecodeTranslator(const fs::Term& term) const;
+	const gecode::TermTranslator* getGecodeTranslator(const fs::Term& term) const;
 	
-	gecode::FormulaTranslator::cptr getGecodeTranslator(const fs::AtomicFormula& formula) const;
+	const gecode::FormulaTranslator* getGecodeTranslator(const fs::AtomicFormula& formula) const;
 
 	friend class print::logical_registry; // Grant access to the corresponding printer class
 	
@@ -86,9 +89,10 @@ protected:
 	
 	std::unordered_map<std::type_index, const EffectTranslator*> _direct_effect_translators;
 	
-	std::unordered_map<std::type_index, gecode::TermTranslator::cptr> _gecode_term_translators;
-	std::unordered_map<std::type_index, gecode::FormulaTranslator::cptr> _gecode_formula_translators;
+	std::unordered_map<std::type_index, const gecode::TermTranslator*> _gecode_term_translators;
+	std::unordered_map<std::type_index, const gecode::FormulaTranslator*> _gecode_formula_translators;
 };
+
 
 class UnregisteredGecodeTranslator : public std::runtime_error {
 public:

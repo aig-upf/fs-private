@@ -14,9 +14,6 @@ protected:
 	DomainVector _domains;
 
 public:
-	typedef std::shared_ptr<RelaxedState> ptr;
-	typedef std::shared_ptr<const RelaxedState> cptr;
-
 	virtual ~RelaxedState();
 
 	//! The only way to construct a relaxed state is from a non-relaxed state.

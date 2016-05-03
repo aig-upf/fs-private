@@ -19,8 +19,6 @@ public:
 //! A statically-headed term that adds up the values of the two subterms
 class AdditionTerm : public ArithmeticTerm {
 public:
-	typedef const AdditionTerm* cptr;
-	
 	AdditionTerm(const std::vector<const Term*>& subterms);
 	
 	AdditionTerm* clone() const { return new AdditionTerm(*this); }
@@ -37,8 +35,6 @@ public:
 //! A statically-headed term that subtracts up the values of the two subterms
 class SubtractionTerm : public ArithmeticTerm {
 public:
-	typedef const SubtractionTerm* cptr;
-	
 	SubtractionTerm(const std::vector<const Term*>& subterms);
 	
 	SubtractionTerm* clone() const { return new SubtractionTerm(*this); }
@@ -55,8 +51,6 @@ public:
 //! A statically-headed term that multiplies the values of the two subterms
 class MultiplicationTerm : public ArithmeticTerm {
 public:
-	typedef const MultiplicationTerm* cptr;
-	
 	MultiplicationTerm(const std::vector<const Term*>& subterms);
 	
 	MultiplicationTerm* clone() const { return new MultiplicationTerm(*this); }

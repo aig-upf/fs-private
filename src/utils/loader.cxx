@@ -15,6 +15,8 @@
 #include <asp/lp_handler.hxx>
 #include <utils/config.hxx>
 #include <state.hxx>
+#include <problem_info.hxx>
+#include <languages/fstrips/formulae.hxx>
 
 
 namespace fs = fs0::language::fstrips;

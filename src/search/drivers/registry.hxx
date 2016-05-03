@@ -18,9 +18,7 @@ typedef aptk::SearchAlgorithm<GroundStateModel> FS0SearchAlgorithm;
 //! A brief interface for any engine creator
 class Driver {
 public:
-	typedef const Driver* cptr;
-	
-	virtual ~Driver() {}
+	virtual ~Driver() = default;
 	
 	//! Create an engine for the given model as specified by the given configuration
 	virtual std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const = 0;
@@ -38,16 +36,16 @@ public:
 	static EngineRegistry& instance();
 	
 	//! Register a new engine creator responsible for creating drivers with the given engine_name
-	void add(const std::string& engine_name, Driver::cptr creator);
+	void add(const std::string& engine_name, const Driver* creator);
 	
 	//! Retrieve the engine creater adequate for the given engine name
-	Driver::cptr get(const std::string& engine_name) const;
+	const Driver* get(const std::string& engine_name) const;
 	
 	
 protected:
 	EngineRegistry();
 	
-	std::unordered_map<std::string, Driver::cptr> _creators;
+	std::unordered_map<std::string, const Driver*> _creators;
 };
 
 } } // namespaces

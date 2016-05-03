@@ -271,8 +271,6 @@ protected:
 //! operator such as =, !=, >, etc.
 class RelationalFormula : public AtomicFormula {
 public:
-	typedef const RelationalFormula* cptr;
-	
 	enum class Symbol {EQ, NEQ, LT, LEQ, GT, GEQ};
 	
 	RelationalFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {

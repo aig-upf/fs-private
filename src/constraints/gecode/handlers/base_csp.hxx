@@ -20,9 +20,6 @@ namespace fs0 { namespace gecode {
 //! The base interface class for all gecode CSP handlers
 class BaseCSP {
 public:
-	typedef BaseCSP* ptr;
-	typedef const BaseCSP* cptr;
-
 	BaseCSP(const TupleIndex& tuple_index, bool approximate);
 	virtual ~BaseCSP() = default;
 	

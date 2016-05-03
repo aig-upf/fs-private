@@ -1,5 +1,7 @@
 
 #include <constraints/direct/translators/translator.hxx>
+#include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/effects.hxx>
 #include <constraints/direct/builtin.hxx>
 #include <constraints/direct/compiled.hxx>
 #include <problem.hxx>
@@ -7,6 +9,8 @@
 #include <aptk2/tools/logging.hxx>
 #include <utils/projections.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <constraints/direct/translators/effects.hxx>
+
 
 namespace fs0 {
 
