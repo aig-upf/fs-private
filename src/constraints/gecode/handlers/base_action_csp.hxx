@@ -15,8 +15,6 @@ class NoveltyConstraint;
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
 class BaseActionCSP : public BaseCSP {
 public:
-	typedef BaseActionCSP* ptr;
-
 	//! Constructor / Destructor
 	BaseActionCSP(const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	virtual ~BaseActionCSP();

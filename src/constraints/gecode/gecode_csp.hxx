@@ -14,8 +14,6 @@ namespace fs0 { namespace gecode {
  */
 class GecodeCSP : public Gecode::Space {
 public:
-	typedef GecodeCSP* ptr;
-
 	GecodeCSP();
 	~GecodeCSP();
 	

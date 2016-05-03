@@ -15,8 +15,6 @@ namespace fs0 { namespace gecode {
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
 class LiftedActionCSP : public BaseActionCSP {
 public:
-	typedef LiftedActionCSP* ptr;
-	
 	//! Factory method
 	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 	
