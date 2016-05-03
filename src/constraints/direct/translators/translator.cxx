@@ -11,7 +11,7 @@
 namespace fs0 {
 
 
-void DirectTranslator::checkSupported(const fs::Term::cptr lhs, const fs::Term::cptr rhs) {
+void DirectTranslator::checkSupported(const fs::Term* lhs, const fs::Term* rhs) {
 	unsigned l1 = lhs->nestedness();
 	unsigned l2 = rhs->nestedness();
 	if (l1 > 0 || l2 > 0) throw UnimplementedFeatureException("Cannot translate nested fluents to DirectConstraints --- try Gecode instead!");
@@ -37,12 +37,12 @@ DirectConstraint* DirectTranslator::generate(const fs::RelationalFormula& formul
 	if (formula_scope.size() > 2) throw std::runtime_error("Too high a scope for direct constraints");
 	
 	// Here we can assume that the scope is <= 2 and there are no nested fluents
-	fs::Term::cptr lhs = formula.lhs(), rhs = formula.rhs(); // shortcuts
+	const fs::Term* lhs = formula.lhs(), *rhs = formula.rhs(); // shortcuts
 	
-	auto lhs_var = dynamic_cast<fs::StateVariable::cptr>(lhs);
-	auto rhs_var = dynamic_cast<fs::StateVariable::cptr>(rhs);
-	auto lhs_const = dynamic_cast<fs::Constant::cptr>(lhs);
-	auto rhs_const = dynamic_cast<fs::Constant::cptr>(rhs);
+	auto lhs_var = dynamic_cast<const fs::StateVariable*>(lhs);
+	auto rhs_var = dynamic_cast<const fs::StateVariable*>(rhs);
+	auto lhs_const = dynamic_cast<const fs::Constant*>(lhs);
+	auto rhs_const = dynamic_cast<const fs::Constant*>(rhs);
 	
 	if (lhs_const && rhs_const) { // A comparison between two constants... shouldn't get to this point
 		throw std::runtime_error("Comparison between two constants");
@@ -99,7 +99,7 @@ std::vector<DirectConstraint*> DirectTranslator::generate(const std::vector<cons
 
 const DirectEffect* DirectTranslator::generate(const fs::ActionEffect& effect) {
 	checkSupported(effect.lhs(), effect.rhs());
-	auto lhs_var = dynamic_cast<fs::StateVariable::cptr>(effect.lhs());
+	auto lhs_var = dynamic_cast<const fs::StateVariable*>(effect.lhs());
 	if (!lhs_var) throw std::runtime_error("Direct effects accept only state variables on the LHS of an effect");
 	VariableIdx affected = lhs_var->getValue();
 	

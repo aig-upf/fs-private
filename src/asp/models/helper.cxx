@@ -48,8 +48,8 @@ void ModelHelper::add_type_rules(const Problem& problem, std::vector<std::string
 std::pair<std::string, bool> ModelHelper::process_atom(const fs::AtomicFormula* atom) {
 	auto eq_atom = dynamic_cast<fs::EQconst AtomicFormula*>(atom);
 	if (!eq_atom) throw std::runtime_error("ASP heuristic available only for simple atoms");
-	auto lhs = dynamic_cast<fs::StateVariable::cptr>(eq_atom->lhs());
-	auto rhs = dynamic_cast<fs::IntConstant::cptr>(eq_atom->rhs());
+	auto lhs = dynamic_cast<const fs::StateVariable*>(eq_atom->lhs());
+	auto rhs = dynamic_cast<const fs::IntConstant*>(eq_atom->rhs());
 	if (!lhs || !rhs) throw std::runtime_error("ASP heuristic available only for simple atoms and effects");
 	
 	if (rhs->getValue() != 1) throw std::runtime_error("ASP heuristic available only for simple preconditions");
@@ -58,8 +58,8 @@ std::pair<std::string, bool> ModelHelper::process_atom(const fs::AtomicFormula* 
 }
 
 std::pair<std::string, bool> ModelHelper::process_effect(const fs::ActionEffect* effect) {
-	auto lhs = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
-	auto rhs = dynamic_cast<fs::IntConstant::cptr>(effect->rhs());
+	auto lhs = dynamic_cast<const fs::StateVariable*>(effect->lhs());
+	auto rhs = dynamic_cast<const fs::IntConstant*>(effect->rhs());
 	if (!lhs || !rhs) throw std::runtime_error("ASP heuristic available only for simple atoms and effects");
 	return std::make_pair(normalize(*lhs), rhs->getValue() == 1);
 }

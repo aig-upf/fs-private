@@ -97,7 +97,7 @@ void BaseActionCSP::index() {
 	// Index the variables IDs that are relevant for the preconditions
 	assert(_action_support.size() == 0);
 	for (auto term:_all_terms) {
-		if (auto casted = dynamic_cast<fs::StateVariable::cptr>(term)) {
+		if (auto casted = dynamic_cast<const fs::StateVariable*>(term)) {
 			_action_support.insert(casted->getValue());
 		}
 	}
@@ -108,8 +108,8 @@ void BaseActionCSP::index() {
 		_all_terms.insert(terms.cbegin(), terms.cend());
 		
 		// As for the LHS of the effect, ATM we only register the LHS subterms (if any)
-		if (auto lhs = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs())) {
-			for (fs::Term::cptr term:lhs->getSubterms()) {
+		if (auto lhs = dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs())) {
+			for (const fs::Term* term:lhs->getSubterms()) {
 				auto subterms = term->all_terms();
 				_all_terms.insert(subterms.cbegin(), subterms.cend());
 			}
@@ -144,7 +144,7 @@ void BaseActionCSP::index_scopes() {
 		fs::ScopeUtils::TermSet nested;
 		fs::ScopeUtils::computeIndirectScope(effects[i], nested);
 		fs::ScopeUtils::computeIndirectScope(get_precondition(), nested);
-		effect_nested_fluents[i] = std::vector<fs::FluentHeadedNestedTerm::cptr>(nested.cbegin(), nested.cend());
+		effect_nested_fluents[i] = std::vector<const fs::FluentHeadedNestedTerm*>(nested.cbegin(), nested.cend());
 		
 		
 		effect_rhs_variables[i] = _translator.resolveVariableIndex(effects[i]->rhs());
@@ -260,7 +260,7 @@ std::vector<TupleIdx> BaseActionCSP::extract_support_from_solution(GecodeCSP* so
 
 Binding BaseActionCSP::build_binding_from_solution(const GecodeCSP* solution) const { return Binding(); }
 
-void BaseActionCSP::extract_nested_term_support(const GecodeCSP* solution, const std::vector<fs::FluentHeadedNestedTerm::cptr>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<TupleIdx>& support) const {
+void BaseActionCSP::extract_nested_term_support(const GecodeCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<TupleIdx>& support) const {
 	if (nested_terms.empty()) return;
 
 	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
@@ -270,7 +270,7 @@ void BaseActionCSP::extract_nested_term_support(const GecodeCSP* solution, const
 	
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
-	for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
+	for (const fs::FluentHeadedNestedTerm* fluent:nested_terms) {
 		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), *solution));
 //		VariableIdx variable = fluent->interpretVariable(assignment, binding);
 		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom

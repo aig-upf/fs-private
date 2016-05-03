@@ -27,10 +27,10 @@ public:
 	~LogicalComponentRegistry();
 	
 	//!
-	typedef std::function<const fs::AtomicFormula*(const std::vector<fs::Term::cptr>&)> FormulaCreator;
+	typedef std::function<const fs::AtomicFormula*(const std::vector<const fs::Term*>&)> FormulaCreator;
 	
 	//!
-	typedef std::function<fs::Term::cptr(const std::vector<fs::Term::cptr>&)> TermCreator;
+	typedef std::function<const fs::Term*(const std::vector<const fs::Term*>&)> TermCreator;
 	
 	//!
 	typedef std::function<DirectConstraint*(const fs::AtomicFormula&)> DirectFormulaTranslator;
@@ -55,9 +55,9 @@ public:
 	//! Add a Gecode Formula translator for the given type to the registry
 	void add(const std::type_info& type, const gecode::FormulaTranslator::cptr translator);
 	
-	const fs::AtomicFormula* instantiate_formula(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
+	const fs::AtomicFormula* instantiate_formula(const std::string symbol, const std::vector<const fs::Term*>& subterms) const;
 	
-	fs::Term::cptr instantiate_term(const std::string symbol, const std::vector<fs::Term::cptr>& subterms) const;
+	const fs::Term* instantiate_term(const std::string symbol, const std::vector<const fs::Term*>& subterms) const;
 	
 	DirectConstraint* instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
 	

@@ -11,8 +11,6 @@ namespace fs0 { namespace language { namespace fstrips {
 //! A logical term in FSTRIPS
 class Term {
 public:
-	typedef const Term* cptr;
-
 	Term() {}
 	virtual ~Term() {}
 
@@ -21,7 +19,7 @@ public:
 
 	//! Processes a term possibly containing bound variables and non-consolidated state variables,
 	//! consolidating all possible state variables and performing the bindings according to the given variable binding
-	virtual Term::cptr bind(const Binding& binding, const ProblemInfo& info) const = 0;
+	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const = 0;
 	
 	//! Returns the level of nestedness of the term.
 	virtual unsigned nestedness() const = 0;
@@ -30,7 +28,7 @@ public:
 	virtual bool flat() const = 0;
 
 	// Returns a list with all terms contained in this term's tree, including itself (possibly with repetitions)
-	virtual std::vector<Term::cptr> all_terms() const = 0;
+	virtual std::vector<const Term*> all_terms() const = 0;
 
 	//! Returns the value of the current term under the given (possibly partial) interpretation
 	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
@@ -63,17 +61,15 @@ public:
 //! the functional symbol 'f' is fluent or not.
 class NestedTerm : public Term {
 public:
-	typedef const NestedTerm* cptr;
-	
 	//! Factory method to create a nested term of the appropriate type
-	static Term::cptr create(const std::string& symbol, const std::vector<Term::cptr>& subterms);
+	static const Term* create(const std::string& symbol, const std::vector<const Term*>& subterms);
 
-	NestedTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
+	NestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 		: _symbol_id(symbol_id), _subterms(subterms)
 	{}
 
 	virtual ~NestedTerm() {
-		for (Term::cptr term:_subterms) delete term;
+		for (const Term* term:_subterms) delete term;
 	}
 	
 	NestedTerm(const NestedTerm& term)
@@ -83,11 +79,11 @@ public:
 		}
 	}
 	
-	virtual Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
+	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const;
 
 	bool flat() const { return false; }
 
-	std::vector<Term::cptr> all_terms() const;
+	std::vector<const Term*> all_terms() const;
 	
 	virtual TypeIdx getType() const;
 
@@ -108,9 +104,9 @@ public:
 
 	//! A helper to interpret a vector of terms
 	template <typename T>
-	static ObjectIdxVector interpret_subterms(const std::vector<Term::cptr>& subterms, const T& assignment, const Binding& binding) {
+	static ObjectIdxVector interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding) {
 		ObjectIdxVector interpreted;
-		for (Term::cptr subterm:subterms) {
+		for (const Term* subterm:subterms) {
 			interpreted.push_back(subterm->interpret(assignment, binding));
 		}
 		return interpreted;
@@ -118,13 +114,13 @@ public:
 
 	unsigned getSymbolId() const { return _symbol_id; }
 
-	const std::vector<Term::cptr>& getSubterms() const { return _subterms; }
+	const std::vector<const Term*>& getSubterms() const { return _subterms; }
 
 	bool operator==(const Term& other) const;
 	virtual std::size_t hash_code() const;
 
 	//! A helper to process lists of subterms
-	static std::vector<Term::cptr> bind_subterms(const std::vector<Term::cptr>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants);
+	static std::vector<const Term*> bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants);
 
 
 protected:
@@ -132,11 +128,11 @@ protected:
 	unsigned _symbol_id;
 
 	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
-	std::vector<Term::cptr> _subterms;
+	std::vector<const Term*> _subterms;
 
 	unsigned maxSubtermNestedness() const {
 		unsigned max = 0;
-		for (Term::cptr subterm:_subterms) max = std::max(max, subterm->nestedness());
+		for (const Term* subterm:_subterms) max = std::max(max, subterm->nestedness());
 		return max;
 	}
 };
@@ -145,9 +141,7 @@ protected:
 //! A nested term headed by a static functional symbol
 class StaticHeadedNestedTerm : public NestedTerm {
 public:
-	typedef const StaticHeadedNestedTerm* cptr;
-
-	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms);
+	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
 
 	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
@@ -162,17 +156,15 @@ public:
 //! A statically-headed term that performs some arithmetic operation to its two subterms
 class ArithmeticTerm : public StaticHeadedNestedTerm {
 public:
-	typedef const ArithmeticTerm* cptr;
-	
-	ArithmeticTerm(const std::vector<Term::cptr>& subterms);
+	ArithmeticTerm(const std::vector<const Term*>& subterms);
 	
 	ArithmeticTerm* clone() const = 0;
 	
-	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
 	
 	//! Creates an arithmetic term of the same type than the current one but with the given subterms
 	// TODO - This is ATM somewhat inefficient because of the redundancy of cloning the whole array of subterms only to delete it.
-	Term::cptr create(const std::vector<Term::cptr>& subterms) const {
+	const Term* create(const std::vector<const Term*>& subterms) const {
 		ArithmeticTerm* term = clone();
 		for (const auto ptr:term->_subterms) delete ptr;
 		term->_subterms = subterms;
@@ -183,9 +175,7 @@ public:
 //! A statically-headed term defined extensionally or otherwise by the concrete planning instance
 class UserDefinedStaticTerm : public StaticHeadedNestedTerm {
 public:
-	typedef const UserDefinedStaticTerm* cptr;
-
-	UserDefinedStaticTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms);
+	UserDefinedStaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
 
 	UserDefinedStaticTerm* clone() const { return new UserDefinedStaticTerm(*this); }
 
@@ -195,7 +185,7 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
 	ObjectIdx interpret(const State& state, const Binding& binding) const;
 	
-	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
 
 protected:
 	// The (static) logical function implementation
@@ -206,9 +196,7 @@ protected:
 //! A nested term headed by a fluent functional symbol
 class FluentHeadedNestedTerm : public NestedTerm {
 public:
-	typedef const FluentHeadedNestedTerm* cptr;
-
-	FluentHeadedNestedTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
+	FluentHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 		: NestedTerm(symbol_id, subterms) {}
 
 	FluentHeadedNestedTerm* clone() const { return new FluentHeadedNestedTerm(*this); }
@@ -221,7 +209,7 @@ public:
 
 	virtual std::pair<int, int> getBounds() const;
 	
-	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
 
 	// A nested term headed by a fluent symbol has as many levels of nestedness as the maximum of its subterms plus one (standing for itself)
 	unsigned nestedness() const { return maxSubtermNestedness() + 1; }
@@ -230,13 +218,11 @@ public:
 //! A logical variable bound to some existential or universal quantifier
 class BoundVariable : public Term {
 public:
-	typedef const BoundVariable* cptr;
-
 	BoundVariable(unsigned id, TypeIdx type) : _id(id), _type(type) {}
 
 	BoundVariable* clone() const { return new BoundVariable(*this); }
 	
-	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
 
 	virtual unsigned nestedness() const { return 1; }
 
@@ -244,7 +230,7 @@ public:
 	
 	virtual TypeIdx getType() const;
 
-	std::vector<Term::cptr> all_terms() const { return std::vector<Term::cptr>(1, this); }
+	std::vector<const Term*> all_terms() const { return std::vector<const Term*>(1, this); }
 
 	//! Returns the unique quantified variable ID
 	unsigned getVariableId() const { return _id; }
@@ -274,9 +260,7 @@ protected:
 //! 'loc(a)', with a being an object, for instance, is a state variable
 class StateVariable : public Term {
 public:
-	typedef const StateVariable* cptr;
-
-	StateVariable(VariableIdx variable_id, FluentHeadedNestedTerm::cptr origin) 
+	StateVariable(VariableIdx variable_id, const FluentHeadedNestedTerm* origin) 
 		: _variable_id(variable_id), _origin(origin)
 	{}
 	
@@ -292,7 +276,7 @@ public:
 	StateVariable* clone() const { return new StateVariable(*this); }
 	
 	//! Nothing to be done for binding, simply return a clone of the element
-	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }
 
 	virtual unsigned nestedness() const { return 0; }
 
@@ -300,7 +284,7 @@ public:
 	
 	virtual TypeIdx getType() const;
 
-	std::vector<Term::cptr> all_terms() const { return std::vector<Term::cptr>(1, this); }
+	std::vector<const Term*> all_terms() const { return std::vector<const Term*>(1, this); }
 
 	//! Returns the index of the state variable
 	VariableIdx getValue() const { return _variable_id; }
@@ -311,11 +295,11 @@ public:
 	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { return _variable_id; }
 	VariableIdx interpretVariable(const State& state, const Binding& binding) const { return _variable_id; }
 	
-	FluentHeadedNestedTerm::cptr getOrigin() const { return _origin; }
+	const FluentHeadedNestedTerm* getOrigin() const { return _origin; }
 	
 	unsigned getSymbolId() const { return _origin->getSymbolId(); }
  
-	virtual const std::vector<Term::cptr>& getSubterms() const { return _origin->getSubterms(); }
+	virtual const std::vector<const Term*>& getSubterms() const { return _origin->getSubterms(); }
 
 	virtual std::pair<int, int> getBounds() const;
 
@@ -330,21 +314,19 @@ protected:
 	VariableIdx _variable_id;
 
 	//! The originating symbol ID and subterms
-	FluentHeadedNestedTerm::cptr _origin;
+	const FluentHeadedNestedTerm* _origin;
 };
 
 
 //! A simple constant term.
 class Constant : public Term {
 public:
-	typedef const Constant* cptr;
-
 	Constant(ObjectIdx value)  : _value(value) {}
 
 	Constant* clone() const { return new Constant(*this); }
 	
 	//! Nothing to be done for binding, simply return a clone of the element
-	Term::cptr bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }
 
 	virtual unsigned nestedness() const { return 0; }
 
@@ -354,7 +336,7 @@ public:
 		throw std::runtime_error("Unimplemented");
 	}
 
-	std::vector<Term::cptr> all_terms() const { return std::vector<Term::cptr>(1, this); }
+	std::vector<const Term*> all_terms() const { return std::vector<const Term*>(1, this); }
 
 	//! Returns the actual value of the constant
 	ObjectIdx getValue() const { return _value; }
@@ -383,8 +365,6 @@ protected:
 //! An integer constant
 class IntConstant : public Constant {
 public:
-	typedef const IntConstant* cptr;
-
 	IntConstant(ObjectIdx value)  : Constant(value) {}
 
 	IntConstant* clone() const { return new IntConstant(*this); }

@@ -33,32 +33,32 @@ Gecode::IntRelType RelationalFormulaTranslator::invert_operator(Gecode::IntRelTy
 
 
 void ConstantTermTranslator::registerVariables(const fs::Term* term, CSPTranslator& translator) const {
-	auto constant = dynamic_cast<fs::Constant::cptr>(term);
+	auto constant = dynamic_cast<const fs::Constant*>(term);
 	assert(constant);
 	translator.registerConstant(constant);
 }
 
 void BoundVariableTermTranslator::registerVariables(const fs::Term* term, CSPTranslator& translator) const {
-	auto variable = dynamic_cast<fs::BoundVariable::cptr>(term);
+	auto variable = dynamic_cast<const fs::BoundVariable*>(term);
 	assert(variable);
 	translator.registerExistentialVariable(variable);
 }
 
 void StaticNestedTermTranslator::registerVariables(const fs::Term* term, CSPTranslator& translator) const {
-	auto nested = dynamic_cast<fs::NestedTerm::cptr>(term);
+	auto nested = dynamic_cast<const fs::NestedTerm*>(term);
 	assert(nested);
 	translator.registerNestedTerm(nested);
 }
 
 void ArithmeticTermTranslator::registerVariables(const fs::Term* term, CSPTranslator& translator) const {
-	auto nested = dynamic_cast<fs::NestedTerm::cptr>(term);
+	auto nested = dynamic_cast<const fs::NestedTerm*>(term);
 	assert(nested);
 	auto bounds = nested->getBounds();
 	translator.registerNestedTerm(nested, bounds.first, bounds.second);
 }
 
 void ArithmeticTermTranslator::registerConstraints(const fs::Term* term, CSPTranslator& translator) const {
-	auto arithmetic_term = dynamic_cast<fs::ArithmeticTerm::cptr>(term);
+	auto arithmetic_term = dynamic_cast<const fs::ArithmeticTerm*>(term);
 	assert(arithmetic_term);
 	
 	LPT_DEBUG("translation", "Registering constraints for arithmetic term " << *term);
@@ -100,7 +100,7 @@ Gecode::IntArgs MultiplicationTermTranslator::getLinearCoefficients() const {
 
 
 void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTranslator& translator) const {
-	auto stat = dynamic_cast<fs::StaticHeadedNestedTerm::cptr>(term);
+	auto stat = dynamic_cast<const fs::StaticHeadedNestedTerm*>(term);
 	assert(stat);
 	
 	LPT_DEBUG("translation", "Registering constraints for static nested term " << *stat);

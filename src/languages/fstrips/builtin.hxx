@@ -9,7 +9,7 @@ namespace fs0 { namespace language { namespace fstrips {
 
 class ArithmeticTermFactory {
 public:
-	static StaticHeadedNestedTerm::cptr create(const std::string& symbol, const std::vector<const Term*>& subterms);
+	static const StaticHeadedNestedTerm* create(const std::string& symbol, const std::vector<const Term*>& subterms);
 	
 	static bool isBuiltinTerm(const std::string& symbol) {
 		return symbol == "+" || symbol == "-" || symbol == "*";
@@ -21,7 +21,7 @@ class AdditionTerm : public ArithmeticTerm {
 public:
 	typedef const AdditionTerm* cptr;
 	
-	AdditionTerm(const std::vector<Term::cptr>& subterms);
+	AdditionTerm(const std::vector<const Term*>& subterms);
 	
 	AdditionTerm* clone() const { return new AdditionTerm(*this); }
 	
@@ -39,7 +39,7 @@ class SubtractionTerm : public ArithmeticTerm {
 public:
 	typedef const SubtractionTerm* cptr;
 	
-	SubtractionTerm(const std::vector<Term::cptr>& subterms);
+	SubtractionTerm(const std::vector<const Term*>& subterms);
 	
 	SubtractionTerm* clone() const { return new SubtractionTerm(*this); }
 	
@@ -57,7 +57,7 @@ class MultiplicationTerm : public ArithmeticTerm {
 public:
 	typedef const MultiplicationTerm* cptr;
 	
-	MultiplicationTerm(const std::vector<Term::cptr>& subterms);
+	MultiplicationTerm(const std::vector<const Term*>& subterms);
 	
 	MultiplicationTerm* clone() const { return new MultiplicationTerm(*this); }
 	
@@ -72,7 +72,7 @@ public:
 
 class ExternallyDefinedFormula : public AtomicFormula {
 public:
-	ExternallyDefinedFormula(const std::vector<Term::cptr>& subterms) : AtomicFormula(subterms) {}
+	ExternallyDefinedFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
 	
 	virtual std::string name() const = 0;
 	
@@ -82,11 +82,11 @@ public:
 
 class AlldiffFormula : public ExternallyDefinedFormula {
 public:
-	AlldiffFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
+	AlldiffFormula(const std::vector<const Term*>& subterms) : ExternallyDefinedFormula(subterms) {}
 	AlldiffFormula(const AlldiffFormula& formula);
 	
 	AlldiffFormula* clone() const { return new AlldiffFormula(*this); }
-	AlldiffFormula* clone(const std::vector<Term::cptr>& subterms) const { return new AlldiffFormula(subterms); }
+	AlldiffFormula* clone(const std::vector<const Term*>& subterms) const { return new AlldiffFormula(subterms); }
 
 	std::string name() const { return "alldiff"; }
 	
@@ -96,11 +96,11 @@ protected:
 
 class SumFormula : public ExternallyDefinedFormula {
 public:
-	SumFormula(const std::vector<Term::cptr>& subterms) : ExternallyDefinedFormula(subterms) {}
+	SumFormula(const std::vector<const Term*>& subterms) : ExternallyDefinedFormula(subterms) {}
 	SumFormula(const SumFormula& formula);
 	
 	SumFormula* clone() const { return new SumFormula(*this); }	
-	SumFormula* clone(const std::vector<Term::cptr>& subterms) const { return new SumFormula(subterms); }
+	SumFormula* clone(const std::vector<const Term*>& subterms) const { return new SumFormula(subterms); }
 	
 	std::string name() const { return "sum"; }
 	

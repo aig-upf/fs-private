@@ -148,7 +148,7 @@ void GroundEffectCSP::solve_approximately(const Atom& atom, gecode::GecodeCSP* c
 		
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		
-		for (fs::FluentHeadedNestedTerm::cptr fluent:nested_terms) {
+		for (const fs::FluentHeadedNestedTerm* fluent:nested_terms) {
 			VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), *csp));
 	//		VariableIdx variable = fluent->interpretVariable(assignment, binding);
 			if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
@@ -174,10 +174,10 @@ void GroundEffectCSP::post(GecodeCSP& csp, const Atom& atom) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	assert(_effects.size() == 1);
 	const auto& effect = _effects[0];
-	if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(effect->lhs())) {
+	if (auto statevar = dynamic_cast<const fs::StateVariable*>(effect->lhs())) {
 		_unused(statevar);
 		assert(statevar->getValue() == atom.getVariable()); // Otherwise we shouldn't be considering this effect as a potential achiever of atom.
-	} else if (auto nested = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(effect->lhs())) {
+	} else if (auto nested = dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs())) {
 		_unused(nested);
 		const auto& data = info.getVariableData(atom.getVariable());
 		assert(nested->getSymbolId() == data.first);
@@ -198,7 +198,7 @@ void GroundEffectCSP::post(GecodeCSP& csp, const Atom& atom) const {
 std::vector<unsigned> GroundEffectCSP::index_lhs_subterms() {
 	std::vector<unsigned> subterm_variables;
 	auto lhs = get_effect()->lhs();
-	if (auto nested = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(lhs)) {
+	if (auto nested = dynamic_cast<const fs::FluentHeadedNestedTerm*>(lhs)) {
 		for (auto subterm:nested->getSubterms()) {
 			subterm_variables.push_back(_translator.resolveVariableIndex(subterm));
 		}

@@ -7,7 +7,7 @@
 namespace fs0 { namespace language { namespace fstrips {
 
 
-StaticHeadedNestedTerm::cptr ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
+const StaticHeadedNestedTerm* ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
 	if (symbol == "+")      return new AdditionTerm(subterms);
 	else if (symbol == "-") return new SubtractionTerm(subterms);
 	else if (symbol == "*") return new MultiplicationTerm(subterms);
@@ -15,7 +15,7 @@ StaticHeadedNestedTerm::cptr ArithmeticTermFactory::create(const std::string& sy
 }
 
 
-AdditionTerm::AdditionTerm(const std::vector<Term::cptr>& subterms)
+AdditionTerm::AdditionTerm(const std::vector<const Term*>& subterms)
 	: ArithmeticTerm(subterms) {}
 
 ObjectIdx AdditionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
@@ -40,7 +40,7 @@ std::ostream& AdditionTerm::print(std::ostream& os, const fs0::ProblemInfo& info
 	return os;
 }
 
-SubtractionTerm::SubtractionTerm(const std::vector<Term::cptr>& subterms)
+SubtractionTerm::SubtractionTerm(const std::vector<const Term*>& subterms)
 	: ArithmeticTerm(subterms) {}
 
 ObjectIdx SubtractionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
@@ -66,7 +66,7 @@ std::ostream& SubtractionTerm::print(std::ostream& os, const fs0::ProblemInfo& i
 }
 
 
-MultiplicationTerm::MultiplicationTerm(const std::vector<Term::cptr>& subterms)
+MultiplicationTerm::MultiplicationTerm(const std::vector<const Term*>& subterms)
 	: ArithmeticTerm(subterms) {}
 
 ObjectIdx MultiplicationTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {

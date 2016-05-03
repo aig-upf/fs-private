@@ -36,7 +36,7 @@ unsigned CSPTranslator::create_bool_variable() {
 	return add_boolvar(Helper::createBoolVariable(_base_csp));
 }
 
-bool CSPTranslator::registerConstant(fs::Constant::cptr constant) {
+bool CSPTranslator::registerConstant(const fs::Constant* constant) {
 	auto it = _registered.find(constant);
 	if (it!= _registered.end()) return false; // The element was already registered
 
@@ -47,7 +47,7 @@ bool CSPTranslator::registerConstant(fs::Constant::cptr constant) {
 	return true;
 }
 
-void CSPTranslator::registerExistentialVariable(fs::BoundVariable::cptr variable) {
+void CSPTranslator::registerExistentialVariable(const fs::BoundVariable* variable) {
 	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, variable->getType()));
 	auto res = _registered.insert(std::make_pair(variable, id));
 	_unused(res);
@@ -67,12 +67,12 @@ void CSPTranslator::registerInputStateVariable(VariableIdx variable) {
 	_input_state_variables.insert(std::make_pair(variable, id));
 }
 
-bool CSPTranslator::registerNestedTerm(fs::NestedTerm::cptr nested) {
+bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested) {
 	TypeIdx domain_type = ProblemInfo::getInstance().getSymbolData(nested->getSymbolId()).getCodomainType();
 	return registerNestedTerm(nested, domain_type);
 }
 
-bool CSPTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, TypeIdx domain_type) {
+bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested, TypeIdx domain_type) {
 	auto it = _registered.find(nested);
 	if (it!= _registered.end()) return false; // The element was already registered
 
@@ -82,7 +82,7 @@ bool CSPTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, TypeIdx doma
 	return true;
 }
 
-bool CSPTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, int min, int max) {
+bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested, int min, int max) {
 	auto it = _registered.find(nested);
 	if (it!= _registered.end()) return false; // The element was already registered
 
@@ -93,8 +93,8 @@ bool CSPTranslator::registerNestedTerm(fs::NestedTerm::cptr nested, int min, int
 }
 
 
-unsigned CSPTranslator::resolveVariableIndex(fs::Term::cptr term) const {
-	if (auto sv = dynamic_cast<fs::StateVariable::cptr>(term)) {
+unsigned CSPTranslator::resolveVariableIndex(const fs::Term* term) const {
+	if (auto sv = dynamic_cast<const fs::StateVariable*>(term)) {
 		return resolveInputVariableIndex(sv->getValue());
 	}
 
@@ -105,11 +105,11 @@ unsigned CSPTranslator::resolveVariableIndex(fs::Term::cptr term) const {
 	return it->second;
 }
 
-const Gecode::IntVar& CSPTranslator::resolveVariable(fs::Term::cptr term, const GecodeCSP& csp) const {
+const Gecode::IntVar& CSPTranslator::resolveVariable(const fs::Term* term, const GecodeCSP& csp) const {
 	return csp._intvars[resolveVariableIndex(term)];
 }
 
-ObjectIdx CSPTranslator::resolveValue(fs::Term::cptr term, const GecodeCSP& csp) const {
+ObjectIdx CSPTranslator::resolveValue(const fs::Term* term, const GecodeCSP& csp) const {
 	return resolveVariable(term, csp).val();
 }
 
@@ -125,17 +125,17 @@ const Gecode::IntVar& CSPTranslator::resolveInputStateVariable(const GecodeCSP& 
 	return csp._intvars[resolveInputVariableIndex(variable)];
 }
 
-Gecode::IntVarArgs CSPTranslator::resolveVariables(const std::vector<fs::Term::cptr>& terms, const GecodeCSP& csp) const {
+Gecode::IntVarArgs CSPTranslator::resolveVariables(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const {
 	Gecode::IntVarArgs variables;
-	for (const fs::Term::cptr term:terms) {
+	for (const fs::Term* term:terms) {
 		variables << resolveVariable(term, csp);
 	}
 	return variables;
 }
 
-std::vector<ObjectIdx> CSPTranslator::resolveValues(const std::vector<fs::Term::cptr>& terms, const GecodeCSP& csp) const {
+std::vector<ObjectIdx> CSPTranslator::resolveValues(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const {
 	std::vector<ObjectIdx> values;
-	for (const fs::Term::cptr term:terms) {
+	for (const fs::Term* term:terms) {
 		values.push_back(resolveValue(term, csp));
 	}
 	return values;

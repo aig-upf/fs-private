@@ -89,7 +89,7 @@ bool StrongNoveltyConstraint::applicable(const std::vector<const fs::ActionEffec
 StrongNoveltyConstraint::StrongNoveltyConstraint(CSPTranslator& translator, const std::vector<const fs::ActionEffect*>& effects)  {
 	assert(applicable(effects));
 	for (const auto effect:effects) {
-		auto variable = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
+		auto variable = dynamic_cast<const fs::StateVariable*>(effect->lhs());
 		assert(variable);
 		unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs());
 		unsigned reified_id = translator.create_bool_variable();
@@ -127,7 +127,7 @@ bool EffectNoveltyConstraint::applicable(const fs::ActionEffect* effect) { retur
 
 EffectNoveltyConstraint::EffectNoveltyConstraint(CSPTranslator& translator, const fs::ActionEffect* effect)  {
 	assert(applicable(effect));
-	auto variable = dynamic_cast<fs::StateVariable::cptr>(effect->lhs());
+	auto variable = dynamic_cast<const fs::StateVariable*>(effect->lhs());
 	assert(variable);
 	unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs());
 	unsigned reified_id = translator.create_bool_variable();

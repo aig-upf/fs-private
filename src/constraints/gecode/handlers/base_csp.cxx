@@ -14,7 +14,7 @@ BaseCSP::BaseCSP(const TupleIndex& tuple_index, bool approximate) :
 	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _tuple_index(tuple_index)
 {}
 
-void BaseCSP::registerTermVariables(const fs::Term::cptr term, CSPTranslator& translator) {
+void BaseCSP::registerTermVariables(const fs::Term* term, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerVariables(term, translator);
@@ -26,7 +26,7 @@ void BaseCSP::registerFormulaVariables(const fs::AtomicFormula* condition, CSPTr
 	component_translator->registerVariables(condition, translator);
 }
 
-void BaseCSP::registerTermConstraints(const fs::Term::cptr term, CSPTranslator& translator) {
+void BaseCSP::registerTermConstraints(const fs::Term* term, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerConstraints(term, translator);
@@ -78,7 +78,7 @@ void BaseCSP::register_csp_variables() {
 	
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
-		if (fs::FluentHeadedNestedTerm::cptr fluent = dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term)) {
+		if (const fs::FluentHeadedNestedTerm* fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
 			bool is_predicate = info.isPredicate(fluent->getSymbolId());
 			_extensional_constraints.push_back(ExtensionalConstraint(fluent, _tuple_index, is_predicate));
 			
@@ -86,7 +86,7 @@ void BaseCSP::register_csp_variables() {
 				_translator.registerNestedTerm(fluent);
 			}
 			
-		} else if (auto statevar = dynamic_cast<fs::StateVariable::cptr>(term)) {
+		} else if (auto statevar = dynamic_cast<const fs::StateVariable*>(term)) {
 			_translator.registerInputStateVariable(statevar->getValue());
 		}
 		
@@ -106,8 +106,8 @@ void BaseCSP::register_csp_constraints() {
 	for (const auto term:_all_terms) {
 		
 		// These types of term do not require a custom translator
-		if (dynamic_cast<fs::FluentHeadedNestedTerm::cptr>(term) ||
-			dynamic_cast<fs::StateVariable::cptr>(term)) {
+		if (dynamic_cast<const fs::FluentHeadedNestedTerm*>(term) ||
+			dynamic_cast<const fs::StateVariable*>(term)) {
 			continue;
 		}
 		
@@ -139,7 +139,7 @@ void BaseCSP::createCSPVariables(bool use_novelty_constraint) {
 	_translator.perform_registration();
 }
 
-void BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<fs::Term::cptr>& terms) {
+void BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::unordered_set<const fs::Term*> inserted_terms;
 	std::unordered_set<const fs::AtomicFormula*> inserted_conditions;

@@ -24,10 +24,10 @@ const DirectEffect* AdditiveTermRhsTranslator::translate(const fs::StateVariable
 	// If some of the subterms is a static expression itself, cannot convert this into an arithmetic DirectEffect.
 	if (!sum_lhs->flat() || ! sum_rhs->flat()) return nullptr; 
 	
-	auto lhs_var = dynamic_cast<fs::StateVariable::cptr>(sum_lhs);
-	auto rhs_var = dynamic_cast<fs::StateVariable::cptr>(sum_rhs);
-	auto lhs_const = dynamic_cast<fs::Constant::cptr>(sum_lhs);
-	auto rhs_const = dynamic_cast<fs::Constant::cptr>(sum_rhs);
+	auto lhs_var = dynamic_cast<const fs::StateVariable*>(sum_lhs);
+	auto rhs_var = dynamic_cast<const fs::StateVariable*>(sum_rhs);
+	auto lhs_const = dynamic_cast<const fs::Constant*>(sum_lhs);
+	auto rhs_const = dynamic_cast<const fs::Constant*>(sum_rhs);
 	
 	if (lhs_var && rhs_var)            return new AdditiveBinaryEffect({lhs_var->getValue(), rhs_var->getValue()}, affected.getValue());
 	else if (lhs_var && rhs_const)     return new AdditiveUnaryEffect(lhs_var->getValue(), affected.getValue(), rhs_const->getValue());
@@ -43,10 +43,10 @@ const DirectEffect* SubtractiveTermRhsTranslator::translate(const fs::StateVaria
 	// If some of the subterms is a static expression itself, cannot convert this into an arithmetic DirectEffect.
 	if (!sum_lhs->flat() || ! sum_rhs->flat()) return nullptr; 
 	
-	auto lhs_var = dynamic_cast<fs::StateVariable::cptr>(sum_lhs);
-	auto rhs_var = dynamic_cast<fs::StateVariable::cptr>(sum_rhs);
-	auto lhs_const = dynamic_cast<fs::Constant::cptr>(sum_lhs);
-	auto rhs_const = dynamic_cast<fs::Constant::cptr>(sum_rhs);
+	auto lhs_var = dynamic_cast<const fs::StateVariable*>(sum_lhs);
+	auto rhs_var = dynamic_cast<const fs::StateVariable*>(sum_rhs);
+	auto lhs_const = dynamic_cast<const fs::Constant*>(sum_lhs);
+	auto rhs_const = dynamic_cast<const fs::Constant*>(sum_rhs);
 	
 	if (lhs_var && rhs_var)            return new SubtractiveBinaryEffect({lhs_var->getValue(), rhs_var->getValue()}, affected.getValue());
 	else if (lhs_var && rhs_const)     return new SubtractiveUnaryEffect(lhs_var->getValue(), affected.getValue(), rhs_const->getValue());
@@ -62,10 +62,10 @@ const DirectEffect* MultiplicativeTermRhsTranslator::translate(const fs::StateVa
 	// If some of the subterms is a static expression itself, cannot convert this into an arithmetic DirectEffect.
 	if (!sum_lhs->flat() || ! sum_rhs->flat()) return nullptr; 
 	
-	auto lhs_var = dynamic_cast<fs::StateVariable::cptr>(sum_lhs);
-	auto rhs_var = dynamic_cast<fs::StateVariable::cptr>(sum_rhs);
-	auto lhs_const = dynamic_cast<fs::Constant::cptr>(sum_lhs);
-	auto rhs_const = dynamic_cast<fs::Constant::cptr>(sum_rhs);
+	auto lhs_var = dynamic_cast<const fs::StateVariable*>(sum_lhs);
+	auto rhs_var = dynamic_cast<const fs::StateVariable*>(sum_rhs);
+	auto lhs_const = dynamic_cast<const fs::Constant*>(sum_lhs);
+	auto rhs_const = dynamic_cast<const fs::Constant*>(sum_rhs);
 	
 	if (lhs_var && rhs_var)            return new MultiplicativeBinaryEffect({lhs_var->getValue(), rhs_var->getValue()}, affected.getValue());
 	else if (lhs_var && rhs_const)     return new MultiplicativeUnaryEffect(lhs_var->getValue(), affected.getValue(), rhs_const->getValue());

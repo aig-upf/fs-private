@@ -53,7 +53,7 @@ void Helper::constrainCSPVariable(GecodeCSP& csp, const Gecode::IntVar& variable
 	Gecode::dom(csp, variable, domain);
 }
 
-Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm::cptr term) {
+Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm* term) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	auto f_data = info.getSymbolData(term->getSymbolId());
 	const auto& functor = f_data.getFunction();

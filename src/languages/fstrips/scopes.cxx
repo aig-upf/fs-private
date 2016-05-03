@@ -15,7 +15,7 @@ std::vector<VariableIdx> ScopeUtils::computeDirectScope(const Term* term) {
 
 void ScopeUtils::computeDirectScope(const Term* term, std::set<VariableIdx>& scope) {
 	for (const Term* subterm:term->all_terms()) {
-		if (auto sv = dynamic_cast<StateVariable::cptr>(subterm)) {
+		if (auto sv = dynamic_cast<const StateVariable*>(subterm)) {
 			scope.insert(sv->getValue());
 		}
 	}
@@ -84,7 +84,7 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 	std::vector<VariableIdx> lhs_variables;
 	std::vector<Atom> affected;
 	
-	if (auto statevar = dynamic_cast<StateVariable::cptr>(effect->lhs())) {
+	if (auto statevar = dynamic_cast<const StateVariable*>(effect->lhs())) {
 		lhs_variables.push_back(statevar->getValue());
 	} else if (auto nested = dynamic_cast<const FluentHeadedNestedTerm*>(effect->lhs())) {
 		lhs_variables = info.resolveStateVariable(nested->getSymbolId()); // TODO - This is a gross overapproximation
@@ -92,7 +92,7 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 	
 	// Now gather, for each possible variables, all possible values
 	for (VariableIdx variable:lhs_variables) {
-		Constant::cptr rhs_const = dynamic_cast<Constant::cptr>(effect->rhs());
+		const Constant* rhs_const = dynamic_cast<const Constant*>(effect->rhs());
 		
 		// TODO - All this should be greatly simplified when we have a proper distinction between functional effects
 		// and predicative add/del effects
@@ -128,7 +128,7 @@ template <typename T>
 void _computeRelevantElements(const T& element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (const Term* term:element->all_terms()) {
-		auto statevar = dynamic_cast<StateVariable::cptr>(term);
+		auto statevar = dynamic_cast<const StateVariable*>(term);
 		auto fluent = dynamic_cast<const FluentHeadedNestedTerm*>(term);
 		
 		if (!statevar && !fluent) continue;

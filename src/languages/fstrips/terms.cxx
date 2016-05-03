@@ -23,10 +23,10 @@ std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const 
 	return os;
 }
 
-std::vector<Term::cptr> NestedTerm::all_terms() const {
-	std::vector<Term::cptr> res;
+std::vector<const Term*> NestedTerm::all_terms() const {
+	std::vector<const Term*> res;
 	res.push_back(this);
-	for (Term::cptr term:_subterms) {
+	for (const Term* term:_subterms) {
 		auto tmp = term->all_terms();
 		res.insert(res.end(), tmp.cbegin(), tmp.cend());
 	}
@@ -34,9 +34,9 @@ std::vector<Term::cptr> NestedTerm::all_terms() const {
 }
 
 
-std::vector<Term::cptr> NestedTerm::bind_subterms(const std::vector<Term::cptr>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants) {
+std::vector<const Term*> NestedTerm::bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants) {
 	assert(constants.empty());
-	std::vector<Term::cptr> result;
+	std::vector<const Term*> result;
 	for (auto unprocessed:subterms) {
 		auto processed = unprocessed->bind(binding, info);
 		result.push_back(processed);
@@ -48,7 +48,7 @@ std::vector<Term::cptr> NestedTerm::bind_subterms(const std::vector<Term::cptr>&
 	return result;
 }
 
-Term::cptr NestedTerm::create(const std::string& symbol, const std::vector<Term::cptr>& subterms) {
+const Term* NestedTerm::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
@@ -63,9 +63,9 @@ Term::cptr NestedTerm::create(const std::string& symbol, const std::vector<Term:
 	}
 }
 
-Term::cptr NestedTerm::bind(const Binding& binding, const ProblemInfo& info) const {
+const Term* NestedTerm::bind(const Binding& binding, const ProblemInfo& info) const {
 	std::vector<ObjectIdx> constant_values;
-	std::vector<Term::cptr> st = bind_subterms(_subterms, binding, info, constant_values);
+	std::vector<const Term*> st = bind_subterms(_subterms, binding, info, constant_values);
 	
 	// We process the 4 different possible cases separately:
 	const auto& function = info.getSymbolData(_symbol_id);
@@ -87,9 +87,9 @@ Term::cptr NestedTerm::bind(const Binding& binding, const ProblemInfo& info) con
 	}
 }
 
-Term::cptr FluentHeadedNestedTerm::bind(const Binding& binding, const ProblemInfo& info) const {
+const Term* FluentHeadedNestedTerm::bind(const Binding& binding, const ProblemInfo& info) const {
 	std::vector<ObjectIdx> constant_values;
-	std::vector<Term::cptr> processed = bind_subterms(_subterms, binding, info, constant_values);
+	std::vector<const Term*> processed = bind_subterms(_subterms, binding, info, constant_values);
 	
 	if (constant_values.size() == _subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
 // 		for (const auto ptr:processed) delete ptr;
@@ -101,9 +101,9 @@ Term::cptr FluentHeadedNestedTerm::bind(const Binding& binding, const ProblemInf
 }
 
 
-Term::cptr UserDefinedStaticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
+const Term* UserDefinedStaticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
 	std::vector<ObjectIdx> constant_values;
-	std::vector<Term::cptr> processed = bind_subterms(_subterms, binding, info, constant_values);
+	std::vector<const Term*> processed = bind_subterms(_subterms, binding, info, constant_values);
 	
 	if (constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:processed) delete ptr;
@@ -117,9 +117,9 @@ Term::cptr UserDefinedStaticTerm::bind(const Binding& binding, const ProblemInfo
 	return new UserDefinedStaticTerm(_symbol_id, processed);
 }
 
-Term::cptr ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
+const Term* ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
 	std::vector<ObjectIdx> constant_values;
-	std::vector<Term::cptr> st = bind_subterms(_subterms, binding, info, constant_values);
+	std::vector<const Term*> st = bind_subterms(_subterms, binding, info, constant_values);
 	
 	auto processed = create(st);
 	
@@ -143,17 +143,17 @@ std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) 
 }
 
 
-StaticHeadedNestedTerm::StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
+StaticHeadedNestedTerm::StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 	: NestedTerm(symbol_id, subterms)
 {}
 
-ArithmeticTerm::ArithmeticTerm(const std::vector<Term::cptr>& subterms)
+ArithmeticTerm::ArithmeticTerm(const std::vector<const Term*>& subterms)
 	: StaticHeadedNestedTerm(-1, subterms)
 {
 	assert(subterms.size() == 2);
 }
 
-UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<Term::cptr>& subterms)
+UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 	: StaticHeadedNestedTerm(symbol_id, subterms),
 	_function(ProblemInfo::getInstance().getSymbolData(symbol_id))
 {}
@@ -223,7 +223,7 @@ TypeIdx BoundVariable::getType() const { return _type; }
 
 std::pair<int, int> BoundVariable::getBounds() const { return ProblemInfo::getInstance().getTypeBounds(_type); }
 
-Term::cptr BoundVariable::bind(const Binding& binding, const ProblemInfo& info) const {
+const Term* BoundVariable::bind(const Binding& binding, const ProblemInfo& info) const {
 	if (!binding.binds(_id)) return clone();
 	ObjectIdx value = binding.value(_id);
 	return info.isBoundedType(_type) ? new IntConstant(value) : new Constant(value);
@@ -294,7 +294,7 @@ std::size_t NestedTerm::hash_code() const {
 	std::size_t hash = 0;
 	boost::hash_combine(hash, typeid(*this).hash_code());
 	boost::hash_combine(hash, _symbol_id);
-	for (const Term::cptr term:_subterms) {
+	for (const Term* term:_subterms) {
 		boost::hash_combine(hash, term->hash_code());
 	}
 	return hash;

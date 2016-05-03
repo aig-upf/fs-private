@@ -36,7 +36,7 @@ std::vector<const std::vector<ObjectIdx>*> term_list_iterator::compute_possible_
 	for (unsigned i = 0; i < subterms.size(); ++i) {
 		const fs::Term* subterm = subterms[i];
 		
-		if (auto constant = dynamic_cast<fs::Constant::cptr>(subterm)) {
+		if (auto constant = dynamic_cast<const fs::Constant*>(subterm)) {
 			auto v = new std::vector<ObjectIdx>(1, constant->getValue()); // Create a temporary vector with the constant value as the only value
 			possible_values.push_back(v);
 			_temporary_vectors.push_back(v); // store the pointer so that we can delete it later

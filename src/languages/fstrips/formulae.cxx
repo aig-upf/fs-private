@@ -19,8 +19,8 @@ const std::map<AFSymbol, std::string> RelationalFormula::symbol_to_string{
 // const std::map<std::string, AFSymbol> RelationalFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
 
 
-std::vector<Term::cptr> Formula::all_terms() const {
-	std::vector<Term::cptr> res;
+std::vector<const Term*> Formula::all_terms() const {
+	std::vector<const Term*> res;
 	for (auto atom:all_atoms()) {
 		auto tmp = atom->all_terms();
 		res.insert(res.end(), tmp.cbegin(), tmp.cend());		
@@ -40,7 +40,7 @@ std::ostream& Formula::print(std::ostream& os) const { return print(os, ProblemI
 
 unsigned AtomicFormula::nestedness() const {
 	unsigned max = 0;
-	for (Term::cptr subterm:_subterms) max = std::max(max, subterm->nestedness());
+	for (const Term* subterm:_subterms) max = std::max(max, subterm->nestedness());
 	return max;
 }
 
@@ -48,9 +48,9 @@ AtomicFormula::~AtomicFormula() {
 	for (const auto ptr:_subterms) delete ptr;
 }
 	
-std::vector<Term::cptr> AtomicFormula::all_terms() const {
-	std::vector<Term::cptr> res;
-	for (Term::cptr term:_subterms) {
+std::vector<const Term*> AtomicFormula::all_terms() const {
+	std::vector<const Term*> res;
+	for (const Term* term:_subterms) {
 		auto tmp = term->all_terms();
 		res.insert(res.end(), tmp.cbegin(), tmp.cend());
 	}
@@ -75,7 +75,7 @@ std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo&
 const Formula* AtomicFormula::bind(const Binding& binding, const ProblemInfo& info) const {
 	// Process the subterms first
 	std::vector<ObjectIdx> constant_values;
-	std::vector<Term::cptr> processed_subterms = NestedTerm::bind_subterms(_subterms, binding, info, constant_values);
+	std::vector<const Term*> processed_subterms = NestedTerm::bind_subterms(_subterms, binding, info, constant_values);
 	
 	// Create the corresponding relational or external formula object, according to the symbol
 	const AtomicFormula* processed = clone(processed_subterms);
