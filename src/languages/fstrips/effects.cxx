@@ -17,10 +17,11 @@ ActionEffect::ActionEffect(const Term* lhs, const Term* rhs, const Formula* cond
 ActionEffect::~ActionEffect() {
 	delete _lhs;
 	delete _rhs;
+	delete _condition;
 }
 
 ActionEffect::ActionEffect(const ActionEffect& other) :
-	_lhs(other._lhs->clone()), _rhs(other._rhs->clone())
+	_lhs(other._lhs->clone()), _rhs(other._rhs->clone()), _condition(other._condition->clone())
 {}
 
 std::vector<const Term*> ActionEffect::all_terms() const {
