@@ -19,8 +19,8 @@ public:
 	//! Factory method
 	static  std::vector<std::shared_ptr<LiftedEffectCSP>> create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
+	//! The only constructor
 	LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate);
-	 
 	~LiftedEffectCSP();
 	
 	bool init(bool use_novelty_constraint) override;
@@ -42,7 +42,7 @@ public:
 
 protected:
 	//! This is the only effect managed by this CSP, which we store in a vector to comply with the parents' interfaces, which require
-	//! to return a vector of effects. By construction, we have that _effects.size() == 0
+	//! to return a vector of effects. By construction, we have that _effects.size() == 1
 	const std::vector<const fs::ActionEffect*> _effects;
 	
 	void process_effect_solution(const GecodeCSP* solution, RPGIndex& rpg) const;

@@ -24,7 +24,7 @@ public:
 	static std::vector<std::shared_ptr<LiftedActionCSP>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
 	LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	virtual ~LiftedActionCSP() {}
+	virtual ~LiftedActionCSP() = default;
 	
 	bool init(bool use_novelty_constraint) override;
 
@@ -39,7 +39,7 @@ public:
 	
 protected:
 	//! The action that originates this handler
-	const PartiallyGroundedAction& _action;
+	const PartiallyGroundedAction _action;
 
 	//! '_parameter_variables[i]' contains the index of the CSP variable that models the value of i-th parameter of the action schema
 	std::vector<unsigned> _parameter_variables;

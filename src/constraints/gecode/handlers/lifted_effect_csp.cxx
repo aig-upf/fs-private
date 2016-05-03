@@ -21,21 +21,30 @@ std::vector<std::shared_ptr<LiftedEffectCSP>> LiftedEffectCSP::create_smart(cons
 	for (const PartiallyGroundedAction* schema:schemata) {
 		LPT_DEBUG("main", "Smart grounding of action " << *schema << "...");
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {
-			for (const PartiallyGroundedAction* flattened:ActionGrounder::flatten_effect_head(schema, eff_idx, info)) {
-				const fs::ActionEffect* effect = schema->getEffects().at(eff_idx);
+			for (const PartiallyGroundedAction* smart_action:ActionGrounder::compile_action_parameters_away(schema, eff_idx, info)) {
+				const fs::ActionEffect* effect = smart_action->getEffects().at(eff_idx);
+				
+				LPT_DEBUG("main", "\tPartially grounded action: " << *smart_action);
 				
 				if (effect->is_del()) { // Ignore delete effects
-					delete flattened;
+					LPT_DEBUG("main", "\tIgnoring delete effect \"" << *effect);
+					delete smart_action;
 					continue;
 				}
 				
-				auto handler = std::make_shared<LiftedEffectCSP>(*flattened, flattened->getEffects().at(eff_idx), tuple_index, approximate);
-				if (handler->init(novelty)) {
-					LPT_DEBUG("main", "Smart grounding of effect \"" << *effect << " results in partially grounded action " << *flattened);
-					handlers.push_back(handler);
-				} else {
-					LPT_DEBUG("main", "Smart grounding of effect \"" << *effect << " results in non-applicable CSP");
+				for (const fs::ActionEffect* flat_effect:ActionGrounder::compile_nested_fluents_away(effect, info)) {
+					
+					auto handler = std::make_shared<LiftedEffectCSP>(*smart_action, flat_effect, tuple_index, approximate);
+					if (handler->init(novelty)) {
+						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in (possibly partially) grounded action " << *smart_action);
+						handlers.push_back(handler);
+					} else {
+						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in non-applicable CSP");
+					}
+					
 				}
+				
+				delete smart_action;
 			}
 		}
 	}
@@ -48,9 +57,7 @@ LiftedEffectCSP::LiftedEffectCSP(const PartiallyGroundedAction& action, const fs
 {}
 
 LiftedEffectCSP::~LiftedEffectCSP() {
-	// Note that we delete the _action pointer here because we know we have cloned the original action when creating the current object.
-	// TODO - TOO UGLY
-	delete &_action;
+	delete _effects[0];
 }
 
 bool LiftedEffectCSP::init(bool use_novelty_constraint) {

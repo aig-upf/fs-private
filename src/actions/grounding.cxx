@@ -13,7 +13,8 @@
 namespace fs0 {
 
 
-std::vector<const PartiallyGroundedAction*> ActionGrounder::fully_lifted(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
+std::vector<const PartiallyGroundedAction*>
+ActionGrounder::fully_lifted(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
 	std::vector<const PartiallyGroundedAction*> lifted;
 	// We simply pass an empty binding to each action schema to obtain a fully-lifted PartiallyGroundedAction
 	for (const ActionData* data:action_data) {
@@ -24,7 +25,8 @@ std::vector<const PartiallyGroundedAction*> ActionGrounder::fully_lifted(const s
 }
 
 
-std::vector<const GroundAction*> ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
+std::vector<const GroundAction*>
+ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
 	std::vector<const GroundAction*> grounded;
 	unsigned total_num_bindings = 0;
 	
@@ -70,7 +72,8 @@ std::vector<const GroundAction*> ActionGrounder::fully_ground(const std::vector<
 	return grounded;
 }
 
-unsigned ActionGrounder::ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded) {
+unsigned
+ActionGrounder::ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded) {
 	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
 	
 	if (GroundAction* ground = full_binding(id, *data, binding, info)) {
@@ -83,7 +86,8 @@ unsigned ActionGrounder::ground(unsigned id, const ActionData* data, const Bindi
 	return id;
 }
 
-ActionData* ActionGrounder::process_action_data(const ActionData& action_data, const ProblemInfo& info) {
+ActionData*
+ActionGrounder::process_action_data(const ActionData& action_data, const ProblemInfo& info) {
 	Binding binding; // An empty binding
 	auto precondition = action_data.getPrecondition()->bind(binding, info);
 	if (precondition->is_contradiction()) {
@@ -99,7 +103,8 @@ ActionData* ActionGrounder::process_action_data(const ActionData& action_data, c
 
 
 
-GroundAction* ActionGrounder::full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
+GroundAction*
+ActionGrounder::full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
 	assert(binding.is_complete()); // Grounding only possible for full bindings
 	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
 	if (precondition->is_contradiction()) {
@@ -116,7 +121,8 @@ GroundAction* ActionGrounder::full_binding(unsigned id, const ActionData& action
 }
 
 
-std::vector<const PartiallyGroundedAction*> ActionGrounder::flatten_effect_head(const PartiallyGroundedAction* schema, unsigned effect_idx, const ProblemInfo& info) {
+std::vector<const PartiallyGroundedAction*>
+ActionGrounder::compile_action_parameters_away(const PartiallyGroundedAction* schema, unsigned effect_idx, const ProblemInfo& info) {
 	const fs::ActionEffect* effect = schema->getEffects().at(effect_idx);
 	
 	auto head_parameters = Utils::filter_by_type<const fs::BoundVariable*>(effect->lhs()->all_terms());
@@ -145,68 +151,136 @@ std::vector<const PartiallyGroundedAction*> ActionGrounder::flatten_effect_head(
 		}
 	}
 	
-// 	return compile_nested_fluents_away(grounded, info);
 	return grounded;
 }
 
-/*
-std::vector<const PartiallyGroundedAction*> ActionGrounder::compile_nested_fluents_away(const std::vector<const PartiallyGroundedAction*>& actions, const ProblemInfo& info) {
-	
-	// We re-write the actions to compile away nested fluents in the effects' heads into additional action parameters.
-	// Thus, an effect "tile(blank) := t" with both 'tile' and 'blank' being fluent function symbols will get rewritten
-	// into k actions with an extra parameter param_blank, extra precondition param_blank = blank, and effect tile(param_blank) := t
-	std::vector<const PartiallyGroundedAction*> rewritten;
 
-	for (const PartiallyGroundedAction* action:actions) {
-		
-		std::vector<const fs::StateVariable*> subvars = collect_effect_head_variables(action);
-		if (subvars.empty()) {
-			rewritten.push_back(action);
-			continue; // No need for further processing of the action
-		}
-		
-		
-		PartiallyGroundedAction* processed = new PartiallyGroundedAction(*action);
-		
-		unsigned num_params = processed->numParameters();
-		
-		
-		std::unordered_set<const fs::StateVariable*> unique_subvars(subvars.begin(), subvars.end());
-		for (const fs::StateVariable* statevar:unique_subvars) {
-			// We have a state variable f(c) in some subterm of the effect LHS
-			auto extra_param = new fs::BoundVariable(num_params++, statevar->getType());
-			processed->addParameter(extra_param);
-			processed->replaceTerm(statevar, extra_param);
-			
-			std::vector<const fs::Term*> subterms{statevar->clone(), extra_param};
-			auto extra_precondition = new fs::EQAtomicFormula(subterms);
-			processed->addPrecondition(extra_precondition);
-		}
-		
-		rewritten.push_back(processed);
-		delete action; // ???
+const std::vector<const fs::ActionEffect*>
+ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, const ProblemInfo& info) {
+
+	const fs::FluentHeadedNestedTerm* head = dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs());
+	if (!head) return { new fs::ActionEffect(*effect) }; // There cannot be nested fluents, so we can safely return the same effect
+	
+	LPT_DEBUG("main", "Compiling away nested fluents in the head of effect \"" << *effect);
+
+	
+	// Let us find the index of the first non-constant subterm
+	auto original_subterms = head->getSubterms();
+	unsigned i = 0;
+	for (; i < original_subterms.size(); ++i) {
+		if (!dynamic_cast<const fs::Constant*>(original_subterms[i])) break;
 	}
+	assert(i < original_subterms.size()); // We necessarily have a non-const subterm, otherwise the head wouldn't be a fluent nested term
+	
+	
+	std::vector<const fs::ActionEffect*> compiled;
+	
+	const fs::Term* subterm_to_replace = original_subterms[i];
+	for (ObjectIdx value:info.getTypeObjects(subterm_to_replace->getType())) {
+		auto subterms = Utils::clone(original_subterms);
+		delete subterms[i];
+		
+		subterms[i] = new fs::IntConstant(value);
+		auto extra_condition = new fs::EQAtomicFormula({subterm_to_replace->clone(), subterms[i]->clone()});
+		auto new_condition = effect->condition()->conjunction(extra_condition);
+		delete extra_condition;
+		
+		auto tmp_head = new fs::FluentHeadedNestedTerm(head->getSymbolId(), subterms);
+		auto processed_head = tmp_head->bind({}, info);
+		delete tmp_head;
+		
+		// Now the recursive call
+		auto eff = new fs::ActionEffect(processed_head, effect->rhs()->clone(), new_condition);
+		auto recursively_compiled = compile_nested_fluents_away(eff, info);
+		delete eff;
+		compiled.insert(compiled.end(), recursively_compiled.begin(), recursively_compiled.end());
+	}
+	
+	return compiled;
+}
+	
+	
+// 	WORK_IN_PROGRESS("Still to be though out: how to dynamically add parameters so that afterwards the comparisons between lifted action IDs are correct");
+	
+	/*
+	
+	std::vector<const fs::Term*> subterms;
+	for (const fs::Term* subterm:head->getSubterms()) {
+		if (dynamic_cast<const fs::Constant*>(subterm)) subterms.push_back(subterm->clone()); // A constant subterm is OK, no need to replace it by anything
+		
+		// Otherwise, we must have a subterm which is a state variable or a nested fluent, which is 
+		// preventing the whole effect head from being an actual state variable itself. We'll compile it away
+		// as a condition of the effect, i.e. if, for instance the effect is of the form f(g(c)) := t,
+		// we take the first non-const subterm in the head, "g(c)", and rewrite the effect to get rid of it by using a conditional effect,
+		// e.g. g(c)=d --> f(d) := t.
+		
+		// For each possible value of the non-const subterm, we'll have an additional conditional effect.
+		for (ObjectIdx value:info.getTypeObjects(subterm->getType())) {
+			auto constant = new fs::IntConstant(value);
+// 			std::vector<const fs::Term*> subterms{subterm->clone(), new fs::IntConstant(value)};
+			auto extra_condition = new fs::EQAtomicFormula({subterm->clone(), constant});
+			
+		}
+		
+	}
+	
+	
+	
+	
+	
+	std::vector<const fs::ActionEffect> compiled;
+
+	std::vector<const fs::Term*> subterms = collect_effect_non_constant_subterms(effect);
+	if (subterms.empty()) { // The received effect is already fluent-less
+		compiled.push_back(effect);
+		return compiled;
+	}
+	
+	
+	// Otherwise, suppose the effect is of the form f(g(c)) := t.
+	// We take the first non-const subterm in the head, e.g. g(c), and rewrite the effect to get rid of it by using a conditional effect,
+	// e.g. g(c)=d --> f(d) := t.
+	const fs::Term* subterm = subterms.at(0); // Simply take the first state variable in the head.
+	
+	// For each possible value of the non-const subterm, we'll have an additional conditional effect.
+	for (ObjectIdx value:info.getTypeObjects(subterm->getType())) {
+		
+		std::vector<const fs::Term*> subterms{subterm->clone(), new fs::IntConstant(value)};
+		auto extra_condition = new fs::EQAtomicFormula(subterms);
+		
+		effect->add_condition(extra_condition);
+		effect->lhs()->replace(subterm, extra_condition);
+		effect->rhs()->replace(subterm, extra_condition);
+	}
+	
+	// If there are still other non-const subterms, we proceed recursively
+	
+	std::vector<const PartiallyGroundedAction*> rewritten;
+	
 	
 	WORK_IN_PROGRESS("Still to be though out: how to dynamically add parameters so that afterwards the comparisons between lifted action IDs are correct");
 	
 	return rewritten;
+	
 }
-*/
 
-std::vector<const fs::StateVariable*> ActionGrounder::collect_effect_head_variables(const PartiallyGroundedAction* action) {
-	std::vector<const fs::StateVariable*> statevars;
-		
-	for (const fs::ActionEffect* effect:action->getEffects()) {
-		
-		for (const fs::StateVariable* statevar:Utils::filter_by_type<const fs::StateVariable*>(effect->lhs()->all_terms())) {
-			if (statevar == effect->lhs()) continue; // We just want to collect subterms' state variables
-			statevars.push_back(statevar);
+std::vector<const fs::Term*>
+collect_effect_non_constant_subterms(const fs::ActionEffect* effect) {
+	std::vector<const fs::Term*> subterms;
+	const fs::FluentHeadedNestedTerm* head = dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs());
+	if (head) {
+		for (const fs::Term* subterm:head->getSubterms()) {
+			if (!dynamic_cast<const fs::Constant*>(subterm)) {
+				subterms.push_back(subterm);
+			}
 		}
 	}
-	return statevars;
+	return subterms;
 }
 
-PartiallyGroundedAction* ActionGrounder::partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
+*/
+PartiallyGroundedAction*
+ActionGrounder::partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
 	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
@@ -221,7 +295,8 @@ PartiallyGroundedAction* ActionGrounder::partial_binding(const ActionData& actio
 	return new PartiallyGroundedAction(action_data, binding, precondition, effects);
 }
 
-GroundAction* ActionGrounder::bind(const PartiallyGroundedAction& action, const Binding& binding, const ProblemInfo& info) {
+GroundAction*
+ActionGrounder::bind(const PartiallyGroundedAction& action, const Binding& binding, const ProblemInfo& info) {
 	Binding full(action.getBinding());
 	full.merge_with(binding); // TODO We should bind not from the action data but from the partially bound action itself.
 	return full_binding(GroundAction::invalid_action_id, action.getActionData(), full, info);
