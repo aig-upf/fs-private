@@ -97,8 +97,9 @@ void FormulaCSP::index_existential_variable_uses() {
 	std::vector<std::vector<std::unordered_map<int, TupleIdx>>> existential_data;
 	existential_data.resize(_base_csp._intvars.size());
 	
-	for (const ExtensionalConstraint& extensional: _extensional_constraints) {
+	for (const ExtensionalConstraint& extensional:_extensional_constraints) {
 		const fs::FluentHeadedNestedTerm* fluent = extensional.get_term();
+		if (!info.isPredicate(fluent->getSymbolId())) continue; // TODO We should instead consider functional fluents as well
 		
 		auto variables = Utils::filter_by_type<const fs::BoundVariable*>(fluent->getSubterms());
 		for (const fs::BoundVariable* variable:variables) {

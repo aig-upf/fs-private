@@ -30,6 +30,7 @@ public:
 	ActionEffect& operator=(const ActionEffect& rhs) = delete;
 	ActionEffect& operator=(ActionEffect&& rhs) = default;
 	
+	ActionEffect* clone() const { return new ActionEffect(*this); }
 	
 	//! Checks that the effect is well formed
 	bool isWellFormed() const;

@@ -6,6 +6,7 @@
 #include <problem.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
+#include <utils/utils.hxx>
 #include <languages/fstrips/language.hxx>
 
 
@@ -37,15 +38,8 @@ ActionBase::~ActionBase() {
 	for (const auto pointer:_effects) delete pointer;
 }
 
-//! A quick private helper
-std::vector<const fs::ActionEffect*> clone_effects(const std::vector<const fs::ActionEffect*>& effects) {
-	std::vector<const fs::ActionEffect*> cloned;
-	for (const fs::ActionEffect* effect:effects) cloned.push_back(new fs::ActionEffect(*effect));
-	return cloned;
-}
-
 ActionBase::ActionBase(const ActionBase& o) :
-	_data(o._data), _binding(o._binding), _precondition(o._precondition->clone()), _effects(clone_effects(o._effects))
+	_data(o._data), _binding(o._binding), _precondition(o._precondition->clone()), _effects(Utils::clone(o._effects))
 {}
 
 /*
