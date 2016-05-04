@@ -15,8 +15,9 @@
 
 namespace fs0 {
 
-std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(const std::vector<const GroundAction*>& actions) {
-	std::vector<std::shared_ptr<DirectActionManager>> managers;
+std::vector<DirectActionManager*>
+DirectActionManager::create(const std::vector<const GroundAction*>& actions) {
+	std::vector<DirectActionManager*> managers;
 	managers.reserve(actions.size());
 	for (const auto action:actions) {
 		auto manager = create(*action);
@@ -26,7 +27,8 @@ std::vector<std::shared_ptr<DirectActionManager>> DirectActionManager::create(co
 	return managers;
 }
 
-std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAction& action) {
+DirectActionManager*
+DirectActionManager::create(const GroundAction& action) {
 	assert(is_supported(action));
 	
 	std::vector<DirectConstraint*> constraints;
@@ -45,10 +47,11 @@ std::shared_ptr<DirectActionManager> DirectActionManager::create(const GroundAct
 	// Compile constraints if necessary
 	ConstraintCompiler::compileConstraints(constraints);
 	
-	return std::make_shared<DirectActionManager>(action, std::move(constraints), std::move(effects));
+	return new DirectActionManager(action, std::move(constraints), std::move(effects));
 }
 
-bool DirectActionManager::is_supported(const GroundAction& action) {
+bool
+DirectActionManager::is_supported(const GroundAction& action) {
 	if (dynamic_cast<const fs::Tautology*>(action.getPrecondition())) return true;
 	auto precondition = dynamic_cast<const fs::Conjunction*>(action.getPrecondition());
 	
@@ -87,13 +90,15 @@ DirectActionManager::~DirectActionManager() {
 	
 }
 
-VariableIdxVector DirectActionManager::extractAllRelevant() const {
+VariableIdxVector
+DirectActionManager::extractAllRelevant() const {
 	std::set<VariableIdx> unique(_scope.begin(), _scope.end());
 	for (const fs::ActionEffect* effect:_action.getEffects()) fs::ScopeUtils::computeDirectScope(effect, unique);
 	return VariableIdxVector(unique.cbegin(), unique.cend());
 }
 
-void DirectActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, fs0::RPGData& rpg) const {
+void
+DirectActionManager::process(unsigned int actionIdx, const fs0::RelaxedState& layer, fs0::RPGData& rpg) const {
 	// We compute the projection of the current relaxed state to the variables relevant to the action
 	// Note that this _clones_ the actual domains, since we will next modify (prune) them.
 	DomainMap actionProjection = Projections::projectCopy(layer, _allRelevant);
@@ -104,12 +109,14 @@ void DirectActionManager::process(unsigned int actionIdx, const fs0::RelaxedStat
 }
 
 
-bool DirectActionManager::checkPreconditionApplicability(const DomainMap& domains) const {
+bool
+DirectActionManager::checkPreconditionApplicability(const DomainMap& domains) const {
 	FilteringOutput o = _handler.filter(domains);
 	return o != FilteringOutput::Failure && DirectCSPHandler::checkConsistency(domains);
 }
 
-void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const {
+void
+DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionProjection, RPGData& rpg) const {
 	for (const DirectEffect* effect:_effects) {
 		const VariableIdxVector& effectScope = effect->getScope();
 
@@ -149,7 +156,8 @@ void DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& ac
 	}
 }
 
-void DirectActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
+void
+DirectActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
 	for (VariableIdx variable:actionScope) {
 		if (effectScope.empty() || variable != effectScope[0]) { // (We know that the effect scope has at most one variable)
 			ObjectIdx value = *(actionProjection.at(variable)->cbegin());
@@ -159,12 +167,14 @@ void DirectActionManager::completeAtomSupport(const VariableIdxVector& actionSco
 }
 
 
-std::ostream& DirectActionManager::print(std::ostream& os) const {
+std::ostream&
+DirectActionManager::print(std::ostream& os) const {
 	os << "DirectActionManager[]";
 	return os;
 }
 
-const ActionID* DirectActionManager::get_action_id(unsigned action_idx) const {
+const ActionID*
+DirectActionManager::get_action_id(unsigned action_idx) const {
 	return new PlainActionID(&_action);
 }
 

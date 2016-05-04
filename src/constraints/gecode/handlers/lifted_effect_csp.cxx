@@ -14,9 +14,9 @@
 namespace fs0 { namespace gecode {
 
 
-std::vector<std::shared_ptr<LiftedEffectCSP>> LiftedEffectCSP::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<LiftedEffectCSP*> LiftedEffectCSP::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	std::vector<std::shared_ptr<LiftedEffectCSP>> handlers;
+	std::vector<LiftedEffectCSP*> handlers;
 	
 	for (const PartiallyGroundedAction* schema:schemata) {
 		LPT_DEBUG("main", "Smart grounding of action " << *schema << "...");
@@ -34,14 +34,13 @@ std::vector<std::shared_ptr<LiftedEffectCSP>> LiftedEffectCSP::create_smart(cons
 				
 				for (const fs::ActionEffect* flat_effect:ActionGrounder::compile_nested_fluents_away(effect, info)) {
 					
-					auto handler = std::make_shared<LiftedEffectCSP>(*smart_action, flat_effect, tuple_index, approximate);
+					auto handler = new LiftedEffectCSP(*smart_action, flat_effect, tuple_index, approximate);
 					if (handler->init(novelty)) {
 						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in (possibly partially) grounded action " << *smart_action);
 						handlers.push_back(handler);
 					} else {
 						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in non-applicable CSP");
 					}
-					
 				}
 				
 				delete smart_action;

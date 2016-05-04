@@ -2,7 +2,6 @@
 #pragma once
 
 #include <fs_types.hxx>
-#include <constraints/direct/action_manager.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 
 namespace fs0 {
@@ -11,13 +10,20 @@ class GroundAction;
 class Problem;
 class State;
 class RelaxedState;
+class DirectActionManager;
+class RPGData;
 
 class DirectCRPG {
 public:
 	typedef GroundAction Action;
 
-	DirectCRPG(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
-	virtual ~DirectCRPG() = default;
+	DirectCRPG(const Problem& problem, std::vector<DirectActionManager*>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
+	virtual ~DirectCRPG();
+	
+	DirectCRPG(const DirectCRPG&) = delete;
+	DirectCRPG(DirectCRPG&&) = default;
+	DirectCRPG& operator=(const DirectCRPG& other) = delete;
+	DirectCRPG& operator=(DirectCRPG&& other) = default;
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	long evaluate(const State& seed);
@@ -35,7 +41,7 @@ protected:
 	const Problem& _problem;
 	
 	//! The set of action managers, one per every action
-	const std::vector<std::shared_ptr<DirectActionManager>> _managers;
+	const std::vector<DirectActionManager*> _managers;
 	
 	//! A whitelist including all possible actions
 	std::vector<unsigned> all_whitelist;
@@ -47,7 +53,7 @@ protected:
 //! The h_max version
 class DirectCHMax : public DirectCRPG {
 public:
- 	DirectCHMax(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
+ 	DirectCHMax(const Problem& problem, std::vector<DirectActionManager*>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
 	~DirectCHMax() = default;
 	
 	//! The hmax heuristic only cares about the size of the RP graph.

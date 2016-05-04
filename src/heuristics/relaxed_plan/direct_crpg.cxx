@@ -2,6 +2,7 @@
 #include <limits>
 
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
+#include <constraints/direct/action_manager.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <relaxed_state.hxx>
 #include <applicability/formula_interpreter.hxx>
@@ -9,13 +10,16 @@
 
 namespace fs0 {
 
-DirectCRPG::DirectCRPG(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
+DirectCRPG::DirectCRPG(const Problem& problem, std::vector<DirectActionManager*>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
 	_problem(problem), _managers(managers), all_whitelist(managers.size()), _builder(builder)
 {
 	LPT_DEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
     std::iota(all_whitelist.begin(), all_whitelist.end(), 0);
 }
 
+DirectCRPG::~DirectCRPG() {
+	for (auto ptr:_managers) delete ptr;
+}
 
 long DirectCRPG::evaluate(const State& seed) {
 	return evaluate(seed, all_whitelist); // If no whitelist is provided, all actions are considered.
@@ -36,7 +40,6 @@ long DirectCRPG::evaluate(const State& seed, const std::vector<ActionIdx>& white
 	while(true) {
 		// Apply all the actions to the RPG layer
 		for (unsigned idx:whitelist) {
-// 		for (unsigned idx = 0; idx < _managers.size(); ++idx) {
 			const auto& manager = _managers[idx];
 			LPT_EDEBUG("heuristic", "Processing ground action #" << idx << ": " << print::action_header(manager->getAction()));
 			manager->process(idx, relaxed, bookkeeping);
@@ -84,7 +87,7 @@ long DirectCRPG::computeHeuristic(const State& seed, const RelaxedState& state, 
 
 
 
-DirectCHMax::DirectCHMax(const Problem& problem, std::vector<std::shared_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder)
+DirectCHMax::DirectCHMax(const Problem& problem, std::vector<DirectActionManager*>&& managers, std::shared_ptr<DirectRPGBuilder> builder)
 	: DirectCRPG(problem, std::move(managers), std::move(builder))
 {}
 

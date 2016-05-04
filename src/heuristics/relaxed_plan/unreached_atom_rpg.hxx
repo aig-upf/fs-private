@@ -14,11 +14,11 @@ class GroundEffectCSP;
 
 class UnreachedAtomRPG {
 protected:
-	typedef std::shared_ptr<GroundEffectCSP> EffectHandlerPtr;
+	typedef GroundEffectCSP* EffectHandlerPtr;
 	
 public:
 	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
-	virtual ~UnreachedAtomRPG() = default;
+	~UnreachedAtomRPG();
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.
 	UnreachedAtomRPG(const UnreachedAtomRPG&) = delete;

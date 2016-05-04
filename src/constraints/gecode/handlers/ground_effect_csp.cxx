@@ -14,9 +14,9 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<std::shared_ptr<GroundEffectCSP>>
+std::vector<GroundEffectCSP*>
 GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
-	std::vector<std::shared_ptr<GroundEffectCSP>> managers;
+	std::vector<GroundEffectCSP*> managers;
 	
 	for (unsigned action_idx = 0; action_idx < actions.size(); ++action_idx) {
 		const auto action = actions[action_idx];
@@ -24,7 +24,7 @@ GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const T
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
 			const fs::ActionEffect* effect = action->getEffects().at(eff_idx);
 			if (effect->is_del()) continue; // Ignore delete effects
-			auto handler = std::make_shared<GroundEffectCSP>(*action, tuple_index, effect, approximate, true);
+			auto handler = new GroundEffectCSP(*action, tuple_index, effect, approximate, true);
 			if (handler->init(novelty)) {
 				managers.push_back(handler);
 				LPT_DEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);

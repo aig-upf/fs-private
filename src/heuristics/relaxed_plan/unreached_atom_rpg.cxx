@@ -27,6 +27,10 @@ UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* go
 	LPT_INFO("heuristic", "Unreached-Atom-Based heuristic initialized");
 }
 
+UnreachedAtomRPG::~UnreachedAtomRPG() {
+	for (auto ptr:_managers) delete ptr;
+}
+
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 long UnreachedAtomRPG::evaluate(const State& seed) {

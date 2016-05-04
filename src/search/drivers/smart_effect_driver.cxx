@@ -24,7 +24,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) c
 	
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
-	std::vector<std::shared_ptr<LiftedEffectCSP>> managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty); // TODO Probably we don't need this to be shared_ptr's anymore
+	std::vector<LiftedEffectCSP*> managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);

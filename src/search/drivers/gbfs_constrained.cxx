@@ -1,6 +1,7 @@
 
 #include <search/drivers/gbfs_constrained.hxx>
-#include "validation.hxx"
+#include <constraints/direct/action_manager.hxx>
+#include <search/drivers/validation.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>

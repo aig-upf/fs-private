@@ -27,6 +27,10 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 	LPT_INFO("heuristic", "SmartRPG heuristic initialized");
 }
 
+SmartRPG::~SmartRPG() {
+	for (auto ptr:_managers) delete ptr;
+}
+
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 long SmartRPG::evaluate(const State& seed) {
 	
