@@ -41,6 +41,10 @@ of ground actions, which usually will not work well with traditional planners th
 * `smart_lifted`: This driver conducts a fully-lifted search as the `lifted` driver above, 
 This is thus equivalent to the `smart` driver above, but using lifted search as in the `lifted` driver.
 
+* `unreached_atom`: An experimental driver which performs a greedy best-first search on a version of the constrained RPG heuristics which is computed
+in a somewhat different manner that iterates through atoms that have not yet been reached in the RPG, trying to achieve them one by one.
+Seems to perform better than other options in some domains, but not in general.
+
 * `iw`: Iterated Width search.
 
 * `novelty_best_first`: A Greedy best-first search with a novelty-based heuristic. Namely, the search favors states with
@@ -49,10 +53,6 @@ first factors being equal.
 
 * `bfs`: A blind, standard breadth-first search.
 
-* `unreached_atom`: An experimental driver which performs a greedy best-first search on a version of the constrained RPG heuristics which is computed
-in a somewhat different manner that iterates through atoms that have not yet been reached in the RPG, trying to achieve them one by one.
-Seems to perform better than other options in some domains, but not in general.
-
 
 Other Options
 -------------
@@ -60,7 +60,7 @@ Other Options
 There are some other important options that can also be specified on the command line. Some of them are particular to each driver,
 some of them are general to more than one (perhaps to all) drivers.
 These options are not mandatory and, if not provided, the defaut value for each of them is the one read from the
-[`defaults.json` configuration file](/) which is located in the planner directory.
+[`defaults.json` configuration file](https://github.com/aig-upf/fs/blob/master/planners/generic/defaults.json) which is located in the planner directory.
 If you want to override the value of a particular option through the command line, you can do so with the `--config` parameter,
 which accepts a list of comma-separated name=value pairs, as in e.g.
 `./solver.bin --driver=smart --config="heuristic=hff,novelty=true"`.
