@@ -1,0 +1,27 @@
+{
+	"smart, smart_lifted": {
+		"heuristic": "hff",
+		"novelty_constraint": true
+	},
+	
+	"smart": {
+		"heuristic": "hff"
+	},
+	
+	"standard": {
+		"heuristic": "hff",
+		"novelty_constraint": true
+	},
+	
+	
+	
+	"all": {
+		"plan_extraction": "propositional",
+		"delayed_evaluation": false,
+		"precondition_resolution": "full",
+		"goal_resolution": "full",
+		"goal_value_selection": "min_hmax",
+		"action_value_selection": "min_val",
+		"support_priority": "first",
+	}
+}
