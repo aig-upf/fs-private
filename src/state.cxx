@@ -16,7 +16,7 @@ State::State(unsigned numAtoms, const std::vector<Atom>& facts) :
 		set(fact);
 	}
 	updateHash();
-};
+}
 
 State::State(const State& state, const std::vector<Atom>& atoms) :
 	State(state) {
@@ -62,6 +62,6 @@ std::ostream& State::print(std::ostream& os) const {
 	return os;
 }
 
-std::size_t State::computeHash() const { return boost::hash_range(_values.begin(), _values.end()); };
+std::size_t State::computeHash() const { return boost::hash_range(_values.begin(), _values.end()); }
 
 } // namespaces
