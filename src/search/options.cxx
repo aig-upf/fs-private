@@ -26,15 +26,9 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 		("options", po::value<std::string>()->default_value(""),                  "Additional configuration options.")
 		("out", po::value<std::string>()->default_value("."),                     "The directory where the results data is to be output.");
 
-	po::positional_options_description pos;
-	pos.add("timeout", 1)
-	   .add("data", 1)
-	   .add("defaults", 1)
-	   .add("out", 1);
-
 	po::variables_map vm;
 	try {
-		po::store(po::command_line_parser(argc, argv).options(description).positional(pos).run(), vm);
+		po::store(po::command_line_parser(argc, argv).options(description).run(), vm);
 		po::notify(vm);
 	} catch(const boost::program_options::invalid_option_value& ex) {
 		std::cout << "Wrong parameter types:";

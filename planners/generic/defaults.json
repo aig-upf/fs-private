@@ -2,9 +2,9 @@
 	"--COMMENT--": "YOU CAN FIND THE DOCUMENTATION OF THE DIFFERENT CONFIGURATION OPTIONS ON THE 'DOC/USAGE.MD' FILE",
 	
 	"heuristic": "hff",
-	"novelty": true,
+	"novelty": "true",
 	"plan_extraction": "propositional",
-	"delayed_evaluation": false,
+	"delayed_evaluation": "false",
 	"precondition_resolution": "full",
 	"goal_resolution": "full",
 	"goal_value_selection": "min_hmax",

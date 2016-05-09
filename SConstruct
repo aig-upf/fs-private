@@ -51,7 +51,7 @@ if env['debug'] or env['edebug']:
 	env.Append(CCFLAGS = ['-g', '-DDEBUG' ])
 	lib_name = 'fs0-debug'
 else:
-	env.Append(CCFLAGS = ['-Ofast', '-DNDEBUG' ])
+	env.Append(CCFLAGS = ['-O3', '-DNDEBUG' ])
 	lib_name = 'fs0'
 
 # Additionally, extreme debug implies a different name plus extra compilation flags
