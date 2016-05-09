@@ -14,11 +14,11 @@ class GroundEffectCSP;
 
 class UnreachedAtomRPG {
 protected:
-	typedef GroundEffectCSP* EffectHandlerPtr;
+	typedef std::unique_ptr<GroundEffectCSP> EffectHandlerPtr;
 	
 public:
 	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
-	~UnreachedAtomRPG();
+	~UnreachedAtomRPG() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.
 	UnreachedAtomRPG(const UnreachedAtomRPG&) = delete;
@@ -42,7 +42,7 @@ protected:
 	const TupleIndex& _tuple_index;
 	
 	//! The set of action managers, one per every action
-	const std::vector<EffectHandlerPtr> _managers;
+	std::vector<EffectHandlerPtr> _managers;
 	
 	std::unique_ptr<FormulaCSP> _goal_handler;
 	

@@ -10,15 +10,11 @@
 
 namespace fs0 {
 
-DirectCRPG::DirectCRPG(const Problem& problem, std::vector<DirectActionManager*>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
-	_problem(problem), _managers(managers), all_whitelist(managers.size()), _builder(builder)
+DirectCRPG::DirectCRPG(const Problem& problem, std::vector<std::unique_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
+	_problem(problem), _managers(std::move(managers)), all_whitelist(managers.size()), _builder(builder)
 {
 	LPT_DEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
     std::iota(all_whitelist.begin(), all_whitelist.end(), 0);
-}
-
-DirectCRPG::~DirectCRPG() {
-	for (auto ptr:_managers) delete ptr;
 }
 
 long DirectCRPG::evaluate(const State& seed) {
@@ -87,7 +83,7 @@ long DirectCRPG::computeHeuristic(const State& seed, const RelaxedState& state, 
 
 
 
-DirectCHMax::DirectCHMax(const Problem& problem, std::vector<DirectActionManager*>&& managers, std::shared_ptr<DirectRPGBuilder> builder)
+DirectCHMax::DirectCHMax(const Problem& problem, std::vector<std::unique_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder)
 	: DirectCRPG(problem, std::move(managers), std::move(builder))
 {}
 

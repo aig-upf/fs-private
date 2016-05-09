@@ -16,15 +16,15 @@ namespace fs0 { namespace drivers {
 
 std::unique_ptr<FS0SearchAlgorithm>
 SmartEffectDriver::create(const Config& config, const GroundStateModel& model) const {
-	LPT_INFO("main", "Using the lifted-effect base RPG constructor");
+	LPT_INFO("main", "Using the smart-effect driver");
 	const Problem& problem = model.getTask();
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = config.useApproximateActionResolution();
-	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+	bool delayed = config.useDelayedEvaluation();
 	
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
-	std::vector<LiftedEffectCSP*> managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
+	auto managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);

@@ -1,27 +1,13 @@
 {
-	"smart, smart_lifted": {
-		"heuristic": "hff",
-		"novelty_constraint": true
-	},
+	"--COMMENT--": "YOU CAN FIND THE DOCUMENTATION OF THE DIFFERENT CONFIGURATION OPTIONS ON THE 'DOC/USAGE.MD' FILE",
 	
-	"smart": {
-		"heuristic": "hff"
-	},
-	
-	"standard": {
-		"heuristic": "hff",
-		"novelty_constraint": true
-	},
-	
-	
-	
-	"all": {
-		"plan_extraction": "propositional",
-		"delayed_evaluation": false,
-		"precondition_resolution": "full",
-		"goal_resolution": "full",
-		"goal_value_selection": "min_hmax",
-		"action_value_selection": "min_val",
-		"support_priority": "first",
-	}
+	"heuristic": "hff",
+	"novelty": true,
+	"plan_extraction": "propositional",
+	"delayed_evaluation": false,
+	"precondition_resolution": "full",
+	"goal_resolution": "full",
+	"goal_value_selection": "min_hmax",
+	"action_value_selection": "min_val",
+	"support_priority": "first"
 }

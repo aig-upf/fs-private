@@ -2,6 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
+#include <unordered_map>
 
 namespace fs0 { class Problem; }
 
@@ -17,20 +18,24 @@ public:
 	
 	const std::string& getOutputDir() const { return _output_dir; }
 	
-	const std::string& getConfig() const { return _config; }
+	const std::string& getDefaultConfigurationFilename() const { return _defaults; }
 	
 	const std::string& getDriver() const { return _driver; }
+	
+	const std::unordered_map<std::string, std::string>& getUserOptions() const { return _user_options; }
 	
 protected:
 	unsigned _timeout;
 	
 	std::string _data_dir;
 	
-	std::string _config;
+	std::string _defaults;
 	
 	std::string _output_dir;
 	
 	std::string _driver;
+	
+	std::unordered_map<std::string, std::string> _user_options;
 };
 
 } } // namespaces

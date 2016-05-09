@@ -21,13 +21,13 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> SmartLiftedDriver::crea
 	
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = config.useApproximateActionResolution();
-	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+	bool delayed = config.useDelayedEvaluation();
 
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	
 	// We create smart managers by grounding only wrt the effect heads.
-	std::vector<LiftedEffectCSP*> managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
+	auto managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);

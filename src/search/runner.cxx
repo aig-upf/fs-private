@@ -18,7 +18,7 @@ Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator)
 
 int Runner::run() {
 	aptk::Logger::init(_options.getOutputDir() + "/logs");
-	Config::init(_options.getConfig());
+	Config::init(_options.getDriver(), _options.getUserOptions(), _options.getDefaultConfigurationFilename());
 
 	std::cout << "Loading problem data" << std::endl;
 	//! This will generate the problem and set it as the global singleton instance

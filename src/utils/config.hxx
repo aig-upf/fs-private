@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <memory>
+#include <unordered_map>
 #include <boost/property_tree/ptree.hpp>
 
 namespace fs0 {
@@ -13,12 +14,6 @@ public:
 	//! The type of relaxed plan extraction
 	enum class RPGExtractionType {Propositional, Supported};
 	
-	//! The type of CSP manager
-	enum class CSPManagerType {Gecode, Direct, ASP, DirectIfPossible};
-	
-	//! The type of CSP model (gecode manager only)
-	enum class CSPModel {GroundedActionCSP, GroundedEffectCSP, ActionSchemaCSP, EffectSchemaCSP};
-	
 	//! The possible types of CSP resolutions we consider
 	enum class CSPResolutionType {Full, Approximate};
 	
@@ -28,18 +23,12 @@ public:
 	//! The type of support sets that should be given priority
 	enum class SupportPriority {First, MinHMaxSum};
 	
-	//! Different types of grounding we might consider
-	enum class Grounding {FullyLifted, SmartGrounding, FullyGrounded};
-	
 	//! Explicit initizalition of the singleton
-	static void init(const std::string& filename);
+	static void init(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
 	
 	//! Retrieve the singleton instance, which has been previously initialized
 	static Config& instance();
 
-	//! Some rudimentary validation of the compatibility of different configuration options
-	static void validateConfig(const Config& config);
-	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Config& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
@@ -49,39 +38,36 @@ protected:
 	
 	boost::property_tree::ptree _root;
 	
-	std::string _filename;
+	const std::unordered_map<std::string, std::string> _user_options	;
 	
 	RPGExtractionType _rpg_extraction;
-	
-	CSPManagerType _csp_manager;
-	
-	CSPModel _csp_model;
 	
 	CSPResolutionType _goal_resolution;
 	
 	CSPResolutionType _precondition_resolution;
 	
 	ValueSelection _goal_value_selection;
+	
 	ValueSelection _action_value_selection;
 	
 	SupportPriority _support_priority;
 	
-	bool _novelty_constraint;
+	bool _novelty;
 	
-	bool _lifted_planning;
+	bool _delayed;
+	
+	std::string _heuristic;
 	
 	//! Private constructor
-	Config(const std::string& filename);
+	Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
 	
 public:
 	Config(const Config& other) = delete;
-	~Config();
+	~Config() = default;
 	
+	void load(const std::string& filename);
+
 	RPGExtractionType getRPGExtractionType() const { return _rpg_extraction; }
-	
-	CSPManagerType getCSPManagerType() const { return _csp_manager; }
-	
-	CSPModel getCSPModel() const { return _csp_model; }
 	
 	CSPResolutionType getGoalResolutionType() const { return _goal_resolution; }
 	
@@ -97,9 +83,11 @@ public:
 	
 	bool useMinHMaxSumSupportPriority() const { return _support_priority == SupportPriority::MinHMaxSum; }
 	
-	bool useNoveltyConstraint() const { return _novelty_constraint; }
+	bool useNoveltyConstraint() const { return _novelty; }
 	
-	bool doLiftedPlanning() const { return _lifted_planning; }
+	bool useDelayedEvaluation() const { return _delayed; }
+	
+	const std::string& getHeuristic() const { return _heuristic; }
 	
 	bool useApproximateActionResolution() const {
 		return getActionPreconditionResolutionType() == CSPResolutionType::Approximate;
@@ -108,8 +96,6 @@ public:
 	bool useApproximateGoalResolution() const {
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
-	
-	bool useDelayedEvaluation() const { return true; }
 	
 	//! A generic getter
 	template <typename T>

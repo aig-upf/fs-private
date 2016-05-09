@@ -23,7 +23,7 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> FullyLiftedDriver::crea
 	
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = config.useApproximateActionResolution();
-	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+	bool delayed = config.useDelayedEvaluation();
 
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	auto managers = LiftedActionCSP::create(actions, problem.get_tuple_index(), approximate, novelty);

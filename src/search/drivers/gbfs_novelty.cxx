@@ -10,7 +10,7 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSNoveltyDriver::create(const Config& conf
 	FS0SearchAlgorithm* engine = nullptr;
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
-	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+	bool delayed = config.useDelayedEvaluation();
 
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	

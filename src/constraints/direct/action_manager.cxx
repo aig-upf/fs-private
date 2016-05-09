@@ -15,9 +15,9 @@
 
 namespace fs0 {
 
-std::vector<DirectActionManager*>
+std::vector<std::unique_ptr<DirectActionManager>>
 DirectActionManager::create(const std::vector<const GroundAction*>& actions) {
-	std::vector<DirectActionManager*> managers;
+	std::vector<std::unique_ptr<DirectActionManager>> managers;
 	managers.reserve(actions.size());
 	for (const auto action:actions) {
 		auto manager = create(*action);
@@ -27,7 +27,7 @@ DirectActionManager::create(const std::vector<const GroundAction*>& actions) {
 	return managers;
 }
 
-DirectActionManager*
+std::unique_ptr<DirectActionManager>
 DirectActionManager::create(const GroundAction& action) {
 	assert(is_supported(action));
 	
@@ -47,7 +47,7 @@ DirectActionManager::create(const GroundAction& action) {
 	// Compile constraints if necessary
 	ConstraintCompiler::compileConstraints(constraints);
 	
-	return new DirectActionManager(action, std::move(constraints), std::move(effects));
+	return std::unique_ptr<DirectActionManager>(new DirectActionManager(action, std::move(constraints), std::move(effects)));
 }
 
 bool
@@ -135,7 +135,7 @@ DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionP
 		}
 
 		/***** Unary Effects *****/
-		else if(effectScope.size() == 1) {  // Micro-optimization for unary effects
+		else if(effectScope.size() == 1) {
 			for (ObjectIdx value:*(actionProjection.at(effectScope[0]))) { // Add to the RPG for every allowed value of the relevant variable
 				if (!effect->applicable(value)) continue;
 				Atom atom = effect->apply(value);

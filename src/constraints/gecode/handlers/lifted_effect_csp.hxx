@@ -17,7 +17,7 @@ class RPGIndex;
 class LiftedEffectCSP : public LiftedActionCSP {
 public:
 	//! Factory method
-	static std::vector<LiftedEffectCSP*> create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::unique_ptr<LiftedEffectCSP>> create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
 	//! The only constructor
 	LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate);

@@ -20,8 +20,8 @@ class RelaxedState;
 class DirectActionManager {
 public:
 	//! Factory methods
-	static DirectActionManager* create(const GroundAction& action);
-	static std::vector<DirectActionManager*> create(const std::vector<const GroundAction*>& actions);
+	static std::unique_ptr<DirectActionManager> create(const GroundAction& action);
+	static std::vector<std::unique_ptr<DirectActionManager>> create(const std::vector<const GroundAction*>& actions);
 
 	//! Returns true ifff the given action is supported by a direct manager
 	static bool is_supported(const GroundAction& action);

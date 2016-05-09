@@ -20,16 +20,13 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 	_problem(problem),
 	_info(ProblemInfo::getInstance()),
 	_tuple_index(problem.get_tuple_index()),
-	_managers(managers),
+	_managers(std::move(managers)),
 	_extension_handler(extension_handler),
 	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
 	LPT_INFO("heuristic", "SmartRPG heuristic initialized");
 }
 
-SmartRPG::~SmartRPG() {
-	for (auto ptr:_managers) delete ptr;
-}
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
 long SmartRPG::evaluate(const State& seed) {
@@ -51,7 +48,7 @@ long SmartRPG::evaluate(const State& seed) {
 	while (true) {
 		
 		// Build a new layer of the RPG.
-		for (const EffectHandlerPtr manager:_managers) {
+		for (const EffectHandlerPtr& manager:_managers) {
 			// TODO - RETHINK
 // 			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
 // 				manager->init_value_selector(&bookkeeping);

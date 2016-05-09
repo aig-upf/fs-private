@@ -4,6 +4,9 @@
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+
 #include <search/options.hxx>
 #include <utils/config.hxx>
 #include <aptk2/tools/logging.hxx>
@@ -16,16 +19,17 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 	po::options_description description("Allowed options");
 	description.add_options()
 		("help,h", "Display this help message")
-		("timeout,t", po::value<int>()->default_value(10),                     "The timeout, in seconds.")
-		("data", po::value<std::string>()->default_value("data"),              "The directory where the input data is stored.")
-		("driver,d", po::value<std::string>()->required(),                     "The desired driver.")
-		("config", po::value<std::string>()->default_value("./config.json"),   "The planner configuration file.")
-		("out", po::value<std::string>()->default_value("."),                  "The directory where the results data is to be output.");
+		("timeout,t", po::value<int>()->default_value(10),                        "The timeout, in seconds.")
+		("data", po::value<std::string>()->default_value("data"),                 "The directory where the input data is stored.")
+		("driver,d", po::value<std::string>()->required(),                        "The desired driver.")
+		("defaults", po::value<std::string>()->default_value("./defaults.json"),  "The planner configuration file.")
+		("options", po::value<std::string>()->default_value(""),                  "Additional configuration options.")
+		("out", po::value<std::string>()->default_value("."),                     "The directory where the results data is to be output.");
 
 	po::positional_options_description pos;
 	pos.add("timeout", 1)
 	   .add("data", 1)
-	   .add("config", 1)
+	   .add("defaults", 1)
 	   .add("out", 1);
 
 	po::variables_map vm;
@@ -46,9 +50,24 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 
 	_timeout = vm["timeout"].as<int>();
 	_data_dir = vm["data"].as<std::string>();
-	_config = vm["config"].as<std::string>();
+	_defaults = vm["defaults"].as<std::string>();
 	_output_dir = vm["out"].as<std::string>();
 	_driver = vm["driver"].as<std::string>();
+	
+	// Populate the map of additional options
+	std::string options = vm["options"].as<std::string>();
+	if (options != "") {
+		std::vector<std::string> config_options;
+		boost::split(config_options, options, boost::is_any_of(","));
+		for (auto& option:config_options) {
+			std::vector<std::string> key_val;
+			boost::split(key_val, option, boost::is_any_of("="));
+			if (key_val.size() != 2) throw std::runtime_error(std::string("Cannot recognize configuration option ") + option);
+			
+			auto res = _user_options.insert(std::make_pair(key_val[0], key_val[1]));
+			if (!res.second) throw std::runtime_error(std::string("Duplicate configuration key ") + key_val[0]);
+		}
+	}
 }
 
 } } // namespaces

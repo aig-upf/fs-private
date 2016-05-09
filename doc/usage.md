@@ -61,9 +61,9 @@ There are some other important options that can also be specified on the command
 some of them are general to more than one (perhaps to all) drivers.
 These options are not mandatory and, if not provided, the defaut value for each of them is the one read from the
 [`defaults.json` configuration file](https://github.com/aig-upf/fs/blob/master/planners/generic/defaults.json) which is located in the planner directory.
-If you want to override the value of a particular option through the command line, you can do so with the `--config` parameter,
+If you want to override the value of a particular option through the command line, you can do so with the `--options` parameter,
 which accepts a list of comma-separated name=value pairs, as in e.g.
-`./solver.bin --driver=smart --config="heuristic=hff,novelty=true"`.
+`./solver.bin --driver=smart --options="heuristic=hff,novelty=false"`.
 
 The most common configuration options are:
 

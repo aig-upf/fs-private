@@ -14,9 +14,9 @@
 
 namespace fs0 { namespace gecode {
 
-std::vector<GroundEffectCSP*>
+std::vector<std::unique_ptr<GroundEffectCSP>>
 GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
-	std::vector<GroundEffectCSP*> managers;
+	std::vector<std::unique_ptr<GroundEffectCSP>> managers;
 	
 	for (unsigned action_idx = 0; action_idx < actions.size(); ++action_idx) {
 		const auto action = actions[action_idx];
@@ -24,9 +24,9 @@ GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const T
 		for (unsigned eff_idx = 0; eff_idx < action->getEffects().size(); ++eff_idx) {
 			const fs::ActionEffect* effect = action->getEffects().at(eff_idx);
 			if (effect->is_del()) continue; // Ignore delete effects
-			auto handler = new GroundEffectCSP(*action, tuple_index, effect, approximate, true);
+			auto handler = std::unique_ptr<GroundEffectCSP>(new GroundEffectCSP(*action, tuple_index, effect, approximate, true));
 			if (handler->init(novelty)) {
-				managers.push_back(handler);
+				managers.push_back(std::move(handler));
 				LPT_DEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
 			} else {
 				LPT_DEBUG("main", "CSP for action effect " << effect << " is inconsistent ==> the action is not applicable");

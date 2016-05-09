@@ -16,10 +16,10 @@ namespace fs0 { namespace drivers {
 
 std::unique_ptr<FS0SearchAlgorithm>
 NativeDriver::create(const Config& config, const GroundStateModel& model) const {
-	LPT_INFO("main", "Using the Native-CSP RPG Driver");
+	LPT_INFO("main", "Using the Native RPG Driver");
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
-	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+	bool delayed = config.useDelayedEvaluation();
 
 	if (!check_supported(problem)) {
 		throw std::runtime_error("The Native Driver cannot process the given problem");

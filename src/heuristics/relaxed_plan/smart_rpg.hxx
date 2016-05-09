@@ -19,11 +19,11 @@ class RPGIndex;
 
 class SmartRPG {
 protected:
-	typedef LiftedEffectCSP* EffectHandlerPtr;
+	typedef std::unique_ptr<LiftedEffectCSP> EffectHandlerPtr;
 	
 public:
 	SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
-	~SmartRPG();
+	~SmartRPG() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.
 	SmartRPG(const SmartRPG&) = delete;
@@ -47,7 +47,7 @@ protected:
 	const TupleIndex& _tuple_index;
 	
 	//! The set of action managers, one per every action
-	const std::vector<EffectHandlerPtr> _managers;
+	std::vector<EffectHandlerPtr> _managers;
 	
 	//!
 	ExtensionHandler _extension_handler;

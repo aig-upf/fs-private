@@ -19,7 +19,7 @@ std::unique_ptr<FS0SearchAlgorithm> UnreachedAtomDriver::create(const Config& co
 	const Problem& problem = model.getTask();
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = config.useApproximateActionResolution();
-	bool delayed = config.getOption<bool>("search.delayed_evaluation");
+	bool delayed = config.useDelayedEvaluation();
 
 	
 	const auto& tuple_index = problem.get_tuple_index();

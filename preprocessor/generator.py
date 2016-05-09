@@ -61,7 +61,7 @@ def compile_translation(translation_dir, args):
     planner_dir = os.path.abspath(os.path.join('../planners', args.planner))
 
     shutil.copy(os.path.join(planner_dir, 'main.cxx'), translation_dir)
-    shutil.copy(os.path.join(planner_dir, 'default.config.json'), os.path.join(translation_dir, 'config.json'))
+    shutil.copy(os.path.join(planner_dir, 'defaults.json'), translation_dir)
     shutil.copy(os.path.join(planner_dir, 'SConstruct'), os.path.join(translation_dir, 'SConstruct'))
 
     command = "scons {}".format(debug_flag)

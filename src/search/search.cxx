@@ -79,7 +79,7 @@ void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Confi
 	
 	// The engine and search model for lifted planning are different!
 	// TODO - REFACTOR THIS
-	if (driver_tag == "fully_lifted") {
+	if (driver_tag == "lifted") {
 		FullyLiftedDriver driver;
 		fs0::LiftedStateModel model = driver.setup(config, problem);
 		auto engine = driver.create(config, model);
