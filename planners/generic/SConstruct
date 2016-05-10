@@ -30,7 +30,7 @@ env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ] )  # Flags common to
 env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
 
 if env['edebug']:
-	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DFS0_DEBUG' ] )
+	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DEDEBUG' ] )
 	fs0_libname = 'fs0-edebug'
 	lapkt_libname = 'lapkt2-edebug'
 	exe_name = 'solver.edebug.bin'
