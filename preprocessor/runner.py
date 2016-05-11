@@ -56,50 +56,6 @@ def extract_names(domain_filename, instance_filename):
     return domain, instance
 
 
-def compile_translation(translation_dir, args):
-    """
-    Copies the relevant files from the BFS directory to the newly-created translation directory,
-     and then calls scons to compile the problem there.
-    """
-    debug_flag = "edebug=1" if args.edebug else ("debug=1" if args.debug else "")
-
-    planner_dir = os.path.abspath(os.path.join('../planners', args.planner))
-
-    shutil.copy(os.path.join(planner_dir, 'main.cxx'), translation_dir)
-    shutil.copy(os.path.join(planner_dir, 'defaults.json'), translation_dir)
-    shutil.copy(os.path.join(planner_dir, 'SConstruct'), os.path.join(translation_dir, 'SConstruct'))
-
-    command = "scons {}".format(debug_flag)
-
-    print("{0:<30}{1}\n".format("Compilation command:", command))
-    sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
-    output = subprocess.call(command.split(), cwd=translation_dir)
-    if output != 0:
-        raise RuntimeError('Error compiling problem at {0}'.format(translation_dir))
-
-
-def run_solver(translation_dir, args):
-    """ Runs the solver binary resulting from the compilation """
-    if not args.run:  # Simply return without running anything
-        return
-    solver = "solver.edebug.bin" if args.edebug else ("solver.debug.bin" if args.debug else "solver.bin")
-    solver = os.path.join(translation_dir, solver)
-
-    command = [solver, "--driver", args.driver]
-    if args.defaults:
-        command += ["--defaults", args.defaults]
-
-    if args.options:
-        command += ["--options", args.options]
-
-    print("{0:<30}{1}\n".format("Running solver:", solver))
-    sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
-    output = subprocess.call(command, cwd=translation_dir)
-    if output != 0:
-        print("Error sunning solver")
-        sys.exit(output)
-
-
 def move_files(base_dir, instance, domain, target_dir):
     """ Moves the domain and instance description files plus additional data files to the translation directory """
     definition_dir = target_dir + '/definition'
@@ -129,6 +85,68 @@ def move_files(base_dir, instance, domain, target_dir):
                 shutil.copy(filename, data_dir)
 
 
+def compile_translation(translation_dir, use_vanilla, args):
+    """
+    Copies the relevant files from the BFS directory to the newly-created translation directory,
+     and then calls scons to compile the problem there.
+    """
+    debug_flag = "edebug=1" if args.edebug else ("debug=1" if args.debug else "")
+
+    planner_dir = os.path.abspath(os.path.join('../planners', args.planner))
+
+    shutil.copy(os.path.join(planner_dir, 'defaults.json'), translation_dir)
+
+    vanilla_solver_name = solver_name(args)
+    vanilla_solver_path = os.path.join(planner_dir, vanilla_solver_name)
+
+    if use_vanilla and os.path.isfile(vanilla_solver_path):
+        print("Using pre-compiled vanilla solver from '{}'".format(vanilla_solver_path))
+        shutil.copy(vanilla_solver_path, translation_dir)
+
+    else:  # We compile the solver from scratch
+        shutil.copy(os.path.join(planner_dir, 'main.cxx'), translation_dir)
+        shutil.copy(os.path.join(planner_dir, 'SConstruct'), os.path.join(translation_dir, 'SConstruct'))
+
+        command = "scons {}".format(debug_flag)
+
+        print("{0:<30}{1}\n".format("Compilation command:", command))
+        sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
+        output = subprocess.call(command.split(), cwd=translation_dir)
+        if output != 0:
+            raise RuntimeError('Error compiling problem at {0}'.format(translation_dir))
+
+
+def run_solver(translation_dir, args):
+    """ Runs the solver binary resulting from the compilation """
+    if not args.run:  # Simply return without running anything
+        return
+
+    solver = solver_name(args)
+    solver = os.path.join(translation_dir, solver)
+
+    if not args.driver:
+        raise RuntimeError("Need to specify a driver to be able to run the solver")
+
+    command = [solver, "--driver", args.driver]
+
+    if args.defaults:
+        command += ["--defaults", args.defaults]
+
+    if args.options:
+        command += ["--options", args.options]
+
+    print("{0:<30}{1}\n".format("Running solver:", solver))
+    sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
+    output = subprocess.call(command, cwd=translation_dir)
+    if output != 0:
+        print("Error sunning solver")
+        sys.exit(output)
+
+
+def solver_name(args):
+    return "solver.edebug.bin" if args.edebug else ("solver.debug.bin" if args.debug else "solver.bin")
+
+
 def main(args):
     # Determine the proper domain and instance filenames
     if args.domain is None:
@@ -154,9 +172,11 @@ def main(args):
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance
-    ProblemRepresentation(fs_task, translation_dir, args.edebug or args.debug).generate()
+    representation = ProblemRepresentation(fs_task, translation_dir, args.edebug or args.debug)
+    representation.generate()
     move_files(args.instance_dir, args.instance, args.domain, translation_dir)
-    compile_translation(translation_dir, args)
+    use_vanilla = not representation.requires_compilation()
+    compile_translation(translation_dir, use_vanilla, args)
     run_solver(translation_dir, args)
 
 

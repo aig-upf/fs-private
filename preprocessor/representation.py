@@ -189,3 +189,6 @@ class ProblemRepresentation(object):
         # And further separate each action into a different file:
         for action in data['action_schemata']:
             self.dump_data("action.{}".format(action['name']), json.dumps(action, indent=2), ext='json', subdir='debug')
+
+    def requires_compilation(self):
+        return len(self.get_function_instantiations())
