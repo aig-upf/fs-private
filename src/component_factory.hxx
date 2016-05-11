@@ -8,7 +8,8 @@ namespace fs0 {
 //! An interface for the concrete instance generators
 class BaseComponentFactory {
 public:
-    virtual std::map<std::string, Function> instantiateFunctions() const = 0;
+	//! To be subclassed if necessary
+    virtual std::map<std::string, Function> instantiateFunctions() const { return {}; }
 };
 
 } // namespaces
