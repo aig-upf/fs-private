@@ -30,6 +30,11 @@ def parse_arguments(args):
                                                        "where the compiled planner will be left.")
     parser.add_argument('--debug', action='store_true', help="Flag to compile in debug mode.")
     parser.add_argument('--edebug', action='store_true', help="Flag to compile in extreme debug mode.")
+    parser.add_argument('--run', action='store_true', help="Set to run the solver after compiling it.")
+
+    parser.add_argument("--driver", help='The solver driver file', default=None)
+    parser.add_argument("--defaults", help='The solver default options file', default=None)
+    parser.add_argument("--options", help='The solver extra options file', default="")
 
     args = parser.parse_args(args)
     args.instance_dir = os.path.dirname(args.instance)
@@ -69,8 +74,30 @@ def compile_translation(translation_dir, args):
     print("{0:<30}{1}\n".format("Compilation command:", command))
     sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
     output = subprocess.call(command.split(), cwd=translation_dir)
-    if not output == 0:
+    if output != 0:
         raise RuntimeError('Error compiling problem at {0}'.format(translation_dir))
+
+
+def run_solver(translation_dir, args):
+    """ Runs the solver binary resulting from the compilation """
+    if not args.run:  # Simply return without running anything
+        return
+    solver = "solver.edebug.bin" if args.edebug else ("solver.debug.bin" if args.debug else "solver.bin")
+    solver = os.path.join(translation_dir, solver)
+
+    command = [solver, "--driver", args.driver]
+    if args.defaults:
+        command += ["--defaults", args.defaults]
+
+    if args.options:
+        command += ["--options", args.options]
+
+    print("{0:<30}{1}\n".format("Running solver:", solver))
+    sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
+    output = subprocess.call(command, cwd=translation_dir)
+    if output != 0:
+        print("Error sunning solver")
+        sys.exit(output)
 
 
 def move_files(base_dir, instance, domain, target_dir):
@@ -130,6 +157,7 @@ def main(args):
     ProblemRepresentation(fs_task, translation_dir, args.edebug or args.debug).generate()
     move_files(args.instance_dir, args.instance, args.domain, translation_dir)
     compile_translation(translation_dir, args)
+    run_solver(translation_dir, args)
 
 
 if __name__ == "__main__":

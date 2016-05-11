@@ -11,8 +11,8 @@ Search Driver
 
 The planner is pre-configured with a number of "search drivers" that specify the global search strategy
 (search algorithm plus heuristic, if necessary) that will be followed in the search for a plan.
-The `--driver` command-line option is thus mandatory, and we can e.g. invoke the planner with the `smart` driver like this:
-`./solver.bin --driver=smart`. The following are the main availabla drivers:
+The `--driver` command-line option is thus mandatory; for instance, to use the planner with the `smart` driver we would invoke 
+`./solver.bin --driver=smart`. The following are the main available drivers:
 
 * `lite`: The lite driver is a greedy best-first search which works with the _non-constrained_ RPG heuristics, i.e. computes the _standard_
 h_FF and h_MAX heuristics, the only difference being that it can work with the more compact Functional STRIPS encodings, thus not being restricted to
