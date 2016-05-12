@@ -30,8 +30,6 @@ You should use the branch `v2_work`, as explained [here](https://github.com/miqu
 
 1. The [Gecode](http://www.gecode.org/) CSP Solver (Tested with version 4.4.0 only). The recommended way to install it is on `~/local`, i.e. by running `./configure --prefix=~/local` before the actual compilation.
 
-<!-- 1. The Clingo ASP Solver, from [Potassco](http://potassco.sourceforge.net/), the Potsdam Answer Set Solving Collection. Clingo seems to require at least `gcc` > 4.8; in order to build the C++ library you need to run `scons libclingo`. -->
-
 
 Once you have installed these projects locally, your system needs to be configured with the following environment variables,
 e.g. by setting them up in your  `~/.bashrc` configuration file:
