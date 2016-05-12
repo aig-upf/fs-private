@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include <lib/rapidjson/document.h>
+#include <utils/static.hxx>
 
 namespace fs0 {
 
@@ -28,6 +29,7 @@ public:
 	Type getType() const { return _type; }
 	const Signature& getSignature() const { return _signature; }
 	const TypeIdx& getCodomainType() const { return _codomain; }
+	unsigned getArity() const { return _signature.size(); }
 	
 	bool isStatic() const { return _static; }
 	
@@ -119,9 +121,12 @@ protected:
 	std::string _domain;
 	std::string _instance_name;
 	
+	//! The extensions of the static symbols
+	std::vector<std::unique_ptr<StaticExtension>> _extensions;
+	
 public:
 	ProblemInfo(const rapidjson::Document& data);
-	~ProblemInfo() {}
+	~ProblemInfo() = default;
 	
 	const std::string& getVariableName(VariableIdx index) const;
 	inline VariableIdx getVariableId(const std::string& name) const { return variableIds.at(name); }
@@ -139,6 +144,7 @@ public:
 	//! Return the ID of the function with given name
 	inline unsigned getSymbolId(const std::string& name) const { return symbolIds.at(name); }
 	const std::string& getSymbolName(unsigned symbol_id) const { return symbolNames.at(symbol_id); }
+	const std::vector<std::string>& getSymbolNames() const { return symbolNames; }
 	unsigned getNumLogicalSymbols() const { return symbolIds.size(); }
 	bool isPredicate(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::PREDICATE; }
 	bool isFunction(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::FUNCTION; }
@@ -150,6 +156,20 @@ public:
 		functionData.at(functionId).setFunction(function);
 	}
 	inline const SymbolData& getSymbolData(unsigned functionId) const { return functionData.at(functionId); }
+	
+	
+	void set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&& extension);
+	const StaticExtension& get_extension(unsigned symbol_id) const;
+	
+	//! A convenient helper
+	template <typename ExtensionT>
+	const ExtensionT& get_extension(const std::string& symbol) const {
+		unsigned id = getSymbolId(symbol);
+		assert(_extensions.at(id) != nullptr);
+		const ExtensionT* extension = dynamic_cast<const ExtensionT*>(_extensions.at(id).get());
+		assert(extension);
+		return *extension;
+	}
 	
 	//! Returns all the objects of the given type _or of a descendant type_
 	inline const std::vector<ObjectIdxVector>& getTypeObjects() const { return typeObjects; }

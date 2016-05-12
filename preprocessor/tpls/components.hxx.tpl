@@ -5,7 +5,7 @@
 #include <lib/rapidjson/document.h>
 #include "external.hxx"
 
-#include <component_factory.hxx>
+#include <utils/component_factory.hxx>
 
 namespace fs0 { class Problem; }
 

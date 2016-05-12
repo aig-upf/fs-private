@@ -27,13 +27,6 @@ def instantiate_predicate(name, arity):
     return (classes[arity])(name)
 
 
-class StaticData(object):
-    def __init__(self):
-        self.declarations = []
-        self.accessors = []
-        self.initializations = []
-
-
 def serialize_symbol(symbol, table):
     serialized = symbol if util.is_int(symbol) else table[symbol]
     return str(serialized)
@@ -46,29 +39,11 @@ def serialize_tuple(t, symbols):
 
 
 class DataElement:
-    DESERIALIZER = None
-
     def __init__(self, name):
         self.name = util.normalize(name)
-        self.accessor = 'get_' + self.name
-
-    def get_tpl(self, name):
-        raise RuntimeError("Method must be subclassed")
-
-    def get_accessor(self, symbols):
-        two_accessors = [self.get_tpl('accessor').format(**self.__dict__), self.get_tpl('accessor2').format(**self.__dict__)]
-        return '\n\t'.join(two_accessors)
-
-    def get_declaration(self, symbols):
-        return self.get_tpl('declaration').format(name=self.name)
 
     def serialize_data(self, symbols):
         raise RuntimeError("Method must be subclassed")
-
-    def initializer_list(self):
-        assert self.DESERIALIZER is not None
-        tpl = '{name}(Serializer::{deserializer}(data_dir + "/{name}.data"))'
-        return tpl.format(name=self.name, deserializer=self.DESERIALIZER)
 
 
 class StaticProcedure(object):
@@ -77,15 +52,6 @@ class StaticProcedure(object):
 
 
 class Arity0Element(DataElement):
-    DESERIALIZER = 'deserialize0AryElement'
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const ObjectIdx {name};',
-            accessor='ObjectIdx {accessor}(const ObjectIdxVector& params) {{ return {name}; }}',
-            accessor2='',
-        )[name]
-
     def __init__(self, name):
         super().__init__(name)
         self.elems = {}
@@ -94,23 +60,12 @@ class Arity0Element(DataElement):
         assert len(elem) == 0
         self.elems[elem] = value
 
-    def get_declaration(self, symbols):
-        return self.get_tpl('declaration').format(name=self.name, val=self.elems[()])
-
     def serialize_data(self, symbols):
         return [serialize_symbol(self.elems[()], symbols)]  # We simply print the only element
 
 
 class UnaryMap(DataElement):
-    DESERIALIZER = 'deserializeUnaryMap'
     ARITY = 1
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const Serializer::BoostUnaryMap {name};',
-            accessor='ObjectIdx {accessor}(const ObjectIdxVector& params) {{ return {name}.at(params[0]); }}',
-            accessor2='ObjectIdx {accessor}(ObjectIdx x) {{ return {name}.at(x); }}',
-        )[name]
 
     def __init__(self, name):
         super().__init__(name)
@@ -130,51 +85,19 @@ class UnaryMap(DataElement):
 
 
 class BinaryMap(UnaryMap):
-    DESERIALIZER = 'deserializeBinaryMap'
     ARITY = 2
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const Serializer::BoostBinaryMap {name};',
-            accessor='ObjectIdx {accessor}(const ObjectIdxVector& params) {{ return {name}.at({{params[0], params[1]}}); }}',
-            accessor2='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.at({{x,y}}); }}',
-        )[name]
 
 
 class Arity3Map(BinaryMap):
-    DESERIALIZER = 'deserializeArity3Map'
     ARITY = 3
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const Serializer::BoostArity3Map {name};',
-            accessor='ObjectIdx {accessor}(const ObjectIdxVector& params) {{ return {name}.at(std::make_tuple(params[0], params[1], params[2])); }}',
-            accessor2='ObjectIdx {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.at(std::make_tuple(x,y,z)); }}',
-        )[name]
 
 
 class Arity4Map(BinaryMap):
-    DESERIALIZER = 'deserializeArity4Map'
     ARITY = 4
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const Serializer::BoostArity4Map {name};',
-            accessor='ObjectIdx {accessor}(const ObjectIdxVector& params) {{ return {name}.at(std::make_tuple(params[0], params[1], params[2], params[3])); }}',
-            accessor2='ObjectIdx {accessor}(ObjectIdx o1, ObjectIdx o2, ObjectIdx o3, ObjectIdx o4) {{ return {name}.at(std::make_tuple(o1,o2,o3,o4)); }}',
-        )[name]
 
 
 class UnarySet(DataElement):
-    DESERIALIZER = 'deserializeUnarySet'
     ARITY = 1
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const Serializer::BoostUnarySet {name};',
-            accessor='bool {accessor}(const ObjectIdxVector& params) {{ return {name}.find(params[0]) != {name}.end(); }}',
-            accessor2='bool {accessor}(ObjectIdx x) {{ return {name}.find(x) != {name}.end(); }}',
-        )[name]
 
     def __init__(self, name):
         super().__init__(name)
@@ -195,15 +118,7 @@ class UnarySet(DataElement):
 
 
 class ZeroarySet(UnarySet):
-    DESERIALIZER = 'deserialize0AryElement'
-    ARITY = 2
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const bool {name};',
-            accessor='bool {accessor}(const ObjectIdxVector& params) {{ return {name}; }}',
-            accessor2='',
-        )[name]
+    ARITY = 0
 
     def __init__(self, name):
         super().__init__(name)
@@ -213,45 +128,17 @@ class ZeroarySet(UnarySet):
         assert _ is None
         self.elems[()] = value
 
-    def get_declaration(self, symbols):
-        return self.get_tpl('declaration').format(name=self.name, val=self.elems[()])
-
     def serialize_data(self, symbols):
         return [serialize_symbol(self.elems[()], symbols)]  # We simply print the only element
 
 
 class BinarySet(UnarySet):
-    DESERIALIZER = 'deserializeBinarySet'
     ARITY = 2
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const Serializer::BoostBinarySet {name};',
-            accessor='bool {accessor}(const ObjectIdxVector& params) {{ return {name}.find({{params[0], params[1]}}) != {name}.end(); }}',
-            accessor2='bool {accessor}(ObjectIdx x, ObjectIdx y) {{ return {name}.find({{x,y}}) != {name}.end(); }}',
-        )[name]
 
 
 class Arity3Set(BinarySet):
-    DESERIALIZER = 'deserializeArity3Set'
     ARITY = 3
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const Serializer::BoostArity3Set {name};',
-            accessor='bool {accessor}(const ObjectIdxVector& params) {{ return {name}.find(std::make_tuple(params[0], params[1], params[2])) != {name}.end(); }}',
-            accessor2='bool {accessor}(ObjectIdx x, ObjectIdx y, ObjectIdx z) {{ return {name}.find(std::make_tuple(x,y,z)) != {name}.end(); }}',
-        )[name]
 
 
 class Arity4Set(BinarySet):
-    DESERIALIZER = 'deserializeArity4Set'
     ARITY = 4
-
-    def get_tpl(self, name):
-        return dict(
-            declaration='const Serializer::BoostArity4Set {name};',
-            accessor='bool {accessor}(const ObjectIdxVector& params) {{ return {name}.find(std::make_tuple(params[0], params[1], params[2], params[3])) != {name}.end(); }}',
-            accessor2='bool {accessor}(ObjectIdx o1, ObjectIdx o2, ObjectIdx o3, ObjectIdx o4) {{ return {name}.find(std::make_tuple(o1,o2,o3,o4)) != {name}.end(); }}',
-        )[name]
-

@@ -36,6 +36,7 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
 		_predicative_variables.push_back(isPredicate(getVariableData(variable).first));
 	}
 	
+	_extensions.resize(getNumLogicalSymbols());
 }
 
 const std::string& ProblemInfo::getVariableName(VariableIdx index) const { return variableNames.at(index); }
@@ -214,6 +215,19 @@ bool ProblemInfo::checkValueIsValid(VariableIdx variable, ObjectIdx value) const
 void ProblemInfo::loadProblemMetadata(const rapidjson::Value& data) {
 	setDomainName(data["domain"].GetString());
 	setInstanceName(data["instance"].GetString());
+}
+
+void
+ProblemInfo::set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&& extension) {
+	assert(_extensions.at(symbol_id) == nullptr); // Shouldn't be setting twice the same extension
+	setFunction(symbol_id, extension->get_function());
+	_extensions.at(symbol_id) = std::move(extension);
+}
+
+const StaticExtension&
+ProblemInfo::get_extension(unsigned symbol_id) const {
+	assert(_extensions.at(symbol_id) != nullptr);
+	return *_extensions.at(symbol_id);
 }
 
 } // namespaces

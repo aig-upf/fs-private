@@ -6,7 +6,7 @@
 #include <utils/loader.hxx>
 #include <actions/actions.hxx>
 #include <actions/grounding.hxx>
-#include <component_factory.hxx>
+#include <utils/component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
 #include <aptk2/tools/logging.hxx>
 #include <constraints/gecode/helper.hxx>
@@ -14,6 +14,7 @@
 #include <utils/printers/registry.hxx>
 #include <asp/lp_handler.hxx>
 #include <utils/config.hxx>
+#include "static.hxx"
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>
@@ -48,17 +49,30 @@ Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp
 	return problem;
 }
 
-void Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
+void 
+Loader::loadFunctions(const BaseComponentFactory& factory, const std::string& data_dir, ProblemInfo& info) {
+	
+	// First load the extensions of the static symbols
+	for (auto name:info.getSymbolNames()) {
+		unsigned id = info.getSymbolId(name);
+		if (info.getSymbolData(id).isStatic()) {
+			info.set_extension(id, StaticExtension::load_static_extension(name, data_dir, info));
+		}
+	}
+	
+	// Load the function objects for externally-defined symbols
 	for (auto elem:factory.instantiateFunctions()) {
 		info.setFunction(info.getSymbolId(elem.first), elem.second);
 	}
 }
 
-void Loader::loadProblemInfo(const rapidjson::Document& data, const BaseComponentFactory& factory) {
+const ProblemInfo&
+Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory) {
 	// Load and set the ProblemInfo data structure
 	auto info = std::unique_ptr<ProblemInfo>(new ProblemInfo(data));
-	loadFunctions(factory, *info);
+	loadFunctions(factory, data_dir, *info);
 	ProblemInfo::setInstance(std::move(info));
+	return ProblemInfo::getInstance();
 }
 
 State* Loader::loadState(const rapidjson::Value& data) {

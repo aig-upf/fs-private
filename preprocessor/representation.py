@@ -33,8 +33,10 @@ class ProblemRepresentation(object):
 
         self.dump_data('problem', json.dumps(data), ext='json')
         self.print_debug_data(data)
+        self.serialize_static_extensions()
 
-        self.generate_components_code()
+        if self.requires_compilation():
+            self.generate_components_code()
 
     def generate_components_code(self):
         # components.hxx:
@@ -45,32 +47,7 @@ class ProblemRepresentation(object):
         # components.cxx:
         self.save_translation('components.cxx', tplManager.get('components.cxx').substitute())
 
-        # external_base.hxx:
-        self.save_translation('external_base.hxx', tplManager.get('external_base.hxx').substitute(
-            data_declarations=self.process_data_code('get_declaration'),
-            data_accessors=self.process_data_code('get_accessor'),
-            data_initialization=self.get_external_data_initializer_list()
-        ))
-
-        self.serialize_external_data()
-
-    def process_data_code(self, method):
-        processed = [getattr(elem, method)(self.index.objects.data) for elem in self.index.initial_static_data.values()
-                     if isinstance(elem, DataElement)]
-        return '\n\t'.join(processed)
-
-    def get_external_data_initializer_list(self):
-        elems = []
-        for elem in self.index.initial_static_data.values():
-            if isinstance(elem, DataElement):
-                elems.append(elem.initializer_list())
-            else:
-                raise RuntimeError()
-        if not elems:
-            return ''
-        return ': {}'.format(','.join(elems))
-
-    def serialize_external_data(self):
+    def serialize_static_extensions(self):
         for elem in self.index.initial_static_data.values():
             assert isinstance(elem, DataElement)
             serialized = elem.serialize_data(self.index.objects.data)
@@ -163,17 +140,13 @@ class ProblemRepresentation(object):
             value = util.bool_string(value) if isinstance(value, bool) else value
             return self.index.objects.get_index(value)
 
+    def requires_compilation(self):
+        # The problem requires compilation iff there are external symbols involved.
+        return len([s for s in self.index.static_symbols if is_external(s)])
+
     def get_function_instantiations(self):
-        tpl = tplManager.get('function_instantiation')
-        extensional = [
-            tpl.substitute(name=name, accessor=elem.accessor)
-            for name, elem in self.index.initial_static_data.items() if isinstance(elem, DataElement)
-            ]
-
-        external = [tpl.substitute(
-            name=symbol, accessor=symbol[1:]) for symbol in self.index.static_symbols if is_external(symbol)]
-
-        return extensional + external
+        return [tplManager.get('function_instantiation').substitute(name=symbol, accessor=symbol[1:])
+                for symbol in self.index.static_symbols if is_external(symbol)]
 
     def print_debug_data(self, data):
         if not self.edebug:
@@ -189,6 +162,3 @@ class ProblemRepresentation(object):
         # And further separate each action into a different file:
         for action in data['action_schemata']:
             self.dump_data("action.{}".format(action['name']), json.dumps(action, indent=2), ext='json', subdir='debug')
-
-    def requires_compilation(self):
-        return len(self.get_function_instantiations())

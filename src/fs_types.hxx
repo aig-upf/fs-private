@@ -14,7 +14,7 @@
 //! A handy macro for explicitly declaring a variable is not used and avoiding the corresponding warnings (see e.g. http://stackoverflow.com/q/777261)
 #define _unused(x) do { (void)sizeof(x);} while (0)
 
-#define WORK_IN_PROGRESS(x) assert(false && x)
+#define WORK_IN_PROGRESS(x) do { assert(false && x); throw std::runtime_error(std::string("UNIMPLEMENTED: ") + x); } while (0)
 
 
 /**
@@ -67,7 +67,7 @@ namespace fs0 {
 	typedef std::map<VariableIdx, ObjectIdx> PartialAssignment;
 
 	//! A function in the logical sense.
-	typedef std::function<ObjectIdx(const ObjectIdxVector&)> Function;
+	typedef std::function<ObjectIdx(const ValueTuple&)> Function;
 	
 	
 	/**

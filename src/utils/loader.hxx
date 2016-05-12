@@ -23,7 +23,7 @@ public:
 	static Problem* loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler);
 	
 	//! Load and set the singleton problemInfo instance
-	static void loadProblemInfo(const rapidjson::Document& data, const BaseComponentFactory& factory);
+	static const ProblemInfo& loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
 	
@@ -34,7 +34,7 @@ protected:
 	static State* loadState(const rapidjson::Value& data);
 
 	//! Load the data related to the problem functions and predicates into the info object
-	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);
+	static void loadFunctions(const BaseComponentFactory& factory, const std::string& data_dir, ProblemInfo& info);
 	
 	static std::vector<const ActionData*> loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info);
 	

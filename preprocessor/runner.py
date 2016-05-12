@@ -56,7 +56,7 @@ def extract_names(domain_filename, instance_filename):
     return domain, instance
 
 
-def move_files(base_dir, instance, domain, target_dir):
+def move_files(base_dir, instance, domain, target_dir, use_vanilla):
     """ Moves the domain and instance description files plus additional data files to the translation directory """
     definition_dir = target_dir + '/definition'
     data_dir = target_dir + '/data'
@@ -66,16 +66,22 @@ def move_files(base_dir, instance, domain, target_dir):
     shutil.copy(instance, definition_dir)
     shutil.copy(domain, definition_dir)
 
-    # The ad-hoc external definitions file - if it does not exist, we use the default.
-    if os.path.isfile(base_dir + '/external.hxx'):
-        shutil.copy(base_dir + '/external.hxx', target_dir)
+    is_external_defined = os.path.isfile(base_dir + '/external.hxx')
 
-        if os.path.isfile(base_dir + '/external.cxx'):  # We also copy a possible cxx implementation file
-            shutil.copy(base_dir + '/external.cxx', target_dir)
+    if is_external_defined and use_vanilla:
+        raise RuntimeError("An external definitions file was found at '{}', but the runner script determined"
+                           "that no external files were needed. Something is wrong.")
 
-    else:
-        default = tplManager.get('external_default.hxx').substitute()  # No substitutions for the default template
-        util.save_file(target_dir + '/external.hxx', default)
+    if not use_vanilla:
+        # The ad-hoc external definitions file - if it does not exist, we use the default.
+        if is_external_defined:
+            shutil.copy(base_dir + '/external.hxx', target_dir)
+            if os.path.isfile(base_dir + '/external.cxx'):  # We also copy a possible cxx implementation file
+                shutil.copy(base_dir + '/external.cxx', target_dir)
+
+        else:
+            default = tplManager.get('external_default.hxx').substitute()  # No substitutions for the default template
+            util.save_file(target_dir + '/external.hxx', default)
 
     # Copy, if they exist, all data files
     origin_data_dir = base_dir + '/data'
@@ -87,7 +93,7 @@ def move_files(base_dir, instance, domain, target_dir):
 
 def compile_translation(translation_dir, use_vanilla, args):
     """
-    Copies the relevant files from the BFS directory to the newly-created translation directory,
+    Copies the relevant files from the planner directory to the newly-created translation directory,
      and then calls scons to compile the problem there.
     """
     debug_flag = "edebug=1" if args.edebug else ("debug=1" if args.debug else "")
@@ -99,7 +105,11 @@ def compile_translation(translation_dir, use_vanilla, args):
     vanilla_solver_name = solver_name(args)
     vanilla_solver_path = os.path.join(planner_dir, vanilla_solver_name)
 
-    if use_vanilla and os.path.isfile(vanilla_solver_path):
+    if use_vanilla and not os.path.isfile(vanilla_solver_path):
+        raise RuntimeError("The problem could use the vanilla solver binary, but this cannot be found on "
+                           "the expected path. Please re-build the project with the appropriate debug configuration.")
+
+    if use_vanilla:
         print("Using pre-compiled vanilla solver from '{}'".format(vanilla_solver_path))
         shutil.copy(vanilla_solver_path, translation_dir)
 
@@ -174,8 +184,9 @@ def main(args):
     # the C++ generated code to obtain a binary tailored to the particular instance
     representation = ProblemRepresentation(fs_task, translation_dir, args.edebug or args.debug)
     representation.generate()
-    move_files(args.instance_dir, args.instance, args.domain, translation_dir)
     use_vanilla = not representation.requires_compilation()
+
+    move_files(args.instance_dir, args.instance, args.domain, translation_dir, use_vanilla)
     compile_translation(translation_dir, use_vanilla, args)
     run_solver(translation_dir, args)
 
