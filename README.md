@@ -2,7 +2,8 @@
 The FS Functional STRIPS planner
 =================================
 
-`FS` is a classical planner that works with the Functional STRIPS planning language, a modeling language based on the quantifier-free
+`FS` is a classical planner that works with the Functional STRIPS planning language [[Geffner, 2000]](#ref-geffner-fstrips-2000),
+a modeling language based on the quantifier-free
 fragment of first-order logic that includes constant, function and predicate symbols, but no variable symbols. The increased expressiveness
 of the Functional STRIPS language with respect to propositional languages such as standard STRIPS (which is indeed subsumed by Functional STRIPS)
 often results in problem encodings which are more compact, more readable, have fewer ground actions
@@ -22,6 +23,7 @@ and [[Francès and Geffner, 2016b]](#ref-frances-effective-2016).
 * [Usage](#usage)
 * [Credits](#credits)
 * [References](#references)
+
 
 
 ## <a name="references"></a>Installation
