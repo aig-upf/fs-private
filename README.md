@@ -13,7 +13,7 @@ from the expressive _and_ the computational point of view. These include _existe
 _state constraints_, a fairly large library of _global constraints_, and the possibility of using _externally-defined symbols_
 and _built-in arithmetic symbols_.
 
-This documentation covers a number of pragmatic issues related to the use of the `FS` planner. The planner, however, has 
+This documentation covers a number of practical issues related to the use of the `FS` planner. The planner, however, has 
 been used and described in a number of academic publications that [can be found here](http://gfrances.github.io/pubs/),
 the most recent of which are [[Francès and Geffner, 2015]](#ref-frances-modeling-2015) and [[Francès and Geffner, 2016a]](#ref-frances-existential-2016)
 and [[Francès and Geffner, 2016b]](#ref-frances-effective-2016).
@@ -180,10 +180,13 @@ Besides, there are some other obscure / experimental options, mostly for interna
 
 ## <a name="credits"></a>Credits
 
-The `FS` planner is partially built upon the [Lightweight Automated Planning Toolkit](www.lapkt.org)
-and the PDDL parser from the [Fast Downward](www.fast-downward.org) distribution.
+The `FS` planner is partially built upon the [Lightweight Automated Planning Toolkit](http://www.lapkt.org)
+and the PDDL parser from the [Fast Downward](http://www.fast-downward.org) distribution.
 
 ## <a name="references"></a>References
+
+* <a name="ref-frances-modeling-2015">Francès, G., and Geffner, H. (2015)</a>,
+[_Modeling and Computation in Planning: Better Heuristics from More Expressive Languages_](http://gfrances.github.io/pubs/2015-icaps-better-heuristics-more-expressive-languages/), ICAPS 2015.
 
 * <a name="ref-frances-existential-2016">Francès, G., and Geffner, H. (2016a)</a>,
 [_E-STRIPS: Existential Quantification in Planning and Constraint Satisfaction_](http://gfrances.github.io/pubs/2016-ijcai-existential-quantification-planning-csp/), IJCAI 2016.
@@ -191,8 +194,6 @@ and the PDDL parser from the [Fast Downward](www.fast-downward.org) distribution
 * <a name="ref-frances-effective-2016">Francès, G., and Geffner, H. (2016b)</a>,
 [_Effective Planning with More Expressive Languages_](http://gfrances.github.io/pubs/2016-ijcai-effective-planning-more-expressive-languages/), IJCAI 2016.
 
-* <a name="ref-frances-modeling-2015">Francès, G., and Geffner, H. (2015)</a>,
-[_Modeling and Computation in Planning: Better Heuristics from More Expressive Languages_](http://gfrances.github.io/pubs/2015-icaps-better-heuristics-more-expressive-languages/), ICAPS 2015.
 
 * <a name="ref-geffner-fstrips-2000">Geffner, H. (2000)</a>,
 [_Functional STRIPS: A more flexible lan-
