@@ -32,6 +32,8 @@ def main(args):
 	print("Building LAPKT production library...")
 	sys.stdout.flush()
 	output = subprocess.call(scons_command.split(), cwd=lapkt_dir)
+	if output:
+		sys.exit(output)
 
 	
 	# Build the FS planner production library
@@ -39,6 +41,8 @@ def main(args):
 	print("Building FS production library...")
 	sys.stdout.flush()
 	output = subprocess.call(scons_command.split(), cwd=current_dir)
+	if output:
+		sys.exit(output)	
 	
 	
     # Build the vanilla generic FS planner
@@ -47,6 +51,9 @@ def main(args):
 	print("Building FS vanilla planner...")
 	sys.stdout.flush()
 	output = subprocess.call(scons_command.split(), cwd=generic_planner_dir)
+	if output:
+		sys.exit(output)
+
 	print('\n')
 
 
