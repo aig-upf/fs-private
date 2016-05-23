@@ -20,7 +20,7 @@ def parse_arguments(args):
 def main(args):
 	
 	current_dir = os.path.dirname(os.path.abspath(__file__))
-	cpus = multiprocessing.cpu_count() - 1
+	cpus = min(5, multiprocessing.cpu_count() - 1)
 	debug_flag = "edebug=1" if args.edebug else ("debug=1" if args.debug else "")
 	scons_command = 'scons -j {} {}'.format(cpus, debug_flag)
 	
