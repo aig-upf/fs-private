@@ -81,7 +81,7 @@ std::pair<int, int> MultiplicationTerm::getBounds() const {
 	// see https://en.wikipedia.org/wiki/Interval_arithmetic
 	auto b0 = _subterms[0]->getBounds();
 	auto b1 = _subterms[1]->getBounds();
-	auto all{b0.first * b1.first, b0.first * b1.second, b0.second * b1.first, b0.second * b1.second};
+	std::vector<int> all{b0.first * b1.first, b0.first * b1.second, b0.second * b1.first, b0.second * b1.second};
 	auto minmax = std::minmax_element(all.begin(), all.end());
 	return std::make_pair(*minmax.first, *minmax.second);
 }

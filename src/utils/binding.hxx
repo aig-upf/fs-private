@@ -2,6 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
+#include <iostream>
 
 namespace fs0 {
 

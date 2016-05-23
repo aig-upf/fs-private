@@ -4,6 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <sstream>
+#include <algorithm>
 #include <fs_types.hxx>
 
 

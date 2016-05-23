@@ -1,4 +1,5 @@
 
+#include <numeric>
 #include <utils/cartesian_iterator.hxx>
 
 namespace fs0 { namespace utils {

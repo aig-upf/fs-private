@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include <fs_types.hxx>
 
 namespace fs0 {
