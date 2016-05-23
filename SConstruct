@@ -49,15 +49,15 @@ if gcc == 'clang': # Get rid of annoying warning message from the Jenkins librar
 # Extreme debug implies normal debug as well
 if env['debug'] or env['edebug']:
 	env.Append(CCFLAGS = ['-g', '-DDEBUG' ])
-	lib_name = 'fs0-debug'
+	lib_name = 'fs-debug'
 else:
 	env.Append(CCFLAGS = ['-O3', '-DNDEBUG' ])
-	lib_name = 'fs0'
+	lib_name = 'fs'
 
 # Additionally, extreme debug implies a different name plus extra compilation flags
 if env['edebug']:
 	env.Append(CCFLAGS = ['-DEDEBUG'])
-	lib_name = 'fs0-edebug'
+	lib_name = 'fs-edebug'
 
 
 # Base include directories

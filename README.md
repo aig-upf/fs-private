@@ -45,7 +45,7 @@ e.g. by setting them up in your  `~/.bashrc` configuration file:
 export LAPKT_PATH="${HOME}/projects/code/lapkt"
 export LAPKT2_PATH="${LAPKT_PATH}/aptk2"
 export FD_AIG_PATH="${HOME}/projects/code/downward/downward-aig"
-export FS0_PATH="${HOME}/projects/code/fs0"
+export FS_PATH="${HOME}/projects/code/fs"
 
 # Local C++ library installations
 export LD_LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
@@ -54,7 +54,7 @@ if [[ -d ${HOME}/local/lib ]]; then
 fi
 
 # LAPKT and FS libraries
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${FS0_PATH}/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${FS_PATH}/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${LAPKT2_PATH}/lib
 
 # AIG Fast Downward PDDL Parser
@@ -64,10 +64,10 @@ fi
 
 ```
 
-Once all this is set up, you can build the `FS0` library by doing
+Once all this is set up, you can build the project library by doing
 
 ```shell
-cd $FS0_PATH
+cd $FS_PATH
 scons
 ```
 
@@ -77,7 +77,7 @@ You can run `scons debug=1` to build the debug version of the library, or `scons
 ## <a name="usage"></a>Usage
 
 `FS` is invoked through a high-level Python script which parses any FSTRIPS problem specification and generates certain data which is necessary for the
-main planner module to run. The main Python preprocessing script is `$FS0_PATH/preprocessor/runner.py`, and can be invoked like
+main planner module to run. The main Python preprocessing script is `$FS_PATH/preprocessor/runner.py`, and can be invoked like
 (replace `$BENCHMARKS` by an appropriate directory):
 
 ```shell
@@ -86,14 +86,14 @@ python3 runner.py --tag foo --instance $BENCHMARKS/fn-simple-sokoban/instance_6.
 
 Where `instance_6.pddl` is a Functional STRIPS (or standard STRIPS) instance file, and 
 `foo` is an arbitrary name that will be used to determine the output directory where the executable solver, related data, and results will be left, which in this case will be
-`$FS0_PATH/generated/test/fn-simple-sokoban/instance_6`. Read below for further details on the semantics of the `--run` and `--driver` options.
+`$FS_PATH/generated/test/fn-simple-sokoban/instance_6`. Read below for further details on the semantics of the `--run` and `--driver` options.
 If externally-defined symbols are used, the parsing process involves the automatic generation of a bunch of C++ classes that 
 is then compiled and linked against the binary solver.
 If `--run` is not used, only the parsing stage is run, in which case all files necessary to run the solver are left on the abovementioned directory, and nothing else is done.
 If that is the case, we can run the automatically generated `solver.bin` executable from that directory (add the `-h` flag for further options :
 
 ```shell
-cd $FS0_PATH/generated/test/fn-simple-sokoban/instance_6
+cd $FS_PATH/generated/test/fn-simple-sokoban/instance_6
 ./solver.bin
 ```
 
