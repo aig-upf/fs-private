@@ -98,8 +98,7 @@ def compile_translation(translation_dir, use_vanilla, args):
     """
     debug_flag = "edebug=1" if args.edebug else ("debug=1" if args.debug else "")
 
-    planner_dir = os.path.abspath(os.path.join('../planners', args.planner))
-
+    planner_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../planners', args.planner))
     shutil.copy(os.path.join(planner_dir, 'defaults.json'), translation_dir)
 
     vanilla_solver_name = solver_name(args)
