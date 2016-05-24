@@ -47,13 +47,13 @@ protected:
 	void index_parameters();
 
 	//! Return the action binding that corresponds to the given solution
-	Binding build_binding_from_solution(const GecodeCSP* solution) const;
+	Binding build_binding_from_solution(const GecodeCSP* solution) const override;
 
 	//! Return the (Lifted) ActionID corresponding to the given solution
-	const ActionID* get_action_id(const GecodeCSP* solution) const;
+	const ActionID* get_action_id(const GecodeCSP* solution) const override;
 	
 	//! Log some handler-related into
-	virtual void log() const;
+	virtual void log() const override;
 };
 
 } } // namespaces

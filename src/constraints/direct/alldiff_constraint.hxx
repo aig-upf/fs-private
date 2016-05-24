@@ -45,9 +45,9 @@ public:
 	// where variables are replaced by their inverse, deducing max bounds.
 	FilteringOutput filter() override;
 	
-	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
 	
-	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const override;
 	
 protected:
 	//! Invert a domain, e.g. from D = {3, 4, 7} to D = {-7, -4, -3}

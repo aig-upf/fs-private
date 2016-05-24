@@ -46,9 +46,9 @@ protected:
 	
 	//! This is the only effect managed by this CSP, which we store in a vector to comply with the parents' interfaces, which require
 	//! to return a vector of effects. By construction, we have that _effects.size() == 0
-	const std::vector<const fs::ActionEffect*> _effects;	
+	const std::vector<const fs::ActionEffect*> _effects;
 	
-	const ActionID* get_action_id(const GecodeCSP* solution) const;
+	const ActionID* get_action_id(const GecodeCSP* solution) const override;
 
 	//! Index the CSP variables corresponding the the effect LHS.
 	std::vector<unsigned> index_lhs_subterms();
@@ -61,7 +61,7 @@ protected:
 	//! is the index of the symbol, then come the indexes of the subterms (Indexes are CSP variable indexes).
 	std::vector<std::pair<unsigned, std::vector<unsigned>>> _tuple_indexes;
 	
-	void log() const;
+	void log() const override;
 	
 	bool solve(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const;
 // 	void solve_approximately(const Atom& atom, gecode::GecodeCSP* csp, RPGData& rpg, const State& seed) const;

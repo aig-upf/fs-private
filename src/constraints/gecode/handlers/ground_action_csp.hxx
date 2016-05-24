@@ -33,10 +33,10 @@ protected:
 	
 	std::vector<const fs::ActionEffect*> _add_effects;
 
-	const ActionID* get_action_id(const GecodeCSP* solution) const;
+	const ActionID* get_action_id(const GecodeCSP* solution) const override;
 	
 	//! Log some handler-related into
-	virtual void log() const;
+	virtual void log() const override;
 };
 
 } } // namespaces

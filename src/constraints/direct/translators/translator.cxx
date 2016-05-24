@@ -54,7 +54,7 @@ DirectConstraint* DirectTranslator::generate(const fs::RelationalFormula& formul
 	
 	if (lhs_var && rhs_var) { // X = Y
 		VariableIdxVector scope{lhs_var->getValue(), rhs_var->getValue()};
-		return { instantiateBinaryConstraint(formula.symbol(), scope, {}) };
+		return instantiateBinaryConstraint(formula.symbol(), scope, {});
 	}
 	
 	if (lhs_var && rhs_const) { // X = c

@@ -52,7 +52,7 @@ protected:
 
 	static ValueTuple index_tuple_indexes(const fs::ActionEffect* effect);
 	
-	void log() const;
+	void log() const override;
 	
 	//! In an effect f(t) := w, '_lhs_symbol' is the index of symbol 'f'
 	unsigned _lhs_symbol;
