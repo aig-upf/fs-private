@@ -21,7 +21,10 @@ def which(program):
 			return exe_file
 	return None
 
-gcc = 'clang' if which('clang') and ARGUMENTS.get('gcc', 'clang') != 'g++' else 'g++'
+# Read the preferred compiler from the environment - if none specified, choose CLANG if possible
+default_compiler = 'clang++' if which("clang++") else 'g++'
+gcc = os.environ.get('CXX', default_compiler)
+
 env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 
 lapkt2_dir = env['lapkt'] + '/aptk2'
