@@ -37,13 +37,13 @@ public:
 	
 	~CompiledUnaryConstraint() {};
 	
-	bool isSatisfied(ObjectIdx o) const;
+	bool isSatisfied(ObjectIdx o) const override;
 	
 	//! Filters from a new set of domains.
-	FilteringOutput filter(const DomainMap& domains) const;
+	FilteringOutput filter(const DomainMap& domains) const override;
 	
 	//! Compiled constraints cannot be compiled again!
-	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& info) const override { return nullptr; }
 	
 	//! Returns a set with all tuples for the given scope that satisfy the the given state
 	static std::set<ElementT> compile(const VariableIdxVector& scope, const Tester& tester);
@@ -53,7 +53,7 @@ public:
 		return compile(constraint.getScope(), [&constraint](ObjectIdx value){ return constraint.isSatisfied(value); });
 	}
 	
-	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const override;
 
 protected:
 	//! Returns an ordered ExtensionT data structure with all the elements that satisfy the constraint.
@@ -91,12 +91,12 @@ public:
 	
 	~CompiledBinaryConstraint() {};
 
-	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const;
+	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const override;
 	
 	FilteringOutput filter(unsigned variable) const override;
 	
 	//! Compiled constraints cannot be compiled again!
-	DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	DirectConstraint* compile(const ProblemInfo& info) const override { return nullptr; }
 	
 	static TupleExtension compile(const VariableIdxVector& scope, const CompiledBinaryConstraint::Tester& tester);
 	
@@ -110,7 +110,7 @@ public:
 		return compile(constraint.getScope(), [&constraint](ObjectIdx x, ObjectIdx y){ return constraint.isSatisfied(x, y); });
 	}
 	
-	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const override;
 };
 
 

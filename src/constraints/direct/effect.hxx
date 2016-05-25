@@ -61,7 +61,7 @@ public:
 	Atom apply(const ObjectIdxVector& values) const override { throw std::runtime_error("0-ary effects are expected not to use this method"); };
 	
 	//! To be overriden by the concrete effect.
-	virtual Atom apply() const = 0;
+	virtual Atom apply() const override = 0;
 	
 	//! A small helper
 	inline Atom apply(const State& s) const override { return this->apply(); }
@@ -81,7 +81,7 @@ public:
 	Atom apply(const ObjectIdxVector& values) const override { throw std::runtime_error("Unary effects are expected not to use this method"); };
 
 	//! To be overriden by the concrete effect.
-	virtual Atom apply(ObjectIdx value) const = 0;
+	virtual Atom apply(ObjectIdx value) const override = 0;
 	
 	//! A small helper
 	Atom apply(const State& s) const override;
@@ -104,7 +104,7 @@ public:
 	};
 	
 	//! To be overriden by the concrete effect.
-	virtual Atom apply(ObjectIdx v1, ObjectIdx v2) const = 0;
+	virtual Atom apply(ObjectIdx v1, ObjectIdx v2) const override = 0;
 	
 	//! A small helper
 	Atom apply(const State& s) const override;

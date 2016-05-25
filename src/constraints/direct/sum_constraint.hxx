@@ -24,9 +24,9 @@ public:
 	//! Filters from the set of currently loaded projections
 	FilteringOutput filter() override;
 	
-	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const { return nullptr; }
+	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
 	
-	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const override;
 };
 
 

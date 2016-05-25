@@ -32,11 +32,11 @@ public:
 
 	virtual ~UnaryDomainBoundsConstraint() {};
 
-	bool isSatisfied(ObjectIdx o) const;
+	bool isSatisfied(ObjectIdx o) const override;
 	
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override;
 	
-	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const override;
 };
 
 
@@ -57,11 +57,11 @@ public:
 
 	virtual ~BinaryDomainBoundsConstraint() {};
 
-	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const;
+	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const override;
 	
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override;
 	
-	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const override;
 };
 
 //! For every action, if any of its effects affects a bounded-domain variable, we want to place

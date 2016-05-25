@@ -68,7 +68,7 @@ protected:
 	std::vector<VariableIdx> effect_lhs_variables;
 	
 	//! See parent class description
-	void index();
+	void index() override;
 	
 	//! Preprocess the action to store the IDs of direct and indirect state variables
 	virtual void index_scopes();

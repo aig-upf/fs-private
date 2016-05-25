@@ -28,8 +28,10 @@ def locate_source_files(base_dir, pattern):
 			matches.append(os.path.join(root, filename))
 	return matches
 
+# Read the preferred compiler from the environment - if none specified, choose CLANG if possible
+default_compiler = 'clang++' if which("clang++") else 'g++'
+gcc = os.environ.get('CXX', default_compiler)
 
-gcc = 'clang' if which('clang') and ARGUMENTS.get('gcc', 'clang') != 'g++' else 'g++'
 env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 
 if env['edebug']:
