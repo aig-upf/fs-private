@@ -27,18 +27,18 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 		("out", po::value<std::string>()->default_value("."),                     "The directory where the results data is to be output.");
 
 	po::variables_map vm;
+	
 	try {
 		po::store(po::command_line_parser(argc, argv).options(description).run(), vm);
+		
+		if (vm.count("help")) {
+			std::cout << description << "\n";
+			exit(0);
+		}
 		po::notify(vm);
-	} catch(const boost::program_options::invalid_option_value& ex) {
-		std::cout << "Wrong parameter types:";
-		std::cout << ex.what() << std::endl;
+	} catch(const std::exception& ex) {
+		std::cout << "Error with command-line options:" << ex.what() << std::endl;
 		std::cout << std::endl << description << std::endl;
-		throw std::runtime_error("Wrong engine options");
-	}
-
-	if (vm.count("help")) {
-		std::cout << description << "\n";
 		exit(0);
 	}
 
