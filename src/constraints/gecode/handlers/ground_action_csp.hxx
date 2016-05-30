@@ -19,7 +19,11 @@ public:
 
 	//! Constructors / Destructor
 	GroundActionCSP(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	virtual ~GroundActionCSP() {}
+	~GroundActionCSP() = default;
+	GroundActionCSP(const GroundActionCSP&) = delete;
+	GroundActionCSP(GroundActionCSP&&) = delete;
+	GroundActionCSP& operator=(const GroundActionCSP&) = delete;
+	GroundActionCSP& operator=(GroundActionCSP&&) = delete;
 	
 	const GroundAction& get_action() const override { return _action; }
 	

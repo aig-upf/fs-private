@@ -13,7 +13,7 @@ namespace fs0 { namespace drivers {
 //! A creator for a Breadth-First Search with Novelty pruning engine
 class IteratedWidthDriver : public Driver {
 public:
-	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const;
+	std::unique_ptr<FSGroundSearchAlgorithm> create(const Config& config, const GroundStateModel& model) const;
 };
 
 } } // namespaces

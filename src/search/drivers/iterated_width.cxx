@@ -5,7 +5,7 @@
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FS0SearchAlgorithm> IteratedWidthDriver::create(const Config& config, const GroundStateModel& model) const {
+std::unique_ptr<FSGroundSearchAlgorithm> IteratedWidthDriver::create(const Config& config, const GroundStateModel& model) const {
 	
 	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
 	NoveltyFeaturesConfiguration feature_configuration(config);
@@ -14,8 +14,8 @@ std::unique_ptr<FS0SearchAlgorithm> IteratedWidthDriver::create(const Config& co
 	LPT_INFO("main", "\tMax novelty: " << max_novelty);
 	LPT_INFO("main", "\tFeatiue extaction: " << feature_configuration);
 	
-	FS0SearchAlgorithm* engine = new FS0IWAlgorithm(model, 1, max_novelty, feature_configuration);
-	return std::unique_ptr<FS0SearchAlgorithm>(engine);
+	FSGroundSearchAlgorithm* engine = new FS0IWAlgorithm(model, 1, max_novelty, feature_configuration);
+	return std::unique_ptr<FSGroundSearchAlgorithm>(engine);
 }
 
 } } // namespaces

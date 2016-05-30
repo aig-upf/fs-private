@@ -16,9 +16,9 @@ public:
 	//! The Breadth-First Search engine uses a simple blind-search node
 	typedef BlindSearchNode<fs0::State> SearchNode;
 	
-	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const {
-		FS0SearchAlgorithm* engine = new aptk::StlBreadthFirstSearch<SearchNode, GroundStateModel>(model);
-		return std::unique_ptr<FS0SearchAlgorithm>(engine);
+	std::unique_ptr<FSGroundSearchAlgorithm> create(const Config& config, const GroundStateModel& model) const {
+		FSGroundSearchAlgorithm* engine = new aptk::StlBreadthFirstSearch<SearchNode, GroundStateModel>(model);
+		return std::unique_ptr<FSGroundSearchAlgorithm>(engine);
 	}
 	
 };

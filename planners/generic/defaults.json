@@ -9,5 +9,6 @@
 	"goal_resolution": "full",
 	"goal_value_selection": "min_hmax",
 	"action_value_selection": "min_val",
-	"support_priority": "first"
+	"support_priority": "first",
+	"reachability_analysis": "true"
 }

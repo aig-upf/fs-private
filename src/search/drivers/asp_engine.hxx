@@ -13,7 +13,7 @@ namespace fs0 { namespace drivers {
 //! An engine creator for an AStar search coupled with the (optimal) ASP-based h^+ admissible heuristic.
 class ASPEngine : public Driver {
 public:
-	std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& problem) const;
+	std::unique_ptr<FSGroundSearchAlgorithm> create(const Config& config, const GroundStateModel& problem) const;
 	
 protected:
 	//! Check that the problem is suitable for this type of engine

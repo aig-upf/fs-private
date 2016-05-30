@@ -6,7 +6,7 @@
 namespace fs0 { namespace drivers {
 
 FS0IWAlgorithm::FS0IWAlgorithm(const GroundStateModel& model, unsigned initial_max_width, unsigned final_max_width, const NoveltyFeaturesConfiguration& feature_configuration)
-	: FS0SearchAlgorithm(model), _current_max_width(initial_max_width), _final_max_width(final_max_width), _feature_configuration(feature_configuration)
+	: FSGroundSearchAlgorithm(model), _current_max_width(initial_max_width), _final_max_width(final_max_width), _feature_configuration(feature_configuration)
 {
 	setup_base_algorithm(_current_max_width);
 }
@@ -16,7 +16,7 @@ FS0IWAlgorithm::~FS0IWAlgorithm() {
 }
 
 
-bool FS0IWAlgorithm::search(const State& state, typename FS0SearchAlgorithm::Plan& solution) {
+bool FS0IWAlgorithm::search(const State& state, typename FSGroundSearchAlgorithm::Plan& solution) {
 	while(_current_max_width <= _final_max_width) {
 		if(_algorithm->search(state, solution)) return true;
 		++_current_max_width;

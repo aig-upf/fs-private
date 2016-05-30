@@ -18,7 +18,7 @@ namespace fs0 { namespace drivers {
 
 //! The original SIW(k) algorithm adapted to FStrips.
 //! BEWARE that currently we do not implement any reachability test (so indeed this is not at all the original SIW(k)... yet)
-class FS0SIWAlgorithm : public FS0SearchAlgorithm {
+class FS0SIWAlgorithm : public FSGroundSearchAlgorithm {
 public:
 	//! IW uses a simple blind-search node
 	typedef BlindSearchNode<State> SearchNode;
@@ -33,7 +33,7 @@ public:
 	typedef FS0IWAlgorithm BaseAlgorithm;
 	
 	FS0IWAlgorithm(const GroundStateModel& model, unsigned max_width, const NoveltyFeaturesConfiguration& feature_configuration)
-		: FS0SearchAlgorithm(model), _max_width(max_width), _feature_configuration(feature_configuration)
+		: FSGroundSearchAlgorithm(model), _max_width(max_width), _feature_configuration(feature_configuration)
 	{
 		setup_base_algorithm(_max_width);
 	}
@@ -43,7 +43,7 @@ public:
 	}
 	
 	
-	virtual bool search(const State& state, typename FS0SearchAlgorithm::Plan& solution) {
+	virtual bool search(const State& state, typename FSGroundSearchAlgorithm::Plan& solution) {
 		while(_current_max_width <= _final_max_width) {
 			if(_algorithm->search(state, solution)) return true;
 			++_current_max_width;

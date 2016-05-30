@@ -38,11 +38,9 @@ public:
 class CSPTranslator {
 public:
 
-	CSPTranslator(GecodeCSP& base_csp) : _base_csp(base_csp) {};
+	CSPTranslator(GecodeCSP& base_csp) : _base_csp(base_csp) {}
 	virtual ~CSPTranslator() {}
-
-	//! Forbid copy constructor
-	CSPTranslator(const CSPTranslator&) = delete;
+	CSPTranslator(const CSPTranslator& other) = delete;
 	CSPTranslator(CSPTranslator&&) = delete;
 	CSPTranslator& operator=(const CSPTranslator& rhs) = delete;
 	CSPTranslator& operator=(CSPTranslator&& rhs) = delete;

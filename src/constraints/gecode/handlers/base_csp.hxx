@@ -22,11 +22,18 @@ class BaseCSP {
 public:
 	BaseCSP(const TupleIndex& tuple_index, bool approximate);
 	virtual ~BaseCSP() = default;
+	BaseCSP(const BaseCSP&) = delete;
+	BaseCSP(BaseCSP&&) = delete;
+	BaseCSP& operator=(const BaseCSP&) = delete;
+	BaseCSP& operator=(BaseCSP&&) = delete;
 	
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
 	GecodeCSP* instantiate(const RPGIndex& graph) const;
 	GecodeCSP* instantiate(const State& state) const;
+	GecodeCSP* instantiate_wo_novelty(const RPGIndex& graph) const;
+	
+	void update_csp(std::unique_ptr<GecodeCSP>&& csp);
 	
 	const CSPTranslator& getTranslator() const { return _translator; }
 
@@ -37,12 +44,12 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const BaseCSP& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const { return print(os, _base_csp); }
+	std::ostream& print(std::ostream& os) const { return print(os, *_base_csp); }
 	std::ostream& print(std::ostream& os, const GecodeCSP& csp) const;
 	
 protected:
 	//! The base Gecode CSP
-	GecodeCSP _base_csp;
+	std::unique_ptr<GecodeCSP> _base_csp;
 	
 	//! Whether the underlying CSP gecode space has already been detected as failed.
 	bool _failed;

@@ -16,9 +16,10 @@
 using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
-std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> FullyLiftedDriver::create(const Config& config, LiftedStateModel& model) const {
+	
+std::unique_ptr<FSLiftedSearchAlgorithm>
+FullyLiftedDriver::create(const Config& config, LiftedStateModel& model) const {
 	LPT_INFO("main", "Using the Fully-lifted driver");
-
 	const Problem& problem = model.getTask();
 	
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
@@ -32,11 +33,12 @@ std::unique_ptr<aptk::SearchAlgorithm<LiftedStateModel>> FullyLiftedDriver::crea
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
 	GecodeCRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
-	return std::unique_ptr<LiftedEngine>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, LiftedStateModel>(model, std::move(heuristic), delayed));
+	return std::unique_ptr<FSLiftedSearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, LiftedStateModel>(model, std::move(heuristic), delayed));
 }
 
 
-LiftedStateModel FullyLiftedDriver::setup(const Config& config, Problem& problem) const {
+LiftedStateModel
+FullyLiftedDriver::setup(const Config& config, Problem& problem) const {
 	
 	Validation::check_no_conditional_effects(problem);
 	std::vector<const PartiallyGroundedAction*> actions = ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance());
@@ -47,6 +49,5 @@ LiftedStateModel FullyLiftedDriver::setup(const Config& config, Problem& problem
 	model.set_handlers(LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
 	return model;
 }
-
 
 } } // namespaces

@@ -20,7 +20,7 @@ using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator::create(const Config& config, const GroundStateModel& model) const {
+std::unique_ptr<FSGroundSearchAlgorithm> GBFSConstrainedHeuristicsCreator::create(const Config& config, const GroundStateModel& model) const {
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
 	
@@ -38,11 +38,11 @@ std::unique_ptr<FS0SearchAlgorithm> GBFSConstrainedHeuristicsCreator::create(con
 	
 	if (config.getHeuristic() == "hff") {
 		GecodeCRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
-		return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, GroundStateModel>(model, std::move(heuristic), delayed));
+		return std::unique_ptr<FSGroundSearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, GroundStateModel>(model, std::move(heuristic), delayed));
 	} else {
 		assert(config.getHeuristic() == "hmax");
 		GecodeCHMax heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
-		return std::unique_ptr<FS0SearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeCHMax, GroundStateModel>(model, std::move(heuristic), delayed));
+		return std::unique_ptr<FSGroundSearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeCHMax, GroundStateModel>(model, std::move(heuristic), delayed));
 	}
 }
 

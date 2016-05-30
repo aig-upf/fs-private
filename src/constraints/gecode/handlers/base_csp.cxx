@@ -13,29 +13,43 @@
 namespace fs0 { namespace gecode {
 
 BaseCSP::BaseCSP(const TupleIndex& tuple_index, bool approximate) :
-	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _tuple_index(tuple_index)
+	_base_csp(new GecodeCSP()),
+	_failed(false),
+	_approximate(approximate),
+	_translator(*_base_csp),
+	_tuple_index(tuple_index)
 {}
 
-void BaseCSP::registerTermVariables(const fs::Term* term, CSPTranslator& translator) {
+void
+BaseCSP::update_csp(std::unique_ptr<GecodeCSP>&& csp) { 
+	_base_csp = std::move(csp);
+}
+
+
+void
+BaseCSP::registerTermVariables(const fs::Term* term, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerVariables(term, translator);
 }
 
-void BaseCSP::registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator) {
+void
+BaseCSP::registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*condition);
 	assert(component_translator);
 	component_translator->registerVariables(condition, translator);
 }
 
-void BaseCSP::registerTermConstraints(const fs::Term* term, CSPTranslator& translator) {
+void
+BaseCSP::registerTermConstraints(const fs::Term* term, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerConstraints(term, translator);
 }
 
 
-void BaseCSP::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) {
+void
+BaseCSP::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*formula);
 	assert(component_translator);
 	component_translator->registerConstraints(formula, translator);
@@ -43,7 +57,8 @@ void BaseCSP::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTr
 
 //! A helper
 template <typename T>
-GecodeCSP* _instantiate(const GecodeCSP& csp,
+GecodeCSP*
+_instantiate(const GecodeCSP& csp,
 						   const CSPTranslator& translator,
 						   const std::vector<ExtensionalConstraint>& extensional_constraints,
 						   const T& layer) {
@@ -58,9 +73,17 @@ GecodeCSP* _instantiate(const GecodeCSP& csp,
 	return clone;
 }
 
-GecodeCSP* BaseCSP::instantiate(const RPGIndex& graph) const {
+GecodeCSP*
+BaseCSP::instantiate_wo_novelty(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	GecodeCSP* csp = _instantiate(_base_csp, _translator, _extensional_constraints, graph);
+	GecodeCSP* csp = _instantiate(*_base_csp, _translator, _extensional_constraints, graph);
+	return csp;
+}
+
+GecodeCSP*
+BaseCSP::instantiate(const RPGIndex& graph) const {
+	if (_failed) return nullptr;
+	GecodeCSP* csp = _instantiate(*_base_csp, _translator, _extensional_constraints, graph);
 	if (!csp) return csp; // The CSP was detected unsatisfiable even before propagating anything
 	
 	// Post the novelty constraint
@@ -69,13 +92,15 @@ GecodeCSP* BaseCSP::instantiate(const RPGIndex& graph) const {
 	return csp;
 }
 
-GecodeCSP* BaseCSP::instantiate(const State& state) const {
+GecodeCSP*
+BaseCSP::instantiate(const State& state) const {
 	if (_failed) return nullptr;
-	return _instantiate(_base_csp, _translator, _extensional_constraints, state);
+	return _instantiate(*_base_csp, _translator, _extensional_constraints, state);
 }
 
 
-void BaseCSP::register_csp_variables() {
+void
+BaseCSP::register_csp_variables() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	//! Register all CSP variables that arise from the logical terms
@@ -101,7 +126,8 @@ void BaseCSP::register_csp_variables() {
 	for (auto condition:_all_formulas) registerFormulaVariables(condition, _translator);
 }
 
-void BaseCSP::register_csp_constraints() {
+void
+BaseCSP::register_csp_constraints() {
 // 	unsigned i = 0; _unused(i);
 	
 	//! Register all CSP variables that arise from the logical terms
@@ -128,11 +154,13 @@ void BaseCSP::register_csp_constraints() {
 	}
 }
 
-std::ostream& BaseCSP::print(std::ostream& os, const GecodeCSP& csp) const {
+std::ostream&
+BaseCSP::print(std::ostream& os, const GecodeCSP& csp) const {
 	return _translator.print(os, csp);
 }
 
-void BaseCSP::createCSPVariables(bool use_novelty_constraint) {
+void
+BaseCSP::createCSPVariables(bool use_novelty_constraint) {
 	register_csp_variables();
 	
 	if (use_novelty_constraint) {
@@ -141,7 +169,8 @@ void BaseCSP::createCSPVariables(bool use_novelty_constraint) {
 	_translator.perform_registration();
 }
 
-void BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms) {
+void
+BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::unordered_set<const fs::Term*> inserted_terms;
 	std::unordered_set<const fs::AtomicFormula*> inserted_conditions;

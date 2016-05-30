@@ -41,10 +41,6 @@ long SmartRPG::evaluate(const State& seed) {
 		_goal_handler->init_value_selector(&graph);
 	}
 	
-	// Copy the sets of possible tuples and prune the ones corresponding to the seed state
-// 	std::vector<Tupleset> tuplesets(_all_tuples_by_symbol);
-// 	prune_tuplesets(seed, tuplesets);
-	
 	while (true) {
 		
 		// Build a new layer of the RPG.
@@ -83,6 +79,33 @@ long SmartRPG::evaluate(const State& seed) {
 
 long SmartRPG::computeHeuristic(const RPGIndex& graph) {
 	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler);
+}
+
+//! Computes the full RPG until a fixpoint is reached, disregarding goal.
+RPGIndex SmartRPG::compute_full_graph(const State& seed) {
+	LPT_EDEBUG("heuristic", std::endl << "Computing Full RPG from seed state: " << std::endl << seed);
+	
+	RPGIndex graph(seed, _tuple_index, _extension_handler);
+	
+	// See method 'evaluate' for comments on the logic of this loop
+	while (true) {
+		LPT_EDEBUG("heuristic", "Opening layer of the full RPG");
+		for (const EffectHandlerPtr& manager:_managers) {
+			TupleIdx achievable = manager->get_achievable_tuple();
+			if (achievable != INVALID_TUPLE && graph.reached(achievable)) continue;
+			
+			// Otherwise, we process the effect to derive the new tuples that it can produce on the current RPG layer
+			manager->seek_novel_tuples(graph);
+		}
+		
+		if (!graph.hasNovelTuples()) break;
+
+		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
+		LPT_EDEBUG("heuristic", "New RPG Layer: " << graph);
+	}
+	
+	LPT_EDEBUG("heuristic", "Full RPG is: " << graph);
+	return graph;
 }
 
 } } // namespaces

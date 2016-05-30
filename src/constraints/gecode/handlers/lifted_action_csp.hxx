@@ -22,7 +22,11 @@ public:
 	static std::vector<std::shared_ptr<LiftedActionCSP>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
 	LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	virtual ~LiftedActionCSP() = default;
+	~LiftedActionCSP() = default;
+	LiftedActionCSP(const LiftedActionCSP&) = delete;
+	LiftedActionCSP(LiftedActionCSP&&) = delete;
+	LiftedActionCSP& operator=(const LiftedActionCSP&) = delete;
+	LiftedActionCSP& operator=(LiftedActionCSP&&) = delete;
 	
 	bool init(bool use_novelty_constraint) override;
 

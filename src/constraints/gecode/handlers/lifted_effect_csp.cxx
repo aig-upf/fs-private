@@ -14,42 +14,76 @@
 namespace fs0 { namespace gecode {
 
 
-std::vector<std::unique_ptr<LiftedEffectCSP>> LiftedEffectCSP::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::unique_ptr<LiftedEffectCSP>>
+LiftedEffectCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::unique_ptr<LiftedEffectCSP>> handlers;
 	
 	for (const PartiallyGroundedAction* schema:schemata) {
 		LPT_DEBUG("main", "Smart grounding of action " << *schema << "...");
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {
-			for (const PartiallyGroundedAction* smart_action:ActionGrounder::compile_action_parameters_away(schema, eff_idx, info)) {
-				const fs::ActionEffect* effect = smart_action->getEffects().at(eff_idx);
+			for (const PartiallyGroundedAction* action:ActionGrounder::compile_action_parameters_away(schema, eff_idx, info)) {
+				const fs::ActionEffect* effect = action->getEffects().at(eff_idx);
 				
-				LPT_DEBUG("main", "\tPartially grounded action: " << *smart_action);
+				LPT_DEBUG("main", "\tPartially grounded action: " << *action);
 				
 				if (effect->is_del()) { // Ignore delete effects
 					LPT_DEBUG("main", "\tIgnoring delete effect \"" << *effect);
-					delete smart_action;
+					delete action;
 					continue;
 				}
 				
 				for (const fs::ActionEffect* flat_effect:ActionGrounder::compile_nested_fluents_away(effect, info)) {
 					
-					auto handler = std::unique_ptr<LiftedEffectCSP>(new LiftedEffectCSP(*smart_action, flat_effect, tuple_index, approximate));
+					auto handler = std::unique_ptr<LiftedEffectCSP>(new LiftedEffectCSP(*action, flat_effect, tuple_index, approximate));
 					if (handler->init(novelty)) {
-						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in (possibly partially) grounded action " << *smart_action);
+						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in (possibly partially) grounded action " << *action);
 						handlers.push_back(std::move(handler));
 					} else {
 						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in non-applicable CSP");
 					}
 				}
 				
-				delete smart_action;
+				delete action;
 			}
 		}
 	}
 	return handlers;
 }
 
+
+void
+LiftedEffectCSP::prune_unreachable(std::vector<std::unique_ptr<LiftedEffectCSP>>& managers, const RPGIndex& rpg) {
+	LPT_INFO("main", "Pruning \"unreachable\" effect CSPs from a set of " << managers.size() << " CSPs");
+	
+	unsigned original_size = managers.size();
+	
+	// We iterate through all CSPs, and instantiate them with the full fixpoint'ed RPG,
+	// discarding all those CSPs that do not have at least one solution, and constraining the others
+	// so that only the domains given by the RPG are taken into account
+	for(auto it = managers.begin(); it != managers.end();) {
+		bool reachable = false;
+		std::unique_ptr<LiftedEffectCSP>& manager = *it;
+		if (GecodeCSP* csp = manager->instantiate_wo_novelty(rpg)) {
+			Gecode::DFS<GecodeCSP> engine(csp);
+			
+			if (GecodeCSP* solution = engine.next()) { // The CSP has at least one solution, thus is relevant for the problem
+				manager->update_csp(std::unique_ptr<GecodeCSP>(csp));
+				reachable = true;
+				delete solution;
+			} else {
+				delete csp;
+			}
+		}
+		
+		// If the effect is not applicable, we can safely erase it from the set of considered effects.
+		if (!reachable) it = managers.erase(it);
+		else ++it;
+	}
+	
+	LPT_INFO("main", "A total of " << original_size - managers.size() << " effect CSPs were deemed unreachable and discarded");
+	std::cout << "A total of " << original_size - managers.size() << " effect CSPs were deemed unreachable and discarded" << std::endl;
+}
 
 LiftedEffectCSP::LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
 	LiftedActionCSP(action, tuple_index, approximate, true), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE)
@@ -59,7 +93,8 @@ LiftedEffectCSP::~LiftedEffectCSP() {
 	delete _effects[0];
 }
 
-bool LiftedEffectCSP::init(bool use_novelty_constraint) {
+bool
+LiftedEffectCSP::init(bool use_novelty_constraint) {
 	if (!LiftedActionCSP::init(use_novelty_constraint)) return false;
 	
 	_lhs_symbol = index_lhs_symbol(get_effect());
@@ -73,7 +108,8 @@ bool LiftedEffectCSP::init(bool use_novelty_constraint) {
 	return true;
 }
 
-TupleIdx LiftedEffectCSP::detect_achievable_tuple() const {
+TupleIdx
+LiftedEffectCSP::detect_achievable_tuple() const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	TupleIdx achievable_tuple_idx = INVALID_TUPLE;
@@ -93,7 +129,8 @@ TupleIdx LiftedEffectCSP::detect_achievable_tuple() const {
 	return achievable_tuple_idx;
 }
 
-ValueTuple LiftedEffectCSP::index_tuple_indexes(const fs::ActionEffect* effect) {
+ValueTuple
+LiftedEffectCSP::index_tuple_indexes(const fs::ActionEffect* effect) {
 	auto lhs_statevar = check_valid_effect(effect);
 	
 	ValueTuple variables;
@@ -105,28 +142,33 @@ ValueTuple LiftedEffectCSP::index_tuple_indexes(const fs::ActionEffect* effect) 
 	return variables;
 }
 
-void LiftedEffectCSP::log() const {
+void
+LiftedEffectCSP::log() const {
 	assert(_effects.size() == 1);
 	LPT_EDEBUG("heuristic", "Processing effect schema \"" << *get_effect() << " of action " << _action);
 }
 
-const fs::ActionEffect* LiftedEffectCSP::get_effect() const { 
+const fs::ActionEffect*
+LiftedEffectCSP::get_effect() const { 
 	assert(_effects.size() == 1);
 	return _effects[0];
 }
 
-unsigned LiftedEffectCSP::index_lhs_symbol(const fs::ActionEffect* effect) {
+unsigned
+LiftedEffectCSP::index_lhs_symbol(const fs::ActionEffect* effect) {
 	return check_valid_effect(effect)->getSymbolId();
 }
 
-const fs::StateVariable* LiftedEffectCSP::check_valid_effect(const fs::ActionEffect* effect) {
+const fs::StateVariable*
+LiftedEffectCSP::check_valid_effect(const fs::ActionEffect* effect) {
 	auto lhs_statevar = dynamic_cast<const fs::StateVariable*>(effect->lhs());
 	if (!lhs_statevar) throw std::runtime_error("LiftedEffectCSP accepts only effects with state-variable (fluent-less) heads");
 	return lhs_statevar;
 }
 
 
-void LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
+void
+LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
 	if (GecodeCSP* csp = instantiate(rpg)) {
 		if (!csp->checkConsistency()) {
 			LPT_EDEBUG("heuristic", "The effect CSP cannot produce any new tuple");
@@ -146,7 +188,8 @@ void LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
 	}
 }
 
-TupleIdx LiftedEffectCSP::compute_reached_tuple(const GecodeCSP* solution) const {
+TupleIdx
+LiftedEffectCSP::compute_reached_tuple(const GecodeCSP* solution) const {
 	TupleIdx tuple_idx = _achievable_tuple_idx;
 	if (tuple_idx == INVALID_TUPLE) { // i.e. we have a functional effect, and thus need to factor the function result into the tuple.
 		ValueTuple tuple(_effect_tuple); // Copy the tuple
@@ -156,7 +199,8 @@ TupleIdx LiftedEffectCSP::compute_reached_tuple(const GecodeCSP* solution) const
 	return tuple_idx;
 }
 
-void LiftedEffectCSP::process_effect_solution(const GecodeCSP* solution, RPGIndex& rpg) const {
+void
+LiftedEffectCSP::process_effect_solution(const GecodeCSP* solution, RPGIndex& rpg) const {
 	TupleIdx tuple_idx = compute_reached_tuple(solution);
 	
 	bool reached = rpg.reached(tuple_idx);
@@ -170,20 +214,24 @@ void LiftedEffectCSP::process_effect_solution(const GecodeCSP* solution, RPGInde
 }
 
 
-void LiftedEffectCSP::create_novelty_constraint() {
+void
+LiftedEffectCSP::create_novelty_constraint() {
 	_novelty = new EffectNoveltyConstraint(_translator, get_effect());
 }
 
-void LiftedEffectCSP::post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const {
+void
+LiftedEffectCSP::post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const {
 	if (_novelty) _novelty->post_constraint(csp, rpg);
 }
 
 
-const std::vector<const fs::ActionEffect*>& LiftedEffectCSP::get_effects() const {
+const std::vector<const fs::ActionEffect*>&
+LiftedEffectCSP::get_effects() const {
 	return _effects;
 }
 
-const fs::Formula* LiftedEffectCSP::get_precondition() const {
+const fs::Formula*
+LiftedEffectCSP::get_precondition() const {
 	return _action.getPrecondition();
 }
 

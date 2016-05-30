@@ -18,7 +18,7 @@
 namespace fs0 { namespace drivers {
 
 //! The original IW algorithm, adapted to FStrips
-class FS0IWAlgorithm : public FS0SearchAlgorithm {
+class FS0IWAlgorithm : public FSGroundSearchAlgorithm {
 public:
 	//! IW uses a simple blind-search node
 	typedef BlindSearchNode<State> SearchNode;
@@ -36,7 +36,7 @@ public:
 	
 	virtual ~FS0IWAlgorithm();
 	
-	virtual bool search(const State& state, typename FS0SearchAlgorithm::Plan& solution);
+	virtual bool search(const State& state, typename FSGroundSearchAlgorithm::Plan& solution);
 	
 	void setup_base_algorithm(unsigned max_width);
 	

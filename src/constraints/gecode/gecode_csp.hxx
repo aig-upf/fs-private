@@ -15,6 +15,10 @@ namespace fs0 { namespace gecode {
 class GecodeCSP : public Gecode::Space {
 public:
 	GecodeCSP();
+	GecodeCSP(GecodeCSP&) = delete;
+	GecodeCSP(GecodeCSP&&) = default;
+	GecodeCSP& operator=(const GecodeCSP&) = delete;
+	GecodeCSP& operator=(GecodeCSP&&) = default;
 	~GecodeCSP();
 	
 	//! Cloning constructor, required by Gecode
@@ -23,9 +27,6 @@ public:
 	//! Shallow copy operator, see notes on search in Gecode to
 	//! get an idea of what is being "actually" copied
 	virtual Gecode::Space* copy(bool share);
-
-	//! Standard copy constructor
-	GecodeCSP(GecodeCSP& other) = delete;
 
 	bool checkConsistency();
 

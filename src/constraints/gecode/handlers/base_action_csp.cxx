@@ -33,7 +33,7 @@ bool BaseActionCSP::init(bool use_novelty_constraint) {
 	index();
 	
 	createCSPVariables(use_novelty_constraint);
-	Helper::postBranchingStrategy(_base_csp);
+	Helper::postBranchingStrategy(*_base_csp);
 	
 // 	LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: no constraints): " << _translator); // Uncomment for extreme debugging
 
@@ -48,7 +48,7 @@ bool BaseActionCSP::init(bool use_novelty_constraint) {
 	LPT_DEBUG("translation", "Action " << get_action() << " results in CSP handler:" << std::endl << *this);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
-	Gecode::SpaceStatus st = _base_csp.status();
+	Gecode::SpaceStatus st = _base_csp->status();
 	if (st == Gecode::SpaceStatus::SS_FAILED) return false;
 	
 	index_scopes(); // This needs to be _after_ the CSP variable registration
@@ -181,9 +181,9 @@ void BaseActionCSP::registerEffectConstraints(const fs::ActionEffect* effect) {
 	
 	// Impose a bound on the RHS based on the type of the LHS
 	if (ProblemInfo::getInstance().isBoundedType(effect->lhs()->getType())) {
-		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), _base_csp);
+		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), *_base_csp);
 		const auto& lhs_bounds = effect->lhs()->getBounds();
-		Gecode::dom(_base_csp, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
+		Gecode::dom(*_base_csp, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
 	}
 }
 

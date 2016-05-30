@@ -39,6 +39,11 @@ public:
 	//! To be subclassed in other RPG-based heuristics such as h_max
 	virtual long computeHeuristic(const RPGIndex& graph);
 	
+	RPGIndex compute_full_graph(const State& seed);
+
+	std::vector<EffectHandlerPtr>&  get_managers() { return _managers; }
+	void set_managers(std::vector<EffectHandlerPtr>&& managers) { _managers = std::move(managers); }
+	
 protected:
 	//! The actual planning problem
 	const Problem& _problem;
