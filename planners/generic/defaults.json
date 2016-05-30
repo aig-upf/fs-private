@@ -10,5 +10,6 @@
 	"goal_value_selection": "min_hmax",
 	"action_value_selection": "min_val",
 	"support_priority": "first",
-	"reachability_analysis": "true"
+	"reachability_analysis": "true",
+	"ehc": "true"
 }

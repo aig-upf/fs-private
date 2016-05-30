@@ -4,15 +4,17 @@
 
 #include <aptk2/tools/resources_control.hxx>
 
+#include <languages/fstrips/language.hxx>
 #include <problem.hxx>
 #include <search/search.hxx>
 #include <search/drivers/registry.hxx>
 #include <search/drivers/fully_lifted_driver.hxx>
 #include <search/drivers/smart_lifted_driver.hxx>
+#include <search/drivers/smart_effect_driver.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
-#include <languages/fstrips/language.hxx>
 #include <state.hxx>
+#include <actions/ground_action_iterator.hxx>
 
 
 namespace fs0 { namespace drivers {
@@ -89,6 +91,13 @@ void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Confi
 		
 		SmartLiftedDriver driver;
 		fs0::LiftedStateModel model = driver.setup(config, problem);
+		auto engine = driver.create(config, model);
+		do_search(*engine, model, out_dir, start_time);
+		
+	} else if (driver_tag == "smart") {
+		
+		SmartEffectDriver driver;
+		GroundStateModel model = driver.setup(config, problem);
 		auto engine = driver.create(config, model);
 		do_search(*engine, model, out_dir, start_time);
 		

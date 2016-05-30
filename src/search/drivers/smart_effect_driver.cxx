@@ -1,5 +1,6 @@
 
 #include <search/drivers/smart_effect_driver.hxx>
+
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <state.hxx>
@@ -7,7 +8,7 @@
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
 #include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
-#include <heuristics/relaxed_plan/smart_rpg.hxx>
+
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <utils/support.hxx>
 
@@ -15,8 +16,8 @@ using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FSGroundSearchAlgorithm>
-SmartEffectDriver::create(const Config& config, const GroundStateModel& model) const {
+SmartEffectDriver::Engine
+SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 	LPT_INFO("main", "Using the smart-effect driver");
 	const Problem& problem = model.getTask();
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
@@ -39,7 +40,17 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) c
 		LiftedEffectCSP::prune_unreachable(heuristic.get_managers(), graph);
 	}
 	
-	return std::unique_ptr<FSGroundSearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, SmartRPG, GroundStateModel>(model, std::move(heuristic), delayed));
+	EHCSearch<SmartRPG>* ehc = nullptr;
+	if (config.getOption<bool>("ehc")) {
+		// TODO Apply reachability analysis for the EHC heuristic as well
+		auto ehc_managers = LiftedEffectCSP::create(actions, tuple_index, approximate, novelty);
+		SmartRPG ehc_heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(ehc_managers), extension_handler);
+		ehc = new EHCSearch<SmartRPG>(problem, std::move(ehc_heuristic));
+	}
+	
+	FSGroundSearchAlgorithm* gbfs = new aptk::StlBestFirstSearch<SearchNode, SmartRPG, GroundStateModel>(model, std::move(heuristic), delayed);
+	
+	return Engine(new EHCThenGBFSSearch<SmartRPG>(problem, gbfs, ehc));
 }
 
 GroundStateModel

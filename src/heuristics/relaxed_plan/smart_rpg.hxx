@@ -4,6 +4,7 @@
 #include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <constraints/gecode/handlers/formula_csp.hxx>
+#include <constraints/gecode/handlers/lifted_effect_csp.hxx>
 #include <utils/tuple_index.hxx>
 #include <unordered_set>
 
@@ -14,7 +15,6 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class LiftedEffectCSP;
 class RPGIndex;
 
 class SmartRPG {

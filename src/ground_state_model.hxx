@@ -14,10 +14,10 @@ public:
 	GroundStateModel(const Problem& problem) : task(problem) {}
 	~GroundStateModel() = default;
 	
-	GroundStateModel(const GroundStateModel& other) = default;
-	GroundStateModel& operator=(const GroundStateModel& other) = default;
-	GroundStateModel(GroundStateModel&& other) = default;
-	GroundStateModel& operator=(GroundStateModel&& rhs) = default;
+	GroundStateModel(const GroundStateModel&) = default;
+	GroundStateModel& operator=(const GroundStateModel&) = default;
+	GroundStateModel(GroundStateModel&&) = default;
+	GroundStateModel& operator=(GroundStateModel&&) = default;
 
 	//! Returns initial state of the problem
 	State init() const;

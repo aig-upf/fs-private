@@ -7,7 +7,6 @@
 #include <search/drivers/gbfs_novelty.hxx>
 // #include <search/drivers/asp_engine.hxx>
 #include <search/drivers/unreached_atom_driver.hxx>
-#include <search/drivers/smart_effect_driver.hxx>
 #include <search/drivers/native_driver.hxx>
 // #include <heuristics/relaxed_plan/direct_crpg.hxx>
 // #include <heuristics/relaxed_plan/gecode_crpg.hxx>
@@ -37,7 +36,6 @@ EngineRegistry::EngineRegistry() {
 	add("native",  new NativeDriver());
 	add("lite",  new NativeDriver());
 	add("unreached_atom",  new UnreachedAtomDriver());
-	add("smart",  new SmartEffectDriver());
 	
 	add("iw",  new IteratedWidthDriver());
 	add("novelty_best_first",  new GBFSNoveltyDriver());

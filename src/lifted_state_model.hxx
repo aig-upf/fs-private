@@ -20,10 +20,10 @@ public:
 	LiftedStateModel(const Problem& problem) : task(problem) {}
 	~LiftedStateModel() = default;
 	
-	LiftedStateModel(const LiftedStateModel& other) = default;
-	LiftedStateModel& operator=(const LiftedStateModel& other) = default;
-	LiftedStateModel(LiftedStateModel&& other) = default;
-	LiftedStateModel& operator=(LiftedStateModel&& rhs) = default;
+	LiftedStateModel(const LiftedStateModel&) = default;
+	LiftedStateModel& operator=(const LiftedStateModel&) = default;
+	LiftedStateModel(LiftedStateModel&&) = default;
+	LiftedStateModel& operator=(LiftedStateModel&&) = default;
 
 	//! Returns initial state of the problem
 	State init() const;

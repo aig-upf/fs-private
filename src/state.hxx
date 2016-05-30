@@ -32,10 +32,10 @@ public:
 	
 	//! Default copy constructors and assignment operators - if ever need a custom version, check the git history!
 	// https://bitbucket.org/gfrances/fs0/src/28ce4119f27a537d8f7628c6ca0487d03d5ed0b1/src/state.hxx?at=gecode_integration
-	State(const State& state) = default;
-	State( State&& state ) = default;
-	State& operator=(const State &state) = default;
-	State& operator=(State&& state) = default;
+	State(const State&) = default;
+	State(State&&) = default;
+	State& operator=(const State&) = default;
+	State& operator=(State&&) = default;
 
 	// Check the hash first for performance.
 	bool operator==(const State &rhs) const { return _hash == rhs._hash && _values == rhs._values; }
