@@ -34,18 +34,18 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 	
 	// If necessary, we constrain the state variables domains and even action/effect CSPs that will be used henceforth
 	// by performing a reachability analysis.
-	if (config.getOption<bool>("reachability_analysis")) {
+	if (config.getOption("reachability_analysis")) {
 		LPT_INFO("main", "Applying reachability analysis");
 		RPGIndex graph = heuristic.compute_full_graph(problem.getInitialState());
 		LiftedEffectCSP::prune_unreachable(heuristic.get_managers(), graph);
 	}
 	
 	EHCSearch<SmartRPG>* ehc = nullptr;
-	if (config.getOption<bool>("ehc")) {
+	if (config.getOption("ehc")) {
 		// TODO Apply reachability analysis for the EHC heuristic as well
 		auto ehc_managers = LiftedEffectCSP::create(actions, tuple_index, approximate, novelty);
 		SmartRPG ehc_heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(ehc_managers), extension_handler);
-		ehc = new EHCSearch<SmartRPG>(problem, std::move(ehc_heuristic));
+		ehc = new EHCSearch<SmartRPG>(model, std::move(ehc_heuristic), config.getOption("helpful_actions"));
 	}
 	
 	FSGroundSearchAlgorithm* gbfs = new aptk::StlBestFirstSearch<SearchNode, SmartRPG, GroundStateModel>(model, std::move(heuristic), delayed);

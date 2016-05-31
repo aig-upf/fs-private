@@ -23,7 +23,6 @@ Config& Config::instance() {
 
 template <typename OptionType>
 OptionType parseOption(const pt::ptree& tree, const std::unordered_map<std::string, std::string>& user_options, const std::string& key, std::map<std::string, OptionType> allowed) {
-	
 	std::string parsed;
 	
 	auto it = user_options.find(key);

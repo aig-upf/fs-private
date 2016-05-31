@@ -18,31 +18,44 @@ LiftedPlanExtractor::LiftedPlanExtractor(const RPGIndex& graph, const TupleIndex
 {}
 
 
-long LiftedPlanExtractor::computeRelaxedPlanCost(const std::vector<TupleIdx>& tuples) {
-	enqueueTuples(tuples);
+long LiftedPlanExtractor::computeRelaxedPlanCost(const std::vector<TupleIdx>& goal_support, std::vector<Atom>& relevant) {
+	enqueueTuples(goal_support);
 	
 	while (!pending.empty()) {
 		TupleIdx tuple = pending.front();
-		processTuple(tuple);
+		processTuple(tuple, relevant);
 		pending.pop();
 	}
 	
 	return buildRelaxedPlan();
 }
 
+void LiftedPlanExtractor::enqueueTuples(const std::vector<TupleIdx>& tuples) {
+	for(const auto& tuple:tuples) {
+		pending.push(tuple);
+	}
+}
 
-void LiftedPlanExtractor::processTuple(TupleIdx tuple) {
-	if (_graph.getSeed().contains(_tuple_index.to_atom(tuple))) return; // The atom was already on the seed state, thus has empty support.
+void LiftedPlanExtractor::processTuple(TupleIdx tuple, std::vector<Atom>& relevant) {
+	const Atom& atom = _tuple_index.to_atom(tuple);
+	if (_graph.getSeed().contains(atom)) return; // The atom was already on the seed state, thus has empty support.
 	if (processed.find(tuple) != processed.end()) return; // The atom has already been processed
 	
 	const RPGIndex::TupleSupport& support = _graph.getTupleSupport(tuple);
 	
 	const ActionID* action_id = std::get<1>(support);
 	assert(action_id);
+	unsigned layer_idx = std::get<0>(support);
 // 	std::cout << "Inserting: " << *action_id << " on layer #" << std::get<0>(support) << ", support size: " << std::get<2>(support).size() << std::endl;
-	perLayerSupporters[std::get<0>(support)].insert(action_id);
+	perLayerSupporters[layer_idx].insert(action_id);
 	enqueueTuples(std::get<2>(support)); // Push the full support of the atom
 	processed.insert(tuple); // Tag the atom as processed.
+	
+	// We store all those atoms that have been identified as supports of some action of the relaxed plan
+	// and are on the first layer of the RPG
+	if (layer_idx == 1) {
+		relevant.push_back(atom);
+	}
 }
 
 

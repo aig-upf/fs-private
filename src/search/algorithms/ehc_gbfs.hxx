@@ -10,7 +10,8 @@
 
 namespace fs0 { namespace drivers {
 
-//! Enhanced Hill-Climbing with a generic heuristic evaluator.
+//! A combined search strategy that first applies a given Enhanced Hill-Climbing and then, if the goal was not found,
+//! a standard GBFS.
 template <typename HeuristicT>
 class EHCThenGBFSSearch {
 public:
@@ -26,9 +27,13 @@ public:
 	
 	bool search(const State& state, std::vector<unsigned>& solution) {
 		assert(solution.size()==0);
+		bool result = false;
 		
 		if (_ehc) {
-			if (_ehc->search(state, solution)) {
+			result = _ehc->search(state, solution);
+			expanded += _ehc->expanded;
+			generated += _ehc->generated;
+			if (result) {
 				LPT_INFO("cout", "Solution found in EHC phase");
 				return true;
 			}
@@ -38,7 +43,10 @@ public:
 			solution.clear();
 		}
 
-		return _gbfs->search(state, solution);
+		result = _gbfs->search(state, solution);
+		expanded += _gbfs->expanded;
+		generated += _gbfs->generated;
+		return result;
 	}
 	
 	//! Convenience method
@@ -47,7 +55,6 @@ public:
 	unsigned long expanded = 0;
 	unsigned long generated = 0;
 
-	
 protected:
 	
 	//!

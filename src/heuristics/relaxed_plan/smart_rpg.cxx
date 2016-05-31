@@ -29,7 +29,7 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
-long SmartRPG::evaluate(const State& seed) {
+long SmartRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	
@@ -71,14 +71,13 @@ long SmartRPG::evaluate(const State& seed) {
 		graph.advance(); // Integrates the novel tuples into the graph as a new layer.
 		LPT_EDEBUG("heuristic", "New RPG Layer: " << graph);
 		
-		long h = computeHeuristic(graph);
+		long h = computeHeuristic(graph, relevant);
 		if (h > -1) return h;
-		
 	}
 }
 
-long SmartRPG::computeHeuristic(const RPGIndex& graph) {
-	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler);
+long SmartRPG::computeHeuristic(const RPGIndex& graph, std::vector<Atom>& relevant) {
+	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler, relevant);
 }
 
 //! Computes the full RPG until a fixpoint is reached, disregarding goal.

@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_map>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace fs0 {
 
@@ -38,7 +39,7 @@ protected:
 	
 	boost::property_tree::ptree _root;
 	
-	const std::unordered_map<std::string, std::string> _user_options	;
+	const std::unordered_map<std::string, std::string> _user_options;
 	
 	RPGExtractionType _rpg_extraction;
 	
@@ -100,7 +101,25 @@ public:
 	//! A generic getter
 	template <typename T>
 	T getOption(const std::string& key) const {
-		return _root.get<T>(key);
+		auto it = _user_options.find(key);
+		if (it != _user_options.end()) { // The user specified an option value, which thus has priority
+			return boost::lexical_cast<T>(it->second);
+		} else {
+			return _root.get<T>(key);
+		}
+	}
+
+// 	template <>
+	bool getOption(const std::string& key) const {
+		auto it = _user_options.find(key);
+		if (it != _user_options.end()) { // The user specified an option value, which thus has priority
+			std::istringstream ss(it->second);
+			bool b;
+			ss >> std::boolalpha >> b;
+			return b;
+		} else {
+			return _root.get<bool>(key);
+		}
 	}
 };
 

@@ -35,17 +35,17 @@ public:
 	HeuristicSearchNode() = delete;
 	~HeuristicSearchNode() {}
 	
-	HeuristicSearchNode(const HeuristicSearchNode& other) = delete;
-	HeuristicSearchNode(HeuristicSearchNode&& other) = delete;
-	HeuristicSearchNode& operator=(const HeuristicSearchNode& rhs) = delete;
-	HeuristicSearchNode& operator=(HeuristicSearchNode&& rhs) = delete;
+	HeuristicSearchNode(const HeuristicSearchNode&) = delete;
+	HeuristicSearchNode(HeuristicSearchNode&&) = delete;
+	HeuristicSearchNode& operator=(const HeuristicSearchNode&) = delete;
+	HeuristicSearchNode& operator=(HeuristicSearchNode&&) = delete;
 	
 	
 	HeuristicSearchNode(const StateT& state_)
 		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(0)
 	{}
 
-	HeuristicSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<HeuristicSearchNode<StateT ,ActionT>> parent_) :
+	HeuristicSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<HeuristicSearchNode<StateT, ActionT>> parent_) :
 		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(0)
 	{}
 
@@ -66,7 +66,7 @@ public:
 	template <typename Heuristic>
 	void evaluate_with(Heuristic& heuristic) {
 		h = heuristic.evaluate(state);
-		LPT_DEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for seed state: " << std::endl << state << std::endl << "****************************************");
+		LPT_DEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for state: " << std::endl << state << std::endl << "****************************************");
 	}
 	
 	void inherit_heuristic_estimate() {

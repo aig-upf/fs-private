@@ -11,5 +11,6 @@
 	"action_value_selection": "min_val",
 	"support_priority": "first",
 	"reachability_analysis": "true",
-	"ehc": "true"
+	"ehc": "true",
+	"helpful_actions": "true"
 }

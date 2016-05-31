@@ -21,7 +21,6 @@ class SmartEffectDriver {
 protected:
 	typedef HeuristicSearchNode<State, GroundAction> SearchNode;
 	
-	typedef std::unique_ptr<EHCStateModel<fs0::gecode::SmartRPG>> Model;
 	typedef std::unique_ptr<EHCThenGBFSSearch<fs0::gecode::SmartRPG>> Engine;
 	
 public:

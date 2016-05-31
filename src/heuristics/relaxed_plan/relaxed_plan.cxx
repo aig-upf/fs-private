@@ -7,7 +7,7 @@
 
 namespace fs0 { namespace gecode { namespace support {
 
-long compute_rpg_cost(const TupleIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler) {
+long compute_rpg_cost(const TupleIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler, std::vector<Atom>& relevant) {
 	long cost = -1;
 	if (GecodeCSP* csp = goal_handler.instantiate(graph)) {
 		if (csp->checkConsistency()) { // ATM we only take into account full goal resolution
@@ -15,12 +15,17 @@ long compute_rpg_cost(const TupleIndex& tuple_index, const RPGIndex& graph, cons
 			std::vector<TupleIdx> causes;
 			if (goal_handler.compute_support(csp, causes)) {
 				LiftedPlanExtractor extractor(graph, tuple_index);
-				cost = extractor.computeRelaxedPlanCost(causes);
+				cost = extractor.computeRelaxedPlanCost(causes, relevant);
 			}
 		}
 		delete csp;
 	}
 	return cost;
+}
+
+long compute_rpg_cost(const TupleIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler) {
+	std::vector<Atom> _;
+	return compute_rpg_cost(tuple_index, graph, goal_handler, _);
 }
 
 long compute_hmax_cost(const TupleIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler) {
