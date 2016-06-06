@@ -8,8 +8,9 @@
 #include <problem.hxx>
 #include <utils/printers/vector.hxx>
 
-#include <aptk2/search/interfaces/search_algorithm.hxx>
-#include <aptk2/search/algorithms/breadth_first_search.hxx>
+#include <search/algorithms/aptk/breadth_first_search.hxx>
+#include <search/events.hxx>
+#include <search/stats.hxx>
 
 
 namespace fs0 { namespace drivers {
@@ -51,12 +52,13 @@ public:
 	std::size_t hash() const { return state.hash(); }
 	
 	template <typename Heuristic>
-	void evaluate_with(Heuristic& heuristic) {
+	long evaluate_with(Heuristic& heuristic) {
 		h = heuristic.evaluate(state, _relevant);
 		LPT_DEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for state: " << std::endl << state << std::endl << "****************************************");
 		
 		// If the heuristic is > 0, then we must have a relaxed plan and at least some atoms in the 1st layer of it.
 		assert(h <= 0 || _relevant.size() > 0);
+		return h;
 	}
 	
 	const typename ActionT::IdType& get_action() const { return action; }
@@ -69,7 +71,6 @@ public:
 	
 	const std::vector<Atom>& get_relevant() const { return _relevant; }
 	
-	
 	StateT state;
 	
 	typename ActionT::IdType action;
@@ -77,23 +78,37 @@ public:
 	std::shared_ptr<EHCSearchNode<StateT, ActionT>> parent;
 	
 	long h;
+
+	bool is_helpful() const { return _helpful; }
+	void mark_as_helpful() { _helpful = true; }
 	
 protected:
 	//! The indexes of the atoms/tuples that were relevant in computing the heuristic of this node.
 	std::vector<Atom> _relevant;
+	
+	bool _helpful;
 };
 
 //! This is a specialized version of breadth-first search that incorporates two modifications:
 //!    (1) It aborts (and returns the node) as soon as a node is found with heuristic smaller than a given bound, and
 //!    (2) When expanding a node, it prunes those actions that do not satisfy a certain helpful-action criteria, namely
 //!        only those actions that add at least one of the supports of the actions in the first block of the relaxed plan.
-template <typename StateModel, typename HeuristicT>
-class EHCBreadthFirstSearch : public aptk::StlBreadthFirstSearch<EHCSearchNode<State, GroundAction>, StateModel>
+template <typename StateModel,
+          typename HeuristicT,
+          typename NodeType = EHCSearchNode<State, GroundAction>
+>
+class EHCBreadthFirstSearch : public lapkt::StlBreadthFirstSearch<NodeType, StateModel>
 {
 public:
-	typedef EHCSearchNode<State, GroundAction> SearchNode;
-	typedef aptk::StlBreadthFirstSearch<SearchNode, StateModel> Base;
-	typedef std::shared_ptr<SearchNode> NodeT;
+	using Base = lapkt::StlBreadthFirstSearch<NodeType, StateModel>;
+	using NodePtr = std::shared_ptr<NodeType>;
+	using PlanT = typename Base::PlanT;
+	
+	//! Relevant events
+	using NodeOpenEvent = lapkt::events::NodeOpenEvent<NodeType>;
+	using GoalFoundEvent = lapkt::events::GoalFoundEvent<NodeType>;
+	using NodeExpansionEvent = lapkt::events::NodeExpansionEvent<NodeType>;
+	using NodeCreationEvent = lapkt::events::NodeCreationEvent<NodeType>;
 	
 	
 	//! For convenience, a constructor where the open list is default-constructed
@@ -108,7 +123,7 @@ public:
 	EHCBreadthFirstSearch& operator=(EHCBreadthFirstSearch&&) = default;
 	
 
-	bool search(const State& state, typename Base::Plan& solution) override {
+	bool search(const State& state, PlanT& solution) override {
 		auto node = make_node(state);
 		auto end = bounded_search(node, node->get_h());
 		if (end) {
@@ -117,43 +132,44 @@ public:
 		return !!end;
 	}
 	
-	static NodeT make_node(const State& state, HeuristicT& heuristic) {
-		auto node = std::make_shared<SearchNode>(state);
+	static NodePtr make_node(const State& state, HeuristicT& heuristic) {
+		auto node = std::make_shared<NodeType>(state);
 		node->evaluate_with(heuristic);
 		return node;
 	}
 	
-	NodeT make_node(const State& state) const { return make_node(state, _heuristic); }
+	NodePtr make_node(const State& state) const { return make_node(state, _heuristic); }
 	
 	//! Returns the first node with heuristic h < h_bound
-	NodeT bounded_search(NodeT root, long h_bound) {
+	NodePtr bounded_search(NodePtr root, long h_bound) {
 		this->_open.insert(root);
 		
-		NodeT goal = nullptr;
+		NodePtr goal = nullptr;
 		unsigned pruned = 0;
 		while (!goal && !this->_open.is_empty()) {
-			NodeT current = this->_open.get_next();
+			
+			NodePtr current = this->_open.get_next();
+			this->notify(NodeOpenEvent(*current));
 			this->_closed.put(current);
 			
-			if (_prune_unhelpful) {
-				LPT_EDEBUG("ehc", "EHC - pruning from node " << *current << std::endl << "Relevant atoms:  " << print::container(current->get_relevant()));
-			}
+			this->notify(NodeExpansionEvent(*current));
 			
 			// Expand children nodes
-			for (const auto& a : Base::model.applicable_actions(current->get_state())) {
-				State s_a = Base::model.next( current->get_state(), a );
+			for (const auto& a : Base::_model.applicable_actions(current->get_state())) {
+				State s_a = Base::_model.next( current->get_state(), a );
+				NodePtr successor = std::make_shared<NodeType>(std::move(s_a), a, current);
+				
+				if ( this->_closed.check( *successor ) ) continue;
+				
+				this->notify(NodeCreationEvent(*successor));
 				
 				// If using HA; we check that the current expansion is helpful, if not, discard it.
-				if (_prune_unhelpful && !is_helpful(current, s_a)) {
+				if (_prune_unhelpful && !successor->is_helpful()) {
 					++pruned;
 					continue;
 				}
 				
-				NodeT successor = std::make_shared<SearchNode>(std::move(s_a), a, current);
-				if ( this->_closed.check( *successor ) ) continue;
-				
-				successor->evaluate_with(_heuristic);
-				if (successor->get_h() < h_bound) {
+				if (successor->evaluate_with(_heuristic) < h_bound) {
 					goal = successor;
 					break;
 				}
@@ -167,21 +183,9 @@ public:
 	}
 
 protected:
-	
-	//! Returns tru iff the given 'state' expanded from 'current' has been expanded through a helpful action,
-	//! i.e. produces at least one of the atoms that support the actions in the first layer of the relaxed plan.
-	bool is_helpful(NodeT current, const State& state) const {
-		for (const Atom& atom:current->get_relevant()) {
-			if (state.contains(atom)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
 	//!
 	HeuristicT& _heuristic;
-	
+
 	bool _prune_unhelpful;
 }; 
 
@@ -193,7 +197,12 @@ template <typename HeuristicT>
 class EHCSearch {
 public:
 	//! EHC uses a breadth-first search as a base.
-	typedef EHCBreadthFirstSearch<GroundStateModel, HeuristicT> BreadthFirstAlgorithm;
+	using BreadthFirstAlgorithm = EHCBreadthFirstSearch<GroundStateModel, HeuristicT>;
+	using NodeT = EHCSearchNode<State, GroundAction>;
+	
+	//! Required event observers
+	using StatsT = StatsObserver<NodeT>;
+	using HAObserverT = HelpfulObserver<NodeT>;
 	
 	~EHCSearch() = default;
 	EHCSearch(const EHCSearch&) = default;
@@ -201,9 +210,12 @@ public:
 	EHCSearch& operator=(const EHCSearch&) = default;
 	EHCSearch& operator=(EHCSearch&&) = default;
 	
-	EHCSearch(const GroundStateModel& model, HeuristicT&& heuristic, bool prune_unhelpful) :
-		_model(model), _heuristic(std::move(heuristic)), _prune_unhelpful(prune_unhelpful)
-	{}
+	EHCSearch(const GroundStateModel& model, HeuristicT&& heuristic, bool prune_unhelpful, SearchStats& stats) :
+		_model(model), _heuristic(std::move(heuristic)), _prune_unhelpful(prune_unhelpful), _stats(stats)
+	{
+		_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
+		_handlers.push_back(std::unique_ptr<HAObserverT>(new HAObserverT()));
+	}
 	
 	bool search(const State& state, std::vector<unsigned>& solution) {
 		assert(solution.size()==0);
@@ -215,6 +227,7 @@ public:
 			
 			// Perform breadth-first search until a state with smaller heuristic value is found
 			BreadthFirstAlgorithm bfs(_model, _heuristic, _prune_unhelpful);
+			lapkt::events::subscribe(bfs, _handlers);
 			
 			if (! (node = bfs.bounded_search(node, node->h))) { // EHC fails
 				LPT_INFO("cout", "EHC's breadth-first search unable to find a state with lower h(s)");
@@ -241,6 +254,10 @@ protected:
 	
 	//! Whether to prune those actions that are not considered helpful or not
 	bool _prune_unhelpful;
+	
+	SearchStats& _stats;
+	
+	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 };
 
 

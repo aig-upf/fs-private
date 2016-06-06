@@ -17,7 +17,7 @@ DirectCRPG::DirectCRPG(const Problem& problem, std::vector<std::unique_ptr<Direc
     std::iota(all_whitelist.begin(), all_whitelist.end(), 0);
 }
 
-long DirectCRPG::evaluate(const State& seed) {
+long DirectCRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
 	return evaluate(seed, all_whitelist); // If no whitelist is provided, all actions are considered.
 }
 

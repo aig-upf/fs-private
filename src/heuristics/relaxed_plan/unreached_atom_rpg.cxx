@@ -28,7 +28,7 @@ UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* go
 }
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
-long UnreachedAtomRPG::evaluate(const State& seed) {
+long UnreachedAtomRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	

@@ -11,6 +11,7 @@
 #include <search/drivers/fully_lifted_driver.hxx>
 #include <search/drivers/smart_lifted_driver.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
+#include <search/stats.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
 #include <state.hxx>
@@ -21,7 +22,7 @@ namespace fs0 { namespace drivers {
 
 
 template <typename StateModelT, typename SearchAlgorithmT>
-void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time) {
+void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time, const SearchStats& stats) {
 	const Problem& problem = model.getTask();
 
 	std::cout << "Writing results to directory: " << out_dir << std::endl;
@@ -46,13 +47,13 @@ void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, 
 	}
 	plan_out.close();
 
-	std::string eval_speed = (search_time > 0) ? std::to_string((float) engine.generated / search_time) : "0";
+	std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.generated() / search_time) : "0";
 	json_out << "{" << std::endl;
 	json_out << "\t\"total_time\": " << total_planning_time << "," << std::endl;
 	json_out << "\t\"search_time\": " << search_time << "," << std::endl;
 	json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
-	json_out << "\t\"generated\": " << engine.generated << "," << std::endl;
-	json_out << "\t\"expanded\": " << engine.expanded << "," << std::endl;
+	json_out << "\t\"generated\": " << stats.generated() << "," << std::endl;
+	json_out << "\t\"expanded\": " << stats.expanded() << "," << std::endl;
 	json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
 	json_out << "\t\"solved\": " << ( solved ? "true" : "false" ) << "," << std::endl;
 	json_out << "\t\"valid\": " << ( valid ? "true" : "false" ) << "," << std::endl;
@@ -66,7 +67,7 @@ void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, 
 	if (solved) {
 		if (!valid) throw std::runtime_error("The plan output by the planner is not correct!");
 		std::cout << "Search Result: Found plan of length " << plan.size() << std::endl;
-		std::cout << "Expanded / Evaluated / Eval. rate: " << engine.expanded << " / " << engine.generated << " / " << eval_speed << std::endl;
+		std::cout << "Expanded / Evaluated / Gen. rate: " << stats.expanded() << " / " << stats.generated() << " / " << eval_speed << std::endl;
 	} else {
 		std::cout << "Search Result: No plan was found " << std::endl;
 		// TODO - Make distinction btw all nodes explored and no plan found, and no plan found in the given time.
@@ -79,34 +80,36 @@ void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, 
 void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Config& config, const std::string& driver_tag, const std::string& out_dir, float start_time) {
 	std::cout << "Starting search..." << std::endl;
 	
+	SearchStats stats;
+	
 	// The engine and search model for lifted planning are different!
 	// TODO - REFACTOR THIS
 	if (driver_tag == "lifted") {
 		FullyLiftedDriver driver;
 		fs0::LiftedStateModel model = driver.setup(config, problem);
 		auto engine = driver.create(config, model);
-		do_search(*engine, model, out_dir, start_time);
+		do_search(*engine, model, out_dir, start_time, stats);
 
 	} else if (driver_tag == "smart_lifted") {
 		
 		SmartLiftedDriver driver;
 		fs0::LiftedStateModel model = driver.setup(config, problem);
 		auto engine = driver.create(config, model);
-		do_search(*engine, model, out_dir, start_time);
+		do_search(*engine, model, out_dir, start_time, stats);
 		
 	} else if (driver_tag == "smart") {
 		
 		SmartEffectDriver driver;
 		GroundStateModel model = driver.setup(config, problem);
 		auto engine = driver.create(config, model);
-		do_search(*engine, model, out_dir, start_time);
+		do_search(*engine, model, out_dir, start_time, driver.getSearchStats());
 		
 	} else {
 		// Standard, grounded planning
 		auto driver = fs0::drivers::EngineRegistry::instance().get(driver_tag);
 		GroundStateModel model = driver->setup(config, problem);
 		auto engine = driver->create(config, model);
-		do_search(*engine, model, out_dir, start_time);
+		do_search(*engine, model, out_dir, start_time, stats);
 	}
 }
 

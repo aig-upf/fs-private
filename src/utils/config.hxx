@@ -24,6 +24,9 @@ public:
 	//! The type of support sets that should be given priority
 	enum class SupportPriority {First, MinHMaxSum};
 	
+	//! The type of node evaluation
+	enum class EvaluationT {eager, delayed, delayed_for_unhelpful};
+	
 	//! Explicit initizalition of the singleton
 	static void init(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
 	
@@ -55,7 +58,7 @@ protected:
 	
 	bool _novelty;
 	
-	bool _delayed;
+	EvaluationT _node_evaluation;
 	
 	std::string _heuristic;
 	
@@ -78,6 +81,8 @@ public:
 	
 	ValueSelection getActionValueSelection() const { return _action_value_selection; }
 	
+	EvaluationT getNodeEvaluationType() const { return _node_evaluation; }
+	
 	bool useMinHMaxGoalValueSelector() const { return _goal_value_selection == ValueSelection::MinHMax; }
 	
 	bool useMinHMaxActionValueSelector() const { return _action_value_selection == ValueSelection::MinHMax; }
@@ -86,9 +91,9 @@ public:
 	
 	bool useNoveltyConstraint() const { return _novelty; }
 	
-	bool useDelayedEvaluation() const { return _delayed; }
-	
 	const std::string& getHeuristic() const { return _heuristic; }
+	
+	bool useDelayedEvaluation() const { return _node_evaluation == EvaluationT::delayed; }
 	
 	bool useApproximateActionResolution() const {
 		return getActionPreconditionResolutionType() == CSPResolutionType::Approximate;

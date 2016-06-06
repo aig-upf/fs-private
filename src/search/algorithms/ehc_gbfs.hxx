@@ -2,6 +2,7 @@
 #pragma once
 
 #include <search/algorithms/ehc.hxx>
+#include "aptk/search_algorithm.hxx"
 #include <aptk2/search/algorithms/best_first_search.hxx>
 
 #include <search/drivers/registry.hxx>
@@ -9,6 +10,9 @@
 #include <problem.hxx>
 
 namespace fs0 { namespace drivers {
+
+using FSSearchAlgorithm = lapkt::SearchAlgorithm<State, unsigned>;
+
 
 //! A combined search strategy that first applies a given Enhanced Hill-Climbing and then, if the goal was not found,
 //! a standard GBFS.
@@ -21,7 +25,7 @@ public:
 	EHCThenGBFSSearch& operator=(const EHCThenGBFSSearch&) = default;
 	EHCThenGBFSSearch& operator=(EHCThenGBFSSearch&&) = default;
 	
-	EHCThenGBFSSearch(const Problem& problem, FSGroundSearchAlgorithm* gbfs, EHCSearch<HeuristicT>* ehc) :
+	EHCThenGBFSSearch(const Problem& problem, FSSearchAlgorithm* gbfs, EHCSearch<HeuristicT>* ehc) :
 		_problem(problem), _gbfs(gbfs), _ehc(ehc)
 	{}
 	
@@ -31,8 +35,6 @@ public:
 		
 		if (_ehc) {
 			result = _ehc->search(state, solution);
-			expanded += _ehc->expanded;
-			generated += _ehc->generated;
 			if (result) {
 				LPT_INFO("cout", "Solution found in EHC phase");
 				return true;
@@ -44,16 +46,11 @@ public:
 		}
 
 		result = _gbfs->search(state, solution);
-		expanded += _gbfs->expanded;
-		generated += _gbfs->generated;
 		return result;
 	}
 	
 	//! Convenience method
 	bool solve_model(std::vector<unsigned>& solution) { return search( _problem.getInitialState(), solution ); }
-	
-	unsigned long expanded = 0;
-	unsigned long generated = 0;
 
 protected:
 	
@@ -61,7 +58,7 @@ protected:
 	const Problem& _problem;
 	
 	//!
-	std::unique_ptr<FSGroundSearchAlgorithm> _gbfs;
+	std::unique_ptr<FSSearchAlgorithm> _gbfs;
 	
 	//!
 	std::unique_ptr<EHCSearch<HeuristicT>> _ehc;

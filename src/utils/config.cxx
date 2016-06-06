@@ -64,7 +64,11 @@ void Config::load(const std::string& filename) {
 	
 	_novelty = parseOption<bool>(_root, _user_options, "novelty", {{"true", true}, {"false", false}});
 	
-	_delayed = parseOption<bool>(_root, _user_options, "delayed_evaluation", {{"true", true}, {"false", false}});
+	_node_evaluation = parseOption<EvaluationT>(_root, _user_options, "evaluation", {
+		{"eager", EvaluationT::eager},
+		{"delayed", EvaluationT::delayed},
+		{"delayed_for_unhelpful", EvaluationT::delayed_for_unhelpful}}
+	);
 	
 	_heuristic = parseOption<std::string>(_root, _user_options, "heuristic", {{"hff", "hff"}, {"hmax", "hmax"}});
 }
