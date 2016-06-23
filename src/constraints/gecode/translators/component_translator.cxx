@@ -163,6 +163,23 @@ void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, 
 	Gecode::linear(csp, coefficients, variables, Gecode::IRT_EQ, 0, Gecode::ICL_DOM);
 }
 
+
+void NValuesGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
+	auto nvalues = dynamic_cast<const fs::NValuesFormula*>(formula);
+	assert(nvalues);
+
+	GecodeCSP& csp = translator.getBaseCSP();
+	
+	std::vector<const fs::Term*> st = nvalues->getSubterms();
+	assert(st.size()>1);
+	
+	std::vector<const fs::Term*> elements(st.begin(), st.end()-1);
+	Gecode::IntVarArgs elements_var = translator.resolveVariables(elements, csp);
+	auto num_vals = translator.resolveVariable(st.back(), csp);;
+	Gecode::nvalues(csp, elements_var, Gecode::IRT_EQ, num_vals);
+}
+
+
 void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
 
 	GecodeCSP& csp = translator.getBaseCSP();

@@ -141,6 +141,13 @@ public:
 	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
 };
 
+class NValuesGecodeTranslator : public FormulaTranslator {
+public:
+	NValuesGecodeTranslator() {}
+
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
+};
+
 //! A Gecode translator that converts whatever arbitrary formula into an equivalent extensional constraint.
 class ExtensionalTranslator : public FormulaTranslator {
 public:

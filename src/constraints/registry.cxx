@@ -31,6 +31,7 @@ void LogicalComponentRegistry::registerLogicalElementCreators() {
 	// Register the builtin global constraints
 	addFormulaCreator("@alldiff", [](const std::vector<const fs::Term*>& subterms){ return new fs::AlldiffFormula(subterms); });
 	addFormulaCreator("@sum",     [](const std::vector<const fs::Term*>& subterms){ return new fs::SumFormula(subterms); });
+	addFormulaCreator("@nvalues",     [](const std::vector<const fs::Term*>& subterms){ return new fs::NValuesFormula(subterms); });
 }
 
 
@@ -75,6 +76,7 @@ void LogicalComponentRegistry::registerGecodeTranslators() {
 	// Gecode translators for the supported global constraints
 	add(typeid(fs::AlldiffFormula), new gecode::AlldiffGecodeTranslator());
 	add(typeid(fs::SumFormula), new gecode::SumGecodeTranslator());
+	add(typeid(fs::NValuesFormula), new gecode::NValuesGecodeTranslator());
 }
 	
 
