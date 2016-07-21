@@ -81,8 +81,8 @@ LiftedEffectCSP::prune_unreachable(std::vector<std::unique_ptr<LiftedEffectCSP>>
 		else ++it;
 	}
 	
-	LPT_INFO("main", "A total of " << original_size - managers.size() << " effect CSPs were deemed unreachable and discarded");
-	std::cout << "A total of " << original_size - managers.size() << " effect CSPs were deemed unreachable and discarded" << std::endl;
+	LPT_INFO("main", "A total of " << original_size - managers.size() << " out of " << original_size << " effect CSPs were deemed unreachable and discarded");
+	std::cout << "A total of " << original_size - managers.size() << " out of " << original_size << " effect CSPs were deemed unreachable and discarded" << std::endl;
 }
 
 LiftedEffectCSP::LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :

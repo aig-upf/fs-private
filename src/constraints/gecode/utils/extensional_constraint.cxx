@@ -17,7 +17,7 @@ ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* t
 {}
 
 void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
-	LPT_DEBUG("translation", "Preprocessing extensional constraints for term " << *_term);
+	LPT_DEBUG("translation", "Preprocessing extensional constraints for term " << *_term << ", predicate?: " << _predicate);
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	for (auto subterm:_term->getSubterms()) {
@@ -43,7 +43,7 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
-		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable	
+		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable
 	} else {
 		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
 	}
@@ -64,8 +64,8 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 	Gecode::extensional(csp, variables, extension);
 // 	Gecode::extensional(csp, variables, extension, Gecode::EPK_SPEED);
 	
-// 	LPT_DEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
-// 	LPT_DEBUG("translation", "Resulting CSP is: " << csp);
+	LPT_DEBUG("heuristic", "Posted extensional constraint for term " << *_term << ": " << print::extensional(variables, extension));
+	LPT_DEBUG("heuristic", "Resulting CSP is: " << csp);
 	return true;
 }
 
