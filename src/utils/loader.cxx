@@ -18,6 +18,7 @@
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <validator.hxx>
 
 
 namespace fs = fs0::language::fstrips;
@@ -46,6 +47,9 @@ Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp
 	
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
+	LPT_INFO("main", "Validating problem...");
+	Validator::validate_problem(*problem, info);
+	
 	return problem;
 }
 

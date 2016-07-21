@@ -11,8 +11,9 @@
 namespace fs0 { namespace print {
 
 class Helper {
-	public:
-		static const std::vector<std::string> name_variables(const std::vector<VariableIdx>& variables);
+public:
+	static const std::vector<std::string> name_variables(const std::vector<VariableIdx>& variables);
+	static const std::vector<std::string> name_objects(const std::vector<ObjectIdx>& objects, const Signature& signature);
 };
 
 	
