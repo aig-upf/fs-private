@@ -5,7 +5,7 @@
 namespace fs0 { namespace utils {
 
 cartesian_iterator::cartesian_iterator(std::vector<const ObjectIdxVector*>&& values) :
-	_values(values),
+	_values(std::move(values)),
 	_iterators(),
 	_element(),
 	_ended(_values.empty())
