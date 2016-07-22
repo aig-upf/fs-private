@@ -28,7 +28,7 @@ Validator::validate_state(const State& state, const ProblemInfo& info) {
 		const auto& objects = info.getVariableObjects(variable);
 		
 		if (std::find(objects.begin(), objects.end(), value) == objects.end()) {
-			std::cerr << "Value '" << value << " assigned to state variable '" << info.getVariableName(variable) << "' is not of the correct type" << std::endl;
+			std::cerr << "Value \"" << value << "\" assigned to state variable '" << info.getVariableName(variable) << "' is not of the correct type" << std::endl;
 		}
 	}
 	
