@@ -62,7 +62,8 @@ std::size_t PlainActionID::hash() const {
 }
 
 std::ostream& LiftedActionID::print(std::ostream& os) const {
-	(_action? os << *generate() : os << "INVALID-ACTION");
+	std::unique_ptr<const GroundAction> ground(generate());
+	(_action? os << *ground : os << "INVALID-ACTION");
 	return os;
 }
 

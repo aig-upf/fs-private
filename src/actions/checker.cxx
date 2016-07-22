@@ -36,10 +36,9 @@ bool Checker::check_correctness(const Problem& problem, const std::vector<Lifted
 	// First we make sure that the whole plan is applicable
 	State state(s0);
 	for (const LiftedActionID& action_id:plan) {
-		const GroundAction* action = action_id.generate();
+		std::unique_ptr<const GroundAction> action(action_id.generate());
 		if (!manager.isApplicable(state, *action)) return false;
 		state.accumulate(manager.computeEffects(state, *action)); // Accumulate the newly-produced atoms
-		delete action;
 	}
 	
 	// Now check that the resulting state is indeed a goal
