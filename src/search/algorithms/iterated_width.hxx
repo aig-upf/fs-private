@@ -43,7 +43,7 @@ public:
 protected:
 	
 	//!
-	BaseAlgorithm* _algorithm;
+	std::unique_ptr<BaseAlgorithm> _algorithm;
 	
 	//!
 	unsigned _current_max_width;

@@ -21,9 +21,6 @@ public:
 	//! Construct a state specifying the values of all state variables
 	//! Note that it is not necessarily the case that numAtoms == facts.size(); since the initial values of
 	//! some (Boolean) state variables is often left unspecified and understood to be false.
-	//! TODO - We might want to perform type checking here against the predicate and function signatures.
-	//! TODO - We might also want to ensure here that all symbol extensions have been defined. This won't be expensive, 
-	//! as it will be done only when we create the initial state.
 	State(unsigned numAtoms, const std::vector<Atom>& facts);
 	
 	//! A constructor that receives a number of atoms and constructs a state that is equal to the received

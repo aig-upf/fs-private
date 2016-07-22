@@ -7,7 +7,7 @@ namespace fs0 { namespace drivers {
 
 std::unique_ptr<FSGroundSearchAlgorithm> IteratedWidthDriver::create(const Config& config, const GroundStateModel& model) const {
 	
-	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
+	unsigned max_novelty = config.getOption<int>("width.max_novelty");
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	
 	LPT_INFO("main", "Heuristic options:");

@@ -9,7 +9,7 @@ namespace fs0 { namespace drivers {
 std::unique_ptr<FSGroundSearchAlgorithm> GBFSNoveltyDriver::create(const Config& config, const GroundStateModel& model) const {
 	FSGroundSearchAlgorithm* engine = nullptr;
 	
-	unsigned max_novelty = config.getOption<int>("engine.max_novelty");
+	unsigned max_novelty = config.getOption<int>("width.max_novelty");
 	bool delayed = config.useDelayedEvaluation();
 
 	NoveltyFeaturesConfiguration feature_configuration(config);
