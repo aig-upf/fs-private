@@ -33,7 +33,7 @@ protected:
 	
 	const fs::Conjunction* extract_goal_conjunction_or_fail(const Problem& problem) {
 		auto goal_conjunction = dynamic_cast<const fs::Conjunction*>(problem.getGoalConditions());
-		if (goal_conjunction) throw std::runtime_error("UnsatisfiedGoalAtomsHeuristic valid only if the goal is a conjunction of atoms");
+		if (!goal_conjunction) throw std::runtime_error("UnsatisfiedGoalAtomsHeuristic valid only if the goal is a conjunction of atoms");
 		return goal_conjunction;
 	}
 };
