@@ -145,7 +145,7 @@ Seems to perform better than other options in some domains, but not in general.
 
 * `iw`: Iterated Width search.
 
-* `novelty_best_first`: A Greedy best-first search with a novelty-based heuristic. Namely, the search favors states with
+* `bfws`: A Greedy best-first search with a novelty-based heuristic. Namely, the search favors states with
 (1) lower novelty, (2) higher number of satisfied goal atoms, if novelty is equal, and (3) lower accumulated cost, the two
 first factors being equal.
 
