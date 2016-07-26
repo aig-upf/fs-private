@@ -124,11 +124,12 @@ NValuesFormula::NValuesFormula(const NValuesFormula& formula) : NValuesFormula(U
 bool NValuesFormula::_satisfied(const ObjectIdxVector& values) const {
 	// nvalues(x_1, ..., x_n) meaning there are exactly x_n different values among variables <x_1, ... x_{n-1}>
 	assert(values.size() > 1);
+	assert(values[values.size()-1] > 0);
 	std::set<ObjectIdx> distinct;
 	for (unsigned i = 0; i < values.size() - 1; ++i) {
 		distinct.insert(values[i]);
 	}
-	return distinct.size() == values[values.size()-1];
+	return distinct.size() == (std::size_t) values[values.size()-1];
 }
 
 } } } // namespaces
