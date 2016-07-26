@@ -23,10 +23,13 @@ GenericNoveltyEvaluator::GenericNoveltyEvaluator(const Problem& problem, unsigne
 	selectFeatures(problem, feature_configuration);
 }
 
-GenericNoveltyEvaluator::~GenericNoveltyEvaluator() {
-	for ( NoveltyFeature::ptr f : _features ) delete f;
-}
 
+GenericNoveltyEvaluator::GenericNoveltyEvaluator(const GenericNoveltyEvaluator& other)
+	: Base(other), _features() {
+	for (unsigned i = 0; i < other._features.size(); ++i) {
+		_features.push_back(std::unique_ptr<NoveltyFeature>(other._features[i]->clone()));
+	}
+}
 
 void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& feature_configuration) {
 	std::set< VariableIdx > relevantVars;
@@ -38,11 +41,11 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 			const auto scope = fs::ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
 			relevantVars.insert(scope.cbegin(), scope.cend());
 		}
-		_features.push_back(feature);
+		_features.push_back(std::unique_ptr<NoveltyFeature>(feature));
 	}
 
 	for ( const GroundAction* action : problem.getGroundActions() ) {
-		ConditionSetFeature*  feature = new ConditionSetFeature;
+		std::unique_ptr<ConditionSetFeature> feature(new ConditionSetFeature);
 
 		// TODO Need to rethink that to do with indirect scopes and in particular with existentially quantified variables
 		for (const fs::AtomicFormula* condition : action->getPrecondition()->all_atoms() ) {
@@ -53,13 +56,12 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 			if ( feature_configuration.useActions() ) feature->addCondition(condition);
 		}
 		
-		if (feature_configuration.useActions()) _features.push_back(feature);
-		else delete feature;
+		if (feature_configuration.useActions()) _features.push_back(std::move(feature));
 	}
 
 	if ( feature_configuration.useStateVars() ) {
-		for ( VariableIdx x : relevantVars ) {
-			_features.push_back( new StateVariableFeature( x ) );
+		for ( VariableIdx var : relevantVars ) {
+			_features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
 		}
 	}
 	LPT_INFO("main", "Novelty From Constraints: # features: " << numFeatures());
@@ -76,7 +78,7 @@ void GenericStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnam
 
 	for ( unsigned k = 0; k < _featureMap.numFeatures(); k++ ) {
 		varnames[k] = k;
-		values[k] = _featureMap.feature( k )->evaluate( _adapted );
+		values[k] = _featureMap.feature(k).evaluate( _adapted );
 	}
 
 	LPT_DEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));

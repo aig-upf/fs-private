@@ -25,22 +25,23 @@ protected:
 };
 
 
-class GenericNoveltyEvaluator : public aptk::FiniteDomainNoveltyEvaluator< GenericStateAdapter > {
+class GenericNoveltyEvaluator : public aptk::FiniteDomainNoveltyEvaluator<GenericStateAdapter> {
 public:
-	typedef aptk::FiniteDomainNoveltyEvaluator< GenericStateAdapter > Base;
+	typedef aptk::FiniteDomainNoveltyEvaluator<GenericStateAdapter> Base;
 
 	GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration);
-	virtual ~GenericNoveltyEvaluator();
+	virtual ~GenericNoveltyEvaluator() = default;
+	GenericNoveltyEvaluator(const GenericNoveltyEvaluator&);
 	
 	using Base::evaluate; // So that we do not hide the base evaluate(const FiniteDomainNoveltyEvaluator&) method
 	
-	unsigned evaluate( const State& s ) {
-		GenericStateAdapter adaptee( s, *this );
-		return evaluate( adaptee );
+	unsigned evaluate(const State& s) {
+		GenericStateAdapter adaptee(s, *this);
+		return evaluate(adaptee);
 	}
 
 	unsigned numFeatures() const { return _features.size(); }
-	NoveltyFeature::ptr feature( unsigned i ) const { return _features[i]; }
+	NoveltyFeature& feature(unsigned i) const { return *_features[i]; }
 
 
 protected:
@@ -48,7 +49,7 @@ protected:
 	void selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& feature_configuration);
 	
 	//! An array with all the features that we take into account when computing the novelty
-	std::vector<NoveltyFeature::ptr> _features;
+	std::vector<std::unique_ptr<NoveltyFeature>> _features;
 };
 
 

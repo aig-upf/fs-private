@@ -41,6 +41,7 @@ public:
 	}
 	
 	~UnsatGoalsNoveltyComponent() {
+		// Log some info upon destruction
 		for (unsigned j = 0; j < _novelty_evaluators.size(); j++)
 			for ( unsigned k = 1; k <= Base::novelty_bound(); k++ ) {
 				LPT_INFO("heuristic", "# novelty(s)[#goals=" << j << "]=" << k << " : " << _novelty_evaluators[j].get_num_states(k));
