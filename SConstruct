@@ -39,7 +39,7 @@ env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 # (see http://stackoverflow.com/q/34387406)
 gcc_major_version = int(env['CXXVERSION'][0])
 if gcc_major_version > 4:  # Force g++ instead of clang
-	env = Environment(variables=vars, ENV=os.environ, CXX='g++')
+	env.Replace(CXX='g++')
 
 if env['edebug']:
 	build_dirname = 'build/edebug'
