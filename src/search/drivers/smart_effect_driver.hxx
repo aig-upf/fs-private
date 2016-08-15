@@ -23,8 +23,8 @@ class SmartEffectDriver {
 public:
 	using NodeT = HeuristicSearchNode<State, GroundAction>;
 	using Engine = std::unique_ptr<EHCThenGBFSSearch<fs0::gecode::SmartRPG>>;
-protected:
 	
+protected:
 	std::unique_ptr<fs0::gecode::SmartRPG> _heuristic;
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 	
@@ -33,7 +33,7 @@ protected:
 public:
 	SmartEffectDriver() {}
 	
-	std::unique_ptr<EHCThenGBFSSearch<fs0::gecode::SmartRPG>> create(const Config& config, const GroundStateModel& problem);
+	Engine create(const Config& config, const GroundStateModel& problem);
 	
 	GroundStateModel setup(const Config& config, Problem& problem) const;
 	
