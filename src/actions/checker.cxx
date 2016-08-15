@@ -6,23 +6,19 @@
 #include <applicability/applicability_manager.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <state.hxx>
+#include <iomanip>
 
 namespace fs0 {
 
 
-bool Checker::check_correctness(const Problem& problem, const ActionPlan& plan, const State& s0) {
-	const auto& actions = problem.getGroundActions();
+
+bool Checker::check_correctness(const Problem& problem, const std::vector<GroundAction>& plan, const State& s0) {
 	ApplicabilityManager manager(problem.getStateConstraints());
 	
 	// First we make sure that the whole plan is applicable
 	State state(s0);
-	for (unsigned idx:plan) {
-		const GroundAction& action = *actions[idx];
-// 		std::cout << "Action: " << action << std::endl;
-		if (!manager.isApplicable(state, action)) {
-// 			std::cout << "Action not applicable on state " << state << std::endl;
-			return false;
-		}
+	for (const GroundAction& action:plan) {
+		if (!manager.isApplicable(state, action)) return false;
 		state.accumulate(manager.computeEffects(state, action)); // Accumulate the newly-produced atoms
 	}
 	
@@ -30,19 +26,58 @@ bool Checker::check_correctness(const Problem& problem, const ActionPlan& plan, 
 	return problem.getGoalSatManager().satisfied(state);
 }
 
-bool Checker::check_correctness(const Problem& problem, const std::vector<LiftedActionID>& plan, const State& s0) {
-	ApplicabilityManager manager(problem.getStateConstraints());
+
+std::vector<GroundAction> Checker::transform(const Problem& problem, const std::vector<LiftedActionID>& plan) {
+	std::vector<GroundAction> transformed;
 	
 	// First we make sure that the whole plan is applicable
-	State state(s0);
 	for (const LiftedActionID& action_id:plan) {
-		std::unique_ptr<const GroundAction> action(action_id.generate());
-		if (!manager.isApplicable(state, *action)) return false;
-		state.accumulate(manager.computeEffects(state, *action)); // Accumulate the newly-produced atoms
+		GroundAction* action = action_id.generate();
+		transformed.push_back(*action);
+		delete action;
+	}
+	return transformed;
+}
+
+std::vector<GroundAction> Checker::transform(const Problem& problem, const ActionPlan& plan) {
+	std::vector<GroundAction> transformed;
+	const auto& actions = problem.getGroundActions();
+	
+	// First we make sure that the whole plan is applicable
+	for (unsigned idx:plan) {
+		transformed.push_back(*actions[idx]);
+	}
+	return transformed;
+}
+
+
+void Checker::print_plan_execution(const Problem& problem, const std::vector<GroundAction>& plan, const State& s0) {
+	ApplicabilityManager manager(problem.getStateConstraints());
+	
+	unsigned i = 0;
+	State state(s0);
+	
+	std::cout << std::setw(3) << i;
+	std::cout << ". " << state << std::endl;
+	for (; i < plan.size(); ++i) {
+		const GroundAction& action = plan[i];
+		
+		std::cout << std::setw(3) << i;
+		std::cout << ". " << action << std::endl << std::endl;
+		
+		if (!manager.isApplicable(state, action)) {
+			std::cout << "ERROR! Action is NOT applicable on the previous state" << std::endl;
+		}
+		state.accumulate(manager.computeEffects(state, action)); // Accumulate the newly-produced atoms
+		
+		std::cout << std::setw(3) << i + 1;
+		std::cout << ". " << state << std::endl;
 	}
 	
 	// Now check that the resulting state is indeed a goal
-	return problem.getGoalSatManager().satisfied(state);
+	if (!problem.getGoalSatManager().satisfied(state)) {
+		std::cout << "ERROR! The state that results from aplying the whole plan is NOT a goal state" << std::endl;
+	}
 }
 
 

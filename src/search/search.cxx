@@ -66,7 +66,10 @@ void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, 
 	json_out.close();
 	
 	if (solved) {
-		if (!valid) throw std::runtime_error("The plan output by the planner is not correct!");
+		if (!valid) {
+			Checker::print_plan_execution(problem, plan, problem.getInitialState());
+			throw std::runtime_error("The plan output by the planner is not correct!");
+		}
 		std::cout << "Search Result: Found plan of length " << plan.size() << std::endl;
 		std::cout << "Expanded / Evaluated / Gen. rate: " << stats.expanded() << " / " << stats.generated() << " / " << eval_speed << std::endl;
 	} else {
