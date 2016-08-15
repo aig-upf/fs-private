@@ -68,6 +68,9 @@ public:
 	{}
 
 	bool has_parent() const { return parent != nullptr; }
+	
+	//! Required for the interface of some algorithms that might prioritise helpful actions.
+	bool is_helpful() const { return false; }
 
 	
 	//! Print the node into the given stream

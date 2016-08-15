@@ -38,7 +38,7 @@ EngineRegistry::EngineRegistry() {
 	add("unreached_atom",  new UnreachedAtomDriver());
 	
 	add("iw",  new IteratedWidthDriver());
-	add("bfws",  new GBFSNoveltyDriver());
+// 	add("bfws",  new GBFSNoveltyDriver());
 	add("breadth_first_search",  new BreadthFirstSearchDriver());
 // 	add("asp_engine",  new ASPEngine());
 }

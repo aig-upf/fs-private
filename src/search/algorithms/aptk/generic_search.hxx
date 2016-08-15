@@ -110,6 +110,9 @@ public:
 		std::reverse( solution.begin(), solution.end() );
 	}
 	
+	//! Convenience method
+	bool solve_model(std::vector<unsigned>& solution) { return search( _model.getTask().getInitialState(), solution ); }
+	
 protected:
 	
 	virtual bool check_goal(NodePtr node, PlanT& solution) {
