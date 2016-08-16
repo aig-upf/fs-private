@@ -67,6 +67,7 @@ protected:
 			// updating it. This is an open problem with the design,
 			// and a more definitive solution needs to be found (soon).
 			replaced->g = replacee->g;
+			replaced->action = replacee->action;
 			replaced->parent = replacee->parent;
 		}
 	};
@@ -79,9 +80,9 @@ public:
 	virtual ~StlSortedOpenList() = default;
 	
 	// Disallow copy, but allow move
-	StlSortedOpenList(const StlSortedOpenList& other) = delete;
+	StlSortedOpenList(const StlSortedOpenList& other) = default;
 	StlSortedOpenList(StlSortedOpenList&& other) = default;
-	StlSortedOpenList& operator=(const StlSortedOpenList& rhs) = delete;
+	StlSortedOpenList& operator=(const StlSortedOpenList& rhs) = default;
 	StlSortedOpenList& operator=(StlSortedOpenList&& rhs) = default;
 
 	virtual void insert( NodePtrType node ) override {

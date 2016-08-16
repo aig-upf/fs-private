@@ -21,6 +21,18 @@ bool LiftedStateModel::goal(const State& state) const {
 	return task.getGoalSatManager().satisfied(state);
 }
 
+bool LiftedStateModel::is_applicable(const State& state, const ActionType& action) const {
+	auto ground_action = action.generate();
+	bool res = is_applicable(state, *ground_action);
+	delete ground_action;
+	return res;
+}
+
+bool LiftedStateModel::is_applicable(const State& state, const GroundAction& action) const {
+	ApplicabilityManager manager(task.getStateConstraints());
+	return manager.isApplicable(state, action);
+}
+
 State LiftedStateModel::next(const State& state, const LiftedActionID& action) const {
 	auto ground_action = action.generate();
 	auto s1 = next(state, *ground_action);

@@ -92,7 +92,9 @@ public:
 			for ( const auto& a : _model.applicable_actions( current->state ) ) {
 				StateT s_a = _model.next( current->state, a );
 				NodePtr successor = std::make_shared<NodeType>( std::move(s_a), a, current );
+				
 				if ( _closed.check( *successor ) ) continue;
+				
 				
 				this->notify(NodeCreationEvent(*successor));
 				_open.insert( successor );
@@ -132,6 +134,32 @@ protected:
 	
 	//! The closed list
 	ClosedList _closed;
+	
+
+	//* Some methods mainly for debugging purposes
+	bool check_open_list_integrity() const {
+		OpenList copy(_open);
+		while (!copy.is_empty()) {
+			NodePtr node = copy.get_next();
+			check_node_correctness(node);
+		}
+		return true;
+	}
+	
+	bool check_closed_list_integrity() const {
+		ClosedList copy(_closed);
+		for (auto node:copy) {
+			check_node_correctness(node.second);
+		}
+		return true;
+	}
+	
+	bool check_node_correctness(NodePtr node) const {
+		if (node->has_parent()) {
+			assert(_model.is_applicable(node->parent->state, node->action));
+		}
+		return true;
+	}
 };
 
 }
