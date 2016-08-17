@@ -35,6 +35,9 @@ namespace fs0 { namespace drivers {
 template <typename StateT, typename ActionT>
 class HeuristicSearchNode {
 public:
+	using ptr_t = std::shared_ptr<HeuristicSearchNode<StateT, ActionT>>;
+
+	
 	HeuristicSearchNode() = delete;
 	~HeuristicSearchNode() = default;
 	
@@ -48,7 +51,7 @@ public:
 		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(std::numeric_limits<long>::max()), _helpful(false)
 	{}
 	
-	HeuristicSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<HeuristicSearchNode<StateT, ActionT>> parent_) :
+	HeuristicSearchNode(StateT&& state_, typename ActionT::IdType action_, ptr_t parent_) :
 		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(std::numeric_limits<long>::max()), _helpful(false)
 	{}
 
@@ -79,6 +82,16 @@ public:
 	void inherit_heuristic_estimate() {
 		if (parent) h = parent->h;
 	}
+	
+	//! What to do when an 'other' node is found during the search while 'this' node is already in
+	//! the open list
+	void update_in_open_list(ptr_t other) {
+		if (other->g < this->g) {
+			this->g = other->g;
+			this->action = other->action;
+			this->parent = other->parent;
+		}
+	}
 
 	//! This effectively implements Greedy Best First search
 	bool operator>( const HeuristicSearchNode<StateT, ActionT>& other ) const { return h > other.h; }
@@ -89,7 +102,7 @@ public:
 	
 	typename ActionT::IdType action;
 	
-	std::shared_ptr<HeuristicSearchNode<StateT, ActionT>> parent;
+	ptr_t parent;
 	
 	unsigned g;
 	

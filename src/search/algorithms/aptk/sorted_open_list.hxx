@@ -87,11 +87,8 @@ public:
 		// the order of the nodes in the open list is not changed by
 		// updating it. This is an open problem with the design,
 		// and a more definitive solution needs to be found (soon).
-		if (node->g < previous->g) {
-			previous->g = node->g;
-			previous->action = node->action;
-			previous->parent = node->parent;			
-		}
+		previous->update_in_open_list(node);
+		
 		return true;
 	}
 

@@ -34,10 +34,12 @@ namespace fs0 { namespace drivers {
 template <typename State>
 class GBFSNoveltyNode {
 public:
+	using ptr_t = std::shared_ptr<GBFSNoveltyNode<State>>;
+	
 	State state;
 	GroundAction::IdType action;
 	
-	std::shared_ptr<GBFSNoveltyNode<State> > parent;
+	ptr_t parent;
 
 	//! Accummulated cost
 	unsigned g;
@@ -63,7 +65,7 @@ public:
 	{}
 
 	//! Constructor with move of the state (cheaper)
-	GBFSNoveltyNode(State&& _state, GroundAction::IdType _action, std::shared_ptr< GBFSNoveltyNode<State> > _parent) :
+	GBFSNoveltyNode(State&& _state, GroundAction::IdType _action, ptr_t _parent) :
 		state(std::move(_state)), action(_action), parent(_parent), g(_parent->g + 1), novelty(0), num_unsat(0)
 	{}
 
@@ -93,6 +95,16 @@ public:
 		if (parent) {
 			novelty = parent->novelty;
 			num_unsat = parent->num_unsat;
+		}
+	}
+	
+	//! What to do when an 'other' node is found during the search while 'this' node is already in
+	//! the open list
+	void update_in_open_list(ptr_t other) {
+		if (other->g < this->g) {
+			this->g = other->g;
+			this->action = other->action;
+			this->parent = other->parent;
 		}
 	}
 
