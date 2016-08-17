@@ -85,7 +85,7 @@ public:
 
 			// close the node before the actual expansion so that children which are identical
 			// to 'current' get properly discarded
-			_closed.put( current );
+			_closed.put(current);
 			
 			this->notify(NodeExpansionEvent(*current));
 			
@@ -93,7 +93,7 @@ public:
 				StateT s_a = _model.next( current->state, a );
 				NodePtr successor = std::make_shared<NodeType>( std::move(s_a), a, current );
 				
-				if ( _closed.check( *successor ) ) continue;
+				if ( _closed.check(successor) ) continue;
 				
 				
 				this->notify(NodeCreationEvent(*successor));

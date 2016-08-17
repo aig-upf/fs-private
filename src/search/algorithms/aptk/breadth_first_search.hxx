@@ -22,11 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <aptk2/search/algorithms/generic_search.hxx>
+#include <search/algorithms/aptk/generic_search.hxx>
+#include <search/algorithms/aptk/unordered_closed_list.hxx>
 #include <aptk2/search/components/unsorted_open_list_impl.hxx>
-#include <aptk2/search/components/closed_list_impl.hxx>
 
-#include "generic_search.hxx"
 
 namespace lapkt {
 
@@ -36,14 +35,14 @@ namespace lapkt {
 template <typename NodeType,
           typename StateModel,
           typename OpenListT = aptk::StlUnsortedFIFO<NodeType>,
-          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>
+          typename ClosedListT = lapkt::UnorderedMapClosedList<NodeType>
 >
 class StlBreadthFirstSearch : public GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>
 {
 public:
 	using OpenList = OpenListT;
 	using ClosedList = ClosedListT;
-	typedef GenericSearch<NodeType, OpenList, ClosedList, StateModel> BaseClass;
+	using BaseClass = GenericSearch<NodeType, OpenList, ClosedList, StateModel>;
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
@@ -60,10 +59,10 @@ public:
 	virtual ~StlBreadthFirstSearch() = default;
 	
 	// Disallow copy, but allow move
-	StlBreadthFirstSearch(const StlBreadthFirstSearch& other) = delete;
-	StlBreadthFirstSearch(StlBreadthFirstSearch&& other) = default;
-	StlBreadthFirstSearch& operator=(const StlBreadthFirstSearch& rhs) = delete;
-	StlBreadthFirstSearch& operator=(StlBreadthFirstSearch&& rhs) = default;	
+	StlBreadthFirstSearch(const StlBreadthFirstSearch&) = delete;
+	StlBreadthFirstSearch(StlBreadthFirstSearch&&) = default;
+	StlBreadthFirstSearch& operator=(const StlBreadthFirstSearch&) = delete;
+	StlBreadthFirstSearch& operator=(StlBreadthFirstSearch&&) = default;
 }; 
 
 }

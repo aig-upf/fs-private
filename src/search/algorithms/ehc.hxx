@@ -159,7 +159,7 @@ public:
 				State s_a = Base::_model.next( current->get_state(), a );
 				NodePtr successor = std::make_shared<NodeType>(std::move(s_a), a, current);
 				
-				if ( this->_closed.check( *successor ) ) continue;
+				if (this->_closed.check(successor)) continue;
 				
 				this->notify(NodeCreationEvent(*successor));
 				

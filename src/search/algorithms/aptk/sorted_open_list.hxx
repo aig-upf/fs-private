@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <queue>
 
 #include <aptk2/search/interfaces/open_list.hxx>
-#include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
+#include <search/algorithms/aptk/unordered_closed_list.hxx>
 
 using namespace aptk;
 
@@ -49,29 +49,8 @@ template <typename NodeType,
 class StlSortedOpenList : public OpenList<NodeType, std::priority_queue<std::shared_ptr<NodeType>, Container, Comparer>>
 {
 public:
-	typedef std::shared_ptr<NodeType> NodePtrType;
+	using NodePtrType = std::shared_ptr<NodeType>;
 
-protected:
-	//! A binary predicate to decide when we need to update an already existing entry on Open
-	struct ReplaceWhen {
-		bool operator()( const NodeType& node_to_be_inserted, const NodeType& node_already_inserted ) const {
-			return node_to_be_inserted.g < node_already_inserted.g;
-		}
-	};
-
-	//! An update operator to replace one node by another with less g.
-	struct ReplaceOperation {
-		void operator()(NodePtrType replacee, NodePtrType replaced) const {
-			//@TODO: Very important: updating g is correct provided that
-			// the order of the nodes in the open list is not changed by
-			// updating it. This is an open problem with the design,
-			// and a more definitive solution needs to be found (soon).
-			replaced->g = replacee->g;
-			replaced->action = replacee->action;
-			replaced->parent = replacee->parent;
-		}
-	};
-	
 public:
 	//! The constructor of a sorted open list needs to specify the heuristic to sort the nodes with
 	StlSortedOpenList(Heuristic& heuristic)
@@ -86,24 +65,41 @@ public:
 	StlSortedOpenList& operator=(StlSortedOpenList&& rhs) = default;
 
 	virtual void insert( NodePtrType node ) override {
-		// Check whether there is n' in the open list 
-		// such that state(n) == state(n').
-		// If it is the case, we just need to replace the
-		// entry on the hash table if g(n) < g(n')
-
-		if ( already_in_open_.update(node, ReplaceWhen(), ReplaceOperation() ) )
-			return;
+		// We deal here with the case where the state we want to insert in the open list was already
+		// inserted there with a possibly different g cost value.
+		if (update(node)) return;
 
 		if ( node->dead_end() ) return;
 		this->push( node );
 		already_in_open_.put( node );
 	}
 
+	//! Check if the open list already contains a node 'previous' referring to the same state.
+	//! If that is the case, there'll be no need to reinsert the node, and we signal so returning true.
+	//! If, in addition, 'previous' had a higher g-value, we do an in-place modification of it.
+	bool update(NodePtrType node) {
+		NodePtrType previous = already_in_open_.seek(node);
+		if (previous == nullptr) return false; // No node with the same state is in the open list
+		
+		// Else the node was already in the open list and we might want to update it
+		
+		// @TODO: Very important: updating g is correct provided that
+		// the order of the nodes in the open list is not changed by
+		// updating it. This is an open problem with the design,
+		// and a more definitive solution needs to be found (soon).
+		if (node->g < previous->g) {
+			previous->g = node->g;
+			previous->action = node->action;
+			previous->parent = node->parent;			
+		}
+		return true;
+	}
+
 	virtual NodePtrType get_next() override {
 		assert( !is_empty() );
 		NodePtrType node = this->top();
 		this->pop();
-		already_in_open_.remove(*node);
+		already_in_open_.remove(node);
 		return node;
 	}
 
@@ -115,7 +111,7 @@ public:
 	Heuristic& _heuristic;
 	
 	//! A list of nodes which are already in the open list
-	StlUnorderedMapClosedList< NodeType > already_in_open_;
+	UnorderedMapClosedList<NodeType> already_in_open_;
 };
 
 }

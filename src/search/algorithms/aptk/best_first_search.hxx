@@ -24,10 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <search/algorithms/aptk/generic_search.hxx>
 #include <search/algorithms/aptk/sorted_open_list.hxx>
-#include <aptk2/search/components/sorted_open_list_impl.hxx>
-#include <aptk2/search/components/closed_list_impl.hxx>
-
-using namespace aptk;
+#include <search/algorithms/aptk/unordered_closed_list.hxx>
 
 namespace lapkt {
 
@@ -37,13 +34,13 @@ namespace lapkt {
 template < typename NodeType, typename Heuristic, typename StateModel >
 class StlBestFirstSearch : public GenericSearch<NodeType, 
                                                 StlSortedOpenList<NodeType, Heuristic>, 
-                                                StlUnorderedMapClosedList<NodeType>,
+                                                UnorderedMapClosedList<NodeType>,
                                                 StateModel>
 {
 public:
-	typedef StlSortedOpenList<NodeType, Heuristic> OpenList;
-	typedef StlUnorderedMapClosedList<NodeType> ClosedList;
-	typedef GenericSearch<NodeType, OpenList, ClosedList, StateModel> BaseClass;
+	using OpenList = StlSortedOpenList<NodeType, Heuristic>;
+	using ClosedList = UnorderedMapClosedList<NodeType>;
+	using BaseClass = GenericSearch<NodeType, OpenList, ClosedList, StateModel>;
 	
 	//! The only allowed constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
@@ -55,10 +52,10 @@ public:
 	virtual ~StlBestFirstSearch() = default;
 	
 	// Disallow copy, but allow move
-	StlBestFirstSearch(const StlBestFirstSearch& other) = delete;
-	StlBestFirstSearch(StlBestFirstSearch&& other) = default;
-	StlBestFirstSearch& operator=(const StlBestFirstSearch& rhs) = delete;
-	StlBestFirstSearch& operator=(StlBestFirstSearch&& rhs) = default;
+	StlBestFirstSearch(const StlBestFirstSearch&) = delete;
+	StlBestFirstSearch(StlBestFirstSearch&&) = default;
+	StlBestFirstSearch& operator=(const StlBestFirstSearch&) = delete;
+	StlBestFirstSearch& operator=(StlBestFirstSearch&&) = default;
 }; 
 
 }
