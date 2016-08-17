@@ -26,11 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 #include <functional>
 #include <queue>
+#include <memory>
 
 #include <aptk2/search/interfaces/open_list.hxx>
-#include <search/algorithms/aptk/unordered_closed_list.hxx>
-
-using namespace aptk;
+#include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 
 namespace lapkt {
 
@@ -43,14 +42,12 @@ struct StlNodePointerAdapter {
 
 template <typename NodeType,
           typename Heuristic,
-          typename Container = std::vector< std::shared_ptr< NodeType > >,
-          typename Comparer = StlNodePointerAdapter< std::shared_ptr< NodeType > > >
+          typename NodePtrType = std::shared_ptr<NodeType>,
+          typename Container = std::vector<NodePtrType>,
+          typename Comparer = StlNodePointerAdapter<NodePtrType>>
 
-class StlSortedOpenList : public OpenList<NodeType, std::priority_queue<std::shared_ptr<NodeType>, Container, Comparer>>
+class StlSortedOpenList : public aptk::OpenList<NodeType, std::priority_queue<NodePtrType, Container, Comparer>>
 {
-public:
-	using NodePtrType = std::shared_ptr<NodeType>;
-
 public:
 	//! The constructor of a sorted open list needs to specify the heuristic to sort the nodes with
 	StlSortedOpenList(Heuristic& heuristic)
@@ -108,7 +105,7 @@ public:
 	Heuristic& _heuristic;
 	
 	//! A list of nodes which are already in the open list
-	UnorderedMapClosedList<NodeType> already_in_open_;
+	aptk::StlUnorderedMapClosedList<NodeType> already_in_open_;
 };
 
 }

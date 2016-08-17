@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <search/algorithms/aptk/generic_search.hxx>
-#include <search/algorithms/aptk/unordered_closed_list.hxx>
+#include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 #include <aptk2/search/components/unsorted_open_list_impl.hxx>
 
 
@@ -35,25 +35,23 @@ namespace lapkt {
 template <typename NodeType,
           typename StateModel,
           typename OpenListT = aptk::StlUnsortedFIFO<NodeType>,
-          typename ClosedListT = lapkt::UnorderedMapClosedList<NodeType>
+          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>
 >
 class StlBreadthFirstSearch : public GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>
 {
 public:
-	using OpenList = OpenListT;
-	using ClosedList = ClosedListT;
-	using BaseClass = GenericSearch<NodeType, OpenList, ClosedList, StateModel>;
+	using BaseClass = GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>;
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the particular open and closed list objects
-	StlBreadthFirstSearch(const StateModel& model, OpenList&& open) :
-		BaseClass(model, std::move(open), ClosedList())
+	StlBreadthFirstSearch(const StateModel& model, OpenListT&& open) :
+		BaseClass(model, std::move(open), ClosedListT())
 	{}
 	
 	//! For convenience, a constructor where the open list is default-constructed
 	StlBreadthFirstSearch(const StateModel& model) :
-		StlBreadthFirstSearch(model, OpenList())
+		StlBreadthFirstSearch(model, OpenListT())
 	{}
 	
 	virtual ~StlBreadthFirstSearch() = default;

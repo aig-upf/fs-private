@@ -24,29 +24,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <search/algorithms/aptk/generic_search.hxx>
 #include <search/algorithms/aptk/sorted_open_list.hxx>
-#include <search/algorithms/aptk/unordered_closed_list.hxx>
+#include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 
 namespace lapkt {
 
 //! Partial specialization of the GenericSearch algorithm:
 //! A best-first search is a generic search with an open list sorted by a certain (given) heuristic
 //! and a standard unsorted closed list. Type of node and state model are still generic.
-template < typename NodeType, typename Heuristic, typename StateModel >
-class StlBestFirstSearch : public GenericSearch<NodeType, 
-                                                StlSortedOpenList<NodeType, Heuristic>, 
-                                                UnorderedMapClosedList<NodeType>,
-                                                StateModel>
+template <typename NodeType,
+          typename Heuristic,
+          typename StateModel,
+          typename OpenListT = StlSortedOpenList<NodeType, Heuristic>,
+          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>
+>
+class StlBestFirstSearch : public GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>
 {
 public:
-	using OpenList = StlSortedOpenList<NodeType, Heuristic>;
-	using ClosedList = UnorderedMapClosedList<NodeType>;
-	using BaseClass = GenericSearch<NodeType, OpenList, ClosedList, StateModel>;
+	using BaseClass = GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>;
 	
 	//! The only allowed constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the particular heuristic object to be used to evaluate states
 	StlBestFirstSearch(const StateModel& model, Heuristic& heuristic) :
-		BaseClass(model, OpenList(heuristic), ClosedList())
+		BaseClass(model, OpenListT(heuristic), ClosedListT())
 	{}
 	
 	virtual ~StlBestFirstSearch() = default;
