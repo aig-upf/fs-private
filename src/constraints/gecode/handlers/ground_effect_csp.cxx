@@ -26,8 +26,8 @@ GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const T
 			if (effect->is_del()) continue; // Ignore delete effects
 			auto handler = std::unique_ptr<GroundEffectCSP>(new GroundEffectCSP(*action, tuple_index, effect, approximate, true));
 			if (handler->init(novelty)) {
-				managers.push_back(std::move(handler));
 				LPT_DEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
+				managers.push_back(std::move(handler));
 			} else {
 				LPT_DEBUG("main", "CSP for action effect " << effect << " is inconsistent ==> the action is not applicable");
 			}
