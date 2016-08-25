@@ -75,7 +75,9 @@ public:
 		LPT_DEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for state: " << std::endl << state << std::endl << "****************************************");
 		
 		// If the heuristic is > 0, then we must have a relaxed plan and at least some atoms in the 1st layer of it.
-		assert(h <= 0 || _relevant.size() > 0);
+		// TODO But this holds only for certain types of searches, other search engines using this very same node type 
+		// won't add anything to the 'relevant' vector
+		// assert(h <= 0 || _relevant.size() > 0);
 		return h;
 	}
 	
