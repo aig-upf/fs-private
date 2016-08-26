@@ -59,21 +59,35 @@ std::ostream& PlanPrinter::print(std::ostream& os) const {
 }
 
 
-namespace print {
+} // namespaces
 
-std::ostream& plan::print(std::ostream& os) const {
+
+
+namespace fs0 { namespace print {
+
+std::ostream&
+plan::print(std::ostream& os) const {
 	for (const ActionID* action:_plan) {
 		os << *action << " ";
 	}
 	return os;
 }
 
-void supported_plan::printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out) {
+void
+supported_plan::printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out) {
 	for (const auto& element:plan) {
 		out << element << " " << std::endl;
 	}
 }
 
+std::ostream&
+support::print(std::ostream& os) const {
+	const TupleIndex& index = Problem::getInstance().get_tuple_index();
+	for (TupleIdx tuple:_support) {
+		const Atom& atom = index.to_atom(tuple);
+		os << atom << ", ";
+	}
+	return os;
 }
 
-} // namespaces
+}} // namespaces
