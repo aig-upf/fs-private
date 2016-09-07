@@ -70,7 +70,7 @@ def move_files(base_dir, instance, domain, target_dir, use_vanilla):
 
     if is_external_defined and use_vanilla:
         raise RuntimeError("An external definitions file was found at '{}', but the runner script determined"
-                           "that no external files were needed. Something is wrong.")
+                           " that no external files were needed. Something is wrong.".format(base_dir))
 
     if not use_vanilla:
         # The ad-hoc external definitions file - if it does not exist, we use the default.

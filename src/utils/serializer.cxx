@@ -2,12 +2,14 @@
 #include <string>
 #include <fstream>
 #include <utils/serializer.hxx>
+#include <utils/serialize_tuple.hxx>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
@@ -26,6 +28,8 @@ void Serializer::BoostDeserialize(const std::string& filename, T& data) {
 
 //! Template instantiations
 template void Serializer::BoostDeserialize<Serializer::BinarySet>(const std::string& filename, Serializer::BinarySet& data);
+template void Serializer::BoostDeserialize<Serializer::Arity3Set>(const std::string& filename, Serializer::Arity3Set& data);
+template void Serializer::BoostDeserialize<std::vector<std::tuple<long, long, long>>>(const std::string& filename, std::vector<std::tuple<long, long, long>>& data);
 
 template <typename T>
 void Serializer::BoostSerialize(const std::string& filename, const T& data) {
