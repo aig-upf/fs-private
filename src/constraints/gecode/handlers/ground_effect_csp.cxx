@@ -94,7 +94,7 @@ bool GroundEffectCSP::find_atom_support(TupleIdx tuple, const Atom& atom, const 
 }
 
 bool GroundEffectCSP::solve(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
-	// We just want to search for one solution an extract the support from it
+	// We just want to search for one solution and extract the support from it
 	Gecode::DFS<GecodeCSP> engine(csp);
 	GecodeCSP* solution = engine.next();
 	if (!solution) return false; // The CSP has no solution at all

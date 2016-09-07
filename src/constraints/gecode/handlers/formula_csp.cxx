@@ -8,6 +8,7 @@
 #include <utils/tuple_index.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/gecode.hxx>
+#include <utils/printers/printers.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <state.hxx>
@@ -28,6 +29,8 @@ FormulaCSP::FormulaCSP(const fs::Formula* formula, const TupleIndex& tuple_index
 	index_existential_variable_uses();
 	
 	Helper::postBranchingStrategy(*_base_csp);
+	
+	// std::cout << "Goal CSP:" << std::endl << _translator << std::endl;
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
 	Gecode::SpaceStatus st = _base_csp->status();
@@ -54,6 +57,7 @@ bool FormulaCSP::compute_support(GecodeCSP* csp, std::vector<TupleIdx>& support)
 	assert(support.empty());
 	support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
 	delete solution;
+	LPT_EDEBUG("heuristic", "Support for the formula is:" << std::endl << fs0::print::support(support));
 	return true;
 }
 

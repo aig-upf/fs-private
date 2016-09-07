@@ -18,11 +18,10 @@ Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& transl
 		VariableIdx variable = element.first;
 		ObjectIdx value = translator.resolveVariableFromIndex(element.second, *solution).val();
 		
-		unsigned tuple_idx = tuple_index.to_index(Atom(variable, value));
-		support.push_back(tuple_idx);
+		support.push_back(tuple_index.to_index(variable, value));
 	}
 	
-	// Now the rest of fluent elements
+	// Now the rest of fluent elements, i.e. the nested fluent terms
 	for (const auto& tuple_info:tuple_indexes) {
 		unsigned symbol = tuple_info.first;
 		
@@ -31,14 +30,31 @@ Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& transl
 			tuple.push_back(translator.resolveValueFromIndex(subterm_idx, *solution));
 		}
 		
-		unsigned tuple_idx = tuple_index.to_index(symbol, tuple);
-		support.push_back(tuple_idx);
+		support.push_back(tuple_index.to_index(symbol, tuple));
 	}
 	
 	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
 	support.insert(support.end(), necessary_tuples.begin(), necessary_tuples.end());
 	
+	/*
+	// Now, insert support tuples related to nested terms that have been mapped into element constraints
+	for (auto fluent:effect_nested_fluents) {
+		const NestedFluentData& nested_data = getNestedFluentTranslator(fluent).getNestedFluentData();
+		VariableIdx variable = nested_data.resolveStateVariable(*solution);
+
+		ObjectIdx value = _translator.resolveValue(fluent, *solution);
+		
+		
+		translator.resolveValueFromIndex(subterm_idx, *solution);
+		
+		support.push_back(tuple_index.to_index(variable, value));
+		}
+	}
+	*/
+	
 	return support;
 }
+
+
 
 } } // namespaces

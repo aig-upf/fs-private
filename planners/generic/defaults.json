@@ -14,6 +14,7 @@
 	"ehc": "false",
 	"helpful_actions": "true",
 	"early_termination": "true",
+	"element_constraint": "false",
 	
 	"width": {
 		"max_novelty": 2,

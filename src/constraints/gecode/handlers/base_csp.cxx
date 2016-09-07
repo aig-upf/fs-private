@@ -8,6 +8,7 @@
 #include <constraints/registry.hxx>
 #include <gecode/driver.hh>
 #include <constraints/gecode/translators/component_translator.hxx>
+#include <utils/config.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -99,18 +100,43 @@ BaseCSP::instantiate(const State& state) const {
 }
 
 
+const NestedFluentElementTranslator&
+BaseCSP::getNestedFluentTranslator(const fs::FluentHeadedNestedTerm* fluent) const { 
+	auto it = _nested_fluent_translators_idx.find(fluent);
+	assert(it != _nested_fluent_translators_idx.end());
+	const NestedFluentElementTranslator& translator = _nested_fluent_translators.at(it->second);
+	assert(*translator.getTerm() == *fluent);
+	return translator;
+}
+
 void
 BaseCSP::register_csp_variables() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
+	const Config& config = Config::instance();
 	
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
 		if (const fs::FluentHeadedNestedTerm* fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
-			bool is_predicate = info.isPredicate(fluent->getSymbolId());
-			_extensional_constraints.push_back(ExtensionalConstraint(fluent, _tuple_index, is_predicate));
+			unsigned symbol_id = fluent->getSymbolId();
+			bool is_predicate = info.isPredicate(symbol_id);
 			
-			if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
-				_translator.registerNestedTerm(fluent);
+			if (config.getOption("element_constraint") && _counter.symbol_requires_element_constraint(symbol_id) && !is_predicate) {
+				LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an element constraint");
+				NestedFluentElementTranslator tr(fluent);
+				tr.register_variables(_translator);
+				_nested_fluent_translators.push_back(std::move(tr));
+				_nested_fluent_translators_idx.insert(std::make_pair(fluent, _nested_fluent_translators.size() - 1));
+			}
+			
+			else {
+				
+				_extensional_constraints.push_back(ExtensionalConstraint(fluent, _tuple_index, is_predicate));
+				if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
+					_translator.registerNestedTerm(fluent);
+					LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an extensional constraint");
+				} else {
+					LPT_DEBUG("translation", "Atom \"" << *fluent << "\" will be translated into an extensional constraint");
+				}
 			}
 			
 		} else if (auto statevar = dynamic_cast<const fs::StateVariable*>(term)) {
@@ -152,6 +178,11 @@ BaseCSP::register_csp_constraints() {
 	for (ExtensionalConstraint& constraint:_extensional_constraints) {
 		constraint.register_constraints(_translator);
 	}
+	
+	for (NestedFluentElementTranslator& tr:_nested_fluent_translators) {
+		tr.register_constraints(_translator);
+		// FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *tr.getTerm() << "): " << _translator); // Uncomment for extreme debugging
+	}
 }
 
 std::ostream&
@@ -191,7 +222,9 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 				
 				if (statevar || nested_fluent) {
 					const fs::FluentHeadedNestedTerm* origin = statevar ? statevar->getOrigin() : nested_fluent;
-					if (info.isPredicate(origin->getSymbolId())) {
+					unsigned symbol_id = origin->getSymbolId();
+					
+					if (info.isPredicate(symbol_id)) {
 						// e.g. we had a condition clear(b) = 1, which we'll want to transform into an extensional constraint on the
 						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
 						
@@ -223,6 +256,11 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 				}
 			}
 		}
+	}
+	
+	for (auto term:terms) {
+		if (auto sv = dynamic_cast<const fs::StateVariable*>(term)) _counter.count_flat(sv->getOrigin()->getSymbolId());
+		else if (auto fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) _counter.count_nested(fluent->getSymbolId());
 	}
 	
 	// Insert into all_formulas and all_terms all those elements in 'conditions' or 'terms' which have not been 
