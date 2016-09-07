@@ -36,22 +36,6 @@ Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& transl
 	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
 	support.insert(support.end(), necessary_tuples.begin(), necessary_tuples.end());
 	
-	/*
-	// Now, insert support tuples related to nested terms that have been mapped into element constraints
-	for (auto fluent:effect_nested_fluents) {
-		const NestedFluentData& nested_data = getNestedFluentTranslator(fluent).getNestedFluentData();
-		VariableIdx variable = nested_data.resolveStateVariable(*solution);
-
-		ObjectIdx value = _translator.resolveValue(fluent, *solution);
-		
-		
-		translator.resolveValueFromIndex(subterm_idx, *solution);
-		
-		support.push_back(tuple_index.to_index(variable, value));
-		}
-	}
-	*/
-	
 	return support;
 }
 

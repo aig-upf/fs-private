@@ -80,9 +80,6 @@ protected:
  	//! Note that we need to use the hash and equality specializations of the parent class Term pointer
  	std::unordered_map<const fs::FluentHeadedNestedTerm*, unsigned, std::hash<const fs::Term*>, std::equal_to<const fs::Term*>> _nested_fluent_translators_idx;
  	
- 	//! Return the nested fluent translator that corresponds to the given term
- 	const NestedFluentElementTranslator& getNestedFluentTranslator(const fs::FluentHeadedNestedTerm* fluent) const;
-	
 	//! The set of nested fluent translators, one for each nested fluent in the set of terms modeled by this CSP
 	std::vector<NestedFluentElementTranslator> _nested_fluent_translators;
 	

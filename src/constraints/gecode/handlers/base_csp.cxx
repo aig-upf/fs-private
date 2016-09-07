@@ -100,15 +100,6 @@ BaseCSP::instantiate(const State& state) const {
 }
 
 
-const NestedFluentElementTranslator&
-BaseCSP::getNestedFluentTranslator(const fs::FluentHeadedNestedTerm* fluent) const { 
-	auto it = _nested_fluent_translators_idx.find(fluent);
-	assert(it != _nested_fluent_translators_idx.end());
-	const NestedFluentElementTranslator& translator = _nested_fluent_translators.at(it->second);
-	assert(*translator.getTerm() == *fluent);
-	return translator;
-}
-
 void
 BaseCSP::register_csp_variables() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
