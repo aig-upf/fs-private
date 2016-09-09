@@ -84,5 +84,11 @@ namespace fs0 {
 	public:
 		InvalidConfiguration(const std::string& msg) : std::runtime_error(msg) {}
 	};
+	
+	class UndefinedValueAccess : public std::runtime_error {
+	public:
+		UndefinedValueAccess(const std::string& msg) : std::runtime_error(msg) {}
+		UndefinedValueAccess() : UndefinedValueAccess("") {}
+	};
 
 } // namespaces
