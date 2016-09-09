@@ -27,9 +27,7 @@ void Serializer::BoostDeserialize(const std::string& filename, T& data) {
 }
 
 //! Template instantiations
-template void Serializer::BoostDeserialize<Serializer::BinarySet>(const std::string& filename, Serializer::BinarySet& data);
-template void Serializer::BoostDeserialize<Serializer::Arity3Set>(const std::string& filename, Serializer::Arity3Set& data);
-template void Serializer::BoostDeserialize<std::vector<std::tuple<long, long, long>>>(const std::string& filename, std::vector<std::tuple<long, long, long>>& data);
+// template void Serializer::BoostDeserialize<Serializer::BinarySet>(const std::string& filename, Serializer::BinarySet& data);
 
 template <typename T>
 void Serializer::BoostSerialize(const std::string& filename, const T& data) {
