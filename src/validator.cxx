@@ -82,7 +82,10 @@ Validator::validate_problem_info(const ProblemInfo& info) {
 			} catch (const std::out_of_range& e) {
 				std::cerr << "The denotation of (static) symbol \"" << info.getSymbolName(symbol) << "\" is undefined at point " << print::container(print::Helper::name_objects(point, signature)) << std::endl;
 				error = true;
-			}
+			} catch (const UndefinedValueAccess& e) {
+				std::cerr << "The denotation of (static) symbol \"" << info.getSymbolName(symbol) << "\" is undefined at point " << print::container(print::Helper::name_objects(point, signature)) << std::endl;
+				error = true;
+			}			
 		}
 	}
 	

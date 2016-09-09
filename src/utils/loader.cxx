@@ -26,6 +26,7 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 {
 
 Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler) {
+	const Config& config = Config::instance();
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	LPT_INFO("main", "Loading initial state...");
@@ -47,8 +48,10 @@ Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp
 	
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
-	LPT_INFO("main", "Validating problem...");
-	Validator::validate_problem(*problem, info);
+	if (config.validate()) {
+		LPT_INFO("main", "Validating problem...");
+		Validator::validate_problem(*problem, info);
+	}
 	
 	return problem;
 }

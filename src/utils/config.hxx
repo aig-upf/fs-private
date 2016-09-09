@@ -103,6 +103,8 @@ public:
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
 	
+	bool validate() const { return getOption("validate"); }
+	
 	//! A generic getter
 	template <typename T>
 	T getOption(const std::string& key) const {
