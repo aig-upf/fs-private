@@ -11,7 +11,7 @@
 #include <search/drivers/fully_lifted_driver.hxx>
 #include <search/drivers/smart_lifted_driver.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
-#include <search/drivers/gbfs_novelty.hxx>
+#include <search/drivers/bfws.hxx>
 #include <search/stats.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
@@ -110,7 +110,7 @@ void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Confi
 
 	} else if (driver_tag == "bfws") {
 		
-		GBFSNoveltyDriver driver;
+		BFWSDriver driver;
 		GroundStateModel model = driver.setup(config, problem);
 		auto engine = driver.create(config, model);
 		do_search(*engine, model, out_dir, start_time, driver.getSearchStats());

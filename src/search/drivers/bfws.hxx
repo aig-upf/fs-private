@@ -2,7 +2,7 @@
 #pragma once
 
 #include <search/drivers/registry.hxx>
-#include <search/nodes/gbfs_novelty_node.hxx>
+#include <search/nodes/bfws_node.hxx>
 #include <search/components/unsat_goals_novelty.hxx>
 #include <search/algorithms/aptk/events.hxx>
 #include <search/algorithms/aptk/best_first_search.hxx>
@@ -14,7 +14,7 @@ namespace fs0 { class GroundStateModel; class Config; }
 namespace fs0 { namespace drivers {
 
 //! A creator for the Iterated Width Search FS0 engine
-class GBFSNoveltyDriver {
+class BFWSDriver {
 public:
 	//! We use a GBFS heuristic search node
 	using NodeT = GBFSNoveltyNode<fs0::State>;

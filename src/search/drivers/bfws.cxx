@@ -1,5 +1,5 @@
 
-#include <search/drivers/gbfs_novelty.hxx>
+#include <search/drivers/bfws.hxx>
 #include <search/events.hxx>
 #include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
@@ -7,8 +7,8 @@
 
 namespace fs0 { namespace drivers {
 	
-GBFSNoveltyDriver::Engine
-GBFSNoveltyDriver::create(const Config& config, const GroundStateModel& model) {
+BFWSDriver::Engine
+BFWSDriver::create(const Config& config, const GroundStateModel& model) {
 	
 	unsigned max_novelty = config.getOption<int>("width.max_novelty");
 
@@ -32,7 +32,7 @@ GBFSNoveltyDriver::create(const Config& config, const GroundStateModel& model) {
 }
 
 GroundStateModel
-GBFSNoveltyDriver::setup(const Config& config, Problem& problem) const {
+BFWSDriver::setup(const Config& config, Problem& problem) const {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	return GroundStateModel(problem); // By default we ground all actions and return a model with the problem as it is
 }
