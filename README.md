@@ -19,15 +19,42 @@ been used and described in a number of academic publications that [can be found 
 the most recent of which are [[Francès and Geffner, 2015]](#ref-frances-modeling-2015) and [[Francès and Geffner, 2016a]](#ref-frances-existential-2016)
 and [[Francès and Geffner, 2016b]](#ref-frances-effective-2016).
 
-* [Installation](#installation)
-* [Usage](#usage)
-* [Credits](#credits)
-* [References](#references)
+1. [Installation](#installation)
+    1. [Docker Image](#docker-image)
+    1. [Manual Installation](#manual-installation)
+1. [Usage](#usage)
+1. [Credits](#credits)
+1. [References](#references)
 
 
 
 ## <a name="references"></a>Installation
-In order to install and run the `FS` planner, you need the following software components:
+
+### <a name="docker-image"></a>Docker Image
+
+The fastest and recommended way to get started with the planner is by grabbing the ready-to-use Docker image and running it interactively.
+
+In order to do so, you need to [have Docker installed on your machine](https://docs.docker.com/engine/installation),
+and then you can pull the image with
+
+```shell
+docker pull aigupf/fs
+```
+
+Once the image is in your computer, you can log into a fully-functioning Docker container where the planner
+and all its software dependencies are already installed for you:
+
+
+```shell
+docker run -it aigupf/fs
+python3 preprocessor/runner.py --tag test --instance $FSBENCHMARKS/benchmarks/counters-fn/instance_5.pddl --run --driver=smart
+```
+
+
+### <a name="manual-installation"></a>Manual Installation
+
+Alternatively, you can perform a full installation of the planner and all its dependencies from source.
+To begin with, you will need the following software components:
 
 1. The [LAPKT Planning Toolkit](http://lapkt.org/), which provides the base search algorithms used with our heuristics.
 You should use the branch `v2_work`, as explained [here](https://github.com/miquelramirez/LAPKT-public/blob/v2-work/aptk2/README.md).
