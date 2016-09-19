@@ -60,7 +60,9 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const HeuristicSearchNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		os << "{@ = " << this << ", s = " << state << ", g = " << g << ", h = " << h <<  ", g+h = " << g+h << ", helpful: " << _helpful << ", parent = " << parent << ", action: " << action << "}";
+		std::string h_ = (h == std::numeric_limits<long>::max()) ? "-" : std::to_string(h);
+		std::string gh_ = (h == std::numeric_limits<long>::max()) ? "-" : std::to_string(g+h);
+		os << "{@ = " << this << ", s = " << state << ", g = " << g << ", h = " << h_ <<  ", g+h = " << gh_ << ", helpful: " << _helpful << ", parent = " << parent << ", action: " << action << "}";
 		return os;
 	}
 	

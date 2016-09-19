@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <iomanip>
+
 #include <utils/printers/vector.hxx>
 #include <search/nodes/heuristic_search_node.hxx>
 #include <utils/config.hxx>
@@ -8,6 +10,7 @@
 #include <search/algorithms/aptk/events.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <search/stats.hxx>
+
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
 namespace fs = fs0::language::fstrips;
@@ -37,6 +40,7 @@ protected:
 	void open(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		auto& node = dynamic_cast<const OpenEvent&>(event).node;
 		LPT_DEBUG("cout", node);
+		LPT_DEBUG("search", std::setw(7) << "OPEN: " << node);
 		_unused(node);
 	}
 	
@@ -46,10 +50,12 @@ protected:
 	
 	void creation(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.generation();
+		LPT_DEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
 	}
 	
 	void expansion(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.expansion();
+		LPT_DEBUG("search", std::setw(7) << "EXPAND: " << dynamic_cast<const ExpansionEvent&>(event).node);
 	}
 	
 	SearchStats& _stats;
