@@ -17,7 +17,7 @@ namespace fs0 { namespace drivers {
 class BFWSDriver {
 public:
 	//! We use a GBFS heuristic search node
-	using NodeT = GBFSNoveltyNode<fs0::State>;
+	using NodeT = BFWSNode<fs0::State>;
 	
 	using NoveltyHeuristic = UnsatGoalsNoveltyComponent<NodeT>;
 	

@@ -32,9 +32,9 @@ namespace fs0 { namespace drivers {
 
 
 template <typename State>
-class GBFSNoveltyNode {
+class BFWSNode {
 public:
-	using ptr_t = std::shared_ptr<GBFSNoveltyNode<State>>;
+	using ptr_t = std::shared_ptr<BFWSNode<State>>;
 	
 	State state;
 	GroundAction::IdType action;
@@ -51,21 +51,21 @@ public:
 	unsigned num_unsat;
 	
 public:
-	GBFSNoveltyNode() = delete;
-	~GBFSNoveltyNode() {}
+	BFWSNode() = delete;
+	~BFWSNode() {}
 	
-	GBFSNoveltyNode(const GBFSNoveltyNode& other) = delete;
-	GBFSNoveltyNode(GBFSNoveltyNode&& other) = delete;
-	GBFSNoveltyNode& operator=(const GBFSNoveltyNode& rhs) = delete;
-	GBFSNoveltyNode& operator=(GBFSNoveltyNode&& rhs) = delete;
+	BFWSNode(const BFWSNode& other) = delete;
+	BFWSNode(BFWSNode&& other) = delete;
+	BFWSNode& operator=(const BFWSNode& rhs) = delete;
+	BFWSNode& operator=(BFWSNode&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	GBFSNoveltyNode(const State& s)
+	BFWSNode(const State& s)
 		: state(s), action(GroundAction::invalid_action_id), parent(nullptr), g(0), novelty(0), num_unsat(0)
 	{}
 
 	//! Constructor with move of the state (cheaper)
-	GBFSNoveltyNode(State&& _state, GroundAction::IdType _action, ptr_t _parent) :
+	BFWSNode(State&& _state, GroundAction::IdType _action, ptr_t _parent) :
 		state(std::move(_state)), action(_action), parent(_parent), g(_parent->g + 1), novelty(0), num_unsat(0)
 	{}
 
@@ -76,13 +76,13 @@ public:
 
 	
 	//! Print the node into the given stream
-	friend std::ostream& operator<<(std::ostream &os, const GBFSNoveltyNode<State>& object) { return object.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const BFWSNode<State>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const { 
 		os << "{@ = " << this << ", s = " << state << ", novelty = " << novelty << ", g = " << g << ", unsat = " << num_unsat << ", parent = " << parent << "}";
 		return os;
 	}
 
-	bool operator==( const GBFSNoveltyNode<State>& o ) const { return state == o.state; }
+	bool operator==( const BFWSNode<State>& o ) const { return state == o.state; }
 
 	template <typename Heuristic>
 	void evaluate_with( Heuristic& heuristic ) {
@@ -120,7 +120,7 @@ public:
 	//! The ordering of the nodes prioritizes:
 	//! (1) nodes with lower novelty, (2) nodes with lower number of unsatisfied goals, (3) nodes with lower accumulated cost
 	// (Undelying logic is: return true iff the second element should be popped before the first.)
-	bool operator>( const GBFSNoveltyNode<State>& other ) const {
+	bool operator>( const BFWSNode<State>& other ) const {
 		if ( novelty > other.novelty ) return true;
 		if ( novelty < other.novelty ) return false;
 		if (num_unsat > other.num_unsat) return true;
