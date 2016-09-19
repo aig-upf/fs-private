@@ -78,7 +78,7 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const GBFSNoveltyNode<State>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const { 
-		os << "{@ = " << this << ", s = " << state << ", novelty = " << novelty << ", g = " << g << " unsat = " << num_unsat << ", parent = " << parent << "}";
+		os << "{@ = " << this << ", s = " << state << ", novelty = " << novelty << ", g = " << g << ", unsat = " << num_unsat << ", parent = " << parent << "}";
 		return os;
 	}
 
@@ -87,7 +87,9 @@ public:
 	template <typename Heuristic>
 	void evaluate_with( Heuristic& heuristic ) {
 		novelty = heuristic.novelty( state );
-		if (novelty > heuristic.novelty_bound()) novelty = std::numeric_limits<unsigned>::infinity();
+		if (novelty > heuristic.novelty_bound()) {
+			novelty = std::numeric_limits<unsigned>::max();
+		}
 		num_unsat = heuristic.evaluate_num_unsat_goals( state );
 	}
 	
@@ -105,20 +107,23 @@ public:
 			this->g = other->g;
 			this->action = other->action;
 			this->parent = other->parent;
+			this->novelty = other->novelty;
+			this->num_unsat = other->num_unsat;
 		}
 	}
 
-	bool dead_end() const { return novelty == std::numeric_limits<unsigned>::infinity(); }
+	bool dead_end() const { return novelty == std::numeric_limits<unsigned>::max(); }
 
 	std::size_t hash() const { return state.hash(); }
 
 	//! The ordering of the nodes prioritizes:
 	//! (1) nodes with lower novelty, (2) nodes with lower number of unsatisfied goals, (3) nodes with lower accumulated cost
+	// (Undelying logic is: return true iff the second element should be popped before the first.)
 	bool operator>( const GBFSNoveltyNode<State>& other ) const {
 		if ( novelty > other.novelty ) return true;
 		if ( novelty < other.novelty ) return false;
 		if (num_unsat > other.num_unsat) return true;
-		if (num_unsat < other.num_unsat) return true;
+		if (num_unsat < other.num_unsat) return false;
 		return g > other.g;
 	}
 };
