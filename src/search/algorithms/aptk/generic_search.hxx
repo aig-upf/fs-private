@@ -95,7 +95,6 @@ public:
 				
 				if ( _closed.check(successor) ) continue;
 				
-				
 				this->notify(NodeCreationEvent(*successor));
 				_open.insert( successor );
 			}

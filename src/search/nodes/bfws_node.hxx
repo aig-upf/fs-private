@@ -112,7 +112,8 @@ public:
 		}
 	}
 
-	bool dead_end() const { return novelty == std::numeric_limits<unsigned>::max(); }
+// 	bool dead_end() const { return novelty == std::numeric_limits<unsigned>::infinity(); }
+	bool dead_end() const { return false; }
 
 	std::size_t hash() const { return state.hash(); }
 
