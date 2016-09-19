@@ -51,6 +51,9 @@ public:
 	unsigned evaluate_num_unsat_goals(const State& state) const { return _unsat_goal_atoms_heuristic.evaluate(state); }
 
 	GenericNoveltyEvaluator& evaluator(const State& state) { return _novelty_evaluators[evaluate_num_unsat_goals(state)]; }
+	
+	//! Returns false iff we want to prune this node during the search
+	virtual bool accept(const SearchNode& n) { return true; }
 };
 
 } } // namespaces

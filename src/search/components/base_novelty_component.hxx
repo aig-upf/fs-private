@@ -34,7 +34,7 @@ public:
 	inline unsigned novelty(const State& state) { return evaluator(state).evaluate(state); }
 
 	//! Returns false iff we want to prune this node during the search
-	bool accept(const SearchNode& n) {
+	virtual bool accept(const SearchNode& n) {
 		return novelty(n.state) <= novelty_bound();
 	}
 };
