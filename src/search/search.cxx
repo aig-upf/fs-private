@@ -71,12 +71,11 @@ void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, 
 			throw std::runtime_error("The plan output by the planner is not correct!");
 		}
 		std::cout << "Search Result: Found plan of length " << plan.size() << std::endl;
-		std::cout << "Expanded / Evaluated / Gen. rate: " << stats.expanded() << " / " << stats.generated() << " / " << eval_speed << std::endl;
 	} else {
 		std::cout << "Search Result: No plan was found " << std::endl;
 		// TODO - Make distinction btw all nodes explored and no plan found, and no plan found in the given time.
 	}
-
+	std::cout << "Expanded / Evaluated / Gen. rate: " << stats.expanded() << " / " << stats.generated() << " / " << eval_speed << std::endl;
 	std::cout << "Total Planning Time: " << total_planning_time << " s." << std::endl;
 	std::cout << "Actual Search Time: " << search_time << " s." << std::endl;
 }
