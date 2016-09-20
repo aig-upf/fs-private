@@ -3,7 +3,7 @@
 #include <search/drivers/registry.hxx>
 #include <search/drivers/gbfs_constrained.hxx>
 // #include <search/drivers/iterated_width.hxx>
-#include <search/drivers/breadth_first_search.hxx>
+// #include <search/drivers/breadth_first_search.hxx>
 // #include <search/drivers/bfws.hxx>
 // #include <search/drivers/asp_engine.hxx>
 #include <search/drivers/unreached_atom_driver.hxx>
@@ -39,7 +39,7 @@ EngineRegistry::EngineRegistry() {
 	
 // 	add("iw",  new IteratedWidthDriver());
 // 	add("bfws",  new BFWSDriver());
-	add("breadth_first_search",  new BreadthFirstSearchDriver());
+// 	add("bfs",  new BreadthFirstSearchDriver());
 // 	add("asp_engine",  new ASPEngine());
 }
 

@@ -13,6 +13,7 @@
 #include <search/drivers/smart_effect_driver.hxx>
 #include <search/drivers/iterated_width.hxx>
 #include <search/drivers/bfws.hxx>
+#include <search/drivers/breadth_first_search.hxx>
 #include <search/stats.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
@@ -122,6 +123,14 @@ void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Confi
 		auto engine = driver.create(config, model);
 		do_search(*engine, model, out_dir, start_time, driver.getSearchStats());
 	
+		
+	} else if (driver_tag == "bfs") {
+		
+		BreadthFirstSearchDriver driver;
+		GroundStateModel model = driver.setup(config, problem);
+		auto engine = driver.create(config, model);
+		do_search(*engine, model, out_dir, start_time, driver.getSearchStats());
+		
 	} else {
 		// Standard, grounded planning
 		auto driver = fs0::drivers::EngineRegistry::instance().get(driver_tag);
