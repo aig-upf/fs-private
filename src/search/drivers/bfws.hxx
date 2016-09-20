@@ -13,10 +13,9 @@ namespace fs0 { class GroundStateModel; class Config; }
 
 namespace fs0 { namespace drivers {
 
-//! A creator for the Iterated Width Search FS0 engine
 class BFWSDriver {
 public:
-	//! We use a GBFS heuristic search node
+	//! We use a specific search node
 	using NodeT = BFWSNode<fs0::State>;
 	
 	using NoveltyHeuristic = UnsatGoalsNoveltyComponent<NodeT>;

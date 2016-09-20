@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <aptk2/tools/logging.hxx>
 #include <actions/actions.hxx>
+#include <state.hxx>
 
 namespace fs0 { namespace drivers {
 
