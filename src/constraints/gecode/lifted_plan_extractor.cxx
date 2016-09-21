@@ -77,7 +77,8 @@ long LiftedPlanExtractor::buildRelaxedPlan() {
 
 	// Note that computing the relaxed heuristic by using some form of local consistency might yield plans that are not correct for the relaxation
 	// assert(ActionManager::checkRelaxedPlanSuccessful(Problem::getInstance(), plan, _seed));
-	LPT_EDEBUG("heuristic" , "Relaxed plan found with length " << plan.size() << std::endl << print::plan(plan));
+	LPT_EDEBUG("relaxed-plan" , "Relaxed plan (" << plan.size() << ") for state: " <<  std::endl << _graph.getSeed() << std::endl << "\t"  << print::plan(plan) << std::endl);
+	
 
 	return (long) plan.size();
 }
