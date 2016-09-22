@@ -5,7 +5,8 @@
 #include <memory>
 #include <unordered_map>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/lexical_cast.hpp>
+#include <utils/lexical_cast.hxx>
+
 
 namespace fs0 {
 
@@ -82,6 +83,11 @@ public:
 	ValueSelection getActionValueSelection() const { return _action_value_selection; }
 	
 	EvaluationT getNodeEvaluationType() const { return _node_evaluation; }
+	
+	bool requiresHelpfulnessAssessment() const {
+		return _node_evaluation ==  EvaluationT::delayed_for_unhelpful
+				|| (getOption<bool>("helpful_actions") && getOption<bool>("ehc"));
+	}
 	
 	bool useMinHMaxGoalValueSelector() const { return _goal_value_selection == ValueSelection::MinHMax; }
 	

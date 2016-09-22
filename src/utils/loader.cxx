@@ -1,6 +1,6 @@
 
 #include <memory>
-#include <boost/lexical_cast.hpp>
+#include <utils/lexical_cast.hxx>
 
 #include <problem.hxx>
 #include <utils/loader.hxx>
@@ -14,7 +14,7 @@
 #include <utils/printers/registry.hxx>
 #include <asp/lp_handler.hxx>
 #include <utils/config.hxx>
-#include "static.hxx"
+#include <utils/static.hxx>
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>

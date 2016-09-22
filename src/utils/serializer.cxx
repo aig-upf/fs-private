@@ -4,7 +4,7 @@
 #include <utils/serializer.hxx>
 #include <utils/serialize_tuple.hxx>
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
+#include <utils/lexical_cast.hxx>
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/map.hpp>

@@ -4,7 +4,7 @@
 
 #include <problem_info.hxx>
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
+#include <utils/lexical_cast.hxx>
 #include <atom.hxx>
 #include <aptk2/tools/logging.hxx>
 

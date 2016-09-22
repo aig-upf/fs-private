@@ -53,7 +53,11 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 	}
 	
 	_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
-	_handlers.push_back(std::unique_ptr<HAObserverT>(new HAObserverT()));
+	
+	if (config.requiresHelpfulnessAssessment()) {
+		_handlers.push_back(std::unique_ptr<HAObserverT>(new HAObserverT()));
+	}
+	
 	_handlers.push_back(std::unique_ptr<EvaluatorT>(new EvaluatorT(*_heuristic, config.getNodeEvaluationType())));
 	
 	auto gbfs = new lapkt::StlBestFirstSearch<NodeT, SmartRPG, GroundStateModel>(model, *_heuristic);

@@ -3,7 +3,6 @@
 #include <fs_types.hxx>
 #include <boost/property_tree/json_parser.hpp>
 
-
 namespace pt = boost::property_tree;
 
 namespace fs0 {
