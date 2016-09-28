@@ -22,27 +22,28 @@ LiftedEffectCSP::create(const std::vector<const PartiallyGroundedAction*>& schem
 	for (const PartiallyGroundedAction* schema:schemata) {
 		assert(!schema->has_empty_parameter());
 		
-		LPT_DEBUG("main", "Smart grounding of action " << *schema << "...");
+		LPT_DEBUG("smart-grounding", "Smart grounding of action " << *schema << "...");
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {
+			
+			const fs::ActionEffect* eff = schema->getEffects().at(eff_idx);
+			if (eff->is_del()) { // Ignore delete effects
+				LPT_DEBUG("smart-grounding", "\tIgnoring delete-effect \"" << *eff);
+				continue;
+			}
+			
 			for (const PartiallyGroundedAction* action:ActionGrounder::compile_action_parameters_away(schema, eff_idx, info)) {
+				LPT_DEBUG("smart-grounding", "\tPartially grounded action: " << *action);
+				
 				const fs::ActionEffect* effect = action->getEffects().at(eff_idx);
-				
-				LPT_DEBUG("main", "\tPartially grounded action: " << *action);
-				
-				if (effect->is_del()) { // Ignore delete effects
-					LPT_DEBUG("main", "\tIgnoring delete effect \"" << *effect);
-					delete action;
-					continue;
-				}
 				
 				for (const fs::ActionEffect* flat_effect:ActionGrounder::compile_nested_fluents_away(effect, info)) {
 					
 					auto handler = std::unique_ptr<LiftedEffectCSP>(new LiftedEffectCSP(*action, flat_effect, tuple_index, approximate));
 					if (handler->init(novelty)) {
-						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in (possibly partially) grounded action " << *action);
+						LPT_DEBUG("smart-grounding", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in (possibly partially) grounded action " << *action);
 						handlers.push_back(std::move(handler));
 					} else {
-						LPT_DEBUG("main", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in non-applicable CSP");
+						LPT_DEBUG("smart-grounding", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in non-applicable CSP");
 					}
 				}
 				
