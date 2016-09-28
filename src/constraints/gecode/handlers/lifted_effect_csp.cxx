@@ -4,6 +4,7 @@
 #include <actions/actions.hxx>
 #include <actions/grounding.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
+#include "formula_csp.hxx"
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <utils/printers/actions.hxx>
@@ -21,8 +22,15 @@ LiftedEffectCSP::create(const std::vector<const PartiallyGroundedAction*>& schem
 	
 	for (const PartiallyGroundedAction* schema:schemata) {
 		assert(!schema->has_empty_parameter());
-		
 		LPT_DEBUG("smart-grounding", "Smart grounding of action " << *schema << "...");
+		
+		// Check whether the precondition is inapplicable even before any ground, before doing any further work
+		FormulaCSP precondition_handler(schema->getPrecondition()->clone(), tuple_index, false);
+		if (precondition_handler.failed()) {
+			LPT_DEBUG("smart-grounding", "Action schema \"" << *schema << "\" detected as non-applicable before grounding");
+			continue;
+		}
+		
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {
 			
 			const fs::ActionEffect* eff = schema->getEffects().at(eff_idx);
@@ -40,10 +48,10 @@ LiftedEffectCSP::create(const std::vector<const PartiallyGroundedAction*>& schem
 					
 					auto handler = std::unique_ptr<LiftedEffectCSP>(new LiftedEffectCSP(*action, flat_effect, tuple_index, approximate));
 					if (handler->init(novelty)) {
-						LPT_DEBUG("smart-grounding", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in (possibly partially) grounded action " << *action);
+						LPT_DEBUG("smart-grounding", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << "\" results in (possibly partially) grounded action " << *action);
 						handlers.push_back(std::move(handler));
 					} else {
-						LPT_DEBUG("smart-grounding", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << " results in non-applicable CSP");
+						LPT_DEBUG("smart-grounding", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << "\" results in non-applicable CSP");
 					}
 				}
 				

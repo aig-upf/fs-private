@@ -43,6 +43,8 @@ public:
 	static void registerTermConstraints(const fs::Term* term, CSPTranslator& translator);
 	static void registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator);
 	static void registerFormulaConstraints(const fs::AtomicFormula* condition, CSPTranslator& translator);
+	
+	bool failed() const { return _failed; }
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const BaseCSP& o) { return o.print(os); }
