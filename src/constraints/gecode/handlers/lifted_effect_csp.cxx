@@ -4,7 +4,7 @@
 #include <actions/actions.hxx>
 #include <actions/grounding.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
-#include "formula_csp.hxx"
+#include <constraints/gecode/handlers/formula_csp.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <utils/printers/actions.hxx>
