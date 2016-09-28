@@ -64,12 +64,12 @@ void NestedFluentElementTranslator::register_constraints(CSPTranslator& translat
 	Gecode::IntVarArgs index_variables = translator.resolveVariables(subterms, csp);
 	index_variables << zero_based_index;
 	Gecode::extensional(csp, index_variables, correspondence);
-	LPT_DEBUG("translation", "Fluent-headed term \"" << *_term << "\" produces indexing constraint: " << print::extensional(index_variables, correspondence));
+	LPT_EDEBUG("translation", "Fluent-headed term \"" << *_term << "\" produces indexing constraint: " << print::extensional(index_variables, correspondence));
 
 	// Now post the actual element constraint
 	const Gecode::IntVar& element_result = translator.resolveVariable(_term, csp);
 	Gecode::element(csp, table, zero_based_index, element_result);
-	LPT_DEBUG("translation", "Fluent-headed term \"" << *_term << "\" produces element constraint: " << print::element(table, zero_based_index, element_result));
+	LPT_EDEBUG("translation", "Fluent-headed term \"" << *_term << "\" produces element constraint: " << print::element(table, zero_based_index, element_result));
 }
 
 } } // namespaces

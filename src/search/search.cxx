@@ -28,7 +28,7 @@ template <typename StateModelT, typename SearchAlgorithmT>
 void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time, const SearchStats& stats) {
 	const Problem& problem = model.getTask();
 
-	std::cout << "Writing results to directory: " << out_dir << std::endl;
+	LPT_INFO("cout", "Starting search. Results written to " << out_dir);
 	std::ofstream plan_out(out_dir + "/first.plan");
 	std::ofstream json_out( out_dir + "/results.json" );
 
@@ -83,9 +83,9 @@ void SearchUtils::do_search(SearchAlgorithmT& engine, const StateModelT& model, 
 }
 
 void SearchUtils::instantiate_seach_engine_and_run(Problem& problem, const Config& config, const std::string& driver_tag, const std::string& out_dir, float start_time) {
-	std::cout << "Starting search..." << std::endl;
-	
+
 	SearchStats stats;
+	LPT_INFO("cout", "Creating search engine...");
 	
 	// The engine and search model for lifted planning are different!
 	// TODO - REFACTOR THIS
