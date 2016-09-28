@@ -25,8 +25,14 @@ LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*
 		assert(!schema->has_empty_parameter());
 		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
 		auto handler = std::make_shared<LiftedActionCSP>(*schema, tuple_index, approximate, false);
+		
+		if (!handler->init(novelty)) {
+			LPT_DEBUG("grounding", "Action schema \"" << *schema << "\" detected as non-applicable before grounding");
+			continue;
+		}
+		
 		handler->init(novelty);
-		LPT_DEBUG("main", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
+		LPT_DEBUG("grounding", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
 	}
 	return handlers;
