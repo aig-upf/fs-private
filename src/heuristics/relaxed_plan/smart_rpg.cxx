@@ -25,6 +25,9 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(goal_formula->conjunction(state_constraints), _tuple_index, false)))
 {
 	LPT_INFO("heuristic", "SmartRPG heuristic initialized");
+	if (_managers.empty()) {
+		LPT_INFO("cout", "*** WARNING - Heuristic initialized with no applicable action ***");
+	}
 }
 
 
