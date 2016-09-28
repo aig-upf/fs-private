@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <string>
 #include <fs_types.hxx>
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class ActionEffect; }}}
@@ -15,9 +16,16 @@ class GroundAction;
 class Binding;
 class PartiallyGroundedAction;
 
+//! This exception is thrown whenever a variable cannot be resolved
+class TooManyGroundActionsError : public std::runtime_error {
+public:
+	TooManyGroundActionsError( unsigned long num_actions ) : std::runtime_error("The number of ground actions is too high: " + std::to_string(num_actions)) {}
+};
 
 class ActionGrounder {
 public:
+	static const unsigned long MAX_GROUND_ACTIONS = 10000000;
+	
 	//! Grounds the set of given action schemata with all parameter groundings that induce no false preconditions
 	//! Returns the new set of grounded actions
 // 	static std::vector<const ActionBase*> ground(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);

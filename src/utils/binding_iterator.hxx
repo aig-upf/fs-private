@@ -33,7 +33,7 @@ public:
 	binding_iterator& operator=(const binding_iterator&) = default;
 	binding_iterator& operator=(binding_iterator&&) = default;
 	
-	unsigned num_bindings() const;
+	unsigned long num_bindings() const;
 	
 	//! Generates a fresh binding each time it is invoked
 	Binding operator*() const;

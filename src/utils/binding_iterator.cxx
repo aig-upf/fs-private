@@ -32,7 +32,7 @@ std::vector<const ObjectIdxVector*> binding_iterator::generate_values(const Sign
 	return values;
 }
 
-unsigned binding_iterator::num_bindings() const { return _iterator->size(); }
+unsigned long binding_iterator::num_bindings() const { return _iterator->size(); }
 
 //! Generates a fresh binding each time it is invoked
 Binding binding_iterator::operator*() const { 

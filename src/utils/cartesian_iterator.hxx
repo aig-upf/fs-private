@@ -26,7 +26,7 @@ public:
 	cartesian_iterator(const cartesian_iterator& o) = default;
 	
 	//! Compute the size of the cartesian product
-	unsigned size() const;
+	unsigned long size() const;
 	
 	//! Advances the iterator at position 'idx' or, if it has reached the end, resets its and tries with the one at the left, recursively.
 	void advanceIterator(unsigned idx);

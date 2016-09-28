@@ -44,7 +44,11 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 		}
 		
 		utils::binding_iterator binding_generator(signature, info);
-		int num_bindings = binding_generator.num_bindings();
+		unsigned long num_bindings = binding_generator.num_bindings();
+		
+		if (num_bindings == 0 || num_bindings > MAX_GROUND_ACTIONS) { // num_bindings == 0 would indicate there's been an overflow
+			throw TooManyGroundActionsError(num_bindings);
+		}
 		
 		std::cout <<  "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:\n\t" << std::flush;
 		LPT_INFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:\n" << print::action_data_name(*data) << "\n");
