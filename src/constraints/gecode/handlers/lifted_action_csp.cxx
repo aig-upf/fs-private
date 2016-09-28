@@ -31,7 +31,6 @@ LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*
 			continue;
 		}
 		
-		handler->init(novelty);
 		LPT_DEBUG("grounding", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
 	}
