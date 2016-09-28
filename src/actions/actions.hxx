@@ -42,7 +42,7 @@ public:
 	bool has_empty_parameter() const;
 	
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const ActionData&  entity) { return entity.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const ActionData& entity) { return entity.print(os); }
 	std::ostream& print(std::ostream& os) const;
 };
 

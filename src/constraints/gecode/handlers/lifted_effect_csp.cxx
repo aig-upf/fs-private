@@ -20,11 +20,7 @@ LiftedEffectCSP::create(const std::vector<const PartiallyGroundedAction*>& schem
 	std::vector<std::unique_ptr<LiftedEffectCSP>> handlers;
 	
 	for (const PartiallyGroundedAction* schema:schemata) {
-		
-		if (schema->has_empty_parameter()) {
-			LPT_INFO("cout", "Action schema " << *schema << " discarded because of empty parameter type." << std::endl);
-			continue;
-		}
+		assert(!schema->has_empty_parameter());
 		
 		LPT_DEBUG("main", "Smart grounding of action " << *schema << "...");
 		for (unsigned eff_idx = 0; eff_idx < schema->getEffects().size(); ++eff_idx) {

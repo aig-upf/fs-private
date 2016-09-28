@@ -97,7 +97,9 @@ State* Loader::loadState(const rapidjson::Value& data) {
 std::vector<const ActionData*> Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info) {
 	std::vector<const ActionData*> schemata;
 	for (unsigned i = 0; i < data.Size(); ++i) {
- 		schemata.push_back(loadActionData(data[i], i, info));
+		if (const ActionData* adata = loadActionData(data[i], i, info)) {
+			schemata.push_back(adata);
+		}
 	}
 	return schemata;
 }
@@ -110,9 +112,15 @@ const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned 
 	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
 	const std::vector<const fs::ActionEffect*> effects = fs::Loader::parseEffectList(node["effects"], info);
 	
+	ActionData adata(id, name, signature, parameters, precondition, effects);
+	if (adata.has_empty_parameter()) {
+		LPT_INFO("cout", "Action schema " << adata << " discarded because of empty parameter type." << std::endl);
+		return nullptr;
+	}
+	
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
 	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it
-	return ActionGrounder::process_action_data(ActionData(id, name, signature, parameters, precondition, effects), info);
+	return ActionGrounder::process_action_data(adata, info);
 }
 
 const fs::Formula* Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
