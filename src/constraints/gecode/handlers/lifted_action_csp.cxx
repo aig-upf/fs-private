@@ -22,6 +22,12 @@ LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*
 	std::vector<std::shared_ptr<LiftedActionCSP>> handlers;
 	
 	for (auto schema:schemata) {
+		
+		if (schema->has_empty_parameter()) {
+			LPT_INFO("cout", "Action schema " << *schema << " discarded because of empty parameter type." << std::endl);
+			continue;
+		}
+		
 		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
 		auto handler = std::make_shared<LiftedActionCSP>(*schema, tuple_index, approximate, false);
 		handler->init(novelty);
@@ -99,4 +105,5 @@ LiftedActionID* LiftedActionCSP::get_lifted_action_id(const GecodeCSP* solution)
 void LiftedActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action schema " << _action);
 }
+
 } } // namespaces

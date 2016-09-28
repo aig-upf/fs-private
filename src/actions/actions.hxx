@@ -38,6 +38,9 @@ public:
 	const fs::Formula* getPrecondition() const { return _precondition; }
 	const std::vector<const fs::ActionEffect*>& getEffects() const { return _effects; }
 	
+	//! Returns true if some parameter of the action has a type with no associated object
+	bool has_empty_parameter() const;
+	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionData&  entity) { return entity.print(os); }
 	std::ostream& print(std::ostream& os) const;
@@ -83,6 +86,9 @@ public:
 	
 	//! Return true iff the i-th action parameter is bound
 	bool isBound(unsigned i) const { return _binding.binds(i); }
+	
+	//! Returns true if some parameter of the action has a type with no associated object
+	bool has_empty_parameter() const { return _data.has_empty_parameter(); }
 	
 // 	void addPrecondition(const fs::Formula* precondition);
 	
