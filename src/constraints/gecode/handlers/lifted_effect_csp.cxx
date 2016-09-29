@@ -97,12 +97,9 @@ LiftedEffectCSP::prune_unreachable(std::vector<std::unique_ptr<LiftedEffectCSP>>
 }
 
 LiftedEffectCSP::LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
-	LiftedActionCSP(action, tuple_index, approximate, true), _effects({effect}),  _achievable_tuple_idx(INVALID_TUPLE)
+	LiftedActionCSP(action, {effect}, tuple_index, approximate, true), _achievable_tuple_idx(INVALID_TUPLE)
 {}
 
-LiftedEffectCSP::~LiftedEffectCSP() {
-	delete _effects[0];
-}
 
 bool
 LiftedEffectCSP::init(bool use_novelty_constraint) {
@@ -233,12 +230,6 @@ LiftedEffectCSP::create_novelty_constraint() {
 void
 LiftedEffectCSP::post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const {
 	if (_novelty) _novelty->post_constraint(csp, rpg);
-}
-
-
-const std::vector<const fs::ActionEffect*>&
-LiftedEffectCSP::get_effects() const {
-	return _effects;
 }
 
 const fs::Formula*

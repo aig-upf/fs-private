@@ -1,5 +1,5 @@
 
-#include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <actions/actions.hxx>
 #include <aptk2/tools/logging.hxx>
@@ -39,8 +39,27 @@ LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*
 
 
 LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
-:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action)
+	: LiftedActionCSP(action, extract_non_delete_effects(action), tuple_index, approximate, use_effect_conditions)
 {}
+
+LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+	:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action), _effects(effects)
+{}
+
+LiftedActionCSP::~LiftedActionCSP() {
+	for (auto eff:_effects) delete eff;
+}
+
+
+std::vector<const fs::ActionEffect*> LiftedActionCSP::extract_non_delete_effects(const PartiallyGroundedAction& action) {
+	std::vector<const fs::ActionEffect*> effects;
+	for (const fs::ActionEffect* effect:action.getEffects()) {
+		if (!effect->is_del()) {
+			effects.push_back(effect->clone());
+		}
+	}
+	return effects;
+}
 
 
 bool LiftedActionCSP::init(bool use_novelty_constraint) {
@@ -86,7 +105,7 @@ Binding LiftedActionCSP::build_binding_from_solution(const GecodeCSP* solution) 
 }
 
 const std::vector<const fs::ActionEffect*>& LiftedActionCSP::get_effects() const {
-	return _action.getEffects();
+	return _effects;
 }
 
 const fs::Formula* LiftedActionCSP::get_precondition() const {

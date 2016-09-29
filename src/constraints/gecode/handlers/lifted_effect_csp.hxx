@@ -24,7 +24,7 @@ public:
 
 	//! The only constructor
 	LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate);
-	~LiftedEffectCSP();
+	~LiftedEffectCSP() = default;
 	LiftedEffectCSP(const LiftedEffectCSP&) = delete;
 	LiftedEffectCSP(LiftedEffectCSP&&) = delete;
 	LiftedEffectCSP& operator=(const LiftedEffectCSP&) = delete;
@@ -43,16 +43,9 @@ public:
 	//! Raises an exception if the given effect is not valid for this type of effect handler, i.e. because it has nested fluents on the effect head.
 	static const fs::StateVariable* check_valid_effect(const fs::ActionEffect* effect);
 	
-	const std::vector<const fs::ActionEffect*>& get_effects() const override;
-
 	const fs::Formula* get_precondition() const override;
 
 protected:
-	//! This is the only effect managed by this CSP, which we store in a vector to comply with the parents' interfaces, which require
-	//! to return a vector of effects. By construction, we have that _effects.size() == 1
-	const std::vector<const fs::ActionEffect*> _effects;
-	
-	
 	//! In an effect f(t) := w, '_lhs_symbol' is the index of symbol 'f'
 	unsigned _lhs_symbol;
 	

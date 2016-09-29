@@ -22,7 +22,8 @@ public:
 	static std::vector<std::shared_ptr<LiftedActionCSP>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
 	LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	~LiftedActionCSP() = default;
+	LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	~LiftedActionCSP();
 	LiftedActionCSP(const LiftedActionCSP&) = delete;
 	LiftedActionCSP(LiftedActionCSP&&) = delete;
 	LiftedActionCSP& operator=(const LiftedActionCSP&) = delete;
@@ -42,9 +43,15 @@ public:
 protected:
 	//! The action that originates this handler
 	const PartiallyGroundedAction _action;
+	
+	//! The effects of the action which are relevant to the CSP manaer (typically these will exclude predicative delete effects!)
+	const std::vector<const fs::ActionEffect*> _effects;
 
 	//! '_parameter_variables[i]' contains the index of the CSP variable that models the value of i-th parameter of the action schema
 	std::vector<unsigned> _parameter_variables;
+	
+	
+	static std::vector<const fs::ActionEffect*> extract_non_delete_effects(const PartiallyGroundedAction& action);
 	
 	//! An schema handler needs to index the action parameter CSP variables in addition
 	//! to the other elements already indexed by the parent class
