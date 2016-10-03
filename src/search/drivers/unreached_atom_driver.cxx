@@ -1,5 +1,6 @@
 
 #include <search/drivers/unreached_atom_driver.hxx>
+#include <search/utils.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <state.hxx>
@@ -35,10 +36,19 @@ std::unique_ptr<FSGroundSearchAlgorithm> UnreachedAtomDriver::create(const Confi
 	return std::unique_ptr<FSGroundSearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, UnreachedAtomRPG, GroundStateModel>(model, std::move(heuristic), delayed));
 }
 
-GroundStateModel UnreachedAtomDriver::setup(const Config& config, Problem& problem) const {
+GroundStateModel UnreachedAtomDriver::setup(Problem& problem) const {
 	// We ground all actions
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	return GroundStateModel(problem);
+}
+
+
+void 
+UnreachedAtomDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	GroundStateModel model = setup(problem);
+	SearchStats stats;
+	auto engine = create(config, model);
+	Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
 
 } } // namespaces

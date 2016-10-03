@@ -19,7 +19,7 @@ namespace fs0 { namespace drivers {
 
 //! An engine creator for the Greedy Best-First Search drivers coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
 //! The choice of the heuristic is done through template instantiation
-class SmartEffectDriver {
+class SmartEffectDriver : public Driver {
 public:
 	using NodeT = HeuristicSearchNode<State, GroundAction>;
 	using Engine = std::unique_ptr<EHCThenGBFSSearch<fs0::gecode::SmartRPG>>;
@@ -35,9 +35,9 @@ public:
 	
 	Engine create(const Config& config, const GroundStateModel& problem);
 	
-	GroundStateModel setup(const Config& config, Problem& problem) const;
+	GroundStateModel setup(Problem& problem) const;
 	
-	SearchStats& getSearchStats() { return _stats; }
+	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 };
 
 } } // namespaces

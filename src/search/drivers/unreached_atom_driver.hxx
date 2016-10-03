@@ -19,9 +19,13 @@ protected:
 	typedef HeuristicSearchNode<State, GroundAction> SearchNode;
 	
 public:
-	std::unique_ptr<FSGroundSearchAlgorithm> create(const Config& config, const GroundStateModel& problem) const override;
 	
-	GroundStateModel setup(const Config& config, Problem& problem) const override;
+	std::unique_ptr<FSGroundSearchAlgorithm> create(const Config& config, const GroundStateModel& problem) const;
+	
+	GroundStateModel setup(Problem& problem) const;
+	
+	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+
 	
 };
 

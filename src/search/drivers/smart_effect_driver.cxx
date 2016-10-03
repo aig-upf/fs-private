@@ -5,6 +5,7 @@
 #include <problem_info.hxx>
 #include <state.hxx>
 #include <search/algorithms/aptk/best_first_search.hxx>
+#include <search/utils.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
 #include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
@@ -68,11 +69,19 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 }
 
 GroundStateModel
-SmartEffectDriver::setup(const Config& config, Problem& problem) const {
+SmartEffectDriver::setup(Problem& problem) const {
 	// We'll use all the ground actions for the search plus the partyally ground actions for the heuristic computations
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	return GroundStateModel(problem);
+}
+
+
+void 
+SmartEffectDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	GroundStateModel model = setup(problem);
+	auto engine = create(config, model);
+	Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
 } } // namespaces

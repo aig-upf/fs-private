@@ -1,6 +1,7 @@
 
 #include <search/drivers/breadth_first_search.hxx>
 #include <search/events.hxx>
+#include <search/utils.hxx>
 #include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <problem_info.hxx>
@@ -21,9 +22,16 @@ BreadthFirstSearchDriver::create(const Config& config, const GroundStateModel& m
 }
 
 GroundStateModel
-BreadthFirstSearchDriver::setup(const Config& config, Problem& problem) const {
+BreadthFirstSearchDriver::setup(Problem& problem) const {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	return GroundStateModel(problem); // By default we ground all actions and return a model with the problem as it is
+}
+
+void 
+BreadthFirstSearchDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	GroundStateModel model = setup(problem);
+	auto engine = create(config, model);
+	Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
 } } // namespaces

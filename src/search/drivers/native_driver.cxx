@@ -1,5 +1,6 @@
 
 #include <search/drivers/native_driver.hxx>
+#include <search/utils.hxx>
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <state.hxx>
@@ -32,7 +33,7 @@ NativeDriver::create(const Config& config, const GroundStateModel& model) const 
 }
 
 GroundStateModel
-NativeDriver::setup(const Config& config, Problem& problem) const {
+NativeDriver::setup(Problem& problem) const {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	return GroundStateModel(problem);
 }
@@ -61,6 +62,15 @@ NativeDriver::check_supported(const Problem& problem) {
 	if (goal->nestedness() > 0 || state_constraints->nestedness() > 0) return false;
 	
 	return true;
+}
+
+
+void 
+NativeDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	GroundStateModel model = setup(problem);
+	SearchStats stats;
+	auto engine = create(config, model);
+	Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
 
 } } // namespaces

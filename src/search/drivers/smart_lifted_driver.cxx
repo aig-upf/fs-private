@@ -1,5 +1,6 @@
 
 #include <search/drivers/smart_lifted_driver.hxx>
+#include <search/utils.hxx>
 #include <problem.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
@@ -51,12 +52,20 @@ SmartLiftedDriver::create(const Config& config, LiftedStateModel& model) const {
 
 
 LiftedStateModel
-SmartLiftedDriver::setup(const Config& config, Problem& problem) const {
+SmartLiftedDriver::setup(Problem& problem) const {
 	// We set up a lifted model with the action schemas
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	LiftedStateModel model(problem);
 	model.set_handlers(LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
 	return model;
+}
+
+
+void 
+SmartLiftedDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	LiftedStateModel model = setup(problem);
+	auto engine = create(config, model);
+	Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
 } } // namespaces

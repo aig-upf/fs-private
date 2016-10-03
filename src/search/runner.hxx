@@ -29,6 +29,9 @@ protected:
 	
 	//! The runner starting time
 	float _start_time;
+	
+	//! Print out some information about the characteristics of the problem
+	static void report_stats(const Problem& problem);	
 };
 
 } } // namespaces
