@@ -202,18 +202,10 @@ public:
 	}
 
 	bool dead_end() const { return hff == -1; }
-
-	//! The ordering of the nodes prioritizes:
-	//! (1) nodes with lower novelty, (2) nodes with lower number of unsatisfied goals, (3) nodes with lower accumulated cost
-	// (Undelying logic is: return true iff the second element should be popped before the first.)
-	bool operator>( const BFWS1H1WNode& other ) const {
-		if (hff > other.hff) return true;
-		if (hff < other.hff) return false;
-		if ( novelty > other.novelty ) return true;
-		if ( novelty < other.novelty ) return false;
-		return g > other.g;
-	}
 };
+
+
+
 
 
 
@@ -245,8 +237,6 @@ protected:
 	//!
 	SearchStats _stats;
 };
-
-
 
 
 
