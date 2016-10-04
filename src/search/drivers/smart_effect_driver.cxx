@@ -17,11 +17,8 @@ using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-
-SmartEffectDriver::Engine
-SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
-	LPT_INFO("main", "Using the smart-effect driver");
-	const Problem& problem = model.getTask();
+gecode::SmartRPG*
+SmartEffectDriver::configure_heuristic(const Problem& problem, const Config& config) {
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = config.useApproximateActionResolution();
 	
@@ -31,7 +28,19 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
-	_heuristic = std::unique_ptr<SmartRPG>(new SmartRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler));
+	return new SmartRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+}
+
+SmartEffectDriver::Engine
+SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
+	LPT_INFO("main", "Using the smart-effect driver");
+	const Problem& problem = model.getTask();
+	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
+	bool approximate = config.useApproximateActionResolution();
+	
+	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
+	
+	_heuristic = std::unique_ptr<SmartRPG>(configure_heuristic(problem, config));
 	
 	// If necessary, we constrain the state variables domains and even action/effect CSPs that will be used henceforth
 	// by performing a reachability analysis.
@@ -48,7 +57,9 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 	EHCSearch<SmartRPG>* ehc = nullptr;
 	if (config.getOption("ehc")) {
 		// TODO Apply reachability analysis for the EHC heuristic as well
-		auto ehc_managers = LiftedEffectCSP::create(actions, tuple_index, approximate, novelty);
+		auto ehc_managers = LiftedEffectCSP::create(actions,  problem.get_tuple_index(), approximate, novelty);
+		const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
+		ExtensionHandler extension_handler(problem.get_tuple_index(), managed);		
 		SmartRPG ehc_heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(ehc_managers), extension_handler);
 		ehc = new EHCSearch<SmartRPG>(model, std::move(ehc_heuristic), config.getOption("helpful_actions"), _stats);
 	}
@@ -69,7 +80,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 }
 
 GroundStateModel
-SmartEffectDriver::setup(Problem& problem) const {
+SmartEffectDriver::setup(Problem& problem) {
 	// We'll use all the ground actions for the search plus the partyally ground actions for the heuristic computations
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));

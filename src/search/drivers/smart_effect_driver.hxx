@@ -35,7 +35,9 @@ public:
 	
 	Engine create(const Config& config, const GroundStateModel& problem);
 	
-	GroundStateModel setup(Problem& problem) const;
+	static gecode::SmartRPG* configure_heuristic(const Problem& problem, const Config& config);
+	
+	static GroundStateModel setup(Problem& problem);
 	
 	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 };
