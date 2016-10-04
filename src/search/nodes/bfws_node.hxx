@@ -64,7 +64,7 @@ public:
 
 	//! Constructor with move of the state (cheaper)
 	BFWSNode(State&& _state, GroundAction::IdType action_, ptr_t parent_) :
-		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0), novelty(std::numeric_limits<unsigned>::max())
+		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0), novelty(std::numeric_limits<unsigned>::max()), num_unsat(std::numeric_limits<unsigned>::max())
 	{}
 
 	bool has_parent() const { return parent != nullptr; }
