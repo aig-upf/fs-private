@@ -55,7 +55,7 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 			throw TooManyGroundActionsError(num_bindings);
 		}
 		
-		LPT_INFO("cout", "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:\n\t" << std::flush);
+		LPT_INFO("cout", "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:" << std::flush);
 		LPT_INFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:\n" << print::action_data_name(*data) << "\n");
 		
 		float onepercent = ((float)num_bindings / 100);

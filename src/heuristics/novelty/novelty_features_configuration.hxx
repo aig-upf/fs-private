@@ -27,8 +27,8 @@ public:
 	std::ostream& print(std::ostream& os) const {
 		os << "Novelty Feature Configuration[";
 		os << "state variables: " << ( _use_state_vars ? "yes" : "no");
-		os << "goal: " << (_use_goal ? "yes" : "no");
-		os << "actions: " << (_use_actions ? "yes" : "no");
+		os << ", goal: " << (_use_goal ? "yes" : "no");
+		os << ", actions: " << (_use_actions ? "yes" : "no");
 		os << "]";
 		return os;
 	}

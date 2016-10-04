@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <memory>
+
 #include <search/algorithms/aptk/generic_search.hxx>
 #include <search/algorithms/aptk/sorted_open_list.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
@@ -34,7 +36,9 @@ namespace lapkt {
 template <typename NodeType,
           typename Heuristic,
           typename StateModel,
-          typename OpenListT = StlSortedOpenList<NodeType, Heuristic>,
+          typename NodePtrT = std::shared_ptr<NodeType>,
+          typename NodeCompareT = StlNodePointerAdapter<NodePtrT>,
+          typename OpenListT = StlSortedOpenList<NodeType, Heuristic, NodePtrT, std::vector<NodePtrT>, NodeCompareT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>
 >
 class StlBestFirstSearch : public GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>

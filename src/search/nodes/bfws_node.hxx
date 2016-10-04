@@ -60,13 +60,11 @@ public:
 	BFWSNode& operator=(BFWSNode&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	BFWSNode(const State& s)
-		: state(s), action(GroundAction::invalid_action_id), parent(nullptr), g(0), novelty(0), num_unsat(0)
-	{}
+	BFWSNode(const State& s) : BFWSNode(State(s), GroundAction::invalid_action_id, nullptr) {}
 
 	//! Constructor with move of the state (cheaper)
-	BFWSNode(State&& _state, GroundAction::IdType _action, ptr_t _parent) :
-		state(std::move(_state)), action(_action), parent(_parent), g(_parent->g + 1), novelty(0), num_unsat(0)
+	BFWSNode(State&& _state, GroundAction::IdType action_, ptr_t parent_) :
+		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0), novelty(std::numeric_limits<unsigned>::max())
 	{}
 
 	bool has_parent() const { return parent != nullptr; }

@@ -13,8 +13,6 @@ namespace fs0 { class Problem; class Config; }
 
 namespace fs0 { namespace drivers {
 
-//! A novelty evaluator object to be used as an open list acceptor.
-//! It accepts a new search node iff its novelty less than or equal to the max novelty bound
 template <typename SearchNode>
 class UnsatGoalsNoveltyComponent : public BaseNoveltyComponent<SearchNode> {
 protected:
