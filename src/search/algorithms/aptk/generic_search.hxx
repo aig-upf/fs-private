@@ -113,7 +113,7 @@ public:
 	}
 	
 	//! Convenience method
-	bool solve_model(std::vector<unsigned>& solution) { return search( _model.getTask().getInitialState(), solution ); }
+	bool solve_model(PlanT& solution) { return search( _model.getTask().getInitialState(), solution ); }
 	
 protected:
 	
