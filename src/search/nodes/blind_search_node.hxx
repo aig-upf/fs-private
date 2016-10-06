@@ -31,44 +31,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace fs0 { namespace drivers {
 
-template <typename State>
+template <typename StateT, typename ActionT>
 class BlindSearchNode {
 public:
-	State state; // TODO - Check no extra copies are being performed, or switch to pointers otherwise.
-	fs0::GroundAction::IdType action;
-	std::shared_ptr<BlindSearchNode<State>> parent;
+	StateT state; // TODO - Check no extra copies are being performed, or switch to pointers otherwise.
+	
+	typename ActionT::IdType action;
+
+	std::shared_ptr<BlindSearchNode<StateT, ActionT>> parent;
 
 public:
 	BlindSearchNode() = delete;
 	~BlindSearchNode() {}
 	
-	BlindSearchNode(const BlindSearchNode& other) = delete;
-	BlindSearchNode(BlindSearchNode&& other) = delete;
-	BlindSearchNode& operator=(const BlindSearchNode& rhs) = delete;
-	BlindSearchNode& operator=(BlindSearchNode&& rhs) = delete;
+	BlindSearchNode(const BlindSearchNode&) = delete;
+	BlindSearchNode(BlindSearchNode&&) = delete;
+	BlindSearchNode& operator=(const BlindSearchNode&) = delete;
+	BlindSearchNode& operator=(BlindSearchNode&&) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	BlindSearchNode( const State& s )
-		: state( s ), action( fs0::GroundAction::invalid_action_id ), parent( nullptr )
+	BlindSearchNode( const StateT& s )
+		: state( s ), action( ActionT::invalid_action_id ), parent( nullptr )
 	{}
 
 	//! Constructor with move of the state (cheaper)
-	BlindSearchNode( State&& _state, fs0::GroundAction::IdType _action, std::shared_ptr< BlindSearchNode<State> > _parent ) :
-		state(std::move(_state)) {
-		action = _action;
-		parent = _parent;
-	}
+	BlindSearchNode( StateT&& _state, typename ActionT::IdType _action, std::shared_ptr< BlindSearchNode<StateT, ActionT> > _parent ) :
+		state(std::move(_state)), action(_action), parent(_parent)
+	{}
 
 	bool has_parent() const { return parent != nullptr; }
 
 		//! Print the node into the given stream
-	friend std::ostream& operator<<(std::ostream &os, const BlindSearchNode<State>& object) { return object.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const BlindSearchNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const { 
 		os << "{@ = " << this << ", s = " << state << ", parent = " << parent << "}";
 		return os;
 	}
 
-	bool operator==( const BlindSearchNode<State>& o ) const { return state == o.state; }
+	bool operator==( const BlindSearchNode<StateT, ActionT>& o ) const { return state == o.state; }
 
 	std::size_t hash() const { return state.hash(); }
 };

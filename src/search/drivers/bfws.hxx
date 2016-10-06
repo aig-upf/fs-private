@@ -497,7 +497,7 @@ struct F5NodeComparer {
 };
 
 
-// We name the common BFWS variations
+// Name the common BFWS variations
 using BFWS_F0_GROUND = BFWSSubdriverF0<GroundStateModel, GroundAction>;
 using BFWS_F0_LIFTED = BFWSSubdriverF0<LiftedStateModel, LiftedActionID>;
 

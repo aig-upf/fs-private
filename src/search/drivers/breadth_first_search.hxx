@@ -16,7 +16,7 @@ namespace fs0 { namespace drivers {
 class BreadthFirstSearchDriver : public Driver {
 public:
 	//! The Breadth-First Search engine uses a simple blind-search node
-	using NodeT = BlindSearchNode<fs0::State>;
+	using NodeT = BlindSearchNode<fs0::State, GroundAction>;
 	
 	using Engine = std::unique_ptr<lapkt::StlBreadthFirstSearch<NodeT, GroundStateModel>>;
 	

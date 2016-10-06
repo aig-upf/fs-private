@@ -10,8 +10,9 @@
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FSGroundSearchAlgorithm>
-IteratedWidthDriver::create(const Config& config, const GroundStateModel& model) {
+template <typename StateModelT>
+typename IteratedWidthDriver<StateModelT>::EnginePtr
+IteratedWidthDriver<StateModelT>::create(const Config& config, const StateModelT& model) {
 	
 	unsigned max_novelty = config.getOption<int>("width.max_novelty");
 	NoveltyFeaturesConfiguration feature_configuration(config);
@@ -21,21 +22,23 @@ IteratedWidthDriver::create(const Config& config, const GroundStateModel& model)
 	LPT_INFO("main", "\tFeature extraction: " << feature_configuration);
 	
 	
-	FSGroundSearchAlgorithm* engine = new FS0IWAlgorithm(model, 1, max_novelty, feature_configuration, _stats);
-	return std::unique_ptr<FSGroundSearchAlgorithm>(engine);
+	return EnginePtr(new Engine(model, 1, max_novelty, feature_configuration, _stats));
 }
 
-GroundStateModel
-IteratedWidthDriver::setup(Problem& problem) const {
-	return GroundingSetup::fully_ground_model(problem);
-}
-
+template <>
 void 
-IteratedWidthDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
-	GroundStateModel model = setup(problem);
+IteratedWidthDriver<GroundStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	auto model = GroundingSetup::fully_ground_model(problem);
 	auto engine = create(config, model);
 	Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
+template <>
+void 
+IteratedWidthDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	auto model = GroundingSetup::fully_lifted_model(problem);
+	auto engine = create(config, model);
+	Utils::do_search(*engine, model, out_dir, start_time, _stats);
+}
 
 } } // namespaces

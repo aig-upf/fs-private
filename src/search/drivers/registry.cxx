@@ -36,10 +36,15 @@ EngineRegistry::EngineRegistry() {
 // 	add("lite",  new NativeDriver());
 	add("unreached_atom",  new UnreachedAtomDriver());
 	add("lifted",  new FullyLiftedDriver());
-	add("iw",  new IteratedWidthDriver());
+	
+	add("iw",  new IteratedWidthDriver<GroundStateModel>());
+	add("liw",  new IteratedWidthDriver<LiftedStateModel>());
+	
 	add("bfws",  new BFWSDriver<GroundStateModel>());
 	add("lbfws",  new BFWSDriver<LiftedStateModel>());
+	
 	add("bfs",  new BreadthFirstSearchDriver());
+	
 	add("smart",  new SmartEffectDriver());
 	add("smart_lifted",  new SmartLiftedDriver());
 	

@@ -16,7 +16,7 @@ namespace fs0 { namespace drivers {
 
 //! A novelty evaluator object to be used as an open list acceptor.
 //! It accepts a new search node iff its novelty less than or equal to the max novelty bound
-template <typename SearchNode>
+template <typename StateModelT, typename SearchNode>
 class SingleNoveltyComponent : public BaseNoveltyComponent<SearchNode> {
 protected:
 	//! A single novelty evaluator will be in charge of evaluating all nodes
@@ -25,7 +25,7 @@ protected:
 public:
 	typedef BaseNoveltyComponent<SearchNode> Base;
 	
-	SingleNoveltyComponent(const GroundStateModel& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
+	SingleNoveltyComponent(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
 		: Base(max_novelty), _novelty_evaluator(model.getTask(), max_novelty, feature_configuration)
 	{}
 	
