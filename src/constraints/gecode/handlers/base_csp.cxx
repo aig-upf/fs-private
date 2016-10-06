@@ -135,6 +135,7 @@ BaseCSP::register_csp_variables() {
 		}
 		
 		else {
+// 			std::cout << "Registering term: " << *term << std::endl;
 			registerTermVariables(term,  _translator);
 		}
 	}

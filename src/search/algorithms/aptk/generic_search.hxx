@@ -93,7 +93,8 @@ public:
 				StateT s_a = _model.next( current->state, a );
 				NodePtr successor = std::make_shared<NodeType>( std::move(s_a), a, current );
 				
-				if ( _closed.check(successor) ) continue;
+				if (_closed.check(successor)) continue; // The node has already been closed
+				if (_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
 				
 				this->notify(NodeCreationEvent(*successor));
 				_open.insert( successor );
@@ -116,7 +117,7 @@ public:
 	
 protected:
 	
-	virtual bool check_goal(NodePtr node, PlanT& solution) {
+	virtual bool check_goal(const NodePtr& node, PlanT& solution) {
 		if ( _model.goal(node->state)) { // Solution found, we're done
 			this->notify(GoalFoundEvent(*node));
 			retrieve_solution(node, solution);
@@ -153,7 +154,7 @@ protected:
 		return true;
 	}
 	
-	bool check_node_correctness(NodePtr node) const {
+	bool check_node_correctness(const NodePtr& node) const {
 		if (node->has_parent()) {
 			assert(_model.is_applicable(node->parent->state, node->action));
 		}
