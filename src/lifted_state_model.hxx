@@ -3,9 +3,10 @@
 
 #include <aptk2/search/interfaces/det_state_model.hxx>
 #include <actions/action_id.hxx>
+#include <actions/lifted_action_iterator.hxx>
 
 
-namespace fs0 { namespace gecode { class LiftedActionIterator; class LiftedActionCSP; }}
+namespace fs0 { namespace gecode { class LiftedActionCSP; }}
 
 namespace fs0 {
 

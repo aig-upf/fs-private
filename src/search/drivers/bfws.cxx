@@ -4,6 +4,7 @@
 #include <search/utils.hxx>
 #include <actions/ground_action_iterator.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
+#include <search/drivers/setups.hxx>
 #include <actions/grounding.hxx>
 #include <problem_info.hxx>
 
@@ -34,15 +35,10 @@ std::ostream& operator<<(std::ostream &o, BFWSConfig::Type type) {
 		default: return o << "(invalid value)";
 	}
 }
-  
-GroundStateModel
-BFWSDriver::setup(Problem& problem) const {
-	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
-	return GroundStateModel(problem); // By default we ground all actions and return a model with the problem as it is
-}
 
-BFWSSubdriverF0::Engine
-BFWSSubdriverF0::create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const GroundStateModel& model) {
+template <typename StateModelT, typename ActionT>
+typename BFWSSubdriverF0<StateModelT, ActionT>::Engine
+BFWSSubdriverF0<StateModelT, ActionT>::create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
 	
 	using EvaluatorT = EvaluationObserver<NodeT, HeuristicT>;
 	using StatsT = StatsObserver<NodeT>;
@@ -52,7 +48,7 @@ BFWSSubdriverF0::create(const Config& config, BFWSConfig& bfws_config, const Nov
 	_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
 	_handlers.push_back(std::unique_ptr<EvaluatorT>(new EvaluatorT(*_heuristic, config.getNodeEvaluationType())));
 	
-	auto engine = new lapkt::StlBestFirstSearch<NodeT, HeuristicT, GroundStateModel>(model, *_heuristic);
+	auto engine = new lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>(model, *_heuristic);
 	lapkt::events::subscribe(*engine, _handlers);
 
 	return Engine(engine);
@@ -85,8 +81,8 @@ BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngine
 }
 
 //! Helper
-template <typename SubdriverT>
-void do_search(const GroundStateModel& model, const Config& config, const std::string& out_dir, float start_time) {
+template <typename StateModelT, typename SubdriverT>
+void do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	BFWSConfig bfws_config(config);
 	SubdriverT subdriver;
 	NoveltyFeaturesConfiguration feature_configuration(config);
@@ -98,18 +94,30 @@ void do_search(const GroundStateModel& model, const Config& config, const std::s
 	Utils::do_search(*engine, model, out_dir, start_time, subdriver.getStats());
 }
 
+
+
+template <>
 void 
-BFWSDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+BFWSDriver<GroundStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	switch(BFWSConfig(config)._type) {
-		case BFWSConfig::Type::F0: do_search<BFWS_F0>(setup(problem), config, out_dir, start_time); break;
-		case BFWSConfig::Type::F1: do_search<BFWS_F1>(SmartEffectDriver::setup(problem), config, out_dir, start_time); break;
-		case BFWSConfig::Type::F2: do_search<BFWS_F2>(SmartEffectDriver::setup(problem), config, out_dir, start_time); break;
+		case BFWSConfig::Type::F0: do_search<GroundStateModel, BFWS_F0_GROUND>(GroundingSetup::fully_ground_model(problem), config, out_dir, start_time); break;
+		case BFWSConfig::Type::F1: do_search<GroundStateModel, BFWS_F1>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
+		case BFWSConfig::Type::F2: do_search<GroundStateModel, BFWS_F2>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
 		default: throw std::runtime_error("Invalid BFWS type");
 	}
 }
 
 
-
+template <>
+void 
+BFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	switch(BFWSConfig(config)._type) {
+ 		case BFWSConfig::Type::F0: do_search<LiftedStateModel, BFWS_F0_LIFTED>(GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time); break;
+// 		case BFWSConfig::Type::F1: do_search<LiftedStateModel, BFWS_F1>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
+// 		case BFWSConfig::Type::F2: do_search<LiftedStateModel, BFWS_F2>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
+		default: throw std::runtime_error("Invalid BFWS type");
+	}
+}
 
 
 } } // namespaces

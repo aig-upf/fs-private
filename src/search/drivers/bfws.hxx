@@ -40,22 +40,22 @@ protected:
 std::ostream& operator<<(std::ostream &o, BFWSConfig::Type type);
 
 
-
+template <typename StateModelT>
 class BFWSDriver : public Driver {
 public:
-	GroundStateModel setup(Problem& problem) const;
-	
 	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 };
 
+
+template <typename StateModelT, typename ActionT>
 class BFWSSubdriverF0 {
 public:
-	using NodeT = BFWSNode<fs0::State>;
-	using HeuristicT = UnsatGoalsNoveltyComponent<NodeT>;
-	using Engine = std::unique_ptr<lapkt::StlBestFirstSearch<NodeT, HeuristicT, GroundStateModel>>;
+	using NodeT = BFWSNode<fs0::State, ActionT>;
+	using HeuristicT = UnsatGoalsNoveltyComponent<StateModelT, NodeT>;
+	using Engine = std::unique_ptr<lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>>;
 
 	//!
-	Engine create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const GroundStateModel& model);
+	Engine create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model);
 	
 	const SearchStats& getStats() const { return _stats; }
 
@@ -272,10 +272,10 @@ struct F2NodeComparer {
 
 
 
-template <typename HeuristicT>
+template <typename StateModelT, typename HeuristicT>
 class BFWSF5HeuristicEnsemble {
 public:
-	BFWSF5HeuristicEnsemble(const GroundStateModel& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration, std::unique_ptr<HeuristicT>&& heuristic) :
+	BFWSF5HeuristicEnsemble(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration, std::unique_ptr<HeuristicT>&& heuristic) :
 		_problem(model.getTask()),
 		_feature_configuration(feature_configuration),
 		_max_novelty(max_novelty), 
@@ -332,13 +332,13 @@ protected:
 	std::unique_ptr<HeuristicT> _base_heuristic;
 	
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
-	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
+	UnsatisfiedGoalAtomsHeuristic<StateModelT> _unsat_goal_atoms_heuristic;
 };
 
 
 template <typename NodeT,
           typename HeuristicT,
-		  typename HeuristicEnsembleT = BFWSF5HeuristicEnsemble<HeuristicT>,
+		  typename HeuristicEnsembleT = BFWSF5HeuristicEnsemble<HeuristicT, GroundStateModel>,
 		  typename RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel>,
 		  typename Engine = std::unique_ptr<RawEngineT>
 >
@@ -498,7 +498,9 @@ struct F5NodeComparer {
 
 
 // We name the common BFWS variations
-using BFWS_F0 = BFWSSubdriverF0;
+using BFWS_F0_GROUND = BFWSSubdriverF0<GroundStateModel, GroundAction>;
+using BFWS_F0_LIFTED = BFWSSubdriverF0<LiftedStateModel, LiftedActionID>;
+
 using BFWS_F1 = BFWS1H1WSubdriver<BFWS1H1WNode, gecode::SmartRPG, F1NodeComparer<BFWS1H1WNode>>;
 using BFWS_F2 = BFWS1H1WSubdriver<BFWS1H1WNode, gecode::SmartRPG, F2NodeComparer<BFWS1H1WNode>>;
 using BFWS_F5 = BFWSF5Subdriver<BFWSF5Node, gecode::SmartRPG, F5NodeComparer<>>;

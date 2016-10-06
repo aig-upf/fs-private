@@ -1,6 +1,6 @@
 
 #include <search/drivers/fully_lifted_driver.hxx>
-#include <search/drivers/validation.hxx>
+#include <search/drivers/setups.hxx>
 #include <search/utils.hxx>
 #include <problem.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
@@ -40,15 +40,7 @@ FullyLiftedDriver::create(const Config& config, LiftedStateModel& model) const {
 
 LiftedStateModel
 FullyLiftedDriver::setup(Problem& problem) const {
-	
-	Validation::check_no_conditional_effects(problem);
-	std::vector<const PartiallyGroundedAction*> actions = ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance());
-	
-	// We don't ground any action
-	problem.setPartiallyGroundedActions(std::move(actions));
-	LiftedStateModel model(problem);
-	model.set_handlers(LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
-	return model;
+	return GroundingSetup::fully_lifted_model(problem);
 }
 
 void 

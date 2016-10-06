@@ -5,6 +5,7 @@
 #include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <problem_info.hxx>
+#include <search/drivers/setups.hxx>
 
 
 namespace fs0 { namespace drivers {
@@ -26,8 +27,7 @@ IteratedWidthDriver::create(const Config& config, const GroundStateModel& model)
 
 GroundStateModel
 IteratedWidthDriver::setup(Problem& problem) const {
-	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
-	return GroundStateModel(problem); // By default we ground all actions and return a model with the problem as it is
+	return GroundingSetup::fully_ground_model(problem);
 }
 
 void 

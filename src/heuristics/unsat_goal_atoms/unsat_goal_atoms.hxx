@@ -10,11 +10,12 @@
 namespace fs0 {
 
 //! The heuristic value of any given state is the number of unsatisfied goal conditions (atoms) on that state
+template <typename StateModelT>
 class UnsatisfiedGoalAtomsHeuristic {
 public:
 	typedef GroundAction Action;
 
-	UnsatisfiedGoalAtomsHeuristic(const GroundStateModel& model) : _problem(model.getTask()), _goal_conjunction(extract_goal_conjunction_or_fail(_problem)) {}
+	UnsatisfiedGoalAtomsHeuristic(const StateModelT& model) : _problem(model.getTask()), _goal_conjunction(extract_goal_conjunction_or_fail(_problem)) {}
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& state) const { 

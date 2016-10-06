@@ -12,6 +12,8 @@
 
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <utils/support.hxx>
+#include <search/drivers/setups.hxx>
+
 
 using namespace fs0::gecode;
 
@@ -81,10 +83,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 
 GroundStateModel
 SmartEffectDriver::setup(Problem& problem) {
-	// We'll use all the ground actions for the search plus the partyally ground actions for the heuristic computations
-	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
-	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
-	return GroundStateModel(problem);
+	return GroundingSetup::ground_search_lifted_heuristic(problem);
 }
 
 

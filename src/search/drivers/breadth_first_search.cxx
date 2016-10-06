@@ -6,6 +6,8 @@
 #include <actions/grounding.hxx>
 #include <problem_info.hxx>
 #include <problem.hxx>
+#include <search/drivers/setups.hxx>
+
 
 namespace fs0 { namespace drivers {
 	
@@ -23,8 +25,7 @@ BreadthFirstSearchDriver::create(const Config& config, const GroundStateModel& m
 
 GroundStateModel
 BreadthFirstSearchDriver::setup(Problem& problem) const {
-	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
-	return GroundStateModel(problem); // By default we ground all actions and return a model with the problem as it is
+	return GroundingSetup::fully_ground_model(problem);
 }
 
 void 

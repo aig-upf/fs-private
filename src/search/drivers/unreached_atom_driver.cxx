@@ -10,6 +10,8 @@
 #include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <utils/support.hxx>
+#include <search/drivers/setups.hxx>
+
 
 using namespace fs0::gecode;
 
@@ -37,9 +39,7 @@ std::unique_ptr<FSGroundSearchAlgorithm> UnreachedAtomDriver::create(const Confi
 }
 
 GroundStateModel UnreachedAtomDriver::setup(Problem& problem) const {
-	// We ground all actions
-	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
-	return GroundStateModel(problem);
+	return GroundingSetup::fully_ground_model(problem);
 }
 
 

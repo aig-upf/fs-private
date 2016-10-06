@@ -11,6 +11,8 @@
 #include <constraints/direct/action_manager.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <search/drivers/setups.hxx>
+
 
 
 namespace fs0 { namespace drivers {
@@ -34,8 +36,7 @@ NativeDriver::create(const Config& config, const GroundStateModel& model) const 
 
 GroundStateModel
 NativeDriver::setup(Problem& problem) const {
-	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
-	return GroundStateModel(problem);
+	return GroundingSetup::fully_ground_model(problem);
 }
 
 bool

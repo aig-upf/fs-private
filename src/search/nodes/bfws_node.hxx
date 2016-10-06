@@ -31,13 +31,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace fs0 { namespace drivers {
 
 
-template <typename State>
+template <typename StateT, typename ActionT>
 class BFWSNode {
 public:
-	using ptr_t = std::shared_ptr<BFWSNode<State>>;
+	using ptr_t = std::shared_ptr<BFWSNode<StateT, ActionT>>;
 	
-	State state;
-	GroundAction::IdType action;
+	StateT state;
+	typename ActionT::IdType action;
 	
 	ptr_t parent;
 
@@ -60,10 +60,10 @@ public:
 	BFWSNode& operator=(BFWSNode&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	BFWSNode(const State& s) : BFWSNode(State(s), GroundAction::invalid_action_id, nullptr) {}
+	BFWSNode(const StateT& s) : BFWSNode(StateT(s), ActionT::invalid_action_id, nullptr) {}
 
 	//! Constructor with move of the state (cheaper)
-	BFWSNode(State&& _state, GroundAction::IdType action_, ptr_t parent_) :
+	BFWSNode(StateT&& _state, typename ActionT::IdType action_, ptr_t parent_) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0), novelty(std::numeric_limits<unsigned>::max()), num_unsat(std::numeric_limits<unsigned>::max())
 	{}
 
@@ -74,13 +74,13 @@ public:
 
 	
 	//! Print the node into the given stream
-	friend std::ostream& operator<<(std::ostream &os, const BFWSNode<State>& object) { return object.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const BFWSNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const { 
 		os << "{@ = " << this << ", s = " << state << ", novelty = " << novelty << ", g = " << g << ", unsat = " << num_unsat << ", parent = " << parent << "}";
 		return os;
 	}
 
-	bool operator==( const BFWSNode<State>& o ) const { return state == o.state; }
+	bool operator==( const BFWSNode<StateT, ActionT>& o ) const { return state == o.state; }
 
 	template <typename Heuristic>
 	void evaluate_with( Heuristic& heuristic ) {
@@ -118,7 +118,7 @@ public:
 	//! The ordering of the nodes prioritizes:
 	//! (1) nodes with lower novelty, (2) nodes with lower number of unsatisfied goals, (3) nodes with lower accumulated cost
 	// (Undelying logic is: return true iff the second element should be popped before the first.)
-	bool operator>( const BFWSNode<State>& other ) const {
+	bool operator>( const BFWSNode<StateT, ActionT>& other ) const {
 		if ( novelty > other.novelty ) return true;
 		if ( novelty < other.novelty ) return false;
 		if (num_unsat > other.num_unsat) return true;
