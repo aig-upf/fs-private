@@ -37,7 +37,7 @@ template <typename NodeType,
           typename Heuristic,
           typename StateModel,
           typename NodePtrT = std::shared_ptr<NodeType>,
-          typename NodeCompareT = StlNodePointerAdapter<NodePtrT>,
+          typename NodeCompareT = node_comparer<NodePtrT>,
           typename OpenListT = StlSortedOpenList<NodeType, Heuristic, NodePtrT, std::vector<NodePtrT>, NodeCompareT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>
 >
