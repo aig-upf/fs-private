@@ -75,6 +75,8 @@ public:
 		NodePtr n = std::make_shared<NodeType>( s );
 		this->notify(NodeCreationEvent(*n));
 		_open.insert(n);
+		
+// 		unsigned iterations = 0;
 
 		while ( !_open.is_empty() ) {
 			NodePtr current = _open.get_next( );
@@ -99,6 +101,8 @@ public:
 				this->notify(NodeCreationEvent(*successor));
 				_open.insert( successor );
 			}
+			
+// 			if (++iterations == 3) return false;
 		}
 		return false;
 	}

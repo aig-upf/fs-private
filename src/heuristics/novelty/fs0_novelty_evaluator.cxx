@@ -8,6 +8,7 @@
 #include <aptk2/tools/logging.hxx>
 #include <utils/printers/feature_set.hxx>
 #include <actions/actions.hxx>
+#include <problem_info.hxx>
 
 namespace fs0 {
 
@@ -64,6 +65,15 @@ void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const Novel
 			_features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
 		}
 	}
+	
+	if (_features.empty()) { // If no features were selected at this point, we simply select all state variables
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
+			_features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
+		}
+	}
+	
+	
 	LPT_INFO("main", "Novelty From Constraints: # features: " << numFeatures());
 }
 

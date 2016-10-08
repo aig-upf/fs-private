@@ -20,7 +20,7 @@
 	"width": {
 		"max_novelty": 2,
 		"use_state_vars": "true",
-		"use_goal": "true",
+		"use_goal": "false",
 		"use_actions": "false"
 	}
 }
