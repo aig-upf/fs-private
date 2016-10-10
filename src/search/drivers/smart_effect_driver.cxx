@@ -28,9 +28,18 @@ SmartEffectDriver::configure_heuristic(const Problem& problem, const Config& con
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	auto managers = LiftedEffectCSP::create(actions, tuple_index, approximate, novelty);
 	
-	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
+	bool use_state_constraints = config.getOption<bool>("use_state_constraints_in_heuristic_goal_evaluation");
+	const fs::Formula* state_constraints = use_state_constraints ? problem.getStateConstraints() : new fs::Tautology;
+	
+	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), state_constraints);
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
-	return new SmartRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+	
+	auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), state_constraints, std::move(managers), extension_handler);
+	
+	// This is ugly, but the fastest way to ensure no memory leaks at the moment
+	if (!use_state_constraints) delete state_constraints;
+	
+	return heuristic;
 }
 
 SmartEffectDriver::Engine

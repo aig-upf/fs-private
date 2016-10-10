@@ -22,5 +22,8 @@
 		"use_state_vars": "true",
 		"use_goal": "false",
 		"use_actions": "false"
-	}
+	},
+	
+	
+	"use_state_constraints_in_heuristic_goal_evaluation": "false"
 }
