@@ -73,12 +73,6 @@ std::vector<VariableIdx> ScopeUtils::computeActionDirectScope(const ActionBase& 
 	return computeDirectScope(action.getPrecondition());
 }
 
-void ScopeUtils::computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<VariableIdx>& scope) {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	const std::vector<VariableIdx>& possible_variables = info.resolveStateVariable(nested.getSymbolId());
-	scope.insert(possible_variables.cbegin(), possible_variables.cend());
-}
-
 std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<VariableIdx> lhs_variables;
@@ -165,6 +159,16 @@ void ScopeUtils::computeRelevantElements(const Term* element, std::set<VariableI
 
 void ScopeUtils::computeRelevantElements(const Formula* element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
 	_computeRelevantElements(element, variables, symbols);
+}
+
+void ScopeUtils::computeFullScope(const Formula* formula, std::set<VariableIdx>& scope) {
+	std::set<unsigned> _;
+	_computeRelevantElements(formula, scope, _);
+}
+
+void ScopeUtils::computeActionFullScope(const ActionBase& action, std::set<VariableIdx>& scope) {
+	std::set<unsigned> _;
+	_computeRelevantElements(action.getPrecondition(), scope, _);
 }
 
 } } } // namespaces
