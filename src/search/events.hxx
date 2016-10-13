@@ -51,11 +51,19 @@ protected:
 	void creation(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.generation();
 		LPT_DEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
+		
+// 		if (_stats.generated() % 10 == 0) {
+// 			LPT_INFO("cout", "Number of generated nodes: " << _stats.generated());
+// 		}
+		
 	}
 	
 	void expansion(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.expansion();
 		LPT_DEBUG("search", std::setw(7) << "EXPAND: " << dynamic_cast<const ExpansionEvent&>(event).node);
+// 		if (_stats.expanded() % 10 == 0) {
+// 			LPT_INFO("cout", "Number of expanded nodes: " << _stats.expanded());
+// 		}
 	}
 	
 	SearchStats& _stats;
