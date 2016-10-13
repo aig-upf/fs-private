@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <queue>
 #include <memory>
+#include <unordered_set>
 
 #include <aptk2/search/interfaces/open_list.hxx>
 
@@ -107,8 +108,6 @@ protected:
 	using node_unordered_set = std::unordered_set<NodePtrT, node_hash<NodePtrT>, node_equal_to<NodePtrT>>;
 	node_unordered_set already_in_open_;
 };
-
-
 
 
 }
