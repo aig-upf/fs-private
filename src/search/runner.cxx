@@ -35,7 +35,6 @@ int Runner::run() {
 	auto driver = EngineRegistry::instance().get(_options.getDriver());
 	driver->search(*problem, config, _options.getOutputDir(), _start_time);
 	
-	
 	return 0;
 }
 

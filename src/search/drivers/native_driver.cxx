@@ -4,34 +4,38 @@
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <state.hxx>
-#include <aptk2/search/algorithms/best_first_search.hxx>
 #include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/direct/action_manager.hxx>
-#include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <search/drivers/setups.hxx>
-
+#include <search/events.hxx>
 
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FSGroundSearchAlgorithm>
-NativeDriver::create(const Config& config, const GroundStateModel& model) const {
+NativeDriver::EnginePT
+NativeDriver::create(const Config& config, const GroundStateModel& model, SearchStats& stats) {
 	LPT_INFO("main", "Using the Native RPG Driver");
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
-	bool delayed = config.useDelayedEvaluation();
 
 	if (!check_supported(problem)) {
-		throw std::runtime_error("The Native Driver cannot process the given problem");
+		throw std::runtime_error("This problem is too complex for the \"native\" driver, try a different one.");
 	}
 	
 	auto direct_builder = DirectRPGBuilder::create(problem.getGoalConditions(), problem.getStateConstraints());
-	DirectCRPG heuristic(problem, DirectActionManager::create(actions), std::move(direct_builder));
 	
-	return std::unique_ptr<FSGroundSearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, DirectCRPG, GroundStateModel>(model, std::move(heuristic), delayed));
+	_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(problem, DirectActionManager::create(actions), std::move(direct_builder)));
+	
+	auto engine = EnginePT(new EngineT(model, *_heuristic));
+	
+	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, DirectCRPG>(config, *_heuristic, _handlers);
+	lapkt::events::subscribe(*engine, _handlers);
+	
+	return engine;
 }
 
 GroundStateModel
@@ -70,7 +74,7 @@ void
 NativeDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	GroundStateModel model = setup(problem);
 	SearchStats stats;
-	auto engine = create(config, model);
+	auto engine = create(config, model, stats);
 	Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
 
