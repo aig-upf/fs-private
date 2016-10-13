@@ -15,8 +15,9 @@
 
 namespace fs0 { namespace drivers {
 
-NativeDriver::EnginePT
-NativeDriver::create(const Config& config, const GroundStateModel& model, SearchStats& stats) {
+template <typename StateModelT>
+typename NativeDriver<StateModelT>::EnginePT
+NativeDriver<StateModelT>::create(const Config& config, const StateModelT& model, SearchStats& stats) {
 	LPT_INFO("main", "Using the Native RPG Driver");
 	const Problem& problem = model.getTask();
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
@@ -38,13 +39,15 @@ NativeDriver::create(const Config& config, const GroundStateModel& model, Search
 	return engine;
 }
 
-GroundStateModel
-NativeDriver::setup(Problem& problem) const {
+template <typename StateModelT>
+StateModelT
+NativeDriver<StateModelT>::setup(Problem& problem) const {
 	return GroundingSetup::fully_ground_model(problem);
 }
 
+template <typename StateModelT>
 bool
-NativeDriver::check_supported(const Problem& problem) {
+NativeDriver<StateModelT>::check_supported(const Problem& problem) {
 	
 	// Check that the actions are supported by the native CSP handlers
 	for (const auto action:problem.getGroundActions()) {
@@ -70,9 +73,10 @@ NativeDriver::check_supported(const Problem& problem) {
 }
 
 
+template <typename StateModelT>
 void 
-NativeDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
-	GroundStateModel model = setup(problem);
+NativeDriver<StateModelT>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	StateModelT model = setup(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
 	Utils::do_search(*engine, model, out_dir, start_time, stats);

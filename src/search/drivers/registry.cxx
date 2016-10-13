@@ -32,7 +32,9 @@ EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search drivers on the instantiation of the singleton
 // 	add("standard",  new GBFSConstrainedHeuristicsCreator());
 	
-	add("native",  new NativeDriver());
+	add("native",  new NativeDriver<GroundStateModel>());
+// 	add("lnative",  new NativeDriver<LiftedStateModel>()); // The native driver is not ready for this
+	
 // 	add("lite",  new NativeDriver());
 	add("unreached_atom",  new UnreachedAtomDriver());
 	add("lifted",  new FullyLiftedDriver());
@@ -46,7 +48,7 @@ EngineRegistry::EngineRegistry() {
 	add("bfs",  new BreadthFirstSearchDriver());
 	
 	add("smart",  new SmartEffectDriver());
-	add("smart_lifted",  new SmartLiftedDriver());
+	add("lsmart",  new SmartLiftedDriver());
 	
 // 	add("asp_engine",  new ASPEngine());
 }
