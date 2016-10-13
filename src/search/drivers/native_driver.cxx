@@ -32,7 +32,7 @@ NativeDriver::create(const Config& config, const GroundStateModel& model, Search
 	auto engine = EnginePT(new EngineT(model, *_heuristic));
 	
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
-	EventUtils::setup_evaluation_observer<NodeT, DirectCRPG>(config, *_heuristic, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
 	
 	return engine;

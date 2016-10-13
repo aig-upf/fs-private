@@ -18,13 +18,12 @@ namespace fs0 { namespace drivers {
 //! An engine creator for the Greedy Best-First Search drivers coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
 //! The choice of the heuristic is done through template instantiation
 class NativeDriver : public Driver {
-protected:
+public:
 	using NodeT = HeuristicSearchNode<State, GroundAction>;
 	using HeuristicT = DirectCRPG;
 	using EngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicT, GroundStateModel>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	
-public:
 	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 
 	EnginePT create(const Config& config, const GroundStateModel& problem, SearchStats& stats);

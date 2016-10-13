@@ -2,8 +2,7 @@
 #pragma once
 
 #include <search/algorithms/ehc.hxx>
-#include "aptk/search_algorithm.hxx"
-#include <aptk2/search/algorithms/best_first_search.hxx>
+#include <search/algorithms/aptk/search_algorithm.hxx>
 
 #include <search/drivers/registry.hxx>
 #include <state.hxx>

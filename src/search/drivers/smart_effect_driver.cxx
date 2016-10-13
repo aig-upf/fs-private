@@ -71,7 +71,6 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 		ehc = new EHCSearch<SmartRPG>(model, std::move(ehc_heuristic), config.getOption("helpful_actions"), _stats);
 	}
 	
-	
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, SmartRPG>(config, *_heuristic, _handlers);
 	if (config.requiresHelpfulnessAssessment()) {
