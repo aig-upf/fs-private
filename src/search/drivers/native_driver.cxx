@@ -33,7 +33,7 @@ NativeDriver<StateModelT>::create(const Config& config, const StateModelT& model
 	auto engine = EnginePT(new EngineT(model, *_heuristic));
 	
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
-	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
 	
 	return engine;

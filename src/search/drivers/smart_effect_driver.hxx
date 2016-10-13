@@ -7,10 +7,9 @@
 
 #include <search/algorithms/ehc.hxx>
 #include <search/events.hxx>
-#include <search/stats.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 
-namespace fs0 { class GroundStateModel;}
+namespace fs0 { class GroundStateModel; class SearchStats; }
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
 namespace fs = fs0::language::fstrips;
@@ -28,12 +27,10 @@ protected:
 	std::unique_ptr<fs0::gecode::SmartRPG> _heuristic;
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 	
-	SearchStats _stats;
-	
 public:
 	SmartEffectDriver() {}
 	
-	Engine create(const Config& config, const GroundStateModel& problem);
+	Engine create(const Config& config, const GroundStateModel& problem, SearchStats& stats);
 	
 	static gecode::SmartRPG* configure_heuristic(const Problem& problem, const Config& config);
 	

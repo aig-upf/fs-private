@@ -28,9 +28,9 @@ public:
 	using HandlerPtr = std::unique_ptr<lapkt::events::EventHandler>;
 	
 	template <typename NodeT, typename HeuristicT>
-	static void setup_evaluation_observer(const Config& config, HeuristicT& heuristic, std::vector<HandlerPtr>& handlers) {
+	static void setup_evaluation_observer(const Config& config, HeuristicT& heuristic, SearchStats& stats, std::vector<HandlerPtr>& handlers) {
 		using EvaluatorT = EvaluationObserver<NodeT, HeuristicT>;
-		handlers.push_back(std::unique_ptr<EvaluatorT>(new EvaluatorT(heuristic, config.getNodeEvaluationType())));
+		handlers.push_back(std::unique_ptr<EvaluatorT>(new EvaluatorT(heuristic, config.getNodeEvaluationType(), stats)));
 	}
 	
 	template <typename NodeT>

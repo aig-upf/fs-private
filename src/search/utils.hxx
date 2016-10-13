@@ -46,13 +46,17 @@ static void do_search(SearchAlgorithmT& engine, const StateModelT& model, const 
 	}
 	plan_out.close();
 
-	std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.generated() / search_time) : "0";
+	std::string gen_speed = (search_time > 0) ? std::to_string((float) stats.generated() / search_time) : "0";
+	std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.evaluated() / search_time) : "0";
+	
 	json_out << "{" << std::endl;
 	json_out << "\t\"total_time\": " << total_planning_time << "," << std::endl;
 	json_out << "\t\"search_time\": " << search_time << "," << std::endl;
 	json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
 	json_out << "\t\"generated\": " << stats.generated() << "," << std::endl;
 	json_out << "\t\"expanded\": " << stats.expanded() << "," << std::endl;
+	json_out << "\t\"evaluated\": " << stats.evaluated() << "," << std::endl;
+	json_out << "\t\"gen_per_second\": " << gen_speed << "," << std::endl;
 	json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
 	json_out << "\t\"solved\": " << ( solved ? "true" : "false" ) << "," << std::endl;
 	json_out << "\t\"valid\": " << ( valid ? "true" : "false" ) << "," << std::endl;
@@ -68,14 +72,16 @@ static void do_search(SearchAlgorithmT& engine, const StateModelT& model, const 
 			Checker::print_plan_execution(problem, plan, problem.getInitialState());
 			throw std::runtime_error("The plan output by the planner is not correct!");
 		}
-		std::cout << "Search Result: Found plan of length " << plan.size() << std::endl;
+		LPT_INFO("cout", "Search Result: Found plan of length " << plan.size());
 	} else {
-		std::cout << "Search Result: No plan was found " << std::endl;
-		// TODO - Make distinction btw all nodes explored and no plan found, and no plan found in the given time.
+		LPT_INFO("cout", "Search Result: No plan was found.");
 	}
-	std::cout << "Expanded / Evaluated / Gen. rate: " << stats.expanded() << " / " << stats.generated() << " / " << eval_speed << std::endl;
-	std::cout << "Total Planning Time: " << total_planning_time << " s." << std::endl;
-	std::cout << "Actual Search Time: " << search_time << " s." << std::endl;
+	
+	LPT_INFO("cout", "Expansions: " << stats.expanded());
+	LPT_INFO("cout", "Generations: " << stats.generated());
+	LPT_INFO("cout", "Evaluations: " << stats.evaluated());
+	LPT_INFO("cout", "Total Planning Time: " << total_planning_time << " s.");
+	LPT_INFO("cout", "Actual Search Time: " << search_time << " s.");
 }
 
 };

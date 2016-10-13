@@ -19,7 +19,7 @@ BFWSSubdriverF0<StateModelT, ActionT>::create(const Config& config, BFWSConfig& 
 	auto engine = new lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>(model, *_heuristic);
 	
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
-	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _stats, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
 
 	return Engine(engine);
@@ -41,7 +41,7 @@ BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngine
 	auto engine = new RawEngineT(model, *_heuristic);
 	
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
-	EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _stats, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
 
 	return Engine(engine);

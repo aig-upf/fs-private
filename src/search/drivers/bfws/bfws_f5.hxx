@@ -265,7 +265,7 @@ public:
 		auto engine = EngineT(new RawEngineT(model, *_heuristic));
 		
 		EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
-		EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _handlers);
+		EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _stats, _handlers);
 		lapkt::events::subscribe(*engine, _handlers);
 		
 		return engine;

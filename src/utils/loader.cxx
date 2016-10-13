@@ -114,7 +114,7 @@ const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned 
 	
 	ActionData adata(id, name, signature, parameters, precondition, effects);
 	if (adata.has_empty_parameter()) {
-		LPT_INFO("cout", "Action schema " << adata << " discarded because of empty parameter type." << std::endl);
+		LPT_INFO("cout", "Action schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
 		return nullptr;
 	}
 	
