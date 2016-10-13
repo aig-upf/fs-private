@@ -14,9 +14,7 @@ namespace fs0 { namespace drivers {
 BreadthFirstSearchDriver::Engine
 BreadthFirstSearchDriver::create(const Config& config, const GroundStateModel& model) {
 	
-	using StatsT = StatsObserver<NodeT>;
-	_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
-	
+	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 	auto engine = new lapkt::StlBreadthFirstSearch<NodeT, GroundStateModel>(model);
 	lapkt::events::subscribe(*engine, _handlers);
 	

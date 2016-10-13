@@ -38,6 +38,13 @@ public:
 		using StatsT = StatsObserver<NodeT>;
 		handlers.push_back(std::unique_ptr<StatsT>(new StatsT(stats)));
 	}
+	
+	template <typename NodeT>
+	static void setup_HA_observer(std::vector<HandlerPtr>& handlers) {
+		using HAObserverT = HelpfulObserver<NodeT>;
+		handlers.push_back(std::unique_ptr<HAObserverT>(new HAObserverT()));
+	}
+	
 };
 
 } } // namespaces

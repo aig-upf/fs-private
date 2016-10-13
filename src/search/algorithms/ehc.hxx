@@ -11,6 +11,7 @@
 #include <search/algorithms/aptk/breadth_first_search.hxx>
 #include <search/events.hxx>
 #include <search/stats.hxx>
+#include <search/drivers/setups.hxx>
 
 
 namespace fs0 { namespace drivers {
@@ -200,10 +201,6 @@ public:
 	using BreadthFirstAlgorithm = EHCBreadthFirstSearch<GroundStateModel, HeuristicT>;
 	using NodeT = EHCSearchNode<State, GroundAction>;
 	
-	//! Required event observers
-	using StatsT = StatsObserver<NodeT>;
-	using HAObserverT = HelpfulObserver<NodeT>;
-	
 	~EHCSearch() = default;
 	EHCSearch(const EHCSearch&) = default;
 	EHCSearch(EHCSearch&&) = default;
@@ -213,8 +210,8 @@ public:
 	EHCSearch(const GroundStateModel& model, HeuristicT&& heuristic, bool prune_unhelpful, SearchStats& stats) :
 		_model(model), _heuristic(std::move(heuristic)), _prune_unhelpful(prune_unhelpful), _stats(stats)
 	{
-		_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
-		_handlers.push_back(std::unique_ptr<HAObserverT>(new HAObserverT()));
+		EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
+		EventUtils::setup_HA_observer<NodeT>(_handlers);
 	}
 	
 	bool search(const State& state, std::vector<unsigned>& solution) {

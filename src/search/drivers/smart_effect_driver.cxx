@@ -61,33 +61,27 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model) {
 		LiftedEffectCSP::prune_unreachable(_heuristic->get_managers(), graph);
 	}
 	
-	using EvaluatorT = EvaluationObserver<NodeT, SmartRPG>;
-	using StatsT = StatsObserver<NodeT>;
-	using HAObserverT = HelpfulObserver<NodeT>;
-	
 	EHCSearch<SmartRPG>* ehc = nullptr;
 	if (config.getOption("ehc")) {
 		// TODO Apply reachability analysis for the EHC heuristic as well
 		auto ehc_managers = LiftedEffectCSP::create(actions,  problem.get_tuple_index(), approximate, novelty);
 		const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
-		ExtensionHandler extension_handler(problem.get_tuple_index(), managed);		
+		ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 		SmartRPG ehc_heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(ehc_managers), extension_handler);
 		ehc = new EHCSearch<SmartRPG>(model, std::move(ehc_heuristic), config.getOption("helpful_actions"), _stats);
 	}
 	
-	_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
 	
+	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, SmartRPG>(config, *_heuristic, _handlers);
 	if (config.requiresHelpfulnessAssessment()) {
-		_handlers.push_back(std::unique_ptr<HAObserverT>(new HAObserverT()));
+		EventUtils::setup_HA_observer<NodeT>(_handlers);
 	}
 	
-	_handlers.push_back(std::unique_ptr<EvaluatorT>(new EvaluatorT(*_heuristic, config.getNodeEvaluationType())));
+	auto engine = new lapkt::StlBestFirstSearch<NodeT, SmartRPG, GroundStateModel>(model, *_heuristic);
+	lapkt::events::subscribe(*engine, _handlers);
 	
-	auto gbfs = new lapkt::StlBestFirstSearch<NodeT, SmartRPG, GroundStateModel>(model, *_heuristic);
-	
-	lapkt::events::subscribe(*gbfs, _handlers);
-	
-	return Engine(new EHCThenGBFSSearch<SmartRPG>(problem, gbfs, ehc));
+	return Engine(new EHCThenGBFSSearch<SmartRPG>(problem, engine, ehc));
 }
 
 GroundStateModel

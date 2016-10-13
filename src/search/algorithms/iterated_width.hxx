@@ -6,6 +6,7 @@
 #include <search/nodes/blind_search_node.hxx>
 #include <search/components/single_novelty.hxx>
 #include <search/drivers/registry.hxx>
+#include <search/drivers/setups.hxx>
 #include <search/algorithms/aptk/breadth_first_search.hxx>
 #include <ground_state_model.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
@@ -27,22 +28,21 @@ public:
 	using PlanT = std::vector<typename StateModelT::ActionType::IdType>;
 	
 	//! IW uses a simple blind-search node
-	using SearchNode = BlindSearchNode<State, ActionT>;
+	using NodeT = BlindSearchNode<State, ActionT>;
 	
 	//! IW uses a single novelty component as the open list evaluator
-	using SearchNoveltyEvaluator = SingleNoveltyComponent<StateModelT, SearchNode>;
+	using SearchNoveltyEvaluator = SingleNoveltyComponent<StateModelT, NodeT>;
 	
 	//! IW uses an unsorted queue with a NoveltyEvaluator acceptor
-	using OpenList = aptk::StlUnsortedFIFO<SearchNode, SearchNoveltyEvaluator>;
+	using OpenList = aptk::StlUnsortedFIFO<NodeT, SearchNoveltyEvaluator>;
 	
 	//! The base algorithm for IW is a simple Breadth-First Search
-	using BaseAlgorithm = lapkt::StlBreadthFirstSearch<SearchNode, StateModelT, OpenList>;
+	using BaseAlgorithm = lapkt::StlBreadthFirstSearch<NodeT, StateModelT, OpenList>;
 	
 	FS0IWAlgorithm(const StateModelT& model, unsigned initial_max_width, unsigned final_max_width, const NoveltyFeaturesConfiguration& feature_configuration, SearchStats& stats)
 		: _model(model), _algorithm(nullptr) ,_current_max_width(initial_max_width), _final_max_width(final_max_width), _feature_configuration(feature_configuration), _stats(stats)
 	{
-		using StatsT = StatsObserver<SearchNode>;
-		_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
+		EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 		setup_base_algorithm(_current_max_width);
 	}
 	

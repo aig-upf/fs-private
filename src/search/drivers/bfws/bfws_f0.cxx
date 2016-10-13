@@ -15,15 +15,11 @@ template <typename StateModelT, typename ActionT>
 typename BFWSSubdriverF0<StateModelT, ActionT>::Engine
 BFWSSubdriverF0<StateModelT, ActionT>::create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
 	
-	using EvaluatorT = EvaluationObserver<NodeT, HeuristicT>;
-	using StatsT = StatsObserver<NodeT>;
-
 	_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(model, bfws_config._max_width, feature_configuration));
-	
-	_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
-	_handlers.push_back(std::unique_ptr<EvaluatorT>(new EvaluatorT(*_heuristic, config.getNodeEvaluationType())));
-	
 	auto engine = new lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>(model, *_heuristic);
+	
+	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
 
 	return Engine(engine);
@@ -40,16 +36,12 @@ template <typename NodeT,
 typename BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngineT, Engine>::EngineT
 BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngineT, Engine>::create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const GroundStateModel& model) {
 	
-	using EvaluatorT = EvaluationObserver<NodeT, HeuristicEnsembleT>;
-	using StatsT = StatsObserver<NodeT>;
-
 	auto base_heuristic = std::unique_ptr<HeuristicT>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
 	_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, bfws_config._max_width, feature_configuration, std::move(base_heuristic)));
-	
-	_handlers.push_back(std::unique_ptr<StatsT>(new StatsT(_stats)));
-	_handlers.push_back(std::unique_ptr<EvaluatorT>(new EvaluatorT(*_heuristic, config.getNodeEvaluationType())));
-	
 	auto engine = new RawEngineT(model, *_heuristic);
+	
+	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
 
 	return Engine(engine);
