@@ -4,7 +4,7 @@
 #include <search/drivers/gbfs_constrained.hxx>
 #include <search/drivers/iterated_width.hxx>
 #include <search/drivers/breadth_first_search.hxx>
-#include <search/drivers/bfws.hxx>
+#include <search/drivers/bfws/bfws.hxx>
 // #include <search/drivers/asp_engine.hxx>
 #include <search/drivers/unreached_atom_driver.hxx>
 #include <search/drivers/native_driver.hxx>

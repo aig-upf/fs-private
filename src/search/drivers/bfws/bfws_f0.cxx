@@ -1,5 +1,5 @@
 
-#include <search/drivers/bfws.hxx>
+#include <search/drivers/bfws/bfws.hxx>
 #include <search/events.hxx>
 #include <search/utils.hxx>
 #include <actions/ground_action_iterator.hxx>
@@ -10,31 +10,6 @@
 
 namespace fs0 { namespace drivers {
 
-
-BFWSConfig::BFWSConfig(const Config& config) :
-	_type(parse_type(config.getOption<std::string>("bfws.tag"))),
-	_max_width(config.getOption<int>("width.max_novelty"))
-{}
-
-BFWSConfig::Type
-BFWSConfig::parse_type(const std::string& type) {
-	if (type == "f0") return Type::F0;
-	if (type == "f1") return Type::F1;
-	if (type == "f2") return Type::F2;
-	if (type == "f5") return Type::F5;
-	throw std::runtime_error("Invalid BFWS type tag: " + type);
-}
-
-
-std::ostream& operator<<(std::ostream &o, BFWSConfig::Type type) {
-	switch(type) {
-		case BFWSConfig::Type::F0: return o << "F0";
-		case BFWSConfig::Type::F1: return o << "F1";
-		case BFWSConfig::Type::F2: return o << "F2";
-		case BFWSConfig::Type::F5: return o << "F5";
-		default: return o << "(invalid value)";
-	}
-}
 
 template <typename StateModelT, typename ActionT>
 typename BFWSSubdriverF0<StateModelT, ActionT>::Engine
@@ -58,9 +33,9 @@ BFWSSubdriverF0<StateModelT, ActionT>::create(const Config& config, BFWSConfig& 
 template <typename NodeT,
           typename HeuristicT,
           typename NodeCompareT,
-		  typename HeuristicEnsembleT,
-		  typename RawEngineT,
-		  typename Engine
+          typename HeuristicEnsembleT,
+          typename RawEngineT,
+          typename Engine
 >
 typename BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngineT, Engine>::EngineT
 BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngineT, Engine>::create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const GroundStateModel& model) {
@@ -79,6 +54,7 @@ BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngine
 
 	return Engine(engine);
 }
+
 
 //! Helper
 template <typename StateModelT, typename SubdriverT>
@@ -103,6 +79,7 @@ BFWSDriver<GroundStateModel>::search(Problem& problem, const Config& config, con
 		case BFWSConfig::Type::F0: do_search<GroundStateModel, BFWS_F0_GROUND>(GroundingSetup::fully_ground_model(problem), config, out_dir, start_time); break;
 		case BFWSConfig::Type::F1: do_search<GroundStateModel, BFWS_F1>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
 		case BFWSConfig::Type::F2: do_search<GroundStateModel, BFWS_F2>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
+		case BFWSConfig::Type::F5: do_search<GroundStateModel, BFWS_F5>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
 		default: throw std::runtime_error("Invalid BFWS type");
 	}
 }
