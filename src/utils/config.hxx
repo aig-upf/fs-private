@@ -122,14 +122,10 @@ public:
 		}
 	}
 
-// 	template <>
 	bool getOption(const std::string& key) const {
 		auto it = _user_options.find(key);
 		if (it != _user_options.end()) { // The user specified an option value, which thus has priority
-			std::istringstream ss(it->second);
-			bool b;
-			ss >> std::boolalpha >> b;
-			return b;
+			return boost::lexical_cast<bool>(it->second);
 		} else {
 			return _root.get<bool>(key);
 		}
