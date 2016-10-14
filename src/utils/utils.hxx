@@ -5,7 +5,7 @@
 #include <ostream>
 #include <algorithm>
 #include <map>
-#include <boost/container/flat_set.hpp>
+#include <set>
 
 namespace fs0 {
 	
@@ -35,10 +35,10 @@ public:
 		return filtered;
 	}
 	
-	//! "Uniquifies" the given vector.
+	//! "Uniquifies" the given vector - but does not preserve element order
 	template <typename T>
 	static std::vector<T> unique(const std::vector<T>& vector) {
-		boost::container::flat_set<T> unique(vector.cbegin(), vector.cend());
+		std::set<T> unique(vector.cbegin(), vector.cend());
 		return std::vector<T>(unique.cbegin(), unique.cend());
 	}
 	
