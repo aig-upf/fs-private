@@ -28,7 +28,7 @@ int Runner::run() {
 	const Config& config = Config::instance();
 	
 	LPT_INFO("main", "Problem instance loaded:" << std::endl << *problem);
-	report_stats(*problem);
+	report_stats(*problem, _options.getOutputDir());
 	
 	LPT_INFO("main", "Planner configuration: " << std::endl << config);
 	LPT_INFO("cout", "Deriving control to search engine...");
@@ -38,21 +38,28 @@ int Runner::run() {
 	return 0;
 }
 
-void Runner::report_stats(const Problem& problem) {
-	auto actions = problem.getGroundActions();
-	unsigned n_actions = actions.size();
+void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	unsigned n_actions = problem.getGroundActions().size();
+	std::ofstream json_out( out_dir + "/problem_stats.json" );
+	json_out << "{" << std::endl;
 	
-	std::cout << "Number of objects: " << ProblemInfo::getInstance().getNumObjects() << std::endl;
-	std::cout << "Number of state variables: " << ProblemInfo::getInstance().getNumVariables() << std::endl;
-	std::cout << "Number of action schemata: " << problem.getActionData().size() << std::endl;
-	std::cout << "Number of (perhaps partially) ground actions: " << n_actions << std::endl;
+	LPT_INFO("cout", "Number of objects: " << info.getNumObjects());
+	LPT_INFO("cout", "Number of state variables: " << info.getNumVariables());
+	LPT_INFO("cout", "Number of action schemata: " << problem.getActionData().size());
+	LPT_INFO("cout", "Number of (perhaps partially) ground actions: " << n_actions);
+	LPT_INFO("cout", "Number of goal atoms: " << problem.getGoalConditions()->all_atoms().size());
+	LPT_INFO("cout", "Number of state constraint atoms: " << problem.getStateConstraints()->all_atoms().size());
 	
-	if (n_actions > 1000) {
-		std::cout << "WARNING: The number of ground actions (" << n_actions << ") is too high for our applicable action strategy to perform well." << std::endl;
-	}
 
-	std::cout << "Number of state constraints: " << problem.getStateConstraints()->all_atoms().size() << std::endl;
-	std::cout << "Number of goal conditions: " << problem.getGoalConditions()->all_atoms().size() << std::endl;
+	json_out << "\t\"num_objects\": " << info.getNumObjects() << "," << std::endl;
+	json_out << "\t\"num_state_variables\": " << info.getNumVariables() << "," << std::endl;
+	json_out << "\t\"num_action_schema\": " << problem.getActionData().size() << "," << std::endl;
+	json_out << "\t\"num_grounded_actions\": " << n_actions << "," << std::endl;
+	json_out << "\t\"num_goal_atoms\": " << problem.getGoalConditions()->all_atoms().size() << "," << std::endl;
+	json_out << "\t\"num_state_constraint_atoms\": " << problem.getStateConstraints()->all_atoms().size();
+	json_out << std::endl << "}" << std::endl;
+	json_out.close();
 }
 
 } } // namespaces

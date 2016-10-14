@@ -31,7 +31,7 @@ protected:
 	float _start_time;
 	
 	//! Print out some information about the characteristics of the problem
-	static void report_stats(const Problem& problem);	
+	static void report_stats(const Problem& problem, const std::string& out_dir);
 };
 
 } } // namespaces
