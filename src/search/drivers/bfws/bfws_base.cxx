@@ -13,7 +13,7 @@ namespace fs0 { namespace drivers {
 
 BFWSConfig::BFWSConfig(const Config& config) :
 	_type(parse_type(config.getOption<std::string>("bfws.tag"))),
-	_max_width(config.getOption<int>("width.max_novelty"))
+	_max_width(config.getOption<int>("width.max"))
 {}
 
 BFWSConfig::Type

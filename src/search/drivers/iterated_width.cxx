@@ -14,7 +14,7 @@ template <typename StateModelT>
 typename IteratedWidthDriver<StateModelT>::EnginePtr
 IteratedWidthDriver<StateModelT>::create(const Config& config, const StateModelT& model) {
 	
-	unsigned max_novelty = config.getOption<int>("width.max_novelty");
+	unsigned max_novelty = config.getOption<int>("width.max");
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	
 	LPT_INFO("main", "Heuristic options:");

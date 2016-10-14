@@ -18,7 +18,7 @@
 	"validate": "true",
 	
 	"width": {
-		"max_novelty": 2,
+		"max": 2,
 		"use_state_vars": "true",
 		"use_goal": "false",
 		"use_actions": "false"
