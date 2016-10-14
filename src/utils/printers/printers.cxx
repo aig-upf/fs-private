@@ -1,6 +1,7 @@
 
 #include <memory>
 #include <utils/printers/printers.hxx>
+#include "helper.hxx"
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 
@@ -25,9 +26,7 @@ void PlanPrinter::print(const std::vector<LiftedActionID>& plan, std::ostream& o
 void PlanPrinter::print_json(const std::vector<LiftedActionID>& plan, std::ostream& out) {
 	std::vector<std::string> names;
 	for (const auto& elem:plan) {
-		std::ostringstream stream;
-		stream << elem;
-		names.push_back(stream.str());
+		names.push_back(printer() << elem);
 	}
 	print_json(names, out);
 }
@@ -36,9 +35,7 @@ void PlanPrinter::print_json(const std::vector<GroundAction::IdType>& plan, std:
 	std::vector<std::string> names;
 	const auto& actions = Problem::getInstance().getGroundActions();
 	for (const auto& action_id:plan) {
-		std::ostringstream stream;
-		stream << print::action_header(*actions.at(action_id));
-		names.push_back(stream.str());
+		names.push_back(printer() << print::action_header(*actions.at(action_id)));
 	}
 	print_json(names, out);
 }

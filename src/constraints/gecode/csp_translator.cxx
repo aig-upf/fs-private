@@ -7,6 +7,7 @@
 #include <state.hxx>
 #include <constraints/gecode/gecode_csp.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
+#include <utils/printers/helper.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -93,6 +94,7 @@ bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested, int min, in
 }
 
 
+
 unsigned CSPTranslator::resolveVariableIndex(const fs::Term* term) const {
 	if (auto sv = dynamic_cast<const fs::StateVariable*>(term)) {
 		return resolveInputVariableIndex(sv->getValue());
@@ -100,7 +102,7 @@ unsigned CSPTranslator::resolveVariableIndex(const fs::Term* term) const {
 
 	auto it = _registered.find(term);
 	if(it == _registered.end()) {
-		throw UnregisteredStateVariableError("Trying to translate a non-existing CSP variable");
+		throw UnregisteredStateVariableError(fs0::printer() << "Trying to resolve unregistered term \"" << *term << "\"");
 	}
 	return it->second;
 }

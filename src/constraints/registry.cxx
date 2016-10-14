@@ -165,4 +165,9 @@ const gecode::FormulaTranslator* LogicalComponentRegistry::getGecodeTranslator(c
 	return it->second;
 }
 
+template <typename T>
+std::string UnregisteredGecodeTranslator::message(const T& element) {
+	return printer() << "A Gecode translator is required for element \""<< element << "\", but none was registered";
+}
+	
 } // namespaces

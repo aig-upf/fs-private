@@ -54,7 +54,8 @@ void BoundsConstraintsGenerator::generate(const GroundAction& action, const std:
 			if (!info.checkValueIsValid(effect->apply())) {
 				std::stringstream buffer;
 				buffer << "Error: 0-ary effect '" << *effect << "' of action " << action << " produces out-of-bounds variable values";
-				throw std::runtime_error(buffer.str());
+				throw std::runtime_error(printer() << "Error: 0-ary effect '" << *effect << "' of action " << action << " produces out-of-bounds variable values");
+
 			}
 		} else if (const auto* casted = dynamic_cast<const UnaryDirectEffect*>(effect)) {
 			constraints.push_back(new UnaryDomainBoundsConstraint(casted, info));
