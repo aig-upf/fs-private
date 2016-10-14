@@ -41,6 +41,21 @@ void state_variable_selection(const Problem& problem, GenericNoveltyEvaluator::F
 	}
 }
 
+//! Returns one novelty feature per every state variable that appears in the goal formula
+void goal_state_variable_selection(const Problem& problem, GenericNoveltyEvaluator::FeatureSet& features) {
+	std::set<VariableIdx> relevant;
+
+	// First extract which state variables are relevant
+	for (const fs::AtomicFormula* condition : problem.getGoalConditions()->all_atoms() ) {
+		fs::ScopeUtils::computeFullScope(condition, relevant);
+	}
+
+	// Insert one novelty feature per each state variable found
+	for (VariableIdx variable : relevant) {
+		features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(variable)));
+	}
+}
+
 //! Returns one novelty feature per every state variable that appears either in the goal or in some action precondition
 //! NOTE THAT ATM THIS WON'T WORK WITH LIFTED ACTIONS, EXISTENTIAL VARIABLES, ETC.
 void relevant_state_variable_selection(const Problem& problem, GenericNoveltyEvaluator::FeatureSet& features) {
@@ -90,9 +105,21 @@ void full_feature_selection(const Problem& problem, GenericNoveltyEvaluator::Fea
 	}
 }
 
-void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& feature_configuration) {
-	state_variable_selection(problem, _features);
-	LPT_INFO("main", "Novelty From Constraints: # features: " << numFeatures());
+void GenericNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config) {
+	if (config.getType() == NoveltyFeaturesConfiguration::Type::RELEVANT1) {
+		full_feature_selection(problem, _features);
+	} else if (config.getType() == NoveltyFeaturesConfiguration::Type::GOAL_ONLY) {
+		goal_state_variable_selection(problem, _features);
+	} else {
+		state_variable_selection(problem, _features);
+	}
+	
+	if (_features.empty()) {
+		LPT_INFO("cout", "No features were selected - the width-based algorithm cannot continue");
+		throw std::runtime_error("No features were selected - the width-based algorithm cannot continue");
+	}
+	
+	LPT_INFO("cout", "Number of features from which state novelty will be computed: " << numFeatures());
 }
 
 void GenericStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std::vector<aptk::ValueIndex>& values) const {

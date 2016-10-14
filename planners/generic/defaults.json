@@ -19,6 +19,7 @@
 	
 	"width": {
 		"max": 2,
+		"features": "all", 
 		"use_state_vars": "true",
 		"use_goal": "false",
 		"use_actions": "false"

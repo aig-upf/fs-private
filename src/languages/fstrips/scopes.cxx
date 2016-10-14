@@ -119,7 +119,7 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 }
 
 template <typename T>
-void _computeRelevantElements(const T& element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
+void _computeRelevantElements(const T& element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols, bool preds_as_state_vars=false) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (const Term* term:element->all_terms()) {
 		auto statevar = dynamic_cast<const StateVariable*>(term);
@@ -132,6 +132,9 @@ void _computeRelevantElements(const T& element, std::set<VariableIdx>& variables
 			
 			if (info.isPredicate(symbol)) {
 				symbols.insert(symbol);
+				if (preds_as_state_vars) {
+					variables.insert(statevar->getValue());
+				}
 			} else {
 				variables.insert(statevar->getValue());
 			}
@@ -163,12 +166,12 @@ void ScopeUtils::computeRelevantElements(const Formula* element, std::set<Variab
 
 void ScopeUtils::computeFullScope(const Formula* formula, std::set<VariableIdx>& scope) {
 	std::set<unsigned> _;
-	_computeRelevantElements(formula, scope, _);
+	_computeRelevantElements(formula, scope, _, true);
 }
 
 void ScopeUtils::computeActionFullScope(const ActionBase& action, std::set<VariableIdx>& scope) {
 	std::set<unsigned> _;
-	_computeRelevantElements(action.getPrecondition(), scope, _);
+	_computeRelevantElements(action.getPrecondition(), scope, _, true);
 }
 
 } } } // namespaces
