@@ -50,7 +50,7 @@ BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngine
 
 //! Helper
 template <typename StateModelT, typename SubdriverT>
-void do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
+ExitCode do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	BFWSConfig bfws_config(config);
 	SubdriverT subdriver;
 	NoveltyFeaturesConfiguration feature_configuration(config);
@@ -59,29 +59,29 @@ void do_search(const StateModelT& model, const Config& config, const std::string
 	LPT_INFO("cout", "\tBFWS Type: " << bfws_config._type);
 	LPT_INFO("cout", "\tMax novelty: " << bfws_config._max_width);
 	LPT_INFO("cout", "\tFeature extraction: " << feature_configuration);
-	Utils::do_search(*engine, model, out_dir, start_time, subdriver.getStats());
+	return Utils::do_search(*engine, model, out_dir, start_time, subdriver.getStats());
 }
 
 
 
 template <>
-void 
+ExitCode 
 BFWSDriver<GroundStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	switch(BFWSConfig(config)._type) {
-		case BFWSConfig::Type::F0: do_search<GroundStateModel, BFWS_F0_GROUND>(GroundingSetup::fully_ground_model(problem), config, out_dir, start_time); break;
-		case BFWSConfig::Type::F1: do_search<GroundStateModel, BFWS_F1>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
-		case BFWSConfig::Type::F2: do_search<GroundStateModel, BFWS_F2>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
-		case BFWSConfig::Type::F5: do_search<GroundStateModel, BFWS_F5>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
+		case BFWSConfig::Type::F0: return do_search<GroundStateModel, BFWS_F0_GROUND>(GroundingSetup::fully_ground_model(problem), config, out_dir, start_time); break;
+		case BFWSConfig::Type::F1: return do_search<GroundStateModel, BFWS_F1>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
+		case BFWSConfig::Type::F2: return do_search<GroundStateModel, BFWS_F2>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
+		case BFWSConfig::Type::F5: return do_search<GroundStateModel, BFWS_F5>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
 		default: throw std::runtime_error("Invalid BFWS type");
 	}
 }
 
 
 template <>
-void 
+ExitCode 
 BFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	switch(BFWSConfig(config)._type) {
- 		case BFWSConfig::Type::F0: do_search<LiftedStateModel, BFWS_F0_LIFTED>(GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time); break;
+ 		case BFWSConfig::Type::F0: return do_search<LiftedStateModel, BFWS_F0_LIFTED>(GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time); break;
 // 		case BFWSConfig::Type::F1: do_search<LiftedStateModel, BFWS_F1>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
 // 		case BFWSConfig::Type::F2: do_search<LiftedStateModel, BFWS_F2>(GroundingSetup::ground_search_lifted_heuristic(problem), config, out_dir, start_time); break;
 		default: throw std::runtime_error("Invalid BFWS type");

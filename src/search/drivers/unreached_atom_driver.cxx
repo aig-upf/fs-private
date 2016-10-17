@@ -43,12 +43,12 @@ GroundStateModel UnreachedAtomDriver::setup(Problem& problem) const {
 }
 
 
-void 
+ExitCode 
 UnreachedAtomDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	GroundStateModel model = setup(problem);
 	SearchStats stats;
 	auto engine = create(config, model);
-	Utils::do_search(*engine, model, out_dir, start_time, stats);
+	return Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
 
 } } // namespaces

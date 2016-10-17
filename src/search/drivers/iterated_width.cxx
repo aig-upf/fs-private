@@ -26,19 +26,19 @@ IteratedWidthDriver<StateModelT>::create(const Config& config, const StateModelT
 }
 
 template <>
-void 
+ExitCode 
 IteratedWidthDriver<GroundStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	auto model = GroundingSetup::fully_ground_model(problem);
 	auto engine = create(config, model);
-	Utils::do_search(*engine, model, out_dir, start_time, _stats);
+	return Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
 template <>
-void 
+ExitCode 
 IteratedWidthDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	auto model = GroundingSetup::fully_lifted_model(problem);
 	auto engine = create(config, model);
-	Utils::do_search(*engine, model, out_dir, start_time, _stats);
+	return Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
 } } // namespaces

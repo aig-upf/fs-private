@@ -5,6 +5,7 @@
 #include <fs_types.hxx>
 #include <ground_state_model.hxx>
 #include <lifted_state_model.hxx>
+#include <utils/system.hxx>
 
 #include <aptk2/search/interfaces/search_algorithm.hxx>
 
@@ -23,7 +24,7 @@ public:
 	virtual ~Driver() = default;
 	
 	//! Perform the search
-	virtual void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) = 0;
+	virtual ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) = 0;
 };
 
 

@@ -74,12 +74,12 @@ NativeDriver<StateModelT>::check_supported(const Problem& problem) {
 
 
 template <typename StateModelT>
-void 
+ExitCode 
 NativeDriver<StateModelT>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	StateModelT model = setup(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
-	Utils::do_search(*engine, model, out_dir, start_time, stats);
+	return Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
 
 } } // namespaces

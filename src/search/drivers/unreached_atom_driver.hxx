@@ -24,9 +24,7 @@ public:
 	
 	GroundStateModel setup(Problem& problem) const;
 	
-	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
-
-	
+	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 };
 
 } } // namespaces

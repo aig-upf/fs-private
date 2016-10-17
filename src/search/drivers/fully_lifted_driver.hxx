@@ -27,7 +27,7 @@ public:
 	
 	LiftedStateModel setup(Problem& problem) const;
 	
-	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 
 protected:
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;

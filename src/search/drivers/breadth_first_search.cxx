@@ -26,11 +26,11 @@ BreadthFirstSearchDriver::setup(Problem& problem) const {
 	return GroundingSetup::fully_ground_model(problem);
 }
 
-void 
+ExitCode 
 BreadthFirstSearchDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	GroundStateModel model = setup(problem);
 	auto engine = create(config, model);
-	Utils::do_search(*engine, model, out_dir, start_time, _stats);
+	return Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
 } } // namespaces

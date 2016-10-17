@@ -22,7 +22,7 @@ public:
 	
 	EnginePtr create(const Config& config, const StateModelT& model);
 	
-	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 	
 protected:
 	SearchStats _stats;

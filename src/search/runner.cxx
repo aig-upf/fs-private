@@ -7,6 +7,7 @@
 #include <search/runner.hxx>
 #include <search/drivers/registry.hxx>
 #include <utils/config.hxx>
+#include <utils/system.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/language.hxx>
 
@@ -33,9 +34,11 @@ int Runner::run() {
 	LPT_INFO("main", "Planner configuration: " << std::endl << config);
 	LPT_INFO("cout", "Deriving control to search engine...");
 	auto driver = EngineRegistry::instance().get(_options.getDriver());
+	
+	
 	driver->search(*problem, config, _options.getOutputDir(), _start_time);
 	
-	return 0;
+	return ExitCode::PLAN_FOUND;
 }
 
 void Runner::report_stats(const Problem& problem, const std::string& out_dir) {

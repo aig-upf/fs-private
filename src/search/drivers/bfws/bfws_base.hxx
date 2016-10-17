@@ -43,7 +43,7 @@ std::ostream& operator<<(std::ostream &o, BFWSConfig::Type type);
 template <typename StateModelT>
 class BFWSDriver : public Driver {
 public:
-	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 };
 
 

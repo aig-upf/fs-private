@@ -47,12 +47,12 @@ FullyLiftedDriver::setup(Problem& problem) const {
 	return GroundingSetup::fully_lifted_model(problem);
 }
 
-void 
+ExitCode 
 FullyLiftedDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	LiftedStateModel model = setup(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
-	Utils::do_search(*engine, model, out_dir, start_time, stats);
+	return Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
 
 } } // namespaces

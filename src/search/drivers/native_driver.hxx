@@ -25,7 +25,7 @@ public:
 	using EngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	
-	void search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 
 	EnginePT create(const Config& config, const StateModelT& problem, SearchStats& stats);
 	

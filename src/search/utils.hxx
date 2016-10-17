@@ -13,6 +13,7 @@
 #include <search/stats.hxx>
 #include <actions/checker.hxx>
 #include <utils/printers/printers.hxx>
+#include <utils/system.hxx>
 
 
 namespace fs0 { namespace drivers {
@@ -21,7 +22,7 @@ class Utils {
 public:
 
 template <typename StateModelT, typename SearchAlgorithmT>
-static void do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time, const SearchStats& stats) {
+static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time, const SearchStats& stats) {
 	const Problem& problem = model.getTask();
 
 	LPT_INFO("cout", "Starting search. Results written to " << out_dir);
@@ -53,6 +54,7 @@ static void do_search(SearchAlgorithmT& engine, const StateModelT& model, const 
 	json_out << "\t\"total_time\": " << total_planning_time << "," << std::endl;
 	json_out << "\t\"search_time\": " << search_time << "," << std::endl;
 	json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
+	json_out << "\t\"memory\": " << get_peak_memory_in_kb() << "," << std::endl;
 	json_out << "\t\"generated\": " << stats.generated() << "," << std::endl;
 	json_out << "\t\"expanded\": " << stats.expanded() << "," << std::endl;
 	json_out << "\t\"evaluated\": " << stats.evaluated() << "," << std::endl;
@@ -67,21 +69,27 @@ static void do_search(SearchAlgorithmT& engine, const StateModelT& model, const 
 	json_out << "}" << std::endl;
 	json_out.close();
 	
+	LPT_INFO("cout", "Expansions: " << stats.expanded());
+	LPT_INFO("cout", "Generations: " << stats.generated());
+	LPT_INFO("cout", "Evaluations: " << stats.evaluated());
+	LPT_INFO("cout", "Total Planning Time: " << total_planning_time << " s.");
+	LPT_INFO("cout", "Actual Search Time: " << search_time << " s.");
+	LPT_INFO("cout", "Peak mem. usage: " << get_peak_memory_in_kb() << " kB.");
+	
+	ExitCode result;
 	if (solved) {
 		if (!valid) {
 			Checker::print_plan_execution(problem, plan, problem.getInitialState());
 			throw std::runtime_error("The plan output by the planner is not correct!");
 		}
 		LPT_INFO("cout", "Search Result: Found plan of length " << plan.size());
+		result = ExitCode::PLAN_FOUND;
 	} else {
 		LPT_INFO("cout", "Search Result: No plan was found.");
+		result = ExitCode::UNSOLVABLE;
 	}
 	
-	LPT_INFO("cout", "Expansions: " << stats.expanded());
-	LPT_INFO("cout", "Generations: " << stats.generated());
-	LPT_INFO("cout", "Evaluations: " << stats.evaluated());
-	LPT_INFO("cout", "Total Planning Time: " << total_planning_time << " s.");
-	LPT_INFO("cout", "Actual Search Time: " << search_time << " s.");
+	return result;
 }
 
 };
