@@ -36,7 +36,7 @@ EngineRegistry::EngineRegistry() {
 // 	add("lnative",  new NativeDriver<LiftedStateModel>()); // The native driver is not ready for this
 	
 // 	add("lite",  new NativeDriver());
-	add("unreached_atom",  new UnreachedAtomDriver());
+	add("lunreached",  new UnreachedAtomDriver<LiftedStateModel>());
 	add("lifted",  new FullyLiftedDriver());
 	
 	add("iw",  new IteratedWidthDriver<GroundStateModel>());

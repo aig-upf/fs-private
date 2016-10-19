@@ -4,7 +4,7 @@
 #include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <constraints/gecode/handlers/formula_csp.hxx>
-#include <constraints/gecode/handlers/ground_effect_csp.hxx>
+#include <constraints/gecode/handlers/lifted_effect_unreached.hxx>
 
 
 namespace fs0 { class Problem; class State; class RPGData; }
@@ -13,7 +13,7 @@ namespace fs0 { namespace gecode {
 
 class UnreachedAtomRPG {
 public:
-	using HandlerT = GroundEffectCSP;
+	using HandlerT = LiftedEffectUnreachedCSP;
 	using HandlerPT = std::unique_ptr<HandlerT>;
 
 	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<HandlerPT>&& managers, ExtensionHandler extension_handler);
