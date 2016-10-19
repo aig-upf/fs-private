@@ -22,12 +22,7 @@ LiftedEffectUnreachedCSP::create(const std::vector<const PartiallyGroundedAction
 	for (auto schema:schemata) {
 		assert(!schema->has_empty_parameter());
 		
-		for (auto eff:schema->getEffects()) {
-			if (eff->is_del()) { // Ignore delete effects
-				LPT_DEBUG("grounding", "\tIgnoring delete-effect \"" << *eff);
-				continue;
-			}
-			
+		for (auto eff:extract_non_delete_effects(*schema)) {
 			// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
 			auto handler = std::unique_ptr<LiftedEffectUnreachedCSP>(new LiftedEffectUnreachedCSP(*schema, eff, tuple_index, approximate));
 			
