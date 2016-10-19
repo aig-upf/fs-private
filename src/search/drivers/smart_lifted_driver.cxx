@@ -31,7 +31,7 @@ SmartLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchS
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	
 	// We create smart managers by grounding only wrt the effect heads.
-	auto managers = LiftedEffectCSP::create(actions, tuple_index, approximate, novelty);
+	auto managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
 	
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);

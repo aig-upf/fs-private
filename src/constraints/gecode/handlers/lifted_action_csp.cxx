@@ -87,6 +87,25 @@ void LiftedActionCSP::index_parameters() {
 	}
 }
 
+void
+LiftedActionCSP::register_csp_variables() {
+	BaseCSP::register_csp_variables();
+	// We simply make sure all action parameters have been registered.
+	const Signature& signature = _action.getSignature();
+	for (unsigned i = 0; i < signature.size(); ++i) {
+		if (!_action.isBound(i)) {
+			// We here assume that the parameter IDs are always 0..k-1, where k is the number of parameters
+			fs::BoundVariable variable(i, signature[i]);
+			if (!_translator.isRegistered(&variable)) {
+				auto var = new fs::BoundVariable(i, signature[i]);
+				registerTermVariables(var,  _translator);
+			}
+		}
+	}
+}
+
+
+
 Binding LiftedActionCSP::build_binding_from_solution(const GecodeCSP* solution) const {
 	std::vector<int> values;
 	std::vector<bool> valid;
@@ -124,5 +143,6 @@ LiftedActionID* LiftedActionCSP::get_lifted_action_id(const GecodeCSP* solution)
 void LiftedActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action schema " << _action);
 }
+
 
 } } // namespaces

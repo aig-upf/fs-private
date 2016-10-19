@@ -26,7 +26,7 @@ SmartEffectDriver::configure_heuristic(const Problem& problem, const Config& con
 	
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
-	auto managers = LiftedEffectCSP::create(actions, tuple_index, approximate, novelty);
+	auto managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
 	
 	bool use_state_constraints = config.getOption<bool>("use_state_constraints_in_heuristic_goal_evaluation");
 	const fs::Formula* state_constraints = use_state_constraints ? problem.getStateConstraints() : new fs::Tautology;
@@ -64,7 +64,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 	EHCSearch<SmartRPG>* ehc = nullptr;
 	if (config.getOption("ehc")) {
 		// TODO Apply reachability analysis for the EHC heuristic as well
-		auto ehc_managers = LiftedEffectCSP::create(actions,  problem.get_tuple_index(), approximate, novelty);
+		auto ehc_managers = LiftedEffectCSP::create_smart(actions,  problem.get_tuple_index(), approximate, novelty);
 		const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 		ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 		SmartRPG ehc_heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(ehc_managers), extension_handler);

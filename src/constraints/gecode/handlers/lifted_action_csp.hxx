@@ -41,6 +41,10 @@ public:
 	LiftedActionID* get_lifted_action_id(const GecodeCSP* solution) const;
 	
 protected:
+	//! We override the base method to ensure all action parameters are registered as CSP variables
+	//! even if they do not appear in other parts of the CSP
+	void register_csp_variables() override;
+	
 	//! The action that originates this handler
 	const PartiallyGroundedAction _action;
 	

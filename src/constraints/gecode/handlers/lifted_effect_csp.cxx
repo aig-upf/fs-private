@@ -16,7 +16,7 @@ namespace fs0 { namespace gecode {
 
 
 std::vector<std::unique_ptr<LiftedEffectCSP>>
-LiftedEffectCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+LiftedEffectCSP::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::unique_ptr<LiftedEffectCSP>> handlers;
 	

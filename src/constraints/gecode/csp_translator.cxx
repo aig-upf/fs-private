@@ -60,6 +60,10 @@ unsigned CSPTranslator::registerIntVariable(int min, int max) {
 }
 
 
+bool CSPTranslator::isRegistered(const fs::Term* variable) const {
+	return _registered.find(variable) != _registered.end();
+}
+
 void CSPTranslator::registerInputStateVariable(VariableIdx variable) {
 	auto it = _input_state_variables.find(variable);
 	if (it != _input_state_variables.end()) return; // The state variable was already registered, no need to register it again

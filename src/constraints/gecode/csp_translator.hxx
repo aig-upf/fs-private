@@ -50,6 +50,8 @@ public:
 
 	//! This updates the actual variables of the given CSP with all the CSP variables that have been registered in the translator so far
 	void perform_registration();
+	
+	bool isRegistered(const fs::Term* variable) const;
 
 	//! Register the given term (under the give role/type) by creating a corresponding CSP variable.
 	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)

@@ -42,14 +42,14 @@ public:
 	
 	const std::vector<const fs::ActionEffect*>& get_effects() const override;
 
-	const fs::Formula* get_precondition() const override;	
+	const fs::Formula* get_precondition() const override;
 	
 protected:
 
 	const GroundAction& _action;
 	
 	//! This is the only effect managed by this CSP, which we store in a vector to comply with the parents' interfaces, which require
-	//! to return a vector of effects. By construction, we have that _effects.size() == 0
+	//! to return a vector of effects. By construction, we have that _effects.size() == 1
 	const std::vector<const fs::ActionEffect*> _effects;
 	
 	const ActionID* get_action_id(const GecodeCSP* solution) const override;
