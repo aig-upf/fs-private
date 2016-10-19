@@ -170,7 +170,7 @@ int get_peak_memory_in_kb() {
 
 void register_event_handlers() {
     // Terminate when running out of memory.
-    std::set_new_handler(out_of_memory_handler);
+    // std::set_new_handler(out_of_memory_handler);
 
     // On exit or when receiving certain signals such as SIGINT (Ctrl-C),
     // print the peak memory usage.

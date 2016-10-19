@@ -33,7 +33,15 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	float t0 = aptk::time_used();
 	double _t0 = (double) clock() / CLOCKS_PER_SEC;
 	
-	bool solved = engine.solve_model( plan );
+	bool solved = false, oom = false;
+	try {
+		solved = engine.solve_model( plan );
+	}
+	catch (const std::bad_alloc& ex)
+	{   //Observe that the local variable `data` no longer exists here.
+		LPT_INFO("cout", "FAILED TO ALLOCATE MEMORY");
+		oom = true;
+	}
 	
 	float search_time = aptk::time_used() - t0;
 	double _search_time = (double) clock() / CLOCKS_PER_SEC - _t0;
@@ -62,6 +70,7 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
 	json_out << "\t\"solved\": " << ( solved ? "true" : "false" ) << "," << std::endl;
 	json_out << "\t\"valid\": " << ( valid ? "true" : "false" ) << "," << std::endl;
+	json_out << "\t\"out_of_memory\": " << ( oom ? "true" : "false" ) << "," << std::endl;
 	json_out << "\t\"plan_length\": " << plan.size() << "," << std::endl;
 	json_out << "\t\"plan\": ";
 	PlanPrinter::print_json( plan, json_out);
@@ -84,6 +93,9 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 		}
 		LPT_INFO("cout", "Search Result: Found plan of length " << plan.size());
 		result = ExitCode::PLAN_FOUND;
+	} else if (oom) {
+		LPT_INFO("cout", "Search Result: Out of memory. Peak memory: " << get_peak_memory_in_kb());
+		result = ExitCode::OUT_OF_MEMORY;
 	} else {
 		LPT_INFO("cout", "Search Result: No plan was found.");
 		result = ExitCode::UNSOLVABLE;
