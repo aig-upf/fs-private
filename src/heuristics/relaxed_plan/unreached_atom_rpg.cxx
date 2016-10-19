@@ -16,7 +16,7 @@
 
 namespace fs0 { namespace gecode {
 
-UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler) :
+UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<HandlerPT>&& managers, ExtensionHandler extension_handler) :
 	_problem(problem),
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
@@ -40,54 +40,58 @@ long UnreachedAtomRPG::evaluate(const State& seed, std::vector<Atom>& relevant) 
 		_goal_handler->init_value_selector(&graph);
 	}
 	
-	auto unachieved = graph.unachieved_atoms(_tuple_index);
+	auto achieved = graph.achieved_atoms(_tuple_index);
 	
 	// The main loop - at each iteration we build an additional RPG layer, until no new atoms are achieved (i.e. the rpg is empty), or we reach a goal layer.
 	while (true) {
 	
 		// Begin a new RPG Layer
 		
-		// cache[i] contains the CSP corresponding to effect 'i' instantiated to the current layer, or nullptr.
-		// We use to avoid instantiating the same effect CSP more than once per layer
+		// cache[i] will contain the CSP corresponding to effect 'i' instantiated to the current layer, or nullptr.
+		// We use it to avoid instantiating the same effect CSP more than once per layer
 		std::vector<std::unique_ptr<GecodeCSP>> cache(_managers.size());
+		
+		// failure_cache[i] will be true iff the CSP corresponding to effect 'i' has already been found to be non-applicable in the current layer.
 		std::vector<bool> failure_cache(_managers.size(), false);
 		
-		
-		for (auto it = unachieved.begin(); it != unachieved.end(); ) {
-			unsigned atom_idx = *it;
+		for (unsigned atom_idx = 0; atom_idx < achieved.size(); ++atom_idx) {
+			if (achieved[atom_idx]) continue; // The atom has already been achieved, no need to do anything about it.
+// 		for (auto it = unachieved.begin(); it != unachieved.end(); ) {
+// 			unsigned atom_idx = *it;
 			const Atom& atom = _tuple_index.to_atom(atom_idx);
 			
 			// Check for a potential support
 			bool atom_supported = false;
 			for (unsigned manager_idx:_atom_achievers.at(atom_idx)) {
-				const EffectHandlerPtr& manager = _managers[manager_idx];
+				const HandlerT& manager = *_managers[manager_idx];
 				if (failure_cache[manager_idx]) {
-					LPT_EDEBUG("heuristic", "Found cached unapplicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
+					LPT_EDEBUG("heuristic", "Found cached unapplicable effect \"" << *manager.get_effect() << "\" of action \"" << manager.get_action() << "\"");
 					continue; // The effect CSP has already been instantiated and found unapplicable on this very same layer
 				}
 				
 				if (cache[manager_idx] == nullptr) {
-					GecodeCSP* raw = manager->preinstantiate(graph);
+					GecodeCSP* raw = manager.preinstantiate(graph);
 					if (!raw) { // We are instantiating the CSP for the first time in this layer and find that it is not applicable.
 						failure_cache[manager_idx] = true;
-						LPT_EDEBUG("heuristic", "Effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\" inconsistent => not applicable");
+						LPT_EDEBUG("heuristic", "Effect \"" << *manager.get_effect() << "\" of action \"" << manager.get_action() << "\" inconsistent => not applicable");
 						continue;
 					}
 					cache[manager_idx] = std::unique_ptr<GecodeCSP>(raw);
 				} else {
-					LPT_EDEBUG("heuristic", "Found cached & applicable effect \"" << *manager->get_effect() << "\" of action \"" << manager->get_action() << "\"");
+					LPT_EDEBUG("heuristic", "Found cached & applicable effect \"" << *manager.get_effect() << "\" of action \"" << manager.get_action() << "\"");
 				}
 				
-				atom_supported = manager->find_atom_support(atom_idx, atom, seed, *cache[manager_idx], graph);
+				atom_supported = manager.find_atom_support(atom_idx, atom, seed, *cache[manager_idx], graph);
 				if (atom_supported) break; // No need to keep iterating
 			}
 			
 			// If a support was found, no need to check for that particular atom anymore.
 			if (atom_supported) {
 				LPT_EDEBUG("heuristic", "Found support for atom " << atom);
-				it = unachieved.erase(it);
+				achieved[atom_idx] = true;
+// 				it = unachieved.erase(it);
 			} else {
-				++it;
+// 				++it;
 			}
 		}
 		
@@ -111,13 +115,13 @@ long UnreachedAtomRPG::computeHeuristic(const RPGIndex& graph) {
 }
 
 
-UnreachedAtomRPG::AchieverIndex UnreachedAtomRPG::build_achievers_index(const std::vector<EffectHandlerPtr>& managers, const TupleIndex& tuple_index) {
+UnreachedAtomRPG::AchieverIndex UnreachedAtomRPG::build_achievers_index(const std::vector<HandlerPT>& managers, const TupleIndex& tuple_index) {
 	AchieverIndex index(tuple_index.size()); // Create an index as large as the number of atoms
 	
 	LPT_INFO("main", "Building index of potential atom achievers");
 	
 	for (unsigned manager_idx = 0; manager_idx < managers.size(); ++manager_idx) {
-		const EffectHandlerPtr& manager = managers[manager_idx];
+		const HandlerPT& manager = managers[manager_idx];
 		
 		const fs::ActionEffect* effect = manager->get_effect();
 		

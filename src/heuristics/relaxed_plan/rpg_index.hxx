@@ -106,7 +106,7 @@ public:
 	std::ostream& print(std::ostream& os) const;
 	
 	//! Return the set of all tuples that have not been yet reached in the current RPG.
-	std::set<unsigned> unachieved_atoms(const TupleIndex& tuple_index) const;
+	std::vector<bool> achieved_atoms(const TupleIndex& tuple_index) const;
 	
 // 	const std::set<unsigned>& get_modified_symbols() const;
 

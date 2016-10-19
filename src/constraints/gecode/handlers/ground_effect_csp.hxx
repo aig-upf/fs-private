@@ -33,6 +33,7 @@ public:
 	//! Preinstantiate the CSP
 	GecodeCSP* preinstantiate(const RPGIndex& rpg) const;
 	
+	//! Find whether this effect can support the atom 'tuple' = 'atom' in the RPG layer given by layer_csp
 	bool find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const;
 	
 	void post(GecodeCSP& csp, const Atom& atom) const;

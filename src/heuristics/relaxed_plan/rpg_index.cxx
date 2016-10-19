@@ -151,12 +151,13 @@ bool RPGIndex::is_true(VariableIdx variable) const {
 // 	return std::find(domain.cbegin(), domain.cend(), 1) != domain.end();
 }
 
-std::set<unsigned> RPGIndex::unachieved_atoms(const TupleIndex& tuple_index) const {
-	std::set<unsigned> unachieved;
+std::vector<bool> RPGIndex::achieved_atoms(const TupleIndex& tuple_index) const {
+	std::vector<bool> achieved(tuple_index.size(), false);
 	for (TupleIdx tuple = 0; tuple < tuple_index.size(); ++tuple) {
-		if (!reached(tuple)) unachieved.insert(tuple);
+// 		if (!reached(tuple)) unachieved.insert(tuple);
+		if (reached(tuple)) achieved[tuple] = true;
 	}
-	return unachieved;
+	return achieved;
 }
 
 /*

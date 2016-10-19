@@ -12,18 +12,18 @@ namespace fs0 { class Problem; class State; class RPGData; }
 namespace fs0 { namespace gecode {
 
 class UnreachedAtomRPG {
-protected:
-	typedef std::unique_ptr<GroundEffectCSP> EffectHandlerPtr;
-
 public:
-	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
+	using HandlerT = GroundEffectCSP;
+	using HandlerPT = std::unique_ptr<HandlerT>;
+
+	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<HandlerPT>&& managers, ExtensionHandler extension_handler);
 	~UnreachedAtomRPG() = default;
 	
 	// Disallow copies of the object, as they will be expensive, but allow moves.
 	UnreachedAtomRPG(const UnreachedAtomRPG&) = delete;
 	UnreachedAtomRPG(UnreachedAtomRPG&&) = default;
 	UnreachedAtomRPG& operator=(const UnreachedAtomRPG& other) = delete;
-	UnreachedAtomRPG& operator=(UnreachedAtomRPG&& other) = default;	
+	UnreachedAtomRPG& operator=(UnreachedAtomRPG&& other) = default;
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	long evaluate(const State& seed, std::vector<Atom>& relevant);
@@ -45,7 +45,7 @@ protected:
 	const TupleIndex& _tuple_index;
 	
 	//! The set of action managers, one per every action
-	std::vector<EffectHandlerPtr> _managers;
+	std::vector<HandlerPT> _managers;
 	
 	std::unique_ptr<FormulaCSP> _goal_handler;
 	
@@ -60,7 +60,7 @@ protected:
 	AchieverIndex _atom_achievers;
 	
 	//! A helper to build the index of atom achievers.
-	static AchieverIndex build_achievers_index(const std::vector<EffectHandlerPtr>& managers, const TupleIndex& tuple_index);
+	static AchieverIndex build_achievers_index(const std::vector<HandlerPT>& managers, const TupleIndex& tuple_index);
 };
 
 } } // namespaces
