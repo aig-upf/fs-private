@@ -4,18 +4,17 @@
 #include <fs_types.hxx>
 #include <constraints/gecode/extensions.hxx>
 #include <constraints/gecode/handlers/formula_csp.hxx>
+#include <constraints/gecode/handlers/ground_effect_csp.hxx>
 
 
 namespace fs0 { class Problem; class State; class RPGData; }
 
 namespace fs0 { namespace gecode {
 
-class GroundEffectCSP;
-
 class UnreachedAtomRPG {
 protected:
 	typedef std::unique_ptr<GroundEffectCSP> EffectHandlerPtr;
-	
+
 public:
 	UnreachedAtomRPG(const Problem& problem, const fs::Formula* goal_formula, const fs::Formula* state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler);
 	~UnreachedAtomRPG() = default;
