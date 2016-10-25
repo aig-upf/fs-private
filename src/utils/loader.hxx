@@ -23,7 +23,7 @@ public:
 	static Problem* loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler);
 	
 	//! Load and set the singleton problemInfo instance
-	static const ProblemInfo& loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory);
+	static ProblemInfo& loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
 	

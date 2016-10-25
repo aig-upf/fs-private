@@ -5,6 +5,7 @@
 #include <search/drivers/iterated_width.hxx>
 #include <search/drivers/breadth_first_search.hxx>
 #include <search/drivers/bfws/bfws.hxx>
+#include "bfws/enhanced_bfws.hxx"
 // #include <search/drivers/asp_engine.hxx>
 #include <search/drivers/unreached_atom_driver.hxx>
 #include <search/drivers/native_driver.hxx>
@@ -44,6 +45,8 @@ EngineRegistry::EngineRegistry() {
 	
 	add("bfws",  new BFWSDriver<GroundStateModel>());
 	add("lbfws",  new BFWSDriver<LiftedStateModel>());
+	
+	add("ebfws",  new EnhancedBFWSDriver<GroundStateModel>());
 	
 	add("bfs",  new BreadthFirstSearchDriver());
 	

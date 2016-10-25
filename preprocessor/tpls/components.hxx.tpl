@@ -11,8 +11,6 @@ namespace fs0 { class Problem; }
 
 using namespace fs0;
 
-extern std::unique_ptr<External> external;
-
 $method_factories
 
 /* Generate the whole planning problem */

@@ -68,18 +68,17 @@ Loader::loadFunctions(const BaseComponentFactory& factory, const std::string& da
 	}
 	
 	// Load the function objects for externally-defined symbols
-	for (auto elem:factory.instantiateFunctions()) {
+	for (auto elem:factory.instantiateFunctions(info)) {
 		info.setFunction(info.getSymbolId(elem.first), elem.second);
 	}
 }
 
-const ProblemInfo&
+ProblemInfo&
 Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory) {
 	// Load and set the ProblemInfo data structure
 	auto info = std::unique_ptr<ProblemInfo>(new ProblemInfo(data));
 	loadFunctions(factory, data_dir, *info);
-	ProblemInfo::setInstance(std::move(info));
-	return ProblemInfo::getInstance();
+	return ProblemInfo::setInstance(std::move(info));
 }
 
 State* Loader::loadState(const rapidjson::Value& data) {
