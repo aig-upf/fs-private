@@ -43,7 +43,6 @@ std::vector<GroundAction> Checker::transform(const Problem& problem, const Actio
 	std::vector<GroundAction> transformed;
 	const auto& actions = problem.getGroundActions();
 	
-	// First we make sure that the whole plan is applicable
 	for (unsigned idx:plan) {
 		transformed.push_back(*actions[idx]);
 	}

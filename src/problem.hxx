@@ -23,7 +23,7 @@ public:
 	Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index);
 	~Problem();
 	
-	Problem(const Problem& other) = delete;
+	Problem(const Problem& other);
 	Problem& operator=(const Problem& other) = delete;
 	Problem(Problem&& other) = delete;
 	bool operator==(const Problem& other) = delete;
@@ -69,6 +69,9 @@ public:
 	
 	//! Return true if all the symbols of the problem are predicates
 	bool is_predicative() const { return _is_predicative; }
+	
+	void set_state_constraints(const fs::Formula* state_constraint_formula);
+	void set_goal(const fs::Formula* goal);
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
