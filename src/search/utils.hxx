@@ -38,7 +38,7 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 		solved = engine.solve_model( plan );
 	}
 	catch (const std::bad_alloc& ex)
-	{   //Observe that the local variable `data` no longer exists here.
+	{
 		LPT_INFO("cout", "FAILED TO ALLOCATE MEMORY");
 		oom = true;
 	}

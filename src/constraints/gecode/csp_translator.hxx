@@ -39,11 +39,11 @@ class CSPTranslator {
 public:
 
 	CSPTranslator(GecodeCSP& base_csp) : _base_csp(base_csp) {}
-	virtual ~CSPTranslator() {}
-	CSPTranslator(const CSPTranslator& other) = delete;
+	virtual ~CSPTranslator() = default;
+	CSPTranslator(const CSPTranslator&) = delete;
 	CSPTranslator(CSPTranslator&&) = delete;
-	CSPTranslator& operator=(const CSPTranslator& rhs) = delete;
-	CSPTranslator& operator=(CSPTranslator&& rhs) = delete;
+	CSPTranslator& operator=(const CSPTranslator&) = delete;
+	CSPTranslator& operator=(CSPTranslator&&) = delete;
 
 	unsigned add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable = INVALID_VARIABLE);
 	unsigned add_boolvar(Gecode::BoolVar csp_variable);

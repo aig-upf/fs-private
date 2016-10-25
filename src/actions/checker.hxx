@@ -12,6 +12,7 @@ class GroundAction;
 
 class Checker {
 public:
+	//! Transform different plan formats into a vector of ground actions.
 	static std::vector<GroundAction> transform(const Problem& problem, const std::vector<LiftedActionID>& plan);
 	static std::vector<GroundAction> transform(const Problem& problem, const ActionPlan& plan);
 	

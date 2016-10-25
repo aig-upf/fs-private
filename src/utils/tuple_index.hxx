@@ -34,11 +34,9 @@ protected:
 public:
 	//! Constructs a full tuple index
 	TupleIndex(const ProblemInfo& info);
-	
-	// Disallow copies of the object, as they will be expensive, but allow moves.
-	TupleIndex(const TupleIndex&) = delete;
+	TupleIndex(const TupleIndex&) = default;
 	TupleIndex(TupleIndex&&) = default;
-	TupleIndex& operator=(const TupleIndex& other) = delete;
+	TupleIndex& operator=(const TupleIndex& other) = default;
 	TupleIndex& operator=(TupleIndex&& other) = default;
 	
 	//! Return the number of tuples of the index

@@ -51,6 +51,15 @@ public:
 		}
 		return cloned;
 	}
+	
+	template <typename T>
+	static std::vector<const T*> copy(const std::vector<const T*>& vector) {
+		std::vector<const T*> cloned;
+		for (const T* element:vector) {
+			cloned.push_back(new T(*element));
+		}
+		return cloned;
+	}
 
 	//! Returns true iff the intersection of the first container (first1-last1) with the second container (first2-last2) is not empty.
 	//! Complexity: O(min(n1, n2)), where n1 and n2 are the sizes of the first and second containers.

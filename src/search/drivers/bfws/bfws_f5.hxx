@@ -188,7 +188,7 @@ public:
 	
 	inline unsigned max_novelty() { return _max_novelty; }
 
-	long compute_heuristic(const State& state, BFWSF5Node::Atomset& relevant, unsigned& num_relevant) { 
+	virtual long compute_heuristic(const State& state, BFWSF5Node::Atomset& relevant, unsigned& num_relevant) { 
 		std::vector<Atom> relevant_atoms;
 		long h = _base_heuristic->evaluate(state, relevant_atoms);
 		num_relevant = relevant_atoms.size();
