@@ -2,6 +2,7 @@
 #include <iostream>
 #include <set>
 
+#include <languages/fstrips/formulae.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <languages/fstrips/scopes.hxx>

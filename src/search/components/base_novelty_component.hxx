@@ -12,7 +12,7 @@ namespace fs0 { namespace drivers {
 
 //! A novelty evaluator object to be used as an open list acceptor.
 //! It accepts a new search node iff its novelty less than or equal to the max novelty bound
-template <typename SearchNode>
+template <typename SearchNode, typename NoveltyEvaluatorT = GenericNoveltyEvaluator>
 class BaseNoveltyComponent {
 protected:
 	unsigned _max_novelty;
@@ -29,7 +29,7 @@ public:
 	
 	//! This must be subclassed to return the novelty evaluator in charge of evaluating the given state
 	//! (which might e.g. depend on the number of achieved goals in the state, etc.)
-	virtual GenericNoveltyEvaluator& evaluator(const State& state) = 0;
+	virtual NoveltyEvaluatorT& evaluator(const State& state) = 0;
 
 	inline unsigned novelty(const State& state) { return evaluator(state).evaluate(state); }
 
