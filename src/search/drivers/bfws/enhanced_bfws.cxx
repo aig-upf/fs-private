@@ -609,6 +609,17 @@ public:
 		return offending.size();
 	}
 	
+	//! Compute the novelty of the state wrt all the states with the same heuristic value.
+	unsigned novelty(const State& state, unsigned unachieved, unsigned relaxed_achieved) override {
+		auto ind = this->index(unachieved, relaxed_achieved);
+		auto it = _ctmp_novelty_evaluators.find(ind);
+		if (it == _ctmp_novelty_evaluators.end()) {
+			auto inserted = _ctmp_novelty_evaluators.insert(std::make_pair(ind, CTMPNoveltyEvaluator(this->_problem, this->_max_novelty, this->_feature_configuration)));
+			it = inserted.first;
+		}
+		return it->second.evaluate(state);
+	}
+	
 protected:
 // 	BFWSF6Node::Atomset _relevant;
 	
