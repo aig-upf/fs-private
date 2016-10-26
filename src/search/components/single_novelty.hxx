@@ -16,14 +16,16 @@ namespace fs0 { namespace drivers {
 
 //! A novelty evaluator object to be used as an open list acceptor.
 //! It accepts a new search node iff its novelty less than or equal to the max novelty bound
-template <typename StateModelT, typename SearchNode>
-class SingleNoveltyComponent : public BaseNoveltyComponent<SearchNode> {
+template <typename StateModelT,
+          typename SearchNode,
+          typename NoveltyEvaluatorT = GenericNoveltyEvaluator>
+class SingleNoveltyComponent : public BaseNoveltyComponent<SearchNode, NoveltyEvaluatorT> {
 protected:
 	//! A single novelty evaluator will be in charge of evaluating all nodes
-	GenericNoveltyEvaluator _novelty_evaluator;
+	NoveltyEvaluatorT _novelty_evaluator;
 
 public:
-	typedef BaseNoveltyComponent<SearchNode> Base;
+	using Base = BaseNoveltyComponent<SearchNode, NoveltyEvaluatorT>;
 	
 	SingleNoveltyComponent(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
 		: Base(max_novelty), _novelty_evaluator(model.getTask(), max_novelty, feature_configuration)
@@ -35,7 +37,7 @@ public:
 		}
 	}
 
-	GenericNoveltyEvaluator& evaluator(const State& state) { return _novelty_evaluator; }
+	NoveltyEvaluatorT& evaluator(const State& state) { return _novelty_evaluator; }
 };
 
 } } // namespaces
