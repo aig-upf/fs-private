@@ -209,7 +209,7 @@ public:
 	}
 	
 	//! Compute the novelty of the state wrt all the states with the same heuristic value.
-	unsigned novelty(const State& state, unsigned unachieved, unsigned relaxed_achieved) {
+	virtual unsigned novelty(const State& state, unsigned unachieved, unsigned relaxed_achieved) {
 // 		auto index = std::make_pair(unachieved, relaxed_achieved);
 		auto ind = index(unachieved, relaxed_achieved);
 		auto it = _novelty_evaluators.find(ind);

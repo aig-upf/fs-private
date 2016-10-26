@@ -7,6 +7,7 @@
 #include <search/utils.hxx>
 #include <utils/utils.hxx>
 #include <utils/external.hxx>
+#include <utils/printers/feature_set.hxx>
 
 using namespace fs0;
 
@@ -282,7 +283,96 @@ public:
 namespace fs0 { namespace drivers {
 
 
+CTMPStateAdapter::CTMPStateAdapter( const State& s, const CTMPNoveltyEvaluator& featureMap )
+	: _adapted( s ), _featureMap( featureMap)
+{}
 	
+
+void 
+CTMPStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std::vector<aptk::ValueIndex>& values) const {
+	if ( varnames.size() != _featureMap.numFeatures() ) {
+		varnames.resize( _featureMap.numFeatures() );
+	}
+
+	if ( values.size() != _featureMap.numFeatures() ) {
+		values.resize( _featureMap.numFeatures() );
+	}
+
+	for ( unsigned k = 0; k < _featureMap.numFeatures(); k++ ) {
+		varnames[k] = k;
+		values[k] = _featureMap.feature(k).evaluate( _adapted );
+	}
+	
+	LPT_DEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));
+}
+
+
+
+CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration)
+	: Base()
+{
+	set_max_novelty(novelty_bound);
+	selectFeatures(problem, feature_configuration);
+}
+
+CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const CTMPNoveltyEvaluator& other)
+	: Base(other), _features() {
+	for (unsigned i = 0; i < other._features.size(); ++i) {
+		_features.push_back(std::unique_ptr<NoveltyFeature>(other._features[i]->clone()));
+	}
+}
+
+void
+CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config) {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+
+	// Add all state variables
+	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
+		_features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
+	}
+	
+	// Add now some domain-dependent features:
+	// For each movable object o, consider the value of "@graspable(confb(rob), confa(rob), confo(o))" as a novelty feature
+	TypeIdx obj_t = info.getTypeId("object_id");
+	unsigned graspable_id = info.getSymbolId("@graspable");
+	unsigned confb_id = info.getSymbolId("confb");
+	unsigned confa_id = info.getSymbolId("confa");
+	unsigned confo_id = info.getSymbolId("confo");
+	ObjectIdx rob_id = info.getObjectId("rob");
+	
+	fs::FluentHeadedNestedTerm confb_rob(confb_id, { new fs::Constant(rob_id) });
+	fs::FluentHeadedNestedTerm confa_rob(confa_id, { new fs::Constant(rob_id) });
+	
+	Binding empty_binding;
+	
+	for (ObjectIdx obj_id:info.getTypeObjects(obj_t)) {
+		fs::FluentHeadedNestedTerm confo_o(confo_id, { new fs::Constant(obj_id) });
+		
+		auto feature_term = new fs::UserDefinedStaticTerm(graspable_id, {
+			confb_rob.bind(empty_binding, info),
+			confa_rob.bind(empty_binding, info),
+			confo_o.bind(empty_binding, info),
+		});
+		
+		LPT_DEBUG("cout", "Adding Term-based Novelty feature: " << *feature_term);
+		_features.push_back(std::unique_ptr<ArbitraryTermFeature>(new ArbitraryTermFeature(feature_term)));
+	}
+	
+	// Plus the value of @placeable(confb(rob), confa(rob)) as a novelty feature
+	unsigned placeable_id = info.getSymbolId("@placeable");
+	
+	auto placeable_term = new fs::UserDefinedStaticTerm(placeable_id, {
+		confb_rob.bind(empty_binding, info),
+		confa_rob.bind(empty_binding, info)
+	});
+	
+	LPT_DEBUG("cout", "Adding Term-based Novelty feature: " << *placeable_term);
+	_features.push_back(std::unique_ptr<ArbitraryTermFeature>(new ArbitraryTermFeature(placeable_term)));
+	
+	LPT_INFO("cout", "Number of features from which state novelty will be computed: " << numFeatures());
+}
+
+
 class BFWSF6Node {
 public:
 	using ptr_t = std::shared_ptr<BFWSF6Node>;
@@ -433,8 +523,8 @@ struct F6NodeComparer {
 	using NodePtrT = std::shared_ptr<BFWSF6Node>;
 	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
 
-		if (n1->novelty < n2->novelty) return true;
-		if (n1->novelty > n2->novelty) return false;
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
 		
 		
 		if (n1->_num_offending > n2->_num_offending) return true;
@@ -451,13 +541,14 @@ struct F6NodeComparer {
 
 
 template <typename StateModelT, typename BaseHeuristicT>
-class BFWSF56Heuristic : public BFWSF5HeuristicEnsemble<StateModelT, BaseHeuristicT> {
+class BFWSF6Heuristic : public BFWSF5HeuristicEnsemble<StateModelT, BaseHeuristicT> {
 public:
 	using BaseT = BFWSF5HeuristicEnsemble<StateModelT, BaseHeuristicT>;
 	
-	BFWSF56Heuristic(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration, std::unique_ptr<BaseHeuristicT>&& heuristic, std::vector<OffendingSet>&& offending) :
+	BFWSF6Heuristic(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration, std::unique_ptr<BaseHeuristicT>&& heuristic, std::vector<OffendingSet>&& offending) :
 		BaseT(model, max_novelty, feature_configuration, std::move(heuristic)),
-		_offending(std::move(offending))
+		_offending(std::move(offending)),
+		_ctmp_novelty_evaluators()
 	{
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		TypeIdx obj_t = info.getTypeId("object_id");
@@ -469,7 +560,7 @@ public:
 		}
 	}
 	
-	~BFWSF56Heuristic() = default;
+	~BFWSF6Heuristic() = default;
 	
 
 	long compute_heuristic(const State& state, BFWSF5Node::Atomset& relevant, unsigned& num_relevant) override {
@@ -527,9 +618,10 @@ protected:
 	
 	// A vector with the variable indexes that correspond to the configuration of each object.
 	std::vector<VariableIdx> _object_configurations;
+	
+	//! We have one different novelty evaluators for each actual heuristic value that a node might have.
+		std::unordered_map<long, CTMPNoveltyEvaluator> _ctmp_novelty_evaluators;
 };
-	
-	
 	
 	
 	
@@ -559,7 +651,7 @@ EnhancedBFWSDriver<GroundStateModel>::search(Problem& problem, const Config& con
 	using BaseHeuristicT = gecode::SmartRPG;
 	using NodeT = BFWSF6Node;
 	using NodeCompareT = F6NodeComparer;
-	using HeuristicEnsembleT = BFWSF56Heuristic<GroundStateModel, BaseHeuristicT>;
+	using HeuristicEnsembleT = BFWSF6Heuristic<GroundStateModel, BaseHeuristicT>;
 	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, std::shared_ptr<NodeT>, NodeCompareT>;
 	using EngineT = std::unique_ptr<RawEngineT>;
 	
@@ -631,7 +723,7 @@ EnhancedBFWSDriver<StateModelT>::preprocess(const Problem& problem, const Config
 	using IWDriver = IteratedWidthDriver<GroundStateModel>;
 	
 	using PreprocessingNodeT = IWPreprocessingNode<State, ActionT>;
-	using EvaluatorT = SingleNoveltyComponent<StateModelT, PreprocessingNodeT>;
+	using EvaluatorT = SingleNoveltyComponent<StateModelT, PreprocessingNodeT, CTMPNoveltyEvaluator>;
 	using EvaluatorPT = std::shared_ptr<EvaluatorT>;
 	using OpenList = aptk::StlUnsortedFIFO<PreprocessingNodeT, EvaluatorT>;
 	using BaseAlgoT = lapkt::AllSolutionsBreadthFirstSearch<PreprocessingNodeT, StateModelT, OpenList>;

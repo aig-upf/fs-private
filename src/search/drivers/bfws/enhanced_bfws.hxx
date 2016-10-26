@@ -46,6 +46,52 @@ protected:
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 };
 
+
+
+class CTMPNoveltyEvaluator;
+class CTMPStateAdapter {
+public:
+	CTMPStateAdapter( const State& s, const CTMPNoveltyEvaluator& featureMap );
+	~CTMPStateAdapter() = default;
+	void get_valuation(std::vector<aptk::VariableIndex>& varnames, std::vector<aptk::ValueIndex>& values) const;
+
+protected:
+	const State& _adapted;
+	const CTMPNoveltyEvaluator& _featureMap;
+};
+
+
+class CTMPNoveltyEvaluator : public aptk::FiniteDomainNoveltyEvaluator<CTMPStateAdapter> {
+public:
+	using Base = aptk::FiniteDomainNoveltyEvaluator<CTMPStateAdapter>;
+	using FeatureSet = std::vector<std::unique_ptr<NoveltyFeature>>;
+	
+
+	CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration);
+	virtual ~CTMPNoveltyEvaluator() = default;
+	CTMPNoveltyEvaluator(const CTMPNoveltyEvaluator&);
+	
+	using Base::evaluate; // So that we do not hide the base evaluate(const FiniteDomainNoveltyEvaluator&) method
+	
+	unsigned evaluate(const State& s) {
+		CTMPStateAdapter adaptee(s, *this);
+		return evaluate(adaptee);
+	}
+
+	unsigned numFeatures() const { return _features.size(); }
+	NoveltyFeature& feature(unsigned i) const { return *_features[i]; }
+
+
+protected:
+	//! Select and create the state features that we will use henceforth to compute the novelty
+	void selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config);
+	
+	//! An array with all the features that we take into account when computing the novelty
+	FeatureSet _features;
+};
+
+
+
 } } // namespaces
 
 
