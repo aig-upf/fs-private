@@ -548,6 +548,7 @@ public:
 	BFWSF6Heuristic(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration, std::unique_ptr<BaseHeuristicT>&& heuristic, std::vector<OffendingSet>&& offending) :
 		BaseT(model, max_novelty, feature_configuration, std::move(heuristic)),
 		_offending(std::move(offending)),
+		_base_evaluator(this->_problem, this->_max_novelty, this->_feature_configuration),
 		_ctmp_novelty_evaluators()
 	{
 		const ProblemInfo& info = ProblemInfo::getInstance();
@@ -614,7 +615,7 @@ public:
 		auto ind = this->index(unachieved, relaxed_achieved);
 		auto it = _ctmp_novelty_evaluators.find(ind);
 		if (it == _ctmp_novelty_evaluators.end()) {
-			auto inserted = _ctmp_novelty_evaluators.insert(std::make_pair(ind, CTMPNoveltyEvaluator(this->_problem, this->_max_novelty, this->_feature_configuration)));
+			auto inserted = _ctmp_novelty_evaluators.insert(std::make_pair(ind, _base_evaluator));
 			it = inserted.first;
 		}
 		return it->second.evaluate(state);
@@ -630,8 +631,12 @@ protected:
 	// A vector with the variable indexes that correspond to the configuration of each object.
 	std::vector<VariableIdx> _object_configurations;
 	
+	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
+	// to perform all the feature selection, etc. anew.
+	CTMPNoveltyEvaluator _base_evaluator;
+	
 	//! We have one different novelty evaluators for each actual heuristic value that a node might have.
-		std::unordered_map<long, CTMPNoveltyEvaluator> _ctmp_novelty_evaluators;
+	std::unordered_map<long, CTMPNoveltyEvaluator> _ctmp_novelty_evaluators;
 };
 	
 	
