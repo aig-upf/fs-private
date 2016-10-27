@@ -46,7 +46,7 @@ EngineRegistry::EngineRegistry() {
 	add("bfws",  new BFWSDriver<GroundStateModel>());
 	add("lbfws",  new BFWSDriver<LiftedStateModel>());
 	
-	add("ebfws",  new EnhancedBFWSDriver<GroundStateModel>());
+	add("ebfws",  new EnhancedBFWSDriver());
 	
 	add("bfs",  new BreadthFirstSearchDriver());
 	

@@ -20,6 +20,21 @@ public:
 	virtual std::vector<ObjectIdx> get_offending_configurations(ObjectIdx confb, ObjectIdx confa) const {
 		throw std::runtime_error("Must be subclassed");
 	}
+	
+	//! To be subclassed
+	virtual bool nonoverlap_oo(const ObjectIdxVector& params) const {
+		throw std::runtime_error("Must be subclassed");
+	}
+
+	//! To be subclassed
+	virtual bool placeable(const ObjectIdxVector& params) const {
+		throw std::runtime_error("Must be subclassed");
+	}
+
+	//! To be subclassed
+	virtual ObjectIdx placing_pose(const ObjectIdxVector& params) const {
+		throw std::runtime_error("Must be subclassed");
+	}
 
 };
 

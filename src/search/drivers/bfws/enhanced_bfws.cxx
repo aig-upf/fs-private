@@ -11,13 +11,10 @@
 
 using namespace fs0;
 
-extern std::unique_ptr<ExternalI> external;
-
 
 //! a helper
 template <typename StateT>
 void derive_all_atoms(const fs::Formula* formula, const StateT& state, std::set<fs0::Atom>& relevant) {
-
 	const fs::Conjunction* precs = dynamic_cast<const fs::Conjunction*>(formula);
 	if (!precs) throw std::runtime_error("This driver can only be applied to a conjunctive-action-precondition problems");
 	
@@ -25,21 +22,6 @@ void derive_all_atoms(const fs::Formula* formula, const StateT& state, std::set<
 	for (const fs::StateVariable* sv:fs0::Utils::filter_by_type<const fs::StateVariable*>(formula->all_terms())) {
 		relevant.insert(fs0::Atom(sv->getValue(), sv->interpret(state, _)));
 	}
-		
-// 	const std::vector<const fs::AtomicFormula*>& conjuncts = precs->getConjuncts();
-// 	for (auto conjunct:conjuncts) {
-// 		std::cout << "CONJUNCT: " << *conjunct << std::endl;
-// 
-// 		auto atomic = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
-// 		if (!atomic) throw std::runtime_error("This driver can only be applied to problems with simple equality atoms in action preconditions");
-// 		
-// 		auto rhs = dynamic_cast<const fs::Constant*>(atomic->rhs());
-// 		if (!rhs) {
-// 			throw std::runtime_error("This driver can only be applied to problems with simple equality atoms in action preconditions");
-// 		}
-		
-// 		auto lhs = dynamic_cast<const fs::StateVariable*>(atomic->lhs());
-// 	}
 }
 
 
@@ -115,16 +97,20 @@ class AllSolutionsBreadthFirstSearch : public GenericSearch<NodeT, OpenListT, Cl
 {
 public:
 	using ActionT = typename StateModel::ActionType;
-	using BaseClass = GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>;
+	using Base = GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>;
 	using StateT = typename StateModel::StateType;
-	using PlanT = typename BaseClass::PlanT;
-	using NodePT = typename BaseClass::NodePtr;
+	using PlanT = typename Base::PlanT;
+	using NodePT = typename Base::NodePtr;
+	
+	using NodeOpenEvent = typename Base::NodeOpenEvent;
+	using NodeExpansionEvent = typename Base::NodeExpansionEvent;
+	using NodeCreationEvent = typename Base::NodeCreationEvent;
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the particular open and closed list objects
 	AllSolutionsBreadthFirstSearch(const StateModel& model, OpenListT&& open, const std::vector<const fs::AtomicFormula*>& goal, const std::vector<const fs::AtomicFormula*>& state_constraints) :
-		BaseClass(model, std::move(open), ClosedListT()), _goal_atoms(goal), _sc_atoms(state_constraints),
+		Base(model, std::move(open), ClosedListT()), _goal_atoms(goal), _sc_atoms(state_constraints),
 		_optimal_paths(_goal_atoms.size(), nullptr)
 	{}
 	virtual ~AllSolutionsBreadthFirstSearch() = default;
@@ -137,16 +123,20 @@ public:
 	
 	bool search(const StateT& s, PlanT& solution) override {
 		NodePT n = std::make_shared<NodeT>(s);
+		this->notify(NodeCreationEvent(*n));
 		this->_open.insert(n);
 		
 		while ( !this->_open.is_empty() ) {
 			NodePT current = this->_open.get_next( );
+			this->notify(NodeOpenEvent(*current));
 			
 			process_node(current);
 
 			// close the node before the actual expansion so that children which are identical
 			// to 'current' get properly discarded
 			this->_closed.put(current);
+			
+			this->notify(NodeExpansionEvent(*current));
 			
 			for ( const auto& a : this->_model.applicable_actions( current->state ) ) {
 				StateT s_a = this->_model.next( current->state, a );
@@ -157,6 +147,7 @@ public:
 				if (this->_closed.check(successor)) continue; // The node has already been closed
 				if (this->_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
 				
+				this->notify(NodeCreationEvent(*successor));
 				this->_open.insert( successor );
 			}
 		}
@@ -192,10 +183,12 @@ protected:
 		
 		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
 			const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
-			if (atom->interpret(state)) {
-				//LPT_INFO("cout", "PREPROCESSING: Goal atom '" << *atom << "' reached");
-				// The state satisfies goal atom with index 'i'
+			if (atom->interpret(state)) { // The state satisfies goal atom with index 'i'
+				
 				const NodePT& optimal = _optimal_paths[goal_atom_idx];
+				if (!optimal) {
+					LPT_INFO("cout", "PREPROCESSING: Goal atom '" << *atom << "' reached for the first time");
+				}
 				if (!optimal || optimal->num_violations() > node->num_violations()) {
 					_optimal_paths[goal_atom_idx] = node;
 				}
@@ -209,7 +202,7 @@ protected:
 			const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
 			const NodePT& optimal = _optimal_paths[goal_atom_idx];
 			if (!optimal) { // 
-				LPT_INFO("cout", "PREPROCESSING: Goal atom '" << *atom << "' not reachable");
+				LPT_INFO("cout", "PREPROCESSING: Goal atom '" << *atom << "' is not reachable!");
 				return false;
 			}
 		}
@@ -244,15 +237,11 @@ public:
 	std::vector<OffendingSet> compute_offending_configurations() {
 		std::vector<OffendingSet> offending(_goal_atoms.size());
 		
-// 		const fs0::Problem& problem = fs0::Problem::getInstance();
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		const ExternalI& external = info.get_external();
 		
-		
 		VariableIdx v_confb = info.getVariableId("confb(rob)");
 		VariableIdx v_confa = info.getVariableId("confa(rob)");
-		
-		
 		
 		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
 			// const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
@@ -268,19 +257,79 @@ public:
 				auto v_off = external.get_offending_configurations(o_confb, o_confa);
 				offending[goal_atom_idx].insert(v_off.begin(), v_off.end());
 				
+				// ADDITIONALLY, IF THE ACTION USED TO REACH THIS STATE IS A 'PLACE' ACTION, WE CHECK THAT THE PLACED OBJECT NO
+				
+				
 				node = node->parent;
 			}
 		}
 		
 		return offending;
 	}
-	
-	
 }; 
 
 } // Namespaces
 
 namespace fs0 { namespace drivers {
+
+//! A feature representing the value of any arbitrary language term, e.g. X+Y, or @proc(Y,Z)
+class PlaceableFeature : public NoveltyFeature {
+public:
+	
+	static VariableIdx derive_config_variable(ObjectIdx object_id) {
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		std::string obj_name = info.deduceObjectName(object_id, info.getTypeId("object_id"));
+		return info.getVariableId("confo(" + obj_name  +  ")");
+	}
+	
+	
+	PlaceableFeature(ObjectIdx object_id)
+		: _external(ProblemInfo::getInstance().get_external())
+	{
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		
+		_object_conf = derive_config_variable(object_id);
+		_confb_rob = info.getVariableId("confb(rob)");
+		_confa_rob = info.getVariableId("confa(rob)");
+
+		TypeIdx obj_t = info.getTypeId("object_id");
+		for (ObjectIdx other_obj_id:info.getTypeObjects(obj_t)) {
+			if (object_id != other_obj_id) {
+				_other_objects_conf.push_back(derive_config_variable(other_obj_id));
+			}
+		}
+	}
+	
+	~PlaceableFeature() = default;
+	
+	PlaceableFeature(const PlaceableFeature&) = default;
+	
+	NoveltyFeature* clone() const override { return new PlaceableFeature(*this); }
+	
+	aptk::ValueIndex evaluate(const State& s) const override {
+		auto rob_conf = {s.getValue(_confb_rob), s.getValue(_confa_rob)};
+		
+		bool placeable = _external.placeable(rob_conf);
+		if (!placeable) return false;
+		
+		ObjectIdx future_object_conf = _external.placing_pose(rob_conf);
+		
+		for (VariableIdx other_object_var:_other_objects_conf) {
+			ObjectIdx other_obj_conf = s.getValue(other_object_var);
+			bool objects_overlap = _external.nonoverlap_oo({future_object_conf, other_obj_conf});
+			if (objects_overlap) return false;
+		}
+		
+		return true;
+	}
+
+protected:
+	VariableIdx _object_conf; // The state variable of the object whose placeability we check
+	std::vector<VariableIdx> _other_objects_conf; // The state variables of the configurations of the rest of objects
+	VariableIdx _confb_rob;
+	VariableIdx _confa_rob;
+	const ExternalI& _external;
+};
 
 
 CTMPStateAdapter::CTMPStateAdapter( const State& s, const CTMPNoveltyEvaluator& featureMap )
@@ -354,10 +403,11 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 			confo_o.bind(empty_binding, info),
 		});
 		
-		LPT_DEBUG("cout", "Adding Term-based Novelty feature: " << *feature_term);
+		LPT_INFO("cout", "Adding Term-based Novelty feature: " << *feature_term);
 		_features.push_back(std::unique_ptr<ArbitraryTermFeature>(new ArbitraryTermFeature(feature_term)));
 	}
 	
+	/*
 	// Plus the value of @placeable(confb(rob), confa(rob)) as a novelty feature
 	unsigned placeable_id = info.getSymbolId("@placeable");
 	
@@ -366,8 +416,16 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 		confa_rob.bind(empty_binding, info)
 	});
 	
-	LPT_DEBUG("cout", "Adding Term-based Novelty feature: " << *placeable_term);
+	LPT_INFO("cout", "Adding Term-based Novelty feature: " << *placeable_term);
 	_features.push_back(std::unique_ptr<ArbitraryTermFeature>(new ArbitraryTermFeature(placeable_term)));
+	*/
+	
+	
+	for (ObjectIdx obj_id:info.getTypeObjects(obj_t)) {
+		LPT_INFO("cout", "Adding Placeable* feature for object: " << info.deduceObjectName(obj_id, obj_t));
+		_features.push_back(std::unique_ptr<PlaceableFeature>(new PlaceableFeature(obj_id)));
+	}
+	
 	
 	LPT_INFO("cout", "Number of features from which state novelty will be computed: " << numFeatures());
 }
@@ -545,10 +603,15 @@ class BFWSF6Heuristic : public BFWSF5HeuristicEnsemble<StateModelT, BaseHeuristi
 public:
 	using BaseT = BFWSF5HeuristicEnsemble<StateModelT, BaseHeuristicT>;
 	
-	BFWSF6Heuristic(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration, std::unique_ptr<BaseHeuristicT>&& heuristic, std::vector<OffendingSet>&& offending) :
+	BFWSF6Heuristic(const StateModelT& model,
+                 unsigned max_novelty,
+                 const NoveltyFeaturesConfiguration& feature_configuration,
+                 const CTMPNoveltyEvaluator& novelty_evaluator,
+                 std::unique_ptr<BaseHeuristicT>&& heuristic,
+                 std::vector<OffendingSet>&& offending) :
 		BaseT(model, max_novelty, feature_configuration, std::move(heuristic)),
 		_offending(std::move(offending)),
-		_base_evaluator(this->_problem, this->_max_novelty, this->_feature_configuration),
+		_base_evaluator(novelty_evaluator),
 		_ctmp_novelty_evaluators()
 	{
 		const ProblemInfo& info = ProblemInfo::getInstance();
@@ -557,7 +620,6 @@ public:
 			std::string obj_name = info.deduceObjectName(obj_id, obj_t);
 			VariableIdx confo_var = info.getVariableId("confo(" + obj_name  +  ")");
 			_object_configurations.push_back(confo_var);
-			LPT_DEBUG("cout", "Variable " << confo_var << " corresponds to " << "confo(" + obj_name  +  ")")
 		}
 	}
 	
@@ -633,7 +695,7 @@ protected:
 	
 	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
 	// to perform all the feature selection, etc. anew.
-	CTMPNoveltyEvaluator _base_evaluator;
+	const CTMPNoveltyEvaluator& _base_evaluator;
 	
 	//! We have one different novelty evaluators for each actual heuristic value that a node might have.
 	std::unordered_map<long, CTMPNoveltyEvaluator> _ctmp_novelty_evaluators;
@@ -642,26 +704,26 @@ protected:
 	
 	
 	
-template <>
 ExitCode 
-EnhancedBFWSDriver<GroundStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
-	
+EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	auto model = GroundingSetup::fully_ground_model(problem);
+	
+	
+	NoveltyFeaturesConfiguration feature_configuration(config);
+	unsigned max_width = config.getOption<int>("width.max");
+	
+	
 	std::vector<OffendingSet> offending = preprocess(problem, config);
 	
 	
+	LPT_INFO("cout", "CTMP-BFWS Configuration:");
+	LPT_INFO("cout", "\tMax width: " << max_width);
 	
-	SearchStats stats;
-	
-	BFWSConfig bfws_config(config);
-	NoveltyFeaturesConfiguration feature_configuration(config);
-// 	auto engine = create(config, bfws_config, feature_configuration, model, stats);
+	// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
+	CTMPNoveltyEvaluator base_novelty_evaluator(problem, max_width, feature_configuration);
 	
 	
-	LPT_INFO("cout", "BFWS Configuration:");
-	LPT_INFO("cout", "\tBFWS Type: " << bfws_config._type);
-	LPT_INFO("cout", "\tMax novelty: " << bfws_config._max_width);
-	LPT_INFO("cout", "\tFeature extraction: " << feature_configuration);
+	
 	
 	
 	using BaseHeuristicT = gecode::SmartRPG;
@@ -673,10 +735,14 @@ EnhancedBFWSDriver<GroundStateModel>::search(Problem& problem, const Config& con
 	
 	auto base_heuristic = std::unique_ptr<gecode::SmartRPG>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
 	
-	auto heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, bfws_config._max_width, feature_configuration, std::move(base_heuristic), std::move(offending)));
+	auto heuristic = std::unique_ptr<HeuristicEnsembleT>(
+                            new HeuristicEnsembleT(model, max_width, feature_configuration,
+                                                   base_novelty_evaluator, std::move(base_heuristic), std::move(offending))
+	);
 	
 	auto engine = EngineT(new RawEngineT(model, *heuristic));
 	
+	SearchStats stats;
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *heuristic, stats, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
@@ -684,29 +750,9 @@ EnhancedBFWSDriver<GroundStateModel>::search(Problem& problem, const Config& con
 	
 	return Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
-/*
-template <typename StateModelT>
-typename EnhancedBFWSDriver<StateModelT>::Engine
-EnhancedBFWSDriver<StateModelT>::create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model, SearchStats& stats) {
-	
-	// PREPROCESS
-	
-	
-// 	_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(model, bfws_config._max_width, feature_configuration));
-	auto engine = new lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>(model, *_heuristic);
-	
-	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
-	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);
-	lapkt::events::subscribe(*engine, _handlers);
 
-	return Engine(engine);
-}
-*/
-
-
-template <typename StateModelT>
 std::vector<OffendingSet>
-EnhancedBFWSDriver<StateModelT>::preprocess(const Problem& problem, const Config& config) {
+EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	
 	const fs::Conjunction* original_goal = dynamic_cast<const fs::Conjunction*>(problem.getGoalConditions());
 	if (!original_goal) {
@@ -734,43 +780,48 @@ EnhancedBFWSDriver<StateModelT>::preprocess(const Problem& problem, const Config
 	
 	Problem simplified(problem);
 	simplified.set_state_constraints(new fs::Tautology);
-// 		simplified.set_goal(conjunct->clone());
+	GroundStateModel model(problem);
 	
 	using IWDriver = IteratedWidthDriver<GroundStateModel>;
-	
 	using PreprocessingNodeT = IWPreprocessingNode<State, ActionT>;
-	using EvaluatorT = SingleNoveltyComponent<StateModelT, PreprocessingNodeT, CTMPNoveltyEvaluator>;
+	using EvaluatorT = SingleNoveltyComponent<GroundStateModel, PreprocessingNodeT, CTMPNoveltyEvaluator>;
 	using EvaluatorPT = std::shared_ptr<EvaluatorT>;
-	using OpenList = aptk::StlUnsortedFIFO<PreprocessingNodeT, EvaluatorT>;
-	using BaseAlgoT = lapkt::AllSolutionsBreadthFirstSearch<PreprocessingNodeT, StateModelT, OpenList>;
 	using OpenListT = aptk::StlUnsortedFIFO<PreprocessingNodeT, EvaluatorT>;
+	using BaseAlgoT = lapkt::AllSolutionsBreadthFirstSearch<PreprocessingNodeT, GroundStateModel, OpenListT>;
 	
-	auto model = GroundingSetup::fully_ground_model(simplified);
 	
 	EvaluatorPT evaluator = std::make_shared<EvaluatorT>(model, k, feature_configuration);
 	
 	BaseAlgoT iw_algorithm(model, OpenListT(evaluator), goal_conjuncts, sc_conjuncts);
 // 		lapkt::events::subscribe(*_algorithm, _handlers);
 	
+	
+	SearchStats stats;
+	std::vector<std::unique_ptr<lapkt::events::EventHandler>> handlers;
+	EventUtils::setup_stats_observer<PreprocessingNodeT>(stats, handlers);
+	lapkt::events::subscribe(iw_algorithm, handlers);
+	
+	
 	std::vector<ActionIdx> plan;
 	LPT_INFO("cout", "PREPROCESSING: Starting IW(2) search...");
 	bool solved = iw_algorithm.search(simplified.getInitialState(), plan);
+	
+	LPT_INFO("cout", "PREPROCESSING: Finished after expanding " << stats.expanded() << " nodes");
+	
 	if (!solved) throw std::runtime_error("PREPROCESSING - IW(2) preprocessing did not yield a solution for all subgoals");
-
-	LPT_INFO("cout", "PREPROCESSING: Retrieving relevant atoms...");
-	auto relevant = iw_algorithm.retrieve_relevant_atom_sets();
 	
 	LPT_INFO("cout", "PREPROCESSING: Computing offending configuration sets...");
 	std::vector<OffendingSet> offending = iw_algorithm.compute_offending_configurations();
 	
+	/*
+	LPT_INFO("cout", "PREPROCESSING: Retrieving relevant atoms...");
+	auto relevant = iw_algorithm.retrieve_relevant_atom_sets();
 	std::cout << "PREPROCESSING - RELEVANT ATOMS ARE: " << std::endl;
-	for (const auto& atom:relevant) {
-		std::cout << atom << ", ";
-	}
+	for (const auto& atom:relevant) std::cout << atom << ", ";
 	std::cout << std::endl;
+	*/
 	
 	return offending;
-// 	std::cout << "NUMBER OF SOLVED SUBGOALS: " << solved << "/" << original_goal->getConjuncts().size() << std::endl;
 }
 
 } } // namespaces

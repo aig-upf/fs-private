@@ -23,23 +23,21 @@
 
 using OffendingSet = std::unordered_set<fs0::ObjectIdx>;
 
-namespace fs0 { class GroundStateModel; class Config; }
+namespace fs0 { class Config; }
 
 namespace fs0 { namespace drivers {
 
-template <typename StateModelT>
 class EnhancedBFWSDriver : public Driver {
 public:
 	using ActionT = GroundAction;
 	using NodeT = BFWSNode<fs0::State, ActionT>;
-	using HeuristicT = UnsatGoalsNoveltyComponent<StateModelT, NodeT>;
-	using Engine = std::unique_ptr<lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>>;
+	using HeuristicT = UnsatGoalsNoveltyComponent<GroundStateModel, NodeT>;
+	using Engine = std::unique_ptr<lapkt::StlBestFirstSearch<NodeT, HeuristicT, GroundStateModel>>;
 	
 	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 	
 	
 protected:
-// 	Engine create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model, SearchStats& stats);
 	
 	std::vector<OffendingSet> preprocess(const Problem& problem, const Config& config);
 
