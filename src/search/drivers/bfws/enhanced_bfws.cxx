@@ -8,9 +8,10 @@
 #include <utils/utils.hxx>
 #include <utils/external.hxx>
 #include <utils/printers/feature_set.hxx>
+#include <languages/fstrips/language.hxx>
 
 using namespace fs0;
-
+namespace fs = fs0::language::fstrips;
 
 //! a helper
 template <typename StateT>
@@ -145,10 +146,11 @@ public:
 				progress_node(successor);
 				
 				if (this->_closed.check(successor)) continue; // The node has already been closed
-				if (this->_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
 				
 				this->notify(NodeCreationEvent(*successor));
-				this->_open.insert( successor );
+				if (!this->_open.insert2( successor )) {
+					LPT_DEBUG("search", std::setw(7) << "PRUNED: " << *successor);
+				}
 			}
 		}
 		
@@ -282,55 +284,216 @@ public:
 		return info.getVariableId("confo(" + obj_name  +  ")");
 	}
 	
+	static VariableIdx derive_goal_config(ObjectIdx object_id, const fs::Formula* goal) {
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		
+		std::string obj_name = info.deduceObjectName(object_id, info.getTypeId("object_id"));
+		VariableIdx obj_conf = info.getVariableId("confo(" + obj_name  +  ")");
+		
+		// This only works for goal atoms of the form "confo(o1) = co5". It is non-symmetrical.
+		for (auto atom:fs0::Utils::filter_by_type<const fs::EQAtomicFormula*>(goal->all_atoms())) {
+			if (auto x = dynamic_cast<const fs::StateVariable*>(atom->lhs())) {
+				if (x->getValue() == obj_conf) {
+					auto y = dynamic_cast<const fs::Constant*>(atom->rhs());
+					assert(y);
+					ObjectIdx goal_conf = y->getValue();
+					LPT_INFO("cout", "Goal config for object " << obj_name << ": " << info.deduceObjectName(goal_conf, info.getTypeId("conf_obj")));
+					return goal_conf;
+				}
+			}
+		}
+		
+		return -1;
+	}
 	
-	PlaceableFeature(ObjectIdx object_id)
-		: _external(ProblemInfo::getInstance().get_external())
+	
+	PlaceableFeature(bool check_final_overlaps, const fs::Formula* goal)
+		:
+		_external(ProblemInfo::getInstance().get_external()),
+		_check_overlaps(check_final_overlaps)
 	{
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		
-		_object_conf = derive_config_variable(object_id);
+		_no_object_id = info.getObjectId("no_object");
+		_holding_var = info.getVariableId("holding()");
 		_confb_rob = info.getVariableId("confb(rob)");
 		_confa_rob = info.getVariableId("confa(rob)");
+		_goal_obj_conf = info.getObjectId("co5");
+		
 
-		TypeIdx obj_t = info.getTypeId("object_id");
-		for (ObjectIdx other_obj_id:info.getTypeObjects(obj_t)) {
-			if (object_id != other_obj_id) {
-				_other_objects_conf.push_back(derive_config_variable(other_obj_id));
+		for (ObjectIdx obj_id:info.getTypeObjects("object_id")) {
+			_all_objects_ids.push_back(obj_id);
+			_all_objects_conf.push_back(derive_config_variable(obj_id));
+			
+			// If the object has a particular goal configuration, insert it.
+			ObjectIdx goal_config = derive_goal_config(obj_id, goal);
+			if (goal_config != -1) {
+				_all_objects_goal.insert(std::make_pair(obj_id, goal_config));
 			}
 		}
 	}
 	
 	~PlaceableFeature() = default;
-	
 	PlaceableFeature(const PlaceableFeature&) = default;
 	
 	NoveltyFeature* clone() const override { return new PlaceableFeature(*this); }
 	
 	aptk::ValueIndex evaluate(const State& s) const override {
-		auto rob_conf = {s.getValue(_confb_rob), s.getValue(_confa_rob)};
 		
-		bool placeable = _external.placeable(rob_conf);
-		if (!placeable) return false;
-		
-		ObjectIdx future_object_conf = _external.placing_pose(rob_conf);
-		
-		for (VariableIdx other_object_var:_other_objects_conf) {
-			ObjectIdx other_obj_conf = s.getValue(other_object_var);
-			bool objects_overlap = _external.nonoverlap_oo({future_object_conf, other_obj_conf});
-			if (objects_overlap) return false;
+		// If no object is being held, return a NULL object ID
+		ObjectIdx held_object = s.getValue(_holding_var);
+		if (held_object == _no_object_id) {
+			return 0;
 		}
 		
-		return true;
+		// Otherwise, ensure that the robot is in a "placeable" overall configuration
+		auto rob_conf = {s.getValue(_confb_rob), s.getValue(_confa_rob)};
+		bool placeable = _external.placeable(rob_conf);
+		if (!placeable) return 0;
+		
+		// And ensure that the resulting configuration would be a goal configuration for the object being placed
+		ObjectIdx future_object_conf = _external.placing_pose(rob_conf);
+		auto it = _all_objects_goal.find(held_object);
+		
+		if (it == _all_objects_goal.end() ||
+		   (it != _all_objects_goal.end() && future_object_conf != it->second)) {
+			// i.e. iff no goal config  was specified for the currently-held object, 
+			// or it was but it is not the future config where it would be placed, return false.
+			return 0;
+		}
+		
+		// And, eventually, that there is no overlap.
+		if (_check_overlaps) {
+			// The configuration on which the object will remain once I place it
+			// does not overlap with the configuration of any other object.
+			
+			assert(_all_objects_conf.size()==_all_objects_ids.size());
+			for (unsigned i = 0; i < _all_objects_conf.size(); ++i) {
+				ObjectIdx other_object_id = _all_objects_ids[i];
+				if (other_object_id != held_object) {
+					VariableIdx other_object_var = _all_objects_conf[i];
+					ObjectIdx other_obj_conf = s.getValue(other_object_var);
+					bool objects_overlap = _external.nonoverlap_oo({future_object_conf, other_obj_conf});
+					if (objects_overlap) return 0;
+				}
+			}
+		}
+		
+		// Otherwise, the object being held is placeable
+		return held_object;
+	}
+	
+	std::ostream& print(std::ostream& os) const override {
+		return os << "placeable*(check_overlaps=" << _check_overlaps << ")";
 	}
 
 protected:
-	VariableIdx _object_conf; // The state variable of the object whose placeability we check
-	std::vector<VariableIdx> _other_objects_conf; // The state variables of the configurations of the rest of objects
+	ObjectIdx _no_object_id;
+	VariableIdx _holding_var;
+	
+	ObjectIdx _goal_obj_conf;
+	
+	// The two following vectors are sync'd, i.e. _all_objects_conf[i] is the config of object _all_objects_ids[i]
+	std::vector<ObjectIdx> _all_objects_ids; // The Ids of all objects
+	std::vector<VariableIdx> _all_objects_conf; // The state variables of the configurations of all objects
+	std::unordered_map<ObjectIdx, ObjectIdx> _all_objects_goal; // The configuration in the goal of each object, if any
+	
+	VariableIdx _confb_rob;
+	VariableIdx _confa_rob;
+	const ExternalI& _external;
+	bool _check_overlaps;
+};
+
+
+//! A feature representing the object which is graspable, if any, given the current configuration of the robot
+class GraspableFeature : public NoveltyFeature {
+public:
+	
+	static VariableIdx derive_config_variable(ObjectIdx object_id) {
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		std::string obj_name = info.deduceObjectName(object_id, info.getTypeId("object_id"));
+		return info.getVariableId("confo(" + obj_name  +  ")");
+	}
+	
+	
+	GraspableFeature()
+		:
+		_external(ProblemInfo::getInstance().get_external())
+	{
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		
+		_confb_rob = info.getVariableId("confb(rob)");
+		_confa_rob = info.getVariableId("confa(rob)");
+		_holding_var = info.getVariableId("holding()");
+		_no_object_id = info.getObjectId("no_object");
+
+		TypeIdx obj_t = info.getTypeId("object_id");
+		for (ObjectIdx other_obj_id:info.getTypeObjects(obj_t)) {
+			_all_objects_conf.push_back(derive_config_variable(other_obj_id));
+		}
+	}
+	
+	~GraspableFeature() = default;
+	GraspableFeature(const GraspableFeature&) = default;
+	NoveltyFeature* clone() const override { return new GraspableFeature(*this); }
+	
+	aptk::ValueIndex evaluate(const State& s) const override {
+		ObjectIdx held_object = s.getValue(_holding_var);
+		if (held_object != _no_object_id) return 0; // Some object is already held.
+		
+		auto cb = s.getValue(_confb_rob);
+		auto ca = s.getValue(_confa_rob);
+		
+		// Return an identifier of the first object that is graspable, or 0, if none
+		for (VariableIdx other_object_var:_all_objects_conf) {
+			ObjectIdx co = s.getValue(other_object_var);
+			bool graspable = _external.graspable({cb, ca, co});
+			if (graspable) return other_object_var;
+		}
+	
+		return 0;
+	}
+	
+	std::ostream& print(std::ostream& os) const override {
+// 		const ProblemInfo& info = ProblemInfo::getInstance();
+		return os << "graspable()";
+	}
+
+protected:
+	std::vector<VariableIdx> _all_objects_conf; // The state variables of the configurations of allobjects
+	
+	ObjectIdx _no_object_id;
+	VariableIdx _holding_var;
 	VariableIdx _confb_rob;
 	VariableIdx _confa_rob;
 	const ExternalI& _external;
 };
 
+//! A feature representing the value of any arbitrary language term, e.g. X+Y, or @proc(Y,Z)
+class GlobalRobotConfFeature : public NoveltyFeature {
+public:
+	GlobalRobotConfFeature() {
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		_confb_rob = info.getVariableId("confb(rob)");
+		_confa_rob = info.getVariableId("confa(rob)");
+	}
+	
+	~GlobalRobotConfFeature() = default;
+	GlobalRobotConfFeature(const GlobalRobotConfFeature&) = default;
+	NoveltyFeature* clone() const override { return new GlobalRobotConfFeature(*this); }
+	
+	aptk::ValueIndex evaluate(const State& s) const override {
+		return s.getValue(_confa_rob) * 1000 + s.getValue(_confb_rob);
+	}
+	
+	std::ostream& print(std::ostream& os) const override {
+		return os << "global_rob_conf";
+	}
+
+protected:
+	VariableIdx _confb_rob;
+	VariableIdx _confa_rob;
+};
 
 CTMPStateAdapter::CTMPStateAdapter( const State& s, const CTMPNoveltyEvaluator& featureMap )
 	: _adapted( s ), _featureMap( featureMap)
@@ -339,6 +502,9 @@ CTMPStateAdapter::CTMPStateAdapter( const State& s, const CTMPNoveltyEvaluator& 
 
 void 
 CTMPStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std::vector<aptk::ValueIndex>& values) const {
+	
+	LPT_INFO("novelty-evaluations", "Evaluating state " << _adapted);
+	
 	if ( varnames.size() != _featureMap.numFeatures() ) {
 		varnames.resize( _featureMap.numFeatures() );
 	}
@@ -350,6 +516,8 @@ CTMPStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std:
 	for ( unsigned k = 0; k < _featureMap.numFeatures(); k++ ) {
 		varnames[k] = k;
 		values[k] = _featureMap.feature(k).evaluate( _adapted );
+		
+		LPT_INFO("novelty-evaluations", "\t" << _featureMap.feature(k) << ": " << values[k]);
 	}
 	
 	LPT_DEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));
@@ -357,11 +525,11 @@ CTMPStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std:
 
 
 
-CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration)
+CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration, bool check_overlaps)
 	: Base()
 {
 	set_max_novelty(novelty_bound);
-	selectFeatures(problem, feature_configuration);
+	selectFeatures(problem, feature_configuration, check_overlaps);
 }
 
 CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const CTMPNoveltyEvaluator& other)
@@ -372,7 +540,7 @@ CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const CTMPNoveltyEvaluator& other)
 }
 
 void
-CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config) {
+CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config, bool check_overlaps) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
 	// Add all state variables
@@ -381,6 +549,7 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 	}
 	
 	// Add now some domain-dependent features:
+	/*
 	// For each movable object o, consider the value of "@graspable(confb(rob), confa(rob), confo(o))" as a novelty feature
 	TypeIdx obj_t = info.getTypeId("object_id");
 	unsigned graspable_id = info.getSymbolId("@graspable");
@@ -389,8 +558,10 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 	unsigned confo_id = info.getSymbolId("confo");
 	ObjectIdx rob_id = info.getObjectId("rob");
 	
+	
 	fs::FluentHeadedNestedTerm confb_rob(confb_id, { new fs::Constant(rob_id) });
 	fs::FluentHeadedNestedTerm confa_rob(confa_id, { new fs::Constant(rob_id) });
+	
 	
 	Binding empty_binding;
 	
@@ -406,26 +577,13 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 		LPT_INFO("cout", "Adding Term-based Novelty feature: " << *feature_term);
 		_features.push_back(std::unique_ptr<ArbitraryTermFeature>(new ArbitraryTermFeature(feature_term)));
 	}
-	
-	/*
-	// Plus the value of @placeable(confb(rob), confa(rob)) as a novelty feature
-	unsigned placeable_id = info.getSymbolId("@placeable");
-	
-	auto placeable_term = new fs::UserDefinedStaticTerm(placeable_id, {
-		confb_rob.bind(empty_binding, info),
-		confa_rob.bind(empty_binding, info)
-	});
-	
-	LPT_INFO("cout", "Adding Term-based Novelty feature: " << *placeable_term);
-	_features.push_back(std::unique_ptr<ArbitraryTermFeature>(new ArbitraryTermFeature(placeable_term)));
 	*/
 	
+	_features.push_back(std::unique_ptr<PlaceableFeature>(new PlaceableFeature(check_overlaps, problem.getGoalConditions())));
+	_features.push_back(std::unique_ptr<GraspableFeature>(new GraspableFeature));
 	
-	for (ObjectIdx obj_id:info.getTypeObjects(obj_t)) {
-		LPT_INFO("cout", "Adding Placeable* feature for object: " << info.deduceObjectName(obj_id, obj_t));
-		_features.push_back(std::unique_ptr<PlaceableFeature>(new PlaceableFeature(obj_id)));
-	}
 	
+// 	_features.push_back(std::unique_ptr<GlobalRobotConfFeature>(new GlobalRobotConfFeature));
 	
 	LPT_INFO("cout", "Number of features from which state novelty will be computed: " << numFeatures());
 }
@@ -627,17 +785,7 @@ public:
 	
 
 	long compute_heuristic(const State& state, BFWSF5Node::Atomset& relevant, unsigned& num_relevant) override {
-// 		std::vector<Atom> relevant_atoms;
-// 		long h = this->_base_heuristic->evaluate(state, relevant_atoms);
-		
-// 		num_relevant = relevant_atoms.size();
-		
-// 		relevant = _relevant;
-// 		this->build_atomset(relevant_atoms);
-// 		LPT_DEBUG("heuristic" , std::endl << "Computed heuristic value of " << h <<  " for state: " << std::endl << state << std::endl << "****************************************");
-// 		return h;
-		assert(0);
-		return 0.0;
+		throw std::runtime_error("Shoudn't be using this");
 	}
 	
 	//! Return the count of how many objects offend the consecution of at least one unachived goal atom.
@@ -720,10 +868,7 @@ EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::st
 	LPT_INFO("cout", "\tMax width: " << max_width);
 	
 	// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
-	CTMPNoveltyEvaluator base_novelty_evaluator(problem, max_width, feature_configuration);
-	
-	
-	
+	CTMPNoveltyEvaluator base_novelty_evaluator(problem, max_width, feature_configuration, true);
 	
 	
 	using BaseHeuristicT = gecode::SmartRPG;
@@ -733,11 +878,12 @@ EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::st
 	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, std::shared_ptr<NodeT>, NodeCompareT>;
 	using EngineT = std::unique_ptr<RawEngineT>;
 	
-	auto base_heuristic = std::unique_ptr<gecode::SmartRPG>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
+// 	auto base_heuristic = std::unique_ptr<gecode::SmartRPG>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
+	std::unique_ptr<gecode::SmartRPG> nullheuristic;
 	
 	auto heuristic = std::unique_ptr<HeuristicEnsembleT>(
                             new HeuristicEnsembleT(model, max_width, feature_configuration,
-                                                   base_novelty_evaluator, std::move(base_heuristic), std::move(offending))
+                                                   base_novelty_evaluator, std::move(nullheuristic), std::move(offending))
 	);
 	
 	auto engine = EngineT(new RawEngineT(model, *heuristic));
@@ -780,7 +926,7 @@ EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	
 	Problem simplified(problem);
 	simplified.set_state_constraints(new fs::Tautology);
-	GroundStateModel model(problem);
+	GroundStateModel model(simplified);
 	
 	using IWDriver = IteratedWidthDriver<GroundStateModel>;
 	using PreprocessingNodeT = IWPreprocessingNode<State, ActionT>;
@@ -790,6 +936,7 @@ EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	using BaseAlgoT = lapkt::AllSolutionsBreadthFirstSearch<PreprocessingNodeT, GroundStateModel, OpenListT>;
 	
 	
+// 	EvaluatorPT evaluator = std::shared_ptr<EvaluatorT>(new EvaluatorT(model, k, feature_configuration));
 	EvaluatorPT evaluator = std::make_shared<EvaluatorT>(model, k, feature_configuration);
 	
 	BaseAlgoT iw_algorithm(model, OpenListT(evaluator), goal_conjuncts, sc_conjuncts);

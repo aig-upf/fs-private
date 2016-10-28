@@ -35,6 +35,10 @@ public:
 	virtual ObjectIdx placing_pose(const ObjectIdxVector& params) const {
 		throw std::runtime_error("Must be subclassed");
 	}
+	
+	virtual bool graspable(const ObjectIdxVector& params) const {
+		throw std::runtime_error("Must be subclassed");
+	}
 
 };
 
