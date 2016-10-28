@@ -15,11 +15,8 @@
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
 
-
-#include <search/algorithms/aptk/generic_search.hxx>
 #include <search/algorithms/aptk/sorted_open_list.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
-#include <aptk2/search/components/unsorted_open_list_impl.hxx>
 
 using OffendingSet = std::unordered_set<fs0::ObjectIdx>;
 
