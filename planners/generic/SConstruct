@@ -50,7 +50,7 @@ else:
 
 # Header and library directories.
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
-include_paths = ['.', env['fs'] + '/src', HOME + '/local/include']
+include_paths = ['.', env['fs'] + '/src', env['lapkt'], HOME + '/local/include']
 lib_paths = [env['fs'] + '/lib', lapkt2_dir + '/lib', HOME + '/local/lib']
     
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])

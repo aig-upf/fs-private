@@ -17,6 +17,10 @@ public:
 	virtual ~NoveltyFeature() = default;
 	virtual NoveltyFeature* clone() const = 0;
 	virtual aptk::ValueIndex evaluate( const State& s ) const = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const NoveltyFeature& o) { return o.print(os); }
+	virtual std::ostream& print(std::ostream& os) const = 0;
 };
 
 //! A state variable-based feature that simply returs the value of a certain variable in the state
@@ -27,6 +31,8 @@ public:
 	StateVariableFeature(const StateVariableFeature&) = default;
 	virtual NoveltyFeature* clone() const override { return new StateVariableFeature(*this); }
 	aptk::ValueIndex  evaluate( const State& s ) const override;
+	
+	std::ostream& print(std::ostream& os) const override;
 
 protected:
 	VariableIdx _variable;
@@ -47,6 +53,8 @@ public:
 	void addCondition(const fs::AtomicFormula* condition) { _conditions.push_back(condition); }
 
 	aptk::ValueIndex evaluate(const State& s) const override;
+	
+	std::ostream& print(std::ostream& os) const override;
 
 protected:
 	// formula pointers are NOT owned by this class
@@ -61,6 +69,8 @@ public:
 	ArbitraryTermFeature(const ArbitraryTermFeature&);
 	NoveltyFeature* clone() const override { return new ArbitraryTermFeature(*this); }
 	aptk::ValueIndex evaluate(const State& s) const override;
+	
+	std::ostream& print(std::ostream& os) const override;
 
 protected:
 	const fs::Term* _term;
