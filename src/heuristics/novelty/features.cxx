@@ -11,6 +11,11 @@ StateVariableFeature::evaluate( const State& s ) const {
 	return s.getValue(_variable);
 }
 
+std::ostream& StateVariableFeature::print(std::ostream& os) const {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	return os << info.getVariableName(_variable);
+}
+
 aptk::ValueIndex
 ConditionSetFeature::evaluate( const State& s ) const {
 	aptk::ValueIndex satisfied = 0;
@@ -20,6 +25,9 @@ ConditionSetFeature::evaluate( const State& s ) const {
 	return satisfied;
 }
 
+std::ostream& ConditionSetFeature::print(std::ostream& os) const {
+	return os << "UNIMPLEMENTED";
+}
 
 ArbitraryTermFeature::ArbitraryTermFeature(const fs::Term* term) 
 	: _term(term)
@@ -38,6 +46,8 @@ ArbitraryTermFeature::evaluate(const State& s) const {
 	return _term->interpret(s);
 }
 
-
+std::ostream& ArbitraryTermFeature::print(std::ostream& os) const {
+	return os << *_term;
+}
 
 }
