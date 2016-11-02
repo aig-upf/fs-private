@@ -225,6 +225,7 @@ public:
 	}
 	
 	static long index(unsigned unachieved, unsigned relaxed_achieved) {
+		return relaxed_achieved * 10000 + unachieved;
 		return (unsigned short)(relaxed_achieved<<16) | (unsigned short)(unachieved);
 	}
 	

@@ -284,7 +284,7 @@ CTMPStateAdapter::CTMPStateAdapter( const State& s, const CTMPNoveltyEvaluator& 
 void 
 CTMPStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std::vector<aptk::ValueIndex>& values) const {
 	
-	LPT_INFO("novelty-evaluations", "Evaluating state " << _adapted);
+// 	LPT_INFO("novelty-evaluations", "Evaluating state " << _adapted);
 	
 	if ( varnames.size() != _featureMap.numFeatures() ) {
 		varnames.resize( _featureMap.numFeatures() );
@@ -301,16 +301,16 @@ CTMPStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std:
 		LPT_INFO("novelty-evaluations", "\t" << _featureMap.feature(k) << ": " << values[k]);
 	}
 	
-	LPT_DEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));
+// 	LPT_DEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));
 }
 
 
 
-CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration, bool check_overlaps)
+CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration, bool check_overlaps, bool placeable, bool graspable)
 	: Base()
 {
 	set_max_novelty(novelty_bound);
-	selectFeatures(problem, feature_configuration, check_overlaps);
+	selectFeatures(problem, feature_configuration, check_overlaps, placeable, graspable);
 }
 
 CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const CTMPNoveltyEvaluator& other)
@@ -321,7 +321,7 @@ CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const CTMPNoveltyEvaluator& other)
 }
 
 void
-CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config, bool check_overlaps) {
+CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config, bool check_overlaps, bool placeable, bool graspable) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
 	// Add all state variables
@@ -360,8 +360,11 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 	}
 	*/
 	
-	_features.push_back(std::unique_ptr<PlaceableFeature>(new PlaceableFeature(check_overlaps, problem.getGoalConditions())));
-	_features.push_back(std::unique_ptr<GraspableFeature>(new GraspableFeature));
+	if (placeable)
+		_features.push_back(std::unique_ptr<PlaceableFeature>(new PlaceableFeature(check_overlaps, problem.getGoalConditions())));
+	
+	if (graspable)
+		_features.push_back(std::unique_ptr<GraspableFeature>(new GraspableFeature));
 	
 	
 // 	_features.push_back(std::unique_ptr<GlobalRobotConfFeature>(new GlobalRobotConfFeature));
@@ -523,10 +526,8 @@ struct F6NodeComparer {
 		if (n1->novelty > n2->novelty) return true;
 		if (n1->novelty < n2->novelty) return false;
 		
-		
 		if (n1->_num_offending > n2->_num_offending) return true;
 		if (n1->_num_offending < n2->_num_offending) return false;
-		
 		
 		if (n1->unachieved > n2->unachieved) return true;
 		if (n1->unachieved < n2->unachieved) return false;
@@ -649,7 +650,7 @@ EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::st
 	LPT_INFO("cout", "\tMax width: " << max_width);
 	
 	// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
-	CTMPNoveltyEvaluator base_novelty_evaluator(problem, max_width, feature_configuration, true);
+	CTMPNoveltyEvaluator base_novelty_evaluator(problem, max_width, feature_configuration, true, true, false);
 	
 	
 	using BaseHeuristicT = gecode::SmartRPG;
@@ -717,8 +718,8 @@ EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	using BaseAlgoT = lapkt::AllSolutionsBreadthFirstSearch<PreprocessingNodeT, GroundStateModel, OpenListT>;
 	
 	
-// 	EvaluatorPT evaluator = std::shared_ptr<EvaluatorT>(new EvaluatorT(model, k, feature_configuration));
-	EvaluatorPT evaluator = std::make_shared<EvaluatorT>(model, k, feature_configuration);
+	EvaluatorPT evaluator = std::shared_ptr<EvaluatorT>(new EvaluatorT(model, k, feature_configuration));
+// 	EvaluatorPT evaluator = std::make_shared<EvaluatorT>(model, k, feature_configuration);
 	
 	BaseAlgoT iw_algorithm(model, OpenListT(evaluator), goal_conjuncts, sc_conjuncts);
 // 		lapkt::events::subscribe(*_algorithm, _handlers);

@@ -62,7 +62,7 @@ public:
 	using FeatureSet = std::vector<std::unique_ptr<NoveltyFeature>>;
 	
 
-	CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration, bool check_overlaps=false);
+	CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration, bool check_overlaps=false, bool placeable = true, bool graspable = false);
 	virtual ~CTMPNoveltyEvaluator() = default;
 	CTMPNoveltyEvaluator(const CTMPNoveltyEvaluator&);
 	
@@ -79,7 +79,7 @@ public:
 
 protected:
 	//! Select and create the state features that we will use henceforth to compute the novelty
-	void selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config, bool check_overlaps);
+	void selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config, bool check_overlaps, bool placeable, bool graspable);
 	
 	//! An array with all the features that we take into account when computing the novelty
 	FeatureSet _features;
