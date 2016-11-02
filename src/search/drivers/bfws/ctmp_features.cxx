@@ -44,6 +44,13 @@ VariableIdx derive_goal_config(ObjectIdx object_id, const fs::Formula* goal) {
 	return -1;
 }
 
+VariableIdx derive_goal_config(ObjectIdx object_id, const std::vector<const fs::AtomicFormula*>& goal) {
+	for (auto atom:goal) {
+		VariableIdx var = derive_goal_config(object_id, atom);
+		if (var != -1) return var;
+	}
+	return -1;
+}
 
 
 PlaceableFeature::PlaceableFeature(bool check_final_overlaps, const fs::Formula* goal)
@@ -57,8 +64,6 @@ PlaceableFeature::PlaceableFeature(bool check_final_overlaps, const fs::Formula*
 	_holding_var = info.getVariableId("holding()");
 	_confb_rob = info.getVariableId("confb(rob)");
 	_confa_rob = info.getVariableId("confa(rob)");
-	_goal_obj_conf = info.getObjectId("co5");
-	
 
 	for (ObjectIdx obj_id:info.getTypeObjects("object_id")) {
 		_all_objects_ids.push_back(obj_id);
@@ -119,7 +124,7 @@ PlaceableFeature::evaluate(const State& s) const {
 }
 
 
-	
+
 GraspableFeature::GraspableFeature()
 	:
 	_external(ProblemInfo::getInstance().get_external())
@@ -167,6 +172,62 @@ aptk::ValueIndex
 GlobalRobotConfFeature::evaluate(const State& s) const {
 	return s.getValue(_confa_rob) * 1000 + s.getValue(_confb_rob);
 }
+
+
+
+
+
+CustomHeuristic::CustomHeuristic(const fs::Formula* goal)
+	:
+	_external(ProblemInfo::getInstance().get_external())
+{
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	
+	_holding_var = info.getVariableId("holding()");
+
+	for (ObjectIdx obj_id:info.getTypeObjects("object_id")) {
+		_all_objects_ids.push_back(obj_id);
+		_all_objects_conf.push_back(derive_config_variable(obj_id));
+		
+		// If the object has a particular goal configuration, insert it.
+		ObjectIdx goal_config = derive_goal_config(obj_id, goal);
+		if (goal_config != -1) {
+			_all_objects_goal.insert(std::make_pair(obj_id, goal_config));
+		}
+	}
+}
+
+
+//! h(s)= number of goal objects that still need to be picked up and moved in s  * 2
+//! -1; if goal object being held
+long
+CustomHeuristic::evaluate(const State& s) const {
+	long h = 0;
+	
+	ObjectIdx held_object = s.getValue(_holding_var); // The object which is currently being held
+	
+	for (unsigned i = 0; i < _all_objects_conf.size(); ++i) {
+		ObjectIdx object_id = _all_objects_ids[i];
+		VariableIdx object_conf = _all_objects_conf[i];
+		
+		auto it = _all_objects_goal.find(object_id);
+		if (it == _all_objects_goal.end()) continue; // The object does not appear on the goal formula
+		
+		// otherwise, we can deduce the goal configuration of the object
+		ObjectIdx goal_obj_conf =  it->second;
+		
+		ObjectIdx current_obj_conf = s.getValue(object_conf);
+		if (current_obj_conf != goal_obj_conf) {
+			
+			if (held_object == object_id) h = h+1;
+			else h = h+2;
+		}
+	}
+
+	return h;
+}
+
+
 
 
 } } // namespaces

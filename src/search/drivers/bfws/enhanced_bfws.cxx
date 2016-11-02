@@ -241,10 +241,30 @@ public:
 		std::vector<OffendingSet> offending(_goal_atoms.size());
 		
 		const ProblemInfo& info = ProblemInfo::getInstance();
+		const Problem& problem = Problem::getInstance();
 		const ExternalI& external = info.get_external();
 		
+		const auto& ground_actions = problem.getGroundActions();
+		assert(ground_actions.size());
+		
 		VariableIdx v_confb = info.getVariableId("confb(rob)");
-		VariableIdx v_confa = info.getVariableId("confa(rob)");
+// 		VariableIdx v_confa = info.getVariableId("confa(rob)");
+		VariableIdx v_traja = info.getVariableId("traj(rob)");
+		VariableIdx v_holding = info.getVariableId("holding()");
+		ObjectIdx no_object_id = info.getObjectId("no_object");
+		
+		// First, precompute which is the goal configuration of every object, if any
+		std::unordered_map<ObjectIdx, ObjectIdx> object_goal;
+		for (ObjectIdx obj_id:info.getTypeObjects("object_id")) {
+			// If the object has a particular goal configuration, insert it.
+			ObjectIdx goal_config = fs0::drivers::derive_goal_config(obj_id, _goal_atoms);
+			if (goal_config != -1) {
+				object_goal.insert(std::make_pair(obj_id, goal_config));
+			}
+		}
+		
+		
+		
 		
 		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
 			// const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
@@ -253,15 +273,34 @@ public:
 			
 			while (node->has_parent()) {
 				const StateT& state = node->state;
+				const StateT& parent_state = node->parent->state;
 				
-				// COMPUTE ALL OBJECT CONFIGURATIONS THAT OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
+				
+				// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
 				ObjectIdx o_confb = state.getValue(v_confb);
-				ObjectIdx o_confa = state.getValue(v_confa);
-				auto v_off = external.get_offending_configurations(o_confb, o_confa);
+// 				ObjectIdx o_confa = state.getValue(v_confa);
+				ObjectIdx o_traj_arm = state.getValue(v_traja);
+				
+				auto v_off = external.get_offending_configurations(o_confb, o_traj_arm);
 				offending[goal_atom_idx].insert(v_off.begin(), v_off.end());
 				
-				// ADDITIONALLY, IF THE ACTION USED TO REACH THIS STATE IS A 'PLACE' ACTION, WE CHECK THAT THE PLACED OBJECT NO
-				
+				// ADDITIONALLY, IF THE ACTION USED TO REACH THIS STATE IS A 'PLACE' ACTION THAT PUTS THE PLACED OBJECT
+				// INTO ITS GOAL CONFIGURATION, THEN THIS GOAL CONFIGURATION IS MARKED AS A POTENTIALLY OFFENDING CONFIGURATION AS WELL
+				ActionIdx action_id = node->action;
+				const GroundAction& action = *(ground_actions.at(action_id));
+				if (action.getActionData().getName() == "place-object") {
+					ObjectIdx held = parent_state.getValue(v_holding);
+					assert(held!=no_object_id);
+					
+					std::string obj_name = info.deduceObjectName(held, info.getTypeId("object_id"));
+					VariableIdx obj_conf = info.getVariableId("confo(" + obj_name  +  ")");
+					ObjectIdx current_config = state.getValue(obj_conf);
+	
+					auto it = object_goal.find(held);
+					if (it != object_goal.end() && current_config == it->second) {
+						offending[goal_atom_idx].insert(current_config);
+					}
+				}
 				
 				node = node->parent;
 			}
@@ -473,6 +512,7 @@ public:
 	void evaluate_with( Heuristic& ensemble ) {
 		unachieved = ensemble.get_unachieved(this->state);
 		_num_offending = ensemble.compute_offending(this->state);
+		hff = ensemble.compute_heuristic(state);
 		
 		if (!has_parent() || unachieved < parent->unachieved) {
 			// TODO Is the initialization of _num_relaxed_achieved correct?
@@ -481,7 +521,7 @@ public:
 // 			update_reached_counters(this->state);
 		}
 		
-		novelty = ensemble.novelty(state, unachieved, _num_offending);
+		novelty = ensemble.novelty(state, hff, _num_offending);
 		if (novelty > ensemble.max_novelty()) {
 			novelty = std::numeric_limits<unsigned>::max();
 		}
@@ -526,6 +566,9 @@ struct F6NodeComparer {
 		if (n1->novelty > n2->novelty) return true;
 		if (n1->novelty < n2->novelty) return false;
 		
+		if (n1->hff > n2->hff) return true;
+		if (n1->hff < n2->hff) return false;
+		
 		if (n1->_num_offending > n2->_num_offending) return true;
 		if (n1->_num_offending < n2->_num_offending) return false;
 		
@@ -552,7 +595,8 @@ public:
 		BaseT(model, max_novelty, feature_configuration, std::move(heuristic)),
 		_offending(std::move(offending)),
 		_base_evaluator(novelty_evaluator),
-		_ctmp_novelty_evaluators()
+		_ctmp_novelty_evaluators(),
+		_custom_heuristic(model.getTask().getGoalConditions())
 	{
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		TypeIdx obj_t = info.getTypeId("object_id");
@@ -565,10 +609,15 @@ public:
 	
 	~BFWSF6Heuristic() = default;
 	
-
 	long compute_heuristic(const State& state, BFWSF5Node::Atomset& relevant, unsigned& num_relevant) override {
 		throw std::runtime_error("Shoudn't be using this");
 	}
+
+
+	long compute_heuristic(const State& state) {
+		return _custom_heuristic.evaluate(state);
+	}
+
 	
 	//! Return the count of how many objects offend the consecution of at least one unachived goal atom.
 	unsigned compute_offending(const State& state) {
@@ -586,11 +635,14 @@ public:
 			}
 		}
 		
+		// For each object, we check whether the configuration of the object in the current state
+		// offends the consecution of _at least one_ unsatisfied goal atom (e.g. of the form confo(o3)=c15)
 		for (VariableIdx conf_var:_object_configurations) {
 			ObjectIdx confo = state.getValue(conf_var);
 			for (unsigned i:unsat_goal_indexes) {
-				const auto& offending_to_goal_atom = _offending[i];
 				
+				// 'offending_to_goal_atom' will contain all possible object configurations that offend the consecution of this particular unsatisfied goal atom
+				const auto& offending_to_goal_atom = _offending[i]; 
 				
 				if (offending_to_goal_atom.find(confo) != offending_to_goal_atom.end()) {
 					// The object configuration is actually an offending one
@@ -629,6 +681,8 @@ protected:
 	
 	//! We have one different novelty evaluators for each actual heuristic value that a node might have.
 	std::unordered_map<long, CTMPNoveltyEvaluator> _ctmp_novelty_evaluators;
+	
+	CustomHeuristic _custom_heuristic;
 };
 	
 	
