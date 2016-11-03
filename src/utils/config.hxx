@@ -122,13 +122,9 @@ public:
 		}
 	}
 
+	// Partial specialization
 	bool getOption(const std::string& key) const {
-		auto it = _user_options.find(key);
-		if (it != _user_options.end()) { // The user specified an option value, which thus has priority
-			return boost::lexical_cast<bool>(it->second);
-		} else {
-			return _root.get<bool>(key);
-		}
+		return getOption<bool>(key);
 	}
 };
 
