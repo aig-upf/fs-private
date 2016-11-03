@@ -39,6 +39,14 @@ protected:
 	std::vector<OffendingSet> preprocess(const Problem& problem, const Config& config);
 
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
+	
+	//! A partial specialization
+	template <typename NodeCompareT>
+	ExitCode do_search_p1(Problem& problem, const Config& config, const std::string& out_dir, float start_time);
+	
+	template <typename NodeCompareT, typename NoveltyIndexerT>
+	ExitCode do_search(Problem& problem, const Config& config, const std::string& out_dir, float start_time);
+	
 };
 
 

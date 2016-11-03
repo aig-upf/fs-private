@@ -435,14 +435,13 @@ public:
 	
 	//! The number of atoms in the last relaxed plan computed in the way to the current state that have been
 	//! made true along the path (#r)
-	enum class REACHED_STATUS : unsigned char {IRRELEVANT_ATOM, UNREACHED, REACHED};
-	using Atomset = std::vector<REACHED_STATUS>;
-	
-	Atomset _reached_idx;
-	unsigned _num_relaxed_achieved;
+// 	enum class REACHED_STATUS : unsigned char {IRRELEVANT_ATOM, UNREACHED, REACHED};
+// 	using Atomset = std::vector<REACHED_STATUS>;
+// 	Atomset _reached_idx;
+// 	unsigned _num_relaxed_achieved;
 	
 	//!
-	long hff;
+	unsigned _h;
 	
 public:
 	BFWSF6Node() = delete;
@@ -462,15 +461,14 @@ public:
 		novelty(std::numeric_limits<unsigned>::max()),
 		unachieved(std::numeric_limits<unsigned>::max()),
 		_num_offending(std::numeric_limits<unsigned>::max()),
-		_num_relaxed_achieved(0),
-		hff(std::numeric_limits<long>::max())
+// 		_num_relaxed_achieved(0),
+		_h(std::numeric_limits<unsigned>::max())
 	{}
 
 	bool has_parent() const { return parent != nullptr; }
 	
 	//! Required for the interface of some algorithms that might prioritise helpful actions.
 	bool is_helpful() const { return false; }
-
 
 	bool operator==( const BFWSF6Node& o ) const { return state == o.state; }
 
@@ -479,10 +477,11 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const BFWSF6Node& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const { 
-		std::string hval = hff == std::numeric_limits<long>::max() ? "?" : std::to_string(hff);
-		return os << "{@ = " << this << ", s = " << state << ", g = " << g << ", w = " << novelty << ", #g=" << unachieved << ", #off=" << _num_offending << ", #r=" << _num_relaxed_achieved << ", h = " << hval << ", parent = " << parent << "}";
+		std::string hval = _h == std::numeric_limits<unsigned>::max() ? "?" : std::to_string(_h);
+		return os << "{@ = " << this << ", s = " << state << ", g = " << g << ", w = " << novelty << ", #g=" << unachieved << ", #off=" << _num_offending << ", h = " << hval << ", parent = " << parent << "}";
 	}
 	
+	/*
 	void update_reached_counters(const State& state) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		const TupleIndex& tuple_idx = Problem::getInstance().get_tuple_index();
@@ -507,21 +506,14 @@ public:
 			}
 		}
 	}
+	*/
 	
 	template <typename Heuristic>
 	void evaluate_with( Heuristic& ensemble ) {
 		unachieved = ensemble.get_unachieved(this->state);
 		_num_offending = ensemble.compute_offending(this->state);
-		hff = ensemble.compute_heuristic(state);
-		
-		if (!has_parent() || unachieved < parent->unachieved) {
-			// TODO Is the initialization of _num_relaxed_achieved correct?
-// 			hff = ensemble.compute_heuristic(state, _reached_idx, _num_relaxed_achieved);
-		} else {
-// 			update_reached_counters(this->state);
-		}
-		
-		novelty = ensemble.novelty(state, hff, _num_offending);
+		_h = ensemble.compute_heuristic(state);
+		novelty = ensemble.novelty(state, unachieved, _h, _num_offending);
 		if (novelty > ensemble.max_novelty()) {
 			novelty = std::numeric_limits<unsigned>::max();
 		}
@@ -530,10 +522,10 @@ public:
 	void inherit_heuristic_estimate() {
 		if (parent) {
 			novelty = parent->novelty;
-			hff = parent->hff;
+			_h = parent->_h;
 			unachieved = parent->unachieved;
-			_reached_idx = parent->_reached_idx;
-			_num_relaxed_achieved = parent->_num_relaxed_achieved;
+// 			_reached_idx = parent->_reached_idx;
+// 			_num_relaxed_achieved = parent->_num_relaxed_achieved;
 			_num_offending = parent->_num_offending;
 		}
 	}
@@ -546,28 +538,40 @@ public:
 			this->action = other->action;
 			this->parent = other->parent;
 			this->novelty = other->novelty;
-			this->hff = other->hff;
+			this->_h = other->_h;
 			unachieved = other->unachieved;
-			_num_relaxed_achieved = other->_num_relaxed_achieved;
-			_reached_idx = other->_reached_idx;
+// 			_num_relaxed_achieved = other->_num_relaxed_achieved;
+// 			_reached_idx = other->_reached_idx;
 			_num_offending = other->_num_offending;
 		}
 	}
 
-	bool dead_end() const { return hff == -1; }
+	bool dead_end() const { return false; }
 };
 
 
+// W only
+struct F6NodeComparer0 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
 
-struct F6NodeComparer {
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+
+		return n1->g > n2->g;
+	}
+};
+
+// W, H, #OFF, #G
+struct F6NodeComparer1 {
 	using NodePtrT = std::shared_ptr<BFWSF6Node>;
 	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
 
 		if (n1->novelty > n2->novelty) return true;
 		if (n1->novelty < n2->novelty) return false;
 		
-		if (n1->hff > n2->hff) return true;
-		if (n1->hff < n2->hff) return false;
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
 		
 		if (n1->_num_offending > n2->_num_offending) return true;
 		if (n1->_num_offending < n2->_num_offending) return false;
@@ -579,24 +583,171 @@ struct F6NodeComparer {
 	}
 };
 
+// W, #G, H, #OFF
+struct F6NodeComparer2 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+		
+		if (n1->unachieved > n2->unachieved) return true;
+		if (n1->unachieved < n2->unachieved) return false;
+		
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
+		
+		if (n1->_num_offending > n2->_num_offending) return true;
+		if (n1->_num_offending < n2->_num_offending) return false;
+
+		return n1->g > n2->g;
+	}
+};
+
+// W, #G, #OFF, H
+struct F6NodeComparer3 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+		
+		if (n1->unachieved > n2->unachieved) return true;
+		if (n1->unachieved < n2->unachieved) return false;
+		
+		if (n1->_num_offending > n2->_num_offending) return true;
+		if (n1->_num_offending < n2->_num_offending) return false;
+		
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
+
+		return n1->g > n2->g;
+	}
+};
+
+// W, #OFF, #G, H
+struct F6NodeComparer4 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+		
+		if (n1->_num_offending > n2->_num_offending) return true;
+		if (n1->_num_offending < n2->_num_offending) return false;
+		
+		if (n1->unachieved > n2->unachieved) return true;
+		if (n1->unachieved < n2->unachieved) return false;
+		
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
+
+		return n1->g > n2->g;
+	}
+};
+
+// W, #OFF, H, #G
+struct F6NodeComparer5 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+		
+		if (n1->_num_offending > n2->_num_offending) return true;
+		if (n1->_num_offending < n2->_num_offending) return false;
+		
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
+		
+		if (n1->unachieved > n2->unachieved) return true;
+		if (n1->unachieved < n2->unachieved) return false;
+
+		return n1->g > n2->g;
+	}
+};
 
 
-template <typename StateModelT, typename BaseHeuristicT>
-class BFWSF6Heuristic : public BFWSF5HeuristicEnsemble<StateModelT, BaseHeuristicT> {
+//! For the problem at hand, 'unachieved' will typically range 0-100, 'offending': 0-100, heuristic: 0-200
+inline unsigned _index(unsigned unachieved, unsigned heuristic, unsigned offending) {
+	return (heuristic<<16) | (offending<<8) |  unachieved;
+}
+
+
+// No index
+struct NoveltyIndexer0 {
+	unsigned operator()(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return 0;
+	}
+
+	std::tuple<unsigned, unsigned, unsigned> relevant(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return std::make_tuple(0, 0, 0);
+	}
+};
+
+// #g
+struct NoveltyIndexer1 {
+	unsigned operator()(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return unachieved;
+	}
+
+	std::tuple<unsigned, unsigned, unsigned> relevant(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return std::make_tuple(unachieved, 0, 0);
+	}
+};
+
+// #g, #off
+struct NoveltyIndexer2 {
+	unsigned operator()(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return _index(unachieved, 0, offending);
+	}
+
+	std::tuple<unsigned, unsigned, unsigned> relevant(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return std::make_tuple(unachieved, 0, offending);
+	}
+};
+
+
+// h, #g
+struct NoveltyIndexer3 {
+	unsigned operator()(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return _index(unachieved, heuristic, 0);
+	}
+
+	std::tuple<unsigned, unsigned, unsigned> relevant(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return std::make_tuple(unachieved, heuristic, 0);
+	}
+};
+
+// h, #g, #off
+struct NoveltyIndexer4 {
+	unsigned operator()(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return _index(unachieved, heuristic, offending);
+	}
+
+	std::tuple<unsigned, unsigned, unsigned> relevant(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return std::make_tuple(unachieved, heuristic, offending);
+	}
+};
+
+template <typename StateModelT, typename BaseHeuristicT, typename NoveltyIndexerT>
+class BFWSF6Heuristic {
 public:
-	using BaseT = BFWSF5HeuristicEnsemble<StateModelT, BaseHeuristicT>;
-	
 	BFWSF6Heuristic(const StateModelT& model,
                  unsigned max_novelty,
                  const NoveltyFeaturesConfiguration& feature_configuration,
                  const CTMPNoveltyEvaluator& novelty_evaluator,
-                 std::unique_ptr<BaseHeuristicT>&& heuristic,
+//                  std::unique_ptr<BaseHeuristicT>&& heuristic,
                  std::vector<OffendingSet>&& offending) :
-		BaseT(model, max_novelty, feature_configuration, std::move(heuristic)),
+		_problem(model.getTask()),
+		_feature_configuration(feature_configuration),
+		_max_novelty(max_novelty), 
+		_ctmp_novelty_evaluators(),
+// 		_base_heuristic(std::move(heuristic)),
+		_unsat_goal_atoms_heuristic(model),
 		_offending(std::move(offending)),
 		_base_evaluator(novelty_evaluator),
-		_ctmp_novelty_evaluators(),
-		_custom_heuristic(model.getTask().getGoalConditions())
+		_custom_heuristic(_problem.getGoalConditions())
 	{
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		TypeIdx obj_t = info.getTypeId("object_id");
@@ -608,13 +759,14 @@ public:
 	}
 	
 	~BFWSF6Heuristic() = default;
+
+	inline unsigned max_novelty() { return _max_novelty; }
 	
-	long compute_heuristic(const State& state, BFWSF5Node::Atomset& relevant, unsigned& num_relevant) override {
-		throw std::runtime_error("Shoudn't be using this");
+	unsigned get_unachieved(const State& state) {
+		return _unsat_goal_atoms_heuristic.evaluate(state);
 	}
-
-
-	long compute_heuristic(const State& state) {
+	
+	unsigned compute_heuristic(const State& state) {
 		return _custom_heuristic.evaluate(state);
 	}
 
@@ -655,8 +807,19 @@ public:
 	}
 	
 	//! Compute the novelty of the state wrt all the states with the same heuristic value.
-	unsigned novelty(const State& state, unsigned unachieved, unsigned relaxed_achieved) override {
-		auto ind = this->index(unachieved, relaxed_achieved);
+	unsigned novelty(const State& state, unsigned unachieved, unsigned heuristic, unsigned offending) {
+		auto ind = _indexer(unachieved, heuristic, offending);
+#ifdef DEBUG
+		// Let's make sure that either it's the first time we see this index, or, if was already there, 
+		// it corresponds to the same combination of <unachieved, heuristic, offending>
+		auto tuple = _indexer.relevant(unachieved, heuristic, offending);
+		auto __it =  __novelty_idx_values.find(ind);
+		if (__it == __novelty_idx_values.end()) {
+			__novelty_idx_values.insert(std::make_pair(ind, tuple));
+		} else {
+			assert(__it->second == tuple);
+		}
+#endif
 		auto it = _ctmp_novelty_evaluators.find(ind);
 		if (it == _ctmp_novelty_evaluators.end()) {
 			auto inserted = _ctmp_novelty_evaluators.insert(std::make_pair(ind, _base_evaluator));
@@ -665,8 +828,32 @@ public:
 		return it->second.evaluate(state);
 	}
 	
+	//! For the problem at hand, 'unachieved' will typically range 0-100, 'offending': 0-100, heuristic: 0-200
+	static inline unsigned index(unsigned unachieved, unsigned heuristic, unsigned offending) {
+		return (heuristic<<16) | (offending<<8) |  unachieved;
+	}
+
 protected:
 // 	BFWSF6Node::Atomset _relevant;
+	
+#ifdef DEBUG
+	// Just for sanity check purposes
+	std::map<unsigned, std::tuple<unsigned,unsigned,unsigned>> __novelty_idx_values;
+#endif
+	
+	const Problem& _problem;
+	
+	const NoveltyFeaturesConfiguration& _feature_configuration;
+	
+	unsigned _max_novelty;
+
+	//! We have one different novelty evaluators for each actual heuristic value that a node might have.
+	std::unordered_map<unsigned, CTMPNoveltyEvaluator> _ctmp_novelty_evaluators;
+	
+// 	std::unique_ptr<BaseHeuristicT> _base_heuristic;
+	
+	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
+	UnsatisfiedGoalAtomsHeuristic<StateModelT> _unsat_goal_atoms_heuristic;
 	
 	const fs::Conjunction* _goal_conjunction;
 	
@@ -679,17 +866,53 @@ protected:
 	// to perform all the feature selection, etc. anew.
 	const CTMPNoveltyEvaluator& _base_evaluator;
 	
-	//! We have one different novelty evaluators for each actual heuristic value that a node might have.
-	std::unordered_map<long, CTMPNoveltyEvaluator> _ctmp_novelty_evaluators;
-	
 	CustomHeuristic _custom_heuristic;
+	
+	NoveltyIndexerT _indexer;
 };
-	
-	
 	
 	
 ExitCode 
 EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	std::string order = config.getOption<std::string>("ebfws.order");
+	if (order == "0") {
+		return do_search_p1<F6NodeComparer0>(problem, config, out_dir, start_time);
+	} else if (order == "1") {
+		return do_search_p1<F6NodeComparer1>(problem, config, out_dir, start_time);
+	} else if (order == "2") {
+		return do_search_p1<F6NodeComparer2>(problem, config, out_dir, start_time);
+	} else if (order == "3") {
+		return do_search_p1<F6NodeComparer3>(problem, config, out_dir, start_time);
+	} else if (order == "4") {
+		return do_search_p1<F6NodeComparer4>(problem, config, out_dir, start_time);
+	} else if (order == "5") {
+		return do_search_p1<F6NodeComparer5>(problem, config, out_dir, start_time);
+	}
+	throw std::runtime_error("Invalid value " + order + " for configuration option \"ebfws.order\"");
+}
+
+template <typename NodeCompareT>
+ExitCode 
+EnhancedBFWSDriver::do_search_p1(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	std::string novelty_t = config.getOption<std::string>("ebfws.novelty_type");
+	if (novelty_t == "0") {
+		return do_search<NodeCompareT, NoveltyIndexer0>(problem, config, out_dir, start_time);
+	} else if (novelty_t == "1") {
+		return do_search<NodeCompareT, NoveltyIndexer1>(problem, config, out_dir, start_time);
+	} else if (novelty_t == "2") {
+		return do_search<NodeCompareT, NoveltyIndexer2>(problem, config, out_dir, start_time);
+	} else if (novelty_t == "3") {
+		return do_search<NodeCompareT, NoveltyIndexer3>(problem, config, out_dir, start_time);
+	} else if (novelty_t == "4") {
+		return do_search<NodeCompareT, NoveltyIndexer4>(problem, config, out_dir, start_time);
+	}
+	throw std::runtime_error("Invalid value " + novelty_t + " for configuration option \"ebfws.novelty_type\"");
+}
+
+
+template <typename NodeCompareT, typename NoveltyIndexerT>
+ExitCode 
+EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	auto model = GroundingSetup::fully_ground_model(problem);
 	
 	
@@ -709,17 +932,17 @@ EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::st
 	
 	using BaseHeuristicT = gecode::SmartRPG;
 	using NodeT = BFWSF6Node;
-	using NodeCompareT = F6NodeComparer;
-	using HeuristicEnsembleT = BFWSF6Heuristic<GroundStateModel, BaseHeuristicT>;
+	
+	using HeuristicEnsembleT = BFWSF6Heuristic<GroundStateModel, BaseHeuristicT, NoveltyIndexerT>;
 	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, std::shared_ptr<NodeT>, NodeCompareT>;
 	using EngineT = std::unique_ptr<RawEngineT>;
 	
 // 	auto base_heuristic = std::unique_ptr<gecode::SmartRPG>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
-	std::unique_ptr<gecode::SmartRPG> nullheuristic;
+// 	std::unique_ptr<gecode::SmartRPG> nullheuristic;
 	
 	auto heuristic = std::unique_ptr<HeuristicEnsembleT>(
                             new HeuristicEnsembleT(model, max_width, feature_configuration,
-                                                   base_novelty_evaluator, std::move(nullheuristic), std::move(offending))
+                                                   base_novelty_evaluator, std::move(offending))
 	);
 	
 	auto engine = EngineT(new RawEngineT(model, *heuristic));

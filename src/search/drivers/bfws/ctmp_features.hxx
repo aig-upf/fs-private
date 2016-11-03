@@ -102,9 +102,8 @@ public:
 	CustomHeuristic(const fs::Formula* goal);
 	~CustomHeuristic() = default;
 	CustomHeuristic(const CustomHeuristic&) = default;
-	
 
-	long evaluate(const State& s) const;
+	unsigned evaluate(const State& s) const;
 
 protected:
 	// The two following vectors are sync'd, i.e. _all_objects_conf[i] is the config of object _all_objects_ids[i]

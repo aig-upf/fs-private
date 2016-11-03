@@ -200,9 +200,9 @@ CustomHeuristic::CustomHeuristic(const fs::Formula* goal)
 
 //! h(s)= number of goal objects that still need to be picked up and moved in s  * 2
 //! -1; if goal object being held
-long
+unsigned
 CustomHeuristic::evaluate(const State& s) const {
-	long h = 0;
+	unsigned h = 0;
 	
 	ObjectIdx held_object = s.getValue(_holding_var); // The object which is currently being held
 	
