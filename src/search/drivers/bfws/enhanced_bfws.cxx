@@ -354,7 +354,7 @@ CTMPStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std:
 		varnames[k] = k;
 		values[k] = _featureMap.feature(k).evaluate( _adapted );
 		
-		LPT_INFO("novelty-evaluations", "\t" << _featureMap.feature(k) << ": " << values[k]);
+// 		LPT_INFO("novelty-evaluations", "\t" << _featureMap.feature(k) << ": " << values[k]);
 	}
 	
 // 	LPT_DEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));
@@ -1030,7 +1030,9 @@ EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	LPT_INFO("cout", "PREPROCESSING: Starting IW(2) search...");
 	bool solved = iw_algorithm.search(simplified.getInitialState(), plan);
 	
-	LPT_INFO("cout", "PREPROCESSING: Finished after expanding " << stats.expanded() << " nodes");
+	LPT_INFO("cout", "PREPROCESSING: Finished");
+	LPT_INFO("cout", "PREPROCESSING: Node expansions: " << stats.expanded());
+	LPT_INFO("cout", "PREPROCESSING: Node generations: " << stats.generated());
 	
 	if (!solved) throw std::runtime_error("PREPROCESSING - IW(2) preprocessing did not yield a solution for all subgoals");
 	
