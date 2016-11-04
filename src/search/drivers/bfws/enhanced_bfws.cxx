@@ -111,8 +111,10 @@ public:
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the particular open and closed list objects
-	AllSolutionsBreadthFirstSearch(const StateModel& model, OpenListT&& open, const std::vector<const fs::AtomicFormula*>& goal, const std::vector<const fs::AtomicFormula*>& state_constraints) :
-		Base(model, std::move(open), ClosedListT()), _goal_atoms(goal), _sc_atoms(state_constraints),
+	AllSolutionsBreadthFirstSearch(const StateModel& model, OpenListT&& open, const std::vector<const fs::AtomicFormula*>& goal, const std::vector<const fs::AtomicFormula*>& state_constraints, bool all_solutions) :
+		Base(model, std::move(open), ClosedListT()),
+		_all_solutions(all_solutions),
+		_goal_atoms(goal), _sc_atoms(state_constraints),
 		_optimal_paths(_goal_atoms.size(), nullptr)
 	{}
 	virtual ~AllSolutionsBreadthFirstSearch() = default;
@@ -132,7 +134,10 @@ public:
 			NodePT current = this->_open.get_next( );
 			this->notify(NodeOpenEvent(*current));
 			
-			process_node(current);
+			bool goals_reached = process_node(current);
+			if (!_all_solutions && goals_reached) {
+				return true;
+			}
 
 			// close the node before the actual expansion so that children which are identical
 			// to 'current' get properly discarded
@@ -159,6 +164,10 @@ public:
 	}
 	
 protected:
+	//! Whether we want to compute IW up until the end or only until paths to all subgoals
+	//! are found _for the first time_
+	bool _all_solutions;
+	
 	//! An index of the nodes with are in the open list at any moment, for faster access
 // 	using node_unordered_set = std::unordered_set<NodePT, node_hash<NodePT>, node_equal_to<NodePT>>;
 // 	node_unordered_set _solutions;
@@ -181,22 +190,29 @@ protected:
 		}
 	}
 	
-	void process_node(const NodePT& node) {
+	bool process_node(const NodePT& node) {
 		const StateT& state = node->state;
+		unsigned num_satisfied = 0;
 		
 		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
 			const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
+			NodePT& optimal = _optimal_paths[goal_atom_idx];
+			
 			if (atom->interpret(state)) { // The state satisfies goal atom with index 'i'
-				
-				const NodePT& optimal = _optimal_paths[goal_atom_idx];
 				if (!optimal) {
 					LPT_INFO("cout", "PREPROCESSING: Goal atom '" << *atom << "' reached for the first time");
 				}
 				if (!optimal || optimal->num_violations() > node->num_violations()) {
-					_optimal_paths[goal_atom_idx] = node;
+					optimal = node;
 				}
 			}
+			
+			if (optimal) {
+				++num_satisfied;
+			}
 		}
+		
+		return num_satisfied == _goal_atoms.size();
 	}
 	
 	//! Returns true iff all goal atoms have been reached
@@ -252,6 +268,7 @@ public:
 		VariableIdx v_traja = info.getVariableId("traj(rob)");
 		VariableIdx v_holding = info.getVariableId("holding()");
 		ObjectIdx no_object_id = info.getObjectId("no_object");
+		_unused(no_object_id);
 		
 		// First, precompute which is the goal configuration of every object, if any
 		std::unordered_map<ObjectIdx, ObjectIdx> object_goal;
@@ -994,11 +1011,12 @@ EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	using OpenListT = aptk::StlUnsortedFIFO<PreprocessingNodeT, EvaluatorT>;
 	using BaseAlgoT = lapkt::AllSolutionsBreadthFirstSearch<PreprocessingNodeT, GroundStateModel, OpenListT>;
 	
+	bool use_all_solutions = config.getOption<std::string>("ebfws.iw") == "all";
 	
 	EvaluatorPT evaluator = std::shared_ptr<EvaluatorT>(new EvaluatorT(model, k, feature_configuration));
 // 	EvaluatorPT evaluator = std::make_shared<EvaluatorT>(model, k, feature_configuration);
 	
-	BaseAlgoT iw_algorithm(model, OpenListT(evaluator), goal_conjuncts, sc_conjuncts);
+	BaseAlgoT iw_algorithm(model, OpenListT(evaluator), goal_conjuncts, sc_conjuncts, use_all_solutions);
 // 		lapkt::events::subscribe(*_algorithm, _handlers);
 	
 	
