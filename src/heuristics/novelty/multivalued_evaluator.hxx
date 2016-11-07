@@ -11,35 +11,29 @@ namespace fs0 {
 
 using FeatureValuation = std::vector<int>;
 
-
+//! A tuple of feature valuations of the form
+//! X_1 = x_1, X_2 = x_2, ..., X_k = x_k,
+//! Where X_i is a feature identifier, and x_i a certain value taken by that feature on some state,
+//! is represented by a vector {X_1, x_1, X_2, x_2...} where identifiers and values are contiguous.
 class ValuesTuple {
 public:
-	using VariableIndex = unsigned;
+	using VariableIndex = int;
 	using ValueIndex = int;
-	using Entry = std::pair<VariableIndex, ValueIndex>;
-	using Container = std::vector<Entry>;
-
+	using Container = std::vector<int>;
 
 	ValuesTuple() = default;
 	~ValuesTuple() = default;
-	ValuesTuple( std::size_t sz, bool preallocate = true );
+	ValuesTuple( std::size_t sz);
 	ValuesTuple(const ValuesTuple&) = default;
 	ValuesTuple(ValuesTuple&&) = default;
-	ValuesTuple& operator=(const ValuesTuple& other) = default;
-	ValuesTuple& operator=(ValuesTuple&& other) = default;
+	ValuesTuple& operator=(const ValuesTuple&) = default;
+	ValuesTuple& operator=(ValuesTuple&&) = default;
 
 
-	void add( VariableIndex x, ValueIndex v ) {
-		elements.push_back( std::make_pair(x,v) );
+	void add(VariableIndex x, ValueIndex v) {
+		elements.push_back(x);
+		elements.push_back(v);
 	}
-
-	void set( unsigned i, VariableIndex x, ValueIndex v ) {
-		elements[i] = std::make_pair(x,v);
-	}
-
-// 	void finish() {
-// 		std::sort( elements.begin(), elements.end() );
-// 	}
 
 	//! Comparison operators
 	inline bool operator==( const ValuesTuple& t ) const { return elements == t.elements; }
@@ -49,26 +43,28 @@ public:
 	inline bool operator<=( const ValuesTuple& t ) const { return !(operator>(t)); }
 	inline bool operator>=( const ValuesTuple& t ) const { return !(operator<(t)); }
 
-	Container::iterator
-	begin() { return elements.begin(); }
 
-	Container::iterator
-	end() { return elements.end(); }
-
-	Container::const_iterator
-	begin() const { return elements.begin(); }
-
-	Container::const_iterator
-	end() const { return elements.end(); }
-
-	friend std::ostream& operator<<( std::ostream& stream, const ValuesTuple& t );
+	friend std::ostream& operator<<( std::ostream& os, const ValuesTuple& t ) { return t.print(os); }
+	std::ostream& print(std::ostream& os) const;
 
 	struct Hasher {
 		std::size_t operator()(const ValuesTuple& tuple) const;
 	};
+	
+	//! Helper mostly for debugging purposes
+	bool _check_ordered() const {
+		std::size_t size = elements.size();
+		assert(size % 2 == 0);
+		
+		if (size <= 2)  return true;
+		
+		for (unsigned i = 2; i < elements.size(); i += 2) {
+			if (elements[i-2] > elements[i]) return false;
+		}
+		return true;
+	}	
 
 protected:
-
 	Container elements;
 };
 
@@ -114,21 +110,8 @@ protected:
 	
 	NoveltyTables _tables;
 	
-	
 	//! A micro-optimization to deal faster with the analysis of width-1 tuples
-	unsigned evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<bool>& novel) {
-		unsigned state_novelty = current.size() + 1;
-		
-		for (unsigned i = 0; i < current.size(); ++i) {
-			if (!novel[i]) continue; // Surely the value won't be new
-			
-			auto res = _width_1_tuples.insert(std::make_pair(i, current[i]));
-			if (!res.second) continue; // This tuple was already accounted for
-			
-			state_novelty = 1; // Otherwise, the value must be new and hence the novelty of the state 1
-		}
-		return state_novelty;
-	}
+	unsigned evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<bool>& novel);
 };
 
 //! An iterator through all tuples of a certain size that can be derived from a certain vector of values.
@@ -152,34 +135,36 @@ public:
 
 	//! Create an iterator through tuples of size `size` of the given feature valuation.
 	TupleIterator(unsigned size, const FeatureValuation& current, const std::vector<bool>& novel) :
-		_current(current), _novel(novel),  _size(size), _indexes(current.size())
+		_current(current), _novel(novel),  _size(size), _indexes(current.size(), false), _ended(false)
 	{
 		assert(_size > 0);
 		assert(current.size() >= _size);
 		assert(novel.size() == current.size());
-		reset();
+		std::fill(_indexes.begin(), _indexes.begin() + _size, true);
+		if (!at_least_one_index_novel()) novel_prev_permutation(); // Seek the first permutation containing at least one novel index.
 	}
 
 	~TupleIterator() = default;
 
-	void reset() {
-		std::fill(_indexes.begin(), _indexes.begin() + _size, true);
-	}
 
-
-	bool next(ValuesTuple& tuple) {
+	ValuesTuple next() {
+		assert(!ended());
 		// Check http://stackoverflow.com/a/9430993
-		unsigned var = 0, k = 0; 
+		unsigned var = 0;
+		ValuesTuple tuple(_size);
 		for (; var < _indexes.size(); ++var) {
 			if (_indexes[var]) {
 				// std::cout << "(" << var << ", " << _current[i] << ") ";
-				tuple.set(k, var, _current[var]);
-				++k;
+				tuple.add(var, _current[var]);
 			}
 		}
-		return novel_prev_permutation();
+		_ended = novel_prev_permutation();
+		return tuple;
 	}
-
+	
+	bool ended() const {
+		return _ended;
+	}
 
 protected:
 	//! The current valuation from which we want to derive size-k tuples
@@ -191,16 +176,24 @@ protected:
 	std::size_t _size;
 	
 	std::vector<bool> _indexes;
+	
+	//! Whether the iteration has ended
+	bool _ended;
 
+	inline bool at_least_one_index_novel() {
+		for (unsigned i = 0; i < _indexes.size(); ++i) {
+			if (_novel[i] && _indexes[i]) return true;
+		}
+		return false;
+	}
+	
 	
 	//! Returns false only if there is no previous index permutation such that at least
 	//! one of the indexes is novel; otherwise returns true and modifies _indexes with
 	//! that permutation
 	bool novel_prev_permutation() {
 		while (std::prev_permutation(_indexes.begin(), _indexes.end())) {
-			for (unsigned i = 0; i < _current.size(); ++i) {
-				if (_novel[i] && _indexes[i]) return true;
-			}
+			if (at_least_one_index_novel()) return true;
 		}
 		return false;
 	}
