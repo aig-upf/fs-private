@@ -10,6 +10,9 @@ namespace fs0 {
 //! domain-specific External classes.
 class ExternalI  {
 public:
+	
+	virtual ~ExternalI() = default;
+
     //! By default, we register no component
     virtual void registerComponents() const {}
 
