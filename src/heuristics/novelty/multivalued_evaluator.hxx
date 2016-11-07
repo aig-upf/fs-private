@@ -158,7 +158,7 @@ public:
 				tuple.add(var, _current[var]);
 			}
 		}
-		_ended = novel_prev_permutation();
+		_ended = !novel_prev_permutation();
 		return tuple;
 	}
 	
