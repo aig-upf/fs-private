@@ -181,6 +181,7 @@ protected:
 	bool _ended;
 
 	inline bool at_least_one_index_novel() {
+		return true;
 		for (unsigned i = 0; i < _indexes.size(); ++i) {
 			if (_novel[i] && _indexes[i]) return true;
 		}

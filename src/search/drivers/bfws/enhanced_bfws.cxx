@@ -68,7 +68,7 @@ public:
 		//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const IWPreprocessingNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const { 
-		os << "{@ = " << this << ", s = " << state << ", parent = " << parent << "}";
+		os << "{@ = " << this << ", s = " << state << ", features= " << fs0::print::container(feature_valuation) << ", parent = " << parent << "}";
 		return os;
 	}
 
