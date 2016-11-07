@@ -34,6 +34,8 @@ public:
 	using PT = std::shared_ptr<IWPreprocessingNode<StateT, ActionT>>;
 	StateT state;
 	
+	FeatureValuation feature_valuation;
+	
 	typename ActionT::IdType action;
 
 	PT parent;
@@ -332,57 +334,52 @@ public:
 namespace fs0 { namespace drivers {
 
 
-CTMPStateAdapter::CTMPStateAdapter( const State& s, const CTMPNoveltyEvaluator& featureMap )
-	: _adapted( s ), _featureMap( featureMap)
-{}
 	
 
-void 
-CTMPStateAdapter::get_valuation(std::vector<aptk::VariableIndex>& varnames, std::vector<aptk::ValueIndex>& values) const {
+std::vector<ValuesTuple::ValueIndex>
+CTMPNoveltyEvaluator::compute_valuation(const State& state) const {
+// 	LPT_INFO("novelty-evaluations", "Evaluating state " << state);
+	std::vector<ValuesTuple::ValueIndex> values;
 	
-// 	LPT_INFO("novelty-evaluations", "Evaluating state " << _adapted);
-	
-	if ( varnames.size() != _featureMap.numFeatures() ) {
-		varnames.resize( _featureMap.numFeatures() );
+	values.reserve(_features.size());
+	for (const auto& feature:_features) {
+		values.push_back(feature->evaluate(state));
+		// 		LPT_INFO("novelty-evaluations", "\t" << _featureMap.feature(k) << ": " << values[k]);
 	}
 
-	if ( values.size() != _featureMap.numFeatures() ) {
-		values.resize( _featureMap.numFeatures() );
-	}
-
-	for ( unsigned k = 0; k < _featureMap.numFeatures(); k++ ) {
-		varnames[k] = k;
-		values[k] = _featureMap.feature(k).evaluate( _adapted );
-		
-// 		LPT_INFO("novelty-evaluations", "\t" << _featureMap.feature(k) << ": " << values[k]);
-	}
-	
+	return values;
 // 	LPT_DEBUG("heuristic", "Feature evaluation: " << std::endl << print::feature_set(varnames, values));
 }
 
 
 
-CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration, bool check_overlaps, bool placeable, bool graspable)
-	: Base()
-{
-	set_max_novelty(novelty_bound);
-	selectFeatures(problem, feature_configuration, check_overlaps, placeable, graspable);
-}
+CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration, bool check_overlaps, bool placeable, bool graspable) :
+	Base(novelty_bound),
+	_features(selectFeatures(problem, feature_configuration, check_overlaps, placeable, graspable))
+{}
 
 CTMPNoveltyEvaluator::CTMPNoveltyEvaluator(const CTMPNoveltyEvaluator& other)
-	: Base(other), _features() {
-	for (unsigned i = 0; i < other._features.size(); ++i) {
-		_features.push_back(std::unique_ptr<NoveltyFeature>(other._features[i]->clone()));
+	: Base(other), _features(clone_features(other._features))
+{}
+
+CTMPNoveltyEvaluator::FeatureSet
+CTMPNoveltyEvaluator::clone_features(const FeatureSet& features) {
+	FeatureSet cloned;
+	for (unsigned i = 0; i < features.size(); ++i) {
+		cloned.push_back(std::unique_ptr<NoveltyFeature>(features[i]->clone()));
 	}
+	return cloned;
 }
 
-void
+CTMPNoveltyEvaluator::FeatureSet
 CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& config, bool check_overlaps, bool placeable, bool graspable) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
+	FeatureSet features;
+	
 	// Add all state variables
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-		_features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
+		features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
 	}
 	
 	// Add now some domain-dependent features:
@@ -412,20 +409,21 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 		});
 		
 		LPT_INFO("cout", "Adding Term-based Novelty feature: " << *feature_term);
-		_features.push_back(std::unique_ptr<ArbitraryTermFeature>(new ArbitraryTermFeature(feature_term)));
+		features.push_back(std::unique_ptr<ArbitraryTermFeature>(new ArbitraryTermFeature(feature_term)));
 	}
 	*/
 	
 	if (placeable)
-		_features.push_back(std::unique_ptr<PlaceableFeature>(new PlaceableFeature(check_overlaps, problem.getGoalConditions())));
+		features.push_back(std::unique_ptr<PlaceableFeature>(new PlaceableFeature(check_overlaps, problem.getGoalConditions())));
 	
 	if (graspable)
-		_features.push_back(std::unique_ptr<GraspableFeature>(new GraspableFeature));
+		features.push_back(std::unique_ptr<GraspableFeature>(new GraspableFeature));
 	
 	
-// 	_features.push_back(std::unique_ptr<GlobalRobotConfFeature>(new GlobalRobotConfFeature));
+// 	features.push_back(std::unique_ptr<GlobalRobotConfFeature>(new GlobalRobotConfFeature));
 	
-	LPT_INFO("cout", "Number of features from which state novelty will be computed: " << numFeatures());
+	LPT_INFO("cout", "Number of features from which state novelty will be computed: " << features.size());
+	return features;
 }
 
 
@@ -435,6 +433,8 @@ public:
 	
 	State state;
 	GroundAction::IdType action;
+	
+	FeatureValuation feature_valuation;
 	
 	ptr_t parent;
 
@@ -474,7 +474,11 @@ public:
 
 	//! Constructor with move of the state (cheaper)
 	BFWSF6Node(State&& _state, GroundAction::IdType action_, ptr_t parent_) :
-		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
+		state(std::move(_state)),
+		action(action_),
+		feature_valuation(),
+		parent(parent_),
+		g(parent ? parent->g+1 : 0),
 		novelty(std::numeric_limits<unsigned>::max()),
 		unachieved(std::numeric_limits<unsigned>::max()),
 		_num_offending(std::numeric_limits<unsigned>::max()),
@@ -530,7 +534,7 @@ public:
 		unachieved = ensemble.get_unachieved(this->state);
 		_num_offending = ensemble.compute_offending(this->state);
 		_h = ensemble.compute_heuristic(state);
-		novelty = ensemble.novelty(state, unachieved, _h, _num_offending);
+		novelty = ensemble.novelty(*this, unachieved, _h, _num_offending);
 		if (novelty > ensemble.max_novelty()) {
 			novelty = std::numeric_limits<unsigned>::max();
 		}
@@ -824,7 +828,8 @@ public:
 	}
 	
 	//! Compute the novelty of the state wrt all the states with the same heuristic value.
-	unsigned novelty(const State& state, unsigned unachieved, unsigned heuristic, unsigned offending) {
+	template <typename NodeT>
+	unsigned novelty(NodeT& node, unsigned unachieved, unsigned heuristic, unsigned offending) {
 		auto ind = _indexer(unachieved, heuristic, offending);
 #ifdef DEBUG
 		// Let's make sure that either it's the first time we see this index, or, if was already there, 
@@ -842,7 +847,11 @@ public:
 			auto inserted = _ctmp_novelty_evaluators.insert(std::make_pair(ind, _base_evaluator));
 			it = inserted.first;
 		}
-		return it->second.evaluate(state);
+		
+		CTMPNoveltyEvaluator& evaluator = it->second;
+		
+		node.feature_valuation = evaluator.compute_valuation(node.state);
+		return evaluator.evaluate(node);
 	}
 	
 	//! For the problem at hand, 'unachieved' will typically range 0-100, 'offending': 0-100, heuristic: 0-200
@@ -1006,15 +1015,16 @@ EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	
 	using IWDriver = IteratedWidthDriver<GroundStateModel>;
 	using PreprocessingNodeT = IWPreprocessingNode<State, ActionT>;
-	using EvaluatorT = SingleNoveltyComponent<GroundStateModel, PreprocessingNodeT, CTMPNoveltyEvaluator>;
-	using EvaluatorPT = std::shared_ptr<EvaluatorT>;
-	using OpenListT = aptk::StlUnsortedFIFO<PreprocessingNodeT, EvaluatorT>;
+	using AcceptorT = CTMPOpenListAcceptor<GroundStateModel, PreprocessingNodeT>;
+	using AcceptorPT = std::shared_ptr<AcceptorT>;
+	using OpenListT = aptk::StlUnsortedFIFO<PreprocessingNodeT, AcceptorT>;
 	using BaseAlgoT = lapkt::AllSolutionsBreadthFirstSearch<PreprocessingNodeT, GroundStateModel, OpenListT>;
 	
 	bool use_all_solutions = config.getOption<std::string>("ebfws.iw") == "all";
 	
-	EvaluatorPT evaluator = std::shared_ptr<EvaluatorT>(new EvaluatorT(model, k, feature_configuration));
-// 	EvaluatorPT evaluator = std::make_shared<EvaluatorT>(model, k, feature_configuration);
+	AcceptorPT evaluator = std::shared_ptr<AcceptorT>(new AcceptorT(model, k, feature_configuration));
+// 	AcceptorPT evaluator = std::make_shared<AcceptorT>(model, k, feature_configuration);
+	
 	
 	BaseAlgoT iw_algorithm(model, OpenListT(evaluator), goal_conjuncts, sc_conjuncts, use_all_solutions);
 // 		lapkt::events::subscribe(*_algorithm, _handlers);
