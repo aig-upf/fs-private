@@ -105,9 +105,9 @@ public:
 	//! A helper to interpret a vector of terms
 	template <typename T>
 	static ObjectIdxVector interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding) {
-		ObjectIdxVector interpreted;
-		for (const Term* subterm:subterms) {
-			interpreted.push_back(subterm->interpret(assignment, binding));
+		ObjectIdxVector interpreted(subterms.size());
+		for (unsigned i = 0, sz = subterms.size(); i < sz; ++i) {
+			interpreted[i] = subterms[i]->interpret(assignment, binding);
 		}
 		return interpreted;
 	}
