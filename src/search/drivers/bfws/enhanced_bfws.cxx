@@ -40,7 +40,7 @@ public:
 
 	PT parent;
 	
-	std::set<unsigned> _violated_state_constraint_atoms;
+// 	std::set<unsigned> _violated_state_constraint_atoms;
 	
 	
 	IWPreprocessingNode() = delete;
@@ -52,15 +52,16 @@ public:
 	
 	//! Constructor with full copying of the state (expensive)
 	IWPreprocessingNode( const StateT& s )
-		: state( s ), action( ActionT::invalid_action_id ), parent( nullptr ), _violated_state_constraint_atoms()
+		: state( s ), action( ActionT::invalid_action_id ), parent( nullptr )
+// 		, _violated_state_constraint_atoms()
 	{}
 
 	//! Constructor with move of the state (cheaper)
 	IWPreprocessingNode( StateT&& _state, typename ActionT::IdType _action, PT& _parent ) :
 		state(std::move(_state)),
 		action(_action),
-		parent(_parent),
-		_violated_state_constraint_atoms(_parent->_violated_state_constraint_atoms)
+		parent(_parent)
+// 		_violated_state_constraint_atoms(_parent->_violated_state_constraint_atoms)
 	{}
 
 	bool has_parent() const { return parent != nullptr; }
@@ -77,13 +78,13 @@ public:
 	std::size_t hash() const { return state.hash(); }
 	
 	
-	void state_constraint_violation(unsigned sc_atom_idx) {
-		_violated_state_constraint_atoms.insert(sc_atom_idx);
-	}
+// 	void state_constraint_violation(unsigned sc_atom_idx) {
+// 		_violated_state_constraint_atoms.insert(sc_atom_idx);
+// 	}
 	
-	std::size_t num_violations() {
-		return _violated_state_constraint_atoms.size();
-	}
+// 	std::size_t num_violations() {
+// 		return _violated_state_constraint_atoms.size();
+// 	}
 };
 
 
@@ -138,7 +139,7 @@ public:
 			
 			bool goals_reached = process_node(current);
 			if (!_all_solutions && goals_reached) {
-				return true;
+				break;
 			}
 
 			// close the node before the actual expansion so that children which are identical
@@ -151,7 +152,7 @@ public:
 				StateT s_a = this->_model.next( current->state, a );
 				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current );
 				
-				progress_node(successor);
+// 				progress_node(successor);
 				
 				if (this->_closed.check(successor)) continue; // The node has already been closed
 				
@@ -181,16 +182,16 @@ protected:
 	//! that reaches the goal atom 'i'.
 	std::vector<NodePT> _optimal_paths;
 	
-	void progress_node(NodePT& node) {
-		const StateT& state = node->state;
-		for (unsigned sc_atom_idx = 0; sc_atom_idx < _sc_atoms.size(); ++sc_atom_idx) {
-			const fs::AtomicFormula* atom = _sc_atoms[sc_atom_idx];
-			if (!atom->interpret(state)) {
-				// The problem state violates the state constraint atom 'atom'
-				node->state_constraint_violation(sc_atom_idx);
-			}
-		}
-	}
+// 	void progress_node(NodePT& node) {
+// 		const StateT& state = node->state;
+// 		for (unsigned sc_atom_idx = 0; sc_atom_idx < _sc_atoms.size(); ++sc_atom_idx) {
+// 			const fs::AtomicFormula* atom = _sc_atoms[sc_atom_idx];
+// 			if (!atom->interpret(state)) {
+// 				// The problem state violates the state constraint atom 'atom'
+// 				node->state_constraint_violation(sc_atom_idx);
+// 			}
+// 		}
+// 	}
 	
 	bool process_node(const NodePT& node) {
 		const StateT& state = node->state;
@@ -200,18 +201,22 @@ protected:
 			const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
 			NodePT& optimal = _optimal_paths[goal_atom_idx];
 			
+			if (optimal) continue; // We are glad with the first path we found
+			
 			if (atom->interpret(state)) { // The state satisfies goal atom with index 'i'
-				if (!optimal) {
-					LPT_INFO("cout", "PREPROCESSING: Goal atom '" << *atom << "' reached for the first time");
-				}
-				if (!optimal || optimal->num_violations() > node->num_violations()) {
-					optimal = node;
-				}
+				optimal = node;
+				++num_satisfied;
+// 				if (!optimal) {
+// 					LPT_INFO("cout", "PREPROCESSING: Goal atom '" << *atom << "' reached for the first time");
+// 				}
+// 				if (!optimal || optimal->num_violations() > node->num_violations()) {
+// 					optimal = node;
+// 				}
 			}
 			
-			if (optimal) {
-				++num_satisfied;
-			}
+// 			if (optimal) {
+// 				++num_satisfied;
+// 			}
 		}
 		
 		return num_satisfied == _goal_atoms.size();
