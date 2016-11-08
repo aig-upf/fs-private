@@ -3,9 +3,9 @@
 
 #include <vector>
 #include <unordered_set>
+#include <bits/stl_numeric.h>
 
 #include <boost/functional/hash.hpp>
-
 
 namespace fs0 {
 
@@ -69,13 +69,6 @@ protected:
 };
 
 class MultivaluedNoveltyEvaluator {
-protected:
-	//! A tuple of width 1 simply contains the identified of the variable and the value
-	using Width1Tuple = std::pair<unsigned, int>;
-	
-	using NoveltyTable = std::unordered_set<ValuesTuple, ValuesTuple::Hasher>;
-	using NoveltyTables = std::vector<NoveltyTable>;
-
 public:
 	
 	MultivaluedNoveltyEvaluator(unsigned max_novelty) :
@@ -88,15 +81,20 @@ public:
 	unsigned max_novelty() const { return _max_novelty; }
 
 	//!
-	unsigned evaluate(const FeatureValuation& current, const std::vector<bool>& novel);
+	unsigned evaluate(const FeatureValuation& current, const std::vector<unsigned>& novel);
 	
 	//! Compute a vector that indicates whether each element in the current valuation is novel wrt parent or not.
-	static std::vector<bool> derive_novel(const FeatureValuation& current, const FeatureValuation* parent) {
-		if (!parent) return std::vector<bool>(current.size(), true);
-		std::vector<bool> novel(current.size(), false);
+	static std::vector<unsigned> derive_novel(const FeatureValuation& current, const FeatureValuation* parent) {
+		if (!parent) { // Base case
+			std::vector<unsigned> all(current.size());
+			std::iota(all.begin(), all.end(), 0);
+			return all;
+		}
+		
+		std::vector<unsigned> novel;
 		for (unsigned i = 0; i < current.size(); ++i) {
 			if (current[i] != (*parent)[i]) {
-				novel[i] = true;
+				novel.push_back(i);
 			}
 		}
 		return novel;
@@ -106,12 +104,23 @@ protected:
 	//! Maximum novelty value to be computed
 	unsigned _max_novelty;
 	
+	//! A tuple of width 1 simply contains the identified of the variable and the value
+	using Width1Tuple = std::pair<unsigned, int>;
+	using Width2Tuple = std::tuple<int, int, int, int>;
+	
+	struct Width2TupleHasher { std::size_t operator()(const Width2Tuple& tuple) const; };
+	
+	using NoveltyTable = std::unordered_set<ValuesTuple, ValuesTuple::Hasher>;
+	using NoveltyTables = std::vector<NoveltyTable>;
+	
 	std::unordered_set<Width1Tuple, boost::hash<Width1Tuple>> _width_1_tuples;
+	std::unordered_set<Width2Tuple, Width2TupleHasher> _width_2_tuples;
 	
 	NoveltyTables _tables;
 	
 	//! A micro-optimization to deal faster with the analysis of width-1 tuples
-	unsigned evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<bool>& novel);
+	unsigned evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<unsigned>& novel);
+	unsigned evaluate_width_2_tuples(unsigned state_novelty, const FeatureValuation& current, const std::vector<unsigned>& novel);
 };
 
 //! An iterator through all tuples of a certain size that can be derived from a certain vector of values.

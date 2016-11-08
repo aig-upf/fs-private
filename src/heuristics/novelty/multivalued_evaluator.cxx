@@ -27,42 +27,76 @@ std::size_t ValuesTuple::Hasher::operator()(const ValuesTuple& tuple) const {
 	return boost::hash_range(tuple.elements.begin(), tuple.elements.end());
 }
 
+std::size_t MultivaluedNoveltyEvaluator::Width2TupleHasher::operator()(const Width2Tuple& tuple) const {
+	assert(std::get<0>(tuple) < std::get<2>(tuple));
+	std::size_t seed = 0;
+	boost::hash_combine(seed, std::get<0>(tuple));
+	boost::hash_combine(seed, std::get<1>(tuple));
+	boost::hash_combine(seed, std::get<2>(tuple));
+	boost::hash_combine(seed, std::get<3>(tuple));
+	return seed;
+}
+
 
 unsigned
-MultivaluedNoveltyEvaluator::evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<bool>& novel) {
+MultivaluedNoveltyEvaluator::evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<unsigned>& novel) {
 	unsigned state_novelty = current.size() + 1;
 	
-	for (unsigned i = 0; i < current.size(); ++i) {
-		if (!novel[i]) continue; // Surely the value won't be new
-		
-		auto res = _width_1_tuples.insert(std::make_pair(i, current[i]));
+	for (unsigned i = 0; i < novel.size(); ++i) {
+		auto res = _width_1_tuples.insert(std::make_pair(i, current[novel[i]]));
 		if (!res.second) continue; // This tuple was already accounted for
 		
 		state_novelty = 1; // Otherwise, the value must be new and hence the novelty of the state 1
 	}
 	return state_novelty;
 }
-	
+
 unsigned
-MultivaluedNoveltyEvaluator::evaluate(const FeatureValuation& current, const std::vector<bool>& novel) {
-	assert(!current.empty());
-	assert(current.size() == novel.size());
-
-	unsigned state_novelty = evaluate_width_1_tuples(current, novel);
-
-	for (unsigned min_novelty = 2; min_novelty <= _max_novelty; ++min_novelty) {
-
-		bool updated_tables = false;
-		TupleIterator it(min_novelty, current, novel);
+MultivaluedNoveltyEvaluator::evaluate_width_2_tuples(unsigned state_novelty, const FeatureValuation& current, const std::vector<unsigned>& novel) {
+	
+	for (unsigned i = 0; i < novel.size(); ++i) {
+		unsigned novel_idx = novel[i];
+		int novel_val = current[novel_idx];
 		
-		while (!it.ended()) {
-			ValuesTuple tuple = it.next();
-			auto result = _tables[min_novelty].insert(tuple);
-			updated_tables |= result.second;
+		for (unsigned j = 0; j < novel_idx; ++j) {
+			auto res = _width_2_tuples.insert(std::make_tuple(j, current[j], novel_idx, novel_val));
+			if (res.second && state_novelty > 2) state_novelty = 2; // The tuple was new, hence the novelty is not more than 2
 		}
 		
-		if (updated_tables && min_novelty < state_novelty) {
-			state_novelty = min_novelty;
+		for (unsigned j = novel_idx+1; j < current.size(); ++j) {
+			auto res = _width_2_tuples.insert(std::make_tuple(novel_idx, novel_val, j, current[j]));
+			if (res.second && state_novelty > 2) state_novelty = 2; // The tuple was new, hence the novelty is not more than 2
+		}
+	}
+
+	return state_novelty;
+}
+
+unsigned
+MultivaluedNoveltyEvaluator::evaluate(const FeatureValuation& current, const std::vector<unsigned>& novel) {
+	assert(!current.empty());
+
+	unsigned state_novelty = evaluate_width_1_tuples(current, novel);
+	state_novelty = evaluate_width_2_tuples(state_novelty, current, novel);
+
+	unsigned min_novelty = 3;
+	if (min_novelty <= _max_novelty) {
+		std::vector<bool> novel_idx(current.size(), false);
+		for (unsigned idx:novel) { novel_idx[idx] = true;}
+
+		for (; min_novelty <= _max_novelty; ++min_novelty) {
+
+			bool updated_tables = false;
+			TupleIterator it(min_novelty, current, novel_idx);
+			
+			while (!it.ended()) {
+				auto result = _tables[min_novelty].insert(it.next());
+				updated_tables |= result.second;
+			}
+			
+			if (updated_tables && min_novelty < state_novelty) {
+				state_novelty = min_novelty;
+			}
 		}
 	}
 

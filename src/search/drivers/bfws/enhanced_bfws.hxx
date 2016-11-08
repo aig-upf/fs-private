@@ -70,7 +70,7 @@ public:
 		
 		const FeatureValuation* parent_valuation = (node.parent ? &(node.parent->feature_valuation) : nullptr);
 		
-		std::vector<bool> novel = derive_novel(node.feature_valuation, parent_valuation);
+		std::vector<unsigned> novel = derive_novel(node.feature_valuation, parent_valuation);
 		return evaluate(valuation, novel);
 	}
 	
