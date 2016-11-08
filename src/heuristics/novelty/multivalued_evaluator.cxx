@@ -44,9 +44,7 @@ MultivaluedNoveltyEvaluator::evaluate_width_1_tuples(const FeatureValuation& cur
 	
 	for (unsigned i = 0; i < novel.size(); ++i) {
 		auto res = _width_1_tuples.insert(std::make_pair(i, current[novel[i]]));
-		if (!res.second) continue; // This tuple was already accounted for
-		
-		state_novelty = 1; // Otherwise, the value must be new and hence the novelty of the state 1
+		if (res.second) state_novelty = 1; // The tuple is new, hence the novelty of the state is 1
 	}
 	return state_novelty;
 }
@@ -77,26 +75,27 @@ MultivaluedNoveltyEvaluator::evaluate(const FeatureValuation& current, const std
 	assert(!current.empty());
 
 	unsigned state_novelty = evaluate_width_1_tuples(current, novel);
+	if (_max_novelty <= 1) return state_novelty;
+	
 	state_novelty = evaluate_width_2_tuples(state_novelty, current, novel);
+	if (_max_novelty <= 2) return state_novelty;
+	
+	
+	std::vector<bool> novel_idx(current.size(), false);
+	for (unsigned idx:novel) { novel_idx[idx] = true;}
 
-	unsigned min_novelty = 3;
-	if (min_novelty <= _max_novelty) {
-		std::vector<bool> novel_idx(current.size(), false);
-		for (unsigned idx:novel) { novel_idx[idx] = true;}
+	for (unsigned novelty = 3; novelty <= _max_novelty; ++novelty) {
 
-		for (; min_novelty <= _max_novelty; ++min_novelty) {
-
-			bool updated_tables = false;
-			TupleIterator it(min_novelty, current, novel_idx);
-			
-			while (!it.ended()) {
-				auto result = _tables[min_novelty].insert(it.next());
-				updated_tables |= result.second;
-			}
-			
-			if (updated_tables && min_novelty < state_novelty) {
-				state_novelty = min_novelty;
-			}
+		bool updated_tables = false;
+		TupleIterator it(novelty, current, novel_idx);
+		
+		while (!it.ended()) {
+			auto result = _tables[novelty].insert(it.next());
+			updated_tables |= result.second;
+		}
+		
+		if (updated_tables && novelty < state_novelty) {
+			state_novelty = novelty;
 		}
 	}
 

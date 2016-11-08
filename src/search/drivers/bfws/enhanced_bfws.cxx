@@ -1018,7 +1018,6 @@ EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	simplified.set_state_constraints(new fs::Tautology);
 	GroundStateModel model(simplified);
 	
-	using IWDriver = IteratedWidthDriver<GroundStateModel>;
 	using PreprocessingNodeT = IWPreprocessingNode<State, ActionT>;
 	using AcceptorT = CTMPOpenListAcceptor<GroundStateModel, PreprocessingNodeT>;
 	using AcceptorPT = std::shared_ptr<AcceptorT>;
