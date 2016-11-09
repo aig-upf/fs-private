@@ -7,7 +7,7 @@ from string import Template
 # some basic templates
 _base = dict(
     function_instantiation='{"${name}", [&info](const ObjectIdxVector& parameters)'
-                           '{ const External& external = dynamic_cast<const External&>(info.get_external());  return external.${accessor}(parameters); }}',
+                           '{ const External& external = static_cast<const External&>(info.get_external());  return external.${accessor}(parameters); }}',
 )
 
 
