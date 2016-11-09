@@ -3,8 +3,8 @@
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
 #include <problem.hxx>
-#include <applicability/applicability_manager.hxx>
 #include <applicability/formula_interpreter.hxx>
+#include <applicability/action_managers.hxx>
 #include <state.hxx>
 #include <iomanip>
 
@@ -13,13 +13,13 @@ namespace fs0 {
 
 
 bool Checker::check_correctness(const Problem& problem, const std::vector<GroundAction>& plan, const State& s0) {
-	ApplicabilityManager manager(problem.getStateConstraints());
+	NaiveApplicabilityManager manager(problem.getStateConstraints());
 	
 	// First we make sure that the whole plan is applicable
 	State state(s0);
 	for (const GroundAction& action:plan) {
 		if (!manager.isApplicable(state, action)) return false;
-		state.accumulate(manager.computeEffects(state, action)); // Accumulate the newly-produced atoms
+		state.accumulate(NaiveApplicabilityManager::computeEffects(state, action)); // Accumulate the newly-produced atoms
 	}
 	
 	// Now check that the resulting state is indeed a goal
@@ -51,7 +51,7 @@ std::vector<GroundAction> Checker::transform(const Problem& problem, const Actio
 
 
 void Checker::print_plan_execution(const Problem& problem, const std::vector<GroundAction>& plan, const State& s0) {
-	ApplicabilityManager manager(problem.getStateConstraints());
+	NaiveApplicabilityManager manager(problem.getStateConstraints());
 	
 	unsigned i = 0;
 	State state(s0);
@@ -67,7 +67,7 @@ void Checker::print_plan_execution(const Problem& problem, const std::vector<Gro
 		if (!manager.isApplicable(state, action)) {
 			std::cout << "ERROR! Action is NOT applicable on the previous state" << std::endl;
 		}
-		state.accumulate(manager.computeEffects(state, action)); // Accumulate the newly-produced atoms
+		state.accumulate(NaiveApplicabilityManager::computeEffects(state, action)); // Accumulate the newly-produced atoms
 		
 		std::cout << std::setw(3) << i + 1;
 		std::cout << ". " << state << std::endl;

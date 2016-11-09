@@ -4,7 +4,7 @@
 #include <actions/action_id.hxx>
 #include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <languages/fstrips/formulae.hxx>
-#include <applicability/applicability_manager.hxx>
+#include <applicability/action_managers.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -39,7 +39,7 @@ void LiftedActionIterator::Iterator::advance() {
 		// Else, we need to check whether the application of the action that results from the CSP solution violates any state constraint
 		// TODO - A better way to do this would be to integrate state constraints into the CSP
 		std::unique_ptr<const GroundAction> ground(_action->generate());
-		State next(_state, ApplicabilityManager::computeEffects(_state, *ground));
+		State next(_state, NaiveApplicabilityManager::computeEffects(_state, *ground));
 		if (_state_constraints->interpret(next)) { // The application of the action would violate the state constraints
 			return;
 		}

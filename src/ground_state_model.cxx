@@ -3,45 +3,44 @@
 #include <problem.hxx>
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
-#include <actions/ground_action_iterator.hxx>
 
 namespace fs0 {
 
+GroundStateModel::GroundStateModel(const Problem& problem) :
+	_task(problem),
+	_manager(problem.getGroundActions(), problem.getStateConstraints())
+{}
+
 State GroundStateModel::init() const {
 	// We need to make a copy so that we can return it as non-const.
-	// Ugly, but this way we make it fit the search engine interface without further changes,
-	// and this is only called once per search.
-	return State(task.getInitialState());
+	// This is only called once per search.
+	return State(_task.getInitialState());
 }
 
 bool GroundStateModel::goal(const State& state) const {
-	return task.getGoalSatManager().satisfied(state);
+	return _task.getGoalSatManager().satisfied(state);
 }
 
 bool GroundStateModel::is_applicable(const State& state, const ActionId& action) const {
-	return is_applicable(state, *(task.getGroundActions()[action]));
+	return is_applicable(state, *(_task.getGroundActions()[action]));
 }
 
 bool GroundStateModel::is_applicable(const State& state, const ActionType& action) const {
-	ApplicabilityManager manager(task.getStateConstraints());
-	return manager.isApplicable(state, action);
+	return _manager.applicable(state, action);
 }
 
 State GroundStateModel::next(const State& state, const GroundAction::IdType& actionIdx) const {
-	return next(state, *(task.getGroundActions()[actionIdx]));
+	return next(state, *(_task.getGroundActions()[actionIdx]));
 } 
 
 State GroundStateModel::next(const State& state, const GroundAction& a) const { 
-	ApplicabilityManager manager(task.getStateConstraints());
-	return State(state, manager.computeEffects(state, a)); // Copy everything into the new state and apply the changeset
+	return State(state, NaiveApplicabilityManager::computeEffects(state, a)); // Copy everything into the new state and apply the changeset
 }
 
-void GroundStateModel::print(std::ostream& os) const {
-	os << task;
-}
+void GroundStateModel::print(std::ostream& os) const { os << _task; }
 
-GroundAction::ApplicableSet GroundStateModel::applicable_actions(const State& state) const {
-	return GroundActionIterator(ApplicabilityManager(task.getStateConstraints()), state, task.getGroundActions());
+GroundApplicableSet GroundStateModel::applicable_actions(const State& state) const {
+	return _manager.applicable(state);
 }
 
 } // namespaces

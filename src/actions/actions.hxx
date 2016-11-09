@@ -3,7 +3,7 @@
 
 #include <fs_types.hxx>
 #include <utils/binding.hxx>
-#include <actions/ground_action_iterator.hxx>
+#include <applicability/action_managers.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class ActionEffect; } }}
@@ -114,7 +114,7 @@ protected:
 public:
 	//! Trait required by aptk::DetStateModel
 	using IdType = ActionIdx;
-	using ApplicableSet = GroundActionIterator;
+	using ApplicableSet = GroundApplicableSet;
 
 	static const ActionIdx invalid_action_id;
 	
