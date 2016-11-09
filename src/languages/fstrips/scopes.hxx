@@ -51,6 +51,9 @@ public:
 	//!
 	static void computeIndirectTermScope(const Term* term, std::set<VariableIdx>& scope);
 
+	//! Returns the state variables (both direct and indirect) affected by the given action
+	static void compute_affected(const ActionBase& action, std::set<VariableIdx>& scope);
+	
 	//!
 	static std::vector<Atom> compute_affected_atoms(const ActionEffect* effect);
 	

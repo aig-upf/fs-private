@@ -1,11 +1,9 @@
 
 #include <search/drivers/bfws/bfws.hxx>
 #include <search/events.hxx>
-#include <search/utils.hxx>
-#include <actions/ground_action_iterator.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
 #include <search/drivers/setups.hxx>
-#include <actions/grounding.hxx>
+#include <search/utils.hxx>
 #include <problem_info.hxx>
 
 namespace fs0 { namespace drivers {

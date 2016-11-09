@@ -7,8 +7,6 @@
 #include <search/algorithms/aptk/best_first_search.hxx>
 #include <search/utils.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
-#include <actions/ground_action_iterator.hxx>
-#include <actions/grounding.hxx>
 
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <utils/support.hxx>

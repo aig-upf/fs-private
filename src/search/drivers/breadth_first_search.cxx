@@ -2,10 +2,6 @@
 #include <search/drivers/breadth_first_search.hxx>
 #include <search/events.hxx>
 #include <search/utils.hxx>
-#include <actions/ground_action_iterator.hxx>
-#include <actions/grounding.hxx>
-#include <problem_info.hxx>
-#include <problem.hxx>
 #include <search/drivers/setups.hxx>
 
 

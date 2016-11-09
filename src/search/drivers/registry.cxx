@@ -11,10 +11,9 @@
 #include <search/drivers/native_driver.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
 #include <search/drivers/smart_lifted_driver.hxx>
-#include "fully_lifted_driver.hxx"
+#include <search/drivers/fully_lifted_driver.hxx>
 // #include <heuristics/relaxed_plan/direct_crpg.hxx>
 // #include <heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <actions/ground_action_iterator.hxx>
 #include <actions/grounding.hxx>
 #include <problem_info.hxx>
 

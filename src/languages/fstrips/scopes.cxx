@@ -174,4 +174,11 @@ void ScopeUtils::computeActionFullScope(const ActionBase& action, std::set<Varia
 	_computeRelevantElements(action.getPrecondition(), scope, _, true);
 }
 
+void ScopeUtils::compute_affected(const ActionBase& action, std::set<VariableIdx>& scope) {
+	std::set<unsigned> _;
+	for (const fs::ActionEffect* eff:action.getEffects()) {
+		_computeRelevantElements(eff->lhs(), scope, _, true);
+	}
+}
+
 } } } // namespaces
