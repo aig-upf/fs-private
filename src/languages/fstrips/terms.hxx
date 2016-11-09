@@ -65,19 +65,14 @@ public:
 	static const Term* create(const std::string& symbol, const std::vector<const Term*>& subterms);
 
 	NestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
-		: _symbol_id(symbol_id), _subterms(subterms)
+		: _symbol_id(symbol_id), _subterms(subterms), _interpreted_subterms(subterms.size(), -1)
 	{}
 
 	virtual ~NestedTerm() {
 		for (const Term* term:_subterms) delete term;
 	}
 	
-	NestedTerm(const NestedTerm& term)
-		: _symbol_id(term._symbol_id) {
-		for (const Term* subterm:term._subterms) {
-			_subterms.push_back(subterm->clone());
-		}
-	}
+	NestedTerm(const NestedTerm& term);
 	
 	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const;
 
@@ -104,12 +99,20 @@ public:
 
 	//! A helper to interpret a vector of terms
 	template <typename T>
-	static ObjectIdxVector interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding) {
-		ObjectIdxVector interpreted(subterms.size());
+	static std::vector<ObjectIdx>
+	interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding) {
+		std::vector<ObjectIdx> interpreted(subterms.size());
+		interpret_subterms(subterms, assignment, binding);
+		return interpreted;
+	}
+
+	template <typename T>
+	static void
+	interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding, std::vector<ObjectIdx>& interpreted) {
+		assert(interpreted.size() == subterms.size());
 		for (unsigned i = 0, sz = subterms.size(); i < sz; ++i) {
 			interpreted[i] = subterms[i]->interpret(assignment, binding);
 		}
-		return interpreted;
 	}
 
 	unsigned getSymbolId() const { return _symbol_id; }
@@ -128,7 +131,11 @@ protected:
 	unsigned _symbol_id;
 
 	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
+	// TODO This should be const
 	std::vector<const Term*> _subterms;
+	
+	//! The last interpretation of the subterms (acts as a cache)
+	mutable std::vector<ObjectIdx> _interpreted_subterms;
 
 	unsigned maxSubtermNestedness() const {
 		unsigned max = 0;
