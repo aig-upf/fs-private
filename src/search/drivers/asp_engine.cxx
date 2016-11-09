@@ -5,7 +5,6 @@
 #include <utils/config.hxx>
 #include <problem.hxx>
 #include <state.hxx>
-#include <actions/ground_action_iterator.hxx>
 #include <aptk2/search/algorithms/best_first_search.hxx>
 #include <asp/asp_hplus.hxx>
 

@@ -4,8 +4,6 @@
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <state.hxx>
-#include <actions/ground_action_iterator.hxx>
-#include <actions/grounding.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/direct/action_manager.hxx>
 #include <languages/fstrips/formulae.hxx>

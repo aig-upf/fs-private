@@ -2,8 +2,6 @@
 #include <search/drivers/iterated_width.hxx>
 #include <search/algorithms/iterated_width.hxx>
 #include <search/utils.hxx>
-#include <actions/ground_action_iterator.hxx>
-#include <actions/grounding.hxx>
 #include <problem_info.hxx>
 #include <search/drivers/setups.hxx>
 
