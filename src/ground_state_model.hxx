@@ -49,6 +49,9 @@ protected:
 	const Problem& _task;
 	
 	const SmartActionManager _manager;
+	
+	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
+	mutable std::vector<Atom> _effects_cache;
 };
 
 } // namespaces

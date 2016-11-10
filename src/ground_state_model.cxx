@@ -8,7 +8,7 @@ namespace fs0 {
 
 GroundStateModel::GroundStateModel(const Problem& problem) :
 	_task(problem),
-	_manager(problem.getGroundActions(), problem.getStateConstraints())
+	_manager(problem.getGroundActions(), problem.getStateConstraints(), problem.get_tuple_index())
 {}
 
 State GroundStateModel::init() const {
@@ -33,8 +33,9 @@ State GroundStateModel::next(const State& state, const GroundAction::IdType& act
 	return next(state, *(_task.getGroundActions()[actionIdx]));
 } 
 
-State GroundStateModel::next(const State& state, const GroundAction& a) const { 
-	return State(state, NaiveApplicabilityManager::computeEffects(state, a)); // Copy everything into the new state and apply the changeset
+State GroundStateModel::next(const State& state, const GroundAction& a) const {
+	NaiveApplicabilityManager::computeEffects(state, a, _effects_cache);
+	return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
 }
 
 void GroundStateModel::print(std::ostream& os) const { os << _task; }
