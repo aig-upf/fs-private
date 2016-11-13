@@ -37,7 +37,7 @@ public:
 	
 protected:
 	
-	std::vector<OffendingSet> preprocess(const Problem& problem, const Config& config);
+	std::vector<OffendingSet> preprocess(const Problem& problem, const Config& config, BasicApplicabilityAnalyzer* analyzer);
 
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 	

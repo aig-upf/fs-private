@@ -10,6 +10,8 @@
 #include <utils/external.hxx>
 #include <utils/printers/feature_set.hxx>
 #include <languages/fstrips/language.hxx>
+#include <applicability/gecode_analyzer.hxx>
+#include <actions/grounding.hxx>
 
 using namespace fs0;
 namespace fs = fs0::language::fstrips;
@@ -944,14 +946,29 @@ EnhancedBFWSDriver::do_search_p1(Problem& problem, const Config& config, const s
 template <typename NodeCompareT, typename NoveltyIndexerT>
 ExitCode 
 EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
-	auto model = GroundingSetup::fully_ground_model(problem);
+	
+	BasicApplicabilityAnalyzer* analyzer = nullptr;
+	
+	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
+	
+	const auto& actions = problem.getGroundActions();
+	const auto& tuple_idx =  problem.get_tuple_index();
+	
+	if (config.getOption<std::string>("applicability", "basic") == "gecode") {
+		analyzer = new GecodeApplicabilityAnalyzer(actions, tuple_idx);
+	} else {
+		analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
+	}
+	analyzer->build();
+	
+	GroundStateModel model(problem, analyzer); 
 	
 	
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	unsigned max_width = config.getOption<int>("width.max");
 	
 	
-	std::vector<OffendingSet> offending = preprocess(problem, config);
+	std::vector<OffendingSet> offending = preprocess(problem, config, analyzer);
 	
 	
 	LPT_INFO("cout", "CTMP-BFWS Configuration:");
@@ -984,11 +1001,14 @@ EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std:
 	lapkt::events::subscribe(*engine, _handlers);
 	
 	
-	return Utils::do_search(*engine, model, out_dir, start_time, stats);
+	auto res = Utils::do_search(*engine, model, out_dir, start_time, stats);
+	
+	delete analyzer;
+	return res;
 }
 
 std::vector<OffendingSet>
-EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
+EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config, BasicApplicabilityAnalyzer* analyzer) {
 	
 	const fs::Conjunction* original_goal = dynamic_cast<const fs::Conjunction*>(problem.getGoalConditions());
 	if (!original_goal) {
@@ -1016,7 +1036,7 @@ EnhancedBFWSDriver::preprocess(const Problem& problem, const Config& config) {
 	
 	Problem simplified(problem);
 	simplified.set_state_constraints(new fs::Tautology);
-	GroundStateModel model(simplified);
+	GroundStateModel model(simplified, analyzer);
 	
 	using PreprocessingNodeT = IWPreprocessingNode<State, ActionT>;
 	using AcceptorT = CTMPOpenListAcceptor<GroundStateModel, PreprocessingNodeT>;
