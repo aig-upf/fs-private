@@ -30,6 +30,12 @@ public:
 	const std::vector<const fs::ActionEffect*>& get_effects() const override;
 
 	const fs::Formula* get_precondition() const override;
+	
+	//! Posts a X=x constraint into the given CSP
+	GecodeCSP* post(VariableIdx variable, ObjectIdx value) const;
+	
+	//! Returns true iff the CSP has at least one solution
+	static bool check_one_solution_exists(GecodeCSP* csp);
 
 protected:
 	

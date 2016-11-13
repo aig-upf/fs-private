@@ -56,4 +56,16 @@ class full_action {
 		std::ostream& print(std::ostream& os) const;
 };
 
+//! Print a list of ground actions
+class actions {
+	protected:
+		const std::vector<const GroundAction*>& _actions;
+
+	public:
+		actions(const std::vector<const GroundAction*>& acts) : _actions(acts) {}
+		
+		friend std::ostream& operator<<(std::ostream &os, const actions& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
 } } // namespaces

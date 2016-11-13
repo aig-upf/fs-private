@@ -10,6 +10,12 @@
 
 namespace fs0 {
 
+class MissingOption : public std::runtime_error {
+public:
+	MissingOption(const std::string& name) : std::runtime_error("Missing or Wrong option type: '" + name + "'") {}
+};
+
+
 //! A (singleton) object to load and store different planner configuration objects
 class Config {
 public:
@@ -115,17 +121,29 @@ public:
 	template <typename T>
 	T getOption(const std::string& key) const {
 		auto it = _user_options.find(key);
-		if (it != _user_options.end()) { // The user specified an option value, which thus has priority
-			return boost::lexical_cast<T>(it->second);
-		} else {
-			return _root.get<T>(key);
+		try {
+			if (it != _user_options.end()) { // The user specified an option value, which thus has priority
+				return boost::lexical_cast<T>(it->second);
+			} else {
+				return _root.get<T>(key);
+			}
+		} catch (const std::runtime_error& e) {
+			throw MissingOption(key);
+		}
+	}
+
+	template <typename T>
+	T getOption(const std::string& key, const T& def) const {
+		try {
+			return getOption<T>(key);
+		} catch (const MissingOption& e) {
+			return def;
 		}
 	}
 
 	// Partial specialization
-	bool getOption(const std::string& key) const {
-		return getOption<bool>(key);
-	}
+	bool getOption(const std::string& key) const { return getOption<bool>(key); }
+	bool getOption(const std::string& key, bool def) const { return getOption<bool>(key, def); }
 };
 
 } // namespaces
