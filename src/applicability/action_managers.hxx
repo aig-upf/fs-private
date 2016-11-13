@@ -36,15 +36,45 @@ protected:
 	const fs::Formula* _state_constraints;
 };
 
+
+class BasicApplicabilityAnalyzer {
+public:
+	BasicApplicabilityAnalyzer(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_idx) : 
+		_actions(actions), _tuple_idx(tuple_idx) {}
+	
+	virtual ~BasicApplicabilityAnalyzer() = default;
+	
+	virtual void build();
+	
+	const std::vector<std::vector<ActionIdx>>& getApplicable() const { return _applicable; }
+	
+	unsigned total_actions() const { return _total_actions; }
+	
+	
+protected:
+	//! The set of all ground actions managed by this object
+	const std::vector<const GroundAction*>& _actions;
+	
+	//! The tuple index of the problem
+	const TupleIndex& _tuple_idx;
+	
+	std::vector<std::vector<ActionIdx>> _applicable;
+	
+	unsigned _total_actions;
+};
+
+
 class GroundApplicableSet; 
 //!
 //!
+// template <typename ApplicabilityAnalyzerT = BasicApplicabilityAnalyzer>
 class SmartActionManager {
 public:
 	using ApplicableSet = GroundApplicableSet;
 	
-	SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const TupleIndex& tuple_idx);
+	SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const TupleIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer);
 	~SmartActionManager() = default;
+	SmartActionManager(const SmartActionManager&) = default;
 	
 	GroundApplicableSet applicable(const State& state) const;
 	
@@ -72,15 +102,13 @@ protected:
 	
 	//! An applicability index that maps each (index of) a tuple (i.e. atom) to the sets of (indexes of) all actions
 	//! which are _potentially_ applicable when that atom holds in a state
-	std::vector<std::vector<ActionIdx>> _app_index;
+	const std::vector<std::vector<ActionIdx>>& _app_index;
 	
 	static std::vector<const fs::AtomicFormula*> process_state_constraints(const fs::Formula* state_constraints);
 	
 	void index_variables(const std::vector<const GroundAction*>& actions, const std::vector<const fs::AtomicFormula*>& constraints);
 	
 	bool check_constraints(unsigned action_id, const State& state) const;
-	
-	void build_applicability_index(const std::vector<const GroundAction*>& actions);
 	
 	//! Computes the list of indexes of those actions that are potentially applicable in the given state
 	std::vector<ActionIdx> compute_whitelist(const State& state) const;
@@ -89,6 +117,8 @@ protected:
 	
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
+	
+	unsigned _total_applicable_actions;
 };
 
 

@@ -6,9 +6,9 @@
 
 namespace fs0 {
 
-GroundStateModel::GroundStateModel(const Problem& problem) :
+GroundStateModel::GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) :
 	_task(problem),
-	_manager(problem.getGroundActions(), problem.getStateConstraints(), problem.get_tuple_index())
+	_manager(build_action_manager(problem, analyzer))
 {}
 
 State GroundStateModel::init() const {
@@ -43,6 +43,16 @@ void GroundStateModel::print(std::ostream& os) const { os << _task; }
 GroundApplicableSet GroundStateModel::applicable_actions(const State& state) const {
 	return _manager.applicable(state);
 }
+
+SmartActionManager
+GroundStateModel::build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) {
+	const auto& actions = problem.getGroundActions();
+	const auto& constraints = problem.getStateConstraints();
+	const auto& tuple_idx =  problem.get_tuple_index();
+	if (analyzer == nullptr) analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
+	return SmartActionManager(actions, constraints, tuple_idx, analyzer);
+}
+
 
 } // namespaces
 
