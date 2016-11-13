@@ -4,6 +4,7 @@
 #include <aptk2/tools/logging.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
+#include <gecode/search.hh>
 
 
 namespace fs0 { namespace gecode {
@@ -51,6 +52,31 @@ const ActionID* GroundActionCSP::get_action_id(const GecodeCSP* solution) const 
 
 void GroundActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action: " << _action);
+}
+
+GecodeCSP* 
+GroundActionCSP::post(VariableIdx variable, ObjectIdx value) const {
+	if (_failed) return nullptr;
+	GecodeCSP* clone = static_cast<GecodeCSP*>(_base_csp->clone());
+	const auto& csp_var = _translator.resolveInputStateVariable(*clone, variable);
+	
+	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, value);
+
+	if (!clone->checkConsistency()) { // This colaterally enforces propagation of constraints
+		delete clone;
+		return nullptr;
+	}
+	return clone;
+}
+
+bool
+GroundActionCSP::check_one_solution_exists(GecodeCSP* csp) {
+	// We just want to tell whether at least one solution exists
+	Gecode::DFS<GecodeCSP> engine(csp);
+	GecodeCSP* solution = engine.next();
+	if (!solution) return false; // The CSP has no solution at all
+	delete solution;
+	return true;
 }
 
 } } // namespaces

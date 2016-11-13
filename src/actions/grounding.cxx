@@ -37,7 +37,7 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 		// In case the action schema is directly not-lifted, we simply bind it with an empty binding and continue.
 		if (signature.empty()) { 
 			LPT_INFO("cout", "Grounding action schema '" << data->getName() << "' with no binding");
-			LPT_INFO("grounding", "Grounding the following action schema with no binding:\n" << *data << "\n");
+			LPT_INFO("grounding", "Grounding the following action schema with no binding:" << *data << "\n");
 			id = ground(id, data, {}, info, grounded);
 			++total_num_bindings;
 			continue;
@@ -56,7 +56,7 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 		}
 		
 		LPT_INFO("cout", "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:" << std::flush);
-		LPT_INFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:\n" << print::action_data_name(*data) << "\n");
+		LPT_INFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:" << print::action_data_name(*data));
 		
 		float onepercent = ((float)num_bindings / 100);
 		int progress = 0;
@@ -77,12 +77,14 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 	
 	LPT_INFO("grounding", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
 	LPT_INFO("cout", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
+	
+	LPT_INFO("grounding", "All ground actions " << std::endl << print::actions(grounded));
 	return grounded;
 }
 
 unsigned
 ActionGrounder::ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded) {
-	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
+// 	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
 	
 	if (GroundAction* ground = full_binding(id, *data, binding, info)) {
 // 		LPT_DEBUG("grounding", "Binding " << print::binding(binding, data->getSignature()) << " generated grounded action:\n" << *ground);

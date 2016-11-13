@@ -34,4 +34,11 @@ std::ostream& full_action::print(std::ostream& os) const {
 	return os;
 }
 
+std::ostream& actions::print(std::ostream& os) const {
+	for (const GroundAction* action:_actions) {
+		os << action->getId() << ": " << action_header(*action) << std::endl;
+	}
+	return os;
+}
+
 } } // namespaces

@@ -64,17 +64,28 @@ bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& 
 
 
 
-SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const TupleIndex& tuple_idx) :
+SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const TupleIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer) :
 	_actions(actions),
 	_state_constraints(process_state_constraints(state_constraints)),
 	_tuple_idx(tuple_idx),
 	_vars_affected_by_actions(),
 	_vars_relevant_to_constraints(),
 	_sc_index(),
-	_app_index()
+	_app_index(analyzer->getApplicable()),
+	_total_applicable_actions(analyzer->total_actions())
 {
 	index_variables(actions, _state_constraints);
-	build_applicability_index(actions);
+	
+	/*
+	// DEBUG
+	for (unsigned j = 0; j < _app_index.size(); ++j) {
+		const Atom& atom = _tuple_idx.to_atom(j);
+		const std::vector<ActionIdx>& tup_actions = _app_index[j];
+		LPT_INFO("cout", "Actions potentially applicable for tuple " << atom << ":" << tup_actions.size());
+		LPT_INFO("cout", fs0::print::container(tup_actions));
+	}
+	*/
+	LPT_INFO("cout", "A total of " << _total_applicable_actions << " actions were determined to be applicable to at least one atom");
 }
 
 std::vector<const fs::AtomicFormula*>
@@ -134,22 +145,25 @@ ObjectIdx _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
 }
 
 
-
 void
-SmartActionManager::build_applicability_index(const std::vector<const GroundAction*>& actions) {
+BasicApplicabilityAnalyzer::build() {
+
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	_app_index.resize(_tuple_idx.size());
 	
-	for (unsigned i = 0; i < actions.size(); ++i) {
-		const GroundAction& action = *actions[i];
+	_applicable.resize(_tuple_idx.size());
+// 	std::vector<std::vector<ActionIdx>> index(_tuple_idx.size());
+	
+	
+	for (unsigned i = 0; i < _actions.size(); ++i) {
+		const GroundAction& action = *_actions[i];
 		if (dynamic_cast<const fs::Tautology*>(action.getPrecondition())) { // If there's no precondition, the action is always potentially applicable
-			for (auto& app_set:_app_index) app_set.push_back(i);
+			for (auto& app_set:_applicable) app_set.push_back(i);
 			continue;
 		}
 		
 		const fs::Conjunction* precondition = dynamic_cast<const fs::Conjunction*>(action.getPrecondition());
 		if (!precondition) { // If the precondition is not a conjunction, we cannot say much, so we consider the action as always potentially applicable
-			for (auto& app_set:_app_index) app_set.push_back(i);
+			for (auto& app_set:_applicable) app_set.push_back(i);
 			continue;
 		}
 		
@@ -184,7 +198,7 @@ SmartActionManager::build_applicability_index(const std::vector<const GroundActi
 			if (eq) { // Prec is of the form X=x
 				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
 				TupleIdx tup = _tuple_idx.to_index(relevant, value);
-				_app_index[tup].push_back(i);
+				_applicable[tup].push_back(i);
 				
 			} else { // Prec is of the form X!=x
 				assert(neq);
@@ -192,7 +206,7 @@ SmartActionManager::build_applicability_index(const std::vector<const GroundActi
 				for (ObjectIdx v2:values) {
 					if (v2 != value) {
 						TupleIdx tup = _tuple_idx.to_index(relevant, v2);
-						_app_index[tup].push_back(i);
+						_applicable[tup].push_back(i);
 					}
 				}
 			}
@@ -204,21 +218,12 @@ SmartActionManager::build_applicability_index(const std::vector<const GroundActi
 			
 			for (ObjectIdx val:info.getVariableObjects(var)) {
 				TupleIdx tup = _tuple_idx.to_index(var, val);
-				_app_index[tup].push_back(i);
+				_applicable[tup].push_back(i);
 			}
 		}
 	}
 	
-	
-	// DEBUG
-	/*
-	for (unsigned j = 0; j < _app_index.size(); ++j) {
-		const Atom& atom = _tuple_idx.to_atom(j);
-		const std::vector<ActionIdx>& tup_actions = _app_index[j];
-		LPT_INFO("cout", "Actions potentially applicable for tuple " << atom << ":");
-		LPT_INFO("cout", fs0::print::container(tup_actions));
-	}
-	*/
+	_total_actions =  _actions.size();
 }
 
 
@@ -240,13 +245,13 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 		tuples[i] = tup;
 		unsigned s = _app_index[tup].size();
 		
-		if (min_size < s) {
+		if (s < min_size) {
 			min_size = s;
 			min_tuple_idx = tup;
 		}
 		
 // 		std::cout << s;
-		if (s == _actions.size()) {
+		if (s == _total_applicable_actions) {
 			tuples_with_all_actions[i] = true;
 // 			std::cout << "*";
 		}
@@ -275,6 +280,10 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 			buffer.clear();
 			std::set_intersection(result.begin(), result.end(), candidates.begin(), candidates.end(), std::back_inserter(buffer));
 			std::swap(result, buffer);
+			
+				if (std::find(result.begin(), result.end(), 138) == result.end()) {
+// 					throw std::runtime_error("WHAAAACK!!");
+				}
 		}
 	}
 	
@@ -321,23 +330,58 @@ GroundApplicableSet::Iterator::Iterator(const State& state, const SmartActionMan
 	_whitelist(action_whitelist),
 	_index(index)
 {
-	advance();
 // 	std::cout << "Whitelist size: " << _whitelist.size() << " vs. num actions: " << _manager._actions.size() << std::endl;
+	advance();
 }
 
 void GroundApplicableSet::Iterator::advance() {
 	const std::vector<const GroundAction*>& actions = _manager._actions;
+	
+	
+// 	if (_index == 0) {
+// 		for(unsigned j = 0; j < _whitelist[_index]; ++j) {
+// 			if (_manager.applicable(_state, *actions[j])) {
+// 				std::cout << "Action " << *actions[j] << " is applicable!!!" << std::endl;
+// 				throw std::runtime_error("WHOCK0");
+// 			}
+// 		}
+// 	}
+	
+	
+	
+	
 	// std::cout << "Checking applicability "<< std::endl;
 // 	for (ActionIdx action_idx:_whitelist) {
 	for (unsigned sz = _whitelist.size();_index < sz; ++_index) {
 			unsigned action_idx = _whitelist[_index];
-// 	for (unsigned size = actions.size();_index != size; ++_index) {
-		// std::cout << "Checking applicability of: " << *_actions[action_idx] << std::endl;
+// 			if (_index > 0) {
+// 				unsigned prev = _whitelist[_index-1], cur = _whitelist[_index];
+// 				for(unsigned j = prev+1; j < cur; ++j) {
+// 					if (_manager.applicable(_state, *actions[j])) {
+// 						std::cout << "Action " << *actions[j] << " is applicable!!!" << std::endl;
+// 						throw std::runtime_error("WHOCK");
+// 					}
+// 				}
+// 			}
+			
+			
 		if (_manager.applicable(_state, *actions[action_idx])) { // The action is applicable, break the for loop.
 			// std::cout << "Found applicable action: " << *_actions[action_idx] << std::endl;
-			break;
+			return;
 		}
 	}
+	
+	
+	
+// 	if (_index > 0) {
+// 		unsigned prev = _whitelist[_index-1];
+// 		for(unsigned j = prev+1; j < actions.size(); ++j) {
+// 			if (_manager.applicable(_state, *actions[j])) {
+// 				std::cout << "Action " << *actions[j] << " is applicable!!!" << std::endl;
+// 				throw std::runtime_error("WHOCK2");
+// 			}
+// 		}
+// 	}
 }
 
 const GroundApplicableSet::Iterator& GroundApplicableSet::Iterator::operator++() {
