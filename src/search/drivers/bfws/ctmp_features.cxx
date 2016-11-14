@@ -203,6 +203,7 @@ CustomHeuristic::CustomHeuristic(const fs::Formula* goal)
 unsigned
 CustomHeuristic::evaluate(const State& s) const {
 	unsigned h = 0;
+	bool holding_goal_object = false;
 	
 	ObjectIdx held_object = s.getValue(_holding_var); // The object which is currently being held
 	
@@ -219,11 +220,16 @@ CustomHeuristic::evaluate(const State& s) const {
 		ObjectIdx current_obj_conf = s.getValue(object_conf);
 		if (current_obj_conf != goal_obj_conf) {
 			
-			if (held_object == object_id) h = h+1;
-			else h = h+2;
+			if (held_object == object_id) {
+				h = h+1;
+				holding_goal_object = true;
+			} else {
+				h = h+2;
+			}
 		}
 	}
 
+	return (holding_goal_object) ? 0 : 1;
 	return h;
 }
 
