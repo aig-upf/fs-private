@@ -229,7 +229,7 @@ CustomHeuristic::evaluate(const State& s) const {
 		}
 	}
 
-	return (holding_goal_object) ? 0 : 1;
+// 	return (holding_goal_object) ? 0 : 1;
 	return h;
 }
 
