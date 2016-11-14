@@ -696,6 +696,91 @@ struct F6NodeComparer5 {
 };
 
 
+// #OFF, W, #G, H
+struct F6NodeComparer6 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+
+		if (n1->_num_offending > n2->_num_offending) return true;
+		if (n1->_num_offending < n2->_num_offending) return false;
+		
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+		
+		if (n1->unachieved > n2->unachieved) return true;
+		if (n1->unachieved < n2->unachieved) return false;
+		
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
+
+		return n1->g > n2->g;
+	}
+};
+
+// #G, W, #OFF, H
+struct F6NodeComparer7 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+
+		if (n1->unachieved > n2->unachieved) return true;
+		if (n1->unachieved < n2->unachieved) return false;
+		
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+		
+		if (n1->_num_offending > n2->_num_offending) return true;
+		if (n1->_num_offending < n2->_num_offending) return false;
+		
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
+
+		return n1->g > n2->g;
+	}
+};
+
+// #OFF, #G, W, H
+struct F6NodeComparer8 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+
+		if (n1->_num_offending > n2->_num_offending) return true;
+		if (n1->_num_offending < n2->_num_offending) return false;
+		
+		if (n1->unachieved > n2->unachieved) return true;
+		if (n1->unachieved < n2->unachieved) return false;
+		
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+		
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
+
+		return n1->g > n2->g;
+	}
+};
+
+
+// #G, #OFF, W, H
+struct F6NodeComparer9 {
+	using NodePtrT = std::shared_ptr<BFWSF6Node>;
+	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+
+		if (n1->unachieved > n2->unachieved) return true;
+		if (n1->unachieved < n2->unachieved) return false;
+		
+		if (n1->_num_offending > n2->_num_offending) return true;
+		if (n1->_num_offending < n2->_num_offending) return false;
+
+		if (n1->novelty > n2->novelty) return true;
+		if (n1->novelty < n2->novelty) return false;
+		
+		if (n1->_h > n2->_h) return true;
+		if (n1->_h < n2->_h) return false;
+
+		return n1->g > n2->g;
+	}
+};
+
 //! For the problem at hand, 'unachieved' will typically range 0-100, 'offending': 0-100, heuristic: 0-200
 inline unsigned _index(unsigned unachieved, unsigned heuristic, unsigned offending) {
 	return (heuristic<<16) | (offending<<8) |  unachieved;
@@ -920,7 +1005,16 @@ EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::st
 		return do_search_p1<F6NodeComparer4>(problem, config, out_dir, start_time);
 	} else if (order == "5") {
 		return do_search_p1<F6NodeComparer5>(problem, config, out_dir, start_time);
+	} else if (order == "6") {
+		return do_search_p1<F6NodeComparer6>(problem, config, out_dir, start_time);
+	} else if (order == "7") {
+		return do_search_p1<F6NodeComparer7>(problem, config, out_dir, start_time);
+	} else if (order == "8") {
+		return do_search_p1<F6NodeComparer8>(problem, config, out_dir, start_time);
+	} else if (order == "9") {
+		return do_search_p1<F6NodeComparer9>(problem, config, out_dir, start_time);
 	}
+	
 	throw std::runtime_error("Invalid value " + order + " for configuration option \"ebfws.order\"");
 }
 
