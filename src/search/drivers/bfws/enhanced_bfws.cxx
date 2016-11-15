@@ -159,7 +159,7 @@ public:
 				if (this->_closed.check(successor)) continue; // The node has already been closed
 				
 				this->notify(NodeCreationEvent(*successor));
-				if (!this->_open.insert2( successor )) {
+				if (!this->_open.insert( successor )) {
 					LPT_DEBUG("search", std::setw(7) << "PRUNED: " << *successor);
 				}
 			}
@@ -1074,9 +1074,14 @@ EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std:
 	
 	using BaseHeuristicT = gecode::SmartRPG;
 	using NodeT = BFWSF6Node;
+	using NodePT = std::shared_ptr<NodeT>;
 	
+
 	using HeuristicEnsembleT = BFWSF6Heuristic<GroundStateModel, BaseHeuristicT, NoveltyIndexerT>;
-	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, std::shared_ptr<NodeT>, NodeCompareT>;
+// 	using OpenListT = lapkt::BaseSortedOpenList<NodeT, HeuristicEnsembleT, NodePT, std::vector<NodePT>, NodeCompareT>;
+	using OpenListT = lapkt::StlSortedOpenList<NodeT, HeuristicEnsembleT, NodePT, std::vector<NodePT>, NodeCompareT>;
+	
+	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, NodePT, NodeCompareT, OpenListT>;
 	using EngineT = std::unique_ptr<RawEngineT>;
 	
 // 	auto base_heuristic = std::unique_ptr<gecode::SmartRPG>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
