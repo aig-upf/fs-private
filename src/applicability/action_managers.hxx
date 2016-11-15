@@ -73,7 +73,7 @@ public:
 	using ApplicableSet = GroundApplicableSet;
 	
 	SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const TupleIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer);
-	~SmartActionManager() = default;
+	virtual ~SmartActionManager() = default;
 	SmartActionManager(const SmartActionManager&) = default;
 	
 	GroundApplicableSet applicable(const State& state) const;
@@ -108,10 +108,10 @@ protected:
 	
 	void index_variables(const std::vector<const GroundAction*>& actions, const std::vector<const fs::AtomicFormula*>& constraints);
 	
-	bool check_constraints(unsigned action_id, const State& state) const;
+	virtual bool check_constraints(unsigned action_id, const State& state) const;
 	
 	//! Computes the list of indexes of those actions that are potentially applicable in the given state
-	std::vector<ActionIdx> compute_whitelist(const State& state) const;
+	virtual std::vector<ActionIdx> compute_whitelist(const State& state) const;
 	
 	friend class GroundApplicableSet;
 	

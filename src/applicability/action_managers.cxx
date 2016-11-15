@@ -280,10 +280,6 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 			buffer.clear();
 			std::set_intersection(result.begin(), result.end(), candidates.begin(), candidates.end(), std::back_inserter(buffer));
 			std::swap(result, buffer);
-			
-				if (std::find(result.begin(), result.end(), 138) == result.end()) {
-// 					throw std::runtime_error("WHAAAACK!!");
-				}
 		}
 	}
 	
