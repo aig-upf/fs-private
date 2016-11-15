@@ -574,7 +574,11 @@ public:
 		}
 	}
 
-	bool dead_end() const { return false; }
+	bool dead_end() const {
+		assert(this->novelty > 0);
+		return this->novelty > 2;
+// 		return false;
+	}
 };
 
 
@@ -1080,8 +1084,11 @@ EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std:
 	using HeuristicEnsembleT = BFWSF6Heuristic<GroundStateModel, BaseHeuristicT, NoveltyIndexerT>;
 // 	using OpenListT = lapkt::BaseSortedOpenList<NodeT, HeuristicEnsembleT, NodePT, std::vector<NodePT>, NodeCompareT>;
 	using OpenListT = lapkt::StlSortedOpenList<NodeT, HeuristicEnsembleT, NodePT, std::vector<NodePT>, NodeCompareT>;
+	// using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
+	using ClosedListT = aptk::NullClosedList<NodeT>;
 	
-	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, NodePT, NodeCompareT, OpenListT>;
+	
+	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, NodePT, NodeCompareT, OpenListT, ClosedListT>;
 	using EngineT = std::unique_ptr<RawEngineT>;
 	
 // 	auto base_heuristic = std::unique_ptr<gecode::SmartRPG>(SmartEffectDriver::configure_heuristic(model.getTask(), config));

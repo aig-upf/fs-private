@@ -53,6 +53,10 @@ public:
 		BaseClass(model, OpenListT(heuristic), ClosedListT())
 	{}
 	
+	StlBestFirstSearch(const StateModel& model, OpenListT&& open) :
+		BaseClass(model, std::move(open), ClosedListT())
+	{}
+	
 	virtual ~StlBestFirstSearch() = default;
 	
 	// Disallow copy, but allow move
