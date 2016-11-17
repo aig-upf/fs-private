@@ -131,7 +131,10 @@ public:
 		const auto& problem = fs0::Problem::getInstance();
 		for (unsigned i = 0; i < nodes.size(); ++i) {
 			std::cout << *nodes[i] << std::endl;
-			if (i < solution.size()) std::cout  << std::endl << "==> " << fs0::print::action_header(*(problem.getGroundActions()[i])) << std::endl << std::endl;
+			if (i < solution.size()) {
+				auto action_idx = solution[i];
+				std::cout  << std::endl << "==> " << fs0::print::action_header(*(problem.getGroundActions()[action_idx])) << std::endl << std::endl;
+			}
 		}
 		
 		
