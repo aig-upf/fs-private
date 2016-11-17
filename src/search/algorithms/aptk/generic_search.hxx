@@ -109,9 +109,12 @@ public:
 
 	//! Backward chaining procedure to recover a plan from a given node
 	virtual void retrieve_solution(NodePtr node, PlanT& solution) {
+		std::cout << "Inverse plan: " << std::endl;
+		std::cout << *node << std::endl;
 		while (node->has_parent()) {
 			solution.push_back(node->action);
 			node = node->parent;
+			std::cout << *node << std::endl;
 		}
 		std::reverse( solution.begin(), solution.end() );
 	}

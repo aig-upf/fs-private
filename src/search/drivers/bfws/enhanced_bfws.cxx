@@ -547,55 +547,19 @@ public:
 	}
 	
 	void inherit_heuristic_estimate() {
-		if (parent) {
-			novelty = parent->novelty;
-			_h = parent->_h;
-			unachieved = parent->unachieved;
-// 			_reached_idx = parent->_reached_idx;
-// 			_num_relaxed_achieved = parent->_num_relaxed_achieved;
-			_num_offending = parent->_num_offending;
-		}
+		throw std::runtime_error("SHOULDN'T BE HERE");
 	}
 	
 	//! What to do when an 'other' node is found during the search while 'this' node is already in
 	//! the open list
 	void update_in_open_list(ptr_t other) {
 		return; // We want no  updates ATM, since it messes with width considerations
-		if (other->g < this->g) {
-			this->g = other->g;
-			this->action = other->action;
-			this->parent = other->parent;
-			this->novelty = other->novelty;
-			this->_h = other->_h;
-			unachieved = other->unachieved;
-// 			_num_relaxed_achieved = other->_num_relaxed_achieved;
-// 			_reached_idx = other->_reached_idx;
-			_num_offending = other->_num_offending;
-		}
 	}
 
 	bool dead_end() const {
-// 		return false;
+		return false;
 		if(this->novelty < 1) throw std::runtime_error("SHOULDN'T BE HAPPENING");
-		bool prune = (this->novelty > 2);
-// 		if (prune) {
-// 			std::cout << "PRUNING NODE WITH NOVELTY " << this->novelty << ": " << std::endl;
-// 			std::cout << *this << std::endl;
-// 			
-// 			std::vector<ActionIdx> solution;
-// 			const BFWSF6Node* n = this;
-// 			while (n->has_parent()) {
-// 				solution.push_back(n->action);
-// 				n = n->parent.get();
-// 			}
-// 			std::reverse(solution.begin(), solution.end());
-// 			std::cout << "Plan prefix is:" << std::endl;
-// 			std::cout << PlanPrinter(solution) << std::endl;
-// 			throw std::runtime_error("GAME OVER");
-// 		}
-		
-		return prune;
-// 		return false;
+		return this->novelty > 2;
 	}
 };
 
@@ -1102,8 +1066,8 @@ EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std:
 	using HeuristicEnsembleT = BFWSF6Heuristic<GroundStateModel, BaseHeuristicT, NoveltyIndexerT>;
 // 	using OpenListT = lapkt::BaseSortedOpenList<NodeT, HeuristicEnsembleT, NodePT, std::vector<NodePT>, NodeCompareT>;
 	using OpenListT = lapkt::StlSortedOpenList<NodeT, HeuristicEnsembleT, NodePT, std::vector<NodePT>, NodeCompareT>;
-// 	 using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
-	using ClosedListT = aptk::NullClosedList<NodeT>;
+	 using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
+//	using ClosedListT = aptk::NullClosedList<NodeT>;
 	
 	
 	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, NodePT, NodeCompareT, OpenListT, ClosedListT>;
