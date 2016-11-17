@@ -128,12 +128,12 @@ public:
 		
 		std::cout << "Found plan: " << std::endl;
 // 		const auto& info = fs0::ProblemInfo::getInstance();
-		const auto& problem = fs0::Problem::getInstance();
+// 		const auto& problem = fs0::Problem::getInstance();
 		for (unsigned i = 0; i < nodes.size(); ++i) {
 			std::cout << *nodes[i] << std::endl;
 			if (i < solution.size()) {
 				auto action_idx = solution[i];
-				std::cout  << std::endl << "==> " << fs0::print::action_header(*(problem.getGroundActions()[action_idx])) << std::endl << std::endl;
+				std::cout  << std::endl << "==> " << action_idx << std::endl << std::endl;
 			}
 		}
 		
