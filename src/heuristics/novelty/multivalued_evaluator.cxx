@@ -42,8 +42,8 @@ unsigned
 MultivaluedNoveltyEvaluator::evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<unsigned>& novel) {
 	unsigned state_novelty = current.size() + 1;
 	
-	for (unsigned i = 0; i < novel.size(); ++i) {
-		auto res = _width_1_tuples.insert(std::make_pair(i, current[novel[i]]));
+	for (unsigned idx:novel) {
+		auto res = _width_1_tuples.insert(std::make_pair(idx, current[idx]));
 		if (res.second) state_novelty = 1; // The tuple is new, hence the novelty of the state is 1
 	}
 	return state_novelty;

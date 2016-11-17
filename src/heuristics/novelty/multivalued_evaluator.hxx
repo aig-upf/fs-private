@@ -104,7 +104,7 @@ protected:
 	//! Maximum novelty value to be computed
 	unsigned _max_novelty;
 	
-	//! A tuple of width 1 simply contains the identified of the variable and the value
+	//! A tuple of width 1 simply contains the identifier of the variable and the value
 	using Width1Tuple = std::pair<unsigned, int>;
 	using Width2Tuple = std::tuple<int, int, int, int>;
 	
