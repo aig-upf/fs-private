@@ -68,7 +68,11 @@ public:
 		const FeatureValuation& valuation = node.feature_valuation;
 		assert(!valuation.empty());
 		
-		const FeatureValuation* parent_valuation = (node.parent ? &(node.parent->feature_valuation) : nullptr);
+		const FeatureValuation* parent_valuation = nullptr;
+		if (node.parent && node.parent->type == node.type) {
+			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
+			parent_valuation = &(node.parent->feature_valuation);
+		}
 		
 		std::vector<unsigned> novel = derive_novel(node.feature_valuation, parent_valuation);
 		return evaluate(valuation, novel);

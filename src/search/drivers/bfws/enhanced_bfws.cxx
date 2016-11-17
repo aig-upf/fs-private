@@ -38,6 +38,8 @@ public:
 	
 	FeatureValuation feature_valuation;
 	
+	unsigned type; // The type of novelty
+	
 	typename ActionT::IdType action;
 
 	PT parent;
@@ -442,6 +444,8 @@ public:
 	GroundAction::IdType action;
 	
 	FeatureValuation feature_valuation;
+	
+	unsigned type; // The type of novelty
 	
 	ptr_t parent;
 
@@ -942,6 +946,7 @@ public:
 		
 		CTMPNoveltyEvaluator& evaluator = it->second;
 		
+		node.type = ind;
 		node.feature_valuation = evaluator.compute_valuation(node.state);
 		return evaluator.evaluate(node);
 	}
