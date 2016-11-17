@@ -32,6 +32,9 @@ Concepts borrowed from Ethan Burn's heuristic search framework.
 
 #include <search/algorithms/aptk/search_algorithm.hxx>
 #include <search/algorithms/aptk/events.hxx>
+#include <problem_info.hxx>
+#include <utils/printers/actions.hxx>
+#include <problem.hxx>
 #include <aptk2/tools/logging.hxx>
 
 namespace lapkt {
@@ -109,14 +112,30 @@ public:
 
 	//! Backward chaining procedure to recover a plan from a given node
 	virtual void retrieve_solution(NodePtr node, PlanT& solution) {
-		std::cout << "Inverse plan: " << std::endl;
-		std::cout << *node << std::endl;
+		std::vector<NodePtr> nodes;
+		nodes.push_back(node);
+// 		std::cout << "Inverse plan: " << std::endl;
+// 		std::cout << *node << std::endl;
 		while (node->has_parent()) {
 			solution.push_back(node->action);
 			node = node->parent;
-			std::cout << *node << std::endl;
+// 			std::cout << *node << std::endl;
+			nodes.push_back(node);
 		}
 		std::reverse( solution.begin(), solution.end() );
+		std::reverse( nodes.begin(), nodes.end() );
+		
+		
+		std::cout << "Found plan: " << std::endl;
+// 		const auto& info = fs0::ProblemInfo::getInstance();
+		const auto& problem = fs0::Problem::getInstance();
+		for (unsigned i = 0; i < nodes.size(); ++i) {
+			std::cout << *nodes[i] << std::endl;
+			if (i < solution.size()) std::cout  << std::endl << "==> " << fs0::print::action_header(*(problem.getGroundActions()[i])) << std::endl << std::endl;
+		}
+		
+		
+		
 	}
 	
 	//! Convenience method
