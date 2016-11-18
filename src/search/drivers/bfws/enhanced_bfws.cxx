@@ -1060,7 +1060,7 @@ EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std:
 	LPT_INFO("cout", "\tMax width: " << max_width);
 	
 	// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
-	CTMPNoveltyEvaluator base_novelty_evaluator(problem, max_width, feature_configuration, true, true, false);
+	CTMPNoveltyEvaluator base_novelty_evaluator(problem, max_width, feature_configuration, true, true, true);
 	
 	
 	using BaseHeuristicT = gecode::SmartRPG;
