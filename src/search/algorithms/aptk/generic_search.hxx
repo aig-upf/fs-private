@@ -40,13 +40,19 @@ Concepts borrowed from Ethan Burn's heuristic search framework.
 
 namespace lapkt {
 
+template <typename NodePT>
+struct NullPruner {
+	static bool inline prune(const NodePT& node) { return false; } // By default don't prune any node
+};
+
 //! A generic search schema
 template <typename NodeType,
           typename OpenList,
           typename ClosedList,
           typename StateModel,
           typename StateT = typename StateModel::StateType,
-          typename ActionT = typename StateModel::ActionType::IdType>
+          typename ActionT = typename StateModel::ActionType::IdType,
+          typename PrunerT = NullPruner<std::shared_ptr<NodeType>>>
 class GenericSearch : public SearchAlgorithm<StateT, ActionT>, public events::Subject {
 public:
 	using BaseClass = SearchAlgorithm<StateT, ActionT>;
@@ -101,6 +107,7 @@ public:
 				if (_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
 				
 				this->notify(NodeCreationEvent(*successor));
+				if (PrunerT::prune(successor)) continue; // Check if we want to prune the node
 				_open.insert( successor );
 			}
 			

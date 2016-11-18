@@ -39,7 +39,8 @@ template <typename NodeType,
           typename NodePtrT = std::shared_ptr<NodeType>,
           typename NodeCompareT = node_comparer<NodePtrT>,
           typename OpenListT = StlSortedOpenList<NodeType, Heuristic, NodePtrT, std::vector<NodePtrT>, NodeCompareT>,
-          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>
+          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>,
+          typename PrunerT = NullPruner<std::shared_ptr<NodeType>>
 >
 class StlBestFirstSearch : public GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>
 {

@@ -43,10 +43,13 @@ protected:
 	
 	//! A partial specialization
 	template <typename NodeCompareT>
-	ExitCode do_search_p1(Problem& problem, const Config& config, const std::string& out_dir, float start_time);
+	ExitCode do_search(Problem& problem, const Config& config, const std::string& out_dir, float start_time);
 	
 	template <typename NodeCompareT, typename NoveltyIndexerT>
 	ExitCode do_search(Problem& problem, const Config& config, const std::string& out_dir, float start_time);
+	
+	template <typename NodeCompareT, typename NoveltyIndexerT, typename PrunerT, typename ClosedListT>
+	ExitCode do_search_1(Problem& problem, const Config& config, const std::string& out_dir, float start_time);
 	
 };
 

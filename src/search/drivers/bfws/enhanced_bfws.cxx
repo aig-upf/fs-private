@@ -433,6 +433,7 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 }
 
 
+// template <typename PrunerT = NullPruner>
 class BFWSF6Node {
 public:
 	using ptr_t = std::shared_ptr<BFWSF6Node>;
@@ -558,11 +559,7 @@ public:
 		return; // We want no  updates ATM, since it messes with width considerations
 	}
 
-	bool dead_end() const {
-		return false;
-		if(this->novelty < 1) throw std::runtime_error("SHOULDN'T BE HAPPENING");
-		return this->novelty > 2;
-	}
+	bool dead_end() const { return false; }
 };
 
 
@@ -977,31 +974,40 @@ protected:
 	
 	NoveltyIndexerT _indexer;
 };
-	
-	
+
+
+// An ad-hoc node pruner that prunes if the novelty of the given node is larger than 2
+template <typename NodePT>
+struct W2Pruner {
+	static bool inline prune(const NodePT& node) { 
+		if(node->novelty < 1) throw std::runtime_error("SHOULDN'T BE HAPPENING");
+		return node->novelty > 2;
+	}
+};
+
 ExitCode 
 EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	std::string order = config.getOption<std::string>("ebfws.order");
 	if (order == "0") {
-		return do_search_p1<F6NodeComparer0>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer0>(problem, config, out_dir, start_time);
 	} else if (order == "1") {
-		return do_search_p1<F6NodeComparer1>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer1>(problem, config, out_dir, start_time);
 	} else if (order == "2") {
-		return do_search_p1<F6NodeComparer2>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer2>(problem, config, out_dir, start_time);
 	} else if (order == "3") {
-		return do_search_p1<F6NodeComparer3>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer3>(problem, config, out_dir, start_time);
 	} else if (order == "4") {
-		return do_search_p1<F6NodeComparer4>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer4>(problem, config, out_dir, start_time);
 	} else if (order == "5") {
-		return do_search_p1<F6NodeComparer5>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer5>(problem, config, out_dir, start_time);
 	} else if (order == "6") {
-		return do_search_p1<F6NodeComparer6>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer6>(problem, config, out_dir, start_time);
 	} else if (order == "7") {
-		return do_search_p1<F6NodeComparer7>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer7>(problem, config, out_dir, start_time);
 	} else if (order == "8") {
-		return do_search_p1<F6NodeComparer8>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer8>(problem, config, out_dir, start_time);
 	} else if (order == "9") {
-		return do_search_p1<F6NodeComparer9>(problem, config, out_dir, start_time);
+		return do_search<F6NodeComparer9>(problem, config, out_dir, start_time);
 	}
 	
 	throw std::runtime_error("Invalid value " + order + " for configuration option \"ebfws.order\"");
@@ -1009,7 +1015,7 @@ EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::st
 
 template <typename NodeCompareT>
 ExitCode 
-EnhancedBFWSDriver::do_search_p1(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	std::string novelty_t = config.getOption<std::string>("ebfws.novelty_type");
 	if (novelty_t == "0") {
 		return do_search<NodeCompareT, NoveltyIndexer0>(problem, config, out_dir, start_time);
@@ -1025,10 +1031,23 @@ EnhancedBFWSDriver::do_search_p1(Problem& problem, const Config& config, const s
 	throw std::runtime_error("Invalid value " + novelty_t + " for configuration option \"ebfws.novelty_type\"");
 }
 
-
 template <typename NodeCompareT, typename NoveltyIndexerT>
 ExitCode 
 EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	
+	std::string pruning_t = config.getOption<std::string>("ebfws.pruning", "none");
+	if (pruning_t == "w2") {
+		return do_search_1<NodeCompareT, NoveltyIndexerT, W2Pruner<BFWSF6Node>, aptk::NullClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
+	} else if (pruning_t == "w2_closed") {
+		return do_search_1<NodeCompareT, NoveltyIndexerT, W2Pruner<BFWSF6Node>, aptk::StlUnorderedMapClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
+	}
+	// Otherwise, we want no pruning at all
+	return do_search_1<NodeCompareT, NoveltyIndexerT, lapkt::NullPruner<BFWSF6Node>, aptk::StlUnorderedMapClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
+}
+
+template <typename NodeCompareT, typename NoveltyIndexerT, typename PrunerT, typename ClosedListT>
+ExitCode
+EnhancedBFWSDriver::do_search_1(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	
 	BasicApplicabilityAnalyzer* analyzer = nullptr;
 	
@@ -1069,20 +1088,13 @@ EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std:
 	using HeuristicEnsembleT = BFWSF6Heuristic<GroundStateModel, BaseHeuristicT, NoveltyIndexerT>;
 // 	using OpenListT = lapkt::BaseSortedOpenList<NodeT, HeuristicEnsembleT, NodePT, std::vector<NodePT>, NodeCompareT>;
 	using OpenListT = lapkt::StlSortedOpenList<NodeT, HeuristicEnsembleT, NodePT, std::vector<NodePT>, NodeCompareT>;
-	 using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
-//	using ClosedListT = aptk::NullClosedList<NodeT>;
-	
-	
-	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, NodePT, NodeCompareT, OpenListT, ClosedListT>;
-	using EngineT = std::unique_ptr<RawEngineT>;
-	
+
 // 	auto base_heuristic = std::unique_ptr<gecode::SmartRPG>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
 // 	std::unique_ptr<gecode::SmartRPG> nullheuristic;
-	
-	auto heuristic = std::unique_ptr<HeuristicEnsembleT>(
-                            new HeuristicEnsembleT(model, max_width, feature_configuration,
-                                                   base_novelty_evaluator, std::move(offending))
-	);
+
+	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, NodePT, NodeCompareT, OpenListT, ClosedListT, PrunerT>;
+	using EngineT = std::unique_ptr<RawEngineT>;
+	auto heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, max_width, feature_configuration, base_novelty_evaluator, std::move(offending)));
 	
 	auto engine = EngineT(new RawEngineT(model, *heuristic));
 	
