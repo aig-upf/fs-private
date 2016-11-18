@@ -139,6 +139,7 @@ public:
 	
 	const std::string getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const;
 	const std::string deduceObjectName(ObjectIdx object, TypeIdx type) const;
+	const std::string deduceObjectName(ObjectIdx object, const std::string& type) const { return deduceObjectName(object, getTypeId(type)); }      
 	inline ObjectIdx getObjectId(const std::string& name) const { return objectIds.at(name); }
 	
 	//! Return the ID of the function with given name
