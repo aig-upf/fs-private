@@ -113,33 +113,11 @@ public:
 
 	//! Backward chaining procedure to recover a plan from a given node
 	virtual void retrieve_solution(NodePtr node, PlanT& solution) {
-		std::vector<NodePtr> nodes;
-		nodes.push_back(node);
-// 		std::cout << "Inverse plan: " << std::endl;
-// 		std::cout << *node << std::endl;
 		while (node->has_parent()) {
 			solution.push_back(node->action);
 			node = node->parent;
-// 			std::cout << *node << std::endl;
-			nodes.push_back(node);
 		}
 		std::reverse( solution.begin(), solution.end() );
-		std::reverse( nodes.begin(), nodes.end() );
-		
-		
-		std::cout << "Found plan: " << std::endl;
-// 		const auto& info = fs0::ProblemInfo::getInstance();
-// 		const auto& problem = fs0::Problem::getInstance();
-		for (unsigned i = 0; i < nodes.size(); ++i) {
-			std::cout << *nodes[i] << std::endl;
-			if (i < solution.size()) {
-// 				const fs0::ActionID* action_idx = solution[i];
-// 				std::cout  << std::endl << "==> " << action_idx << std::endl << std::endl;
-			}
-		}
-		
-		
-		
 	}
 	
 	//! Convenience method
