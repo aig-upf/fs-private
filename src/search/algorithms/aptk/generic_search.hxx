@@ -35,6 +35,7 @@ Concepts borrowed from Ethan Burn's heuristic search framework.
 #include <problem_info.hxx>
 #include <utils/printers/actions.hxx>
 #include <problem.hxx>
+#include <actions/action_id.hxx>
 #include <aptk2/tools/logging.hxx>
 
 namespace lapkt {
@@ -132,8 +133,8 @@ public:
 		for (unsigned i = 0; i < nodes.size(); ++i) {
 			std::cout << *nodes[i] << std::endl;
 			if (i < solution.size()) {
-				auto action_idx = solution[i];
-				std::cout  << std::endl << "==> " << action_idx << std::endl << std::endl;
+// 				const fs0::ActionID* action_idx = solution[i];
+// 				std::cout  << std::endl << "==> " << action_idx << std::endl << std::endl;
 			}
 		}
 		

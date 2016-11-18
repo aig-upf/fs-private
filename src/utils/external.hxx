@@ -20,12 +20,12 @@ public:
     virtual asp::LPHandler* get_asp_handler() const { return nullptr; }
     
     //! To be subclassed
-	virtual std::vector<ObjectIdx> get_offending_configurations(ObjectIdx confb, ObjectIdx confa) const {
+	virtual std::vector<ObjectIdx> get_offending_configurations(ObjectIdx confb, ObjectIdx arm_traj, ObjectIdx held_o) const {
 		throw std::runtime_error("Must be subclassed");
 	}
 	
 	//! To be subclassed
-	virtual bool nonoverlap_oo(const ObjectIdxVector& params) const {
+	virtual bool nonoverlap(const ObjectIdxVector& params) const {
 		throw std::runtime_error("Must be subclassed");
 	}
 

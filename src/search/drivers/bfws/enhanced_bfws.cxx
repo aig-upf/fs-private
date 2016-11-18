@@ -274,7 +274,6 @@ public:
 		assert(ground_actions.size());
 		
 		VariableIdx v_confb = info.getVariableId("confb(rob)");
-// 		VariableIdx v_confa = info.getVariableId("confa(rob)");
 		VariableIdx v_traja = info.getVariableId("traj(rob)");
 		VariableIdx v_holding = info.getVariableId("holding()");
 		ObjectIdx no_object_id = info.getObjectId("no_object");
@@ -292,7 +291,6 @@ public:
 		
 		
 		
-		
 		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
 			// const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
 			NodePT node = _optimal_paths[goal_atom_idx];
@@ -305,10 +303,10 @@ public:
 				
 				// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
 				ObjectIdx o_confb = state.getValue(v_confb);
-// 				ObjectIdx o_confa = state.getValue(v_confa);
 				ObjectIdx o_traj_arm = state.getValue(v_traja);
+				ObjectIdx o_held = state.getValue(v_holding);
 				
-				auto v_off = external.get_offending_configurations(o_confb, o_traj_arm);
+				auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held);
 				offending[goal_atom_idx].insert(v_off.begin(), v_off.end());
 				
 				// ADDITIONALLY, IF THE ACTION USED TO REACH THIS STATE IS A 'PLACE' ACTION THAT PUTS THE PLACED OBJECT

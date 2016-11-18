@@ -63,7 +63,7 @@ PlaceableFeature::PlaceableFeature(bool check_final_overlaps, const fs::Formula*
 	_no_object_id = info.getObjectId("no_object");
 	_holding_var = info.getVariableId("holding()");
 	_confb_rob = info.getVariableId("confb(rob)");
-	_confa_rob = info.getVariableId("confa(rob)");
+	_traj_rob = info.getVariableId("traj(rob)");
 
 	for (ObjectIdx obj_id:info.getTypeObjects("object_id")) {
 		_all_objects_ids.push_back(obj_id);
@@ -86,8 +86,11 @@ PlaceableFeature::evaluate(const State& s) const {
 		return 0;
 	}
 	
+	auto cb = s.getValue(_confb_rob);
+	auto traj = s.getValue(_traj_rob);
+	
 	// Otherwise, ensure that the robot is in a "placeable" overall configuration
-	auto rob_conf = {s.getValue(_confb_rob), s.getValue(_confa_rob)};
+	auto rob_conf = {cb, traj};
 	bool placeable = _external.placeable(rob_conf);
 	if (!placeable) return 0;
 	
@@ -113,7 +116,8 @@ PlaceableFeature::evaluate(const State& s) const {
 			if (other_object_id != held_object) {
 				VariableIdx other_object_var = _all_objects_conf[i];
 				ObjectIdx other_obj_conf = s.getValue(other_object_var);
-				bool objects_overlap = _external.nonoverlap_oo({future_object_conf, other_obj_conf});
+				//(@nonoverlap ?cb - conf_base ?t - trajectory ?held - nullable_object_id ?o_conf - conf_obj)
+				bool objects_overlap = _external.nonoverlap({cb, traj, held_object, other_obj_conf});
 				if (objects_overlap) return 0;
 			}
 		}
@@ -132,7 +136,7 @@ GraspableFeature::GraspableFeature()
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	_confb_rob = info.getVariableId("confb(rob)");
-	_confa_rob = info.getVariableId("confa(rob)");
+	_traj_rob = info.getVariableId("traj(rob)");
 	_holding_var = info.getVariableId("holding()");
 	_no_object_id = info.getObjectId("no_object");
 
@@ -149,12 +153,12 @@ GraspableFeature::evaluate(const State& s) const {
 	if (held_object != _no_object_id) return 0; // Some object is already held.
 	
 	auto cb = s.getValue(_confb_rob);
-	auto ca = s.getValue(_confa_rob);
+	auto traj = s.getValue(_traj_rob);
 	
 	// Return an identifier of the first object that is graspable, or 0, if none
 	for (VariableIdx other_object_var:_all_objects_conf) {
 		ObjectIdx co = s.getValue(other_object_var);
-		bool graspable = _external.graspable({cb, ca, co});
+		bool graspable = _external.graspable({cb, traj, co});
 		if (graspable) return other_object_var;
 	}
 
@@ -164,13 +168,13 @@ GraspableFeature::evaluate(const State& s) const {
 GlobalRobotConfFeature::GlobalRobotConfFeature() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	_confb_rob = info.getVariableId("confb(rob)");
-	_confa_rob = info.getVariableId("confa(rob)");
+	_traj_rob = info.getVariableId("traj(rob)");
 }
 
 
 aptk::ValueIndex
 GlobalRobotConfFeature::evaluate(const State& s) const {
-	return s.getValue(_confa_rob) * 1000 + s.getValue(_confb_rob);
+	return s.getValue(_traj_rob) * 1000 + s.getValue(_confb_rob);
 }
 
 

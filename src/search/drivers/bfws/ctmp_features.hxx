@@ -38,13 +38,14 @@ protected:
 	ObjectIdx _no_object_id;
 	VariableIdx _holding_var;
 	
+	
 	// The two following vectors are sync'd, i.e. _all_objects_conf[i] is the config of object _all_objects_ids[i]
 	std::vector<ObjectIdx> _all_objects_ids; // The Ids of all objects
 	std::vector<VariableIdx> _all_objects_conf; // The state variables of the configurations of all objects
 	std::unordered_map<ObjectIdx, ObjectIdx> _all_objects_goal; // The configuration in the goal of each object, if any
 	
 	VariableIdx _confb_rob;
-	VariableIdx _confa_rob;
+	VariableIdx _traj_rob;
 	const ExternalI& _external;
 	bool _check_overlaps;
 };
@@ -71,7 +72,7 @@ protected:
 	ObjectIdx _no_object_id;
 	VariableIdx _holding_var;
 	VariableIdx _confb_rob;
-	VariableIdx _confa_rob;
+	VariableIdx _traj_rob;
 	const ExternalI& _external;
 };
 
@@ -91,7 +92,7 @@ public:
 
 protected:
 	VariableIdx _confb_rob;
-	VariableIdx _confa_rob;
+	VariableIdx _traj_rob;
 };
 
 //! A custom heuristic for the CTMP problem
