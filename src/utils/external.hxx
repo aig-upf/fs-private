@@ -42,6 +42,8 @@ public:
 	virtual bool graspable(const ObjectIdxVector& params) const {
 		throw std::runtime_error("Must be subclassed");
 	}
+	
+	virtual ObjectIdx target_a(const std::vector<ObjectIdx>& params) const { throw std::runtime_error("Must be subclassed"); }
 
 };
 

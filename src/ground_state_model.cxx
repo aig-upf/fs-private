@@ -17,7 +17,7 @@ GroundStateModel::nullify_trajectory(State& state) const {
 GroundStateModel::GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer, bool remove_trajectory) :
 	_task(problem),
 	_manager(build_action_manager(problem, analyzer)),
-	_null_trajectory_atom(fs0::ProblemInfo::getInstance().getVariableId("traj(rob)"), 0),
+	_null_trajectory_atom(fs0::ProblemInfo::getInstance().getVariableId("traj(rob)"), fs0::ProblemInfo::getInstance().getObjectId("t0")),
 	_null_trajectory(),
 	_remove_trajectory(remove_trajectory)
 {
