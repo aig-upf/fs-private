@@ -4,6 +4,7 @@
 #include <aptk2/search/interfaces/det_state_model.hxx>
 #include <actions/actions.hxx>
 #include <applicability/action_managers.hxx>
+#include "atom.hxx"
 
 namespace fs0 {
 
@@ -16,7 +17,7 @@ public:
 	using ActionType = BaseT::ActionType;
 	using ActionId = ActionType::IdType;
 	
-	GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer = nullptr);
+	GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer = nullptr, bool remove_trajectory = false);
 	~GroundStateModel() = default;
 	
 	GroundStateModel(const GroundStateModel&) = default;
@@ -54,6 +55,14 @@ protected:
 	mutable std::vector<Atom> _effects_cache;
 	
 	static SmartActionManager build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer);
+
+	fs0::Atom _null_trajectory_atom;
+	//! HACK HACK HACK
+	std::vector<fs0::Atom> _null_trajectory;
+	
+	bool _remove_trajectory;
+
+	void nullify_trajectory(State& state) const;
 };
 
 } // namespaces

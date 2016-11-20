@@ -3,18 +3,33 @@
 #include <problem.hxx>
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
+#include "problem_info.hxx"
 
 namespace fs0 {
+	
+void 
+GroundStateModel::nullify_trajectory(State& state) const {
+	if (_remove_trajectory) {
+		state.accumulate(_null_trajectory); // HACK HACK HACK Nullify the "traj(rob)" state variable
+	}
+}
 
-GroundStateModel::GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) :
+GroundStateModel::GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer, bool remove_trajectory) :
 	_task(problem),
-	_manager(build_action_manager(problem, analyzer))
-{}
+	_manager(build_action_manager(problem, analyzer)),
+	_null_trajectory_atom(fs0::ProblemInfo::getInstance().getVariableId("traj(rob)"), 0),
+	_null_trajectory(),
+	_remove_trajectory(remove_trajectory)
+{
+	_null_trajectory.push_back(_null_trajectory_atom);
+}
 
 State GroundStateModel::init() const {
 	// We need to make a copy so that we can return it as non-const.
 	// This is only called once per search.
-	return State(_task.getInitialState());
+	State init(_task.getInitialState());
+	nullify_trajectory(init);
+	return init;
 }
 
 bool GroundStateModel::goal(const State& state) const {
@@ -35,6 +50,9 @@ State GroundStateModel::next(const State& state, const GroundAction::IdType& act
 
 State GroundStateModel::next(const State& state, const GroundAction& a) const {
 	NaiveApplicabilityManager::computeEffects(state, a, _effects_cache);
+	if (_remove_trajectory) {
+		_effects_cache.push_back(_null_trajectory_atom);
+	}
 	return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
 }
 

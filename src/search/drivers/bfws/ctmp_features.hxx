@@ -45,7 +45,7 @@ protected:
 	std::unordered_map<ObjectIdx, ObjectIdx> _all_objects_goal; // The configuration in the goal of each object, if any
 	
 	VariableIdx _confb_rob;
-	VariableIdx _traj_rob;
+	VariableIdx _confa_rob;
 	const ExternalI& _external;
 	bool _check_overlaps;
 };
@@ -72,27 +72,8 @@ protected:
 	ObjectIdx _no_object_id;
 	VariableIdx _holding_var;
 	VariableIdx _confb_rob;
-	VariableIdx _traj_rob;
+	VariableIdx _confa_rob;
 	const ExternalI& _external;
-};
-
-//! A feature representing the value of any arbitrary language term, e.g. X+Y, or @proc(Y,Z)
-class GlobalRobotConfFeature : public NoveltyFeature {
-public:
-	GlobalRobotConfFeature();
-	~GlobalRobotConfFeature() = default;
-	GlobalRobotConfFeature(const GlobalRobotConfFeature&) = default;
-	NoveltyFeature* clone() const override { return new GlobalRobotConfFeature(*this); }
-	
-	aptk::ValueIndex evaluate(const State& s) const override;
-	
-	std::ostream& print(std::ostream& os) const override {
-		return os << "global_rob_conf";
-	}
-
-protected:
-	VariableIdx _confb_rob;
-	VariableIdx _traj_rob;
 };
 
 //! A custom heuristic for the CTMP problem

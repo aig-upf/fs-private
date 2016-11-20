@@ -1063,9 +1063,6 @@ EnhancedBFWSDriver::do_search_1(Problem& problem, const Config& config, const st
 	}
 	analyzer->build();
 	
-	GroundStateModel model(problem, analyzer); 
-	
-	
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	unsigned max_width = config.getOption<int>("width.max");
 	
@@ -1079,6 +1076,8 @@ EnhancedBFWSDriver::do_search_1(Problem& problem, const Config& config, const st
 	// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
 	CTMPNoveltyEvaluator base_novelty_evaluator(problem, max_width, feature_configuration, true, true, true);
 	
+	
+	GroundStateModel model(problem, analyzer, true); 
 	
 	using BaseHeuristicT = gecode::SmartRPG;
 	using NodeT = BFWSF6Node;
