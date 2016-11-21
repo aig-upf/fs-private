@@ -40,12 +40,14 @@ template <typename NodeType,
           typename NodeCompareT = node_comparer<NodePtrT>,
           typename OpenListT = StlSortedOpenList<NodeType, Heuristic, NodePtrT, std::vector<NodePtrT>, NodeCompareT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>,
-          typename PrunerT = NullPruner<std::shared_ptr<NodeType>>
+          typename PrunerT = NullPruner<std::shared_ptr<NodeType>>,
+		  typename StateT = typename StateModel::StateType,
+          typename ActionT = typename StateModel::ActionType::IdType
 >
-class StlBestFirstSearch : public GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>
+class StlBestFirstSearch : public GenericSearch<NodeType, OpenListT, ClosedListT, StateModel, StateT, ActionT, PrunerT>
 {
 public:
-	using BaseClass = GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>;
+	using BaseClass = GenericSearch<NodeType, OpenListT, ClosedListT, StateModel, StateT, ActionT, PrunerT>;
 	
 	//! The only allowed constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search

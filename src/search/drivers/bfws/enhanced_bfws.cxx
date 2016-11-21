@@ -1037,12 +1037,12 @@ EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std:
 	
 	std::string pruning_t = config.getOption<std::string>("ebfws.pruning", "none");
 	if (pruning_t == "w2") {
-		return do_search_1<NodeCompareT, NoveltyIndexerT, W2Pruner<BFWSF6Node>, aptk::NullClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
+		return do_search_1<NodeCompareT, NoveltyIndexerT, W2Pruner<std::shared_ptr<BFWSF6Node>>, aptk::NullClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
 	} else if (pruning_t == "w2_closed") {
-		return do_search_1<NodeCompareT, NoveltyIndexerT, W2Pruner<BFWSF6Node>, aptk::StlUnorderedMapClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
+		return do_search_1<NodeCompareT, NoveltyIndexerT, W2Pruner<std::shared_ptr<BFWSF6Node>>, aptk::StlUnorderedMapClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
 	}
 	// Otherwise, we want no pruning at all
-	return do_search_1<NodeCompareT, NoveltyIndexerT, lapkt::NullPruner<BFWSF6Node>, aptk::StlUnorderedMapClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
+	return do_search_1<NodeCompareT, NoveltyIndexerT, lapkt::NullPruner<std::shared_ptr<BFWSF6Node>>, aptk::StlUnorderedMapClosedList<BFWSF6Node>>(problem, config, out_dir, start_time);
 }
 
 template <typename NodeCompareT, typename NoveltyIndexerT, typename PrunerT, typename ClosedListT>
