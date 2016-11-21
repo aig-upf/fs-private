@@ -88,7 +88,7 @@ public:
 		
 		LPT_INFO("cout", "Initial Node: " << std::endl << *n);
 		LPT_INFO("init_stats", "Initial Node: " << std::endl << *n);
-		LPT_INFO("init_stats", "# state vars: " << fs0::ProblemInfo::getInstance().getNumVariables());
+		LPT_INFO("init_stats", "# state vars: " << fs0::Problem::getInstance().get_tuple_index().size());
 
 		while ( !_open.is_empty() ) {
 			NodePtr current = _open.get_next( );
@@ -103,9 +103,14 @@ public:
 			
 			this->notify(NodeExpansionEvent(*current));
 			
+			unsigned count = 0;
 			for ( const auto& a : _model.applicable_actions( current->state ) ) {
 				StateT s_a = _model.next( current->state, a );
 				NodePtr successor = std::make_shared<NodeType>( std::move(s_a), a, current );
+				
+				++count;
+				
+// 				std::cout << *(_model.getTask().getGroundActions().at(_model.get_action_idx(a))) << std::endl;
 				
 				if (_closed.check(successor)) continue; // The node has already been closed
 				if (_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
@@ -114,6 +119,8 @@ public:
 				if (PrunerT::prune(successor)) continue; // Check if we want to prune the node
 				_open.insert( successor );
 			}
+			
+			// LPT_INFO("generations", count);
 			
 		}
 		return false;

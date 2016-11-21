@@ -44,6 +44,8 @@ public:
 	void print(std::ostream &os) const;
 	
 	const Problem& getTask() const { return _task; }
+	
+	unsigned get_action_idx(const ActionId& action) const { return static_cast<unsigned>(action); }
 
 protected:
 	// The underlying planning problem.
