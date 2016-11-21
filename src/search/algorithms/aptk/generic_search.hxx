@@ -85,6 +85,10 @@ public:
 		NodePtr n = std::make_shared<NodeType>( s );
 		this->notify(NodeCreationEvent(*n));
 		_open.insert(n);
+		
+		LPT_INFO("cout", "Initial Node: " << std::endl << *n);
+		LPT_INFO("init_stats", "Initial Node: " << std::endl << *n);
+		LPT_INFO("init_stats", "# state vars: " << fs0::ProblemInfo::getInstance().getNumVariables());
 
 		while ( !_open.is_empty() ) {
 			NodePtr current = _open.get_next( );
@@ -131,14 +135,14 @@ public:
 		std::reverse( nodes.begin(), nodes.end() );
 		
 		
-		std::cout << "Found plan: " << std::endl;
+// 		std::cout << "Found plan: " << std::endl;
 // 		const auto& info = fs0::ProblemInfo::getInstance();
 		const auto& problem = fs0::Problem::getInstance();
 		for (unsigned i = 0; i < nodes.size(); ++i) {
 			LPT_INFO("debugging", *nodes[i]);
 // 			std::cout << *nodes[i] << std::endl;
 			if (i < solution.size()) {
-				std::cout  << std::endl << "==> " << fs0::print::action_header(*(problem.getGroundActions()[i])) << std::endl << std::endl;
+// 				std::cout  << std::endl << "==> " << fs0::print::action_header(*(problem.getGroundActions()[i])) << std::endl << std::endl;
 				LPT_INFO("debugging", "==> " << fs0::print::action_header(*(problem.getGroundActions()[i])) << std::endl);
 			}
 		}

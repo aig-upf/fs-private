@@ -38,7 +38,7 @@ public:
 
 protected:
 	void open(lapkt::events::Subject&, const lapkt::events::Event& event) {
-		auto& node = dynamic_cast<const OpenEvent&>(event).node;
+		auto& node = static_cast<const OpenEvent&>(event).node;
 		LPT_DEBUG("cout", node);
 		LPT_DEBUG("search", std::setw(7) << "OPEN: " << node);
 		_unused(node);

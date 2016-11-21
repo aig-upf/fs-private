@@ -464,6 +464,8 @@ public:
 	//! The number of objects in an offending configuration
 	unsigned _num_offending;
 	
+	ObjectIdx picked_offending_object; // The object that we picked and that was offending
+	
 	//! The number of atoms in the last relaxed plan computed in the way to the current state that have been
 	//! made true along the path (#r)
 // 	enum class REACHED_STATUS : unsigned char {IRRELEVANT_ATOM, UNREACHED, REACHED};
@@ -497,6 +499,7 @@ public:
 		unachieved(std::numeric_limits<unsigned>::max()),
 		_num_offending(std::numeric_limits<unsigned>::max()),
 // 		_num_relaxed_achieved(0),
+		picked_offending_object(-1),
 		_h(std::numeric_limits<unsigned>::max())
 	{}
 
@@ -513,7 +516,7 @@ public:
 	friend std::ostream& operator<<(std::ostream &os, const BFWSF6Node& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const { 
 		std::string hval = _h == std::numeric_limits<unsigned>::max() ? "?" : std::to_string(_h);
-		return os << "{@ = " << this << ", s = " << state << ", g = " << g << ", w = " << novelty << ", #g=" << unachieved << ", #off=" << _num_offending << ", h = " << hval << ", parent = " << parent << "}";
+		return os << "{@ = " << this << ", s = " << state << ", g = " << g << ", w = " << novelty << ", #g=" << unachieved << ", #off=" << _num_offending << ", p = " << picked_offending_object << ", h = " << hval << ", parent = " << parent << "}";
 	}
 	
 	/*
@@ -546,12 +549,23 @@ public:
 	template <typename Heuristic>
 	void evaluate_with( Heuristic& ensemble ) {
 		unachieved = ensemble.get_unachieved(this->state);
-		_num_offending = ensemble.compute_offending(this->state);
+		_num_offending = ensemble.compute_offending(*this, picked_offending_object);
 		_h = ensemble.compute_heuristic(state);
 		novelty = ensemble.novelty(*this, unachieved, _h, _num_offending);
 		if (novelty > ensemble.max_novelty()) {
 			novelty = std::numeric_limits<unsigned>::max();
 		}
+		
+		/*
+		if (this->parent->_num_offending == _num_offending + 2) {
+			// It must be that we picked an offending configuration
+			const GroundAction
+			if (true) throw std::runtime_error("WRONG ASSUMPTION");
+			
+			
+			
+		}
+		*/
 	}
 	
 	void inherit_heuristic_estimate() {
@@ -875,7 +889,12 @@ public:
 
 	
 	//! Return the count of how many objects offend the consecution of at least one unachived goal atom.
-	unsigned compute_offending(const State& state) {
+	template <typename NodeT>
+	unsigned compute_offending(const NodeT& node, ObjectIdx& picked_offending_object) {
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		const Problem& problem = Problem::getInstance();
+		
+		const State& state = node.state;
 		
 		std::unordered_set<VariableIdx> offending; // We'll store here which problem objects are offending some unreached goal atom.
 		
@@ -906,7 +925,56 @@ public:
 			}
 		}
 		
-		return offending.size();
+		unsigned num_offending = 2 * offending.size();
+		
+// 		std::cout << "Num offending #1: " << num_offending << "   " << state.hash() <<std::endl;
+		
+		if (node.action == GroundAction::invalid_action_id || node.parent == nullptr) return num_offending;
+		
+		picked_offending_object = -1;
+		const GroundAction& action = *(problem.getGroundActions().at(node.action));
+		const ValueTuple& values = action.getBinding().get_full_binding();
+		
+// 		bool yes = (node.parent->_num_offending == num_offending + 2);
+// 		if (yes) std::cout << "!!Num offending #2: " << num_offending << std::endl;
+// 		if (yes) std::cout << "!!Num offending #1.1: " << node.parent->_num_offending << ", " << num_offending << std::endl;
+		
+		if (action.getName() == "grasp-object" && (node.parent->_num_offending == num_offending + 2)) {
+			// It must be that we picked an offending configuration
+			
+// 			if (yes) std::cout << "Num offending #3: " << num_offending << std::endl;
+			
+			assert(values.size()==1); // The action has exactly one parameter
+			picked_offending_object = values[0];
+			
+			VariableIdx v_holding = info.getVariableId("holding()");
+			if (state.getValue(v_holding) != picked_offending_object) throw std::runtime_error("WRONG ASSUMPTION");
+			
+			num_offending += 1;
+			
+		} else {
+			ObjectIdx previously_picked =  node.parent->picked_offending_object;
+			
+// 			std::cout << "Num offending #4: " << num_offending << std::endl;
+			
+			if (previously_picked != -1) { // We were carrying a picked object in the parent
+				
+// 				std::cout << "Num offending #5: " << num_offending << std::endl;
+				
+				if (action.getName() == "place-object") { // We're placing the previously-picked offending object
+					// We must be placing the ex-offending object
+					if (values.size() != 1 ||  values[0] != previously_picked) throw std::runtime_error("WRONG ASSUMPTION");
+					
+				} else {
+					// Else we're still carrying a previously picked offending object, so we add a +1 to the num_offending
+					num_offending += 1;
+					picked_offending_object = previously_picked;
+				}
+			}
+		}
+		
+// 		std::cout << "Num offending FINAL: " << num_offending << "   " << state.hash() <<std::endl;
+		return num_offending;
 	}
 	
 	//! Compute the novelty of the state wrt all the states with the same heuristic value.

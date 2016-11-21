@@ -58,6 +58,7 @@ PlaceableFeature::PlaceableFeature(bool check_final_overlaps, const fs::Formula*
 	_external(ProblemInfo::getInstance().get_external()),
 	_check_overlaps(check_final_overlaps)
 {
+// 	std::cout << "PLACEABLE::CHECK_OVERLAPS" << _check_overlaps << std::endl;
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	_no_object_id = info.getObjectId("no_object");
@@ -97,6 +98,16 @@ PlaceableFeature::evaluate(const State& s) const {
 	// And ensure that the resulting configuration would be a goal configuration for the object being placed
 	ObjectIdx future_object_conf = _external.placing_pose(rob_conf);
 	auto it = _all_objects_goal.find(held_object);
+	
+	if (it != _all_objects_goal.end()) { // For goal objects, an object is placeable if it can be left in its final position
+		if (future_object_conf == it->second) {
+			return held_object;
+		}
+	} else { // For the rest, it is placeable if it can be left no matter where.
+		if (_check_overlaps) return held_object; // HACK We use the boolean to denote whether we want to check non-goal objects or not.
+		else return 0;
+	}
+	return 0;
 	
 	if (it == _all_objects_goal.end() ||
 		(it != _all_objects_goal.end() && future_object_conf != it->second)) {
