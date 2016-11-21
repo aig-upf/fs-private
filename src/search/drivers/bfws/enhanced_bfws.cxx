@@ -298,21 +298,24 @@ public:
 			
 			while (node->has_parent()) {
 				const StateT& state = node->state;
-				const StateT& parent_state = node->parent->state;
-				
-				
-				// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
-				ObjectIdx o_confb = state.getValue(v_confb);
-				ObjectIdx o_traj_arm = state.getValue(v_traja);
-				ObjectIdx o_held = state.getValue(v_holding);
-				
-				auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held);
-				offending[goal_atom_idx].insert(v_off.begin(), v_off.end());
-				
-				// ADDITIONALLY, IF THE ACTION USED TO REACH THIS STATE IS A 'PLACE' ACTION THAT PUTS THE PLACED OBJECT
-				// INTO ITS GOAL CONFIGURATION, THEN THIS GOAL CONFIGURATION IS MARKED AS A POTENTIALLY OFFENDING CONFIGURATION AS WELL
+// 				const StateT& parent_state = node->parent->state;
 				ActionIdx action_id = node->action;
 				const GroundAction& action = *(ground_actions.at(action_id));
+				
+				// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
+				if (action.getName() == "transition_arm") {
+					
+					ObjectIdx o_confb = state.getValue(v_confb);
+					ObjectIdx o_traj_arm = state.getValue(v_traja);
+					ObjectIdx o_held = state.getValue(v_holding);
+					auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held);
+					offending[goal_atom_idx].insert(v_off.begin(), v_off.end());
+				}
+				
+				/*
+				// ADDITIONALLY, IF THE ACTION USED TO REACH THIS STATE IS A 'PLACE' ACTION THAT PUTS THE PLACED OBJECT
+				// INTO ITS GOAL CONFIGURATION, THEN THIS GOAL CONFIGURATION IS MARKED AS A POTENTIALLY OFFENDING CONFIGURATION AS WELL
+				
 				if (action.getActionData().getName() == "place-object") {
 					ObjectIdx held = parent_state.getValue(v_holding);
 					assert(held!=no_object_id);
@@ -326,6 +329,7 @@ public:
 						offending[goal_atom_idx].insert(current_config);
 					}
 				}
+				*/
 				
 				node = node->parent;
 			}
