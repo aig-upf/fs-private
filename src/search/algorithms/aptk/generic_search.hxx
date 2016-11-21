@@ -137,13 +137,15 @@ public:
 		
 // 		std::cout << "Found plan: " << std::endl;
 // 		const auto& info = fs0::ProblemInfo::getInstance();
-		const auto& problem = fs0::Problem::getInstance();
+// 		const auto& problem = fs0::Problem::getInstance();
 		for (unsigned i = 0; i < nodes.size(); ++i) {
 			LPT_INFO("debugging", *nodes[i]);
+			auto action_idx = solution[i];
 // 			std::cout << *nodes[i] << std::endl;
 			if (i < solution.size()) {
-// 				std::cout  << std::endl << "==> " << fs0::print::action_header(*(problem.getGroundActions()[i])) << std::endl << std::endl;
-				LPT_INFO("debugging", "==> " << fs0::print::action_header(*(problem.getGroundActions()[i])) << std::endl);
+// 				std::cout  << std::endl << "==> " << action_idx << std::endl << std::endl;
+				LPT_INFO("debugging", "==> " <<  action_idx  << std::endl);
+
 			}
 		}
 		
