@@ -136,19 +136,18 @@ SmartActionManager::index_variables(const std::vector<const GroundAction*>& acti
 	}
 	
 	
-	
-	
-	
 	// HACK HACK HACK
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	ObjectIdx ca0 = info.getObjectId("ca0");
 	const ExternalI& external = info.get_external();
-	for(unsigned j = 0; j < _sc_index.size(); j++) {
+	for (unsigned j = 0; j < _sc_index.size(); j++) {
 		const GroundAction& action = *(actions.at(j));
-		if (action.getName() != "transition_arm") {
+		if (action.getName() != "transition_arm" && action.getName() != "grasp-object") {
 			_sc_index[j].clear();
 		} 
 	}
+
+
 }
 
 //! A small helper

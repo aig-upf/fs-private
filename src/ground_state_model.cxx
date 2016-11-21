@@ -19,7 +19,7 @@ GroundStateModel::GroundStateModel(const Problem& problem, BasicApplicabilityAna
 	_manager(build_action_manager(problem, analyzer)),
 	_null_trajectory_atom(fs0::ProblemInfo::getInstance().getVariableId("traj(rob)"), fs0::ProblemInfo::getInstance().getObjectId("t0")),
 	_null_trajectory(),
-	_remove_trajectory(remove_trajectory)
+	_remove_trajectory(false)
 {
 	_null_trajectory.push_back(_null_trajectory_atom);
 }
