@@ -145,21 +145,10 @@ SmartActionManager::index_variables(const std::vector<const GroundAction*>& acti
 	const ExternalI& external = info.get_external();
 	for(unsigned j = 0; j < _sc_index.size(); j++) {
 		const GroundAction& action = *(actions.at(j));
-// 		std::cout << "Action name: " << action.getName() << std::endl;
 		if (action.getName() != "transition_arm") {
 			_sc_index[j].clear();
-		} else { // We have a move-transition action
-			const Binding& binding = action.getBinding();
-			const ValueTuple& values = binding.get_full_binding();
-			assert(values.size()==1); // The action has exactly one parameter
-			ObjectIdx trajectory_id = values[0];
-			if (external.target_a({trajectory_id }) == ca0) { // The move-arm is a return to the resting pose, thus no overlap is possible
-				_sc_index[j].clear();
-			}
-		}
+		} 
 	}
-	
-	
 }
 
 //! A small helper
