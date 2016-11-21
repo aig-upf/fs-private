@@ -383,9 +383,14 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 
 	FeatureSet features;
 	
+	VariableIdx traj = info.getVariableId("traj(rob)");
+// 	traj = -1;
+	
 	// Add all state variables
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-		features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
+		if (var != traj) {
+			features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
+		}
 	}
 	
 	// Add now some domain-dependent features:
