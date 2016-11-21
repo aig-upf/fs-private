@@ -994,25 +994,25 @@ ExitCode
 EnhancedBFWSDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	std::string order = config.getOption<std::string>("ebfws.order");
 	if (order == "0") {
-		return do_search<F6NodeComparer0>(problem, config, out_dir, start_time);
+// 		return do_search<F6NodeComparer0>(problem, config, out_dir, start_time);
 	} else if (order == "1") {
-		return do_search<F6NodeComparer1>(problem, config, out_dir, start_time);
+// 		return do_search<F6NodeComparer1>(problem, config, out_dir, start_time);
 	} else if (order == "2") {
-		return do_search<F6NodeComparer2>(problem, config, out_dir, start_time);
+// 		return do_search<F6NodeComparer2>(problem, config, out_dir, start_time);
 	} else if (order == "3") {
-		return do_search<F6NodeComparer3>(problem, config, out_dir, start_time);
+// 		return do_search<F6NodeComparer3>(problem, config, out_dir, start_time);
 	} else if (order == "4") {
 		return do_search<F6NodeComparer4>(problem, config, out_dir, start_time);
 	} else if (order == "5") {
 		return do_search<F6NodeComparer5>(problem, config, out_dir, start_time);
 	} else if (order == "6") {
-		return do_search<F6NodeComparer6>(problem, config, out_dir, start_time);
+// 		return do_search<F6NodeComparer6>(problem, config, out_dir, start_time);
 	} else if (order == "7") {
 		return do_search<F6NodeComparer7>(problem, config, out_dir, start_time);
 	} else if (order == "8") {
 		return do_search<F6NodeComparer8>(problem, config, out_dir, start_time);
 	} else if (order == "9") {
-		return do_search<F6NodeComparer9>(problem, config, out_dir, start_time);
+// 		return do_search<F6NodeComparer9>(problem, config, out_dir, start_time);
 	}
 	
 	throw std::runtime_error("Invalid value " + order + " for configuration option \"ebfws.order\"");
@@ -1025,9 +1025,9 @@ EnhancedBFWSDriver::do_search(Problem& problem, const Config& config, const std:
 	if (novelty_t == "0") {
 		return do_search<NodeCompareT, NoveltyIndexer0>(problem, config, out_dir, start_time);
 	} else if (novelty_t == "1") {
-		return do_search<NodeCompareT, NoveltyIndexer1>(problem, config, out_dir, start_time);
+// 		return do_search<NodeCompareT, NoveltyIndexer1>(problem, config, out_dir, start_time);
 	} else if (novelty_t == "2") {
-		return do_search<NodeCompareT, NoveltyIndexer2>(problem, config, out_dir, start_time);
+// 		return do_search<NodeCompareT, NoveltyIndexer2>(problem, config, out_dir, start_time);
 	} else if (novelty_t == "3") {
 		return do_search<NodeCompareT, NoveltyIndexer3>(problem, config, out_dir, start_time);
 	} else if (novelty_t == "4") {
