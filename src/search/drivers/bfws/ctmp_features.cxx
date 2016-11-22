@@ -250,9 +250,10 @@ CustomHeuristic::evaluate(const State& s, const std::vector<bool>& is_path_to_go
 		ObjectIdx current_obj_conf = s.getValue(object_conf);
 		if (current_obj_conf != goal_obj_conf) {
 			
-			int idx = _idx_goal_atom[object_id];
-			if (idx == -1) throw std::runtime_error("WRONG ASSUMPTION");
-			if (held_object == object_id && is_path_to_goal_atom_clear[idx]) {
+// 			int idx = _idx_goal_atom[object_id];
+// 			if (idx == -1) throw std::runtime_error("WRONG ASSUMPTION");
+// 			if (held_object == object_id && is_path_to_goal_atom_clear[idx]) {
+			if (held_object == object_id) {
 				h = h+1;
 			} else {
 				h = h+2;
