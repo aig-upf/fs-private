@@ -129,10 +129,24 @@ public:
 	//! (2) the particular open and closed list objects
 	AllSolutionsBreadthFirstSearch(const StateModel& model, OpenListT&& open, const std::vector<const fs::AtomicFormula*>& goal, const std::vector<const fs::AtomicFormula*>& state_constraints, bool all_solutions) :
 		Base(model, std::move(open), ClosedListT()),
+		_info(ProblemInfo::getInstance()),
+		_tuple_idx(model.getTask().get_tuple_index()),
+		_init(model.init()),
 		_all_solutions(all_solutions),
 		_goal_atoms(goal), _sc_atoms(state_constraints),
-		_optimal_paths(_goal_atoms.size(), nullptr)
-	{}
+		_optimal_paths(_goal_atoms.size(), nullptr),
+		_tuple_to_node(_tuple_idx.size(), nullptr),
+		_obj_to_holding_tuple_idx(_info.getNumObjects(), -1)
+	{
+		VariableIdx holding_v = _info.getVariableId("holding()");
+		for (ObjectIdx obj:_info.getTypeObjects("object_id")) {
+			TupleIdx t = _tuple_idx.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
+			_obj_to_holding_tuple_idx.at(obj) = t;
+		}
+	
+	
+	}
+	
 	virtual ~AllSolutionsBreadthFirstSearch() = default;
 	
 	// Disallow copy, but allow move
@@ -180,6 +194,10 @@ public:
 	}
 	
 protected:
+	const ProblemInfo& _info;
+	const TupleIndex& _tuple_idx;
+	const StateT _init;
+	
 	//! Whether we want to compute IW up until the end or only until paths to all subgoals
 	//! are found _for the first time_
 	bool _all_solutions;
@@ -195,6 +213,13 @@ protected:
 	//! that reaches the goal atom 'i'.
 	std::vector<NodePT> _optimal_paths;
 	
+	//! The node first achieving each problem tuple
+	std::vector<NodePT> _tuple_to_node;
+	
+	//! Object_id o to the index of the tuple "holding()=o"
+	std::vector<TupleIdx> _obj_to_holding_tuple_idx;
+	
+	
 // 	void progress_node(NodePT& node) {
 // 		const StateT& state = node->state;
 // 		for (unsigned sc_atom_idx = 0; sc_atom_idx < _sc_atoms.size(); ++sc_atom_idx) {
@@ -209,6 +234,13 @@ protected:
 	bool process_node(const NodePT& node) {
 		const StateT& state = node->state;
 		unsigned num_satisfied = 0;
+		
+		for (unsigned i = 0; i < state.numAtoms(); ++i) {
+			TupleIdx idx = _tuple_idx.to_index(i, state.getValue(i));
+			if (_tuple_to_node[idx] == nullptr) {
+				_tuple_to_node[idx] = node;
+			}
+		}
 		
 		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
 			const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
@@ -232,6 +264,7 @@ protected:
 // 			}
 		}
 		
+		return false; // RUN IW(2) ALWAYS TIL THE END
 		return num_satisfied == _goal_atoms.size();
 	}
 	
@@ -249,6 +282,105 @@ protected:
 	}
 
 public:
+	
+	//! One offending set per each goal atom
+	std::vector<OffendingSet> compute_offending_configurations() {
+		std::vector<OffendingSet> offending_0 = compute_goal_offending_configurations();
+		
+		const std::vector<ObjectIdx> all_objects = _info.getTypeObjects("object_id");
+		
+		// Now augment this set as follows:
+		// Taking each offending configuration, and check whether some object o is in that config in the initial state. If not, continue with the next configuration.
+		// If yes, flag as "offending" all the configurations that themselves offend the precomputed trajectory to reach the atom "holding(o)".
+		// Continue recursively.
+		for (unsigned i = 0; i < offending_0.size(); ++i) {
+			OffendingSet& offending = offending_0[i];
+			
+			unsigned offending0_size = offending.size();
+			unsigned cur_size = 0;
+		
+			std::vector<bool> processed(all_objects.size(), false); // This will tell us for each object whether the tuple holding(o) has already been processed.
+			
+			do {
+				cur_size = offending.size();
+				
+				for (unsigned j = 0; j < all_objects.size(); ++j) {
+					ObjectIdx obj = all_objects[j];
+					if (processed[j]) continue; // No need to process twice the same holding(o) subgoal!
+					
+					VariableIdx confo_var = _info.getVariableId("confo(" + _info.deduceObjectName(obj, "object_id") + ")"); // TODO This should be precomputed
+					ObjectIdx confo = _init.getValue(confo_var);
+					if (offending.find(confo) == offending.end()) continue;
+					
+					// Otherwise, object o is initially in an offending configuration
+					
+					TupleIdx holding_o = _obj_to_holding_tuple_idx.at(obj); // the tuple "holding(o)"
+					NodePT& node = _tuple_to_node.at(holding_o);
+					flag_offending_configurations(node, offending);
+					processed[j] = true;
+				}
+				
+			} while(offending.size() > cur_size);
+			
+			
+			LPT_INFO("cout", "A total of " << offending.size() << " (" << offending0_size << " + " << offending.size() - offending0_size << ") real object configurations found to be offending to goal atom " << *_goal_atoms[i]);
+		}
+		
+		return offending_0;
+	}
+	
+//! One offending set per each goal atom
+	std::vector<OffendingSet> compute_goal_offending_configurations() {
+		std::vector<OffendingSet> offending(_goal_atoms.size());
+
+		// First, precompute which is the goal configuration of every object, if any
+		std::unordered_map<ObjectIdx, ObjectIdx> object_goal;
+		for (ObjectIdx obj_id:_info.getTypeObjects("object_id")) {
+			// If the object has a particular goal configuration, insert it.
+			ObjectIdx goal_config = fs0::drivers::derive_goal_config(obj_id, _goal_atoms);
+			if (goal_config != -1) {
+				object_goal.insert(std::make_pair(obj_id, goal_config));
+			}
+		}
+		
+		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
+			NodePT& node = _optimal_paths[goal_atom_idx];
+			assert(node);
+			flag_offending_configurations(node, offending[goal_atom_idx]);
+		}
+		
+		return offending;
+	}
+	
+	// Flag as offending all real object configurations that offend the arm trajectories of the
+	// path from the root to the given node
+	void flag_offending_configurations(NodePT& node, OffendingSet& offending) {
+		const ExternalI& external = _info.get_external();
+		const auto& ground_actions = this->_model.getTask().getGroundActions();
+		assert(ground_actions.size());
+		VariableIdx v_confb = _info.getVariableId("confb(rob)");
+		VariableIdx v_traja = _info.getVariableId("traj(rob)");
+		VariableIdx v_holding = _info.getVariableId("holding()");
+		
+		while (node->has_parent()) {
+			const StateT& state = node->state;
+			// const StateT& parent_state = node->parent->state;
+			ActionIdx action_id = node->action;
+			const GroundAction& action = *(ground_actions.at(action_id));
+			
+			// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
+			if (action.getName() == "transition_arm") {
+				ObjectIdx o_confb = state.getValue(v_confb);
+				ObjectIdx o_traj_arm = state.getValue(v_traja);
+				ObjectIdx o_held = state.getValue(v_holding);
+				auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held);
+				offending.insert(v_off.begin(), v_off.end());
+			}
+			node = node->parent;
+		}
+	}
+	
+	/*
 	std::set<fs0::Atom> retrieve_relevant_atom_sets() {
 		
 		std::set<fs0::Atom> relevant;
@@ -269,84 +401,7 @@ public:
 		}
 		
 		return relevant;
-	}
-	
-	
-	//! One offending set per each goal atom
-	std::vector<OffendingSet> compute_offending_configurations() {
-		std::vector<OffendingSet> offending(_goal_atoms.size());
-		
-		const ProblemInfo& info = ProblemInfo::getInstance();
-		const Problem& problem = Problem::getInstance();
-		const ExternalI& external = info.get_external();
-		
-		const auto& ground_actions = problem.getGroundActions();
-		assert(ground_actions.size());
-		
-		VariableIdx v_confb = info.getVariableId("confb(rob)");
-		VariableIdx v_traja = info.getVariableId("traj(rob)");
-		VariableIdx v_holding = info.getVariableId("holding()");
-		ObjectIdx no_object_id = info.getObjectId("no_object");
-		_unused(no_object_id);
-		
-		// First, precompute which is the goal configuration of every object, if any
-		std::unordered_map<ObjectIdx, ObjectIdx> object_goal;
-		for (ObjectIdx obj_id:info.getTypeObjects("object_id")) {
-			// If the object has a particular goal configuration, insert it.
-			ObjectIdx goal_config = fs0::drivers::derive_goal_config(obj_id, _goal_atoms);
-			if (goal_config != -1) {
-				object_goal.insert(std::make_pair(obj_id, goal_config));
-			}
-		}
-		
-		
-		
-		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
-			// const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
-			NodePT node = _optimal_paths[goal_atom_idx];
-			assert(node);
-			
-			while (node->has_parent()) {
-				const StateT& state = node->state;
-// 				const StateT& parent_state = node->parent->state;
-				ActionIdx action_id = node->action;
-				const GroundAction& action = *(ground_actions.at(action_id));
-				
-				// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
-				if (action.getName() == "transition_arm") {
-					
-					ObjectIdx o_confb = state.getValue(v_confb);
-					ObjectIdx o_traj_arm = state.getValue(v_traja);
-					ObjectIdx o_held = state.getValue(v_holding);
-					auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held);
-					offending[goal_atom_idx].insert(v_off.begin(), v_off.end());
-				}
-				
-				/*
-				// ADDITIONALLY, IF THE ACTION USED TO REACH THIS STATE IS A 'PLACE' ACTION THAT PUTS THE PLACED OBJECT
-				// INTO ITS GOAL CONFIGURATION, THEN THIS GOAL CONFIGURATION IS MARKED AS A POTENTIALLY OFFENDING CONFIGURATION AS WELL
-				
-				if (action.getActionData().getName() == "place-object") {
-					ObjectIdx held = parent_state.getValue(v_holding);
-					assert(held!=no_object_id);
-					
-					std::string obj_name = info.deduceObjectName(held, info.getTypeId("object_id"));
-					VariableIdx obj_conf = info.getVariableId("confo(" + obj_name  +  ")");
-					ObjectIdx current_config = state.getValue(obj_conf);
-	
-					auto it = object_goal.find(held);
-					if (it != object_goal.end() && current_config == it->second) {
-						offending[goal_atom_idx].insert(current_config);
-					}
-				}
-				*/
-				
-				node = node->parent;
-			}
-		}
-		
-		return offending;
-	}
+	}*/
 }; 
 
 } // Namespaces
