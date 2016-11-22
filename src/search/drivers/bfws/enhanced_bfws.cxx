@@ -10,6 +10,7 @@
 #include <utils/external.hxx>
 #include <utils/printers/feature_set.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/scopes.hxx>
 #include <applicability/gecode_analyzer.hxx>
 #include <actions/grounding.hxx>
 
@@ -227,8 +228,7 @@ public:
 	template <typename Heuristic>
 	void evaluate_with( Heuristic& ensemble ) {
 		unachieved = ensemble.get_unachieved(this->state);
-		_num_offending = ensemble.compute_offending(*this, picked_offending_object);
-		_h = ensemble.compute_heuristic(state);
+		_num_offending = ensemble.compute_offending(*this, picked_offending_object, _h);
 		novelty = ensemble.novelty(*this, unachieved, _h, _num_offending);
 		if (novelty > ensemble.max_novelty()) {
 			novelty = std::numeric_limits<unsigned>::max();
@@ -542,7 +542,8 @@ public:
 		_unsat_goal_atoms_heuristic(model),
 		_offending(std::move(offending)),
 		_base_evaluator(novelty_evaluator),
-		_custom_heuristic(_problem.getGoalConditions())
+		_custom_heuristic(_problem.getGoalConditions()),
+		_per_goal_rel_var(_unsat_goal_atoms_heuristic.get_goal_conjuncts().size(), -1)
 	{
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		TypeIdx obj_t = info.getTypeId("object_id");
@@ -550,6 +551,16 @@ public:
 			std::string obj_name = info.deduceObjectName(obj_id, obj_t);
 			VariableIdx confo_var = info.getVariableId("confo(" + obj_name  +  ")");
 			_object_configurations.push_back(confo_var);
+		}
+		
+		
+		auto conjuncts = this->_unsat_goal_atoms_heuristic.get_goal_conjuncts();
+		for (unsigned i = 0; i < conjuncts.size(); ++i) {
+			const fs::AtomicFormula* condition = conjuncts[i];
+			
+			auto scope = fs::ScopeUtils::computeDirectScope(condition);
+			if (scope.size() != 1) throw std::runtime_error("Unsupported goal type");
+			_per_goal_rel_var[i] = scope[0];
 		}
 	}
 	
@@ -561,24 +572,22 @@ public:
 		return _unsat_goal_atoms_heuristic.evaluate(state);
 	}
 	
-	unsigned compute_heuristic(const State& state) {
-		return _custom_heuristic.evaluate(state);
-	}
-
 	
 	//! Return the count of how many objects offend the consecution of at least one unachived goal atom.
 	template <typename NodeT>
-	unsigned compute_offending(const NodeT& node, ObjectIdx& picked_offending_object) {
+	unsigned compute_offending(const NodeT& node, ObjectIdx& picked_offending_object, unsigned& h) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		const Problem& problem = Problem::getInstance();
 		
 		const State& state = node.state;
 		
 		std::unordered_set<VariableIdx> offending; // We'll store here which problem objects are offending some unreached goal atom.
+// 		std::vector<VariableIdx> offending;
 		
 		
+		// COMPUTE WHICH ATOM GOALS HAVE NOT BEEN REACHED YET
 		std::vector<unsigned> unsat_goal_indexes;
-		auto conjuncts = this->_unsat_goal_atoms_heuristic.get_goal_conjuncts();
+		auto conjuncts = _unsat_goal_atoms_heuristic.get_goal_conjuncts();
 		for (unsigned i = 0; i < conjuncts.size(); ++i) {
 			const fs::AtomicFormula* condition = conjuncts[i];
 			
@@ -587,11 +596,15 @@ public:
 			}
 		}
 		
+		std::vector<bool> is_path_to_goal_atom_clear(_unsat_goal_atoms_heuristic.get_goal_conjuncts().size(), true);
+		
 		// For each object, we check whether the configuration of the object in the current state
 		// offends the consecution of _at least one_ unsatisfied goal atom (e.g. of the form confo(o3)=c15)
 		for (VariableIdx conf_var:_object_configurations) {
 			ObjectIdx confo = state.getValue(conf_var);
 			for (unsigned i:unsat_goal_indexes) {
+				
+				if (conf_var == _per_goal_rel_var[i]) continue; // Don't consider as offending to a goal atom the config of the object appearing on that atom itself!
 				
 				// 'offending_to_goal_atom' will contain all possible object configurations that offend the consecution of this particular unsatisfied goal atom
 				const auto& offending_to_goal_atom = _offending[i]; 
@@ -599,9 +612,19 @@ public:
 				if (offending_to_goal_atom.find(confo) != offending_to_goal_atom.end()) {
 					// The object configuration is actually an offending one
 					offending.insert(conf_var); // (the state variable IDs acts as an identifying proxy for the actual object ID)
+					is_path_to_goal_atom_clear[i] = false;
 				}
 			}
 		}
+		/*
+		std::cout << "Offending objects: " << std::endl;
+		for (auto v:offending) {
+			std::cout << info.getVariableName(v) << std::endl;
+		}
+		std::cout << std::endl;
+		*/
+		
+		h = _custom_heuristic.evaluate(state, is_path_to_goal_atom_clear);
 		
 		unsigned num_offending = 2 * offending.size();
 		
@@ -722,6 +745,8 @@ protected:
 	const CTMPNoveltyEvaluator& _base_evaluator;
 	
 	CustomHeuristic _custom_heuristic;
+	
+	std::vector<VariableIdx> _per_goal_rel_var;
 	
 	NoveltyIndexerT _indexer;
 };

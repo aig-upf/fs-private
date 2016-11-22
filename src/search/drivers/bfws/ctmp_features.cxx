@@ -8,6 +8,7 @@
 #include <utils/utils.hxx>
 #include <utils/printers/feature_set.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/scopes.hxx>
 
 using namespace fs0;
 namespace fs = fs0::language::fstrips;
@@ -184,7 +185,8 @@ GraspableFeature::evaluate(const State& s) const {
 
 CustomHeuristic::CustomHeuristic(const fs::Formula* goal)
 	:
-	_external(ProblemInfo::getInstance().get_external())
+	_external(ProblemInfo::getInstance().get_external()),
+	_idx_goal_atom(ProblemInfo::getInstance().getNumObjects(), -1)
 {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
@@ -200,15 +202,38 @@ CustomHeuristic::CustomHeuristic(const fs::Formula* goal)
 			_all_objects_goal.insert(std::make_pair(obj_id, goal_config));
 		}
 	}
+	
+	
+	
+	
+	const fs::Conjunction* g = dynamic_cast<const fs::Conjunction*>(goal);
+	assert(g);
+	auto conjuncts = g->getConjuncts();
+
+	for (ObjectIdx obj_id:info.getTypeObjects("object_id")) {
+		std::string obj_name = info.deduceObjectName(obj_id, info.getTypeId("object_id"));
+		VariableIdx co_var = info.getVariableId("confo(" + obj_name  +  ")");
+		
+		for (unsigned i = 0; i < conjuncts.size(); ++i) {
+			const fs::AtomicFormula* condition = conjuncts[i];
+			
+			auto scope = fs::ScopeUtils::computeDirectScope(condition);
+			if (scope.size() != 1) throw std::runtime_error("Unsupported goal type");
+			
+			if (co_var == scope[0]) {
+				_idx_goal_atom[obj_id] = i;
+				break;
+			}
+		}
+	}
 }
 
 
 //! h(s)= number of goal objects that still need to be picked up and moved in s  * 2
 //! -1; if goal object being held
 unsigned
-CustomHeuristic::evaluate(const State& s) const {
+CustomHeuristic::evaluate(const State& s, const std::vector<bool>& is_path_to_goal_atom_clear) const {
 	unsigned h = 0;
-	bool holding_goal_object = false;
 	
 	ObjectIdx held_object = s.getValue(_holding_var); // The object which is currently being held
 	
@@ -225,16 +250,16 @@ CustomHeuristic::evaluate(const State& s) const {
 		ObjectIdx current_obj_conf = s.getValue(object_conf);
 		if (current_obj_conf != goal_obj_conf) {
 			
-			if (held_object == object_id) {
+			int idx = _idx_goal_atom[object_id];
+			if (idx == -1) throw std::runtime_error("WRONG ASSUMPTION");
+			if (held_object == object_id && is_path_to_goal_atom_clear[idx]) {
 				h = h+1;
-				holding_goal_object = true;
 			} else {
 				h = h+2;
 			}
 		}
 	}
 
-// 	return (holding_goal_object) ? 0 : 1;
 	return h;
 }
 

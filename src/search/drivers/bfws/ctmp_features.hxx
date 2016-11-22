@@ -85,7 +85,7 @@ public:
 	~CustomHeuristic() = default;
 	CustomHeuristic(const CustomHeuristic&) = default;
 
-	unsigned evaluate(const State& s) const;
+	unsigned evaluate(const State& s, const std::vector<bool>& is_path_to_goal_atom_clear) const;
 
 protected:
 	// The two following vectors are sync'd, i.e. _all_objects_conf[i] is the config of object _all_objects_ids[i]
@@ -95,6 +95,7 @@ protected:
 	
 	VariableIdx _holding_var;
 	const ExternalI& _external;
+	std::vector<unsigned> _idx_goal_atom; // The index of the goal atom in which a certain object_id appears
 };
 
 } } // namespaces
