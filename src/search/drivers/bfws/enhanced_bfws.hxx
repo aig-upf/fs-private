@@ -19,7 +19,6 @@
 #include <search/algorithms/aptk/sorted_open_list.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 
-using OffendingSet = std::unordered_set<fs0::ObjectIdx>;
 
 namespace fs0 { class Config; }
 
@@ -37,8 +36,6 @@ public:
 	
 protected:
 	
-	std::vector<OffendingSet> preprocess(const Problem& problem, const Config& config, BasicApplicabilityAnalyzer* analyzer);
-
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 	
 	//! A partial specialization
