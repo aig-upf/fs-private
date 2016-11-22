@@ -326,7 +326,45 @@ public:
 			LPT_INFO("cout", "A total of " << offending.size() << " (" << offending0_size << " + " << offending.size() - offending0_size << ") real object configurations found to be offending to goal atom " << *_goal_atoms[i]);
 		}
 		
+		// print_offending_graph(offending_0);
+		
 		return offending_0;
+	}
+	
+	void print_offending_graph(const std::vector<OffendingSet>& all_offending) {
+		
+		VariableIdx holding_v = _info.getVariableId("holding()");
+		for (ObjectIdx obj:_info.getTypeObjects("object_id")) {
+			std::string o1_name = _info.deduceObjectName(obj, "object_id");
+			TupleIdx t = _tuple_idx.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
+			
+			OffendingSet offending;
+			NodePT& node = _tuple_to_node.at(t);
+			flag_offending_configurations(node, offending);
+			
+			print_offending_objects("holding(" + o1_name + ")", offending);
+		}
+		
+		LPT_INFO("deadlocks", "");LPT_INFO("deadlocks", "");LPT_INFO("deadlocks", "");LPT_INFO("deadlocks", "");
+		
+		for (unsigned goal_atom_idx = 0; goal_atom_idx < _goal_atoms.size(); ++goal_atom_idx) {
+			const fs::AtomicFormula* atom = _goal_atoms[goal_atom_idx];
+			LPT_INFO("deadlocks", "Goal Atom " << *atom << " offended by: ");
+			print_offending_objects("", all_offending.at(goal_atom_idx));
+		}
+		
+	}
+	
+	void print_offending_objects(const std::string& to, const OffendingSet& offending) {
+		
+		for (ObjectIdx obj2:_info.getTypeObjects("object_id")) {
+			std::string o2_name = _info.deduceObjectName(obj2, "object_id");
+			VariableIdx confo_var = _info.getVariableId("confo(" + o2_name + ")");
+			ObjectIdx confo = _init.getValue(confo_var);
+			if (offending.find(confo) != offending.end()) {
+				LPT_INFO("deadlocks", to << " - offended by " << o2_name);
+			}
+		}
 	}
 	
 //! One offending set per each goal atom
