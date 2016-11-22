@@ -388,11 +388,10 @@ CTMPNoveltyEvaluator::selectFeatures(const Problem& problem, const NoveltyFeatur
 	FeatureSet features;
 	
 	VariableIdx traj = info.getVariableId("traj(rob)");
-// 	traj = -1;
-	
+	std::cout << "INCLUDING TRAJECTORY: " << config.include_trajectory() << std::endl;
 	// Add all state variables
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-		if (var != traj) {
+		if (config.include_trajectory() || var != traj) {
 			features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
 		}
 	}

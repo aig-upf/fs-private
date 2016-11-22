@@ -15,12 +15,14 @@ public:
 		_use_state_vars(config.getOption<bool>("width.use_state_vars")),
 		_use_goal(config.getOption<bool>("width.use_goal")),
 		_use_actions(config.getOption<bool>("width.use_actions")),
+		_include_trajectory(config.getOption<bool>("ebfws.trajectory", true)),
 		_type(parse_type(config.getOption<std::string>("width.features")))
 	{}
 
 	bool useStateVars() const { return _use_state_vars; }
 	bool useGoal() const { return _use_goal; }
 	bool useActions() const { return _use_actions; }
+	bool include_trajectory() const { return _include_trajectory; }
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const NoveltyFeaturesConfiguration&  o) { return o.print(os); }
@@ -40,6 +42,7 @@ protected:
 	bool _use_state_vars;
 	bool _use_goal;
 	bool _use_actions;
+	bool _include_trajectory;
 	
 	Type _type;
 	
