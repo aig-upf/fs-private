@@ -19,13 +19,13 @@ ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* t
 void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
 	LPT_DEBUG("translation", "Preprocessing extensional constraints for term " << *_term);
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	
+
 	for (auto subterm:_term->getSubterms()) {
 		_subterm_variable_indexes.push_back(translator.resolveVariableIndex(subterm));
 	}
-	
+
 	if (!_predicate) _term_variable_index = translator.resolveVariableIndex(_term);
-	
+
 	if (_term->getSubterms().empty()) {
 		_variable_idx = info.resolveStateVariable(_term->getSymbolId(), {});
 	}
@@ -43,27 +43,31 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
-		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable	
+		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable
 	} else {
 		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
 	}
 }
 
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const {
+	// Check whether the extension contains no tuples, then the CSP is unsolvable
+	if (extension.tuples() == 0 ) return false;
+
 	// Collect the references to the CSP variables
 	Gecode::IntVarArgs variables;
 	for (unsigned csp_var_index:_subterm_variable_indexes) {
 		variables << translator.resolveVariableFromIndex(csp_var_index, csp);
 	}
-	
+
 	if (!_predicate) {
 		variables << translator.resolveVariableFromIndex(_term_variable_index, csp);
 	}
 
 	// Post the constraint with the given extension
+
 	Gecode::extensional(csp, variables, extension);
 // 	Gecode::extensional(csp, variables, extension, Gecode::EPK_SPEED);
-	
+
 // 	LPT_DEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
 // 	LPT_DEBUG("translation", "Resulting CSP is: " << csp);
 	return true;
@@ -83,7 +87,7 @@ Gecode::TupleSet ExtensionalConstraint::compute_extension(unsigned symbol_id, co
 		ObjectIdx value = state.getValue(variable);
 		extension_handler.process_atom(variable, value);
 	}
-	
+
 	return extension_handler.generate_extension(symbol_id);
 }
 
