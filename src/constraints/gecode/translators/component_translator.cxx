@@ -60,7 +60,7 @@ void ArithmeticTermTranslator::registerVariables(const fs::Term* term, CSPTransl
 void ArithmeticTermTranslator::registerConstraints(const fs::Term* term, CSPTranslator& translator) const {
 	auto arithmetic_term = dynamic_cast<const fs::ArithmeticTerm*>(term);
 	assert(arithmetic_term);
-	
+
 	LPT_DEBUG("translation", "Registering constraints for arithmetic term " << *term);
 
 	// Now we assert that the root temporary variable equals the sum of the subterms
@@ -102,16 +102,16 @@ Gecode::IntArgs MultiplicationTermTranslator::getLinearCoefficients() const {
 void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTranslator& translator) const {
 	auto stat = dynamic_cast<const fs::StaticHeadedNestedTerm*>(term);
 	assert(stat);
-	
+
 	LPT_DEBUG("translation", "Registering constraints for static nested term " << *stat);
 
 	GecodeCSP& csp = translator.getBaseCSP();
-	
+
 	// Assume we have a static term s(t_1, ..., t_n), where t_i are the subterms.
 	// We have registered a temporary variable Z for the whole term, plus temporaries Z_i accounting for each subterm t_i
 	// Now we need to post an extensional constraint on all temporary variables <Z_1, Z_2, ..., Z_n, Z> such that
 	// the tuples <z_1, ..., z_n, z> satisfying the constraints are exactly those such that z = s(z_1, ..., z_n)
-	
+
 	// First compile the variables in the right order (order matters, must be the same than in the tupleset):
 	Gecode::IntVarArgs variables = translator.resolveVariables(stat->getSubterms(), csp);
 	variables << translator.resolveVariable(stat, csp);
@@ -121,7 +121,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 
 	// And finally post the constraint
 	Gecode::extensional(csp, variables, extension);
-	
+
 	LPT_DEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
 }
 
@@ -142,9 +142,9 @@ void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula* formu
 	assert(alldiff);
 
 	GecodeCSP& csp = translator.getBaseCSP();
-	
+
 	Gecode::IntVarArgs variables = translator.resolveVariables(alldiff->getSubterms(), csp);
-	Gecode::distinct(csp, variables, Gecode::ICL_DOM);
+	Gecode::distinct(csp, variables);
 }
 
 void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
@@ -160,7 +160,7 @@ void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, 
 	v_coefficients[variables.size() - 1] = -1; // Last coefficient is a -1, since the last variable of the scope is the element of the sum
 	Gecode::IntArgs coefficients(v_coefficients);
 
-	Gecode::linear(csp, coefficients, variables, Gecode::IRT_EQ, 0, Gecode::ICL_DOM);
+	Gecode::linear(csp, coefficients, variables, Gecode::IRT_EQ, 0);
 }
 
 void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
@@ -170,7 +170,7 @@ void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula* formula
 	Gecode::IntVarArgs variables = translator.resolveVariables(formula->getSubterms(), csp);
 	Gecode::TupleSet extension = Helper::extensionalize(formula);
 	Gecode::extensional(csp, variables, extension);
-	
+
 	LPT_DEBUG("translation", "Registered a Gecode extensional constraint of arity " << extension.arity() << " and size " << extension.tuples() << " for formula \"" << *formula << ":\n" << print::extensional(variables, extension));
 }
 
