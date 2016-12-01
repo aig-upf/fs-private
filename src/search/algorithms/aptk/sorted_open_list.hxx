@@ -66,10 +66,11 @@ public:
 	StlSortedOpenList& operator=(const StlSortedOpenList& rhs) = default;
 	StlSortedOpenList& operator=(StlSortedOpenList&& rhs) = default;
 
-	void insert(const NodePtrT& node) override {
-		if ( node->dead_end() ) return;
+	bool insert(const NodePtrT& node) override {
+		if ( node->dead_end() ) return false;
 		this->push( node );
 		already_in_open_.insert( node );
+		return true;
 	}
 
 	//! Check if the open list already contains a node 'previous' referring to the same state.

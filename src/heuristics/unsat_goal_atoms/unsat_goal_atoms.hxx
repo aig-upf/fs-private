@@ -20,11 +20,16 @@ public:
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& state) const { 
 		unsigned unsatisfied = 0;
-		for (const fs::AtomicFormula* condition:_goal_conjunction->getConjuncts()) {
+		for (const fs::AtomicFormula* condition:get_goal_conjuncts()) {
 			if (!condition->interpret(state)) ++unsatisfied;
 		}
 		return unsatisfied;
 	}
+	
+	const std::vector<const fs::AtomicFormula*>& get_goal_conjuncts() const {
+		return _goal_conjunction->getConjuncts();
+	}
+	
 	
 protected:
 	//! The actual planning problem

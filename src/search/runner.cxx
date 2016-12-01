@@ -33,12 +33,9 @@ int Runner::run() {
 	
 	LPT_INFO("main", "Planner configuration: " << std::endl << config);
 	LPT_INFO("cout", "Deriving control to search engine...");
+	
 	auto driver = EngineRegistry::instance().get(_options.getDriver());
-	
-	
-	driver->search(*problem, config, _options.getOutputDir(), _start_time);
-	
-	return ExitCode::PLAN_FOUND;
+	return driver->search(*problem, config, _options.getOutputDir(), _start_time);
 }
 
 void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
