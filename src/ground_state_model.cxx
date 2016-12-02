@@ -49,7 +49,10 @@ GroundStateModel::build_action_manager(const Problem& problem, BasicApplicabilit
 	const auto& actions = problem.getGroundActions();
 	const auto& constraints = problem.getStateConstraints();
 	const auto& tuple_idx =  problem.get_tuple_index();
-	if (analyzer == nullptr) analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
+	if (analyzer == nullptr) {
+		analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
+		analyzer->build();
+	}
 	return SmartActionManager(actions, constraints, tuple_idx, analyzer);
 }
 
