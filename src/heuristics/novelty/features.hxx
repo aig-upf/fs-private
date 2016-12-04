@@ -14,9 +14,8 @@ class State;
 //! Base interface for any novelty feature
 class NoveltyFeature {
 public:
-	typedef NoveltyFeature* ptr;
-
-	virtual ~NoveltyFeature() {}
+	virtual ~NoveltyFeature() = default;
+	virtual NoveltyFeature* clone() const = 0;
 	virtual aptk::ValueIndex evaluate( const State& s ) const = 0;
 };
 
@@ -24,7 +23,9 @@ public:
 class StateVariableFeature : public NoveltyFeature {
 public:
 	StateVariableFeature( VariableIdx variable ) : _variable(variable) {}
-	~StateVariableFeature() {}
+	~StateVariableFeature() = default;
+	StateVariableFeature(const StateVariableFeature&) = default;
+	virtual NoveltyFeature* clone() const;
 	aptk::ValueIndex  evaluate( const State& s ) const;
 
 protected:
@@ -36,13 +37,19 @@ protected:
 class ConditionSetFeature : public NoveltyFeature {
 public:
 	ConditionSetFeature() {}
-	~ConditionSetFeature() {}
+	~ConditionSetFeature() = default;
+	
+	// we can use the default copy constructor, as formula pointers are NOT owned by this class
+	ConditionSetFeature(const ConditionSetFeature&) = default;
 
+	virtual NoveltyFeature* clone() const;
+	
 	void addCondition(const fs::AtomicFormula* condition) { _conditions.push_back(condition); }
 
-	aptk::ValueIndex  evaluate( const State& s ) const;
+	aptk::ValueIndex evaluate(const State& s) const;
 
 protected:
+	// formula pointers are NOT owned by this class
 	std::vector<const fs::AtomicFormula*> _conditions;
 };
 

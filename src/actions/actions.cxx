@@ -29,6 +29,14 @@ std::ostream& ActionData::print(std::ostream& os) const {
 	return os;
 }
 
+bool
+ActionData::has_empty_parameter() const {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	for (TypeIdx type:_signature) {
+		if (info.getTypeObjects(type).empty()) return true;
+	}
+	return false;
+}
 
 ActionBase::ActionBase(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects) :
 	_data(action_data), _binding(binding), _precondition(precondition), _effects(effects) {}

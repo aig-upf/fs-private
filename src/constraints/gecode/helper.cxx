@@ -64,7 +64,9 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm* term) 
 		try {
 			ObjectIdx out = functor(it.arguments());
 			tuples.add(it.getIntArgsElement(out)); // Add the term value as the last element
-		} catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
+		}
+		catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
+		catch(const UndefinedValueAccess& e) {}
 	}
 
 	tuples.finalize();
@@ -79,7 +81,10 @@ Gecode::TupleSet Helper::extensionalize(const fs::AtomicFormula* formula) {
 			if (formula->_satisfied(it.arguments())) {
 				tuples.add(it.getIntArgsElement());
 			}
-		} catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
+		}
+		catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
+		catch(const UndefinedValueAccess& e) {}
+		
 	}
 
 	tuples.finalize();

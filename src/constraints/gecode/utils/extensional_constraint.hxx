@@ -19,6 +19,10 @@ class ExtensionalConstraint {
 public:
 	
 	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const TupleIndex& tuple_index, bool predicate);
+	ExtensionalConstraint(const ExtensionalConstraint&) = default;
+	ExtensionalConstraint(ExtensionalConstraint&&) = default;
+	ExtensionalConstraint& operator=(const ExtensionalConstraint& other) = default;
+	ExtensionalConstraint& operator=(ExtensionalConstraint&& other) = default;
 	
 	void register_variables(CSPTranslator& translator) {} // TODO - REMOVE IF NOT NEEDED
 	

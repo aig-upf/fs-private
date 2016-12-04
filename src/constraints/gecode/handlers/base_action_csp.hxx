@@ -18,6 +18,10 @@ public:
 	//! Constructor / Destructor
 	BaseActionCSP(const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	virtual ~BaseActionCSP();
+	BaseActionCSP(const BaseActionCSP&) = delete;
+	BaseActionCSP(BaseActionCSP&&) = delete;
+	BaseActionCSP& operator=(const BaseActionCSP&) = delete;
+	BaseActionCSP& operator=(BaseActionCSP&&) = delete;	
 	
 	//! Returns false iff the induced CSP is inconsistent, i.e. the action is not applicable
 	virtual bool init(bool use_novelty_constraint);
@@ -67,15 +71,16 @@ protected:
 	//! When _has_nested_lhs is false, we store here the VariableIdx referred to by the LHS of each effect, which can be deduced statically
 	std::vector<VariableIdx> effect_lhs_variables;
 	
+	std::set<VariableIdx> _action_support;
+	
+	
 	//! See parent class description
 	void index() override;
 	
 	//! Preprocess the action to store the IDs of direct and indirect state variables
 	virtual void index_scopes();
 	
-	void compute_support(GecodeCSP* csp, RPGIndex& graph) const;
-	
-	std::set<VariableIdx> _action_support;
+	void compute_support(GecodeCSP* csp, RPGIndex& graph) const;	
 	
 	// Constraint registration methods
 	void registerEffectConstraints(const fs::ActionEffect* effect);

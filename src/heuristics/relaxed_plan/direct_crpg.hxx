@@ -26,8 +26,11 @@ public:
 	DirectCRPG& operator=(DirectCRPG&& other) = default;
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
-	long evaluate(const State& seed);
-	
+	long evaluate(const State& seed, std::vector<Atom>& relevant);
+	long evaluate(const State& seed) {
+		std::vector<Atom> _; // Ignore the relevant values if not requested
+		return evaluate(seed, _);
+	}
 	//! A version where only certain actions are allowed
 	long evaluate(const State& seed, const std::vector<ActionIdx>& whitelist);
 	

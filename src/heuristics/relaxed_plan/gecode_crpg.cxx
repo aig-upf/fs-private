@@ -26,7 +26,7 @@ GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, 
 
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
-long GecodeCRPG::evaluate(const State& seed) {
+long GecodeCRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
 	
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 	

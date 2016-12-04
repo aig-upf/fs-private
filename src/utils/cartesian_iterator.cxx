@@ -5,7 +5,7 @@
 namespace fs0 { namespace utils {
 
 cartesian_iterator::cartesian_iterator(std::vector<const ObjectIdxVector*>&& values) :
-	_values(values),
+	_values(std::move(values)),
 	_iterators(),
 	_element(),
 	_ended(_values.empty())
@@ -26,8 +26,8 @@ cartesian_iterator::cartesian_iterator(std::vector<const ObjectIdxVector*>&& val
 
 
 //! Compute the size of the cartesian product
-unsigned cartesian_iterator::size() const {
-	return std::accumulate(_values.begin(), _values.end(), 1, [](int a, const ObjectIdxVector* b) { return a * b->size(); });
+unsigned long cartesian_iterator::size() const {
+	return std::accumulate(_values.begin(), _values.end(), (unsigned long) 1, [](int a, const ObjectIdxVector* b) { return a * b->size(); });
 }
 
 //! Advances the iterator at position 'idx' or, if it has reached the end, resets its and tries with the one at the left, recursively.

@@ -18,6 +18,15 @@ bool GroundStateModel::goal(const State& state) const {
 	return task.getGoalSatManager().satisfied(state);
 }
 
+bool GroundStateModel::is_applicable(const State& state, const ActionId& action) const {
+	return is_applicable(state, *(task.getGroundActions()[action]));
+}
+
+bool GroundStateModel::is_applicable(const State& state, const ActionType& action) const {
+	ApplicabilityManager manager(task.getStateConstraints());
+	return manager.isApplicable(state, action);
+}
+
 State GroundStateModel::next(const State& state, const GroundAction::IdType& actionIdx) const {
 	return next(state, *(task.getGroundActions()[actionIdx]));
 } 

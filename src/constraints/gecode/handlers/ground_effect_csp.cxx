@@ -26,8 +26,8 @@ GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const T
 			if (effect->is_del()) continue; // Ignore delete effects
 			auto handler = std::unique_ptr<GroundEffectCSP>(new GroundEffectCSP(*action, tuple_index, effect, approximate, true));
 			if (handler->init(novelty)) {
-				managers.push_back(std::move(handler));
 				LPT_DEBUG("main", "Generated CSP for the effect #" << eff_idx << " of action " << print::action_header(*action) << std::endl <<  *handler << std::endl);
+				managers.push_back(std::move(handler));
 			} else {
 				LPT_DEBUG("main", "CSP for action effect " << effect << " is inconsistent ==> the action is not applicable");
 			}
@@ -94,7 +94,7 @@ bool GroundEffectCSP::find_atom_support(TupleIdx tuple, const Atom& atom, const 
 }
 
 bool GroundEffectCSP::solve(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
-	// We just want to search for one solution an extract the support from it
+	// We just want to search for one solution and extract the support from it
 	Gecode::DFS<GecodeCSP> engine(csp);
 	GecodeCSP* solution = engine.next();
 	if (!solution) return false; // The CSP has no solution at all

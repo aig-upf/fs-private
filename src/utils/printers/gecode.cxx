@@ -30,6 +30,16 @@ std::ostream& extensional::print(std::ostream& os) const {
 	return os;
 }
 
+std::ostream& element::print(std::ostream& os) const {
+	os << "Gecode::element(table, index, output):" << std::endl;
+	os << "index \\in " << _index << std::endl;
+	os << "output \\in " << _output << std::endl;
+	os << "table = {" << std::endl;
+	for (auto var:_table) os << var << std::endl;
+	os << "}" << std::endl;
+	return os;
+}
+
 std::ostream& csp::print(std::ostream& os) const {
 	return _translator.print(os, _csp);
 }

@@ -36,7 +36,7 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 		
 		// In case the action schema is directly not-lifted, we simply bind it with an empty binding and continue.
 		if (signature.empty()) { 
-			std::cout <<  "Grounding action schema '" << data->getName() << "' with no binding" << std::endl;
+			LPT_INFO("cout", "Grounding action schema '" << data->getName() << "' with no binding");
 			LPT_INFO("grounding", "Grounding the following action schema with no binding:\n" << *data << "\n");
 			id = ground(id, data, {}, info, grounded);
 			++total_num_bindings;
@@ -44,9 +44,18 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 		}
 		
 		utils::binding_iterator binding_generator(signature, info);
-		int num_bindings = binding_generator.num_bindings();
+		if (binding_generator.ended()) {
+			LPT_INFO("cout", "Grounding of schema '" << data->getName() << "' yields no ground action, likely due to a parameter with empty type");
+			continue;
+		}
 		
-		std::cout <<  "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:\n\t" << std::flush;
+		unsigned long num_bindings = binding_generator.num_bindings();
+		
+		if (num_bindings == 0 || num_bindings > MAX_GROUND_ACTIONS) { // num_bindings == 0 would indicate there's been an overflow
+			throw TooManyGroundActionsError(num_bindings);
+		}
+		
+		LPT_INFO("cout", "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:\n\t" << std::flush);
 		LPT_INFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:\n" << print::action_data_name(*data) << "\n");
 		
 		float onepercent = ((float)num_bindings / 100);
@@ -67,8 +76,7 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 	}
 	
 	LPT_INFO("grounding", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
-	std::cout << "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions" << std::endl;
-
+	LPT_INFO("cout", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
 	return grounded;
 }
 

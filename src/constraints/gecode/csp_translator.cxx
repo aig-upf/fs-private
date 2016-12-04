@@ -200,7 +200,8 @@ std::vector<std::pair<unsigned, std::vector<unsigned>>>
 CSPTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::pair<unsigned, std::vector<unsigned>>> tuple_indexes;
-	// Register all fluent symbols involved
+
+	// Register the indexes of the CSP variables that correspond to all involved nested fluent symbols
 	for (auto term:terms) {
 		if (const fs::FluentHeadedNestedTerm* nested = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
 			unsigned symbol = nested->getSymbolId();

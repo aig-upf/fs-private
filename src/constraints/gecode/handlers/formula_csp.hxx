@@ -16,7 +16,11 @@ public:
 
 	FormulaCSP(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate);
 	~FormulaCSP();
-
+	FormulaCSP(const FormulaCSP&) = delete;
+	FormulaCSP(FormulaCSP&&) = delete;
+	FormulaCSP& operator=(const FormulaCSP&) = delete;
+	FormulaCSP& operator=(FormulaCSP&&) = delete;
+	
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
 	bool compute_support(GecodeCSP* csp, std::vector<TupleIdx>& support) const;
 	

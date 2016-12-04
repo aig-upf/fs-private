@@ -121,8 +121,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 
 	// And finally post the constraint
 	Gecode::extensional(csp, variables, extension);
-
-	LPT_DEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
+	LPT_EDEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
 }
 
 
@@ -162,6 +161,23 @@ void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, 
 
 	Gecode::linear(csp, coefficients, variables, Gecode::IRT_EQ, 0);
 }
+
+
+void NValuesGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
+	auto nvalues = dynamic_cast<const fs::NValuesFormula*>(formula);
+	assert(nvalues);
+
+	GecodeCSP& csp = translator.getBaseCSP();
+
+	std::vector<const fs::Term*> st = nvalues->getSubterms();
+	assert(st.size()>1);
+
+	std::vector<const fs::Term*> elements(st.begin(), st.end()-1);
+	Gecode::IntVarArgs elements_var = translator.resolveVariables(elements, csp);
+	auto num_vals = translator.resolveVariable(st.back(), csp);;
+	Gecode::nvalues(csp, elements_var, Gecode::IRT_EQ, num_vals);
+}
+
 
 void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
 

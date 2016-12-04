@@ -27,7 +27,11 @@ public:
 	UnreachedAtomRPG& operator=(UnreachedAtomRPG&& other) = default;	
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
-	long evaluate(const State& seed);
+	long evaluate(const State& seed, std::vector<Atom>& relevant);
+	long evaluate(const State& seed) {
+		std::vector<Atom> _; // Ignore the relevant values if not requested
+		return evaluate(seed, _);
+	}
 	
 	//! The computation of the heuristic value. Returns -1 if the RPG layer encoded in the relaxed state is not a goal,
 	//! otherwise returns h_{FF}.

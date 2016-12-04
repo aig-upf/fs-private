@@ -32,12 +32,14 @@ namespace fs0 { namespace drivers {
 
 
 template <typename State>
-class GBFSNoveltyNode {
+class BFWSNode {
 public:
+	using ptr_t = std::shared_ptr<BFWSNode<State>>;
+	
 	State state;
 	GroundAction::IdType action;
 	
-	std::shared_ptr<GBFSNoveltyNode<State> > parent;
+	ptr_t parent;
 
 	//! Accummulated cost
 	unsigned g;
@@ -49,40 +51,45 @@ public:
 	unsigned num_unsat;
 	
 public:
-	GBFSNoveltyNode() = delete;
-	~GBFSNoveltyNode() {}
+	BFWSNode() = delete;
+	~BFWSNode() {}
 	
-	GBFSNoveltyNode(const GBFSNoveltyNode& other) = delete;
-	GBFSNoveltyNode(GBFSNoveltyNode&& other) = delete;
-	GBFSNoveltyNode& operator=(const GBFSNoveltyNode& rhs) = delete;
-	GBFSNoveltyNode& operator=(GBFSNoveltyNode&& rhs) = delete;
+	BFWSNode(const BFWSNode& other) = delete;
+	BFWSNode(BFWSNode&& other) = delete;
+	BFWSNode& operator=(const BFWSNode& rhs) = delete;
+	BFWSNode& operator=(BFWSNode&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	GBFSNoveltyNode(const State& s)
+	BFWSNode(const State& s)
 		: state(s), action(GroundAction::invalid_action_id), parent(nullptr), g(0), novelty(0), num_unsat(0)
 	{}
 
 	//! Constructor with move of the state (cheaper)
-	GBFSNoveltyNode(State&& _state, GroundAction::IdType _action, std::shared_ptr< GBFSNoveltyNode<State> > _parent) :
+	BFWSNode(State&& _state, GroundAction::IdType _action, ptr_t _parent) :
 		state(std::move(_state)), action(_action), parent(_parent), g(_parent->g + 1), novelty(0), num_unsat(0)
 	{}
 
 	bool has_parent() const { return parent != nullptr; }
+	
+	//! Required for the interface of some algorithms that might prioritise helpful actions.
+	bool is_helpful() const { return false; }
 
 	
 	//! Print the node into the given stream
-	friend std::ostream& operator<<(std::ostream &os, const GBFSNoveltyNode<State>& object) { return object.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const BFWSNode<State>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const { 
-		os << "{@ = " << this << ", s = " << state << ", novelty = " << novelty << ", g = " << g << " unsat = " << num_unsat << ", parent = " << parent << "}";
+		os << "{@ = " << this << ", s = " << state << ", novelty = " << novelty << ", g = " << g << ", unsat = " << num_unsat << ", parent = " << parent << "}";
 		return os;
 	}
 
-	bool operator==( const GBFSNoveltyNode<State>& o ) const { return state == o.state; }
+	bool operator==( const BFWSNode<State>& o ) const { return state == o.state; }
 
 	template <typename Heuristic>
 	void evaluate_with( Heuristic& heuristic ) {
 		novelty = heuristic.novelty( state );
-		if (novelty > heuristic.novelty_bound()) novelty = std::numeric_limits<unsigned>::infinity();
+		if (novelty > heuristic.novelty_bound()) {
+			novelty = std::numeric_limits<unsigned>::max();
+		}
 		num_unsat = heuristic.evaluate_num_unsat_goals( state );
 	}
 	
@@ -92,18 +99,32 @@ public:
 			num_unsat = parent->num_unsat;
 		}
 	}
+	
+	//! What to do when an 'other' node is found during the search while 'this' node is already in
+	//! the open list
+	void update_in_open_list(ptr_t other) {
+		if (other->g < this->g) {
+			this->g = other->g;
+			this->action = other->action;
+			this->parent = other->parent;
+			this->novelty = other->novelty;
+			this->num_unsat = other->num_unsat;
+		}
+	}
 
-	bool dead_end() const { return novelty == std::numeric_limits<unsigned>::infinity(); }
+// 	bool dead_end() const { return novelty == std::numeric_limits<unsigned>::infinity(); }
+	bool dead_end() const { return false; }
 
 	std::size_t hash() const { return state.hash(); }
 
 	//! The ordering of the nodes prioritizes:
 	//! (1) nodes with lower novelty, (2) nodes with lower number of unsatisfied goals, (3) nodes with lower accumulated cost
-	bool operator>( const GBFSNoveltyNode<State>& other ) const {
+	// (Undelying logic is: return true iff the second element should be popped before the first.)
+	bool operator>( const BFWSNode<State>& other ) const {
 		if ( novelty > other.novelty ) return true;
 		if ( novelty < other.novelty ) return false;
 		if (num_unsat > other.num_unsat) return true;
-		if (num_unsat < other.num_unsat) return true;
+		if (num_unsat < other.num_unsat) return false;
 		return g > other.g;
 	}
 };

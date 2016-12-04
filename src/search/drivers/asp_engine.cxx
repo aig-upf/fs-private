@@ -11,12 +11,12 @@
 
 namespace fs0 { namespace drivers {
 	
-std::unique_ptr<FS0SearchAlgorithm> ASPEngine::create(const Config& config, const GroundStateModel& model) const {
+std::unique_ptr<FSGroundSearchAlgorithm> ASPEngine::create(const Config& config, const GroundStateModel& model) const {
 	const Problem& problem = model.getTask();
 	
 	validate(problem);
 	
-	FS0SearchAlgorithm* engine = nullptr;
+	FSGroundSearchAlgorithm* engine = nullptr;
 	std::string search = config.getOption<std::string>("engine.search");
 	if (search == "astar") {
 		LPT_INFO("main", "Chosen engine: A* with ASP-based h+ computation");
@@ -28,7 +28,7 @@ std::unique_ptr<FS0SearchAlgorithm> ASPEngine::create(const Config& config, cons
 		typedef HeuristicSearchNode<State, GroundAction> GBFSNode;
 		engine = new aptk::StlBestFirstSearch<GBFSNode, asp::ASPHPlus, GroundStateModel>(model, asp::ASPHPlus(problem));
 	}
-	return std::unique_ptr<FS0SearchAlgorithm>(engine);
+	return std::unique_ptr<FSGroundSearchAlgorithm>(engine);
 }
 
 void ASPEngine::validate(const Problem& problem) {

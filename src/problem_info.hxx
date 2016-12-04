@@ -193,7 +193,7 @@ public:
 	
 	
 	//! Resolves a pair of function ID + an assignment of values to their parameters to the corresponding state variable.
-	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<ObjectIdx>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
+	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<ObjectIdx>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, std::move(constants))); }
 	VariableIdx resolveStateVariable(unsigned symbol_id, const std::vector<ObjectIdx>& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
 	
 	//! Return the data that originated a state variable

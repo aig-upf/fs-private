@@ -17,7 +17,7 @@ DirectCRPG::DirectCRPG(const Problem& problem, std::vector<std::unique_ptr<Direc
     std::iota(all_whitelist.begin(), all_whitelist.end(), 0);
 }
 
-long DirectCRPG::evaluate(const State& seed) {
+long DirectCRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
 	return evaluate(seed, all_whitelist); // If no whitelist is provided, all actions are considered.
 }
 
@@ -58,7 +58,7 @@ long DirectCRPG::evaluate(const State& seed, const std::vector<ActionIdx>& white
 		// Prune using state constraints - TODO - Would be nicer if the whole state constraint pruning was refactored into a single line
 		FilteringOutput o = _builder.pruneUsingStateConstraints(relaxed);
 		LPT_EDEBUG("heuristic", "State Constraint pruning output: " <<  static_cast<std::underlying_type<FilteringOutput>::type>(o));
-		if (o == FilteringOutput::Failure) return std::numeric_limits<unsigned>::infinity();
+		if (o == FilteringOutput::Failure) return std::numeric_limits<unsigned>::max();
 		if (o == FilteringOutput::Pruned && relaxed.getNumberOfAtoms() <= prev_number_of_atoms) return std::numeric_limits<float>::infinity();
 */
 		

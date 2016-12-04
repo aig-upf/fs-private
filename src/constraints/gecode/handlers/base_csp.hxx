@@ -2,11 +2,13 @@
 #pragma once
 
 #include <unordered_set>
+#include <unordered_map>
 
 #include <fs_types.hxx>
 #include <atom.hxx>
 #include <constraints/gecode/gecode_csp.hxx>
 #include <constraints/gecode/utils/extensional_constraint.hxx>
+#include <constraints/gecode/utils/element_constraint.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 
 
@@ -22,11 +24,18 @@ class BaseCSP {
 public:
 	BaseCSP(const TupleIndex& tuple_index, bool approximate);
 	virtual ~BaseCSP() = default;
+	BaseCSP(const BaseCSP&) = delete;
+	BaseCSP(BaseCSP&&) = delete;
+	BaseCSP& operator=(const BaseCSP&) = delete;
+	BaseCSP& operator=(BaseCSP&&) = delete;
 	
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
 	GecodeCSP* instantiate(const RPGIndex& graph) const;
 	GecodeCSP* instantiate(const State& state) const;
+	GecodeCSP* instantiate_wo_novelty(const RPGIndex& graph) const;
+	
+	void update_csp(std::unique_ptr<GecodeCSP>&& csp);
 	
 	const CSPTranslator& getTranslator() const { return _translator; }
 
@@ -34,15 +43,17 @@ public:
 	static void registerTermConstraints(const fs::Term* term, CSPTranslator& translator);
 	static void registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator);
 	static void registerFormulaConstraints(const fs::AtomicFormula* condition, CSPTranslator& translator);
+	
+	bool failed() const { return _failed; }
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const BaseCSP& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const { return print(os, _base_csp); }
+	std::ostream& print(std::ostream& os) const { return print(os, *_base_csp); }
 	std::ostream& print(std::ostream& os, const GecodeCSP& csp) const;
 	
 protected:
 	//! The base Gecode CSP
-	GecodeCSP _base_csp;
+	std::unique_ptr<GecodeCSP> _base_csp;
 	
 	//! Whether the underlying CSP gecode space has already been detected as failed.
 	bool _failed;
@@ -66,6 +77,15 @@ protected:
 	
 	//!
 	std::vector<ExtensionalConstraint> _extensional_constraints;
+	
+	//! An index from the actual term to the position of the translator in the vector '_nested_fluent_translators'
+ 	//! Note that we need to use the hash and equality specializations of the parent class Term pointer
+ 	std::unordered_map<const fs::FluentHeadedNestedTerm*, unsigned, std::hash<const fs::Term*>, std::equal_to<const fs::Term*>> _nested_fluent_translators_idx;
+ 	
+	//! The set of nested fluent translators, one for each nested fluent in the set of terms modeled by this CSP
+	std::vector<NestedFluentElementTranslator> _nested_fluent_translators;
+	
+	VariableCounter _counter;
 	
 	//! Index all terms and formulas appearing in the formula / actions which will be relevant to the CSP
 	virtual void index() = 0;

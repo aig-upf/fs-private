@@ -2,12 +2,11 @@
 #include <problem.hxx>
 #include <search/drivers/registry.hxx>
 #include <search/drivers/gbfs_constrained.hxx>
-#include <search/drivers/iterated_width.hxx>
-#include <search/drivers/breadth_first_search.hxx>
-#include <search/drivers/gbfs_novelty.hxx>
+// #include <search/drivers/iterated_width.hxx>
+// #include <search/drivers/breadth_first_search.hxx>
+// #include <search/drivers/bfws.hxx>
 // #include <search/drivers/asp_engine.hxx>
 #include <search/drivers/unreached_atom_driver.hxx>
-#include <search/drivers/smart_effect_driver.hxx>
 #include <search/drivers/native_driver.hxx>
 // #include <heuristics/relaxed_plan/direct_crpg.hxx>
 // #include <heuristics/relaxed_plan/gecode_crpg.hxx>
@@ -37,11 +36,10 @@ EngineRegistry::EngineRegistry() {
 	add("native",  new NativeDriver());
 	add("lite",  new NativeDriver());
 	add("unreached_atom",  new UnreachedAtomDriver());
-	add("smart",  new SmartEffectDriver());
 	
-	add("iw",  new IteratedWidthDriver());
-	add("novelty_best_first",  new GBFSNoveltyDriver());
-	add("breadth_first_search",  new BreadthFirstSearchDriver());
+// 	add("iw",  new IteratedWidthDriver());
+// 	add("bfws",  new BFWSDriver());
+// 	add("bfs",  new BreadthFirstSearchDriver());
 // 	add("asp_engine",  new ASPEngine());
 }
 

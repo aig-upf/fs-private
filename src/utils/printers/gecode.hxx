@@ -46,6 +46,19 @@ class extensional {
 		std::ostream& print(std::ostream& os) const;
 };
 
+class element {
+	protected:
+		const Gecode::IntVarArgs& _table;
+		const Gecode::IntVar& _index;
+		const Gecode::IntVar& _output;
+		
+	public:
+		element(const Gecode::IntVarArgs& table, const Gecode::IntVar& index, const Gecode::IntVar& output) : _table(table), _index(index), _output(output) {}
+		
+		friend std::ostream& operator<<(std::ostream &os, const element& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
 class csp {
 	protected:
 		const gecode::CSPTranslator& _translator;

@@ -13,9 +13,9 @@ public:
 	//! Create a NoveltyFeaturesConfiguration object from a global configuration object
 	NoveltyFeaturesConfiguration(const Config& config)
 		: NoveltyFeaturesConfiguration(
-			config.getOption<bool>("engine.use_state_vars"),
-			config.getOption<bool>("engine.use_goal"),
-			config.getOption<bool>("engine.use_actions"))
+			config.getOption<bool>("width.use_state_vars"),
+			config.getOption<bool>("width.use_goal"),
+			config.getOption<bool>("width.use_actions"))
 	{}
 
 	bool useStateVars() const { return _use_state_vars; }

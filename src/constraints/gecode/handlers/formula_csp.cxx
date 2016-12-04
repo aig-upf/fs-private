@@ -7,6 +7,8 @@
 #include <aptk2/tools/logging.hxx>
 #include <utils/tuple_index.hxx>
 #include <utils/utils.hxx>
+#include <utils/printers/gecode.hxx>
+#include <utils/printers/printers.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <state.hxx>
@@ -19,16 +21,19 @@ FormulaCSP::FormulaCSP(const fs::Formula* formula, const TupleIndex& tuple_index
 	:  BaseCSP(tuple_index, approximate),
 	  _formula(formula)
 {
+	LPT_DEBUG("translation", "Gecode Formula Handler: processing goal formula " << *_formula);
 	index();
 	
 	createCSPVariables(false);
 	register_csp_constraints();
 	index_existential_variable_uses();
 	
-	Helper::postBranchingStrategy(_base_csp);
+	Helper::postBranchingStrategy(*_base_csp);
+	
+	// std::cout << "Goal CSP:" << std::endl << _translator << std::endl;
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
-	Gecode::SpaceStatus st = _base_csp.status();
+	Gecode::SpaceStatus st = _base_csp->status();
 	
 	if (st == Gecode::SpaceStatus::SS_SOLVED) {
 		LPT_INFO("main", "Formula CSP was statically solved:" << std::endl <<  *this);
@@ -48,10 +53,11 @@ bool FormulaCSP::compute_support(GecodeCSP* csp, std::vector<TupleIdx>& support)
 	GecodeCSP* solution = compute_single_solution(csp);
 	if (!solution) return false;
 	
-	LPT_EDEBUG("heuristic", "Formula CSP solution found: " << *solution);
+	LPT_EDEBUG("heuristic", "Formula CSP solution found: " << fs0::print::csp(_translator, *solution));
 	assert(support.empty());
 	support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
 	delete solution;
+	LPT_EDEBUG("heuristic", "Support for the formula is:" << std::endl << fs0::print::support(support));
 	return true;
 }
 
@@ -82,7 +88,7 @@ void FormulaCSP::index() {
 }
 
 void FormulaCSP::init_value_selector(const RPGIndex* graph) {
-	_base_csp.init_value_selector(std::make_shared<TupleMinHMaxValueSelector>(&_tuple_index, &_translator, graph));
+	_base_csp->init_value_selector(std::make_shared<TupleMinHMaxValueSelector>(&_tuple_index, &_translator, graph));
 }
 
 void FormulaCSP::index_existential_variable_uses() {
@@ -95,7 +101,7 @@ void FormulaCSP::index_existential_variable_uses() {
 	// atoms are achieved the earliest possible
 
 	std::vector<std::vector<std::unordered_map<int, TupleIdx>>> existential_data;
-	existential_data.resize(_base_csp._intvars.size());
+	existential_data.resize(_base_csp->_intvars.size());
 	
 	for (const ExtensionalConstraint& extensional:_extensional_constraints) {
 		const fs::FluentHeadedNestedTerm* fluent = extensional.get_term();

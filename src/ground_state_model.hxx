@@ -11,13 +11,17 @@ class State;
 
 class GroundStateModel : public aptk::DetStateModel<State, GroundAction> {
 public:
+	using BaseT = aptk::DetStateModel<State, GroundAction>;
+	using ActionType = BaseT::ActionType;
+	using ActionId = ActionType::IdType;
+	
 	GroundStateModel(const Problem& problem) : task(problem) {}
 	~GroundStateModel() = default;
 	
-	GroundStateModel(const GroundStateModel& other) = default;
-	GroundStateModel& operator=(const GroundStateModel& other) = default;
-	GroundStateModel(GroundStateModel&& other) = default;
-	GroundStateModel& operator=(GroundStateModel&& rhs) = default;
+	GroundStateModel(const GroundStateModel&) = default;
+	GroundStateModel& operator=(const GroundStateModel&) = default;
+	GroundStateModel(GroundStateModel&&) = default;
+	GroundStateModel& operator=(GroundStateModel&&) = default;
 
 	//! Returns initial state of the problem
 	State init() const;
@@ -27,6 +31,9 @@ public:
 
 	//! Returns applicable action set object
 	typename GroundAction::ApplicableSet applicable_actions(const State& state) const;
+	
+	bool is_applicable(const State& state, const ActionType& action) const;
+	bool is_applicable(const State& state, const ActionId& action) const;
 
 	//! Returns the state resulting from applying the given action action on the given state
 	State next(const State& state, const GroundAction::IdType& id) const;

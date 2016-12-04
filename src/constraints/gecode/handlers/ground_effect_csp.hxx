@@ -17,8 +17,11 @@ public:
 	static std::vector<std::unique_ptr<GroundEffectCSP>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
 
 	GroundEffectCSP(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions);
-	 
-	~GroundEffectCSP() {}
+	~GroundEffectCSP() = default;
+	GroundEffectCSP(const GroundEffectCSP&) = delete;
+	GroundEffectCSP(GroundEffectCSP&&) = delete;
+	GroundEffectCSP& operator=(const GroundEffectCSP&) = delete;
+	GroundEffectCSP& operator=(GroundEffectCSP&&) = delete;
 	
 	bool init(bool use_novelty_constraint) override;
 	

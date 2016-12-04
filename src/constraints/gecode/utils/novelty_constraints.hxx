@@ -17,6 +17,7 @@ class CSPTranslator;
 class NoveltyConstraint {
 public:
 	virtual ~NoveltyConstraint() = default;
+	virtual NoveltyConstraint* clone() const = 0;
 	virtual void post_constraint(GecodeCSP& csp, const RPGIndex& layer) const = 0;
 	
 	//! Creates a suitable novelty constraint (strong if possible, weak if not) from a set of action preconditions and effects
@@ -70,6 +71,8 @@ public:
 	
 	//! Create the constraint and register the necessary variables for the constraint
 	StrongNoveltyConstraint(CSPTranslator& translator, const std::vector<const fs::ActionEffect*>& effects);
+	StrongNoveltyConstraint(const StrongNoveltyConstraint&) = default;
+	NoveltyConstraint* clone() const override { return new StrongNoveltyConstraint(*this); }
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
 	void post_constraint(GecodeCSP& csp, const RPGIndex& layer) const override;
@@ -91,6 +94,8 @@ public:
 	
 	//! Create the constraint and register the necessary variables for the constraint
 	EffectNoveltyConstraint(CSPTranslator& translator, const fs::ActionEffect* effect);
+	EffectNoveltyConstraint(const EffectNoveltyConstraint&) = default;
+	EffectNoveltyConstraint* clone() const override { return new EffectNoveltyConstraint(*this); }
 	
 	//! Post the novelty constraint to the given CSP and with the delta values given by 'layer'
 	void post_constraint(GecodeCSP& csp, const RPGIndex& rpg) const override;

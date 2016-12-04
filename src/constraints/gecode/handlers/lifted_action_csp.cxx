@@ -1,5 +1,5 @@
 
-#include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <actions/actions.hxx>
 #include <aptk2/tools/logging.hxx>
@@ -22,10 +22,16 @@ LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*
 	std::vector<std::shared_ptr<LiftedActionCSP>> handlers;
 	
 	for (auto schema:schemata) {
+		assert(!schema->has_empty_parameter());
 		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
 		auto handler = std::make_shared<LiftedActionCSP>(*schema, tuple_index, approximate, false);
-		handler->init(novelty);
-		LPT_DEBUG("main", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
+		
+		if (!handler->init(novelty)) {
+			LPT_DEBUG("grounding", "Action schema \"" << *schema << "\" detected as non-applicable before grounding");
+			continue;
+		}
+		
+		LPT_DEBUG("grounding", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
 	}
 	return handlers;
@@ -33,8 +39,27 @@ LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*
 
 
 LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
-:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action)
+	: LiftedActionCSP(action, extract_non_delete_effects(action), tuple_index, approximate, use_effect_conditions)
 {}
+
+LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+	:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action), _effects(effects)
+{}
+
+LiftedActionCSP::~LiftedActionCSP() {
+	for (auto eff:_effects) delete eff;
+}
+
+
+std::vector<const fs::ActionEffect*> LiftedActionCSP::extract_non_delete_effects(const PartiallyGroundedAction& action) {
+	std::vector<const fs::ActionEffect*> effects;
+	for (const fs::ActionEffect* effect:action.getEffects()) {
+		if (!effect->is_del()) {
+			effects.push_back(effect->clone());
+		}
+	}
+	return effects;
+}
 
 
 bool LiftedActionCSP::init(bool use_novelty_constraint) {
@@ -80,7 +105,7 @@ Binding LiftedActionCSP::build_binding_from_solution(const GecodeCSP* solution) 
 }
 
 const std::vector<const fs::ActionEffect*>& LiftedActionCSP::get_effects() const {
-	return _action.getEffects();
+	return _effects;
 }
 
 const fs::Formula* LiftedActionCSP::get_precondition() const {
@@ -99,4 +124,5 @@ LiftedActionID* LiftedActionCSP::get_lifted_action_id(const GecodeCSP* solution)
 void LiftedActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action schema " << _action);
 }
+
 } } // namespaces

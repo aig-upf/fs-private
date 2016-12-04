@@ -172,7 +172,7 @@ Seems to perform better than other options in some domains, but not in general.
 
 * `iw`: Iterated Width search.
 
-* `novelty_best_first`: A Greedy best-first search with a novelty-based heuristic. Namely, the search favors states with
+* `bfws`: A Greedy best-first search with a novelty-based heuristic. Namely, the search favors states with
 (1) lower novelty, (2) higher number of satisfied goal atoms, if novelty is equal, and (3) lower accumulated cost, the two
 first factors being equal.
 
@@ -192,6 +192,8 @@ which accepts a list of comma-separated name=value pairs, as in e.g.
 The most common configuration options are:
 
 * `heuristic`: Usually either `hff` or `hmax`.
+* `evaluation`: Either `eager`, `delayed`, or `delayed_for_unhelpful`. The first two are standard, the last one means that only
+  those nodes that are considered helpful are evaluated eagerly, the rest are evaluated only once they are opened.
 * `goal_resolution`: Either `full` or `approximate`: whether to fully or only approximately solve the action goal CSPs.
 * `precondition_resolution`: Same than `goal_resolution` but for action precondition formulas.
 * `novelty`: Either `true` or `false`.

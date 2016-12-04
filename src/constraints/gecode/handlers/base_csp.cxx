@@ -8,34 +8,49 @@
 #include <constraints/registry.hxx>
 #include <gecode/driver.hh>
 #include <constraints/gecode/translators/component_translator.hxx>
+#include <utils/config.hxx>
 
 
 namespace fs0 { namespace gecode {
 
 BaseCSP::BaseCSP(const TupleIndex& tuple_index, bool approximate) :
-	_base_csp(), _failed(false), _approximate(approximate), _translator(_base_csp), _tuple_index(tuple_index)
+	_base_csp(new GecodeCSP()),
+	_failed(false),
+	_approximate(approximate),
+	_translator(*_base_csp),
+	_tuple_index(tuple_index)
 {}
 
-void BaseCSP::registerTermVariables(const fs::Term* term, CSPTranslator& translator) {
+void
+BaseCSP::update_csp(std::unique_ptr<GecodeCSP>&& csp) { 
+	_base_csp = std::move(csp);
+}
+
+
+void
+BaseCSP::registerTermVariables(const fs::Term* term, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerVariables(term, translator);
 }
 
-void BaseCSP::registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator) {
+void
+BaseCSP::registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*condition);
 	assert(component_translator);
 	component_translator->registerVariables(condition, translator);
 }
 
-void BaseCSP::registerTermConstraints(const fs::Term* term, CSPTranslator& translator) {
+void
+BaseCSP::registerTermConstraints(const fs::Term* term, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*term);
 	assert(component_translator);
 	component_translator->registerConstraints(term, translator);
 }
 
 
-void BaseCSP::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) {
+void
+BaseCSP::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*formula);
 	assert(component_translator);
 	component_translator->registerConstraints(formula, translator);
@@ -43,7 +58,8 @@ void BaseCSP::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTr
 
 //! A helper
 template <typename T>
-GecodeCSP* _instantiate(const GecodeCSP& csp,
+GecodeCSP*
+_instantiate(const GecodeCSP& csp,
 						   const CSPTranslator& translator,
 						   const std::vector<ExtensionalConstraint>& extensional_constraints,
 						   const T& layer) {
@@ -58,9 +74,17 @@ GecodeCSP* _instantiate(const GecodeCSP& csp,
 	return clone;
 }
 
-GecodeCSP* BaseCSP::instantiate(const RPGIndex& graph) const {
+GecodeCSP*
+BaseCSP::instantiate_wo_novelty(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	GecodeCSP* csp = _instantiate(_base_csp, _translator, _extensional_constraints, graph);
+	GecodeCSP* csp = _instantiate(*_base_csp, _translator, _extensional_constraints, graph);
+	return csp;
+}
+
+GecodeCSP*
+BaseCSP::instantiate(const RPGIndex& graph) const {
+	if (_failed) return nullptr;
+	GecodeCSP* csp = _instantiate(*_base_csp, _translator, _extensional_constraints, graph);
 	if (!csp) return csp; // The CSP was detected unsatisfiable even before propagating anything
 	
 	// Post the novelty constraint
@@ -69,23 +93,41 @@ GecodeCSP* BaseCSP::instantiate(const RPGIndex& graph) const {
 	return csp;
 }
 
-GecodeCSP* BaseCSP::instantiate(const State& state) const {
+GecodeCSP*
+BaseCSP::instantiate(const State& state) const {
 	if (_failed) return nullptr;
-	return _instantiate(_base_csp, _translator, _extensional_constraints, state);
+	return _instantiate(*_base_csp, _translator, _extensional_constraints, state);
 }
 
 
-void BaseCSP::register_csp_variables() {
+void
+BaseCSP::register_csp_variables() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
+	const Config& config = Config::instance();
 	
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
 		if (const fs::FluentHeadedNestedTerm* fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
-			bool is_predicate = info.isPredicate(fluent->getSymbolId());
-			_extensional_constraints.push_back(ExtensionalConstraint(fluent, _tuple_index, is_predicate));
+			unsigned symbol_id = fluent->getSymbolId();
+			bool is_predicate = info.isPredicate(symbol_id);
 			
-			if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
-				_translator.registerNestedTerm(fluent);
+			if (config.getOption("element_constraint") && _counter.symbol_requires_element_constraint(symbol_id) && !is_predicate) {
+				LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an element constraint");
+				NestedFluentElementTranslator tr(fluent);
+				tr.register_variables(_translator);
+				_nested_fluent_translators.push_back(std::move(tr));
+				_nested_fluent_translators_idx.insert(std::make_pair(fluent, _nested_fluent_translators.size() - 1));
+			}
+			
+			else {
+				
+				_extensional_constraints.push_back(ExtensionalConstraint(fluent, _tuple_index, is_predicate));
+				if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
+					_translator.registerNestedTerm(fluent);
+					LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an extensional constraint");
+				} else {
+					LPT_DEBUG("translation", "Atom \"" << *fluent << "\" will be translated into an extensional constraint");
+				}
 			}
 			
 		} else if (auto statevar = dynamic_cast<const fs::StateVariable*>(term)) {
@@ -93,6 +135,7 @@ void BaseCSP::register_csp_variables() {
 		}
 		
 		else {
+// 			std::cout << "Registering term: " << *term << std::endl;
 			registerTermVariables(term,  _translator);
 		}
 	}
@@ -101,7 +144,8 @@ void BaseCSP::register_csp_variables() {
 	for (auto condition:_all_formulas) registerFormulaVariables(condition, _translator);
 }
 
-void BaseCSP::register_csp_constraints() {
+void
+BaseCSP::register_csp_constraints() {
 // 	unsigned i = 0; _unused(i);
 	
 	//! Register all CSP variables that arise from the logical terms
@@ -126,13 +170,20 @@ void BaseCSP::register_csp_constraints() {
 	for (ExtensionalConstraint& constraint:_extensional_constraints) {
 		constraint.register_constraints(_translator);
 	}
+	
+	for (NestedFluentElementTranslator& tr:_nested_fluent_translators) {
+		tr.register_constraints(_translator);
+		// FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *tr.getTerm() << "): " << _translator); // Uncomment for extreme debugging
+	}
 }
 
-std::ostream& BaseCSP::print(std::ostream& os, const GecodeCSP& csp) const {
+std::ostream&
+BaseCSP::print(std::ostream& os, const GecodeCSP& csp) const {
 	return _translator.print(os, csp);
 }
 
-void BaseCSP::createCSPVariables(bool use_novelty_constraint) {
+void
+BaseCSP::createCSPVariables(bool use_novelty_constraint) {
 	register_csp_variables();
 	
 	if (use_novelty_constraint) {
@@ -141,7 +192,8 @@ void BaseCSP::createCSPVariables(bool use_novelty_constraint) {
 	_translator.perform_registration();
 }
 
-void BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms) {
+void
+BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::unordered_set<const fs::Term*> inserted_terms;
 	std::unordered_set<const fs::AtomicFormula*> inserted_conditions;
@@ -162,7 +214,9 @@ void BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>
 				
 				if (statevar || nested_fluent) {
 					const fs::FluentHeadedNestedTerm* origin = statevar ? statevar->getOrigin() : nested_fluent;
-					if (info.isPredicate(origin->getSymbolId())) {
+					unsigned symbol_id = origin->getSymbolId();
+					
+					if (info.isPredicate(symbol_id)) {
 						// e.g. we had a condition clear(b) = 1, which we'll want to transform into an extensional constraint on the
 						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
 						
@@ -194,6 +248,11 @@ void BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>
 				}
 			}
 		}
+	}
+	
+	for (auto term:terms) {
+		if (auto sv = dynamic_cast<const fs::StateVariable*>(term)) _counter.count_flat(sv->getOrigin()->getSymbolId());
+		else if (auto fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) _counter.count_nested(fluent->getSymbolId());
 	}
 	
 	// Insert into all_formulas and all_terms all those elements in 'conditions' or 'terms' which have not been 

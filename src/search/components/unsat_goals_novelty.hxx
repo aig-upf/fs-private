@@ -41,6 +41,7 @@ public:
 	}
 	
 	~UnsatGoalsNoveltyComponent() {
+		// Log some info upon destruction
 		for (unsigned j = 0; j < _novelty_evaluators.size(); j++)
 			for ( unsigned k = 1; k <= Base::novelty_bound(); k++ ) {
 				LPT_INFO("heuristic", "# novelty(s)[#goals=" << j << "]=" << k << " : " << _novelty_evaluators[j].get_num_states(k));
@@ -50,6 +51,9 @@ public:
 	unsigned evaluate_num_unsat_goals(const State& state) const { return _unsat_goal_atoms_heuristic.evaluate(state); }
 
 	GenericNoveltyEvaluator& evaluator(const State& state) { return _novelty_evaluators[evaluate_num_unsat_goals(state)]; }
+	
+	//! Returns false iff we want to prune this node during the search
+	virtual bool accept(const SearchNode& n) { return true; }
 };
 
 } } // namespaces

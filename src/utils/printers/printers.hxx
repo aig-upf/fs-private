@@ -66,6 +66,18 @@ public:
 	static void printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out);
 };
 
+class support {
+	protected:
+		const Support& _support;
+
+	public:
+		support(const Support& sup) : _support(sup) {}
+		
+		friend std::ostream& operator<<(std::ostream &os, const support& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
+
 //! Print the proper, demangled name of a std::type_info / std::type_index object
 template <typename T>
 std::string type_info_name(const T& type) { return boost::units::detail::demangle(type.name()); }

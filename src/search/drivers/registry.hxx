@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <fs_types.hxx>
 #include <ground_state_model.hxx>
+#include <lifted_state_model.hxx>
 
 #include <aptk2/search/interfaces/search_algorithm.hxx>
 
@@ -13,7 +14,8 @@ namespace fs0 {
 
 namespace fs0 { namespace drivers {
 
-typedef aptk::SearchAlgorithm<GroundStateModel> FS0SearchAlgorithm;
+typedef aptk::SearchAlgorithm<GroundStateModel> FSGroundSearchAlgorithm;
+typedef aptk::SearchAlgorithm<LiftedStateModel> FSLiftedSearchAlgorithm;
 
 //! A brief interface for any engine creator
 class Driver {
@@ -21,7 +23,7 @@ public:
 	virtual ~Driver() = default;
 	
 	//! Create an engine for the given model as specified by the given configuration
-	virtual std::unique_ptr<FS0SearchAlgorithm> create(const Config& config, const GroundStateModel& model) const = 0;
+	virtual std::unique_ptr<FSGroundSearchAlgorithm> create(const Config& config, const GroundStateModel& model) const = 0;
 	
 	virtual GroundStateModel setup(const Config& config, Problem& problem) const;
 };

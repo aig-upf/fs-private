@@ -8,7 +8,7 @@
 #include <fs_types.hxx>
 
 
-namespace fs0 { class State; class ActionID; class TupleIndex; }
+namespace fs0 { class State; class ActionID; class TupleIndex; class Atom; }
 namespace fs0 { namespace gecode {
 
 class RPGIndex;
@@ -41,14 +41,14 @@ public:
 	 * 
 	 * @param goalAtoms The atoms that allowed the planning graph to reach a goal state.
 	 */
-	long computeRelaxedPlanCost(const std::vector<TupleIdx>& tuples);
+	long computeRelaxedPlanCost(const std::vector<TupleIdx>& goal_support, std::vector<Atom>& relevant);
 	
 protected:
 	//! Put all the atoms in a given vector of atoms in the queue to be processed.
-	inline void enqueueTuples(const std::vector<TupleIdx>& tuples) { for(const auto& tuple:tuples) pending.push(tuple); }
+	void enqueueTuples(const std::vector<TupleIdx>& tuples);
 
 	//! Process a single atom by seeking its supports left-to-right in the RPG and enqueuing them to be further processed
-	void processTuple(TupleIdx tuple);
+	void processTuple(TupleIdx tuple, std::vector<Atom>& relevant);
 	
 	
 	long buildRelaxedPlan();

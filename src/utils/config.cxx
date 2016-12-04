@@ -3,7 +3,6 @@
 #include <fs_types.hxx>
 #include <boost/property_tree/json_parser.hpp>
 
-
 namespace pt = boost::property_tree;
 
 namespace fs0 {
@@ -23,7 +22,6 @@ Config& Config::instance() {
 
 template <typename OptionType>
 OptionType parseOption(const pt::ptree& tree, const std::unordered_map<std::string, std::string>& user_options, const std::string& key, std::map<std::string, OptionType> allowed) {
-	
 	std::string parsed;
 	
 	auto it = user_options.find(key);
@@ -65,7 +63,11 @@ void Config::load(const std::string& filename) {
 	
 	_novelty = parseOption<bool>(_root, _user_options, "novelty", {{"true", true}, {"false", false}});
 	
-	_delayed = parseOption<bool>(_root, _user_options, "delayed_evaluation", {{"true", true}, {"false", false}});
+	_node_evaluation = parseOption<EvaluationT>(_root, _user_options, "evaluation", {
+		{"eager", EvaluationT::eager},
+		{"delayed", EvaluationT::delayed},
+		{"delayed_for_unhelpful", EvaluationT::delayed_for_unhelpful}}
+	);
 	
 	_heuristic = parseOption<std::string>(_root, _user_options, "heuristic", {{"hff", "hff"}, {"hmax", "hmax"}});
 }

@@ -93,7 +93,7 @@ public:
 	SumFormula(const std::vector<const Term*>& subterms) : ExternallyDefinedFormula(subterms) {}
 	SumFormula(const SumFormula& formula);
 	
-	SumFormula* clone() const { return new SumFormula(*this); }	
+	SumFormula* clone() const { return new SumFormula(*this); }
 	SumFormula* clone(const std::vector<const Term*>& subterms) const { return new SumFormula(subterms); }
 	
 	std::string name() const { return "sum"; }
@@ -101,5 +101,21 @@ public:
 protected:
 	bool _satisfied(const ObjectIdxVector& values) const;
 };
+
+
+class NValuesFormula : public ExternallyDefinedFormula {
+public:
+	NValuesFormula(const std::vector<const Term*>& subterms) : ExternallyDefinedFormula(subterms) {}
+	NValuesFormula(const NValuesFormula& formula);
+	
+	NValuesFormula* clone() const { return new NValuesFormula(*this); }	
+	NValuesFormula* clone(const std::vector<const Term*>& subterms) const { return new NValuesFormula(subterms); }
+	
+	std::string name() const { return "nvalues"; }
+	
+protected:
+	bool _satisfied(const ObjectIdxVector& values) const;
+};
+
 
 } } } // namespaces

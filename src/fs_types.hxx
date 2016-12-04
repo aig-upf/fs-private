@@ -18,56 +18,58 @@
 
 
 /**
- * Custom datatypes and typedefs.
+ * Custom datatypes and usings.
  */
 namespace fs0 {
 
 	// A unique identifier for any of the domain actions.
-	typedef unsigned ActionIdx;
+	using ActionIdx = unsigned;
 
 	// A sequence of actions is a plan.
-	typedef std::vector<ActionIdx> ActionPlan;
+	using ActionPlan = std::vector<ActionIdx>;
 
 	// A unique identifier for any of the domain data types.
-	typedef unsigned TypeIdx;
+	using TypeIdx = unsigned;
 	const TypeIdx INVALID_TYPE = std::numeric_limits<unsigned>::max();
 
 	// A unique identifier for any of the problem objects (might be an integer)
-	typedef int ObjectIdx;
+	using ObjectIdx = int;
 
 	//! An action signature is a list of (positional) parameters with a given type.
-	typedef std::vector<TypeIdx> Signature;
+	using Signature = std::vector<TypeIdx>;
 
 	//! The index identifying a state variable.
-	typedef unsigned VariableIdx;
+	using VariableIdx = unsigned;
 	const VariableIdx INVALID_VARIABLE = std::numeric_limits<unsigned>::max();
 
-	typedef std::vector<VariableIdx> VariableIdxVector;
+	using VariableIdxVector = std::vector<VariableIdx>;
 
-	typedef std::vector<ObjectIdx> ObjectIdxVector;
+	using ObjectIdxVector = std::vector<ObjectIdx>;
 	
 	//! A tuple of values
-	typedef std::vector<ObjectIdx> ValueTuple;
+	using ValueTuple = std::vector<ObjectIdx>;
 	
 	//! The index of a tuple of a FSTRIPS logical symbol, unique across all symbols.
-	typedef unsigned TupleIdx;
+	using TupleIdx = unsigned;
 	const TupleIdx INVALID_TUPLE = std::numeric_limits<unsigned int>::max();
+	
+	using Support = std::vector<TupleIdx>;
 
 	//! A domain is a set of values (of a state variable)
- 	typedef boost::container::flat_set<ObjectIdx> Domain;
-	typedef std::shared_ptr<Domain> DomainPtr;
+ 	using Domain = boost::container::flat_set<ObjectIdx>;
+	using DomainPtr = std::shared_ptr<Domain>;
 
 	//! A vector of domains.
-	typedef std::vector<DomainPtr> DomainVector;
+	using DomainVector = std::vector<DomainPtr>;
 
 	//! A map mapping state variable indexes to their possible domains.
-	typedef std::map<VariableIdx, DomainPtr> DomainMap;
+	using DomainMap = std::map<VariableIdx, DomainPtr>;
 	
 	//! A map mapping a subset of state variables to possible values
-	typedef std::map<VariableIdx, ObjectIdx> PartialAssignment;
+	using PartialAssignment = std::map<VariableIdx, ObjectIdx>;
 
 	//! A function in the logical sense.
-	typedef std::function<ObjectIdx(const ValueTuple&)> Function;
+	using Function = std::function<ObjectIdx(const ValueTuple&)>;
 	
 	
 	/**
@@ -81,6 +83,12 @@ namespace fs0 {
 	class InvalidConfiguration : public std::runtime_error {
 	public:
 		InvalidConfiguration(const std::string& msg) : std::runtime_error(msg) {}
+	};
+	
+	class UndefinedValueAccess : public std::runtime_error {
+	public:
+		UndefinedValueAccess(const std::string& msg) : std::runtime_error(msg) {}
+		UndefinedValueAccess() : UndefinedValueAccess("") {}
 	};
 
 } // namespaces

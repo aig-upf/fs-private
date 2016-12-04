@@ -21,9 +21,6 @@ public:
 	//! Construct a state specifying the values of all state variables
 	//! Note that it is not necessarily the case that numAtoms == facts.size(); since the initial values of
 	//! some (Boolean) state variables is often left unspecified and understood to be false.
-	//! TODO - We might want to perform type checking here against the predicate and function signatures.
-	//! TODO - We might also want to ensure here that all symbol extensions have been defined. This won't be expensive, 
-	//! as it will be done only when we create the initial state.
 	State(unsigned numAtoms, const std::vector<Atom>& facts);
 	
 	//! A constructor that receives a number of atoms and constructs a state that is equal to the received
@@ -32,10 +29,10 @@ public:
 	
 	//! Default copy constructors and assignment operators - if ever need a custom version, check the git history!
 	// https://bitbucket.org/gfrances/fs0/src/28ce4119f27a537d8f7628c6ca0487d03d5ed0b1/src/state.hxx?at=gecode_integration
-	State(const State& state) = default;
-	State( State&& state ) = default;
-	State& operator=(const State &state) = default;
-	State& operator=(State&& state) = default;
+	State(const State&) = default;
+	State(State&&) = default;
+	State& operator=(const State&) = default;
+	State& operator=(State&&) = default;
 
 	// Check the hash first for performance.
 	bool operator==(const State &rhs) const { return _hash == rhs._hash && _values == rhs._values; }
