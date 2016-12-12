@@ -2,6 +2,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <boost/functional/hash.hpp>
 
 #include <atom.hxx>
 
@@ -10,11 +11,11 @@ namespace fs0 {
 class ProblemInfo;
 class Atom;
 
-template <typename Container>
-struct container_hash {
-    std::size_t operator()(Container const& c) const;
-};
-
+//! An AtomIndex indexes all possible atoms of a certain problem (be it predicative as in 'clear(b)',
+//! or coming from a function, as in 'loc(b,c)'. This essentially means that all
+//! possible atoms are assigned a (contiguous) ID, which can be subsequently retrieved in an efficient manner.
+//! The inverse operation, i.e. retrieving the index of an atom from the atom itself, can also be performed
+//! in as efficient as possible a manner.
 class AtomIndex {
 protected:
 	//! Maps from tuple indexes to their corresponding tuples / atoms
@@ -25,7 +26,7 @@ protected:
 	std::vector<unsigned> _symbol_index;
 	
 	//! A map from actual tuples to their index
-	std::vector<std::unordered_map<ValueTuple, AtomIdx, container_hash<ValueTuple>>> _tuple_index_inv;
+	std::vector<std::unordered_map<ValueTuple, AtomIdx, boost::hash<ValueTuple>>> _tuple_index_inv;
 	
 	//! _atom_index_inv.at(i) contains a map mapping all possible values 'v' of variable 'i'
 	//! to the tuple that corresponds to the atom <i, v>

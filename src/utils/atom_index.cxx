@@ -7,9 +7,6 @@
 
 namespace fs0 {
 
-template <typename Container>
-std::size_t container_hash<Container>::operator()(Container const& c) const { return boost::hash_range(c.begin(), c.end()); }
-
 AtomIndex::AtomIndex(const ProblemInfo& info) :
 	_tuple_index_inv(info.getNumLogicalSymbols()),
 	_atom_index_inv(info.getNumVariables())
