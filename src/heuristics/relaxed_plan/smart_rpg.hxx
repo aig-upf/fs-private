@@ -5,7 +5,7 @@
 #include <constraints/gecode/extensions.hxx>
 #include <constraints/gecode/handlers/formula_csp.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 #include <unordered_set>
 
 namespace fs0 { class Problem; class State; class RPGData; }

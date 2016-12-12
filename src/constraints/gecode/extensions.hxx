@@ -1,7 +1,7 @@
 
 #pragma once
 #include <fs_types.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 #include <gecode/int.hh>
 
 namespace fs0 { class ProblemInfo; }

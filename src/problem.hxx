@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 
 namespace fs0 { namespace asp { class LPHandler; }}
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}

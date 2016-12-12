@@ -1,7 +1,7 @@
 
 #include <boost/functional/hash.hpp>
 
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 #include <problem_info.hxx>
 
 

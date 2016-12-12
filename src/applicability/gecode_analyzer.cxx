@@ -4,7 +4,7 @@
 #include <applicability/gecode_analyzer.hxx>
 #include <problem_info.hxx>
 #include <constraints/gecode/handlers/ground_action_csp.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
 

@@ -4,7 +4,7 @@
 #include <constraints/gecode/csp_translator.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 
 namespace fs0 { namespace gecode {
 
