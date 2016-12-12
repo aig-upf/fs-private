@@ -14,26 +14,26 @@ TupleIndex::TupleIndex(const ProblemInfo& info) :
 	_tuple_index_inv(info.getNumLogicalSymbols()),
 	_atom_index_inv(info.getNumVariables())
 {
-	std::vector<std::vector<ValueTuple>> tuples_by_symbol = compute_all_reachable_tuples(info);
+	auto tuples_by_symbol = compute_all_reachable_tuples(info);
 	
 	std::vector<std::pair<unsigned, unsigned>> symbol_ranges;
 	unsigned idx = 0;
 	for (unsigned symbol = 0; symbol < info.getNumLogicalSymbols(); ++symbol) {
 		std::pair<unsigned, unsigned> range{idx, 0};
 		
-		for (const ValueTuple& tuple:tuples_by_symbol.at(symbol)) {
+		for (const std::pair<ValueTuple, ObjectIdx>& data:tuples_by_symbol.at(symbol)) {
 			// For each symbol, we process all derived tuples and keep information
 			// about the index range of the tuples that correspond to that symbol.
 			
-			ValueTuple copy(tuple);
+			const ValueTuple& arguments = data.first;
+			const ObjectIdx& value = data.second;
 			
-			ObjectIdx value = 1;
-			if (!info.isPredicate(symbol)) {
-				value = copy[copy.size() - 1];
-				copy.erase(copy.end() - 1);
+			ValueTuple tuple = arguments; // Copy the vector
+			if (info.isFunction(symbol)) { // A functional symbol, we want to store the arguments+value tuple
+				tuple.push_back(value);
 			}
 			
-			VariableIdx variable = info.resolveStateVariable(symbol, copy);
+			VariableIdx variable = info.resolveStateVariable(symbol, arguments);
 			add(symbol, tuple, idx, Atom(variable, value));
 			idx++;
 		}
@@ -77,23 +77,15 @@ TupleIdx TupleIndex::to_index(VariableIdx variable, ObjectIdx value) const {
 }
 
 // TODO - We should be applying some reachability analysis here to prune out tuples that will never be reachable at all.
-std::vector<std::vector<ValueTuple>> TupleIndex::compute_all_reachable_tuples(const ProblemInfo& info) {
-	std::vector<std::vector<ValueTuple>> tuples_by_symbol(info.getNumLogicalSymbols());
+std::vector<std::vector<std::pair<ValueTuple, ObjectIdx>>> TupleIndex::compute_all_reachable_tuples(const ProblemInfo& info) {
+	std::vector<std::vector<std::pair<ValueTuple, ObjectIdx>>> tuples_by_symbol(info.getNumLogicalSymbols());
 
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 		const auto& data = info.getVariableData(var);
 		auto& symbol_tuples = tuples_by_symbol.at(data.first); // The tupleset corresponding to the symbol index
 		
-		if (info.isPredicativeVariable(var)) {
-			symbol_tuples.push_back(data.second); // We're just interested in the non-negated atom
-		
-			
-		} else { // A function symbol
-			for (ObjectIdx value:info.getVariableObjects(var)) {
-				std::vector<int> arguments(data.second); // Copy the vector
-				arguments.push_back(value);
-				symbol_tuples.push_back(std::move(arguments)); 
-			}
+		for (ObjectIdx value:info.getVariableObjects(var)) {
+			symbol_tuples.push_back(std::make_pair(data.second, value)); 
 		}
 	}
 	return tuples_by_symbol;

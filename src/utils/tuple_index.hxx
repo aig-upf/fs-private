@@ -64,8 +64,10 @@ public:
 	unsigned symbol(TupleIdx tuple) const { return _symbol_index.at(tuple); }
 	
 protected:
-	//! A helper to compute and index all reachable tuples
-	static std::vector<std::vector<ValueTuple>> compute_all_reachable_tuples(const ProblemInfo& info);
+	//! A helper to compute and index all reachable tuples.
+	//! Returns an index from each logical symbol to all the tuples that are reachable / make sense for that particular
+	//! logical symbol.
+	static std::vector<std::vector<std::pair<ValueTuple, ObjectIdx>>> compute_all_reachable_tuples(const ProblemInfo& info);
 };
 
 } // namespaces

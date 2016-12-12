@@ -58,6 +58,8 @@ protected:
 	//! The tuple index of the problem
 	const TupleIndex& _tuple_idx;
 	
+	//! A map from each atom index to the set of actions that might be applicable when
+	//! that atom is true in a certain state
 	std::vector<std::vector<ActionIdx>> _applicable;
 	
 	unsigned _total_actions;
