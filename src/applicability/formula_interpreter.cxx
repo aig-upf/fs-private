@@ -7,7 +7,7 @@
 
 namespace fs0 {
 
-FormulaInterpreter* FormulaInterpreter::create(const fs::Formula* formula, const TupleIndex& tuple_index) {
+FormulaInterpreter* FormulaInterpreter::create(const fs::Formula* formula, const AtomIndex& tuple_index) {
 	// If there is some quantified variable in the formula, we will use a CSP-based interpreter
 	auto existential_formulae = Utils::filter_by_type<const fs::ExistentiallyQuantifiedFormula*>(formula->all_formulae());
 	if (!existential_formulae.empty()) {
@@ -38,7 +38,7 @@ bool DirectFormulaInterpreter::satisfied(const State& state) const {
 	return _formula->interpret(state);
 }
 
-CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula* formula, const TupleIndex& tuple_index) :
+CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula* formula, const AtomIndex& tuple_index) :
 	FormulaInterpreter(formula),
 	// Note that we don't need any of the optimizations, since we will be instantiating the CSP on a state, not a RPG layer
 	_formula_csp(new gecode::FormulaCSP(formula, tuple_index, false)),

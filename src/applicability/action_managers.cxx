@@ -64,7 +64,7 @@ bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& 
 
 
 
-SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const TupleIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer) :
+SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer) :
 	_actions(actions),
 	_state_constraints(process_state_constraints(state_constraints)),
 	_tuple_idx(tuple_idx),
@@ -197,7 +197,7 @@ BasicApplicabilityAnalyzer::build() {
 			
 			if (eq) { // Prec is of the form X=x
 				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
-				TupleIdx tup = _tuple_idx.to_index(relevant, value);
+				AtomIdx tup = _tuple_idx.to_index(relevant, value);
 				_applicable[tup].push_back(i);
 				
 			} else { // Prec is of the form X!=x
@@ -205,7 +205,7 @@ BasicApplicabilityAnalyzer::build() {
 				ObjectIdx value = _extract_constant_val(neq->lhs(), neq->rhs());
 				for (ObjectIdx v2:values) {
 					if (v2 != value) {
-						TupleIdx tup = _tuple_idx.to_index(relevant, v2);
+						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
 						_applicable[tup].push_back(i);
 					}
 				}
@@ -217,7 +217,7 @@ BasicApplicabilityAnalyzer::build() {
 			if (referenced.find(var) != referenced.end()) continue;
 			
 			for (ObjectIdx val:info.getVariableObjects(var)) {
-				TupleIdx tup = _tuple_idx.to_index(var, val);
+				AtomIdx tup = _tuple_idx.to_index(var, val);
 				_applicable[tup].push_back(i);
 			}
 		}
@@ -238,10 +238,10 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 	
 	// We find the state variable values giving us the smallest potentially-applicable action set
 	// and at the same time precompute all tuple indexes of the state atoms.
-	TupleIdx min_tuple_idx = 0, min_size = std::numeric_limits<unsigned>::max();
-	std::vector<TupleIdx> tuples(values.size());
+	AtomIdx min_tuple_idx = 0, min_size = std::numeric_limits<unsigned>::max();
+	std::vector<AtomIdx> tuples(values.size());
 	for (unsigned i = 0; i < values.size(); ++i) {
-		TupleIdx tup = _tuple_idx.to_index(i, values[i]);
+		AtomIdx tup = _tuple_idx.to_index(i, values[i]);
 		tuples[i] = tup;
 		unsigned s = _app_index[tup].size();
 		
@@ -273,7 +273,7 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 	std::vector<ActionIdx> buffer; // outside the loop so that we reuse its memory
 	
 	for (unsigned j = 0, sz = tuples.size(); j < sz; ++j) {
-		TupleIdx tup = tuples[j];
+		AtomIdx tup = tuples[j];
 // 		if (tuples_with_all_actions[j]) std::cout << "Smart one!" << std::endl;
 		if (tup != min_tuple_idx && !tuples_with_all_actions[j]) {
 			const auto& candidates = _app_index[tup];

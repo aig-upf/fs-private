@@ -9,7 +9,7 @@
 
 namespace fs0 { namespace gecode {
 	
-std::vector<std::shared_ptr<BaseActionCSP>> GroundActionCSP::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<BaseActionCSP>> GroundActionCSP::create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<BaseActionCSP>> managers;
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
@@ -27,7 +27,7 @@ std::vector<std::shared_ptr<BaseActionCSP>> GroundActionCSP::create(const std::v
 }
 
 // If no set of effects is provided, we'll take all of them into account
-GroundActionCSP::GroundActionCSP(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+GroundActionCSP::GroundActionCSP(const GroundAction& action, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions)
 	:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action)
 {
 	// Filter out delete effects

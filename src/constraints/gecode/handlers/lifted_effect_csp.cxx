@@ -16,7 +16,7 @@ namespace fs0 { namespace gecode {
 
 
 std::vector<std::unique_ptr<LiftedEffectCSP>>
-LiftedEffectCSP::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+LiftedEffectCSP::create_smart(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::unique_ptr<LiftedEffectCSP>> handlers;
 	
@@ -96,7 +96,7 @@ LiftedEffectCSP::prune_unreachable(std::vector<std::unique_ptr<LiftedEffectCSP>>
 	std::cout << "A total of " << original_size - managers.size() << " out of " << original_size << " effect CSPs were deemed unreachable and discarded" << std::endl;
 }
 
-LiftedEffectCSP::LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
+LiftedEffectCSP::LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const AtomIndex& tuple_index, bool approximate) :
 	LiftedActionCSP(action, {effect}, tuple_index, approximate, true), _achievable_tuple_idx(INVALID_TUPLE)
 {}
 
@@ -116,11 +116,11 @@ LiftedEffectCSP::init(bool use_novelty_constraint) {
 	return true;
 }
 
-TupleIdx
+AtomIdx
 LiftedEffectCSP::detect_achievable_tuple() const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
-	TupleIdx achievable_tuple_idx = INVALID_TUPLE;
+	AtomIdx achievable_tuple_idx = INVALID_TUPLE;
 	
 	// We necessarily assume that the head of the effect is fluent-less
 	if (info.isPredicate(_lhs_symbol)) { // If the effect is predicative, it must be an add-effect
@@ -196,9 +196,9 @@ LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
 	}
 }
 
-TupleIdx
+AtomIdx
 LiftedEffectCSP::compute_reached_tuple(const GecodeCSP* solution) const {
-	TupleIdx tuple_idx = _achievable_tuple_idx;
+	AtomIdx tuple_idx = _achievable_tuple_idx;
 	if (tuple_idx == INVALID_TUPLE) { // i.e. we have a functional effect, and thus need to factor the function result into the tuple.
 		ValueTuple tuple(_effect_tuple); // Copy the tuple
 		tuple.push_back(_translator.resolveValueFromIndex(_rhs_variable, *solution));
@@ -209,7 +209,7 @@ LiftedEffectCSP::compute_reached_tuple(const GecodeCSP* solution) const {
 
 void
 LiftedEffectCSP::process_effect_solution(const GecodeCSP* solution, RPGIndex& rpg) const {
-	TupleIdx tuple_idx = compute_reached_tuple(solution);
+	AtomIdx tuple_idx = compute_reached_tuple(solution);
 	
 	bool reached = rpg.reached(tuple_idx);
 	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple_idx);
@@ -217,7 +217,7 @@ LiftedEffectCSP::process_effect_solution(const GecodeCSP* solution, RPGIndex& rp
 	if (reached) return; // The value has already been reached before
 	
 	// Otherwise, the value is actually new - we extract the actual support from the solution
-	std::vector<TupleIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
+	std::vector<AtomIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
 	rpg.add(tuple_idx, get_action_id(solution), std::move(support));
 }
 

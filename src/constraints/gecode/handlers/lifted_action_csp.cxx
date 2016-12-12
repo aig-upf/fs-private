@@ -8,7 +8,7 @@
 namespace fs0 { namespace gecode {
 
 std::vector<std::shared_ptr<BaseActionCSP>>
-LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	// Simply upcast the shared_ptrs
 	std::vector<std::shared_ptr<BaseActionCSP>> handlers;
 	for (const auto& element:create_derived(schemata, tuple_index, approximate, novelty)) {
@@ -18,7 +18,7 @@ LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schem
 }
 
 std::vector<std::shared_ptr<LiftedActionCSP>>
-LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<LiftedActionCSP>> handlers;
 	
 	for (auto schema:schemata) {
@@ -38,11 +38,11 @@ LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*
 }
 
 
-LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions)
 	: LiftedActionCSP(action, extract_non_delete_effects(action), tuple_index, approximate, use_effect_conditions)
 {}
 
-LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions)
 	:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action), _effects(effects)
 {}
 

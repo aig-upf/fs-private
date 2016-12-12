@@ -123,9 +123,9 @@ public:
 	
 	std::vector<std::pair<unsigned, std::vector<unsigned>>> index_fluents(const std::unordered_set<const fs::Term*>& terms);
 	
-	void set_existential_data(std::vector<std::vector<std::unordered_map<int, TupleIdx>>>&& existential_data) { _existential_data = existential_data; };
+	void set_existential_data(std::vector<std::vector<std::unordered_map<int, AtomIdx>>>&& existential_data) { _existential_data = existential_data; };
 	
-	std::vector<std::unordered_map<int, TupleIdx>> getExistentialData(unsigned csp_var_idx) const { return _existential_data.at(csp_var_idx); };
+	std::vector<std::unordered_map<int, AtomIdx>> getExistentialData(unsigned csp_var_idx) const { return _existential_data.at(csp_var_idx); };
 	
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.
@@ -147,7 +147,7 @@ protected:
 	std::unordered_map<VariableIdx, unsigned> _input_state_variables;
 // 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
 	
-	std::vector<std::vector<std::unordered_map<int, TupleIdx>>> _existential_data;
+	std::vector<std::vector<std::unordered_map<int, AtomIdx>>> _existential_data;
 };
 
 

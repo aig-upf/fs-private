@@ -5,7 +5,7 @@
 #include <ostream> 
 
 namespace Gecode { class TupleSet; }
-namespace fs0 { class State; class TupleIndex; }
+namespace fs0 { class State; class AtomIndex; }
 namespace fs0 { namespace language { namespace fstrips { class FluentHeadedNestedTerm; } } }
 namespace fs = fs0::language::fstrips;
 
@@ -18,7 +18,7 @@ class RPGIndex;
 class ExtensionalConstraint {
 public:
 	
-	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const TupleIndex& tuple_index, bool predicate);
+	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const AtomIndex& tuple_index, bool predicate);
 	ExtensionalConstraint(const ExtensionalConstraint&) = default;
 	ExtensionalConstraint(ExtensionalConstraint&&) = default;
 	ExtensionalConstraint& operator=(const ExtensionalConstraint& other) = default;
@@ -60,7 +60,7 @@ protected:
 	int _variable_idx;
 	
 	//!
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 	
 	Gecode::TupleSet compute_extension(unsigned symbol_id, const State& state) const;
 };

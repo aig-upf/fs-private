@@ -42,7 +42,7 @@ protected:
 	//! The actual planning problem
 	const Problem& _problem;
 	
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 	
 	//! The set of action managers, one per every action
 	std::vector<HandlerPT> _managers;
@@ -60,7 +60,7 @@ protected:
 	AchieverIndex _atom_achievers;
 	
 	//! A helper to build the index of atom achievers.
-	static AchieverIndex build_achievers_index(const std::vector<HandlerPT>& managers, const TupleIndex& tuple_index);
+	static AchieverIndex build_achievers_index(const std::vector<HandlerPT>& managers, const AtomIndex& tuple_index);
 };
 
 } } // namespaces

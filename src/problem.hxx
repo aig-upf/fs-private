@@ -20,7 +20,7 @@ class GroundAction;
 class Problem {
 public:
 
-	Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index);
+	Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index);
 	~Problem();
 	
 	Problem(const Problem& other);
@@ -65,7 +65,7 @@ public:
 		return *_instance;
 	}
 	
-	const TupleIndex& get_tuple_index() const { return _tuple_index; }
+	const AtomIndex& get_tuple_index() const { return _tuple_index; }
 	
 	//! Return true if all the symbols of the problem are predicates
 	bool is_predicative() const { return _is_predicative; }
@@ -79,7 +79,7 @@ public:
 
 protected:
 	//! An index of tuples and atoms
-	TupleIndex _tuple_index;
+	AtomIndex _tuple_index;
 	
 	//! The initial state of the problem
 	const std::unique_ptr<State> _init;

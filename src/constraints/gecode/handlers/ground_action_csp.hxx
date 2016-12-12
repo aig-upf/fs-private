@@ -15,10 +15,10 @@ namespace fs0 { namespace gecode {
 class GroundActionCSP : public BaseActionCSP {
 public:
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool approximate, bool novelty);
 
 	//! Constructors / Destructor
-	GroundActionCSP(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	GroundActionCSP(const GroundAction& action, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	~GroundActionCSP() = default;
 	GroundActionCSP(const GroundActionCSP&) = delete;
 	GroundActionCSP(GroundActionCSP&&) = delete;

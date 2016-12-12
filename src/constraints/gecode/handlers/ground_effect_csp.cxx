@@ -15,7 +15,7 @@
 namespace fs0 { namespace gecode {
 
 std::vector<std::unique_ptr<GroundEffectCSP>>
-GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::unique_ptr<GroundEffectCSP>> managers;
 	
 	for (unsigned action_idx = 0; action_idx < actions.size(); ++action_idx) {
@@ -36,7 +36,7 @@ GroundEffectCSP::create(const std::vector<const GroundAction*>& actions, const T
 	return managers;
 }
 
-GroundEffectCSP::GroundEffectCSP(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions) :
+GroundEffectCSP::GroundEffectCSP(const GroundAction& action, const AtomIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions) :
 	BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action), _effects({ effect })
 {}
 
@@ -71,7 +71,7 @@ GecodeCSP* GroundEffectCSP::preinstantiate(const RPGIndex& rpg) const {
 }
 
 
-bool GroundEffectCSP::find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const {
+bool GroundEffectCSP::find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const {
 	log();
 	
 	std::unique_ptr<GecodeCSP> csp = std::unique_ptr<GecodeCSP>(static_cast<GecodeCSP*>(layer_csp.clone()));
@@ -93,7 +93,7 @@ bool GroundEffectCSP::find_atom_support(TupleIdx tuple, const Atom& atom, const 
 	}
 }
 
-bool GroundEffectCSP::solve(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
+bool GroundEffectCSP::solve(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
 	// We just want to search for one solution and extract the support from it
 	Gecode::DFS<GecodeCSP> engine(csp);
 	GecodeCSP* solution = engine.next();
@@ -105,7 +105,7 @@ bool GroundEffectCSP::solve(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& gr
 	if (reached) return true; // The value has already been reached before
 	
 	// Otherwise, the value is actually new - we extract the actual support from the solution
-	std::vector<TupleIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
+	std::vector<AtomIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
 	graph.add(tuple, get_action_id(solution), std::move(support));
 
 	delete solution;

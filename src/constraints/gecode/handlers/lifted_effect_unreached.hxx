@@ -4,7 +4,7 @@
 #include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <gecode/int.hh>
 
-namespace fs0 { class TupleIndex; }
+namespace fs0 { class AtomIndex; }
 
 namespace fs0 { namespace language { namespace fstrips { class StateVariable; } } }
 namespace fs = fs0::language::fstrips;
@@ -17,10 +17,10 @@ class RPGIndex;
 class LiftedEffectUnreachedCSP : public LiftedActionCSP {
 public:
 	//! Factory methods
-	static std::vector<std::unique_ptr<LiftedEffectUnreachedCSP>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::unique_ptr<LiftedEffectUnreachedCSP>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty);
 	
 	//! The only constructor
-	LiftedEffectUnreachedCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate);
+	LiftedEffectUnreachedCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const AtomIndex& tuple_index, bool approximate);
 	~LiftedEffectUnreachedCSP() = default;
 	LiftedEffectUnreachedCSP(const LiftedEffectUnreachedCSP&) = delete;
 	LiftedEffectUnreachedCSP(LiftedEffectUnreachedCSP&&) = delete;
@@ -48,7 +48,7 @@ protected:
 	
 	
 	
-	bool solve_for_tuple(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const;
+	bool solve_for_tuple(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const;
 	
 	void post_atom(GecodeCSP& csp, const Atom& atom) const;
 
@@ -64,7 +64,7 @@ public:
 	GecodeCSP* preinstantiate(const RPGIndex& rpg) const;
 	
 	//! Find whether this effect can support the atom 'tuple' = 'atom' in the RPG layer given by layer_csp
-	bool find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const;
+	bool find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const;
 };
 
 

@@ -12,7 +12,7 @@ namespace fs0 {
 class State;
 class GroundAction; 
 class Atom;
-class TupleIndex;
+class AtomIndex;
 
 //! A simple manager that only checks applicability of actions in a non-relaxed setting.
 class NaiveApplicabilityManager {
@@ -39,7 +39,7 @@ protected:
 
 class BasicApplicabilityAnalyzer {
 public:
-	BasicApplicabilityAnalyzer(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_idx) : 
+	BasicApplicabilityAnalyzer(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_idx) : 
 		_actions(actions), _tuple_idx(tuple_idx) {}
 	
 	virtual ~BasicApplicabilityAnalyzer() = default;
@@ -56,7 +56,7 @@ protected:
 	const std::vector<const GroundAction*>& _actions;
 	
 	//! The tuple index of the problem
-	const TupleIndex& _tuple_idx;
+	const AtomIndex& _tuple_idx;
 	
 	//! A map from each atom index to the set of actions that might be applicable when
 	//! that atom is true in a certain state
@@ -74,7 +74,7 @@ class SmartActionManager {
 public:
 	using ApplicableSet = GroundApplicableSet;
 	
-	SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const TupleIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer);
+	SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer);
 	virtual ~SmartActionManager() = default;
 	SmartActionManager(const SmartActionManager&) = default;
 	
@@ -91,7 +91,7 @@ protected:
 	const std::vector<const fs::AtomicFormula*> _state_constraints;
 	
 	//! The tuple index of the problem
-	const TupleIndex& _tuple_idx;
+	const AtomIndex& _tuple_idx;
 	
 	//! An index mapping (the index of) each action to the set of state variables affected by that action
 	std::vector<std::set<VariableIdx>> _vars_affected_by_actions;

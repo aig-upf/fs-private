@@ -58,7 +58,7 @@ GecodeApplicabilityAnalyzer::build() {
 				
 				GecodeCSP* restricted = manager.post(relevant, value);
 				if (manager.check_one_solution_exists(restricted)) {
-					TupleIdx tup = _tuple_idx.to_index(relevant, value);
+					AtomIdx tup = _tuple_idx.to_index(relevant, value);
 					_applicable[tup].push_back(i);
 					potentially_applicable.insert(i);
 				}
@@ -70,7 +70,7 @@ GecodeApplicabilityAnalyzer::build() {
 			if (all_relevant.find(var) != all_relevant.end()) continue;
 			
 			for (ObjectIdx val:info.getVariableObjects(var)) {
-				TupleIdx tup = _tuple_idx.to_index(var, val);
+				AtomIdx tup = _tuple_idx.to_index(var, val);
 				_applicable[tup].push_back(i);
 				potentially_applicable.insert(i);
 			}

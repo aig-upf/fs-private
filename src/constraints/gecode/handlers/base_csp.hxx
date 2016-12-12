@@ -22,7 +22,7 @@ namespace fs0 { namespace gecode {
 //! The base interface class for all gecode CSP handlers
 class BaseCSP {
 public:
-	BaseCSP(const TupleIndex& tuple_index, bool approximate);
+	BaseCSP(const AtomIndex& tuple_index, bool approximate);
 	virtual ~BaseCSP() = default;
 	BaseCSP(const BaseCSP&) = delete;
 	BaseCSP(BaseCSP&&) = delete;
@@ -71,9 +71,9 @@ protected:
 	std::unordered_set<const fs::AtomicFormula*> _all_formulas;
 	
 	//! The Ids of the state variables that are relevant to some formula via a (predicative) atom.
-	std::vector<TupleIdx> _necessary_tuples;
+	std::vector<AtomIdx> _necessary_tuples;
 	
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 	
 	//!
 	std::vector<ExtensionalConstraint> _extensional_constraints;

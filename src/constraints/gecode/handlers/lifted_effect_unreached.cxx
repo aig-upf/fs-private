@@ -16,7 +16,7 @@ namespace fs0 { namespace gecode {
 
 
 std::vector<std::unique_ptr<LiftedEffectUnreachedCSP>>
-LiftedEffectUnreachedCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+LiftedEffectUnreachedCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::unique_ptr<LiftedEffectUnreachedCSP>> handlers;
 	
 	for (auto schema:schemata) {
@@ -39,7 +39,7 @@ LiftedEffectUnreachedCSP::create(const std::vector<const PartiallyGroundedAction
 }
 
 
-LiftedEffectUnreachedCSP::LiftedEffectUnreachedCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const TupleIndex& tuple_index, bool approximate) :
+LiftedEffectUnreachedCSP::LiftedEffectUnreachedCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const AtomIndex& tuple_index, bool approximate) :
 	LiftedActionCSP(action, {effect}, tuple_index, approximate, true)
 {}
 
@@ -85,7 +85,7 @@ LiftedEffectUnreachedCSP::get_precondition() const {
 
 
 
-bool LiftedEffectUnreachedCSP::find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const {
+bool LiftedEffectUnreachedCSP::find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const {
 	log();
 	
 	std::unique_ptr<GecodeCSP> csp = std::unique_ptr<GecodeCSP>(static_cast<GecodeCSP*>(layer_csp.clone()));
@@ -106,7 +106,7 @@ bool LiftedEffectUnreachedCSP::find_atom_support(TupleIdx tuple, const Atom& ato
 	}
 }
 
-bool LiftedEffectUnreachedCSP::solve_for_tuple(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
+bool LiftedEffectUnreachedCSP::solve_for_tuple(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
 	// We just want to search for one solution and extract the support from it
 	Gecode::DFS<GecodeCSP> engine(csp);
 	GecodeCSP* solution = engine.next();
@@ -118,7 +118,7 @@ bool LiftedEffectUnreachedCSP::solve_for_tuple(TupleIdx tuple, gecode::GecodeCSP
 	if (reached) return true; // The value has already been reached before
 	
 	// Otherwise, the value is actually new - we extract the actual support from the solution
-	std::vector<TupleIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
+	std::vector<AtomIdx> support = Supports::extract_support(solution, _translator, _tuple_indexes, _necessary_tuples);
 	graph.add(tuple, get_action_id(solution), std::move(support));
 
 	delete solution;

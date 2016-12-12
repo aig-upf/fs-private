@@ -3,7 +3,7 @@
 
 #include <constraints/gecode/handlers/base_csp.hxx>
 
-namespace fs0 { class TupleIndex; }
+namespace fs0 { class AtomIndex; }
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
 namespace fs = fs0::language::fstrips;
 
@@ -14,7 +14,7 @@ namespace fs0 { namespace gecode {
 class FormulaCSP : public BaseCSP {
 public:
 
-	FormulaCSP(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate);
+	FormulaCSP(const fs::Formula* formula, const AtomIndex& tuple_index, bool approximate);
 	~FormulaCSP();
 	FormulaCSP(const FormulaCSP&) = delete;
 	FormulaCSP(FormulaCSP&&) = delete;
@@ -22,7 +22,7 @@ public:
 	FormulaCSP& operator=(FormulaCSP&&) = delete;
 	
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
-	bool compute_support(GecodeCSP* csp, std::vector<TupleIdx>& support) const;
+	bool compute_support(GecodeCSP* csp, std::vector<AtomIdx>& support) const;
 	
 	void init_value_selector(const RPGIndex* graph);
 	

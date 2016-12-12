@@ -10,7 +10,7 @@ namespace fs0 {
 template <typename Container>
 std::size_t container_hash<Container>::operator()(Container const& c) const { return boost::hash_range(c.begin(), c.end()); }
 
-TupleIndex::TupleIndex(const ProblemInfo& info) :
+AtomIndex::AtomIndex(const ProblemInfo& info) :
 	_tuple_index_inv(info.getNumLogicalSymbols()),
 	_atom_index_inv(info.getNumVariables())
 {
@@ -43,7 +43,7 @@ TupleIndex::TupleIndex(const ProblemInfo& info) :
 	}
 }
 
-void TupleIndex::add(unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom) {
+void AtomIndex::add(unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom) {
 	assert(_tuple_index.size() == idx);
 	_tuple_index.push_back(tuple);
 	
@@ -58,18 +58,18 @@ void TupleIndex::add(unsigned symbol, const ValueTuple& tuple, unsigned idx, con
 	_atom_index_inv.at(atom.getVariable()).insert(std::make_pair(atom.getValue(), idx));
 }
 
-TupleIdx TupleIndex::to_index(unsigned symbol, const ValueTuple& tuple) const {
+AtomIdx AtomIndex::to_index(unsigned symbol, const ValueTuple& tuple) const {
 	const auto& map = _tuple_index_inv.at(symbol);
 	auto it = map.find(tuple);
 	assert(it != map.end());
 	return it->second;
 }
 
-TupleIdx TupleIndex::to_index(const Atom& atom) const {
+AtomIdx AtomIndex::to_index(const Atom& atom) const {
 	return to_index(atom.getVariable(), atom.getValue());
 }
 
-TupleIdx TupleIndex::to_index(VariableIdx variable, ObjectIdx value) const {
+AtomIdx AtomIndex::to_index(VariableIdx variable, ObjectIdx value) const {
 	const auto& map = _atom_index_inv.at(variable);
 	auto it = map.find(value);
 	assert(it != map.end());
@@ -77,7 +77,7 @@ TupleIdx TupleIndex::to_index(VariableIdx variable, ObjectIdx value) const {
 }
 
 // TODO - We should be applying some reachability analysis here to prune out tuples that will never be reachable at all.
-std::vector<std::vector<std::pair<ValueTuple, ObjectIdx>>> TupleIndex::compute_all_reachable_tuples(const ProblemInfo& info) {
+std::vector<std::vector<std::pair<ValueTuple, ObjectIdx>>> AtomIndex::compute_all_reachable_tuples(const ProblemInfo& info) {
 	std::vector<std::vector<std::pair<ValueTuple, ObjectIdx>>> tuples_by_symbol(info.getNumLogicalSymbols());
 
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {

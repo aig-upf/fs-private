@@ -15,7 +15,7 @@ struct container_hash {
     std::size_t operator()(Container const& c) const;
 };
 
-class TupleIndex {
+class AtomIndex {
 protected:
 	//! Maps from tuple indexes to their corresponding tuples / atoms
 	std::vector<ValueTuple> _tuple_index;
@@ -25,19 +25,19 @@ protected:
 	std::vector<unsigned> _symbol_index;
 	
 	//! A map from actual tuples to their index
-	std::vector<std::unordered_map<ValueTuple, TupleIdx, container_hash<ValueTuple>>> _tuple_index_inv;
+	std::vector<std::unordered_map<ValueTuple, AtomIdx, container_hash<ValueTuple>>> _tuple_index_inv;
 	
 	//! _atom_index_inv.at(i) contains a map mapping all possible values 'v' of variable 'i'
 	//! to the tuple that corresponds to the atom <i, v>
-	std::vector<std::unordered_map<ObjectIdx, TupleIdx>> _atom_index_inv;
+	std::vector<std::unordered_map<ObjectIdx, AtomIdx>> _atom_index_inv;
 	
 public:
 	//! Constructs a full tuple index
-	TupleIndex(const ProblemInfo& info);
-	TupleIndex(const TupleIndex&) = default;
-	TupleIndex(TupleIndex&&) = default;
-	TupleIndex& operator=(const TupleIndex& other) = default;
-	TupleIndex& operator=(TupleIndex&& other) = default;
+	AtomIndex(const ProblemInfo& info);
+	AtomIndex(const AtomIndex&) = default;
+	AtomIndex(AtomIndex&&) = default;
+	AtomIndex& operator=(const AtomIndex& other) = default;
+	AtomIndex& operator=(AtomIndex&& other) = default;
 	
 	//! Return the number of tuples of the index
 	unsigned size() const { return _tuple_index.size(); }
@@ -46,22 +46,22 @@ public:
 	void add(unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom);
 
 	//! Returns the atom corresponding to the given index
-	const Atom& to_atom(TupleIdx tuple) const { return _atom_index.at(tuple); }
+	const Atom& to_atom(AtomIdx tuple) const { return _atom_index.at(tuple); }
 	
 	//! Returns the index corresponding to the given tuple for the given logical symbol
-	TupleIdx to_index(unsigned symbol, const ValueTuple& tuple) const;
-	TupleIdx to_index(const std::pair<unsigned, ValueTuple>& tuple) const { return to_index(tuple.first, tuple.second); }
+	AtomIdx to_index(unsigned symbol, const ValueTuple& tuple) const;
+	AtomIdx to_index(const std::pair<unsigned, ValueTuple>& tuple) const { return to_index(tuple.first, tuple.second); }
 	
 	//! Returns the index corresponding to the given atom
-	TupleIdx to_index(const Atom& atom) const;
-	TupleIdx to_index(VariableIdx variable, ObjectIdx value) const;
+	AtomIdx to_index(const Atom& atom) const;
+	AtomIdx to_index(VariableIdx variable, ObjectIdx value) const;
 
 	
 	//! Returns the actual value tuple that corresponds to the given tuple index, without the logical symbol 
-	const ValueTuple& to_tuple(TupleIdx tuple) const { return _tuple_index.at(tuple); }
+	const ValueTuple& to_tuple(AtomIdx tuple) const { return _tuple_index.at(tuple); }
 	
 	//! Returns the logical symbol that corresponds to the given tuple index
-	unsigned symbol(TupleIdx tuple) const { return _symbol_index.at(tuple); }
+	unsigned symbol(AtomIdx tuple) const { return _symbol_index.at(tuple); }
 	
 protected:
 	//! A helper to compute and index all reachable tuples.

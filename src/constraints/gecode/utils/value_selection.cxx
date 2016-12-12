@@ -9,7 +9,7 @@
 namespace fs0 { namespace gecode {
 
 
-TupleMinHMaxValueSelector::TupleMinHMaxValueSelector(const TupleIndex* tuple_index, const CSPTranslator* translator, const RPGIndex* bookkeeping)
+TupleMinHMaxValueSelector::TupleMinHMaxValueSelector(const AtomIndex* tuple_index, const CSPTranslator* translator, const RPGIndex* bookkeeping)
 	: _tuple_index(tuple_index), _translator(translator), _bookkeeping(bookkeeping)
 {}
 
@@ -21,7 +21,7 @@ int TupleMinHMaxValueSelector::select(const Gecode::IntVar& x, unsigned csp_var_
 		return select_state_variable_value(variable, x);
 	}
 	
-	const std::vector<std::unordered_map<int, TupleIdx>>& existential_data = _translator->getExistentialData(csp_var_idx);
+	const std::vector<std::unordered_map<int, AtomIdx>>& existential_data = _translator->getExistentialData(csp_var_idx);
 	if (!existential_data.empty()) {
 		return select_existential_variable_value(existential_data, x);
 	}
@@ -53,7 +53,7 @@ int TupleMinHMaxValueSelector::select_state_variable_value(VariableIdx variable,
 }
 
 
-int TupleMinHMaxValueSelector::select_existential_variable_value(const std::vector<std::unordered_map<int, TupleIdx>>& existential_data, const Gecode::IntVar& x) const {
+int TupleMinHMaxValueSelector::select_existential_variable_value(const std::vector<std::unordered_map<int, AtomIdx>>& existential_data, const Gecode::IntVar& x) const {
 	int best_value = std::numeric_limits<int>::max();
 	unsigned best_hmax_sum = std::numeric_limits<unsigned>::max();
 	
@@ -64,11 +64,11 @@ int TupleMinHMaxValueSelector::select_existential_variable_value(const std::vect
 		int value = values.val();
 		
 		unsigned hmax_sum = 0;
-		for (const std::unordered_map<int, TupleIdx>& map:existential_data) {
+		for (const std::unordered_map<int, AtomIdx>& map:existential_data) {
 			const auto& it = map.find(value);
 			assert(it != map.end());
 			
-			TupleIdx tuple = it->second;
+			AtomIdx tuple = it->second;
 			if (!_bookkeeping->reached(tuple)) {
 				hmax_sum = std::numeric_limits<unsigned>::max();
 			}

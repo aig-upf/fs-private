@@ -16,7 +16,7 @@ class NoveltyConstraint;
 class BaseActionCSP : public BaseCSP {
 public:
 	//! Constructor / Destructor
-	BaseActionCSP(const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	BaseActionCSP(const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	virtual ~BaseActionCSP();
 	BaseActionCSP(const BaseActionCSP&) = delete;
 	BaseActionCSP(BaseActionCSP&&) = delete;
@@ -89,12 +89,12 @@ protected:
 	void process_solution(GecodeCSP* solution, RPGIndex& graph) const;
 	
 	//!
-	void simple_atom_processing(GecodeCSP* solution, RPGIndex& graph, TupleIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+	void simple_atom_processing(GecodeCSP* solution, RPGIndex& graph, AtomIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
 // 	void hmax_based_atom_processing(GecodeCSP* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 
 	//! Extracts the full support of a given effect corresponding to the given solution
-	std::vector<TupleIdx> extract_support_from_solution(GecodeCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+	std::vector<AtomIdx> extract_support_from_solution(GecodeCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
 	
 	//! Return the ActionID that corresponds to the current action / action schema, for some given solution
@@ -113,7 +113,7 @@ protected:
 	void post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const override;
 	
 	//!
-	void extract_nested_term_support(const GecodeCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<TupleIdx>& support) const;
+	void extract_nested_term_support(const GecodeCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const;
 };
 
 } } // namespaces

@@ -50,10 +50,10 @@ namespace fs0 {
 	using ValueTuple = std::vector<ObjectIdx>;
 	
 	//! The index of a tuple of a FSTRIPS logical symbol, unique across all symbols.
-	using TupleIdx = unsigned;
-	const TupleIdx INVALID_TUPLE = std::numeric_limits<unsigned int>::max();
+	using AtomIdx = unsigned;
+	const AtomIdx INVALID_TUPLE = std::numeric_limits<unsigned int>::max();
 	
-	using Support = std::vector<TupleIdx>;
+	using Support = std::vector<AtomIdx>;
 
 	//! A domain is a set of values (of a state variable)
  	using Domain = boost::container::flat_set<ObjectIdx>;

@@ -79,8 +79,8 @@ supported_plan::printSupportedPlan(const std::set<SupportedAction>& plan, std::o
 
 std::ostream&
 support::print(std::ostream& os) const {
-	const TupleIndex& index = Problem::getInstance().get_tuple_index();
-	for (TupleIdx tuple:_support) {
+	const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	for (AtomIdx tuple:_support) {
 		const Atom& atom = index.to_atom(tuple);
 		os << atom << ", ";
 	}

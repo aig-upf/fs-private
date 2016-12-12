@@ -115,7 +115,7 @@ long UnreachedAtomRPG::computeHeuristic(const RPGIndex& graph) {
 }
 
 
-UnreachedAtomRPG::AchieverIndex UnreachedAtomRPG::build_achievers_index(const std::vector<HandlerPT>& managers, const TupleIndex& tuple_index) {
+UnreachedAtomRPG::AchieverIndex UnreachedAtomRPG::build_achievers_index(const std::vector<HandlerPT>& managers, const AtomIndex& tuple_index) {
 	AchieverIndex index(tuple_index.size()); // Create an index as large as the number of atoms
 	
 	LPT_INFO("main", "Building index of potential atom achievers");
@@ -131,7 +131,7 @@ UnreachedAtomRPG::AchieverIndex UnreachedAtomRPG::build_achievers_index(const st
 		// that are reached by the CSP in some layer of the RPG.
 		
 		for (const auto& atom:fs::ScopeUtils::compute_affected_atoms(effect)) {
-			TupleIdx idx = tuple_index.to_index(atom);
+			AtomIdx idx = tuple_index.to_index(atom);
 			index.at(idx).push_back(manager_idx);
 		}
 	}

@@ -39,7 +39,7 @@ protected:
 	//! The actual planning problem
 	const Problem& _problem;
 	
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 	
 	//! The set of action managers, one per every action
 	const std::vector<std::shared_ptr<BaseActionCSP>> _managers;

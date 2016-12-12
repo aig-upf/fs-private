@@ -53,7 +53,7 @@ protected:
 	const Problem& _problem;
 	const ProblemInfo& _info;
 	
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 	
 	//! The set of action managers, one per every action
 	std::vector<EffectHandlerPtr> _managers;

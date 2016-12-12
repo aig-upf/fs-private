@@ -89,7 +89,7 @@ public:
 	
 	void update_reached_counters(const State& state) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
-		const TupleIndex& tuple_idx = Problem::getInstance().get_tuple_index();
+		const AtomIndex& tuple_idx = Problem::getInstance().get_tuple_index();
 		
 		// We copy the map of reached values from the parent node and will update it below
 		_reached_idx = parent->_reached_idx;
@@ -102,7 +102,7 @@ public:
 			// TODO This should be revised if we change the definition of the set of relevant atoms
 			// TODO and it includes possible 0-valued predicative atoms
 			if (!info.isPredicativeVariable(var) || state.getValue(var) != 0) {
-				TupleIdx index = tuple_idx.to_index(Atom(var, state.getValue(var)));
+				AtomIdx index = tuple_idx.to_index(Atom(var, state.getValue(var)));
 				auto& element = _reached_idx[index];
 				if (element == REACHED_STATUS::UNREACHED) {
 					element = REACHED_STATUS::REACHED;
@@ -200,7 +200,7 @@ public:
 	//! Builds an atomset from a set of relevant atoms - all possible atoms set to irrelevant except those considered as relevant,
 	//! which are set to unreached
 	BFWSF5Node::Atomset build_atomset(const std::vector<Atom>& relevant) {
-		const TupleIndex& tuple_idx = Problem::getInstance().get_tuple_index();
+		const AtomIndex& tuple_idx = Problem::getInstance().get_tuple_index();
 		BFWSF5Node::Atomset atomset(tuple_idx.size(), BFWSF5Node::REACHED_STATUS::IRRELEVANT_ATOM);
 		for (const Atom& atom:relevant) {
 			atomset[tuple_idx.to_index(atom)] = BFWSF5Node::REACHED_STATUS::UNREACHED;

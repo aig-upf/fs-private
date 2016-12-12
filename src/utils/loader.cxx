@@ -42,7 +42,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
-	Problem* problem = new Problem(init, action_data, goal, sc, TupleIndex(info));
+	Problem* problem = new Problem(init, action_data, goal, sc, AtomIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	problem->setLPHandler(lp_handler);
 	
