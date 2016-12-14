@@ -1,9 +1,12 @@
 
 #pragma once
 
+#include <cassert>
 #include <vector>
 #include <unordered_set>
 #include <bits/stl_numeric.h>
+#include <algorithm>
+
 
 #include <boost/functional/hash.hpp>
 
@@ -71,11 +74,15 @@ protected:
 class MultivaluedNoveltyEvaluator {
 public:
 	
+	MultivaluedNoveltyEvaluator() = delete;
 	MultivaluedNoveltyEvaluator(unsigned max_novelty) :
 		_max_novelty(max_novelty), _tables(_max_novelty + 1)
 	{}
 	
-	~MultivaluedNoveltyEvaluator() = default;
+	MultivaluedNoveltyEvaluator(const MultivaluedNoveltyEvaluator&) = default;
+	MultivaluedNoveltyEvaluator(MultivaluedNoveltyEvaluator&&) = default;
+	MultivaluedNoveltyEvaluator& operator=(const MultivaluedNoveltyEvaluator&) = default;
+	MultivaluedNoveltyEvaluator& operator=(MultivaluedNoveltyEvaluator&&) = default;
 
 	//!
 	unsigned max_novelty() const { return _max_novelty; }
@@ -119,8 +126,8 @@ protected:
 	NoveltyTables _tables;
 	
 	//! A micro-optimization to deal faster with the analysis of width-1 tuples
-	unsigned evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<unsigned>& novel);
-	unsigned evaluate_width_2_tuples(unsigned state_novelty, const FeatureValuation& current, const std::vector<unsigned>& novel);
+	void evaluate_width_1_tuples(unsigned& novelty, const FeatureValuation& current, const std::vector<unsigned>& novel);
+	void evaluate_width_2_tuples(unsigned& novelty, const FeatureValuation& current, const std::vector<unsigned>& novel);
 };
 
 //! An iterator through all tuples of a certain size that can be derived from a certain vector of values.
