@@ -13,18 +13,18 @@ namespace fs0 { class GroundStateModel; class Config; }
 namespace fs0 { namespace drivers {
 
 //! A creator for an standard Breadth-First Search engine
-class BreadthFirstSearchDriver {
+class BreadthFirstSearchDriver : public Driver {
 public:
 	//! The Breadth-First Search engine uses a simple blind-search node
-	using NodeT = BlindSearchNode<fs0::State>;
+	using NodeT = BlindSearchNode<fs0::State, GroundAction>;
 	
 	using Engine = std::unique_ptr<lapkt::StlBreadthFirstSearch<NodeT, GroundStateModel>>;
 	
 	Engine create(const Config& config, const GroundStateModel& model);
 	
-	GroundStateModel setup(const Config& config, Problem& problem) const;
+	GroundStateModel setup(Problem& problem) const;
 	
-	SearchStats& getSearchStats() { return _stats; }
+	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 
 protected:
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;

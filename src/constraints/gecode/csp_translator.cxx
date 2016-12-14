@@ -7,6 +7,7 @@
 #include <state.hxx>
 #include <constraints/gecode/gecode_csp.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
+#include <utils/printers/helper.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -59,6 +60,10 @@ unsigned CSPTranslator::registerIntVariable(int min, int max) {
 }
 
 
+bool CSPTranslator::isRegistered(const fs::Term* variable) const {
+	return _registered.find(variable) != _registered.end();
+}
+
 void CSPTranslator::registerInputStateVariable(VariableIdx variable) {
 	auto it = _input_state_variables.find(variable);
 	if (it != _input_state_variables.end()) return; // The state variable was already registered, no need to register it again
@@ -93,6 +98,7 @@ bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested, int min, in
 }
 
 
+
 unsigned CSPTranslator::resolveVariableIndex(const fs::Term* term) const {
 	if (auto sv = dynamic_cast<const fs::StateVariable*>(term)) {
 		return resolveInputVariableIndex(sv->getValue());
@@ -100,7 +106,7 @@ unsigned CSPTranslator::resolveVariableIndex(const fs::Term* term) const {
 
 	auto it = _registered.find(term);
 	if(it == _registered.end()) {
-		throw UnregisteredStateVariableError("Trying to translate a non-existing CSP variable");
+		throw UnregisteredStateVariableError(fs0::printer() << "Trying to resolve unregistered term \"" << *term << "\"");
 	}
 	return it->second;
 }

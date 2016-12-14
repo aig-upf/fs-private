@@ -42,7 +42,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data, asp::LPHandler* lp
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
-	Problem* problem = new Problem(init, action_data, goal, sc, TupleIndex(info));
+	Problem* problem = new Problem(init, action_data, goal, sc, AtomIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	problem->setLPHandler(lp_handler);
 	
@@ -68,18 +68,17 @@ Loader::loadFunctions(const BaseComponentFactory& factory, const std::string& da
 	}
 	
 	// Load the function objects for externally-defined symbols
-	for (auto elem:factory.instantiateFunctions()) {
+	for (auto elem:factory.instantiateFunctions(info)) {
 		info.setFunction(info.getSymbolId(elem.first), elem.second);
 	}
 }
 
-const ProblemInfo&
+ProblemInfo&
 Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory) {
 	// Load and set the ProblemInfo data structure
 	auto info = std::unique_ptr<ProblemInfo>(new ProblemInfo(data));
 	loadFunctions(factory, data_dir, *info);
-	ProblemInfo::setInstance(std::move(info));
-	return ProblemInfo::getInstance();
+	return ProblemInfo::setInstance(std::move(info));
 }
 
 State* Loader::loadState(const rapidjson::Value& data) {
@@ -114,7 +113,7 @@ const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned 
 	
 	ActionData adata(id, name, signature, parameters, precondition, effects);
 	if (adata.has_empty_parameter()) {
-		LPT_INFO("cout", "Action schema " << adata << " discarded because of empty parameter type." << std::endl);
+		LPT_INFO("cout", "Action schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
 		return nullptr;
 	}
 	

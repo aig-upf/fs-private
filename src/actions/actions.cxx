@@ -24,6 +24,15 @@ ActionData::~ActionData() {
 	for (const auto pointer:_effects) delete pointer;
 }
 
+ActionData::ActionData(const ActionData& other) :
+	_id(other._id),
+	_name(other._name),
+	_signature(other._signature),
+	_parameter_names(other._parameter_names),
+	_precondition(other._precondition->clone()),
+	_effects(Utils::copy(other._effects))
+{}
+
 std::ostream& ActionData::print(std::ostream& os) const { 
 	os <<  print::action_data_name(*this);
 	return os;
@@ -49,22 +58,6 @@ ActionBase::~ActionBase() {
 ActionBase::ActionBase(const ActionBase& o) :
 	_data(o._data), _binding(o._binding), _precondition(o._precondition->clone()), _effects(Utils::clone(o._effects))
 {}
-
-/*
-void ActionBase::addPrecondition(const fs::Formula* precondition) {
-	auto old = _precondition;
-	_precondition = _precondition->conjunction(precondition);
-	delete old;
-}
-
-void ActionBase::replaceTerm(const fs::Term* before, const fs::Term* after) {
-	WORK_IN_PROGRESS;
-}
-
-void ActionBase::addParameter(fs::BoundVariable* parameter) {
-	WORK_IN_PROGRESS;
-}
-*/
 
 std::ostream& ActionBase::print(std::ostream& os) const {
 	os << print::action_header(*this);

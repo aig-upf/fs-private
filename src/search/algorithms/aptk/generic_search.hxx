@@ -75,7 +75,7 @@ public:
 		NodePtr n = std::make_shared<NodeType>( s );
 		this->notify(NodeCreationEvent(*n));
 		_open.insert(n);
-
+		
 		while ( !_open.is_empty() ) {
 			NodePtr current = _open.get_next( );
 			
@@ -113,7 +113,7 @@ public:
 	}
 	
 	//! Convenience method
-	bool solve_model(std::vector<unsigned>& solution) { return search( _model.getTask().getInitialState(), solution ); }
+	bool solve_model(PlanT& solution) { return search( _model.getTask().getInitialState(), solution ); }
 	
 protected:
 	

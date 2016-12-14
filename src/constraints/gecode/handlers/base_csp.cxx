@@ -13,7 +13,7 @@
 
 namespace fs0 { namespace gecode {
 
-BaseCSP::BaseCSP(const TupleIndex& tuple_index, bool approximate) :
+BaseCSP::BaseCSP(const AtomIndex& tuple_index, bool approximate) :
 	_base_csp(new GecodeCSP()),
 	_failed(false),
 	_approximate(approximate),
@@ -197,7 +197,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::unordered_set<const fs::Term*> inserted_terms;
 	std::unordered_set<const fs::AtomicFormula*> inserted_conditions;
-	std::unordered_set<TupleIdx> true_tuples;
+	std::unordered_set<AtomIdx> true_tuples;
 	
 	
 	for (auto condition:conditions) {

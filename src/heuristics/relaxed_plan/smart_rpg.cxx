@@ -56,7 +56,7 @@ long SmartRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
 			
 			// If the effect has a fixed achievable tuple (e.g. because it is of the form X := c), and this tuple has already
 			// been reached in the RPG, we can safely skip it.
-			TupleIdx achievable = manager->get_achievable_tuple();
+			AtomIdx achievable = manager->get_achievable_tuple();
 			if (achievable != INVALID_TUPLE && graph.reached(achievable)) continue;
 			
 			// Otherwise, we process the effect to derive the new tuples that it can produce on the current RPG layer
@@ -93,7 +93,7 @@ RPGIndex SmartRPG::compute_full_graph(const State& seed) {
 	while (true) {
 		LPT_EDEBUG("heuristic", "Opening layer of the full RPG");
 		for (const EffectHandlerPtr& manager:_managers) {
-			TupleIdx achievable = manager->get_achievable_tuple();
+			AtomIdx achievable = manager->get_achievable_tuple();
 			if (achievable != INVALID_TUPLE && graph.reached(achievable)) continue;
 			
 			// Otherwise, we process the effect to derive the new tuples that it can produce on the current RPG layer

@@ -18,9 +18,13 @@
 	"validate": "true",
 	
 	"width": {
-		"max_novelty": 2,
+		"max": 2,
+		"features": "all", 
 		"use_state_vars": "true",
-		"use_goal": "true",
+		"use_goal": "false",
 		"use_actions": "false"
-	}
+	},
+	
+	
+	"use_state_constraints_in_heuristic_goal_evaluation": "true"
 }

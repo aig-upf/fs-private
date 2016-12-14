@@ -7,7 +7,7 @@
 
 #include <fs_types.hxx>
 
-namespace fs0 { class TupleIndex; }
+namespace fs0 { class AtomIndex; }
 
 namespace fs0 { namespace gecode {
 
@@ -31,7 +31,7 @@ public:
 class TupleMinHMaxValueSelector : public MinHMaxValueSelector {
 public:
 	//! The proper constructor
-	TupleMinHMaxValueSelector(const TupleIndex* tuple_index, const CSPTranslator* translator, const RPGIndex* bookkeeping);
+	TupleMinHMaxValueSelector(const AtomIndex* tuple_index, const CSPTranslator* translator, const RPGIndex* bookkeeping);
 
 	TupleMinHMaxValueSelector(const TupleMinHMaxValueSelector&) = default;
 	TupleMinHMaxValueSelector(TupleMinHMaxValueSelector&&) = default;
@@ -43,13 +43,13 @@ public:
 
 protected:
 	//! Pointers to the necessary data structures to perform the value selection
-	const TupleIndex* _tuple_index; 
+	const AtomIndex* _tuple_index; 
 	const CSPTranslator* _translator;
 	const RPGIndex* _bookkeeping;
 	
 	int select_state_variable_value(VariableIdx variable, const Gecode::IntVar& x) const;
 	
-	int select_existential_variable_value(const std::vector<std::unordered_map<int, TupleIdx>>& existential_data, const Gecode::IntVar& x) const;
+	int select_existential_variable_value(const std::vector<std::unordered_map<int, AtomIdx>>& existential_data, const Gecode::IntVar& x) const;
 };
 
 } } // namespaces

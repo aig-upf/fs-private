@@ -27,7 +27,9 @@ protected:
 
 class GenericNoveltyEvaluator : public aptk::FiniteDomainNoveltyEvaluator<GenericStateAdapter> {
 public:
-	typedef aptk::FiniteDomainNoveltyEvaluator<GenericStateAdapter> Base;
+	using Base = aptk::FiniteDomainNoveltyEvaluator<GenericStateAdapter>;
+	using FeatureSet = std::vector<std::unique_ptr<NoveltyFeature>>;
+	
 
 	GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration);
 	virtual ~GenericNoveltyEvaluator() = default;
@@ -49,7 +51,8 @@ protected:
 	void selectFeatures(const Problem& problem, const NoveltyFeaturesConfiguration& feature_configuration);
 	
 	//! An array with all the features that we take into account when computing the novelty
-	std::vector<std::unique_ptr<NoveltyFeature>> _features;
+	
+	FeatureSet _features;
 };
 
 

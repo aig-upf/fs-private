@@ -2,15 +2,15 @@
 #include <constraints/gecode/supports.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/gecode_csp.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 #include <problem.hxx>
 
 namespace fs0 { namespace gecode {
 
-std::vector<TupleIdx>
-Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<TupleIdx>& necessary_tuples) {
+std::vector<AtomIdx>
+Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<AtomIdx>& necessary_tuples) {
 	const auto& tuple_index = Problem::getInstance().get_tuple_index();
-	std::vector<TupleIdx> support;
+	std::vector<AtomIdx> support;
 	
 	// We extract the actual support from the solution
 	// First process the direct state variables

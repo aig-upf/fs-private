@@ -1,7 +1,7 @@
 
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <aptk2/tools/logging.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 #include <state.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
@@ -11,7 +11,7 @@
 namespace fs0 { namespace gecode {
 
 
-RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHandler& extension_handler) :
+RPGIndex::RPGIndex(const State& seed, const AtomIndex& tuple_index, ExtensionHandler& extension_handler) :
 	_reached(tuple_index.size(), nullptr),
 	_novel_tuples(),
 	_current_layer(0),
@@ -28,7 +28,7 @@ RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHa
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 		ObjectIdx value = seed.getValue(variable);
 		
-		TupleIdx tuple_index = _extension_handler.process_atom(variable, value);
+		AtomIdx tuple_index = _extension_handler.process_atom(variable, value);
 		if (tuple_index != INVALID_TUPLE) {
 			_domains.push_back(Gecode::IntSet(value, value));
 			add(tuple_index, nullptr, {});
@@ -43,7 +43,7 @@ RPGIndex::RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHa
 void RPGIndex::advance() {
 	_extension_handler.advance();
 	
-	for (TupleIdx tuple:_novel_tuples) {
+	for (AtomIdx tuple:_novel_tuples) {
 		_extension_handler.process_tuple(tuple);
 	}
 	
@@ -76,21 +76,21 @@ RPGIndex::~RPGIndex() {
 }
 
 
-RPGIndex::TupleSupport* RPGIndex::createTupleSupport(const ActionID* action, std::vector<TupleIdx>&& support) const {
+RPGIndex::TupleSupport* RPGIndex::createTupleSupport(const ActionID* action, std::vector<AtomIdx>&& support) const {
 	return new TupleSupport(_current_layer, action, std::move(support));
 }
 
-const RPGIndex::TupleSupport& RPGIndex::getTupleSupport(TupleIdx tuple) const {
+const RPGIndex::TupleSupport& RPGIndex::getTupleSupport(AtomIdx tuple) const {
 	auto support = _reached.at(tuple);
 	assert(support != nullptr);
 	return *support;
 }
 
-bool RPGIndex::reached(TupleIdx tuple) const {
+bool RPGIndex::reached(AtomIdx tuple) const {
 	return _reached.at(tuple) != nullptr;
 }
 
-void RPGIndex::add(TupleIdx tuple, const ActionID* action, std::vector<TupleIdx>&& support) {
+void RPGIndex::add(AtomIdx tuple, const ActionID* action, std::vector<AtomIdx>&& support) {
 	auto& it = _reached.at(tuple);
 	if (it != nullptr) return; // Don't insert the atom if it was already tracked by the RPG
 	it = createTupleSupport(action, std::move(support)); // This effectively inserts the tuple into '_reached'
@@ -135,7 +135,7 @@ std::ostream& RPGIndex::print(std::ostream& os) const {
 	return os;
 }
 
-void RPGIndex::printAtoms(const std::vector<TupleIdx>& vector, std::ostream& os) const {
+void RPGIndex::printAtoms(const std::vector<AtomIdx>& vector, std::ostream& os) const {
 	for (const auto& element:vector) {
 		os << element << ", ";
 	}
@@ -151,12 +151,13 @@ bool RPGIndex::is_true(VariableIdx variable) const {
 // 	return std::find(domain.cbegin(), domain.cend(), 1) != domain.end();
 }
 
-std::set<unsigned> RPGIndex::unachieved_atoms(const TupleIndex& tuple_index) const {
-	std::set<unsigned> unachieved;
-	for (TupleIdx tuple = 0; tuple < tuple_index.size(); ++tuple) {
-		if (!reached(tuple)) unachieved.insert(tuple);
+std::vector<bool> RPGIndex::achieved_atoms(const AtomIndex& tuple_index) const {
+	std::vector<bool> achieved(tuple_index.size(), false);
+	for (AtomIdx tuple = 0; tuple < tuple_index.size(); ++tuple) {
+// 		if (!reached(tuple)) unachieved.insert(tuple);
+		if (reached(tuple)) achieved[tuple] = true;
 	}
-	return unachieved;
+	return achieved;
 }
 
 /*

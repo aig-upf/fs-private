@@ -8,7 +8,39 @@
 #include <fs_types.hxx>
 
 
+namespace fs0 {
+//! Helper to generate std::strings from printable objects
+//! Adapted from: http://stackoverflow.com/a/12262626
+//! Example usage:
+//! throw std::runtime_error(printer() << foo << 13 << ", bar" << myData);   // implicitly cast to std::string
+//! throw std::runtime_error(printer() << foo << 13 << ", bar" << myData >> printer::to_str);    // explicitly cast to std::string
+class printer {
+public:
+	printer() = default;
+	~printer() = default;
+	printer(const printer&) = delete;
+	printer& operator=(printer&) = delete;
+
+	template <typename Type>
+	printer & operator<<(const Type & value) {
+		stream_ << value;
+		return *this;
+	}
+
+	std::string str() const         { return stream_.str(); }
+	operator std::string() const   { return stream_.str(); }
+
+	enum ConvertToString { to_str };
+	std::string operator>>(ConvertToString) { return stream_.str(); }
+
+private:
+    std::stringstream stream_;
+};
+} // namespaces
+
 namespace fs0 { namespace print {
+
+
 
 class Helper {
 public:
@@ -35,3 +67,4 @@ std::string normalize(const T& t) {
 
 
 } } // namespaces
+

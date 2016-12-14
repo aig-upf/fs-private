@@ -23,7 +23,7 @@ std::vector<const Term*> Formula::all_terms() const {
 	std::vector<const Term*> res;
 	for (auto atom:all_atoms()) {
 		auto tmp = atom->all_terms();
-		res.insert(res.end(), tmp.cbegin(), tmp.cend());		
+		res.insert(res.end(), tmp.cbegin(), tmp.cend());
 	}
 	return res;
 }
@@ -34,7 +34,7 @@ std::vector<const AtomicFormula*> Formula::all_atoms() const {
 
 bool Formula::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
 bool Formula::interpret(const State& state) const  { return interpret(state, Binding()); }
-	
+
 
 std::ostream& Formula::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
@@ -47,7 +47,7 @@ unsigned AtomicFormula::nestedness() const {
 AtomicFormula::~AtomicFormula() {
 	for (const auto ptr:_subterms) delete ptr;
 }
-	
+
 std::vector<const Term*> AtomicFormula::all_terms() const {
 	std::vector<const Term*> res;
 	for (const Term* term:_subterms) {
@@ -60,11 +60,13 @@ std::vector<const Term*> AtomicFormula::all_terms() const {
 AtomicFormula* AtomicFormula::clone() const { return clone(Utils::clone(_subterms)); }
 
 bool AtomicFormula::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	return _satisfied(NestedTerm::interpret_subterms(_subterms, assignment, binding));
+	NestedTerm::interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
+	return _satisfied(_interpreted_subterms);
 }
 
 bool AtomicFormula::interpret(const State& state, const Binding& binding) const {
-	return _satisfied(NestedTerm::interpret_subterms(_subterms, state, binding));
+	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
+	return _satisfied(_interpreted_subterms);
 }
 
 std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {

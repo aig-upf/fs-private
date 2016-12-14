@@ -11,10 +11,10 @@
 namespace fs0 {
 
 DirectCRPG::DirectCRPG(const Problem& problem, std::vector<std::unique_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
-	_problem(problem), _managers(std::move(managers)), all_whitelist(managers.size()), _builder(builder)
+	_problem(problem), _managers(std::move(managers)), all_whitelist(_managers.size()), _builder(builder)
 {
 	LPT_DEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
-    std::iota(all_whitelist.begin(), all_whitelist.end(), 0);
+	std::iota(all_whitelist.begin(), all_whitelist.end(), 0); // Fill in whe vector with values 0, 1, 2, 3 ...
 }
 
 long DirectCRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {

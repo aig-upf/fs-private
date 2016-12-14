@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include <fs_types.hxx>
+#include <utils/printers/helper.hxx>
 
 namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; class Term; }}}
 namespace fs = fs0::language::fstrips;
@@ -100,11 +101,7 @@ public:
 	UnregisteredGecodeTranslator(const T& element) : std::runtime_error(message(element)) {}
 	
 	template <typename T>
-	static std::string message(const T& element) {
-		std::ostringstream stream;
-		stream << "A Gecode translator is required for element \""<< element << "\", but none was registered";
-		return stream.str();
-	}
+	static std::string message(const T& element);
 };
 
 } // namespaces

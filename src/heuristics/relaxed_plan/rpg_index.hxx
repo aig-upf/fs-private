@@ -7,7 +7,7 @@
 #include <unordered_set>
 
 
-namespace fs0 { class ProblemInfo; class State; class Atom; class ActionID; class TupleIndex; }
+namespace fs0 { class ProblemInfo; class State; class Atom; class ActionID; class AtomIndex; }
 
 namespace fs0 { namespace gecode {
 	
@@ -24,10 +24,10 @@ class ExtensionHandler;
 class RPGIndex {
 public:
 	//! <layer ID, Action ID, support>, where 'support' is a vector of indexes of logical symbol tuples
-	typedef std::tuple<unsigned, const ActionID*, std::vector<TupleIdx>> TupleSupport;
+	typedef std::tuple<unsigned, const ActionID*, std::vector<AtomIdx>> TupleSupport;
 	
 	//! A map from the index of a logical symbol tuple to its support in the RPG
-// 	typedef std::unordered_map<TupleIdx, TupleSupport> SupportMap;
+// 	typedef std::unordered_map<AtomIdx, TupleSupport> SupportMap;
 	typedef std::vector<TupleSupport*> SupportMap;
 
 protected:
@@ -40,7 +40,7 @@ protected:
 	SupportMap _reached;
 
 	//! This keeps a reference to the novel atoms that have been inserted in the most recent layer of the RPG.
-	std::vector<TupleIdx> _novel_tuples;
+	std::vector<AtomIdx> _novel_tuples;
 
 	//! The current number of layers.
 	unsigned _current_layer;
@@ -56,16 +56,16 @@ protected:
 	//! This is the set of all values reached so far for each state variable
 	std::vector<std::vector<ObjectIdx>> _domains_raw;
 	
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 	
 	const State& _seed;
 
 public:
-	explicit RPGIndex(const State& seed, const TupleIndex& tuple_index, ExtensionHandler& extension_handler);
+	explicit RPGIndex(const State& seed, const AtomIndex& tuple_index, ExtensionHandler& extension_handler);
 	~RPGIndex();
 	
 	//! Returns true if the given tuple has already been reached in the current graph.
-	bool reached(TupleIdx tuple) const;
+	bool reached(AtomIdx tuple) const;
 	
 	bool is_true(VariableIdx variable) const;
 	const Gecode::TupleSet& get_extension(unsigned symbol_id) const { return _extensions.at(symbol_id); }
@@ -79,7 +79,7 @@ public:
 	unsigned getCurrentLayerIdx() const  {return _current_layer; }
 
 	//! Returns the support for the given atom
-	const TupleSupport& getTupleSupport(TupleIdx tuple) const;
+	const TupleSupport& getTupleSupport(AtomIdx tuple) const;
 	
 	const State& getSeed() const { return _seed; }
 
@@ -89,14 +89,14 @@ public:
 	std::size_t num_novel_tuples() const { return _novel_tuples.size(); }
 	
 	
-	const std::vector<TupleIdx>& getNovelTuples() const { return _novel_tuples; }
+	const std::vector<AtomIdx>& getNovelTuples() const { return _novel_tuples; }
 
 	//!
 	void advance();
 	
 	
 	//! Add an atom to the set of newly-reached atoms, only if it is indeed new.
-	void add(TupleIdx tuple, const ActionID* action, std::vector<TupleIdx>&& support);
+	void add(AtomIdx tuple, const ActionID* action, std::vector<AtomIdx>&& support);
 	
 	//! Compute the sum of h_max values of all the given atoms, assuming that they have already been reached in the RPG data structure
 // 	unsigned compute_hmax_sum(const std::vector<Atom>& atoms) const;
@@ -106,16 +106,16 @@ public:
 	std::ostream& print(std::ostream& os) const;
 	
 	//! Return the set of all tuples that have not been yet reached in the current RPG.
-	std::set<unsigned> unachieved_atoms(const TupleIndex& tuple_index) const;
+	std::vector<bool> achieved_atoms(const AtomIndex& tuple_index) const;
 	
 // 	const std::set<unsigned>& get_modified_symbols() const;
 
 
 protected:
 	//! Creates an atom support data structure with the given data and taking into account the current RPG layer
-	TupleSupport* createTupleSupport(const ActionID* action, std::vector<TupleIdx>&& support) const;
+	TupleSupport* createTupleSupport(const ActionID* action, std::vector<AtomIdx>&& support) const;
 	
-	void printAtoms(const std::vector<TupleIdx>& vector, std::ostream& os) const;
+	void printAtoms(const std::vector<AtomIdx>& vector, std::ostream& os) const;
 	
 	void next();
 };

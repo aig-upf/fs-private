@@ -14,9 +14,9 @@ namespace fs0 { namespace gecode {
 class GroundEffectCSP : public BaseActionCSP {
 public:
 	//! Factory method
-	static std::vector<std::unique_ptr<GroundEffectCSP>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::unique_ptr<GroundEffectCSP>> create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool approximate, bool novelty);
 
-	GroundEffectCSP(const GroundAction& action, const TupleIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions);
+	GroundEffectCSP(const GroundAction& action, const AtomIndex& tuple_index, const fs::ActionEffect* effect, bool approximate, bool use_effect_conditions);
 	~GroundEffectCSP() = default;
 	GroundEffectCSP(const GroundEffectCSP&) = delete;
 	GroundEffectCSP(GroundEffectCSP&&) = delete;
@@ -33,7 +33,8 @@ public:
 	//! Preinstantiate the CSP
 	GecodeCSP* preinstantiate(const RPGIndex& rpg) const;
 	
-	bool find_atom_support(TupleIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const;
+	//! Find whether this effect can support the atom 'tuple' = 'atom' in the RPG layer given by layer_csp
+	bool find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const;
 	
 	void post(GecodeCSP& csp, const Atom& atom) const;
 	
@@ -41,14 +42,14 @@ public:
 	
 	const std::vector<const fs::ActionEffect*>& get_effects() const override;
 
-	const fs::Formula* get_precondition() const override;	
+	const fs::Formula* get_precondition() const override;
 	
 protected:
 
 	const GroundAction& _action;
 	
 	//! This is the only effect managed by this CSP, which we store in a vector to comply with the parents' interfaces, which require
-	//! to return a vector of effects. By construction, we have that _effects.size() == 0
+	//! to return a vector of effects. By construction, we have that _effects.size() == 1
 	const std::vector<const fs::ActionEffect*> _effects;
 	
 	const ActionID* get_action_id(const GecodeCSP* solution) const override;
@@ -66,7 +67,7 @@ protected:
 	
 	void log() const override;
 	
-	bool solve(TupleIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const;
+	bool solve(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const;
 // 	void solve_approximately(const Atom& atom, gecode::GecodeCSP* csp, RPGData& rpg, const State& seed) const;
 };
 

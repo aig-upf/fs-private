@@ -5,7 +5,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <aptk2/tools/logging.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/gecode.hxx>
 #include <utils/printers/printers.hxx>
@@ -17,7 +17,7 @@
 
 namespace fs0 { namespace gecode {
 	
-FormulaCSP::FormulaCSP(const fs::Formula* formula, const TupleIndex& tuple_index, bool approximate)
+FormulaCSP::FormulaCSP(const fs::Formula* formula, const AtomIndex& tuple_index, bool approximate)
 	:  BaseCSP(tuple_index, approximate),
 	  _formula(formula)
 {
@@ -49,7 +49,7 @@ FormulaCSP::FormulaCSP(const fs::Formula* formula, const TupleIndex& tuple_index
 
 FormulaCSP::~FormulaCSP() { delete _formula; }
 
-bool FormulaCSP::compute_support(GecodeCSP* csp, std::vector<TupleIdx>& support) const {
+bool FormulaCSP::compute_support(GecodeCSP* csp, std::vector<AtomIdx>& support) const {
 	GecodeCSP* solution = compute_single_solution(csp);
 	if (!solution) return false;
 	
@@ -100,7 +100,7 @@ void FormulaCSP::index_existential_variable_uses() {
 	// the possible values z of Z such that hmax(p(z)) + hmax(q(z,c)) is minimum, i.e. such that the induced
 	// atoms are achieved the earliest possible
 
-	std::vector<std::vector<std::unordered_map<int, TupleIdx>>> existential_data;
+	std::vector<std::vector<std::unordered_map<int, AtomIdx>>> existential_data;
 	existential_data.resize(_base_csp->_intvars.size());
 	
 	for (const ExtensionalConstraint& extensional:_extensional_constraints) {
@@ -133,11 +133,11 @@ void FormulaCSP::index_existential_variable_uses() {
 			if (!rest_subterms_are_constant) continue;
 			assert(ex_var_position != -1);
 			
-			std::unordered_map<int, TupleIdx> variable_resolutions;
+			std::unordered_map<int, AtomIdx> variable_resolutions;
 			
 			for (ObjectIdx value:info.getTypeObjects(variable->getType())) {
 				subterm_values.at(ex_var_position) = value;
-				TupleIdx tuple_id = _tuple_index.to_index(fluent->getSymbolId(), subterm_values);
+				AtomIdx tuple_id = _tuple_index.to_index(fluent->getSymbolId(), subterm_values);
 				variable_resolutions.insert(std::make_pair(value, tuple_id));
 			}
 			

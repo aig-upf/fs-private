@@ -38,7 +38,7 @@ public:
 
 protected:
 	void open(lapkt::events::Subject&, const lapkt::events::Event& event) {
-		auto& node = dynamic_cast<const OpenEvent&>(event).node;
+		auto& node = static_cast<const OpenEvent&>(event).node;
 		LPT_DEBUG("cout", node);
 		LPT_DEBUG("search", std::setw(7) << "OPEN: " << node);
 		_unused(node);
@@ -51,11 +51,19 @@ protected:
 	void creation(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.generation();
 		LPT_DEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
+		
+// 		if (_stats.generated() % 10 == 0) {
+// 			LPT_INFO("cout", "Number of generated nodes: " << _stats.generated());
+// 		}
+		
 	}
 	
 	void expansion(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.expansion();
 		LPT_DEBUG("search", std::setw(7) << "EXPAND: " << dynamic_cast<const ExpansionEvent&>(event).node);
+// 		if (_stats.expanded() % 10 == 0) {
+// 			LPT_INFO("cout", "Number of expanded nodes: " << _stats.expanded());
+// 		}
 	}
 	
 	SearchStats& _stats;
@@ -111,7 +119,7 @@ public:
 	using ExpansionEvent = lapkt::events::NodeExpansionEvent<NodeT>;
 	using CreationEvent  = lapkt::events::NodeCreationEvent<NodeT>;
 	
-	EvaluationObserver(HeuristicT& heuristic, EvaluationT evaluation) : _heuristic(heuristic), _evaluation(evaluation) {
+	EvaluationObserver(HeuristicT& heuristic, EvaluationT evaluation, SearchStats& stats) : _heuristic(heuristic), _evaluation(evaluation), _stats(stats) {
 		registerEventHandler<ExpansionEvent>(std::bind(&EvaluationObserver::expansion, this, std::placeholders::_1, std::placeholders::_2));
 		registerEventHandler<CreationEvent>(std::bind(&EvaluationObserver::creation, this, std::placeholders::_1, std::placeholders::_2));
 	}
@@ -119,6 +127,7 @@ public:
 protected:
 	HeuristicT& _heuristic;
 	EvaluationT _evaluation;
+	SearchStats& _stats;
 	
 	//! Returns true if the evaluation type is such that the node should be evaluated eagerly, i.e. upon creation
 	bool do_early_evaluation(NodeT& node) const {
@@ -131,18 +140,25 @@ protected:
 	void expansion(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		auto& node = dynamic_cast<const ExpansionEvent&>(event).node;
 		// If we didn't evaluate the node early, we do it know
-		if (!do_early_evaluation(node)) node.evaluate_with(_heuristic);
+		if (!do_early_evaluation(node)) {
+			evaluate(node);
+		}
 	}
 	
 	void creation(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		auto& node = dynamic_cast<const CreationEvent&>(event).node;
 		if (do_early_evaluation(node)) {
 			LPT_EDEBUG("heuristic", "Node " << node.hash() << " is evaluated eagerly");
-			node.evaluate_with(_heuristic);
+			evaluate(node);
 		} else {
 			LPT_EDEBUG("heuristic", "Node " << node.hash() << " will be evaluated lazily");
 			node.inherit_heuristic_estimate();
 		}
+	}
+	
+	void evaluate(NodeT& node) {
+		node.evaluate_with(_heuristic);
+		_stats.evaluation();
 	}
 };
 

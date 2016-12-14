@@ -16,13 +16,13 @@ namespace fs0 { namespace gecode {
 class LiftedActionCSP : public BaseActionCSP {
 public:
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty);
 	
 	//! HACK
-	static std::vector<std::shared_ptr<LiftedActionCSP>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<LiftedActionCSP>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty);
 
-	LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	LiftedActionCSP(const PartiallyGroundedAction& action, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	~LiftedActionCSP();
 	LiftedActionCSP(const LiftedActionCSP&) = delete;
 	LiftedActionCSP(LiftedActionCSP&&) = delete;
@@ -41,6 +41,10 @@ public:
 	LiftedActionID* get_lifted_action_id(const GecodeCSP* solution) const;
 	
 protected:
+	//! We override the base method to ensure all action parameters are registered as CSP variables
+	//! even if they do not appear in other parts of the CSP
+	void register_csp_variables() override;
+	
 	//! The action that originates this handler
 	const PartiallyGroundedAction _action;
 	

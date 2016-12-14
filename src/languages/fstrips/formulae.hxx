@@ -73,7 +73,7 @@ public:
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
 class AtomicFormula : public Formula {
 public:
-	AtomicFormula(const std::vector<const Term*>& subterms) : _subterms(subterms) {}
+	AtomicFormula(const std::vector<const Term*>& subterms) : _subterms(subterms), _interpreted_subterms(subterms.size(), -1) {}
 	
 	virtual ~AtomicFormula();
 	
@@ -109,6 +109,9 @@ public:
 protected:
 	//! The formula subterms
 	std::vector<const Term*> _subterms;
+	
+	//! The last interpretation of the subterms (acts as a cache)
+	mutable std::vector<ObjectIdx> _interpreted_subterms;
 };
 
 
@@ -250,7 +253,7 @@ protected:
 	bool interpret_rec(const T& assignment, const Binding& binding, unsigned i) const;
 };
 
-
+/*
 //! A formula such as 'clear(b)', where clear is one of the problem's fluents.
 class FluentAtom : public AtomicFormula {
 public:
@@ -267,6 +270,7 @@ protected:
 	
 	unsigned _symbol_id;
 };
+*/
 
 
 //! A formula of the form t_1 <op> t_2, where t_i are terms and <op> is a basic relational
@@ -294,7 +298,7 @@ public:
 	const Term* rhs() const { return _subterms[1]; }
 	
 protected:
-	bool _satisfied(const ObjectIdxVector& values) const { return _satisfied(values[0], values[1]); }
+	inline bool _satisfied(const ObjectIdxVector& values) const { return _satisfied(values[0], values[1]); }
 	virtual bool _satisfied(ObjectIdx o1, ObjectIdx o2) const = 0;
 };
 
@@ -303,8 +307,8 @@ public:
 	EQAtomicFormula(const std::vector<const Term*>& subterms) : RelationalFormula(subterms) {}
 	
 	EQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new EQAtomicFormula(subterms); }
-		
-	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 == o2; }
+	
+	inline bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 == o2; }
 	
 	virtual Symbol symbol() const { return Symbol::EQ; }
 };
@@ -314,8 +318,8 @@ public:
 	NEQAtomicFormula(const std::vector<const Term*>& subterms) : RelationalFormula(subterms) {}
 	
 	NEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new NEQAtomicFormula(subterms); }
-		
-	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 != o2; }
+	
+	inline bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 != o2; }
 	
 	Symbol symbol() const { return Symbol::NEQ; }
 };
@@ -337,7 +341,7 @@ public:
 	
 	LEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new LEQAtomicFormula(subterms); }
 		
-	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 <= o2; }
+	inline bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 <= o2; }
 	
 	Symbol symbol() const { return Symbol::LEQ; }
 };
@@ -348,7 +352,7 @@ public:
 	
 	GTAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new GTAtomicFormula(subterms); }
 		
-	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 > o2; }
+	inline bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 > o2; }
 	
 	Symbol symbol() const { return Symbol::GT; }
 };
@@ -359,7 +363,7 @@ public:
 	
 	GEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new GEQAtomicFormula(subterms); }
 		
-	bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 >= o2; }
+	inline bool _satisfied(ObjectIdx o1, ObjectIdx o2) const { return o1 >= o2; }
 	
 	Symbol symbol() const { return Symbol::GEQ; }
 };

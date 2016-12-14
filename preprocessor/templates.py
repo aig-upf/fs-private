@@ -7,7 +7,7 @@ from string import Template
 # some basic templates
 _base = dict(
     function_instantiation='{"${name}", [](const ObjectIdxVector& parameters)'
-                           '{ return external->${accessor}(parameters); }}',
+                           '{ return static_cast<const External&>(ProblemInfo::getInstance().get_external()).${accessor}(parameters); }}',
 )
 
 

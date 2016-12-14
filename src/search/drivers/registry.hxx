@@ -5,6 +5,7 @@
 #include <fs_types.hxx>
 #include <ground_state_model.hxx>
 #include <lifted_state_model.hxx>
+#include <utils/system.hxx>
 
 #include <aptk2/search/interfaces/search_algorithm.hxx>
 
@@ -22,10 +23,8 @@ class Driver {
 public:
 	virtual ~Driver() = default;
 	
-	//! Create an engine for the given model as specified by the given configuration
-	virtual std::unique_ptr<FSGroundSearchAlgorithm> create(const Config& config, const GroundStateModel& model) const = 0;
-	
-	virtual GroundStateModel setup(const Config& config, Problem& problem) const;
+	//! Perform the search
+	virtual ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) = 0;
 };
 
 
@@ -38,16 +37,16 @@ public:
 	static EngineRegistry& instance();
 	
 	//! Register a new engine creator responsible for creating drivers with the given engine_name
-	void add(const std::string& engine_name, const Driver* creator);
+	void add(const std::string& engine_name, Driver* creator);
 	
 	//! Retrieve the engine creater adequate for the given engine name
-	const Driver* get(const std::string& engine_name) const;
+	Driver* get(const std::string& engine_name);
 	
 	
 protected:
 	EngineRegistry();
 	
-	std::unordered_map<std::string, const Driver*> _creators;
+	std::unordered_map<std::string, Driver*> _creators;
 };
 
 } } // namespaces

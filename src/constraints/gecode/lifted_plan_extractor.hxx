@@ -8,7 +8,7 @@
 #include <fs_types.hxx>
 
 
-namespace fs0 { class State; class ActionID; class TupleIndex; class Atom; }
+namespace fs0 { class State; class ActionID; class AtomIndex; class Atom; }
 namespace fs0 { namespace gecode {
 
 class RPGIndex;
@@ -22,16 +22,16 @@ class LiftedPlanExtractor {
 protected:
 	const RPGIndex& _graph;
 	
-	std::set<TupleIdx> processed;
-	std::queue<TupleIdx> pending;
+	std::set<AtomIdx> processed;
+	std::queue<AtomIdx> pending;
 	
 	std::vector<std::unordered_set<const ActionID*>> perLayerSupporters;
 	
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 
 public:
 	
-	LiftedPlanExtractor(const RPGIndex& graph, const TupleIndex& tuple_index);
+	LiftedPlanExtractor(const RPGIndex& graph, const AtomIndex& tuple_index);
 	virtual ~LiftedPlanExtractor() = default;
 
 
@@ -41,14 +41,14 @@ public:
 	 * 
 	 * @param goalAtoms The atoms that allowed the planning graph to reach a goal state.
 	 */
-	long computeRelaxedPlanCost(const std::vector<TupleIdx>& goal_support, std::vector<Atom>& relevant);
+	long computeRelaxedPlanCost(const std::vector<AtomIdx>& goal_support, std::vector<Atom>& relevant);
 	
 protected:
 	//! Put all the atoms in a given vector of atoms in the queue to be processed.
-	void enqueueTuples(const std::vector<TupleIdx>& tuples);
+	void enqueueTuples(const std::vector<AtomIdx>& tuples);
 
 	//! Process a single atom by seeking its supports left-to-right in the RPG and enqueuing them to be further processed
-	void processTuple(TupleIdx tuple, std::vector<Atom>& relevant);
+	void processTuple(AtomIdx tuple, std::vector<Atom>& relevant);
 	
 	
 	long buildRelaxedPlan();

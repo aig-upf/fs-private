@@ -9,11 +9,14 @@ namespace fs0 {
 //! domain-specific External classes.
 class ExternalI  {
 public:
-    //! By default, we register no component
-    virtual void registerComponents() const {}
+	
+	virtual ~ExternalI() = default;
 
-    //! To be subclassed in case the particular problem has a ASP handler
-    virtual asp::LPHandler* get_asp_handler() const { return nullptr; }
+	//! By default, we register no component
+	virtual void registerComponents() const {}
+
+	//! To be subclassed in case the particular problem has a ASP handler
+	virtual asp::LPHandler* get_asp_handler() const { return nullptr; }
 };
 
 

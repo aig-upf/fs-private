@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 
 namespace fs0 { namespace asp { class LPHandler; }}
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
@@ -20,10 +20,10 @@ class GroundAction;
 class Problem {
 public:
 
-	Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index);
+	Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index);
 	~Problem();
 	
-	Problem(const Problem& other) = delete;
+	Problem(const Problem& other);
 	Problem& operator=(const Problem& other) = delete;
 	Problem(Problem&& other) = delete;
 	bool operator==(const Problem& other) = delete;
@@ -65,10 +65,13 @@ public:
 		return *_instance;
 	}
 	
-	const TupleIndex& get_tuple_index() const { return _tuple_index; }
+	const AtomIndex& get_tuple_index() const { return _tuple_index; }
 	
 	//! Return true if all the symbols of the problem are predicates
 	bool is_predicative() const { return _is_predicative; }
+	
+	void set_state_constraints(const fs::Formula* state_constraint_formula);
+	void set_goal(const fs::Formula* goal);
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
@@ -76,7 +79,7 @@ public:
 
 protected:
 	//! An index of tuples and atoms
-	TupleIndex _tuple_index;
+	AtomIndex _tuple_index;
 	
 	//! The initial state of the problem
 	const std::unique_ptr<State> _init;

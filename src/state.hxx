@@ -38,7 +38,6 @@ public:
 	bool operator==(const State &rhs) const { return _hash == rhs._hash && _values == rhs._values; }
 	bool operator!=(const State &rhs) const { return !(this->operator==(rhs));}
 	
-	void set(const Atom& atom);
 	
 	bool contains(const Atom& atom) const;
 	
@@ -52,6 +51,8 @@ public:
 	void accumulate(const std::vector<Atom>& atoms);
 
 protected:
+	void set(const Atom& atom);
+	
 	void updateHash() { _hash = computeHash(); }
 	
 	std::size_t computeHash() const;

@@ -5,13 +5,14 @@
 #include <aptk2/tools/logging.hxx>
 #include <utils/printers/language.hxx>
 #include <utils/printers/actions.hxx>
+#include <utils/utils.hxx>
 #include <applicability/formula_interpreter.hxx>
 
 namespace fs0 {
 
 std::unique_ptr<Problem> Problem::_instance = nullptr;
 
-Problem::Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, TupleIndex&& tuple_index) :
+Problem::Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index) :
 	_tuple_index(std::move(tuple_index)),
 	_init(init),
 	_action_data(action_data),
@@ -30,6 +31,28 @@ Problem::~Problem() {
 	for (const auto pointer:_partials) delete pointer;
 	delete _state_constraint_formula;
 	delete _goal_formula;
+}
+
+Problem::Problem(const Problem& other) :
+	_tuple_index(other._tuple_index),
+	_init(new State(*other._init)),
+	_action_data(Utils::copy(other._action_data)),
+	_ground(Utils::copy(other._ground)),
+	_partials(Utils::copy(other._partials)),
+	_state_constraint_formula(other._state_constraint_formula->clone()),
+	_goal_formula(other._goal_formula->clone()),
+	_goal_sat_manager(other._goal_sat_manager->clone()),
+	_is_predicative(other._is_predicative)
+{}
+
+void Problem::set_state_constraints(const fs::Formula* state_constraint_formula) { 
+	delete _state_constraint_formula;
+	_state_constraint_formula = state_constraint_formula;
+}
+
+void Problem::set_goal(const fs::Formula* goal) { 
+	delete _goal_formula;
+	_goal_formula = goal;
 }
 
 std::ostream& Problem::print(std::ostream& os) const { 

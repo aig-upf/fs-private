@@ -39,17 +39,19 @@ class CSPTranslator {
 public:
 
 	CSPTranslator(GecodeCSP& base_csp) : _base_csp(base_csp) {}
-	virtual ~CSPTranslator() {}
-	CSPTranslator(const CSPTranslator& other) = delete;
+	virtual ~CSPTranslator() = default;
+	CSPTranslator(const CSPTranslator&) = delete;
 	CSPTranslator(CSPTranslator&&) = delete;
-	CSPTranslator& operator=(const CSPTranslator& rhs) = delete;
-	CSPTranslator& operator=(CSPTranslator&& rhs) = delete;
+	CSPTranslator& operator=(const CSPTranslator&) = delete;
+	CSPTranslator& operator=(CSPTranslator&&) = delete;
 
 	unsigned add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable = INVALID_VARIABLE);
 	unsigned add_boolvar(Gecode::BoolVar csp_variable);
 
 	//! This updates the actual variables of the given CSP with all the CSP variables that have been registered in the translator so far
 	void perform_registration();
+	
+	bool isRegistered(const fs::Term* variable) const;
 
 	//! Register the given term (under the give role/type) by creating a corresponding CSP variable.
 	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)
@@ -121,9 +123,9 @@ public:
 	
 	std::vector<std::pair<unsigned, std::vector<unsigned>>> index_fluents(const std::unordered_set<const fs::Term*>& terms);
 	
-	void set_existential_data(std::vector<std::vector<std::unordered_map<int, TupleIdx>>>&& existential_data) { _existential_data = existential_data; };
+	void set_existential_data(std::vector<std::vector<std::unordered_map<int, AtomIdx>>>&& existential_data) { _existential_data = existential_data; };
 	
-	std::vector<std::unordered_map<int, TupleIdx>> getExistentialData(unsigned csp_var_idx) const { return _existential_data.at(csp_var_idx); };
+	std::vector<std::unordered_map<int, AtomIdx>> getExistentialData(unsigned csp_var_idx) const { return _existential_data.at(csp_var_idx); };
 	
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.
@@ -145,7 +147,7 @@ protected:
 	std::unordered_map<VariableIdx, unsigned> _input_state_variables;
 // 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
 	
-	std::vector<std::vector<std::unordered_map<int, TupleIdx>>> _existential_data;
+	std::vector<std::vector<std::unordered_map<int, AtomIdx>>> _existential_data;
 };
 
 

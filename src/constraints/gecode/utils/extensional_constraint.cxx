@@ -12,7 +12,7 @@
 
 namespace fs0 { namespace gecode {
 
-ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const TupleIndex& tuple_index, bool predicate)
+ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const AtomIndex& tuple_index, bool predicate)
 	: _predicate(predicate), _term(term), _variable_idx(-1), _tuple_index(tuple_index)
 {}
 

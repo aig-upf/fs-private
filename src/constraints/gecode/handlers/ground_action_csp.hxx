@@ -15,10 +15,10 @@ namespace fs0 { namespace gecode {
 class GroundActionCSP : public BaseActionCSP {
 public:
 	//! Factory method
-	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty);
+	static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool approximate, bool novelty);
 
 	//! Constructors / Destructor
-	GroundActionCSP(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions);
+	GroundActionCSP(const GroundAction& action, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions);
 	~GroundActionCSP() = default;
 	GroundActionCSP(const GroundActionCSP&) = delete;
 	GroundActionCSP(GroundActionCSP&&) = delete;
@@ -30,6 +30,12 @@ public:
 	const std::vector<const fs::ActionEffect*>& get_effects() const override;
 
 	const fs::Formula* get_precondition() const override;
+	
+	//! Posts a X=x constraint into the given CSP
+	GecodeCSP* post(VariableIdx variable, ObjectIdx value) const;
+	
+	//! Returns true iff the CSP has at least one solution
+	static bool check_one_solution_exists(GecodeCSP* csp);
 
 protected:
 	

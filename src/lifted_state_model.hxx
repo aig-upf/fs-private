@@ -3,9 +3,10 @@
 
 #include <aptk2/search/interfaces/det_state_model.hxx>
 #include <actions/action_id.hxx>
+#include <actions/lifted_action_iterator.hxx>
 
 
-namespace fs0 { namespace gecode { class LiftedActionIterator; class LiftedActionCSP; }}
+namespace fs0 { namespace gecode { class LiftedActionCSP; }}
 
 namespace fs0 {
 
@@ -48,6 +49,8 @@ public:
 	
 	const Problem& getTask() const { return task; }
 	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>>&& handlers) { _handlers = std::move(handlers); }
+	
+	unsigned get_action_idx(const LiftedActionID& action) const { return 0; }
 
 protected:
 	// The underlying planning problem.

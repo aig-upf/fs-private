@@ -1,7 +1,7 @@
 
 #pragma once
 #include <fs_types.hxx>
-#include <utils/tuple_index.hxx>
+#include <utils/atom_index.hxx>
 #include <gecode/int.hh>
 
 namespace fs0 { class ProblemInfo; }
@@ -11,14 +11,14 @@ namespace fs0 { namespace gecode {
 //! A small helper class to generate the Gecode tuplesets.
 class Extension {
 protected:
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 	
-	std::vector<TupleIdx> _tuples;
+	std::vector<AtomIdx> _tuples;
 	
 public:
-	Extension(const TupleIndex& tuple_index);
+	Extension(const AtomIndex& tuple_index);
 	
-	void add_tuple(TupleIdx tuple);
+	void add_tuple(AtomIdx tuple);
 	
 	bool is_tautology() const;
 	
@@ -29,7 +29,7 @@ class ExtensionHandler {
 protected:
 	const ProblemInfo& _info;
 	
-	const TupleIndex& _tuple_index;
+	const AtomIndex& _tuple_index;
 	
 	//! _extensions[i] contains the extension of logical symbol 'i'
 	std::vector<Extension> _extensions;
@@ -40,7 +40,7 @@ protected:
 	//! _modified[i] is true iff the denotation of logical symbol 'i' changed on the last layer
 // 	std::set<unsigned> _modified;
 public:
-	ExtensionHandler(const TupleIndex& tuple_index, std::vector<bool> managed);
+	ExtensionHandler(const AtomIndex& tuple_index, std::vector<bool> managed);
 	
 	//! Default copy constructors and assignment operators
 	ExtensionHandler(const ExtensionHandler& other) = default;
@@ -51,9 +51,9 @@ public:
 	void reset();
 	
 	//! Processes an atom and returns the equivalent extension tuple.
-	TupleIdx process_atom(VariableIdx variable, ObjectIdx value);
+	AtomIdx process_atom(VariableIdx variable, ObjectIdx value);
 	
-	void process_tuple(TupleIdx tuple);
+	void process_tuple(AtomIdx tuple);
 
 	// TODO REMOVE?
 	void process_delta(VariableIdx variable, const std::vector<ObjectIdx>& delta);

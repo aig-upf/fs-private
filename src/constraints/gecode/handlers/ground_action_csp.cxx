@@ -4,11 +4,12 @@
 #include <aptk2/tools/logging.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
+#include <gecode/search.hh>
 
 
 namespace fs0 { namespace gecode {
 	
-std::vector<std::shared_ptr<BaseActionCSP>> GroundActionCSP::create(const std::vector<const GroundAction*>& actions, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+std::vector<std::shared_ptr<BaseActionCSP>> GroundActionCSP::create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<BaseActionCSP>> managers;
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
@@ -26,7 +27,7 @@ std::vector<std::shared_ptr<BaseActionCSP>> GroundActionCSP::create(const std::v
 }
 
 // If no set of effects is provided, we'll take all of them into account
-GroundActionCSP::GroundActionCSP(const GroundAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+GroundActionCSP::GroundActionCSP(const GroundAction& action, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions)
 	:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action)
 {
 	// Filter out delete effects
@@ -51,6 +52,31 @@ const ActionID* GroundActionCSP::get_action_id(const GecodeCSP* solution) const 
 
 void GroundActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action: " << _action);
+}
+
+GecodeCSP* 
+GroundActionCSP::post(VariableIdx variable, ObjectIdx value) const {
+	if (_failed) return nullptr;
+	GecodeCSP* clone = static_cast<GecodeCSP*>(_base_csp->clone());
+	const auto& csp_var = _translator.resolveInputStateVariable(*clone, variable);
+	
+	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, value);
+
+	if (!clone->checkConsistency()) { // This colaterally enforces propagation of constraints
+		delete clone;
+		return nullptr;
+	}
+	return clone;
+}
+
+bool
+GroundActionCSP::check_one_solution_exists(GecodeCSP* csp) {
+	// We just want to tell whether at least one solution exists
+	Gecode::DFS<GecodeCSP> engine(csp);
+	GecodeCSP* solution = engine.next();
+	if (!solution) return false; // The CSP has no solution at all
+	delete solution;
+	return true;
 }
 
 } } // namespaces

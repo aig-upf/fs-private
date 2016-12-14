@@ -7,7 +7,7 @@
 
 namespace fs0 {
 
-FormulaInterpreter* FormulaInterpreter::create(const fs::Formula* formula, const TupleIndex& tuple_index) {
+FormulaInterpreter* FormulaInterpreter::create(const fs::Formula* formula, const AtomIndex& tuple_index) {
 	// If there is some quantified variable in the formula, we will use a CSP-based interpreter
 	auto existential_formulae = Utils::filter_by_type<const fs::ExistentiallyQuantifiedFormula*>(formula->all_formulae());
 	if (!existential_formulae.empty()) {
@@ -21,23 +21,38 @@ FormulaInterpreter* FormulaInterpreter::create(const fs::Formula* formula, const
 	}
 }
 
-
-DirectFormulaInterpreter::DirectFormulaInterpreter(const fs::Formula* formula) :
-	_formula(formula)
+FormulaInterpreter::FormulaInterpreter(const fs::Formula* formula) :
+	_formula(formula->clone())
 {}
+
+FormulaInterpreter::~FormulaInterpreter() {
+	delete _formula;
+}
+
+FormulaInterpreter::FormulaInterpreter(const FormulaInterpreter& other) :
+	_formula(other._formula->clone())
+{}
+
 
 bool DirectFormulaInterpreter::satisfied(const State& state) const {
 	return _formula->interpret(state);
 }
 
+CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula* formula, const AtomIndex& tuple_index) :
+	FormulaInterpreter(formula),
+	// Note that we don't need any of the optimizations, since we will be instantiating the CSP on a state, not a RPG layer
+	_formula_csp(new gecode::FormulaCSP(formula, tuple_index, false)),
+	_tuple_index(tuple_index)
+{}
 
 CSPFormulaInterpreter::~CSPFormulaInterpreter() {
 	delete _formula_csp;
 }
 
-CSPFormulaInterpreter::CSPFormulaInterpreter(const fs::Formula* formula, const TupleIndex& tuple_index) :
-	// Note that we don't need any of the optimizations, since we will be instantiating the CSP on a state, not a RPG layer
-	_formula_csp(new gecode::FormulaCSP(formula, tuple_index, false))
+CSPFormulaInterpreter::CSPFormulaInterpreter(const CSPFormulaInterpreter& other) :
+	FormulaInterpreter(other),
+	_formula_csp(new gecode::FormulaCSP(other._formula, other._tuple_index, false)),
+	_tuple_index(other._tuple_index)
 {}
 
 bool CSPFormulaInterpreter::satisfied(const State& state) const {

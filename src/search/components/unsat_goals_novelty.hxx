@@ -13,9 +13,7 @@ namespace fs0 { class Problem; class Config; }
 
 namespace fs0 { namespace drivers {
 
-//! A novelty evaluator object to be used as an open list acceptor.
-//! It accepts a new search node iff its novelty less than or equal to the max novelty bound
-template <typename SearchNode>
+template <typename StateModelT, typename SearchNode>
 class UnsatGoalsNoveltyComponent : public BaseNoveltyComponent<SearchNode> {
 protected:
 	//! We have k+1 novelty evaluators, where k is the number of goal conditions, so that we can evaluate the novelty
@@ -25,12 +23,12 @@ protected:
 	std::vector<GenericNoveltyEvaluator> _novelty_evaluators;
 	
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
-	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
+	UnsatisfiedGoalAtomsHeuristic<StateModelT> _unsat_goal_atoms_heuristic;
 
 public:
 	typedef BaseNoveltyComponent<SearchNode> Base;
 
-	UnsatGoalsNoveltyComponent(const GroundStateModel& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
+	UnsatGoalsNoveltyComponent(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
 		: Base(max_novelty), 
 		  _novelty_evaluators(model.getTask().getGoalConditions()->all_atoms().size()+1, GenericNoveltyEvaluator(model.getTask(), max_novelty, feature_configuration)), // We set up k+1 identical evaluators
 		  _unsat_goal_atoms_heuristic(model)

@@ -22,7 +22,6 @@ def parse_arguments(args):
     parser.add_argument('--instance', required=True,
                         help="The problem instance filename (heuristics are used to determine domain filename).")
     parser.add_argument('--domain', required=False, help="The problem domain filename.", default=None)
-    parser.add_argument('--planner', default="generic", help="The directory containing the planner sources.")
     parser.add_argument('--output_base', default=os.path.join(os.path.dirname(__file__), "../generated"),
                         help="The base for the output directory where the compiled planner will be left. "
                              "Additional subdirectories will be created with the name of the domain and the instance")
@@ -98,7 +97,7 @@ def compile_translation(translation_dir, use_vanilla, args):
     """
     debug_flag = "edebug=1" if args.edebug else ("debug=1" if args.debug else "")
 
-    planner_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../planners', args.planner))
+    planner_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../planners', 'generic'))
     shutil.copy(os.path.join(planner_dir, 'defaults.json'), translation_dir)
 
     vanilla_solver_name = solver_name(args)
@@ -172,7 +171,6 @@ def main(args):
 
     print("{0:<30}{1}".format("Problem domain:", domain_name))
     print("{0:<30}{1}".format("Problem instance:", instance_name))
-    print("{0:<30}{1}".format("Chosen Planner:", args.planner))
     print("{0:<30}{1}".format("Translation directory:", translation_dir))
 
     # Parse the task with FD's parser and transform it to our format

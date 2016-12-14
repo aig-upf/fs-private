@@ -25,10 +25,10 @@ public:
 	
 	virtual ~ActionEffect();
 	
-	ActionEffect(const ActionEffect& other);
-	ActionEffect(ActionEffect&& other) = default;
-	ActionEffect& operator=(const ActionEffect& rhs) = delete;
-	ActionEffect& operator=(ActionEffect&& rhs) = default;
+	ActionEffect(const ActionEffect&);
+	ActionEffect(ActionEffect&&) = default;
+	ActionEffect& operator=(const ActionEffect&) = delete;
+	ActionEffect& operator=(ActionEffect&&) = default;
 	
 	ActionEffect* clone() const { return new ActionEffect(*this); }
 	

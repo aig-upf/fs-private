@@ -6,6 +6,7 @@
 
 #include <lib/rapidjson/document.h>
 #include <utils/static.hxx>
+#include <utils/external.hxx>
 
 namespace fs0 {
 
@@ -62,16 +63,17 @@ public:
 	enum class ObjectType {INT, BOOL, OBJECT};
 	
 	//! Set the global singleton problem instance
-	static void setInstance(std::unique_ptr<ProblemInfo>&& problem) {
+	static ProblemInfo& setInstance(std::unique_ptr<ProblemInfo>&& problem) {
 		assert(!_instance);
 		_instance = std::move(problem);
+		return *_instance;
 	}
 	
 	//! Global singleton object accessor
 	static const ProblemInfo& getInstance() {
 		assert(_instance);
 		return *_instance;
-	}	
+	}
 	
 protected:
 	//! The singleton instance
@@ -124,6 +126,8 @@ protected:
 	//! The extensions of the static symbols
 	std::vector<std::unique_ptr<StaticExtension>> _extensions;
 	
+	std::unique_ptr<ExternalI> _external;
+	
 public:
 	ProblemInfo(const rapidjson::Document& data);
 	~ProblemInfo() = default;
@@ -139,6 +143,7 @@ public:
 	
 	const std::string getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const;
 	const std::string deduceObjectName(ObjectIdx object, TypeIdx type) const;
+	const std::string deduceObjectName(ObjectIdx object, const std::string& type) const { return deduceObjectName(object, getTypeId(type)); }      
 	inline ObjectIdx getObjectId(const std::string& name) const { return objectIds.at(name); }
 	
 	//! Return the ID of the function with given name
@@ -160,6 +165,12 @@ public:
 	
 	void set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&& extension);
 	const StaticExtension& get_extension(unsigned symbol_id) const;
+	
+	void set_external(std::unique_ptr<ExternalI> external) { _external = std::move(external); }
+	const ExternalI& get_external() const {
+		assert(_external);
+		return *_external;
+	}
 	
 	//! A convenient helper
 	template <typename ExtensionT>

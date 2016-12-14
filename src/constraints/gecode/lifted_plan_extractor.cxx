@@ -13,16 +13,16 @@
 namespace fs0 { namespace gecode {
 
 	
-LiftedPlanExtractor::LiftedPlanExtractor(const RPGIndex& graph, const TupleIndex& tuple_index) :
+LiftedPlanExtractor::LiftedPlanExtractor(const RPGIndex& graph, const AtomIndex& tuple_index) :
 	_graph(graph), processed(), pending(), perLayerSupporters(graph.getNumLayers()), _tuple_index(tuple_index)
 {}
 
 
-long LiftedPlanExtractor::computeRelaxedPlanCost(const std::vector<TupleIdx>& goal_support, std::vector<Atom>& relevant) {
+long LiftedPlanExtractor::computeRelaxedPlanCost(const std::vector<AtomIdx>& goal_support, std::vector<Atom>& relevant) {
 	enqueueTuples(goal_support);
 	
 	while (!pending.empty()) {
-		TupleIdx tuple = pending.front();
+		AtomIdx tuple = pending.front();
 		processTuple(tuple, relevant);
 		pending.pop();
 	}
@@ -30,13 +30,13 @@ long LiftedPlanExtractor::computeRelaxedPlanCost(const std::vector<TupleIdx>& go
 	return buildRelaxedPlan();
 }
 
-void LiftedPlanExtractor::enqueueTuples(const std::vector<TupleIdx>& tuples) {
+void LiftedPlanExtractor::enqueueTuples(const std::vector<AtomIdx>& tuples) {
 	for(const auto& tuple:tuples) {
 		pending.push(tuple);
 	}
 }
 
-void LiftedPlanExtractor::processTuple(TupleIdx tuple, std::vector<Atom>& relevant) {
+void LiftedPlanExtractor::processTuple(AtomIdx tuple, std::vector<Atom>& relevant) {
 	const Atom& atom = _tuple_index.to_atom(tuple);
 	if (_graph.getSeed().contains(atom)) return; // The atom was already on the seed state, thus has empty support.
 	if (processed.find(tuple) != processed.end()) return; // The atom has already been processed

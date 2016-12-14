@@ -15,8 +15,6 @@ class RPGData;
 
 class DirectCRPG {
 public:
-	typedef GroundAction Action;
-
 	DirectCRPG(const Problem& problem, std::vector<std::unique_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder);
 	virtual ~DirectCRPG() = default;
 	

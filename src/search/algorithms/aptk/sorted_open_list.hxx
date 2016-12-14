@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <queue>
 #include <memory>
+#include <unordered_set>
 
 #include <aptk2/search/interfaces/open_list.hxx>
 
@@ -65,10 +66,11 @@ public:
 	StlSortedOpenList& operator=(const StlSortedOpenList& rhs) = default;
 	StlSortedOpenList& operator=(StlSortedOpenList&& rhs) = default;
 
-	void insert(const NodePtrT& node) override {
-		if ( node->dead_end() ) return;
+	bool insert(const NodePtrT& node) override {
+		if ( node->dead_end() ) return false;
 		this->push( node );
 		already_in_open_.insert( node );
+		return true;
 	}
 
 	//! Check if the open list already contains a node 'previous' referring to the same state.
@@ -107,8 +109,6 @@ protected:
 	using node_unordered_set = std::unordered_set<NodePtrT, node_hash<NodePtrT>, node_equal_to<NodePtrT>>;
 	node_unordered_set already_in_open_;
 };
-
-
 
 
 }

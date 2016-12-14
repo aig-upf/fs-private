@@ -32,23 +32,28 @@ public:
 	
 	//! Computes the direct scope of a formula
 	static std::vector<VariableIdx> computeDirectScope(const Formula* formula);
-	static void computeDirectScope(const Formula* formula, std::set<fs0::VariableIdx>& scope);
+	static void computeDirectScope(const Formula* formula, std::set<VariableIdx>& scope);
 	
 	//! Computes the indirect scope of a formula
 	static void computeIndirectScope(const Formula* formula, ScopeUtils::TermSet& scope);
+	
+	//! Computes the full scope of a given formula, including state variables derived from nested fluents.
+	static void computeFullScope(const Formula* formula, std::set<VariableIdx>& scope);
 	
 	//! Returns the direct scope of an action, i.e. the set of all the state variables that are directly relevant
 	//! to either the preconditions or some effect of the action.
 	//! This excludes indirect relevant actions produced by nested fluents.
 	static std::vector<VariableIdx> computeActionDirectScope(const ActionBase& action);
 	
-	//! Computes all the (indirect) state variables in which a nested fluent might result
-	// TODO - Check if really necessary
-	static void computeIndirectScope(FluentHeadedNestedTerm& nested, std::set<VariableIdx>& scope);
-
+	//! Computes the full scope of an action, which currently takes only into account variables appearing in the action precondition.
+	static void computeActionFullScope(const ActionBase& action, std::set<VariableIdx>& scope);
+	
 	//!
 	static void computeIndirectTermScope(const Term* term, std::set<VariableIdx>& scope);
 
+	//! Returns the state variables (both direct and indirect) affected by the given action
+	static void compute_affected(const ActionBase& action, std::set<VariableIdx>& scope);
+	
 	//!
 	static std::vector<Atom> compute_affected_atoms(const ActionEffect* effect);
 	

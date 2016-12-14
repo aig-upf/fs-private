@@ -3,7 +3,7 @@
 #include <problem.hxx>
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
-#include <actions/ground_action_iterator.hxx>
+#include <applicability/action_managers.hxx>
 #include <actions/lifted_action_iterator.hxx>
 #include <actions/actions.hxx>
 
@@ -29,7 +29,7 @@ bool LiftedStateModel::is_applicable(const State& state, const ActionType& actio
 }
 
 bool LiftedStateModel::is_applicable(const State& state, const GroundAction& action) const {
-	ApplicabilityManager manager(task.getStateConstraints());
+	NaiveApplicabilityManager manager(task.getStateConstraints());
 	return manager.isApplicable(state, action);
 }
 
@@ -41,9 +41,9 @@ State LiftedStateModel::next(const State& state, const LiftedActionID& action) c
 }
 
 State LiftedStateModel::next(const State& state, const GroundAction& action) const { 
-	ApplicabilityManager manager(task.getStateConstraints());
+	NaiveApplicabilityManager manager(task.getStateConstraints());
 	assert(manager.isApplicable(state, action));
-	return State(state, manager.computeEffects(state, action)); // Copy everything into the new state and apply the changeset
+	return State(state, NaiveApplicabilityManager::computeEffects(state, action)); // Copy everything into the new state and apply the changeset
 }
 
 

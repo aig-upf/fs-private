@@ -23,6 +23,13 @@ std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const 
 	return os;
 }
 
+NestedTerm::NestedTerm(const NestedTerm& term) :
+	_symbol_id(term._symbol_id),
+	_subterms(Utils::clone(term._subterms)),
+	_interpreted_subterms(term._interpreted_subterms)
+{}
+
+
 std::vector<const Term*> NestedTerm::all_terms() const {
 	std::vector<const Term*> res;
 	res.push_back(this);
@@ -168,11 +175,13 @@ std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
 }
 
 ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	return _function.getFunction()(interpret_subterms(_subterms, assignment, binding));
+	interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
+	return _function.getFunction()(_interpreted_subterms);
 }
 
 ObjectIdx UserDefinedStaticTerm::interpret(const State& state, const Binding& binding) const {
-	return _function.getFunction()(interpret_subterms(_subterms, state, binding));
+	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
+	return _function.getFunction()(_interpreted_subterms);
 }
 
 ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
@@ -185,12 +194,14 @@ ObjectIdx FluentHeadedNestedTerm::interpret(const State& state, const Binding& b
 
 VariableIdx FluentHeadedNestedTerm::interpretVariable(const PartialAssignment& assignment, const Binding& binding) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, assignment, binding));
+	interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
+	VariableIdx variable = info.resolveStateVariable(_symbol_id, _interpreted_subterms);
 	return variable;
 }
 VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state, const Binding& binding) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	VariableIdx variable = info.resolveStateVariable(_symbol_id, interpret_subterms(_subterms, state, binding));
+	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
+	VariableIdx variable = info.resolveStateVariable(_symbol_id, _interpreted_subterms);
 	return variable;
 }
 

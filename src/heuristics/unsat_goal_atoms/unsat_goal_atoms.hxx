@@ -10,20 +10,26 @@
 namespace fs0 {
 
 //! The heuristic value of any given state is the number of unsatisfied goal conditions (atoms) on that state
+template <typename StateModelT>
 class UnsatisfiedGoalAtomsHeuristic {
 public:
 	typedef GroundAction Action;
 
-	UnsatisfiedGoalAtomsHeuristic(const GroundStateModel& model) : _problem(model.getTask()), _goal_conjunction(extract_goal_conjunction_or_fail(_problem)) {}
+	UnsatisfiedGoalAtomsHeuristic(const StateModelT& model) : _problem(model.getTask()), _goal_conjunction(extract_goal_conjunction_or_fail(_problem)) {}
 	
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& state) const { 
 		unsigned unsatisfied = 0;
-		for (const fs::AtomicFormula* condition:_goal_conjunction->getConjuncts()) {
+		for (const fs::AtomicFormula* condition:get_goal_conjuncts()) {
 			if (!condition->interpret(state)) ++unsatisfied;
 		}
 		return unsatisfied;
 	}
+	
+	const std::vector<const fs::AtomicFormula*>& get_goal_conjuncts() const {
+		return _goal_conjunction->getConjuncts();
+	}
+	
 	
 protected:
 	//! The actual planning problem

@@ -3,6 +3,7 @@
 
 #include <fs_types.hxx>
 #include <utils/binding.hxx>
+#include <applicability/action_managers.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class ActionEffect; } }}
@@ -10,7 +11,6 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
-class GroundActionIterator;
 class ProblemInfo;
 
 //! All the data that fully characterizes a lifted action
@@ -30,6 +30,7 @@ public:
 			   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	
 	~ActionData();
+	ActionData(const ActionData&);
 	
 	unsigned getId() const { return _id; }
 	const std::string& getName() const { return _name; }
@@ -90,12 +91,6 @@ public:
 	//! Returns true if some parameter of the action has a type with no associated object
 	bool has_empty_parameter() const { return _data.has_empty_parameter(); }
 	
-// 	void addPrecondition(const fs::Formula* precondition);
-	
-// 	void replaceTerm(const fs::Term* before, const fs::Term* after);
-	
-// 	void addParameter(fs::BoundVariable* parameter);
-	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionBase&  entity) { return entity.print(os); }
 	virtual std::ostream& print(std::ostream& os) const;
@@ -106,8 +101,7 @@ class PartiallyGroundedAction : public ActionBase {
 public:
 	PartiallyGroundedAction(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	~PartiallyGroundedAction() = default;
-	
-	PartiallyGroundedAction(const PartiallyGroundedAction& o) = default;
+	PartiallyGroundedAction(const PartiallyGroundedAction&) = default;
 };
 
 
@@ -119,13 +113,14 @@ protected:
 
 public:
 	//! Trait required by aptk::DetStateModel
-	typedef ActionIdx IdType;
-	typedef GroundActionIterator ApplicableSet;
+	using IdType = ActionIdx;
+	using ApplicableSet = GroundApplicableSet;
 
 	static const ActionIdx invalid_action_id;
 	
 	GroundAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	~GroundAction() = default;
+	GroundAction(const GroundAction&) = default;
 	
 	unsigned getId() const { return _id; }
 };

@@ -8,7 +8,7 @@
 namespace fs0 { namespace gecode {
 
 std::vector<std::shared_ptr<BaseActionCSP>>
-LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	// Simply upcast the shared_ptrs
 	std::vector<std::shared_ptr<BaseActionCSP>> handlers;
 	for (const auto& element:create_derived(schemata, tuple_index, approximate, novelty)) {
@@ -18,7 +18,7 @@ LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schem
 }
 
 std::vector<std::shared_ptr<LiftedActionCSP>>
-LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const TupleIndex& tuple_index, bool approximate, bool novelty) {
+LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<LiftedActionCSP>> handlers;
 	
 	for (auto schema:schemata) {
@@ -38,11 +38,11 @@ LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*
 }
 
 
-LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions)
 	: LiftedActionCSP(action, extract_non_delete_effects(action), tuple_index, approximate, use_effect_conditions)
 {}
 
-LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const TupleIndex& tuple_index, bool approximate, bool use_effect_conditions)
+LiftedActionCSP::LiftedActionCSP(const PartiallyGroundedAction& action, const std::vector<const fs::ActionEffect*>& effects, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions)
 	:  BaseActionCSP(tuple_index, approximate, use_effect_conditions), _action(action), _effects(effects)
 {}
 
@@ -87,6 +87,25 @@ void LiftedActionCSP::index_parameters() {
 	}
 }
 
+void
+LiftedActionCSP::register_csp_variables() {
+	BaseCSP::register_csp_variables();
+	// We simply make sure all action parameters have been registered.
+	const Signature& signature = _action.getSignature();
+	for (unsigned i = 0; i < signature.size(); ++i) {
+		if (!_action.isBound(i)) {
+			// We here assume that the parameter IDs are always 0..k-1, where k is the number of parameters
+			fs::BoundVariable variable(i, signature[i]);
+			if (!_translator.isRegistered(&variable)) {
+				auto var = new fs::BoundVariable(i, signature[i]);
+				registerTermVariables(var,  _translator);
+			}
+		}
+	}
+}
+
+
+
 Binding LiftedActionCSP::build_binding_from_solution(const GecodeCSP* solution) const {
 	std::vector<int> values;
 	std::vector<bool> valid;
@@ -124,5 +143,6 @@ LiftedActionID* LiftedActionCSP::get_lifted_action_id(const GecodeCSP* solution)
 void LiftedActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action schema " << _action);
 }
+
 
 } } // namespaces

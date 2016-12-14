@@ -7,12 +7,12 @@
 
 namespace fs0 { namespace gecode { namespace support {
 
-long compute_rpg_cost(const TupleIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler, std::vector<Atom>& relevant) {
+long compute_rpg_cost(const AtomIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler, std::vector<Atom>& relevant) {
 	long cost = -1;
 	if (GecodeCSP* csp = goal_handler.instantiate(graph)) {
 		if (csp->checkConsistency()) { // ATM we only take into account full goal resolution
 			LPT_EDEBUG("heuristic", "Goal formula CSP is consistent: " << *csp);
-			std::vector<TupleIdx> causes;
+			std::vector<AtomIdx> causes;
 			if (goal_handler.compute_support(csp, causes)) {
 				LiftedPlanExtractor extractor(graph, tuple_index);
 				cost = extractor.computeRelaxedPlanCost(causes, relevant);
@@ -23,12 +23,12 @@ long compute_rpg_cost(const TupleIndex& tuple_index, const RPGIndex& graph, cons
 	return cost;
 }
 
-long compute_rpg_cost(const TupleIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler) {
+long compute_rpg_cost(const AtomIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler) {
 	std::vector<Atom> _;
 	return compute_rpg_cost(tuple_index, graph, goal_handler, _);
 }
 
-long compute_hmax_cost(const TupleIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler) {
+long compute_hmax_cost(const AtomIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler) {
 	long cost = -1;
 	if (GecodeCSP* csp = goal_handler.instantiate(graph)) {
 		if (csp->checkConsistency() && goal_handler.is_satisfiable(csp)) { // ATM we only take into account full goal resolution
