@@ -30,7 +30,7 @@ public:
 	~StateVariableFeature() = default;
 	StateVariableFeature(const StateVariableFeature&) = default;
 	virtual NoveltyFeature* clone() const override { return new StateVariableFeature(*this); }
-	aptk::ValueIndex  evaluate( const State& s ) const override;
+	aptk::ValueIndex evaluate( const State& s ) const override;
 	
 	std::ostream& print(std::ostream& os) const override;
 

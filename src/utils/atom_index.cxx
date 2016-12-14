@@ -31,7 +31,7 @@ AtomIndex::AtomIndex(const ProblemInfo& info) :
 			}
 			
 			VariableIdx variable = info.resolveStateVariable(symbol, arguments);
-			add(symbol, tuple, idx, Atom(variable, value));
+			add(info, symbol, tuple, idx, Atom(variable, value));
 			idx++;
 		}
 		
@@ -40,14 +40,16 @@ AtomIndex::AtomIndex(const ProblemInfo& info) :
 	}
 }
 
-void AtomIndex::add(unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom) {
+void AtomIndex::add(const ProblemInfo& info, unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom) {
 	assert(_tuple_index.size() == idx);
 	_tuple_index.push_back(tuple);
 	
 	assert(_symbol_index.size() == idx);
 	_symbol_index.push_back(symbol);
 	
-	_tuple_index_inv.at(symbol).insert(std::make_pair(tuple, idx));
+	if (info.isFunction(symbol) || atom.getValue() == 1) { // For predicative symbols, we only map the logical symbol to the index of the corresponding "true" atom
+		_tuple_index_inv.at(symbol).insert(std::make_pair(tuple, idx));
+	}
 	
 	assert(_atom_index.size() == idx);
 	_atom_index.push_back(atom);

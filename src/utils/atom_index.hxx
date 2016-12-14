@@ -43,9 +43,6 @@ public:
 	//! Return the number of tuples of the index
 	unsigned size() const { return _tuple_index.size(); }
 	
-	//! Add a new element to the index.
-	void add(unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom);
-
 	//! Returns the atom corresponding to the given index
 	const Atom& to_atom(AtomIdx tuple) const { return _atom_index.at(tuple); }
 	
@@ -65,6 +62,9 @@ public:
 	unsigned symbol(AtomIdx tuple) const { return _symbol_index.at(tuple); }
 	
 protected:
+	//! Add a new element to the index.
+	void add(const ProblemInfo& info,unsigned symbol, const ValueTuple& tuple, unsigned idx, const Atom& atom);
+	
 	//! A helper to compute and index all reachable tuples.
 	//! Returns an index from each logical symbol to all the tuples that are reachable / make sense for that particular
 	//! logical symbol.
