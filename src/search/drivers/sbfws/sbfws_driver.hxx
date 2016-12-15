@@ -93,18 +93,22 @@ public:
 	
 	template <typename HeuristicT>
 	void evaluate_with(HeuristicT& heuristic) {
+		// Update the number of unachieved goal atoms
 		unachieved = heuristic.compute_unachieved(this->state);
 		
-		// Only for the root node and whenever the number of unachieved nodes decreases 
+		// Only for the root node _or_ whenever the number of unachieved nodes decreases 
 		// do we recompute the set of relevant atoms.
 		if (!has_parent() || unachieved < parent->unachieved) { 
 			_relevant_atoms = heuristic.compute_relevant(state);
 		} else {
-			// We copy the map of reached values from the parent node and update it with newly-reached atoms
+			// We copy the map of reached values from the parent node
 			_relevant_atoms = parent->_relevant_atoms;
-			_relevant_atoms.mark(this->state, RelevantAtomSet::STATUS::REACHED);
 		}
 		
+		// In both cases, we update the set of relevant nodes with those that have been reached.
+		_relevant_atoms.mark(this->state, RelevantAtomSet::STATUS::REACHED);
+		
+		// Finally, compute the novelty of the node wrt both #g (unachieved) and #r.
 		novelty = heuristic.novelty(*this, unachieved, _relevant_atoms.num_reached());
 	}
 	

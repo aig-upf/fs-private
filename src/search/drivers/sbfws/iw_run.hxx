@@ -284,6 +284,8 @@ protected:
 	bool process_node(const NodePT& node) {
 		const StateT& state = node->state;
 		
+		// We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
+		// to check if the current node satisfies any of them - and if it does, we mark it appropriately.
 		for (auto it = _unreached.begin(); it != _unreached.end(); ) {
 			unsigned atom_idx = *it;
 			const Atom& atom = _goal_atoms[atom_idx];
@@ -297,6 +299,7 @@ protected:
 			}
 		}
 		
+		// As soon as all nodes have been processed, we return true so that we can stop the search
 		return _unreached.empty();
 	}
 
