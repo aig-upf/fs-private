@@ -301,7 +301,7 @@ protected:
 			unsigned atom_idx = *it;
 			const Atom& atom = _goal_atoms[atom_idx];
 
-			if (state.contains(atom) && _reached[atom_idx] == nullptr) { // The state satisfies goal atom with index 'i'
+			if (state.contains(atom)) { // The state satisfies goal atom with index 'i'
 				_reached[atom_idx] = node;
 				it = _unreached.erase(it);
 				// LPT_INFO("cout", "IWRUN: Goal atom '" << *atom << "' reached for the first time");
