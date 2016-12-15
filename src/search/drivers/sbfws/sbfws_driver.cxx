@@ -7,18 +7,19 @@ namespace fs0 { namespace bfws {
 
 SBFWSConfig::SBFWSConfig(const Config& config) :
 	search_width(config.getOption<int>("width.search")),
-	simulation_width(config.getOption<int>("width.simulation"))
+	simulation_width(config.getOption<int>("width.simulation")),
+	filter_out_static_atoms(config.getOption<bool>("relevance.filter_out_static_atoms"))
 {}
 
 
 template <>
-ExitCode 
+ExitCode
 SimulatedBFWSDriver<GroundStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_ground_model(problem), config, out_dir, start_time);
 }
 
 template <>
-ExitCode 
+ExitCode
 SimulatedBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time);
 }

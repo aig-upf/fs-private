@@ -24,44 +24,44 @@ class SBFWSNode {
 public:
 	using ptr_t = std::shared_ptr<SBFWSNode<StateT, ActionT>>;
 	using action_t = typename ActionT::IdType;
-	
+
 	//! The state corresponding to the search node
 	StateT state;
-	
+
 	//! The action that led to the state in this search node
 	action_t action;
-	
+
 	//! The parent search node
 	ptr_t parent;
-	
+
 	//! Accummulated cost
 	unsigned g;
-	
+
 	//! The (cached) feature valuation corresponding to the state in this node
 	FeatureValuation feature_valuation;
-	
+
 	//! The novelty "type", i.e. the values wrt which the novelty is computed, e.g. <#g, #r>
 	unsigned _type;
-	
+
 	//! The novelty of the state
 	unsigned novelty;
-	
+
 	//! The number of unachieved goals (#g)
 	unsigned unachieved;
-	
+
 	//! The number of atoms in the last relaxed plan computed in the way to the current state that have been
 	//! made true along the path (#r)
 	RelevantAtomSet _relevant_atoms;
-	
+
 public:
 	SBFWSNode() = delete;
 	~SBFWSNode() = default;
-	
+
 	SBFWSNode(const SBFWSNode& other) = delete;
 	SBFWSNode(SBFWSNode&& other) = delete;
 	SBFWSNode& operator=(const SBFWSNode& rhs) = delete;
 	SBFWSNode& operator=(SBFWSNode&& rhs) = delete;
-	
+
 	//! Constructor with full copying of the state (expensive)
 	SBFWSNode(const StateT& s) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr) {}
 
@@ -72,12 +72,12 @@ public:
 		unachieved(std::numeric_limits<unsigned>::max()),
 		_relevant_atoms()
 	{}
-	
+
 	//! The novelty type (for the IWRun node, will always be 0)
 	unsigned type() const { return _type; }
 
 	bool has_parent() const { return parent != nullptr; }
-	
+
 	//! Required for the interface of some algorithms that might prioritise helpful actions.
 	bool is_helpful() const { return false; }
 
@@ -87,31 +87,31 @@ public:
 
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const SBFWSNode<StateT, ActionT>& object) { return object.print(os); }
-	std::ostream& print(std::ostream& os) const { 
+	std::ostream& print(std::ostream& os) const {
 		return os << "{@ = " << this << ", s = " << state << ", g = " << g << ", w = " << novelty << ", #g=" << unachieved << ", #r=" << _relevant_atoms.num_reached() << ", t=" << _type << ", parent = " << parent << "}";
 	}
-	
+
 	template <typename HeuristicT>
 	void evaluate_with(HeuristicT& heuristic) {
 		unachieved = heuristic.compute_unachieved(this->state);
-		
-		// Only for the root node and whenever the number of unachieved nodes decreases 
+
+		// Only for the root node and whenever the number of unachieved nodes decreases
 		// do we recompute the set of relevant atoms.
-		if (!has_parent() || unachieved < parent->unachieved) { 
+		if (!has_parent() || unachieved < parent->unachieved) {
 			_relevant_atoms = heuristic.compute_relevant(state);
 		} else {
 			// We copy the map of reached values from the parent node and update it with newly-reached atoms
 			_relevant_atoms = parent->_relevant_atoms;
 			_relevant_atoms.mark(this->state, RelevantAtomSet::STATUS::REACHED);
 		}
-		
+
 		novelty = heuristic.novelty(*this, unachieved, _relevant_atoms.num_reached());
 	}
-	
+
 	void inherit_heuristic_estimate() {
 		throw std::runtime_error("This shouldn't be invoked");
 	}
-	
+
 	//! What to do when an 'other' node is found during the search while 'this' node is already in
 	//! the open list
 	void update_in_open_list(ptr_t other) {
@@ -152,17 +152,18 @@ struct SBFWSNoveltyIndexer {
 template <typename StateModelT, typename NoveltyIndexerT>
 class SBFWSHeuristic {
 public:
-	SBFWSHeuristic(const StateModelT& model, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator) :
+	SBFWSHeuristic(const StateModelT& model, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, bool filter_out_static_atoms ) :
 		_model(model),
 		_problem(model.getTask()),
 		_search_evaluator(search_evaluator),
 		_simulation_evaluator(simulation_evaluator),
 		_novelty_evaluators(),
-		_unsat_goal_atoms_heuristic(model)
+		_unsat_goal_atoms_heuristic(model),
+		_filter_out_static_atoms(filter_out_static_atoms)
 	{}
-	
+
 	~SBFWSHeuristic() = default;
-	
+
 	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
 	//! all those atoms marked as "unreached", and the rest as irrelevant.
 	RelevantAtomSet compute_relevant(const State& state) {
@@ -170,16 +171,17 @@ public:
 		using NodeT = IWRunNode<State, ActionT>;
 		using IWAlgorithm = IWRun<NodeT, StateModelT>;
 		auto iw = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _simulation_evaluator));
+		if (_filter_out_static_atoms ) iw->filter_out_static_atoms();
 		return iw->run(state);
 	}
 
-	
+
 	//! Compute the novelty of the state wrt all the states with the same heuristic value.
 	template <typename NodeT>
 	unsigned novelty(NodeT& node, unsigned unachieved, unsigned relaxed_achieved) {
 		auto ind = _indexer(unachieved, relaxed_achieved);
 #ifdef DEBUG
-		// Let's make sure that either it's the first time we see this index, or, if was already there, 
+		// Let's make sure that either it's the first time we see this index, or, if was already there,
 		// it corresponds to the same combination of <unachieved, relaxed_achieved>
 		auto tuple = _indexer.relevant(unachieved, relaxed_achieved);
 		auto __it =  __novelty_idx_values.find(ind);
@@ -194,28 +196,28 @@ public:
 			auto inserted = _novelty_evaluators.insert(std::make_pair(ind, _search_evaluator));
 			it = inserted.first;
 		}
-		
+
 		IWNoveltyEvaluator& evaluator = it->second;
-		
+
 		node._type = ind;
 		node.feature_valuation = evaluator.compute_valuation(node.state);
 		return evaluator.evaluate(node);
 	}
-	
+
 	unsigned compute_unachieved(const State& state) {
 		return _unsat_goal_atoms_heuristic.evaluate(state);
 	}
-	
+
 protected:
 #ifdef DEBUG
 	// Just for sanity check purposes
 	std::map<unsigned, std::tuple<unsigned,unsigned>> __novelty_idx_values;
 #endif
-	
+
 	const StateModelT& _model;
-	
+
 	const Problem& _problem;
-	
+
 	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
 	// to perform all the feature selection, etc. anew.
 	const IWNoveltyEvaluator& _search_evaluator;
@@ -223,11 +225,12 @@ protected:
 
 	//! We have one different novelty evaluators for each actual heuristic value that a node might have.
 	std::unordered_map<long, IWNoveltyEvaluator> _novelty_evaluators;
-	
+
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
 	UnsatisfiedGoalAtomsHeuristic<StateModelT> _unsat_goal_atoms_heuristic;
-	
+
 	NoveltyIndexerT _indexer;
+	bool			_filter_out_static_atoms;
 };
 
 template <typename NodeT>
@@ -250,8 +253,9 @@ struct SBFWSConfig {
 	SBFWSConfig& operator=(SBFWSConfig&&) = default;
 
 	//! The maximum levels of width for search and simulation
-	const unsigned search_width;
-	const unsigned simulation_width;
+	const unsigned 	search_width;
+	const unsigned 	simulation_width;
+	const bool		filter_out_static_atoms;
 };
 
 
@@ -280,62 +284,62 @@ public:
 
 	//! Factory method
 	EngineT create(const Config& config, SBFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
-		
+
 		// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
 		_featureset = selectFeatures(feature_configuration);
-		
+
 		_search_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(bfws_config.search_width, _featureset));
 		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(bfws_config.simulation_width, _featureset));
-		
-		
-		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, *_search_evaluator, *_simulation_evaluator));
-		
+
+
+		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, *_search_evaluator, *_simulation_evaluator, bfws_config.filter_out_static_atoms ));
+
 		auto engine = EngineT(new RawEngineT(model, *_heuristic));
-		
+
 		drivers::EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 		drivers::EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _stats, _handlers);
 		lapkt::events::subscribe(*engine, _handlers);
-		
+
 		return engine;
 	}
-	
+
 	const SearchStats& getStats() const { return _stats; }
-	
+
 	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 
 protected:
 	//!
 	std::unique_ptr<HeuristicEnsembleT> _heuristic;
-	
+
 	//!
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
-	
+
 	//!
 	SearchStats _stats;
-	
+
 	//! The feature set used for the novelty computations
 	FeatureSet _featureset;
-	
+
 	//! We keep a "base" novelty evaluator with the appropriate features, which (ATM)
 	//! we will use for both search and heuristic simulation
 	std::unique_ptr<IWNoveltyEvaluator> _search_evaluator;
 	std::unique_ptr<IWNoveltyEvaluator> _simulation_evaluator;
-	
+
 	// ATM we don't perform any particular feature selection
 	bfws::FeatureSet selectFeatures(const NoveltyFeaturesConfiguration& feature_configuration) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 
 		FeatureSet features;
-		
+
 		// Add all state variables
 		for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 			features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
 		}
-		
+
 		LPT_INFO("cout", "Number of features from which state novelty will be computed: " << features.size());
 		return features;
 	}
-	
+
 	//! Helper
 	ExitCode do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
 };
