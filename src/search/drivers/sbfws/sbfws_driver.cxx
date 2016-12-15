@@ -8,7 +8,7 @@ namespace fs0 { namespace bfws {
 SBFWSConfig::SBFWSConfig(const Config& config) :
 	search_width(config.getOption<int>("width.search")),
 	simulation_width(config.getOption<int>("width.simulation")),
-	filter_out_static_atoms(config.getOption<bool>("relevance.filter_out_static_atoms"))
+	mark_negative_propositions(config.getOption<bool>("relevance.neg_prop"))
 {}
 
 
@@ -33,6 +33,7 @@ SimulatedBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Conf
 	LPT_INFO("cout", "Simulated BFWS Configuration:");
 	LPT_INFO("cout", "\tMaximum search novelty: " << bfws_config.search_width);
 	LPT_INFO("cout", "\tMaximum simulation novelty: " << bfws_config.simulation_width);
+	LPT_INFO("cout", "\tMark as relevant negative propositional atoms?: " << bfws_config.mark_negative_propositions);
 // 	LPT_INFO("cout", "\tFeature extraction: " << feature_configuration);
 	return drivers::Utils::do_search(*engine, model, out_dir, start_time, getStats());
 }

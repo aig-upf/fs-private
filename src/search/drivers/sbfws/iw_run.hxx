@@ -26,7 +26,7 @@ public:
 	enum class STATUS : unsigned char {IRRELEVANT, UNREACHED, REACHED};
 
 
-	//! This constructor leaves the object in an "invalid" state, but is necessary ATM to simplify node creation
+	//! This constructor leaves the object in an "invalid" state, but is necessary ATM to simplify node creation - TODO REFACTOR THIS
 	RelevantAtomSet() :
 		_atomidx(nullptr), _num_reached(0), _num_unreached(0), _status()
 	{}
@@ -41,26 +41,22 @@ public:
 	RelevantAtomSet& operator=(const RelevantAtomSet&) = default;
 	RelevantAtomSet& operator=(RelevantAtomSet&&) = default;
 
-	inline void mark(VariableIdx variable, ObjectIdx value, STATUS status, bool only_if_relevant = true) {
+	inline void mark(VariableIdx variable, ObjectIdx value, STATUS status, bool only_if_relevant) {
 		assert(_atomidx);
 		mark(_atomidx->to_index(variable, value), status, only_if_relevant);
 	}
 
-	//! A helper
-	void mark(const State& state, STATUS status, bool only_if_relevant = true) {
+	void mark(const State& state, const State* parent, STATUS status, bool mark_negative_propositions, bool only_if_relevant) {
+		const ProblemInfo& info = ProblemInfo::getInstance();
 		for (VariableIdx var = 0; var < state.numAtoms(); ++var) {
+			ObjectIdx val = state.getValue(var);
+			if (!mark_negative_propositions && info.isPredicativeVariable(var) && val==0) continue; // We don't want to mark negative propositions
+			if (parent && val == parent->getValue(var)) continue; // If a parent was provided, we check that the value is new wrt the parent
 			mark(var, state.getValue(var), status, only_if_relevant);
 		}
 	}
 
-	void mark(const State& state, const State& parent, STATUS status, bool only_if_relevant = true) {
-		for (VariableIdx var = 0; var < state.numAtoms(); ++var) {
-			if ( state.getValue(var) == parent.getValue(var) ) continue;
-			mark(var, state.getValue(var), status, only_if_relevant);
-		}
-	}
-
-	void mark(AtomIdx idx, STATUS status, bool only_if_relevant = true) {
+	void mark(AtomIdx idx, STATUS status, bool only_if_relevant) {
 		assert(status==STATUS::REACHED || status==STATUS::UNREACHED);
 		auto& st = _status[idx];
 		if (only_if_relevant && st == STATUS::IRRELEVANT) return;
@@ -72,8 +68,8 @@ public:
 		}
 	}
 
-	inline void reach(VariableIdx variable, ObjectIdx value) { mark(variable, value, STATUS::REACHED); }
-	inline void unreach(VariableIdx variable, ObjectIdx value) { mark(variable, value, STATUS::UNREACHED); }
+	// inline void reach(VariableIdx variable, ObjectIdx value) { mark(variable, value, STATUS::REACHED); }
+	// inline void unreach(VariableIdx variable, ObjectIdx value) { mark(variable, value, STATUS::UNREACHED); }
 
 	unsigned num_reached() const { return _num_reached; }
 	unsigned num_unreached() const { return _num_unreached; }
@@ -205,25 +201,25 @@ public:
 
 
 	//! Factory method
-	static IWRun* build(const StateModel& model, const IWNoveltyEvaluator& novelty_evaluator) {
+	static IWRun* build(const StateModel& model, const IWNoveltyEvaluator& novelty_evaluator, bool mark_negative_propositions) {
 		const Problem& problem = model.getTask();
 
 		auto atoms = obtain_goal_atoms(problem.getGoalConditions());
 		auto acceptor = std::make_shared<IWRunAcceptor>(novelty_evaluator);
 
-		return new IWRun(model, OpenListT(acceptor), atoms, false);
+		return new IWRun(model, OpenListT(acceptor), atoms, false, mark_negative_propositions);
 	}
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the particular open and closed list objects
-	IWRun(const StateModel& model, OpenListT&& open, const std::vector<Atom>& goal, bool complete) :
+	IWRun(const StateModel& model, OpenListT&& open, const std::vector<Atom>& goal, bool complete, bool mark_negative_propositions) :
 		Base(model, std::move(open), ClosedListT()),
 		_complete(complete),
 		_goal_atoms(goal),
 		_reached(_goal_atoms.size(), nullptr),
 		_unreached(),
-		_filter_out_static_atoms(false)
+		_mark_negative_propositions(mark_negative_propositions)
 	{
 		for (unsigned i = 0; i < _goal_atoms.size(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
 	}
@@ -235,9 +231,6 @@ public:
 	IWRun(IWRun&&) = default;
 	IWRun& operator=(const IWRun&) = delete;
 	IWRun& operator=(IWRun&&) = default;
-
-	void filter_out_static_atoms() { _filter_out_static_atoms = true; }
-	void allow_static_atoms() { _filter_out_static_atoms = false; }
 
 	bool search(const StateT& s, PlanT& solution) override {
 		throw std::runtime_error("Shouldn't be invoking this");
@@ -290,7 +283,7 @@ protected:
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
 	std::unordered_set<unsigned> _unreached;
 
-	bool _filter_out_static_atoms;
+	bool _mark_negative_propositions;
 
 
 	//! Returns true iff all goal atoms have been reached in the IW search
@@ -327,7 +320,6 @@ protected:
 
 		std::unordered_set<NodePT> processed;
 
-
 		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
 			NodePT node = _reached[subgoal_idx];
 			if (!node) { // No solution for the subgoal was found
@@ -336,17 +328,12 @@ protected:
 			}
 
 			// Traverse from the solution node to the root node, adding all atoms on the way
-			// (but no need to re-add those in the root node, which we added first, nor those in the last node)
-			if (node->has_parent()) node = node->parent; // Skip the last node
+			// if (node->has_parent()) node = node->parent; // (Don't) skip the last node
 			while (node->has_parent()) {
 				// If the node has already been processed, no need to do it again, nor to process the parents,
 				// which will necessarily also have been processed.
 				if (processed.find(node) != processed.end()) break;
-
-				if (_filter_out_static_atoms )
-					atomset.mark(node->state, node->parent->state, RelevantAtomSet::STATUS::UNREACHED, false);
-				else
-					atomset.mark(node->state, RelevantAtomSet::STATUS::UNREACHED, false);
+				atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
 				processed.insert(node);
 				node = node->parent;
 			}
