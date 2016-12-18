@@ -93,18 +93,15 @@ public:
 
 	template <typename HeuristicT>
 	void evaluate_with(HeuristicT& heuristic) {
+		// The order of the operations below matters.
+
+		// Update the number of unachieved goal atoms
 		unachieved = heuristic.compute_unachieved(this->state);
 
-		// Only for the root node and whenever the number of unachieved nodes decreases
-		// do we recompute the set of relevant atoms.
-		if (!has_parent() || unachieved < parent->unachieved) {
-			_relevant_atoms = heuristic.compute_relevant(state);
-		} else {
-			// We copy the map of reached values from the parent node and update it with newly-reached atoms
-			_relevant_atoms = parent->_relevant_atoms;
-			_relevant_atoms.mark(this->state, RelevantAtomSet::STATUS::REACHED);
-		}
+		// Update the set of relevant atoms
+		heuristic.update_relevant_atoms(*this, _relevant_atoms);
 
+		// Finally, compute the novelty of the node wrt both #g (unachieved) and #r.
 		novelty = heuristic.novelty(*this, unachieved, _relevant_atoms.num_reached());
 	}
 
@@ -152,26 +149,25 @@ struct SBFWSNoveltyIndexer {
 template <typename StateModelT, typename NoveltyIndexerT>
 class SBFWSHeuristic {
 public:
-	SBFWSHeuristic(const StateModelT& model, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, bool filter_out_static_atoms ) :
+	SBFWSHeuristic(const StateModelT& model, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, bool mark_negative_propositions ) :
 		_model(model),
 		_problem(model.getTask()),
 		_search_evaluator(search_evaluator),
 		_simulation_evaluator(simulation_evaluator),
 		_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(model),
-		_filter_out_static_atoms(filter_out_static_atoms)
+		_mark_negative_propositions(mark_negative_propositions)
 	{}
 
 	~SBFWSHeuristic() = default;
 
 	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
 	//! all those atoms marked as "unreached", and the rest as irrelevant.
-	RelevantAtomSet compute_relevant(const State& state) {
+	RelevantAtomSet compute_relevant(const State& state) const {
 		using ActionT = typename StateModelT::ActionType;
 		using NodeT = IWRunNode<State, ActionT>;
 		using IWAlgorithm = IWRun<NodeT, StateModelT>;
-		auto iw = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _simulation_evaluator));
-		if (_filter_out_static_atoms ) iw->filter_out_static_atoms();
+		auto iw = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _simulation_evaluator, _mark_negative_propositions));
 		return iw->run(state);
 	}
 
@@ -204,6 +200,21 @@ public:
 		return evaluator.evaluate(node);
 	}
 
+	template <typename NodeT>
+	void update_relevant_atoms(NodeT& node, RelevantAtomSet& atomset) const {
+		// Only for the root node _or_ whenever the number of unachieved nodes decreases
+		// do we recompute the set of relevant atoms.
+		if (!node.has_parent() || node.unachieved < node.parent->unachieved) {
+			node._relevant_atoms = compute_relevant(node.state);
+		} else {
+			// We copy the map of reached values from the parent node
+			node._relevant_atoms = node.parent->_relevant_atoms;
+		}
+
+		// In both cases, we update the set of relevant nodes with those that have been reached.
+		node._relevant_atoms.mark(node.state, nullptr, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
+	}
+
 	unsigned compute_unachieved(const State& state) {
 		return _unsat_goal_atoms_heuristic.evaluate(state);
 	}
@@ -230,7 +241,7 @@ protected:
 	UnsatisfiedGoalAtomsHeuristic<StateModelT> _unsat_goal_atoms_heuristic;
 
 	NoveltyIndexerT _indexer;
-	bool			_filter_out_static_atoms;
+	bool _mark_negative_propositions;
 };
 
 template <typename NodeT>
@@ -253,9 +264,9 @@ struct SBFWSConfig {
 	SBFWSConfig& operator=(SBFWSConfig&&) = default;
 
 	//! The maximum levels of width for search and simulation
-	const unsigned 	search_width;
-	const unsigned 	simulation_width;
-	const bool		filter_out_static_atoms;
+	const unsigned search_width;
+	const unsigned simulation_width;
+	const bool mark_negative_propositions;
 };
 
 
@@ -283,16 +294,16 @@ public:
 	using EngineT = std::unique_ptr<RawEngineT>;
 
 	//! Factory method
-	EngineT create(const Config& config, SBFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
+	EngineT create(const Config& config, SBFWSConfig& conf, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
 
 		// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
 		_featureset = selectFeatures(feature_configuration);
 
-		_search_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(bfws_config.search_width, _featureset));
-		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(bfws_config.simulation_width, _featureset));
+		_search_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.search_width, _featureset));
+		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.simulation_width, _featureset));
 
 
-		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, *_search_evaluator, *_simulation_evaluator, bfws_config.filter_out_static_atoms ));
+		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, *_search_evaluator, *_simulation_evaluator, conf.mark_negative_propositions ));
 
 		auto engine = EngineT(new RawEngineT(model, *_heuristic));
 
