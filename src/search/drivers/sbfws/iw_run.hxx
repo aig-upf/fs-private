@@ -208,11 +208,7 @@ public:
 		auto atoms = obtain_goal_atoms(problem.getGoalConditions());
 		auto acceptor = std::make_shared<IWRunAcceptor>(novelty_evaluator);
 
-<<<<<<< HEAD
-		return new IWRun(model, OpenListT(acceptor), atoms, false);
-=======
 		return new IWRun(model, OpenListT(acceptor), atoms, false, mark_negative_propositions);
->>>>>>> upstream/bfws
 	}
 
 	//! The constructor requires the user of the algorithm to inject both
@@ -224,11 +220,7 @@ public:
 		_goal_atoms(goal),
 		_reached(_goal_atoms.size(), nullptr),
 		_unreached(),
-<<<<<<< HEAD
-		_filter_out_static_atoms(false)
-=======
 		_mark_negative_propositions(mark_negative_propositions)
->>>>>>> upstream/bfws
 	{
 		for (unsigned i = 0; i < _goal_atoms.size(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
 	}
@@ -241,12 +233,6 @@ public:
 	IWRun& operator=(const IWRun&) = delete;
 	IWRun& operator=(IWRun&&) = default;
 
-<<<<<<< HEAD
-	void filter_out_static_atoms() { _filter_out_static_atoms = true; }
-	void allow_static_atoms() { _filter_out_static_atoms = false; }
-
-=======
->>>>>>> upstream/bfws
 	bool search(const StateT& s, PlanT& solution) override {
 		throw std::runtime_error("Shouldn't be invoking this");
 	}
@@ -298,23 +284,15 @@ protected:
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
 	std::unordered_set<unsigned> _unreached;
 
-<<<<<<< HEAD
-	bool _filter_out_static_atoms;
-=======
 	bool _mark_negative_propositions;
->>>>>>> upstream/bfws
 
 
 	//! Returns true iff all goal atoms have been reached in the IW search
 	bool process_node(const NodePT& node) {
 		const StateT& state = node->state;
-<<<<<<< HEAD
-
-=======
 
 		// We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
 		// to check if the current node satisfies any of them - and if it does, we mark it appropriately.
->>>>>>> upstream/bfws
 		for (auto it = _unreached.begin(); it != _unreached.end(); ) {
 			unsigned atom_idx = *it;
 			const Atom& atom = _goal_atoms[atom_idx];
@@ -327,12 +305,7 @@ protected:
 				++it;
 			}
 		}
-<<<<<<< HEAD
-
-=======
-
 		// As soon as all nodes have been processed, we return true so that we can stop the search
->>>>>>> upstream/bfws
 		return _unreached.empty();
 	}
 
@@ -346,11 +319,7 @@ protected:
 		// atomset.mark(seed, RelevantAtomSet::STATUS::UNREACHED); // This is not necessary, since all these atoms will be made true by the "root" state of the simulation
 
 		std::unordered_set<NodePT> processed;
-<<<<<<< HEAD
-
-=======
 		unsigned reachable = 0;
->>>>>>> upstream/bfws
 
 		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
 			NodePT node = _reached[subgoal_idx];
@@ -358,11 +327,7 @@ protected:
 				LPT_EDEBUG("simulation-relevant", "Goal atom '" << _goal_atoms[subgoal_idx] << "' unreachable");
 				continue;
 			}
-<<<<<<< HEAD
-=======
-
 			++reachable;
->>>>>>> upstream/bfws
 
 			// Traverse from the solution node to the root node, adding all atoms on the way
 			// if (node->has_parent()) node = node->parent; // (Don't) skip the last node
@@ -370,31 +335,15 @@ protected:
 				// If the node has already been processed, no need to do it again, nor to process the parents,
 				// which will necessarily also have been processed.
 				if (processed.find(node) != processed.end()) break;
-<<<<<<< HEAD
-
-				if (_filter_out_static_atoms )
-					atomset.mark(node->state, node->parent->state, RelevantAtomSet::STATUS::UNREACHED, false);
-				else
-					atomset.mark(node->state, RelevantAtomSet::STATUS::UNREACHED, false);
-=======
 				atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
->>>>>>> upstream/bfws
 				processed.insert(node);
 				node = node->parent;
 			}
 		}
-<<<<<<< HEAD
-		LPT_EDEBUG("simulation-relevant", "Set of relevant atoms (" << atomset.num_unreached() << "): " << print::relevant_atomset(atomset) << std::endl << std::endl);
-=======
 		LPT_EDEBUG("simulation-relevant", atomset.num_unreached() << " relevant atoms (" << reachable << "/" << _reached.size() << " reachable subgoals): " << print::relevant_atomset(atomset) << std::endl << std::endl);
->>>>>>> upstream/bfws
 
 		return atomset;
 	}
 };
 
 } } // namespaces
-<<<<<<< HEAD
-=======
-
->>>>>>> upstream/bfws
