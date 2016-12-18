@@ -319,6 +319,7 @@ protected:
 		// atomset.mark(seed, RelevantAtomSet::STATUS::UNREACHED); // This is not necessary, since all these atoms will be made true by the "root" state of the simulation
 
 		std::unordered_set<NodePT> processed;
+		unsigned reachable = 0;
 
 		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
 			NodePT node = _reached[subgoal_idx];
@@ -326,6 +327,8 @@ protected:
 				LPT_EDEBUG("simulation-relevant", "Goal atom '" << _goal_atoms[subgoal_idx] << "' unreachable");
 				continue;
 			}
+			
+			++reachable;
 
 			// Traverse from the solution node to the root node, adding all atoms on the way
 			// if (node->has_parent()) node = node->parent; // (Don't) skip the last node
@@ -338,7 +341,7 @@ protected:
 				node = node->parent;
 			}
 		}
-		LPT_EDEBUG("simulation-relevant", "Set of relevant atoms (" << atomset.num_unreached() << "): " << print::relevant_atomset(atomset) << std::endl << std::endl);
+		LPT_EDEBUG("simulation-relevant", atomset.num_unreached() << " relevant atoms (" << reachable << "/" << _reached.size() << " reachable subgoals): " << print::relevant_atomset(atomset) << std::endl << std::endl);
 
 		return atomset;
 	}
