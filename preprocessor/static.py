@@ -40,7 +40,7 @@ def serialize_tuple(t, symbols):
 
 class DataElement:
     def __init__(self, name):
-        self.name = util.normalize(name)
+        self.name = name
 
     def serialize_data(self, symbols):
         raise RuntimeError("Method must be subclassed")
