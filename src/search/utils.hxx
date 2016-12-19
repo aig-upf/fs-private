@@ -21,8 +21,8 @@ namespace fs0 { namespace drivers {
 class Utils {
 public:
 
-template <typename StateModelT, typename SearchAlgorithmT>
-static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time, const SearchStats& stats) {
+template <typename StateModelT, typename SearchAlgorithmT, typename StatsT>
+static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time, const StatsT& stats) {
 	const Problem& problem = model.getTask();
 
 	LPT_INFO("cout", "Starting search. Results written to " << out_dir);
@@ -58,14 +58,17 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	std::string gen_speed = (search_time > 0) ? std::to_string((float) stats.generated() / search_time) : "0";
 	std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.evaluated() / search_time) : "0";
 	
+
+
+	
 	json_out << "{" << std::endl;
+	for (const auto& point:stats.dump()) {
+		json_out << "\t\"" << std::get<0>(point) << "\": " << std::get<2>(point) << "," << std::endl;
+	}
 	json_out << "\t\"total_time\": " << total_planning_time << "," << std::endl;
 	json_out << "\t\"search_time\": " << search_time << "," << std::endl;
 	json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
 	json_out << "\t\"memory\": " << get_peak_memory_in_kb() << "," << std::endl;
-	json_out << "\t\"generated\": " << stats.generated() << "," << std::endl;
-	json_out << "\t\"expanded\": " << stats.expanded() << "," << std::endl;
-	json_out << "\t\"evaluated\": " << stats.evaluated() << "," << std::endl;
 	json_out << "\t\"gen_per_second\": " << gen_speed << "," << std::endl;
 	json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
 	json_out << "\t\"solved\": " << ( solved ? "true" : "false" ) << "," << std::endl;
@@ -78,9 +81,9 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	json_out << "}" << std::endl;
 	json_out.close();
 	
-	LPT_INFO("cout", "Expansions: " << stats.expanded());
-	LPT_INFO("cout", "Generations: " << stats.generated());
-	LPT_INFO("cout", "Evaluations: " << stats.evaluated());
+	for (const auto& point:stats.dump()) {
+		LPT_INFO("cout", std::get<1>(point) << ": " << std::get<2>(point));
+	}
 	LPT_INFO("cout", "Total Planning Time: " << total_planning_time << " s.");
 	LPT_INFO("cout", "Actual Search Time: " << search_time << " s.");
 	LPT_INFO("cout", "Peak mem. usage: " << get_peak_memory_in_kb() << " kB.");

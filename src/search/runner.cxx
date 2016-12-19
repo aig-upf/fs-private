@@ -40,12 +40,14 @@ int Runner::run() {
 
 void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
+	const AtomIndex& tuple_index = problem.get_tuple_index();
 	unsigned n_actions = problem.getGroundActions().size();
 	std::ofstream json_out( out_dir + "/problem_stats.json" );
 	json_out << "{" << std::endl;
 	
 	LPT_INFO("cout", "Number of objects: " << info.getNumObjects());
 	LPT_INFO("cout", "Number of state variables: " << info.getNumVariables());
+	LPT_INFO("cout", "Number of problem atoms: " << tuple_index.size());
 	LPT_INFO("cout", "Number of action schemata: " << problem.getActionData().size());
 	LPT_INFO("cout", "Number of (perhaps partially) ground actions: " << n_actions);
 	LPT_INFO("cout", "Number of goal atoms: " << problem.getGoalConditions()->all_atoms().size());
@@ -54,6 +56,7 @@ void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
 
 	json_out << "\t\"num_objects\": " << info.getNumObjects() << "," << std::endl;
 	json_out << "\t\"num_state_variables\": " << info.getNumVariables() << "," << std::endl;
+	json_out << "\t\"num_atoms\": " << tuple_index.size() << "," << std::endl;
 	json_out << "\t\"num_action_schema\": " << problem.getActionData().size() << "," << std::endl;
 	json_out << "\t\"num_grounded_actions\": " << n_actions << "," << std::endl;
 	json_out << "\t\"num_goal_atoms\": " << problem.getGoalConditions()->all_atoms().size() << "," << std::endl;

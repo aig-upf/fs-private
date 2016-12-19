@@ -10,13 +10,51 @@
 #include <search/components/unsat_goals_novelty.hxx>
 #include <search/algorithms/aptk/events.hxx>
 #include <search/algorithms/aptk/best_first_search.hxx>
-#include <search/stats.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 #include <search/drivers/bfws/iw_novelty_evaluator.hxx>
 
 
 namespace fs0 { namespace bfws {
+
+class BFWSStats {
+public:
+	BFWSStats() : _expanded(0), _generated(0), _evaluated(0) {}
+	
+	void expansion() { ++_expanded; }
+	void generation() { ++_generated; }
+	void evaluation() { ++_evaluated; }
+	void simulation() { ++_simulations; }
+
+	unsigned long expanded() const { return _expanded; }
+	unsigned long generated() const { return _generated; }
+	unsigned long evaluated() const { return _evaluated; }
+	unsigned int simulated() const { return _simulations; }
+	
+	void set_initial_reachable_subgoals(unsigned num) { _initial_reachable_subgoals = num; }
+	void set_initial_relevant_atoms(unsigned num) { _initial_relevant_atoms = num; }
+	
+	using DataPointT = std::tuple<std::string, std::string, std::string>;
+	std::vector<DataPointT> dump() const {
+		return {
+			std::make_tuple("expanded", "Expansions", std::to_string(expanded())),
+			std::make_tuple("generated", "Generations", std::to_string(generated())),
+			std::make_tuple("evaluated", "Evaluations", std::to_string(evaluated())),
+			
+			std::make_tuple("simulations", "Simulations", std::to_string(simulated())),
+			std::make_tuple("reachable_0", "Subreachable goals in initial state", std::to_string(_initial_reachable_subgoals)),
+			std::make_tuple("relevant_atoms_0", "|R|_0", std::to_string(_initial_relevant_atoms)),
+		};
+	}
+	
+protected:
+	unsigned long _expanded;
+	unsigned long _generated;
+	unsigned long _evaluated;
+	unsigned long _simulations;
+	unsigned int _initial_reachable_subgoals; // The number of subgoals that are reachable on the initial simulation
+	unsigned int _initial_relevant_atoms; // The size of |R| on the initial state
+};
 
 //! The node type we'll use for the Simulated BFWS search, parametrized by type of state and action action
 template <typename StateT, typename ActionT>
@@ -149,21 +187,22 @@ struct SBFWSNoveltyIndexer {
 template <typename StateModelT, typename NoveltyIndexerT>
 class SBFWSHeuristic {
 public:
-	SBFWSHeuristic(const StateModelT& model, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, bool mark_negative_propositions ) :
+	SBFWSHeuristic(const StateModelT& model, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, BFWSStats& stats, bool mark_negative_propositions) :
 		_model(model),
 		_problem(model.getTask()),
 		_search_evaluator(search_evaluator),
 		_simulation_evaluator(simulation_evaluator),
 		_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(model),
-		_mark_negative_propositions(mark_negative_propositions)
+		_mark_negative_propositions(mark_negative_propositions),
+		_stats(stats)
 	{}
 
 	~SBFWSHeuristic() = default;
 
 	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
 	//! all those atoms marked as "unreached", and the rest as irrelevant.
-	RelevantAtomSet compute_relevant(const State& state) const {
+	RelevantAtomSet compute_relevant(const State& state, bool log_stats) const {
 		using ActionT = typename StateModelT::ActionType;
 		using NodeT = IWRunNode<State, ActionT>;
 		using IWAlgorithm = IWRun<NodeT, StateModelT>;
@@ -172,8 +211,27 @@ public:
 			return RelevantAtomSet(&(_problem.get_tuple_index()));
 		}
 		
+		_stats.simulation();
+		
 		auto iw = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _simulation_evaluator, _mark_negative_propositions));
-		return iw->run(state);
+		
+		//BFWSStats stats;
+		//StatsObserver<NodeT, BFWSStats> st_obs(stats, false);
+		//iw->subscribe(st_obs);
+		
+		iw->run(state);
+		unsigned reachable = 0;
+		RelevantAtomSet relevant = iw->retrieve_relevant_atoms(state, reachable);
+		
+		//LPT_INFO("cout", "IW Simulation: Node expansions: " << stats.expanded());
+		//LPT_INFO("cout", "IW Simulation: Node generations: " << stats.generated());
+
+		if (log_stats) {
+			_stats.set_initial_reachable_subgoals(reachable);
+			_stats.set_initial_relevant_atoms(relevant.num_unreached());
+		}
+
+		return relevant;
 	}
 
 
@@ -210,7 +268,7 @@ public:
 		// Only for the root node _or_ whenever the number of unachieved nodes decreases
 		// do we recompute the set of relevant atoms.
 		if (!node.has_parent() || node.unachieved < node.parent->unachieved) {
-			node._relevant_atoms = compute_relevant(node.state);
+			node._relevant_atoms = compute_relevant(node.state, !node.has_parent());
 		} else {
 			// We copy the map of reached values from the parent node
 			node._relevant_atoms = node.parent->_relevant_atoms;
@@ -247,6 +305,8 @@ protected:
 
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;
+	
+	BFWSStats& _stats;
 };
 
 template <typename NodeT>
@@ -308,7 +368,7 @@ public:
 		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.simulation_width, _featureset));
 
 
-		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, *_search_evaluator, *_simulation_evaluator, conf.mark_negative_propositions ));
+		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions));
 
 		auto engine = EngineT(new RawEngineT(model, *_heuristic));
 
@@ -319,7 +379,7 @@ public:
 		return engine;
 	}
 
-	const SearchStats& getStats() const { return _stats; }
+	const BFWSStats& getStats() const { return _stats; }
 
 	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 
@@ -331,7 +391,7 @@ protected:
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 
 	//!
-	SearchStats _stats;
+	BFWSStats _stats;
 
 	//! The feature set used for the novelty computations
 	FeatureSet _featureset;

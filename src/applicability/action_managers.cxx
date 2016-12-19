@@ -192,7 +192,7 @@ BasicApplicabilityAnalyzer::build() {
 			const std::vector<ObjectIdx>& values = info.getVariableObjects(relevant);
 			
 			if (!referenced.insert(relevant).second) {
-				throw std::runtime_error("SmartActionManager requires that no two preconditions make reference to the same state variable");
+				throw std::runtime_error("BasicApplicabilityAnalyzer requires that no two preconditions make reference to the same state variable");
 			}
 			
 			if (eq) { // Prec is of the form X=x

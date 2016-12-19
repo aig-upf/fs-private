@@ -27,16 +27,16 @@ class EventUtils {
 public:
 	using HandlerPtr = std::unique_ptr<lapkt::events::EventHandler>;
 	
-	template <typename NodeT, typename HeuristicT>
-	static void setup_evaluation_observer(const Config& config, HeuristicT& heuristic, SearchStats& stats, std::vector<HandlerPtr>& handlers) {
-		using EvaluatorT = EvaluationObserver<NodeT, HeuristicT>;
+	template <typename NodeT, typename HeuristicT, typename StatsT>
+	static void setup_evaluation_observer(const Config& config, HeuristicT& heuristic, StatsT& stats, std::vector<HandlerPtr>& handlers) {
+		using EvaluatorT = EvaluationObserver<NodeT, HeuristicT, StatsT>;
 		handlers.push_back(std::unique_ptr<EvaluatorT>(new EvaluatorT(heuristic, config.getNodeEvaluationType(), stats)));
 	}
 	
-	template <typename NodeT>
-	static void setup_stats_observer(SearchStats& stats, std::vector<HandlerPtr>& handlers) {
-		using StatsT = StatsObserver<NodeT>;
-		handlers.push_back(std::unique_ptr<StatsT>(new StatsT(stats)));
+	template <typename NodeT, typename StatsT>
+	static void setup_stats_observer(StatsT& stats, std::vector<HandlerPtr>& handlers) {
+		using StatsObserverT = StatsObserver<NodeT, StatsT>;
+		handlers.push_back(std::unique_ptr<StatsObserverT>(new StatsObserverT(stats)));
 	}
 	
 	template <typename NodeT>
