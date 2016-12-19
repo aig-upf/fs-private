@@ -70,7 +70,7 @@ public:
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		novelty(std::numeric_limits<unsigned>::max()),
 		unachieved(std::numeric_limits<unsigned>::max()),
-		_relevant_atoms()
+		_relevant_atoms(nullptr)
 	{}
 
 	//! The novelty type (for the IWRun node, will always be 0)
@@ -167,6 +167,11 @@ public:
 		using ActionT = typename StateModelT::ActionType;
 		using NodeT = IWRunNode<State, ActionT>;
 		using IWAlgorithm = IWRun<NodeT, StateModelT>;
+		
+		if (_simulation_evaluator.max_novelty() == 0) { // No need to run anything
+			return RelevantAtomSet(&(_problem.get_tuple_index()));
+		}
+		
 		auto iw = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _simulation_evaluator, _mark_negative_propositions));
 		return iw->run(state);
 	}

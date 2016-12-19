@@ -25,14 +25,8 @@ class RelevantAtomSet {
 public:
 	enum class STATUS : unsigned char {IRRELEVANT, UNREACHED, REACHED};
 
-
-	//! This constructor leaves the object in an "invalid" state, but is necessary ATM to simplify node creation - TODO REFACTOR THIS
-	RelevantAtomSet() :
-		_atomidx(nullptr), _num_reached(0), _num_unreached(0), _status()
-	{}
-
 	RelevantAtomSet(const AtomIndex* atomidx) :
-		_atomidx(atomidx), _num_reached(0), _num_unreached(0), _status(atomidx->size(), STATUS::IRRELEVANT)
+		_atomidx(atomidx), _num_reached(0), _num_unreached(0), _status(atomidx ? atomidx->size() : 0, STATUS::IRRELEVANT)
 	{}
 
 	~RelevantAtomSet() = default;
