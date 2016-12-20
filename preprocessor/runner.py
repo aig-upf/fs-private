@@ -143,7 +143,8 @@ def run_solver(translation_dir, args):
     if args.options:
         command += ["--options", args.options]
 
-    print("{0:<30}{1}\n".format("Running solver:", solver))
+    print("{0:<30}{1}".format("Running solver:", solver))
+    print("{0:<30}{1}\n".format("Command line arguments:", ' '.join(command[1:])))
     sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
     output = subprocess.call(command, cwd=translation_dir)
     if output != 0:
