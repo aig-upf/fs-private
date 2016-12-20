@@ -25,14 +25,8 @@ class RelevantAtomSet {
 public:
 	enum class STATUS : unsigned char {IRRELEVANT, UNREACHED, REACHED};
 
-
-	//! This constructor leaves the object in an "invalid" state, but is necessary ATM to simplify node creation - TODO REFACTOR THIS
-	RelevantAtomSet() :
-		_atomidx(nullptr), _num_reached(0), _num_unreached(0), _status()
-	{}
-
 	RelevantAtomSet(const AtomIndex* atomidx) :
-		_atomidx(atomidx), _num_reached(0), _num_unreached(0), _status(atomidx->size(), STATUS::IRRELEVANT)
+		_atomidx(atomidx), _num_reached(0), _num_unreached(0), _status(atomidx ? atomidx->size() : 0, STATUS::IRRELEVANT)
 	{}
 
 	~RelevantAtomSet() = default;
@@ -237,7 +231,7 @@ public:
 		throw std::runtime_error("Shouldn't be invoking this");
 	}
 
-	RelevantAtomSet run(const StateT& seed) {
+	void run(const StateT& seed) {
 		NodePT n = std::make_shared<NodeT>(seed);
 		this->notify(NodeCreationEvent(*n));
 		this->_open.insert(n);
@@ -266,8 +260,6 @@ public:
 				}
 			}
 		}
-
-		return retrieve_relevant_atoms(seed);
 	}
 
 protected:
@@ -309,8 +301,9 @@ protected:
 		return _unreached.empty();
 	}
 
+public:
 	//! Retrieve the set of atoms which are relevant to reach at least one of the subgoals
-	RelevantAtomSet retrieve_relevant_atoms(const StateT& seed) const {
+	RelevantAtomSet retrieve_relevant_atoms(const StateT& seed, unsigned& reachable) const {
 		const AtomIndex& atomidx = this->_model.getTask().get_tuple_index();
 		RelevantAtomSet atomset(&atomidx);
 
@@ -319,7 +312,6 @@ protected:
 		// atomset.mark(seed, RelevantAtomSet::STATUS::UNREACHED); // This is not necessary, since all these atoms will be made true by the "root" state of the simulation
 
 		std::unordered_set<NodePT> processed;
-		unsigned reachable = 0;
 
 		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
 			NodePT node = _reached[subgoal_idx];

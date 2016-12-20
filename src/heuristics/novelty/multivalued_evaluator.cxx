@@ -70,6 +70,7 @@ MultivaluedNoveltyEvaluator::evaluate(const FeatureValuation& current, const std
 	assert(!current.empty());
 
 	unsigned novelty = std::numeric_limits<unsigned>::max();
+	if (_max_novelty == 0) return novelty; // We're actually computing nothing, novelty will always be MAX
 	
 	evaluate_width_1_tuples(novelty, current, novel);
 	if (_max_novelty <= 1) return novelty; // Novelty will be either 1 or MAX

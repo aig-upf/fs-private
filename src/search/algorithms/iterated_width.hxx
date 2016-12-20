@@ -14,6 +14,8 @@
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
 #include <search/events.hxx>
+#include <search/stats.hxx>
+
 
 namespace fs0 { class SearchStats; }
 

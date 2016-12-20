@@ -9,7 +9,6 @@
 
 #include <search/algorithms/aptk/events.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
-#include <search/stats.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
@@ -18,7 +17,7 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 {
 
 //! An observer to report and store some stats about the search process
-template <typename NodeT>
+template <typename NodeT, typename StatsT>
 class StatsObserver: public lapkt::events::EventHandler {
 public:
 	using OpenEvent = lapkt::events::NodeOpenEvent<NodeT>;
@@ -26,8 +25,8 @@ public:
 	using CreationEvent = lapkt::events::NodeCreationEvent<NodeT>;
 	using ExpansionEvent = lapkt::events::NodeExpansionEvent<NodeT>;
 
-	StatsObserver(SearchStats& stats) :
-		_stats(stats)
+	StatsObserver(StatsT& stats, bool verbose = true) :
+		_stats(stats), _verbose(verbose)
 	{
 		// Register a call to a member method
 		registerEventHandler<OpenEvent>(std::bind(&StatsObserver::open, this, std::placeholders::_1, std::placeholders::_2));
@@ -38,19 +37,25 @@ public:
 
 protected:
 	void open(lapkt::events::Subject&, const lapkt::events::Event& event) {
-		auto& node = static_cast<const OpenEvent&>(event).node;
-		LPT_DEBUG("cout", node);
-		LPT_DEBUG("search", std::setw(7) << "OPEN: " << node);
-		_unused(node);
+		if (_verbose) {
+			auto& node = static_cast<const OpenEvent&>(event).node;
+			_unused(node);
+			LPT_DEBUG("cout", node);
+			LPT_DEBUG("search", std::setw(7) << "OPEN: " << node);
+		}
 	}
 	
 	void goal(lapkt::events::Subject&, const lapkt::events::Event& event) {
-		LPT_INFO("cout", "Goal found");
+		if (_verbose) {
+			LPT_INFO("cout", "Goal found");
+		}
 	}
 	
 	void creation(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.generation();
-		LPT_DEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
+		if (_verbose) {
+			LPT_DEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
+		}
 		
 // 		if (_stats.generated() % 10 == 0) {
 // 			LPT_INFO("cout", "Number of generated nodes: " << _stats.generated());
@@ -60,13 +65,16 @@ protected:
 	
 	void expansion(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.expansion();
-		LPT_DEBUG("search", std::setw(7) << "EXPAND: " << dynamic_cast<const ExpansionEvent&>(event).node);
+		if (_verbose) {
+			LPT_DEBUG("search", std::setw(7) << "EXPAND: " << dynamic_cast<const ExpansionEvent&>(event).node);
+		}
 // 		if (_stats.expanded() % 10 == 0) {
 // 			LPT_INFO("cout", "Number of expanded nodes: " << _stats.expanded());
 // 		}
 	}
 	
-	SearchStats& _stats;
+	StatsT& _stats;
+	bool _verbose;
 };
 
 //! An observer that evaluates the helpfulness of a given node, given the relaxed plan computed
@@ -112,14 +120,14 @@ protected:
 
 //! An observer that decides when to evaluate the heuristic value of a node, when
 //! to inherit it from the parent's value, etc.
-template <typename NodeT, typename HeuristicT>
+template <typename NodeT, typename HeuristicT, typename StatsT>
 class EvaluationObserver: public lapkt::events::EventHandler {
 public:
 	using EvaluationT = Config::EvaluationT;
 	using ExpansionEvent = lapkt::events::NodeExpansionEvent<NodeT>;
 	using CreationEvent  = lapkt::events::NodeCreationEvent<NodeT>;
 	
-	EvaluationObserver(HeuristicT& heuristic, EvaluationT evaluation, SearchStats& stats) : _heuristic(heuristic), _evaluation(evaluation), _stats(stats) {
+	EvaluationObserver(HeuristicT& heuristic, EvaluationT evaluation, StatsT& stats) : _heuristic(heuristic), _evaluation(evaluation), _stats(stats) {
 		registerEventHandler<ExpansionEvent>(std::bind(&EvaluationObserver::expansion, this, std::placeholders::_1, std::placeholders::_2));
 		registerEventHandler<CreationEvent>(std::bind(&EvaluationObserver::creation, this, std::placeholders::_1, std::placeholders::_2));
 	}
@@ -127,7 +135,7 @@ public:
 protected:
 	HeuristicT& _heuristic;
 	EvaluationT _evaluation;
-	SearchStats& _stats;
+	StatsT& _stats;
 	
 	//! Returns true if the evaluation type is such that the node should be evaluated eagerly, i.e. upon creation
 	bool do_early_evaluation(NodeT& node) const {

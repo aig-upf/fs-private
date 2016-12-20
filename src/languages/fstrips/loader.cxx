@@ -18,7 +18,9 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 		const rapidjson::Value& elements = tree["elements"];
 		for (unsigned i = 0; i < elements.Size(); ++i) {
 			const AtomicFormula* atomic = dynamic_cast<const AtomicFormula*>(parseFormula(elements[i], info));
-			assert(atomic); // ATM we only accept conjunctions of atoms.
+			if (!atomic) {
+				throw std::runtime_error("Only conjunctions of atoms supported so far");
+			}
 			list.push_back(atomic);
 		}
 		return new Conjunction(list);
