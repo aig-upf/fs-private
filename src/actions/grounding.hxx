@@ -24,7 +24,7 @@ public:
 
 class ActionGrounder {
 public:
-	static const unsigned long MAX_GROUND_ACTIONS = 10000000;
+	static const unsigned long MAX_GROUND_ACTIONS = 100000000;
 	
 	//! Grounds the set of given action schemata with all parameter groundings that induce no false preconditions
 	//! Returns the new set of grounded actions
