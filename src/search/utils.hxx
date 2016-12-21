@@ -31,7 +31,6 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 
 	std::vector<typename StateModelT::ActionType::IdType> plan;
 	float t0 = aptk::time_used();
-	double _t0 = (double) clock() / CLOCKS_PER_SEC;
 	
 	bool solved = false, oom = false;
 	try {
@@ -44,7 +43,6 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	}
 	
 	float search_time = aptk::time_used() - t0;
-	double _search_time = (double) clock() / CLOCKS_PER_SEC - _t0;
 	float total_planning_time = aptk::time_used() - start_time;
 
 	bool valid = false;
@@ -59,15 +57,13 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.evaluated() / search_time) : "0";
 	
 
-
-	
 	json_out << "{" << std::endl;
 	for (const auto& point:stats.dump()) {
 		json_out << "\t\"" << std::get<0>(point) << "\": " << std::get<2>(point) << "," << std::endl;
 	}
 	json_out << "\t\"total_time\": " << total_planning_time << "," << std::endl;
 	json_out << "\t\"search_time\": " << search_time << "," << std::endl;
-	json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
+	// json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
 	json_out << "\t\"memory\": " << get_peak_memory_in_kb() << "," << std::endl;
 	json_out << "\t\"gen_per_second\": " << gen_speed << "," << std::endl;
 	json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
