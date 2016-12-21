@@ -168,9 +168,7 @@ BasicApplicabilityAnalyzer::build() {
 		}
 		
 		
-		
 		std::set<VariableIdx> referenced; // The state variables already made reference to by some precondition
-		
 		for (const fs::AtomicFormula* conjunct:precondition->getConjuncts()) {
 			
 			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
@@ -186,6 +184,7 @@ BasicApplicabilityAnalyzer::build() {
 			const fs::StateVariable* sv = dynamic_cast<const fs::StateVariable*>(rel->lhs());
 			if (!sv) continue;
 			
+// 			std::cout << "Processing action #" << i << ": " << action << std::endl;
 // 			std::cout << "Processing conjunct: " << *conjunct << std::endl;
 			
 			VariableIdx relevant = all_relevant[0];
@@ -228,66 +227,59 @@ BasicApplicabilityAnalyzer::build() {
 
 
 std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state) const {
+	std::vector<ActionIdx> _; // !!! Uncomment this to ignore the whitelist strategy
+	_.resize(_actions.size()); std::iota(_.begin(), _.end(), 0); // !!! Uncomment this to ignore the whitelist strategy
+	return _; // !!! Uncomment this to ignore the whitelist strategy
+	
 	const std::vector<ObjectIdx>& values = state.getValues();
+	std::size_t num_vars = values.size(); // The number of state variables, i.e. of atoms in a state
+	assert(num_vars >= 1); // We have at least one state variable
 	
-	assert(values.size() >= 1); // We have at least one state variable
+	// We'll store here the indexes of the atoms that cannot prune any action (because all actions are applicable wrt atoms)
+	// We want this because if an atom cannot prune any action, then there's no need to intersect anything.
+	std::vector<bool> tuples_with_all_actions(num_vars, false);
 	
-// 	std::cout << "Sizes of potentially applicable action vectors: " << std::endl;
-	
-	std::vector<bool> tuples_with_all_actions(values.size(), false); // We'll store here which tuples don't prune any action (if they don't: no need to intersect!)
-	
-	// We find the state variable values giving us the smallest potentially-applicable action set
-	// and at the same time precompute all tuple indexes of the state atoms.
-	AtomIdx min_tuple_idx = 0, min_size = std::numeric_limits<unsigned>::max();
-	std::vector<AtomIdx> tuples(values.size());
-	for (unsigned i = 0; i < values.size(); ++i) {
+	// We find the atom in the state that has associated to it the smallest potentially-applicable action set (we'll start intersecting with that one)
+	// At the same time, we precompute the indexes of all atoms in the state
+	unsigned var_with_min_app_set = 0, min_size = std::numeric_limits<unsigned>::max();
+	std::vector<AtomIdx> tuples(num_vars);
+	for (unsigned i = 0; i < num_vars; ++i) {
 		AtomIdx tup = _tuple_idx.to_index(i, values[i]);
 		tuples[i] = tup;
 		unsigned s = _app_index[tup].size();
 		
 		if (s < min_size) {
 			min_size = s;
-			min_tuple_idx = tup;
+			var_with_min_app_set = i;
 		}
 		
-// 		std::cout << s;
 		if (s == _total_applicable_actions) {
 			tuples_with_all_actions[i] = true;
-// 			std::cout << "*";
 		}
-// 		std::cout <<  ", ";
 	}
 	
-// 	std::cout << std::endl << std::endl << std::endl;
 	
 	// Partially based on http://stackoverflow.com/a/12882072
+	std::vector<ActionIdx> result = _app_index[tuples[var_with_min_app_set]]; // Copy the vector // only return this one, for NRVO to kick in!
 	
-	std::vector<ActionIdx> result = _app_index[min_tuple_idx]; // Copy the vector // only return this one, for NRVO to kick in!
-	
-	if (tuples.size() == 1) { // We simply return a copy of the potentially-applicable actions for the only atom
+	if (num_vars == 1) { // We simply return a copy of the potentially-applicable actions for the only atom
 		return result;
 	}
 	
-	// Else we have at least two state variables 
+	// Otherwise, the state has at least two atoms, so we'll intersect the "whitelists" of all
+	// atom states to obtain a final list of action indexes
 	
 	std::vector<ActionIdx> buffer; // outside the loop so that we reuse its memory
-	
-	for (unsigned j = 0, sz = tuples.size(); j < sz; ++j) {
-		AtomIdx tup = tuples[j];
-// 		if (tuples_with_all_actions[j]) std::cout << "Smart one!" << std::endl;
-		if (tup != min_tuple_idx && !tuples_with_all_actions[j]) {
+	for (unsigned i = 0; i < num_vars; ++i) {
+		if (i != var_with_min_app_set && !tuples_with_all_actions[i]) {
+			AtomIdx tup = tuples[i];
 			const auto& candidates = _app_index[tup];
 			buffer.clear();
 			std::set_intersection(result.begin(), result.end(), candidates.begin(), candidates.end(), std::back_inserter(buffer));
 			std::swap(result, buffer);
-			
-				if (std::find(result.begin(), result.end(), 138) == result.end()) {
-// 					throw std::runtime_error("WHAAAACK!!");
-				}
 		}
 	}
 	
-// 	result.resize(_actions.size()); std::iota(result.begin(), result.end(), 0); // !!!
 	return result;
 }
 
