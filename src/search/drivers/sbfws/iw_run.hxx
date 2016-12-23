@@ -13,7 +13,7 @@
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
 #include <state.hxx>
-
+#include <boost/pool/pool_alloc.hpp>
 
 namespace fs = fs0::language::fstrips;
 
@@ -104,9 +104,9 @@ public:
 	PT parent;
 
 
-	IWRunNode() = delete;
+	IWRunNode() = default;
 	~IWRunNode() = default;
-	IWRunNode(const IWRunNode&) = delete;
+	IWRunNode(const IWRunNode&) = default;
 	IWRunNode(IWRunNode&&) = delete;
 	IWRunNode& operator=(const IWRunNode&) = delete;
 	IWRunNode& operator=(IWRunNode&&) = delete;
@@ -216,6 +216,7 @@ public:
 		_unreached(),
 		_mark_negative_propositions(mark_negative_propositions)
 	{
+
 		for (unsigned i = 0; i < _goal_atoms.size(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
 	}
 
@@ -232,7 +233,8 @@ public:
 	}
 
 	void run(const StateT& seed) {
-		NodePT n = std::make_shared<NodeT>(seed);
+		//NodePT n = std::make_shared<NodeT>(seed);
+		NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 		this->notify(NodeCreationEvent(*n));
 		this->_open.insert(n);
 
@@ -250,7 +252,8 @@ public:
 
 			for (const auto& a : this->_model.applicable_actions(current->state)) {
 				StateT s_a = this->_model.next( current->state, a );
-				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current );
+				//NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current );
+				NodePT successor = std::allocate_shared<NodeT>( _allocator, std::move(s_a), a, current );
 
 				if (this->_closed.check(successor)) continue; // The node has already been closed
 
@@ -277,6 +280,8 @@ protected:
 	std::unordered_set<unsigned> _unreached;
 
 	bool _mark_negative_propositions;
+
+	boost::fast_pool_allocator<NodeT>	_allocator;
 
 
 	//! Returns true iff all goal atoms have been reached in the IW search
