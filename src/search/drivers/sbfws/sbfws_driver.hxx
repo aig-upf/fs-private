@@ -132,7 +132,7 @@ public:
 	template <typename HeuristicT>
 	void evaluate_with(HeuristicT& heuristic) {
 		// The order of the operations below matters.
-		
+
 		// Update the number of unachieved goal atoms
 		unachieved = heuristic.compute_unachieved(this->state);
 
@@ -262,7 +262,7 @@ public:
 		node.feature_valuation = evaluator.compute_valuation(node.state);
 		return evaluator.evaluate(node);
 	}
-	
+
 	template <typename NodeT>
 	void update_relevant_atoms(NodeT& node, RelevantAtomSet& atomset) const {
 		// Only for the root node _or_ whenever the number of unachieved nodes decreases
@@ -273,7 +273,7 @@ public:
 			// We copy the map of reached values from the parent node
 			node._relevant_atoms = node.parent->_relevant_atoms;
 		}
-		
+
 		// In both cases, we update the set of relevant nodes with those that have been reached.
 		node._relevant_atoms.mark(node.state, nullptr, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
 	}

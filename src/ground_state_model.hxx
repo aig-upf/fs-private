@@ -15,10 +15,10 @@ public:
 	using BaseT = aptk::DetStateModel<State, GroundAction>;
 	using ActionType = BaseT::ActionType;
 	using ActionId = ActionType::IdType;
-	
+
 	GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer = nullptr);
 	~GroundStateModel() = default;
-	
+
 	GroundStateModel(const GroundStateModel&) = default;
 	GroundStateModel& operator=(const GroundStateModel&) = default;
 	GroundStateModel(GroundStateModel&&) = default;
@@ -32,7 +32,7 @@ public:
 
 	//! Returns applicable action set object
 	GroundApplicableSet applicable_actions(const State& state) const;
-	
+
 	bool is_applicable(const State& state, const ActionType& action) const;
 	bool is_applicable(const State& state, const ActionId& action) const;
 
@@ -41,21 +41,21 @@ public:
 	State next(const State& state, const GroundAction& a) const;
 
 	void print(std::ostream &os) const;
-	
+
 	const Problem& getTask() const { return _task; }
-	
+
 	unsigned get_action_idx(const ActionId& action) const { return static_cast<unsigned>(action); }
 
 protected:
 	// The underlying planning problem.
 	const Problem& _task;
-	
-	const SmartActionManager _manager;
-	
+
+	const SmartActionManager* _manager;
+
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
-	
-	static SmartActionManager build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer);
+
+	static SmartActionManager* build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer);
 };
 
 } // namespaces

@@ -3,6 +3,9 @@
 #include <problem.hxx>
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
+#include <utils/config.hxx>
+#include <applicability/match_tree.hxx>
+#include <aptk2/tools/logging.hxx>
 
 namespace fs0 {
 
@@ -26,12 +29,12 @@ bool GroundStateModel::is_applicable(const State& state, const ActionId& action)
 }
 
 bool GroundStateModel::is_applicable(const State& state, const ActionType& action) const {
-	return _manager.applicable(state, action);
+	return _manager->applicable(state, action);
 }
 
 State GroundStateModel::next(const State& state, const GroundAction::IdType& actionIdx) const {
 	return next(state, *(_task.getGroundActions()[actionIdx]));
-} 
+}
 
 State GroundStateModel::next(const State& state, const GroundAction& a) const {
 	NaiveApplicabilityManager::computeEffects(state, a, _effects_cache);
@@ -41,10 +44,10 @@ State GroundStateModel::next(const State& state, const GroundAction& a) const {
 void GroundStateModel::print(std::ostream& os) const { os << _task; }
 
 GroundApplicableSet GroundStateModel::applicable_actions(const State& state) const {
-	return _manager.applicable(state);
+	return _manager->applicable(state);
 }
 
-SmartActionManager
+SmartActionManager*
 GroundStateModel::build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) {
 	const auto& actions = problem.getGroundActions();
 	const auto& constraints = problem.getStateConstraints();
@@ -53,9 +56,13 @@ GroundStateModel::build_action_manager(const Problem& problem, BasicApplicabilit
 		analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
 		analyzer->build();
 	}
-	return SmartActionManager(actions, constraints, tuple_idx, analyzer);
+	if ( Config::instance().getSuccessorGeneratorType() == Config::SuccessorGenerationStrategy::functional_aware) {
+		LPT_INFO( "main", "Successor Generator Strategy: \"Functional Aware\"");
+		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
+	}
+	LPT_INFO( "main", "Successor Generator Strategy: \"Match Tree\"");
+	return new MatchTreeActionManager( actions, constraints, tuple_idx, analyzer );
 }
 
 
 } // namespaces
-

@@ -13,7 +13,7 @@
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
 #include <state.hxx>
-
+#include <boost/pool/pool_alloc.hpp>
 
 namespace fs = fs0::language::fstrips;
 
@@ -40,6 +40,7 @@ public:
 		mark(_atomidx->to_index(variable, value), status, only_if_relevant);
 	}
 
+	//! A helper
 	void mark(const State& state, const State* parent, STATUS status, bool mark_negative_propositions, bool only_if_relevant) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		for (VariableIdx var = 0; var < state.numAtoms(); ++var) {
@@ -103,9 +104,9 @@ public:
 	PT parent;
 
 
-	IWRunNode() = delete;
+	IWRunNode() = default;
 	~IWRunNode() = default;
-	IWRunNode(const IWRunNode&) = delete;
+	IWRunNode(const IWRunNode&) = default;
 	IWRunNode(IWRunNode&&) = delete;
 	IWRunNode& operator=(const IWRunNode&) = delete;
 	IWRunNode& operator=(IWRunNode&&) = delete;
@@ -215,6 +216,7 @@ public:
 		_unreached(),
 		_mark_negative_propositions(mark_negative_propositions)
 	{
+
 		for (unsigned i = 0; i < _goal_atoms.size(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
 	}
 
@@ -231,7 +233,8 @@ public:
 	}
 
 	void run(const StateT& seed) {
-		NodePT n = std::make_shared<NodeT>(seed);
+		//NodePT n = std::make_shared<NodeT>(seed);
+		NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 		this->notify(NodeCreationEvent(*n));
 		this->_open.insert(n);
 
@@ -249,7 +252,8 @@ public:
 
 			for (const auto& a : this->_model.applicable_actions(current->state)) {
 				StateT s_a = this->_model.next( current->state, a );
-				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current );
+				//NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current );
+				NodePT successor = std::allocate_shared<NodeT>( _allocator, std::move(s_a), a, current );
 
 				if (this->_closed.check(successor)) continue; // The node has already been closed
 
@@ -277,11 +281,13 @@ protected:
 
 	bool _mark_negative_propositions;
 
+	boost::fast_pool_allocator<NodeT>	_allocator;
+
 
 	//! Returns true iff all goal atoms have been reached in the IW search
 	bool process_node(const NodePT& node) {
 		const StateT& state = node->state;
-		
+
 		// We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
 		// to check if the current node satisfies any of them - and if it does, we mark it appropriately.
 		for (auto it = _unreached.begin(); it != _unreached.end(); ) {
@@ -296,7 +302,6 @@ protected:
 				++it;
 			}
 		}
-		
 		// As soon as all nodes have been processed, we return true so that we can stop the search
 		return _unreached.empty();
 	}
@@ -319,7 +324,6 @@ public:
 				LPT_EDEBUG("simulation-relevant", "Goal atom '" << _goal_atoms[subgoal_idx] << "' unreachable");
 				continue;
 			}
-			
 			++reachable;
 
 			// Traverse from the solution node to the root node, adding all atoms on the way
@@ -340,4 +344,3 @@ public:
 };
 
 } } // namespaces
-
