@@ -156,7 +156,6 @@ namespace fs0 {
     }
 
     void SwitchNode::print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const {
-        const ProblemInfo& info = ProblemInfo::getInstance();
         Atom a = manager._tuple_idx.to_atom( _pivot );
         stream << indent << "switch on " << a << std::endl;
         stream << indent << "immediately:" << std::endl;
