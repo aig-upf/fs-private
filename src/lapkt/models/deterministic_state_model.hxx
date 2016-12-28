@@ -11,7 +11,7 @@ public:
 // 	const typename ActionT::IdType invalid_action = ActionT::invalid_action_id; // TODO Remove?
 	using StateT = _StateT;
 	using ActionIdT = _ActionIdT;
-	using _ApplicableSetT = _ApplicableSetT;
+	using ApplicableSetT = _ApplicableSetT;
 	using ValueT = typename StateT::ValueT;
 
 	DeterministicStateModel() = default;

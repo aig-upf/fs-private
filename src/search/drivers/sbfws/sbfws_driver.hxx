@@ -187,7 +187,6 @@ struct SBFWSNoveltyIndexer {
 template <typename StateModelT, typename NoveltyIndexerT>
 class SBFWSHeuristic {
 public:
-// 	using StateT = typename StateModelT::StateT;
 	using FeatureSetT = lapkt::novelty::FeatureSet<State>;
 	
 	SBFWSHeuristic(const StateModelT& model, const FeatureSetT& features, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, BFWSStats& stats, bool mark_negative_propositions) :
@@ -362,12 +361,12 @@ public:
 	using NodeT = SBFWSNode<fs0::State, ActionT>;
 	using NodeCompareT = SBFWSNodeComparer<NodeT>;
 	using HeuristicEnsembleT = SBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer>;
-	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, StateModelT, std::shared_ptr<NodeT>, NodeCompareT>;
-	using EngineT = std::unique_ptr<RawEngineT>;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, StateModelT, std::shared_ptr<NodeT>, NodeCompareT>;
+	using EnginePT = std::unique_ptr<EngineT>;
 	using FeatureSetT = lapkt::novelty::FeatureSet<StateT>;
 
 	//! Factory method
-	EngineT create(const Config& config, SBFWSConfig& conf, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
+	EnginePT create(const Config& config, SBFWSConfig& conf, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
 
 		// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
 		_featureset = selectFeatures(feature_configuration);
@@ -375,10 +374,9 @@ public:
 		_search_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.search_width));
 		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.simulation_width));
 
-
 		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions));
 
-		auto engine = EngineT(new RawEngineT(model, *_heuristic));
+		auto engine = EnginePT(new EngineT(model, *_heuristic));
 
 		drivers::EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 		drivers::EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _stats, _handlers);
