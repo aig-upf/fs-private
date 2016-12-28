@@ -8,6 +8,6 @@ Problem* generate(const rapidjson::Document& data, const std::string& data_dir) 
 	std::unique_ptr<External> external = std::unique_ptr<External>(new External(info, data_dir));
 	external->registerComponents();
 	info.set_external(std::move(external));
-	auto problem = Loader::loadProblem(data, nullptr);
+	auto problem = Loader::loadProblem(data);
 	return problem;
 }

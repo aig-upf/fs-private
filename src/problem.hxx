@@ -4,7 +4,6 @@
 #include <fs_types.hxx>
 #include <utils/atom_index.hxx>
 
-namespace fs0 { namespace asp { class LPHandler; }}
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
 namespace fs = fs0::language::fstrips;
 
@@ -50,9 +49,6 @@ public:
 	
 	const FormulaInterpreter& getGoalSatManager() const { return *_goal_sat_manager; }
 	
-	void setLPHandler(asp::LPHandler* handler) { _lp_handler = handler; }
-	const asp::LPHandler* getLPHandler() const { return _lp_handler; }
-
 	//! Set the global singleton problem instance
 	static void setInstance(std::unique_ptr<Problem>&& problem) {
 		assert(!_instance);
@@ -97,8 +93,6 @@ protected:
 	const fs::Formula* _goal_formula;
 
 	std::unique_ptr<FormulaInterpreter> _goal_sat_manager;
-	
-	asp::LPHandler* _lp_handler = nullptr;
 	
 	//! Whether all the symbols of the problem are predicates
 	const bool _is_predicative;

@@ -7,8 +7,6 @@
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace asp { class LPHandler; }}
-
 namespace fs0 {
 
 class BaseComponentFactory;
@@ -20,7 +18,7 @@ class Problem;
 class Loader {
 public:
 	//! Load and set the singleton problem instance
-	static Problem* loadProblem(const rapidjson::Document& data, asp::LPHandler* lp_handler);
+	static Problem* loadProblem(const rapidjson::Document& data);
 	
 	//! Load and set the singleton problemInfo instance
 	static ProblemInfo& loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory);
