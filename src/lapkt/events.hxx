@@ -80,7 +80,7 @@ void subscribe(Subject& subject, const std::vector<ObserverT>& observers) {
 
 
 //!
-//! Some search events
+//! Some standard search events
 //!
 template <typename NodeT>
 class NodeEvent : public Event {

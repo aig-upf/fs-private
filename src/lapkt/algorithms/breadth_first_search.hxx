@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <search/algorithms/aptk/generic_search.hxx>
+#include <lapkt/algorithms/generic_search.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 #include <aptk2/search/components/unsorted_open_list_impl.hxx>
 
@@ -32,15 +32,15 @@ namespace lapkt {
 //! Partial specialization of the GenericSearch algorithm:
 //! A breadth-first search is a generic search with a FIFO open list and 
 //! a standard unsorted closed list. Type of node and state model are still generic.
-template <typename NodeType,
+template <typename NodeT,
           typename StateModel,
-          typename OpenListT = aptk::StlUnsortedFIFO<NodeType>,
-          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeType>
+          typename OpenListT = aptk::StlUnsortedFIFO<NodeT>,
+          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
-class StlBreadthFirstSearch : public GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>
+class StlBreadthFirstSearch : public GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>
 {
 public:
-	using BaseClass = GenericSearch<NodeType, OpenListT, ClosedListT, StateModel>;
+	using BaseClass = GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>;
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search

@@ -6,7 +6,6 @@
 #include <search/drivers/breadth_first_search.hxx>
 #include <search/drivers/bfws/bfws.hxx>
 #include <search/drivers/sbfws/sbfws_driver.hxx>
-// #include <search/drivers/asp_engine.hxx>
 #include <search/drivers/unreached_atom_driver.hxx>
 #include <search/drivers/native_driver.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
@@ -16,6 +15,7 @@
 // #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <actions/grounding.hxx>
 #include <problem_info.hxx>
+
 
 // using namespace fs0::gecode;
 
@@ -30,12 +30,11 @@ EngineRegistry& EngineRegistry::instance() {
 
 EngineRegistry::EngineRegistry() {
 	// We register the pre-configured search drivers on the instantiation of the singleton
-// 	add("standard",  new GBFSConstrainedHeuristicsCreator());
+	add("standard",  new GBFS_CRPGDriver());
 	
 	add("native",  new NativeDriver<GroundStateModel>());
 // 	add("lnative",  new NativeDriver<LiftedStateModel>()); // The native driver is not ready for this
 	
-// 	add("lite",  new NativeDriver());
 	add("lunreached",  new UnreachedAtomDriver<LiftedStateModel>());
 	add("lifted",  new FullyLiftedDriver());
 	
@@ -53,8 +52,6 @@ EngineRegistry::EngineRegistry() {
 	
 	add("smart",  new SmartEffectDriver());
 	add("lsmart",  new SmartLiftedDriver());
-	
-// 	add("asp_engine",  new ASPEngine());
 }
 
 EngineRegistry::~EngineRegistry() {

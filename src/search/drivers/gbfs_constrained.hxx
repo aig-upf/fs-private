@@ -3,23 +3,40 @@
 
 #include <search/drivers/registry.hxx>
 #include <search/nodes/heuristic_search_node.hxx>
+#include <lapkt/events.hxx>
 #include <utils/config.hxx>
 
-namespace fs0 { class GroundStateModel;}
+#include <state.hxx>
+#include <actions/actions.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
-namespace fs = fs0::language::fstrips;
+namespace fs0 { class SearchStats; }
+namespace fs0 { namespace gecode { class GecodeCRPG; } }
+
+
+// namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+// namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace drivers {
 
 //! An engine creator for the Greedy Best-First Search drivers coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
 //! The choice of the heuristic is done through template instantiation
-class GBFSConstrainedHeuristicsCreator : public Driver {
-protected:
-	typedef HeuristicSearchNode<State, GroundAction> SearchNode;
-	
+class GBFS_CRPGDriver : public Driver {
 public:
-	std::unique_ptr<FSGroundSearchAlgorithm> create(const Config& config, const GroundStateModel& problem) const;
+	using NodeT = HeuristicSearchNode<State, GroundAction>;
+
+	~GBFS_CRPGDriver();
+
+	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+	
+protected:
+	//!
+	gecode::GecodeCRPG* _heuristic;
+
+	//!
+	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
+
+	//!
+	SearchStats* _stats;
 };
 
 } } // namespaces

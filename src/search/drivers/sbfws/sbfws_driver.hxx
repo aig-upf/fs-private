@@ -8,8 +8,8 @@
 #include <search/drivers/smart_effect_driver.hxx>
 #include <search/nodes/bfws_node.hxx>
 #include <search/components/unsat_goals_novelty.hxx>
-#include <search/algorithms/aptk/events.hxx>
-#include <search/algorithms/aptk/best_first_search.hxx>
+#include <lapkt/events.hxx>
+#include <lapkt/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 #include <search/drivers/bfws/iw_novelty_evaluator.hxx>
@@ -76,7 +76,7 @@ public:
 	unsigned g;
 
 	//! The (cached) feature valuation corresponding to the state in this node
-	FeatureValuation feature_valuation;
+	lapkt::novelty::FeatureValuation feature_valuation;
 
 	//! The novelty "type", i.e. the values wrt which the novelty is computed, e.g. <#g, #r>
 	unsigned _type;
@@ -187,9 +187,13 @@ struct SBFWSNoveltyIndexer {
 template <typename StateModelT, typename NoveltyIndexerT>
 class SBFWSHeuristic {
 public:
-	SBFWSHeuristic(const StateModelT& model, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, BFWSStats& stats, bool mark_negative_propositions) :
+// 	using StateT = typename StateModelT::StateT;
+	using FeatureSetT = lapkt::novelty::FeatureSet<State>;
+	
+	SBFWSHeuristic(const StateModelT& model, const FeatureSetT& features, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, BFWSStats& stats, bool mark_negative_propositions) :
 		_model(model),
 		_problem(model.getTask()),
+		_featureset(features),
 		_search_evaluator(search_evaluator),
 		_simulation_evaluator(simulation_evaluator),
 		_novelty_evaluators(),
@@ -213,7 +217,7 @@ public:
 		
 		_stats.simulation();
 		
-		auto iw = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _simulation_evaluator, _mark_negative_propositions));
+		auto iw = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator, _mark_negative_propositions));
 		
 		//BFWSStats stats;
 		//StatsObserver<NodeT, BFWSStats> st_obs(stats, false);
@@ -256,10 +260,10 @@ public:
 			it = inserted.first;
 		}
 
-		IWNoveltyEvaluator& evaluator = it->second;
-
 		node._type = ind;
-		node.feature_valuation = evaluator.compute_valuation(node.state);
+		node.feature_valuation = _featureset.evaluate(node.state);
+		
+		IWNoveltyEvaluator& evaluator = it->second;
 		return evaluator.evaluate(node);
 	}
 
@@ -291,6 +295,8 @@ protected:
 	const StateModelT& _model;
 
 	const Problem& _problem;
+	
+	const FeatureSetT& _featureset;
 
 	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
 	// to perform all the feature selection, etc. anew.
@@ -351,12 +357,14 @@ struct SBFWSConfig {
 template <typename StateModelT>
 class SimulatedBFWSDriver : public drivers::Driver {
 public:
+	using StateT = typename StateModelT::StateT;
 	using ActionT = typename StateModelT::ActionType;
 	using NodeT = SBFWSNode<fs0::State, ActionT>;
 	using NodeCompareT = SBFWSNodeComparer<NodeT>;
 	using HeuristicEnsembleT = SBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer>;
 	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, StateModelT, std::shared_ptr<NodeT>, NodeCompareT>;
 	using EngineT = std::unique_ptr<RawEngineT>;
+	using FeatureSetT = lapkt::novelty::FeatureSet<StateT>;
 
 	//! Factory method
 	EngineT create(const Config& config, SBFWSConfig& conf, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
@@ -364,11 +372,11 @@ public:
 		// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
 		_featureset = selectFeatures(feature_configuration);
 
-		_search_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.search_width, _featureset));
-		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.simulation_width, _featureset));
+		_search_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.search_width));
+		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.simulation_width));
 
 
-		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions));
+		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions));
 
 		auto engine = EngineT(new RawEngineT(model, *_heuristic));
 
@@ -394,7 +402,7 @@ protected:
 	BFWSStats _stats;
 
 	//! The feature set used for the novelty computations
-	FeatureSet _featureset;
+	FeatureSetT _featureset;
 
 	//! We keep a "base" novelty evaluator with the appropriate features, which (ATM)
 	//! we will use for both search and heuristic simulation
@@ -402,14 +410,14 @@ protected:
 	std::unique_ptr<IWNoveltyEvaluator> _simulation_evaluator;
 
 	// ATM we don't perform any particular feature selection
-	bfws::FeatureSet selectFeatures(const NoveltyFeaturesConfiguration& feature_configuration) {
+	FeatureSetT selectFeatures(const NoveltyFeaturesConfiguration& feature_configuration) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 
-		FeatureSet features;
+		FeatureSetT features;
 
 		// Add all state variables
 		for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-			features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
+			features.add(std::unique_ptr<lapkt::novelty::NoveltyFeature<State>>(new StateVariableFeature(var)));
 		}
 
 		LPT_INFO("cout", "Number of features from which state novelty will be computed: " << features.size());

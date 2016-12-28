@@ -2,28 +2,37 @@
 #include <search/drivers/gbfs_constrained.hxx>
 #include <constraints/direct/action_manager.hxx>
 #include <search/drivers/validation.hxx>
+#include "setups.hxx"
+#include <lapkt/algorithms/best_first_search.hxx>
 #include <problem.hxx>
 #include <state.hxx>
-#include <aptk2/search/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <constraints/gecode/handlers/ground_action_csp.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <utils/support.hxx>
+#include <search/stats.hxx>
+#include <search/utils.hxx>
 
 
 using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-std::unique_ptr<FSGroundSearchAlgorithm> GBFSConstrainedHeuristicsCreator::create(const Config& config, const GroundStateModel& model) const {
-	const Problem& problem = model.getTask();
+GBFS_CRPGDriver::~GBFS_CRPGDriver() {
+	delete _heuristic;
+	delete _stats;
+}
+
+ExitCode
+GBFS_CRPGDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	
+	const auto model = drivers::GroundingSetup::fully_ground_model(problem);
 	const std::vector<const GroundAction*>& actions = problem.getGroundActions();
 	
 	bool novelty = config.useNoveltyConstraint();
 	bool approximate = config.useApproximateActionResolution();
-	bool delayed = config.useDelayedEvaluation();
 	
 	LPT_INFO("main", "Chosen CSP Manager: Gecode");
 	
@@ -33,16 +42,23 @@ std::unique_ptr<FSGroundSearchAlgorithm> GBFSConstrainedHeuristicsCreator::creat
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
+	
 	if (config.getHeuristic() == "hff") {
-		GecodeCRPG heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
-		return std::unique_ptr<FSGroundSearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeCRPG, GroundStateModel>(model, std::move(heuristic), delayed));
+		_heuristic = new GecodeCRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	} else {
 		assert(config.getHeuristic() == "hmax");
-		GecodeCHMax heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
-		return std::unique_ptr<FSGroundSearchAlgorithm>(new aptk::StlBestFirstSearch<SearchNode, GecodeCHMax, GroundStateModel>(model, std::move(heuristic), delayed));
+		_heuristic = new GecodeCHMax(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	}
+	
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, GecodeCRPG, GroundStateModel>;
+	auto engine = std::unique_ptr<EngineT>(new EngineT(model, *_heuristic));
+	
+	drivers::EventUtils::setup_stats_observer<NodeT>(*_stats, _handlers);
+	drivers::EventUtils::setup_evaluation_observer<NodeT, GecodeCRPG>(config, *_heuristic, *_stats, _handlers);
+	lapkt::events::subscribe(*engine, _handlers);
+	
+	return drivers::Utils::do_search(*engine, model, out_dir, start_time, *_stats);
 }
-
 
 
 } } // namespaces

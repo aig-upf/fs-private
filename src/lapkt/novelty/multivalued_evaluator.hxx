@@ -9,10 +9,9 @@
 
 
 #include <boost/functional/hash.hpp>
+#include "features.hxx"
 
-namespace fs0 {
-
-using FeatureValuation = std::vector<int>;
+namespace lapkt { namespace novelty {
 
 //! A tuple of feature valuations of the form
 //! X_1 = x_1, X_2 = x_2, ..., X_k = x_k,
@@ -65,7 +64,7 @@ public:
 			if (elements[i-2] > elements[i]) return false;
 		}
 		return true;
-	}	
+	}
 
 protected:
 	Container elements;
@@ -90,7 +89,7 @@ public:
 	//!
 	unsigned evaluate(const FeatureValuation& current, const std::vector<unsigned>& novel);
 	
-	//! Compute a vector that indicates whether each element in the current valuation is novel wrt parent or not.
+	//! Compute a vector that indicates whether each element in a certain valuation is novel wrt another valuation or not.
 	static std::vector<unsigned> derive_novel(const FeatureValuation& current, const FeatureValuation* parent) {
 		if (!parent) { // Base case
 			std::vector<unsigned> all(current.size());
@@ -215,4 +214,4 @@ protected:
 	}
 };
 
-}
+} } // namespaces

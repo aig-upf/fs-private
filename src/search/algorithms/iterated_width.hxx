@@ -7,7 +7,7 @@
 #include <search/components/single_novelty.hxx>
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
-#include <search/algorithms/aptk/breadth_first_search.hxx>
+#include <lapkt/algorithms/breadth_first_search.hxx>
 #include <ground_state_model.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 

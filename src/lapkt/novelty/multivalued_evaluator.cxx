@@ -2,10 +2,11 @@
 #include <cassert>
 #include <algorithm>
 
-#include <heuristics/novelty/multivalued_evaluator.hxx>
+#include "multivalued_evaluator.hxx"
+#include "features.hxx"
 
 
-namespace fs0 {
+namespace lapkt { namespace novelty {
 
 ValuesTuple::ValuesTuple(std::size_t sz) {
 	elements.reserve(sz*2);
@@ -100,4 +101,4 @@ MultivaluedNoveltyEvaluator::evaluate(const FeatureValuation& current, const std
 	return novelty;
 }
 
-} // namespaces
+} } // namespaces

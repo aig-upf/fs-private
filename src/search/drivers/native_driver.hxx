@@ -3,10 +3,11 @@
 
 #include <search/drivers/registry.hxx>
 #include <search/nodes/heuristic_search_node.hxx>
-#include <search/algorithms/aptk/events.hxx>
-#include <search/algorithms/aptk/best_first_search.hxx>
+#include <lapkt/events.hxx>
+#include <lapkt/algorithms/best_first_search.hxx>
 #include <utils/config.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
+#include <ground_state_model.hxx>
 
 namespace fs0 { class GroundStateModel; class Problem; class SearchStats; }
 

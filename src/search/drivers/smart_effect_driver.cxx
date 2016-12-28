@@ -4,7 +4,7 @@
 #include <problem.hxx>
 #include <problem_info.hxx>
 #include <state.hxx>
-#include <search/algorithms/aptk/best_first_search.hxx>
+#include <lapkt/algorithms/best_first_search.hxx>
 #include <search/utils.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
 
@@ -40,7 +40,7 @@ SmartEffectDriver::configure_heuristic(const Problem& problem, const Config& con
 	return heuristic;
 }
 
-SmartEffectDriver::Engine
+SmartEffectDriver::EnginePT
 SmartEffectDriver::create(const Config& config, const GroundStateModel& model, SearchStats& stats) {
 	LPT_INFO("main", "Using the smart-effect driver");
 	const Problem& problem = model.getTask();
@@ -75,10 +75,10 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 		EventUtils::setup_HA_observer<NodeT>(_handlers);
 	}
 	
-	auto engine = new lapkt::StlBestFirstSearch<NodeT, SmartRPG, GroundStateModel>(model, *_heuristic);
+	auto engine = new GBFST(model, *_heuristic);
 	lapkt::events::subscribe(*engine, _handlers);
 	
-	return Engine(new EHCThenGBFSSearch<SmartRPG>(problem, engine, ehc));
+	return EnginePT(new EngineT(problem, engine, ehc));
 }
 
 GroundStateModel

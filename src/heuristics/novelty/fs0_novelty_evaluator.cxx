@@ -29,7 +29,7 @@ GenericNoveltyEvaluator::GenericNoveltyEvaluator(const Problem& problem, unsigne
 GenericNoveltyEvaluator::GenericNoveltyEvaluator(const GenericNoveltyEvaluator& other)
 	: Base(other), _features() {
 	for (unsigned i = 0; i < other._features.size(); ++i) {
-		_features.push_back(std::unique_ptr<NoveltyFeature>(other._features[i]->clone()));
+		_features.push_back(std::unique_ptr<FSNoveltyFeature>(other._features[i]->clone()));
 	}
 }
 
@@ -38,7 +38,7 @@ GenericNoveltyEvaluator::GenericNoveltyEvaluator(const GenericNoveltyEvaluator& 
 void state_variable_selection(const Problem& problem, GenericNoveltyEvaluator::FeatureSet& features) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-		features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
+		features.push_back(std::unique_ptr<FSNoveltyFeature>(new StateVariableFeature(var)));
 	}
 }
 
@@ -53,7 +53,7 @@ void goal_state_variable_selection(const Problem& problem, GenericNoveltyEvaluat
 
 	// Insert one novelty feature per each state variable found
 	for (VariableIdx variable : relevant) {
-		features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(variable)));
+		features.push_back(std::unique_ptr<FSNoveltyFeature>(new StateVariableFeature(variable)));
 	}
 }
 
@@ -73,7 +73,7 @@ void relevant_state_variable_selection(const Problem& problem, GenericNoveltyEva
 	
 	// Insert one novelty feature per each state variable found
 	for (VariableIdx variable : relevant) {
-		features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(variable)));
+		features.push_back(std::unique_ptr<FSNoveltyFeature>(new StateVariableFeature(variable)));
 	}
 }
 
@@ -86,7 +86,7 @@ void full_feature_selection(const Problem& problem, GenericNoveltyEvaluator::Fea
 		const auto scope = fs::ScopeUtils::computeDirectScope(condition); // TODO - Should we also add the indirect scope?
 		relevant.insert(scope.cbegin(), scope.cend());
 	}
-	features.push_back(std::unique_ptr<NoveltyFeature>(feature));
+	features.push_back(std::unique_ptr<FSNoveltyFeature>(feature));
 
 	for ( const GroundAction* action : problem.getGroundActions() ) {
 		std::unique_ptr<ConditionSetFeature> feature(new ConditionSetFeature);
@@ -102,7 +102,7 @@ void full_feature_selection(const Problem& problem, GenericNoveltyEvaluator::Fea
 	}
 
 	for ( VariableIdx var : relevant ) {
-		features.push_back(std::unique_ptr<NoveltyFeature>(new StateVariableFeature(var)));
+		features.push_back(std::unique_ptr<FSNoveltyFeature>(new StateVariableFeature(var)));
 	}
 }
 

@@ -8,7 +8,7 @@
 #include <problem.hxx>
 #include <utils/printers/vector.hxx>
 
-#include <search/algorithms/aptk/breadth_first_search.hxx>
+#include <lapkt/algorithms/breadth_first_search.hxx>
 #include <search/events.hxx>
 #include <search/stats.hxx>
 #include <search/drivers/setups.hxx>

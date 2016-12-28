@@ -3,7 +3,7 @@
 
 #include <search/drivers/registry.hxx>
 #include <search/nodes/blind_search_node.hxx>
-#include <search/algorithms/aptk/breadth_first_search.hxx>
+#include <lapkt/algorithms/breadth_first_search.hxx>
 #include <search/stats.hxx>
 
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>

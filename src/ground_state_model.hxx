@@ -10,10 +10,12 @@ namespace fs0 {
 class Problem;
 class State;
 
-class GroundStateModel : public aptk::DetStateModel<State, GroundAction> {
+class GroundStateModel { // : public aptk::DetStateModel<State, GroundAction> {
 public:
-	using BaseT = aptk::DetStateModel<State, GroundAction>;
-	using ActionType = BaseT::ActionType;
+	//using BaseT = aptk::DetStateModel<State, GroundAction>;
+	using StateT = State;
+	//using ActionType = BaseT::ActionType;
+	using ActionType = GroundAction;
 	using ActionId = ActionType::IdType;
 
 	GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer = nullptr);

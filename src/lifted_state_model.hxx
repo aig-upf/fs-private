@@ -19,6 +19,7 @@ class GroundAction;
 class LiftedStateModel : public aptk::DetStateModel<State, LiftedActionID> {
 public:
 	using BaseT = aptk::DetStateModel<State, LiftedActionID>;
+	using StateT = State;
 	using ActionType = BaseT::ActionType;
 
 	LiftedStateModel(const Problem& problem) : task(problem) {}

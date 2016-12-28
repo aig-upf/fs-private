@@ -30,30 +30,27 @@ Concepts borrowed from Ethan Burn's heuristic search framework.
 #include <algorithm>
 #include <memory>
 
-#include <search/algorithms/aptk/search_algorithm.hxx>
-#include <search/algorithms/aptk/events.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/events.hxx>
 
 namespace lapkt {
 
 //! A generic search schema
-template <typename NodeType,
+template <typename NodeT,
           typename OpenList,
           typename ClosedList,
           typename StateModel,
-          typename StateT = typename StateModel::StateType,
-          typename ActionT = typename StateModel::ActionType::IdType>
-class GenericSearch : public SearchAlgorithm<StateT, ActionT>, public events::Subject {
+          typename StateT = typename StateModel::StateT,
+          typename ActionIdT = typename StateModel::ActionType::IdType>
+class GenericSearch : public events::Subject {
 public:
-	using BaseClass = SearchAlgorithm<StateT, ActionT>;
-	using PlanT = typename BaseClass::PlanT;
-	using NodePtr = std::shared_ptr<NodeType>;
+	using PlanT =  std::vector<ActionIdT>;
+	using NodePtr = std::shared_ptr<NodeT>;
 	
 	//! Relevant events
-	using NodeOpenEvent = events::NodeOpenEvent<NodeType>;
-	using GoalFoundEvent = events::GoalFoundEvent<NodeType>;
-	using NodeExpansionEvent = events::NodeExpansionEvent<NodeType>;
-	using NodeCreationEvent = events::NodeCreationEvent<NodeType>;
+	using NodeOpenEvent = events::NodeOpenEvent<NodeT>;
+	using GoalFoundEvent = events::GoalFoundEvent<NodeT>;
+	using NodeExpansionEvent = events::NodeExpansionEvent<NodeT>;
+	using NodeCreationEvent = events::NodeCreationEvent<NodeT>;
 
 	//! The only allowed constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
@@ -71,8 +68,8 @@ public:
 	GenericSearch& operator=(const GenericSearch& rhs) = delete;
 	GenericSearch& operator=(GenericSearch&& rhs) = default;
 
-	bool search(const StateT& s, PlanT& solution) override {
-		NodePtr n = std::make_shared<NodeType>( s );
+	virtual bool search(const StateT& s, PlanT& solution) {
+		NodePtr n = std::make_shared<NodeT>( s );
 		this->notify(NodeCreationEvent(*n));
 		_open.insert(n);
 		
@@ -91,7 +88,7 @@ public:
 			
 			for ( const auto& a : _model.applicable_actions( current->state ) ) {
 				StateT s_a = _model.next( current->state, a );
-				NodePtr successor = std::make_shared<NodeType>( std::move(s_a), a, current );
+				NodePtr successor = std::make_shared<NodeT>( std::move(s_a), a, current );
 				
 				if (_closed.check(successor)) continue; // The node has already been closed
 				if (_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.

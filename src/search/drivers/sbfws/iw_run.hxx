@@ -3,9 +3,10 @@
 
 #include <iomanip>
 
+#include <aptk2/tools/logging.hxx>
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
-#include <search/algorithms/aptk/generic_search.hxx>
+#include <lapkt/algorithms/generic_search.hxx>
 #include <search/drivers/bfws/iw_novelty_evaluator.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/language.hxx>
@@ -13,6 +14,7 @@
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
 #include <state.hxx>
+#include <lapkt/novelty/features.hxx>
 #include <boost/pool/pool_alloc.hpp>
 
 namespace fs = fs0::language::fstrips;
@@ -95,7 +97,7 @@ public:
 	StateT state;
 
 	//! The (cached) feature valuation that corresponds to the state in this node.
-	FeatureValuation feature_valuation;
+	lapkt::novelty::FeatureValuation feature_valuation;
 
 	//! The action that led to this node
 	typename ActionT::IdType action;
@@ -148,11 +150,15 @@ std::vector<Atom> obtain_goal_atoms(const fs::Formula* goal);
 //! - a node is pruned iff its novelty is higher than a given threshold.
 class IWRunAcceptor {
 protected:
+	//! The set of features used to compute the novelty
+	const lapkt::novelty::FeatureSet<State>& _features;
+
 	//! A single novelty evaluator will be in charge of evaluating all nodes
 	IWNoveltyEvaluator _novelty_evaluator;
 
 public:
-	IWRunAcceptor(const IWNoveltyEvaluator& novelty_evaluator) :
+	IWRunAcceptor(const lapkt::novelty::FeatureSet<State>& features, const IWNoveltyEvaluator& novelty_evaluator) :
+		_features(features),
 		_novelty_evaluator(novelty_evaluator) // Copy the evaluator
 	{}
 
@@ -162,7 +168,7 @@ public:
 	template <typename NodeT>
 	bool accept(NodeT& node) {
 		assert(node.feature_valuation.empty()); // We should not be computing the feature valuation twice!
-		node.feature_valuation = _novelty_evaluator.compute_valuation(node.state);
+		node.feature_valuation = _features.evaluate(node.state);
 		unsigned novelty = _novelty_evaluator.evaluate(node);
 		return novelty < std::numeric_limits<unsigned>::max();
 	}
@@ -186,7 +192,7 @@ class IWRun : public lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateMo
 public:
 	using ActionT = typename StateModel::ActionType;
 	using Base = lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>;
-	using StateT = typename StateModel::StateType;
+	using StateT = typename StateModel::StateT;
 	using PlanT = typename Base::PlanT;
 	using NodePT = typename Base::NodePtr;
 
@@ -196,11 +202,11 @@ public:
 
 
 	//! Factory method
-	static IWRun* build(const StateModel& model, const IWNoveltyEvaluator& novelty_evaluator, bool mark_negative_propositions) {
+	static IWRun* build(const StateModel& model, const lapkt::novelty::FeatureSet<State>& featureset, const IWNoveltyEvaluator& novelty_evaluator, bool mark_negative_propositions) {
 		const Problem& problem = model.getTask();
 
 		auto atoms = obtain_goal_atoms(problem.getGoalConditions());
-		auto acceptor = std::make_shared<IWRunAcceptor>(novelty_evaluator);
+		auto acceptor = std::make_shared<IWRunAcceptor>(featureset, novelty_evaluator);
 
 		return new IWRun(model, OpenListT(acceptor), atoms, false, mark_negative_propositions);
 	}

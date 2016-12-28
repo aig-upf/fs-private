@@ -112,8 +112,6 @@ public:
 
 	const std::string& getHeuristic() const { return _heuristic; }
 
-	bool useDelayedEvaluation() const { return _node_evaluation == EvaluationT::delayed; }
-
 	bool useApproximateActionResolution() const {
 		return getActionPreconditionResolutionType() == CSPResolutionType::Approximate;
 	}

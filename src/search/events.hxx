@@ -7,7 +7,7 @@
 #include <search/nodes/heuristic_search_node.hxx>
 #include <utils/config.hxx>
 
-#include <search/algorithms/aptk/events.hxx>
+#include <lapkt/events.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 
 

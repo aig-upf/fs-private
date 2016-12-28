@@ -2,21 +2,15 @@
 #pragma once
 
 #include <unordered_map>
-#include <fs_types.hxx>
-#include <ground_state_model.hxx>
-#include <lifted_state_model.hxx>
 #include <utils/system.hxx>
 
-#include <aptk2/search/interfaces/search_algorithm.hxx>
 
 namespace fs0 {
-	class Config; 
+	class Config;
+	class Problem;
 }
 
 namespace fs0 { namespace drivers {
-
-typedef aptk::SearchAlgorithm<GroundStateModel> FSGroundSearchAlgorithm;
-typedef aptk::SearchAlgorithm<LiftedStateModel> FSLiftedSearchAlgorithm;
 
 //! A brief interface for any engine creator
 class Driver {

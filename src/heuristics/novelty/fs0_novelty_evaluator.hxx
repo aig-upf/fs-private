@@ -12,6 +12,8 @@ class NoveltyFeaturesConfiguration;
 
 class GenericNoveltyEvaluator;
 
+using FSNoveltyFeature = lapkt::novelty::NoveltyFeature<State>;
+
 class GenericStateAdapter {
 public:
 	GenericStateAdapter( const State& s, const GenericNoveltyEvaluator& featureMap );
@@ -28,7 +30,7 @@ protected:
 class GenericNoveltyEvaluator : public aptk::FiniteDomainNoveltyEvaluator<GenericStateAdapter> {
 public:
 	using Base = aptk::FiniteDomainNoveltyEvaluator<GenericStateAdapter>;
-	using FeatureSet = std::vector<std::unique_ptr<NoveltyFeature>>;
+	using FeatureSet = std::vector<std::unique_ptr<FSNoveltyFeature>>;
 	
 
 	GenericNoveltyEvaluator(const Problem& problem, unsigned novelty_bound, const NoveltyFeaturesConfiguration& feature_configuration);
@@ -43,7 +45,7 @@ public:
 	}
 
 	unsigned numFeatures() const { return _features.size(); }
-	NoveltyFeature& feature(unsigned i) const { return *_features[i]; }
+	FSNoveltyFeature& feature(unsigned i) const { return *_features[i]; }
 
 
 protected:

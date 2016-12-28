@@ -3,9 +3,10 @@
 
 #include <search/drivers/registry.hxx>
 #include <search/nodes/heuristic_search_node.hxx>
-#include <search/algorithms/aptk/best_first_search.hxx>
+#include <lapkt/algorithms/best_first_search.hxx>
 #include <utils/config.hxx>
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
+#include <lifted_state_model.hxx>
 
 namespace fs0 { class GroundStateModel; class SearchStats; }
 

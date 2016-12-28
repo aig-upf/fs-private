@@ -1,14 +1,12 @@
 
 #pragma once
 
-#include <aptk2/search/interfaces/search_algorithm.hxx>
-
 #include <lifted_state_model.hxx>
 #include <actions/action_id.hxx>
 #include <search/nodes/heuristic_search_node.hxx>
 #include <search/drivers/registry.hxx>
-#include <search/algorithms/aptk/events.hxx>
-#include <search/algorithms/aptk/best_first_search.hxx>
+#include <lapkt/events.hxx>
+#include <lapkt/algorithms/best_first_search.hxx>
 #include <utils/config.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 

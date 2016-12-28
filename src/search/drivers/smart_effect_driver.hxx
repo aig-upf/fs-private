@@ -8,6 +8,7 @@
 #include <search/algorithms/ehc.hxx>
 #include <search/events.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
+#include <lapkt/algorithms/best_first_search.hxx>
 
 namespace fs0 { class GroundStateModel; class SearchStats; }
 
@@ -21,16 +22,18 @@ namespace fs0 { namespace drivers {
 class SmartEffectDriver : public Driver {
 public:
 	using NodeT = HeuristicSearchNode<State, GroundAction>;
-	using Engine = std::unique_ptr<EHCThenGBFSSearch<fs0::gecode::SmartRPG>>;
+	using GBFST = lapkt::StlBestFirstSearch<NodeT, gecode::SmartRPG, GroundStateModel>;
+	using EngineT = EHCThenGBFSSearch<GBFST, gecode::SmartRPG>;
+	using EnginePT = std::unique_ptr<EngineT>;
 	
 protected:
-	std::unique_ptr<fs0::gecode::SmartRPG> _heuristic;
+	std::unique_ptr<gecode::SmartRPG> _heuristic;
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 	
 public:
 	SmartEffectDriver() {}
 	
-	Engine create(const Config& config, const GroundStateModel& problem, SearchStats& stats);
+	EnginePT create(const Config& config, const GroundStateModel& problem, SearchStats& stats);
 	
 	static gecode::SmartRPG* configure_heuristic(const Problem& problem, const Config& config);
 	

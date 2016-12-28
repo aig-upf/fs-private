@@ -6,7 +6,7 @@
 namespace fs0 {
 
 
-aptk::ValueIndex
+FSFeatureValueT
 StateVariableFeature::evaluate( const State& s ) const {
 	return s.getValue(_variable);
 }
@@ -16,9 +16,9 @@ std::ostream& StateVariableFeature::print(std::ostream& os) const {
 	return os << info.getVariableName(_variable);
 }
 
-aptk::ValueIndex
+FSFeatureValueT
 ConditionSetFeature::evaluate( const State& s ) const {
-	aptk::ValueIndex satisfied = 0;
+	FSFeatureValueT satisfied = 0;
 	for ( const fs::AtomicFormula* c : _conditions ) {
 		if (c->interpret(s)) satisfied++;
 	}
@@ -41,7 +41,7 @@ ArbitraryTermFeature::ArbitraryTermFeature(const ArbitraryTermFeature& other)
 	: _term(other._term->clone())
 {}
 
-aptk::ValueIndex
+FSFeatureValueT
 ArbitraryTermFeature::evaluate(const State& s) const {
 	return _term->interpret(s);
 }

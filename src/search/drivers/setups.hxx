@@ -3,7 +3,7 @@
 
 #include <lifted_state_model.hxx>
 #include <ground_state_model.hxx>
-#include <search/algorithms/aptk/events.hxx>
+#include <lapkt/events.hxx>
 #include <search/events.hxx>
 
 namespace fs0 { class Problem; }

@@ -2,7 +2,6 @@
 #pragma once
 
 #include <search/algorithms/ehc.hxx>
-#include <search/algorithms/aptk/search_algorithm.hxx>
 
 #include <search/drivers/registry.hxx>
 #include <state.hxx>
@@ -10,12 +9,10 @@
 
 namespace fs0 { namespace drivers {
 
-using FSSearchAlgorithm = lapkt::SearchAlgorithm<State, unsigned>;
-
 
 //! A combined search strategy that first applies a given Enhanced Hill-Climbing and then, if the goal was not found,
 //! a standard GBFS.
-template <typename HeuristicT>
+template <typename SearchAlgorithmT, typename HeuristicT>
 class EHCThenGBFSSearch {
 public:
 	~EHCThenGBFSSearch() = default;
@@ -24,7 +21,7 @@ public:
 	EHCThenGBFSSearch& operator=(const EHCThenGBFSSearch&) = default;
 	EHCThenGBFSSearch& operator=(EHCThenGBFSSearch&&) = default;
 	
-	EHCThenGBFSSearch(const Problem& problem, FSSearchAlgorithm* gbfs, EHCSearch<HeuristicT>* ehc) :
+	EHCThenGBFSSearch(const Problem& problem, SearchAlgorithmT* gbfs, EHCSearch<HeuristicT>* ehc) :
 		_problem(problem), _gbfs(gbfs), _ehc(ehc)
 	{}
 	
@@ -57,7 +54,7 @@ protected:
 	const Problem& _problem;
 	
 	//!
-	std::unique_ptr<FSSearchAlgorithm> _gbfs;
+	std::unique_ptr<SearchAlgorithmT> _gbfs;
 	
 	//!
 	std::unique_ptr<EHCSearch<HeuristicT>> _ehc;

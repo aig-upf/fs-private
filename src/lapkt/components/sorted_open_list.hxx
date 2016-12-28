@@ -35,27 +35,27 @@ namespace lapkt {
 
 //! We need to define custom hash, equality and comparison functions for the node-pointer type.
 
-template <typename NodePtrT>
-struct node_comparer { bool operator()(const NodePtrT& n1, const NodePtrT& n2) const { return *n1 > *n2; } };
+template <typename NodePT>
+struct node_comparer { bool operator()(const NodePT& n1, const NodePT& n2) const { return *n1 > *n2; } };
 
-template <typename NodePtrT>
-struct node_hash { size_t operator() (const NodePtrT& node) const { return node->state.hash(); } };
+template <typename NodePT>
+struct node_hash { size_t operator() (const NodePT& node) const { return node->state.hash(); } };
 
-template <typename NodePtrT>
-struct node_equal_to { bool operator() (const NodePtrT& n1, const NodePtrT& n2) const { return n1->state == n2->state; } };
+template <typename NodePT>
+struct node_equal_to { bool operator() (const NodePT& n1, const NodePT& n2) const { return n1->state == n2->state; } };
 
 
-template <typename NodeType,
+template <typename NodeT,
           typename Heuristic,
-          typename NodePtrT = std::shared_ptr<NodeType>,
-          typename Container = std::vector<NodePtrT>,
-          typename Comparer = node_comparer<NodePtrT>
+          typename NodePT = std::shared_ptr<NodeT>,
+          typename Container = std::vector<NodePT>,
+          typename Comparer = node_comparer<NodePT>
 >
-class StlSortedOpenList : public aptk::OpenList<NodeType, std::priority_queue<NodePtrT, Container, Comparer>>
+class StlSortedOpenList : public aptk::OpenList<NodeT, std::priority_queue<NodePT, Container, Comparer>>
 {
 public:
 	//! The constructor of a sorted open list needs to specify the heuristic to sort the nodes with
-	StlSortedOpenList(Heuristic& heuristic)
+	explicit StlSortedOpenList(Heuristic& heuristic)
 		: _heuristic(heuristic), already_in_open_()
 	{}
 	virtual ~StlSortedOpenList() = default;
@@ -66,7 +66,7 @@ public:
 	StlSortedOpenList& operator=(const StlSortedOpenList& rhs) = default;
 	StlSortedOpenList& operator=(StlSortedOpenList&& rhs) = default;
 
-	bool insert(const NodePtrT& node) override {
+	bool insert(const NodePT& node) override {
 		if ( node->dead_end() ) return false;
 		this->push( node );
 		already_in_open_.insert( node );
@@ -76,7 +76,7 @@ public:
 	//! Check if the open list already contains a node 'previous' referring to the same state.
 	//! If that is the case, there'll be no need to reinsert the node, and we signal so returning true.
 	//! If, in addition, 'previous' had a higher g-value, we do an in-place modification of it.
-	bool updatable(const NodePtrT& node) {
+	bool updatable(const NodePT& node) {
 		auto it = already_in_open_.find(node);
 		if (it == already_in_open_.end()) return false; // No node with the same state is in the open list
 		
@@ -91,9 +91,9 @@ public:
 		return true;
 	}
 
-	NodePtrT get_next() override {
+	NodePT get_next() override {
 		assert( !is_empty() );
-		NodePtrT node = this->top();
+		NodePT node = this->top();
 		this->pop();
 		already_in_open_.erase(node);
 		return node;
@@ -106,7 +106,7 @@ protected:
 	Heuristic& _heuristic;
 	
 	//! An index of the nodes with are in the open list at any moment, for faster access
-	using node_unordered_set = std::unordered_set<NodePtrT, node_hash<NodePtrT>, node_equal_to<NodePtrT>>;
+	using node_unordered_set = std::unordered_set<NodePT, node_hash<NodePT>, node_equal_to<NodePT>>;
 	node_unordered_set already_in_open_;
 };
 
