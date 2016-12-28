@@ -49,15 +49,15 @@ public:
 	const std::vector<ValueT>& values() const { return _values; }
 	
 	//! Checks whether a certain variable has the given value
-	bool check(unsigned index, ValueT value) const { return value(index) == value; }
+	bool check(unsigned index, ValueT val) const { return value(index) == val; }
 
 	//! Return the number of state variables
 	unsigned size() const { return _values.size(); }
 	
 	//! Update the value of a single variable.
 	//! This operation has linear cost, as it involves updating the internal hash of the state.
-	void set(unsigned variable, ValueT value) {
-		_values.at(variable) = value;
+	void set(unsigned variable, ValueT val) {
+		_values.at(variable) = val;
 		_hash = computeHash();
 	}
 	

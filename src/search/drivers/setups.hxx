@@ -3,6 +3,8 @@
 
 #include <lifted_state_model.hxx>
 #include <ground_state_model.hxx>
+#include <models/simple_state_model.hxx>
+
 #include <lapkt/events.hxx>
 #include <search/events.hxx>
 
@@ -17,6 +19,8 @@ public:
 	
 	//! A simple model with all grounded actions
 	static GroundStateModel fully_ground_model(Problem& problem);
+	
+	static SimpleStateModel fully_ground_simple_model(Problem& problem);
 	
 	//! We'll use all the ground actions for the search plus the partially ground actions for the heuristic computations
 	static GroundStateModel ground_search_lifted_heuristic(Problem& problem);

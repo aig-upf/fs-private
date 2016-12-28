@@ -15,6 +15,7 @@
 // #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <actions/grounding.hxx>
 #include <problem_info.hxx>
+#include <models/simple_state_model.hxx>
 
 
 // using namespace fs0::gecode;
@@ -44,8 +45,8 @@ EngineRegistry::EngineRegistry() {
 	add("bfws",  new BFWSDriver<GroundStateModel>());
 	add("lbfws",  new BFWSDriver<LiftedStateModel>());
 	
-	add("sbfws",  new bfws::SimulatedBFWSDriver<GroundStateModel>());
-	add("lsbfws",  new bfws::SimulatedBFWSDriver<LiftedStateModel>());
+	add("sbfws",  new bfws::SimulatedBFWSDriver<SimpleStateModel>());
+// 	add("lsbfws",  new bfws::SimulatedBFWSDriver<LiftedStateModel>());
 	
 	
 	add("bfs",  new BreadthFirstSearchDriver());

@@ -28,6 +28,12 @@ GroundingSetup::fully_ground_model(Problem& problem) {
 	return GroundStateModel(problem); 
 }
 
+SimpleStateModel
+GroundingSetup::fully_ground_simple_model(Problem& problem) {
+	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
+	return SimpleStateModel::build(problem); 
+}
+
 GroundStateModel
 GroundingSetup::ground_search_lifted_heuristic(Problem& problem) {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));

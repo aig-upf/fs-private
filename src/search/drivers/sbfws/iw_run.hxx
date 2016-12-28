@@ -9,15 +9,13 @@
 #include <lapkt/algorithms/generic_search.hxx>
 #include <search/drivers/bfws/iw_novelty_evaluator.hxx>
 #include <problem_info.hxx>
-#include <languages/fstrips/language.hxx>
-#include <problem.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
+#include <utils/atom_index.hxx>
 #include <state.hxx>
 #include <lapkt/novelty/features.hxx>
 #include <boost/pool/pool_alloc.hpp>
 
-namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace bfws {
 
@@ -143,9 +141,6 @@ public:
 };
 
 
-//! Helper
-std::vector<Atom> obtain_goal_atoms(const fs::Formula* goal);
-
 //! This is the acceptor for an open list with width-based node pruning
 //! - a node is pruned iff its novelty is higher than a given threshold.
 class IWRunAcceptor {
@@ -190,8 +185,8 @@ template <typename NodeT,
 class IWRun : public lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>
 {
 public:
-	using ActionT = typename StateModel::ActionType;
 	using Base = lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>;
+	using ActionT = typename StateModel::ActionType;
 	using StateT = typename StateModel::StateT;
 	using PlanT = typename Base::PlanT;
 	using NodePT = typename Base::NodePtr;
@@ -203,27 +198,22 @@ public:
 
 	//! Factory method
 	static IWRun* build(const StateModel& model, const lapkt::novelty::FeatureSet<State>& featureset, const IWNoveltyEvaluator& novelty_evaluator, bool mark_negative_propositions) {
-		const Problem& problem = model.getTask();
-
-		auto atoms = obtain_goal_atoms(problem.getGoalConditions());
 		auto acceptor = std::make_shared<IWRunAcceptor>(featureset, novelty_evaluator);
-
-		return new IWRun(model, OpenListT(acceptor), atoms, false, mark_negative_propositions);
+		return new IWRun(model, OpenListT(acceptor), false, mark_negative_propositions);
 	}
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the particular open and closed list objects
-	IWRun(const StateModel& model, OpenListT&& open, const std::vector<Atom>& goal, bool complete, bool mark_negative_propositions) :
+	IWRun(const StateModel& model, OpenListT&& open, bool complete, bool mark_negative_propositions) :
 		Base(model, std::move(open), ClosedListT()),
 		_complete(complete),
-		_goal_atoms(goal),
-		_reached(_goal_atoms.size(), nullptr),
+		_reached(model.num_subgoals(), nullptr),
 		_unreached(),
 		_mark_negative_propositions(mark_negative_propositions)
 	{
 
-		for (unsigned i = 0; i < _goal_atoms.size(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
+		for (unsigned i = 0; i < model.num_subgoals(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
 	}
 
 	~IWRun() = default;
@@ -277,8 +267,6 @@ protected:
 	//! NOTE - as of yet, this is unused
 	bool _complete;
 
-	const std::vector<Atom> _goal_atoms;
-
 	//! _reached[i] contains the first node that reaches goal atom 'i'.
 	std::vector<NodePT> _reached;
 
@@ -297,13 +285,11 @@ protected:
 		// We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
 		// to check if the current node satisfies any of them - and if it does, we mark it appropriately.
 		for (auto it = _unreached.begin(); it != _unreached.end(); ) {
-			unsigned atom_idx = *it;
-			const Atom& atom = _goal_atoms[atom_idx];
+			unsigned subgoal_idx = *it;
 
-			if (state.contains(atom)) { // The state satisfies goal atom with index 'i'
-				_reached[atom_idx] = node;
+			if (this->_model.goal(state, subgoal_idx)) {
+				_reached[subgoal_idx] = node;
 				it = _unreached.erase(it);
-				// LPT_INFO("cout", "IWRUN: Goal atom '" << *atom << "' reached for the first time");
 			} else {
 				++it;
 			}
@@ -327,7 +313,7 @@ public:
 		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
 			NodePT node = _reached[subgoal_idx];
 			if (!node) { // No solution for the subgoal was found
-				LPT_EDEBUG("simulation-relevant", "Goal atom '" << _goal_atoms[subgoal_idx] << "' unreachable");
+				LPT_EDEBUG("simulation-relevant", "Goal atom #'" << subgoal_idx << "' unreachable");
 				continue;
 			}
 			++reachable;

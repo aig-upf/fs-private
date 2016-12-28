@@ -1,6 +1,7 @@
 
 #include <search/drivers/sbfws/sbfws_driver.hxx>
 #include <search/utils.hxx>
+#include <models/simple_state_model.hxx>
 #include <aptk2/tools/logging.hxx>
 
 namespace fs0 { namespace bfws {
@@ -14,15 +15,17 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 
 template <>
 ExitCode
-SimulatedBFWSDriver<GroundStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
-	return do_search(drivers::GroundingSetup::fully_ground_model(problem), config, out_dir, start_time);
+SimulatedBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	return do_search(drivers::GroundingSetup::fully_ground_simple_model(problem), config, out_dir, start_time);
 }
 
+/*
 template <>
 ExitCode
 SimulatedBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time);
 }
+*/
 
 template <typename StateModelT>
 ExitCode
