@@ -36,8 +36,8 @@ template <typename StateT, typename ActionT>
 class HeuristicSearchNode {
 public:
 	using ptr_t = std::shared_ptr<HeuristicSearchNode<StateT, ActionT>>;
+	using ActionIdT = typename ActionT::IdType;
 
-	
 	HeuristicSearchNode() = delete;
 	~HeuristicSearchNode() = default;
 	
@@ -51,7 +51,7 @@ public:
 		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(std::numeric_limits<long>::max()), _helpful(false)
 	{}
 	
-	HeuristicSearchNode(StateT&& state_, typename ActionT::IdType action_, ptr_t parent_) :
+	HeuristicSearchNode(StateT&& state_, ActionIdT action_, ptr_t parent_) :
 		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(std::numeric_limits<long>::max()), _helpful(false)
 	{}
 
@@ -104,7 +104,7 @@ public:
 
 	StateT state;
 	
-	typename ActionT::IdType action;
+	ActionIdT action;
 	
 	ptr_t parent;
 	

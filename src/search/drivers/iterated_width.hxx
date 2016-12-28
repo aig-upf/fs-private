@@ -2,7 +2,6 @@
 #pragma once
 
 #include <search/drivers/registry.hxx>
-#include <search/nodes/blind_search_node.hxx>
 #include <search/components/single_novelty.hxx>
 #include <lapkt/events.hxx>
 #include <search/algorithms/iterated_width.hxx>

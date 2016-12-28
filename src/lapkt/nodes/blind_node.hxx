@@ -1,5 +1,5 @@
 /*
-FS0 planner
+
 Copyright (c) 2015
 Guillem Frances <guillem.frances@upf.edu>
 
@@ -26,17 +26,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <aptk2/tools/logging.hxx>
-#include <actions/actions.hxx>
-#include <state.hxx>
 
-namespace fs0 { namespace drivers {
+namespace lapkt {
 
 template <typename StateT, typename ActionT>
 class BlindSearchNode {
 public:
 	StateT state; // TODO - Check no extra copies are being performed, or switch to pointers otherwise.
 	
-	typename ActionT::IdType action;
+	using ActionIdT = typename ActionT::IdType;
+	ActionIdT action;
 
 	std::shared_ptr<BlindSearchNode<StateT, ActionT>> parent;
 
@@ -55,7 +54,7 @@ public:
 	{}
 
 	//! Constructor with move of the state (cheaper)
-	BlindSearchNode( StateT&& _state, typename ActionT::IdType _action, std::shared_ptr< BlindSearchNode<StateT, ActionT> > _parent ) :
+	BlindSearchNode( StateT&& _state, ActionIdT _action, std::shared_ptr< BlindSearchNode<StateT, ActionT> > _parent ) :
 		state(std::move(_state)), action(_action), parent(_parent)
 	{}
 
@@ -73,4 +72,4 @@ public:
 	std::size_t hash() const { return state.hash(); }
 };
 
-} }  // namespaces
+}  // namespaces

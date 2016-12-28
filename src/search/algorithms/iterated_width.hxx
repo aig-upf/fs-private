@@ -3,15 +3,15 @@
 
 #include <functional>
 
-#include <search/nodes/blind_search_node.hxx>
+#include <lapkt/nodes/blind_node.hxx>
+#include <lapkt/algorithms/breadth_first_search.hxx>
+#include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
+
 #include <search/components/single_novelty.hxx>
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
-#include <lapkt/algorithms/breadth_first_search.hxx>
 #include <ground_state_model.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
-
-#include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
 #include <search/events.hxx>
 #include <search/stats.hxx>
@@ -30,7 +30,7 @@ public:
 	using PlanT = std::vector<typename StateModelT::ActionType::IdType>;
 	
 	//! IW uses a simple blind-search node
-	using NodeT = BlindSearchNode<State, ActionT>;
+	using NodeT = lapkt::BlindSearchNode<State, ActionT>;
 	
 	//! IW uses a single novelty component as the open list evaluator
 	using SearchNoveltyEvaluator = SingleNoveltyComponent<StateModelT, NodeT>;

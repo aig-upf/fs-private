@@ -2,9 +2,11 @@
 #pragma once
 
 #include <search/drivers/registry.hxx>
-#include <search/nodes/blind_search_node.hxx>
+#include <lapkt/nodes/blind_node.hxx>
 #include <lapkt/algorithms/breadth_first_search.hxx>
 #include <search/stats.hxx>
+#include <state.hxx>
+#include <actions/actions.hxx>
 
 #include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
@@ -16,7 +18,7 @@ namespace fs0 { namespace drivers {
 class BreadthFirstSearchDriver : public Driver {
 public:
 	//! The Breadth-First Search engine uses a simple blind-search node
-	using NodeT = BlindSearchNode<fs0::State, GroundAction>;
+	using NodeT = lapkt::BlindSearchNode<State, GroundAction>;
 	
 	using Engine = std::unique_ptr<lapkt::StlBreadthFirstSearch<NodeT, GroundStateModel>>;
 	

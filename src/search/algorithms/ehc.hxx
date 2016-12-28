@@ -2,7 +2,6 @@
 #pragma once
 
 #include <search/nodes/heuristic_search_node.hxx>
-#include <search/nodes/blind_search_node.hxx>
 #include <ground_state_model.hxx>
 #include <state.hxx>
 #include <problem.hxx>

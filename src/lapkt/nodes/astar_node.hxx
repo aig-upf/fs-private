@@ -1,5 +1,5 @@
 /*
-FS0 planner
+
 Copyright (c) 2015
 Guillem Frances <guillem.frances@upf.edu>
 
@@ -32,6 +32,8 @@ namespace fs0 { namespace drivers {
 template <typename StateT, typename ActionT>
 class AStarSearchNode {
 public:
+	using ActionIdT = typename ActionT::IdType;
+	
 	AStarSearchNode() = delete;
 	virtual ~AStarSearchNode() {}
 	
@@ -45,7 +47,7 @@ public:
 		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(0)
 	{}
 
-	AStarSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<AStarSearchNode<StateT ,ActionT>> parent_) :
+	AStarSearchNode(StateT&& state_, ActionIdT action_, std::shared_ptr<AStarSearchNode<StateT ,ActionT>> parent_) :
 		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(0)
 	{}
 
@@ -85,7 +87,7 @@ public:
 
 	StateT state;
 	
-	typename ActionT::IdType action;
+	ActionIdT action;
 	
 	std::shared_ptr<AStarSearchNode<StateT, ActionT>> parent;
 	
