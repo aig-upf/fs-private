@@ -37,7 +37,7 @@ template <typename NodeT,
           typename StateModel,
           typename NodePT = std::shared_ptr<NodeT>,
           typename NodeCompareT = node_comparer<NodePT>,
-          typename OpenListT = UpdatableOpenList<NodeT, NodePT, std::vector<NodePT>, NodeCompareT>,
+          typename OpenListT = UpdatableOpenList<NodeT, NodePT, NodeCompareT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
 class StlBestFirstSearch : public GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>

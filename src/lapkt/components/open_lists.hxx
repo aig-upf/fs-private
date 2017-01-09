@@ -47,10 +47,9 @@ struct node_equal_to { bool operator() (const NodePT& n1, const NodePT& n2) cons
 //! of the nodes contained in the list.
 template <typename NodeT,
           typename NodePT = std::shared_ptr<NodeT>,
-          typename Container = std::vector<NodePT>,
-          typename Comparer = node_comparer<NodePT>
+          typename ComparerT = node_comparer<NodePT>
 >
-class UpdatableOpenList : public std::priority_queue<NodePT, Container, Comparer>
+class UpdatableOpenList : public std::priority_queue<NodePT, std::vector<NodePT>, ComparerT>
 {
 public:
 	//! Constructor
@@ -110,10 +109,9 @@ protected:
 //! A simple wrapper around a priority_queue, for compatibility
 template <typename NodeT,
           typename NodePT = std::shared_ptr<NodeT>,
-          typename Container = std::vector<NodePT>,
-          typename Comparer = node_comparer<NodePT>
+          typename ComparerT = node_comparer<NodePT>
 >
-class SimpleOpenList : public std::priority_queue<NodePT, Container, Comparer>
+class SimpleOpenList : public std::priority_queue<NodePT, std::vector<NodePT>, ComparerT>
 {
 public:
 	//! Constructor
