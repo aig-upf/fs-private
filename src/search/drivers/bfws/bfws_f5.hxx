@@ -255,7 +255,7 @@ public:
 	using NodeT = BFWSF5Node;
 	using NodeCompareT = F5NodeComparer;
 	using HeuristicEnsembleT = BFWSF5HeuristicEnsemble<GroundStateModel, BaseHeuristicT>;
-	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, std::shared_ptr<NodeT>, NodeCompareT>;
+	using RawEngineT = lapkt::StlBestFirstSearch<NodeT, GroundStateModel, std::shared_ptr<NodeT>, NodeCompareT>;
 	using EngineT = std::unique_ptr<RawEngineT>;
 
 	//!
@@ -263,7 +263,7 @@ public:
 	
 		auto base_heuristic = std::unique_ptr<BaseHeuristicT>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
 		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, bfws_config._max_width, feature_configuration, std::move(base_heuristic)));
-		auto engine = EngineT(new RawEngineT(model, *_heuristic));
+		auto engine = EngineT(new RawEngineT(model));
 		
 		EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 		EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _stats, _handlers);

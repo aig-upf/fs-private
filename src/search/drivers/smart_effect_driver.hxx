@@ -22,7 +22,7 @@ namespace fs0 { namespace drivers {
 class SmartEffectDriver : public Driver {
 public:
 	using NodeT = HeuristicSearchNode<State, GroundAction>;
-	using GBFST = lapkt::StlBestFirstSearch<NodeT, gecode::SmartRPG, GroundStateModel>;
+	using GBFST = lapkt::StlBestFirstSearch<NodeT, GroundStateModel>;
 	using EngineT = EHCThenGBFSSearch<GBFST, gecode::SmartRPG>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	

@@ -47,7 +47,7 @@ SmartLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchS
 		LiftedEffectCSP::prune_unreachable(_heuristic->get_managers(), graph);
 	}
 	
-	auto engine = EnginePT(new EngineT(model, *_heuristic));
+	auto engine = EnginePT(new EngineT(model));
 	
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);

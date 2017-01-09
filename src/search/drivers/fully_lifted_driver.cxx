@@ -32,7 +32,7 @@ FullyLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchS
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
 	_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler));
-	auto engine = EnginePT(new EngineT(model, *_heuristic));
+	auto engine = EnginePT(new EngineT(model));
 	
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);

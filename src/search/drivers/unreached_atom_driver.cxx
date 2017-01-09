@@ -36,7 +36,7 @@ UnreachedAtomDriver<StateModelT>::create(const Config& config, const StateModelT
 		extension_handler)
 	);
 	
-	auto engine = EnginePT(new EngineT(model, *_heuristic));
+	auto engine = EnginePT(new EngineT(model));
 	
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);

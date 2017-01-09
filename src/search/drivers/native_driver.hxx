@@ -23,7 +23,7 @@ public:
 	using ActionT = typename StateModelT::ActionType;
 	using NodeT = HeuristicSearchNode<State, ActionT>;
 	using HeuristicT = DirectCRPG;
-	using EngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, StateModelT>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	
 	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;

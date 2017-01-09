@@ -50,8 +50,8 @@ GBFS_CRPGDriver::search(Problem& problem, const Config& config, const std::strin
 		_heuristic = new GecodeCHMax(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 	}
 	
-	using EngineT = lapkt::StlBestFirstSearch<NodeT, GecodeCRPG, GroundStateModel>;
-	auto engine = std::unique_ptr<EngineT>(new EngineT(model, *_heuristic));
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, GroundStateModel>;
+	auto engine = std::unique_ptr<EngineT>(new EngineT(model));
 	
 	drivers::EventUtils::setup_stats_observer<NodeT>(*_stats, _handlers);
 	drivers::EventUtils::setup_evaluation_observer<NodeT, GecodeCRPG>(config, *_heuristic, *_stats, _handlers);

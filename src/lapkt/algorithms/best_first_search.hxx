@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 #include <lapkt/algorithms/generic_search.hxx>
-#include <lapkt/components/sorted_open_list.hxx>
+#include <lapkt/components/open_lists.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 
 namespace lapkt {
@@ -34,11 +34,10 @@ namespace lapkt {
 //! A best-first search is a generic search with an open list sorted by a certain (given) heuristic
 //! and a standard unsorted closed list. Type of node and state model are still generic.
 template <typename NodeT,
-          typename HeuristicT,
           typename StateModel,
           typename NodePT = std::shared_ptr<NodeT>,
           typename NodeCompareT = node_comparer<NodePT>,
-          typename OpenListT = StlSortedOpenList<NodeT, HeuristicT, NodePT, std::vector<NodePT>, NodeCompareT>,
+          typename OpenListT = UpdatableOpenList<NodeT, NodePT, std::vector<NodePT>, NodeCompareT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
 class StlBestFirstSearch : public GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>
@@ -53,9 +52,9 @@ public:
 		BaseClass(model, std::move(open), ClosedListT())
 	{}
 	
-	//! Simply default-construct an open list with the given heuristic object
-	StlBestFirstSearch(const StateModel& model, HeuristicT& heuristic) :
-		BaseClass(model, OpenListT(heuristic), ClosedListT())
+	//! Simply default-construct an open list
+	StlBestFirstSearch(const StateModel& model) :
+		BaseClass(model, OpenListT(), ClosedListT())
 	{}
 	
 	virtual ~StlBestFirstSearch() = default;

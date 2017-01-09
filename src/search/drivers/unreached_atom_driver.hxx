@@ -21,7 +21,7 @@ public:
 	using ActionT = typename StateModelT::ActionType;
 	using NodeT = HeuristicSearchNode<State, ActionT>;
 	using HeuristicT = fs0::gecode::UnreachedAtomRPG;
-	using EngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, StateModelT>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	
 	EnginePT create(const Config& config, const StateModelT& problem, SearchStats& stats);

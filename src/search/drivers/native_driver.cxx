@@ -28,7 +28,7 @@ NativeDriver<StateModelT>::create(const Config& config, const StateModelT& model
 	
 	_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(problem, DirectActionManager::create(actions), std::move(direct_builder)));
 	
-	auto engine = EnginePT(new EngineT(model, *_heuristic));
+	auto engine = EnginePT(new EngineT(model));
 	
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);

@@ -361,7 +361,7 @@ public:
 	using NodeT = SBFWSNode<fs0::State, ActionT>;
 	using NodeCompareT = SBFWSNodeComparer<NodeT>;
 	using HeuristicEnsembleT = SBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer>;
-	using EngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, StateModelT, std::shared_ptr<NodeT>, NodeCompareT>;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, StateModelT, std::shared_ptr<NodeT>, NodeCompareT>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	using FeatureSetT = lapkt::novelty::FeatureSet<StateT>;
 
@@ -376,7 +376,7 @@ public:
 
 		_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions));
 
-		auto engine = EnginePT(new EngineT(model, *_heuristic));
+		auto engine = EnginePT(new EngineT(model));
 
 		drivers::EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 		drivers::EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _stats, _handlers);

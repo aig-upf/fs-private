@@ -75,7 +75,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 		EventUtils::setup_HA_observer<NodeT>(_handlers);
 	}
 	
-	auto engine = new GBFST(model, *_heuristic);
+	auto engine = new GBFST(model);
 	lapkt::events::subscribe(*engine, _handlers);
 	
 	return EnginePT(new EngineT(problem, engine, ehc));

@@ -14,7 +14,7 @@ typename BFWSSubdriverF0<StateModelT, ActionT>::Engine
 BFWSSubdriverF0<StateModelT, ActionT>::create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
 	
 	_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(model, bfws_config._max_width, feature_configuration));
-	auto engine = new lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>(model, *_heuristic);
+	auto engine = new lapkt::StlBestFirstSearch<NodeT, StateModelT>(model);
 	
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _stats, _handlers);
@@ -36,7 +36,7 @@ BFWS1H1WSubdriver<NodeT, HeuristicT, NodeCompareT, HeuristicEnsembleT, RawEngine
 	
 	auto base_heuristic = std::unique_ptr<HeuristicT>(SmartEffectDriver::configure_heuristic(model.getTask(), config));
 	_heuristic = std::unique_ptr<HeuristicEnsembleT>(new HeuristicEnsembleT(model, bfws_config._max_width, feature_configuration, std::move(base_heuristic)));
-	auto engine = new RawEngineT(model, *_heuristic);
+	auto engine = new RawEngineT(model);
 	
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicEnsembleT>(config, *_heuristic, _stats, _handlers);

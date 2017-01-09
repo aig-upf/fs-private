@@ -29,8 +29,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <unordered_set>
 
-#include <aptk2/search/interfaces/open_list.hxx>
-
 namespace lapkt {
 
 //! We need to define custom hash, equality and comparison functions for the node-pointer type.
@@ -45,28 +43,30 @@ template <typename NodePT>
 struct node_equal_to { bool operator() (const NodePT& n1, const NodePT& n2) const { return n1->state == n2->state; } };
 
 
+//! An classical open list augmented with a hash table to allow for fast updates
+//! of the nodes contained in the list.
 template <typename NodeT,
-          typename Heuristic,
           typename NodePT = std::shared_ptr<NodeT>,
           typename Container = std::vector<NodePT>,
           typename Comparer = node_comparer<NodePT>
 >
-class StlSortedOpenList : public aptk::OpenList<NodeT, std::priority_queue<NodePT, Container, Comparer>>
+class UpdatableOpenList : public std::priority_queue<NodePT, Container, Comparer>
 {
 public:
-	//! The constructor of a sorted open list needs to specify the heuristic to sort the nodes with
-	explicit StlSortedOpenList(Heuristic& heuristic)
-		: _heuristic(heuristic), already_in_open_()
+	//! Constructor
+	explicit UpdatableOpenList()
+		: already_in_open_()
 	{}
-	virtual ~StlSortedOpenList() = default;
+	
+	virtual ~UpdatableOpenList() = default;
 	
 	// Disallow copy, but allow move
-	StlSortedOpenList(const StlSortedOpenList& other) = default;
-	StlSortedOpenList(StlSortedOpenList&& other) = default;
-	StlSortedOpenList& operator=(const StlSortedOpenList& rhs) = default;
-	StlSortedOpenList& operator=(StlSortedOpenList&& rhs) = default;
+	UpdatableOpenList(const UpdatableOpenList&) = default;
+	UpdatableOpenList(UpdatableOpenList&&) = default;
+	UpdatableOpenList& operator=(const UpdatableOpenList&) = default;
+	UpdatableOpenList& operator=(UpdatableOpenList&&) = default;
 
-	bool insert(const NodePT& node) override {
+	bool insert(const NodePT& node) {
 		if ( node->dead_end() ) return false;
 		this->push( node );
 		already_in_open_.insert( node );
@@ -91,7 +91,7 @@ public:
 		return true;
 	}
 
-	NodePT get_next() override {
+	NodePT get_next() {
 		assert( !is_empty() );
 		NodePT node = this->top();
 		this->pop();
@@ -99,15 +99,47 @@ public:
 		return node;
 	}
 
-	bool is_empty() const override { return this->empty(); }
+	bool is_empty() const { return this->empty(); }
 	
 protected:
-	//! The heuristic we'll use to sort the nodes
-	Heuristic& _heuristic;
-	
 	//! An index of the nodes with are in the open list at any moment, for faster access
 	using node_unordered_set = std::unordered_set<NodePT, node_hash<NodePT>, node_equal_to<NodePT>>;
 	node_unordered_set already_in_open_;
+};
+
+//! A simple wrapper around a priority_queue, for compatibility
+template <typename NodeT,
+          typename NodePT = std::shared_ptr<NodeT>,
+          typename Container = std::vector<NodePT>,
+          typename Comparer = node_comparer<NodePT>
+>
+class SimpleOpenList : public std::priority_queue<NodePT, Container, Comparer>
+{
+public:
+	//! Constructor
+	explicit SimpleOpenList() = default;
+	~SimpleOpenList() = default;
+	
+	// Disallow copy, but allow move
+	SimpleOpenList(const SimpleOpenList&) = default;
+	SimpleOpenList(SimpleOpenList&&) = default;
+	SimpleOpenList& operator=(const SimpleOpenList&) = default;
+	SimpleOpenList& operator=(SimpleOpenList&&) = default;
+
+	bool insert(const NodePT& node) {
+		if ( node->dead_end() ) return false;
+		this->push( node );
+		return true;
+	}
+
+	NodePT get_next() {
+		assert( !is_empty() );
+		NodePT node = this->top();
+		this->pop();
+		return node;
+	}
+
+	bool is_empty() const { return this->empty(); }
 };
 
 

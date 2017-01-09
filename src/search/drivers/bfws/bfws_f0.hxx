@@ -24,7 +24,7 @@ class BFWSSubdriverF0 {
 public:
 	using NodeT = BFWSNode<fs0::State, ActionT>;
 	using HeuristicT = UnsatGoalsNoveltyComponent<StateModelT, NodeT>;
-	using Engine = std::unique_ptr<lapkt::StlBestFirstSearch<NodeT, HeuristicT, StateModelT>>;
+	using Engine = std::unique_ptr<lapkt::StlBestFirstSearch<NodeT, StateModelT>>;
 
 	//!
 	Engine create(const Config& config, BFWSConfig& bfws_config, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model);
@@ -187,7 +187,7 @@ template <typename NodeT,
           typename HeuristicT,
           typename NodeCompareT,
           typename HeuristicEnsembleT = BFWSHeuristicEnsemble<HeuristicT>,
-          typename RawEngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicEnsembleT, GroundStateModel, std::shared_ptr<NodeT>, NodeCompareT>,
+          typename RawEngineT = lapkt::StlBestFirstSearch<NodeT, GroundStateModel, std::shared_ptr<NodeT>, NodeCompareT>,
           typename Engine = std::unique_ptr<RawEngineT>
 >
 class BFWS1H1WSubdriver {

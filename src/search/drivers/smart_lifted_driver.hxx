@@ -19,7 +19,7 @@ class SmartLiftedDriver : public Driver {
 protected:
 	using NodeT = HeuristicSearchNode<State, LiftedActionID>;
 	using HeuristicT = fs0::gecode::SmartRPG;
-	using EngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicT, LiftedStateModel>;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, LiftedStateModel>;
 	using EnginePT = std::unique_ptr<EngineT>;
 
 public:

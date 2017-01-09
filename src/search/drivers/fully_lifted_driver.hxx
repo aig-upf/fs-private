@@ -19,7 +19,7 @@ class FullyLiftedDriver : public Driver {
 public:
 	using NodeT = HeuristicSearchNode<State, LiftedActionID>;
 	using HeuristicT = fs0::gecode::GecodeCRPG;
-	using EngineT = lapkt::StlBestFirstSearch<NodeT, HeuristicT, LiftedStateModel>;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, LiftedStateModel>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	
 	
