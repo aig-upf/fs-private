@@ -22,7 +22,7 @@ def single_build(directory, command):
 	# First build the LAPKT production library
 	lapkt_dir = os.environ['LAPKT2_PATH']
 	print('\n')
-	print("Building LAPKT production library...")
+	print("Building LAPKT library...")
 	sys.stdout.flush()
 	output = subprocess.call(command.split(), cwd=lapkt_dir)
 	if output:
@@ -31,7 +31,7 @@ def single_build(directory, command):
 	
 	# Build the FS planner production library
 	print('\n')
-	print("Building FS production library...")
+	print("Building FS library...")
 	sys.stdout.flush()
 	output = subprocess.call(command.split(), cwd=directory)
 	if output:
