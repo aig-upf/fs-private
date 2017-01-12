@@ -86,10 +86,14 @@ public:
 	//!
 	unsigned max_novelty() const { return _max_novelty; }
 
-	//!
-	unsigned evaluate(const FeatureValuation& current, const std::vector<unsigned>& novel);
+	//! Evauate the novelty of a given feature valuation, taking into account that only those indexes given in 'novel'
+	//! contain values that can actually be novel.
+	unsigned evaluate(const FeatureValuation& valuation, const std::vector<unsigned>& novel);
 	
-	//! Compute a vector that indicates whether each element in a certain valuation is novel wrt another valuation or not.
+	//! Check only if the valuation contains a width-'k' tuple which is novel; return k if that is the case, or MAX if not
+	unsigned evaluate(const FeatureValuation& valuation, const std::vector<unsigned>& novel, unsigned k);
+	
+	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
 	static std::vector<unsigned> derive_novel(const FeatureValuation& current, const FeatureValuation* parent) {
 		if (!parent) { // Base case
 			std::vector<unsigned> all(current.size());
@@ -124,9 +128,9 @@ protected:
 	
 	NoveltyTables _tables;
 	
-	//! A micro-optimization to deal faster with the analysis of width-1 tuples
-	void evaluate_width_1_tuples(unsigned& novelty, const FeatureValuation& current, const std::vector<unsigned>& novel);
-	void evaluate_width_2_tuples(unsigned& novelty, const FeatureValuation& current, const std::vector<unsigned>& novel);
+	//! A micro-optimization to deal faster with the analysis of width-1 and width-2 tuples
+	bool evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<unsigned>& novel);
+	bool evaluate_width_2_tuples(const FeatureValuation& current, const std::vector<unsigned>& novel);
 };
 
 //! An iterator through all tuples of a certain size that can be derived from a certain vector of values.

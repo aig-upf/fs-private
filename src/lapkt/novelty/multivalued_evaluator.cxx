@@ -39,62 +39,86 @@ std::size_t MultivaluedNoveltyEvaluator::Width2TupleHasher::operator()(const Wid
 }
 
 
-void
-MultivaluedNoveltyEvaluator::evaluate_width_1_tuples(unsigned& novelty, const FeatureValuation& current, const std::vector<unsigned>& novel) {
+bool
+MultivaluedNoveltyEvaluator::evaluate_width_1_tuples(const FeatureValuation& valuation, const std::vector<unsigned>& novel) {
+	bool exists_nove_tuple = false;
 	for (unsigned idx:novel) {
-		auto res = _width_1_tuples.insert(std::make_pair(idx, current[idx]));
-		if (res.second) novelty = 1; // The tuple is new, hence the novelty of the state is 1
+		auto res = _width_1_tuples.insert(std::make_pair(idx, valuation[idx]));
+		if (res.second) exists_nove_tuple = true; // The tuple is new, hence the novelty of the state is 1
 	}
+	return exists_nove_tuple;
 }
 
-void
-MultivaluedNoveltyEvaluator::evaluate_width_2_tuples(unsigned& novelty, const FeatureValuation& current, const std::vector<unsigned>& novel) {
-	
+bool
+MultivaluedNoveltyEvaluator::evaluate_width_2_tuples(const FeatureValuation& valuation, const std::vector<unsigned>& novel) {
+	bool exists_nove_tuple = false;
 	for (unsigned i = 0; i < novel.size(); ++i) {
 		unsigned novel_idx = novel[i];
-		int novel_val = current[novel_idx];
+		int novel_val = valuation[novel_idx];
 		
 		for (unsigned j = 0; j < novel_idx; ++j) {
-			auto res = _width_2_tuples.insert(std::make_tuple(j, current[j], novel_idx, novel_val));
-			if (res.second && novelty > 2) novelty = 2; // The tuple was new, hence the novelty is not more than 2
+			auto res = _width_2_tuples.insert(std::make_tuple(j, valuation[j], novel_idx, novel_val));
+			exists_nove_tuple |= res.second;
 		}
 		
-		for (unsigned j = novel_idx+1; j < current.size(); ++j) {
-			auto res = _width_2_tuples.insert(std::make_tuple(novel_idx, novel_val, j, current[j]));
-			if (res.second && novelty > 2) novelty = 2; // The tuple was new, hence the novelty is not more than 2
+		for (unsigned j = novel_idx+1; j < valuation.size(); ++j) {
+			auto res = _width_2_tuples.insert(std::make_tuple(novel_idx, novel_val, j, valuation[j]));
+			exists_nove_tuple |= res.second;
 		}
 	}
+	return exists_nove_tuple;
 }
 
 unsigned
-MultivaluedNoveltyEvaluator::evaluate(const FeatureValuation& current, const std::vector<unsigned>& novel) {
-	assert(!current.empty());
+MultivaluedNoveltyEvaluator::evaluate(const FeatureValuation& valuation, const std::vector<unsigned>& novel) {
+	assert(!valuation.empty());
 
 	unsigned novelty = std::numeric_limits<unsigned>::max();
 	if (_max_novelty == 0) return novelty; // We're actually computing nothing, novelty will always be MAX
 	
-	evaluate_width_1_tuples(novelty, current, novel);
+	if (evaluate_width_1_tuples(valuation, novel)) novelty = 1;
 	if (_max_novelty <= 1) return novelty; // Novelty will be either 1 or MAX
 	
-	evaluate_width_2_tuples(novelty, current, novel);
+	if (evaluate_width_2_tuples(valuation, novel) && novelty > 1) novelty = 2;
 	if (_max_novelty <= 2) return novelty; // Novelty will be either 1, 2 or MAX
 	
 	
-	std::vector<bool> novel_idx(current.size(), false);
-	for (unsigned idx:novel) { novel_idx[idx] = true;}
+	std::vector<bool> novel_idx(valuation.size(), false);
+	for (unsigned idx:novel) { novel_idx[idx] = true; }
 
 	for (unsigned n = 3; n <= _max_novelty; ++n) {
 
 		bool updated_tables = false;
-		TupleIterator it(n, current, novel_idx);
+		TupleIterator it(n, valuation, novel_idx);
 		
 		while (!it.ended()) {
 			auto result = _tables[n].insert(it.next());
 			updated_tables |= result.second;
 		}
 		
-		if (updated_tables && n < novelty) {
-			novelty = n;
+		if (updated_tables && n < novelty) novelty = n;
+	}
+
+	return novelty;
+}
+
+unsigned
+MultivaluedNoveltyEvaluator::evaluate(const FeatureValuation& valuation, const std::vector<unsigned>& novel, unsigned k) {
+	assert(!valuation.empty());
+
+	unsigned novelty = std::numeric_limits<unsigned>::max();
+	if (k == 1) {
+		if (evaluate_width_1_tuples(valuation, novel)) novelty = 1;
+	} else if (k == 2) {
+		if (evaluate_width_2_tuples(valuation, novel)) novelty = 2;
+	} else {
+		std::vector<bool> novel_idx(valuation.size(), false);
+		for (unsigned idx:novel) { novel_idx[idx] = true; }
+
+		TupleIterator it(k, valuation, novel_idx);
+		while (!it.ended()) {
+			auto res = _tables[k].insert(it.next());
+			if (res.second) novelty = k;
 		}
 	}
 

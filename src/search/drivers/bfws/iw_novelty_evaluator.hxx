@@ -21,7 +21,7 @@ public:
 	using Base::evaluate; // So that we do not hide the base evaluate(const FiniteDomainNoveltyEvaluator&) method
 	
 	template <typename NodeT>
-	unsigned evaluate(const NodeT& node) {
+	unsigned evaluate(const NodeT& node, unsigned check_only_width = 0) {
 		const lapkt::novelty::FeatureValuation& valuation = node.feature_valuation;
 		assert(!valuation.empty());
 		
@@ -32,7 +32,7 @@ public:
 		}
 		
 		std::vector<unsigned> novel = derive_novel(node.feature_valuation, parent_valuation);
-		return evaluate(valuation, novel);
+		return check_only_width > 0 ? evaluate(valuation, novel, check_only_width) : evaluate(valuation, novel);
 	}
 };
 
