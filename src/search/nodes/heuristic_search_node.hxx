@@ -47,11 +47,11 @@ public:
 	HeuristicSearchNode& operator=(HeuristicSearchNode&&) = delete;
 	
 	
-	HeuristicSearchNode(const StateT& state_)
+	HeuristicSearchNode(const StateT& state_, unsigned long gen_order = 0)
 		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(std::numeric_limits<long>::max()), _helpful(false)
 	{}
 	
-	HeuristicSearchNode(StateT&& state_, ActionIdT action_, ptr_t parent_) :
+	HeuristicSearchNode(StateT&& state_, ActionIdT action_, ptr_t parent_, unsigned long gen_order = 0) :
 		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(std::numeric_limits<long>::max()), _helpful(false)
 	{}
 

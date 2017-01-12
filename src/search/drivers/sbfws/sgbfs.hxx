@@ -13,10 +13,17 @@
 namespace fs0 { namespace bfws {
 
 
-//! Prioritize nodes with lower number of _un_achieved subgoals
+//! Prioritize nodes with lower number of _un_achieved subgoals. Break ties with g.
 template <typename NodePT>
-struct unachieved_subgoals_comparer { bool operator()(const NodePT& n1, const NodePT& n2) const { return n1->unachieved_subgoals > n2->unachieved_subgoals; } };
-
+struct unachieved_subgoals_comparer {
+	bool operator()(const NodePT& n1, const NodePT& n2) const {
+		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+		if (n1->g > n2->g) return true;
+		if (n1->g < n2->g) return false;
+		return n1->_gen_order > n2->_gen_order;
+	}
+};
 
 
 //! The node type we'll use for the Simulated BFWS search, parametrized by type of state and action action
@@ -57,6 +64,9 @@ public:
 	bool _processed;
 	
 // 	bool from_simulation;
+	
+	//! The generation order, uniquely identifies the node
+	unsigned long _gen_order;
 
 public:
 	LazyBFWSNode() = delete;
@@ -68,15 +78,16 @@ public:
 	LazyBFWSNode& operator=(LazyBFWSNode&&) = delete;
 
 	//! Constructor with full copying of the state (expensive)
-	LazyBFWSNode(const StateT& s) : LazyBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr) {}
+	LazyBFWSNode(const StateT& s, unsigned long gen_order) : LazyBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	LazyBFWSNode(StateT&& _state, action_t action_, ptr_t parent_) :
+	LazyBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, unsigned long gen_order) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		wg(std::numeric_limits<unsigned>::max()),
 		unachieved_subgoals(std::numeric_limits<unsigned>::max()),
 		_relevant_atoms(nullptr),
-		_processed(false)
+		_processed(false),
+		_gen_order(gen_order)
 	{}
 
 	//! The novelty type (i.e. value wrt which the novelty is computed)
@@ -318,7 +329,8 @@ public:
 		_solution(nullptr),
 		_heuristic(heuristic),
 		_stats(stats),
-		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false))
+		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false)),
+		_generated(0)
 	{
 	}
 
@@ -330,21 +342,8 @@ public:
 	
 	//! Convenience method
 	bool solve_model(PlanT& solution) { return search(_model.init(), solution); }
-	
-	NodePT convert_simulation_node(const SimulationNodeT& sim_node) const {
-		NodePT search_node = std::make_shared<NodeT>(sim_node.state); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
-		
-		
-// 		search_node->from_simulation = true;
-		search_node->g = sim_node.g;
-		search_node->wg = 1; // we enforce this by definition
-		search_node->action = sim_node.action;
-		search_node->unachieved_subgoals = _heuristic.compute_unachieved(search_node->state);
-		
-		return search_node;
-	}
-	
-	std::vector<NodePT> convert_simulation_nodes(const NodePT& root, const std::unordered_set<SimulationNodePT>& sim_nodes) const {
+
+	std::vector<NodePT> convert_simulation_nodes(const NodePT& root, const std::unordered_set<SimulationNodePT>& sim_nodes) {
 		
 		// Convert a set of simulation nodes into a set of search nodes
 		// This is straight-forward except for setting up correctly the pointers to the parent node,
@@ -361,7 +360,7 @@ public:
 				search_node = root;
 			} else {
 				// We just update those attributes we're interested in
-				search_node = std::make_shared<NodeT>(sim_node->state); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
+				search_node = std::make_shared<NodeT>(sim_node->state, _generated++); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
 				search_node->g = sim_node->g;
 				search_node->action = sim_node->action;
 				search_node->wg = 1; // we enforce this by definition
@@ -407,7 +406,7 @@ public:
 	}
 	
 	bool search(const StateT& s, PlanT& plan) {
-		NodePT root = std::make_shared<NodeT>(s);
+		NodePT root = std::make_shared<NodeT>(s, _generated++);
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 		
@@ -547,7 +546,7 @@ protected:
 		
 		for (const auto& action:_model.applicable_actions(node->state)) {
 			StateT s_a = _model.next(node->state, action);
-			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node);
+			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, _generated++);
 			
 			if (_closed.check(successor)) continue; // The node has already been closed
 			if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it
@@ -590,8 +589,8 @@ protected:
 		
 		std::reverse(plan.begin(), plan.end());
 		return true;
-	}	
-	
+	}
+
 protected:
 	using UnachievedSubgoalsComparerT = unachieved_subgoals_comparer<NodePT>;
 	using WG1OpenList = lapkt::UpdatableOpenList<NodeT, NodePT, UnachievedSubgoalsComparerT>;
@@ -608,15 +607,15 @@ protected:
 	WG1OpenList _q1;
 	
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 1 novelty tables
-	SearchableQueue _qwgr1;
+	WG1OpenList _qwgr1;
 	
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 2 novelty tables
-	SearchableQueue _qwgr2;
+	WG1OpenList _qwgr2;
 	
 	//! A queue with those nodes that have been run through all relevant novelty tables 
 	//! and for which it has been proven that they have w_{#g, #r} > 2 and have not 
 	//! yet been processed.
-	SearchableQueue _qrest;
+	WG1OpenList _qrest;
 
 	//! The closed list
 	ClosedListT _closed;
@@ -628,6 +627,9 @@ protected:
 	
 	//! Whether we want to run a simulation from the root node before starting the search
 	bool _run_simulation_from_root;
+	
+	//! The number of generated nodes so far
+	unsigned long _generated;
 };
 
 

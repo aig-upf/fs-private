@@ -49,12 +49,12 @@ public:
 	BlindSearchNode& operator=(BlindSearchNode&&) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	BlindSearchNode( const StateT& s )
+	BlindSearchNode( const StateT& s, unsigned long gen_order = 0)
 		: state( s ), action( ActionT::invalid_action_id ), parent( nullptr )
 	{}
 
 	//! Constructor with move of the state (cheaper)
-	BlindSearchNode( StateT&& _state, ActionIdT _action, std::shared_ptr< BlindSearchNode<StateT, ActionT> > _parent ) :
+	BlindSearchNode( StateT&& _state, ActionIdT _action, std::shared_ptr< BlindSearchNode<StateT, ActionT> > _parent, unsigned long gen_order = 0) :
 		state(std::move(_state)), action(_action), parent(_parent)
 	{}
 

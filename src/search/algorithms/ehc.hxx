@@ -30,11 +30,11 @@ public:
 	EHCSearchNode& operator=(EHCSearchNode&&) = delete;
 	
 	
-	EHCSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<EHCSearchNode<StateT, ActionT>> parent_) :
+	EHCSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<EHCSearchNode<StateT, ActionT>> parent_, unsigned long gen_order = 0) :
 		state(std::move(state_)), action(action_), parent(parent_), h(0)
 	{}
 	
-	EHCSearchNode(const StateT& state) :
+	EHCSearchNode(const StateT& state, unsigned long gen_order = 0) :
 		EHCSearchNode(StateT(state), ActionT::invalid_action_id, nullptr)
 	{}
 

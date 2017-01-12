@@ -59,10 +59,10 @@ public:
 	BFWSF5Node& operator=(BFWSF5Node&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	BFWSF5Node(const State& s) : BFWSF5Node(State(s), GroundAction::invalid_action_id, nullptr) {}
+	BFWSF5Node(const State& s, unsigned long gen_order) : BFWSF5Node(State(s), GroundAction::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	BFWSF5Node(State&& _state, GroundAction::IdType action_, ptr_t parent_) :
+	BFWSF5Node(State&& _state, GroundAction::IdType action_, ptr_t parent_, unsigned long gen_order) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		novelty(std::numeric_limits<unsigned>::max()),
 		unachieved(std::numeric_limits<unsigned>::max()),

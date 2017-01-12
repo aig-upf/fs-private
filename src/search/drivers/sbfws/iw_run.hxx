@@ -117,12 +117,12 @@ public:
 	IWRunNode& operator=(IWRunNode&&) = delete;
 
 	//! Constructor with full copying of the state (expensive)
-	IWRunNode(const StateT& s)
+	IWRunNode(const StateT& s, unsigned long gen_order = 0)
 		: state( s ), action( ActionT::invalid_action_id ), parent( nullptr )
 	{}
 
 	//! Constructor with move of the state (cheaper)
-	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT& _parent) :
+	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT& _parent, unsigned long gen_order = 0) :
 		state(std::move(_state)),
 		action(_action),
 		parent(_parent),

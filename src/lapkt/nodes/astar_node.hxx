@@ -43,11 +43,11 @@ public:
 	AStarSearchNode& operator=(AStarSearchNode&& rhs) = delete;
 	
 	
-	AStarSearchNode(const StateT& state_)
+	AStarSearchNode(const StateT& state_, unsigned long gen_order = 0)
 		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(0)
 	{}
 
-	AStarSearchNode(StateT&& state_, ActionIdT action_, std::shared_ptr<AStarSearchNode<StateT ,ActionT>> parent_) :
+	AStarSearchNode(StateT&& state_, ActionIdT action_, std::shared_ptr<AStarSearchNode<StateT ,ActionT>> parent_, unsigned long gen_order = 0) :
 		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(0)
 	{}
 

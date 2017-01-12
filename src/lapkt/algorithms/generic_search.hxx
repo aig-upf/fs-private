@@ -57,7 +57,7 @@ public:
 	//! (2) the open list object to be used in the search
 	//! (3) the closed list object to be used in the search
 	GenericSearch(const StateModel& model, OpenList&& open, ClosedList&& closed) :
-		_model(model), _open(std::move(open)), _closed(std::move(closed))
+		_model(model), _open(std::move(open)), _closed(std::move(closed)), _generated(0)
 	{}
 
 	virtual ~GenericSearch() {}
@@ -69,7 +69,7 @@ public:
 	GenericSearch& operator=(GenericSearch&& rhs) = default;
 
 	virtual bool search(const StateT& s, PlanT& solution) {
-		NodePtr n = std::make_shared<NodeT>( s );
+		NodePtr n = std::make_shared<NodeT>(s, _generated++);
 		this->notify(NodeCreationEvent(*n));
 		_open.insert(n);
 		
@@ -88,7 +88,7 @@ public:
 			
 			for ( const auto& a : _model.applicable_actions( current->state ) ) {
 				StateT s_a = _model.next( current->state, a );
-				NodePtr successor = std::make_shared<NodeT>( std::move(s_a), a, current );
+				NodePtr successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 				
 				if (_closed.check(successor)) continue; // The node has already been closed
 				if (_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
@@ -132,6 +132,8 @@ protected:
 	//! The closed list
 	ClosedList _closed;
 	
+	//! The number of generated nodes so far
+	unsigned long _generated;
 
 	//* Some methods mainly for debugging purposes
 	bool check_open_list_integrity() const {

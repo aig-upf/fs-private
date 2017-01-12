@@ -121,10 +121,10 @@ public:
 	BFWS1H1WNode& operator=(BFWS1H1WNode&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	BFWS1H1WNode(const State& s) : BFWS1H1WNode(State(s), GroundAction::invalid_action_id, nullptr) {}
+	BFWS1H1WNode(const State& s, unsigned long gen_order = 0) : BFWS1H1WNode(State(s), GroundAction::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	BFWS1H1WNode(State&& _state, GroundAction::IdType action_, ptr_t parent_) :
+	BFWS1H1WNode(State&& _state, GroundAction::IdType action_, ptr_t parent_, unsigned long gen_order = 0) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0), novelty(std::numeric_limits<unsigned>::max()), hff(std::numeric_limits<long>::max())
 	{}
 

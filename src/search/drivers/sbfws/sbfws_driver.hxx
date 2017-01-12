@@ -52,6 +52,9 @@ public:
 	//! The number of atoms in the last relaxed plan computed in the way to the current state that have been
 	//! made true along the path (#r)
 	RelevantAtomSet _relevant_atoms;
+	
+	//! The generation order, uniquely identifies the node
+	unsigned long _gen_order;
 
 public:
 	SBFWSNode() = delete;
@@ -63,14 +66,16 @@ public:
 	SBFWSNode& operator=(SBFWSNode&& rhs) = delete;
 
 	//! Constructor with full copying of the state (expensive)
-	SBFWSNode(const StateT& s) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr) {}
+	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	SBFWSNode(StateT&& _state, action_t action_, ptr_t parent_) :
+	SBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, unsigned long gen_order) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		novelty(std::numeric_limits<unsigned>::max()),
 		unachieved(std::numeric_limits<unsigned>::max()),
-		_relevant_atoms(nullptr)
+		_relevant_atoms(nullptr),
+		_gen_order(gen_order)
+		
 	{}
 
 	//! The novelty type (for the IWRun node, will always be 0)
@@ -267,7 +272,9 @@ struct SBFWSNodeComparer {
 		if (n1->novelty < n2->novelty ) return false;
 		if (n1->unachieved > n2->unachieved) return true;
 		if (n1->unachieved < n2->unachieved) return false;
-		return n1->g > n2->g;
+		if (n1->g > n2->g) return true;
+		if (n1->g < n2->g) return false;
+		return n1->_gen_order > n2->_gen_order;
 	}
 };
 

@@ -59,10 +59,10 @@ public:
 	BFWSNode& operator=(BFWSNode&& rhs) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	BFWSNode(const StateT& s) : BFWSNode(StateT(s), ActionT::invalid_action_id, nullptr) {}
+	BFWSNode(const StateT& s, unsigned long gen_order = 0) : BFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	BFWSNode(StateT&& _state, typename ActionT::IdType action_, ptr_t parent_) :
+	BFWSNode(StateT&& _state, typename ActionT::IdType action_, ptr_t parent_, unsigned long gen_order = 0) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0), novelty(std::numeric_limits<unsigned>::max()), num_unsat(std::numeric_limits<unsigned>::max())
 	{}
 
