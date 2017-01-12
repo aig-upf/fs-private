@@ -36,6 +36,8 @@ public:
 	void wgr2_node() { ++_num_wgr2_nodes; }
 	void wgr_gt2_node() { ++_num_wgr_gt2_nodes; }
 	
+	void simulation_node_reused() { ++_reused_simulation_nodes; }
+	
 	void expansion_g_decrease() { ++_num_expanded_g_decrease; }
 	void generation_g_decrease() { ++_num_generated_g_decrease; }
 
@@ -66,6 +68,8 @@ public:
 			
 			std::make_tuple("_num_expanded_g_decrease", "Expansions with #g decrease", std::to_string(_num_expanded_g_decrease)),
 			std::make_tuple("_num_generated_g_decrease", "Generations with #g decrease", std::to_string(_num_generated_g_decrease)),
+			
+			std::make_tuple("_reused_simulation_nodes", "Simulation nodes reused in the search", std::to_string(_reused_simulation_nodes)),
 
 			std::make_tuple("simulations", "Simulations", std::to_string(simulated())),
 			std::make_tuple("reachable_0", "Reachable subgoals in initial state", std::to_string(_initial_reachable_subgoals)),
@@ -87,6 +91,8 @@ protected:
 	unsigned long _num_wgr_gt2_nodes; // The number of nodes with w_{#g,#r} > 2 (and w_{#g} > 1) that have been processed.
 	unsigned long _num_expanded_g_decrease; // The number of nodes with a decrease in #g that are expanded
 	unsigned long _num_generated_g_decrease; // The number of nodes with a decrease in #g that are expanded
+	
+	unsigned _reused_simulation_nodes;
 };
 
 //! TODO - TOO HACKY?

@@ -104,6 +104,9 @@ public:
 
 	//! The parent node
 	PT parent;
+	
+	//! Accummulated cost
+	unsigned g;
 
 
 	IWRunNode() = default;
@@ -122,7 +125,8 @@ public:
 	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT& _parent) :
 		state(std::move(_state)),
 		action(_action),
-		parent(_parent)
+		parent(_parent),
+		g(parent ? parent->g+1 : 0)
 	{}
 
 	//! The novelty type (for the IWRun node, will always be 0)
@@ -133,7 +137,7 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const IWRunNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		os << "{@ = " << this << ", s = " << state << ", features= " << fs0::print::container(feature_valuation) << ", parent = " << parent << "}";
+		os << "{@ = " << this << ", s = " << state << ", g=" << g << ", features= " << fs0::print::container(feature_valuation) << ", parent = " << parent << "}";
 		return os;
 	}
 
@@ -212,7 +216,8 @@ public:
 		_complete(complete),
 		_reached(model.num_subgoals(), nullptr),
 		_unreached(),
-		_mark_negative_propositions(mark_negative_propositions)
+		_mark_negative_propositions(mark_negative_propositions),
+		_visited()
 	{
 
 		for (unsigned i = 0; i < model.num_subgoals(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
@@ -277,7 +282,11 @@ protected:
 
 	bool _mark_negative_propositions;
 
-	boost::fast_pool_allocator<NodeT>	_allocator;
+	boost::fast_pool_allocator<NodeT> _allocator;
+	
+	//! Upon retrieval of the set of relevant atoms, this will contain all those nodes that are part
+	//! of the path to some subgoal
+	std::unordered_set<NodePT> _visited;
 
 
 	//! Returns true iff all goal atoms have been reached in the IW search
@@ -302,7 +311,7 @@ protected:
 
 public:
 	//! Retrieve the set of atoms which are relevant to reach at least one of the subgoals
-	RelevantAtomSet retrieve_relevant_atoms(const StateT& seed, unsigned& reachable) const {
+	RelevantAtomSet retrieve_relevant_atoms(const StateT& seed, unsigned& reachable) {
 		const AtomIndex& atomidx = this->_model.getTask().get_tuple_index();
 		RelevantAtomSet atomset(&atomidx);
 
@@ -310,7 +319,7 @@ public:
 
 		// atomset.mark(seed, RelevantAtomSet::STATUS::UNREACHED); // This is not necessary, since all these atoms will be made true by the "root" state of the simulation
 
-		std::unordered_set<NodePT> processed;
+		_visited.clear();
 
 		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
 			NodePT node = _reached[subgoal_idx];
@@ -325,16 +334,20 @@ public:
 			while (node->has_parent()) {
 				// If the node has already been processed, no need to do it again, nor to process the parents,
 				// which will necessarily also have been processed.
-				if (processed.find(node) != processed.end()) break;
+				if (_visited.find(node) != _visited.end()) break;
 				atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
-				processed.insert(node);
+				_visited.insert(node);
 				node = node->parent;
 			}
+			
+			_visited.insert(node); // Insert the root anyway to mark it as a relevant node
 		}
 		LPT_EDEBUG("simulation-relevant", atomset.num_unreached() << " relevant atoms (" << reachable << "/" << _reached.size() << " reachable subgoals): " << print::relevant_atomset(atomset) << std::endl << std::endl);
 
 		return atomset;
 	}
+	
+	const std::unordered_set<NodePT>& get_relevant_nodes() const { return _visited; }
 };
 
 } } // namespaces

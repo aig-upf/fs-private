@@ -55,6 +55,8 @@ public:
 	RelevantAtomSet _relevant_atoms;
 	
 	bool _processed;
+	
+// 	bool from_simulation;
 
 public:
 	LazyBFWSNode() = delete;
@@ -117,6 +119,10 @@ class LazyBFWSHeuristic {
 public:
 	using FeatureSetT = lapkt::novelty::FeatureSet<State>;
 	using NoveltyEvaluatorMapT = std::unordered_map<long, IWNoveltyEvaluator>;
+	using ActionT = typename StateModelT::ActionType;
+	using IWNodeT = IWRunNode<State, ActionT>;
+	using IWAlgorithm = IWRun<IWNodeT, StateModelT>;
+	using IWNodePT = typename IWAlgorithm::NodePT;
 	
 	LazyBFWSHeuristic(const StateModelT& model, const FeatureSetT& features, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, BFWSStats& stats, bool mark_negative_propositions) :
 		_model(model),
@@ -156,26 +162,22 @@ public:
 
 	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
 	//! all those atoms marked as "unreached", and the rest as irrelevant.
-	RelevantAtomSet compute_relevant(const State& state, bool log_stats) const {
-		using ActionT = typename StateModelT::ActionType;
-		using NodeT = IWRunNode<State, ActionT>;
-		using IWAlgorithm = IWRun<NodeT, StateModelT>;
-		
+	RelevantAtomSet compute_relevant(const State& state, bool log_stats) {
 		if (_simulation_evaluator.max_novelty() == 0) { // No need to run anything
 			return RelevantAtomSet(&(_problem.get_tuple_index()));
 		}
 		
 		_stats.simulation();
 		
-		auto iw = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator, _mark_negative_propositions));
+		_iw_runner = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator, _mark_negative_propositions));
 		
 		//BFWSStats stats;
-		//StatsObserver<NodeT, BFWSStats> st_obs(stats, false);
+		//StatsObserver<IWNodeT, BFWSStats> st_obs(stats, false);
 		//iw->subscribe(st_obs);
 		
-		iw->run(state);
+		_iw_runner->run(state);
 		unsigned reachable = 0;
-		RelevantAtomSet relevant = iw->retrieve_relevant_atoms(state, reachable);
+		RelevantAtomSet relevant = _iw_runner->retrieve_relevant_atoms(state, reachable);
 		
 		//LPT_INFO("cout", "IW Simulation: Node expansions: " << stats.expanded());
 		//LPT_INFO("cout", "IW Simulation: Node generations: " << stats.generated());
@@ -187,6 +189,8 @@ public:
 
 		return relevant;
 	}
+	
+	const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _iw_runner->get_relevant_nodes(); }
 
 	//! This is a hackish way to obtain an integer index that uniquely identifies the tuple <#g, #r>
 	unsigned compute_node_complex_type(unsigned unachieved, unsigned relaxed_achieved) {
@@ -219,14 +223,14 @@ public:
 	}
 
 	template <typename NodeT>
-	void update_relevant_atoms(NodeT& node) const {
+	void update_relevant_atoms(NodeT& node) {
 		// Only for the root node _or_ whenever the number of unachieved nodes decreases
 		// do we recompute the set of relevant atoms.
 		if (node.decreases_unachieved_subgoals()) {
 			node._relevant_atoms = compute_relevant(node.state, !node.has_parent());
 		} else {
 			// We copy the map of reached values from the parent node
-			node._relevant_atoms = node.parent->get_relevant_atoms(*this);
+			node._relevant_atoms = node.parent->get_relevant_atoms(*this); // This might trigger a recursive computation
 		}
 
 		// In both cases, we update the set of relevant nodes with those that have been reached.
@@ -268,6 +272,9 @@ protected:
 	bool _mark_negative_propositions;
 	
 	BFWSStats& _stats;
+	
+	//! The last used iw-simulator, if any
+	std::unique_ptr<IWAlgorithm> _iw_runner;
 };
 
 
@@ -284,6 +291,8 @@ public:
 	using NodePT = std::shared_ptr<NodeT>;
 	using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
 	using HeuristicT = LazyBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer>;
+	using SimulationNodeT = typename HeuristicT::IWNodeT;
+	using SimulationNodePT = typename HeuristicT::IWNodePT;
 	
 protected:
 	enum class QPR_OUTPUT { // The result of processing any of the queues
@@ -304,11 +313,12 @@ public:
 	//! (1) the state model to be used in the search
 	//! (2) the open list object to be used in the search
 	//! (3) the closed list object to be used in the search
-	LazyBFWS(const StateModelT& model, HeuristicT& heuristic, BFWSStats& stats) :
+	LazyBFWS(const StateModelT& model, HeuristicT& heuristic, BFWSStats& stats, const Config& config) :
 		_model(model),
 		_solution(nullptr),
 		_heuristic(heuristic),
-		_stats(stats)
+		_stats(stats),
+		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false))
 	{
 	}
 
@@ -321,11 +331,89 @@ public:
 	//! Convenience method
 	bool solve_model(PlanT& solution) { return search(_model.init(), solution); }
 	
+	NodePT convert_simulation_node(const SimulationNodeT& sim_node) const {
+		NodePT search_node = std::make_shared<NodeT>(sim_node.state); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
+		
+		
+// 		search_node->from_simulation = true;
+		search_node->g = sim_node.g;
+		search_node->wg = 1; // we enforce this by definition
+		search_node->action = sim_node.action;
+		search_node->unachieved_subgoals = _heuristic.compute_unachieved(search_node->state);
+		
+		return search_node;
+	}
+	
+	std::vector<NodePT> convert_simulation_nodes(const NodePT& root, const std::unordered_set<SimulationNodePT>& sim_nodes) const {
+		
+		// Convert a set of simulation nodes into a set of search nodes
+		// This is straight-forward except for setting up correctly the pointers to the parent node,
+		// for which we need a second pass and the help of a couple of maps.
+		std::unordered_map<SimulationNodePT, NodePT> simulation_to_search;
+		std::unordered_map<NodePT, SimulationNodePT> search_to_simulation;
+		
+		std::vector<NodePT> search_nodes;
+		search_nodes.reserve(sim_nodes.size());
+		
+		for (const SimulationNodePT& sim_node:sim_nodes) {
+			NodePT search_node ;
+			if (sim_node->parent == nullptr) { // We don't want to duplicate the root node
+				search_node = root;
+			} else {
+				// We just update those attributes we're interested in
+				search_node = std::make_shared<NodeT>(sim_node->state); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
+				search_node->g = sim_node->g;
+				search_node->action = sim_node->action;
+				search_node->wg = 1; // we enforce this by definition
+				search_node->unachieved_subgoals = _heuristic.compute_unachieved(search_node->state);
+			}
+			
+			simulation_to_search.insert(std::make_pair(sim_node, search_node));
+			search_to_simulation.insert(std::make_pair(search_node, sim_node));
+			search_nodes.push_back(search_node);
+			
+			//std::cout << "Simulation node " << sim_node << " corresponds to search node " << search_node << std::endl;
+		}
+		
+		// Let n be any search node (note that the root node has been already discarded), and s be its corresponding simulation node
+		// The parent of n is the search node that corresponds to parent(s)
+		for (const NodePT& search_node:search_nodes) {
+			if (search_node == root) continue; // We won't return the root node of the simulation, as it is already processed elsewhere
+			
+			auto it = search_to_simulation.find(search_node);
+			assert(it != search_to_simulation.end());
+			
+			const auto& sim_node = it->second;
+			assert(sim_node->parent != nullptr);
+			auto it2 = simulation_to_search.find(sim_node->parent);
+			//std::cout << "Simulation node parent: " << sim_node->parent << std::endl;
+			assert(it2 != simulation_to_search.end());
+			search_node->parent = it2->second;
+		}
+		
+		return search_nodes;
+	}
+	
+	void preprocess(const NodePT& node) {
+		_heuristic.update_relevant_atoms(*node);
+		const auto& simulation_nodes = _heuristic.get_last_simulation_nodes();
+		auto search_nodes = convert_simulation_nodes(node, simulation_nodes);
+		for (const auto& n:search_nodes) {
+			//create_node(n);
+			_q1.insert(n);
+			_stats.simulation_node_reused();
+			// std::cout << "Simulation node reused: " << *n << std::endl;
+		}
+	}
+	
 	bool search(const StateT& s, PlanT& plan) {
 		NodePT root = std::make_shared<NodeT>(s);
-		
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
+		
+		if (_run_simulation_from_root) {
+			preprocess(root); // Preprocess the root node only
+		}
 		
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
@@ -333,70 +421,6 @@ public:
 		for (bool remaining_nodes = true; !_solution && remaining_nodes;) {
 			remaining_nodes = process_one_node();
 		}
-		
-		/*
-		while (!_solution && some_queue_nonempty()) {
-			
-			///// Q1 QUEUE /////
-			// First process nodes with w_{#g}=1
-			if (!_q1.empty()) {
-				LPT_EDEBUG("multiqueue-search", "Picking node from Q1");
-				NodePT node = _q1.next();
-				process_node(node);
-				continue; // Start the loop again
-			}
-			
-			
-			///// QWGR1 QUEUE /////
-			// Check whether there are nodes with w_{#g, #r} = 1
-			if (!_qwgr1.empty()) {
-				LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 1");
-				NodePT node = _qwgr1.next();
-				
-				// Compute wgr1 (this will compute #r lazily if necessary), and if novelty is one, expand the node.
-				// Note that we _need_ to process the node through the wgr1 tables even if the node itself
-				// has already been processed, for the sake of complying with the proper definition of novelty.
-				unsigned nov = _heuristic.evaluate_wgr1(*node);
-				if (!node->_processed && nov == 1) {
-					if (process_node(node) == NPR_OUTPUT::GOAL_FOUND) break;
-				}
-				continue; // We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
-			}
-			
-		
-			///// QWGR2 QUEUE /////
-			// Check whether there are nodes with w_{#g, #r} = 2
-			if (!_qwgr2.empty()) {
-				LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 2");
-				NodePT node = _qwgr2.next();
-				
-				unsigned nov = _heuristic.evaluate_wgr2(*node);
-				
-				// If the node has already been processed, no need to do anything else with it,
-				// since we've already run it through all novelty tables.
-				if (!node->_processed) {
-					if (nov == 2) { // i.e. the node has exactly w_{#, #r} = 2
-						if (process_node(node) == NPR_OUTPUT::GOAL_FOUND) break;
-					} else {
-						_qrest.insert(node);
-					}
-				}
-				
-				continue;
-			}
-		
-			///// Q_REST QUEUE /////
-			// Process the rest of the nodes, i.e. those with w_{#g, #r} > 1
-			// We only extract one node and process it, as this will hopefully yield nodes with low novelty
-			// that will thus have more priority than the rest of nodes in this queue.
-			if (!_qrest.empty()) {
-				LPT_EDEBUG("multiqueue-search", "Expanding one remaining node with w_{#g, #r} > 1");
-				NodePT node = _qrest.next();
-				if (process_node(node) == NPR_OUTPUT::GOAL_FOUND) break;
-			}
-		}
-		*/
-
 		
 		return extract_plan(_solution, plan);
 	}
@@ -473,67 +497,6 @@ protected:
 		return false;
 	}
 	
-	
-	/*
-	//! Process _all_ nodes in Q1. Return true iff at least one new node is created during the process.
-	QPR_OUTPUT process_q1_nodes() {
-		while (!_q1.empty()) {
-			NodePT node = _q1.next();
-			NPR_OUTPUT output = process_node(node);
-			if (output == NPR_OUTPUT::GOAL_FOUND) return QPR_OUTPUT::GOAL_FOUND;
-			// Otherwise keep processing nodes from the queue
-		}
-		
-		return QPR_OUTPUT::QUEUE_EMPTY;
-	}
-	
-	
-	//! Process one node in Qwrg1. Return true iff at least one new node is created during the process.
-	QPR_OUTPUT process_qwgr1_nodes() {
-		if (!_qwgr1.empty()) {
-			NodePT node = _qwgr1.next();
-			
-			// Compute wgr1 (this will compute #r lazily if necessary), and if novelty is one, expand the node.
-			// Note that we _need_ to process the node through the wgr1 tables even if the node itself
-			// has already been processed, for the sake of complying with the proper definition of novelty.
-			unsigned nov = _heuristic.evaluate_wgr1(*node);
-			if (!node->_processed && nov == 1) {
-				return process_node(node);
-			}
-		}
-		
-		return false;
-	}
-	
-	//! Process nodes in Qwrg2. Return true iff at least one new node is created during the process.
-	bool process_qwgr2_nodes() {
-		if (_qwgr2.empty()) {
-			NodePT node = _qwgr2.next();
-			
-			unsigned nov = _heuristic.evaluate_wgr2(*node);
-			
-			// If the node has already been processed, no need to do anything else with it,
-			// since we've already run it through all novelty tables.
-			if (!node->_processed) {
-				if (nov == 2) { // i.e. the node has exactly w_{#, #r} = 2
-					return process_node(node);
-				} else {
-					_qrest.insert(node);
-				}
-			}
-		}
-		return false;
-	}
-	
-	//! Process nodes in Q_rest. Return true iff at least one new node is created during the process.
-	bool process_qrest() {
-		// We only extract one node and process it, as this will hopefully yield nodes with low novelty
-		// that will thus have more priority than the rest of nodes in this queue.
-		if (_qrest.empty()) return false;
-		NodePT node = _qrest.next();
-		return process_node(node);
-	}
-	*/
 
 	//! When opening a node, we compute #g and evaluates whether the given node has <#g>-novelty 1 or not;
 	//! if that is the case, we insert it into a special queue.
@@ -555,9 +518,12 @@ protected:
 	
 	//! Process the node. Return true iff at least one node was created during the processing.
 	NPR_OUTPUT process_node(const NodePT& node) {
-		assert(!node->_processed); // Don't process a node twice!
 		
-		node->_processed = true; // Mark the node as processed
+		//assert(!node->_processed); // Don't process a node twice!
+		
+// 		if (!node->from_simulation) {
+			node->_processed = true; // Mark the node as processed
+// 		}
 		
 		if (is_goal(node)) {
 			LPT_INFO("cout", "Goal found");
@@ -659,6 +625,9 @@ protected:
 	HeuristicT& _heuristic;
 	
 	BFWSStats& _stats;
+	
+	//! Whether we want to run a simulation from the root node before starting the search
+	bool _run_simulation_from_root;
 };
 
 
@@ -700,7 +669,7 @@ public:
 
 		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions));
 
-		auto engine = EnginePT(new EngineT(model, *_heuristic, _stats));
+		auto engine = EnginePT(new EngineT(model, *_heuristic, _stats, config));
 
 // 		drivers::EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 // 		drivers::EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _stats, _handlers);
