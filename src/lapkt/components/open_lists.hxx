@@ -54,7 +54,7 @@ class UpdatableOpenList : public std::priority_queue<NodePT, std::vector<NodePT>
 public:
 	//! Constructor
 	explicit UpdatableOpenList()
-		: already_in_open_()
+		: _index()
 	{}
 	
 	virtual ~UpdatableOpenList() = default;
@@ -68,16 +68,20 @@ public:
 	bool insert(const NodePT& node) {
 		if ( node->dead_end() ) return false;
 		this->push( node );
-		already_in_open_.insert( node );
+		_index.insert( node );
 		return true;
+	}
+	
+	bool contains(const NodePT& node) const {
+		return _index.find(node) != _index.end();
 	}
 
 	//! Check if the open list already contains a node 'previous' referring to the same state.
 	//! If that is the case, there'll be no need to reinsert the node, and we signal so returning true.
 	//! If, in addition, 'previous' had a higher g-value, we do an in-place modification of it.
 	bool updatable(const NodePT& node) {
-		auto it = already_in_open_.find(node);
-		if (it == already_in_open_.end()) return false; // No node with the same state is in the open list
+		auto it = _index.find(node);
+		if (it == _index.end()) return false; // No node with the same state is in the open list
 		
 		// Else the node was already in the open list and we might want to update it
 		
@@ -90,11 +94,15 @@ public:
 		return true;
 	}
 
-	NodePT get_next() {
+	//! For the sake of compatibility
+	inline NodePT get_next() { return next(); }
+	
+	//! Extract the "next" node from the data structure and return it
+	NodePT next() {
 		assert( !is_empty() );
 		NodePT node = this->top();
 		this->pop();
-		already_in_open_.erase(node);
+		_index.erase(node);
 		return node;
 	}
 
@@ -103,7 +111,7 @@ public:
 protected:
 	//! An index of the nodes with are in the open list at any moment, for faster access
 	using node_unordered_set = std::unordered_set<NodePT, node_hash<NodePT>, node_equal_to<NodePT>>;
-	node_unordered_set already_in_open_;
+	node_unordered_set _index;
 };
 
 //! A simple wrapper around a priority_queue, for compatibility
@@ -130,15 +138,89 @@ public:
 		return true;
 	}
 
-	NodePT get_next() {
-		assert( !is_empty() );
+	//! For the sake of compatibility
+	inline NodePT get_next() { return next(); }
+	
+	//! Extract the "next" node from the data structure and return it
+	NodePT next() {
+		assert(!this->empty());
 		NodePT node = this->top();
 		this->pop();
 		return node;
 	}
-
-	bool is_empty() const { return this->empty(); }
 };
 
+
+//! A simple wrapper around a queue, for compatibility
+template <typename NodeT,
+          typename NodePT = std::shared_ptr<NodeT>>
+class SimpleQueue : public std::queue<NodePT> {
+public:
+	explicit SimpleQueue() = default;
+	~SimpleQueue() = default;
+	SimpleQueue(const SimpleQueue&) = default;
+	SimpleQueue(SimpleQueue&&) = default;
+	SimpleQueue& operator=(const SimpleQueue&) = default;
+	SimpleQueue& operator=(SimpleQueue&&) = default;
+
+	bool insert(const NodePT& node) {
+		this->push(node);
+		return true;
+	}
+
+	//! Extract the "next" node from the data structure and return it
+	NodePT next() {
+		assert(!this->empty());
+		NodePT node = this->front();
+		this->pop();
+		return node;
+	}
+};
+
+
+
+//! A queue where elements can be searched for efficiently
+template <typename NodeT,
+          typename NodePT = std::shared_ptr<NodeT>>
+class SearchableQueue : public std::queue<NodePT> {
+public:
+	//! Constructor
+	explicit SearchableQueue()
+		: _index()
+	{}
+	
+	virtual ~SearchableQueue() = default;
+	
+	// Disallow copy, but allow move
+	SearchableQueue(const SearchableQueue&) = default;
+	SearchableQueue(SearchableQueue&&) = default;
+	SearchableQueue& operator=(const SearchableQueue&) = default;
+	SearchableQueue& operator=(SearchableQueue&&) = default;
+
+	bool insert(const NodePT& node) {
+		if ( node->dead_end() ) return false;
+		this->push( node );
+		_index.insert( node );
+		return true;
+	}
+	
+	bool contains(const NodePT& node) const {
+		return _index.find(node) != _index.end();
+	}
+
+	//! Extract the "next" node from the data structure and return it
+	NodePT next() {
+		assert(!this->empty());
+		NodePT node = this->front();
+		this->pop();
+		_index.erase(node);
+		return node;
+	}
+
+protected:
+	//! An index of the nodes with are in the open list at any moment, for faster access
+	using node_unordered_set = std::unordered_set<NodePT, node_hash<NodePT>, node_equal_to<NodePT>>;
+	node_unordered_set _index;
+};
 
 }

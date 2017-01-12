@@ -68,6 +68,8 @@ public:
 
 	unsigned num_reached() const { return _num_reached; }
 	unsigned num_unreached() const { return _num_unreached; }
+	
+	bool valid() const { return _atomidx != nullptr; }
 
 	friend class print::relevant_atomset;
 
