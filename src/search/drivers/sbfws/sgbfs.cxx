@@ -1,28 +1,29 @@
 
-#include <search/drivers/sbfws/sbfws_driver.hxx>
+#include <search/drivers/sbfws/sgbfs.hxx>
 #include <search/utils.hxx>
 #include <models/simple_state_model.hxx>
 #include <aptk2/tools/logging.hxx>
 
 namespace fs0 { namespace bfws {
 
+
 template <>
 ExitCode
-SimulatedBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+LazyBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_ground_simple_model(problem), config, out_dir, start_time);
 }
 
 /*
 template <>
 ExitCode
-SimulatedBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+LazyBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time);
 }
 */
 
 template <typename StateModelT>
 ExitCode
-SimulatedBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
+LazyBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	SBFWSConfig bfws_config(config);
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	auto engine = create(config, bfws_config, feature_configuration, model);

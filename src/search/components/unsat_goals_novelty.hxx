@@ -23,7 +23,7 @@ protected:
 	std::vector<GenericNoveltyEvaluator> _novelty_evaluators;
 	
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
-	UnsatisfiedGoalAtomsHeuristic<StateModelT> _unsat_goal_atoms_heuristic;
+	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
 public:
 	typedef BaseNoveltyComponent<SearchNode> Base;
@@ -31,7 +31,7 @@ public:
 	UnsatGoalsNoveltyComponent(const StateModelT& model, unsigned max_novelty, const NoveltyFeaturesConfiguration& feature_configuration)
 		: Base(max_novelty), 
 		  _novelty_evaluators(model.getTask().getGoalConditions()->all_atoms().size()+1, GenericNoveltyEvaluator(model.getTask(), max_novelty, feature_configuration)), // We set up k+1 identical evaluators
-		  _unsat_goal_atoms_heuristic(model)
+		  _unsat_goal_atoms_heuristic(model.getTask())
 	{
 		if (!dynamic_cast<const fs::Conjunction*>(model.getTask().getGoalConditions())) {
 			throw std::runtime_error("NoveltyComponent available only for goal conjunctions");

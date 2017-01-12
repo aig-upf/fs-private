@@ -6,6 +6,7 @@
 #include <search/drivers/breadth_first_search.hxx>
 #include <search/drivers/bfws/bfws.hxx>
 #include <search/drivers/sbfws/sbfws_driver.hxx>
+#include "sbfws/sgbfs.hxx"
 #include <search/drivers/unreached_atom_driver.hxx>
 #include <search/drivers/native_driver.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
@@ -47,6 +48,8 @@ EngineRegistry::EngineRegistry() {
 	
 	add("sbfws",  new bfws::SimulatedBFWSDriver<SimpleStateModel>());
 // 	add("lsbfws",  new bfws::SimulatedBFWSDriver<LiftedStateModel>());
+	
+	add("lazybfws",  new bfws::LazyBFWSDriver<SimpleStateModel>());
 	
 	
 	add("bfs",  new BreadthFirstSearchDriver());

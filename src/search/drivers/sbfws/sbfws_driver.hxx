@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include <search/drivers/sbfws/base.hxx>
 #include <search/drivers/sbfws/iw_run.hxx>
 #include <search/drivers/registry.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
@@ -16,45 +17,6 @@
 
 
 namespace fs0 { namespace bfws {
-
-class BFWSStats {
-public:
-	BFWSStats() : _expanded(0), _generated(0), _evaluated(0) {}
-	
-	void expansion() { ++_expanded; }
-	void generation() { ++_generated; }
-	void evaluation() { ++_evaluated; }
-	void simulation() { ++_simulations; }
-
-	unsigned long expanded() const { return _expanded; }
-	unsigned long generated() const { return _generated; }
-	unsigned long evaluated() const { return _evaluated; }
-	unsigned int simulated() const { return _simulations; }
-	
-	void set_initial_reachable_subgoals(unsigned num) { _initial_reachable_subgoals = num; }
-	void set_initial_relevant_atoms(unsigned num) { _initial_relevant_atoms = num; }
-	
-	using DataPointT = std::tuple<std::string, std::string, std::string>;
-	std::vector<DataPointT> dump() const {
-		return {
-			std::make_tuple("expanded", "Expansions", std::to_string(expanded())),
-			std::make_tuple("generated", "Generations", std::to_string(generated())),
-			std::make_tuple("evaluated", "Evaluations", std::to_string(evaluated())),
-			
-			std::make_tuple("simulations", "Simulations", std::to_string(simulated())),
-			std::make_tuple("reachable_0", "Subreachable goals in initial state", std::to_string(_initial_reachable_subgoals)),
-			std::make_tuple("relevant_atoms_0", "|R|_0", std::to_string(_initial_relevant_atoms)),
-		};
-	}
-	
-protected:
-	unsigned long _expanded;
-	unsigned long _generated;
-	unsigned long _evaluated;
-	unsigned long _simulations;
-	unsigned int _initial_reachable_subgoals; // The number of subgoals that are reachable on the initial simulation
-	unsigned int _initial_relevant_atoms; // The size of |R| on the initial state
-};
 
 //! The node type we'll use for the Simulated BFWS search, parametrized by type of state and action action
 template <typename StateT, typename ActionT>
@@ -137,7 +99,7 @@ public:
 		unachieved = heuristic.compute_unachieved(this->state);
 
 		// Update the set of relevant atoms
-		heuristic.update_relevant_atoms(*this, _relevant_atoms);
+		heuristic.update_relevant_atoms(*this);
 
 		// Finally, compute the novelty of the node wrt both #g (unachieved) and #r.
 		novelty = heuristic.novelty(*this, unachieved, _relevant_atoms.num_reached());
@@ -164,23 +126,6 @@ public:
 };
 
 
-//! TODO - TOO HACKY?
-inline unsigned _index(unsigned unachieved, unsigned relaxed_achieved) {
-	return (unachieved<<16) | relaxed_achieved;
-}
-
-// Index the novelty tables by <#g, #r>
-struct SBFWSNoveltyIndexer {
-	unsigned operator()(unsigned unachieved, unsigned relaxed_achieved) const {
-		return _index(unachieved, relaxed_achieved);
-	}
-
-	std::tuple<unsigned, unsigned> relevant(unsigned unachieved, unsigned relaxed_achieved) const {
-		return std::make_tuple(unachieved, relaxed_achieved);
-	}
-};
-
-
 //! The main Simulated BFWS heuristic object, which is in charge of computing the novelty of nodes
 //! _and_, whenever necessary, of computing the set R of atoms that are relevant to the achievement
 //! of the problem goal from the node state.
@@ -196,7 +141,7 @@ public:
 		_search_evaluator(search_evaluator),
 		_simulation_evaluator(simulation_evaluator),
 		_novelty_evaluators(),
-		_unsat_goal_atoms_heuristic(model),
+		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(mark_negative_propositions),
 		_stats(stats)
 	{}
@@ -267,7 +212,7 @@ public:
 	}
 
 	template <typename NodeT>
-	void update_relevant_atoms(NodeT& node, RelevantAtomSet& atomset) const {
+	void update_relevant_atoms(NodeT& node) const {
 		// Only for the root node _or_ whenever the number of unachieved nodes decreases
 		// do we recompute the set of relevant atoms.
 		if (!node.has_parent() || node.unachieved < node.parent->unachieved) {
@@ -306,7 +251,7 @@ protected:
 	std::unordered_map<long, IWNoveltyEvaluator> _novelty_evaluators;
 
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
-	UnsatisfiedGoalAtomsHeuristic<StateModelT> _unsat_goal_atoms_heuristic;
+	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;
@@ -324,19 +269,6 @@ struct SBFWSNodeComparer {
 		if (n1->unachieved < n2->unachieved) return false;
 		return n1->g > n2->g;
 	}
-};
-
-struct SBFWSConfig {
-	SBFWSConfig(const Config&);
-	SBFWSConfig(const SBFWSConfig&) = default;
-	SBFWSConfig& operator=(const SBFWSConfig&) = default;
-	SBFWSConfig(SBFWSConfig&&) = default;
-	SBFWSConfig& operator=(SBFWSConfig&&) = default;
-
-	//! The maximum levels of width for search and simulation
-	const unsigned search_width;
-	const unsigned simulation_width;
-	const bool mark_negative_propositions;
 };
 
 

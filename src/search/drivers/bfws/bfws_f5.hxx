@@ -181,7 +181,7 @@ public:
 		_max_novelty(max_novelty), 
 		_novelty_evaluators(),
 		_base_heuristic(std::move(heuristic)),
-		_unsat_goal_atoms_heuristic(model)
+		_unsat_goal_atoms_heuristic(_problem)
 	{}
 	
 	~BFWSF5HeuristicEnsemble() = default;
@@ -242,7 +242,7 @@ protected:
 	std::unique_ptr<BaseHeuristicT> _base_heuristic;
 	
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
-	UnsatisfiedGoalAtomsHeuristic<StateModelT> _unsat_goal_atoms_heuristic;
+	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 };
 
 using BFWS_F5_BASE_HEURISTIC = unsigned;
