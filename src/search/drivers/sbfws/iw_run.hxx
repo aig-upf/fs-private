@@ -117,13 +117,12 @@ public:
 	IWRunNode& operator=(IWRunNode&&) = delete;
 
 	//! Constructor with full copying of the state (expensive)
-	IWRunNode(const StateT& s, unsigned long gen_order = 0)
-		: state( s ), action( ActionT::invalid_action_id ), parent( nullptr )
-	{}
+	IWRunNode(const StateT& s, unsigned long gen_order = 0) : IWRunNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT& _parent, unsigned long gen_order = 0) :
+	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT _parent, unsigned long gen_order = 0) :
 		state(std::move(_state)),
+		feature_valuation(0),
 		action(_action),
 		parent(_parent),
 		g(parent ? parent->g+1 : 0)
@@ -137,7 +136,11 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const IWRunNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		os << "{@ = " << this << ", s = " << state << ", g=" << g << ", features= " << fs0::print::container(feature_valuation) << ", parent = " << parent << "}";
+		os << "{@ = " << this;
+		os << ", s = " << state ;
+		os << ", g=" << g ;
+		os << ", features= " << fs0::print::container(feature_valuation);
+		os << ", parent = " << parent << "}";
 		return os;
 	}
 

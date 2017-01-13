@@ -26,6 +26,9 @@ obtain_goal_atoms(const fs::Formula* goal) {
 }
 */
 
+SimpleStateModel::~SimpleStateModel() {
+	delete _manager;
+}
 
 //! A helper to derive the distinct goal atoms
 std::vector<Atom>
@@ -118,16 +121,20 @@ SimpleStateModel::build_action_manager(const Problem& problem, BasicApplicabilit
 	const auto& actions = problem.getGroundActions();
 	const auto& constraints = problem.getStateConstraints();
 	const auto& tuple_idx =  problem.get_tuple_index();
+	SmartActionManager* manager = nullptr;
 	if (analyzer == nullptr) {
 		analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
 		analyzer->build();
 	}
 	if ( Config::instance().getSuccessorGeneratorType() == Config::SuccessorGenerationStrategy::functional_aware) {
 		LPT_INFO( "main", "Successor Generator Strategy: \"Functional Aware\"");
-		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
+		manager = new SmartActionManager(actions, constraints, tuple_idx, analyzer);
+	} else {
+		LPT_INFO( "main", "Successor Generator Strategy: \"Match Tree\"");
+		manager = new MatchTreeActionManager( actions, constraints, tuple_idx, analyzer );
 	}
-	LPT_INFO( "main", "Successor Generator Strategy: \"Match Tree\"");
-	return new MatchTreeActionManager( actions, constraints, tuple_idx, analyzer );
+	delete analyzer;
+	return manager;
 }
 
 

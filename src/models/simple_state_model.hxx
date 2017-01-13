@@ -29,7 +29,7 @@ protected:
 	SimpleStateModel(const Problem& problem, std::vector<Atom> subgoals, BasicApplicabilityAnalyzer* analyzer = nullptr);
 
 public:
-	~SimpleStateModel() = default;
+	~SimpleStateModel();
 
 	SimpleStateModel(const SimpleStateModel&) = default;
 	SimpleStateModel& operator=(const SimpleStateModel&) = default;
