@@ -14,7 +14,7 @@
 #include <utils/atom_index.hxx>
 #include <state.hxx>
 #include <lapkt/novelty/features.hxx>
-#include <boost/pool/pool_alloc.hpp>
+// #include <boost/pool/pool_alloc.hpp>
 
 
 namespace fs0 { namespace bfws {
@@ -239,8 +239,8 @@ public:
 	}
 
 	void run(const StateT& seed) {
-		//NodePT n = std::make_shared<NodeT>(seed);
-		NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
+		NodePT n = std::make_shared<NodeT>(seed);
+		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 		this->notify(NodeCreationEvent(*n));
 		this->_open.insert(n);
 
@@ -258,8 +258,8 @@ public:
 
 			for (const auto& a : this->_model.applicable_actions(current->state)) {
 				StateT s_a = this->_model.next( current->state, a );
-				//NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current );
-				NodePT successor = std::allocate_shared<NodeT>( _allocator, std::move(s_a), a, current );
+				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current );
+				//NodePT successor = std::allocate_shared<NodeT>( _allocator, std::move(s_a), a, current );
 
 				if (this->_closed.check(successor)) continue; // The node has already been closed
 
@@ -285,7 +285,7 @@ protected:
 
 	bool _mark_negative_propositions;
 
-	boost::fast_pool_allocator<NodeT> _allocator;
+	//boost::fast_pool_allocator<NodeT> _allocator;
 	
 	//! Upon retrieval of the set of relevant atoms, this will contain all those nodes that are part
 	//! of the path to some subgoal
