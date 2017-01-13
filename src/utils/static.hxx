@@ -10,6 +10,7 @@ class ProblemInfo;
 
 class StaticExtension {
 public:
+	virtual ~StaticExtension() = default;
 	virtual Function get_function() const = 0;
 	
 	//! Factory method
