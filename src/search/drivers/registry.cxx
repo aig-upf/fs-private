@@ -52,7 +52,8 @@ EngineRegistry::EngineRegistry() {
 	add("lazybfws",  new bfws::LazyBFWSDriver<SimpleStateModel>());
 	
 	
-	add("bfs",  new BreadthFirstSearchDriver());
+	add("bfs",  new BreadthFirstSearchDriver<GroundStateModel>());
+	add("lbfs",  new BreadthFirstSearchDriver<LiftedStateModel>());
 	
 	add("smart",  new SmartEffectDriver());
 	add("lsmart",  new SmartLiftedDriver());

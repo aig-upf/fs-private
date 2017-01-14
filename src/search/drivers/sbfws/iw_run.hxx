@@ -327,7 +327,7 @@ public:
 		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
 			NodePT node = _reached[subgoal_idx];
 			if (!node) { // No solution for the subgoal was found
-				LPT_EDEBUG("simulation-relevant", "Goal atom #'" << subgoal_idx << "' unreachable");
+				LPT_EDEBUG("simulation-relevant", "Goal atom #" << subgoal_idx << " unreachable");
 				continue;
 			}
 			++reachable;
