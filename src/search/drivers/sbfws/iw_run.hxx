@@ -265,7 +265,7 @@ public:
 
 				this->notify(NodeCreationEvent(*successor));
 				if (!this->_open.insert( successor )) {
-					LPT_DEBUG("search", std::setw(7) << "PRUNED: " << *successor);
+					LPT_EDEBUG("search", std::setw(7) << "PRUNED: " << *successor);
 				}
 			}
 		}

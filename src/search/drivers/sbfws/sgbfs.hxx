@@ -330,6 +330,7 @@ public:
 		_heuristic(heuristic),
 		_stats(stats),
 		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false)),
+		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
 		_generated(0)
 	{
 	}
@@ -474,7 +475,9 @@ protected:
 					_stats.wgr2_node();
 					process_node(node);
 				} else {
-					_qrest.insert(node);
+					if (!_prune_wgr2_gt_2) {
+						_qrest.insert(node);
+					}
 				}
 			}
 			
@@ -627,6 +630,9 @@ protected:
 	
 	//! Whether we want to run a simulation from the root node before starting the search
 	bool _run_simulation_from_root;
+	
+	//! Whether we want to prune those nodes with novelty w_{#g, #r} > 2 or not
+	bool _prune_wgr2_gt_2;
 	
 	//! The number of generated nodes so far
 	unsigned long _generated;
