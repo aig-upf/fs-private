@@ -39,12 +39,13 @@ template <typename NodeT,
           typename OpenList,
           typename ClosedList,
           typename StateModel,
-          typename StateT = typename StateModel::StateT,
+          typename _StateT = typename StateModel::StateT,
           typename ActionIdT = typename StateModel::ActionType::IdType>
 class GenericSearch : public events::Subject {
 public:
 	using PlanT =  std::vector<ActionIdT>;
-	using NodePtr = std::shared_ptr<NodeT>;
+	using NodePT = std::shared_ptr<NodeT>;
+	using StateT = _StateT;
 	
 	//! Relevant events
 	using NodeOpenEvent = events::NodeOpenEvent<NodeT>;
@@ -69,12 +70,12 @@ public:
 	GenericSearch& operator=(GenericSearch&& rhs) = default;
 
 	virtual bool search(const StateT& s, PlanT& solution) {
-		NodePtr n = std::make_shared<NodeT>(s, _generated++);
+		NodePT n = std::make_shared<NodeT>(s, _generated++);
 		this->notify(NodeCreationEvent(*n));
 		_open.insert(n);
 		
 		while ( !_open.is_empty() ) {
-			NodePtr current = _open.get_next( );
+			NodePT current = _open.get_next( );
 			
 			this->notify(NodeOpenEvent(*current));
 			
@@ -88,7 +89,7 @@ public:
 			
 			for ( const auto& a : _model.applicable_actions( current->state ) ) {
 				StateT s_a = _model.next( current->state, a );
-				NodePtr successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
+				NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 				
 				if (_closed.check(successor)) continue; // The node has already been closed
 				if (_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
@@ -101,7 +102,7 @@ public:
 	}
 
 	//! Backward chaining procedure to recover a plan from a given node
-	virtual void retrieve_solution(NodePtr node, PlanT& solution) {
+	virtual void retrieve_solution(NodePT node, PlanT& solution) {
 		while (node->has_parent()) {
 			solution.push_back(node->action);
 			node = node->parent;
@@ -114,7 +115,7 @@ public:
 	
 protected:
 	
-	virtual bool check_goal(const NodePtr& node, PlanT& solution) {
+	virtual bool check_goal(const NodePT& node, PlanT& solution) {
 		if ( _model.goal(node->state)) { // Solution found, we're done
 			this->notify(GoalFoundEvent(*node));
 			retrieve_solution(node, solution);
@@ -139,7 +140,7 @@ protected:
 	bool check_open_list_integrity() const {
 		OpenList copy(_open);
 		while (!copy.is_empty()) {
-			NodePtr node = copy.get_next();
+			NodePT node = copy.get_next();
 			check_node_correctness(node);
 		}
 		return true;
@@ -153,7 +154,7 @@ protected:
 		return true;
 	}
 	
-	bool check_node_correctness(const NodePtr& node) const {
+	bool check_node_correctness(const NodePT& node) const {
 		if (node->has_parent()) {
 			assert(_model.is_applicable(node->parent->state, node->action));
 		}

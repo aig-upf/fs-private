@@ -25,6 +25,7 @@ class RelevantAtomSet {
 public:
 	enum class STATUS : unsigned char {IRRELEVANT, UNREACHED, REACHED};
 
+	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
 	RelevantAtomSet(const AtomIndex* atomidx) :
 		_atomidx(atomidx), _num_reached(0), _num_unreached(0), _status(atomidx ? atomidx->size() : 0, STATUS::IRRELEVANT)
 	{}
@@ -35,36 +36,39 @@ public:
 	RelevantAtomSet& operator=(const RelevantAtomSet&) = default;
 	RelevantAtomSet& operator=(RelevantAtomSet&&) = default;
 
-	inline void mark(VariableIdx variable, ObjectIdx value, STATUS status, bool only_if_relevant) {
-		assert(_atomidx);
-		mark(_atomidx->to_index(variable, value), status, only_if_relevant);
-	}
-
-	//! A helper
+	//! Marks all the atoms in the state with the given 'status'.
+	//! If 'mark_negative_propositions' is false, predicative atoms of the form X=false are ignored
+	//! If 'only_if_relevant' is true, only those atoms that were not deemed _irrelevant_ (i.e. their status was either reached or unreached)
+	//! are marked
 	void mark(const State& state, const State* parent, STATUS status, bool mark_negative_propositions, bool only_if_relevant) {
+		assert(_atomidx);
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		for (VariableIdx var = 0; var < state.numAtoms(); ++var) {
 			ObjectIdx val = state.getValue(var);
 			if (!mark_negative_propositions && info.isPredicativeVariable(var) && val==0) continue; // We don't want to mark negative propositions
-			if (parent && val == parent->getValue(var)) continue; // If a parent was provided, we check that the value is new wrt the parent
-			mark(var, state.getValue(var), status, only_if_relevant);
+			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
+			mark(_atomidx->to_index(var, val), status, only_if_relevant);
 		}
 	}
 
+	//! Marks the atom with given index with the given status.
+	//! If 'only_if_relevant' is true, then only marks the atom if it was previously
+	//! marked as relevant (i.e. its status was _not_ STATUS::IRRELEVANT).
 	void mark(AtomIdx idx, STATUS status, bool only_if_relevant) {
 		assert(status==STATUS::REACHED || status==STATUS::UNREACHED);
 		auto& st = _status[idx];
-		if (only_if_relevant && st == STATUS::IRRELEVANT) return;
+		if (only_if_relevant && (st == STATUS::IRRELEVANT)) return;
 
 		if (st != status) {
-			st = status;
 			if (status==STATUS::REACHED) ++_num_reached;
 			else if (status==STATUS::UNREACHED) ++_num_unreached;
+			
+			if (st==STATUS::REACHED) --_num_reached; // The old status was reached, and will not be anymore, so we decrease the counter.
+			else if (st==STATUS::UNREACHED) --_num_unreached;
+			
+			st = status;
 		}
 	}
-
-	// inline void reach(VariableIdx variable, ObjectIdx value) { mark(variable, value, STATUS::REACHED); }
-	// inline void unreach(VariableIdx variable, ObjectIdx value) { mark(variable, value, STATUS::UNREACHED); }
 
 	unsigned num_reached() const { return _num_reached; }
 	unsigned num_unreached() const { return _num_unreached; }
@@ -198,7 +202,7 @@ public:
 	using ActionT = typename StateModel::ActionType;
 	using StateT = typename StateModel::StateT;
 	using PlanT = typename Base::PlanT;
-	using NodePT = typename Base::NodePtr;
+	using NodePT = typename Base::NodePT;
 
 	using NodeOpenEvent = typename Base::NodeOpenEvent;
 	using NodeExpansionEvent = typename Base::NodeExpansionEvent;
@@ -314,6 +318,8 @@ protected:
 
 public:
 	//! Retrieve the set of atoms which are relevant to reach at least one of the subgoals
+	//! Additionally, leaves in the class attribute '_visited' pointers to all those nodes which
+	//! are on at least one of the paths from the seed state to one of the nodes that satisfies a subgoal.
 	RelevantAtomSet retrieve_relevant_atoms(const StateT& seed, unsigned& reachable) {
 		const AtomIndex& atomidx = this->_model.getTask().get_tuple_index();
 		RelevantAtomSet atomset(&atomidx);
@@ -324,6 +330,8 @@ public:
 
 		_visited.clear();
 
+		// Iterate through all the subgoals that have been reached, and rebuild the path from the seed state to reach them
+		// adding all atoms encountered in the path to the RelevantAtomSet as "relevant but unreached"
 		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
 			NodePT node = _reached[subgoal_idx];
 			if (!node) { // No solution for the subgoal was found
@@ -338,6 +346,8 @@ public:
 				// If the node has already been processed, no need to do it again, nor to process the parents,
 				// which will necessarily also have been processed.
 				if (_visited.find(node) != _visited.end()) break;
+				
+				// Mark all the atoms in the state as "yet to be reached"
 				atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
 				_visited.insert(node);
 				node = node->parent;

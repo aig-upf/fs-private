@@ -266,8 +266,8 @@ protected:
 
 template <typename NodeT>
 struct SBFWSNodeComparer {
-	using NodePtrT = std::shared_ptr<NodeT>;
-	bool operator()(const NodePtrT& n1, const NodePtrT& n2) const {
+	using NodePT = std::shared_ptr<NodeT>;
+	bool operator()(const NodePT& n1, const NodePT& n2) const {
 		if (n1->novelty > n2->novelty ) return true;
 		if (n1->novelty < n2->novelty ) return false;
 		if (n1->unachieved > n2->unachieved) return true;

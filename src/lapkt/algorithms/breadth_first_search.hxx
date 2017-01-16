@@ -41,6 +41,14 @@ class StlBreadthFirstSearch : public GenericSearch<NodeT, OpenListT, ClosedListT
 {
 public:
 	using BaseClass = GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>;
+	using StateT = typename BaseClass::StateT;
+	using PlanT = typename BaseClass::PlanT;
+	using NodePT = typename BaseClass::NodePT;
+	
+	using NodeOpenEvent = typename BaseClass::NodeOpenEvent;
+	using GoalFoundEvent = typename BaseClass::GoalFoundEvent;
+	using NodeExpansionEvent = typename BaseClass::NodeExpansionEvent;
+	using NodeCreationEvent = typename BaseClass::NodeCreationEvent;
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
@@ -61,6 +69,46 @@ public:
 	StlBreadthFirstSearch(StlBreadthFirstSearch&&) = default;
 	StlBreadthFirstSearch& operator=(const StlBreadthFirstSearch&) = delete;
 	StlBreadthFirstSearch& operator=(StlBreadthFirstSearch&&) = default;
+	
+	
+	//! We redefine where the whole search schema following Russell&Norvig.
+	//! The only modification is that the check for whether a state is a goal
+	//! or not is done right after the creation of the state, instead of upon expansion.
+	//! On a problem that has a solution at depth 'd', this avoids the worst-case expansion
+	//! of all the $b^d$ nodes of the last (deepest) layer (where b is the branching factor).
+	bool search(const StateT& s, PlanT& solution) {
+		NodePT n = std::make_shared<NodeT>(s, this->_generated++);
+		this->notify(NodeCreationEvent(*n));
+		
+		if (this->check_goal(n, solution)) return true;
+		
+		this->_open.insert(n);
+		
+		while ( !this->_open.is_empty() ) {
+			NodePT current = this->_open.get_next( );
+			this->notify(NodeOpenEvent(*current));
+			
+			// close the node before the actual expansion so that children which are identical
+			// to 'current' get properly discarded
+			this->_closed.put(current);
+			
+			this->notify(NodeExpansionEvent(*current));
+			
+			for ( const auto& a : this->_model.applicable_actions( current->state ) ) {
+				StateT s_a = this->_model.next( current->state, a );
+				NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, this->_generated++);
+				
+				if (this->_closed.check(successor)) continue; // The node has already been closed
+				if (this->_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
+
+				this->notify(NodeCreationEvent(*successor));
+				
+				if (this->check_goal(current, solution)) return true;
+				this->_open.insert( successor );
+			}
+		}
+		return false;
+	}
 }; 
 
 }

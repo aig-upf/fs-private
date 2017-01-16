@@ -173,6 +173,7 @@ public:
 
 	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
 	//! all those atoms marked as "unreached", and the rest as irrelevant.
+	//! If 'log_stats' is true, the stats of this simulation will be logged in the '_stats' atribute.
 	RelevantAtomSet compute_relevant(const State& state, bool log_stats) {
 		if (_simulation_evaluator.max_novelty() == 0) { // No need to run anything
 			return RelevantAtomSet(&(_problem.get_tuple_index()));
@@ -238,7 +239,7 @@ public:
 		// Only for the root node _or_ whenever the number of unachieved nodes decreases
 		// do we recompute the set of relevant atoms.
 		if (node.decreases_unachieved_subgoals()) {
-			node._relevant_atoms = compute_relevant(node.state, !node.has_parent());
+			node._relevant_atoms = compute_relevant(node.state, !node.has_parent()); // Log only the stats of the seed state of the search.
 		} else {
 			// We copy the map of reached values from the parent node
 			node._relevant_atoms = node.parent->get_relevant_atoms(*this); // This might trigger a recursive computation
