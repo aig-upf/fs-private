@@ -1,18 +1,17 @@
 
 #pragma once
 
-// #define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS
-
-
 #include <fs_types.hxx>
-// #include <boost/dynamic_bitset.hpp>
 
-// namespace boost {
-//     template <typename B, typename A>
-//     std::size_t hash_value(const boost::dynamic_bitset<B, A>& bs) {
-//         return boost::hash_value(bs.m_bits);
-//     }
-// }
+#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS // see http://stackoverflow.com/a/3897217
+#include <boost/dynamic_bitset.hpp>
+
+namespace boost {
+    template <typename B, typename A>
+    std::size_t hash_value(const boost::dynamic_bitset<B, A>& bs) {
+        return boost::hash_value(bs.m_bits);
+    }
+}
 
 namespace fs0 {
 
@@ -22,8 +21,8 @@ class Atom;
 class State {
 protected:
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
-	std::vector<bool> _values;
-// 	boost::dynamic_bitset<> _values;
+// 	std::vector<bool> _values;
+	boost::dynamic_bitset<> _values;
 
 	std::size_t _hash;
 

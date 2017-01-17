@@ -67,8 +67,8 @@ std::ostream& State::print(std::ostream& os) const {
 
 
 std::size_t State::computeHash() const { 
-// 	return boost::hash_value(_values);
-	return boost::hash_range(_values.begin(), _values.end());
+	return boost::hash_value(_values);
+	//return boost::hash_range(_values.begin(), _values.end());
 }
 
 
