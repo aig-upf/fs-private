@@ -246,14 +246,13 @@ public:
 		NodePT n = std::make_shared<NodeT>(seed);
 		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 		this->notify(NodeCreationEvent(*n));
+		
+		if (process_node(n)) return;
 		this->_open.insert(n);
 
 		while (!this->_open.empty()) {
 			NodePT current = this->_open.next( );
 			this->notify(NodeOpenEvent(*current));
-
-			bool all_goals_reached = process_node(current);
-			if (all_goals_reached) break;
 
 			// close the node before the actual expansion so that children which are identical to 'current' get properly discarded.
 			this->_closed.put(current);
@@ -266,6 +265,9 @@ public:
 				//NodePT successor = std::allocate_shared<NodeT>( _allocator, std::move(s_a), a, current );
 
 				if (this->_closed.check(successor)) continue; // The node has already been closed
+				if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
+
+				if (process_node(successor)) return;
 
 				this->notify(NodeCreationEvent(*successor));
 				if (!this->_open.insert( successor )) {
