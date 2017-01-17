@@ -1,7 +1,18 @@
 
 #pragma once
 
+// #define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS
+
+
 #include <fs_types.hxx>
+// #include <boost/dynamic_bitset.hpp>
+
+// namespace boost {
+//     template <typename B, typename A>
+//     std::size_t hash_value(const boost::dynamic_bitset<B, A>& bs) {
+//         return boost::hash_value(bs.m_bits);
+//     }
+// }
 
 namespace fs0 {
 
@@ -11,7 +22,8 @@ class Atom;
 class State {
 protected:
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
-	std::vector<ObjectIdx> _values;
+	std::vector<bool> _values;
+// 	boost::dynamic_bitset<> _values;
 
 	std::size_t _hash;
 
@@ -43,8 +55,6 @@ public:
 	
 	ObjectIdx getValue(const VariableIdx& variable) const;
 	
-	const std::vector<ObjectIdx>& getValues() const { return _values; }
-
 	unsigned numAtoms() const { return _values.size(); }
 	
 	//! "Applies" the given atoms into the current state.
@@ -66,3 +76,4 @@ public:
 };
 
 } // namespaces
+

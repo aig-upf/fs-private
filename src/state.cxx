@@ -24,7 +24,9 @@ State::State(const State& state, const std::vector<Atom>& atoms) :
 }
 	
 void State::set(const Atom& atom) {
-	_values.at(atom.getVariable()) = atom.getValue();
+	auto value = atom.getValue();
+// 	_values.at(atom.getVariable()) = value;
+	_values[atom.getVariable()] = value;
 }
 
 bool State::contains(const Atom& atom) const {
@@ -32,7 +34,8 @@ bool State::contains(const Atom& atom) const {
 }
 
 ObjectIdx State::getValue(const VariableIdx& variable) const {
-	return _values.at(variable);
+// 	return _values.at(variable);
+	return _values[variable];
 }
 
 //! Applies the given changeset into the current state.
@@ -49,12 +52,12 @@ std::ostream& State::print(std::ostream& os) const {
 	os << "(" << _hash << ")[";
 	for (unsigned i = 0; i < _values.size(); ++i) {
 		if (info.getVariableGenericType(i) == ProblemInfo::ObjectType::BOOL) {
-			if (_values.at(i) == 0) continue;
+			if (_values[i] == 0) continue;
 			
 			// Print only those atoms which are true in the state
 			os << info.getVariableName(i);
 		} else {
-			os << info.getVariableName(i) << "=" << info.getObjectName(i, _values.at(i));
+			os << info.getVariableName(i) << "=" << info.getObjectName(i, _values[i]);
 		}
 		if (i < _values.size() - 1) os << ", ";
 	}
@@ -62,6 +65,11 @@ std::ostream& State::print(std::ostream& os) const {
 	return os;
 }
 
-std::size_t State::computeHash() const { return boost::hash_range(_values.begin(), _values.end()); }
+
+std::size_t State::computeHash() const { 
+// 	return boost::hash_value(_values);
+	return boost::hash_range(_values.begin(), _values.end());
+}
+
 
 } // namespaces
