@@ -4,8 +4,8 @@
 #include <functional>
 
 #include <lapkt/nodes/blind_node.hxx>
+#include <lapkt/components/open_lists.hxx>
 #include <lapkt/algorithms/breadth_first_search.hxx>
-#include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
 #include <search/components/single_novelty.hxx>
 #include <search/drivers/registry.hxx>
@@ -36,7 +36,7 @@ public:
 	using SearchNoveltyEvaluator = SingleNoveltyComponent<StateModelT, NodeT>;
 	
 	//! IW uses an unsorted queue with a NoveltyEvaluator acceptor
-	using OpenList = aptk::StlUnsortedFIFO<NodeT, SearchNoveltyEvaluator>;
+	using OpenList = lapkt::SearchableQueue<NodeT>;
 	
 	//! The base algorithm for IW is a simple Breadth-First Search
 	using BaseAlgorithm = lapkt::StlBreadthFirstSearch<NodeT, StateModelT, OpenList>;

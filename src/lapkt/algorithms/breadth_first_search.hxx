@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <lapkt/algorithms/generic_search.hxx>
+#include <lapkt/components/open_lists.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
-#include <aptk2/search/components/unsorted_open_list_impl.hxx>
 
 
 namespace lapkt {
@@ -34,7 +34,7 @@ namespace lapkt {
 //! a standard unsorted closed list. Type of node and state model are still generic.
 template <typename NodeT,
           typename StateModel,
-          typename OpenListT = aptk::StlUnsortedFIFO<NodeT>,
+          typename OpenListT = lapkt::SearchableQueue<NodeT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
 class StlBreadthFirstSearch : public GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>
@@ -76,7 +76,7 @@ public:
 	//! or not is done right after the creation of the state, instead of upon expansion.
 	//! On a problem that has a solution at depth 'd', this avoids the worst-case expansion
 	//! of all the $b^d$ nodes of the last (deepest) layer (where b is the branching factor).
-	bool search(const StateT& s, PlanT& solution) {
+	bool search(const StateT& s, PlanT& solution) override {
 		NodePT n = std::make_shared<NodeT>(s, this->_generated++);
 		this->notify(NodeCreationEvent(*n));
 		
@@ -84,8 +84,8 @@ public:
 		
 		this->_open.insert(n);
 		
-		while ( !this->_open.is_empty() ) {
-			NodePT current = this->_open.get_next( );
+		while (!this->_open.empty()) {
+			NodePT current = this->_open.next( );
 			this->notify(NodeOpenEvent(*current));
 			
 			// close the node before the actual expansion so that children which are identical
@@ -99,11 +99,12 @@ public:
 				NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, this->_generated++);
 				
 				if (this->_closed.check(successor)) continue; // The node has already been closed
-				if (this->_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
+				if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
 
 				this->notify(NodeCreationEvent(*successor));
+
+				if (this->check_goal(successor, solution)) return true;
 				
-				if (this->check_goal(current, solution)) return true;
 				this->_open.insert( successor );
 			}
 		}

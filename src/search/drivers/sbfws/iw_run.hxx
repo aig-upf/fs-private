@@ -4,7 +4,6 @@
 #include <iomanip>
 
 #include <aptk2/tools/logging.hxx>
-#include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 #include <lapkt/algorithms/generic_search.hxx>
 #include <search/drivers/bfws/iw_novelty_evaluator.hxx>
@@ -14,6 +13,7 @@
 #include <utils/atom_index.hxx>
 #include <state.hxx>
 #include <lapkt/novelty/features.hxx>
+#include <lapkt/components/open_lists.hxx>
 // #include <boost/pool/pool_alloc.hpp>
 
 
@@ -156,7 +156,8 @@ public:
 
 //! This is the acceptor for an open list with width-based node pruning
 //! - a node is pruned iff its novelty is higher than a given threshold.
-class IWRunAcceptor {
+template <typename NodeT>
+class IWRunAcceptor : public lapkt::QueueAcceptorI<NodeT> {
 protected:
 	//! The set of features used to compute the novelty
 	const lapkt::novelty::FeatureSet<State>& _features;
@@ -173,7 +174,6 @@ public:
 	~IWRunAcceptor() = default;
 
 	//! Returns false iff we want to prune this node during the search
-	template <typename NodeT>
 	bool accept(NodeT& node) {
 		assert(node.feature_valuation.empty()); // We should not be computing the feature valuation twice!
 		node.feature_valuation = _features.evaluate(node.state);
@@ -192,7 +192,7 @@ public:
 //! satisfied.
 template <typename NodeT,
           typename StateModel,
-          typename OpenListT = aptk::StlUnsortedFIFO<NodeT, IWRunAcceptor>,
+          typename OpenListT = lapkt::SearchableQueue<NodeT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
 class IWRun : public lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>
@@ -211,7 +211,7 @@ public:
 
 	//! Factory method
 	static IWRun* build(const StateModel& model, const lapkt::novelty::FeatureSet<State>& featureset, const IWNoveltyEvaluator& novelty_evaluator, bool mark_negative_propositions) {
-		auto acceptor = std::make_shared<IWRunAcceptor>(featureset, novelty_evaluator);
+		auto acceptor = new IWRunAcceptor<NodeT>(featureset, novelty_evaluator);
 		return new IWRun(model, OpenListT(acceptor), false, mark_negative_propositions);
 	}
 
@@ -248,8 +248,8 @@ public:
 		this->notify(NodeCreationEvent(*n));
 		this->_open.insert(n);
 
-		while (!this->_open.is_empty()) {
-			NodePT current = this->_open.get_next( );
+		while (!this->_open.empty()) {
+			NodePT current = this->_open.next( );
 			this->notify(NodeOpenEvent(*current));
 
 			bool all_goals_reached = process_node(current);

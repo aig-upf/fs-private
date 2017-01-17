@@ -94,19 +94,14 @@ public:
 		return true;
 	}
 
-	//! For the sake of compatibility
-	inline NodePT get_next() { return next(); }
-	
 	//! Extract the "next" node from the data structure and return it
 	NodePT next() {
-		assert( !is_empty() );
+		assert(!this->empty());
 		NodePT node = this->top();
 		this->pop();
 		_index.erase(node);
 		return node;
 	}
-
-	bool is_empty() const { return this->empty(); }
 	
 protected:
 	//! An index of the nodes with are in the open list at any moment, for faster access
@@ -138,9 +133,6 @@ public:
 		return true;
 	}
 
-	//! For the sake of compatibility
-	inline NodePT get_next() { return next(); }
-	
 	//! Extract the "next" node from the data structure and return it
 	NodePT next() {
 		assert(!this->empty());
@@ -178,15 +170,24 @@ public:
 };
 
 
+//! An acceptor that always accepts to insert any given state
+template <typename NodeT>
+class QueueAcceptorI {
+public:
+	//! Accept any state
+	virtual bool accept(NodeT& n) = 0;
+};
+
 
 //! A queue where elements can be searched for efficiently
 template <typename NodeT,
           typename NodePT = std::shared_ptr<NodeT>>
 class SearchableQueue : public std::queue<NodePT> {
+	using QueueAcceptorT = QueueAcceptorI<NodeT>;
 public:
 	//! Constructor
-	explicit SearchableQueue()
-		: _index()
+	explicit SearchableQueue(QueueAcceptorT* acceptor = nullptr)
+		: _index(), _acceptor(acceptor)
 	{}
 	
 	virtual ~SearchableQueue() = default;
@@ -198,7 +199,7 @@ public:
 	SearchableQueue& operator=(SearchableQueue&&) = default;
 
 	bool insert(const NodePT& node) {
-		if ( node->dead_end() ) return false;
+		if (_acceptor && !_acceptor->accept(*node)) return false;
 		this->push( node );
 		_index.insert( node );
 		return true;
@@ -208,6 +209,9 @@ public:
 		return _index.find(node) != _index.end();
 	}
 
+	//! For the sake of template compatibility
+	bool updatable(const NodePT& node) { return contains(node); }
+	
 	//! Extract the "next" node from the data structure and return it
 	NodePT next() {
 		assert(!this->empty());
@@ -221,6 +225,9 @@ protected:
 	//! An index of the nodes with are in the open list at any moment, for faster access
 	using node_unordered_set = std::unordered_set<NodePT, node_hash<NodePT>, node_equal_to<NodePT>>;
 	node_unordered_set _index;
+	
+	//! An (optional) acceptor object
+	std::unique_ptr<QueueAcceptorT> _acceptor;
 };
 
 }

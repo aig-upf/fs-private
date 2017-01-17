@@ -74,8 +74,8 @@ public:
 		this->notify(NodeCreationEvent(*n));
 		_open.insert(n);
 		
-		while ( !_open.is_empty() ) {
-			NodePT current = _open.get_next( );
+		while ( !_open.empty() ) {
+			NodePT current = _open.next( );
 			
 			this->notify(NodeOpenEvent(*current));
 			
@@ -139,8 +139,8 @@ protected:
 	//* Some methods mainly for debugging purposes
 	bool check_open_list_integrity() const {
 		OpenList copy(_open);
-		while (!copy.is_empty()) {
-			NodePT node = copy.get_next();
+		while (!copy.empty()) {
+			NodePT node = copy.next();
 			check_node_correctness(node);
 		}
 		return true;

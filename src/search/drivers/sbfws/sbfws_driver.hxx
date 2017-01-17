@@ -12,7 +12,6 @@
 #include <lapkt/events.hxx>
 #include <lapkt/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
-#include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 #include <search/drivers/bfws/iw_novelty_evaluator.hxx>
 
 

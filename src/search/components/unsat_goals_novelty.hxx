@@ -51,7 +51,7 @@ public:
 	GenericNoveltyEvaluator& evaluator(const State& state) { return _novelty_evaluators[evaluate_num_unsat_goals(state)]; }
 	
 	//! Returns false iff we want to prune this node during the search
-	virtual bool accept(const SearchNode& n) { return true; }
+	bool accept(SearchNode& n) override { return true; }
 };
 
 } } // namespaces

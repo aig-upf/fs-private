@@ -146,9 +146,9 @@ public:
 		
 		NodePtr goal = nullptr;
 		unsigned pruned = 0;
-		while (!goal && !this->_open.is_empty()) {
+		while (!goal && !this->_open.empty()) {
 			
-			NodePtr current = this->_open.get_next();
+			NodePtr current = this->_open.next();
 			this->notify(NodeOpenEvent(*current));
 			this->_closed.put(current);
 			

@@ -10,7 +10,6 @@
 #include <lapkt/algorithms/best_first_search.hxx>
 #include <search/stats.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
-#include <aptk2/search/components/stl_unsorted_fifo_open_list.hxx>
 
 namespace fs0 { class GroundStateModel; class Config; }
 

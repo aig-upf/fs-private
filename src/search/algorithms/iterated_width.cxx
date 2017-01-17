@@ -19,7 +19,7 @@ FS0IWAlgorithm<StateModelT>::search(const State& state, PlanT& solution) {
 template <typename StateModelT>
 void
 FS0IWAlgorithm<StateModelT>::setup_base_algorithm(unsigned max_width) {
-	std::shared_ptr<SearchNoveltyEvaluator> evaluator = std::make_shared<SearchNoveltyEvaluator>(_model, _current_max_width, _feature_configuration);
+	SearchNoveltyEvaluator* evaluator = new SearchNoveltyEvaluator(_model, _current_max_width, _feature_configuration);
 	_algorithm = std::unique_ptr<BaseAlgorithm>(new BaseAlgorithm(_model, OpenList(evaluator)));
 	lapkt::events::subscribe(*_algorithm, _handlers);
 }

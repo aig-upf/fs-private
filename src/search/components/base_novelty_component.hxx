@@ -5,6 +5,7 @@
 #include <ground_state_model.hxx>
 #include <aptk2/tools/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
+#include <lapkt/components/open_lists.hxx>
 
 namespace fs0 { class Problem; class Config; }
 
@@ -13,7 +14,7 @@ namespace fs0 { namespace drivers {
 //! A novelty evaluator object to be used as an open list acceptor.
 //! It accepts a new search node iff its novelty less than or equal to the max novelty bound
 template <typename SearchNode, typename NoveltyEvaluatorT = GenericNoveltyEvaluator>
-class BaseNoveltyComponent {
+class BaseNoveltyComponent : public lapkt::QueueAcceptorI<SearchNode> {
 protected:
 	unsigned _max_novelty;
 
@@ -34,7 +35,7 @@ public:
 	inline unsigned novelty(const State& state) { return evaluator(state).evaluate(state); }
 
 	//! Returns false iff we want to prune this node during the search
-	virtual bool accept(const SearchNode& n) {
+	virtual bool accept(SearchNode& n) {
 		return novelty(n.state) <= novelty_bound();
 	}
 };
