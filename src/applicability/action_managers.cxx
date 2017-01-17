@@ -231,8 +231,7 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 	_.resize(_actions.size()); std::iota(_.begin(), _.end(), 0); // !!! Uncomment this to ignore the whitelist strategy
 	return _; // !!! Uncomment this to ignore the whitelist strategy
 
-	const std::vector<ObjectIdx>& values = state.getValues();
-	std::size_t num_vars = values.size(); // The number of state variables, i.e. of atoms in a state
+	std::size_t num_vars = state.numAtoms(); // The number of state variables, i.e. of atoms in a state
 	assert(num_vars >= 1); // We have at least one state variable
 
 	// We'll store here the indexes of the atoms that cannot prune any action (because all actions are applicable wrt atoms)
@@ -244,7 +243,7 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 	unsigned var_with_min_app_set = 0, min_size = std::numeric_limits<unsigned>::max();
 	std::vector<AtomIdx> tuples(num_vars);
 	for (unsigned i = 0; i < num_vars; ++i) {
-		AtomIdx tup = _tuple_idx.to_index(i, values[i]);
+		AtomIdx tup = _tuple_idx.to_index(i, state.getValue(i));
 		tuples[i] = tup;
 		unsigned s = _app_index[tup].size();
 
