@@ -13,8 +13,12 @@ protected:
 	ValueTuple _values;
 	
 public:
+	//! A const empty binding, to be used whenever needed.
+	const static Binding EMPTY_BINDING;
+	
 	//! Construct an empty binding
-	Binding() {}
+	Binding() = default;
+	
 	
 	//! Construct a binding of given size with all variables unset
 	Binding(std::size_t size) : _set(size, false), _values(size) {}

@@ -124,7 +124,7 @@ const fs::Formula* Loader::loadGroundedFormula(const rapidjson::Value& data, con
 	const fs::Formula* unprocessed = fs::Loader::parseFormula(data["conditions"], info);
 	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
 	// to detect tautologies, contradictions, etc., and to consolidate state variables
-	auto processed = unprocessed->bind(Binding(), info);
+	auto processed = unprocessed->bind(Binding::EMPTY_BINDING, info);
 	delete unprocessed;
 	return processed;
 }

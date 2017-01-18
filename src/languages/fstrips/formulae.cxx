@@ -32,8 +32,8 @@ std::vector<const AtomicFormula*> Formula::all_atoms() const {
 	return Utils::filter_by_type<const AtomicFormula*>(all_formulae());
 }
 
-bool Formula::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
-bool Formula::interpret(const State& state) const  { return interpret(state, Binding()); }
+bool Formula::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
+bool Formula::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
 
 
 std::ostream& Formula::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }

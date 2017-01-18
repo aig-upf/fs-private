@@ -11,10 +11,10 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
-ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
-ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding()); }
-VariableIdx Term::interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding()); }
-VariableIdx Term::interpretVariable(const State& state) const { return interpretVariable(state, Binding()); }
+ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
+ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
+VariableIdx Term::interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding::EMPTY_BINDING); }
+VariableIdx Term::interpretVariable(const State& state) const { return interpretVariable(state, Binding::EMPTY_BINDING); }
 	
 std::ostream& Term::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
@@ -131,7 +131,7 @@ const Term* ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info
 	auto processed = create(st);
 	
 	if (constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
-		auto value = processed->interpret({}, Binding());
+		auto value = processed->interpret({}, Binding::EMPTY_BINDING);
 		delete processed;
 		return new IntConstant(value); // Arithmetic terms necessarily involve integer subterms
 	}
