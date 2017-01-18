@@ -179,8 +179,6 @@ public:
 			return RelevantAtomSet(&(_problem.get_tuple_index()));
 		}
 		
-		_stats.simulation();
-		
 		_iw_runner = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator, _mark_negative_propositions));
 		
 		//BFWSStats stats;
@@ -198,6 +196,9 @@ public:
 			_stats.set_initial_reachable_subgoals(reachable);
 			_stats.set_initial_relevant_atoms(relevant.num_unreached());
 		}
+		_stats.reachable_subgoals(reachable);
+		_stats.relevant_atoms(relevant.num_unreached());
+		_stats.simulation();
 
 		return relevant;
 	}
@@ -246,6 +247,7 @@ public:
 		}
 
 		// In both cases, we update the set of relevant nodes with those that have been reached.
+// 		node._relevant_atoms.mark(node.state, !node.has_parent() ? nullptr :  &(node.parent->state), RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
 		node._relevant_atoms.mark(node.state, nullptr, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
 	}
 
