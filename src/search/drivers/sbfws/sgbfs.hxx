@@ -247,8 +247,8 @@ public:
 		}
 
 		// In both cases, we update the set of relevant nodes with those that have been reached.
-// 		node._relevant_atoms.mark(node.state, !node.has_parent() ? nullptr :  &(node.parent->state), RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
-		node._relevant_atoms.mark(node.state, nullptr, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
+		node._relevant_atoms.mark(node.state, !node.has_parent() ? nullptr :  &(node.parent->state), RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
+//		node._relevant_atoms.mark(node.state, nullptr, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
 	}
 
 	unsigned compute_unachieved(const State& state) {
