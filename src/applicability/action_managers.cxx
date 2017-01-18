@@ -191,6 +191,7 @@ BasicApplicabilityAnalyzer::build() {
 			const std::vector<ObjectIdx>& values = info.getVariableObjects(relevant);
 
 			if (!referenced.insert(relevant).second) {
+				LPT_INFO("cout", "Conjunct \"" << *conjunct << "\" contains a duplicate reference to state variable \"" << info.getVariableName(relevant) << "\"");
 				throw std::runtime_error("BasicApplicabilityAnalyzer requires that no two preconditions make reference to the same state variable");
 			}
 
