@@ -71,7 +71,7 @@ public:
 	}
 	
 	static std::string _if_computed(unsigned val) {
-		return val < std::numeric_limits<unsigned>::max() ?  std::to_string(val) : "NOT COMPUTED";
+		return val < std::numeric_limits<unsigned>::max() ?  std::to_string(val) : "N/A";
 	}
 	
 	using DataPointT = std::tuple<std::string, std::string, std::string>;
