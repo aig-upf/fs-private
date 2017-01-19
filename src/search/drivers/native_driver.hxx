@@ -32,8 +32,8 @@ public:
 	
 	StateModelT setup(Problem& problem) const;
 	
-protected:
 	static bool check_supported(const Problem& problem);
+protected:
 	
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 	

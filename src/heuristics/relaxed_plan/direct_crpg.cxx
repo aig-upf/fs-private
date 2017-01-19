@@ -11,7 +11,7 @@
 namespace fs0 {
 
 DirectCRPG::DirectCRPG(const Problem& problem, std::vector<std::unique_ptr<DirectActionManager>>&& managers, std::shared_ptr<DirectRPGBuilder> builder) :
-	_problem(problem), _managers(std::move(managers)), all_whitelist(_managers.size()), _builder(builder)
+	_problem(problem), _managers(std::move(managers)), all_whitelist(_managers.size()), _builder(builder), _last_extractor(nullptr)
 {
 	LPT_DEBUG("heuristic", "Relaxed Plan heuristic initialized with builder: " << std::endl << *_builder);
 	std::iota(all_whitelist.begin(), all_whitelist.end(), 0); // Fill in whe vector with values 0, 1, 2, 3 ...
@@ -74,9 +74,8 @@ long DirectCRPG::evaluate(const State& seed, const std::vector<ActionIdx>& white
 long DirectCRPG::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping) {
 	Atom::vctr causes;
 	if (_builder->isGoal(seed, state, causes)) {
-		auto extractor = RelaxedPlanExtractorFactory<RPGData>::create(seed, bookkeeping);
-		long cost = extractor->computeRelaxedPlanCost(causes);
-		delete extractor;
+		_last_extractor = std::unique_ptr<BaseRelaxedPlanExtractor<RPGData>>(RelaxedPlanExtractorFactory<RPGData>::create(seed, bookkeeping));
+		long cost = _last_extractor->computeRelaxedPlanCost(causes);
 		return cost;
 	} else return -1;
 }

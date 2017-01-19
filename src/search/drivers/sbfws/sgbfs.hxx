@@ -5,10 +5,13 @@
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
+#include <search/drivers/native_driver.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <heuristics/novelty/features.hxx>
+#include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <lapkt/components/open_lists.hxx>
+
 
 namespace fs0 { namespace bfws {
 
@@ -135,7 +138,10 @@ public:
 	using IWAlgorithm = IWRun<IWNodeT, StateModelT>;
 	using IWNodePT = typename IWAlgorithm::NodePT;
 	
-	LazyBFWSHeuristic(const StateModelT& model, const FeatureSetT& features, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, BFWSStats& stats, bool mark_negative_propositions) :
+	using HFFHeuristicT = DirectCRPG;
+	using HFFHeuristicPT = std::unique_ptr<HFFHeuristicT>;
+	
+	LazyBFWSHeuristic(const StateModelT& model, const FeatureSetT& features, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, BFWSStats& stats, bool mark_negative_propositions, bool use_hff) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
@@ -145,9 +151,19 @@ public:
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(mark_negative_propositions),
-		_stats(stats)
-	{}
-
+		_stats(stats),
+		_direct_rpg(nullptr)
+	{
+		if (use_hff) { // Setup the HFF heuristic
+			if (!fs0::drivers::NativeDriver<GroundStateModel>::check_supported(_problem)) {
+				throw std::runtime_error("This problem is too complex for the \"native\" driver, try a different one.");
+			}
+			
+			auto direct_builder = DirectRPGBuilder::create(_problem.getGoalConditions(), _problem.getStateConstraints());
+			_direct_rpg = HFFHeuristicPT(new HFFHeuristicT(_problem, DirectActionManager::create(_problem.getGroundActions()), std::move(direct_builder)));
+		}
+	}
+	
 	~LazyBFWSHeuristic() = default;
 	
 	template <typename NodeT>
@@ -174,7 +190,9 @@ public:
 	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
 	//! all those atoms marked as "unreached", and the rest as irrelevant.
 	//! If 'log_stats' is true, the stats of this simulation will be logged in the '_stats' atribute.
-	RelevantAtomSet compute_relevant(const State& state, bool log_stats) {
+	RelevantAtomSet compute_relevant_simulation(const State& state, unsigned& reachable) {
+		reachable = 0;
+		
 		if (_simulation_evaluator.max_novelty() == 0) { // No need to run anything
 			return RelevantAtomSet(&(_problem.get_tuple_index()));
 		}
@@ -186,11 +204,27 @@ public:
 		//iw->subscribe(st_obs);
 		
 		_iw_runner->run(state);
-		unsigned reachable = 0;
+		
 		RelevantAtomSet relevant = _iw_runner->retrieve_relevant_atoms(state, reachable);
 		
 		//LPT_INFO("cout", "IW Simulation: Node expansions: " << stats.expanded());
 		//LPT_INFO("cout", "IW Simulation: Node generations: " << stats.generated());
+
+		return relevant;
+	}
+	
+	RelevantAtomSet compute_relevant(const State& state, bool log_stats) {
+		unsigned reachable = 0, max_reachable = _model.num_subgoals();
+		RelevantAtomSet relevant(nullptr);
+		if (_direct_rpg) {
+			reachable = max_reachable; // In a relaxed-plan environment all subgoals are reachable
+			relevant = compute_relevant_hff(state);
+		} else {
+			relevant = compute_relevant_simulation(state, reachable);
+		}
+		
+		LPT_EDEBUG("simulation-relevant", "Computing R(s) from state: " << std::endl << state << std::endl);
+		LPT_EDEBUG("simulation-relevant", relevant.num_unreached() << " relevant atoms (" << reachable << "/" << max_reachable << " reachable subgoals): " << print::relevant_atomset(relevant) << std::endl << std::endl);
 
 		if (log_stats) {
 			_stats.set_initial_reachable_subgoals(reachable);
@@ -203,6 +237,29 @@ public:
 		return relevant;
 	}
 	
+	RelevantAtomSet compute_relevant_hff(const State& state) {
+		assert(_direct_rpg);
+		const AtomIndex& atomidx = _problem.get_tuple_index();
+		RelevantAtomSet atomset(&atomidx);
+		long h =  _direct_rpg->evaluate(state);
+		if (h<0) { // No relaxed plan was found - no need to do anything
+
+		} else {
+			const ProblemInfo& info = ProblemInfo::getInstance();
+			for (const Atom& atom:_direct_rpg->get_relevant()) {
+				auto var = atom.getVariable();
+				auto val = atom.getValue();
+				if (!_mark_negative_propositions && info.isPredicativeVariable(var) && val==0) {
+					continue; // We don't want to mark negative propositions
+				}
+				
+				atomset.mark(atomidx.to_index(var, val), RelevantAtomSet::STATUS::UNREACHED, false);
+			}
+		}
+		return atomset;
+	}
+
+
 	const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _iw_runner->get_relevant_nodes(); }
 
 	//! This is a hackish way to obtain an integer index that uniquely identifies the tuple <#g, #r>
@@ -286,6 +343,8 @@ protected:
 	bool _mark_negative_propositions;
 	
 	BFWSStats& _stats;
+	
+	HFFHeuristicPT _direct_rpg;
 	
 	//! The last used iw-simulator, if any
 	std::unique_ptr<IWAlgorithm> _iw_runner;
@@ -678,7 +737,8 @@ public:
 		_search_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.search_width));
 		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.simulation_width));
 
-		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions));
+		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(
+			model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions, config.getOption<bool>("bfws.use_hff", false)));
 
 		auto engine = EnginePT(new EngineT(model, *_heuristic, _stats, config));
 

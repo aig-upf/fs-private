@@ -4,6 +4,7 @@
 #include <fs_types.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/direct/action_manager.hxx>
+#include "relaxed_plan_extractor.hxx"
 
 namespace fs0 {
 
@@ -37,6 +38,11 @@ public:
 	//! To be subclassed in other RPG-based heuristics such as h_max
 	virtual long computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping);
 	
+	const std::unordered_set<Atom>& get_relevant() const { 
+		assert(_last_extractor);
+		return _last_extractor->get_relevant();
+	}
+
 protected:
 	//! The actual planning problem
 	const Problem& _problem;
@@ -49,6 +55,8 @@ protected:
 	
 	//! The RPG building helper
 	const std::shared_ptr<DirectRPGBuilder> _builder;
+	
+	std::unique_ptr<BaseRelaxedPlanExtractor<RPGData>> _last_extractor;
 };
 
 //! The h_max version

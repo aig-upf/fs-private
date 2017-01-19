@@ -326,8 +326,6 @@ public:
 		const AtomIndex& atomidx = this->_model.getTask().get_tuple_index();
 		RelevantAtomSet atomset(&atomidx);
 
-		LPT_EDEBUG("simulation-relevant", "Computing set of relevant atoms from state: " << std::endl << seed << std::endl);
-
 		// atomset.mark(seed, RelevantAtomSet::STATUS::UNREACHED); // This is not necessary, since all these atoms will be made true by the "root" state of the simulation
 
 		_visited.clear();
@@ -357,7 +355,6 @@ public:
 			
 			_visited.insert(node); // Insert the root anyway to mark it as a relevant node
 		}
-		LPT_EDEBUG("simulation-relevant", atomset.num_unreached() << " relevant atoms (" << reachable << "/" << _reached.size() << " reachable subgoals): " << print::relevant_atomset(atomset) << std::endl << std::endl);
 
 		return atomset;
 	}
