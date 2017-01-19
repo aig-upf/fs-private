@@ -2,6 +2,7 @@
 #pragma once
 
 #include <string>
+#include <boost/lexical_cast.hpp>
 
 #include <aptk2/tools/resources_control.hxx>
 #include <aptk2/tools/logging.hxx>
@@ -20,6 +21,21 @@ namespace fs0 { namespace drivers {
 
 class Utils {
 public:
+
+template <typename StatsT>
+static void dump_stats(std::ofstream& out, const StatsT& stats) {
+	for (const auto& point:stats.dump()) {
+		std::string val = std::get<2>(point);
+
+		try { double _ = boost::lexical_cast<double>(val); _unused(_); }
+		catch(boost::bad_lexical_cast& e) { 
+			// Not a number, we print a string
+			val = "\"" + val + "\"";
+		}
+
+		out << "\t\"" << std::get<0>(point) << "\": " << val << "," << std::endl;
+	}
+}
 
 template <typename StateModelT, typename SearchAlgorithmT, typename StatsT>
 static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, const std::string& out_dir, float start_time, const StatsT& stats) {
@@ -58,9 +74,7 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	
 
 	json_out << "{" << std::endl;
-	for (const auto& point:stats.dump()) {
-		json_out << "\t\"" << std::get<0>(point) << "\": " << std::get<2>(point) << "," << std::endl;
-	}
+	dump_stats(json_out, stats);
 	json_out << "\t\"total_time\": " << total_planning_time << "," << std::endl;
 	json_out << "\t\"search_time\": " << search_time << "," << std::endl;
 	// json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
