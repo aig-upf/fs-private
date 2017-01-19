@@ -174,6 +174,8 @@ public:
 template <typename NodeT>
 class QueueAcceptorI {
 public:
+	virtual ~QueueAcceptorI() = default;
+	
 	//! Accept any state
 	virtual bool accept(NodeT& n) = 0;
 };
