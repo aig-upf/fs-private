@@ -146,9 +146,12 @@ def run_solver(translation_dir, args):
     print("{0:<30}{1}".format("Running solver:", solver))
     print("{0:<30}{1}\n".format("Command line arguments:", ' '.join(command[1:])))
     sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
-    output = subprocess.call(command, cwd=translation_dir)
+
+    command_str = ' '.join(command)
+    # We run the command spawning a new shell so that we can get typical shell kill signals such as OOM, etc.
+    output = subprocess.call(command_str, cwd=translation_dir, shell=True)
     if output != 0:
-        print("Error sunning solver")
+        print("Error running solver. Output code: {}".format(output))
         sys.exit(output)
 
 
