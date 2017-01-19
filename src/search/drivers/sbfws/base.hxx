@@ -5,6 +5,9 @@
 #include <tuple>
 #include <vector>
 #include <limits>
+#include <sstream>
+#include <ios>
+#include <iomanip>
 
 namespace fs0 { class Config; }
 
@@ -74,6 +77,13 @@ public:
 		return val < std::numeric_limits<unsigned>::max() ?  std::to_string(val) : "N/A";
 	}
 	
+	static std::string _avg(unsigned val, unsigned den) {
+		if (den == 0) return "N/A";
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(2) << val / (float) den;
+		return ss.str();
+	}
+	
 	using DataPointT = std::tuple<std::string, std::string, std::string>;
 	std::vector<DataPointT> dump() const {
 		return {
@@ -94,10 +104,10 @@ public:
 			std::make_tuple("simulations", "Simulations", std::to_string(simulated())),
 			std::make_tuple("reachable_0", "Reachable subgoals in initial state", _if_computed(_initial_reachable_subgoals)),
 			std::make_tuple("reachable_max", "Max. # reachable subgoals in any simulation", std::to_string(_max_reachable_subgoals)),
-			std::make_tuple("reachable_avg", "Avg. # reachable subgoals in any simulation", std::to_string(_sum_reachable_subgoals/_simulations)),
+			std::make_tuple("reachable_avg", "Avg. # reachable subgoals in any simulation", _avg(_sum_reachable_subgoals, _simulations)),
 			std::make_tuple("relevant_atoms_0", "|R|_0", _if_computed(_initial_relevant_atoms)),
 			std::make_tuple("relevant_atoms_max", "|R|_max", std::to_string(_max_relevant_atoms)),
-			std::make_tuple("relevant_atoms_avg", "|R|_avg", std::to_string(_sum_relevant_atoms/_simulations))
+			std::make_tuple("relevant_atoms_avg", "|R|_avg", _avg(_sum_relevant_atoms, _simulations))
 		};
 	}
 	
