@@ -296,16 +296,22 @@ public:
 	void update_relevant_atoms(NodeT& node) {
 		// Only for the root node _or_ whenever the number of unachieved nodes decreases
 		// do we recompute the set of relevant atoms.
+		State* marking_parent = nullptr;
+		
 		if (node.decreases_unachieved_subgoals()) {
 			node._relevant_atoms = compute_relevant(node.state, !node.has_parent()); // Log only the stats of the seed state of the search.
 		} else {
 			// We copy the map of reached values from the parent node
 			node._relevant_atoms = node.parent->get_relevant_atoms(*this); // This might trigger a recursive computation
 		}
+		
+		// For the seed of the simulation, we want to mark all the initial atoms as reached.
+		// But otherwise, we might want to mark as reached those atoms that change of value with respect to the parent.
+// 		if (node.has_parent() && !node.decreases_unachieved_subgoals()) marking_parent = &(node.parent->state);
+		if (node.has_parent()) marking_parent = &(node.parent->state);
 
 		// In both cases, we update the set of relevant nodes with those that have been reached.
-		node._relevant_atoms.mark(node.state, !node.has_parent() ? nullptr :  &(node.parent->state), RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
-//		node._relevant_atoms.mark(node.state, nullptr, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
+		node._relevant_atoms.mark(node.state, marking_parent, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
 	}
 
 	unsigned compute_unachieved(const State& state) {
