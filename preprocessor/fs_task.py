@@ -16,6 +16,18 @@ from pddl.f_expression import NumericConstant
 from state_variables import create_all_possible_state_variables
 
 
+def filter_out_action_cost_atoms(fd_initial_state, action_cost_symbols):
+    filtered = []
+    for atom in fd_initial_state:
+        if isinstance(atom, pddl.Assign):
+            name = atom.fluent.symbol
+            if name in action_cost_symbols:
+                continue
+        filtered.append(atom)
+
+    return filtered
+
+
 def create_fs_task(fd_task, domain_name, instance_name):
     """ Create a problem domain and instance and perform the appropriate validity checks """
     types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
@@ -24,7 +36,7 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task.process_types(types, type_map)
     task.process_symbols(fd_task.actions, fd_task.predicates, fd_task.functions)
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
-    task.process_initial_state(fd_task.init)
+    task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
     task.process_actions(fd_task.actions)
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
@@ -64,6 +76,7 @@ class FSTaskIndex(object):
         self.objects = util.UninitializedAttribute('objects')
         self.symbols = util.UninitializedAttribute('symbols')
         self.symbol_types = util.UninitializedAttribute('symbol_types')
+        self.action_cost_symbols = util.UninitializedAttribute('symbol_types')
         self.symbol_index = util.UninitializedAttribute('symbol_index')
         self.all_symbols = util.UninitializedAttribute('all_symbols')
         self.static_symbols = util.UninitializedAttribute('static_symbols')
@@ -85,7 +98,7 @@ class FSTaskIndex(object):
         self.objects = self._index_objects(objects)
 
     def process_symbols(self, actions, predicates, functions):
-        self.symbols, self.symbol_types = self._index_symbols(predicates, functions)
+        self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
         self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
 
         self.all_symbols = list(self.symbol_types.keys())
@@ -115,7 +128,7 @@ class FSTaskIndex(object):
          This method takes care of analyzing any given task to determine which of the task symbols
          are fluent and which static.
         """
-        symbols, symbol_types = OrderedDict(), {}
+        symbols, symbol_types, action_cost_symbols = OrderedDict(), {}, set()
 
         for s in predicates:
             argtypes = [t.type for t in s.arguments]
@@ -123,12 +136,14 @@ class FSTaskIndex(object):
             symbol_types[s.name] = 'bool'
 
         for s in functions:
-            if s.name != 'total-cost':  # Ignore the "fake" total-cost function
+            if s.name == 'total-cost' or s.type == 'number':  # Ignore action costs
+                action_cost_symbols.add(s.name)
+            else:
                 argtypes = [t.type for t in s.arguments]
                 symbols[s.name] = base.Function(s.name, argtypes, s.type)
                 symbol_types[s.name] = s.type
 
-        return symbols, symbol_types
+        return symbols, symbol_types, action_cost_symbols
 
     def process_initial_state(self, fd_initial_state):
         fd_initial_atoms = self._extract_initial_atom_names_and_arguments(fd_initial_state)
