@@ -11,10 +11,14 @@ class Problem;
 class Atom;
 
 class State {
+public:
+	// using BitsetT = boost::dynamic_bitset<>;
+	using BitsetT = std::vector<bool>;
+
 protected:
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
-// 	std::vector<bool> _values;
-	boost::dynamic_bitset<> _values;
+	BitsetT _bool_values;
+	//std::vector<ObjectIdx> _int_values;
 
 	std::size_t _hash;
 
@@ -38,18 +42,20 @@ public:
 	State& operator=(State&&) = default;
 
 	// Check the hash first for performance.
-	bool operator==(const State &rhs) const { return _hash == rhs._hash && _values == rhs._values; }
+	bool operator==(const State &rhs) const { return _hash == rhs._hash && _bool_values == rhs._bool_values; }
 	bool operator!=(const State &rhs) const { return !(this->operator==(rhs));}
 	
 	
 	bool contains(const Atom& atom) const;
 	
-	ObjectIdx getValue(const VariableIdx& variable) const;
+	inline ObjectIdx getValue(const VariableIdx& variable) const { return _bool_values[variable]; }
 	
-	unsigned numAtoms() const { return _values.size(); }
+	unsigned numAtoms() const { return _bool_values.size(); }
 	
 	//! "Applies" the given atoms into the current state.
 	void accumulate(const std::vector<Atom>& atoms);
+	
+	const BitsetT& get_boolean_values() const { return _bool_values; }
 
 protected:
 	void set(const Atom& atom);

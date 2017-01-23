@@ -9,8 +9,9 @@
 
 namespace fs0 { namespace bfws {
 
-
-class IWNoveltyEvaluator : public lapkt::novelty::MultivaluedNoveltyEvaluator {
+/*
+//! @deprecated, to be removed
+class IWNoveltyEvaluator : public lapkt::novelty::MultivaluedNoveltyEvaluator<int> {
 public:
 	using Base = MultivaluedNoveltyEvaluator;
 
@@ -32,6 +33,34 @@ public:
 		}
 		
 		std::vector<unsigned> novel = derive_novel(node.feature_valuation, parent_valuation);
+		return check_only_width > 0 ? evaluate(valuation, novel, check_only_width) : evaluate(valuation, novel);
+	}
+};
+*/
+
+class IWBinaryNoveltyEvaluator : public lapkt::novelty::MultivaluedNoveltyEvaluator<bool> {
+public:
+	using Base = MultivaluedNoveltyEvaluator;
+
+	IWBinaryNoveltyEvaluator(unsigned novelty_bound) :
+		Base(novelty_bound)
+	{}
+	
+	~IWBinaryNoveltyEvaluator() = default;
+	IWBinaryNoveltyEvaluator(const IWBinaryNoveltyEvaluator&) = default;
+	
+	using Base::evaluate; // So that we do not hide the base evaluate(const FiniteDomainNoveltyEvaluator&) method
+	
+	template <typename NodeT>
+	unsigned evaluate(const NodeT& node, const lapkt::novelty::BinaryFeatureValuation& valuation, unsigned check_only_width = 0) {
+		std::vector<unsigned> novel = derive_novel(valuation, nullptr);
+		return check_only_width > 0 ? evaluate(valuation, novel, check_only_width) : evaluate(valuation, novel);
+	}
+	
+	//! Evaluate the novelty of a node taking into account the valuation of its parent, for optimization purposes
+	template <typename NodeT>
+	unsigned evaluate(const NodeT& node, const lapkt::novelty::BinaryFeatureValuation& valuation, const lapkt::novelty::BinaryFeatureValuation& parent_valuation, unsigned check_only_width = 0) {
+		std::vector<unsigned> novel = derive_novel(valuation, &parent_valuation);
 		return check_only_width > 0 ? evaluate(valuation, novel, check_only_width) : evaluate(valuation, novel);
 	}
 };

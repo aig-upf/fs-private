@@ -13,6 +13,7 @@ using FeatureValueT = int;
 
 //! A feature valuation is an ordered set of feature values
 using FeatureValuation = std::vector<FeatureValueT>;
+using BinaryFeatureValuation = std::vector<bool>;
 
 //! Base interface. A single novelty feature basically takes a state of a given type and returns a feature value.
 template <typename StateT>
@@ -30,19 +31,19 @@ public:
 };
 
 
-//! An (ordered) set of novelty features
+//! An (ordered) set of generic novelty features
 template <typename StateT>
-class FeatureSet {
+class FeatureSetEvaluator {
 public:
 	using FeatureT = std::unique_ptr<NoveltyFeature<StateT>>;
 	
-	FeatureSet() = default;
-	~FeatureSet() = default;
+	FeatureSetEvaluator() = default;
+	~FeatureSetEvaluator() = default;
 	
-	FeatureSet(const FeatureSet&) = delete;
-	FeatureSet(FeatureSet&&) = default;
-	FeatureSet& operator=(const FeatureSet&) = delete;
-	FeatureSet& operator=(FeatureSet&&) = default;
+	FeatureSetEvaluator(const FeatureSetEvaluator&) = delete;
+	FeatureSetEvaluator(FeatureSetEvaluator&&) = default;
+	FeatureSetEvaluator& operator=(const FeatureSetEvaluator&) = delete;
+	FeatureSetEvaluator& operator=(FeatureSetEvaluator&&) = default;
 	
 	//!
 	void add(FeatureT&& feature) {
@@ -70,6 +71,24 @@ public:
 protected:
 	//! The features in the set
 	std::vector<FeatureT> _features;
+};
+
+//! A "straight" evaluator simply returns as features the binary value of each of the binary state variables of the state.
+//! This should be more performant, as it simply returns a const reference to the 
+//! (already existing in the state) vector of boolean values.
+template <typename StateT>
+class StraightBinaryFeatureSetEvaluator {
+public:
+	StraightBinaryFeatureSetEvaluator() = default;
+	~StraightBinaryFeatureSetEvaluator() = default;
+	
+	StraightBinaryFeatureSetEvaluator(const StraightBinaryFeatureSetEvaluator&) = default;
+	StraightBinaryFeatureSetEvaluator(StraightBinaryFeatureSetEvaluator&&) = default;
+	StraightBinaryFeatureSetEvaluator& operator=(const StraightBinaryFeatureSetEvaluator&) = default;
+	StraightBinaryFeatureSetEvaluator& operator=(StraightBinaryFeatureSetEvaluator&&) = default;
+	
+	//!
+	const BinaryFeatureValuation& evaluate(const StateT& state) const { return state.get_boolean_values(); }
 };
 
 } } // namespaces
