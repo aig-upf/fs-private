@@ -5,6 +5,7 @@
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
+#include "hff_run.hxx"
 #include <search/drivers/native_driver.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
@@ -49,7 +50,7 @@ public:
 	unsigned g;
 
 	//! The (cached) feature valuation corresponding to the state in this node
-	lapkt::novelty::FeatureValuation feature_valuation;
+// 	lapkt::novelty::FeatureValuation feature_valuation;
 
 	//! The novelty "type", i.e. the values wrt which the novelty is computed, e.g. <#g, #r>
 	unsigned _type;
@@ -128,20 +129,25 @@ public:
 
 
 
-template <typename StateModelT, typename NoveltyIndexerT>
+template <typename StateModelT, typename NoveltyIndexerT, typename NoveltyEvaluatorT>
 class LazyBFWSHeuristic {
 public:
-	using FeatureSetT = lapkt::novelty::FeatureSet<State>;
-	using NoveltyEvaluatorMapT = std::unordered_map<long, IWNoveltyEvaluator>;
+	using FeatureSetT = lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>;
+	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT>;
 	using ActionT = typename StateModelT::ActionType;
 	using IWNodeT = IWRunNode<State, ActionT>;
-	using IWAlgorithm = IWRun<IWNodeT, StateModelT>;
+	using IWAlgorithm = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT>;
 	using IWNodePT = typename IWAlgorithm::NodePT;
 	
 	using HFFHeuristicT = DirectCRPG;
 	using HFFHeuristicPT = std::unique_ptr<HFFHeuristicT>;
 	
-	LazyBFWSHeuristic(const StateModelT& model, const FeatureSetT& features, const IWNoveltyEvaluator& search_evaluator, const IWNoveltyEvaluator& simulation_evaluator, BFWSStats& stats, bool mark_negative_propositions, bool use_hff) :
+	using APTKFFHeuristicT = HFFRun;
+	using APTKFFHeuristicPT = std::unique_ptr<APTKFFHeuristicT>;
+	
+	
+	
+	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, const NoveltyEvaluatorT& simulation_evaluator, BFWSStats& stats) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
@@ -150,18 +156,22 @@ public:
 		_wg_novelty_evaluators(),
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
-		_mark_negative_propositions(mark_negative_propositions),
+		_mark_negative_propositions(config.mark_negative_propositions),
 		_stats(stats),
-		_direct_rpg(nullptr)
+		_direct_rpg(nullptr),
+		_aptk_rpg(nullptr)
 	{
-		if (use_hff) { // Setup the HFF heuristic
+		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::HFF) { // Setup the HFF heuristic
 			if (!fs0::drivers::NativeDriver<GroundStateModel>::check_supported(_problem)) {
 				throw std::runtime_error("This problem is too complex for the \"native\" driver, try a different one.");
 			}
 			
 			auto direct_builder = DirectRPGBuilder::create(_problem.getGoalConditions(), _problem.getStateConstraints());
 			_direct_rpg = HFFHeuristicPT(new HFFHeuristicT(_problem, DirectActionManager::create(_problem.getGroundActions()), std::move(direct_builder)));
+		} else if (config.relevant_set_type == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
+			_aptk_rpg = APTKFFHeuristicPT(APTKFFHeuristicT::create("", "", true)); // TODO Which values here?
 		}
+		// Else we'll simply use simulators
 	}
 	
 	~LazyBFWSHeuristic() = default;
@@ -169,14 +179,14 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wg1(NodeT& node) {
 		node._type = node.unachieved_subgoals;
-		node.feature_valuation = _featureset.evaluate(node.state);
+		// node.feature_valuation = _featureset.evaluate(node.state);
 		return evaluate_novelty(node, _wg_novelty_evaluators, 1);
 	}
 	
 	template <typename NodeT>
 	unsigned evaluate_wgr1(NodeT& node) {
 		node._type = compute_node_complex_type(node.unachieved_subgoals, node.get_relevant_atoms(*this).num_reached());
-		node.feature_valuation = _featureset.evaluate(node.state);
+		//node.feature_valuation = _featureset.evaluate(node.state); The node has already been evaluated
 		return evaluate_novelty(node, _wgr_novelty_evaluators, 1);
 	}
 	
@@ -219,6 +229,8 @@ public:
 		if (_direct_rpg) {
 			reachable = max_reachable; // In a relaxed-plan environment all subgoals are reachable
 			relevant = compute_relevant_hff(state);
+		} else if (_aptk_rpg) {
+			relevant = compute_relevant_aptk_hff(state);
 		} else {
 			relevant = compute_relevant_simulation(state, reachable);
 		}
@@ -236,7 +248,7 @@ public:
 
 		return relevant;
 	}
-	
+
 	RelevantAtomSet compute_relevant_hff(const State& state) {
 		assert(_direct_rpg);
 		const AtomIndex& atomidx = _problem.get_tuple_index();
@@ -258,6 +270,12 @@ public:
 		}
 		return atomset;
 	}
+	
+	RelevantAtomSet compute_relevant_aptk_hff(const State& state) {
+		assert(_aptk_rpg);
+		const AtomIndex& atomidx = _problem.get_tuple_index();
+		return _aptk_rpg->compute_r_ff(state, atomidx);
+	}	
 
 
 	const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _iw_runner->get_relevant_nodes(); }
@@ -282,14 +300,22 @@ public:
 	
 	
 	template <typename NodeT>
-	unsigned evaluate_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map, unsigned max_novelty = std::numeric_limits<unsigned>::max()) {
+	unsigned evaluate_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map, unsigned check_only_novelty) {
 		auto it = evaluator_map.find(node._type);
 		if (it == evaluator_map.end()) {
 			auto inserted = evaluator_map.insert(std::make_pair(node._type, _search_evaluator));
 			it = inserted.first;
 		}
-		IWNoveltyEvaluator& evaluator = it->second;
-		return evaluator.evaluate(node, max_novelty);
+		NoveltyEvaluatorT& evaluator = it->second;
+		
+		if (node.parent && node.parent->type() == node.type()) {
+			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
+			return evaluator.evaluate(node, _featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), check_only_novelty);
+		}
+		
+		return evaluator.evaluate(node, _featureset.evaluate(node.state), check_only_novelty);
+		
+		
 	}
 
 	template <typename NodeT>
@@ -332,8 +358,8 @@ protected:
 
 	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
 	// to perform all the feature selection, etc. anew.
-	const IWNoveltyEvaluator& _search_evaluator;
-	const IWNoveltyEvaluator& _simulation_evaluator;
+	const NoveltyEvaluatorT& _search_evaluator;
+	const NoveltyEvaluatorT& _simulation_evaluator;
 
 	
 	//! The novelty evaluators for the different #g values
@@ -352,6 +378,8 @@ protected:
 	
 	HFFHeuristicPT _direct_rpg;
 	
+	APTKFFHeuristicPT _aptk_rpg;
+	
 	//! The last used iw-simulator, if any
 	std::unique_ptr<IWAlgorithm> _iw_runner;
 };
@@ -369,7 +397,7 @@ public:
 	using PlanT =  std::vector<ActionIdT>;
 	using NodePT = std::shared_ptr<NodeT>;
 	using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
-	using HeuristicT = LazyBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer>;
+	using HeuristicT = LazyBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer, IWBinaryNoveltyEvaluator>;
 	using SimulationNodeT = typename HeuristicT::IWNodeT;
 	using SimulationNodePT = typename HeuristicT::IWNodePT;
 	
@@ -732,7 +760,9 @@ public:
 	using EnginePT = std::unique_ptr<EngineT>;
 	using NodeT = LazyBFWSNode<StateT, ActionT>;
 	using HeuristicT = typename EngineT::HeuristicT;
-	using FeatureSetT = lapkt::novelty::FeatureSet<StateT>;
+	using FeatureSetT = lapkt::novelty::StraightBinaryFeatureSetEvaluator<StateT>;
+	using NoveltyEvaluatorT = IWBinaryNoveltyEvaluator;
+	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
 
 	//! Factory method
 	EnginePT create(const Config& config, SBFWSConfig& conf, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
@@ -740,11 +770,10 @@ public:
 		// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
 		_featureset = selectFeatures(feature_configuration);
 
-		_search_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.search_width));
-		_simulation_evaluator = std::unique_ptr<IWNoveltyEvaluator>(new IWNoveltyEvaluator(conf.simulation_width));
+		_search_evaluator = NoveltyEvaluatorPT(new NoveltyEvaluatorT(conf.search_width));
+		_simulation_evaluator = NoveltyEvaluatorPT(new NoveltyEvaluatorT(conf.simulation_width));
 
-		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(
-			model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats, conf.mark_negative_propositions, config.getOption<bool>("bfws.use_hff", false)));
+		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(conf, model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats));
 
 		auto engine = EnginePT(new EngineT(model, *_heuristic, _stats, config));
 
@@ -774,11 +803,12 @@ protected:
 
 	//! We keep a "base" novelty evaluator with the appropriate features, which (ATM)
 	//! we will use for both search and heuristic simulation
-	std::unique_ptr<IWNoveltyEvaluator> _search_evaluator;
-	std::unique_ptr<IWNoveltyEvaluator> _simulation_evaluator;
+	NoveltyEvaluatorPT _search_evaluator;
+	NoveltyEvaluatorPT _simulation_evaluator;
 
 	// ATM we don't perform any particular feature selection
 	FeatureSetT selectFeatures(const NoveltyFeaturesConfiguration& feature_configuration) {
+		/*
 		const ProblemInfo& info = ProblemInfo::getInstance();
 
 		FeatureSetT features;
@@ -790,6 +820,8 @@ protected:
 
 		LPT_INFO("cout", "Number of features from which state novelty will be computed: " << features.size());
 		return features;
+		*/
+		return FeatureSetT();
 	}
 
 	//! Helper

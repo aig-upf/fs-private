@@ -7,10 +7,9 @@
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 #include <lapkt/algorithms/generic_search.hxx>
 #include <search/drivers/bfws/iw_novelty_evaluator.hxx>
-#include <problem_info.hxx>
+#include <search/drivers/sbfws/relevant_atomset.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
-#include <utils/atom_index.hxx>
 #include <state.hxx>
 #include <lapkt/novelty/features.hxx>
 #include <lapkt/components/open_lists.hxx>
@@ -18,78 +17,6 @@
 
 
 namespace fs0 { namespace bfws {
-
-//! A RelevantAtomSet contains information about which of the atoms of a problem are relevant for a certain
-//! goal, and, among those, which have already been reached and which others have not.
-class RelevantAtomSet {
-public:
-	enum class STATUS : unsigned char {IRRELEVANT, UNREACHED, REACHED};
-
-	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
-	RelevantAtomSet(const AtomIndex* atomidx) :
-		_atomidx(atomidx), _num_reached(0), _num_unreached(0), _status(atomidx ? atomidx->size() : 0, STATUS::IRRELEVANT)
-	{}
-
-	~RelevantAtomSet() = default;
-	RelevantAtomSet(const RelevantAtomSet&) = default;
-	RelevantAtomSet(RelevantAtomSet&&) = default;
-	RelevantAtomSet& operator=(const RelevantAtomSet&) = default;
-	RelevantAtomSet& operator=(RelevantAtomSet&&) = default;
-
-	//! Marks all the atoms in the state with the given 'status'.
-	//! If 'mark_negative_propositions' is false, predicative atoms of the form X=false are ignored
-	//! If 'only_if_relevant' is true, only those atoms that were not deemed _irrelevant_ (i.e. their status was either reached or unreached)
-	//! are marked
-	void mark(const State& state, const State* parent, STATUS status, bool mark_negative_propositions, bool only_if_relevant) {
-		assert(_atomidx);
-		const ProblemInfo& info = ProblemInfo::getInstance();
-		for (VariableIdx var = 0; var < state.numAtoms(); ++var) {
-			ObjectIdx val = state.getValue(var);
-			if (!mark_negative_propositions && info.isPredicativeVariable(var) && val==0) continue; // We don't want to mark negative propositions
-			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
-			mark(_atomidx->to_index(var, val), status, only_if_relevant);
-		}
-	}
-
-	//! Marks the atom with given index with the given status.
-	//! If 'only_if_relevant' is true, then only marks the atom if it was previously
-	//! marked as relevant (i.e. its status was _not_ STATUS::IRRELEVANT).
-	void mark(AtomIdx idx, STATUS status, bool only_if_relevant) {
-		assert(status==STATUS::REACHED || status==STATUS::UNREACHED);
-		auto& st = _status[idx];
-		if (only_if_relevant && (st == STATUS::IRRELEVANT)) return;
-
-		if (st != status) {
-			if (status==STATUS::REACHED) ++_num_reached;
-			else if (status==STATUS::UNREACHED) ++_num_unreached;
-			
-			if (st==STATUS::REACHED) --_num_reached; // The old status was reached, and will not be anymore, so we decrease the counter.
-			else if (st==STATUS::UNREACHED) --_num_unreached;
-			
-			st = status;
-		}
-	}
-
-	unsigned num_reached() const { return _num_reached; }
-	unsigned num_unreached() const { return _num_unreached; }
-	
-	bool valid() const { return _atomidx != nullptr; }
-
-	friend class print::relevant_atomset;
-
-protected:
-	//! A reference to the global atom index
-	const AtomIndex* _atomidx;
-
-	//! The total number of reached / unreached atoms
-	unsigned _num_reached;
-	unsigned _num_unreached;
-
-	//! The status of each atom (indexed by its atom index)
-	std::vector<STATUS> _status;
-};
-
-
 
 template <typename StateT, typename ActionType>
 class IWRunNode {
@@ -101,7 +28,7 @@ public:
 	StateT state;
 
 	//! The (cached) feature valuation that corresponds to the state in this node.
-	lapkt::novelty::FeatureValuation feature_valuation;
+// 	lapkt::novelty::FeatureValuation feature_valuation;
 
 	//! The action that led to this node
 	typename ActionT::IdType action;
@@ -126,14 +53,12 @@ public:
 	//! Constructor with move of the state (cheaper)
 	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT _parent, unsigned long gen_order = 0) :
 		state(std::move(_state)),
-		feature_valuation(0),
+//		feature_valuation(0),
 		action(_action),
 		parent(_parent),
 		g(parent ? parent->g+1 : 0)
 	{}
 
-	//! The novelty type (for the IWRun node, will always be 0)
-	unsigned type() const { return 0; }
 
 	bool has_parent() const { return parent != nullptr; }
 
@@ -143,7 +68,7 @@ public:
 		os << "{@ = " << this;
 		os << ", s = " << state ;
 		os << ", g=" << g ;
-		os << ", features= " << fs0::print::container(feature_valuation);
+// 		os << ", features= " << fs0::print::container(feature_valuation);
 		os << ", parent = " << parent << "}";
 		return os;
 	}
@@ -156,17 +81,17 @@ public:
 
 //! This is the acceptor for an open list with width-based node pruning
 //! - a node is pruned iff its novelty is higher than a given threshold.
-template <typename NodeT>
+template <typename NodeT, typename NoveltyEvaluatorT>
 class IWRunAcceptor : public lapkt::QueueAcceptorI<NodeT> {
 protected:
 	//! The set of features used to compute the novelty
-	const lapkt::novelty::FeatureSet<State>& _features;
+	const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& _features;
 
 	//! A single novelty evaluator will be in charge of evaluating all nodes
-	IWNoveltyEvaluator _novelty_evaluator;
+	NoveltyEvaluatorT _novelty_evaluator;
 
 public:
-	IWRunAcceptor(const lapkt::novelty::FeatureSet<State>& features, const IWNoveltyEvaluator& novelty_evaluator) :
+	IWRunAcceptor(const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& features, const NoveltyEvaluatorT& novelty_evaluator) :
 		_features(features),
 		_novelty_evaluator(novelty_evaluator) // Copy the evaluator
 	{}
@@ -175,9 +100,15 @@ public:
 
 	//! Returns false iff we want to prune this node during the search
 	bool accept(NodeT& node) {
-		assert(node.feature_valuation.empty()); // We should not be computing the feature valuation twice!
-		node.feature_valuation = _features.evaluate(node.state);
-		unsigned novelty = _novelty_evaluator.evaluate(node);
+		unsigned novelty = 0;
+		
+		if (node.parent) {
+			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
+			novelty = _novelty_evaluator.evaluate(node, _features.evaluate(node.state), _features.evaluate(node.parent->state));
+		} else {
+			novelty = _novelty_evaluator.evaluate(node, _features.evaluate(node.state));
+		}
+		
 		return novelty < std::numeric_limits<unsigned>::max();
 	}
 };
@@ -192,6 +123,7 @@ public:
 //! satisfied.
 template <typename NodeT,
           typename StateModel,
+          typename NoveltyEvaluatorT,
           typename OpenListT = lapkt::SearchableQueue<NodeT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
@@ -203,6 +135,7 @@ public:
 	using StateT = typename StateModel::StateT;
 	using PlanT = typename Base::PlanT;
 	using NodePT = typename Base::NodePT;
+	using AcceptorT = IWRunAcceptor<NodeT, NoveltyEvaluatorT>;
 
 	using NodeOpenEvent = typename Base::NodeOpenEvent;
 	using NodeExpansionEvent = typename Base::NodeExpansionEvent;
@@ -210,8 +143,8 @@ public:
 
 
 	//! Factory method
-	static IWRun* build(const StateModel& model, const lapkt::novelty::FeatureSet<State>& featureset, const IWNoveltyEvaluator& novelty_evaluator, bool mark_negative_propositions) {
-		auto acceptor = new IWRunAcceptor<NodeT>(featureset, novelty_evaluator);
+	static IWRun* build(const StateModel& model, const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& featureset, const NoveltyEvaluatorT& novelty_evaluator, bool mark_negative_propositions) {
+		auto acceptor = new AcceptorT(featureset, novelty_evaluator);
 		return new IWRun(model, OpenListT(acceptor), false, mark_negative_propositions);
 	}
 
