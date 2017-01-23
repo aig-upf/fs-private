@@ -37,6 +37,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 	
 	} else if (formula_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
+		bool negated = tree["negated"].GetBool();
 		std::vector<const Term*> subterms = parseTermList(tree["elements"], info);
 		
 		// TODO - This is a temporary hack to parse predicates 'p(x)' as if they were
@@ -45,7 +46,8 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 			unsigned symbol_id = info.getSymbolId(symbol);
 			if (info.isPredicate(symbol_id)) {
 				// 
-				subterms = {NestedTerm::create(symbol, subterms), new IntConstant(1)};
+				IntConstant* value = negated ? new IntConstant(0) : new IntConstant(1);
+				subterms = {NestedTerm::create(symbol, subterms), value};
 				symbol = "=";
 			}
 		} catch(std::out_of_range& ex) {} // The symbol might be built-in, and thus not registered.
