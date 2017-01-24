@@ -10,6 +10,7 @@ from pddl import Effect, Truth, Atom, NegatedAtom
 from pddl.effects import AssignmentEffect
 from pddl.f_expression import FunctionalTerm
 from parser import Parser
+import copy
 
 TypedVar = namedtuple('TypedVar', ['name', 'type'])
 
@@ -60,6 +61,20 @@ def ensure_conjunction(node):
     if isinstance(node, (pddl.conditions.Atom, pddl.conditions.NegatedAtom)):
         node = pddl.conditions.Conjunction([node])
     return node
+
+
+class Grounding:
+    def __init__(self, variable, value):
+        self.variable = variable
+        self.value = value
+
+
+def ground_atom(atom, grounding):
+    grounded = copy.deepcopy(atom)
+    for i, arg in enumerate(atom.args, 0):
+        if grounding.variable == arg:
+            grounded.args = atom.args[:i] + (grounding.value,) + atom.args[i+1:]  # i.e. atom.args[i] = grounding.value
+    return grounded
 
 
 class BaseComponentProcessor(object):
@@ -129,12 +144,29 @@ class ActionSchemaProcessor(BaseComponentProcessor):
         self.process_effects()
         return self.data
 
+    def ground_possibly_quantified_effect(self, effect):
+        assert isinstance(effect, Effect)
+        if not effect.parameters:
+            return [effect]
+
+        processed = []
+        assert len(effect.parameters) == 1, "Only one quantified variable supported ATM"
+        parameter = effect.parameters[0]
+
+        for value in self.index.type_map[parameter.type]:
+            grounding = Grounding(parameter.name, value)
+            processed.append(
+                Effect([], ground_atom(effect.condition, grounding), ground_atom(effect.literal, grounding)))
+
+        return processed
+
+
     def process_effects(self):
         """  Generates the actual effects from the PDDL parser effect list"""
-        for effect in self.action.effects:
-            assert isinstance(effect, Effect) and not effect.parameters
-            effect = self.process_effect(effect.literal, effect.condition)
-            self.data['effects'].append(effect)
+        for qeffect in self.action.effects:
+            for effect in self.ground_possibly_quantified_effect(qeffect):
+                effect = self.process_effect(effect.literal, effect.condition)
+                self.data['effects'].append(effect)
 
     def process_effect(self, expression, condition):
         assert isinstance(expression, (AssignmentEffect, Atom, NegatedAtom))
