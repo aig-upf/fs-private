@@ -97,41 +97,6 @@ ActionGrounder::ground(unsigned id, const ActionData* data, const Binding& bindi
 	return id;
 }
 
-ActionData*
-ActionGrounder::process_action_data(const ActionData& action_data, const ProblemInfo& info) {
-	Binding binding; // An empty binding
-	auto precondition = action_data.getPrecondition()->bind(binding, info);
-	if (precondition->is_contradiction()) {
-		throw std::runtime_error("The precondition of the action schema is (statically) unsatisfiable!");
-	}
-	
-	std::vector<const fs::ActionEffect*> effects;
-	for (const fs::ActionEffect* effect:action_data.getEffects()) {
-		effects.push_back(effect->bind(binding, info));
-	}
-	return new ActionData(action_data.getId(), action_data.getName(), action_data.getSignature(), action_data.getParameterNames(), precondition, effects);
-}
-
-
-
-GroundAction*
-ActionGrounder::full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
-	assert(binding.is_complete()); // Grounding only possible for full bindings
-	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
-	if (precondition->is_contradiction()) {
-		delete precondition;
-		return nullptr;
-	}
-	
-	std::vector<const fs::ActionEffect*> effects;
-	for (const fs::ActionEffect* effect:action_data.getEffects()) {
-		effects.push_back(effect->bind(binding, info));
-	}
-	
-	return new GroundAction(id, action_data, binding, precondition, effects);
-}
-
-
 std::vector<const PartiallyGroundedAction*>
 ActionGrounder::compile_action_parameters_away(const PartiallyGroundedAction* schema, unsigned effect_idx, const ProblemInfo& info) {
 	const fs::ActionEffect* effect = schema->getEffects().at(effect_idx);
@@ -290,6 +255,23 @@ collect_effect_non_constant_subterms(const fs::ActionEffect* effect) {
 }
 
 */
+
+std::vector<const fs::ActionEffect*>
+_bind_effects(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
+	std::vector<const fs::ActionEffect*> effects;
+	for (const fs::ActionEffect* effect:action_data.getEffects()) {
+		if (const fs::ActionEffect* bound = effect->bind(binding, info)) {
+			effects.push_back(bound);
+		}
+	}
+	
+	if (effects.empty()) {
+		LPT_INFO("cout", "WARNING - " <<  action_data << " with binding " << binding << " has no applicable effects");
+	}
+	return effects;
+}
+	
+
 PartiallyGroundedAction*
 ActionGrounder::partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
 	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
@@ -298,12 +280,47 @@ ActionGrounder::partial_binding(const ActionData& action_data, const Binding& bi
 		return nullptr;
 	}
 	
-	std::vector<const fs::ActionEffect*> effects;
-	for (const fs::ActionEffect* effect:action_data.getEffects()) {
-		effects.push_back(effect->bind(binding, info));
+	auto effects = _bind_effects(action_data, binding, info);
+	if (effects.empty()) {
+		delete precondition;
+		return nullptr;
 	}
 	
 	return new PartiallyGroundedAction(action_data, binding, precondition, effects);
+}
+
+GroundAction*
+ActionGrounder::full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
+	assert(binding.is_complete()); // Grounding only possible for full bindings
+	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
+	if (precondition->is_contradiction()) {
+		delete precondition;
+		return nullptr;
+	}
+	
+	auto effects = _bind_effects(action_data, binding, info);
+	if (effects.empty()) {
+		delete precondition;
+		return nullptr;
+	}
+	
+	return new GroundAction(id, action_data, binding, precondition, effects);
+}
+
+ActionData*
+ActionGrounder::process_action_data(const ActionData& action_data, const ProblemInfo& info) {
+	auto precondition = action_data.getPrecondition()->bind(Binding::EMPTY_BINDING, info);
+	if (precondition->is_contradiction()) {
+		delete precondition;
+		throw std::runtime_error("The precondition of the action schema is (statically) unsatisfiable!");
+	}
+	
+	auto effects = _bind_effects(action_data, Binding::EMPTY_BINDING, info);
+	if (effects.empty()) {
+		delete precondition;
+		throw std::runtime_error("The action schema has (statically) no applicable action effects!");
+	}
+	return new ActionData(action_data.getId(), action_data.getName(), action_data.getSignature(), action_data.getParameterNames(), precondition, effects);
 }
 
 GroundAction*

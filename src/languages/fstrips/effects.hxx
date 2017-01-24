@@ -35,6 +35,8 @@ public:
 	//! Checks that the effect is well formed
 	bool isWellFormed() const;
 	
+	//! Binds an effect schema with a particular binding.
+	//! Might return null if the binding results in a non-applicable (conditional) effect
 	const ActionEffect* bind(const Binding& binding, const ProblemInfo& info) const;
 
 
