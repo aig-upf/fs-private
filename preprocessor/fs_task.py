@@ -65,11 +65,13 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
 
     task.process_objects(adl_task.objects.values())
     task.process_types(types, type_map)
-    task.process_adl_symbols(adl_task.actions.values(), adl_task.predicates.values(), adl_task.functions.values())
 
     adl_functions = filter_out_action_cost_functions(adl_task.functions.values())
-    state_var_list = create_all_possible_state_variables_from_groundings(adl_task.predicates.values(),
-                                                                         adl_functions,
+    adl_predicates = adl_task.predicates.values()
+
+    task.process_adl_symbols(adl_task.actions.values(), adl_predicates, adl_functions)
+
+    state_var_list = create_all_possible_state_variables_from_groundings(adl_predicates, adl_functions,
                                                                          task.static_symbols)
     task.process_state_variables(state_var_list)
 
@@ -147,7 +149,24 @@ class FSTaskIndex(object):
         # The rest are static, including, by definition, the equality predicate
         self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")
 
+    def convert_functions_to_fd(self, symbols):
+        converted = []
+        for symbol in symbols:
+            arguments = [pddl.TypedObject(arg.name, arg.type.name) for arg in symbol.arguments]
+            assert False, "How do we derive the type of the function here?"  # TODO
+            converted.append(pddl.functions.TypedFunction(symbol.name, arguments, ''))
+        return converted
+
+    def convert_predicates_to_fd(self, symbols):
+        converted = []
+        for symbol in symbols:
+            arguments = [pddl.TypedObject(arg.name, arg.type.name) for arg in symbol.arguments]
+            converted.append(pddl.Predicate(symbol.name, arguments))
+        return converted
+
     def process_adl_symbols(self, actions, predicates, functions):
+
+        predicates, functions = self.convert_predicates_to_fd(predicates), self.convert_functions_to_fd(functions)
         self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
         self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
 
