@@ -32,6 +32,9 @@ class ProblemRepresentation(object):
                 }
 
         self.dump_data('problem', json.dumps(data), ext='json')
+
+        # Optionally, we'll want to print out the precomputed action groundings
+        self.print_groundings_if_available(self.index.action_schemas, self.index.groundings, self.index.objects)
         self.print_debug_data(data)
         self.serialize_static_extensions()
 
@@ -162,3 +165,23 @@ class ProblemRepresentation(object):
         # And further separate each action into a different file:
         for action in data['action_schemata']:
             self.dump_data("action.{}".format(action['name']), json.dumps(action, indent=2), ext='json', subdir='debug')
+
+    def print_groundings_if_available(self, schemas, all_groundings, object_idx):
+
+        if all_groundings is None:  # No groundings available
+            return
+
+        data = []
+
+        # Order matters! The groundings of each action schema are provided in consecutive blocks, one grounding per line
+        for i, action in enumerate(schemas, 0):
+            action_name = action['name']
+            data.append("# {} # {}".format(i, action_name))  # A comment line
+
+            for grounding in all_groundings[action_name]:
+                object_ids = (str(object_idx.get_index(obj_name)) for obj_name in grounding)
+                data.append(','.join(object_ids))
+
+        self.dump_data("groundings", data)
+
+

@@ -6,7 +6,7 @@ from collections import namedtuple
 
 import pddl
 from pddl import conditions
-from pddl import Effect, Truth, Atom, NegatedAtom
+from pddl import Effect, Atom, NegatedAtom
 from pddl.effects import AssignmentEffect
 from pddl.f_expression import FunctionalTerm
 from parser import Parser
@@ -70,6 +70,9 @@ class Grounding:
 
 
 def ground_atom(atom, grounding):
+    if isinstance(atom, (pddl.Truth, pddl.Falsity)):
+        return atom
+
     grounded = copy.deepcopy(atom)
     for i, arg in enumerate(atom.args, 0):
         if grounding.variable == arg:
@@ -159,7 +162,6 @@ class ActionSchemaProcessor(BaseComponentProcessor):
                 Effect([], ground_atom(effect.condition, grounding), ground_atom(effect.literal, grounding)))
 
         return processed
-
 
     def process_effects(self):
         """  Generates the actual effects from the PDDL parser effect list"""

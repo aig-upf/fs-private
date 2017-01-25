@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
-from fs_task import create_fs_task
+from fs_task import create_fs_task, create_fs_task_from_adl
 from pddl import tasks, pddl_file
 import util
 from representation import ProblemRepresentation
@@ -34,6 +34,8 @@ def parse_arguments(args):
     parser.add_argument("--driver", help='The solver driver file', default=None)
     parser.add_argument("--defaults", help='The solver default options file', default=None)
     parser.add_argument("--options", help='The solver extra options file', default="")
+    parser.add_argument("--gringo", action='store_true',
+                        help='Use smart grounder (only strict ADL, without numerics etc.)')
 
     args = parser.parse_args(args)
     args.instance_dir = os.path.dirname(args.instance)
@@ -46,6 +48,11 @@ def parse_pddl_task(domain, instance):
     task_pddl = pddl_file.parse_pddl_file("task", instance)
     task = tasks.Task.parse(domain_pddl, task_pddl)
     return task
+
+
+def parse_pddl_task_smart(domain, instance):
+    import smart.processor
+    return smart.processor.parse_and_ground('ipc', domain, instance)
 
 
 def extract_names(domain_filename, instance_filename):
@@ -178,8 +185,12 @@ def main(args):
     print("{0:<30}{1}".format("Translation directory:", translation_dir))
 
     # Parse the task with FD's parser and transform it to our format
-    fd_task = parse_pddl_task(args.domain, args.instance)
-    fs_task = create_fs_task(fd_task, domain_name, instance_name)
+    if not args.gringo:
+        fd_task = parse_pddl_task(args.domain, args.instance)
+        fs_task = create_fs_task(fd_task, domain_name, instance_name)
+    else:
+        adl_task = parse_pddl_task_smart(args.domain, args.instance)
+        fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance

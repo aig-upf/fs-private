@@ -55,7 +55,6 @@ def process_type_hierarchy(fd_types):
     used_types = set()
     predeclared = set(types.keys())
     correctly_declared = set(types.keys())
-
     for t in fd_types:
         if t.name in predeclared:
             continue

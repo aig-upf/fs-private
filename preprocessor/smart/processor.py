@@ -3,10 +3,10 @@
 
 import sys, os, time, subprocess, errno, argparse, traceback, resource
 
-from utilities import CodeException, remove, PRE_SUFFIX, GROUND_SUFFIX,\
+from smart.utilities import CodeException, remove, PRE_SUFFIX, GROUND_SUFFIX,\
     solving_error_code, extracting_error_code, ProblemException, tmp_path
 
-from parser import ParsingException, Parser, Grounder
+from smart.parser import ParsingException, Parser, Grounder
 
 def parse_and_ground( tag, domain_file, problem_file, remove_tmp = True ) :
     #Parse the input PDDL
