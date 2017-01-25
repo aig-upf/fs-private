@@ -38,6 +38,8 @@ public:
 	
 	//! Accummulated cost
 	unsigned g;
+	
+	bool satisfies_subgoal; // Whether the node satisfies some subgoal
 
 
 	IWRunNode() = default;
@@ -143,9 +145,9 @@ public:
 
 
 	//! Factory method
-	static IWRun* build(const StateModel& model, const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& featureset, const NoveltyEvaluatorT& novelty_evaluator, bool mark_negative_propositions) {
+	static IWRun* build(const StateModel& model, const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& featureset, const NoveltyEvaluatorT& novelty_evaluator, bool complete, bool mark_negative_propositions) {
 		auto acceptor = new AcceptorT(featureset, novelty_evaluator);
-		return new IWRun(model, OpenListT(acceptor), false, mark_negative_propositions);
+		return new IWRun(model, OpenListT(acceptor), complete, mark_negative_propositions);
 	}
 
 	//! The constructor requires the user of the algorithm to inject both
@@ -154,8 +156,9 @@ public:
 	IWRun(const StateModel& model, OpenListT&& open, bool complete, bool mark_negative_propositions) :
 		Base(model, std::move(open), ClosedListT()),
 		_complete(complete),
-		_reached(model.num_subgoals(), nullptr),
+		_all_paths(model.num_subgoals()),
 		_unreached(),
+		_in_seed(model.num_subgoals(), false),
 		_mark_negative_propositions(mark_negative_propositions),
 		_visited()
 	{
@@ -176,11 +179,14 @@ public:
 	}
 
 	void run(const StateT& seed) {
+		mark_seed_subgoals(seed);
+		
 		NodePT n = std::make_shared<NodeT>(seed);
 		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 		this->notify(NodeCreationEvent(*n));
 		
 		if (process_node(n)) return;
+		
 		this->_open.insert(n);
 
 		while (!this->_open.empty()) {
@@ -213,14 +219,16 @@ public:
 protected:
 
 	//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
-	//! NOTE - as of yet, this is unused
 	bool _complete;
 
-	//! _reached[i] contains the first node that reaches goal atom 'i'.
-	std::vector<NodePT> _reached;
+	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
+	std::vector<std::vector<NodePT>> _all_paths;
 
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
 	std::unordered_set<unsigned> _unreached;
+	
+	//! Contains the indexes of all those goal atoms that were already reached in the seed state
+	std::vector<bool> _in_seed;
 
 	bool _mark_negative_propositions;
 
@@ -232,7 +240,9 @@ protected:
 
 
 	//! Returns true iff all goal atoms have been reached in the IW search
-	bool process_node(const NodePT& node) {
+	bool process_node(NodePT& node) {
+		if (_complete) return process_node_complete(node);
+		
 		const StateT& state = node->state;
 
 		// We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
@@ -241,7 +251,8 @@ protected:
 			unsigned subgoal_idx = *it;
 
 			if (this->_model.goal(state, subgoal_idx)) {
-				_reached[subgoal_idx] = node;
+				node->satisfies_subgoal = true;
+				_all_paths[subgoal_idx].push_back(node);
 				it = _unreached.erase(it);
 			} else {
 				++it;
@@ -250,6 +261,29 @@ protected:
 		// As soon as all nodes have been processed, we return true so that we can stop the search
 		return _unreached.empty();
 	}
+	
+	//! Returns true iff all goal atoms have been reached in the IW search
+	bool process_node_complete(NodePT& node) {
+		const StateT& state = node->state;
+
+		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
+			if (!_in_seed[i] && this->_model.goal(state, i)) {
+				node->satisfies_subgoal = true;
+				_all_paths[i].push_back(node);
+			}
+		}
+		return false;
+	}
+	
+	bool mark_seed_subgoals(const StateT& seed) {
+		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
+			if (this->_model.goal(seed, i)) {
+				_unreached.erase(i);
+				_in_seed[i] = true;
+			}
+		}
+		return false;
+	}	
 
 public:
 	//! Retrieve the set of atoms which are relevant to reach at least one of the subgoals
@@ -265,32 +299,38 @@ public:
 
 		// Iterate through all the subgoals that have been reached, and rebuild the path from the seed state to reach them
 		// adding all atoms encountered in the path to the RelevantAtomSet as "relevant but unreached"
-		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
-			NodePT node = _reached[subgoal_idx];
-			if (!node) { // No solution for the subgoal was found
-				LPT_EDEBUG("simulation-relevant", "Goal atom #" << subgoal_idx << " unreachable");
-				continue;
-			}
-			++reachable;
-
-			// Traverse from the solution node to the root node, adding all atoms on the way
-			// if (node->has_parent()) node = node->parent; // (Don't) skip the last node
-			while (node->has_parent()) {
-				// If the node has already been processed, no need to do it again, nor to process the parents,
-				// which will necessarily also have been processed.
-				if (_visited.find(node) != _visited.end()) break;
-				
-				// Mark all the atoms in the state as "yet to be reached"
-				atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
-				_visited.insert(node);
-				node = node->parent;
+		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
+			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
+			
+			if (_in_seed[subgoal_idx] || !paths.empty()) {
+				++reachable;
 			}
 			
-			_visited.insert(node); // Insert the root anyway to mark it as a relevant node
+			for (const NodePT& node:paths) {
+				process_path_node(node, atomset);
+			}
 		}
 
 		return atomset;
 	}
+	
+	void process_path_node(NodePT node, RelevantAtomSet& atomset) {
+		// Traverse from the solution node to the root node, adding all atoms on the way
+		// if (node->has_parent()) node = node->parent; // (Don't) skip the last node
+		while (node->has_parent()) {
+			// If the node has already been processed, no need to do it again, nor to process the parents,
+			// which will necessarily also have been processed.
+			if (_visited.find(node) != _visited.end()) break;
+			
+			// Mark all the atoms in the state as "yet to be reached"
+			atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
+			_visited.insert(node);
+			node = node->parent;
+		}
+		
+		_visited.insert(node); // Insert the root anyway to mark it as a relevant node
+	}
+	
 	
 	const std::unordered_set<NodePT>& get_relevant_nodes() const { return _visited; }
 };

@@ -56,7 +56,12 @@ std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info
 }
 
 const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo& info) const {
-	return new ActionEffect(_lhs->bind(binding, info), _rhs->bind(binding, info), _condition->bind(binding, info));
+	const fs::Formula* condition = _condition->bind(binding, info);
+	if (condition->is_contradiction()) {
+		delete condition;
+		return nullptr;
+	}
+	return new ActionEffect(_lhs->bind(binding, info), _rhs->bind(binding, info), condition);
 }
 
 // TODO - Refactor this into a hierarchy of effects, a delete effect should be an object of a particular type, or at least effect should have a method is_delete()

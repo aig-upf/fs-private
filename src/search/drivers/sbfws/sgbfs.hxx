@@ -66,6 +66,9 @@ public:
 	RelevantAtomSet _relevant_atoms;
 
 	bool _processed;
+	
+	//! Whether a simulation has already been run from this node
+	bool _simulated;
 
 // 	bool from_simulation;
 
@@ -91,6 +94,7 @@ public:
 		unachieved_subgoals(std::numeric_limits<unsigned>::max()),
 		_relevant_atoms(nullptr),
 		_processed(false),
+		_simulated(false),
 		_gen_order(gen_order)
 	{}
 
@@ -157,9 +161,11 @@ public:
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
+		_complete_simulation(config.complete_simulation),
 		_stats(stats),
 		_direct_rpg(nullptr),
-		_aptk_rpg(nullptr)
+		_aptk_rpg(nullptr),
+		_use_simulation_nodes(false)
 	{
 		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::HFF) { // Setup the HFF heuristic
 			if (!fs0::drivers::NativeDriver<GroundStateModel>::check_supported(_problem)) {
@@ -170,7 +176,10 @@ public:
 			_direct_rpg = HFFHeuristicPT(new HFFHeuristicT(_problem, DirectActionManager::create(_problem.getGroundActions()), std::move(direct_builder)));
 		} else if (config.relevant_set_type == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
 			_aptk_rpg = APTKFFHeuristicPT(APTKFFHeuristicT::create(_problem, true));
+		} else if (config.relevant_set_type == SBFWSConfig::RelevantSetType::Macro) {
+			_use_simulation_nodes = true;
 		}
+		
 		// Else we'll simply use simulators
 	}
 
@@ -179,23 +188,27 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wg1(NodeT& node) {
 		node._type = node.unachieved_subgoals;
-		// node.feature_valuation = _featureset.evaluate(node.state);
 		return evaluate_novelty(node, _wg_novelty_evaluators, 1);
 	}
 
 	template <typename NodeT>
 	unsigned evaluate_wgr1(NodeT& node) {
 		node._type = compute_node_complex_type(node.unachieved_subgoals, node.get_relevant_atoms(*this).num_reached());
-		//node.feature_valuation = _featureset.evaluate(node.state); The node has already been evaluated
 		return evaluate_novelty(node, _wgr_novelty_evaluators, 1);
 	}
 
 	template <typename NodeT>
 	unsigned evaluate_wgr2(NodeT& node) {
-		// The type and feature valuation of the node are already cached therein.
+		// The type is already cached in the ndoe.
 		assert(node._relevant_atoms.valid());
 		return evaluate_novelty(node, _wgr_novelty_evaluators, 2);
 	}
+	
+	template <typename NodeT>
+	unsigned evaluate_wg2(NodeT& node) {
+		node._type = node.unachieved_subgoals;
+		return evaluate_novelty(node, _wg_novelty_evaluators, 2);
+	}	
 
 	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
 	//! all those atoms marked as "unreached", and the rest as irrelevant.
@@ -207,7 +220,7 @@ public:
 			return RelevantAtomSet(&(_problem.get_tuple_index()));
 		}
 
-		_iw_runner = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator, _mark_negative_propositions));
+		_iw_runner = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator, _complete_simulation, _mark_negative_propositions));
 
 		//BFWSStats stats;
 		//StatsObserver<IWNodeT, BFWSStats> st_obs(stats, false);
@@ -231,6 +244,9 @@ public:
 			relevant = compute_relevant_hff(state);
 		} else if (_aptk_rpg) {
 			relevant = compute_relevant_aptk_hff(state);
+		} else if (_use_simulation_nodes) {
+			// Leave the relevant atom set empty
+			compute_relevant_simulation(state, reachable);
 		} else {
 			relevant = compute_relevant_simulation(state, reachable);
 		}
@@ -339,6 +355,28 @@ public:
 		// In both cases, we update the set of relevant nodes with those that have been reached.
 		node._relevant_atoms.mark(node.state, marking_parent, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
 	}
+	
+	template <typename NodeT>
+	void run_simulation(NodeT& node) {
+		assert(_use_simulation_nodes);
+		if (node._simulated) return;
+		
+		node._simulated = true;
+		
+		unsigned reachable = 0, max_reachable = _model.num_subgoals();
+		_unused(max_reachable);
+		// Leave the relevant atom set empty
+		compute_relevant_simulation(node.state, reachable);
+
+		LPT_EDEBUG("simulation-relevant", "Running simulation from state: " << std::endl << node.state << std::endl);
+		LPT_EDEBUG("simulation-relevant", " " << reachable << "/" << max_reachable << " reachable subgoals" << std::endl << std::endl);
+
+		if (!node.has_parent()) {
+			_stats.set_initial_reachable_subgoals(reachable);
+		}
+		_stats.reachable_subgoals(reachable);
+		_stats.simulation();
+	}
 
 	unsigned compute_unachieved(const State& state) {
 		return _unsat_goal_atoms_heuristic.evaluate(state);
@@ -373,12 +411,15 @@ protected:
 
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;
+	bool _complete_simulation;
 
 	BFWSStats& _stats;
 
 	HFFHeuristicPT _direct_rpg;
 
 	APTKFFHeuristicPT _aptk_rpg;
+	
+	bool _use_simulation_nodes;
 
 	//! The last used iw-simulator, if any
 	std::unique_ptr<IWAlgorithm> _iw_runner;
@@ -420,14 +461,16 @@ public:
 	//! (1) the state model to be used in the search
 	//! (2) the open list object to be used in the search
 	//! (3) the closed list object to be used in the search
-	LazyBFWS(const StateModelT& model, HeuristicT& heuristic, BFWSStats& stats, const Config& config) :
+	LazyBFWS(const StateModelT& model, HeuristicT& heuristic, BFWSStats& stats, const Config& config, SBFWSConfig& conf) :
 		_model(model),
 		_solution(nullptr),
 		_heuristic(heuristic),
 		_stats(stats),
 		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false)),
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
-		_generated(0)
+		_use_simulation_as_macros_only(conf.relevant_set_type==SBFWSConfig::RelevantSetType::Macro),
+		_generated(0),
+		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max())
 	{
 	}
 
@@ -473,6 +516,7 @@ public:
 
 		// Let n be any search node (note that the root node has been already discarded), and s be its corresponding simulation node
 		// The parent of n is the search node that corresponds to parent(s)
+		std::vector<NodePT> relevant;
 		for (const NodePT& search_node:search_nodes) {
 			if (search_node == root) continue; // We won't return the root node of the simulation, as it is already processed elsewhere
 
@@ -485,31 +529,33 @@ public:
 			//std::cout << "Simulation node parent: " << sim_node->parent << std::endl;
 			assert(it2 != simulation_to_search.end());
 			search_node->parent = it2->second;
+			
+			// ATM we only want to process the subgoal-satisfiyng end node of the path, and thus will pretend
+			// pretend that intermediate nodes have already been processed
+			// This works because we're using shared_ptrs!
+			if (sim_node->satisfies_subgoal) {
+				relevant.push_back(search_node);
+			} else {
+// 				std::cout << "Does NOT satisfy subgoal" << std::endl;
+			}
 		}
 
-		return search_nodes;
+		return relevant;
 	}
 
-	void preprocess(const NodePT& node) {
-		_heuristic.update_relevant_atoms(*node);
-		const auto& simulation_nodes = _heuristic.get_last_simulation_nodes();
-		auto search_nodes = convert_simulation_nodes(node, simulation_nodes);
-		for (const auto& n:search_nodes) {
-			//create_node(n);
-			_q1.insert(n);
-			_stats.simulation_node_reused();
-			// std::cout << "Simulation node reused: " << *n << std::endl;
-		}
-	}
+// 	void preprocess(const NodePT& node) {
+// 		_heuristic.update_relevant_atoms(*node);
+// 	}
+	
 
 	bool search(const StateT& s, PlanT& plan) {
 		NodePT root = std::make_shared<NodeT>(s, _generated++);
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 
-		if (_run_simulation_from_root) {
-			preprocess(root); // Preprocess the root node only
-		}
+// 		if (_run_simulation_from_root) {
+// 			preprocess(root); // Preprocess the root node only
+// 		}
 
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
@@ -522,6 +568,18 @@ public:
 	}
 
 protected:
+	void dump_simulation_nodes(NodePT& node) {
+		_heuristic.run_simulation(*node);
+		const auto& simulation_nodes = _heuristic.get_last_simulation_nodes();
+		auto search_nodes = convert_simulation_nodes(node, simulation_nodes);
+		// std::cout << "Got " << simulation_nodes.size() << " simulation nodes, of which " << search_nodes.size() << " reused" << std::endl;
+		for (const auto& n:search_nodes) {
+			//create_node(n);
+			_q1.insert(n);
+			_stats.simulation_node_reused();
+			// std::cout << "Simulation node reused: " << *n << std::endl;
+		}
+	}
 
 	//! Process one node from some of the queues, according to their priorities
 	bool process_one_node() {
@@ -538,7 +596,7 @@ protected:
 
 		///// QWGR1 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 1
-		if (!_qwgr1.empty()) {
+		if (!_use_simulation_as_macros_only && !_qwgr1.empty()) {
 			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 1");
 			NodePT node = _qwgr1.next();
 
@@ -562,7 +620,15 @@ protected:
 			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 2");
 			NodePT node = _qwgr2.next();
 
-			unsigned nov = _heuristic.evaluate_wgr2(*node);
+			unsigned nov;
+			if (_use_simulation_as_macros_only) {
+				if ( node->decreases_unachieved_subgoals()) {
+					dump_simulation_nodes(node);
+				}
+				nov = _heuristic.evaluate_wg2(*node);
+			} else {
+				nov = _heuristic.evaluate_wgr2(*node);
+			}
 
 			// If the node has already been processed, no need to do anything else with it,
 			// since we've already run it through all novelty tables.
@@ -600,6 +666,11 @@ protected:
 	//! if that is the case, we insert it into a special queue.
 	void create_node(const NodePT& node) {
 		node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
+		
+		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
+			_min_subgoals_to_reach = node->unachieved_subgoals;
+			LPT_INFO("cout", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
+		}
 
 		// Now insert the node into the appropriate queues
 		node->wg = _heuristic.evaluate_wg1(*node);
@@ -729,9 +800,14 @@ protected:
 
 	//! Whether we want to prune those nodes with novelty w_{#g, #r} > 2 or not
 	bool _prune_wgr2_gt_2;
+	
+	bool _use_simulation_as_macros_only;
 
 	//! The number of generated nodes so far
 	unsigned long _generated;
+	
+	//! The minimum number of subgoals-to-reach that we have achieved at any moment of the search
+	unsigned _min_subgoals_to_reach;
 };
 
 
@@ -775,7 +851,7 @@ public:
 
 		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(conf, model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats));
 
-		auto engine = EnginePT(new EngineT(model, *_heuristic, _stats, config));
+		auto engine = EnginePT(new EngineT(model, *_heuristic, _stats, config, conf));
 
 // 		drivers::EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 // 		drivers::EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _stats, _handlers);
