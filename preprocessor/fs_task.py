@@ -32,6 +32,14 @@ def filter_out_action_cost_atoms(fd_initial_state, action_cost_symbols):
     return filtered
 
 
+def filter_out_action_cost_functions(adl_functions):
+    filtered = []
+    for function in adl_functions:
+        if function.name != 'total-cost':
+            filtered.append(function)
+    return filtered
+
+
 def create_fs_task(fd_task, domain_name, instance_name):
     """ Create a problem domain and instance and perform the appropriate validity checks """
     types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
@@ -58,8 +66,10 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     task.process_objects(adl_task.objects.values())
     task.process_types(types, type_map)
     task.process_adl_symbols(adl_task.actions.values(), adl_task.predicates.values(), adl_task.functions.values())
+
+    adl_functions = filter_out_action_cost_functions(adl_task.functions.values())
     state_var_list = create_all_possible_state_variables_from_groundings(adl_task.predicates.values(),
-                                                                         adl_task.functions.values(),
+                                                                         adl_functions,
                                                                          task.static_symbols)
     task.process_state_variables(state_var_list)
 
