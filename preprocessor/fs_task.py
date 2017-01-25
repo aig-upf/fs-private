@@ -287,7 +287,7 @@ class FSTaskIndex(object):
         from smart.problem import PredicateCondition, ConditionalEffect
         self.action_schemas = []
         for action in adl_task.actions.values():
-            params = [TypedObject(p, t.name) for p, t in action.parameters]
+            action_params = [TypedObject(p, t.name) for p, t in action.parameters]
             precs = self._process_adl_conjunction(action.precondition)
             cost = 1
             effs = []
@@ -300,7 +300,7 @@ class FSTaskIndex(object):
                     for ceff_formula in eff_formula.effects:
                         params = [TypedObject(v, action.param_types[v].name) for v in ceff_formula.variables]
                         effs.append(Effect(params, eff_prec, self._process_adl_predicate_condition(ceff_formula)))
-            fd_action = Action(action.name, params, 0, precs, effs, 1)
+            fd_action = Action(action.name, action_params, 0, precs, effs, 1)
             self.action_schemas.append(ActionSchemaProcessor(self, fd_action).process())
             print(action.groundings)
 
