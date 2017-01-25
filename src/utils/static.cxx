@@ -13,7 +13,7 @@ StaticExtension::load_static_extension(const std::string& name, const std::strin
 	SymbolData::Type type = data.getType();
 	assert(type == SymbolData::Type::PREDICATE || type == SymbolData::Type::FUNCTION);
 	
-	std::string filename = data_dir + "/" + name + ".data"; 
+	std::string filename = data_dir + "/" + name + ".data";
 	StaticExtension* extension = nullptr;
 	
 	if (arity == 0) {

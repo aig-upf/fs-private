@@ -79,7 +79,7 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 	LPT_INFO("grounding", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
 	LPT_INFO("cout", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
 	
-	LPT_INFO("grounding", "All ground actions " << std::endl << print::actions(grounded));
+	LPT_EDEBUG("grounding", "All ground actions " << std::endl << print::actions(grounded));
 	return grounded;
 }
 
