@@ -303,13 +303,13 @@ class FSTaskIndex(object):
             effs = []
             for eff_formula in action.effects:
                 if isinstance(eff_formula, PredicateCondition):
-                    params = [TypedObject(v, action.param_types[v].name) for v in eff_formula.variables]
-                    effs.append(Effect(params, Truth(), self._process_adl_predicate_condition(eff_formula)))
+                    # params = [TypedObject(v, action.param_types[v].name) for v in eff_formula.variables]
+                    effs.append(Effect([], Truth(), self._process_adl_predicate_condition(eff_formula)))
                 elif isinstance(eff_formula, ConditionalEffect):
                     eff_prec = self._process_adl_conjunction(eff_formula.condition)
                     for ceff_formula in eff_formula.effects:
-                        params = [TypedObject(v, action.param_types[v].name) for v in ceff_formula.variables]
-                        effs.append(Effect(params, eff_prec, self._process_adl_predicate_condition(ceff_formula)))
+                        # params = [TypedObject(v, action.param_types[v].name) for v in ceff_formula.variables]
+                        effs.append(Effect([], eff_prec, self._process_adl_predicate_condition(ceff_formula)))
             fd_action = Action(action.name, action_params, 0, precs, effs, 1)
             self.action_schemas.append(ActionSchemaProcessor(self, fd_action).process())
             print(action.groundings)
