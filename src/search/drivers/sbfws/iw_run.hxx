@@ -301,11 +301,10 @@ public:
 		// adding all atoms encountered in the path to the RelevantAtomSet as "relevant but unreached"
 		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
 			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
-			if (paths.empty()) { // No solution for the subgoal was found
-				LPT_EDEBUG("simulation-relevant", "Goal atom #" << subgoal_idx << " unreachable");
-				continue;
+			
+			if (_in_seed[subgoal_idx] || !paths.empty()) {
+				++reachable;
 			}
-			++reachable;
 			
 			for (const NodePT& node:paths) {
 				process_path_node(node, atomset);
