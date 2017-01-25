@@ -469,7 +469,8 @@ public:
 		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false)),
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
 		_use_simulation_as_macros_only(conf.relevant_set_type==SBFWSConfig::RelevantSetType::Macro),
-		_generated(0)
+		_generated(0),
+		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max())
 	{
 	}
 
@@ -571,7 +572,7 @@ protected:
 		_heuristic.run_simulation(*node);
 		const auto& simulation_nodes = _heuristic.get_last_simulation_nodes();
 		auto search_nodes = convert_simulation_nodes(node, simulation_nodes);
-// 		std::cout << "Got " << simulation_nodes.size() << " simulation nodes, of which " << search_nodes.size() << " reused" << std::endl;
+		// std::cout << "Got " << simulation_nodes.size() << " simulation nodes, of which " << search_nodes.size() << " reused" << std::endl;
 		for (const auto& n:search_nodes) {
 			//create_node(n);
 			_q1.insert(n);
@@ -665,6 +666,11 @@ protected:
 	//! if that is the case, we insert it into a special queue.
 	void create_node(const NodePT& node) {
 		node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
+		
+		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
+			_min_subgoals_to_reach = node->unachieved_subgoals;
+			LPT_INFO("cout", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
+		}
 
 		// Now insert the node into the appropriate queues
 		node->wg = _heuristic.evaluate_wg1(*node);
@@ -799,6 +805,9 @@ protected:
 
 	//! The number of generated nodes so far
 	unsigned long _generated;
+	
+	//! The minimum number of subgoals-to-reach that we have achieved at any moment of the search
+	unsigned _min_subgoals_to_reach;
 };
 
 
