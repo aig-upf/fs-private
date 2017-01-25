@@ -21,23 +21,24 @@ def create_all_possible_state_variables(symbols, static_symbols, type_map):
             variables.add(Variable(symbol.name, instantiation))
     return variables
 
-def create_all_possible_state_variables_from_groundings( predicates, functions, static_symbols ) :
+
+def create_all_possible_state_variables_from_groundings(predicates, functions, static_symbols):
     variables = IndexDictionary()
 
-    for pred in predicates :
+    for pred in predicates:
         name = pred.name
-        if is_external(name) or name in static_symbols :
+        if is_external(name) or name in static_symbols:
             continue
-        for grounding in pred.groundings :
-            variables.add(Variable(name,list(grounding)))
+        for grounding in pred.groundings:
+            variables.add(Variable(name, list(grounding)))
 
-    for func in functions :
+    for func in functions:
         name = func.name
-        if is_external(name) or name in static_symbols :
+        if is_external(name) or name in static_symbols:
             continue
         # MRJ: Right now the only supported function is total-cost, which
         # takes no args!
-        #for grounding in func.groundings :
-        variables.add(Variable(name,[]))
+        # for grounding in func.groundings :
+        variables.add(Variable(name, []))
 
     return variables
