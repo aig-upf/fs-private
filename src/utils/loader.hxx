@@ -13,6 +13,7 @@ class BaseComponentFactory;
 class ProblemInfo;
 class State;
 class ActionData;
+class GroundAction;
 class Problem;
 
 class Loader {
@@ -24,6 +25,9 @@ public:
 	static ProblemInfo& loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
+	
+	//! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector
+	static std::vector<const GroundAction*> loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const ActionData*>& action_data);
 	
 protected:
 	

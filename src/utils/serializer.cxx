@@ -141,9 +141,11 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::BinarySe
 	return os;
 }
 
-std::vector<int> Serializer::deserializeLine(const std::string& line) {
+
+std::vector<int>
+Serializer::deserializeLine(const std::string& line, const std::string& separators) {
 	std::vector<std::string> strings;
-	boost::split(strings, line, boost::is_any_of(","));
+	boost::split(strings, line, boost::is_any_of(separators));
 	std::vector<int> result;
 	result.reserve(strings.size());
 	for (const std::string& str:strings) {

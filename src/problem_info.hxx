@@ -129,7 +129,7 @@ protected:
 	std::unique_ptr<ExternalI> _external;
 	
 public:
-	ProblemInfo(const rapidjson::Document& data);
+	ProblemInfo(const rapidjson::Document& data, const std::string& data_dir);
 	~ProblemInfo() = default;
 	
 	const std::string& getVariableName(VariableIdx index) const;
@@ -244,6 +244,8 @@ public:
 	ObjectType getGenericType(TypeIdx typeId) const;
 	ObjectType getGenericType(const std::string& type) const;
 	
+	const std::string& getDataDir() const { return _data_dir; } 
+	
 protected:
 	//! Load all the function-related data 
 	void loadSymbolIndex(const rapidjson::Value& data);
@@ -260,6 +262,9 @@ protected:
 	void loadProblemMetadata(const rapidjson::Value& data);
 	
 	std::vector<bool> _predicative_variables;
+	
+	//! The filesystem directory where the problem serialized data is found
+	const std::string _data_dir;
 };
 
 } // namespaces

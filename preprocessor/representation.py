@@ -120,19 +120,27 @@ class ProblemRepresentation(object):
         with open(self.translation_dir + '/' + name, "w") as f:
             f.write(translation)
 
-    def dump_data(self, name, data, ext='data', subdir=None):
-        if not isinstance(data, list):
-            data = [data]
-
+    def _compute_filenames(self, name, ext, subdir=None):
         basedir = self.translation_dir + '/data'
 
         if subdir:
             basedir += '/' + subdir
 
+        return basedir, basedir + '/' + name + '.' + ext
+
+    def dump_data(self, name, data, ext='data', subdir=None):
+        if not isinstance(data, list):
+            data = [data]
+
+        basedir, filename = self._compute_filenames(name, ext, subdir)
         util.mkdirp(basedir)
-        with open(basedir + '/' + name + '.' + ext, "w") as f:
+        with open(filename, "w") as f:
             for l in data:
                 f.write(str(l) + '\n')
+
+    def rm_data(self, name, ext='data', subdir=None):
+        basedir, filename = self._compute_filenames(name, ext, subdir)
+        util.silentremove(filename)
 
     def get_value_idx(self, value):
         """ Returns the appropriate integer index for the given value."""
@@ -167,8 +175,10 @@ class ProblemRepresentation(object):
             self.dump_data("action.{}".format(action['name']), json.dumps(action, indent=2), ext='json', subdir='debug')
 
     def print_groundings_if_available(self, schemas, all_groundings, object_idx):
+        groundings_filename = "groundings"
 
         if all_groundings is None:  # No groundings available
+            self.rm_data(groundings_filename)
             return
 
         data = []
@@ -182,6 +192,4 @@ class ProblemRepresentation(object):
                 object_ids = (str(object_idx.get_index(obj_name)) for obj_name in grounding)
                 data.append(','.join(object_ids))
 
-        self.dump_data("groundings", data)
-
-
+        self.dump_data(groundings_filename, data)

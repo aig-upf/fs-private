@@ -2,6 +2,7 @@
     Some basic utility methods.
 """
 import os
+import errno
 import sys
 import unicodedata
 import re
@@ -32,6 +33,14 @@ def mkdirp(directory):
     """" mkdir -p -like functionality """
     if not os.path.isdir(directory):
         os.makedirs(directory)
+
+
+def silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError as e:
+        if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
+            raise  # re-raise exception if a different error occured
 
 
 def load_file(filename):

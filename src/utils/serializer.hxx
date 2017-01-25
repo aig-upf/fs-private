@@ -71,8 +71,8 @@ public:
 	static void BoostSerialize(const std::string& filename, const T& data);
 	
 	static BinaryMap bDeserializeBinaryMap(const std::string& filename);
-protected:
-	static std::vector<int> deserializeLine(const std::string& line);
+	
+	static std::vector<int> deserializeLine(const std::string& line, const std::string& separators = ",");
 };
 
 
