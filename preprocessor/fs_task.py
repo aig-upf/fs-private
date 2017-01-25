@@ -73,7 +73,7 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     task.process_state_variables(state_var_list)
 
     task.process_adl_initial_state(adl_task)
-    task.process_adl_actions(adl_task)
+    task.process_adl_actions(adl_task.actions.values())
     task.process_adl_goal(adl_task)
     task.process_state_constraints([])  # No state constr. possible in ADL, but this needs to be invoked nevertheless
 
@@ -124,6 +124,7 @@ class FSTaskIndex(object):
         self.goal = util.UninitializedAttribute('goal')
         self.state_constraints = util.UninitializedAttribute('state_constraints')
         self.action_schemas = util.UninitializedAttribute('action_schemas')
+        self.groundings = None
 
     def process_types(self, types, type_map):
         # Each typename points to its (unique) 0-based index
@@ -265,12 +266,9 @@ class FSTaskIndex(object):
     def process_actions(self, actions):
         self.action_schemas = [ActionSchemaProcessor(self, action).process() for action in actions]
 
-    def process_adl_actions(self, adl_task):
-        self.action_schemas = []
-        for action in adl_task.actions.values():
-            fd_action = adl.convert_adl_action(action)
-            self.action_schemas.append(ActionSchemaProcessor(self, fd_action).process())
-            print(action.groundings)
+    def process_adl_actions(self, actions):
+        self.action_schemas = [ActionSchemaProcessor(self, adl.convert_adl_action(act)).process() for act in actions]
+        self.groundings = {act.name: act.groundings for act in actions}
 
     def process_goal(self, goal):
         self.goal = FormulaProcessor(self, goal).process()
