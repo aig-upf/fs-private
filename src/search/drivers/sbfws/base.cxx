@@ -7,8 +7,8 @@ namespace fs0 { namespace bfws {
 SBFWSConfig::SBFWSConfig(const Config& config) :
 	search_width(config.getOption<int>("width.search")),
 	simulation_width(config.getOption<int>("width.simulation")),
-	mark_negative_propositions(config.getOption<bool>("relevance.neg_prop")),
-	complete_simulation(config.getOption<bool>("relevance.complete", true))
+	mark_negative_propositions(config.getOption<bool>("simulation.neg_prop")),
+	complete_simulation(config.getOption<bool>("simulation.complete", true))
 {
 	std::string rs = config.getOption<std::string>("bfws.rs");
 	if (rs == "hff") relevant_set_type = RelevantSetType::HFF;
