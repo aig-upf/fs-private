@@ -3,6 +3,7 @@
 """
 from collections import OrderedDict
 
+import adl
 import base
 import pddl_helper
 import pddl
@@ -12,11 +13,7 @@ from exceptions import ParseException
 from util import IndexDictionary
 from language_processor import ActionSchemaProcessor, FormulaProcessor
 from object_types import process_problem_types
-from pddl.pddl_types import TypedObject
 from pddl.f_expression import NumericConstant
-from pddl.conditions import Conjunction, Atom, NegatedAtom, Truth
-from pddl.actions import Action
-from pddl.effects import Effect
 from state_variables import create_all_possible_state_variables, create_all_possible_state_variables_from_groundings
 
 
@@ -149,24 +146,8 @@ class FSTaskIndex(object):
         # The rest are static, including, by definition, the equality predicate
         self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")
 
-    def convert_functions_to_fd(self, symbols):
-        converted = []
-        for symbol in symbols:
-            arguments = [pddl.TypedObject(arg.name, arg.type.name) for arg in symbol.arguments]
-            assert False, "How do we derive the type of the function here?"  # TODO
-            converted.append(pddl.functions.TypedFunction(symbol.name, arguments, ''))
-        return converted
-
-    def convert_predicates_to_fd(self, symbols):
-        converted = []
-        for symbol in symbols:
-            arguments = [pddl.TypedObject(arg.name, arg.type.name) for arg in symbol.arguments]
-            converted.append(pddl.Predicate(symbol.name, arguments))
-        return converted
-
     def process_adl_symbols(self, actions, predicates, functions):
-
-        predicates, functions = self.convert_predicates_to_fd(predicates), self.convert_functions_to_fd(functions)
+        predicates, functions = adl.convert_predicates_to_fd(predicates), adl.convert_functions_to_fd(functions)
         self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
         self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
 
@@ -233,7 +214,6 @@ class FSTaskIndex(object):
                     initial_fluents.append((predicate.name, grounding, None))
         adl_initial_fluent_atoms = [elem for elem in initial_fluents if self.is_fluent(elem[0])]
         adl_initial_static_atoms = [elem for elem in initial_fluents if not self.is_fluent(elem[0])]
-        print(adl_initial_static_atoms)
         self.initial_fluent_atoms = _process_fluent_atoms(adl_initial_fluent_atoms)
         self.initial_static_data = self._process_static_atoms(adl_initial_static_atoms)
 
@@ -285,51 +265,10 @@ class FSTaskIndex(object):
     def process_actions(self, actions):
         self.action_schemas = [ActionSchemaProcessor(self, action).process() for action in actions]
 
-    def _process_adl_flat_formula(self, formula):
-        parts = []
-        for prec in formula:
-            symbol = prec[0].pred.name
-            grounding = prec[0].ground_conditions[prec[1]]
-            sign = prec[2]
-            if sign:
-                parts.append(Atom(symbol, grounding))
-            else:
-                parts.append(NegatedAtom(symbol, grounding))
-        return Conjunction(parts)
-
-    def _process_adl_conjunction(self, formula):
-        parts = []
-        for p in formula.conditions:
-            parts.append(self._process_adl_predicate_condition(p))
-
-        return Conjunction(parts)
-
-    def _process_adl_predicate_condition(self, condition):
-        symbol = condition.pred.name
-        args = condition.variables
-        sign = condition.sign
-        if sign:
-            return Atom(symbol, args)
-        return NegatedAtom(symbol, args)
-
     def process_adl_actions(self, adl_task):
-        from smart.problem import PredicateCondition, ConditionalEffect
         self.action_schemas = []
         for action in adl_task.actions.values():
-            action_params = [TypedObject(p, t.name) for p, t in action.parameters]
-            precs = self._process_adl_conjunction(action.precondition)
-            cost = 1
-            effs = []
-            for eff_formula in action.effects:
-                if isinstance(eff_formula, PredicateCondition):
-                    # params = [TypedObject(v, action.param_types[v].name) for v in eff_formula.variables]
-                    effs.append(Effect([], Truth(), self._process_adl_predicate_condition(eff_formula)))
-                elif isinstance(eff_formula, ConditionalEffect):
-                    eff_prec = self._process_adl_conjunction(eff_formula.condition)
-                    for ceff_formula in eff_formula.effects:
-                        # params = [TypedObject(v, action.param_types[v].name) for v in ceff_formula.variables]
-                        effs.append(Effect([], eff_prec, self._process_adl_predicate_condition(ceff_formula)))
-            fd_action = Action(action.name, action_params, 0, precs, effs, 1)
+            fd_action = adl.convert_adl_action(action)
             self.action_schemas.append(ActionSchemaProcessor(self, fd_action).process())
             print(action.groundings)
 
@@ -337,8 +276,7 @@ class FSTaskIndex(object):
         self.goal = FormulaProcessor(self, goal).process()
 
     def process_adl_goal(self, adl_task):
-        g = self._process_adl_flat_formula(adl_task.flat_ground_goal_preconditions)
-        self.process_goal(g)
+        self.process_goal(adl.process_adl_flat_formula(adl_task.flat_ground_goal_preconditions))
 
     def process_state_constraints(self, constraints):
         self.state_constraints = FormulaProcessor(self, constraints).process()
