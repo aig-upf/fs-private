@@ -13,13 +13,15 @@
 
 import itertools
 
-from utilities import ProblemException, default_type_name, cond_prefix,\
+from smart.utilities import ProblemException, default_type_name, cond_prefix,\
     inequality_prefix, grounding_error_code, lower_var_alphabet, NOT_CONDITION,\
     AND_CONDITION, OR_CONDITION, IMPLY_CONDITION, FORALL_CONDITION,\
     EXISTS_CONDITION, INCREASE_CONDITION, EQUALS_CONDITION, CONDITIONAL_EFFECT,\
     PRE_COND, POST_COND
 
-import strips_problem
+from collections import namedtuple
+
+import smart.strips_problem
 
 class Object(object):
     """ A PDDL object """
@@ -43,6 +45,10 @@ class Object(object):
             (Object) -> str
         """
         return self.name
+
+    @property
+    def type(self) :
+        return self.otype.name
 
 class Type(object):
     """ A PDDL type """
@@ -79,6 +85,12 @@ class Type(object):
             if self.parent:
                 self.parent.add_object(obj)
 
+    @property # For object_types.process_type_hierarchy
+    def basetype_name(self) :
+        if self.parent is None : return None
+        return self.parent.name
+
+Argument = namedtuple('Argument', ['name','type'])
 
 class Function(object):
     """ A PDDL numeric function """
@@ -91,6 +103,7 @@ class Function(object):
         self.variables = variables
         self.types = types
         self.values = {}
+        self.arguments = [ Argument(v,t) for v, t in zip(self.variables,self.types)]
 
     def __dump__(self):
         """ Return a full string representation of the function
@@ -118,7 +131,7 @@ class Predicate(object):
         self.types = types
         self.groundings = []
         self.neg_groundings = []
-
+        self.arguments = [ Argument(v,t) for v, t in zip(self.variables,self.types)]
 
     def __dump__(self):
         """ Return a full string representation of the predicate
@@ -1271,6 +1284,11 @@ class ConditionalEffect(Condition):
         self.flat_ground_effects = {}
         self.flat_ground_preconditions = {}
         self.desc = CONDITIONAL_EFFECT
+    @property
+    def effects(self) :
+        if isinstance(self.effect,AndCondition) :
+            return self.effect.conditions
+        return [self.effect]
 
     def __dump__(self):
         """ Write a string representation of the effect.
@@ -1427,6 +1445,25 @@ class Action(object):
         #These will be lists of PredicateConditions or Conditional Effects
         self.flat_ground_effects = {}
         self.flat_ground_preconditions = {}
+
+    @property
+    def effects(self) :
+        if isinstance(self.effect,AndCondition) :
+            return self.effect.conditions
+        return [self.effect]
+
+    def get_effect_symbol( self, eff ) :
+        if isinstance(eff, PredicateCondition):
+            return eff.pred.name
+        elif isinstance(eff, NotCondition ) :
+            return self.get_effect_symbol(eff.condition)
+        elif isinstance(eff, ConditionalEffect ) :
+            return [ self.get_effect_symbol(e) for e in eff.effects ]
+        elif isinstance(eff, IncreaseCondition):
+            assert isinstance(eff.var, Function)
+            return eff.var.name
+        else:
+            raise UnimplementedFeature('TODO - Effect type not yet supported')
 
     def __dump__(self):
         """ Write a string representation of the operator to the given file in

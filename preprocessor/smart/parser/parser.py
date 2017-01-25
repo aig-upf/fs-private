@@ -5,12 +5,12 @@
 
 from pyparsing import OneOrMore, nestedExpr
 
-from utilities import CodeException, parsing_error_code, NOT_CONDITION,\
+from smart.utilities import CodeException, parsing_error_code, NOT_CONDITION,\
     AND_CONDITION, OR_CONDITION, IMPLY_CONDITION, FORALL_CONDITION,\
     EXISTS_CONDITION, INCREASE_CONDITION, EQUALS_CONDITION, NOT_EQUALS_CONDITION,\
     CONDITIONAL_EFFECT, valid_requirements
 
-from problem   import Object, Type, Function, Predicate,\
+from smart.problem   import Object, Type, Function, Predicate,\
                       PredicateCondition, NotCondition, AndCondition,\
                       OrCondition, ForAllCondition, ExistsCondition,\
                       IncreaseCondition, EqualsCondition, ConditionalEffect,\

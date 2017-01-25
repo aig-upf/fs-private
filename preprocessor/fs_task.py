@@ -12,8 +12,12 @@ from exceptions import ParseException
 from util import IndexDictionary
 from language_processor import ActionSchemaProcessor, FormulaProcessor
 from object_types import process_problem_types
+from pddl.pddl_types import TypedObject
 from pddl.f_expression import NumericConstant
-from state_variables import create_all_possible_state_variables
+from pddl.conditions import Conjunction, Atom, NegatedAtom, Truth
+from pddl.actions import Action
+from pddl.effects import Effect
+from state_variables import create_all_possible_state_variables, create_all_possible_state_variables_from_groundings
 
 
 def filter_out_action_cost_atoms(fd_initial_state, action_cost_symbols):
@@ -40,6 +44,28 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task.process_actions(fd_task.actions)
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
+    return task
+
+def create_fs_task_from_adl( adl_task, domain_name, instance_name ) :
+    # MRJ: steps from fs_task.create_fs_task are copied here to act
+    # as both a reminder and a TODO list
+
+    #types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
+    types, type_map = process_problem_types(adl_task.types.values(), adl_task.objects.values(), [])
+    task = FSTaskIndex( domain_name, instance_name )
+
+    task.process_objects(adl_task.objects.values())
+    task.process_types(types, type_map)
+    task.process_adl_symbols(adl_task.actions.values(), adl_task.predicates.values(), adl_task.functions.values())
+    state_var_list = create_all_possible_state_variables_from_groundings(adl_task.predicates.values(), adl_task.functions.values(), task.static_symbols)
+    task.process_state_variables(state_var_list)
+
+    task.process_adl_initial_state(adl_task)
+    task.process_adl_actions(adl_task)
+    task.process_adl_goal(adl_task)
+    #task.process_state_constraints(fd_task.constraints)
+
+
     return task
 
 
@@ -109,6 +135,19 @@ class FSTaskIndex(object):
         # The rest are static, including, by definition, the equality predicate
         self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")
 
+    def process_adl_symbols(self, actions, predicates, functions):
+        self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
+        self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
+
+        self.all_symbols = list(self.symbol_types.keys())
+
+        # All symbols appearing on some action effect are fluent
+        self.fluent_symbols = set(action.get_effect_symbol(eff) for action in actions for eff in action.effects)
+
+        # The rest are static, including, by definition, the equality predicate
+        self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")
+
+
     def is_fluent(self, symbol_name):
         return symbol_name in self.fluent_symbols
 
@@ -154,6 +193,19 @@ class FSTaskIndex(object):
 
         self.initial_fluent_atoms = _process_fluent_atoms(fd_initial_fluent_atoms)
         self.initial_static_data = self._process_static_atoms(fd_initial_static_atoms)
+
+    def process_adl_initial_state( self, adl_task ) :
+        initial_fluents = []
+        for predicate in adl_task.predicates.values():
+            for grounding in predicate.groundings:
+                prop = (predicate, grounding)
+                if prop in adl_task.initial_state:
+                    initial_fluents.append( (predicate.name, grounding, None))
+        adl_initial_fluent_atoms = [elem for elem in initial_fluents if self.is_fluent(elem[0])]
+        adl_initial_static_atoms = [elem for elem in initial_fluents if not self.is_fluent(elem[0])]
+        print(adl_initial_static_atoms)
+        self.initial_fluent_atoms = _process_fluent_atoms(adl_initial_fluent_atoms)
+        self.initial_static_data = self._process_static_atoms(adl_initial_static_atoms)
 
     def _process_static_atoms(self, fd_initial_static_atoms):
         initial_static_data = {}
@@ -203,8 +255,63 @@ class FSTaskIndex(object):
     def process_actions(self, actions):
         self.action_schemas = [ActionSchemaProcessor(self, action).process() for action in actions]
 
+    def _process_adl_flat_formula( self, formula ) :
+        parts = []
+        for prec  in formula:
+            symbol = prec[0].pred.name
+            grounding = prec[0].ground_conditions[prec[1]]
+            sign = prec[2]
+            if sign :
+                parts.append( Atom( symbol, grounding ))
+            else :
+                parts.append( NegatedAtom( symbol, grounding ))
+        return Conjunction(parts)
+
+    def _process_adl_conjunction( self, formula ) :
+        parts = []
+        for p in formula.conditions :
+            parts.append( self._process_adl_predicate_condition(p))
+
+        return Conjunction(parts)
+
+    def _process_adl_predicate_condition( self, condition ) :
+        symbol = condition.pred.name
+        args = condition.variables
+        sign = condition.sign
+        if sign :
+            return Atom( symbol, args )
+        return NegatedAtom( symbol, args )
+
+    def process_adl_actions( self, adl_task ) :
+        from smart.problem import PredicateCondition,ConditionalEffect
+        self.action_schemas = []
+        for action in adl_task.actions.values() :
+            params = [ TypedObject( p, t.name ) for p, t in action.parameters ]
+            precs = self._process_adl_conjunction(action.precondition)
+            cost = 1
+            effs = []
+            for eff_formula in action.effects :
+                if isinstance(eff_formula, PredicateCondition) :
+                    params = [ TypedObject( v, action.param_types[v].name ) for v in eff_formula.variables]
+                    effs.append( Effect(params,Truth(),self._process_adl_predicate_condition(eff_formula)) )
+                elif isinstance(eff_formula,ConditionalEffect) :
+                    eff_prec = self._process_adl_conjunction(eff_formula.condition)
+                    for ceff_formula in eff_formula.effects :
+                        params = [ TypedObject( v, action.param_types[v].name ) for v in ceff_formula.variables]
+                        effs.append( Effect(params,eff_prec,self._process_adl_predicate_condition(ceff_formula)) )
+            fd_action = Action( action.name, params, 0, precs, effs, 1 )
+            self.action_schemas.append( ActionSchemaProcessor(self, fd_action).process() )
+            print(action.groundings)
+
+
+
     def process_goal(self, goal):
         self.goal = FormulaProcessor(self, goal).process()
+
+    def process_adl_goal( self, adl_task ) :
+        G = self._process_adl_flat_formula(adl_task.flat_ground_goal_preconditions)
+
+        self.process_goal( G )
 
     def process_state_constraints(self, constraints):
         self.state_constraints = FormulaProcessor(self, constraints).process()

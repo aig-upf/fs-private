@@ -25,7 +25,7 @@
     All Propositions which are mutex at step N are also mutex at steps > N.
 """
 
-from utilities import ProblemException
+from smart.utilities import ProblemException
 
 class Proposition(object):
     """ A state proposition. """
