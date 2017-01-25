@@ -158,6 +158,7 @@ public:
 		_complete(complete),
 		_all_paths(model.num_subgoals()),
 		_unreached(),
+		_in_seed(model.num_subgoals(), false),
 		_mark_negative_propositions(mark_negative_propositions),
 		_visited()
 	{
@@ -178,6 +179,8 @@ public:
 	}
 
 	void run(const StateT& seed) {
+		mark_seed_subgoals(seed);
+		
 		NodePT n = std::make_shared<NodeT>(seed);
 		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 		this->notify(NodeCreationEvent(*n));
@@ -223,6 +226,9 @@ protected:
 
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
 	std::unordered_set<unsigned> _unreached;
+	
+	//! Contains the indexes of all those goal atoms that were already reached in the seed state
+	std::vector<bool> _in_seed;
 
 	bool _mark_negative_propositions;
 
@@ -261,9 +267,19 @@ protected:
 		const StateT& state = node->state;
 
 		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
-			if (this->_model.goal(state, i)) {
+			if (!_in_seed[i] && this->_model.goal(state, i)) {
 				node->satisfies_subgoal = true;
 				_all_paths[i].push_back(node);
+			}
+		}
+		return false;
+	}
+	
+	bool mark_seed_subgoals(const StateT& seed) {
+		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
+			if (this->_model.goal(seed, i)) {
+				_unreached.erase(i);
+				_in_seed[i] = true;
 			}
 		}
 		return false;
