@@ -331,8 +331,7 @@ class Grounder(object):
                                    ", ".join([var_alphabet[action.var_indices[v]] \
                                               for v in action.precondition.relevant_vars]) + "))")
                     for pid, (param, ptype) in enumerate(action.parameters):
-                        if param not in action.precondition.relevant_vars:
-                            writer.write_str(", " + ptype.name + "(" + var_alphabet[pid] + ")")
+                        writer.write_str(", " + ptype.name + "(" + var_alphabet[pid] + ")")
                     writer.write_str(".\n")
                 self.write_prec_asp(action.precondition, writer.desc())
             else:
