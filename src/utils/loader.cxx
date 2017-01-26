@@ -55,13 +55,13 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 }
 
 void 
-Loader::loadFunctions(const BaseComponentFactory& factory, const std::string& data_dir, ProblemInfo& info) {
+Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 	
 	// First load the extensions of the static symbols
 	for (auto name:info.getSymbolNames()) {
 		unsigned id = info.getSymbolId(name);
 		if (info.getSymbolData(id).isStatic()) {
-			info.set_extension(id, StaticExtension::load_static_extension(name, data_dir, info));
+			info.set_extension(id, StaticExtension::load_static_extension(name, info));
 		}
 	}
 	
@@ -75,7 +75,7 @@ ProblemInfo&
 Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory) {
 	// Load and set the ProblemInfo data structure
 	auto info = std::unique_ptr<ProblemInfo>(new ProblemInfo(data, data_dir));
-	loadFunctions(factory, data_dir, *info);
+	loadFunctions(factory, *info);
 	return ProblemInfo::setInstance(std::move(info));
 }
 

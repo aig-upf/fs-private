@@ -14,7 +14,7 @@ public:
 	virtual Function get_function() const = 0;
 	
 	//! Factory method
-	static std::unique_ptr<StaticExtension> load_static_extension(const std::string& name, const std::string& data_dir, const ProblemInfo& info);
+	static std::unique_ptr<StaticExtension> load_static_extension(const std::string& name, const ProblemInfo& info);
 };
 
 

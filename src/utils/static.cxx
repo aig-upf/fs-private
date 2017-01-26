@@ -6,14 +6,14 @@ namespace fs0 {
 
 
 std::unique_ptr<StaticExtension>
-StaticExtension::load_static_extension(const std::string& name, const std::string& data_dir, const ProblemInfo& info) {
+StaticExtension::load_static_extension(const std::string& name, const ProblemInfo& info) {
 	unsigned id = info.getSymbolId(name);
 	const SymbolData& data = info.getSymbolData(id);
 	unsigned arity = data.getArity();
 	SymbolData::Type type = data.getType();
 	assert(type == SymbolData::Type::PREDICATE || type == SymbolData::Type::FUNCTION);
 	
-	std::string filename = data_dir + "/" + name + ".data";
+	std::string filename = info.getDataDir() + "/" + name + ".data";
 	StaticExtension* extension = nullptr;
 	
 	if (arity == 0) {

@@ -36,7 +36,7 @@ protected:
 	static State* loadState(const rapidjson::Value& data);
 
 	//! Load the data related to the problem functions and predicates into the info object
-	static void loadFunctions(const BaseComponentFactory& factory, const std::string& data_dir, ProblemInfo& info);
+	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);
 	
 	static std::vector<const ActionData*> loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info);
 	
