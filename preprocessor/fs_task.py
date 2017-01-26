@@ -113,7 +113,7 @@ class FSTaskIndex(object):
         self.objects = util.UninitializedAttribute('objects')
         self.symbols = util.UninitializedAttribute('symbols')
         self.symbol_types = util.UninitializedAttribute('symbol_types')
-        self.action_cost_symbols = util.UninitializedAttribute('symbol_types')
+        self.action_cost_symbols = util.UninitializedAttribute('action_cost_symbols')
         self.symbol_index = util.UninitializedAttribute('symbol_index')
         self.all_symbols = util.UninitializedAttribute('all_symbols')
         self.static_symbols = util.UninitializedAttribute('static_symbols')
