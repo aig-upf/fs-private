@@ -33,6 +33,10 @@ Validator::validate_state(const State& state, const ProblemInfo& info) {
 	}
 	
 	// Check that the extension of each fluent symbol has been fully specified
+	// TODO - THIS CHECK IS NOT CORRECT. There might be domain points for certain logical symbols
+	// TODO - that are not modeled as state variables, as the preprocessing reachability analysis 
+	// TODO - might have shown that they might never be true
+	/*
 	for (unsigned symbol = 0; symbol < info.getNumLogicalSymbols(); ++symbol) {
 		const SymbolData& data = info.getSymbolData(symbol);
 		
@@ -52,6 +56,7 @@ Validator::validate_state(const State& state, const ProblemInfo& info) {
 			}
 		}
 	}
+	*/
 	return error;
 }
 
