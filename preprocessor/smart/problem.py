@@ -95,13 +95,14 @@ Argument = namedtuple('Argument', ['name','type'])
 class Function(object):
     """ A PDDL numeric function """
 
-    def __init__(self, name, variables, types):
+    def __init__(self, name, variables, types, function_type):
         """ Make a new Function
             (Function, str, [str], [Type]) -> None
         """
         self.name = name
         self.variables = variables
         self.types = types
+        self.function_type = function_type
         self.values = {}
         self.arguments = [ Argument(v,t) for v, t in zip(self.variables,self.types)]
 

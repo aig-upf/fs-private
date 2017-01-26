@@ -63,8 +63,7 @@ def convert_functions_to_fd(symbols):
     converted = []
     for symbol in symbols:
         arguments = [pddl.TypedObject(arg.name, arg.type.name) for arg in symbol.arguments]
-        assert False, "How do we derive the type of the function here?"  # TODO
-        converted.append(pddl.functions.TypedFunction(symbol.name, arguments, ''))
+        converted.append(pddl.functions.TypedFunction(symbol.name, arguments, symbol.function_type))
     return converted
 
 

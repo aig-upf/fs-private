@@ -308,8 +308,8 @@ class Parser(object):
                 if token != '-':
                     raise ParsingException("Error: badly formed function: " + function,
                         parsing_error_code)
-                token = next(tokens)
-                if token != 'number':
+                function_type = next(tokens)
+                if function_type != 'number':
                     raise ParsingException("Error: we only support numeric functions: " + function,
                         parsing_error_code)
 
@@ -345,7 +345,7 @@ class Parser(object):
                     variables.append(arg)
                     types.append(self.problem.default_type)
 
-                self.problem.functions[name] = Function(name, variables, types)
+                self.problem.functions[name] = Function(name, variables, types, function_type)
             except StopIteration:
                 raise ParsingException("Error: badly formed function: " + function,
                     parsing_error_code)

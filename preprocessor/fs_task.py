@@ -32,7 +32,7 @@ def filter_out_action_cost_atoms(fd_initial_state, action_cost_symbols):
 def filter_out_action_cost_functions(adl_functions):
     filtered = []
     for function in adl_functions:
-        if function.name != 'total-cost':
+        if function.name != 'total-cost' and function.function_type != 'number':
             filtered.append(function)
     return filtered
 
