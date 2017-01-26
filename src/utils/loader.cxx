@@ -135,7 +135,7 @@ Loader::loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<
 		return grounded;
 	}
 	
-	unsigned total_groundings = 0;
+	unsigned current_schema_groundings = 0;
 	unsigned id = 0;
 	unsigned schema_id = -1;
 	const ActionData* current = action_data[0];
@@ -143,12 +143,19 @@ Loader::loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<
 	
 	while (std::getline(is, line)) {
 		if (line.length() > 0 && line[0] == '#') { // We switch to the next action schema
+			
+			
 			++schema_id;
 			if (schema_id >= action_data.size()) {
 				throw std::runtime_error("The number of action schemas in the groundings file does not match that in the problem description");
 			}
+			
+			if (schema_id > 0) {
+				LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+			}
+			
 			current = action_data[schema_id];
-			LPT_INFO("cout", "Grounding action schema '" << current->getName());
+			current_schema_groundings = 0;
 			continue;
 		}
 		
@@ -165,11 +172,11 @@ Loader::loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<
 			Binding binding(std::move(deserialized));
 			id = ActionGrounder::ground(id, current, binding, info, grounded);
 		}
-		++total_groundings;
+		++current_schema_groundings;
 	}
 	
-	
-	LPT_INFO("cout", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions");
+	LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+	LPT_INFO("cout", "Grounding process stats:\t" << grounded.size() << " grounded actions");
 	return grounded;
 }
 

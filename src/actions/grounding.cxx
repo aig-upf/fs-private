@@ -37,6 +37,7 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 	
 	unsigned id = 0;
 	for (const ActionData* data:action_data) {
+		unsigned grounded_0 = grounded.size();
 		const Signature& signature = data->getSignature();
 		
 		// In case the action schema is directly not-lifted, we simply bind it with an empty binding and continue.
@@ -79,6 +80,8 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 			++total_num_bindings;
 		}
 		std::cout << std::endl;
+		LPT_INFO("cout", "Action schema \"" << print::action_data_name(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded actions");
+		std::cout << std::endl;
 	}
 	
 	LPT_INFO("grounding", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
@@ -92,7 +95,7 @@ ActionGrounder::ground(unsigned id, const ActionData* data, const Binding& bindi
 // 	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
 	
 	if (GroundAction* ground = full_binding(id, *data, binding, info)) {
-// 		LPT_DEBUG("grounding", "Binding " << print::binding(binding, data->getSignature()) << " generated grounded action:\n" << *ground);
+		LPT_EDEBUG("valid-groundings", "Binding " << print::binding(binding, data->getSignature()) << "\t\t\t generates grounded action:\n" << *ground);
 		grounded.push_back(ground);
 		return id + 1;
 	} else {
