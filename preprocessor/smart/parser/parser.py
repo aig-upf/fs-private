@@ -738,6 +738,11 @@ class Parser(object):
 
             (Parser, [str]) -> None
         """
+        def add_objects(obj_list, problem, _type):
+            for name in obj_list:
+                problem.objects[name] = Object(name, _type, False)
+                problem.sorted_object_names.append(name)
+
         current_objects = []
         tokens = iter(objects)
         for token in tokens:
@@ -747,9 +752,7 @@ class Parser(object):
                     if token not in self.problem.types:
                         raise ParsingException("Error: unknown object type " + token,
                             parsing_error_code)
-                    for obj_str in current_objects:
-                        obj = Object(obj_str, self.problem.types[token], False)
-                        self.problem.objects[obj.name] = obj
+                    add_objects(current_objects, self.problem, self.problem.types[token])
                     current_objects = []
                 except StopIteration:
                     raise ParsingException("Error: badly formed object description.",
@@ -757,11 +760,7 @@ class Parser(object):
             else:
                 current_objects.append(token)
 
-
-        for obj_str in current_objects:
-            obj = Object(obj_str, self.problem.default_type, False)
-            self.problem.objects[obj.name] = obj
-            self.problem.sorted_object_names.append(obj.name)
+        add_objects(current_objects, self.problem, self.problem.default_type)
 
         for obj in list(self.problem.objects.values()):
             obj.otype.add_object(obj)
