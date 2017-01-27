@@ -56,6 +56,8 @@ def convert_adl_action(action):
             for ceff_formula in eff_formula.effects:
                 # params = [TypedObject(v, action.param_types[v].name) for v in ceff_formula.variables]
                 effs.append(pddl.Effect([], eff_prec, _process_adl_predicate_condition(ceff_formula)))
+        else:
+            raise UnimplementedFeature('TODO - Effect type not yet supported')
     return pddl.Action(action.name, action_params, 0, precs, effs, 1)
 
 
