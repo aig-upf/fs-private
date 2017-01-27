@@ -174,6 +174,10 @@ class ProblemRepresentation(object):
         for action in data['action_schemata']:
             self.dump_data("action.{}".format(action['name']), json.dumps(action, indent=2), ext='json', subdir='debug')
 
+        # Print all (ordered) action schema names in a separate file
+        names = [action['name'] for action in data['action_schemata']]
+        self.dump_data("schemas", names, ext='txt', subdir='debug')
+
     def print_groundings_if_available(self, schemas, all_groundings, object_idx):
         groundings_filename = "groundings"
 
