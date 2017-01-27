@@ -1893,7 +1893,7 @@ class Problem(object):
                         else:
                             eff[0].pred.ground_dels[eff[0].ground_conditions[eff[1]]].add(ag_pair)
                     elif not isinstance(eff[0], IncreaseCondition):
-                        eff[0].ground_adds[eff[1]].append(ag_pair)
+                        eff[0].ground_adds[eff[1]].add(ag_pair)
 
     def make_strips_conditions(self):
         """ Make pre and post-conditions for each grounding which link directly
