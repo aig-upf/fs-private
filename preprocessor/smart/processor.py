@@ -1,14 +1,14 @@
 # Nathan Robinson (nathan.m.robinson@gmail.com) 2014
 # Miquel Ramirez (miquel.ramirez@gmail.com) 2015, 2016, 2017
 
-import sys, os, time, subprocess, errno, argparse, traceback, resource
-
-from smart.utilities import CodeException, remove, PRE_SUFFIX, GROUND_SUFFIX,\
-    solving_error_code, extracting_error_code, ProblemException, tmp_path
+import os
+import sys
+import time
 
 from smart.parser import ParsingException, Parser, Grounder
+from smart.utilities import ProblemException
 
-def parse_and_ground( tag, domain_file, problem_file, remove_tmp = True ) :
+def parse_and_ground( domain_file, problem_file, workspace_dir, remove_tmp = False ) :
     #Parse the input PDDL
     try:
         t0 = time.time()
@@ -27,8 +27,8 @@ def parse_and_ground( tag, domain_file, problem_file, remove_tmp = True ) :
         print("Parsing time:", (end_parsing_time - t0))
 
         print("Grounding the problem...")
-        pre_file_name = os.path.join(tmp_path, tag + PRE_SUFFIX)
-        ground_file_name = os.path.join(tmp_path, tag + GROUND_SUFFIX)
+        pre_file_name = os.path.join(workspace_dir, "preprocessing", "asp_model.lp")
+        ground_file_name = os.path.join(workspace_dir, "preprocessing", "asp_model.sol")
 
         grounder = Grounder(problem, pre_file_name, ground_file_name)
         grounder.ground()

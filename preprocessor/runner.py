@@ -50,10 +50,6 @@ def parse_pddl_task(domain, instance):
     return task
 
 
-def parse_pddl_task_smart(domain, instance):
-    import smart.processor
-    return smart.processor.parse_and_ground('ipc', domain, instance)
-
 
 def extract_names(domain_filename, instance_filename):
     """ Extract the canonical domain and instance names from the corresponding filenames """
@@ -189,7 +185,8 @@ def main(args):
         fd_task = parse_pddl_task(args.domain, args.instance)
         fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:
-        adl_task = parse_pddl_task_smart(args.domain, args.instance)
+        import smart.processor
+        adl_task = smart.processor.parse_and_ground(args.domain, args.instance, translation_dir)
         fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile

@@ -19,8 +19,6 @@ extracting_error_code    = -6
 grounder_path = os.path.join(os.path.dirname(__file__), "gringo", "gringo")
 tmp_path = os.path.join(os.path.dirname(__file__), "tmp_files")
 
-PRE_SUFFIX = ".pre"
-GROUND_SUFFIX = ".grd"
 grounder_run_success_code = 0
 var_alphabet = "ABCDEFGHIJKLMNOPQRSTUFWXYZ"
 lower_var_alphabet = var_alphabet.lower()
