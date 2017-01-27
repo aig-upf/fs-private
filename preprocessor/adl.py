@@ -4,6 +4,7 @@
 
 import pddl
 import smart.problem as sproblem
+from exceptions import UnimplementedFeature
 
 
 def ensure_conjunction(node):
