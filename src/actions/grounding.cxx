@@ -95,7 +95,7 @@ ActionGrounder::ground(unsigned id, const ActionData* data, const Binding& bindi
 // 	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
 	
 	if (GroundAction* ground = full_binding(id, *data, binding, info)) {
-		LPT_EDEBUG("valid-groundings", "Binding " << print::binding(binding, data->getSignature()) << "\t\t\t generates grounded action:\n" << *ground);
+		LPT_EDEBUG("groundings", "\t" << *ground);
 		grounded.push_back(ground);
 		return id + 1;
 	} else {
