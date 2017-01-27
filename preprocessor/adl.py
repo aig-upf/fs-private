@@ -43,27 +43,48 @@ def process_adl_flat_formula(formula):
     return pddl.Conjunction(parts)
 
 
+def convert_adl_effect(effect):
+    """
+        Return a FD effect (or set of effects) corresponding to the given ADL effect
+    """
+    effs = []
+    if isinstance(effect, sproblem.PredicateCondition):
+        # params = [TypedObject(v, action.param_types[v].name) for v in effect.variables]
+        effs.append(pddl.Effect([], pddl.Truth(), _process_adl_predicate_condition(effect)))
+    elif isinstance(effect, sproblem.ConditionalEffect):
+        eff_prec = _process_adl_conjunction(effect.condition)
+        for ceff_formula in effect.effects:
+            # params = [TypedObject(v, action.param_types[v].name) for v in ceff_formula.variables]
+            effs.append(pddl.Effect([], eff_prec, _process_adl_predicate_condition(ceff_formula)))
+    elif isinstance(effect, sproblem.ForAllCondition):
+        parameter = pddl.TypedObject(effect.var, effect.v_type.name)
+        nested = convert_adl_effect(effect.condition)
+        for neff in nested:
+            assert isinstance(neff.condition, pddl.Conjunction) and len(neff.condition.parts) == 1  # Otherwise we need to rethink this a bit
+            effs.append(pddl.Effect([parameter], neff.condition.parts[0], neff.literal))
+    else:
+        raise UnimplementedFeature('TODO - Effect type not yet supported')
+    return effs
+
+
 def convert_adl_action(action):
+    """
+        Convert an ADL action to FD format
+    """
     action_params = [pddl.TypedObject(p, t.name) for p, t in action.parameters]
     precs = _process_adl_conjunction(action.precondition)
     cost = 1
     effs = []
+
     for effect in action.effects:
-        if isinstance(effect, sproblem.PredicateCondition):
-            # params = [TypedObject(v, action.param_types[v].name) for v in effect.variables]
-            effs.append(pddl.Effect([], pddl.Truth(), _process_adl_predicate_condition(effect)))
-        elif isinstance(effect, sproblem.ConditionalEffect):
-            eff_prec = _process_adl_conjunction(effect.condition)
-            for ceff_formula in effect.effects:
-                # params = [TypedObject(v, action.param_types[v].name) for v in ceff_formula.variables]
-                effs.append(pddl.Effect([], eff_prec, _process_adl_predicate_condition(ceff_formula)))
-        elif isinstance(effect, sproblem.IncreaseCondition):
+        if isinstance(effect, sproblem.IncreaseCondition):  # We treat the action-cost effect differently
             # ATM this will get soon pruned, as we are ignoring action costs, so this is perhaps not 100% correct.
             head = pddl.f_expression.PrimitiveNumericExpression(effect.var.name, effect.var.arguments)
             exp = effect.value
             cost = pddl.f_expression.Increase(head, exp)
         else:
-            raise UnimplementedFeature('TODO - Effect type not yet supported')
+            effs += convert_adl_effect(effect)
+
     return pddl.Action(action.name, action_params, 0, precs, effs, cost)
 
 
