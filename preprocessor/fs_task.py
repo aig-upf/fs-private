@@ -3,6 +3,8 @@
 """
 from collections import OrderedDict
 
+import itertools
+
 import adl
 import base
 import pddl_helper
@@ -10,6 +12,7 @@ import pddl
 import static
 import util
 from exceptions import ParseException
+from smart.problem import get_effect_symbols
 from util import IndexDictionary
 from language_processor import ActionSchemaProcessor, FormulaProcessor
 from object_types import process_problem_types
@@ -155,7 +158,8 @@ class FSTaskIndex(object):
         self.all_symbols = list(self.symbol_types.keys())
 
         # All symbols appearing on some action effect are fluent
-        self.fluent_symbols = set(action.get_effect_symbol(eff) for action in actions for eff in action.effects)
+        all_effects = itertools.chain.from_iterable(action.effects for action in actions)
+        self.fluent_symbols = set(itertools.chain.from_iterable(get_effect_symbols(eff) for eff in all_effects))
 
         # The rest are static, including, by definition, the equality predicate
         self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")

@@ -13,6 +13,7 @@
 
 import itertools
 
+from exceptions import UnimplementedFeature
 from smart.utilities import ProblemException, default_type_name, cond_prefix,\
     inequality_prefix, grounding_error_code, lower_var_alphabet, NOT_CONDITION,\
     AND_CONDITION, OR_CONDITION, IMPLY_CONDITION, FORALL_CONDITION,\
@@ -20,8 +21,6 @@ from smart.utilities import ProblemException, default_type_name, cond_prefix,\
     PRE_COND, POST_COND
 
 from collections import namedtuple
-
-import smart.strips_problem
 
 class Object(object):
     """ A PDDL object """
@@ -1452,19 +1451,6 @@ class Action(object):
             return self.effect.conditions
         return [self.effect]
 
-    def get_effect_symbol( self, eff ) :
-        if isinstance(eff, PredicateCondition):
-            return eff.pred.name
-        elif isinstance(eff, NotCondition ) :
-            return self.get_effect_symbol(eff.condition)
-        elif isinstance(eff, ConditionalEffect ) :
-            return [ self.get_effect_symbol(e) for e in eff.effects ]
-        elif isinstance(eff, IncreaseCondition):
-            assert isinstance(eff.var, Function)
-            return eff.var.name
-        else:
-            raise UnimplementedFeature('TODO - Effect type not yet supported')
-
     def __dump__(self):
         """ Write a string representation of the operator to the given file in
             the fast-downward output format.
@@ -2230,3 +2216,24 @@ class Problem(object):
                 success = False
 
         return success, 0
+
+
+def get_effect_symbols( eff ) :
+    """
+        Return all the symbols potentially affected in a given effect
+    """
+    if isinstance(eff, PredicateCondition):
+        symbols = [eff.pred.name]
+    elif isinstance(eff, NotCondition ) :
+        symbols = get_effect_symbols(eff.condition)
+    elif isinstance(eff, ConditionalEffect ) :
+        symbols = list(itertools.chain.from_iterable(get_effect_symbols(e) for e in eff.effects))
+    elif isinstance(eff, IncreaseCondition):
+        assert isinstance(eff.var, Function)
+        symbols = [eff.var.name]
+    elif isinstance(eff, ForAllCondition ) :
+        symbols = get_effect_symbols(eff.condition)
+    else:
+        raise UnimplementedFeature('TODO - Effect type not yet supported')
+
+    return symbols
