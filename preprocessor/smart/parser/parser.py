@@ -667,6 +667,7 @@ class Parser(object):
             raise ParsingException("Error parsing effects of action: " + name +\
                 "\n" + e.message, parsing_error_code)
 
+        self.problem.sorted_action_names.append(name)
         self.problem.actions[name] = Action(name, variables, types, precondition, effect, False)
 
 

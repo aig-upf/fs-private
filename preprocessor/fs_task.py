@@ -76,7 +76,7 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     task.process_state_variables(state_var_list)
 
     task.process_adl_initial_state(adl_task)
-    task.process_adl_actions(adl_task.actions.values())
+    task.process_adl_actions(adl_task.actions, adl_task.sorted_action_names)
     task.process_adl_goal(adl_task)
     task.process_state_constraints([])  # No state constr. possible in ADL, but this needs to be invoked nevertheless
 
@@ -270,9 +270,10 @@ class FSTaskIndex(object):
     def process_actions(self, actions):
         self.action_schemas = [ActionSchemaProcessor(self, action).process() for action in actions]
 
-    def process_adl_actions(self, actions):
-        self.action_schemas = [ActionSchemaProcessor(self, adl.convert_adl_action(act)).process() for act in actions]
-        self.groundings = {act.name: act.groundings for act in actions}
+    def process_adl_actions(self, actions, sorted_action_names):
+        sorted_act = [actions[name] for name in sorted_action_names if name in actions]
+        self.action_schemas = [ActionSchemaProcessor(self, adl.convert_adl_action(act)).process() for act in sorted_act]
+        self.groundings = {act.name: act.groundings for act in sorted_act}
 
     def process_goal(self, goal):
         self.goal = FormulaProcessor(self, goal).process()

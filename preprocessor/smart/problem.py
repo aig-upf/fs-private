@@ -1645,6 +1645,7 @@ class Problem(object):
         self.predicates = {}
         self.functions = {}
         self.actions = {}
+        self.sorted_action_names = []  # Action names, in the same order as declared in the PDDL
         self.derived_predicates = {}
 
         self.objects = {}
