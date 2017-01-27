@@ -192,8 +192,11 @@ class ProblemRepresentation(object):
             action_name = action['name']
             data.append("# {} # {}".format(i, action_name))  # A comment line
 
+            action_groundings = []  # A list with the (integer index of) each grounding
             for grounding in all_groundings[action_name]:
-                object_ids = (str(object_idx.get_index(obj_name)) for obj_name in grounding)
-                data.append(','.join(object_ids))
+                action_groundings.append(tuple(object_idx.get_index(obj_name) for obj_name in grounding))
+
+            for grounding in sorted(action_groundings):  # IMPORTANT to output the groundings in lexicographical order
+                data.append(','.join(map(str, grounding)))
 
         self.dump_data(groundings_filename, data)

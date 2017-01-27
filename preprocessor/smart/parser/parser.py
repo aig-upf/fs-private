@@ -756,9 +756,12 @@ class Parser(object):
                         parsing_error_code)
             else:
                 current_objects.append(token)
+
+
         for obj_str in current_objects:
             obj = Object(obj_str, self.problem.default_type, False)
             self.problem.objects[obj.name] = obj
+            self.problem.sorted_object_names.append(obj.name)
 
         for obj in list(self.problem.objects.values()):
             obj.otype.add_object(obj)

@@ -60,10 +60,11 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     # as both a reminder and a TODO list
 
     # types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
-    types, type_map = process_problem_types(adl_task.types.values(), adl_task.objects.values(), [])
+    sorted_objs = [adl_task.objects[name] for name in adl_task.sorted_object_names]
+    types, type_map = process_problem_types(adl_task.types.values(), sorted_objs, [])
     task = FSTaskIndex(domain_name, instance_name)
 
-    task.process_objects(adl_task.objects.values())
+    task.process_objects(sorted_objs)
     task.process_types(types, type_map)
 
     adl_functions = filter_out_action_cost_functions(adl_task.functions.values())

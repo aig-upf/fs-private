@@ -1649,6 +1649,7 @@ class Problem(object):
         self.derived_predicates = {}
 
         self.objects = {}
+        self.sorted_object_names = []  # object names, in the same order as declared in the PDDL
         self.initial_state = []
         self.initial_state_set = None
         self.goal = None
