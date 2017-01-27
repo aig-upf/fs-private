@@ -347,8 +347,7 @@ class Parser(object):
 
                 self.problem.functions[name] = Function(name, variables, types, function_type)
             except StopIteration:
-                raise ParsingException("Error: badly formed function: " + function,
-                    parsing_error_code)
+                raise ParsingException("Error: badly formed function: " + str(function), parsing_error_code)
 
     def parse_condition(self, definition, scope, context, check_consts):
         """ Parse the definition list into a Condition. The scope contains the
@@ -508,7 +507,7 @@ class Parser(object):
                     parsing_error_code)
             conditions = definition[1:]
             if len(conditions) != 2:
-                raise ParsingException("Badly formed equality condition",
+                raise ParsingException("Badly formed equality condition: {}".format(definition),
                     parsing_error_code)
             var1, var2 = conditions
             if var1[0] != '?':
