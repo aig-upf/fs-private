@@ -512,13 +512,12 @@ class AndCondition(Condition):
         for condition in self.conditions:
             condition = condition.link_groundings(static_preds, neg_static_preds)
             if isinstance(condition, AndCondition):
-                for cond in condition.conditions:
-                    self.conditions.append(cond)
+                self.conditions += condition.conditions
             elif condition is not None:
                 sub_indices = [self.var_indices[v][0] for v in condition.relevant_vars]
                 ground_conditions = {}
                 for grounding in self.groundings:
-                    sub_grounding = tuple([grounding[i] for i in sub_indices])
+                    sub_grounding = tuple(grounding[i] for i in sub_indices)
                     if sub_grounding in condition.groundings:
                         ground_conditions[grounding] = sub_grounding
                 if ground_conditions:
