@@ -48,18 +48,23 @@ def convert_adl_action(action):
     precs = _process_adl_conjunction(action.precondition)
     cost = 1
     effs = []
-    for eff_formula in action.effects:
-        if isinstance(eff_formula, sproblem.PredicateCondition):
-            # params = [TypedObject(v, action.param_types[v].name) for v in eff_formula.variables]
-            effs.append(pddl.Effect([], pddl.Truth(), _process_adl_predicate_condition(eff_formula)))
-        elif isinstance(eff_formula, sproblem.ConditionalEffect):
-            eff_prec = _process_adl_conjunction(eff_formula.condition)
-            for ceff_formula in eff_formula.effects:
+    for effect in action.effects:
+        if isinstance(effect, sproblem.PredicateCondition):
+            # params = [TypedObject(v, action.param_types[v].name) for v in effect.variables]
+            effs.append(pddl.Effect([], pddl.Truth(), _process_adl_predicate_condition(effect)))
+        elif isinstance(effect, sproblem.ConditionalEffect):
+            eff_prec = _process_adl_conjunction(effect.condition)
+            for ceff_formula in effect.effects:
                 # params = [TypedObject(v, action.param_types[v].name) for v in ceff_formula.variables]
                 effs.append(pddl.Effect([], eff_prec, _process_adl_predicate_condition(ceff_formula)))
+        elif isinstance(effect, sproblem.IncreaseCondition):
+            # ATM this will get soon pruned, as we are ignoring action costs, so this is perhaps not 100% correct.
+            head = pddl.f_expression.PrimitiveNumericExpression(effect.var.name, effect.var.arguments)
+            exp = effect.value
+            cost = pddl.f_expression.Increase(head, exp)
         else:
             raise UnimplementedFeature('TODO - Effect type not yet supported')
-    return pddl.Action(action.name, action_params, 0, precs, effs, 1)
+    return pddl.Action(action.name, action_params, 0, precs, effs, cost)
 
 
 def convert_functions_to_fd(symbols):
