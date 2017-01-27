@@ -33,9 +33,8 @@ def parse_arguments(args):
 
     parser.add_argument("--driver", help='The solver driver file', default=None)
     parser.add_argument("--defaults", help='The solver default options file', default=None)
-    parser.add_argument("--options", help='The solver extra options file', default="")
-    parser.add_argument("--gringo", action='store_true',
-                        help='Use smart grounder (only strict ADL, without numerics etc.)')
+    parser.add_argument("--options", help='The solver extra options', default="")
+    parser.add_argument("--gringo", action='store_true', help='Use ASP grounder (strict ADL, without numerics etc.)')
 
     args = parser.parse_args(args)
     args.instance_dir = os.path.dirname(args.instance)
