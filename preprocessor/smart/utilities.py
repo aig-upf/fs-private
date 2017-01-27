@@ -44,7 +44,7 @@ NOT_EQUALS_CONDITION = "!="
 CONDITIONAL_EFFECT   = "when"
 
 valid_requirements = [':typing', ':action-costs', ':adl', ":strips",
-        ":negative-preconditions", ":equality", ":derived-predicates"]
+        ":negative-preconditions", ":equality", ":derived-predicates", ":conditional-effects"]
 
 #Precisely Split Encoding
 PRE_COND = 0
