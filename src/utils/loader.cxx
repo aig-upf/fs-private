@@ -144,7 +144,6 @@ Loader::loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<
 	while (std::getline(is, line)) {
 		if (line.length() > 0 && line[0] == '#') { // We switch to the next action schema
 			
-			
 			++schema_id;
 			if (schema_id >= action_data.size()) {
 				throw std::runtime_error("The number of action schemas in the groundings file does not match that in the problem description");
