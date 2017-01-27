@@ -237,9 +237,7 @@ class Parser(object):
                     if type_name not in self.problem.types:
                          raise ParsingException("Error: type " + type_name +\
                                 " for constants.", parsing_error_code)
-                    for constant_name in current_constants:
-                        self.problem.objects[constant_name] =\
-                            Object(constant_name, self.problem.types[type_name], True)
+                    _add_objects(current_constants, self.problem, self.problem.types[type_name], True)
                     current_constants = []
                 except StopIteration:
                     raise ParsingException("Error: badly formed constants.",
@@ -247,9 +245,7 @@ class Parser(object):
             else:
                 current_constants.append(token)
 
-        for constant_name in current_constants:
-            self.problem.objects[constant_name] = \
-                Object(constant_name, self.problem.default_type, True)
+        _add_objects(current_constants, self.problem, self.problem.default_type, True)
 
 
     def parse_predicates(self, definition):
@@ -738,11 +734,6 @@ class Parser(object):
 
             (Parser, [str]) -> None
         """
-        def add_objects(obj_list, problem, _type):
-            for name in obj_list:
-                problem.objects[name] = Object(name, _type, False)
-                problem.sorted_object_names.append(name)
-
         current_objects = []
         tokens = iter(objects)
         for token in tokens:
@@ -752,7 +743,7 @@ class Parser(object):
                     if token not in self.problem.types:
                         raise ParsingException("Error: unknown object type " + token,
                             parsing_error_code)
-                    add_objects(current_objects, self.problem, self.problem.types[token])
+                    _add_objects(current_objects, self.problem, self.problem.types[token], False)
                     current_objects = []
                 except StopIteration:
                     raise ParsingException("Error: badly formed object description.",
@@ -760,7 +751,7 @@ class Parser(object):
             else:
                 current_objects.append(token)
 
-        add_objects(current_objects, self.problem, self.problem.default_type)
+        _add_objects(current_objects, self.problem, self.problem.default_type, False)
 
         for obj in list(self.problem.objects.values()):
             obj.otype.add_object(obj)
@@ -835,3 +826,9 @@ class Parser(object):
         except IndexError:
             raise ParsingException("Error: badly formed metric.\n" +\
                     "We only support minimi(s/z)ing total-cost", parsing_error_code)
+
+
+def _add_objects(obj_list, problem, _type, is_constant):
+    for name in obj_list:
+        problem.objects[name] = Object(name, _type, is_constant)
+        problem.sorted_object_names.append(name)

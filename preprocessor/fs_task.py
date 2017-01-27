@@ -56,8 +56,7 @@ def create_fs_task(fd_task, domain_name, instance_name):
 
 
 def create_fs_task_from_adl(adl_task, domain_name, instance_name):
-    # MRJ: steps from fs_task.create_fs_task are copied here to act
-    # as both a reminder and a TODO list
+    # MRJ: steps from fs_task.create_fs_task are copied here to act as both a reminder and a TODO list
 
     # types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
     sorted_objs = [adl_task.objects[name] for name in adl_task.sorted_object_names]
