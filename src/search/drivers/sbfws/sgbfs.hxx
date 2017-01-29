@@ -29,6 +29,7 @@ struct unachieved_subgoals_comparer {
 	}
 };
 
+enum class Novelty { Unknown, One, GTOne, Two, GTTwo};
 
 //! The node type we'll use for the Simulated BFWS search, parametrized by type of state and action action
 template <typename StateT, typename ActionT>
@@ -37,7 +38,6 @@ public:
 	using ptr_t = std::shared_ptr<LazyBFWSNode<StateT, ActionT>>;
 	using action_t = typename ActionT::IdType;
 	
-
 	//! The state corresponding to the search node
 	StateT state;
 
@@ -66,10 +66,10 @@ public:
 	unsigned long _gen_order;
 
 	//! The novelty w_{#g} of the state
-	unsigned w_g;
+	Novelty w_g;
 	
 	//! The novelty w_{#g,#r} of the state
-	unsigned w_gr;
+	Novelty w_gr;
 	
 	
 	LazyBFWSNode() = delete;
@@ -91,15 +91,19 @@ public:
 		_processed(false),
 		_simulated(false),
 		_gen_order(gen_order),
-		w_g(std::numeric_limits<unsigned>::max()),
-		w_gr(std::numeric_limits<unsigned>::max())
+		w_g(Novelty::Unknown),
+		w_gr(Novelty::Unknown)
 	{}
 	
-	inline bool is_wg_set() const { return w_g < std::numeric_limits<unsigned>::max(); }
-	inline bool is_wgr_set() const { return w_gr < std::numeric_limits<unsigned>::max(); }
 	
-	inline std::string wg_str() const { return is_wg_set() ? std::to_string(w_g) : "?"; }
-	inline std::string wgr_str() const { return is_wgr_set() ? std::to_string(w_gr) : "?"; }
+	inline std::string print_novelty(const Novelty& novelty) const { 
+		if (novelty == Novelty::Unknown) return "=?";
+		if (novelty == Novelty::One) return "=1";
+		if (novelty == Novelty::GTOne) return ">1";
+		if (novelty == Novelty::Two) return "=2";
+		if (novelty == Novelty::GTTwo) return ">2";
+		throw std::runtime_error("Unknown novelty value");
+	}
 
 	bool has_parent() const { return parent != nullptr; }
 
@@ -112,7 +116,7 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const LazyBFWSNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		return os << "{@ = " << this << ", s = " << state << ", g = " << g << ", w_g=" << wg_str() <<  ", w_gr=" << wgr_str() << ", #g=" << unachieved_subgoals << ", #r=" << _relevant_atoms.num_reached() << ", parent = " << parent << "}";
+		return os << "{@ = " << this << ", s = " << state << ", g = " << g << ", w_g" << print_novelty(w_g) <<  ", w_gr" << print_novelty(w_gr) << ", #g=" << unachieved_subgoals << ", #r=" << _relevant_atoms.num_reached() << ", parent = " << parent << "}";
 	}
 
 
@@ -185,20 +189,29 @@ public:
 
 	~LazyBFWSHeuristic() = default;
 
-// 		unsigned evaluate_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map,  unsigned check_only_novelty, bool has_parent, unsigned type, unsigned parent_type)
 	
 	template <typename NodeT>
 	unsigned evaluate_wg1(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
 		unsigned ptype = node.has_parent() ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
-		return evaluate_novelty(node, _wg_novelty_evaluators, 1, node.has_parent(), type, ptype);
+		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, node.has_parent(), type, ptype);
+		assert(node.w_g == Novelty::Unknown);
+		node.w_g = (nov == 1) ? Novelty::One : Novelty::GTOne;
+		return nov;
+
 	}
 	
 	template <typename NodeT>
 	unsigned evaluate_wg2(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
 		unsigned ptype = node.has_parent() ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
-		return evaluate_novelty(node, _wg_novelty_evaluators, 2, node.has_parent(), type, ptype);
+		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 2, node.has_parent(), type, ptype);
+		
+		assert(node.w_g != Novelty::Unknown);
+		if (node.w_g != Novelty::One) {
+			node.w_g = (nov == 2) ? Novelty::Two : Novelty::GTTwo;
+		}
+		return nov;
 	}
 	
 	template <typename NodeT>
@@ -210,7 +223,11 @@ public:
 	unsigned evaluate_wgr1(NodeT& node) {
 		unsigned type = compute_node_complex_type(node);
 		unsigned ptype = node.has_parent() ? compute_node_complex_type(*(node.parent)) : 0;
-		return evaluate_novelty(node, _wgr_novelty_evaluators, 1, node.has_parent(), type, ptype);
+		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 1, node.has_parent(), type, ptype);
+		
+		assert(node.w_gr == Novelty::Unknown);
+		node.w_gr = (nov == 1) ? Novelty::One : Novelty::GTOne;
+		return nov;
 	}
 
 	template <typename NodeT>
@@ -218,7 +235,13 @@ public:
 		assert(node._relevant_atoms.valid());
 		unsigned type = compute_node_complex_type(node);
 		unsigned ptype = node.has_parent() ? compute_node_complex_type(*(node.parent)) : 0;
-		return evaluate_novelty(node, _wgr_novelty_evaluators, 2, node.has_parent(), type, ptype);
+		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 2, node.has_parent(), type, ptype);
+		
+		assert(node.w_gr != Novelty::Unknown);
+		if (node.w_gr != Novelty::One) {
+			node.w_gr = (nov == 2) ? Novelty::Two : Novelty::GTTwo;
+		}		
+		return nov;
 	}
 	
 
@@ -515,7 +538,7 @@ public:
 				search_node = std::make_shared<NodeT>(sim_node->state, _generated++); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
 				search_node->g = sim_node->g;
 				search_node->action = sim_node->action;
-				search_node->w_g = 1; // we enforce this by definition
+				search_node->w_g = Novelty::One; // we enforce this by definition
 				search_node->unachieved_subgoals = _heuristic.compute_unachieved(search_node->state);
 			}
 
@@ -685,8 +708,8 @@ protected:
 		}
 
 		// Now insert the node into the appropriate queues
-		node->w_g = _heuristic.evaluate_wg1(*node);
-		if (node->w_g == 1) {
+		_heuristic.evaluate_wg1(*node);
+		if (node->w_g == Novelty::One) {
 			_q1.insert(node);
 		}
 
