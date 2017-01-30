@@ -72,7 +72,7 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     task.process_adl_symbols(adl_task.actions.values(), adl_predicates, adl_functions)
 
     state_var_list = create_all_possible_state_variables_from_groundings(adl_predicates, adl_functions,
-                                                                         task.static_symbols)
+                                                                         task.objects, task.static_symbols)
     task.process_state_variables(state_var_list)
 
     task.process_adl_initial_state(adl_task)
