@@ -193,7 +193,8 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wg1(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
-		bool has_parent = node.has_parent() && (node.parent->w_g != Novelty::Unknown);
+// 		bool has_parent = node.has_parent() && (node.parent->w_g != Novelty::Unknown);
+		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
 		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, has_parent, type, ptype);
 		assert(node.w_g == Novelty::Unknown);
@@ -205,7 +206,8 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wg2(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
-		bool has_parent = node.has_parent() && (node.parent->w_g == Novelty::Two || node.parent->w_g == Novelty::GTTwo); // i.e. the state has been evaluated on the novelty-two tables
+// 		bool has_parent = node.has_parent() && (node.parent->w_g == Novelty::Two || node.parent->w_g == Novelty::GTTwo); // i.e. the state has been evaluated on the novelty-two tables
+		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
 		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 2, node.has_parent(), type, ptype);
 		
@@ -224,7 +226,8 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wgr1(NodeT& node) {
 		unsigned type = compute_node_complex_type(node);
-		bool has_parent = node.has_parent() && (node.parent->w_gr != Novelty::Unknown);
+// 		bool has_parent = node.has_parent() && (node.parent->w_gr != Novelty::Unknown);
+		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? compute_node_complex_type(*(node.parent)) : 0;
 		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 1, node.has_parent(), type, ptype);
 		
@@ -237,7 +240,8 @@ public:
 	unsigned evaluate_wgr2(NodeT& node) {
 		assert(node._relevant_atoms.valid());
 		unsigned type = compute_node_complex_type(node);
-		bool has_parent = node.has_parent() && (node.parent->w_gr == Novelty::Two || node.parent->w_gr == Novelty::GTTwo); // i.e. the state has been evaluated on the novelty-two tables
+// 		bool has_parent = node.has_parent() && (node.parent->w_gr == Novelty::Two || node.parent->w_gr == Novelty::GTTwo); // i.e. the state has been evaluated on the novelty-two tables
+		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? compute_node_complex_type(*(node.parent)) : 0;
 		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 2, node.has_parent(), type, ptype);
 		
