@@ -320,6 +320,10 @@ class PredicateCondition(Condition):
                     t_grounding[vi] = grounding[vid]
             t_grounding = tuple(t_grounding)
             pg_pair = (self.pred, t_grounding)
+            if hasattr(self,"preserve_statics") :
+                new_groundings.append(grounding)
+                self.ground_conditions[grounding] = tuple(t_grounding)
+                continue
             if (not self.sign and pg_pair not in neg_static_preds) or\
                (self.sign and pg_pair not in static_preds):
                 new_groundings.append(grounding)
@@ -508,8 +512,11 @@ class AndCondition(Condition):
                 set([(Predicate, (str, ...))])) -> Condition
         """
         new_conditions = []
+        #print("Processing And condition...")
         for condition in self.conditions:
+            #print(condition)
             condition = condition.link_groundings(static_preds, neg_static_preds)
+            #print(condition)
             if isinstance(condition, AndCondition):
                 self.conditions += condition.conditions
             elif condition is not None:
@@ -522,12 +529,12 @@ class AndCondition(Condition):
                 if ground_conditions:
                     self.ground_conditions.append(ground_conditions)
                     new_conditions.append(condition)
-        self.conditions = new_conditions
 
+        self.conditions = new_conditions
         new_groundings = []
         for grounding in self.groundings:
             for ground_conditions in self.ground_conditions:
-                if grounding in ground_conditions:
+                if grounding in ground_conditions or len(grounding)==0:
                     new_groundings.append(grounding)
                     break
         self.groundings = new_groundings
@@ -542,7 +549,12 @@ class AndCondition(Condition):
             (AndCondition, [(Predicate, bool, (str, ...))], (str, ...)) -> None
         """
         for cid, condition in enumerate(self.conditions):
-            condition.make_flat_effects(ground_effects, self.ground_conditions[cid][grounding])
+            try :
+                condition.make_flat_effects(ground_effects, self.ground_conditions[cid][grounding])
+            except KeyError as e :
+                # MRJ: Effect was found to be statically true
+                #print("Grounding {} of effect {} discarded due to static predicates being compiled away".format(grounding,condition,cid))
+                pass
 
     def make_flat_preconditions(self, ground_precs, grounding):
         """ Make the flat list of ground preconditions
@@ -862,7 +874,11 @@ class ForAllCondition(Condition):
             (ForAllCondition, set([(Predicate, (str, ...))],
                 set([(Predicate, (str, ...))])) -> Condition
         """
+        #print("Processing ForAll condition...")
+        #print("Grounding: {}".format(self.condition))
         self.condition = self.condition.link_groundings(static_preds, neg_static_preds)
+        #print("After Grounding: {}".format(self.condition))
+
         if self.condition is None:
             return None
 
@@ -881,6 +897,12 @@ class ForAllCondition(Condition):
             self.ground_conditions[grounding][var_val] = cgrounding
 
         new_groundings = []
+        #print("ForAll condition: Processing {} groundings".format(len(self.groundings)))
+        #print("ForAll condition: Ground conditions: {}".format(len(self.ground_conditions)))
+        #print(self.ground_conditions)
+        #if (None,None) in self.ground_conditions : # all groundings take a pass
+        #    return self
+
         for grounding in self.groundings:
             if grounding in self.ground_conditions:
                 new_groundings.append(grounding)
@@ -1372,13 +1394,18 @@ class ConditionalEffect(Condition):
             (ConditionalEffect, set([(Predicate, (str, ...))],
                 set([(Predicate, (str, ...))])) -> Condition
         """
+        #print("Processing Conditional Effect...")
+        #print("Grounding: {}".format(self.effect))
         self.effect = self.effect.link_groundings(static_preds, neg_static_preds)
+        #print("After grounding: {}".format(self.effect))
         if self.effect is None:
             return None
 
+        #print("Grounding: {}".format(self.condition))
+        # MRJ: static predicates on the condition of a conditional effect are always
+        # preserved
+        self.condition.preserve_statics = True
         self.condition = self.condition.link_groundings(static_preds, neg_static_preds)
-        if self.condition is None:
-            return self.effect
 
         pre_sub_indices = [self.var_indices[v][0] for v in self.condition.relevant_vars]
         pre_groundings = set(self.condition.groundings)
@@ -1409,7 +1436,15 @@ class ConditionalEffect(Condition):
         self.effect.make_flat_effects(t_effects, self.ground_effects[grounding])
         self.flat_ground_effects[grounding] = t_effects
         t_precs = []
-        self.condition.make_flat_preconditions(t_precs, self.ground_preconditions[grounding])
+        try :
+            self.condition.make_flat_preconditions(t_precs, self.ground_preconditions[grounding])
+        except KeyError as e :
+            #print("Could not find grounding: {}".format(grounding))
+            #print("Ground Preconditions: {}".format(self.ground_preconditions))
+            #MRJ: Condition of conditional effect is statically false
+            # this can be quite verbose so I have commented it out
+            #print("Conditional effect (when {} {}) never triggers with grounding {}".format(self.condition,self.effect,grounding))
+            return
         self.flat_ground_preconditions[grounding] = t_precs
 
     def get_encode_conds(self, encode_conds, do_encode):
@@ -1552,7 +1587,9 @@ class Action(object):
 
             (Action, set([(Predicate, (str, ...))]), set([(Predicate, (str, ...))])) -> None
         """
+        #print("Hello {}".format(self.effect))
         self.effect = self.effect.link_groundings(static_preds, neg_static_preds)
+        #print("Goodbye {}".format(self.effect))
         if self.effect is None:
             self.groundings = []
             return
