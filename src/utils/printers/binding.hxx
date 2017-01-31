@@ -14,7 +14,7 @@ class binding {
 		const Signature& _signature;
 	public:
 		binding(const Binding& binding, const Signature& signature) : _binding(binding), _signature(signature) {
-			assert(binding.size() == signature.size());
+			//assert(binding.size() == signature.size());
 		}
 		
 		friend std::ostream& operator<<(std::ostream &os, const binding& o) { return o.print(os); }

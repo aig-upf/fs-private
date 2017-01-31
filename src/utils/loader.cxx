@@ -135,6 +135,8 @@ Loader::loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<
 		return grounded;
 	}
 	
+	LPT_INFO("cout", "Loading the list of reachable ground actions from \"" << filename << "\"");
+	
 	unsigned current_schema_groundings = 0;
 	unsigned id = 0;
 	unsigned schema_id = -1;

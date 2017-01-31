@@ -218,9 +218,11 @@ class FSTaskIndex(object):
                 if prop in adl_task.initial_state:
                     initial_fluents.append((predicate.name, grounding, None))
         adl_initial_fluent_atoms = [elem for elem in initial_fluents if self.is_fluent(elem[0])]
-        adl_initial_static_atoms = [elem for elem in initial_fluents if not self.is_fluent(elem[0])]
+        assert len(adl_initial_fluent_atoms) == len(initial_fluents)
+
+        static_atoms = [(pred.name, args, None) for pred, args in adl_task.static_preds]
         self.initial_fluent_atoms = _process_fluent_atoms(adl_initial_fluent_atoms)
-        self.initial_static_data = self._process_static_atoms(adl_initial_static_atoms)
+        self.initial_static_data = self._process_static_atoms(static_atoms)
 
     def _process_static_atoms(self, fd_initial_static_atoms):
         initial_static_data = {}
