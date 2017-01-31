@@ -6,6 +6,7 @@
 """
 
 import os
+import itertools
 
 #Error codes
 parsing_error_code       = -1
@@ -20,8 +21,10 @@ grounder_path = os.path.join(os.path.dirname(__file__), "gringo", "gringo")
 tmp_path = os.path.join(os.path.dirname(__file__), "tmp_files")
 
 grounder_run_success_code = 0
-var_alphabet = "ABCDEFGHIJKLMNOPQRSTUFWXYZ"
-lower_var_alphabet = var_alphabet.lower()
+_var_alphabet = "ABCDEFGHIJKLMNOPQRSTUFWXYZ"
+# i.e. var_alphabet = ["A", "B", ..., "Z", "AA", "AB", ..., "ZZ"]
+var_alphabet = list(_var_alphabet) + [''.join(tup) for tup in itertools.product(_var_alphabet, _var_alphabet)]
+lower_var_alphabet = [x.lower() for x in var_alphabet]
 
 #Problem
 default_type_name = "object"
