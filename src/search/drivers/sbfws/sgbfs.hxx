@@ -29,6 +29,20 @@ struct unachieved_subgoals_comparer {
 	}
 };
 
+// ! Comparer taking into account #g and novelty
+template <typename NodePT>
+struct novelty_comparer {
+	bool operator()(const NodePT& n1, const NodePT& n2) const {
+		if (n1->w_g_num > n2->w_g_num) return true;
+		if (n1->w_g_num < n2->w_g_num) return false;
+		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+		if (n1->g > n2->g) return true;
+		if (n1->g < n2->g) return false;
+		return n1->_gen_order > n2->_gen_order;
+	}
+};
+
 enum class Novelty { Unknown, One, GTOne, Two, GTTwo};
 
 //! The node type we'll use for the Simulated BFWS search, parametrized by type of state and action action
@@ -801,8 +815,14 @@ protected:
 	}
 
 protected:
+	// An open list sorted by #g
 	using UnachievedSubgoalsComparerT = unachieved_subgoals_comparer<NodePT>;
-	using WG1OpenList = lapkt::UpdatableOpenList<NodeT, NodePT, UnachievedSubgoalsComparerT>;
+	using UnachievedOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, UnachievedSubgoalsComparerT>;
+	
+	//! An open list sorted by the numerical value of width, then #g
+	using NoveltyComparerT = novelty_comparer<NodePT>;
+	using StandardOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, NoveltyComparerT>;
+	
 	using SearchableQueue = lapkt::SearchableQueue<NodeT>;
 
 
@@ -813,18 +833,18 @@ protected:
 	NodePT _solution;
 
 	//! A list with all nodes that have novelty w_{#g}=1
-	WG1OpenList _q1;
+	UnachievedOpenList _q1;
 
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 1 novelty tables
-	WG1OpenList _qwgr1;
+	UnachievedOpenList _qwgr1;
 
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 2 novelty tables
-	WG1OpenList _qwgr2;
+	UnachievedOpenList _qwgr2;
 
 	//! A queue with those nodes that have been run through all relevant novelty tables
 	//! and for which it has been proven that they have w_{#g, #r} > 2 and have not
 	//! yet been processed.
-	WG1OpenList _qrest;
+	UnachievedOpenList _qrest;
 
 	//! The closed list
 	ClosedListT _closed;
