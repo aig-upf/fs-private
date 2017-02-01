@@ -586,10 +586,6 @@ public:
 		return relevant;
 	}
 
-// 	void preprocess(const NodePT& node) {
-// 		_heuristic.update_relevant_atoms(*node);
-// 	}
-	
 
 	bool search(const StateT& s, PlanT& plan) {
 		NodePT root = std::make_shared<NodeT>(s, _generated++);
