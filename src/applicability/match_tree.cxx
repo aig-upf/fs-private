@@ -174,7 +174,7 @@ namespace fs0 {
     MatchTreeActionManager::MatchTreeActionManager( const std::vector<const GroundAction*>& actions,
                                                     const fs::Formula* state_constraints,
                                                     const AtomIndex& tuple_idx,
-                                                    const BasicApplicabilityAnalyzer* analyzer)
+                                                    const BasicApplicabilityAnalyzer& analyzer)
         : SmartActionManager( actions, state_constraints, tuple_idx, analyzer),
         _rev_app_index(),
         _tree(nullptr)

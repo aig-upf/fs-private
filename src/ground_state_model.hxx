@@ -18,7 +18,7 @@ public:
 	using ActionType = GroundAction;
 	using ActionId = ActionType::IdType;
 
-	GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer = nullptr);
+	GroundStateModel(const Problem& problem);
 	~GroundStateModel() = default;
 
 	GroundStateModel(const GroundStateModel&) = default;
@@ -57,7 +57,7 @@ protected:
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
 
-	static SmartActionManager* build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer);
+	static SmartActionManager* build_action_manager(const Problem& problem);
 };
 
 } // namespaces

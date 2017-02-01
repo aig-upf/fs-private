@@ -121,7 +121,7 @@ namespace fs0 {
         friend class LeafNode;
         friend class EmptyNode;
 
-    	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer);
+    	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer);
     	virtual ~MatchTreeActionManager() = default;
     	MatchTreeActionManager(const MatchTreeActionManager&) = default;
 

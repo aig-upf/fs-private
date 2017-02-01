@@ -2,6 +2,7 @@
 #include "simple_state_model.hxx"
 #include <problem.hxx>
 #include <state.hxx>
+#include <applicability/action_managers.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <utils/config.hxx>
 #include <applicability/match_tree.hxx>
@@ -26,9 +27,6 @@ obtain_goal_atoms(const fs::Formula* goal) {
 }
 */
 
-SimpleStateModel::~SimpleStateModel() {
-	delete _manager;
-}
 
 //! A helper to derive the distinct goal atoms
 std::vector<Atom>
@@ -60,13 +58,13 @@ obtain_goal_atoms(const fs::Formula* goal) {
 
 
 SimpleStateModel
-SimpleStateModel::build(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) {
-	return SimpleStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()), analyzer);
+SimpleStateModel::build(const Problem& problem) {
+	return SimpleStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
 }
 
-SimpleStateModel::SimpleStateModel(const Problem& problem, std::vector<Atom> subgoals, BasicApplicabilityAnalyzer* analyzer) :
+SimpleStateModel::SimpleStateModel(const Problem& problem, std::vector<Atom> subgoals) :
 	_task(problem),
-	_manager(build_action_manager(problem, analyzer)),
+	_manager(build_action_manager(problem)),
 	_subgoals(subgoals)
 {}
 
@@ -116,25 +114,35 @@ SimpleStateModel::applicable_actions(const StateT& state) const {
 	return _manager->applicable(state);
 }
 
-SmartActionManager*
-SimpleStateModel::build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) {
+ActionManagerI*
+SimpleStateModel::build_action_manager(const Problem& problem) {
 	const auto& actions = problem.getGroundActions();
 	const auto& constraints = problem.getStateConstraints();
 	const auto& tuple_idx =  problem.get_tuple_index();
-	SmartActionManager* manager = nullptr;
-	if (analyzer == nullptr) {
-		analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
-		analyzer->build();
+	Config::SuccessorGenerationStrategy strategy = Config::instance().getSuccessorGeneratorType();
+	
+
+	if (strategy == Config::SuccessorGenerationStrategy::naive) {
+		LPT_INFO( "cout", "Successor Generator Strategy: \"Naive\"");
+		return new NaiveActionManager(actions, constraints);
 	}
-	if ( Config::instance().getSuccessorGeneratorType() == Config::SuccessorGenerationStrategy::functional_aware) {
-		LPT_INFO( "main", "Successor Generator Strategy: \"Functional Aware\"");
-		manager = new SmartActionManager(actions, constraints, tuple_idx, analyzer);
-	} else {
-		LPT_INFO( "main", "Successor Generator Strategy: \"Match Tree\"");
-		manager = new MatchTreeActionManager( actions, constraints, tuple_idx, analyzer );
+	
+	// Else, we'll need an applicability analyzer
+	// TODO Do we really need it for the match-tree manager?? Or perhaps MatchTreeActionManager can directly subclass NaiveActionManager?
+	BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
+	analyzer.build();
+	
+	if (strategy == Config::SuccessorGenerationStrategy::functional_aware) {
+		LPT_INFO( "cout", "Successor Generator Strategy: \"Functional Aware\"");
+		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
+	
+		
+	} else if (strategy == Config::SuccessorGenerationStrategy::match_tree) {
+		LPT_INFO( "cout", "Successor Generator Strategy: \"Match Tree\"");
+		return new MatchTreeActionManager( actions, constraints, tuple_idx, analyzer );
 	}
-	delete analyzer;
-	return manager;
+	
+	throw std::runtime_error("Unknown successor generation strategy");
 }
 
 

@@ -9,9 +9,9 @@
 
 namespace fs0 {
 
-GroundStateModel::GroundStateModel(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) :
+GroundStateModel::GroundStateModel(const Problem& problem) :
 	_task(problem),
-	_manager(build_action_manager(problem, analyzer))
+	_manager(build_action_manager(problem))
 {}
 
 State GroundStateModel::init() const {
@@ -48,14 +48,14 @@ GroundApplicableSet GroundStateModel::applicable_actions(const State& state) con
 }
 
 SmartActionManager*
-GroundStateModel::build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) {
+GroundStateModel::build_action_manager(const Problem& problem) {
 	const auto& actions = problem.getGroundActions();
 	const auto& constraints = problem.getStateConstraints();
 	const auto& tuple_idx =  problem.get_tuple_index();
-	if (analyzer == nullptr) {
-		analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
-		analyzer->build();
-	}
+	
+
+	BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
+	analyzer.build();
 	if ( Config::instance().getSuccessorGeneratorType() == Config::SuccessorGenerationStrategy::functional_aware) {
 		LPT_INFO( "main", "Successor Generator Strategy: \"Functional Aware\"");
 		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);

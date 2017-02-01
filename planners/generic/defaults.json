@@ -25,7 +25,7 @@
 		"use_actions": "false"
 	},
 
-	"successor_generation" : "functional_aware",
+	"successor_generation" : "naive",
 
 	"use_state_constraints_in_heuristic_goal_evaluation": "true"
 }

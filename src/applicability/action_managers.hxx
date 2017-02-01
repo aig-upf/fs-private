@@ -2,6 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
+#include "base.hxx"
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
@@ -68,29 +69,56 @@ protected:
 //! A small helper
 ObjectIdx _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs);
 
-class GroundApplicableSet;
-
-class SmartActionManager {
+//!
+class NaiveActionManager : public ActionManagerI  {
 public:
-	using ApplicableSet = GroundApplicableSet;
+	using Base = ActionManagerI;
+	using ApplicableSet = typename Base::ApplicableSet;
 
-	//using ApplicableSet = GroundApplicableSet<SmartActionManager>;
+	NaiveActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints);
+	~NaiveActionManager() = default;
 
-	SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer);
-	virtual ~SmartActionManager() = default;
-	SmartActionManager(const SmartActionManager&) = default;
+	//! Return the set of all actions applicable in a given state
+	ApplicableSet applicable(const State& state) const override;
 
-	ApplicableSet applicable(const State& state) const;
-
-	//! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
-	bool applicable(const State& state, const GroundAction& action) const;
+	//! Return whether the given action is applicable in the given state
+	bool applicable(const State& state, const GroundAction& action) const override;
+	
+	const std::vector<const GroundAction*>& getAllActions() const override { return _actions; }
 
 protected:
 	//! The set of all ground actions managed by this object
-	const std::vector<const GroundAction*>& _actions;
-
+	const std::vector<const GroundAction*>& _actions;	
+	
 	//! The state constraints relevant to this object
 	const std::vector<const fs::AtomicFormula*> _state_constraints;
+	
+	//! A list <0,1, ..., num_actions>
+	const std::vector<ActionIdx> _all_actions_whitelist;
+	
+	//! Optimization - A cache to hold the effects of the last-applied action and avoid memory allocations.
+	mutable std::vector<Atom> _effects_cache;
+	
+	
+protected:
+	//! Check whether any state constraint is violated in the given state, knowing the last-applied action
+	virtual bool check_constraints(unsigned applied_action_id, const State& state) const;
+};
+
+//! 
+class SmartActionManager : public NaiveActionManager {
+public:
+	using Base = NaiveActionManager;
+	using ApplicableSet = typename Base::ApplicableSet;
+
+	SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer);
+	~SmartActionManager() = default;
+	SmartActionManager(const SmartActionManager&) = default;
+
+	using Base::applicable;
+	ApplicableSet applicable(const State& state) const override;
+
+protected:
 
 	//! The tuple index of the problem
 	const AtomIndex& _tuple_idx;
@@ -108,19 +136,12 @@ protected:
 	//! which are _potentially_ applicable when that atom holds in a state
 	const std::vector<std::vector<ActionIdx>>& _app_index;
 
-	static std::vector<const fs::AtomicFormula*> process_state_constraints(const fs::Formula* state_constraints);
-
 	void index_variables(const std::vector<const GroundAction*>& actions, const std::vector<const fs::AtomicFormula*>& constraints);
 
-	virtual bool check_constraints(unsigned action_id, const State& state) const;
+	bool check_constraints(unsigned action_id, const State& state) const override;
 
 	//! Computes the list of indexes of those actions that are potentially applicable in the given state
 	virtual std::vector<ActionIdx> compute_whitelist(const State& state) const;
-
-	friend ApplicableSet;
-
-	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
-	mutable std::vector<Atom> _effects_cache;
 
 	unsigned _total_applicable_actions;
 };
@@ -131,13 +152,15 @@ protected:
 class GroundApplicableSet {
 protected:
 	friend class SmartActionManager;
-	GroundApplicableSet(const SmartActionManager& manager, const State& state, const std::vector<ActionIdx>& action_whitelist):
+	friend class NaiveActionManager;
+	
+	GroundApplicableSet(const ActionManagerI& manager, const State& state, const std::vector<ActionIdx>& action_whitelist):
 		_manager(manager), _state(state), _whitelist(action_whitelist)
 	{}
 
 	class Iterator {
 
-		const SmartActionManager& _manager;
+		const ActionManagerI& _manager;
 
 		const State& _state;
 
@@ -146,7 +169,7 @@ protected:
 		unsigned _index;
 
 		void advance() {
-			const std::vector<const GroundAction*>& actions = _manager._actions;
+			const std::vector<const GroundAction*>& actions = _manager.getAllActions();
 
 			// std::cout << "Checking applicability "<< std::endl;
 		// 	for (ActionIdx action_idx:_whitelist) {
@@ -162,7 +185,7 @@ protected:
 		}
 
 	public:
-		Iterator(const State& state, const SmartActionManager& manager, const std::vector<ActionIdx>& action_whitelist, unsigned index) :
+		Iterator(const State& state, const ActionManagerI& manager, const std::vector<ActionIdx>& action_whitelist, unsigned index) :
 			_manager(manager),
 			_state(state),
 			_whitelist(action_whitelist),
@@ -191,7 +214,7 @@ public:
 	Iterator end() const { return Iterator(_state, _manager, _whitelist, _whitelist.size()); }
 
 protected:
-	const SmartActionManager& _manager;
+	const ActionManagerI& _manager;
 
 	const State& _state;
 
