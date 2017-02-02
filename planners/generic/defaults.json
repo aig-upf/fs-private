@@ -15,7 +15,6 @@
 	"helpful_actions": "true",
 	"early_termination": "true",
 	"element_constraint": "false",
-	"validate": "true",
 
 	"width": {
 		"max": 2,
