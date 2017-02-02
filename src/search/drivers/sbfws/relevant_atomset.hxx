@@ -36,7 +36,8 @@ public:
 	void mark(const State& state, const State* parent, STATUS status, bool mark_negative_propositions, bool only_if_relevant) {
 		assert(_atomidx);
 		const ProblemInfo& info = ProblemInfo::getInstance();
-		for (VariableIdx var = 0; var < state.numAtoms(); ++var) {
+		unsigned n = state.numAtoms();
+		for (VariableIdx var = 0; var < n; ++var) {
 			ObjectIdx val = state.getValue(var);
 			if (!mark_negative_propositions && info.isPredicativeVariable(var) && val==0) continue; // We don't want to mark negative propositions
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
