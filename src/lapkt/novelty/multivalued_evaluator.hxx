@@ -96,16 +96,10 @@ public:
 	unsigned evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k);
 	
 	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
-	static std::vector<unsigned> derive_novel(const ValuationT& current, const ValuationT* parent) {
-		if (!parent) { // Base case
-			std::vector<unsigned> all(current.size());
-			std::iota(all.begin(), all.end(), 0);
-			return all;
-		}
-		
+	static std::vector<unsigned> derive_novel(const ValuationT& current, const ValuationT& parent) {
 		std::vector<unsigned> novel;
 		for (unsigned i = 0; i < current.size(); ++i) {
-			if (current[i] != (*parent)[i]) {
+			if (current[i] != parent[i]) {
 				novel.push_back(i);
 			}
 		}
