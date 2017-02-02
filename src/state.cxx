@@ -63,8 +63,8 @@ std::ostream& State::print(std::ostream& os) const {
 
 
 std::size_t State::computeHash() const { 
-	return boost::hash_value(_bool_values);
-	//return boost::hash_range(_bool_values.begin(), _bool_values.end());
+	return std::hash<BitsetT>{}(_bool_values);
+// 	return boost::hash_value(_bool_values);
 }
 
 
