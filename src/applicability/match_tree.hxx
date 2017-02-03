@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fs_types.hxx>
 #include <applicability/action_managers.hxx>
 #include <sstream>
+#include <unordered_set>
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
@@ -50,7 +51,7 @@ namespace fs0 {
         const AtomIndex&                            _tuple_index;
         const std::vector<std::vector<ActionIdx>>&  _app_index;
         const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
-        std::set< AtomIdx >                         _seen;
+        std::unordered_set< AtomIdx >                         _seen;
 
     };
 
