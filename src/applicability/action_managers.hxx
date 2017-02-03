@@ -103,6 +103,8 @@ protected:
 protected:
 	//! Check whether any state constraint is violated in the given state, knowing the last-applied action
 	virtual bool check_constraints(unsigned applied_action_id, const State& state) const;
+	
+	virtual std::vector<ActionIdx> compute_whitelist(const State& state) const { return _all_actions_whitelist; }
 };
 
 //! 
@@ -114,9 +116,6 @@ public:
 	SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer);
 	~SmartActionManager() = default;
 	SmartActionManager(const SmartActionManager&) = default;
-
-	using Base::applicable;
-	ApplicableSet applicable(const State& state) const override;
 
 protected:
 
@@ -141,7 +140,7 @@ protected:
 	bool check_constraints(unsigned action_id, const State& state) const override;
 
 	//! Computes the list of indexes of those actions that are potentially applicable in the given state
-	virtual std::vector<ActionIdx> compute_whitelist(const State& state) const;
+	std::vector<ActionIdx> compute_whitelist(const State& state) const override;
 
 	unsigned _total_applicable_actions;
 };
@@ -151,7 +150,6 @@ protected:
 //! A simple iterator strategy to iterate over the actions applicable in a given state.
 class GroundApplicableSet {
 protected:
-	friend class SmartActionManager;
 	friend class NaiveActionManager;
 	
 	GroundApplicableSet(const ActionManagerI& manager, const State& state, const std::vector<ActionIdx>& action_whitelist):
@@ -169,10 +167,15 @@ protected:
 		unsigned _index;
 
 		void advance() {
+			
+			if (_manager.whitelist_guarantees_applicability()) {
+				 // All actions in the whitelist guaranteed to be true, no need to check anything else
+				return; 
+			}
+			
 			const std::vector<const GroundAction*>& actions = _manager.getAllActions();
 
-			// std::cout << "Checking applicability "<< std::endl;
-		// 	for (ActionIdx action_idx:_whitelist) {
+			// std::cout << "Checking applicability " << std::endl;
 			for (unsigned sz = _whitelist.size();_index < sz; ++_index) {
 					unsigned action_idx = _whitelist[_index];
 

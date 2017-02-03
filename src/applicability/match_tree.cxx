@@ -189,7 +189,9 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
                                                     const fs::Formula* state_constraints,
                                                     const AtomIndex& tuple_idx,
                                                     const BasicApplicabilityAnalyzer& analyzer)
-        : SmartActionManager( actions, state_constraints, tuple_idx, analyzer),
+        : NaiveActionManager(actions, state_constraints),
+        _tuple_idx(tuple_idx),
+        _app_index(analyzer.getApplicable()),
         _rev_app_index(),
         _tree(nullptr)
     {

@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fs_types.hxx>
 #include <applicability/action_managers.hxx>
-#include <sstream>
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
@@ -34,7 +33,6 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 {
 
     class MatchTreeActionManager;
-
 
     class NodeCreationContext {
     public:
@@ -112,7 +110,7 @@ namespace fs0 {
     //! Match tree data structure from PRP ( https://bitbucket.org/haz/planner-for-relevant-policies )
     //! Ported to FS by Miquel Ramirez, on December 2016
 
-    class MatchTreeActionManager : public SmartActionManager {
+    class MatchTreeActionManager : public NaiveActionManager {
     public:
 
         friend class SwitchNode;
@@ -123,14 +121,26 @@ namespace fs0 {
     	virtual ~MatchTreeActionManager() = default;
     	MatchTreeActionManager(const MatchTreeActionManager&) = default;
 
-        virtual std::vector<ActionIdx> compute_whitelist(const State& state) const override;
+		//! By definition, the match tree whitelist contains all the applicable actions
+		bool whitelist_guarantees_applicability() const override { return true; }
 
 
     protected:
+		//! The tuple index of the problem
+		const AtomIndex& _tuple_idx;
+		
+		//! An applicability index that maps each (index of) a tuple (i.e. atom) to the sets of (indexes of) all actions
+		//! which are _potentially_ applicable when that atom holds in a state
+		const std::vector<std::vector<ActionIdx>>& _app_index;		
+		
         //! Reversed applicability index, mapping action indices into sets of atoms making up their preconditions
         std::vector<std::vector<AtomIdx>>    _rev_app_index;
 
+		//!
         BaseNode::ptr   _tree;
+		
+	protected:
+		std::vector<ActionIdx> compute_whitelist(const State& state) const override;
     };
 
 }

@@ -3,7 +3,7 @@
 
 #include <aptk2/search/interfaces/det_state_model.hxx>
 #include <actions/actions.hxx>
-#include <applicability/action_managers.hxx>
+#include <applicability/base.hxx>
 
 namespace fs0 {
 
@@ -52,12 +52,12 @@ protected:
 	// The underlying planning problem.
 	const Problem& _task;
 
-	const SmartActionManager* _manager;
+	const ActionManagerI* _manager;
 
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
 
-	static SmartActionManager* build_action_manager(const Problem& problem);
+	static ActionManagerI* build_action_manager(const Problem& problem);
 };
 
 } // namespaces

@@ -47,7 +47,7 @@ GroundApplicableSet GroundStateModel::applicable_actions(const State& state) con
 	return _manager->applicable(state);
 }
 
-SmartActionManager*
+ActionManagerI*
 GroundStateModel::build_action_manager(const Problem& problem) {
 	const auto& actions = problem.getGroundActions();
 	const auto& constraints = problem.getStateConstraints();
@@ -61,7 +61,7 @@ GroundStateModel::build_action_manager(const Problem& problem) {
 		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
 	}
 	LPT_INFO( "main", "Successor Generator Strategy: \"Match Tree\"");
-	return new MatchTreeActionManager( actions, constraints, tuple_idx, analyzer );
+	return new MatchTreeActionManager(actions, constraints, tuple_idx, analyzer);
 }
 
 

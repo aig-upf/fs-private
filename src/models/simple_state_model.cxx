@@ -128,7 +128,6 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 	}
 	
 	// Else, we'll need an applicability analyzer
-	// TODO Do we really need it for the match-tree manager?? Or perhaps MatchTreeActionManager can directly subclass NaiveActionManager?
 	BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 	analyzer.build();
 	
@@ -139,7 +138,7 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 		
 	} else if (strategy == Config::SuccessorGenerationStrategy::match_tree) {
 		LPT_INFO( "cout", "Successor Generator Strategy: \"Match Tree\"");
-		return new MatchTreeActionManager( actions, constraints, tuple_idx, analyzer );
+		return new MatchTreeActionManager(actions, constraints, tuple_idx, analyzer);
 	}
 	
 	throw std::runtime_error("Unknown successor generation strategy");

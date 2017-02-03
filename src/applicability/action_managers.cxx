@@ -277,10 +277,6 @@ SmartActionManager::check_constraints(unsigned applied_action_id, const State& s
 	return true;
 }
 
-GroundApplicableSet
-SmartActionManager::applicable(const State& state) const {
-	return GroundApplicableSet(*this, state, compute_whitelist(state));
-}
 
 //! A local helper to build a list <0,1,...,size>
 std::vector<ActionIdx> _build_all_actions_whitelist(unsigned size) {
@@ -323,8 +319,9 @@ NaiveActionManager::applicable(const State& state, const GroundAction& action) c
 
 GroundApplicableSet
 NaiveActionManager::applicable(const State& state) const {
-	return GroundApplicableSet(*this, state, _all_actions_whitelist);
+	return GroundApplicableSet(*this, state, compute_whitelist(state));
 }
+
 
 bool
 NaiveActionManager::check_constraints(unsigned applied_action_id, const State& state) const {
