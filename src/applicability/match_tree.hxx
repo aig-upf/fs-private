@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fs_types.hxx>
 #include <applicability/action_managers.hxx>
 #include <sstream>
-#include <unordered_set>
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
@@ -42,17 +41,15 @@ namespace fs0 {
         NodeCreationContext(    const std::vector<ActionIdx>& actions,
                                 const AtomIndex& tuple_index,
                                 const std::vector<std::vector<ActionIdx>>& app_index,
-                                const std::vector<std::vector<AtomIdx>>& rev_app_index)
-        : _actions( actions ), _tuple_index( tuple_index ), _app_index( app_index), _rev_app_index(rev_app_index) {
-
-        }
+                                const std::vector<std::vector<AtomIdx>>& rev_app_index);
 
         const std::vector<ActionIdx>&               _actions;
         const AtomIndex&                            _tuple_index;
         const std::vector<std::vector<ActionIdx>>&  _app_index;
         const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
-        std::unordered_set< AtomIdx >                         _seen;
-
+		
+		//! _seen[i] is true iff  the tuple with index i has already been "seen"
+		std::vector<bool>                           _seen;
     };
 
     class BaseNode {

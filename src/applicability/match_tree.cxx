@@ -1,3 +1,4 @@
+
 #include <applicability/match_tree.hxx>
 #include <algorithm>
 #include <aptk2/tools/logging.hxx>
@@ -11,6 +12,13 @@
 namespace fs0 {
 
 
+NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actions,
+					const AtomIndex& tuple_index,
+					const std::vector<std::vector<ActionIdx>>& app_index,
+					const std::vector<std::vector<AtomIdx>>& rev_app_index)
+: _actions( actions ), _tuple_index( tuple_index ), _app_index( app_index), _rev_app_index(rev_app_index), _seen(tuple_index.size(), false)
+{}
+		
     BaseNode::ptr
     BaseNode::create_tree(  NodeCreationContext& context ) {
 
@@ -47,12 +55,12 @@ namespace fs0 {
         	for (unsigned i = 0; i < context._tuple_index.size(); ++i)
         		var_count[i] = std::make_pair( context._app_index[i].size(), i);
 
-        	sort(var_count.begin(), var_count.end());
+        	std::sort(var_count.begin(), var_count.end());
             initialised = true;
         }
 
     	for (int i = var_count.size() - 1; i >= 0; --i) {
-    		if (context._seen.count(var_count[i].second) <= 0) {
+    		if (!context._seen[var_count[i].second]) {
     			//cout << "Best var " << var_count[i].second << " with a count of " << var_count[i].first << endl;
                 // We return the atom index
     			return var_count[i].second;
@@ -66,7 +74,7 @@ namespace fs0 {
     bool
     BaseNode::action_done( unsigned i, NodeCreationContext& context  ) {
     	for (unsigned j = 0; j < context._rev_app_index[i].size(); ++j)
-    		if (0 == context._seen.count(context._rev_app_index[i][j]))
+    		if (!context._seen[context._rev_app_index[i][j]])
     			return false;
 
     	return true;
@@ -126,7 +134,7 @@ namespace fs0 {
         }
 
 
-        context._seen.insert(_pivot);
+        context._seen[_pivot] = true;
 
         // Create the switch generators
         NodeCreationContext true_context( value_items[0], context._tuple_index, context._app_index, context._rev_app_index );
@@ -140,7 +148,7 @@ namespace fs0 {
         _default_child = create_tree(false_context);
         context._seen = std::move(false_context._seen);
 
-        context._seen.erase(_pivot);
+		context._seen[_pivot] = false;
     }
 
     int SwitchNode::count() const {
