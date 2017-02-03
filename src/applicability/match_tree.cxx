@@ -36,16 +36,20 @@ namespace fs0 {
 
     	// TODO: This fluents.size() stuff needs to change to the number of mutexes once they're computed
 
-    	std::vector< std::pair<int,int> > var_count = std::vector< std::pair<int,int> >(context._tuple_index.size());
+    	static std::vector< std::pair<int,int> > var_count = std::vector< std::pair<int,int> >(context._tuple_index.size());
+        static bool initialised = false;
 
 
         // MRJ: The atom selection heuristic chooses the atom that appears on the most
         // action preconditions, breaking ties lexicographically (see the second field of
         // the pairs in var_count).
-    	for (unsigned i = 0; i < context._tuple_index.size(); ++i)
-    		var_count[i] = std::make_pair( context._app_index[i].size(), i);
+        if (!initialised) {
+        	for (unsigned i = 0; i < context._tuple_index.size(); ++i)
+        		var_count[i] = std::make_pair( context._app_index[i].size(), i);
 
-    	sort(var_count.begin(), var_count.end());
+        	sort(var_count.begin(), var_count.end());
+            initialised = true;
+        }
 
     	for (int i = var_count.size() - 1; i >= 0; --i) {
     		if (context._seen.count(var_count[i].second) <= 0) {
@@ -126,13 +130,15 @@ namespace fs0 {
 
         // Create the switch generators
         NodeCreationContext true_context( value_items[0], context._tuple_index, context._app_index, context._rev_app_index );
-        true_context._seen = context._seen;
+        true_context._seen = std::move(context._seen);
         _children.push_back(create_tree(true_context));
+        context._seen = std::move(true_context._seen);
 
         // Create the default generator
         NodeCreationContext false_context( default_items, context._tuple_index, context._app_index, context._rev_app_index );
-        false_context._seen = context._seen;
+        false_context._seen = std::move(context._seen);
         _default_child = create_tree(false_context);
+        context._seen = std::move(false_context._seen);
 
         context._seen.erase(_pivot);
     }
