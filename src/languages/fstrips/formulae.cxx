@@ -113,7 +113,7 @@ const Formula* Conjunction::bind(const Binding& binding, const fs0::ProblemInfo&
 		auto processed_atomic = dynamic_cast<const AtomicFormula*>(processed);
 		assert(processed_atomic);
 		conjuncts.push_back(processed_atomic);
-		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(c);
+		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(processed_atomic);
 		if( cc == nullptr ) continue;
 		const StateVariable* lhs = dynamic_cast<const StateVariable*>(cc->lhs());
 		if( lhs == nullptr ) continue;
