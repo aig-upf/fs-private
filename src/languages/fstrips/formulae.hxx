@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include <fs_types.hxx>
-#include <atom.hxx>
 
 namespace fs0 {
 class State;
@@ -38,8 +37,8 @@ public:
 	//! Return the boolean interpretation of the current formula under the given assignment and binding.
 	virtual bool interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual bool interpret(const State& state, const Binding& binding) const = 0;
-	bool interpret(const PartialAssignment& assignment) const;
-	bool interpret(const State& state) const;
+	virtual bool interpret(const PartialAssignment& assignment) const;
+	virtual bool interpret(const State& state) const;
 
 	//! The level of nestedness of the formula
 	virtual unsigned nestedness() const = 0;
@@ -86,8 +85,8 @@ public:
 
 	const std::vector<const Term*>& getSubterms() const { return _subterms; }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	bool interpret(const State& state, const Binding& binding) const;
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
 	using Formula::interpret;
 
 	unsigned nestedness() const;
@@ -126,8 +125,8 @@ public:
 
 	std::vector<const Formula*> all_formulae() const { return std::vector<const Formula*>(1, this); }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const { return true; }
-	bool interpret(const State& state, const Binding& binding) const { return true; }
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return true; }
+	bool interpret(const State& state, const Binding& binding) const override { return true; }
 
 	bool is_tautology() const { return true; }
 
@@ -150,8 +149,8 @@ public:
 
 	std::vector<const Formula*> all_formulae() const { return std::vector<const Formula*>(1, this); }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const { return false; }
-	bool interpret(const State& state, const Binding& binding) const { return false; }
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return false; }
+	bool interpret(const State& state, const Binding& binding) const override { return false; }
 
 	bool is_contradiction() const { return true; }
 
@@ -171,11 +170,7 @@ public:
 
 	Conjunction(const std::vector<const AtomicFormula*>& conjuncts) : _conjuncts(conjuncts) {}
 
-	Conjunction(const Conjunction& conjunction) {
-		for (const AtomicFormula* conjunct:conjunction._conjuncts) {
-			_conjuncts.push_back(conjunct->clone());
-		}
-	}
+	Conjunction(const Conjunction& conjunction);
 
 	virtual ~Conjunction() {
 		for (const auto ptr:_conjuncts) delete ptr;
@@ -187,8 +182,8 @@ public:
 
 	const std::vector<const AtomicFormula*>& getConjuncts() const { return _conjuncts; }
 
-	virtual bool interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	virtual bool interpret(const State& state, const Binding& binding) const;
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
 
 	unsigned nestedness() const;
 
@@ -207,34 +202,30 @@ protected:
 	std::vector<const AtomicFormula*> _conjuncts;
 };
 
-//! A conjunctive formula made up of atoms X=x
+//! A conjunctive formula made up of atoms X=x - geared towards optimizing the `interpret` method
 class AtomConjunction : public Conjunction {
-
 public:
+	using AtomT = std::pair<VariableIdx, ObjectIdx>;
 
 	friend class LogicalOperations;
 
-	AtomConjunction(const std::vector<const AtomicFormula*>& conjuncts, const std::vector<Atom>& atoms )
+	AtomConjunction(const std::vector<const AtomicFormula*>& conjuncts, const std::vector<AtomT>& atoms)
 		: Conjunction(conjuncts), _atoms(atoms) {}
 
-	AtomConjunction(const AtomConjunction& conjunction)
-		: Conjunction(conjunction) {
-		for (const Atom& conjunct:conjunction._atoms) {
-			_atoms.push_back(conjunct);
-		}
-	}
-
-	virtual ~AtomConjunction() {
-	}
-
-	AtomConjunction* clone() const { return new AtomConjunction(*this); }
-
-	virtual bool interpret(const State& state, const Binding& binding) const override;
+	~AtomConjunction() = default;
+	AtomConjunction(const AtomConjunction&) = default;
+	AtomConjunction& operator=(const AtomConjunction&) = default;
+	AtomConjunction(AtomConjunction&&) = default;
+	AtomConjunction& operator=(AtomConjunction&&) = default;
+	AtomConjunction* clone() const {return new AtomConjunction(*this); }
+	
+	using Conjunction::interpret;
+	bool interpret(const State& state, const Binding& binding) const override { return interpret(state); }
+	bool interpret(const State& state) const override;
 
 protected:
-
-	std::vector< Atom > _atoms;
-
+	//! Each pair (X,x) represents a conjunct X=x
+	std::vector<AtomT> _atoms;
 };
 
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
@@ -256,8 +247,8 @@ public:
 
 	const Conjunction* getSubformula() const { return _subformula; }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	bool interpret(const State& state, const Binding& binding) const;
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
 
 	unsigned nestedness() const { return _subformula->nestedness(); }
 

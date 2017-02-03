@@ -92,9 +92,13 @@ const Formula* AtomicFormula::bind(const Binding& binding, const ProblemInfo& in
 	return processed;
 }
 
+Conjunction::Conjunction(const Conjunction& other) :
+	_conjuncts(Utils::clone(other._conjuncts))
+{}
+	
 const Formula* Conjunction::bind(const Binding& binding, const fs0::ProblemInfo& info) const {
 	std::vector<const AtomicFormula*> conjuncts;
-	std::vector<Atom> atoms;
+	std::vector<AtomConjunction::AtomT> atoms;
 	for (const AtomicFormula* c:_conjuncts) {
 		auto processed = c->bind(binding, info);
 		// Static checks
@@ -115,15 +119,14 @@ const Formula* Conjunction::bind(const Binding& binding, const fs0::ProblemInfo&
 		if( lhs == nullptr ) continue;
 		const Constant* rhs = dynamic_cast< const Constant*>(cc->rhs());
 		if( rhs == nullptr ) continue;
-		atoms.push_back( Atom(lhs->getValue(), rhs->getValue()) );
+		atoms.push_back(std::make_pair(lhs->getValue(), rhs->getValue()));
 	}
 
 	if (conjuncts.empty()) return new Tautology; // The empty conjunction is a tautology
 
-	if ( conjuncts.size() == atoms.size()) // All the subformulae are atoms
+	if ( conjuncts.size() == atoms.size()) { // All the subformulae are atoms
 		return new AtomConjunction( conjuncts, atoms );
-
-
+	}
 
 	return new Conjunction(conjuncts);
 }
@@ -167,12 +170,15 @@ std::vector<const Formula*> Conjunction::all_formulae() const {
 }
 
 
+
 bool
-AtomConjunction::interpret(const State& state, const Binding& binding) const {
-	for ( auto p : _atoms )
-		if ( state.getValue(p.getVariable()) != p.getValue()) return false;
+AtomConjunction::interpret(const State& state) const {
+	for (const auto& atom:_atoms) {
+		if ( state.getValue(atom.first) != atom.second) return false;
+	}
 	return true;
 }
+
 
 ExistentiallyQuantifiedFormula::ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula& other) :
 _variables(Utils::clone(other._variables)), _subformula(other._subformula->clone())
