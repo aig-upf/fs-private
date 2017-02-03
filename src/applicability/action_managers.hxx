@@ -194,7 +194,7 @@ protected:
 			_whitelist(action_whitelist),
 			_index(index)
 		{
-		// 	std::cout << "Whitelist size: " << _whitelist.size() << " vs. num actions: " << _manager._actions.size() << std::endl;
+		 	// std::cout << "Whitelist size: " << _whitelist.size() << " vs. num actions: " << _manager.getAllActions().size() << std::endl;
 			advance();
 		}
 
