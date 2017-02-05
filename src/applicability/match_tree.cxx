@@ -89,6 +89,11 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
         actions.insert( actions.end(), _applicable_items.begin(), _applicable_items.end() );
     }
 
+	SwitchNode::~SwitchNode() {
+		delete _default_child;
+		for (BaseNode* child:_children) delete child;
+	}
+
 
     void SwitchNode::generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) {
         actions.insert( actions.end(), _immediate_items.begin(), _immediate_items.end() );

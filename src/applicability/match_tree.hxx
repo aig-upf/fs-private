@@ -54,7 +54,7 @@ namespace fs0 {
     public:
         typedef BaseNode*   ptr;
 
-    	virtual ~BaseNode() {}
+    	virtual ~BaseNode() = default;
     	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) = 0;
     	virtual int count() const = 0;
         virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const = 0;
@@ -78,6 +78,7 @@ namespace fs0 {
 
     public:
     	SwitchNode( NodeCreationContext& context );
+		~SwitchNode();
 
     	virtual void generate_applicable_items(     const State& s,
                                                     const AtomIndex& tuple_index,
@@ -118,7 +119,7 @@ namespace fs0 {
         friend class EmptyNode;
 
     	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer);
-    	virtual ~MatchTreeActionManager() = default;
+    	virtual ~MatchTreeActionManager() { if (_tree) delete _tree; };
     	MatchTreeActionManager(const MatchTreeActionManager&) = default;
 
 		//! By definition, the match tree whitelist contains all the applicable actions
