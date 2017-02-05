@@ -22,21 +22,22 @@ public:
 	
 	
 	//! Factory method - creates the evaluator only if suitable, i.e. if the number of atoms of the problem is small enough
-	static AtomNoveltyEvaluator* create(const ValuationIndexerT& indexer) {
+	static AtomNoveltyEvaluator* create(const ValuationIndexerT& indexer, bool ignore_negative) {
 		
 		// With this novelty evaluator we can handle up to 2^32 atoms
 		if (indexer.num_indexes() >= 65536) return nullptr;
 		
 		if (!Tuple2MarkerT::can_handle(num_combined_indexes(indexer.num_indexes()))) return nullptr;
 		
-		return new AtomNoveltyEvaluator(indexer);
+		return new AtomNoveltyEvaluator(indexer, ignore_negative);
 	}
 	
 	AtomNoveltyEvaluator() = delete;
 	
 protected:
-	AtomNoveltyEvaluator(const ValuationIndexerT& indexer) :
+	AtomNoveltyEvaluator(const ValuationIndexerT& indexer, bool ignore_negative) :
 		_indexer(indexer),
+		_ignore_negative(ignore_negative),
 		_num_atom_indexes(_indexer.num_indexes()),
 		_seen_tuples_sz_1(_num_atom_indexes, false),
 		_t2marker(num_combined_indexes(), _num_atom_indexes)
@@ -56,7 +57,10 @@ public:
 	bool evaluate_width_1_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) override {
 		bool exists_novel_tuple = false;
 		for (unsigned var_index:novel) {
-			unsigned atom_index = _indexer.to_index(var_index, valuation[var_index]);
+			const auto& feature_value = valuation[var_index];
+			if (_ignore_negative && feature_value == 0) continue;
+			
+			unsigned atom_index = _indexer.to_index(var_index, feature_value);
 			auto&& value = _seen_tuples_sz_1[atom_index]; // see http://stackoverflow.com/a/8399942
 			if (!value) { // The tuple is new, hence the novelty of the state is 1
 				exists_novel_tuple = true; 
@@ -74,12 +78,18 @@ public:
 		
 		for (unsigned i = 0; i < novel.size(); ++i) {
 			unsigned idx1 = novel[i];
-			unsigned atom1_index = _indexer.to_index(idx1, valuation[idx1]);
+			const auto& feature1_value = valuation[idx1];
+			if (_ignore_negative && feature1_value == 0) continue;
+			
+			unsigned atom1_index = _indexer.to_index(idx1, feature1_value);
 			
 			for (unsigned j = 0; j < sz; ++j) {
 				if (j==idx1) continue;
 				
-				exists_novel_tuple |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(j, valuation[j]));
+				const auto& feature2_value = valuation[j];
+				if (_ignore_negative && feature2_value == 0) continue;
+				
+				exists_novel_tuple |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(j, feature2_value));
 			}
 		}
 		return exists_novel_tuple;
@@ -93,7 +103,9 @@ public:
 			unsigned atom1_index = _indexer.to_index(i, valuation[i]);
 			
 			for (unsigned j = i+1; j < sz; ++j) {
-				exists_novel_tuple |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(j, valuation[j]));
+				const auto& feature2_value = valuation[j];
+				if (_ignore_negative && feature2_value == 0) continue;
+				exists_novel_tuple |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(j, feature2_value));
 			}
 		}
 		return exists_novel_tuple;
@@ -123,6 +135,8 @@ public:
 	
 protected:
 	ValuationIndexerT _indexer;
+	
+	bool _ignore_negative;
 	
 	uint32_t _num_atom_indexes;
 	

@@ -908,7 +908,7 @@ public:
 		
 		if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
 			const AtomIndex& index = problem.get_tuple_index();
-			auto evaluator = FSAtomNoveltyEvaluator::create(index);
+			auto evaluator = FSAtomNoveltyEvaluator::create(index, true);
 			if (evaluator) {
 				LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
 				return evaluator;
