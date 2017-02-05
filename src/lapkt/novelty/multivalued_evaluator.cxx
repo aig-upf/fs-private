@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include "multivalued_evaluator.hxx"
-#include "features.hxx"
 
 
 namespace lapkt { namespace novelty {
@@ -75,7 +74,7 @@ MultivaluedNoveltyEvaluator<FeatureValueT>::evaluate_width_2_tuples(const Valuat
 
 template <typename FeatureValueT>
 unsigned
-MultivaluedNoveltyEvaluator<FeatureValueT>::evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) {
+MultivaluedNoveltyEvaluator<FeatureValueT>::_evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) {
 	assert(!valuation.empty());
 
 	unsigned novelty = std::numeric_limits<unsigned>::max();
@@ -109,7 +108,7 @@ MultivaluedNoveltyEvaluator<FeatureValueT>::evaluate(const ValuationT& valuation
 
 template <typename FeatureValueT>
 unsigned
-MultivaluedNoveltyEvaluator<FeatureValueT>::evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) {
+MultivaluedNoveltyEvaluator<FeatureValueT>::_evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) {
 	assert(!valuation.empty());
 
 	unsigned novelty = std::numeric_limits<unsigned>::max();

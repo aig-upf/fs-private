@@ -6,7 +6,7 @@
 #include <aptk2/tools/logging.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 #include <lapkt/algorithms/generic_search.hxx>
-#include <search/drivers/bfws/iw_novelty_evaluator.hxx>
+#include <search/novelty/fs_novelty.hxx>
 #include <search/drivers/sbfws/relevant_atomset.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
@@ -83,22 +83,24 @@ public:
 
 //! This is the acceptor for an open list with width-based node pruning
 //! - a node is pruned iff its novelty is higher than a given threshold.
-template <typename NodeT, typename NoveltyEvaluatorT>
+template <typename NodeT>
 class IWRunAcceptor : public lapkt::QueueAcceptorI<NodeT> {
 protected:
 	//! The set of features used to compute the novelty
 	const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& _features;
 
 	//! A single novelty evaluator will be in charge of evaluating all nodes
-	NoveltyEvaluatorT _novelty_evaluator;
+	FSBinaryNoveltyEvaluatorI* _evaluator;
 
 public:
-	IWRunAcceptor(const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& features, const NoveltyEvaluatorT& novelty_evaluator) :
+	IWRunAcceptor(const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& features, FSBinaryNoveltyEvaluatorI* evaluator) :
 		_features(features),
-		_novelty_evaluator(novelty_evaluator) // Copy the evaluator
+		_evaluator(evaluator)
 	{}
 
-	~IWRunAcceptor() = default;
+	~IWRunAcceptor() {
+		delete _evaluator;
+	}
 
 	//! Returns false iff we want to prune this node during the search
 	bool accept(NodeT& node) {
@@ -106,9 +108,9 @@ public:
 		
 		if (node.parent) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
-			novelty = _novelty_evaluator.evaluate(node, _features.evaluate(node.state), _features.evaluate(node.parent->state));
+			novelty = _evaluator->evaluate(_features.evaluate(node.state), _features.evaluate(node.parent->state));
 		} else {
-			novelty = _novelty_evaluator.evaluate(node, _features.evaluate(node.state));
+			novelty = _evaluator->evaluate(_features.evaluate(node.state));
 		}
 		
 		return novelty < std::numeric_limits<unsigned>::max();
@@ -125,7 +127,6 @@ public:
 //! satisfied.
 template <typename NodeT,
           typename StateModel,
-          typename NoveltyEvaluatorT,
           typename OpenListT = lapkt::SearchableQueue<NodeT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
@@ -137,7 +138,7 @@ public:
 	using StateT = typename StateModel::StateT;
 	using PlanT = typename Base::PlanT;
 	using NodePT = typename Base::NodePT;
-	using AcceptorT = IWRunAcceptor<NodeT, NoveltyEvaluatorT>;
+	using AcceptorT = IWRunAcceptor<NodeT>;
 
 	using NodeOpenEvent = typename Base::NodeOpenEvent;
 	using NodeExpansionEvent = typename Base::NodeExpansionEvent;
@@ -145,8 +146,8 @@ public:
 
 
 	//! Factory method
-	static IWRun* build(const StateModel& model, const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& featureset, const NoveltyEvaluatorT& novelty_evaluator, bool complete, bool mark_negative_propositions) {
-		auto acceptor = new AcceptorT(featureset, novelty_evaluator);
+	static IWRun* build(const StateModel& model, const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& featureset, FSBinaryNoveltyEvaluatorI* evaluator, bool complete, bool mark_negative_propositions) {
+		auto acceptor = new AcceptorT(featureset, evaluator);
 		return new IWRun(model, OpenListT(acceptor), complete, mark_negative_propositions);
 	}
 
