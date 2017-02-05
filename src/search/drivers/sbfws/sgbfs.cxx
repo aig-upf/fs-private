@@ -28,8 +28,8 @@ LazyBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& c
 	NoveltyFeaturesConfiguration feature_configuration(config);
 	auto engine = create(config, bfws_config, feature_configuration, model);
 	LPT_INFO("cout", "Simulated BFWS Configuration:");
-	LPT_INFO("cout", "\tMaximum search novelty: " << bfws_config.search_width);
-	LPT_INFO("cout", "\tMaximum simulation novelty: " << bfws_config.simulation_width);
+// 	LPT_INFO("cout", "\tMaximum search novelty: " << bfws_config.search_width);
+// 	LPT_INFO("cout", "\tMaximum simulation novelty: " << bfws_config.simulation_width);
 	LPT_INFO("cout", "\tMark as relevant negative propositional atoms?: " << bfws_config.mark_negative_propositions);
 // 	LPT_INFO("cout", "\tFeature extraction: " << feature_configuration);
 	return drivers::Utils::do_search(*engine, model, out_dir, start_time, getStats());

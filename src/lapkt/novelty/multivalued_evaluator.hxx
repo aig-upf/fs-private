@@ -4,12 +4,12 @@
 #include <cassert>
 #include <vector>
 #include <unordered_set>
-#include <bits/stl_numeric.h>
 #include <algorithm>
 
 
 #include <boost/functional/hash.hpp>
 #include "features.hxx"
+#include "base.hxx"
 
 namespace lapkt { namespace novelty {
 
@@ -71,14 +71,19 @@ protected:
 };
 
 template <typename FeatureValueT>
-class MultivaluedNoveltyEvaluator {
+class MultivaluedNoveltyEvaluator : public NoveltyEvaluatorI<FeatureValueT> {
 public:
-	using ValuationT = std::vector<FeatureValueT>;
+	using Base = NoveltyEvaluatorI<FeatureValueT>;
+	using ValuationT = typename Base::ValuationT;
 	
 	MultivaluedNoveltyEvaluator() = delete;
 	MultivaluedNoveltyEvaluator(unsigned max_novelty) :
 		_max_novelty(max_novelty), _tables(_max_novelty + 1)
 	{}
+	
+	MultivaluedNoveltyEvaluator* clone() const {
+		return new MultivaluedNoveltyEvaluator(*this);
+	}
 	
 	MultivaluedNoveltyEvaluator(const MultivaluedNoveltyEvaluator&) = default;
 	MultivaluedNoveltyEvaluator(MultivaluedNoveltyEvaluator&&) = default;
@@ -88,27 +93,22 @@ public:
 	//!
 	unsigned max_novelty() const { return _max_novelty; }
 
-	//! Evauate the novelty of a given feature valuation, taking into account that only those indexes given in 'novel'
+
+	bool evaluate_width_1_tuples(const ValuationT& current, const std::vector<unsigned>& novel) override;
+	bool evaluate_width_2_tuples(const ValuationT& current, const std::vector<unsigned>& novel) override;
+	
+protected:
+	//! Evaluate the novelty of a given feature valuation, taking into account that only those indexes given in 'novel'
 	//! contain values that can actually be novel.
-	unsigned evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel);
+	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) override;
 	
 	//! Check only if the valuation contains a width-'k' tuple which is novel; return k if that is the case, or MAX if not
-	unsigned evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k);
+	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) override;
 	
-	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
-	static std::vector<unsigned> derive_novel(const ValuationT& current, const ValuationT& parent) {
-		std::vector<unsigned> novel;
-		for (unsigned i = 0; i < current.size(); ++i) {
-			if (current[i] != parent[i]) {
-				novel.push_back(i);
-			}
-		}
-		return novel;
-	}
-
 protected:
 	//! Maximum novelty value to be computed
 	unsigned _max_novelty;
+
 	
 	//! A tuple of width 1 simply contains the identifier of the variable and the value
 	using Width1Tuple = std::pair<unsigned, FeatureValueT>;
@@ -123,10 +123,6 @@ protected:
 	std::unordered_set<Width2Tuple, Width2TupleHasher> _width_2_tuples;
 	
 	NoveltyTables _tables;
-	
-	//! A micro-optimization to deal faster with the analysis of width-1 and width-2 tuples
-	bool evaluate_width_1_tuples(const ValuationT& current, const std::vector<unsigned>& novel);
-	bool evaluate_width_2_tuples(const ValuationT& current, const std::vector<unsigned>& novel);
 };
 
 //! An iterator through all tuples of a certain size that can be derived from a certain vector of values.

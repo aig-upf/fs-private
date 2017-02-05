@@ -151,14 +151,14 @@ public:
 
 
 
-template <typename StateModelT, typename NoveltyIndexerT, typename NoveltyEvaluatorT>
+template <typename StateModelT, typename NoveltyIndexerT>
 class LazyBFWSHeuristic {
 public:
 	using FeatureSetT = lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>;
-	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT>;
+	using NoveltyEvaluatorMapT = std::unordered_map<long, FSBinaryNoveltyEvaluatorI*>;
 	using ActionT = typename StateModelT::ActionType;
 	using IWNodeT = IWRunNode<State, ActionT>;
-	using IWAlgorithm = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT>;
+	using IWAlgorithm = IWRun<IWNodeT, StateModelT>;
 	using IWNodePT = typename IWAlgorithm::NodePT;
 
 	using HFFHeuristicT = DirectCRPG;
@@ -169,7 +169,7 @@ public:
 
 
 
-	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, const NoveltyEvaluatorT& simulation_evaluator, BFWSStats& stats) :
+	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const FSBinaryNoveltyEvaluatorI& search_evaluator, const FSBinaryNoveltyEvaluatorI& simulation_evaluator, BFWSStats& stats) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
@@ -201,7 +201,10 @@ public:
 		// Else we'll simply use simulators
 	}
 
-	~LazyBFWSHeuristic() = default;
+	~LazyBFWSHeuristic() {
+		for (auto& p:_wg_novelty_evaluators) delete p.second;
+		for (auto& p:_wgr_novelty_evaluators) delete p.second;
+	};
 
 	
 	template <typename NodeT>
@@ -273,11 +276,7 @@ public:
 	RelevantAtomSet compute_relevant_simulation(const State& state, unsigned& reachable) {
 		reachable = 0;
 
-		if (_simulation_evaluator.max_novelty() == 0) { // No need to run anything
-			return RelevantAtomSet(&(_problem.get_tuple_index()));
-		}
-
-		_iw_runner = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator, _complete_simulation, _mark_negative_propositions));
+		_iw_runner = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator.clone(), _complete_simulation, _mark_negative_propositions));
 
 		//BFWSStats stats;
 		//StatsObserver<IWNodeT, BFWSStats> st_obs(stats, false);
@@ -373,20 +372,20 @@ public:
 
 
 	template <typename NodeT>
-	unsigned evaluate_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map,  unsigned check_only_novelty, bool has_parent, unsigned type, unsigned parent_type) {
+	unsigned evaluate_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map,  unsigned k, bool has_parent, unsigned type, unsigned parent_type) {
 		auto it = evaluator_map.find(type);
 		if (it == evaluator_map.end()) {
-			auto inserted = evaluator_map.insert(std::make_pair(type, _search_evaluator));
+			auto inserted = evaluator_map.insert(std::make_pair(type, _search_evaluator.clone()));
 			it = inserted.first;
 		}
-		NoveltyEvaluatorT& evaluator = it->second;
+		FSBinaryNoveltyEvaluatorI* evaluator = it->second;
 
 		if (has_parent && type == parent_type) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
-			return evaluator.evaluate(node, _featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), check_only_novelty);
+			return evaluator->evaluate(_featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), k);
 		}
 
-		return evaluator.evaluate(node, _featureset.evaluate(node.state), check_only_novelty);
+		return evaluator->evaluate(_featureset.evaluate(node.state), k);
 
 
 	}
@@ -453,8 +452,8 @@ protected:
 
 	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
 	// to perform all the feature selection, etc. anew.
-	const NoveltyEvaluatorT& _search_evaluator;
-	const NoveltyEvaluatorT& _simulation_evaluator;
+	const FSBinaryNoveltyEvaluatorI& _search_evaluator;
+	const FSBinaryNoveltyEvaluatorI& _simulation_evaluator;
 
 
 	//! The novelty evaluators for the different #g values
@@ -495,22 +494,9 @@ public:
 	using PlanT =  std::vector<ActionIdT>;
 	using NodePT = std::shared_ptr<NodeT>;
 	using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
-	using HeuristicT = LazyBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer, IWBinaryNoveltyEvaluator>;
+	using HeuristicT = LazyBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer>;
 	using SimulationNodeT = typename HeuristicT::IWNodeT;
 	using SimulationNodePT = typename HeuristicT::IWNodePT;
-
-protected:
-	enum class QPR_OUTPUT { // The result of processing any of the queues
-		GOAL_FOUND, // The goal was found
-		QUEUE_EMPTY, // Queue exhausted without finding a goal
-
-	};
-
-	enum class NPR_OUTPUT { // The result of processing a node
-		GOAL_FOUND, // The goal was found while processing the node
-		SOME_NODE_CREATED, // Some children node was actually generated while processing the node
-		NO_NODE_CREATED // No children node was actually generated while processing the node
-	};
 
 public:
 
@@ -739,7 +725,7 @@ protected:
 	}
 
 	//! Process the node. Return true iff at least one node was created during the processing.
-	NPR_OUTPUT process_node(const NodePT& node) {
+	void process_node(const NodePT& node) {
 
 		//assert(!node->_processed); // Don't process a node twice!
 
@@ -750,13 +736,11 @@ protected:
 		if (is_goal(node)) {
 			LPT_INFO("cout", "Goal found");
 			_solution = node;
-			return NPR_OUTPUT::GOAL_FOUND;
+			return;
 		}
 
 		_closed.put(node);
-		unsigned num_created = expand_node(node);
-		return num_created > 0 ? NPR_OUTPUT::SOME_NODE_CREATED : NPR_OUTPUT::NO_NODE_CREATED;
-
+		expand_node(node);
 	}
 
 	// Return true iff at least one node was created
@@ -896,18 +880,19 @@ public:
 	using NodeT = LazyBFWSNode<StateT, ActionT>;
 	using HeuristicT = typename EngineT::HeuristicT;
 	using FeatureSetT = lapkt::novelty::StraightBinaryFeatureSetEvaluator<StateT>;
-	using NoveltyEvaluatorT = IWBinaryNoveltyEvaluator;
-	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
+	using NoveltyEvaluatorPT = std::unique_ptr<FSBinaryNoveltyEvaluatorI>;
+	
 
 	//! Factory method
 	EnginePT create(const Config& config, SBFWSConfig& conf, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
 
 		// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
-		_featureset = selectFeatures(feature_configuration);
+		_featureset = FeatureSetT();
 
-		_search_evaluator = NoveltyEvaluatorPT(new NoveltyEvaluatorT(conf.search_width));
-		_simulation_evaluator = NoveltyEvaluatorPT(new NoveltyEvaluatorT(conf.simulation_width));
-
+		
+		_search_evaluator = NoveltyEvaluatorPT(create_novelty_evaluator(model.getTask(), conf.search_width));
+		_simulation_evaluator = NoveltyEvaluatorPT(create_novelty_evaluator(model.getTask(), conf.simulation_width));
+		
 		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(conf, model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats));
 
 		auto engine = EnginePT(new EngineT(model, *_heuristic, _stats, config, conf));
@@ -917,6 +902,18 @@ public:
 // 		lapkt::events::subscribe(*engine, _handlers);
 
 		return engine;
+	}
+	
+	FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, unsigned max_width) {
+		const AtomIndex& index = problem.get_tuple_index();
+		auto evaluator = FSAtomNoveltyEvaluator::create(index);
+		if (evaluator) {
+			LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
+			return evaluator;
+		}
+		
+		LPT_INFO("cout", "Using a Binary Novelty Evaluator");
+		return new FSBinaryNoveltyEvaluator(max_width);
 	}
 
 	const BFWSStats& getStats() const { return _stats; }
@@ -940,24 +937,6 @@ protected:
 	//! we will use for both search and heuristic simulation
 	NoveltyEvaluatorPT _search_evaluator;
 	NoveltyEvaluatorPT _simulation_evaluator;
-
-	// ATM we don't perform any particular feature selection
-	FeatureSetT selectFeatures(const NoveltyFeaturesConfiguration& feature_configuration) {
-		/*
-		const ProblemInfo& info = ProblemInfo::getInstance();
-
-		FeatureSetT features;
-
-		// Add all state variables
-		for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-			features.add(std::unique_ptr<lapkt::novelty::NoveltyFeature<State>>(new StateVariableFeature(var)));
-		}
-
-		LPT_INFO("cout", "Number of features from which state novelty will be computed: " << features.size());
-		return features;
-		*/
-		return FeatureSetT();
-	}
 
 	//! Helper
 	ExitCode do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
