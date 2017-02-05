@@ -890,8 +890,8 @@ public:
 		_featureset = FeatureSetT();
 
 		
-		_search_evaluator = NoveltyEvaluatorPT(create_novelty_evaluator(model.getTask(), conf.search_width));
-		_simulation_evaluator = NoveltyEvaluatorPT(create_novelty_evaluator(model.getTask(), conf.simulation_width));
+		_search_evaluator = NoveltyEvaluatorPT(create_novelty_evaluator(model.getTask(), config, conf.search_width));
+		_simulation_evaluator = NoveltyEvaluatorPT(create_novelty_evaluator(model.getTask(), config, conf.simulation_width));
 		
 		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(conf, model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats));
 
@@ -904,12 +904,15 @@ public:
 		return engine;
 	}
 	
-	FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, unsigned max_width) {
-		const AtomIndex& index = problem.get_tuple_index();
-		auto evaluator = FSAtomNoveltyEvaluator::create(index);
-		if (evaluator) {
-			LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
-			return evaluator;
+	FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, const Config& config, unsigned max_width) {
+		
+		if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
+			const AtomIndex& index = problem.get_tuple_index();
+			auto evaluator = FSAtomNoveltyEvaluator::create(index);
+			if (evaluator) {
+				LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
+				return evaluator;
+			}
 		}
 		
 		LPT_INFO("cout", "Using a Binary Novelty Evaluator");
