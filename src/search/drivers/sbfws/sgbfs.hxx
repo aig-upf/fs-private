@@ -513,7 +513,8 @@ public:
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
 		_use_simulation_as_macros_only(conf.relevant_set_type==SBFWSConfig::RelevantSetType::Macro),
 		_generated(0),
-		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max())
+		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
+		_novelty_levels(setup_novelty_levels(model))
 	{
 	}
 
@@ -522,6 +523,23 @@ public:
 	LazyBFWS(LazyBFWS&&) = default;
 	LazyBFWS& operator=(const LazyBFWS&) = delete;
 	LazyBFWS& operator=(LazyBFWS&&) = default;
+	
+	unsigned setup_novelty_levels(const StateModelT& model) const {
+		const AtomIndex& atomidx = model.getTask().get_tuple_index();
+		const unsigned num_subgoals = model.num_subgoals();
+		const unsigned partition_size = num_subgoals * 10;   /// ???? What value expected for |R|??
+		const unsigned num_positive_atoms = atomidx.size() / 2;
+		
+		float size_novelty2_tables = ( (float) pow(num_positive_atoms, 2) / 1024000.)  * (float) partition_size * 4;
+		
+		unsigned levels = (size_novelty2_tables > 2048) ? 2 : 3;
+		
+		LPT_INFO("cout", "Size of the novelty-two tables estimated at: " << size_novelty2_tables);
+		LPT_INFO("cout", "Novelty levels of the search:  " << levels);
+		
+		return levels;
+	}
+	
 
 	//! Convenience method
 	bool solve_model(PlanT& solution) { return search(_model.init(), solution); }
@@ -646,6 +664,8 @@ protected:
 			if (!node->_processed && nov == 1) {
 				_stats.wgr1_node();
 				process_node(node);
+			} else if (_novelty_levels == 2) {
+				_qrest.insert(node);
 			}
 
 			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
@@ -655,7 +675,7 @@ protected:
 
 		///// QWGR2 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 2
-		if (!_qwgr2.empty()) {
+		if (_novelty_levels == 3 && !_qwgr2.empty()) {
 			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 2");
 			NodePT node = _qwgr2.next();
 
@@ -718,7 +738,10 @@ protected:
 		}
 
 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
-		_qwgr2.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=2 tables
+		
+		if (_novelty_levels == 3) {
+			_qwgr2.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=2 tables
+		}
 
 		_stats.generation();
 		if (node->decreases_unachieved_subgoals()) _stats.generation_g_decrease();
@@ -851,6 +874,9 @@ protected:
 	
 	//! The minimum number of subgoals-to-reach that we have achieved at any moment of the search
 	unsigned _min_subgoals_to_reach;
+	
+	//! How many novelty levels we want to use in the search.
+	unsigned _novelty_levels;	
 };
 
 
