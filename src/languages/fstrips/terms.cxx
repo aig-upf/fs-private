@@ -124,6 +124,18 @@ const Term* UserDefinedStaticTerm::bind(const Binding& binding, const ProblemInf
 	return new UserDefinedStaticTerm(_symbol_id, processed);
 }
 
+
+const Term* AxiomaticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
+	std::vector<ObjectIdx> constant_values;
+	std::vector<const Term*> processed = bind_subterms(_subterms, binding, info, constant_values);
+	
+	// We simply return a user-defined static term with the processed/bound subterms
+	return clone(processed);
+}
+
+AxiomaticTerm* AxiomaticTerm::clone() const { return clone(Utils::clone(_subterms)); }
+
+
 const Term* ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> st = bind_subterms(_subterms, binding, info, constant_values);
@@ -165,6 +177,7 @@ UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vect
 	_function(ProblemInfo::getInstance().getSymbolData(symbol_id))
 {}
 
+
 TypeIdx UserDefinedStaticTerm::getType() const {
 	return _function.getCodomainType();
 }
@@ -173,6 +186,7 @@ std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	return info.getTypeBounds(getType());
 }
+
 
 ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
@@ -183,6 +197,23 @@ ObjectIdx UserDefinedStaticTerm::interpret(const State& state, const Binding& bi
 	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
 	return _function.getFunction()(_interpreted_subterms);
 }
+
+
+AxiomaticTerm::AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
+	: StaticHeadedNestedTerm(symbol_id, subterms)
+{}
+
+std::pair<int, int> AxiomaticTerm::getBounds() const {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	return info.getTypeBounds(getType());
+}
+
+ObjectIdx AxiomaticTerm::interpret(const State& state, const Binding& binding) const {
+	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
+	return compute(state, _interpreted_subterms);
+}
+
+
 
 ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	return assignment.at(interpretVariable(assignment, binding));

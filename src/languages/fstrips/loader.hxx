@@ -26,7 +26,6 @@ public:
 	
 	//! Parse a list of quantified variables 
 	static std::vector<const BoundVariable*> parseVariables(const rapidjson::Value& tree, const ProblemInfo& info);
-
 	
 	//! Parse a list of terms
 	static std::vector<const Term*> parseTermList(const rapidjson::Value& tree, const ProblemInfo& info);

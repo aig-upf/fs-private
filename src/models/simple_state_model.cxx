@@ -30,28 +30,22 @@ obtain_goal_atoms(const fs::Formula* goal) {
 
 
 //! A helper to derive the distinct goal atoms
-std::vector<Atom>
+std::vector<const fs::AtomicFormula*>
 obtain_goal_atoms(const fs::Formula* goal) {
 	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
 	if (!conjunction) {
 		throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
 	}
 	
-	std::vector<Atom> goal_atoms;
+	std::vector<const fs::AtomicFormula*> goal_atoms;
 	
 	for (const fs::AtomicFormula* atom:conjunction->getConjuncts()) {
-		auto eq =  dynamic_cast<const fs::EQAtomicFormula*>(atom);
+		auto eq =  dynamic_cast<const fs::AtomicFormula*>(atom);
 		if (!eq) { // This could be easily extended to negated atoms
 			throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
 		}
 		
-		auto sv =  dynamic_cast<const fs::StateVariable*>(eq->lhs());
-		if (!sv) throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
-		
-		auto ct =  dynamic_cast<const fs::Constant*>(eq->rhs());
-		if (!ct) throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
-		
-		goal_atoms.push_back(Atom(sv->getValue(), ct->getValue()));
+		goal_atoms.push_back(eq);
 	}
 	
 	return goal_atoms;
@@ -63,7 +57,7 @@ SimpleStateModel::build(const Problem& problem) {
 	return SimpleStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
 }
 
-SimpleStateModel::SimpleStateModel(const Problem& problem, std::vector<Atom> subgoals) :
+SimpleStateModel::SimpleStateModel(const Problem& problem, const std::vector<const fs::AtomicFormula*>& subgoals) :
 	_task(problem),
 	_manager(build_action_manager(problem)),
 	_subgoals(subgoals)
@@ -104,7 +98,8 @@ SimpleStateModel::next(const StateT& state, const GroundAction& a) const {
 
 bool
 SimpleStateModel::goal(const StateT& s, unsigned i) const {
-	return s.contains(_subgoals.at(i)); // TODO SHOULD BE:
+	return _subgoals.at(i)->interpret(s, Binding::EMPTY_BINDING);
+// 	return s.contains(_subgoals.at(i)); // TODO SHOULD BE:
 	// const Atom& subgoal = _subgoals.at(i);
 	// return s.check(subgoal.getVariable(), s.getValue());
 }

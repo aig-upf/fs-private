@@ -92,6 +92,39 @@ const Formula* AtomicFormula::bind(const Binding& binding, const ProblemInfo& in
 	return processed;
 }
 
+std::ostream& ExternallyDefinedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+       os << name() << "(";
+       for (const auto ptr:_subterms) os << *ptr << ", ";
+       os << ")";
+       return os;
+}
+
+
+const AxiomaticFormula* AxiomaticFormula::bind(const Binding& binding, const ProblemInfo& info) const {
+	// Process the subterms first
+	std::vector<ObjectIdx> constant_values;
+	std::vector<const Term*> processed_subterms = NestedTerm::bind_subterms(_subterms, binding, info, constant_values);
+
+	// Create the corresponding relational or external formula object, according to the symbol
+	return clone(processed_subterms);
+}
+
+std::ostream& AxiomaticFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << name() << "(";
+	for (const auto ptr:_subterms) os << *ptr << ", ";
+	os << ")";
+	return os;
+}
+
+bool AxiomaticFormula::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	throw std::runtime_error("UNIMPLEMENTED");
+}
+
+bool AxiomaticFormula::interpret(const State& state, const Binding& binding) const {
+	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
+	return compute(state, _interpreted_subterms);
+}
+
 Conjunction::Conjunction(const Conjunction& other) :
 	_conjuncts(Utils::clone(other._conjuncts))
 {}
