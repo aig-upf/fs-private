@@ -6,11 +6,9 @@
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
 #include "hff_run.hxx"
-#include <search/drivers/native_driver.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <heuristics/novelty/features.hxx>
-#include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <lapkt/components/open_lists.hxx>
 
 
@@ -161,9 +159,6 @@ public:
 	using IWAlgorithm = IWRun<IWNodeT, StateModelT>;
 	using IWNodePT = typename IWAlgorithm::NodePT;
 
-	using HFFHeuristicT = DirectCRPG;
-	using HFFHeuristicPT = std::unique_ptr<HFFHeuristicT>;
-
 	using APTKFFHeuristicT = HFFRun;
 	using APTKFFHeuristicPT = std::unique_ptr<APTKFFHeuristicT>;
 
@@ -181,18 +176,10 @@ public:
 		_mark_negative_propositions(config.mark_negative_propositions),
 		_complete_simulation(config.complete_simulation),
 		_stats(stats),
-		_direct_rpg(nullptr),
 		_aptk_rpg(nullptr),
 		_use_simulation_nodes(false)
 	{
-		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::HFF) { // Setup the HFF heuristic
-			if (!fs0::drivers::NativeDriver<GroundStateModel>::check_supported(_problem)) {
-				throw std::runtime_error("This problem is too complex for the \"native\" driver, try a different one.");
-			}
-
-			auto direct_builder = DirectRPGBuilder::create(_problem.getGoalConditions(), _problem.getStateConstraints());
-			_direct_rpg = HFFHeuristicPT(new HFFHeuristicT(_problem, DirectActionManager::create(_problem.getGroundActions()), std::move(direct_builder)));
-		} else if (config.relevant_set_type == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
+		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
 			_aptk_rpg = APTKFFHeuristicPT(APTKFFHeuristicT::create(_problem, true));
 		} else if (config.relevant_set_type == SBFWSConfig::RelevantSetType::Macro) {
 			_use_simulation_nodes = true;
@@ -294,11 +281,9 @@ public:
 
 	RelevantAtomSet compute_relevant(const State& state, bool log_stats) {
 		unsigned reachable = 0, max_reachable = _model.num_subgoals();
+		_unused(max_reachable);
 		RelevantAtomSet relevant(nullptr);
-		if (_direct_rpg) {
-			reachable = max_reachable; // In a relaxed-plan environment all subgoals are reachable
-			relevant = compute_relevant_hff(state);
-		} else if (_aptk_rpg) {
+		if (_aptk_rpg) {
 			relevant = compute_relevant_aptk_hff(state);
 		} else if (_use_simulation_nodes) {
 			// Leave the relevant atom set empty
@@ -319,28 +304,6 @@ public:
 		_stats.simulation();
 
 		return relevant;
-	}
-
-	RelevantAtomSet compute_relevant_hff(const State& state) {
-		assert(_direct_rpg);
-		const AtomIndex& atomidx = _problem.get_tuple_index();
-		RelevantAtomSet atomset(&atomidx);
-		long h =  _direct_rpg->evaluate(state);
-		if (h<0) { // No relaxed plan was found - no need to do anything
-
-		} else {
-			const ProblemInfo& info = ProblemInfo::getInstance();
-			for (const Atom& atom:_direct_rpg->get_relevant()) {
-				auto var = atom.getVariable();
-				auto val = atom.getValue();
-				if (!_mark_negative_propositions && info.isPredicativeVariable(var) && val==0) {
-					continue; // We don't want to mark negative propositions
-				}
-
-				atomset.mark(atomidx.to_index(var, val), RelevantAtomSet::STATUS::UNREACHED, false);
-			}
-		}
-		return atomset;
 	}
 
 	RelevantAtomSet compute_relevant_aptk_hff(const State& state) {
@@ -470,8 +433,6 @@ protected:
 	bool _complete_simulation;
 
 	BFWSStats& _stats;
-
-	HFFHeuristicPT _direct_rpg;
 
 	APTKFFHeuristicPT _aptk_rpg;
 	

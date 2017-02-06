@@ -20,7 +20,7 @@ struct SBFWSConfig {
 	SBFWSConfig(SBFWSConfig&&) = default;
 	SBFWSConfig& operator=(SBFWSConfig&&) = default;
 
-	enum class RelevantSetType {Sim, HFF, APTK_HFF, Macro};
+	enum class RelevantSetType {Sim, APTK_HFF, Macro};
 	
 	//! The maximum levels of width for search and simulation
 	const unsigned search_width;

@@ -11,8 +11,7 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 	complete_simulation(config.getOption<bool>("simulation.complete", true))
 {
 	std::string rs = config.getOption<std::string>("bfws.rs");
-	if (rs == "hff") relevant_set_type = RelevantSetType::HFF;
-	else if  (rs == "aptk_hff") relevant_set_type = RelevantSetType::APTK_HFF;
+	if  (rs == "aptk_hff") relevant_set_type = RelevantSetType::APTK_HFF;
 	else if  (rs == "macro") relevant_set_type = RelevantSetType::Macro;
 	else if  (rs == "sim") relevant_set_type = RelevantSetType::Sim;
 	else throw std::runtime_error("Unknown option value \"bfws.rs\"=" + rs);
