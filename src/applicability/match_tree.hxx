@@ -118,7 +118,7 @@ namespace fs0 {
         friend class LeafNode;
         friend class EmptyNode;
 
-    	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer);
+    	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx);
     	virtual ~MatchTreeActionManager() { if (_tree) delete _tree; };
     	MatchTreeActionManager(const MatchTreeActionManager&) = default;
 
@@ -129,10 +129,6 @@ namespace fs0 {
     protected:
 		//! The tuple index of the problem
 		const AtomIndex& _tuple_idx;
-
-		//! An applicability index that maps each (index of) a tuple (i.e. atom) to the sets of (indexes of) all actions
-		//! which are _potentially_ applicable when that atom holds in a state
-		const std::vector<std::vector<ActionIdx>>& _app_index;
 
         //! Reversed applicability index, mapping action indices into sets of atoms making up their preconditions
         std::vector<std::vector<AtomIdx>>*    _rev_app_index;

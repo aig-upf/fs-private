@@ -54,14 +54,14 @@ GroundStateModel::build_action_manager(const Problem& problem) {
 	const auto& tuple_idx =  problem.get_tuple_index();
 	
 
-	BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
-	analyzer.build();
 	if ( Config::instance().getSuccessorGeneratorType() == Config::SuccessorGenerationStrategy::functional_aware) {
 		LPT_INFO( "main", "Successor Generator Strategy: \"Functional Aware\"");
+		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
+		analyzer.build();
 		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
 	}
 	LPT_INFO( "main", "Successor Generator Strategy: \"Match Tree\"");
-	return new MatchTreeActionManager(actions, constraints, tuple_idx, analyzer);
+	return new MatchTreeActionManager(actions, constraints, tuple_idx);
 }
 
 

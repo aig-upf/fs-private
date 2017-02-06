@@ -127,18 +127,16 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 		return new NaiveActionManager(actions, constraints);
 	}
 	
-	// Else, we'll need an applicability analyzer
-	BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
-	analyzer.build();
-	
 	if (strategy == Config::SuccessorGenerationStrategy::functional_aware) {
 		LPT_INFO( "cout", "Successor Generator Strategy: \"Functional Aware\"");
+		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
+		analyzer.build();
 		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
 	
 		
 	} else if (strategy == Config::SuccessorGenerationStrategy::match_tree) {
 		LPT_INFO( "cout", "Successor Generator Strategy: \"Match Tree\"");
-		return new MatchTreeActionManager(actions, constraints, tuple_idx, analyzer);
+		return new MatchTreeActionManager(actions, constraints, tuple_idx);
 	}
 	
 	throw std::runtime_error("Unknown successor generation strategy");

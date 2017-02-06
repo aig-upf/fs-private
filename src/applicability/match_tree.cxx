@@ -192,11 +192,9 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
 
     MatchTreeActionManager::MatchTreeActionManager( const std::vector<const GroundAction*>& actions,
                                                     const fs::Formula* state_constraints,
-                                                    const AtomIndex& tuple_idx,
-                                                    const BasicApplicabilityAnalyzer& analyzer)
+                                                    const AtomIndex& tuple_idx)
         : NaiveActionManager(actions, state_constraints),
         _tuple_idx(tuple_idx),
-        _app_index(analyzer.getApplicable()),
         _rev_app_index(),
         _tree(nullptr)
     {
@@ -204,8 +202,7 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
         // MRJ: This code below builds the reverse applicability index
 		_rev_app_index = new std::vector<std::vector<AtomIdx>>();
         _rev_app_index->resize(actions.size());
-
-
+		
         for (unsigned i = 0; i < _actions.size(); ++i) {
     		const GroundAction& action = *_actions[i];
 
@@ -261,13 +258,16 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
         }
 
 
+        BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
+		analyzer.build();
+		
         // MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
         // lots of methods with absurdly long signatures. The idea is to progressively move
         // towards a more visitor/creator like implementation, but I don't want to depart too
         // much from Chris' original implementation to help with debugging.
         std::vector<ActionIdx> action_indices(_actions.size());
         std::iota( action_indices.begin(), action_indices.end(), 0);
-        NodeCreationContext helper(action_indices, _tuple_idx, _app_index, *_rev_app_index );
+        NodeCreationContext helper(action_indices, _tuple_idx, analyzer.getApplicable(), *_rev_app_index );
         _tree = BaseNode::create_tree( helper );
 
         LPT_INFO("main", "Match Tree created");
