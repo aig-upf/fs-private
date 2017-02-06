@@ -131,6 +131,7 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
                 continue;
             }
             const auto& required = context._rev_app_index[ context._actions[i] ];
+			// std::cout << "std::find() on vector of size: " << required.size() << std::endl;
             if ( std::find( required.begin(), required.end(), _pivot ) != required.end() )  {
                 value_items[0].push_back(context._actions[i]);
                 continue;
@@ -195,13 +196,12 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
                                                     const AtomIndex& tuple_idx)
         : NaiveActionManager(actions, state_constraints),
         _tuple_idx(tuple_idx),
-        _rev_app_index(),
         _tree(nullptr)
     {
         const ProblemInfo& info = ProblemInfo::getInstance();
-        // MRJ: This code below builds the reverse applicability index
-		_rev_app_index = new std::vector<std::vector<AtomIdx>>();
-        _rev_app_index->resize(actions.size());
+        
+		// MRJ: This code below builds the reverse applicability index, mapping action indices into sets of atoms making up their preconditions
+        std::vector<std::vector<AtomIdx>>    rev_app_index(actions.size());
 		
         for (unsigned i = 0; i < _actions.size(); ++i) {
     		const GroundAction& action = *_actions[i];
@@ -242,7 +242,7 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
     			if (eq) { // Prec is of the form X=x
     				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
     				AtomIdx tup = _tuple_idx.to_index(relevant, value);
-    				(*_rev_app_index)[i].push_back(tup);
+    				rev_app_index[i].push_back(tup);
 
     			} else { // Prec is of the form X!=x
     				assert(neq);
@@ -250,7 +250,7 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
     				for (ObjectIdx v2:values) {
     					if (v2 != value) {
     						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
-    						(*_rev_app_index)[i].push_back(tup);
+    						rev_app_index[i].push_back(tup);
     					}
     				}
     			}
@@ -267,19 +267,15 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
         // much from Chris' original implementation to help with debugging.
         std::vector<ActionIdx> action_indices(_actions.size());
         std::iota( action_indices.begin(), action_indices.end(), 0);
-        NodeCreationContext helper(action_indices, _tuple_idx, analyzer.getApplicable(), *_rev_app_index );
+        NodeCreationContext helper(action_indices, _tuple_idx, analyzer.getApplicable(), rev_app_index );
         _tree = BaseNode::create_tree( helper );
 
         LPT_INFO("main", "Match Tree created");
+        #ifdef EDEBUG
         std::stringstream buffer;
-        #ifdef DEBUG
         _tree->print( buffer, "", *this );
-        LPT_DEBUG("main", "\n" << buffer.str() );
+        LPT_EDEBUG("main", "\n" << buffer.str() );
         #endif
-
-		// MRJ: let's try to release as much memory as possible, some of these tables can
-		// quite big.
-		delete _rev_app_index;
     }
 
 

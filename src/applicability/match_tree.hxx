@@ -132,9 +132,6 @@ namespace fs0 {
 		//! The tuple index of the problem
 		const AtomIndex& _tuple_idx;
 
-        //! Reversed applicability index, mapping action indices into sets of atoms making up their preconditions
-        std::vector<std::vector<AtomIdx>>*    _rev_app_index;
-
 		//!
         BaseNode::ptr   _tree;
 
