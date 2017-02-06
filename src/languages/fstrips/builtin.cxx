@@ -91,13 +91,6 @@ std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo
 	return os;
 }
 
-std::ostream& ExternallyDefinedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << name() << "(";
-	for (const auto ptr:_subterms) os << *ptr << ", ";
-	os << ")";
-	return os;
-}
-
 AlldiffFormula::AlldiffFormula(const AlldiffFormula& formula) : AlldiffFormula(Utils::clone(formula._subterms)) {}
 
 bool AlldiffFormula::_satisfied(const ObjectIdxVector& values) const {

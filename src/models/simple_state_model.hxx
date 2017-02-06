@@ -8,6 +8,10 @@
 
 // namespace lapkt { class MultivaluedState; }
 
+namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; }}}
+namespace fs = fs0::language::fstrips;
+
+
 namespace fs0 {
 
 class Problem;
@@ -26,7 +30,7 @@ public:
 	static SimpleStateModel build(const Problem& problem);
 	
 protected:
-	SimpleStateModel(const Problem& problem, std::vector<Atom> subgoals);
+	SimpleStateModel(const Problem& problem, const std::vector<const fs::AtomicFormula*>& subgoals);
 
 public:
 	~SimpleStateModel() = default;
@@ -73,7 +77,7 @@ protected:
 
 	static ActionManagerI* build_action_manager(const Problem& problem);
 	
-	std::vector<Atom> _subgoals;
+	const std::vector<const fs::AtomicFormula*> _subgoals;
 };
 
 } // namespaces
