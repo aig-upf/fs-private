@@ -126,7 +126,7 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
 
         // MRJ: Atoms can be either false or true, so actions
         // either feature or not those atoms
-		std::vector<ActionIdx> value_items;
+		std::vector<std::vector<ActionIdx>> value_items;
 
 
         // Sort out the regression items
@@ -138,7 +138,7 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
             const std::vector<AtomIdx>& required = context._rev_app_index[ context._actions[i] ];
 			// std::cout << "std::find() on vector of size: " << required.size() << std::endl;
             if ( std::find( required.begin(), required.end(), _pivot ) != required.end() )  {
-                value_items.push_back(context._actions[i]);
+                value_items[0].push_back(context._actions[i]);
                 continue;
             }
             default_items.push_back(context._actions[i]);
