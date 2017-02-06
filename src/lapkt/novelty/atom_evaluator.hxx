@@ -61,13 +61,14 @@ public:
 			if (_ignore_negative && feature_value == 0) continue;
 
 			unsigned atom_index = _indexer.to_index(var_index, feature_value);
-			//auto&& value = _seen_tuples_sz_1[atom_index];//std::move(_seen_tuples_sz_1[atom_index]); // see http://stackoverflow.com/a/8399942
+			//auto&& value = _seen_tuples_sz_1[atom_index]; // see http://stackoverflow.com/a/8399942
+			// MRJ: Looks to me the above was needed probably with c++ compilers available circa
+			// 2012, with g++ 5.4.0 the original code works just fine
 			std::vector< bool >::reference value = _seen_tuples_sz_1[atom_index];
 			if (!value) { // The tuple is new, hence the novelty of the state is 1
 				exists_novel_tuple = true;
 				value = true;
 			}
-			//_seen_tuples_sz_1[atom_index] = std::move(value);
 		}
 		return exists_novel_tuple;
 	}
