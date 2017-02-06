@@ -117,7 +117,7 @@ protected:
 	std::map<std::string, unsigned> symbolIds;
 	
 	//! A map from function ID to the function data
-	std::vector<SymbolData> functionData;
+	std::vector<SymbolData> _functionData;
 	
 	//! The names of the problem domain and instance
 	std::string _domain;
@@ -158,9 +158,9 @@ public:
 	bool isNegatedPredicativeAtom(const Atom& atom) const;
 	
 	void setFunction(unsigned functionId, const Function& function) {
-		functionData.at(functionId).setFunction(function);
+		_functionData.at(functionId).setFunction(function);
 	}
-	inline const SymbolData& getSymbolData(unsigned functionId) const { return functionData.at(functionId); }
+	inline const SymbolData& getSymbolData(unsigned functionId) const { return _functionData.at(functionId); }
 	
 	
 	void set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&& extension);

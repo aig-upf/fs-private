@@ -135,7 +135,7 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 		}
 		
 		bool is_static = data[i][6].GetBool();
-		functionData.push_back(SymbolData(type, domain, codomain, variables, is_static));
+		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static));
 	}
 }
 
