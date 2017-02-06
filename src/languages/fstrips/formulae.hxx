@@ -81,7 +81,7 @@ public:
 	virtual AtomicFormula* clone(const std::vector<const Term*>& subterms) const = 0;
 	AtomicFormula* clone() const;
 
-	const Formula* bind(const fs0::Binding& binding, const fs0::ProblemInfo& info) const;
+	const Formula* bind(const fs0::Binding& binding, const fs0::ProblemInfo& info) const override;
 
 	const std::vector<const Term*>& getSubterms() const { return _subterms; }
 
@@ -106,12 +106,47 @@ public:
 	//! A helper to recursively evaluate the formula - must be subclassed
 	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
 
+
 protected:
 	//! The formula subterms
 	std::vector<const Term*> _subterms;
 
 	//! The last interpretation of the subterms (acts as a cache)
 	mutable std::vector<ObjectIdx> _interpreted_subterms;
+};
+
+class ExternallyDefinedFormula : public AtomicFormula {
+public:
+       ExternallyDefinedFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
+       
+       virtual std::string name() const = 0;
+       
+       //! Prints a representation of the object to the given stream.
+       std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+};
+
+
+class AxiomaticFormula : public AtomicFormula {
+public:
+	AxiomaticFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
+	
+	//! To be subclassed
+	virtual std::string name() const = 0;
+	
+	const AxiomaticFormula* bind(const Binding& binding, const ProblemInfo& info) const override;
+	
+	virtual AxiomaticFormula* clone(const std::vector<const Term*>& subterms) const = 0;
+	
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
+	
+	//! To be subclassed
+	virtual bool compute(const State& state, std::vector<ObjectIdx>& arguments) const = 0;
+	bool _satisfied(const ObjectIdxVector& values) const override { throw std::runtime_error("This shouldn't be called"); };
+
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 };
 
 

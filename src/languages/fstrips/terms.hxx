@@ -199,6 +199,27 @@ protected:
 	const SymbolData& _function;
 };
 
+//! 
+class AxiomaticTerm : public StaticHeadedNestedTerm {
+public:
+	AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
+
+	AxiomaticTerm* clone() const override;
+	virtual AxiomaticTerm* clone(const std::vector<const Term*>& subterms) const = 0;
+
+	std::pair<int, int> getBounds() const override;
+
+	virtual std::string name() const = 0;
+		
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("Not yet implemented"); }
+	ObjectIdx interpret(const State& state, const Binding& binding) const;
+	
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
+	
+	//! This needs to be overriden by the particular implementation
+	virtual ObjectIdx compute(const State& state, std::vector<ObjectIdx>& arguments) const = 0;
+};
+
 
 //! A nested term headed by a fluent functional symbol
 class FluentHeadedNestedTerm : public NestedTerm {

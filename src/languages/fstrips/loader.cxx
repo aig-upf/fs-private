@@ -40,6 +40,10 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 		bool negated = tree["negated"].GetBool();
 		std::vector<const Term*> subterms = parseTermList(tree["elements"], info);
 		
+		// HACK - WONT WORK FOR NEGATED FORMULAS
+		try { return LogicalComponentRegistry::instance().instantiate_formula(symbol, subterms); }
+		catch(const std::runtime_error& e) {}
+		
 		// TODO - This is a temporary hack to parse predicates 'p(x)' as if they were
 		// equality predicates 'p(x) = 1' with 'p' being a binary function.
 		try {
@@ -47,6 +51,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 			if (info.isPredicate(symbol_id)) {
 				// 
 				IntConstant* value = negated ? new IntConstant(0) : new IntConstant(1);
+				
 				subterms = {NestedTerm::create(symbol, subterms), value};
 				symbol = "=";
 			}
@@ -64,18 +69,6 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 	throw std::runtime_error("Unknown formula type " + formula_type);
 }
 
-std::vector<const BoundVariable*> Loader::parseVariables(const rapidjson::Value& tree, const ProblemInfo& info) {
-	std::vector<const BoundVariable*> list;
-	for (unsigned i = 0; i < tree.Size(); ++i) {
-		const rapidjson::Value& node = tree[i];
-		unsigned id = node[0].GetUint();
-// 		std::string name = node[1].GetString();
-		std::string type_name = node[2].GetString();
-		TypeIdx type = info.getTypeId(type_name);
-		list.push_back(new BoundVariable(id, type));
-	}
-	return list;
-}
 
 const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& info) {
 	std::string term_type = tree["type"].GetString();
@@ -89,9 +82,27 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 	} else if (term_type == "function") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<const Term*> subterms = parseTermList(tree["subterms"], info);
+		
+		try { return LogicalComponentRegistry::instance().instantiate_term(symbol, subterms); }
+		catch(const std::runtime_error& e) {}
+		
 		return NestedTerm::create(symbol, subterms);
 	} else throw std::runtime_error("Unknown node type " + term_type);
 }
+
+std::vector<const BoundVariable*> Loader::parseVariables(const rapidjson::Value& tree, const ProblemInfo& info) {
+	std::vector<const BoundVariable*> list;
+	for (unsigned i = 0; i < tree.Size(); ++i) {
+		const rapidjson::Value& node = tree[i];
+		unsigned id = node[0].GetUint();
+// 		std::string name = node[1].GetString();
+		std::string type_name = node[2].GetString();
+		TypeIdx type = info.getTypeId(type_name);
+		list.push_back(new BoundVariable(id, type));
+	}
+	return list;
+}
+
 
 std::vector<const Term*> Loader::parseTermList(const rapidjson::Value& tree, const ProblemInfo& info) {
 	std::vector<const Term*> list;
