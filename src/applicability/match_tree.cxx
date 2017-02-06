@@ -45,7 +45,7 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
     }
 
     AtomIdx
-    BaseNode::get_best_atom( NodeCreationContext& context ) {
+    BaseNode::get_best_atom( const NodeCreationContext& context ) {
 
     	// TODO: This fluents.size() stuff needs to change to the number of mutexes once they're computed
 
@@ -79,7 +79,7 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
     }
 
     bool
-    BaseNode::action_done( unsigned i, NodeCreationContext& context  ) {
+    BaseNode::action_done( unsigned i, const NodeCreationContext& context  ) {
     	for (unsigned j = 0; j < context._rev_app_index[i].size(); ++j)
     		if (!context._seen[context._rev_app_index[i][j]])
     			return false;
@@ -121,13 +121,12 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
     SwitchNode::SwitchNode( NodeCreationContext& context ) {
         _pivot = get_best_atom(context);
 
-        std::vector< std::vector<ActionIdx> > value_items;
         // MRJ: default_items contains the "false" branches
         std::vector<ActionIdx> default_items;
 
         // MRJ: Atoms can be either false or true, so actions
         // either feature or not those atoms
-        value_items.push_back( std::vector<ActionIdx>() );
+		std::vector<ActionIdx> value_items;
 
 
         // Sort out the regression items
@@ -139,7 +138,7 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
             const std::vector<AtomIdx>& required = context._rev_app_index[ context._actions[i] ];
 			// std::cout << "std::find() on vector of size: " << required.size() << std::endl;
             if ( std::find( required.begin(), required.end(), _pivot ) != required.end() )  {
-                value_items[0].push_back(context._actions[i]);
+                value_items.push_back(context._actions[i]);
                 continue;
             }
             default_items.push_back(context._actions[i]);

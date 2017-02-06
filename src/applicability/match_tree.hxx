@@ -63,10 +63,10 @@ namespace fs0 {
         create_tree(  NodeCreationContext& context );
 
     	static AtomIdx
-        get_best_atom( NodeCreationContext& context );
+        get_best_atom( const NodeCreationContext& context );
 
     	static bool
-        action_done( unsigned i, NodeCreationContext& context );
+        action_done( unsigned i, const NodeCreationContext& context );
     };
 
 
