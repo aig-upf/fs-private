@@ -45,7 +45,7 @@ namespace fs0 {
         const AtomIndex&                            _tuple_index;
         const std::vector<std::vector<ActionIdx>>&  _app_index;
         const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
-		
+
 		//! _seen[i] is true iff  the tuple with index i has already been "seen"
 		std::vector<bool>                           _seen;
     };
@@ -129,17 +129,17 @@ namespace fs0 {
     protected:
 		//! The tuple index of the problem
 		const AtomIndex& _tuple_idx;
-		
+
 		//! An applicability index that maps each (index of) a tuple (i.e. atom) to the sets of (indexes of) all actions
 		//! which are _potentially_ applicable when that atom holds in a state
-		const std::vector<std::vector<ActionIdx>>& _app_index;		
-		
+		const std::vector<std::vector<ActionIdx>>& _app_index;
+
         //! Reversed applicability index, mapping action indices into sets of atoms making up their preconditions
-        std::vector<std::vector<AtomIdx>>    _rev_app_index;
+        std::vector<std::vector<AtomIdx>>*    _rev_app_index;
 
 		//!
         BaseNode::ptr   _tree;
-		
+
 	protected:
 		std::vector<ActionIdx> compute_whitelist(const State& state) const override;
     };
