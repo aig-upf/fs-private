@@ -260,7 +260,7 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
 
         BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build();
-		
+
         // MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
         // lots of methods with absurdly long signatures. The idea is to progressively move
         // towards a more visitor/creator like implementation, but I don't want to depart too
@@ -280,9 +280,6 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
 		// MRJ: let's try to release as much memory as possible, some of these tables can
 		// quite big.
 		delete _rev_app_index;
-
-
-
     }
 
 

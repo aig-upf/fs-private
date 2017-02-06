@@ -124,6 +124,8 @@ namespace fs0 {
 
 		//! By definition, the match tree whitelist contains all the applicable actions
 		bool whitelist_guarantees_applicability() const override { return true; }
+		
+		unsigned count() { return _tree->count(); }
 
 
     protected:

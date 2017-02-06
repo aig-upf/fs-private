@@ -8,10 +8,20 @@
 
 #include <problem.hxx>
 #include <actions/actions.hxx>
+#include <utils/system.hxx>
 #include <aptk2/tools/logging.hxx>
 
 namespace fs0 { namespace bfws {
 
+	HFFRun* HFFRun::create(const Problem& fs_problem, bool one_HA_per_fluent) {
+		LPT_INFO("cout", "Peak mem. usage before HFF object construction: " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Current mem. usage before HFF object construction: " << get_current_memory_in_kb() << " kB.");
+		auto run = new HFFRun( fs_problem, one_HA_per_fluent);
+		LPT_INFO("cout", "Peak mem. usage after HFF object construction: " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Current mem. usage HFF object construction: " << get_current_memory_in_kb() << " kB.");
+		return run;
+	}
+	
 
     HFFRun::HFFRun( const Problem& fs_problem, bool one_HA_per_fluent ) :
         _fs_problem( fs_problem ),

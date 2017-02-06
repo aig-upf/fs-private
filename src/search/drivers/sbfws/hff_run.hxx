@@ -42,9 +42,7 @@ public:
 	using H_Add_Rp_Fwd = Relaxed_Plan_Heuristic< Fwd_Search_Problem, H_Add_Fwd>;
 
 	//! Factory method
-	static HFFRun* create(const Problem& fs_problem, bool one_HA_per_fluent) {
-		return new HFFRun( fs_problem, one_HA_per_fluent);
-	}
+	static HFFRun* create(const Problem& fs_problem, bool one_HA_per_fluent);
 
 	void compile_to_STRIPS();
 

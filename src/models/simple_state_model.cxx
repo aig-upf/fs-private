@@ -5,6 +5,7 @@
 #include <applicability/action_managers.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <utils/config.hxx>
+#include <utils/system.hxx>
 #include <applicability/match_tree.hxx>
 #include <aptk2/tools/logging.hxx>
 
@@ -123,20 +124,27 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 	
 
 	if (strategy == Config::SuccessorGenerationStrategy::naive) {
-		LPT_INFO( "cout", "Successor Generator Strategy: \"Naive\"");
+		LPT_INFO( "cout", "Successor Generator Strategy: Naive");
 		return new NaiveActionManager(actions, constraints);
 	}
 	
 	if (strategy == Config::SuccessorGenerationStrategy::functional_aware) {
-		LPT_INFO( "cout", "Successor Generator Strategy: \"Functional Aware\"");
+		LPT_INFO( "cout", "Successor Generator Strategy: Functional Aware");
 		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build();
 		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
 	
 		
 	} else if (strategy == Config::SuccessorGenerationStrategy::match_tree) {
-		LPT_INFO( "cout", "Successor Generator Strategy: \"Match Tree\"");
-		return new MatchTreeActionManager(actions, constraints, tuple_idx);
+		LPT_INFO( "cout", "Successor Generator Strategy: Match Tree");
+		LPT_INFO("cout", "Peak mem. usage before match-tree construction: " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Current mem. usage before match-tree construction: " << get_current_memory_in_kb() << " kB.");
+		
+		auto mng = new MatchTreeActionManager(actions, constraints, tuple_idx);
+		LPT_INFO("cout", "Match-tree built with " << mng->count() << " nodes.");
+		LPT_INFO("cout", "Peak mem. usage after match-tree construction: " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Current mem. usage after match-tree construction: " << get_current_memory_in_kb() << " kB.");
+		return mng;
 	}
 	
 	throw std::runtime_error("Unknown successor generation strategy");
