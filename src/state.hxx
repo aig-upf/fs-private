@@ -44,7 +44,8 @@ public:
 	
 	//! Set a value into the state
 	void set(State& state, const Atom& atom) const;
-	
+	void set(State& state, VariableIdx variable, ObjectIdx value) const;
+
 protected:
 	IndexT compute_index(const ProblemInfo& info);
 };

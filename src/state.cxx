@@ -50,16 +50,37 @@ StateAtomIndexer::compute_index(const ProblemInfo& info) {
 
 ObjectIdx
 StateAtomIndexer::get(const State& state, VariableIdx variable) const {
+	std::size_t n_vars = _index.size();
+	assert(variable < n_vars);
+	
+	// If the state is fully boolean or fully multivalued, we can optimize the operation,
+	// since the variable index will be exactly `variable`
+	if (n_vars == _n_bool) return state._bool_values[variable];
+	if (n_vars == _n_int) return state._int_values[variable];
+	
+	// Otherwise we need to deindex the variable
 	const IndexElemT& ind = _index[variable];
 	if (ind.first) return state._bool_values[ind.second];
 	else return state._int_values[ind.second];
 }
 
 void 
-StateAtomIndexer::set(State& state, const Atom& atom) const {
-	const IndexElemT& ind = _index[atom.getVariable()];
-	if (ind.first) state._bool_values[ind.second] = atom.getValue();
-	else state._int_values[ind.second] = atom.getValue();
+StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), atom.getValue()); }
+
+void 
+StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const {
+	std::size_t n_vars = _index.size();
+	assert(variable < n_vars);
+	
+	// If the state is fully boolean or fully multivalued, we can optimize the operation,
+	// since the variable index will be exactly `variable`
+	if (n_vars == _n_bool) state._bool_values[variable] = value;
+	else if (n_vars == _n_int) state._int_values[variable] = value;
+	else {
+		const IndexElemT& ind = _index[variable];
+		if (ind.first) state._bool_values[ind.second] = value;
+		else state._int_values[ind.second] = value;
+	}
 }
 	
 State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std::vector<Atom>& atoms) {
