@@ -80,7 +80,6 @@ protected:
 template <typename StateT>
 class StraightBinaryFeatureSetEvaluator {
 public:
-	
 	//!
 	const BinaryFeatureValuation& evaluate(const StateT& state) const { return state.get_boolean_values(); }
 };
@@ -88,9 +87,26 @@ public:
 template <typename StateT>
 class StraightMultivaluedFeatureSetEvaluator {
 public:
-	
 	//!
 	const IntFeatureValuation& evaluate(const StateT& state) const { return state.get_int_values(); }
+};
+
+
+//! A feature evaluator that works for hybrid states
+template <typename StateT>
+class StraightHybridFeatureSetEvaluator {
+public:
+	//!
+	const IntFeatureValuation evaluate(const StateT& state) const {
+		unsigned sz = state.numAtoms();
+		IntFeatureValuation valuation;
+		valuation.reserve(sz);
+		
+		for (unsigned var = 0; var < sz; ++var) {
+			valuation.push_back(state.getValue(var));
+		}
+		return valuation;
+	}
 };
 
 } } // namespaces

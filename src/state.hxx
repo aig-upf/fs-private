@@ -38,6 +38,9 @@ public:
 	
 	std::size_t num_bool() const { return _n_bool; }
 	std::size_t num_int() const { return _n_int; }
+
+	bool is_fully_binary() const { return _n_int == 0; }
+	bool is_fully_multivalued() const { return _n_bool == 0; }
 	
 	//! Obtain and return the value of the given variable from the given state
 	ObjectIdx get(const State& state, VariableIdx variable) const;
@@ -103,12 +106,15 @@ public:
 	//! "Applies" the given atoms into the current state.
 	void accumulate(const std::vector<Atom>& atoms);
 
-	const BitsetT& get_boolean_values() const { return _bool_values; }
-	const IntsetT& get_int_values() const { return _int_values; }
+	const BitsetT& get_boolean_values() const {
+		assert(_indexer.is_fully_binary());
+		return _bool_values;
+	}
+	const IntsetT& get_int_values() const {
+		assert(_indexer.is_fully_multivalued());
+		return _int_values;
+	}
 	
-	bool is_fully_binary() const { return _int_values.empty(); }
-	bool is_fully_multivalued() const { return _bool_values.empty(); }
-
 protected:
 	void set(const Atom& atom);
 
