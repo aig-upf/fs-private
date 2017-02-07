@@ -5,7 +5,7 @@
 namespace fs0 { namespace bfws {
 
 SBFWSConfig::SBFWSConfig(const Config& config) :
-	search_width(config.getOption<int>("width.search", 1)),
+	search_width(config.getOption<int>("width.search", 2)),
 	simulation_width(config.getOption<int>("width.simulation", 1)),
 	mark_negative_propositions(config.getOption<bool>("simulation.neg_prop", false)),
 	complete_simulation(config.getOption<bool>("simulation.complete", true))
