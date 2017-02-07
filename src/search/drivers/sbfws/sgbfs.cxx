@@ -13,7 +13,7 @@ FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, cons
 	
 	if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
 		const AtomIndex& index = problem.get_tuple_index();
-		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true);
+		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
 		if (evaluator) {
 			LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
 			return evaluator;

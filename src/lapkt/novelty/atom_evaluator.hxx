@@ -22,25 +22,50 @@ public:
 
 
 	//! Factory method - creates the evaluator only if suitable, i.e. if the number of atoms of the problem is small enough
-	static AtomNoveltyEvaluator* create(const ValuationIndexerT& indexer, bool ignore_negative) {
+	static AtomNoveltyEvaluator* create(const ValuationIndexerT& indexer, bool ignore_negative, unsigned max_width) {
+		if (max_width > 2) return nullptr; // This evaluator is not prepared for such high widths
+		
+		if (max_width == 2) { // Some additional checks that are not necessary if all we'll do is to compute width 1.
+			// With this novelty evaluator we can handle up to 2^32 atoms
+			if (indexer.num_indexes() >= 65536) return nullptr;
 
-		// With this novelty evaluator we can handle up to 2^32 atoms
-		if (indexer.num_indexes() >= 65536) return nullptr;
+			if (!Tuple2MarkerT::can_handle(num_combined_indexes(indexer.num_indexes()))) return nullptr;
+		}
 
-		if (!Tuple2MarkerT::can_handle(num_combined_indexes(indexer.num_indexes()))) return nullptr;
-
-		return new AtomNoveltyEvaluator(indexer, ignore_negative);
+		return new AtomNoveltyEvaluator(indexer, ignore_negative, max_width);
 	}
 
 	AtomNoveltyEvaluator() = delete;
 
 protected:
-	AtomNoveltyEvaluator(const ValuationIndexerT& indexer, bool ignore_negative) :
+	//! The indexer that maps each pair of (feature, value) to a feature-index.
+	ValuationIndexerT _indexer;
+
+	//! Whether we want to ignore "negative" values, i.e. values of 0.
+	bool _ignore_negative;
+
+	//! The total number of possible feature-indexes that can be given by the feature valuation indexer.
+	uint32_t _num_atom_indexes;
+
+	//! The tuples of size 1 that we have seen so far
+	std::vector<bool> _seen_tuples_sz_1;
+
+	//! The tuple-2 marker stores in a policy-dependent manner the information
+	//! about the tuples of size 2 that we have seen so far
+	Tuple2MarkerT _t2marker;
+	
+	//! The maximum width this evaluator is prepared to handle.
+	//! If no particular width is specified, the evaluator computes up to (_max_width+1) levels of novelty
+	//! (i.e. if _max_width=1, then the evaluator will return whether a state has novelty 1 or >1.
+	unsigned _max_width;
+	
+	AtomNoveltyEvaluator(const ValuationIndexerT& indexer, bool ignore_negative, unsigned max_width) :
 		_indexer(indexer),
 		_ignore_negative(ignore_negative),
 		_num_atom_indexes(_indexer.num_indexes()),
 		_seen_tuples_sz_1(_num_atom_indexes, false),
-		_t2marker(num_combined_indexes(), _num_atom_indexes)
+		_t2marker(num_combined_indexes(), _num_atom_indexes),
+		_max_width(max_width)
 	{}
 
 public:
@@ -74,6 +99,10 @@ public:
 	}
 
 	bool evaluate_width_2_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) override {
+		if(_max_width < 2) {  // i.e. make sure the evaluator was prepared for this widths!
+			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
+		}
+		
 		unsigned sz = valuation.size();
 		if (sz == novel.size()) return _evaluate_width_2_tuples(valuation);
 
@@ -137,20 +166,21 @@ public:
 
 
 protected:
-	ValuationIndexerT _indexer;
 
-	bool _ignore_negative;
-
-	uint32_t _num_atom_indexes;
-
-	std::vector<bool> _seen_tuples_sz_1;
-
-	Tuple2MarkerT _t2marker;
-
-
-	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) override {
-		throw std::runtime_error("Unsupported type of novelty evaluation operation");
-	};
+	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) {
+		assert(!valuation.empty());
+		
+		unsigned novelty = std::numeric_limits<unsigned>::max();
+		if (_max_width == 0) return novelty; // We're actually computing nothing, novelty will always be MAX
+		
+		if (evaluate_width_1_tuples(valuation, novel)) novelty = 1;
+		if (_max_width <= 1) return novelty; // Novelty will be either 1 or MAX
+		
+		if (evaluate_width_2_tuples(valuation, novel) && novelty > 1) novelty = 2;
+		
+		assert(_max_width == 2); // Novelty will be either 1, 2 or MAX
+		return novelty;
+	}
 
 	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) override {
 		assert(!valuation.empty());
