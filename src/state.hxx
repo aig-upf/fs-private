@@ -14,11 +14,12 @@ class State {
 public:
 	// using BitsetT = boost::dynamic_bitset<>;
 	using BitsetT = std::vector<bool>;
+	using IntsetT = std::vector<int>;
 
 protected:
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
 	BitsetT _bool_values;
-	//std::vector<ObjectIdx> _int_values;
+	IntsetT _int_values;
 
 	std::size_t _hash;
 
@@ -56,6 +57,7 @@ public:
 	void accumulate(const std::vector<Atom>& atoms);
 	
 	const BitsetT& get_boolean_values() const { return _bool_values; }
+	const IntsetT& get_int_values() const { return _int_values; }
 
 protected:
 	void set(const Atom& atom);

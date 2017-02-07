@@ -70,25 +70,29 @@ protected:
 	ContainerT elements;
 };
 
+//! A generic novelty evaluator that accepts all sorts of feature valuations as long as
+//! their type is (homogeneously) FeatureValueT
+//! The evaluator has somewhat optimized data structures for computing novelty 1 and 2,
+//! but is also able to compute higher novelty values.
 template <typename FeatureValueT>
-class MultivaluedNoveltyEvaluator : public NoveltyEvaluatorI<FeatureValueT> {
+class GenericNoveltyEvaluator : public NoveltyEvaluatorI<FeatureValueT> {
 public:
 	using Base = NoveltyEvaluatorI<FeatureValueT>;
 	using ValuationT = typename Base::ValuationT;
 	
-	MultivaluedNoveltyEvaluator() = delete;
-	MultivaluedNoveltyEvaluator(unsigned max_novelty) :
+	GenericNoveltyEvaluator() = delete;
+	GenericNoveltyEvaluator(unsigned max_novelty) :
 		_max_novelty(max_novelty), _tables(_max_novelty + 1)
 	{}
 	
-	MultivaluedNoveltyEvaluator* clone() const {
-		return new MultivaluedNoveltyEvaluator(*this);
+	GenericNoveltyEvaluator* clone() const {
+		return new GenericNoveltyEvaluator(*this);
 	}
 	
-	MultivaluedNoveltyEvaluator(const MultivaluedNoveltyEvaluator&) = default;
-	MultivaluedNoveltyEvaluator(MultivaluedNoveltyEvaluator&&) = default;
-	MultivaluedNoveltyEvaluator& operator=(const MultivaluedNoveltyEvaluator&) = default;
-	MultivaluedNoveltyEvaluator& operator=(MultivaluedNoveltyEvaluator&&) = default;
+	GenericNoveltyEvaluator(const GenericNoveltyEvaluator&) = default;
+	GenericNoveltyEvaluator(GenericNoveltyEvaluator&&) = default;
+	GenericNoveltyEvaluator& operator=(const GenericNoveltyEvaluator&) = default;
+	GenericNoveltyEvaluator& operator=(GenericNoveltyEvaluator&&) = default;
 
 	//!
 	unsigned max_novelty() const { return _max_novelty; }

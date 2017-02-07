@@ -29,7 +29,7 @@ std::size_t ValueTuple::Hasher::operator()(const ValueTuple& tuple) const {
 
 template <typename FeatureValueT>
 std::size_t
-MultivaluedNoveltyEvaluator<FeatureValueT>::Width2TupleHasher::operator()(const Width2Tuple& tuple) const {
+GenericNoveltyEvaluator<FeatureValueT>::Width2TupleHasher::operator()(const Width2Tuple& tuple) const {
 	assert(std::get<0>(tuple) < std::get<2>(tuple));
 	std::size_t seed = 0;
 	boost::hash_combine(seed, std::get<0>(tuple));
@@ -42,7 +42,7 @@ MultivaluedNoveltyEvaluator<FeatureValueT>::Width2TupleHasher::operator()(const 
 
 template <typename FeatureValueT>
 bool
-MultivaluedNoveltyEvaluator<FeatureValueT>::evaluate_width_1_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) {
+GenericNoveltyEvaluator<FeatureValueT>::evaluate_width_1_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) {
 	bool exists_novel_tuple = false;
 	for (unsigned idx:novel) {
 		auto res = _width_1_tuples.insert(std::make_pair(idx, valuation[idx]));
@@ -53,7 +53,7 @@ MultivaluedNoveltyEvaluator<FeatureValueT>::evaluate_width_1_tuples(const Valuat
 
 template <typename FeatureValueT>
 bool
-MultivaluedNoveltyEvaluator<FeatureValueT>::evaluate_width_2_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) {
+GenericNoveltyEvaluator<FeatureValueT>::evaluate_width_2_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) {
 	bool exists_novel_tuple = false;
 	for (unsigned i = 0; i < novel.size(); ++i) {
 		unsigned novel_idx = novel[i];
@@ -74,7 +74,7 @@ MultivaluedNoveltyEvaluator<FeatureValueT>::evaluate_width_2_tuples(const Valuat
 
 template <typename FeatureValueT>
 unsigned
-MultivaluedNoveltyEvaluator<FeatureValueT>::_evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) {
+GenericNoveltyEvaluator<FeatureValueT>::_evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) {
 	assert(!valuation.empty());
 
 	unsigned novelty = std::numeric_limits<unsigned>::max();
@@ -108,7 +108,7 @@ MultivaluedNoveltyEvaluator<FeatureValueT>::_evaluate(const ValuationT& valuatio
 
 template <typename FeatureValueT>
 unsigned
-MultivaluedNoveltyEvaluator<FeatureValueT>::_evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) {
+GenericNoveltyEvaluator<FeatureValueT>::_evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) {
 	assert(!valuation.empty());
 
 	unsigned novelty = std::numeric_limits<unsigned>::max();
@@ -131,8 +131,8 @@ MultivaluedNoveltyEvaluator<FeatureValueT>::_evaluate(const ValuationT& valuatio
 }
 
 // explicit template instantiation
-template class MultivaluedNoveltyEvaluator<bool>;
-template class MultivaluedNoveltyEvaluator<int>;
+template class GenericNoveltyEvaluator<bool>;
+template class GenericNoveltyEvaluator<int>;
 
 
 } } // namespaces

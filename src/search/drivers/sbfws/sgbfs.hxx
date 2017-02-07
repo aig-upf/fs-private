@@ -7,8 +7,7 @@
 #include <search/drivers/sbfws/base.hxx>
 #include "hff_run.hxx"
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
-#include <heuristics/novelty/novelty_features_configuration.hxx>
-#include <heuristics/novelty/features.hxx>
+
 #include <lapkt/components/open_lists.hxx>
 
 
@@ -149,11 +148,10 @@ public:
 
 
 
-template <typename StateModelT, typename NoveltyIndexerT>
+template <typename StateModelT, typename NoveltyIndexerT, typename FeatureSetT, typename NoveltyEvaluatorT>
 class LazyBFWSHeuristic {
 public:
-	using FeatureSetT = lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>;
-	using NoveltyEvaluatorMapT = std::unordered_map<long, FSBinaryNoveltyEvaluatorI*>;
+	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT*>;
 	using ActionT = typename StateModelT::ActionType;
 	using IWNodeT = IWRunNode<State, ActionT>;
 	using IWAlgorithm = IWRun<IWNodeT, StateModelT>;
@@ -162,9 +160,43 @@ public:
 	using APTKFFHeuristicT = HFFRun;
 	using APTKFFHeuristicPT = std::unique_ptr<APTKFFHeuristicT>;
 
+protected:
+	const StateModelT& _model;
+
+	const Problem& _problem;
+
+	const FeatureSetT& _featureset;
+
+	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
+	// to perform all the feature selection, etc. anew.
+	const NoveltyEvaluatorT& _search_evaluator;
+	const NoveltyEvaluatorT& _simulation_evaluator;
 
 
-	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const FSBinaryNoveltyEvaluatorI& search_evaluator, const FSBinaryNoveltyEvaluatorI& simulation_evaluator, BFWSStats& stats) :
+	//! The novelty evaluators for the different #g values
+	NoveltyEvaluatorMapT _wg_novelty_evaluators;
+
+	//! The novelty evaluators for the different <#g, #r> values
+	NoveltyEvaluatorMapT _wgr_novelty_evaluators;
+
+	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
+	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
+
+	NoveltyIndexerT _indexer;
+	bool _mark_negative_propositions;
+	bool _complete_simulation;
+
+	BFWSStats& _stats;
+
+	APTKFFHeuristicPT _aptk_rpg;
+	
+	bool _use_simulation_nodes;
+
+	//! The last used iw-simulator, if any
+	std::unique_ptr<IWAlgorithm> _iw_runner;
+	
+public:
+	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, const NoveltyEvaluatorT& simulation_evaluator, BFWSStats& stats) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
@@ -341,7 +373,7 @@ public:
 			auto inserted = evaluator_map.insert(std::make_pair(type, _search_evaluator.clone()));
 			it = inserted.first;
 		}
-		FSBinaryNoveltyEvaluatorI* evaluator = it->second;
+		NoveltyEvaluatorT* evaluator = it->second;
 
 		if (has_parent && type == parent_type) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
@@ -406,46 +438,12 @@ protected:
 	// Just for sanity check purposes
 	std::map<unsigned, std::tuple<unsigned,unsigned>> __novelty_idx_values;
 #endif
-
-	const StateModelT& _model;
-
-	const Problem& _problem;
-
-	const FeatureSetT& _featureset;
-
-	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
-	// to perform all the feature selection, etc. anew.
-	const FSBinaryNoveltyEvaluatorI& _search_evaluator;
-	const FSBinaryNoveltyEvaluatorI& _simulation_evaluator;
-
-
-	//! The novelty evaluators for the different #g values
-	NoveltyEvaluatorMapT _wg_novelty_evaluators;
-
-	//! The novelty evaluators for the different <#g, #r> values
-	NoveltyEvaluatorMapT _wgr_novelty_evaluators;
-
-	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
-	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
-
-	NoveltyIndexerT _indexer;
-	bool _mark_negative_propositions;
-	bool _complete_simulation;
-
-	BFWSStats& _stats;
-
-	APTKFFHeuristicPT _aptk_rpg;
-	
-	bool _use_simulation_nodes;
-
-	//! The last used iw-simulator, if any
-	std::unique_ptr<IWAlgorithm> _iw_runner;
 };
 
 
 //! A specialized BFWS search schema with multiple queues to implement
 //! effectively lazy novelty evaluation.
-template <typename StateModelT>
+template <typename StateModelT, typename FeatureSetT, typename NoveltyEvaluatorT>
 class LazyBFWS {
 public:
 	using StateT = typename StateModelT::StateT;
@@ -455,20 +453,99 @@ public:
 	using PlanT =  std::vector<ActionIdT>;
 	using NodePT = std::shared_ptr<NodeT>;
 	using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
-	using HeuristicT = LazyBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer>;
+	using HeuristicT = LazyBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer, FeatureSetT, NoveltyEvaluatorT>;
 	using SimulationNodeT = typename HeuristicT::IWNodeT;
 	using SimulationNodePT = typename HeuristicT::IWNodePT;
+	
+	// Novelty evaluator pointer type
+	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
 
+protected:
+	
+// An open list sorted by #g
+	using UnachievedSubgoalsComparerT = unachieved_subgoals_comparer<NodePT>;
+	using UnachievedOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, UnachievedSubgoalsComparerT>;
+	
+	//! An open list sorted by the numerical value of width, then #g
+	using NoveltyComparerT = novelty_comparer<NodePT>;
+	using StandardOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, NoveltyComparerT>;
+	
+	using SearchableQueue = lapkt::SearchableQueue<NodeT>;
+
+
+	//! The search model
+	const StateModelT& _model;
+
+	//! The solution node, if any. This will be set during the search process
+	NodePT _solution;
+
+	//! A list with all nodes that have novelty w_{#g}=1
+	UnachievedOpenList _q1;
+
+	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 1 novelty tables
+	UnachievedOpenList _qwgr1;
+
+	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 2 novelty tables
+	UnachievedOpenList _qwgr2;
+
+	//! A queue with those nodes that have been run through all relevant novelty tables
+	//! and for which it has been proven that they have w_{#g, #r} > 2 and have not
+	//! yet been processed.
+	UnachievedOpenList _qrest;
+
+	//! The closed list
+	ClosedListT _closed;
+
+	//! We keep a "base" novelty evaluator with the appropriate features, which (ATM)
+	//! we will use for both search and heuristic simulation
+	NoveltyEvaluatorPT _search_evaluator;
+	NoveltyEvaluatorPT _simulation_evaluator;
+
+	//! The novelty feature evaluator.
+	//! We hold the object here so that we can reuse the same featureset for search and simulations
+	FeatureSetT _featureset;
+	
+	//! The heuristic object that will help us perform node evaluations
+	HeuristicT _heuristic;
+
+	BFWSStats& _stats;
+
+	//! Whether we want to run a simulation from the root node before starting the search
+	bool _run_simulation_from_root;
+
+	//! Whether we want to prune those nodes with novelty w_{#g, #r} > 2 or not
+	bool _prune_wgr2_gt_2;
+	
+	bool _use_simulation_as_macros_only;
+
+	//! The number of generated nodes so far
+	unsigned long _generated;
+	
+	//! The minimum number of subgoals-to-reach that we have achieved at any moment of the search
+	unsigned _min_subgoals_to_reach;
+	
+	//! How many novelty levels we want to use in the search.
+	unsigned _novelty_levels;
+	
 public:
 
 	//! The only allowed constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the open list object to be used in the search
 	//! (3) the closed list object to be used in the search
-	LazyBFWS(const StateModelT& model, HeuristicT& heuristic, BFWSStats& stats, const Config& config, SBFWSConfig& conf) :
+	LazyBFWS(const StateModelT& model,
+             NoveltyEvaluatorT* search_evaluator,
+             NoveltyEvaluatorT* sim_evaluator,
+             BFWSStats& stats,
+             const Config& config,
+             SBFWSConfig& conf) :
+             
 		_model(model),
 		_solution(nullptr),
-		_heuristic(heuristic),
+		_search_evaluator(search_evaluator),
+		_simulation_evaluator(sim_evaluator),
+		_featureset(), // ATM we use no feature selection, etc.
+		_heuristic(conf, model, _featureset, *_search_evaluator, *_simulation_evaluator, stats),
 		_stats(stats),
 		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false)),
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
@@ -781,68 +858,13 @@ protected:
 		std::reverse(plan.begin(), plan.end());
 		return true;
 	}
-
-protected:
-	// An open list sorted by #g
-	using UnachievedSubgoalsComparerT = unachieved_subgoals_comparer<NodePT>;
-	using UnachievedOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, UnachievedSubgoalsComparerT>;
-	
-	//! An open list sorted by the numerical value of width, then #g
-	using NoveltyComparerT = novelty_comparer<NodePT>;
-	using StandardOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, NoveltyComparerT>;
-	
-	using SearchableQueue = lapkt::SearchableQueue<NodeT>;
-
-
-	//! The search model
-	const StateModelT& _model;
-
-	//! The solution node, if any. This will be set during the search process
-	NodePT _solution;
-
-	//! A list with all nodes that have novelty w_{#g}=1
-	UnachievedOpenList _q1;
-
-	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 1 novelty tables
-	UnachievedOpenList _qwgr1;
-
-	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 2 novelty tables
-	UnachievedOpenList _qwgr2;
-
-	//! A queue with those nodes that have been run through all relevant novelty tables
-	//! and for which it has been proven that they have w_{#g, #r} > 2 and have not
-	//! yet been processed.
-	UnachievedOpenList _qrest;
-
-	//! The closed list
-	ClosedListT _closed;
-
-	//! The heuristic object that will help us perform node evaluations
-	HeuristicT& _heuristic;
-
-	BFWSStats& _stats;
-
-	//! Whether we want to run a simulation from the root node before starting the search
-	bool _run_simulation_from_root;
-
-	//! Whether we want to prune those nodes with novelty w_{#g, #r} > 2 or not
-	bool _prune_wgr2_gt_2;
-	
-	bool _use_simulation_as_macros_only;
-
-	//! The number of generated nodes so far
-	unsigned long _generated;
-	
-	//! The minimum number of subgoals-to-reach that we have achieved at any moment of the search
-	unsigned _min_subgoals_to_reach;
-	
-	//! How many novelty levels we want to use in the search.
-	unsigned _novelty_levels;	
 };
 
 
-
-
+//! A helper to create a novelty evaluator of the appropriate type
+template <typename NoveltyEvaluatorT>
+NoveltyEvaluatorT* create_novelty_evaluator(const Problem& problem, const Config& config, unsigned max_width);
+	
 
 //! The main Simulated BFWS driver, sets everything up and runs the search.
 //! The basic setup is:
@@ -861,75 +883,26 @@ template <typename StateModelT>
 class LazyBFWSDriver : public drivers::Driver {
 public:
 	using StateT = typename StateModelT::StateT;
-	using ActionT = typename StateModelT::ActionType;
-	using EngineT = LazyBFWS<StateModelT>;
-	using EnginePT = std::unique_ptr<EngineT>;
-	using NodeT = LazyBFWSNode<StateT, ActionT>;
-	using HeuristicT = typename EngineT::HeuristicT;
-	using FeatureSetT = lapkt::novelty::StraightBinaryFeatureSetEvaluator<StateT>;
-	using NoveltyEvaluatorPT = std::unique_ptr<FSBinaryNoveltyEvaluatorI>;
 	
-
-	//! Factory method
-	EnginePT create(const Config& config, SBFWSConfig& conf, const NoveltyFeaturesConfiguration& feature_configuration, const StateModelT& model) {
-
-		// Create here one instance to be copied around, so that no need to keep reanalysing which features are relevant
-		_featureset = FeatureSetT();
-
-		
-		_search_evaluator = NoveltyEvaluatorPT(create_novelty_evaluator(model.getTask(), config, conf.search_width));
-		_simulation_evaluator = NoveltyEvaluatorPT(create_novelty_evaluator(model.getTask(), config, conf.simulation_width));
-		
-		_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(conf, model, _featureset, *_search_evaluator, *_simulation_evaluator, _stats));
-
-		auto engine = EnginePT(new EngineT(model, *_heuristic, _stats, config, conf));
-
-// 		drivers::EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
-// 		drivers::EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, _stats, _handlers);
-// 		lapkt::events::subscribe(*engine, _handlers);
-
-		return engine;
-	}
-	
-	FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, const Config& config, unsigned max_width) {
-		
-		if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
-			const AtomIndex& index = problem.get_tuple_index();
-			auto evaluator = FSAtomNoveltyEvaluator::create(index, true);
-			if (evaluator) {
-				LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
-				return evaluator;
-			}
-		}
-		
-		LPT_INFO("cout", "Using a Binary Novelty Evaluator");
-		return new FSBinaryNoveltyEvaluator(max_width);
-	}
-
-	const BFWSStats& getStats() const { return _stats; }
-
+	//! The necessary search method
 	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 
 protected:
-	//!
-	std::unique_ptr<HeuristicT> _heuristic;
-
-	//!
-	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
-
-	//!
+	//! The stats of the search
 	BFWSStats _stats;
 
-	//! The feature set used for the novelty computations
-	FeatureSetT _featureset;
-
-	//! We keep a "base" novelty evaluator with the appropriate features, which (ATM)
-	//! we will use for both search and heuristic simulation
-	NoveltyEvaluatorPT _search_evaluator;
-	NoveltyEvaluatorPT _simulation_evaluator;
-
-	//! Helper
+	//! Helper methods to set up the correct template parameters
 	ExitCode do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
+	
+	/*
+	template <typename NoveltyEvaluatorT>
+	ExitCode
+	do_search1(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
+	*/
+	
+	template <typename NoveltyEvaluatorT, typename FeatureSetT>
+	ExitCode
+	do_search2(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
 };
 
 

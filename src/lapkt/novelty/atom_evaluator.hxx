@@ -167,7 +167,9 @@ protected:
 	}
 };
 
-
+//! A 2-tuple marker based on a large std::vector of bools that keeps, for each possible index
+//! that represents the combination of two novelty feature indexes, whether that index has been
+//! previously seen or not.
 class BoolVectorTuple2Marker {
 public:
 	static bool can_handle(unsigned num_combined_indexes) {

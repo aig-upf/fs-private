@@ -13,6 +13,7 @@ using FeatureValueT = int;
 
 //! A feature valuation is an ordered set of feature values
 using FeatureValuation = std::vector<FeatureValueT>;
+using IntFeatureValuation = std::vector<int>;
 using BinaryFeatureValuation = std::vector<bool>;
 
 //! Base interface. A single novelty feature basically takes a state of a given type and returns a feature value.
@@ -79,16 +80,17 @@ protected:
 template <typename StateT>
 class StraightBinaryFeatureSetEvaluator {
 public:
-	StraightBinaryFeatureSetEvaluator() = default;
-	~StraightBinaryFeatureSetEvaluator() = default;
-	
-	StraightBinaryFeatureSetEvaluator(const StraightBinaryFeatureSetEvaluator&) = default;
-	StraightBinaryFeatureSetEvaluator(StraightBinaryFeatureSetEvaluator&&) = default;
-	StraightBinaryFeatureSetEvaluator& operator=(const StraightBinaryFeatureSetEvaluator&) = default;
-	StraightBinaryFeatureSetEvaluator& operator=(StraightBinaryFeatureSetEvaluator&&) = default;
 	
 	//!
 	const BinaryFeatureValuation& evaluate(const StateT& state) const { return state.get_boolean_values(); }
+};
+
+template <typename StateT>
+class StraightMultivaluedFeatureSetEvaluator {
+public:
+	
+	//!
+	const IntFeatureValuation& evaluate(const StateT& state) const { return state.get_int_values(); }
 };
 
 } } // namespaces

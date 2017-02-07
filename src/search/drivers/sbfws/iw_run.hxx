@@ -11,7 +11,7 @@
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
 #include <state.hxx>
-#include <lapkt/novelty/features.hxx>
+// #include <lapkt/novelty/features.hxx>
 #include <lapkt/components/open_lists.hxx>
 // #include <boost/pool/pool_alloc.hpp>
 
@@ -83,17 +83,17 @@ public:
 
 //! This is the acceptor for an open list with width-based node pruning
 //! - a node is pruned iff its novelty is higher than a given threshold.
-template <typename NodeT>
+template <typename NodeT, typename FeatureSetT, typename NoveltyEvaluatorT>
 class IWRunAcceptor : public lapkt::QueueAcceptorI<NodeT> {
 protected:
 	//! The set of features used to compute the novelty
-	const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& _features;
+	const FeatureSetT& _features;
 
 	//! A single novelty evaluator will be in charge of evaluating all nodes
-	FSBinaryNoveltyEvaluatorI* _evaluator;
+	NoveltyEvaluatorT* _evaluator;
 
 public:
-	IWRunAcceptor(const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& features, FSBinaryNoveltyEvaluatorI* evaluator) :
+	IWRunAcceptor(const FeatureSetT& features, NoveltyEvaluatorT* evaluator) :
 		_features(features),
 		_evaluator(evaluator)
 	{}
@@ -138,7 +138,7 @@ public:
 	using StateT = typename StateModel::StateT;
 	using PlanT = typename Base::PlanT;
 	using NodePT = typename Base::NodePT;
-	using AcceptorT = IWRunAcceptor<NodeT>;
+	
 
 	using NodeOpenEvent = typename Base::NodeOpenEvent;
 	using NodeExpansionEvent = typename Base::NodeExpansionEvent;
@@ -146,7 +146,9 @@ public:
 
 
 	//! Factory method
-	static IWRun* build(const StateModel& model, const lapkt::novelty::StraightBinaryFeatureSetEvaluator<State>& featureset, FSBinaryNoveltyEvaluatorI* evaluator, bool complete, bool mark_negative_propositions) {
+	template <typename FeatureSetT, typename NoveltyEvaluatorT>
+	static IWRun* build(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, bool complete, bool mark_negative_propositions) {
+		using AcceptorT = IWRunAcceptor<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 		auto acceptor = new AcceptorT(featureset, evaluator);
 		return new IWRun(model, OpenListT(acceptor), complete, mark_negative_propositions);
 	}
