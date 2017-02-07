@@ -40,6 +40,9 @@ public:
 	unsigned g;
 	
 	bool satisfies_subgoal; // Whether the node satisfies some subgoal
+	
+	//! The generation order, uniquely identifies the node
+	unsigned long _gen_order;	
 
 
 	IWRunNode() = default;
@@ -50,15 +53,16 @@ public:
 	IWRunNode& operator=(IWRunNode&&) = delete;
 
 	//! Constructor with full copying of the state (expensive)
-	IWRunNode(const StateT& s, unsigned long gen_order = 0) : IWRunNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
+	IWRunNode(const StateT& s, unsigned long gen_order) : IWRunNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT _parent, unsigned long gen_order = 0) :
+	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT _parent, unsigned long gen_order) :
 		state(std::move(_state)),
 //		feature_valuation(0),
 		action(_action),
 		parent(_parent),
-		g(parent ? parent->g+1 : 0)
+		g(parent ? parent->g+1 : 0),
+		_gen_order(gen_order)
 	{}
 
 
@@ -163,7 +167,8 @@ public:
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 		_mark_negative_propositions(mark_negative_propositions),
-		_visited()
+		_visited(),
+		_generated(0)
 	{
 
 		for (unsigned i = 0; i < model.num_subgoals(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
@@ -184,7 +189,7 @@ public:
 	void run(const StateT& seed) {
 		mark_seed_subgoals(seed);
 		
-		NodePT n = std::make_shared<NodeT>(seed);
+		NodePT n = std::make_shared<NodeT>(seed, _generated);
 		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 		this->notify(NodeCreationEvent(*n));
 		
@@ -203,7 +208,7 @@ public:
 
 			for (const auto& a : this->_model.applicable_actions(current->state)) {
 				StateT s_a = this->_model.next( current->state, a );
-				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current );
+				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current, _generated++ );
 				//NodePT successor = std::allocate_shared<NodeT>( _allocator, std::move(s_a), a, current );
 
 				if (this->_closed.check(successor)) continue; // The node has already been closed
@@ -240,6 +245,9 @@ protected:
 	//! Upon retrieval of the set of relevant atoms, this will contain all those nodes that are part
 	//! of the path to some subgoal
 	std::unordered_set<NodePT> _visited;
+	
+	//! The number of generated nodes so far
+	unsigned long _generated;
 
 
 	//! Returns true iff all goal atoms have been reached in the IW search
