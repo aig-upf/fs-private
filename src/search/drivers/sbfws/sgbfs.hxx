@@ -195,6 +195,8 @@ protected:
 	//! The last used iw-simulator, if any
 	std::unique_ptr<IWAlgorithm> _iw_runner;
 	
+	SBFWSConfig::RelevantSetType _rstype;
+	
 public:
 	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, const NoveltyEvaluatorT& simulation_evaluator, BFWSStats& stats) :
 		_model(model),
@@ -209,15 +211,16 @@ public:
 		_complete_simulation(config.complete_simulation),
 		_stats(stats),
 		_aptk_rpg(nullptr),
-		_use_simulation_nodes(false)
+		_use_simulation_nodes(false),
+		_rstype(config.relevant_set_type)
 	{
-		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
+		if (_rstype == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
 			_aptk_rpg = APTKFFHeuristicPT(APTKFFHeuristicT::create(_problem, true));
-		} else if (config.relevant_set_type == SBFWSConfig::RelevantSetType::Macro) {
+		} else if (_rstype == SBFWSConfig::RelevantSetType::Macro) {
 			_use_simulation_nodes = true;
 		}
 		
-		// Else we'll simply use simulators
+		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
 	}
 
 	~LazyBFWSHeuristic() {
@@ -255,12 +258,26 @@ public:
 	}
 	
 	template <typename NodeT>
+	unsigned get_hash_r(NodeT& node) {
+		if (_rstype == SBFWSConfig::RelevantSetType::None) return 0;
+		return node.get_relevant_atoms(*this).num_reached();
+	}
+	
+	template <typename NodeT>
 	unsigned compute_node_complex_type(NodeT& node) {
-		return compute_node_complex_type(node.unachieved_subgoals, node.get_relevant_atoms(*this).num_reached());
+		return compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node));
 	}
 	
 	template <typename NodeT>
 	unsigned evaluate_wgr1(NodeT& node) {
+		
+		// A temporary hack: if we want no R computation at all, then return INF novelty w_{#g,#r} so that nodes on QWRG1 are ignored.
+		// This poses a small overhead, but it is only temporary.
+		if (_rstype == SBFWSConfig::RelevantSetType::None) {
+			node.w_gr = Novelty::GTOne;
+			return std::numeric_limits<unsigned>::max();
+		}
+		
 		unsigned type = compute_node_complex_type(node);
 // 		bool has_parent = node.has_parent() && (node.parent->w_gr != Novelty::Unknown);
 		bool has_parent = node.has_parent();
@@ -312,6 +329,7 @@ public:
 	}
 
 	RelevantAtomSet compute_relevant(const State& state, bool log_stats) {
+		
 		unsigned reachable = 0, max_reachable = _model.num_subgoals();
 		_unused(max_reachable);
 		RelevantAtomSet relevant(nullptr);
@@ -750,8 +768,10 @@ protected:
 		if (!_qrest.empty()) {
 			LPT_EDEBUG("multiqueue-search", "Expanding one remaining node with w_{#g, #r} > 1");
 			NodePT node = _qrest.next();
-			_stats.wgr_gt2_node();
-			process_node(node);
+			if (!node->_processed) {
+				_stats.wgr_gt2_node();
+				process_node(node);
+			}
 			return true;
 		}
 
