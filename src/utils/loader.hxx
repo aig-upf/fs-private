@@ -12,6 +12,7 @@ namespace fs0 {
 class BaseComponentFactory;
 class ProblemInfo;
 class State;
+class StateAtomIndexer;
 class ActionData;
 class GroundAction;
 class Problem;
@@ -33,7 +34,7 @@ protected:
 	
 	 //! Loads a state specification for a given text file.
 	 //! The specification basically consists on an assignation of values to all the state variables.
-	static State* loadState(const rapidjson::Value& data);
+	static State* loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data);
 
 	//! Load the data related to the problem functions and predicates into the info object
 	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);

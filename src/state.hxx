@@ -9,34 +9,80 @@ namespace fs0 {
 
 class Problem;
 class Atom;
+class StateAtomIndexer;
+class ProblemInfo;
+class State;
+
+class StateAtomIndexer {
+public:
+	using IndexElemT = std::pair<bool, unsigned>;
+	using IndexT = std::vector<IndexElemT>;
+	
+protected:
+	//! Assume _index[v] = (b,i). This means that the value of the state variable v
+	//! is stored in the i-th position of the vector of bools (if b is true) or the vector
+	//! of ints (if b is false)
+	const IndexT _index;
+
+	std::size_t _n_bool;
+	std::size_t _n_int;
+	
+	//! Private constructor
+	StateAtomIndexer(IndexT&& index, unsigned n_bool, unsigned n_int);
+	
+public:	
+	//! Factory method
+	static StateAtomIndexer* create(const ProblemInfo& info);
+	
+	std::size_t size() const { return _index.size(); }
+	
+	std::size_t num_bool() const { return _n_bool; }
+	std::size_t num_int() const { return _n_int; }
+	
+	//! Obtain and return the value of the given variable from the given state
+	ObjectIdx get(const State& state, VariableIdx variable) const;
+	
+	//! Set a value into the state
+	void set(State& state, const Atom& atom) const;
+	
+protected:
+	IndexT compute_index(const ProblemInfo& info);
+};
 
 class State {
+	friend class StateAtomIndexer;
 public:
 	// using BitsetT = boost::dynamic_bitset<>;
 	using BitsetT = std::vector<bool>;
 	using IntsetT = std::vector<int>;
 
 protected:
+	const StateAtomIndexer& _indexer;
+	
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
 	BitsetT _bool_values;
 	IntsetT _int_values;
 
 	std::size_t _hash;
 
-public:
-	~State() {}
-
+protected:
 	//! Construct a state specifying the values of all state variables
-	//! Note that it is not necessarily the case that numAtoms == facts.size(); since the initial values of
+	//! Note that it is not necessarily the case that numAtoms == atoms.size(); since the initial values of
 	//! some (Boolean) state variables is often left unspecified and understood to be false.
-	State(unsigned numAtoms, const std::vector<Atom>& facts);
+	State(const StateAtomIndexer& index, const std::vector<Atom>& atoms);
+
+public:
+	~State() = default;
+	
+	//! Factory method
+	static State* create(const StateAtomIndexer& index, unsigned numAtoms, const std::vector<Atom>& atoms);
+	
 
 	//! A constructor that receives a number of atoms and constructs a state that is equal to the received
 	//! state plus the new atoms. Note that we do not check that there are no contradictory atoms.
 	State(const State& state, const std::vector<Atom>& atoms);
 
-	//! Default copy constructors and assignment operators - if ever need a custom version, check the git history!
-	// https://bitbucket.org/gfrances/fs0/src/28ce4119f27a537d8f7628c6ca0487d03d5ed0b1/src/state.hxx?at=gecode_integration
+	//! Default copy constructors and assignment operators
 	State(const State&) = default;
 	State(State&&) = default;
 	State& operator=(const State&) = default;
@@ -51,13 +97,16 @@ public:
 
 	ObjectIdx getValue(const VariableIdx& variable) const;
 
-	unsigned numAtoms() const { return _bool_values.size(); }
+	unsigned numAtoms() const { return _bool_values.size() + _int_values.size(); }
 
 	//! "Applies" the given atoms into the current state.
 	void accumulate(const std::vector<Atom>& atoms);
 
 	const BitsetT& get_boolean_values() const { return _bool_values; }
 	const IntsetT& get_int_values() const { return _int_values; }
+	
+	bool is_fully_binary() const { return _int_values.empty(); }
+	bool is_fully_multivalued() const { return _bool_values.empty(); }
 
 protected:
 	void set(const Atom& atom);
