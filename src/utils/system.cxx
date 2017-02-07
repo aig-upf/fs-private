@@ -183,7 +183,7 @@ int get_peak_memory_in_kb() {
         // Skip to end of line.
         procfile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
-    
+
     if (procfile.fail()) {
         memory_in_kb = -1;
 	}
@@ -211,6 +211,7 @@ void register_event_handlers() {
     sigaddset(&default_signal_action.sa_mask, SIGSEGV);
     sigaddset(&default_signal_action.sa_mask, SIGINT);
     sigaddset(&default_signal_action.sa_mask, SIGXCPU);
+    sigaddset(&default_signal_action.sa_mask, SIGKILL);
     // Reset handler to default action after completion.
     default_signal_action.sa_flags = SA_RESETHAND;
 
@@ -219,6 +220,7 @@ void register_event_handlers() {
     sigaction(SIGSEGV, &default_signal_action, 0);
     sigaction(SIGINT, &default_signal_action, 0);
     sigaction(SIGXCPU, &default_signal_action, 0);
+    sigaction(SIGKILL, &default_signal_action, 0);
 }
 
 
@@ -319,9 +321,3 @@ size_t getCurrentRSS( )
 }
 
 } } // namespaces
-
-
-
-
-
-

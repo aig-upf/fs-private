@@ -36,12 +36,12 @@ namespace fs0 {
 
     class NodeCreationContext {
     public:
-        NodeCreationContext(    const std::vector<ActionIdx>& actions,
+        NodeCreationContext(    std::vector<ActionIdx>& actions,
                                 const AtomIndex& tuple_index,
                                 const std::vector<std::vector<ActionIdx>>& app_index,
                                 const std::vector<std::vector<AtomIdx>>& rev_app_index);
 
-        const std::vector<ActionIdx>&               _actions;
+        std::vector<ActionIdx>&                     _actions;
         const AtomIndex&                            _tuple_index;
         const std::vector<std::vector<ActionIdx>>&  _app_index;
         const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
@@ -92,7 +92,7 @@ namespace fs0 {
     class LeafNode : public BaseNode {
     	std::vector<ActionIdx> _applicable_items;
     public:
-    	LeafNode( const std::vector<ActionIdx>& actions );
+    	LeafNode( std::vector<ActionIdx>& actions );
     	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) override;
     	virtual int count() const { return _applicable_items.size(); }
         virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
@@ -124,7 +124,7 @@ namespace fs0 {
 
 		//! By definition, the match tree whitelist contains all the applicable actions
 		bool whitelist_guarantees_applicability() const override { return true; }
-		
+
 		unsigned count() { return _tree->count(); }
 
 
