@@ -8,22 +8,25 @@
 #include <state.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <utils/system.hxx>
 
 namespace fs0 {
 
 
-NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actions,
+NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
 					const AtomIndex& tuple_index,
 					const std::vector<std::vector<ActionIdx>>& app_index,
 					const std::vector<std::vector<AtomIdx>>& rev_app_index)
-: _actions( actions ), _tuple_index( tuple_index ), _app_index( app_index), _rev_app_index(rev_app_index), _seen(tuple_index.size(), false)
+: _actions( actions ), _tuple_index( tuple_index ), _app_index( app_index), _rev_app_index(rev_app_index)//, _seen(tuple_index.size(), false)
 {}
 
     BaseNode::ptr
     BaseNode::create_tree(  NodeCreationContext& context ) {
 
-    	if (context._actions.empty())
-    		return new EmptyNode;
+    	if (context._actions.empty()){
+            return new EmptyNode;
+        }
+
 
     	// If every item is done, then we create a leaf node
     	bool all_done = true;
@@ -33,9 +36,11 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
     		}
     	}
 
-    	if (all_done)
-    		return new LeafNode(context._actions);
-		return new SwitchNode(context);
+    	if (all_done) {
+            return new LeafNode(context._actions);
+        }
+
+        return new SwitchNode(context);
 
     }
 
@@ -44,7 +49,7 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
 
     	// TODO: This fluents.size() stuff needs to change to the number of mutexes once they're computed
 
-    	static std::vector< std::pair<int,int> > var_count = std::vector< std::pair<int,int> >(context._tuple_index.size());
+    	static std::vector< std::pair<int,int> > var_count(context._tuple_index.size());
         static bool initialised = false;
 
 
@@ -57,6 +62,8 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
 
         	std::sort(var_count.begin(), var_count.end());
             initialised = true;
+            LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << var_count.size() );
+            LPT_INFO("cout", "Current mem. usage after match-tree construction: " << get_current_memory_in_kb() << " kB.");
         }
 
     	for (int i = var_count.size() - 1; i >= 0; --i) {
@@ -81,8 +88,8 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
     }
 
 
-    LeafNode::LeafNode( const std::vector<AtomIdx>& actions ) {
-    	_applicable_items.assign(actions.begin(),actions.end());
+    LeafNode::LeafNode( std::vector<AtomIdx>& actions ) {
+    	_applicable_items.swap(actions);
     }
 
     void LeafNode::generate_applicable_items( const State&, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) {
@@ -112,7 +119,6 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
     }
 
     SwitchNode::SwitchNode( NodeCreationContext& context ) {
-
         _pivot = get_best_atom(context);
 
         // MRJ: default_items contains the "false" branches
@@ -120,7 +126,7 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
 
         // MRJ: Atoms can be either false or true, so actions
         // either feature or not those atoms
-		std::vector<ActionIdx> value_items;
+		std::vector<std::vector<ActionIdx>> value_items;
 
 
         // Sort out the regression items
@@ -129,10 +135,10 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
                 _immediate_items.push_back(context._actions[i]);
                 continue;
             }
-            const auto& required = context._rev_app_index[ context._actions[i] ];
+            const std::vector<AtomIdx>& required = context._rev_app_index[ context._actions[i] ];
 			// std::cout << "std::find() on vector of size: " << required.size() << std::endl;
             if ( std::find( required.begin(), required.end(), _pivot ) != required.end() )  {
-                value_items.push_back(context._actions[i]);
+                value_items[0].push_back(context._actions[i]);
                 continue;
             }
             default_items.push_back(context._actions[i]);
@@ -142,17 +148,21 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
         context._seen[_pivot] = true;
 
         // Create the switch generators
-        NodeCreationContext true_context( value_items, context._tuple_index, context._app_index, context._rev_app_index );
+        std::vector<bool> tmp;
+        NodeCreationContext true_context( value_items[0], context._tuple_index, context._app_index, context._rev_app_index );
+        tmp = std::move( true_context._seen );
         true_context._seen = std::move(context._seen);
         _children.push_back(create_tree(true_context));
         context._seen = std::move(true_context._seen);
+        true_context._seen = std::move(tmp);
 
         // Create the default generator
         NodeCreationContext false_context( default_items, context._tuple_index, context._app_index, context._rev_app_index );
+        tmp = std::move( false_context._seen );
         false_context._seen = std::move(context._seen);
         _default_child = create_tree(false_context);
         context._seen = std::move(false_context._seen);
-
+        false_context._seen = std::move(tmp);
 		context._seen[_pivot] = false;
     }
 
@@ -198,10 +208,13 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
         _tree(nullptr)
     {
         const ProblemInfo& info = ProblemInfo::getInstance();
-        
+        LPT_INFO( "cout", "[Match Tree]  MatchTreeActionManager::MatchTreeActionManager() starts...");
+        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
+
+
 		// MRJ: This code below builds the reverse applicability index, mapping action indices into sets of atoms making up their preconditions
         std::vector<std::vector<AtomIdx>>    rev_app_index(actions.size());
-		
+
         for (unsigned i = 0; i < _actions.size(); ++i) {
     		const GroundAction& action = *_actions[i];
 
@@ -255,10 +268,14 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
     			}
     		}
         }
+        LPT_INFO( "cout", "[Match Tree]  Atom -> Action Index built...");
+        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
 
 
         BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build();
+        LPT_INFO( "cout", "[Match Tree]  Basic Analyzer built...");
+        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
 
         // MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
         // lots of methods with absurdly long signatures. The idea is to progressively move
@@ -267,9 +284,17 @@ NodeCreationContext::NodeCreationContext(    const std::vector<ActionIdx>& actio
         std::vector<ActionIdx> action_indices(_actions.size());
         std::iota( action_indices.begin(), action_indices.end(), 0);
         NodeCreationContext helper(action_indices, _tuple_idx, analyzer.getApplicable(), rev_app_index );
+        helper._seen.resize( _tuple_idx.size() );
+        for ( unsigned k = 0; k < helper._seen.size(); k++ )
+            helper._seen[k] = false;
+
+        LPT_INFO( "cout", "[Match Tree] Calling BaseNode::create_tree() ");
+        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
         _tree = BaseNode::create_tree( helper );
 
         LPT_INFO("main", "Match Tree created");
+        LPT_INFO("cout", "Match Tree created");
+        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
         #ifdef EDEBUG
         std::stringstream buffer;
         _tree->print( buffer, "", *this );
