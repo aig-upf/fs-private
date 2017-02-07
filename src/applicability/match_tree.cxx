@@ -127,6 +127,7 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
         // MRJ: Atoms can be either false or true, so actions
         // either feature or not those atoms
 		std::vector<std::vector<ActionIdx>> value_items;
+		value_items.push_back( std::vector<ActionIdx>() );
 
 
         // Sort out the regression items
