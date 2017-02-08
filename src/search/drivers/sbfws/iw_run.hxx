@@ -190,7 +190,7 @@ protected:
 	SimEvaluatorT _evaluator;
 	
 	//! All those nodes with width 1 on the first stage of the simulation
-	std::unordered_set<NodePT> _w1_nodes;
+	std::vector<NodePT> _w1_nodes;
 	
 	
 	//! The number of generated nodes so far
@@ -225,18 +225,56 @@ public:
 	bool search(const StateT& s, PlanT& solution) override {
 		throw std::runtime_error("Shouldn't be invoking this");
 	}
+	
+	std::unordered_set<NodePT> compute_relevant_w2_nodes() const {
+		std::unordered_set<NodePT> all_visited;
+		std::unordered_set<NodePT> w2_nodes;
+		for (NodePT node:_w1_nodes) {
+			process_w1_node(node, w2_nodes, all_visited);
+		}
+		return w2_nodes;
+	}
+	
+	void process_w1_node(NodePT node, std::unordered_set<NodePT>& w2_nodes, std::unordered_set<NodePT>& all_visited) const {
+		// Traverse from the solution node to the root node
+		
+		// We ignore s0
+		while (node->has_parent()) {
+			// If the node has already been processed, no need to do it again, nor to process the parents,
+			// which will necessarily also have been processed.
+			auto res = all_visited.insert(node);
+			if (!res.second) break;
+			
+			if (node->_w == 2) {
+				w2_nodes.insert(node);
+			}
+			node = node->parent;
+		}
+		
+	}
 
 	void run(const StateT& seed) {
+		_run(seed);
+		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
+		
+		auto relevant_w2_nodes = compute_relevant_w2_nodes();
+		LPT_INFO("cout", "IW Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
+		
+	}
+	
+	void _run(const StateT& seed) {
 		mark_seed_subgoals(seed);
 		
 		NodePT n = std::make_shared<NodeT>(seed, _generated);
 		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 // 		this->notify(NodeCreationEvent(*n));
 		
-		if (process_node(n)) return;
+// 		if (process_node(n)) return;
 		
 		this->_open.insert(n);
 
+		unsigned accepted = 1; // (the root node counts as accepted)
+		
 		while (!this->_open.empty()) {
 			NodePT current = this->_open.next( );
 // 			this->notify(NodeOpenEvent(*current));
@@ -254,20 +292,29 @@ public:
 				if (this->_closed.check(successor)) continue; // The node has already been closed
 				if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
 
-				if (process_node(successor)) return;
+// 				if (process_node(successor)) return;
 
 // 				this->notify(NodeCreationEvent(*successor));
 				
-				if (_evaluator.evaluate(*successor) == 1) {
-					_w1_nodes.insert(successor);
+				unsigned novelty = _evaluator.evaluate(*successor);
+				if (novelty == 1) {
+					_w1_nodes.push_back(successor);
 				}
 				
-				if (!this->_open.insert( successor )) {
+				if (novelty <= 2) {
+					this->_open.insert(successor);
+					accepted++;
+				} else {
 					LPT_EDEBUG("search", std::setw(7) << "PRUNED: " << *successor);
+				}
+				
+				if (accepted > _config._bound) {
+					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
+					return;
 				}
 			}
 		}
-	}
+	}	
 
 protected:
 
