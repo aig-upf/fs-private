@@ -158,7 +158,7 @@ struct SBFWSNoveltyIndexer {
 
 //! A helper to create a novelty evaluator of the appropriate type
 template <typename NoveltyEvaluatorT>
-NoveltyEvaluatorT* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width);
+NoveltyEvaluatorT* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width, bool persistent = false);
 
 } } // namespaces
 

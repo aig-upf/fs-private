@@ -30,14 +30,23 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 
 
 template<>
-FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width) {
+FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width, bool persistent) {
 	
 	if (evaluator_t == SBFWSConfig::NoveltyEvaluatorType::Adaptive) {
 		const AtomIndex& index = problem.get_tuple_index();
-		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
-		if (evaluator) {
-			LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
-			return evaluator;
+		
+		if (persistent) {
+			auto evaluator = FSAtomBinaryNoveltyEvaluatorPersistent::create(index, true, max_width);
+			if (evaluator) {
+				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator WITH PERSISTENCE");
+				return evaluator;
+			}			
+		} else {
+			auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
+			if (evaluator) {
+				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
+				return evaluator;
+			}
 		}
 	}
 	
@@ -46,7 +55,7 @@ FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFW
 }
 
 template<>
-FSMultivaluedNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width) {
+FSMultivaluedNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width, bool persistent) {
 	
 	/*
 	 * TODO - IMPLEMENT THIS FOR MULTIVALUED TYPES

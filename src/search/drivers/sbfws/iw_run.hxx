@@ -45,6 +45,9 @@ public:
 	//! The novelty  of the state
 	int _w;
 	
+	//!
+	std::unordered_set<unsigned> _relevant_atoms;
+	
 	//! The generation order, uniquely identifies the node
 	unsigned long _gen_order;
 
@@ -116,6 +119,10 @@ public:
 			node._w = _evaluator->evaluate(_features.evaluate(node.state), _features.evaluate(node.parent->state));
 		} else {
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
+		}
+		
+		if (node._w == 2) { // If the novelty is two, we want to store the set R_s of atoms that belong to a novel 2-tuple
+			_evaluator->atoms_in_novel_tuple(node._relevant_atoms);
 		}
 		
 		return node._w;
@@ -206,7 +213,7 @@ public:
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 		_visited(),
-		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, 2)),
+		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, 2, true)),
 		_w1_nodes(),
 		_generated(0)
 	{
@@ -247,6 +254,7 @@ public:
 			
 			if (node->_w == 2) {
 				w2_nodes.insert(node);
+				LPT_INFO("cout", "IW Simulation - |R_s| = " << node->_relevant_atoms.size());
 			}
 			node = node->parent;
 		}
@@ -308,7 +316,7 @@ public:
 					LPT_EDEBUG("search", std::setw(7) << "PRUNED: " << *successor);
 				}
 				
-				if (accepted > _config._bound) {
+				if (accepted >= _config._bound) {
 					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
 					return;
 				}
