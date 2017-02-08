@@ -28,8 +28,11 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	const Config& config = Config::instance();
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
+	LPT_INFO("main", "Creating State Indexer...");
+	auto indexer = StateAtomIndexer::create(info);
+	
 	LPT_INFO("main", "Loading initial state...");
-	auto init = loadState(data["init"]);
+	auto init = loadState(*indexer, data["init"]);
 	
 	LPT_INFO("main", "Loading action data...");
 	auto action_data = loadAllActionData(data["action_schemata"], info);
@@ -41,7 +44,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
-	Problem* problem = new Problem(init, action_data, goal, sc, AtomIndex(info));
+	Problem* problem = new Problem(init, indexer, action_data, goal, sc, AtomIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
@@ -80,7 +83,7 @@ Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data
 }
 
 State*
-Loader::loadState(const rapidjson::Value& data) {
+Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data) {
 	// The state is an array of two-sized arrays [x,v], representing atoms x=v
 	unsigned numAtoms = data["variables"].GetInt();
 	Atom::vctr facts;
@@ -88,7 +91,7 @@ Loader::loadState(const rapidjson::Value& data) {
 		const rapidjson::Value& node = data["atoms"][i];
 		facts.push_back(Atom(node[0].GetInt(), node[1].GetInt()));
 	}
-	return new State(numAtoms, facts);
+	return State::create(indexer, numAtoms, facts);
 }
 
 

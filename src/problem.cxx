@@ -12,9 +12,10 @@ namespace fs0 {
 
 std::unique_ptr<Problem> Problem::_instance = nullptr;
 
-Problem::Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index) :
+Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index) :
 	_tuple_index(std::move(tuple_index)),
 	_init(init),
+	_state_indexer(state_indexer),
 	_action_data(action_data),
 	_ground(),
 	_partials(),
@@ -36,6 +37,7 @@ Problem::~Problem() {
 Problem::Problem(const Problem& other) :
 	_tuple_index(other._tuple_index),
 	_init(new State(*other._init)),
+	_state_indexer(new StateAtomIndexer(*other._state_indexer)),
 	_action_data(Utils::copy(other._action_data)),
 	_ground(Utils::copy(other._ground)),
 	_partials(Utils::copy(other._partials)),
