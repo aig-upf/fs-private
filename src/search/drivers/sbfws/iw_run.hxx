@@ -8,6 +8,7 @@
 #include <lapkt/algorithms/generic_search.hxx>
 #include <search/novelty/fs_novelty.hxx>
 #include <search/drivers/sbfws/relevant_atomset.hxx>
+#include "base.hxx"
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
 #include <state.hxx>
@@ -41,8 +42,11 @@ public:
 	
 	bool satisfies_subgoal; // Whether the node satisfies some subgoal
 	
+	//! The novelty  of the state
+	unsigned _w;
+	
 	//! The generation order, uniquely identifies the node
-	unsigned long _gen_order;	
+	unsigned long _gen_order;
 
 
 	IWRunNode() = default;
@@ -85,39 +89,35 @@ public:
 };
 
 
-//! This is the acceptor for an open list with width-based node pruning
-//! - a node is pruned iff its novelty is higher than a given threshold.
 template <typename NodeT, typename FeatureSetT, typename NoveltyEvaluatorT>
-class IWRunAcceptor : public lapkt::QueueAcceptorI<NodeT> {
+class SimulationEvaluator {
 protected:
 	//! The set of features used to compute the novelty
 	const FeatureSetT& _features;
 
 	//! A single novelty evaluator will be in charge of evaluating all nodes
-	NoveltyEvaluatorT* _evaluator;
+	std::unique_ptr<NoveltyEvaluatorT> _evaluator;
 
 public:
-	IWRunAcceptor(const FeatureSetT& features, NoveltyEvaluatorT* evaluator) :
+	SimulationEvaluator(const FeatureSetT& features, NoveltyEvaluatorT* evaluator) :
 		_features(features),
 		_evaluator(evaluator)
 	{}
 
-	~IWRunAcceptor() {
-		delete _evaluator;
-	}
+	~SimulationEvaluator() = default;
 
 	//! Returns false iff we want to prune this node during the search
-	bool accept(NodeT& node) {
-		unsigned novelty = 0;
+	unsigned evaluate(NodeT& node) {
+		assert(node._w == std::numeric_limits<unsigned>::max()); // i.e. don't evaluate a node twice!
 		
 		if (node.parent) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
-			novelty = _evaluator->evaluate(_features.evaluate(node.state), _features.evaluate(node.parent->state));
+			node._w = _evaluator->evaluate(_features.evaluate(node.state), _features.evaluate(node.parent->state));
 		} else {
-			novelty = _evaluator->evaluate(_features.evaluate(node.state));
+			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
 		
-		return novelty < std::numeric_limits<unsigned>::max();
+		return node._w;
 	}
 };
 
@@ -131,6 +131,8 @@ public:
 //! satisfied.
 template <typename NodeT,
           typename StateModel,
+          typename NoveltyEvaluatorT,
+		  typename FeatureSetT,
           typename OpenListT = lapkt::SearchableQueue<NodeT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
@@ -142,6 +144,7 @@ public:
 	using StateT = typename StateModel::StateT;
 	using PlanT = typename Base::PlanT;
 	using NodePT = typename Base::NodePT;
+	using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 	
 
 	using NodeOpenEvent = typename Base::NodeOpenEvent;
@@ -170,6 +173,7 @@ protected:
 	std::vector<std::vector<NodePT>> _all_paths;
 
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
+	// TODO REMOVE
 	std::unordered_set<unsigned> _unreached;
 	
 	//! Contains the indexes of all those goal atoms that were already reached in the seed state
@@ -181,28 +185,28 @@ protected:
 	//! of the path to some subgoal
 	std::unordered_set<NodePT> _visited;
 	
+	//! A single novelty evaluator will be in charge of evaluating all nodes
+	SimEvaluatorT _evaluator;
+	
+	//! All those nodes with width 1 on the first stage of the simulation
+	std::unordered_set<NodePT> _w1_nodes;
+	
+	
 	//! The number of generated nodes so far
-	unsigned long _generated;	
+	unsigned long _generated;
 
 public:
-	//! Factory method
-	template <typename FeatureSetT, typename NoveltyEvaluatorT>
-	static IWRun* build(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const IWRun::Config& config) {
-		using AcceptorT = IWRunAcceptor<NodeT, FeatureSetT, NoveltyEvaluatorT>;
-		auto acceptor = new AcceptorT(featureset, evaluator);
-		return new IWRun(model, OpenListT(acceptor), config);
-	}
 
-	//! The constructor requires the user of the algorithm to inject both
-	//! (1) the state model to be used in the search
-	//! (2) the particular open and closed list objects
-	IWRun(const StateModel& model, OpenListT&& open, const IWRun::Config& config) :
-		Base(model, std::move(open), ClosedListT()),
+	//! Constructor
+	IWRun(const StateModel& model, const FeatureSetT& featureset, const IWRun::Config& config) :
+		Base(model, OpenListT(), ClosedListT()),
 		_config(config),
 		_all_paths(model.num_subgoals()),
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 		_visited(),
+		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, 2)),
+		_w1_nodes(),
 		_generated(0)
 	{
 
@@ -226,7 +230,7 @@ public:
 		
 		NodePT n = std::make_shared<NodeT>(seed, _generated);
 		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
-		this->notify(NodeCreationEvent(*n));
+// 		this->notify(NodeCreationEvent(*n));
 		
 		if (process_node(n)) return;
 		
@@ -234,12 +238,12 @@ public:
 
 		while (!this->_open.empty()) {
 			NodePT current = this->_open.next( );
-			this->notify(NodeOpenEvent(*current));
+// 			this->notify(NodeOpenEvent(*current));
 
 			// close the node before the actual expansion so that children which are identical to 'current' get properly discarded.
 			this->_closed.put(current);
 
-			this->notify(NodeExpansionEvent(*current));
+// 			this->notify(NodeExpansionEvent(*current));
 
 			for (const auto& a : this->_model.applicable_actions(current->state)) {
 				StateT s_a = this->_model.next( current->state, a );
@@ -251,7 +255,12 @@ public:
 
 				if (process_node(successor)) return;
 
-				this->notify(NodeCreationEvent(*successor));
+// 				this->notify(NodeCreationEvent(*successor));
+				
+				if (_evaluator.evaluate(*successor) == 1) {
+					_w1_nodes.insert(successor);
+				}
+				
 				if (!this->_open.insert( successor )) {
 					LPT_EDEBUG("search", std::setw(7) << "PRUNED: " << *successor);
 				}

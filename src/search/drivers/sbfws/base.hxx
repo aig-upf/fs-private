@@ -9,7 +9,7 @@
 #include <ios>
 #include <iomanip>
 
-namespace fs0 { class Config; }
+namespace fs0 { class Config; class Problem; }
 
 namespace fs0 { namespace bfws {
 
@@ -20,16 +20,17 @@ struct SBFWSConfig {
 	SBFWSConfig(SBFWSConfig&&) = default;
 	SBFWSConfig& operator=(SBFWSConfig&&) = default;
 
-	enum class RelevantSetType {None, Sim, APTK_HFF, Macro};
-	
 	//! The maximum levels of width for search and simulation
 	const unsigned search_width;
 	const unsigned simulation_width;
 	const bool mark_negative_propositions;
 	const bool complete_simulation;
 	
-	RelevantSetType relevant_set_type;
+	enum class NoveltyEvaluatorType {Adaptive, Generic};
+	NoveltyEvaluatorType evaluator_t;
 	
+	enum class RelevantSetType {None, Sim, APTK_HFF, Macro};
+	RelevantSetType relevant_set_type;
 };
 
 class BFWSStats {
@@ -155,6 +156,9 @@ struct SBFWSNoveltyIndexer {
 	}
 };
 
+//! A helper to create a novelty evaluator of the appropriate type
+template <typename NoveltyEvaluatorT>
+NoveltyEvaluatorT* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width);
 
 } } // namespaces
 

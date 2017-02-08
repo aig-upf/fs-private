@@ -154,7 +154,7 @@ public:
 	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT*>;
 	using ActionT = typename StateModelT::ActionType;
 	using IWNodeT = IWRunNode<State, ActionT>;
-	using SimulationT = IWRun<IWNodeT, StateModelT>;
+	using SimulationT = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
 	using SimConfigT = typename SimulationT::Config;
 	using IWNodePT = typename SimulationT::NodePT;
 
@@ -171,7 +171,6 @@ protected:
 	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
 	// to perform all the feature selection, etc. anew.
 	const NoveltyEvaluatorT& _search_evaluator;
-	const NoveltyEvaluatorT& _simulation_evaluator;
 
 
 	//! The novelty evaluators for the different #g values
@@ -199,12 +198,11 @@ protected:
 	SBFWSConfig::RelevantSetType _rstype;
 	
 public:
-	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, const NoveltyEvaluatorT& simulation_evaluator, BFWSStats& stats) :
+	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, BFWSStats& stats) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
 		_search_evaluator(search_evaluator),
-		_simulation_evaluator(simulation_evaluator),
 		_wg_novelty_evaluators(),
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
@@ -313,7 +311,7 @@ public:
 	RelevantAtomSet compute_relevant_simulation(const State& state, unsigned& reachable) {
 		reachable = 0;
 
-		_simulator = std::unique_ptr<SimulationT>(SimulationT::build(_model, _featureset, _simulation_evaluator.clone(), _simconfig));
+		_simulator = std::unique_ptr<SimulationT>(new SimulationT(_model, _featureset, _simconfig));
 
 		//BFWSStats stats;
 		//StatsObserver<IWNodeT, BFWSStats> st_obs(stats, false);
@@ -515,10 +513,8 @@ protected:
 	//! The closed list
 	ClosedListT _closed;
 
-	//! We keep a "base" novelty evaluator with the appropriate features, which (ATM)
-	//! we will use for both search and heuristic simulation
+	//! We keep a "base" novelty evaluator with the appropriate features
 	NoveltyEvaluatorPT _search_evaluator;
-	NoveltyEvaluatorPT _simulation_evaluator;
 
 	//! The novelty feature evaluator.
 	//! We hold the object here so that we can reuse the same featureset for search and simulations
@@ -554,7 +550,6 @@ public:
 	//! (3) the closed list object to be used in the search
 	LazyBFWS(const StateModelT& model,
              NoveltyEvaluatorT* search_evaluator,
-             NoveltyEvaluatorT* sim_evaluator,
              BFWSStats& stats,
              const Config& config,
              SBFWSConfig& conf) :
@@ -562,9 +557,8 @@ public:
 		_model(model),
 		_solution(nullptr),
 		_search_evaluator(search_evaluator),
-		_simulation_evaluator(sim_evaluator),
 		_featureset(), // ATM we use no feature selection, etc.
-		_heuristic(conf, model, _featureset, *_search_evaluator, *_simulation_evaluator, stats),
+		_heuristic(conf, model, _featureset, *_search_evaluator, stats),
 		_stats(stats),
 		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false)),
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
@@ -882,10 +876,6 @@ protected:
 };
 
 
-//! A helper to create a novelty evaluator of the appropriate type
-template <typename NoveltyEvaluatorT>
-NoveltyEvaluatorT* create_novelty_evaluator(const Problem& problem, const Config& config, unsigned max_width);
-	
 
 //! The main Simulated BFWS driver, sets everything up and runs the search.
 //! The basic setup is:

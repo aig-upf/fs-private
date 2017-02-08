@@ -8,41 +8,6 @@
 namespace fs0 { namespace bfws {
 
 
-template<>
-FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, const Config& config, unsigned max_width) {
-	
-	if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
-		const AtomIndex& index = problem.get_tuple_index();
-		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
-		if (evaluator) {
-			LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
-			return evaluator;
-		}
-	}
-	
-	LPT_INFO("cout", "NOVELTY EVALUATION: Using a binary novelty evaluator");
-	return new FSGenericBinaryNoveltyEvaluator(max_width);
-}
-
-template<>
-FSMultivaluedNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, const Config& config, unsigned max_width) {
-	
-	/*
-	 * TODO - IMPLEMENT THIS
-	if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
-		const AtomIndex& index = problem.get_tuple_index();
-		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
-		if (evaluator) {
-			LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
-			return evaluator;
-		}
-	}
-	*/
-	
-	LPT_INFO("cout", "NOVELTY EVALUATION: Using a generic multivalued novelty evaluator");
-	return new FSGenericMultivaluedNoveltyEvaluator(max_width);
-}
-
 //! Factory method
 template <typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEvaluatorT>
 std::unique_ptr<LazyBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>>
@@ -51,10 +16,9 @@ create(const Config& config, SBFWSConfig& conf, const StateModelT& model, BFWSSt
 	// Engine types
 	using EngineT = LazyBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>;
 	
-	auto search_evaluator = create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), config, conf.search_width);
-	auto simulation_evaluator = create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), config, conf.simulation_width);
+	auto search_evaluator = create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), conf.evaluator_t, conf.search_width);
 	
-	return std::unique_ptr<EngineT>(new EngineT(model, search_evaluator, simulation_evaluator, stats, config, conf));
+	return std::unique_ptr<EngineT>(new EngineT(model, search_evaluator, stats, config, conf));
 }
 
 template <>
