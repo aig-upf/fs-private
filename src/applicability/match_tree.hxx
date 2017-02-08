@@ -31,7 +31,7 @@ namespace fs = fs0::language::fstrips;
 
 
 namespace fs0 {
-
+	class ProblemInfo;
     class MatchTreeActionManager;
 
     class NodeCreationContext {
@@ -126,6 +126,8 @@ namespace fs0 {
 		bool whitelist_guarantees_applicability() const override { return true; }
 
 		unsigned count() { return _tree->count(); }
+		
+		static void check_match_tree_can_be_used(const ProblemInfo& info);
 
 
     protected:

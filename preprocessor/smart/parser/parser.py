@@ -306,7 +306,7 @@ class Parser(object):
                         parsing_error_code)
                 function_type = next(tokens)
                 if function_type != 'number':
-                    raise ParsingException("Error: we only support numeric functions: " + function,
+                    raise ParsingException("Error: we only support numeric functions: {}".format(function),
                         parsing_error_code)
 
                 name = function[0]
