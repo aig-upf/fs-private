@@ -10,6 +10,7 @@ namespace fs = fs0::language::fstrips;
 namespace fs0 {
 
 class State;
+class StateAtomIndexer;
 class FormulaInterpreter;
 class ActionData;
 class ActionBase;
@@ -19,7 +20,7 @@ class GroundAction;
 class Problem {
 public:
 
-	Problem(State* init, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index);
+	Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index);
 	~Problem();
 	
 	Problem(const Problem& other);
@@ -30,6 +31,8 @@ public:
 
 	//! Get the initial state of the problem
 	const State& getInitialState() const { return *_init; }
+	
+	const StateAtomIndexer& getStateAtomIndexer() const { return *_state_indexer; }
 
 	//! Get the set of action schemata of the problem
 	const std::vector<const ActionData*>& getActionData() const { return _action_data; }
@@ -80,6 +83,8 @@ protected:
 	//! The initial state of the problem
 	const std::unique_ptr<State> _init;
 
+	const std::unique_ptr<StateAtomIndexer> _state_indexer;
+	
 	const std::vector<const ActionData*> _action_data;
 	
 	// The set of grounded actions of the problem

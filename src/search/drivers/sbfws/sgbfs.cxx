@@ -15,22 +15,41 @@ FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, cons
 		const AtomIndex& index = problem.get_tuple_index();
 		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
 		if (evaluator) {
-			LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
+			LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
 			return evaluator;
 		}
 	}
 	
-	LPT_INFO("cout", "Using a Binary Novelty Evaluator");
+	LPT_INFO("cout", "NOVELTY EVALUATION: Using a binary novelty evaluator");
 	return new FSGenericBinaryNoveltyEvaluator(max_width);
 }
 
+template<>
+FSMultivaluedNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, const Config& config, unsigned max_width) {
+	
+	/*
+	 * TODO - IMPLEMENT THIS
+	if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
+		const AtomIndex& index = problem.get_tuple_index();
+		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
+		if (evaluator) {
+			LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
+			return evaluator;
+		}
+	}
+	*/
+	
+	LPT_INFO("cout", "NOVELTY EVALUATION: Using a generic multivalued novelty evaluator");
+	return new FSGenericMultivaluedNoveltyEvaluator(max_width);
+}
+
 //! Factory method
-template <typename StateModelT, typename FeatureSetT, typename NoveltyEvaluatorT>
-std::unique_ptr<LazyBFWS<StateModelT, FeatureSetT, NoveltyEvaluatorT>>
+template <typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEvaluatorT>
+std::unique_ptr<LazyBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>>
 create(const Config& config, SBFWSConfig& conf, const StateModelT& model, BFWSStats& stats) {
 	
 	// Engine types
-	using EngineT = LazyBFWS<StateModelT, FeatureSetT, NoveltyEvaluatorT>;
+	using EngineT = LazyBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>;
 	
 	auto search_evaluator = create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), config, conf.search_width);
 	auto simulation_evaluator = create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), config, conf.simulation_width);
@@ -48,12 +67,22 @@ LazyBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config,
 template <typename StateModelT>
 ExitCode
 LazyBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
-
-	if (true) { // TODO - IF THE STATE CONTAINS ONLY BINARY VARIABLES
-		return do_search2<FSBinaryNoveltyEvaluatorI, lapkt::novelty::StraightBinaryFeatureSetEvaluator<StateT>>(model, config, out_dir, start_time);
+	const StateAtomIndexer& indexer = model.getTask().getStateAtomIndexer();
+	
+	if (indexer.is_fully_binary()) { // The state is fully binary
+		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightBinaryFeatureSetEvaluator");
+		using FeatureEvaluatorT = lapkt::novelty::StraightBinaryFeatureSetEvaluator<StateT>;
+		return do_search2<FSBinaryNoveltyEvaluatorI, FeatureEvaluatorT>(model, config, out_dir, start_time);
 		
-	} else {
-		return do_search2<FSMultivaluedNoveltyEvaluatorI, lapkt::novelty::StraightMultivaluedFeatureSetEvaluator<StateT>>(model, config, out_dir, start_time);
+	} else if (indexer.is_fully_multivalued()) { // The state is fully multivalued
+		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightMultivaluedFeatureSetEvaluator");
+		using FeatureEvaluatorT = lapkt::novelty::StraightMultivaluedFeatureSetEvaluator<StateT>;
+		return do_search2<FSMultivaluedNoveltyEvaluatorI, FeatureEvaluatorT>(model, config, out_dir, start_time);
+		
+	} else { // We have a hybrid state and cannot thus apply optimizations
+		LPT_INFO("cout", "FEATURE EVALUATION: Using a generic StraightHybridFeatureSetEvaluator");
+		using FeatureEvaluatorT = lapkt::novelty::StraightHybridFeatureSetEvaluator<StateT>;
+		return do_search2<FSMultivaluedNoveltyEvaluatorI, FeatureEvaluatorT>(model, config, out_dir, start_time);
 	}
 }
 
@@ -72,13 +101,13 @@ LazyBFWSDriver<StateModelT>::do_search1(const StateModelT& model, const Config& 
 */
 
 template <typename StateModelT>
-template <typename NoveltyEvaluatorT, typename FeatureSetT>
+template <typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 ExitCode
 LazyBFWSDriver<StateModelT>::do_search2(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	SBFWSConfig bfws_config(config);
 	
 	
-	auto engine = create<StateModelT, FeatureSetT, NoveltyEvaluatorT>(config, bfws_config, model, _stats);
+	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>(config, bfws_config, model, _stats);
 	
 	
 	LPT_INFO("cout", "Simulated BFWS Configuration:");
