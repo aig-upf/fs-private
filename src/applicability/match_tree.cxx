@@ -199,6 +199,17 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
             _children[i]->print(stream, indent + "  ", manager);
         }
     }
+    
+    void 
+    MatchTreeActionManager::check_match_tree_can_be_used(const ProblemInfo& info) {
+		for (unsigned var = 0; var < info.getNumVariables(); ++var) {
+			TypeIdx type = info.getVariableType(var);
+			if (info.getGenericType(type) == ProblemInfo::ObjectType::INT) {
+				LPT_INFO("cout", "ERROR - Match Tree cannot be used with FSTRIPS encodings that contain bound integers. Try the \"naive\" successor generation instead");
+				throw std::runtime_error("ERROR - Match Tree cannot be used with FSTRIPS encodings that contain bound integers. Try the \"naive\" successor generation instead");
+			}
+		}
+	}
 
 
     MatchTreeActionManager::MatchTreeActionManager( const std::vector<const GroundAction*>& actions,
@@ -209,7 +220,10 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
         _tree(nullptr)
     {
         const ProblemInfo& info = ProblemInfo::getInstance();
-        LPT_INFO( "cout", "[Match Tree]  MatchTreeActionManager::MatchTreeActionManager() starts...");
+		
+		check_match_tree_can_be_used(info);
+		
+        LPT_INFO("cout", "[Match Tree]  MatchTreeActionManager::MatchTreeActionManager() starts...");
         LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
 
 
