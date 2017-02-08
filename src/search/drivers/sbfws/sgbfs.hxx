@@ -426,9 +426,8 @@ public:
 	
 	template <typename NodeT>
 	void run_simulation(NodeT& node) {
-		assert(_use_simulation_nodes);
+// 		assert(_use_simulation_nodes);
 		if (node._simulated) return;
-		
 		node._simulated = true;
 		
 		unsigned reachable = 0, max_reachable = _model.num_subgoals();
@@ -445,6 +444,30 @@ public:
 		_stats.reachable_subgoals(reachable);
 		_stats.simulation();
 	}
+	
+	template <typename NodeT>
+	void run_simulation2(NodeT& node) {
+// 		assert(_use_simulation_nodes);
+		assert(!node._simulated);
+		node._simulated = true;
+		
+		LPT_DEBUG("cout", "Running Simulation!");
+		
+		SimulationT simulator(_model, _featureset, _simconfig);
+
+		//BFWSStats stats;
+		//StatsObserver<IWNodeT, BFWSStats> st_obs(stats, false);
+		//iw->subscribe(st_obs);
+
+		simulator.run(node.state);
+
+// 		RelevantAtomSet relevant = simulator.retrieve_relevant_atoms(state, reachable);
+
+		//LPT_INFO("cout", "IW Simulation: Node expansions: " << stats.expanded());
+		//LPT_INFO("cout", "IW Simulation: Node generations: " << stats.generated());
+	}
+	
+
 
 	unsigned compute_unachieved(const State& state) {
 		return _unsat_goal_atoms_heuristic.evaluate(state);
@@ -560,7 +583,7 @@ public:
 		_featureset(), // ATM we use no feature selection, etc.
 		_heuristic(conf, model, _featureset, *_search_evaluator, stats),
 		_stats(stats),
-		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false)),
+		_run_simulation_from_root(config.getOption<bool>("bfws.sim0", true)),
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
 		_use_simulation_as_macros_only(conf.relevant_set_type==SBFWSConfig::RelevantSetType::Macro),
 		_generated(0),
@@ -661,9 +684,9 @@ public:
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 
-// 		if (_run_simulation_from_root) {
-// 			preprocess(root); // Preprocess the root node only
-// 		}
+		if (_run_simulation_from_root) {
+			_heuristic.run_simulation2(*root); // Preprocess the root node
+		}
 
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found

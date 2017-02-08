@@ -43,7 +43,7 @@ public:
 	bool satisfies_subgoal; // Whether the node satisfies some subgoal
 	
 	//! The novelty  of the state
-	unsigned _w;
+	int _w;
 	
 	//! The generation order, uniquely identifies the node
 	unsigned long _gen_order;
@@ -66,6 +66,7 @@ public:
 		action(_action),
 		parent(_parent),
 		g(parent ? parent->g+1 : 0),
+		_w(-1),
 		_gen_order(gen_order)
 	{}
 
@@ -108,7 +109,7 @@ public:
 
 	//! Returns false iff we want to prune this node during the search
 	unsigned evaluate(NodeT& node) {
-		assert(node._w == std::numeric_limits<unsigned>::max()); // i.e. don't evaluate a node twice!
+		assert(node._w == -1); // i.e. don't evaluate a node twice!
 		
 		if (node.parent) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
