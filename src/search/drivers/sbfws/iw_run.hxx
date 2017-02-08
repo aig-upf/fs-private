@@ -147,26 +147,61 @@ public:
 	using NodeOpenEvent = typename Base::NodeOpenEvent;
 	using NodeExpansionEvent = typename Base::NodeExpansionEvent;
 	using NodeCreationEvent = typename Base::NodeCreationEvent;
+	
+	struct Config {
+		//! The bound on the simulation number of generated nodes
+		unsigned _bound;
+		
+		//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
+		bool _complete;
+		
+		//! Whether to take into account negative propositions or not
+		bool _mark_negative;
+		
+		Config(unsigned bound, bool complete, bool mark_negative) :
+			_bound(bound), _complete(complete), _mark_negative(mark_negative) {}
+	};
+	
+protected:
+	//! The simulation configuration
+	const Config _config;
 
+	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
+	std::vector<std::vector<NodePT>> _all_paths;
 
+	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
+	std::unordered_set<unsigned> _unreached;
+	
+	//! Contains the indexes of all those goal atoms that were already reached in the seed state
+	std::vector<bool> _in_seed;
+
+	//boost::fast_pool_allocator<NodeT> _allocator;
+	
+	//! Upon retrieval of the set of relevant atoms, this will contain all those nodes that are part
+	//! of the path to some subgoal
+	std::unordered_set<NodePT> _visited;
+	
+	//! The number of generated nodes so far
+	unsigned long _generated;	
+
+public:
 	//! Factory method
 	template <typename FeatureSetT, typename NoveltyEvaluatorT>
-	static IWRun* build(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, bool complete, bool mark_negative_propositions) {
+	static IWRun* build(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const IWRun::Config& config) {
 		using AcceptorT = IWRunAcceptor<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 		auto acceptor = new AcceptorT(featureset, evaluator);
-		return new IWRun(model, OpenListT(acceptor), complete, mark_negative_propositions);
+		return new IWRun(model, OpenListT(acceptor), config);
 	}
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the particular open and closed list objects
-	IWRun(const StateModel& model, OpenListT&& open, bool complete, bool mark_negative_propositions) :
+	IWRun(const StateModel& model, OpenListT&& open, const IWRun::Config& config) :
 		Base(model, std::move(open), ClosedListT()),
-		_complete(complete),
+		_config(config),
 		_all_paths(model.num_subgoals()),
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
-		_mark_negative_propositions(mark_negative_propositions),
 		_visited(),
 		_generated(0)
 	{
@@ -226,33 +261,9 @@ public:
 
 protected:
 
-	//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
-	bool _complete;
-
-	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
-	std::vector<std::vector<NodePT>> _all_paths;
-
-	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
-	std::unordered_set<unsigned> _unreached;
-	
-	//! Contains the indexes of all those goal atoms that were already reached in the seed state
-	std::vector<bool> _in_seed;
-
-	bool _mark_negative_propositions;
-
-	//boost::fast_pool_allocator<NodeT> _allocator;
-	
-	//! Upon retrieval of the set of relevant atoms, this will contain all those nodes that are part
-	//! of the path to some subgoal
-	std::unordered_set<NodePT> _visited;
-	
-	//! The number of generated nodes so far
-	unsigned long _generated;
-
-
 	//! Returns true iff all goal atoms have been reached in the IW search
 	bool process_node(NodePT& node) {
-		if (_complete) return process_node_complete(node);
+		if (_config._complete) return process_node_complete(node);
 		
 		const StateT& state = node->state;
 
@@ -334,7 +345,7 @@ public:
 			if (_visited.find(node) != _visited.end()) break;
 			
 			// Mark all the atoms in the state as "yet to be reached"
-			atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
+			atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _config._mark_negative, false);
 			_visited.insert(node);
 			node = node->parent;
 		}

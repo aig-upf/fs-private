@@ -154,8 +154,9 @@ public:
 	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT*>;
 	using ActionT = typename StateModelT::ActionType;
 	using IWNodeT = IWRunNode<State, ActionT>;
-	using IWAlgorithm = IWRun<IWNodeT, StateModelT>;
-	using IWNodePT = typename IWAlgorithm::NodePT;
+	using SimulationT = IWRun<IWNodeT, StateModelT>;
+	using SimConfigT = typename SimulationT::Config;
+	using IWNodePT = typename SimulationT::NodePT;
 
 	using APTKFFHeuristicT = HFFRun;
 	using APTKFFHeuristicPT = std::unique_ptr<APTKFFHeuristicT>;
@@ -184,7 +185,7 @@ protected:
 
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;
-	bool _complete_simulation;
+	const SimConfigT _simconfig;
 
 	BFWSStats& _stats;
 
@@ -193,7 +194,7 @@ protected:
 	bool _use_simulation_nodes;
 
 	//! The last used iw-simulator, if any
-	std::unique_ptr<IWAlgorithm> _iw_runner;
+	std::unique_ptr<SimulationT> _simulator;
 	
 	SBFWSConfig::RelevantSetType _rstype;
 	
@@ -208,7 +209,7 @@ public:
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
-		_complete_simulation(config.complete_simulation),
+		_simconfig(10000, config.complete_simulation, config.mark_negative_propositions),
 		_stats(stats),
 		_aptk_rpg(nullptr),
 		_use_simulation_nodes(false),
@@ -312,15 +313,15 @@ public:
 	RelevantAtomSet compute_relevant_simulation(const State& state, unsigned& reachable) {
 		reachable = 0;
 
-		_iw_runner = std::unique_ptr<IWAlgorithm>(IWAlgorithm::build(_model, _featureset, _simulation_evaluator.clone(), _complete_simulation, _mark_negative_propositions));
+		_simulator = std::unique_ptr<SimulationT>(SimulationT::build(_model, _featureset, _simulation_evaluator.clone(), _simconfig));
 
 		//BFWSStats stats;
 		//StatsObserver<IWNodeT, BFWSStats> st_obs(stats, false);
 		//iw->subscribe(st_obs);
 
-		_iw_runner->run(state);
+		_simulator->run(state);
 
-		RelevantAtomSet relevant = _iw_runner->retrieve_relevant_atoms(state, reachable);
+		RelevantAtomSet relevant = _simulator->retrieve_relevant_atoms(state, reachable);
 
 		//LPT_INFO("cout", "IW Simulation: Node expansions: " << stats.expanded());
 		//LPT_INFO("cout", "IW Simulation: Node generations: " << stats.generated());
@@ -363,7 +364,7 @@ public:
 	}
 
 
-	const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _iw_runner->get_relevant_nodes(); }
+	const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _simulator->get_relevant_nodes(); }
 
 	//! This is a hackish way to obtain an integer index that uniquely identifies the tuple <#g, #r>
 	unsigned compute_node_complex_type(unsigned unachieved, unsigned relaxed_achieved) {
