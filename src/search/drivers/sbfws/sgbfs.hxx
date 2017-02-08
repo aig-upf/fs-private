@@ -291,7 +291,7 @@ public:
 
 	template <typename NodeT>
 	unsigned evaluate_wgr2(NodeT& node) {
-		assert(node._relevant_atoms.valid());
+// 		assert(node._relevant_atoms.valid());
 		unsigned type = compute_node_complex_type(node);
 // 		bool has_parent = node.has_parent() && (node.parent->w_gr == Novelty::Two || node.parent->w_gr == Novelty::GTTwo); // i.e. the state has been evaluated on the novelty-two tables
 		bool has_parent = node.has_parent();
