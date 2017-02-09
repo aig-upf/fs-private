@@ -28,9 +28,9 @@ public:
 
 	//! Factory method
 	static SimpleStateModel build(const Problem& problem);
-	
+
 protected:
-	SimpleStateModel(const Problem& problem, const std::vector<const fs::AtomicFormula*>& subgoals);
+	SimpleStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
 
 public:
 	~SimpleStateModel() = default;
@@ -76,8 +76,8 @@ protected:
 	mutable std::vector<Atom> _effects_cache;
 
 	static ActionManagerI* build_action_manager(const Problem& problem);
-	
-	const std::vector<const fs::AtomicFormula*> _subgoals;
+
+	const std::vector<const fs::Formula*> _subgoals;
 };
 
 } // namespaces

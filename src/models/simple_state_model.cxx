@@ -30,24 +30,19 @@ obtain_goal_atoms(const fs::Formula* goal) {
 
 
 //! A helper to derive the distinct goal atoms
-std::vector<const fs::AtomicFormula*>
+std::vector<const fs::Formula*>
 obtain_goal_atoms(const fs::Formula* goal) {
 	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
 	if (!conjunction) {
 		throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
 	}
-	
-	std::vector<const fs::AtomicFormula*> goal_atoms;
-	
+
+	std::vector<const fs::Formula*> goal_atoms;
+
 	for (const fs::AtomicFormula* atom:conjunction->getConjuncts()) {
-		auto eq =  dynamic_cast<const fs::AtomicFormula*>(atom);
-		if (!eq) { // This could be easily extended to negated atoms
-			throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
-		}
-		
-		goal_atoms.push_back(eq);
+		goal_atoms.push_back(atom);
 	}
-	
+
 	return goal_atoms;
 }
 
@@ -57,7 +52,7 @@ SimpleStateModel::build(const Problem& problem) {
 	return SimpleStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
 }
 
-SimpleStateModel::SimpleStateModel(const Problem& problem, const std::vector<const fs::AtomicFormula*>& subgoals) :
+SimpleStateModel::SimpleStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals) :
 	_task(problem),
 	_manager(build_action_manager(problem)),
 	_subgoals(subgoals)
@@ -116,32 +111,32 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 	const auto& constraints = problem.getStateConstraints();
 	const auto& tuple_idx =  problem.get_tuple_index();
 	Config::SuccessorGenerationStrategy strategy = Config::instance().getSuccessorGeneratorType();
-	
+
 
 	if (strategy == Config::SuccessorGenerationStrategy::naive) {
 		LPT_INFO( "cout", "Successor Generator Strategy: Naive");
 		return new NaiveActionManager(actions, constraints);
 	}
-	
+
 	if (strategy == Config::SuccessorGenerationStrategy::functional_aware) {
 		LPT_INFO( "cout", "Successor Generator Strategy: Functional Aware");
 		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build();
 		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
-	
-		
+
+
 	} else if (strategy == Config::SuccessorGenerationStrategy::match_tree) {
 		LPT_INFO( "cout", "Successor Generator Strategy: Match Tree");
 		LPT_INFO("cout", "Peak mem. usage before match-tree construction: " << get_peak_memory_in_kb() << " kB.");
 		LPT_INFO("cout", "Current mem. usage before match-tree construction: " << get_current_memory_in_kb() << " kB.");
-		
+
 		auto mng = new MatchTreeActionManager(actions, constraints, tuple_idx);
 		LPT_INFO("cout", "Match-tree built with " << mng->count() << " nodes.");
 		LPT_INFO("cout", "Peak mem. usage after match-tree construction: " << get_peak_memory_in_kb() << " kB.");
 		LPT_INFO("cout", "Current mem. usage after match-tree construction: " << get_current_memory_in_kb() << " kB.");
 		return mng;
 	}
-	
+
 	throw std::runtime_error("Unknown successor generation strategy");
 }
 
