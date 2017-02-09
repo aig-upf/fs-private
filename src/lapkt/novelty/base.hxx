@@ -27,25 +27,32 @@ public:
 	NoveltyEvaluatorI(unsigned max_novelty) : _max_novelty(max_novelty) {}
 	virtual ~NoveltyEvaluatorI() = default;
 	virtual NoveltyEvaluatorI* clone() const = 0;
+
+	//! Return the max novelty considered by this evaluator
+	unsigned max_novelty() const { return _max_novelty; }
 	
-	virtual bool evaluate_width_1_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) = 0;
-	virtual bool evaluate_width_2_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) = 0;
+	//! Evaluate assuming all elements in the valuation can be novel
+	virtual unsigned evaluate(const ValuationT& valuation, unsigned k) = 0;
 	
 	
+	//! Evaluate assuming all elements in the valuation can be novel
 	unsigned evaluate(const ValuationT& valuation) {
-		setup_all_features_novel(valuation);
-		return _evaluate(valuation, _all_features_novel);
+		unsigned novelty = std::numeric_limits<unsigned>::max();
+		for (unsigned k = 0; k <= _max_novelty; ++k) {
+			novelty = std::min(novelty, evaluate(valuation, k));
+		}
+		return novelty;
 	}
+	
 	
 	//! Evaluate the novelty of a node taking into account the valuation of its parent, for optimization purposes
 	unsigned evaluate(const ValuationT& valuation, const ValuationT& parent_valuation) {
 		std::vector<unsigned> novel = derive_novel(valuation, parent_valuation);
-		return _evaluate(valuation, novel);
-	}
-	
-	unsigned evaluate(const ValuationT& valuation, unsigned k) {
-		setup_all_features_novel(valuation);
-		return _evaluate(valuation, _all_features_novel, k);
+		unsigned novelty = std::numeric_limits<unsigned>::max();
+		for (unsigned k = 0; k <= _max_novelty; ++k) {
+			novelty = std::min(novelty, _evaluate(valuation, novel, k));
+		}
+		return novelty;
 	}
 	
 	//! Evaluate the novelty of a node taking into account the valuation of its parent, for optimization purposes
@@ -54,39 +61,17 @@ public:
 		return _evaluate(valuation, novel, k);
 	}
 	
-	//!
-	unsigned max_novelty() const { return _max_novelty; }
-	
 protected:
-	//! Evaluate the novelty of a given feature valuation, taking into account that only those indexes given in 'novel'
-	//! contain values that can actually be novel.
-	virtual unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) {
-		unsigned novelty = std::numeric_limits<unsigned>::max();
-		for (unsigned k = 0; k <= _max_novelty; ++k) {
-			novelty = std::min(novelty, _evaluate(valuation, novel, k));
-		}
-		return novelty;
-	}
 	
 	//! Check only if the valuation contains a width-'k' tuple which is novel; return k if that is the case, or MAX if not
 	virtual unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) = 0;
+	
 	
 protected:
 	//! The maximum width this evaluator is prepared to handle.
 	//! If no particular width is specified, the evaluator computes up to (_max_novelty+1) levels of novelty
 	//! (i.e. if _max_novelty=1, then the evaluator will return whether a state has novelty 1 or >1.
 	unsigned _max_novelty;
-	
-	//! This is used to cache a vector <0,1,...,k> of appropriate length and spare the creation of one each time we need it.
-	mutable std::vector<unsigned> _all_features_novel;	
-	
-	void setup_all_features_novel(const ValuationT& valuation) {
-		std::size_t num_features = valuation.size();
-		if (_all_features_novel.size() != num_features) {
-			_all_features_novel.resize(num_features);
-			std::iota(_all_features_novel.begin(), _all_features_novel.end(), 0);
-		}		
-	}
 };
 
 } } // namespaces
