@@ -82,7 +82,7 @@ public:
 	
 	GenericNoveltyEvaluator() = delete;
 	GenericNoveltyEvaluator(unsigned max_novelty) :
-		_max_novelty(max_novelty), _tables(_max_novelty + 1)
+		Base(max_novelty), _tables(max_novelty + 1)
 	{}
 	
 	GenericNoveltyEvaluator* clone() const {
@@ -93,9 +93,6 @@ public:
 	GenericNoveltyEvaluator(GenericNoveltyEvaluator&&) = default;
 	GenericNoveltyEvaluator& operator=(const GenericNoveltyEvaluator&) = default;
 	GenericNoveltyEvaluator& operator=(GenericNoveltyEvaluator&&) = default;
-
-	//!
-	unsigned max_novelty() const { return _max_novelty; }
 
 
 	bool evaluate_width_1_tuples(const ValuationT& current, const std::vector<unsigned>& novel) override;
