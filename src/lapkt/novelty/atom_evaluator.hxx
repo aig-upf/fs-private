@@ -54,94 +54,23 @@ protected:
 	//! about the tuples of size 2 that we have seen so far
 	Tuple2MarkerT _t2marker;
 	
-	//! The maximum width this evaluator is prepared to handle.
-	//! If no particular width is specified, the evaluator computes up to (_max_width+1) levels of novelty
-	//! (i.e. if _max_width=1, then the evaluator will return whether a state has novelty 1 or >1.
-	unsigned _max_width;
-	
 	AtomNoveltyEvaluator(const ValuationIndexerT& indexer, bool ignore_negative, unsigned max_width) :
+		Base(max_width),
 		_indexer(indexer),
 		_ignore_negative(ignore_negative),
 		_num_atom_indexes(_indexer.num_indexes()),
 		_seen_tuples_sz_1(_num_atom_indexes, false),
-		_t2marker(num_combined_indexes(), _num_atom_indexes),
-		_max_width(max_width)
+		_t2marker(num_combined_indexes(), _num_atom_indexes)
 	{}
 
 public:
-
-	AtomNoveltyEvaluator* clone() const override {
-		return new AtomNoveltyEvaluator(*this);
-	}
 
 	AtomNoveltyEvaluator(const AtomNoveltyEvaluator&) = default;
 	AtomNoveltyEvaluator(AtomNoveltyEvaluator&&) = default;
 	AtomNoveltyEvaluator& operator=(const AtomNoveltyEvaluator&) = default;
 	AtomNoveltyEvaluator& operator=(AtomNoveltyEvaluator&&) = default;
-
-	bool evaluate_width_1_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) override {
-		bool exists_novel_tuple = false;
-		for (unsigned var_index:novel) {
-			const auto& feature_value = valuation[var_index];
-			if (_ignore_negative && feature_value == 0) continue;
-
-			unsigned atom_index = _indexer.to_index(var_index, feature_value);
-			//auto&& value = _seen_tuples_sz_1[atom_index]; // see http://stackoverflow.com/a/8399942
-			// MRJ: Looks to me the above was needed probably with c++ compilers available circa
-			// 2012, with g++ 5.4.0 the original code works just fine
-			std::vector< bool >::reference value = _seen_tuples_sz_1[atom_index];
-			if (!value) { // The tuple is new, hence the novelty of the state is 1
-				exists_novel_tuple = true;
-				value = true;
-			}
-		}
-		return exists_novel_tuple;
-	}
-
-	bool evaluate_width_2_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) override {
-		if(_max_width < 2) {  // i.e. make sure the evaluator was prepared for this widths!
-			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
-		}
-		
-		unsigned sz = valuation.size();
-		if (sz == novel.size()) return _evaluate_width_2_tuples(valuation);
-
-		bool exists_novel_tuple = false;
-
-		for (unsigned i = 0; i < novel.size(); ++i) {
-			unsigned idx1 = novel[i];
-			const auto& feature1_value = valuation[idx1];
-			if (_ignore_negative && feature1_value == 0) continue;
-
-			unsigned atom1_index = _indexer.to_index(idx1, feature1_value);
-
-			for (unsigned j = 0; j < sz; ++j) {
-				if (j==idx1) continue;
-
-				const auto& feature2_value = valuation[j];
-				if (_ignore_negative && feature2_value == 0) continue;
-
-				exists_novel_tuple |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(j, feature2_value));
-			}
-		}
-		return exists_novel_tuple;
-	}
-
-	bool _evaluate_width_2_tuples(const ValuationT& valuation) {
-		bool exists_novel_tuple = false;
-		unsigned sz = valuation.size();
-
-		for (unsigned i = 0; i < sz; ++i) {
-			unsigned atom1_index = _indexer.to_index(i, valuation[i]);
-
-			for (unsigned j = i+1; j < sz; ++j) {
-				const auto& feature2_value = valuation[j];
-				if (_ignore_negative && feature2_value == 0) continue;
-				exists_novel_tuple |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(j, feature2_value));
-			}
-		}
-		return exists_novel_tuple;
-	}
+	AtomNoveltyEvaluator* clone() const override { return new AtomNoveltyEvaluator(*this); }
+	
 
 	inline unsigned num_combined_indexes() const { return num_combined_indexes(_num_atom_indexes); }
 
@@ -164,37 +93,137 @@ public:
 		return _t2marker.expected_size(num_combined_indexes());
 	}
 
+	//! Evaluate assuming all elements in the valuation can be novel
+	unsigned evaluate(const ValuationT& valuation, unsigned k) override {
+		assert(!valuation.empty());
+
+		if (k == 1) {
+			return evaluate_width_1_tuples(valuation) ? 1 : std::numeric_limits<unsigned>::max();
+		}
+		
+		assert(k==2);
+		return evaluate_pairs(valuation) ? 2 : std::numeric_limits<unsigned>::max();
+	}
 
 protected:
 
-	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) {
-		assert(!valuation.empty());
-		
-		unsigned novelty = std::numeric_limits<unsigned>::max();
-		if (_max_width == 0) return novelty; // We're actually computing nothing, novelty will always be MAX
-		
-		if (evaluate_width_1_tuples(valuation, novel)) novelty = 1;
-		if (_max_width <= 1) return novelty; // Novelty will be either 1 or MAX
-		
-		if (evaluate_width_2_tuples(valuation, novel) && novelty > 1) novelty = 2;
-		
-		assert(_max_width == 2); // Novelty will be either 1, 2 or MAX
-		return novelty;
-	}
-
 	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) override {
 		assert(!valuation.empty());
-		assert(k==1 || k==2);
 
-		unsigned novelty = std::numeric_limits<unsigned>::max();
 		if (k == 1) {
-			if (evaluate_width_1_tuples(valuation, novel)) novelty = 1;
-		} else if (k == 2) {
-			if (evaluate_width_2_tuples(valuation, novel)) novelty = 2;
+			return evaluate_width_1_tuples(valuation, novel) ? 1 : std::numeric_limits<unsigned>::max();
 		}
-
-		return novelty;
+		
+		assert(k==2);
+		return evaluate_pairs(valuation, novel) ? 2 : std::numeric_limits<unsigned>::max();
 	}
+	
+	bool evaluate_width_1_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel) {
+		bool exists_novel_tuple = false;
+		for (unsigned var_index:novel) {
+			exists_novel_tuple |= update_tuple1(var_index, valuation[var_index]);
+		}
+		return exists_novel_tuple;
+	}
+	
+	//! Assume all elements in the valuation can be new.
+	//! NOTE this closely mirrors the code of the method with the `novel` parameter,
+	//! but we favor here performance over avoiding code duplication.
+	bool evaluate_width_1_tuples(const ValuationT& valuation) {
+		bool exists_novel_tuple = false;
+		for (unsigned var_index = 0; var_index < valuation.size(); ++var_index) {
+			exists_novel_tuple |= update_tuple1(var_index, valuation[var_index]);
+		}
+		return exists_novel_tuple;
+	}	
+
+	bool evaluate_pairs(const ValuationT& valuation, const std::vector<unsigned>& novel) {
+		if(this->_max_novelty < 2) {  // i.e. make sure the evaluator was prepared for this widths!
+			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
+		}
+		
+		assert(valuation.size() >= novel.size());
+		
+		if (valuation.size() == novel.size()) return evaluate_pairs(valuation); // Just in case
+		
+
+		// WORK-IN-PROGRESS
+// 		std::vector<unsigned> novel_indexes, non_novel_indexes;
+// 		novel_indexes.reserve(novel_sz); non_novel_indexes.reserve(novel_sz);
+		
+		
+		auto all_indexes = index_valuation(valuation);
+		auto novel_indexes = index_valuation(novel, valuation);
+
+		bool exists_novel_tuple = false;
+		for (unsigned feat_index1:novel_indexes) {
+			for (unsigned feat_index2:all_indexes) {
+				if (feat_index1==feat_index2) continue;
+				exists_novel_tuple |= _t2marker.update_sz2_table(feat_index1, feat_index2);
+			}
+		}
+		return exists_novel_tuple;
+	}	
+	
+	
+
+	bool evaluate_pairs(const ValuationT& valuation) {
+		return evaluate_pairs_from_index(index_valuation(valuation));
+	}
+
+	//! Evaluate all pairs from a vector with all feature value indexes.
+	bool evaluate_pairs_from_index(const std::vector<unsigned>& indexes) {
+		bool exists_novel_tuple = false;
+		unsigned sz = indexes.size();
+
+		for (unsigned i = 0; i < sz; ++i) {
+			unsigned index_i = indexes[i];
+
+			for (unsigned j = i+1; j < sz; ++j) {
+				exists_novel_tuple |= _t2marker.update_sz2_table(index_i, indexes[j]);
+			}
+		}
+		return exists_novel_tuple;
+	}	
+
+	//! Helper. Map a feature valuation into proper indexes. Ignore negative values if so requested.
+	std::vector<unsigned> index_valuation(const ValuationT& valuation) {
+		unsigned sz = valuation.size();
+		std::vector<unsigned> indexes;
+		indexes.reserve(sz);
+		for (unsigned i = 0; i < sz; ++i) {
+			const auto& value = valuation[i];
+			if (_ignore_negative && value == 0) continue;
+			indexes.push_back(_indexer.to_index(i, value));
+		}
+		return indexes;
+	}
+	
+	//! This one performs the same mapping but assuming we only want the values given by the indexes in 'novel'
+	std::vector<unsigned> index_valuation(const std::vector<unsigned>& novel, const ValuationT& valuation) {
+		std::vector<unsigned> indexes;
+		indexes.reserve(novel.size());
+		for (unsigned i:novel) {
+			const auto& value = valuation[i];
+			if (_ignore_negative && value == 0) continue;
+			indexes.push_back(_indexer.to_index(i, value));
+		}
+		return indexes;
+	}	
+	
+	//! Helper. Returns true if the given feature is novel in the index of 1-tuples.
+	bool update_tuple1(unsigned index, const FeatureValueT& value) {
+		if (_ignore_negative && value == 0) return false;
+
+		unsigned atom_index = _indexer.to_index(index, value);
+		std::vector<bool>::reference ref = _seen_tuples_sz_1[atom_index];
+		if (!ref) { // The tuple is new
+			ref = true;
+			return true;
+		}
+		return false;
+	}	
+	
 };
 
 //! A 2-tuple marker based on a large std::vector of bools that keeps, for each possible index
