@@ -142,11 +142,9 @@ protected:
 			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
 		}
 		
-		unsigned all_sz = valuation.size(), novel_sz = novel.size();
-		assert(all_sz >= novel_sz);
+		assert(valuation.size() >= novel.size());
 		
-		// Just in case
-		if (all_sz == novel_sz) return evaluate_pairs(valuation);
+		if (valuation.size() == novel.size()) return evaluate_pairs(valuation); // Just in case
 		
 
 		// WORK-IN-PROGRESS
@@ -156,10 +154,8 @@ protected:
 		
 		auto all_indexes = index_valuation(valuation);
 		auto novel_indexes = index_valuation(novel, valuation);
-		
 
 		bool exists_novel_tuple = false;
-
 		for (unsigned feat_index1:novel_indexes) {
 			for (unsigned feat_index2:all_indexes) {
 				if (feat_index1==feat_index2) continue;
