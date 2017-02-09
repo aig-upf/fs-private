@@ -2,6 +2,7 @@
 #pragma once
 
 #include <iomanip>
+#include <unordered_set>
 
 #include <aptk2/tools/logging.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
@@ -11,9 +12,11 @@
 #include "base.hxx"
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
+#include <utils/printers/actions.hxx>
 #include <state.hxx>
 // #include <lapkt/novelty/features.hxx>
 #include <lapkt/components/open_lists.hxx>
+#include <problem.hxx>
 // #include <boost/pool/pool_alloc.hpp>
 
 
@@ -43,7 +46,9 @@ public:
 	bool satisfies_subgoal; // Whether the node satisfies some subgoal
 	
 	//! The novelty  of the state
-	int _w;
+	unsigned _w;
+	
+	bool _evaluated;
 	
 	//!
 	std::unordered_set<unsigned> _relevant_atoms;
@@ -69,7 +74,8 @@ public:
 		action(_action),
 		parent(_parent),
 		g(parent ? parent->g+1 : 0),
-		_w(-1),
+		_w(std::numeric_limits<unsigned>::max()),
+		_evaluated(false),
 		_gen_order(gen_order)
 	{}
 
@@ -79,10 +85,20 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const IWRunNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
+		const Problem& problem = Problem::getInstance();
 		os << "{@ = " << this;
+		os << ", #=" << _gen_order ;
 		os << ", s = " << state ;
 		os << ", g=" << g ;
-// 		os << ", features= " << fs0::print::container(feature_valuation);
+		os << ", w=" << (_evaluated ? (_w == std::numeric_limits<unsigned>::max() ? "INF" : std::to_string(_w)) : "?") ;
+		
+		if (action < std::numeric_limits<unsigned>::max()) {
+			os << ", act=" << *(problem.getGroundActions()[action]) ;
+// 			os << fs0::print::full_action(*(problem.getGroundActions()[action]));
+		} else {
+			os << ", act=" << "NONE" ;
+		}
+		
 		os << ", parent = " << parent << "}";
 		return os;
 	}
@@ -112,7 +128,8 @@ public:
 
 	//! Returns false iff we want to prune this node during the search
 	unsigned evaluate(NodeT& node) {
-		assert(node._w == -1); // i.e. don't evaluate a node twice!
+		assert(!node._evaluated); // i.e. don't evaluate a node twice!
+		node._evaluated = true;
 		
 		if (node.parent) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
@@ -121,8 +138,16 @@ public:
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
 		
+		LPT_INFO("evaluated", "Evaluated: " << node);
+		
 		if (node._w == 2) { // If the novelty is two, we want to store the set R_s of atoms that belong to a novel 2-tuple
 			_evaluator->atoms_in_novel_tuple(node._relevant_atoms);
+			if (node._gen_order == 149 && node._relevant_atoms.count(101) > 0) {
+				const AtomIndex& index = Problem::getInstance().get_tuple_index();
+				LPT_INFO("cout", "Atom 101 appears novel in node: " << node);
+				_evaluator->explain(101);
+				LPT_INFO("cout", "Atom 137 is: " << index.to_atom(137));
+			}
 		}
 		
 		return node._w;
@@ -175,7 +200,7 @@ public:
 	
 protected:
 	//! The simulation configuration
-	const Config _config;
+	Config _config;
 
 	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
 	std::vector<std::vector<NodePT>> _all_paths;
@@ -245,37 +270,133 @@ public:
 	void process_w1_node(NodePT node, std::unordered_set<NodePT>& w2_nodes, std::unordered_set<NodePT>& all_visited) const {
 		// Traverse from the solution node to the root node
 		
+		NodePT root = node;
 		// We ignore s0
 		while (node->has_parent()) {
+// 			if (root->_gen_order == 292) std::cout <<  *node << std::endl;
 			// If the node has already been processed, no need to do it again, nor to process the parents,
 			// which will necessarily also have been processed.
 			auto res = all_visited.insert(node);
-			if (!res.second) break;
+			if (!res.second) break; // TODO REACTIVAAAAAAAAAAAAAAAAAAAAAAAAATE
 			
 			if (node->_w == 2) {
 				w2_nodes.insert(node);
-				LPT_INFO("cout", "IW Simulation - |R_s| = " << node->_relevant_atoms.size());
+// 				if (node->_gen_order == 149) {
+// 					LPT_INFO("cout", "Width-2 node 149 is on the way to width-1 node: " << *root);
+// 				}
 			}
 			node = node->parent;
 		}
 		
+// 		if (root->_gen_order == 292) std::cout <<  *node << std::endl;
+	}
+	
+	AtomIdx select_atom(const std::unordered_set<NodePT>& nodes) const {
+		std::unordered_map<AtomIdx, unsigned> counts;
+		
+		for (const auto& node:nodes) {
+			for (const AtomIdx atom:node->_relevant_atoms) {
+// 				if (atom==101) {
+// 					LPT_INFO("cout", "Atom 101 appears novel in node: " << *node << "\n");
+// 				}
+				counts[atom]++;
+			}
+		}
+		
+// 		for (const auto& c:counts) LPT_INFO("cout", "Atom " << c.first << " count: " << c.second);
+		
+		using T = typename std::unordered_map<AtomIdx, unsigned>::value_type;
+		return std::max_element(counts.begin(), counts.end(), [](T a, T b){ return a.second < b.second; })->first;
+	}
+	
+	// TODO Optimize this very inefficient prototype
+	std::unordered_set<AtomIdx> compute_hitting_set(std::unordered_set<NodePT>& nodes) const {
+		
+		const AtomIndex& index = this->_model.getTask().get_tuple_index();
+		
+		std::unordered_set<AtomIdx> hs;
+		while (!nodes.empty()) {
+			AtomIdx selected = select_atom(nodes);
+			
+			LPT_INFO("cout", "IW Simulation - Selected atom: " << selected << ": " << index.to_atom(selected));
+			
+			for (auto it = nodes.begin(); it != nodes.end();) {
+				const std::unordered_set<unsigned>& rset = (*it)->_relevant_atoms;
+				if (rset.find(selected) != rset.end()) {
+					it = nodes.erase(it);
+				} else {
+					++it;
+				}
+			}
+			hs.insert(selected);
+		}
+		
+		return hs;
+		
+	}
+	
+	std::unordered_set<AtomIdx> compute_union(std::unordered_set<NodePT>& nodes) const {
+		std::unordered_set<AtomIdx> set_union;
+		for (const auto& node:nodes) {
+			set_union.insert(node->_relevant_atoms.begin(), node->_relevant_atoms.end());
+		}
+		return set_union;
+	}
+	
+	void _print_atomset(std::unordered_set<AtomIdx>& atoms) const {
+		const AtomIndex& index = this->_model.getTask().get_tuple_index();
+		for (AtomIdx atom:atoms) {
+			LPT_INFO("cout", "IW Simulation - \t" << index.to_atom(atom));
+		}		
 	}
 
 	void run(const StateT& seed) {
-		_run(seed);
+		
+		_config._complete = false;
+		
+		bool all_reached_before_bound = _run(seed);
+		
+		std::vector<NodePT> w1_seed_nodes;
+		if (all_reached_before_bound) {
+			for (const auto& n:_w1_nodes) {
+				if (n->satisfies_subgoal) w1_seed_nodes.push_back(n);
+			}
+		} else {
+			w1_seed_nodes = _w1_nodes;
+		}
+		
+		LPT_INFO("cout", "IW Simulation - All subgoals reached before bound? " << all_reached_before_bound);
 		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
+		LPT_INFO("cout", "IW Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
 		
 		auto relevant_w2_nodes = compute_relevant_w2_nodes();
 		LPT_INFO("cout", "IW Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
 		
+		auto su = compute_union(relevant_w2_nodes); // Order matters!
+		auto hs = compute_hitting_set(relevant_w2_nodes);
+		
+		LPT_INFO("cout", "IW Simulation - union-based R (|R|=" << su.size() << ")");
+		_print_atomset(su);
+		
+		
+		LPT_INFO("cout", "IW Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
+		_print_atomset(hs);
+		
+		
 	}
 	
-	void _run(const StateT& seed) {
+	bool _run(const StateT& seed) {
 		mark_seed_subgoals(seed);
 		
-		NodePT n = std::make_shared<NodeT>(seed, _generated);
+		NodePT n = std::make_shared<NodeT>(seed, _generated++);
 		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 // 		this->notify(NodeCreationEvent(*n));
+		
+		
+		auto nov =_evaluator.evaluate(*n);
+		assert(nov==1);
+		LPT_INFO("cout", "IW Simulation - Seed node: " << *n);
+
 		
 // 		if (process_node(n)) return;
 		
@@ -297,6 +418,8 @@ public:
 				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current, _generated++ );
 				//NodePT successor = std::allocate_shared<NodeT>( _allocator, std::move(s_a), a, current );
 
+// 				LPT_INFO("cout", "IW Simulation - Node generated0: " << *successor);
+				
 				if (this->_closed.check(successor)) continue; // The node has already been closed
 				if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
 
@@ -309,6 +432,10 @@ public:
 					_w1_nodes.push_back(successor);
 				}
 				
+				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
+				
+				if (process_node(successor)) return true; // i.e. all subgoals have been reached before reaching the bound
+				
 				if (novelty <= 2) {
 					this->_open.insert(successor);
 					accepted++;
@@ -318,10 +445,13 @@ public:
 				
 				if (accepted >= _config._bound) {
 					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
-					return;
+					return false;
 				}
 			}
 		}
+		LPT_INFO("cout", "IW Simulation - State space exhausted after exploring " << accepted << " nodes");
+		LPT_INFO("cout", "IW Simulation - # unreached subgoals: " << _unreached.size());
+		return false; // Or the state space is exhausted before either reaching all subgoals or reaching the bound
 	}	
 
 protected:

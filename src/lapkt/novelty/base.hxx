@@ -56,6 +56,7 @@ public:
 	//! Some subclasses might want to override this, that is expected to return all those atoms from the 
 	//! last evaluated state that are novel in the sense of belonging to a novel 2-tuple
 	virtual void atoms_in_novel_tuple(std::unordered_set<unsigned>&) {}
+	virtual void explain(unsigned atom) const {  }
 	
 protected:
 	//! Evaluate the novelty of a given feature valuation, taking into account that only those indexes given in 'novel'

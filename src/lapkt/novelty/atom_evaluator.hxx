@@ -5,8 +5,10 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_set>
+#include <unordered_map>
 
 #include "base.hxx"
+#include <utils/utils.hxx>
 #include <aptk2/tools/logging.hxx>
 
 
@@ -147,6 +149,64 @@ public:
 		}
 		return exists_novel_tuple;
 	}
+	
+	//!
+	bool evaluate_width_1_and_half_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel, const std::vector<unsigned>& special) {
+		if(_max_width < 2) {  // i.e. make sure the evaluator was prepared for this width!
+			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
+		}
+		
+		_t2marker.start();
+		
+		unsigned sz = valuation.size();
+// 		if (sz == novel.size()) return _evaluate_width_2_tuples(valuation);
+
+		
+		// Compute intersection and set differences in one pass
+		std::vector<unsigned> intersect, novel_wo_special, special_wo_novel;
+		fs0::Utils::intersection_and_set_diff(novel, special, intersect, novel_wo_special, special_wo_novel);
+		
+		bool exists_novel_tuple = false;
+		
+		
+		// 1. Check if there is a novel pair involving one element in the intersection plus any other element 
+		for (unsigned idx1:intersect) {
+			const auto& feature1_value = valuation[idx1];
+			if (_ignore_negative && feature1_value == 0) continue;
+			unsigned atom1_index = _indexer.to_index(idx1, feature1_value);
+
+			for (unsigned j = 0; j < sz; ++j) {
+				if (j==idx1) continue;
+
+				const auto& feature2_value = valuation[j];
+				if (_ignore_negative && feature2_value == 0) continue;
+				exists_novel_tuple  |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(j, feature2_value));
+			}
+		}
+		
+		
+		// 2. Check if there is a novel pair involving one element from novel \ special and one element from special \ novel
+		for (unsigned idx1:novel_wo_special) {
+			const auto& feature1_value = valuation[idx1];
+			if (_ignore_negative && feature1_value == 0) continue;
+			unsigned atom1_index = _indexer.to_index(idx1, feature1_value);
+
+			for (unsigned idx2:special_wo_novel) {
+				if (idx1==idx2) continue;
+
+				const auto& feature2_value = valuation[idx2];
+				if (_ignore_negative && feature2_value == 0) continue;
+				exists_novel_tuple  |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(idx2, feature2_value));
+			}
+		}		
+		
+		return exists_novel_tuple;
+	}	
+	
+	
+	
+	
+	
 
 	inline unsigned num_combined_indexes() const { return num_combined_indexes(_num_atom_indexes); }
 
@@ -172,6 +232,8 @@ public:
 	void atoms_in_novel_tuple(std::unordered_set<unsigned>& atoms) override {
 		_t2marker.atoms_in_novel_tuple(atoms);
 	}
+	
+	virtual void explain(unsigned atom) const { _t2marker.explain(atom); }
 
 protected:
 
@@ -243,6 +305,8 @@ public:
 	}
 	
 	virtual void atoms_in_novel_tuple(std::unordered_set<unsigned>& atoms) {}
+	virtual void explain(unsigned atom) const {}
+
 
 protected:
 	std::vector<bool> _seen_tuples_sz_2;
@@ -257,6 +321,7 @@ public:
 
 	void start() override {
 		_part_of_a_novel_tuple.clear();
+// 		_explanation.clear();
 	}
 	
 	bool update_sz2_table(unsigned atom1_index, unsigned atom2_index) {
@@ -267,6 +332,8 @@ public:
 			value = true;
 			_part_of_a_novel_tuple.insert(atom1_index);
 			_part_of_a_novel_tuple.insert(atom2_index);
+// 			_explanation.insert(std::make_pair(atom1_index, atom2_index));
+// 			_explanation.insert(std::make_pair(atom2_index, atom1_index));
 			return true;
 		}
 		return false;
@@ -276,11 +343,18 @@ public:
 		atoms = std::move(_part_of_a_novel_tuple);
 		_part_of_a_novel_tuple = std::unordered_set<unsigned>();
 	}
+	
+	void explain(unsigned atom) const {
+// 		auto it = _explanation.find(atom);
+// 		assert(it != _explanation.end());
+// 		LPT_INFO("cout", "Atom " << atom << " is part of the novel 2-tuple: (" <<  atom << ", " << it->second  << ")");
+	}
 
 
 
 protected:
 	std::unordered_set<unsigned> _part_of_a_novel_tuple;
+// 	std::unordered_map<unsigned, unsigned> _explanation;
 };
 
 

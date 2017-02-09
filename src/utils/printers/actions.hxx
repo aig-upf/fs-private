@@ -4,7 +4,7 @@
 #include <fs_types.hxx>
 #include <ostream>
 
-namespace fs0 { class ActionData; class ActionBase; }
+namespace fs0 { class ActionData; class ActionBase; class GroundAction; }
 
 namespace fs0 { namespace print {
 
