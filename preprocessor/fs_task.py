@@ -263,7 +263,7 @@ class FSTaskIndex(object):
             return expression.value
         else:
             if expression.symbol not in self.objects:
-                raise ParseException("Functions need to be instantiated to plain objects")
+                raise ParseException("Functions need to be instantiated to plain objects: symbol {} is not an object".format(expression.symbol))
             return expression.symbol
 
     def process_state_variables(self, state_variables):
