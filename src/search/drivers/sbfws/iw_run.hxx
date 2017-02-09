@@ -432,7 +432,7 @@ public:
 					_w1_nodes.push_back(successor);
 				}
 				
-				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
+// 				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
 				
 				if (process_node(successor)) return true; // i.e. all subgoals have been reached before reaching the bound
 				
