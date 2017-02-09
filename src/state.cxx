@@ -8,9 +8,9 @@
 
 namespace fs0 {
 
-	
+
 StateAtomIndexer*
-StateAtomIndexer::create(const ProblemInfo& info) 
+StateAtomIndexer::create(const ProblemInfo& info)
 {
 	unsigned n_vars = info.getNumVariables(), n_bool = 0, n_int = 0;
 	IndexT index;
@@ -23,7 +23,7 @@ StateAtomIndexer::create(const ProblemInfo& info)
 		}
 	}
 	assert(index.size() == n_vars && n_vars == n_bool + n_int);
-	
+
 	return new StateAtomIndexer(std::move(index), n_bool, n_int);
 }
 
@@ -52,26 +52,26 @@ ObjectIdx
 StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 	std::size_t n_vars = _index.size();
 	assert(variable < n_vars);
-	
+
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
 	if (n_vars == _n_bool) return state._bool_values[variable];
 	if (n_vars == _n_int) return state._int_values[variable];
-	
+
 	// Otherwise we need to deindex the variable
 	const IndexElemT& ind = _index[variable];
 	if (ind.first) return state._bool_values[ind.second];
 	else return state._int_values[ind.second];
 }
 
-void 
+void
 StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), atom.getValue()); }
 
-void 
+void
 StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const {
 	std::size_t n_vars = _index.size();
 	assert(variable < n_vars);
-	
+
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
 	if (n_vars == _n_bool) state._bool_values[variable] = value;
@@ -82,7 +82,7 @@ StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const
 		else state._int_values[ind.second] = value;
 	}
 }
-	
+
 State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std::vector<Atom>& atoms) {
 	assert(numAtoms == index.size());
 	return new State(index, atoms);
@@ -131,18 +131,17 @@ std::ostream& State::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "State";
 	os << "(" << _hash << ")[";
-	for (unsigned i = 0; i < _bool_values.size(); ++i) {
-		if (!info.isPredicativeVariable(i)) continue;
-        if ( _bool_values[i] == 0 ) continue;
-		os << info.getVariableName(i);
-		if (i < _bool_values.size() - 1) os << ", ";
-	}
-    for (unsigned i = 0; i < _int_values.size(); ++i) {
-		if (info.isPredicativeVariable(i)) continue;
-        os << info.getVariableName(i) << "=" << info.getObjectName(i, _int_values[i]);
-        if (i < _int_values.size() - 1) os << ", ";
+    for ( unsigned x = 0; x < info.getNumVariables(); x++ ) {
+        ObjectIdx v = getValue(x);
+        if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::BOOL ) {
+            if ( v == 0 ) continue;
+            os << info.getVariableName(x);
+    		if (x < info.getNumVariables() - 1) os << ", ";
+            continue;
+        }
+        os << info.getVariableName(x) << "=" << info.getObjectName(x, v);
+        if (x < info.getNumVariables() - 1) os << ", ";
     }
-
 	os << "]";
 	return os;
 }
@@ -157,7 +156,7 @@ std::size_t State::computeHash() const {
 	boost::hash_combine(seed, std::hash<BitsetT>{}(_bool_values));
 	boost::hash_combine(seed, boost::hash_value( _int_values));
 	return seed;
-	
+
 }
 
 
