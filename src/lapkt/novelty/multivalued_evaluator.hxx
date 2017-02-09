@@ -99,9 +99,6 @@ public:
 	bool evaluate_width_2_tuples(const ValuationT& current, const std::vector<unsigned>& novel) override;
 	
 protected:
-	//! Evaluate the novelty of a given feature valuation, taking into account that only those indexes given in 'novel'
-	//! contain values that can actually be novel.
-	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel) override;
 	
 	//! Check only if the valuation contains a width-'k' tuple which is novel; return k if that is the case, or MAX if not
 	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) override;
