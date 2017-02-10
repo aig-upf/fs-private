@@ -73,8 +73,24 @@ def ground_atom(atom, grounding):
     if isinstance(atom, (pddl.Truth, pddl.Falsity)):
         return atom
 
+    if isinstance(atom,str) :
+        if atom[0] != '?' :
+            return atom
+        if grounding.variable == atom :
+            return grounding.value
+
+    if isinstance(atom, AssignmentEffect) :
+        grounded = copy.deepcopy(atom)
+        grounded.lhs = ground_atom(grounded.lhs, grounding)
+        grounded.rhs = ground_atom(grounded.rhs, grounding)
+        return grounded
+
     grounded = copy.deepcopy(atom)
     for i, arg in enumerate(atom.args, 0):
+        if isinstance( arg, FunctionalTerm ) :
+            grounded_arg = copy.deepcopy(arg)
+            grounded.args = grounded.args[:i] + (ground_atom(grounded_arg, grounding),) + grounded.args[i+1:]  # i.e. atom.args[i] = grounding.value
+            continue
         if grounding.variable == arg:
             grounded.args = atom.args[:i] + (grounding.value,) + atom.args[i+1:]  # i.e. atom.args[i] = grounding.value
     return grounded

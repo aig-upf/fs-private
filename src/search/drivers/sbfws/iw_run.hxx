@@ -31,9 +31,6 @@ public:
 	//! The state in this node
 	StateT state;
 
-	//! The (cached) feature valuation that corresponds to the state in this node.
-// 	lapkt::novelty::FeatureValuation feature_valuation;
-
 	//! The action that led to this node
 	typename ActionT::IdType action;
 

@@ -127,7 +127,13 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const LazyBFWSNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		return os << "{@ = " << this << ", s = " << state << ", g = " << g << ", w_g" << print_novelty(w_g) <<  ", w_gr" << print_novelty(w_gr) << ", #g=" << unachieved_subgoals << ", #r=" << _relevant_atoms.num_reached() << ", parent = " << parent << "}";
+		const Problem& problem = Problem::getInstance();
+		os << "{@ = " << this << ", #" << _gen_order << ", s = " << state;
+		os << ", g = " << g << ", w_g" << print_novelty(w_g) <<  ", w_gr" << print_novelty(w_gr) << ", #g=" << unachieved_subgoals << ", #r=" << _relevant_atoms.num_reached();
+		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
+		if (action < ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
+		else os << ", a = None";
+		return os << "}";
 	}
 
 
@@ -825,15 +831,11 @@ protected:
 
 	//! Process the node. Return true iff at least one node was created during the processing.
 	void process_node(const NodePT& node) {
-
 		//assert(!node->_processed); // Don't process a node twice!
-
-// 		if (!node->from_simulation) {
-			node->_processed = true; // Mark the node as processed
-// 		}
+		node->_processed = true; // Mark the node as processed
 
 		if (is_goal(node)) {
-			LPT_INFO("cout", "Goal found");
+			LPT_INFO("cout", "Goal found. Node: " << std::endl << *node);
 			_solution = node;
 			return;
 		}
@@ -851,6 +853,7 @@ protected:
 		unsigned created = 0;
 
 		for (const auto& action:_model.applicable_actions(node->state)) {
+			// std::cout << *(Problem::getInstance().getGroundActions()[action]) << std::endl;
 			StateT s_a = _model.next(node->state, action);
 			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, _generated++);
 

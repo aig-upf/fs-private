@@ -117,7 +117,7 @@ def compile_translation(translation_dir, use_vanilla, args):
         shutil.copy(os.path.join(planner_dir, 'main.cxx'), translation_dir)
         shutil.copy(os.path.join(planner_dir, 'SConstruct'), os.path.join(translation_dir, 'SConstruct'))
 
-        command = "scons {}".format(debug_flag)
+        command = "python2 /usr/bin/scons {}".format(debug_flag)
 
         print("{0:<30}{1}\n".format("Compilation command:", command))
         sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.

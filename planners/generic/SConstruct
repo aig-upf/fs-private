@@ -51,10 +51,12 @@ else:
 
 # Header and library directories.
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
-include_paths = ['.', env['fs'] + '/src', env['lapkt'], HOME + '/local/include']
+include_paths = ['.', env['fs'] + '/src', env['lapkt']]
+isystem_paths = [HOME + '/local/include']
 lib_paths = [env['fs'] + '/lib', lapkt2_dir + '/lib', lapkt1_dir, HOME + '/local/lib']
     
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
+env.Append(CCFLAGS = ['-isystem' + os.path.abspath(p) for p in isystem_paths])
 
 src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both the main.cxx and the generated code for the particular instance
 
