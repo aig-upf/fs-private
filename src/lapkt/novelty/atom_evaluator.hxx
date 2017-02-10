@@ -160,6 +160,8 @@ protected:
 		
 		auto all_indexes = index_valuation(valuation);
 		auto novel_indexes = index_valuation(novel, valuation);
+		
+		_t2marker.start();
 
 		bool exists_novel_tuple = false;
 		for (unsigned feat_index1:novel_indexes) {
@@ -181,6 +183,8 @@ protected:
 	bool evaluate_pairs_from_index(const std::vector<unsigned>& indexes) {
 		bool exists_novel_tuple = false;
 		unsigned sz = indexes.size();
+		
+		_t2marker.start();
 
 		for (unsigned i = 0; i < sz; ++i) {
 			unsigned index_i = indexes[i];
