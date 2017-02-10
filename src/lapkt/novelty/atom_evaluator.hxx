@@ -97,6 +97,8 @@ public:
 	unsigned evaluate(const ValuationT& valuation, unsigned k) override {
 		assert(!valuation.empty());
 
+		if (k==0) return std::numeric_limits<unsigned>::max();
+			
 		if (k == 1) {
 			return evaluate_width_1_tuples(valuation) ? 1 : std::numeric_limits<unsigned>::max();
 		}
@@ -109,6 +111,8 @@ protected:
 
 	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) override {
 		assert(!valuation.empty());
+		
+		if (k==0) return std::numeric_limits<unsigned>::max();
 
 		if (k == 1) {
 			return evaluate_width_1_tuples(valuation, novel) ? 1 : std::numeric_limits<unsigned>::max();
