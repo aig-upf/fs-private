@@ -73,6 +73,12 @@ def ground_atom(atom, grounding):
     if isinstance(atom, (pddl.Truth, pddl.Falsity)):
         return atom
 
+    if isinstance(atom,str) :
+        if atom[0] != '?' :
+            return atom
+        if grounding.variable == atom :
+            return grounding.value
+
     if isinstance(atom, AssignmentEffect) :
         grounded = copy.deepcopy(atom)
         grounded.lhs = ground_atom(grounded.lhs, grounding)
