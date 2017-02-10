@@ -768,6 +768,7 @@ protected:
 			return true;
 		}
 		
+		/*
 		///// QWGR1 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 1
 		if (!_use_simulation_as_macros_only && !_qwgr1.empty()) {
@@ -788,6 +789,7 @@ protected:
 			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
 			return true;
 		}
+		*/
 
 
 		///// QWGR2 QUEUE /////
@@ -797,6 +799,8 @@ protected:
 			NodePT node = _qwgr2.next();
 
 			unsigned nov;
+			nov = _heuristic.evaluate_wg2(*node);
+			/*
 			if (_use_simulation_as_macros_only) {
 				if ( node->decreases_unachieved_subgoals()) {
 					dump_simulation_nodes(node);
@@ -805,6 +809,7 @@ protected:
 			} else {
 				nov = _heuristic.evaluate_wgr2(*node);
 			}
+			*/
 
 			// If the node has already been processed, no need to do anything else with it,
 			// since we've already run it through all novelty tables.
