@@ -346,8 +346,12 @@ public:
 			LPT_INFO("cout", "IW Simulation - \t" << index.to_atom(atom));
 		}		
 	}
-
+	
 	void run(const StateT& seed) {
+		throw std::runtime_error("This no longer works :-)");
+	}
+
+	std::vector<AtomIdx> compute_R(const StateT& seed) {
 		
 		_config._complete = false;
 		
@@ -379,7 +383,9 @@ public:
 		LPT_INFO("cout", "IW Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
 		_print_atomset(hs);
 		
-		
+		std::vector<AtomIdx> relevant(su.begin(), su.end());
+		std::sort(relevant.begin(), relevant.end());
+		return relevant;
 	}
 	
 	bool _run(const StateT& seed) {

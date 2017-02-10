@@ -8,6 +8,8 @@
 
 namespace lapkt { namespace novelty {
 
+enum class Novelty { Unknown, One, GTOne, OneAndAHalf, GTOneAndAHalf, Two, GTTwo};
+
 //! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
 template <typename FeatureValueT>
 std::vector<unsigned> derive_novel(const std::vector<FeatureValueT>& current, const std::vector<FeatureValueT>& parent) {
@@ -34,6 +36,22 @@ public:
 	
 	//! Evaluate assuming all elements in the valuation can be novel
 	virtual unsigned evaluate(const ValuationT& valuation, unsigned k) = 0;
+	
+	
+	
+	bool evaluate_1_5(const ValuationT& valuation, const ValuationT& parent, const std::vector<unsigned>& special) {
+		return evaluate_1_5(valuation, derive_novel(valuation, parent), special);
+	}
+	
+	bool evaluate_1_5(const ValuationT& valuation, const std::vector<unsigned>& special) {
+		setup_all_features_novel(valuation);
+		return evaluate_1_5(valuation, _all_features_novel, special);
+	}
+	
+	virtual bool evaluate_1_5(const ValuationT& valuation, const std::vector<unsigned>& novel, const std::vector<unsigned>& special) {
+		throw std::runtime_error("This novelty evaluator is not prepared to compute 1.5 novelty values");
+	}
+	
 	
 	
 	//! Evaluate assuming all elements in the valuation can be novel
@@ -78,6 +96,17 @@ protected:
 	//! If no particular width is specified, the evaluator computes up to (_max_novelty+1) levels of novelty
 	//! (i.e. if _max_novelty=1, then the evaluator will return whether a state has novelty 1 or >1.
 	unsigned _max_novelty;
+	
+	//! This is used to cache a vector <0,1,...,k> of appropriate length and spare the creation of one each time we need it.
+	mutable std::vector<unsigned> _all_features_novel;	
+	
+	void setup_all_features_novel(const ValuationT& valuation) {
+		std::size_t num_features = valuation.size();
+		if (_all_features_novel.size() != num_features) {
+			_all_features_novel.resize(num_features);
+			std::iota(_all_features_novel.begin(), _all_features_novel.end(), 0);
+		}		
+	}
 };
 
 } } // namespaces

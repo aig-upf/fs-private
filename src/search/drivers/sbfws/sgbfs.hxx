@@ -13,6 +13,7 @@
 
 namespace fs0 { namespace bfws {
 
+using Novelty = lapkt::novelty::Novelty;
 
 //! Prioritize nodes with lower number of _un_achieved subgoals. Break ties with g.
 template <typename NodePT>
@@ -40,7 +41,6 @@ struct novelty_comparer {
 	}
 };
 
-enum class Novelty { Unknown, One, GTOne, Two, GTTwo};
 
 //! The node type we'll use for the Simulated BFWS search, parametrized by type of state and action action
 template <typename StateT, typename ActionT>
@@ -110,6 +110,7 @@ public:
 	inline std::string print_novelty(const Novelty& novelty) const { 
 		if (novelty == Novelty::Unknown) return "=?";
 		if (novelty == Novelty::One) return "=1";
+		if (novelty == Novelty::OneAndAHalf) return "=1.5";
 		if (novelty == Novelty::GTOne) return ">1";
 		if (novelty == Novelty::Two) return "=2";
 		if (novelty == Novelty::GTTwo) return ">2";
@@ -181,6 +182,8 @@ protected:
 
 	//! The novelty evaluators for the different #g values
 	NoveltyEvaluatorMapT _wg_novelty_evaluators;
+	
+	NoveltyEvaluatorMapT _wg_half_novelty_evaluators; // 1.5 nov evaluators
 
 	//! The novelty evaluators for the different <#g, #r> values
 	NoveltyEvaluatorMapT _wgr_novelty_evaluators;
@@ -210,6 +213,7 @@ public:
 		_featureset(features),
 		_search_evaluator(search_evaluator),
 		_wg_novelty_evaluators(),
+		_wg_half_novelty_evaluators(),
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
@@ -230,6 +234,7 @@ public:
 
 	~LazyBFWSHeuristic() {
 		for (auto& p:_wg_novelty_evaluators) delete p.second;
+		for (auto& p:_wg_half_novelty_evaluators) delete p.second;
 		for (auto& p:_wgr_novelty_evaluators) delete p.second;
 	};
 
@@ -244,8 +249,30 @@ public:
 		assert(node.w_g == Novelty::Unknown);
 		node.w_g = (nov == 1) ? Novelty::One : Novelty::GTOne;
 		return nov;
-
 	}
+	
+	template <typename NodeT>
+	bool evaluate_wg1_5(NodeT& node, const std::vector<AtomIdx>& special) {
+		assert(node.w_g != Novelty::Unknown);
+		unsigned type = node.unachieved_subgoals;
+		bool has_parent = node.has_parent();
+		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
+
+		// A somewhat special routine for dealing with 1.5 computations
+		bool res;
+		NoveltyEvaluatorT* evaluator = fetch_evaluator(_wg_half_novelty_evaluators, type);
+		
+		if (has_parent && type == ptype) {
+			res = evaluator->evaluate_1_5(_featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), special);
+		} else {
+			res = evaluator->evaluate_1_5(_featureset.evaluate(node.state), special);
+		}
+		
+		if (node.w_g != Novelty::One) {
+			node.w_g = res ? Novelty::OneAndAHalf : Novelty::GTOneAndAHalf;
+		}
+		return res;
+	}	
 	
 	template <typename NodeT>
 	unsigned evaluate_wg2(NodeT& node) {
@@ -387,25 +414,24 @@ public:
 		return ind;
 	}
 
-
-
-	template <typename NodeT>
-	unsigned evaluate_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map,  unsigned k, bool has_parent, unsigned type, unsigned parent_type) {
+	NoveltyEvaluatorT* fetch_evaluator(NoveltyEvaluatorMapT& evaluator_map, unsigned type) {
 		auto it = evaluator_map.find(type);
 		if (it == evaluator_map.end()) {
 			auto inserted = evaluator_map.insert(std::make_pair(type, _search_evaluator.clone()));
 			it = inserted.first;
 		}
-		NoveltyEvaluatorT* evaluator = it->second;
+		return it->second;
+	}
+
+	template <typename NodeT>
+	unsigned evaluate_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map,  unsigned k, bool has_parent, unsigned type, unsigned parent_type) {
+		NoveltyEvaluatorT* evaluator = fetch_evaluator(evaluator_map, type);
 
 		if (has_parent && type == parent_type) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
 			return evaluator->evaluate(_featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), k);
 		}
-
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
-
-
 	}
 
 	template <typename NodeT>
@@ -452,7 +478,7 @@ public:
 	}
 	
 	template <typename NodeT>
-	void run_simulation2(NodeT& node) {
+	std::vector<AtomIdx> run_simulation2(NodeT& node) {
 // 		assert(_use_simulation_nodes);
 		assert(!node._simulated);
 		node._simulated = true;
@@ -460,17 +486,7 @@ public:
 		LPT_DEBUG("cout", "Running Simulation!");
 		
 		SimulationT simulator(_model, _featureset, _simconfig);
-
-		//BFWSStats stats;
-		//StatsObserver<IWNodeT, BFWSStats> st_obs(stats, false);
-		//iw->subscribe(st_obs);
-
-		simulator.run(node.state);
-
-// 		RelevantAtomSet relevant = simulator.retrieve_relevant_atoms(state, reachable);
-
-		//LPT_INFO("cout", "IW Simulation: Node expansions: " << stats.expanded());
-		//LPT_INFO("cout", "IW Simulation: Node generations: " << stats.generated());
+		return simulator.compute_R(node.state);
 	}
 	
 
@@ -527,6 +543,9 @@ protected:
 
 	//! A list with all nodes that have novelty w_{#g}=1
 	UnachievedOpenList _q1;
+	
+	//! A list with all nodes that have novelty w_{#g}=1.5
+	UnachievedOpenList _q1half;
 
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 1 novelty tables
 	UnachievedOpenList _qwgr1;
@@ -570,6 +589,9 @@ protected:
 	
 	//! How many novelty levels we want to use in the search.
 	unsigned _novelty_levels;
+	
+	//! The set R of "specially relevant" atoms (i.e. AtomIndexes)	
+	std::vector<AtomIdx>  _R;
 	
 public:
 
@@ -690,9 +712,9 @@ public:
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 
-		if (_run_simulation_from_root) {
-			_heuristic.run_simulation2(*root); // Preprocess the root node
-		}
+// 		if (_run_simulation_from_root) {
+			_R = _heuristic.run_simulation2(*root); // Preprocess the root node
+// 		}
 
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
@@ -730,7 +752,22 @@ protected:
 			return true;
 		}
 
+		///// 1.5-width QUEUE /////
+		// Check whether there are nodes with w_{#g, #r} = 1
+		if (!_q1half.empty()) {
+			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g} = 1.5");
+			NodePT node = _q1half.next();
 
+			bool novel = _heuristic.evaluate_wg1_5(*node, _R);
+			if (!node->_processed && novel) {
+				_stats.wg1_5_node();
+				process_node(node);
+			} 
+
+			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
+			return true;
+		}
+		
 		///// QWGR1 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 1
 		if (!_use_simulation_as_macros_only && !_qwgr1.empty()) {
@@ -819,6 +856,7 @@ protected:
 			_q1.insert(node);
 		}
 
+		_q1half.insert(node);
 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
 		
 		if (_novelty_levels == 3) {
@@ -868,6 +906,7 @@ protected:
 
 	bool is_open(const NodePT& node) const {
 		return _q1.contains(node) ||
+			   _q1half.contains(node) ||
 		       _qwgr1.contains(node) ||
 		       _qwgr2.contains(node) ||
 		       _qrest.contains(node);
@@ -875,6 +914,7 @@ protected:
 
 	bool some_queue_nonempty() const {
 		return !_q1.empty() ||
+			   !_q1half.empty() ||
 		       !_qwgr1.empty() ||
 		       !_qwgr2.empty() ||
 		       !_qrest.empty();

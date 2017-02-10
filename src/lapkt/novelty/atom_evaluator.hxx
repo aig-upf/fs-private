@@ -235,23 +235,28 @@ protected:
 	}
 	
 	
-	
-	
-	
-	bool evaluate_width_1_and_half_tuples(const ValuationT& valuation, const std::vector<unsigned>& novel, const std::vector<unsigned>& special) {
+	//! 'valuation' contains feature values
+	//! 'novel' contains the indexes of 'valuation' which contain values that are novel wrt the parent valuation
+	//! 'special' contains indexes of feature-value pairs;
+	bool evaluate_1_5(const ValuationT& valuation, const std::vector<unsigned>& novel, const std::vector<unsigned>& special) override {
+		unsigned sz = valuation.size();
 		if(this->_max_novelty < 2) {  // i.e. make sure the evaluator was prepared for this width!
 			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
 		}
 		
 		_t2marker.start();
 		
-		unsigned sz = valuation.size();
-// 		if (sz == novel.size()) return _evaluate_width_2_tuples(valuation);
+// 		LPT_DEBUG("novelty_1_5", "Computing 1,5-Novelty...");
+		LPT_DEBUG("cout", "Computing 1,5-Novelty...");
+		
 
+		auto all_indexes = index_valuation(valuation);
+		auto novel_indexes = index_valuation(novel, valuation);
+		
 		
 		// Compute intersection and set differences in one pass
 		std::vector<unsigned> intersect, novel_wo_special, special_wo_novel;
-		fs0::Utils::intersection_and_set_diff(novel, special, intersect, novel_wo_special, special_wo_novel);
+		fs0::Utils::intersection_and_set_diff(novel_indexes, special, intersect, novel_wo_special, special_wo_novel);
 		
 		bool exists_novel_tuple = false;
 		
@@ -287,7 +292,7 @@ protected:
 			}
 		}		
 		
-		return exists_novel_tuple;
+		return exists_novel_tuple ? 2 : std::numeric_limits<unsigned>::max();;
 	}
 	
 	
