@@ -239,7 +239,6 @@ protected:
 	//! 'novel' contains the indexes of 'valuation' which contain values that are novel wrt the parent valuation
 	//! 'special' contains indexes of feature-value pairs;
 	bool evaluate_1_5(const ValuationT& valuation, const std::vector<unsigned>& novel, const std::vector<unsigned>& special) override {
-		unsigned sz = valuation.size();
 		if(this->_max_novelty < 2) {  // i.e. make sure the evaluator was prepared for this width!
 			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
 		}
@@ -262,33 +261,19 @@ protected:
 		
 		
 		// 1. Check if there is a novel pair involving one element in the intersection plus any other element 
-		for (unsigned idx1:intersect) {
-			const auto& feature1_value = valuation[idx1];
-			if (_ignore_negative && feature1_value == 0) continue;
-			unsigned atom1_index = _indexer.to_index(idx1, feature1_value);
-
-			for (unsigned j = 0; j < sz; ++j) {
-				if (j==idx1) continue;
-
-				const auto& feature2_value = valuation[j];
-				if (_ignore_negative && feature2_value == 0) continue;
-				exists_novel_tuple  |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(j, feature2_value));
+		for (unsigned feat_idx1:intersect) {
+			for (unsigned feat_idx2:all_indexes) {
+				if (feat_idx1==feat_idx2) continue;
+				exists_novel_tuple  |= _t2marker.update_sz2_table(feat_idx1, feat_idx2);
 			}
 		}
 		
 		
 		// 2. Check if there is a novel pair involving one element from novel \ special and one element from special \ novel
-		for (unsigned idx1:novel_wo_special) {
-			const auto& feature1_value = valuation[idx1];
-			if (_ignore_negative && feature1_value == 0) continue;
-			unsigned atom1_index = _indexer.to_index(idx1, feature1_value);
-
-			for (unsigned idx2:special_wo_novel) {
-				if (idx1==idx2) continue;
-
-				const auto& feature2_value = valuation[idx2];
-				if (_ignore_negative && feature2_value == 0) continue;
-				exists_novel_tuple  |= _t2marker.update_sz2_table(atom1_index, _indexer.to_index(idx2, feature2_value));
+		for (unsigned feat_idx1:novel_wo_special) {
+			for (unsigned feat_idx2:special_wo_novel) {
+				if (feat_idx1==feat_idx2) continue;
+				exists_novel_tuple  |= _t2marker.update_sz2_table(feat_idx1, feat_idx2);
 			}
 		}		
 		
