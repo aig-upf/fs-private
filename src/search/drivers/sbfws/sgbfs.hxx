@@ -207,7 +207,7 @@ protected:
 	SBFWSConfig::RelevantSetType _rstype;
 	
 public:
-	LazyBFWSHeuristic(const SBFWSConfig& config, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, BFWSStats& stats) :
+	LazyBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, BFWSStats& stats) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
@@ -217,7 +217,7 @@ public:
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
-		_simconfig(10000, config.complete_simulation, config.mark_negative_propositions),
+		_simconfig(c.getOption<int>("sim.bound", 10000), config.complete_simulation, config.mark_negative_propositions),
 		_stats(stats),
 		_aptk_rpg(nullptr),
 		_use_simulation_nodes(false),
@@ -253,6 +253,8 @@ public:
 	
 	template <typename NodeT>
 	bool evaluate_wg1_5(NodeT& node, const std::vector<AtomIdx>& special) {
+		// LPT_DEBUG("cout", "Let's compute whether node has novelty 1,5: " << node);
+
 		assert(node.w_g != Novelty::Unknown);
 		unsigned type = node.unachieved_subgoals;
 		bool has_parent = node.has_parent();
@@ -609,7 +611,7 @@ public:
 		_solution(nullptr),
 		_search_evaluator(search_evaluator),
 		_featureset(), // ATM we use no feature selection, etc.
-		_heuristic(conf, model, _featureset, *_search_evaluator, stats),
+		_heuristic(conf, config, model, _featureset, *_search_evaluator, stats),
 		_stats(stats),
 		_run_simulation_from_root(config.getOption<bool>("bfws.sim0", true)),
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
@@ -713,7 +715,8 @@ public:
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 
 // 		if (_run_simulation_from_root) {
-			_R = _heuristic.run_simulation2(*root); // Preprocess the root node
+		_R = _heuristic.run_simulation2(*root); // Preprocess the root node
+// 		if (_R.empty()) return false;
 // 		}
 
 		// The main search loop
@@ -758,11 +761,24 @@ protected:
 			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g} = 1.5");
 			NodePT node = _q1half.next();
 
+			// Greedy 1,5-novelty evaluation
+			/*
+			if (!node->_processed) {
+				_stats.wg1_5_node();
+				process_node(node);
+			}
+			*/
+			
+			// Lazy 1,5-novelty evaluation:
+			
 			bool novel = _heuristic.evaluate_wg1_5(*node, _R);
 			if (!node->_processed && novel) {
 				_stats.wg1_5_node();
 				process_node(node);
-			} 
+			} else if (_novelty_levels == 2) {
+				_qrest.insert(node);
+			}
+			
 
 			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
 			return true;
@@ -860,9 +876,18 @@ protected:
 		if (node->w_g == Novelty::One) {
 			_q1.insert(node);
 		}
-
+		
+		// Greedy 1,5-novelty evaluation
+		/*
+		if (_heuristic.evaluate_wg1_5(*node, _R)) {
+			_q1half.insert(node);
+		}
+		*/
+		
+		// Lazy 1,5-novelty evaluation
 		_q1half.insert(node);
-		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
+		
+// 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
 		
 		if (_novelty_levels == 3) {
 			_qwgr2.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=2 tables

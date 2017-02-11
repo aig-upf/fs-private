@@ -135,16 +135,18 @@ public:
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
 		
-		LPT_INFO("evaluated", "Evaluated: " << node);
+// 		LPT_INFO("evaluated", "Evaluated: " << node);
 		
 		if (node._w == 2) { // If the novelty is two, we want to store the set R_s of atoms that belong to a novel 2-tuple
 			_evaluator->atoms_in_novel_tuple(node._relevant_atoms);
+			/*
 			if (node._gen_order == 149 && node._relevant_atoms.count(101) > 0) {
 				const AtomIndex& index = Problem::getInstance().get_tuple_index();
 				LPT_INFO("cout", "Atom 101 appears novel in node: " << node);
 				_evaluator->explain(101);
 				LPT_INFO("cout", "Atom 137 is: " << index.to_atom(137));
 			}
+			*/
 		}
 		
 		return node._w;
@@ -221,9 +223,14 @@ protected:
 	//! All those nodes with width 1 on the first stage of the simulation
 	std::vector<NodePT> _w1_nodes;
 	
-	
 	//! The number of generated nodes so far
 	unsigned long _generated;
+	
+	unsigned long _w1_nodes_expanded;
+	unsigned long _w2_nodes_expanded;
+	unsigned long _w1_nodes_generated;
+	unsigned long _w2_nodes_generated;
+	unsigned long _w_gt2_nodes_generated;
 
 public:
 
@@ -237,7 +244,12 @@ public:
 		_visited(),
 		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, 2, true)),
 		_w1_nodes(),
-		_generated(0)
+		_generated(0),
+		_w1_nodes_expanded(0),
+		_w2_nodes_expanded(0),
+		_w1_nodes_generated(0),
+		_w2_nodes_generated(0),		
+		_w_gt2_nodes_generated(0)
 	{
 
 		for (unsigned i = 0; i < model.num_subgoals(); ++i) _unreached.insert(i); // Initially all goal atoms assumed to be unreached
@@ -367,7 +379,19 @@ public:
 		}
 		
 		LPT_INFO("cout", "IW Simulation - All subgoals reached before bound? " << all_reached_before_bound);
+		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << this->_model.num_subgoals());
 		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
+		LPT_INFO("cout", "IW Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
+		LPT_INFO("cout", "IW Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
+		
+		LPT_INFO("cout", "IW Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
+		LPT_INFO("cout", "IW Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
+		LPT_INFO("cout", "IW Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
+		
+		
+		LPT_INFO("cout", "IW Simulation - Total number of generated nodes (incl. pruned): " << _generated);
+		
+		
 		LPT_INFO("cout", "IW Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
 		
 		auto relevant_w2_nodes = compute_relevant_w2_nodes();
@@ -383,6 +407,7 @@ public:
 		LPT_INFO("cout", "IW Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
 		_print_atomset(hs);
 		
+		//std::vector<AtomIdx> relevant(hs.begin(), hs.end());
 		std::vector<AtomIdx> relevant(su.begin(), su.end());
 		std::sort(relevant.begin(), relevant.end());
 		return relevant;
@@ -397,6 +422,7 @@ public:
 		
 		
 		auto nov =_evaluator.evaluate(*n);
+		_unused(nov);
 		assert(nov==1);
 		LPT_INFO("cout", "IW Simulation - Seed node: " << *n);
 
@@ -415,6 +441,9 @@ public:
 			this->_closed.put(current);
 
 // 			this->notify(NodeExpansionEvent(*current));
+			
+			if (current->_w == 1) ++_w1_nodes_expanded;
+			else if (current->_w == 2) ++_w2_nodes_expanded;
 
 			for (const auto& a : this->_model.applicable_actions(current->state)) {
 				StateT s_a = this->_model.next( current->state, a );
@@ -437,13 +466,21 @@ public:
 				
 // 				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
 				
-				if (process_node(successor)) return true; // i.e. all subgoals have been reached before reaching the bound
+				if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
+					LPT_INFO("cout", "IW Simulation - All subgoals reached after processing " << accepted << " nodes");
+					return true;
+				}
 				
 				if (novelty <= 2) {
 					this->_open.insert(successor);
 					accepted++;
+					
+					assert(novelty == 1 || novelty == 2);
+					
+					if (novelty==1) ++_w1_nodes_generated;
+					else  ++_w2_nodes_generated;
 				} else {
-					LPT_EDEBUG("search", std::setw(7) << "PRUNED: " << *successor);
+					++_w_gt2_nodes_generated;
 				}
 				
 				if (accepted >= _config._bound) {

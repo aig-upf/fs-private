@@ -8,6 +8,7 @@
 #include "base.hxx"
 #include <aptk2/tools/logging.hxx>
 #include <utils/utils.hxx>
+#include <problem.hxx>
 
 
 
@@ -234,6 +235,16 @@ protected:
 		return false;
 	}
 	
+	static void print_indexes(const std::vector<unsigned>& indexes) {
+		for (auto ind:indexes) print_index(ind);
+	}
+	
+	static void print_index(unsigned ind) {
+		const fs0::AtomIndex& index = fs0::Problem::getInstance().get_tuple_index();
+		_unused(index);
+		LPT_DEBUG("cout", "\t" << index.to_atom(ind));
+	}	
+	
 	
 	//! 'valuation' contains feature values
 	//! 'novel' contains the indexes of 'valuation' which contain values that are novel wrt the parent valuation
@@ -245,26 +256,46 @@ protected:
 		
 		_t2marker.start();
 		
-// 		LPT_DEBUG("novelty_1_5", "Computing 1,5-Novelty...");
-		LPT_DEBUG("cout", "Computing 1,5-Novelty...");
+		// LPT_DEBUG("cout", "Computing 1,5-Novelty...");
 		
 
 		auto all_indexes = index_valuation(valuation);
 		auto novel_indexes = index_valuation(novel, valuation);
 		
-		
 		// Compute intersection and set differences in one pass
 		std::vector<unsigned> intersect, novel_wo_special, special_wo_novel;
 		fs0::Utils::intersection_and_set_diff(novel_indexes, special, intersect, novel_wo_special, special_wo_novel);
 		
-		bool exists_novel_tuple = false;
 		
+		/*
+		LPT_DEBUG("cout", "All atoms: ");
+		print_indexes(all_indexes);
+		LPT_DEBUG("cout", "Novel atoms: ");
+		print_indexes(novel_indexes);
+		LPT_DEBUG("cout", "Special atoms: ");
+		print_indexes(special);
+		
+		LPT_DEBUG("cout", "Special AND novel: ");
+		print_indexes(intersect);
+		LPT_DEBUG("cout", "Special \\ Novel: ");
+		print_indexes(special_wo_novel);
+		LPT_DEBUG("cout", "Novel \\ special: ");
+		print_indexes(novel_wo_special);				
+		*/
+		
+		
+		
+		bool exists_novel_tuple = false;
 		
 		// 1. Check if there is a novel pair involving one element in the intersection plus any other element 
 		for (unsigned feat_idx1:intersect) {
 			for (unsigned feat_idx2:all_indexes) {
 				if (feat_idx1==feat_idx2) continue;
-				exists_novel_tuple  |= _t2marker.update_sz2_table(feat_idx1, feat_idx2);
+				if (_t2marker.update_sz2_table(feat_idx1, feat_idx2)) {
+					exists_novel_tuple = true ;
+					//LPT_DEBUG("cout", "Tuple makes novelty 1.5!: "); print_indexes({feat_idx1, feat_idx2});
+				}
+				
 			}
 		}
 		
@@ -273,11 +304,14 @@ protected:
 		for (unsigned feat_idx1:novel_wo_special) {
 			for (unsigned feat_idx2:special_wo_novel) {
 				if (feat_idx1==feat_idx2) continue;
-				exists_novel_tuple  |= _t2marker.update_sz2_table(feat_idx1, feat_idx2);
+				if (_t2marker.update_sz2_table(feat_idx1, feat_idx2)) {
+					exists_novel_tuple = true ;
+					//LPT_DEBUG("cout", "Tuple makes novelty 1.5!: "); print_indexes({feat_idx1, feat_idx2});
+				}
 			}
 		}		
 		
-		return exists_novel_tuple ? 2 : std::numeric_limits<unsigned>::max();;
+		return exists_novel_tuple;
 	}
 	
 	
