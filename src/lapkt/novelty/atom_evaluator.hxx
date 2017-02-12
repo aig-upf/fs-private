@@ -319,6 +319,10 @@ protected:
 		_t2marker.atoms_in_novel_tuple(atoms);
 	}
 	
+	void mark_atoms_in_novelty1_table(std::vector<bool>& atoms) const override {
+		atoms = _seen_tuples_sz_1;
+	}	
+	
 	virtual void explain(unsigned atom) const { _t2marker.explain(atom); }
 	
 	

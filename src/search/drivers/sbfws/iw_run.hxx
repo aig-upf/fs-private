@@ -135,22 +135,21 @@ public:
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
 		
-// 		LPT_INFO("evaluated", "Evaluated: " << node);
+// 		LPT_INFO("evaluated", "Evaluated: " << node << std::endl);
 		
 		if (node._w == 2) { // If the novelty is two, we want to store the set R_s of atoms that belong to a novel 2-tuple
 			_evaluator->atoms_in_novel_tuple(node._relevant_atoms);
-			/*
-			if (node._gen_order == 149 && node._relevant_atoms.count(101) > 0) {
-				const AtomIndex& index = Problem::getInstance().get_tuple_index();
-				LPT_INFO("cout", "Atom 101 appears novel in node: " << node);
-				_evaluator->explain(101);
-				LPT_INFO("cout", "Atom 137 is: " << index.to_atom(137));
-			}
-			*/
 		}
 		
 		return node._w;
 	}
+	
+	std::vector<bool> reached_atoms() const {
+		std::vector<bool> atoms;
+		_evaluator->mark_atoms_in_novelty1_table(atoms);
+		return atoms;
+	}
+	
 };
 
 
@@ -185,7 +184,7 @@ public:
 	
 	struct Config {
 		//! The bound on the simulation number of generated nodes
-		unsigned _bound;
+		int _bound;
 		
 		//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
 		bool _complete;
@@ -193,8 +192,13 @@ public:
 		//! Whether to take into account negative propositions or not
 		bool _mark_negative;
 		
-		Config(unsigned bound, bool complete, bool mark_negative) :
-			_bound(bound), _complete(complete), _mark_negative(mark_negative) {}
+		//!
+		unsigned _max_width;
+		
+		Config(int bound, bool complete, bool mark_negative) :
+			_bound(bound), _complete(complete), _mark_negative(mark_negative), _max_width(2) {}
+		
+		
 	};
 	
 protected:
@@ -242,7 +246,7 @@ public:
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 		_visited(),
-		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, 2, true)),
+		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, 1, true)),
 		_w1_nodes(),
 		_generated(0),
 		_w1_nodes_expanded(0),
@@ -282,22 +286,16 @@ public:
 		NodePT root = node;
 		// We ignore s0
 		while (node->has_parent()) {
-// 			if (root->_gen_order == 292) std::cout <<  *node << std::endl;
 			// If the node has already been processed, no need to do it again, nor to process the parents,
 			// which will necessarily also have been processed.
 			auto res = all_visited.insert(node);
-			if (!res.second) break; // TODO REACTIVAAAAAAAAAAAAAAAAAAAAAAAAATE
+			if (!res.second) break;
 			
 			if (node->_w == 2) {
 				w2_nodes.insert(node);
-// 				if (node->_gen_order == 149) {
-// 					LPT_INFO("cout", "Width-2 node 149 is on the way to width-1 node: " << *root);
-// 				}
 			}
 			node = node->parent;
 		}
-		
-// 		if (root->_gen_order == 292) std::cout <<  *node << std::endl;
 	}
 	
 	AtomIdx select_atom(const std::unordered_set<NodePT>& nodes) const {
@@ -305,9 +303,6 @@ public:
 		
 		for (const auto& node:nodes) {
 			for (const AtomIdx atom:node->_relevant_atoms) {
-// 				if (atom==101) {
-// 					LPT_INFO("cout", "Atom 101 appears novel in node: " << *node << "\n");
-// 				}
 				counts[atom]++;
 			}
 		}
@@ -320,14 +315,11 @@ public:
 	
 	// TODO Optimize this very inefficient prototype
 	std::unordered_set<AtomIdx> compute_hitting_set(std::unordered_set<NodePT>& nodes) const {
-		
-		const AtomIndex& index = this->_model.getTask().get_tuple_index();
-		
 		std::unordered_set<AtomIdx> hs;
 		while (!nodes.empty()) {
 			AtomIdx selected = select_atom(nodes);
 			
-			LPT_INFO("cout", "IW Simulation - Selected atom: " << selected << ": " << index.to_atom(selected));
+// 			LPT_INFO("cout", "IW Simulation - Selected atom: " << selected << ": " << index.to_atom(selected));
 			
 			for (auto it = nodes.begin(); it != nodes.end();) {
 				const std::unordered_set<unsigned>& rset = (*it)->_relevant_atoms;
@@ -362,7 +354,29 @@ public:
 	void run(const StateT& seed) {
 		throw std::runtime_error("This no longer works :-)");
 	}
+	
+	std::vector<bool> compute_R_IW1(const StateT& seed) {
+		_config._max_width = 1;
+		_config._bound = -1; // No bound
+		compute_R(seed);
+		return _evaluator.reached_atoms();
+	}
 
+	std::vector<bool> compute_R_union_Rs(const StateT& seed) {
+		_config._max_width = 2;
+// 		_config._bound = -1; // No bound
+		auto atoms = compute_R(seed);
+		
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		std::vector<bool> res(index.size(), false);
+		for (AtomIdx atom:atoms) {
+			res[atom] = true;
+		}
+		return res;
+	}
+
+	
+	
 	std::vector<AtomIdx> compute_R(const StateT& seed) {
 		
 		_config._complete = false;
@@ -471,7 +485,7 @@ public:
 					return true;
 				}
 				
-				if (novelty <= 2) {
+				if (novelty <= _config._max_width) {
 					this->_open.insert(successor);
 					accepted++;
 					
@@ -483,7 +497,7 @@ public:
 					++_w_gt2_nodes_generated;
 				}
 				
-				if (accepted >= _config._bound) {
+				if (_config._bound > 0 && accepted >= _config._bound) {
 					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
 					return false;
 				}

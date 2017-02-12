@@ -85,6 +85,9 @@ public:
 	virtual void atoms_in_novel_tuple(std::unordered_set<unsigned>&) {}
 	virtual void explain(unsigned atom) const {  }
 	
+	
+	virtual void mark_atoms_in_novelty1_table(std::vector<bool>& atoms) const {}
+	
 protected:
 	
 	//! Check only if the valuation contains a width-'k' tuple which is novel; return k if that is the case, or MAX if not

@@ -41,7 +41,6 @@ struct novelty_comparer {
 	}
 };
 
-
 //! The node type we'll use for the Simulated BFWS search, parametrized by type of state and action action
 template <typename StateT, typename ActionT>
 class LazyBFWSNode {
@@ -66,7 +65,8 @@ public:
 
 	//! The number of atoms in the last relaxed plan computed in the way to the current state that have been
 	//! made true along the path (#r)
-	RelevantAtomSet _relevant_atoms;
+// 	RelevantAtomSet _relevant_atoms;
+	LightRelevantAtomSet _lrelevant_atoms;
 
 	bool _processed;
 	
@@ -92,13 +92,14 @@ public:
 	LazyBFWSNode& operator=(LazyBFWSNode&&) = delete;
 
 	//! Constructor with full copying of the state (expensive)
-	LazyBFWSNode(const StateT& s, unsigned long gen_order) : LazyBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
+	LazyBFWSNode(const StateT& s, const AtomsetHelper* helper, unsigned long gen_order) : LazyBFWSNode(StateT(s), helper, ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	LazyBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, unsigned long gen_order) :
+	LazyBFWSNode(StateT&& _state, const AtomsetHelper* helper, action_t action_, ptr_t parent_, unsigned long gen_order) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		unachieved_subgoals(std::numeric_limits<unsigned>::max()),
-		_relevant_atoms(nullptr),
+// 		_relevant_atoms(nullptr),
+		_lrelevant_atoms(helper),
 		_processed(false),
 		_simulated(false),
 		_gen_order(gen_order),
@@ -130,23 +131,27 @@ public:
 	std::ostream& print(std::ostream& os) const {
 		const Problem& problem = Problem::getInstance();
 		os << "{@ = " << this << ", #" << _gen_order << ", s = " << state;
-		os << ", g = " << g << ", w_g" << print_novelty(w_g) <<  ", w_gr" << print_novelty(w_gr) << ", #g=" << unachieved_subgoals << ", #r=" << _relevant_atoms.num_reached();
+// 		os << ", g = " << g << ", w_g" << print_novelty(w_g) <<  ", w_gr" << print_novelty(w_gr) << ", #g=" << unachieved_subgoals << ", #r=" << _relevant_atoms.num_reached();
+		os << ", g = " << g << ", w_g" << print_novelty(w_g) <<  ", w_gr" << print_novelty(w_gr) << ", #g=" << unachieved_subgoals << ", #r=" << _lrelevant_atoms.num_reached();
 		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
+		os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
 		if (action < ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
 		else os << ", a = None";
 		return os << "}";
 	}
 
 
+	/*
 	//! Return the (possibly cached) set R of relevant atoms corresponding to this node.
 	//! This might trigger the recursive computation from the parent node.
 	template <typename HeuristicT>
-	const RelevantAtomSet& get_relevant_atoms(HeuristicT& heuristic) {
-		if (!_relevant_atoms.valid()) {
+	const LightRelevantAtomSet& get_relevant_atoms(HeuristicT& heuristic) {
+		if (!_lrelevant_atoms.valid()) {
 			heuristic.update_relevant_atoms(*this);
 		}
-		return _relevant_atoms;
+		return _lrelevant_atoms;
 	}
+	*/
 
 	bool decreases_unachieved_subgoals() const {
 		return (!has_parent() || unachieved_subgoals < parent->unachieved_subgoals);
@@ -294,11 +299,12 @@ public:
 	template <typename NodeT>
 	unsigned get_hash_r(NodeT& node) {
 		if (_rstype == SBFWSConfig::RelevantSetType::None) return 0;
-		return node.get_relevant_atoms(*this).num_reached();
+		return node._lrelevant_atoms.num_reached();
 	}
 	
 	template <typename NodeT>
 	unsigned compute_node_complex_type(NodeT& node) {
+// 		LPT_INFO("types", "Type=" << compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node)) << " for node: " << std::endl << node)
 		return compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node));
 	}
 	
@@ -335,7 +341,10 @@ public:
 		assert(node.w_gr != Novelty::Unknown);
 		if (node.w_gr != Novelty::One) {
 			node.w_gr = (nov == 2) ? Novelty::Two : Novelty::GTTwo;
-		}		
+		}
+		
+// 		LPT_INFO("types", "Type=" << compute_node_complex_type(node) << " for node: " << std::endl << node << std::endl)
+// 		LPT_INFO("types", "Relevant atoms=" << std::endl << node._lrelevant_atoms << std::endl)
 		return nov;
 	}
 	
@@ -343,6 +352,7 @@ public:
 	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
 	//! all those atoms marked as "unreached", and the rest as irrelevant.
 	//! If 'log_stats' is true, the stats of this simulation will be logged in the '_stats' atribute.
+	/*
 	RelevantAtomSet compute_relevant_simulation(const State& state, unsigned& reachable) {
 		reachable = 0;
 
@@ -361,40 +371,41 @@ public:
 
 		return relevant;
 	}
-
-	RelevantAtomSet compute_relevant(const State& state, bool log_stats) {
+	
+	void compute_relevant(const State& state, bool log_stats, LightRelevantAtomSet& atomset) {
 		
 		unsigned reachable = 0, max_reachable = _model.num_subgoals();
 		_unused(max_reachable);
-		RelevantAtomSet relevant(nullptr);
+		
 		if (_aptk_rpg) {
-			relevant = compute_relevant_aptk_hff(state);
+			compute_relevant_aptk_hff(state, atomset);
 		} else if (_use_simulation_nodes) {
 			// Leave the relevant atom set empty
-			compute_relevant_simulation(state, reachable);
+			assert(false); // This needs to be rethought
+// 			compute_relevant_simulation(state, reachable);
 		} else {
-			relevant = compute_relevant_simulation(state, reachable);
+			compute_relevant_simulation(state, reachable, atomset);
 		}
 
 		LPT_EDEBUG("simulation-relevant", "Computing R(s) from state: " << std::endl << state << std::endl);
-		LPT_EDEBUG("simulation-relevant", relevant.num_unreached() << " relevant atoms (" << reachable << "/" << max_reachable << " reachable subgoals): " << print::relevant_atomset(relevant) << std::endl << std::endl);
+		LPT_EDEBUG("simulation-relevant", relevant.num_unreached() << " relevant atoms (" << reachable << "/" << max_reachable << " reachable subgoals): " << print::relevant_atomset(atomset) << std::endl << std::endl);
 
 		if (log_stats) {
 			_stats.set_initial_reachable_subgoals(reachable);
-			_stats.set_initial_relevant_atoms(relevant.num_unreached());
+			_stats.set_initial_relevant_atoms(atomset.num_unreached());
 		}
 		_stats.reachable_subgoals(reachable);
-		_stats.relevant_atoms(relevant.num_unreached());
+		_stats.relevant_atoms(atomset.num_unreached());
 		_stats.simulation();
-
-		return relevant;
 	}
+	
 
-	RelevantAtomSet compute_relevant_aptk_hff(const State& state) {
+	void compute_relevant_aptk_hff(const State& state, LightRelevantAtomSet& atomset) {
 		assert(_aptk_rpg);
 		const AtomIndex& atomidx = _problem.get_tuple_index();
 		return _aptk_rpg->compute_r_ff(state, atomidx);
 	}
+	*/
 
 
 	const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _simulator->get_relevant_nodes(); }
@@ -442,22 +453,36 @@ public:
 		// do we recompute the set of relevant atoms.
 		State* marking_parent = nullptr;
 
-		if (node.decreases_unachieved_subgoals()) {
-			node._relevant_atoms = compute_relevant(node.state, !node.has_parent()); // Log only the stats of the seed state of the search.
-		} else {
+		// ATM we use only one Relevant atomset, computed from the seed state.
+// 		if (node.decreases_unachieved_subgoals()) {
+// 			compute_relevant(node.state, !node.has_parent(), node._lrelevant_atoms); // Log only the stats of the seed state of the search.
+// 		} else {
 			// We copy the map of reached values from the parent node
-			node._relevant_atoms = node.parent->get_relevant_atoms(*this); // This might trigger a recursive computation
-		}
+// 			node._lrelevant_atoms = node.parent->_lrelevant_atoms;
+// 		}
 
+		// If the node increases the number of reached subgoals, we reset the counter of reached atoms.
+		if (node.decreases_unachieved_subgoals()) {
+// 			node._lrelevant_atoms.reset();
+			node._lrelevant_atoms.update_counter(node.state);
+			return;
+		}
+		
 		// For the seed of the simulation, we want to mark all the initial atoms as reached.
 		// But otherwise, we might want to mark as reached those atoms that change of value with respect to the parent.
 // 		if (node.has_parent() && !node.decreases_unachieved_subgoals()) marking_parent = &(node.parent->state);
-		if (node.has_parent()) marking_parent = &(node.parent->state);
+		if (node.has_parent()) {
+			marking_parent = &(node.parent->state);
+			node._lrelevant_atoms = node.parent->_lrelevant_atoms;
+		} else {
+			// we assume it's the seed node and its set of relevant atoms has already been computed.
+		}
 
 		// In both cases, we update the set of relevant nodes with those that have been reached.
-		node._relevant_atoms.mark(node.state, marking_parent, RelevantAtomSet::STATUS::REACHED, _mark_negative_propositions, true);
+		node._lrelevant_atoms.update(node.state, marking_parent);
 	}
 	
+	/*
 	template <typename NodeT>
 	void run_simulation(NodeT& node) {
 // 		assert(_use_simulation_nodes);
@@ -478,6 +503,7 @@ public:
 		_stats.reachable_subgoals(reachable);
 		_stats.simulation();
 	}
+	*/
 	
 	template <typename NodeT>
 	std::vector<AtomIdx> run_simulation2(NodeT& node) {
@@ -491,6 +517,17 @@ public:
 		return simulator.compute_R(node.state);
 	}
 	
+	template <typename StateT>
+	std::vector<bool> compute_R_IW1(const StateT& state) {
+		SimulationT simulator(_model, _featureset, _simconfig);
+		return simulator.compute_R_IW1(state);
+	}
+	
+	template <typename StateT>
+	std::vector<bool> compute_R_union_Rs(const StateT& state) {
+		SimulationT simulator(_model, _featureset, _simconfig);
+		return simulator.compute_R_union_Rs(state);
+	}	
 
 
 	unsigned compute_unachieved(const State& state) {
@@ -547,7 +584,7 @@ protected:
 	UnachievedOpenList _q1;
 	
 	//! A list with all nodes that have novelty w_{#g}=1.5
-	UnachievedOpenList _q1half;
+// 	UnachievedOpenList _q1half;
 
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 1 novelty tables
 	UnachievedOpenList _qwgr1;
@@ -595,6 +632,10 @@ protected:
 	//! The set R of "specially relevant" atoms (i.e. AtomIndexes)	
 	std::vector<AtomIdx>  _R;
 	
+	//! A bitset indicating which atoms have been reached in a simulation run from s0
+	std::unique_ptr<AtomsetHelper> _helper;
+	
+	
 public:
 
 	//! The only allowed constructor requires the user of the algorithm to inject both
@@ -618,7 +659,8 @@ public:
 		_use_simulation_as_macros_only(conf.relevant_set_type==SBFWSConfig::RelevantSetType::Macro),
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
-		_novelty_levels(setup_novelty_levels(model))
+		_novelty_levels(setup_novelty_levels(model)),
+		_helper(nullptr)
 	{
 	}
 
@@ -665,7 +707,7 @@ public:
 				search_node = root;
 			} else {
 				// We just update those attributes we're interested in
-				search_node = std::make_shared<NodeT>(sim_node->state, _generated++); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
+				search_node = std::make_shared<NodeT>(sim_node->state, _helper.get(), _generated++); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
 				search_node->g = sim_node->g;
 				search_node->action = sim_node->action;
 				search_node->w_g = Novelty::One; // we enforce this by definition
@@ -710,14 +752,38 @@ public:
 
 
 	bool search(const StateT& s, PlanT& plan) {
-		NodePT root = std::make_shared<NodeT>(s, _generated++);
+		
+		
+		// Compute set of relevant nodes from the seed state
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		auto relevant = _heuristic.compute_R_IW1(s);
+// 		auto relevant = _heuristic.compute_R_union_Rs(s);
+		_helper = std::unique_ptr<AtomsetHelper>(new AtomsetHelper(index, relevant));
+		
+		LPT_INFO("cout", "Size of R[IW(1)]: " << _helper->_num_relevant);
+		
+		
+		NodePT root = std::make_shared<NodeT>(s, _helper.get(), _generated++);
+		
+		
+// 		LPT_INFO("cout", "R[IW(1)]: " << root->_lrelevant_atoms);
+		
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
+		
+		
+// 		LPT_INFO("cout", "R(s0): " <<  root->_lrelevant_atoms);		
+		
+		
 
-// 		if (_run_simulation_from_root) {
-		_R = _heuristic.run_simulation2(*root); // Preprocess the root node
+// 		if (false) {
+// 			_R = _heuristic.run_simulation2(*root); // Preprocess the root node
 // 		if (_R.empty()) return false;
+// 		} else {
 // 		}
+		
+		
+
 
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
@@ -730,6 +796,7 @@ public:
 	}
 
 protected:
+	/*
 	void dump_simulation_nodes(NodePT& node) {
 		_heuristic.run_simulation(*node);
 		const auto& simulation_nodes = _heuristic.get_last_simulation_nodes();
@@ -742,6 +809,7 @@ protected:
 			// std::cout << "Simulation node reused: " << *n << std::endl;
 		}
 	}
+	*/
 
 	//! Process one node from some of the queues, according to their priorities
 	bool process_one_node() {
@@ -755,19 +823,21 @@ protected:
 			return true;
 		}
 
+		/*
 		///// 1.5-width QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 1
+		
 		if (!_q1half.empty()) {
 			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g} = 1.5");
 			NodePT node = _q1half.next();
 
 			// Greedy 1,5-novelty evaluation
-			/*
-			if (!node->_processed) {
-				_stats.wg1_5_node();
-				process_node(node);
-			}
-			*/
+			
+// 			if (!node->_processed) {
+// 				_stats.wg1_5_node();
+// 				process_node(node);
+// 			}
+			
 			
 			// Lazy 1,5-novelty evaluation:
 			
@@ -783,8 +853,9 @@ protected:
 			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
 			return true;
 		}
+		*/
 		
-		/*
+		
 		///// QWGR1 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 1
 		if (!_use_simulation_as_macros_only && !_qwgr1.empty()) {
@@ -805,7 +876,7 @@ protected:
 			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
 			return true;
 		}
-		*/
+		
 
 
 		///// QWGR2 QUEUE /////
@@ -815,17 +886,17 @@ protected:
 			NodePT node = _qwgr2.next();
 
 			unsigned nov;
-			nov = _heuristic.evaluate_wg2(*node);
-			/*
-			if (_use_simulation_as_macros_only) {
-				if ( node->decreases_unachieved_subgoals()) {
-					dump_simulation_nodes(node);
-				}
-				nov = _heuristic.evaluate_wg2(*node);
-			} else {
+			// nov = _heuristic.evaluate_wg2(*node);
+			
+// 			if (_use_simulation_as_macros_only) {
+// 				if ( node->decreases_unachieved_subgoals()) {
+// 					dump_simulation_nodes(node);
+// 				}
+// 				nov = _heuristic.evaluate_wg2(*node);
+// 			} else {
 				nov = _heuristic.evaluate_wgr2(*node);
-			}
-			*/
+// 			}
+			
 
 			// If the node has already been processed, no need to do anything else with it,
 			// since we've already run it through all novelty tables.
@@ -870,6 +941,8 @@ protected:
 			_min_subgoals_to_reach = node->unachieved_subgoals;
 			LPT_INFO("cout", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
 		}
+		
+		_heuristic.update_relevant_atoms(*node);
 
 		// Now insert the node into the appropriate queues
 		_heuristic.evaluate_wg1(*node);
@@ -885,9 +958,9 @@ protected:
 		*/
 		
 		// Lazy 1,5-novelty evaluation
-		_q1half.insert(node);
+// 		_q1half.insert(node);
 		
-// 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
+ 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
 		
 		if (_novelty_levels == 3) {
 			_qwgr2.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=2 tables
@@ -923,7 +996,7 @@ protected:
 		for (const auto& action:_model.applicable_actions(node->state)) {
 			// std::cout << *(Problem::getInstance().getGroundActions()[action]) << std::endl;
 			StateT s_a = _model.next(node->state, action);
-			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, _generated++);
+			NodePT successor = std::make_shared<NodeT>(std::move(s_a), _helper.get(), action, node, _generated++);
 
 			if (_closed.check(successor)) continue; // The node has already been closed
 			if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it
@@ -936,7 +1009,7 @@ protected:
 
 	bool is_open(const NodePT& node) const {
 		return _q1.contains(node) ||
-			   _q1half.contains(node) ||
+// 			   _q1half.contains(node) ||
 		       _qwgr1.contains(node) ||
 		       _qwgr2.contains(node) ||
 		       _qrest.contains(node);
@@ -944,7 +1017,7 @@ protected:
 
 	bool some_queue_nonempty() const {
 		return !_q1.empty() ||
-			   !_q1half.empty() ||
+// 			   !_q1half.empty() ||
 		       !_qwgr1.empty() ||
 		       !_qwgr2.empty() ||
 		       !_qrest.empty();
