@@ -70,13 +70,18 @@ ExitCode
 LazyBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	const StateAtomIndexer& indexer = model.getTask().getStateAtomIndexer();
 	
+	
+	if (config.getOption<bool>("bfws.extra_features", false)) {
 	FeatureSelector<StateT> selector(ProblemInfo::getInstance());
 	
 	if (selector.has_extra_features()) {
 		LPT_INFO("cout", "FEATURE EVALUATION: Extra Features were found!  Using a GenericFeatureSetEvaluator");
 		using FeatureEvaluatorT = lapkt::novelty::GenericFeatureSetEvaluator<StateT>;
 		return do_search2<FSMultivaluedNoveltyEvaluatorI, FeatureEvaluatorT>(model, selector.select(), config, out_dir, start_time);
-	} else if (indexer.is_fully_binary()) { // The state is fully binary
+		}
+	}
+	
+	if (indexer.is_fully_binary()) { // The state is fully binary
 		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<bin>");
 		using FeatureEvaluatorT = lapkt::novelty::StraightFeatureSetEvaluator<bool>;
 		return do_search2<FSBinaryNoveltyEvaluatorI, FeatureEvaluatorT>(model, FeatureEvaluatorT(), config, out_dir, start_time);
