@@ -25,6 +25,8 @@ protected:
 public:
 	ZeroaryFunction(ObjectIdx data) : _data(data) {}
 	
+	ObjectIdx value() const { return _data; }
+	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
@@ -40,6 +42,8 @@ protected:
 	
 public:
 	UnaryFunction(Serializer::BoostUnaryMap&& data) : _data(std::move(data)) {}
+	
+	ObjectIdx value(ObjectIdx x) const { return _data.at(x); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -57,6 +61,8 @@ protected:
 public:
 	UnaryPredicate(Serializer::BoostUnarySet&& data) : _data(std::move(data)) {}
 	
+	bool value(ObjectIdx x) const { return _data.find(x) != _data.end(); }
+	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
@@ -73,6 +79,8 @@ protected:
 	
 public:
 	BinaryFunction(Serializer::BoostBinaryMap&& data) : _data(std::move(data)) {}
+	
+	ObjectIdx value(ObjectIdx x, ObjectIdx y) const { return _data.at({x, y}); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -92,6 +100,8 @@ protected:
 public:
 	BinaryPredicate(Serializer::BoostBinarySet&& data) : _data(std::move(data)) {}
 	
+	bool value(ObjectIdx x, ObjectIdx y) const { return _data.find({x,y}) != _data.end(); }
+	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
@@ -107,6 +117,8 @@ protected:
 	
 public:
 	Arity3Function(Serializer::BoostArity3Map&& data) : _data(std::move(data)) {}
+	
+	ObjectIdx value(ObjectIdx x0, ObjectIdx x1, ObjectIdx x2) const { return _data.at(std::make_tuple(x0,x1,x2)); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -124,6 +136,8 @@ protected:
 public:
 	Arity3Predicate(Serializer::BoostArity3Set&& data) : _data(std::move(data)) {}
 	
+	bool value(ObjectIdx x0, ObjectIdx x1, ObjectIdx x2) const { return _data.find(std::make_tuple(x0,x1,x2)) != _data.end(); }
+	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
@@ -140,6 +154,8 @@ protected:
 public:
 	Arity4Function(Serializer::BoostArity4Map&& data) : _data(std::move(data)) {}
 	
+	ObjectIdx value(ObjectIdx x0, ObjectIdx x1, ObjectIdx x2, ObjectIdx x3) const { return _data.at(std::make_tuple(x0,x1,x2,x3)); }
+	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
@@ -155,6 +171,8 @@ protected:
 	
 public:
 	Arity4Predicate(Serializer::BoostArity4Set&& data) : _data(std::move(data)) {}
+	
+	bool value(ObjectIdx x0, ObjectIdx x1, ObjectIdx x2, ObjectIdx x3) const { return _data.find(std::make_tuple(x0,x1,x2,x3)) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;
