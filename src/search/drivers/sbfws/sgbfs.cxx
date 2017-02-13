@@ -34,18 +34,18 @@ LazyBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& c
 	const StateAtomIndexer& indexer = model.getTask().getStateAtomIndexer();
 	
 	if (indexer.is_fully_binary()) { // The state is fully binary
-		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightBinaryFeatureSetEvaluator");
-		using FeatureEvaluatorT = lapkt::novelty::StraightBinaryFeatureSetEvaluator<StateT>;
+		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<bin>");
+		using FeatureEvaluatorT = lapkt::novelty::StraightFeatureSetEvaluator<bool>;
 		return do_search2<FSBinaryNoveltyEvaluatorI, FeatureEvaluatorT>(model, config, out_dir, start_time);
 		
 	} else if (indexer.is_fully_multivalued()) { // The state is fully multivalued
-		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightMultivaluedFeatureSetEvaluator");
-		using FeatureEvaluatorT = lapkt::novelty::StraightMultivaluedFeatureSetEvaluator<StateT>;
+		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<int>");
+		using FeatureEvaluatorT = lapkt::novelty::StraightFeatureSetEvaluator<int>;
 		return do_search2<FSMultivaluedNoveltyEvaluatorI, FeatureEvaluatorT>(model, config, out_dir, start_time);
 		
 	} else { // We have a hybrid state and cannot thus apply optimizations
 		LPT_INFO("cout", "FEATURE EVALUATION: Using a generic StraightHybridFeatureSetEvaluator");
-		using FeatureEvaluatorT = lapkt::novelty::StraightHybridFeatureSetEvaluator<StateT>;
+		using FeatureEvaluatorT = lapkt::novelty::StraightHybridFeatureSetEvaluator;
 		return do_search2<FSMultivaluedNoveltyEvaluatorI, FeatureEvaluatorT>(model, config, out_dir, start_time);
 	}
 }

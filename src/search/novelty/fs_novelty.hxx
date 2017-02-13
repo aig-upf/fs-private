@@ -53,5 +53,4 @@ using FSAtomBinaryNoveltyEvaluator = lapkt::novelty::AtomNoveltyEvaluator<bool, 
 using FSAtomBinaryNoveltyEvaluatorPersistent = lapkt::novelty::AtomNoveltyEvaluator<bool, FSAtomValuationIndexer, lapkt::novelty::PersistentBoolVectorTuple2Marker>;
 
 
-
 } } // namespaces
