@@ -52,5 +52,4 @@ using FSGenericMultivaluedNoveltyEvaluator = lapkt::novelty::GenericNoveltyEvalu
 using FSAtomBinaryNoveltyEvaluator = lapkt::novelty::AtomNoveltyEvaluator<bool, FSAtomValuationIndexer, lapkt::novelty::BoolVectorTuple2Marker>;
 
 
-
 } } // namespaces
