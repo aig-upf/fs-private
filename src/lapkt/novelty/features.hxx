@@ -36,7 +36,8 @@ public:
 template <typename StateT>
 class GenericFeatureSetEvaluator {
 public:
-	using FeatureT = std::unique_ptr<NoveltyFeature<StateT>>;
+	using FeatureT = NoveltyFeature<StateT>;
+	using FeaturePT = std::unique_ptr<FeatureT>;
 	
 	GenericFeatureSetEvaluator() = default;
 	~GenericFeatureSetEvaluator() = default;
@@ -47,8 +48,8 @@ public:
 	GenericFeatureSetEvaluator& operator=(GenericFeatureSetEvaluator&&) = default;
 	
 	//!
-	void add(FeatureT&& feature) {
-		_features.push_back(std::move(feature));
+	void add(FeatureT* feature) {
+		_features.push_back(FeaturePT(feature));
 	}
 	
 	//!
@@ -71,7 +72,7 @@ public:
 	
 protected:
 	//! The features in the set
-	std::vector<FeatureT> _features;
+	std::vector<FeaturePT> _features;
 };
 
 //! A "straight" evaluator simply returns as a set of features _a const reference_ to the

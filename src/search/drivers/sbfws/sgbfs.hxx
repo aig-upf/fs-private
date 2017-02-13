@@ -558,6 +558,7 @@ public:
 	//! (2) the open list object to be used in the search
 	//! (3) the closed list object to be used in the search
 	LazyBFWS(const StateModelT& model,
+			 FeatureSetT&& featureset,
              NoveltyEvaluatorT* search_evaluator,
              NoveltyEvaluatorT* sim_evaluator,
              BFWSStats& stats,
@@ -568,7 +569,7 @@ public:
 		_solution(nullptr),
 		_search_evaluator(search_evaluator),
 		_simulation_evaluator(sim_evaluator),
-		_featureset(), // ATM we use no feature selection, etc.
+		_featureset(std::move(featureset)),
 		_heuristic(conf, model, _featureset, *_search_evaluator, *_simulation_evaluator, stats),
 		_stats(stats),
 		_run_simulation_from_root(config.getOption<bool>("bfws.init_simulation", false)),
@@ -923,9 +924,9 @@ protected:
 	do_search1(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
 	*/
 	
-	template <typename NoveltyEvaluatorT, typename FeatureSetT>
+	template <typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 	ExitCode
-	do_search2(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
+	do_search2(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time);
 };
 
 
