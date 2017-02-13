@@ -5,7 +5,7 @@
 #include <fs_types.hxx>
 #include <state.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Term; class AtomicFormula; }}}
+namespace fs0 { namespace language { namespace fstrips { class Term; class AtomicFormula; class Formula; }}}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -53,7 +53,7 @@ protected:
 //! A feature representing the value of any arbitrary language term, e.g. X+Y, or @proc(Y,Z)
 class ArbitraryTermFeature : public lapkt::novelty::NoveltyFeature<State> {
 public:
-	ArbitraryTermFeature(const fs::Term* term);
+	ArbitraryTermFeature(const fs::Term* term) : _term(term) {}
 	~ArbitraryTermFeature();
 	ArbitraryTermFeature(const ArbitraryTermFeature&);
 	lapkt::novelty::NoveltyFeature<State>* clone() const override { return new ArbitraryTermFeature(*this); }
@@ -64,6 +64,46 @@ public:
 protected:
 	const fs::Term* _term;
 };
+
+class ArbitraryFormulaFeature : public lapkt::novelty::NoveltyFeature<State> {
+public:
+	ArbitraryFormulaFeature(const fs::Formula* formula) : _formula(formula) {}
+	~ArbitraryFormulaFeature();
+	ArbitraryFormulaFeature(const ArbitraryFormulaFeature&);
+	lapkt::novelty::NoveltyFeature<State>* clone() const override { return new ArbitraryFormulaFeature(*this); }
+	FSFeatureValueT evaluate(const State& s) const override;
+	
+	std::ostream& print(std::ostream& os) const override;
+
+protected:
+	const fs::Formula* _formula;
+};
+
+/*
+ TODO - WORK-IN-PROGRESS
+//! A feature representing any arbitrary procedure that receives a state and returns a feature value
+// template <typename FeatureValueT> // TODO GENERALIZE TO BOOL/INT FEATURES, CURRENTLY ONLY INTS ARE SUPPORTED
+class LambdaFeature : public lapkt::novelty::NoveltyFeature<State> {
+public:
+	using EvaluatorT = std::function<int(const State&)>; // TODO Generalize this to return bools too
+	
+	LambdaFeature(const EvaluatorT& evaluator) : _evaluator(evaluator) {}
+	~LambdaFeature() = default;
+// 	LambdaFeature(const LambdaFeature&) = default;
+	
+	LambdaFeature* clone() const override { return new LambdaFeature(*this); }
+	FSFeatureValueT evaluate(const State& s) const override { // TODO Generalize this to return bools too
+		return _evaluator(s);
+	}
+	
+	std::ostream& print(std::ostream& os) const override {
+		return os << "Anonymous Lambda Feature";
+	}
+	
+protected:
+	EvaluatorT _evaluator;
+};
+*/
 
 
 
