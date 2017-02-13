@@ -30,7 +30,9 @@ public:
 };
 
 
-//! An (ordered) set of generic novelty features
+//! An GenericFeatureSetEvaluator works for any type of state, for any combination of features
+//! that we want to use. In case we want to use only the values of state variables, however, it 
+//! might be more performant to use one of the evaluators below.
 template <typename StateT>
 class GenericFeatureSetEvaluator {
 public:
