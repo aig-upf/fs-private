@@ -5,7 +5,12 @@
 #include <problem_info.hxx>
 #include <heuristics/novelty/features.hxx>
 #include <utils/loader.hxx>
+#include <utils/printers/binding.hxx>
+#include <utils/binding_iterator.hxx>
+#include <constraints/registry.hxx>
+#include <languages/fstrips/language.hxx>
 
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace bfws {
 
@@ -46,12 +51,39 @@ FeatureSelector<StateT>::add_state_variables(const ProblemInfo& info, std::vecto
 	}
 }
 
-void process_feature_list(const rapidjson::Value& data) {
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		const auto& feat_node = data[i];
-		const std::string& feat_name = feat_node["name"].GetString();
-		LPT_DEBUG("cout", "Processing feature: " << feat_name);
+lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemInfo& info,  const std::string& feat_name, const std::vector<ObjectIdx>& parameters) {
+	
+	unsigned symbol_id = info.getSymbolId(feat_name);
+	const SymbolData& sdata = info.getSymbolData(symbol_id);
+	
+	std::vector<const fs::Term*> subterms;
+	for (ObjectIdx value:parameters) {
+		subterms.push_back(new fs::IntConstant(value));
 	}
+	
+	if (sdata.getType() == SymbolData::Type::PREDICATE) {
+		auto formula =  LogicalComponentRegistry::instance().instantiate_formula(feat_name, subterms);
+		return new ArbitraryFormulaFeature(formula);
+		
+	} else {
+		auto term =  LogicalComponentRegistry::instance().instantiate_term(feat_name, subterms);
+		return new ArbitraryTermFeature(term);
+	}
+}
+
+void process_feature(const ProblemInfo& info, const std::string& feat_name, std::vector<lapkt::novelty::NoveltyFeature<State>*>& features) {
+	
+	unsigned symbol_id = info.getSymbolId(feat_name);
+	const SymbolData& sdata = info.getSymbolData(symbol_id);
+	const Signature& signature = sdata.getSignature();
+	
+	LPT_DEBUG("cout", "Processing feature: " << feat_name << ", with signature: (" << print::raw_signature(signature) << ")");
+	
+	for (utils::binding_iterator binding_generator(signature, info); !binding_generator.ended(); ++binding_generator) {
+		auto feature = generate_arbitrary_feature(info, feat_name, (*binding_generator).get_full_binding());
+		LPT_DEBUG("cout", "Generated feature: " << *feature);
+		features.push_back(feature);
+	}	
 }
 
 
@@ -61,13 +93,12 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 	
 	try {
 		auto data = Loader::loadJSONObject(info.getDataDir() + "/extra.json");
-		process_feature_list(data["features"]);
-// 		for (auto feature:process_feature_list(data["features"])) {
-// 			
-// 		}
-			
-			
-			
+		const auto& features_node = data["features"];
+		for (unsigned i = 0; i < features_node.Size(); ++i) {
+			const auto& feature_node = features_node[i];
+			process_feature(info, feature_node["name"].GetString(), features);
+		}
+		
 	} catch(const std::exception& e) {
 		return; // No extra.json file could be loaded, therefore we assume there's no extra feature info.
 	}

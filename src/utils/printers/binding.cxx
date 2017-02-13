@@ -24,6 +24,16 @@ std::ostream& signature::print(std::ostream& os) const {
 	return os;
 }
 
+std::ostream& raw_signature::print(std::ostream& os) const {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	for (unsigned i = 0; i < _signature.size(); ++i) {
+		os << info.getTypename(_signature[i]);
+		if (i < _signature.size() - 1) os << ", ";
+	}
+	return os;
+}
+
+
 std::ostream& partial_binding::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (unsigned i = 0; i < _parameter_names.size(); ++i) {
