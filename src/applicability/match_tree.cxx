@@ -13,12 +13,6 @@
 namespace fs0 {
 
 
-NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
-					const AtomIndex& tuple_index,
-					const std::vector<std::vector<ActionIdx>>& app_index,
-					const std::vector<std::vector<AtomIdx>>& rev_app_index)
-: _actions( actions ), _tuple_index( tuple_index ), _app_index( app_index), _rev_app_index(rev_app_index)//, _seen(tuple_index.size(), false)
-{}
 
     BaseNode::ptr
     BaseNode::create_tree(  NodeCreationContext& context ) {
@@ -35,47 +29,22 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
     			all_done = false;
     		}
     	}
-
-    	if (all_done) {
-            return new LeafNode(context._actions);
-        }
-
-        return new SwitchNode(context);
-
+    	
+    	if (all_done) return new LeafNode(context._actions);
+		else return new SwitchNode(context);
     }
 
     AtomIdx
     BaseNode::get_best_atom( const NodeCreationContext& context ) {
 
-    	// TODO: This fluents.size() stuff needs to change to the number of mutexes once they're computed
-
-    	static std::vector< std::pair<int,int> > var_count(context._tuple_index.size());
-        static bool initialised = false;
-
-
-        // MRJ: The atom selection heuristic chooses the atom that appears on the most
-        // action preconditions, breaking ties lexicographically (see the second field of
-        // the pairs in var_count).
-        if (!initialised) {
-        	for (unsigned i = 0; i < context._tuple_index.size(); ++i)
-        		var_count[i] = std::make_pair( context._app_index[i].size(), i);
-
-        	std::sort(var_count.begin(), var_count.end());
-            initialised = true;
-            LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << var_count.size() );
-            LPT_INFO("cout", "Current mem. usage after match-tree construction: " << get_current_memory_in_kb() << " kB.");
-        }
-
-    	for (int i = var_count.size() - 1; i >= 0; --i) {
-    		if (!context._seen[var_count[i].second]) {
-    			//cout << "Best var " << var_count[i].second << " with a count of " << var_count[i].first << endl;
-                // We return the atom index
-    			return var_count[i].second;
-    		}
-    	}
-
-    	assert(false);
-    	return INVALID_TUPLE;
+		// Return the most-frequent atom that has not yet been seen
+		for (AtomIdx atom:context._sorted_atoms) {
+			if (!context._seen[atom]) {
+				return atom;
+			}
+		}
+		
+		throw std::runtime_error("Shouldn't get here");
     }
 
     bool
@@ -87,10 +56,6 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
     	return true;
     }
 
-
-    LeafNode::LeafNode( std::vector<AtomIdx>& actions ) {
-    	_applicable_items.swap(actions);
-    }
 
     void LeafNode::generate_applicable_items( const State&, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) {
         actions.insert( actions.end(), _applicable_items.begin(), _applicable_items.end() );
@@ -119,6 +84,8 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
     }
 
     SwitchNode::SwitchNode( NodeCreationContext& context ) {
+		static unsigned __count = 0;
+		if (__count++ % 1000 == 0) std::cout << "SwitchNode::SwitchNode count " << __count << std::endl;
         _pivot = get_best_atom(context);
 
         // MRJ: default_items contains the "false" branches
@@ -131,39 +98,31 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
 
 
         // Sort out the regression items
-        for (unsigned i = 0; i < context._actions.size(); i++) {
-            if (action_done(context._actions[i], context)) {
-                _immediate_items.push_back(context._actions[i]);
+		for (ActionIdx action:context._actions) {
+            if (action_done(action, context)) {
+                _immediate_items.push_back(action);
                 continue;
             }
-            const std::vector<AtomIdx>& required = context._rev_app_index[ context._actions[i] ];
+            const std::vector<AtomIdx>& required = context._rev_app_index[action];
 			// std::cout << "std::find() on vector of size: " << required.size() << std::endl;
             if ( std::find( required.begin(), required.end(), _pivot ) != required.end() )  {
-                value_items[0].push_back(context._actions[i]);
+                value_items[0].push_back(action);
                 continue;
             }
-            default_items.push_back(context._actions[i]);
+            default_items.push_back(action);
         }
 
 
         context._seen[_pivot] = true;
 
         // Create the switch generators
-        std::vector<bool> tmp;
-        NodeCreationContext true_context( value_items[0], context._tuple_index, context._app_index, context._rev_app_index );
-        tmp = std::move( true_context._seen );
-        true_context._seen = std::move(context._seen);
+		NodeCreationContext true_context(context, value_items[0]);
         _children.push_back(create_tree(true_context));
-        context._seen = std::move(true_context._seen);
-        true_context._seen = std::move(tmp);
 
         // Create the default generator
-        NodeCreationContext false_context( default_items, context._tuple_index, context._app_index, context._rev_app_index );
-        tmp = std::move( false_context._seen );
-        false_context._seen = std::move(context._seen);
+		NodeCreationContext false_context(context, default_items);
         _default_child = create_tree(false_context);
-        context._seen = std::move(false_context._seen);
-        false_context._seen = std::move(tmp);
+		
 		context._seen[_pivot] = false;
     }
 
@@ -298,24 +257,53 @@ NodeCreationContext::NodeCreationContext(    std::vector<ActionIdx>& actions,
         // much from Chris' original implementation to help with debugging.
         std::vector<ActionIdx> action_indices(_actions.size());
         std::iota( action_indices.begin(), action_indices.end(), 0);
-        NodeCreationContext helper(action_indices, _tuple_idx, analyzer.getApplicable(), rev_app_index );
-        helper._seen.resize( _tuple_idx.size() );
-        for ( unsigned k = 0; k < helper._seen.size(); k++ )
-            helper._seen[k] = false;
-
-        LPT_INFO( "cout", "[Match Tree] Calling BaseNode::create_tree() ");
-        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
-        _tree = BaseNode::create_tree( helper );
-
-        LPT_INFO("main", "Match Tree created");
+		
+		
+		std::vector<bool> seen(_tuple_idx.size(), false);
+		std::vector<unsigned> sorted_atoms = sort_atom_idxs(analyzer.getApplicable());
+		
+        NodeCreationContext helper(action_indices, _tuple_idx, sorted_atoms, rev_app_index, seen);
+		
+		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		_tree = new SwitchNode(helper);
+		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
         LPT_INFO("cout", "Match Tree created");
-        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
+		
+		/*
         #ifdef EDEBUG
         std::stringstream buffer;
         _tree->print( buffer, "", *this );
         LPT_EDEBUG("main", "\n" << buffer.str() );
         #endif
+        */
     }
+    
+    
+    std::vector<unsigned> MatchTreeActionManager::sort_atom_idxs(const std::vector<std::vector<ActionIdx>>& applicability_idx) const {
+		
+		// This will contain pairs (x,y), where 'x' is the number of times that atom with index 'y'
+		// appears on some action precondition
+		 std::vector<std::pair<int, unsigned>> atom_count(_tuple_idx.size());
+		for (unsigned i = 0; i < _tuple_idx.size(); ++i) {
+			atom_count[i] = std::make_pair(applicability_idx[i].size(), i);
+		}
+
+		// This will sort by count, breaking ties lexicographically by atom index.
+		std::sort(atom_count.begin(), atom_count.end());
+		
+		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << atom_count.size() );
+		LPT_INFO("cout", "(B2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		
+		
+			
+		std::vector<unsigned> indexes_only;
+		indexes_only.reserve(atom_count.size());
+		
+		for (int i = atom_count.size()-1; i >= 0; --i) {
+			indexes_only.push_back(atom_count[i].second);
+		}
+		return indexes_only;
+	}
 
 
     std::vector<ActionIdx> MatchTreeActionManager::compute_whitelist(const State& state) const {
