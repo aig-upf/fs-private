@@ -188,7 +188,7 @@ BasicApplicabilityAnalyzer::build() {
 				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
 				AtomIdx tup = _tuple_idx.to_index(relevant, value);
 				_applicable[tup].push_back(i);
-				_rev_applicable[i].push_back(tup);
+				_rev_applicable[i].insert(tup);
 
 			} else { // Prec is of the form X!=x
 				assert(neq);
@@ -197,7 +197,7 @@ BasicApplicabilityAnalyzer::build() {
 					if (v2 != value) {
 						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
 						_applicable[tup].push_back(i);
-						_rev_applicable[i].push_back(tup);
+						_rev_applicable[i].insert(tup);
 					}
 				}
 			}
