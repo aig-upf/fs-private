@@ -12,26 +12,23 @@
 
 namespace fs0 {
 
-
-
     BaseNode::ptr
-    BaseNode::create_tree(  NodeCreationContext& context ) {
+    BaseNode::create_tree(std::vector<ActionIdx>&& actions, NodeCreationContext& context) {
 
-    	if (context._actions.empty()){
+    	if (actions.empty()){
             return new EmptyNode;
         }
 
-
     	// If every item is done, then we create a leaf node
     	bool all_done = true;
-    	for (unsigned i = 0; all_done && (i < context._actions.size()); ++i) {
-    		if (!(action_done(context._actions[i], context))) {
+    	for (unsigned i = 0; all_done && (i < actions.size()); ++i) {
+    		if (!(action_done(actions[i], context))) {
     			all_done = false;
     		}
     	}
     	
-    	if (all_done) return new LeafNode(context._actions);
-		else return new SwitchNode(context);
+    	if (all_done) return new LeafNode(std::move(actions));
+		else return new SwitchNode(actions, context);
     }
 
     AtomIdx
@@ -49,15 +46,16 @@ namespace fs0 {
 
     bool
     BaseNode::action_done( unsigned i, const NodeCreationContext& context  ) {
-    	for (unsigned j = 0; j < context._rev_app_index[i].size(); ++j)
-    		if (!context._seen[context._rev_app_index[i][j]])
+    	for (unsigned j = 0; j < context._rev_app_index[i].size(); ++j) {
+    		if (!context._seen[context._rev_app_index[i][j]]) {
     			return false;
-
+			}
+		}
     	return true;
     }
 
 
-    void LeafNode::generate_applicable_items( const State&, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) {
+    void LeafNode::generate_applicable_items( const State&, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const {
         actions.insert( actions.end(), _applicable_items.begin(), _applicable_items.end() );
     }
 
@@ -67,7 +65,7 @@ namespace fs0 {
 	}
 
 
-    void SwitchNode::generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) {
+    void SwitchNode::generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const {
         actions.insert( actions.end(), _immediate_items.begin(), _immediate_items.end() );
 
         // TODO: Change this when mutex's are done proper
@@ -83,9 +81,9 @@ namespace fs0 {
         _default_child->generate_applicable_items( s, tuple_index, actions );
     }
 
-    SwitchNode::SwitchNode( NodeCreationContext& context ) {
+    SwitchNode::SwitchNode(const std::vector<ActionIdx>& actions,  NodeCreationContext& context) {
 		static unsigned __count = 0;
-		if (__count++ % 1000 == 0) std::cout << "SwitchNode::SwitchNode count " << __count << std::endl;
+		if (__count++ % 100000 == 0) std::cout << "SwitchNode::SwitchNode count " << __count << std::endl;
         _pivot = get_best_atom(context);
 
         // MRJ: default_items contains the "false" branches
@@ -98,7 +96,7 @@ namespace fs0 {
 
 
         // Sort out the regression items
-		for (ActionIdx action:context._actions) {
+		for (ActionIdx action:actions) {
             if (action_done(action, context)) {
                 _immediate_items.push_back(action);
                 continue;
@@ -115,21 +113,17 @@ namespace fs0 {
 
         context._seen[_pivot] = true;
 
-        // Create the switch generators
-		NodeCreationContext true_context(context, value_items[0]);
-        _children.push_back(create_tree(true_context));
-
-        // Create the default generator
-		NodeCreationContext false_context(context, default_items);
-        _default_child = create_tree(false_context);
+        _children.push_back(create_tree(std::move(value_items[0]), context)); // Create the switch generators
+        _default_child = create_tree(std::move(default_items), context); // Create the default generator
 		
 		context._seen[_pivot] = false;
     }
 
-    int SwitchNode::count() const {
-        int total = 0;
-        for (unsigned i = 0; i < _children.size(); ++i)
-            total += _children[i]->count();
+    unsigned SwitchNode::count() const {
+        unsigned total = 0;
+		for (const auto child:_children) {
+            total += child->count();
+		}
         total += _default_child->count();
         total += _immediate_items.size();
         return total;
@@ -255,17 +249,17 @@ namespace fs0 {
         // lots of methods with absurdly long signatures. The idea is to progressively move
         // towards a more visitor/creator like implementation, but I don't want to depart too
         // much from Chris' original implementation to help with debugging.
-        std::vector<ActionIdx> action_indices(_actions.size());
-        std::iota( action_indices.begin(), action_indices.end(), 0);
+        std::vector<ActionIdx> all_actions(_actions.size());
+        std::iota( all_actions.begin(), all_actions.end(), 0);
 		
 		
 		std::vector<bool> seen(_tuple_idx.size(), false);
 		std::vector<unsigned> sorted_atoms = sort_atom_idxs(analyzer.getApplicable());
 		
-        NodeCreationContext helper(action_indices, _tuple_idx, sorted_atoms, rev_app_index, seen);
+        NodeCreationContext helper(_tuple_idx, sorted_atoms, rev_app_index, seen);
 		
 		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-		_tree = new SwitchNode(helper);
+		_tree = new SwitchNode(all_actions, helper);
 		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
         LPT_INFO("cout", "Match Tree created");
 		
@@ -293,8 +287,6 @@ namespace fs0 {
 		
 		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << atom_count.size() );
 		LPT_INFO("cout", "(B2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-		
-		
 			
 		std::vector<unsigned> indexes_only;
 		indexes_only.reserve(atom_count.size());
