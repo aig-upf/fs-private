@@ -25,40 +25,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fs_types.hxx>
 #include <applicability/action_managers.hxx>
-#include <sstream>
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
 
 
 namespace fs0 {
-
+	class ProblemInfo;
     class MatchTreeActionManager;
-
 
     class NodeCreationContext {
     public:
-        NodeCreationContext(    const std::vector<ActionIdx>& actions,
+        NodeCreationContext(    std::vector<ActionIdx>& actions,
                                 const AtomIndex& tuple_index,
                                 const std::vector<std::vector<ActionIdx>>& app_index,
-                                const std::vector<std::vector<AtomIdx>>& rev_app_index)
-        : _actions( actions ), _tuple_index( tuple_index ), _app_index( app_index), _rev_app_index(rev_app_index) {
+                                const std::vector<std::vector<AtomIdx>>& rev_app_index);
 
-        }
-
-        const std::vector<ActionIdx>&               _actions;
+        std::vector<ActionIdx>&                     _actions;
         const AtomIndex&                            _tuple_index;
         const std::vector<std::vector<ActionIdx>>&  _app_index;
         const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
-        std::set< AtomIdx >                         _seen;
 
+		//! _seen[i] is true iff  the tuple with index i has already been "seen"
+		std::vector<bool>                           _seen;
     };
 
     class BaseNode {
     public:
         typedef BaseNode*   ptr;
 
-    	virtual ~BaseNode() {}
+    	virtual ~BaseNode() = default;
     	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) = 0;
     	virtual int count() const = 0;
         virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const = 0;
@@ -67,10 +63,10 @@ namespace fs0 {
         create_tree(  NodeCreationContext& context );
 
     	static AtomIdx
-        get_best_atom( NodeCreationContext& context );
+        get_best_atom( const NodeCreationContext& context );
 
     	static bool
-        action_done( unsigned i, NodeCreationContext& context );
+        action_done( unsigned i, const NodeCreationContext& context );
     };
 
 
@@ -82,6 +78,7 @@ namespace fs0 {
 
     public:
     	SwitchNode( NodeCreationContext& context );
+		~SwitchNode();
 
     	virtual void generate_applicable_items(     const State& s,
                                                     const AtomIndex& tuple_index,
@@ -95,7 +92,7 @@ namespace fs0 {
     class LeafNode : public BaseNode {
     	std::vector<ActionIdx> _applicable_items;
     public:
-    	LeafNode( const std::vector<ActionIdx>& actions );
+    	LeafNode( std::vector<ActionIdx>& actions );
     	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) override;
     	virtual int count() const { return _applicable_items.size(); }
         virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
@@ -114,25 +111,34 @@ namespace fs0 {
     //! Match tree data structure from PRP ( https://bitbucket.org/haz/planner-for-relevant-policies )
     //! Ported to FS by Miquel Ramirez, on December 2016
 
-    class MatchTreeActionManager : public SmartActionManager {
+    class MatchTreeActionManager : public NaiveActionManager {
     public:
 
         friend class SwitchNode;
         friend class LeafNode;
         friend class EmptyNode;
 
-    	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer);
-    	virtual ~MatchTreeActionManager() = default;
+    	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx);
+    	virtual ~MatchTreeActionManager() { if (_tree) delete _tree; };
     	MatchTreeActionManager(const MatchTreeActionManager&) = default;
 
-        virtual std::vector<ActionIdx> compute_whitelist(const State& state) const override;
+		//! By definition, the match tree whitelist contains all the applicable actions
+		bool whitelist_guarantees_applicability() const override { return true; }
+
+		unsigned count() { return _tree->count(); }
+		
+		static void check_match_tree_can_be_used(const ProblemInfo& info);
 
 
     protected:
-        //! Reversed applicability index, mapping action indices into sets of atoms making up their preconditions
-        std::vector<std::vector<AtomIdx>>    _rev_app_index;
+		//! The tuple index of the problem
+		const AtomIndex& _tuple_idx;
 
+		//!
         BaseNode::ptr   _tree;
+
+	protected:
+		std::vector<ActionIdx> compute_whitelist(const State& state) const override;
     };
 
 }

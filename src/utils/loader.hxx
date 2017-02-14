@@ -12,7 +12,9 @@ namespace fs0 {
 class BaseComponentFactory;
 class ProblemInfo;
 class State;
+class StateAtomIndexer;
 class ActionData;
+class GroundAction;
 class Problem;
 
 class Loader {
@@ -25,14 +27,17 @@ public:
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
 	
+	//! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector
+	static std::vector<const GroundAction*> loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const ActionData*>& action_data);
+	
 protected:
 	
 	 //! Loads a state specification for a given text file.
 	 //! The specification basically consists on an assignation of values to all the state variables.
-	static State* loadState(const rapidjson::Value& data);
+	static State* loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data);
 
 	//! Load the data related to the problem functions and predicates into the info object
-	static void loadFunctions(const BaseComponentFactory& factory, const std::string& data_dir, ProblemInfo& info);
+	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);
 	
 	static std::vector<const ActionData*> loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info);
 	

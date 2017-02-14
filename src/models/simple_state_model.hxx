@@ -3,10 +3,14 @@
 
 #include <aptk2/search/interfaces/det_state_model.hxx>
 #include <actions/actions.hxx>
-#include <applicability/action_managers.hxx>
+#include <applicability/base.hxx>
 #include <atom.hxx>
 
 // namespace lapkt { class MultivaluedState; }
+
+namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; }}}
+namespace fs = fs0::language::fstrips;
+
 
 namespace fs0 {
 
@@ -23,16 +27,16 @@ public:
 	using ActionId = ActionType::IdType;
 
 	//! Factory method
-	static SimpleStateModel build(const Problem& problem, BasicApplicabilityAnalyzer* analyzer = nullptr);
-	
+	static SimpleStateModel build(const Problem& problem);
+
 protected:
-	SimpleStateModel(const Problem& problem, std::vector<Atom> subgoals, BasicApplicabilityAnalyzer* analyzer = nullptr);
+	SimpleStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
 
 public:
-	~SimpleStateModel();
+	~SimpleStateModel() = default;
 
-	SimpleStateModel(const SimpleStateModel&) = default;
-	SimpleStateModel& operator=(const SimpleStateModel&) = default;
+	SimpleStateModel(const SimpleStateModel&) =  delete;
+	SimpleStateModel& operator=(const SimpleStateModel&) = delete;
 	SimpleStateModel(SimpleStateModel&&) = default;
 	SimpleStateModel& operator=(SimpleStateModel&&) = default;
 
@@ -66,14 +70,14 @@ protected:
 	// The underlying planning problem.
 	const Problem& _task;
 
-	const SmartActionManager* _manager;
+	std::unique_ptr<ActionManagerI> _manager;
 
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
 
-	static SmartActionManager* build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer);
-	
-	std::vector<Atom> _subgoals;
+	static ActionManagerI* build_action_manager(const Problem& problem);
+
+	const std::vector<const fs::Formula*> _subgoals;
 };
 
 } // namespaces

@@ -61,8 +61,9 @@ protected:
 	//! The book-keeping RPG data.
 	const RPGBookkeeping& _data;
 	
-	std::set<Atom> processed;
+	std::unordered_set<Atom> processed;
 	std::queue<Atom> pending;
+	std::unordered_set<Atom> _relevant;
 
 public:
 	
@@ -83,7 +84,7 @@ public:
 	 * 
 	 * @param goalAtoms The atoms that allowed the planning graph to reach a goal state.
 	 */
-	long computeRelaxedPlanCost(const Atom::vctr& goalAtoms) {
+	long computeRelaxedPlanCost(const std::vector<Atom>& goalAtoms) {
 		enqueueAtoms(goalAtoms);
 		
 		while (!pending.empty()) {
@@ -94,10 +95,14 @@ public:
 		
 		return buildRelaxedPlan();
 	}
+	
+	const std::unordered_set<Atom>& get_relevant() const { return _relevant; }
 
 protected:
 	//! Put all the atoms in a given vector of atoms in the queue to be processed.
-	inline void enqueueAtoms(const Atom::vctr& atoms) { for(auto& atom:atoms) pending.push(atom); }
+	inline void enqueueAtoms(const std::vector<Atom>& atoms) { for(auto& atom:atoms) pending.push(atom); }
+	
+	inline void mark_as_relevant(const std::vector<Atom>& atoms) { for(auto& atom:atoms) _relevant.insert(atom); }
 
 	//! Process a single atom by seeking its supports left-to-right in the RPG and enqueuing them to be further processed
 	void processAtom(const Atom& atom) {
@@ -111,6 +116,7 @@ protected:
 		assert(action_id);
 		registerPlanAction(support);
 		enqueueAtoms(*(std::get<2>(support))); // Push the full support of the atom
+		mark_as_relevant(*(std::get<2>(support)));
 		processed.insert(atom); // Tag the atom as processed.
 	}
 	
@@ -199,7 +205,7 @@ protected:
 
 		// Note that computing the relaxed heuristic by using some form of local consistency might yield plans that are not correct for the relaxation
 		// assert(ActionManager::checkRelaxedPlanSuccessful(Problem::getInstance(), plan, _seed));
-		LPT_EDEBUG("relaxed-plan" , "Relaxed plan (" << plan.size() << ") for state: " <<  std::endl << this->_seed << std::endl << "\t"  << print::plan(plan));
+		LPT_EDEBUG("relaxed-plan" , "Relaxed plan (" << plan.size() << ") for state: " <<  std::endl << this->_seed << std::endl << "\t"  << print::plan(plan) << std::endl);
 
 		return (long) plan.size();
 	}

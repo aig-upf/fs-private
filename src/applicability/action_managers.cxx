@@ -64,15 +64,14 @@ bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& 
 
 
 
-SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer* analyzer) :
-	_actions(actions),
-	_state_constraints(process_state_constraints(state_constraints)),
+SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer) :
+	Base(actions, state_constraints),
 	_tuple_idx(tuple_idx),
 	_vars_affected_by_actions(),
 	_vars_relevant_to_constraints(),
 	_sc_index(),
-	_app_index(analyzer->getApplicable()),
-	_total_applicable_actions(analyzer->total_actions())
+	_app_index(analyzer.getApplicable()),
+	_total_applicable_actions(analyzer.total_actions())
 {
 	index_variables(actions, _state_constraints);
 
@@ -86,16 +85,6 @@ SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& a
 	}
 	*/
 	LPT_INFO("cout", "A total of " << _total_applicable_actions << " actions were determined to be applicable to at least one atom");
-}
-
-std::vector<const fs::AtomicFormula*>
-SmartActionManager::process_state_constraints(const fs::Formula* state_constraints) {
-	if (dynamic_cast<const fs::Tautology*>(state_constraints)) return {};
-
-	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(state_constraints);
-	if (!conjunction) throw std::runtime_error("Unsupported State Constraint type");
-
-	return conjunction->getConjuncts();
 }
 
 
@@ -191,6 +180,7 @@ BasicApplicabilityAnalyzer::build() {
 			const std::vector<ObjectIdx>& values = info.getVariableObjects(relevant);
 
 			if (!referenced.insert(relevant).second) {
+				LPT_INFO("cout", "Conjunct \"" << *conjunct << "\" contains a duplicate reference to state variable \"" << info.getVariableName(relevant) << "\"");
 				throw std::runtime_error("BasicApplicabilityAnalyzer requires that no two preconditions make reference to the same state variable");
 			}
 
@@ -227,10 +217,6 @@ BasicApplicabilityAnalyzer::build() {
 
 
 std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state) const {
-	std::vector<ActionIdx> _; // !!! Uncomment this to ignore the whitelist strategy
-	_.resize(_actions.size()); std::iota(_.begin(), _.end(), 0); // !!! Uncomment this to ignore the whitelist strategy
-	return _; // !!! Uncomment this to ignore the whitelist strategy
-
 	std::size_t num_vars = state.numAtoms(); // The number of state variables, i.e. of atoms in a state
 	assert(num_vars >= 1); // We have at least one state variable
 
@@ -283,7 +269,42 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 }
 
 bool
-SmartActionManager::applicable(const State& state, const GroundAction& action) const {
+SmartActionManager::check_constraints(unsigned applied_action_id, const State& state) const {
+	// Check only those constraints that can be affected by the action last applied
+	for (const fs::AtomicFormula* constraint:_sc_index[applied_action_id]) {
+		if (!constraint->interpret(state)) return false;
+	}
+	return true;
+}
+
+
+//! A local helper to build a list <0,1,...,size>
+std::vector<ActionIdx> _build_all_actions_whitelist(unsigned size) {
+	std::vector<ActionIdx> vector(size);
+	std::iota(vector.begin(), vector.end(), 0);
+	return vector;
+}
+
+//! A local helper to ensure the provided state constraints are of the adequate form.
+std::vector<const fs::AtomicFormula*>
+_process_state_constraints(const fs::Formula* state_constraints) {
+	if (dynamic_cast<const fs::Tautology*>(state_constraints)) return {};
+
+	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(state_constraints);
+	if (!conjunction) throw std::runtime_error("Unsupported State Constraint type");
+
+	return conjunction->getConjuncts();
+}
+
+
+NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints) :
+	_actions(actions),
+	_state_constraints(_process_state_constraints(state_constraints)),
+	_all_actions_whitelist(_build_all_actions_whitelist(actions.size()))
+{}
+
+bool
+NaiveActionManager::applicable(const State& state, const GroundAction& action) const {
 	if (!NaiveApplicabilityManager::checkFormulaHolds(action.getPrecondition(), state)) return false;
 
 	NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);
@@ -296,17 +317,18 @@ SmartActionManager::applicable(const State& state, const GroundAction& action) c
 	return true;
 }
 
+GroundApplicableSet
+NaiveActionManager::applicable(const State& state) const {
+	return GroundApplicableSet(*this, state, compute_whitelist(state));
+}
+
+
 bool
-SmartActionManager::check_constraints(unsigned action_id, const State& state) const {
-	// Check only those constraints that can be affected by the action last applied
-	for (const fs::AtomicFormula* constraint:_sc_index[action_id]) {
+NaiveActionManager::check_constraints(unsigned applied_action_id, const State& state) const {
+	for (const fs::AtomicFormula* constraint:_state_constraints) { // Check all state constraints
 		if (!constraint->interpret(state)) return false;
 	}
 	return true;
-}
-
-GroundApplicableSet SmartActionManager::applicable(const State& state) const {
-	return GroundApplicableSet(*this, state, compute_whitelist(state));
 }
 
 } // namespaces

@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
-from fs_task import create_fs_task
+from fs_task import create_fs_task, create_fs_task_from_adl
 from pddl import tasks, pddl_file
 import util
 from representation import ProblemRepresentation
@@ -33,7 +33,8 @@ def parse_arguments(args):
 
     parser.add_argument("--driver", help='The solver driver file', default=None)
     parser.add_argument("--defaults", help='The solver default options file', default=None)
-    parser.add_argument("--options", help='The solver extra options file', default="")
+    parser.add_argument("--options", help='The solver extra options', default="")
+    parser.add_argument("--gringo", action='store_true', help='Use ASP grounder (strict ADL, without numerics etc.)')
 
     args = parser.parse_args(args)
     args.instance_dir = os.path.dirname(args.instance)
@@ -46,6 +47,7 @@ def parse_pddl_task(domain, instance):
     task_pddl = pddl_file.parse_pddl_file("task", instance)
     task = tasks.Task.parse(domain_pddl, task_pddl)
     return task
+
 
 
 def extract_names(domain_filename, instance_filename):
@@ -115,7 +117,7 @@ def compile_translation(translation_dir, use_vanilla, args):
         shutil.copy(os.path.join(planner_dir, 'main.cxx'), translation_dir)
         shutil.copy(os.path.join(planner_dir, 'SConstruct'), os.path.join(translation_dir, 'SConstruct'))
 
-        command = "scons {}".format(debug_flag)
+        command = "python2 /usr/bin/scons {}".format(debug_flag)
 
         print("{0:<30}{1}\n".format("Compilation command:", command))
         sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
@@ -146,9 +148,12 @@ def run_solver(translation_dir, args):
     print("{0:<30}{1}".format("Running solver:", solver))
     print("{0:<30}{1}\n".format("Command line arguments:", ' '.join(command[1:])))
     sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
-    output = subprocess.call(command, cwd=translation_dir)
+
+    command_str = ' '.join(command)
+    # We run the command spawning a new shell so that we can get typical shell kill signals such as OOM, etc.
+    output = subprocess.call(command_str, cwd=translation_dir, shell=True)
     if output != 0:
-        print("Error sunning solver")
+        print("Error running solver. Output code: {}".format(output))
         sys.exit(output)
 
 
@@ -175,8 +180,13 @@ def main(args):
     print("{0:<30}{1}".format("Translation directory:", translation_dir))
 
     # Parse the task with FD's parser and transform it to our format
-    fd_task = parse_pddl_task(args.domain, args.instance)
-    fs_task = create_fs_task(fd_task, domain_name, instance_name)
+    if not args.gringo:
+        fd_task = parse_pddl_task(args.domain, args.instance)
+        fs_task = create_fs_task(fd_task, domain_name, instance_name)
+    else:
+        import smart.processor
+        adl_task = smart.processor.parse_and_ground(args.domain, args.instance, translation_dir)
+        fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance

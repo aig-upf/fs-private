@@ -4,6 +4,21 @@
  */
 
 #pragma once
+#include <stddef.h>
+
+/*
+ * Author:  David Robert Nadeau
+ * Site:    http://NadeauSoftware.com/
+ * License: Creative Commons Attribution 3.0 Unported License
+ *          http://creativecommons.org/licenses/by/3.0/deed.en_US
+ */
+namespace fs0 { namespace utils {
+
+size_t getCurrentRSS( );
+size_t getPeakRSS( );
+	
+	
+} } // namespaces
 
 
 namespace fs0 {
@@ -24,4 +39,7 @@ bool is_exit_code_error_reentrant(int exitcode);
 void register_event_handlers();
 int get_process_id();
 
+size_t get_current_memory_in_kb();
+
 } // namespaces
+

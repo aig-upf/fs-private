@@ -32,6 +32,9 @@ class ProblemRepresentation(object):
                 }
 
         self.dump_data('problem', json.dumps(data), ext='json')
+
+        # Optionally, we'll want to print out the precomputed action groundings
+        self.print_groundings_if_available(self.index.action_schemas, self.index.groundings, self.index.objects)
         self.print_debug_data(data)
         self.serialize_static_extensions()
 
@@ -117,19 +120,27 @@ class ProblemRepresentation(object):
         with open(self.translation_dir + '/' + name, "w") as f:
             f.write(translation)
 
-    def dump_data(self, name, data, ext='data', subdir=None):
-        if not isinstance(data, list):
-            data = [data]
-
+    def _compute_filenames(self, name, ext, subdir=None):
         basedir = self.translation_dir + '/data'
 
         if subdir:
             basedir += '/' + subdir
 
+        return basedir, basedir + '/' + name + '.' + ext
+
+    def dump_data(self, name, data, ext='data', subdir=None):
+        if not isinstance(data, list):
+            data = [data]
+
+        basedir, filename = self._compute_filenames(name, ext, subdir)
         util.mkdirp(basedir)
-        with open(basedir + '/' + name + '.' + ext, "w") as f:
+        with open(filename, "w") as f:
             for l in data:
                 f.write(str(l) + '\n')
+
+    def rm_data(self, name, ext='data', subdir=None):
+        basedir, filename = self._compute_filenames(name, ext, subdir)
+        util.silentremove(filename)
 
     def get_value_idx(self, value):
         """ Returns the appropriate integer index for the given value."""
@@ -162,3 +173,30 @@ class ProblemRepresentation(object):
         # And further separate each action into a different file:
         for action in data['action_schemata']:
             self.dump_data("action.{}".format(action['name']), json.dumps(action, indent=2), ext='json', subdir='debug')
+
+        # Print all (ordered) action schema names in a separate file
+        names = [action['name'] for action in data['action_schemata']]
+        self.dump_data("schemas", names, ext='txt', subdir='debug')
+
+    def print_groundings_if_available(self, schemas, all_groundings, object_idx):
+        groundings_filename = "groundings"
+
+        if all_groundings is None:  # No groundings available
+            self.rm_data(groundings_filename)
+            return
+
+        data = []
+
+        # Order matters! The groundings of each action schema are provided in consecutive blocks, one grounding per line
+        for i, action in enumerate(schemas, 0):
+            action_name = action['name']
+            data.append("# {} # {}".format(i, action_name))  # A comment line
+
+            action_groundings = []  # A list with the (integer index of) each grounding
+            for grounding in all_groundings[action_name]:
+                action_groundings.append(tuple(object_idx.get_index(obj_name) for obj_name in grounding))
+
+            for grounding in sorted(action_groundings):  # IMPORTANT to output the groundings in lexicographical order
+                data.append(','.join(map(str, grounding)))
+
+        self.dump_data(groundings_filename, data)

@@ -4,6 +4,10 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <limits>
+#include <sstream>
+#include <ios>
+#include <iomanip>
 
 namespace fs0 { class Config; }
 
@@ -16,15 +20,28 @@ struct SBFWSConfig {
 	SBFWSConfig(SBFWSConfig&&) = default;
 	SBFWSConfig& operator=(SBFWSConfig&&) = default;
 
+	enum class RelevantSetType {None, Sim, APTK_HFF, Macro};
+	
 	//! The maximum levels of width for search and simulation
 	const unsigned search_width;
 	const unsigned simulation_width;
 	const bool mark_negative_propositions;
+	const bool complete_simulation;
+	
+	RelevantSetType relevant_set_type;
+	
 };
 
 class BFWSStats {
 public:
-	BFWSStats() : _expanded(0), _generated(0), _evaluated(0) {}
+	BFWSStats() : _expanded(0), _generated(0), _evaluated(0),
+		_initial_reachable_subgoals(std::numeric_limits<unsigned>::max()),
+		_max_reachable_subgoals(0),
+		_sum_reachable_subgoals(0),
+		_initial_relevant_atoms(std::numeric_limits<unsigned>::max()),
+		_max_relevant_atoms(0),
+		_sum_relevant_atoms(0)
+	{}
 	
 	void expansion() { ++_expanded; }
 	void generation() { ++_generated; }
@@ -53,6 +70,25 @@ public:
 	
 	void set_initial_reachable_subgoals(unsigned num) { _initial_reachable_subgoals = num; }
 	void set_initial_relevant_atoms(unsigned num) { _initial_relevant_atoms = num; }
+	void reachable_subgoals(unsigned num) {
+		_max_reachable_subgoals = std::max(num, _max_reachable_subgoals);
+		_sum_reachable_subgoals += num;
+	}
+	void relevant_atoms(unsigned num) {
+		_max_relevant_atoms = std::max(num, _max_relevant_atoms);
+		_sum_relevant_atoms += num;
+	}
+	
+	static std::string _if_computed(unsigned val) {
+		return val < std::numeric_limits<unsigned>::max() ?  std::to_string(val) : "N/A";
+	}
+	
+	static std::string _avg(unsigned val, unsigned den) {
+		if (den == 0) return "N/A";
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(2) << val / (float) den;
+		return ss.str();
+	}
 	
 	using DataPointT = std::tuple<std::string, std::string, std::string>;
 	std::vector<DataPointT> dump() const {
@@ -72,8 +108,12 @@ public:
 			std::make_tuple("_reused_simulation_nodes", "Simulation nodes reused in the search", std::to_string(_reused_simulation_nodes)),
 
 			std::make_tuple("simulations", "Simulations", std::to_string(simulated())),
-			std::make_tuple("reachable_0", "Reachable subgoals in initial state", std::to_string(_initial_reachable_subgoals)),
-			std::make_tuple("relevant_atoms_0", "|R|_0", std::to_string(_initial_relevant_atoms)),
+			std::make_tuple("reachable_0", "Reachable subgoals in initial state", _if_computed(_initial_reachable_subgoals)),
+			std::make_tuple("reachable_max", "Max. # reachable subgoals in any simulation", std::to_string(_max_reachable_subgoals)),
+			std::make_tuple("reachable_avg", "Avg. # reachable subgoals in any simulation", _avg(_sum_reachable_subgoals, _simulations)),
+			std::make_tuple("relevant_atoms_0", "|R|_0", _if_computed(_initial_relevant_atoms)),
+			std::make_tuple("relevant_atoms_max", "|R|_max", std::to_string(_max_relevant_atoms)),
+			std::make_tuple("relevant_atoms_avg", "|R|_avg", _avg(_sum_relevant_atoms, _simulations))
 		};
 	}
 	
@@ -83,7 +123,11 @@ protected:
 	unsigned long _evaluated;
 	unsigned long _simulations;
 	unsigned int _initial_reachable_subgoals; // The number of subgoals that are reachable on the initial simulation
+	unsigned int _max_reachable_subgoals; // The max. number of subgoals that are reachable in any simulation
+	unsigned int _sum_reachable_subgoals; // The sum of # reached subgoals, to obtain an average
 	unsigned int _initial_relevant_atoms; // The size of |R| on the initial state
+	unsigned int _max_relevant_atoms;
+	unsigned int _sum_relevant_atoms;
 	
 	unsigned long _num_wg1_nodes; // The number of nodes with w_{#g} = 1 that have been processed.
 	unsigned long _num_wgr1_nodes; // The number of nodes with w_{#g,#r} = 1 (and w_{#g} > 1) that have been processed.

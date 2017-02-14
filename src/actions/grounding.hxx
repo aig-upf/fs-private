@@ -46,11 +46,11 @@ public:
 	
 	static const std::vector<const fs::ActionEffect*> compile_nested_fluents_away(const fs::ActionEffect* effect, const ProblemInfo& info);
 	
-protected:
 	//! Helper to ground a schema with a single binding. Returns the expected next action ID, which might be the same
 	//! ID that was received, if the grounding was unsuccessful, or a consecutive one, otherwise.
 	static unsigned ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded);
 	
+protected:
 	//! Process the action schema with a given parameter binding and return the corresponding GroundAction
 	//! A nullptr is returned if the action is detected to be statically non-applicable
 	static GroundAction* full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info);

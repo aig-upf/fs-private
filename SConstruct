@@ -53,7 +53,7 @@ if env['debug'] or env['edebug']:
 	env.Append(CCFLAGS = ['-g', '-DDEBUG' ])
 	lib_name = 'fs-debug'
 else:
-	env.Append(CCFLAGS = ['-O3', '-DNDEBUG' ])
+	env.Append(CCFLAGS = ['-g', '-O3', '-DNDEBUG' ])
 	lib_name = 'fs'
 
 # Additionally, extreme debug implies a different name plus extra compilation flags
@@ -63,7 +63,12 @@ if env['edebug']:
 
 
 # Base include directories
-include_paths = ['src', env['lapkt']]
+include_paths = ['src',
+				 env['lapkt'],
+				 env['lapkt'] + '/include',
+				 env['lapkt'] + '/interfaces/agnostic',
+				 env['lapkt'] + '/external',
+]
 isystem_paths = []
 	
 # Gecode tweaks

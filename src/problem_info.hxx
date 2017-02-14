@@ -117,7 +117,7 @@ protected:
 	std::map<std::string, unsigned> symbolIds;
 	
 	//! A map from function ID to the function data
-	std::vector<SymbolData> functionData;
+	std::vector<SymbolData> _functionData;
 	
 	//! The names of the problem domain and instance
 	std::string _domain;
@@ -129,7 +129,7 @@ protected:
 	std::unique_ptr<ExternalI> _external;
 	
 public:
-	ProblemInfo(const rapidjson::Document& data);
+	ProblemInfo(const rapidjson::Document& data, const std::string& data_dir);
 	~ProblemInfo() = default;
 	
 	const std::string& getVariableName(VariableIdx index) const;
@@ -158,9 +158,9 @@ public:
 	bool isNegatedPredicativeAtom(const Atom& atom) const;
 	
 	void setFunction(unsigned functionId, const Function& function) {
-		functionData.at(functionId).setFunction(function);
+		_functionData.at(functionId).setFunction(function);
 	}
-	inline const SymbolData& getSymbolData(unsigned functionId) const { return functionData.at(functionId); }
+	inline const SymbolData& getSymbolData(unsigned functionId) const { return _functionData.at(functionId); }
 	
 	
 	void set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&& extension);
@@ -244,6 +244,8 @@ public:
 	ObjectType getGenericType(TypeIdx typeId) const;
 	ObjectType getGenericType(const std::string& type) const;
 	
+	const std::string& getDataDir() const { return _data_dir; } 
+	
 protected:
 	//! Load all the function-related data 
 	void loadSymbolIndex(const rapidjson::Value& data);
@@ -260,6 +262,9 @@ protected:
 	void loadProblemMetadata(const rapidjson::Value& data);
 	
 	std::vector<bool> _predicative_variables;
+	
+	//! The filesystem directory where the problem serialized data is found
+	const std::string _data_dir;
 };
 
 } // namespaces

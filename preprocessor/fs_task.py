@@ -3,17 +3,41 @@
 """
 from collections import OrderedDict
 
+import itertools
+
+import adl
 import base
 import pddl_helper
 import pddl
 import static
 import util
 from exceptions import ParseException
+from smart.problem import get_effect_symbols
 from util import IndexDictionary
 from language_processor import ActionSchemaProcessor, FormulaProcessor
 from object_types import process_problem_types
 from pddl.f_expression import NumericConstant
-from state_variables import create_all_possible_state_variables
+from state_variables import create_all_possible_state_variables, create_all_possible_state_variables_from_groundings
+
+
+def filter_out_action_cost_atoms(fd_initial_state, action_cost_symbols):
+    filtered = []
+    for atom in fd_initial_state:
+        if isinstance(atom, pddl.Assign):
+            name = atom.fluent.symbol
+            if name in action_cost_symbols:
+                continue
+        filtered.append(atom)
+
+    return filtered
+
+
+def filter_out_action_cost_functions(adl_functions):
+    filtered = []
+    for function in adl_functions:
+        if function.name != 'total-cost' and function.function_type != 'number':
+            filtered.append(function)
+    return filtered
 
 
 def create_fs_task(fd_task, domain_name, instance_name):
@@ -24,10 +48,38 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task.process_types(types, type_map)
     task.process_symbols(fd_task.actions, fd_task.predicates, fd_task.functions)
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
-    task.process_initial_state(fd_task.init)
+    task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
     task.process_actions(fd_task.actions)
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
+    return task
+
+
+def create_fs_task_from_adl(adl_task, domain_name, instance_name):
+    # MRJ: steps from fs_task.create_fs_task are copied here to act as both a reminder and a TODO list
+
+    # types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
+    sorted_objs = [adl_task.objects[name] for name in adl_task.sorted_object_names]
+    types, type_map = process_problem_types(adl_task.types.values(), sorted_objs, [])
+    task = FSTaskIndex(domain_name, instance_name)
+
+    task.process_objects(sorted_objs)
+    task.process_types(types, type_map)
+
+    adl_functions = filter_out_action_cost_functions(adl_task.functions.values())
+    adl_predicates = adl_task.predicates.values()
+
+    task.process_adl_symbols(adl_task.actions.values(), adl_predicates, adl_functions)
+
+    state_var_list = create_all_possible_state_variables_from_groundings(adl_predicates, adl_functions,
+                                                                         task.objects, task.static_symbols)
+    task.process_state_variables(state_var_list)
+
+    task.process_adl_initial_state(adl_task)
+    task.process_adl_actions(adl_task.actions, adl_task.sorted_action_names)
+    task.process_adl_goal(adl_task)
+    task.process_state_constraints([])  # No state constr. possible in ADL, but this needs to be invoked nevertheless
+
     return task
 
 
@@ -64,6 +116,7 @@ class FSTaskIndex(object):
         self.objects = util.UninitializedAttribute('objects')
         self.symbols = util.UninitializedAttribute('symbols')
         self.symbol_types = util.UninitializedAttribute('symbol_types')
+        self.action_cost_symbols = util.UninitializedAttribute('action_cost_symbols')
         self.symbol_index = util.UninitializedAttribute('symbol_index')
         self.all_symbols = util.UninitializedAttribute('all_symbols')
         self.static_symbols = util.UninitializedAttribute('static_symbols')
@@ -74,6 +127,7 @@ class FSTaskIndex(object):
         self.goal = util.UninitializedAttribute('goal')
         self.state_constraints = util.UninitializedAttribute('state_constraints')
         self.action_schemas = util.UninitializedAttribute('action_schemas')
+        self.groundings = None
 
     def process_types(self, types, type_map):
         # Each typename points to its (unique) 0-based index
@@ -85,13 +139,27 @@ class FSTaskIndex(object):
         self.objects = self._index_objects(objects)
 
     def process_symbols(self, actions, predicates, functions):
-        self.symbols, self.symbol_types = self._index_symbols(predicates, functions)
+        self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
         self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
 
         self.all_symbols = list(self.symbol_types.keys())
 
         # All symbols appearing on some action effect are fluent
         self.fluent_symbols = set(pddl_helper.get_effect_symbol(eff) for action in actions for eff in action.effects)
+
+        # The rest are static, including, by definition, the equality predicate
+        self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")
+
+    def process_adl_symbols(self, actions, predicates, functions):
+        predicates, functions = adl.convert_predicates_to_fd(predicates), adl.convert_functions_to_fd(functions)
+        self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
+        self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
+
+        self.all_symbols = list(self.symbol_types.keys())
+
+        # All symbols appearing on some action effect are fluent
+        all_effects = itertools.chain.from_iterable(action.effects for action in actions)
+        self.fluent_symbols = set(itertools.chain.from_iterable(get_effect_symbols(eff) for eff in all_effects))
 
         # The rest are static, including, by definition, the equality predicate
         self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")
@@ -115,7 +183,7 @@ class FSTaskIndex(object):
          This method takes care of analyzing any given task to determine which of the task symbols
          are fluent and which static.
         """
-        symbols, symbol_types = OrderedDict(), {}
+        symbols, symbol_types, action_cost_symbols = OrderedDict(), {}, set()
 
         for s in predicates:
             argtypes = [t.type for t in s.arguments]
@@ -123,12 +191,14 @@ class FSTaskIndex(object):
             symbol_types[s.name] = 'bool'
 
         for s in functions:
-            if s.name != 'total-cost':  # Ignore the "fake" total-cost function
+            if s.name == 'total-cost' or s.type == 'number':  # Ignore action costs
+                action_cost_symbols.add(s.name)
+            else:
                 argtypes = [t.type for t in s.arguments]
                 symbols[s.name] = base.Function(s.name, argtypes, s.type)
                 symbol_types[s.name] = s.type
 
-        return symbols, symbol_types
+        return symbols, symbol_types, action_cost_symbols
 
     def process_initial_state(self, fd_initial_state):
         fd_initial_atoms = self._extract_initial_atom_names_and_arguments(fd_initial_state)
@@ -139,6 +209,20 @@ class FSTaskIndex(object):
 
         self.initial_fluent_atoms = _process_fluent_atoms(fd_initial_fluent_atoms)
         self.initial_static_data = self._process_static_atoms(fd_initial_static_atoms)
+
+    def process_adl_initial_state(self, adl_task):
+        initial_fluents = []
+        for predicate in adl_task.predicates.values():
+            for grounding in predicate.groundings:
+                prop = (predicate, grounding)
+                if prop in adl_task.initial_state:
+                    initial_fluents.append((predicate.name, grounding, None))
+        adl_initial_fluent_atoms = [elem for elem in initial_fluents if self.is_fluent(elem[0])]
+        assert len(adl_initial_fluent_atoms) == len(initial_fluents)
+
+        static_atoms = [(pred.name, args, None) for pred, args in adl_task.static_preds]
+        self.initial_fluent_atoms = _process_fluent_atoms(adl_initial_fluent_atoms)
+        self.initial_static_data = self._process_static_atoms(static_atoms)
 
     def _process_static_atoms(self, fd_initial_static_atoms):
         initial_static_data = {}
@@ -179,7 +263,7 @@ class FSTaskIndex(object):
             return expression.value
         else:
             if expression.symbol not in self.objects:
-                raise ParseException("Functions need to be instantiated to plain objects")
+                raise ParseException("Functions need to be instantiated to plain objects: symbol {} is not an object".format(expression.symbol))
             return expression.symbol
 
     def process_state_variables(self, state_variables):
@@ -188,8 +272,16 @@ class FSTaskIndex(object):
     def process_actions(self, actions):
         self.action_schemas = [ActionSchemaProcessor(self, action).process() for action in actions]
 
+    def process_adl_actions(self, actions, sorted_action_names):
+        sorted_act = [actions[name] for name in sorted_action_names if name in actions]
+        self.action_schemas = [ActionSchemaProcessor(self, adl.convert_adl_action(act)).process() for act in sorted_act]
+        self.groundings = {act.name: act.groundings for act in sorted_act}
+
     def process_goal(self, goal):
         self.goal = FormulaProcessor(self, goal).process()
+
+    def process_adl_goal(self, adl_task):
+        self.process_goal(adl.process_adl_flat_formula(adl_task.flat_ground_goal_preconditions))
 
     def process_state_constraints(self, constraints):
         self.state_constraints = FormulaProcessor(self, constraints).process()

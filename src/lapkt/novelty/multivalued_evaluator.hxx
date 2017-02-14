@@ -4,12 +4,12 @@
 #include <cassert>
 #include <vector>
 #include <unordered_set>
-#include <bits/stl_numeric.h>
 #include <algorithm>
 
 
 #include <boost/functional/hash.hpp>
 #include "features.hxx"
+#include "base.hxx"
 
 namespace lapkt { namespace novelty {
 
@@ -17,19 +17,19 @@ namespace lapkt { namespace novelty {
 //! X_1 = x_1, X_2 = x_2, ..., X_k = x_k,
 //! Where X_i is a feature identifier, and x_i a certain value taken by that feature on some state,
 //! is represented by a vector {X_1, x_1, X_2, x_2...} where identifiers and values are contiguous.
-class ValuesTuple {
+class ValueTuple {
 public:
 	using VariableIndex = int;
 	using ValueIndex = int;
-	using Container = std::vector<int>;
+	using ContainerT = std::vector<int>;
 
-	ValuesTuple() = default;
-	~ValuesTuple() = default;
-	ValuesTuple( std::size_t sz);
-	ValuesTuple(const ValuesTuple&) = default;
-	ValuesTuple(ValuesTuple&&) = default;
-	ValuesTuple& operator=(const ValuesTuple&) = default;
-	ValuesTuple& operator=(ValuesTuple&&) = default;
+	ValueTuple() = default;
+	~ValueTuple() = default;
+	ValueTuple( std::size_t sz);
+	ValueTuple(const ValueTuple&) = default;
+	ValueTuple(ValueTuple&&) = default;
+	ValueTuple& operator=(const ValueTuple&) = default;
+	ValueTuple& operator=(ValueTuple&&) = default;
 
 
 	void add(VariableIndex x, ValueIndex v) {
@@ -38,19 +38,19 @@ public:
 	}
 
 	//! Comparison operators
-	inline bool operator==( const ValuesTuple& t ) const { return elements == t.elements; }
-	inline bool operator!=( const ValuesTuple& t ) const { return !(operator==(t)); }
-	inline bool operator< ( const ValuesTuple& t ) const { return elements < t.elements; }
-	inline bool operator> ( const ValuesTuple& t ) const { return t.operator<(*this); }
-	inline bool operator<=( const ValuesTuple& t ) const { return !(operator>(t)); }
-	inline bool operator>=( const ValuesTuple& t ) const { return !(operator<(t)); }
+	inline bool operator==( const ValueTuple& t ) const { return elements == t.elements; }
+	inline bool operator!=( const ValueTuple& t ) const { return !(operator==(t)); }
+	inline bool operator< ( const ValueTuple& t ) const { return elements < t.elements; }
+	inline bool operator> ( const ValueTuple& t ) const { return t.operator<(*this); }
+	inline bool operator<=( const ValueTuple& t ) const { return !(operator>(t)); }
+	inline bool operator>=( const ValueTuple& t ) const { return !(operator<(t)); }
 
 
-	friend std::ostream& operator<<( std::ostream& os, const ValuesTuple& t ) { return t.print(os); }
+	friend std::ostream& operator<<( std::ostream& os, const ValueTuple& t ) { return t.print(os); }
 	std::ostream& print(std::ostream& os) const;
 
 	struct Hasher {
-		std::size_t operator()(const ValuesTuple& tuple) const;
+		std::size_t operator()(const ValueTuple& tuple) const;
 	};
 	
 	//! Helper mostly for debugging purposes
@@ -67,70 +67,74 @@ public:
 	}
 
 protected:
-	Container elements;
+	ContainerT elements;
 };
 
-class MultivaluedNoveltyEvaluator {
+//! A generic novelty evaluator that accepts all sorts of feature valuations as long as
+//! their type is (homogeneously) FeatureValueT
+//! The evaluator has somewhat optimized data structures for computing novelty 1 and 2,
+//! but is also able to compute higher novelty values.
+template <typename FeatureValueT>
+class GenericNoveltyEvaluator : public NoveltyEvaluatorI<FeatureValueT> {
 public:
+	using Base = NoveltyEvaluatorI<FeatureValueT>;
+	using ValuationT = typename Base::ValuationT;
 	
-	MultivaluedNoveltyEvaluator() = delete;
-	MultivaluedNoveltyEvaluator(unsigned max_novelty) :
-		_max_novelty(max_novelty), _tables(_max_novelty + 1)
+	GenericNoveltyEvaluator() = delete;
+	GenericNoveltyEvaluator(unsigned max_novelty) :
+		Base(max_novelty), _tables(max_novelty + 1)
 	{}
 	
-	MultivaluedNoveltyEvaluator(const MultivaluedNoveltyEvaluator&) = default;
-	MultivaluedNoveltyEvaluator(MultivaluedNoveltyEvaluator&&) = default;
-	MultivaluedNoveltyEvaluator& operator=(const MultivaluedNoveltyEvaluator&) = default;
-	MultivaluedNoveltyEvaluator& operator=(MultivaluedNoveltyEvaluator&&) = default;
+	GenericNoveltyEvaluator(const GenericNoveltyEvaluator&) = default;
+	GenericNoveltyEvaluator(GenericNoveltyEvaluator&&) = default;
+	GenericNoveltyEvaluator& operator=(const GenericNoveltyEvaluator&) = default;
+	GenericNoveltyEvaluator& operator=(GenericNoveltyEvaluator&&) = default;
+	GenericNoveltyEvaluator* clone() const override { return new GenericNoveltyEvaluator(*this);	}
 
-	//!
-	unsigned max_novelty() const { return _max_novelty; }
-
-	//! Evauate the novelty of a given feature valuation, taking into account that only those indexes given in 'novel'
-	//! contain values that can actually be novel.
-	unsigned evaluate(const FeatureValuation& valuation, const std::vector<unsigned>& novel);
+	
+	//! Evaluate assuming all elements in the valuation can be novel
+	unsigned evaluate(const ValuationT& valuation, unsigned k) override {
+		setup_all_features_novel(valuation);
+		return _evaluate(valuation, _all_features_novel, k);
+	}	
+	
+protected:
 	
 	//! Check only if the valuation contains a width-'k' tuple which is novel; return k if that is the case, or MAX if not
-	unsigned evaluate(const FeatureValuation& valuation, const std::vector<unsigned>& novel, unsigned k);
+	unsigned _evaluate(const ValuationT& valuation, const std::vector<unsigned>& novel, unsigned k) override;
 	
-	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
-	static std::vector<unsigned> derive_novel(const FeatureValuation& current, const FeatureValuation* parent) {
-		if (!parent) { // Base case
-			std::vector<unsigned> all(current.size());
-			std::iota(all.begin(), all.end(), 0);
-			return all;
-		}
-		
-		std::vector<unsigned> novel;
-		for (unsigned i = 0; i < current.size(); ++i) {
-			if (current[i] != (*parent)[i]) {
-				novel.push_back(i);
-			}
-		}
-		return novel;
-	}
-
+	bool evaluate_width_1_tuples(const ValuationT& current, const std::vector<unsigned>& novel);
+	bool evaluate_width_2_tuples(const ValuationT& current, const std::vector<unsigned>& novel);	
+	
 protected:
 	//! Maximum novelty value to be computed
 	unsigned _max_novelty;
+
+	
+	//! This is used to cache a vector <0,1,...,k> of appropriate length and spare the creation of one each time we need it.
+	mutable std::vector<unsigned> _all_features_novel;	
+	
+	void setup_all_features_novel(const ValuationT& valuation) {
+		std::size_t num_features = valuation.size();
+		if (_all_features_novel.size() != num_features) {
+			_all_features_novel.resize(num_features);
+			std::iota(_all_features_novel.begin(), _all_features_novel.end(), 0);
+		}		
+	}
 	
 	//! A tuple of width 1 simply contains the identifier of the variable and the value
-	using Width1Tuple = std::pair<unsigned, int>;
-	using Width2Tuple = std::tuple<int, int, int, int>;
+	using Width1Tuple = std::pair<unsigned, FeatureValueT>;
+	using Width2Tuple = std::tuple<unsigned, FeatureValueT, unsigned, FeatureValueT>;
 	
 	struct Width2TupleHasher { std::size_t operator()(const Width2Tuple& tuple) const; };
 	
-	using NoveltyTable = std::unordered_set<ValuesTuple, ValuesTuple::Hasher>;
+	using NoveltyTable = std::unordered_set<ValueTuple, ValueTuple::Hasher>;
 	using NoveltyTables = std::vector<NoveltyTable>;
 	
 	std::unordered_set<Width1Tuple, boost::hash<Width1Tuple>> _width_1_tuples;
 	std::unordered_set<Width2Tuple, Width2TupleHasher> _width_2_tuples;
 	
 	NoveltyTables _tables;
-	
-	//! A micro-optimization to deal faster with the analysis of width-1 and width-2 tuples
-	bool evaluate_width_1_tuples(const FeatureValuation& current, const std::vector<unsigned>& novel);
-	bool evaluate_width_2_tuples(const FeatureValuation& current, const std::vector<unsigned>& novel);
 };
 
 //! An iterator through all tuples of a certain size that can be derived from a certain vector of values.
@@ -149,11 +153,13 @@ protected:
 //!
 //! As it would be implicitly understood that tuple {<1,B>, <2,C>} cannot be new, since both values pertain already
 //! to the parent valuation
+template <typename FeatureValueT>
 class TupleIterator {
 public:
-
+	using ValuationT = std::vector<FeatureValueT>;
+	
 	//! Create an iterator through tuples of size `size` of the given feature valuation.
-	TupleIterator(unsigned size, const FeatureValuation& current, const std::vector<bool>& novel) :
+	TupleIterator(unsigned size, const ValuationT& current, const std::vector<bool>& novel) :
 		_current(current), _novel(novel),  _size(size), _indexes(current.size(), false), _ended(false)
 	{
 		assert(_size > 0);
@@ -166,11 +172,11 @@ public:
 	~TupleIterator() = default;
 
 
-	ValuesTuple next() {
+	ValueTuple next() {
 		assert(!ended());
 		// Check http://stackoverflow.com/a/9430993
 		unsigned var = 0;
-		ValuesTuple tuple(_size);
+		ValueTuple tuple(_size);
 		for (; var < _indexes.size(); ++var) {
 			if (_indexes[var]) {
 				// std::cout << "(" << var << ", " << _current[i] << ") ";
@@ -187,7 +193,7 @@ public:
 
 protected:
 	//! The current valuation from which we want to derive size-k tuples
-	const FeatureValuation& _current;
+	const ValuationT& _current;
 	
 	//! `_novel[i]` iff current[i] != parent[i]
 	const std::vector<bool>& _novel;

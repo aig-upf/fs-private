@@ -30,23 +30,26 @@ public:
 };
 
 
-//! An (ordered) set of novelty features
+//! An GenericFeatureSetEvaluator works for any type of state, for any combination of features
+//! that we want to use. In case we want to use only the values of state variables, however, it 
+//! might be more performant to use one of the evaluators below.
 template <typename StateT>
-class FeatureSet {
+class GenericFeatureSetEvaluator {
 public:
-	using FeatureT = std::unique_ptr<NoveltyFeature<StateT>>;
+	using FeatureT = NoveltyFeature<StateT>;
+	using FeaturePT = std::unique_ptr<FeatureT>;
 	
-	FeatureSet() = default;
-	~FeatureSet() = default;
+	GenericFeatureSetEvaluator() = default;
+	~GenericFeatureSetEvaluator() = default;
 	
-	FeatureSet(const FeatureSet&) = delete;
-	FeatureSet(FeatureSet&&) = default;
-	FeatureSet& operator=(const FeatureSet&) = delete;
-	FeatureSet& operator=(FeatureSet&&) = default;
+	GenericFeatureSetEvaluator(const GenericFeatureSetEvaluator&) = delete;
+	GenericFeatureSetEvaluator(GenericFeatureSetEvaluator&&) = default;
+	GenericFeatureSetEvaluator& operator=(const GenericFeatureSetEvaluator&) = delete;
+	GenericFeatureSetEvaluator& operator=(GenericFeatureSetEvaluator&&) = default;
 	
 	//!
-	void add(FeatureT&& feature) {
-		_features.push_back(std::move(feature));
+	void add(FeatureT* feature) {
+		_features.push_back(FeaturePT(feature));
 	}
 	
 	//!
@@ -69,7 +72,53 @@ public:
 	
 protected:
 	//! The features in the set
-	std::vector<FeatureT> _features;
+	std::vector<FeaturePT> _features;
+};
+
+//! A "straight" evaluator simply returns as a set of features _a const reference_ to the
+//! vector of values that underlies the representation of the state. This should work
+//! whenever the state has values of one single type (int / bool) and we're not interested
+//! in using additional features. It _is_ a somewhat ugly abstraction leak, but I think
+//! well-justified for the sake of performance.
+template <typename FeatureValueT>
+class StraightFeatureSetEvaluator {
+public:
+	//!
+	template <typename StateT>
+	const std::vector<FeatureValueT>& evaluate(const StateT& state) const;
+};
+
+//! Partial specialization for all-bool states
+template <>
+template <typename StateT>
+const std::vector<bool>&
+StraightFeatureSetEvaluator<bool>::evaluate(const StateT& state) const { return state.get_boolean_values(); }
+
+//! Partial specialization for all-int states
+template <>
+template <typename StateT>
+const std::vector<int>&
+StraightFeatureSetEvaluator<int>::evaluate(const StateT& state) const { return state.get_int_values(); }
+
+
+//! A "straight" hybrid feature evaluator is aimed at working with states that can hold both int and bool values
+//! at the same time. As such, it can no longer return a const-ref to a vector of values, since it needs to compose
+//! a single vector containing all values. It is still, however, specialized, in the sense that it can be used
+//! only when we're not interested in additional features other than the values of all state variables.
+class StraightHybridFeatureSetEvaluator {
+public:
+	//!
+	template <typename StateT>
+	const std::vector<int> evaluate(const StateT& state) const {
+		unsigned sz = state.numAtoms();
+		std::vector<int> valuation;
+		valuation.reserve(sz);
+		
+		for (unsigned var = 0; var < sz; ++var) {
+			valuation.push_back(state.getValue(var));
+		}
+		return valuation;
+	}
 };
 
 } } // namespaces

@@ -28,8 +28,11 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	const Config& config = Config::instance();
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
+	LPT_INFO("main", "Creating State Indexer...");
+	auto indexer = StateAtomIndexer::create(info);
+	
 	LPT_INFO("main", "Loading initial state...");
-	auto init = loadState(data["init"]);
+	auto init = loadState(*indexer, data["init"]);
 	
 	LPT_INFO("main", "Loading action data...");
 	auto action_data = loadAllActionData(data["action_schemata"], info);
@@ -41,7 +44,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
-	Problem* problem = new Problem(init, action_data, goal, sc, AtomIndex(info));
+	Problem* problem = new Problem(init, indexer, action_data, goal, sc, AtomIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
@@ -55,13 +58,13 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 }
 
 void 
-Loader::loadFunctions(const BaseComponentFactory& factory, const std::string& data_dir, ProblemInfo& info) {
+Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 	
 	// First load the extensions of the static symbols
 	for (auto name:info.getSymbolNames()) {
 		unsigned id = info.getSymbolId(name);
 		if (info.getSymbolData(id).isStatic()) {
-			info.set_extension(id, StaticExtension::load_static_extension(name, data_dir, info));
+			info.set_extension(id, StaticExtension::load_static_extension(name, info));
 		}
 	}
 	
@@ -74,12 +77,13 @@ Loader::loadFunctions(const BaseComponentFactory& factory, const std::string& da
 ProblemInfo&
 Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory) {
 	// Load and set the ProblemInfo data structure
-	auto info = std::unique_ptr<ProblemInfo>(new ProblemInfo(data));
-	loadFunctions(factory, data_dir, *info);
+	auto info = std::unique_ptr<ProblemInfo>(new ProblemInfo(data, data_dir));
+	loadFunctions(factory, *info);
 	return ProblemInfo::setInstance(std::move(info));
 }
 
-State* Loader::loadState(const rapidjson::Value& data) {
+State*
+Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data) {
 	// The state is an array of two-sized arrays [x,v], representing atoms x=v
 	unsigned numAtoms = data["variables"].GetInt();
 	Atom::vctr facts;
@@ -87,11 +91,12 @@ State* Loader::loadState(const rapidjson::Value& data) {
 		const rapidjson::Value& node = data["atoms"][i];
 		facts.push_back(Atom(node[0].GetInt(), node[1].GetInt()));
 	}
-	return new State(numAtoms, facts);
+	return State::create(indexer, numAtoms, facts);
 }
 
 
-std::vector<const ActionData*> Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info) {
+std::vector<const ActionData*>
+Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info) {
 	std::vector<const ActionData*> schemata;
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		if (const ActionData* adata = loadActionData(data[i], i, info)) {
@@ -101,7 +106,8 @@ std::vector<const ActionData*> Loader::loadAllActionData(const rapidjson::Value&
 	return schemata;
 }
 
-const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemInfo& info) {
+const ActionData*
+Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemInfo& info) {
 	const std::string& name = node["name"].GetString();
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
@@ -120,16 +126,76 @@ const ActionData* Loader::loadActionData(const rapidjson::Value& node, unsigned 
 	return ActionGrounder::process_action_data(adata, info);
 }
 
-const fs::Formula* Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
+std::vector<const GroundAction*>
+Loader::loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const ActionData*>& action_data) {
+	std::vector<const GroundAction*> grounded;
+	if (action_data.empty()) return grounded;
+	
+	std::string filename = info.getDataDir() + "/groundings.data";
+	std::ifstream is(filename);
+	
+    if (!is.good()) { // File groundings.data does not exist
+		return grounded;
+	}
+	
+	LPT_INFO("cout", "Loading the list of reachable ground actions from \"" << filename << "\"");
+	
+	unsigned current_schema_groundings = 0;
+	unsigned id = 0;
+	unsigned schema_id = -1;
+	const ActionData* current = action_data[0];
+	std::string line;
+	
+	while (std::getline(is, line)) {
+		if (line.length() > 0 && line[0] == '#') { // We switch to the next action schema
+			
+			++schema_id;
+			if (schema_id >= action_data.size()) {
+				throw std::runtime_error("The number of action schemas in the groundings file does not match that in the problem description");
+			}
+			
+			if (schema_id > 0) {
+				LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+			}
+			
+			current = action_data[schema_id];
+			current_schema_groundings = 0;
+			continue;
+		}
+		
+		std::vector<ObjectIdx> deserialized = Serializer::deserializeLine(line, ",");
+		if (current->getSignature().size() != deserialized.size()) {
+			throw std::runtime_error("Wrong number of action parameters");
+		}
+		
+		
+		if (deserialized.empty()) {
+			LPT_INFO("cout", "Grounding action schema '" << current->getName() << "' with no binding");
+			id = ActionGrounder::ground(id, current, Binding::EMPTY_BINDING, info, grounded);
+		} else {
+			Binding binding(std::move(deserialized));
+			id = ActionGrounder::ground(id, current, binding, info, grounded);
+		}
+		++current_schema_groundings;
+	}
+	
+	LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+	LPT_INFO("cout", "Grounding process stats:\t" << grounded.size() << " grounded actions");
+	return grounded;
+}
+
+const fs::Formula*
+Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
 	const fs::Formula* unprocessed = fs::Loader::parseFormula(data["conditions"], info);
 	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
 	// to detect tautologies, contradictions, etc., and to consolidate state variables
-	auto processed = unprocessed->bind(Binding(), info);
+	auto processed = unprocessed->bind(Binding::EMPTY_BINDING, info);
 	delete unprocessed;
 	return processed;
 }
 
-rapidjson::Document Loader::loadJSONObject(const std::string& filename) {
+rapidjson::Document
+Loader::loadJSONObject(const std::string& filename) {
 	// Load and parse the JSON data file.
 	std::ifstream in(filename);
 	if (in.fail()) throw std::runtime_error("Could not open filename '" + filename + "'");
@@ -141,7 +207,8 @@ rapidjson::Document Loader::loadJSONObject(const std::string& filename) {
 
 
 template<typename T>
-std::vector<T> Loader::parseNumberList(const rapidjson::Value& data) {
+std::vector<T>
+Loader::parseNumberList(const rapidjson::Value& data) {
 	std::vector<T> output;
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		output.push_back(boost::lexical_cast<T>(data[i].GetInt()));
@@ -149,7 +216,8 @@ std::vector<T> Loader::parseNumberList(const rapidjson::Value& data) {
 	return output;
 }
 
-std::vector<std::string> Loader::parseStringList(const rapidjson::Value& data) {
+std::vector<std::string>
+Loader::parseStringList(const rapidjson::Value& data) {
 	std::vector<std::string> output;
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		output.push_back(data[i].GetString());

@@ -27,6 +27,7 @@ gcc = os.environ.get('CXX', default_compiler)
 
 env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 
+lapkt1_dir  = env['lapkt']
 lapkt2_dir = env['lapkt'] + '/aptk2'
 
 env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ] )  # Flags common to all options
@@ -43,22 +44,31 @@ elif env['debug']:
 	lapkt_libname = 'lapkt2-debug'
 	exe_name = 'solver.debug.bin'
 else:
-	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
+	env.Append( CCFLAGS = ['-g', '-O3', '-DNDEBUG' ] )
 	fs_libname = 'fs'
 	lapkt_libname = 'lapkt2'
 	exe_name = 'solver.bin'
 
 # Header and library directories.
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
-include_paths = ['.', env['fs'] + '/src', env['lapkt'], HOME + '/local/include']
-lib_paths = [env['fs'] + '/lib', lapkt2_dir + '/lib', HOME + '/local/lib']
+include_paths = ['.', env['fs'] + '/src', env['lapkt']]
+isystem_paths = [HOME + '/local/include']
+lib_paths = [env['fs'] + '/lib', lapkt2_dir + '/lib', lapkt1_dir, HOME + '/local/lib']
     
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
+env.Append(CCFLAGS = ['-isystem' + os.path.abspath(p) for p in isystem_paths])
 
 src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both the main.cxx and the generated code for the particular instance
 
 # Note: order matters. If A depends on B, A should go _before_ B.
 env.Append(LIBS=[fs_libname, lapkt_libname, 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
+
+env.Append(LIBS=[File(lapkt1_dir + '/libaptk.a'),
+				 File(lapkt1_dir + '/interfaces/agnostic/libaptk-base.a'),
+				 File(lapkt1_dir + '/interfaces/ff-wrapped/libaptk-ff-wrap.a'),
+				 File(lapkt1_dir + '/external/libff/libff.a'),
+])
+
 
 # Add necessary Gecode libraries
 gecode_libs = [

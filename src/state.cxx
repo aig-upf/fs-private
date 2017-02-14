@@ -8,12 +8,94 @@
 
 namespace fs0 {
 
-State::State(unsigned numAtoms, const std::vector<Atom>& facts) :
-	_values(numAtoms)
+
+StateAtomIndexer*
+StateAtomIndexer::create(const ProblemInfo& info)
+{
+	unsigned n_vars = info.getNumVariables(), n_bool = 0, n_int = 0;
+	IndexT index;
+	index.reserve(n_vars);
+	for (unsigned var = 0; var < n_vars; ++var) {
+		if (info.isPredicativeVariable(var)) {
+			index.push_back(std::make_pair(true, n_bool++)); // Important to post-increment
+		} else {
+			index.push_back(std::make_pair(false, n_int++)); // Important to post-increment
+		}
+	}
+	assert(index.size() == n_vars && n_vars == n_bool + n_int);
+
+	return new StateAtomIndexer(std::move(index), n_bool, n_int);
+}
+
+StateAtomIndexer::StateAtomIndexer(IndexT&& index, unsigned n_bool, unsigned n_int) :
+	_index(std::move(index)), _n_bool(n_bool), _n_int(n_int)
+{
+}
+
+StateAtomIndexer::IndexT
+StateAtomIndexer::compute_index(const ProblemInfo& info) {
+	unsigned n_vars = info.getNumVariables(), n_bool = 0, n_int = 0;
+	IndexT index;
+	index.reserve(n_vars);
+	for (unsigned var = 0; var < n_vars; ++var) {
+		if (info.isPredicativeVariable(var)) {
+			index.push_back(std::make_pair(true, n_bool++)); // Important to post-increment
+		} else {
+			index.push_back(std::make_pair(false, n_int++)); // Important to post-increment
+		}
+	}
+	assert(index.size() == n_vars && n_vars == n_bool + n_int);
+	return index;
+}
+
+ObjectIdx
+StateAtomIndexer::get(const State& state, VariableIdx variable) const {
+	std::size_t n_vars = _index.size();
+	assert(variable < n_vars);
+
+	// If the state is fully boolean or fully multivalued, we can optimize the operation,
+	// since the variable index will be exactly `variable`
+	if (n_vars == _n_bool) return state._bool_values[variable];
+	if (n_vars == _n_int) return state._int_values[variable];
+
+	// Otherwise we need to deindex the variable
+	const IndexElemT& ind = _index[variable];
+	if (ind.first) return state._bool_values[ind.second];
+	else return state._int_values[ind.second];
+}
+
+void
+StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), atom.getValue()); }
+
+void
+StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const {
+	std::size_t n_vars = _index.size();
+	assert(variable < n_vars);
+
+	// If the state is fully boolean or fully multivalued, we can optimize the operation,
+	// since the variable index will be exactly `variable`
+	if (n_vars == _n_bool) state._bool_values[variable] = value;
+	else if (n_vars == _n_int) state._int_values[variable] = value;
+	else {
+		const IndexElemT& ind = _index[variable];
+		if (ind.first) state._bool_values[ind.second] = value;
+		else state._int_values[ind.second] = value;
+	}
+}
+
+State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std::vector<Atom>& atoms) {
+	assert(numAtoms == index.size());
+	return new State(index, atoms);
+}
+
+State::State(const StateAtomIndexer& index, const std::vector<Atom>& atoms) :
+	_indexer(index),
+	_bool_values(index.num_bool(), 0),
+	_int_values(index.num_int(), 0)
 {
 	// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
-	for (const auto& fact:facts) { // Insert all the elements of the vector
-		set(fact);
+	for (const Atom& atom:atoms) { // Insert all the elements of the vector
+		set(atom);
 	}
 	updateHash();
 }
@@ -22,22 +104,24 @@ State::State(const State& state, const std::vector<Atom>& atoms) :
 	State(state) {
 	accumulate(atoms);
 }
-	
+
 void State::set(const Atom& atom) {
-	_values.at(atom.getVariable()) = atom.getValue();
+// 	_bool_values.at(atom.getVariable()) = value;
+	_indexer.set(*this, atom);
 }
 
 bool State::contains(const Atom& atom) const {
 	return getValue(atom.getVariable()) == atom.getValue();
 }
 
-ObjectIdx State::getValue(const VariableIdx& variable) const {
-	return _values.at(variable);
+ObjectIdx
+State::getValue(const VariableIdx& variable) const {
+	return _indexer.get(*this, variable);
 }
 
 //! Applies the given changeset into the current state.
 void State::accumulate(const std::vector<Atom>& atoms) {
-	for (const Atom& fact:atoms) { 
+	for (const Atom& fact:atoms) {
 		set(fact);
 	}
 	updateHash(); // Important to update the hash value after all the changes have been applied!
@@ -47,21 +131,33 @@ std::ostream& State::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "State";
 	os << "(" << _hash << ")[";
-	for (unsigned i = 0; i < _values.size(); ++i) {
-		if (info.getVariableGenericType(i) == ProblemInfo::ObjectType::BOOL) {
-			if (_values.at(i) == 0) continue;
-			
-			// Print only those atoms which are true in the state
-			os << info.getVariableName(i);
-		} else {
-			os << info.getVariableName(i) << "=" << info.getObjectName(i, _values.at(i));
-		}
-		if (i < _values.size() - 1) os << ", ";
-	}
+    for ( unsigned x = 0; x < info.getNumVariables(); x++ ) {
+        ObjectIdx v = getValue(x);
+        if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::BOOL ) {
+            if ( v == 0 ) continue;
+            os << info.getVariableName(x);
+    		if (x < info.getNumVariables() - 1) os << ", ";
+            continue;
+        }
+        os << info.getVariableName(x) << "=" << info.getObjectName(x, v);
+        if (x < info.getNumVariables() - 1) os << ", ";
+    }
 	os << "]";
 	return os;
 }
 
-std::size_t State::computeHash() const { return boost::hash_range(_values.begin(), _values.end()); }
+
+std::size_t State::computeHash() const {
+	//return std::hash<BitsetT>{}(_bool_values);
+//     auto a = boost::hash_value( _bool_values);
+//     auto b = boost::hash_value( _int_values);
+// 	return boost::hash_value(_bool_values);
+	std::size_t seed = 0;
+	boost::hash_combine(seed, std::hash<BitsetT>{}(_bool_values));
+	boost::hash_combine(seed, boost::hash_value( _int_values));
+	return seed;
+
+}
+
 
 } // namespaces

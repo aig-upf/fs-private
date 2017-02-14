@@ -32,8 +32,8 @@ std::vector<const AtomicFormula*> Formula::all_atoms() const {
 	return Utils::filter_by_type<const AtomicFormula*>(all_formulae());
 }
 
-bool Formula::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
-bool Formula::interpret(const State& state) const  { return interpret(state, Binding()); }
+bool Formula::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
+bool Formula::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
 
 
 std::ostream& Formula::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
@@ -78,28 +78,66 @@ const Formula* AtomicFormula::bind(const Binding& binding, const ProblemInfo& in
 	// Process the subterms first
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed_subterms = NestedTerm::bind_subterms(_subterms, binding, info, constant_values);
-	
+
 	// Create the corresponding relational or external formula object, according to the symbol
 	const AtomicFormula* processed = clone(processed_subterms);
-	
+
 	// Check if we can resolve the value of the formula statically
 	if (constant_values.size() == _subterms.size()) {
 		auto resolved = processed->interpret({}) ? static_cast<const Formula*>(new Tautology) : static_cast<const Formula*>(new Contradiction);
 		delete processed;
 		return resolved;
 	}
-	
+
 	return processed;
 }
 
+std::ostream& ExternallyDefinedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+       os << name() << "(";
+       for (const auto ptr:_subterms) os << *ptr << ", ";
+       os << ")";
+       return os;
+}
+
+
+const AxiomaticFormula* AxiomaticFormula::bind(const Binding& binding, const ProblemInfo& info) const {
+	// Process the subterms first
+	std::vector<ObjectIdx> constant_values;
+	std::vector<const Term*> processed_subterms = NestedTerm::bind_subterms(_subterms, binding, info, constant_values);
+
+	// Create the corresponding relational or external formula object, according to the symbol
+	return clone(processed_subterms);
+}
+
+std::ostream& AxiomaticFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << name() << "(";
+	for (const auto ptr:_subterms) os << *ptr << ", ";
+	os << ")";
+	return os;
+}
+
+bool AxiomaticFormula::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	throw std::runtime_error("UNIMPLEMENTED");
+}
+
+bool AxiomaticFormula::interpret(const State& state, const Binding& binding) const {
+	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
+	return compute(state, _interpreted_subterms);
+}
+
+Conjunction::Conjunction(const Conjunction& other) :
+	_conjuncts(Utils::clone(other._conjuncts))
+{}
+	
 const Formula* Conjunction::bind(const Binding& binding, const fs0::ProblemInfo& info) const {
 	std::vector<const AtomicFormula*> conjuncts;
+	std::vector<AtomConjunction::AtomT> atoms;
 	for (const AtomicFormula* c:_conjuncts) {
 		auto processed = c->bind(binding, info);
 		// Static checks
 		if (processed->is_tautology()) { // No need to add the condition, which is always true
 			delete processed;
-			continue; 
+			continue;
 		} else if (processed->is_contradiction()) { // The whole conjunction statically resolves to false
 			delete processed;
 			for (auto elem:conjuncts) delete elem;
@@ -108,10 +146,21 @@ const Formula* Conjunction::bind(const Binding& binding, const fs0::ProblemInfo&
 		auto processed_atomic = dynamic_cast<const AtomicFormula*>(processed);
 		assert(processed_atomic);
 		conjuncts.push_back(processed_atomic);
+		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(processed_atomic);
+		if( cc == nullptr ) continue;
+		const StateVariable* lhs = dynamic_cast<const StateVariable*>(cc->lhs());
+		if( lhs == nullptr ) continue;
+		const Constant* rhs = dynamic_cast< const Constant*>(cc->rhs());
+		if( rhs == nullptr ) continue;
+		atoms.push_back(std::make_pair(lhs->getValue(), rhs->getValue()));
 	}
-	
+
 	if (conjuncts.empty()) return new Tautology; // The empty conjunction is a tautology
-	
+
+	if ( conjuncts.size() == atoms.size()) { // All the subformulae are atoms
+		return new AtomConjunction( conjuncts, atoms );
+	}
+
 	return new Conjunction(conjuncts);
 }
 
@@ -153,6 +202,17 @@ std::vector<const Formula*> Conjunction::all_formulae() const {
 	return res;
 }
 
+
+
+bool
+AtomConjunction::interpret(const State& state) const {
+	for (const auto& atom:_atoms) {
+		if ( state.getValue(atom.first) != atom.second) return false;
+	}
+	return true;
+}
+
+
 ExistentiallyQuantifiedFormula::ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula& other) :
 _variables(Utils::clone(other._variables)), _subformula(other._subformula->clone())
 {}
@@ -169,14 +229,14 @@ const Formula* ExistentiallyQuantifiedFormula::bind(const Binding& binding, cons
 	for (const BoundVariable* var:_variables) {
 		if (binding.binds(var->getVariableId())) throw std::runtime_error("Wrong binding - Duplicated variable");
 	}
-	// TODO Check if the binding is a complete binding and thus we can directly return the (variable-free) conjunction 
+	// TODO Check if the binding is a complete binding and thus we can directly return the (variable-free) conjunction
 	// TODO Redesign this mess
 	auto bound_subformula = _subformula->bind(binding, info);
 	if (dynamic_cast<const Tautology*>(bound_subformula) || dynamic_cast<const Contradiction*>(bound_subformula)) return bound_subformula;
-	
+
 	auto bound_conjunction = dynamic_cast<const Conjunction*>(bound_subformula);
 	assert(bound_conjunction);
-	
+
 	return new ExistentiallyQuantifiedFormula(_variables, bound_conjunction);
 }
 
@@ -204,7 +264,7 @@ template <typename T>
 bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, const Binding& binding, unsigned i) const {
 	// Base case - all existentially quantified variables have been bound
 	if (i == _variables.size()) return _subformula->interpret(assignment, binding);
-	
+
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	const BoundVariable* variable = _variables.at(i);
 	Binding copy(binding);
@@ -231,7 +291,7 @@ Formula* Conjunction::conjunction(const AtomicFormula* 						other) const { thro
 Formula* Conjunction::conjunction(const ExistentiallyQuantifiedFormula*		other) const { return other->conjunction(this); }
 Formula* ExistentiallyQuantifiedFormula::conjunction(const Formula* 							other) const { return other->conjunction(this); }
 Formula* ExistentiallyQuantifiedFormula::conjunction(const AtomicFormula* 						other) const { throw std::runtime_error("Unimplemented"); }
-Formula* ExistentiallyQuantifiedFormula::conjunction(const ExistentiallyQuantifiedFormula*		other) const { throw std::runtime_error("Unimplemented"); }	
+Formula* ExistentiallyQuantifiedFormula::conjunction(const ExistentiallyQuantifiedFormula*		other) const { throw std::runtime_error("Unimplemented"); }
 
 Conjunction* Conjunction::conjunction(const Conjunction* other) const {
 	auto all_subterms = Utils::merge(Utils::clone(_conjuncts), Utils::clone(other->_conjuncts));

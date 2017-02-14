@@ -2,8 +2,10 @@
 #include "simple_state_model.hxx"
 #include <problem.hxx>
 #include <state.hxx>
+#include <applicability/action_managers.hxx>
 #include <applicability/formula_interpreter.hxx>
 #include <utils/config.hxx>
+#include <utils/system.hxx>
 #include <applicability/match_tree.hxx>
 #include <aptk2/tools/logging.hxx>
 
@@ -26,47 +28,33 @@ obtain_goal_atoms(const fs::Formula* goal) {
 }
 */
 
-SimpleStateModel::~SimpleStateModel() {
-	delete _manager;
-}
 
 //! A helper to derive the distinct goal atoms
-std::vector<Atom>
+std::vector<const fs::Formula*>
 obtain_goal_atoms(const fs::Formula* goal) {
 	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
 	if (!conjunction) {
 		throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
 	}
-	
-	std::vector<Atom> goal_atoms;
-	
+
+	std::vector<const fs::Formula*> goal_atoms;
+
 	for (const fs::AtomicFormula* atom:conjunction->getConjuncts()) {
-		auto eq =  dynamic_cast<const fs::EQAtomicFormula*>(atom);
-		if (!eq) { // This could be easily extended to negated atoms
-			throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
-		}
-		
-		auto sv =  dynamic_cast<const fs::StateVariable*>(eq->lhs());
-		if (!sv) throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
-		
-		auto ct =  dynamic_cast<const fs::Constant*>(eq->rhs());
-		if (!ct) throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
-		
-		goal_atoms.push_back(Atom(sv->getValue(), ct->getValue()));
+		goal_atoms.push_back(atom);
 	}
-	
+
 	return goal_atoms;
 }
 
 
 SimpleStateModel
-SimpleStateModel::build(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) {
-	return SimpleStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()), analyzer);
+SimpleStateModel::build(const Problem& problem) {
+	return SimpleStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
 }
 
-SimpleStateModel::SimpleStateModel(const Problem& problem, std::vector<Atom> subgoals, BasicApplicabilityAnalyzer* analyzer) :
+SimpleStateModel::SimpleStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals) :
 	_task(problem),
-	_manager(build_action_manager(problem, analyzer)),
+	_manager(build_action_manager(problem)),
 	_subgoals(subgoals)
 {}
 
@@ -105,7 +93,8 @@ SimpleStateModel::next(const StateT& state, const GroundAction& a) const {
 
 bool
 SimpleStateModel::goal(const StateT& s, unsigned i) const {
-	return s.contains(_subgoals.at(i)); // TODO SHOULD BE:
+	return _subgoals.at(i)->interpret(s, Binding::EMPTY_BINDING);
+// 	return s.contains(_subgoals.at(i)); // TODO SHOULD BE:
 	// const Atom& subgoal = _subgoals.at(i);
 	// return s.check(subgoal.getVariable(), s.getValue());
 }
@@ -116,25 +105,39 @@ SimpleStateModel::applicable_actions(const StateT& state) const {
 	return _manager->applicable(state);
 }
 
-SmartActionManager*
-SimpleStateModel::build_action_manager(const Problem& problem, BasicApplicabilityAnalyzer* analyzer) {
+ActionManagerI*
+SimpleStateModel::build_action_manager(const Problem& problem) {
 	const auto& actions = problem.getGroundActions();
 	const auto& constraints = problem.getStateConstraints();
 	const auto& tuple_idx =  problem.get_tuple_index();
-	SmartActionManager* manager = nullptr;
-	if (analyzer == nullptr) {
-		analyzer = new BasicApplicabilityAnalyzer(actions, tuple_idx);
-		analyzer->build();
+	Config::SuccessorGenerationStrategy strategy = Config::instance().getSuccessorGeneratorType();
+
+
+	if (strategy == Config::SuccessorGenerationStrategy::naive) {
+		LPT_INFO( "cout", "Successor Generator Strategy: Naive");
+		return new NaiveActionManager(actions, constraints);
 	}
-	if ( Config::instance().getSuccessorGeneratorType() == Config::SuccessorGenerationStrategy::functional_aware) {
-		LPT_INFO( "main", "Successor Generator Strategy: \"Functional Aware\"");
-		manager = new SmartActionManager(actions, constraints, tuple_idx, analyzer);
-	} else {
-		LPT_INFO( "main", "Successor Generator Strategy: \"Match Tree\"");
-		manager = new MatchTreeActionManager( actions, constraints, tuple_idx, analyzer );
+
+	if (strategy == Config::SuccessorGenerationStrategy::functional_aware) {
+		LPT_INFO( "cout", "Successor Generator Strategy: Functional Aware");
+		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
+		analyzer.build();
+		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
+
+
+	} else if (strategy == Config::SuccessorGenerationStrategy::match_tree) {
+		LPT_INFO( "cout", "Successor Generator Strategy: Match Tree");
+		LPT_INFO("cout", "Peak mem. usage before match-tree construction: " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Current mem. usage before match-tree construction: " << get_current_memory_in_kb() << " kB.");
+
+		auto mng = new MatchTreeActionManager(actions, constraints, tuple_idx);
+		LPT_INFO("cout", "Match-tree built with " << mng->count() << " nodes.");
+		LPT_INFO("cout", "Peak mem. usage after match-tree construction: " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Current mem. usage after match-tree construction: " << get_current_memory_in_kb() << " kB.");
+		return mng;
 	}
-	delete analyzer;
-	return manager;
+
+	throw std::runtime_error("Unknown successor generation strategy");
 }
 
 

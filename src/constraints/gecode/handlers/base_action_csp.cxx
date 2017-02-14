@@ -258,7 +258,7 @@ std::vector<AtomIdx> BaseActionCSP::extract_support_from_solution(GecodeCSP* sol
 	return support;
 }
 
-Binding BaseActionCSP::build_binding_from_solution(const GecodeCSP* solution) const { return Binding(); }
+Binding BaseActionCSP::build_binding_from_solution(const GecodeCSP* solution) const { return Binding::EMPTY_BINDING; }
 
 void BaseActionCSP::extract_nested_term_support(const GecodeCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const {
 	if (nested_terms.empty()) return;

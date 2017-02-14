@@ -11,10 +11,10 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
-ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding()); }
-ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding()); }
-VariableIdx Term::interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding()); }
-VariableIdx Term::interpretVariable(const State& state) const { return interpretVariable(state, Binding()); }
+ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
+ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
+VariableIdx Term::interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding::EMPTY_BINDING); }
+VariableIdx Term::interpretVariable(const State& state) const { return interpretVariable(state, Binding::EMPTY_BINDING); }
 	
 std::ostream& Term::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
@@ -124,6 +124,18 @@ const Term* UserDefinedStaticTerm::bind(const Binding& binding, const ProblemInf
 	return new UserDefinedStaticTerm(_symbol_id, processed);
 }
 
+
+const Term* AxiomaticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
+	std::vector<ObjectIdx> constant_values;
+	std::vector<const Term*> processed = bind_subterms(_subterms, binding, info, constant_values);
+	
+	// We simply return a user-defined static term with the processed/bound subterms
+	return clone(processed);
+}
+
+AxiomaticTerm* AxiomaticTerm::clone() const { return clone(Utils::clone(_subterms)); }
+
+
 const Term* ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> st = bind_subterms(_subterms, binding, info, constant_values);
@@ -131,7 +143,7 @@ const Term* ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info
 	auto processed = create(st);
 	
 	if (constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
-		auto value = processed->interpret({}, Binding());
+		auto value = processed->interpret({}, Binding::EMPTY_BINDING);
 		delete processed;
 		return new IntConstant(value); // Arithmetic terms necessarily involve integer subterms
 	}
@@ -165,6 +177,7 @@ UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vect
 	_function(ProblemInfo::getInstance().getSymbolData(symbol_id))
 {}
 
+
 TypeIdx UserDefinedStaticTerm::getType() const {
 	return _function.getCodomainType();
 }
@@ -173,6 +186,7 @@ std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	return info.getTypeBounds(getType());
 }
+
 
 ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
@@ -183,6 +197,23 @@ ObjectIdx UserDefinedStaticTerm::interpret(const State& state, const Binding& bi
 	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
 	return _function.getFunction()(_interpreted_subterms);
 }
+
+
+AxiomaticTerm::AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
+	: StaticHeadedNestedTerm(symbol_id, subterms)
+{}
+
+std::pair<int, int> AxiomaticTerm::getBounds() const {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	return info.getTypeBounds(getType());
+}
+
+ObjectIdx AxiomaticTerm::interpret(const State& state, const Binding& binding) const {
+	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
+	return compute(state, _interpreted_subterms);
+}
+
+
 
 ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	return assignment.at(interpretVariable(assignment, binding));

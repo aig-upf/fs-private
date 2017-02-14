@@ -15,7 +15,6 @@
 	"helpful_actions": "true",
 	"early_termination": "true",
 	"element_constraint": "false",
-	"validate": "true",
 
 	"width": {
 		"max": 2,
@@ -25,7 +24,7 @@
 		"use_actions": "false"
 	},
 
-	"successor_generation" : "functional_aware",
+	"successor_generation" : "naive",
 
 	"use_state_constraints_in_heuristic_goal_evaluation": "true"
 }

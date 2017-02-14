@@ -12,7 +12,9 @@ namespace fs0 {
 
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
-ProblemInfo::ProblemInfo(const rapidjson::Document& data) {
+ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
+	_data_dir(data_dir)
+{
 	
 	LPT_INFO("main", "Loading Type index...");
 	loadTypeIndex(data["types"]); // Order matters
@@ -133,7 +135,7 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 		}
 		
 		bool is_static = data[i][6].GetBool();
-		functionData.push_back(SymbolData(type, domain, codomain, variables, is_static));
+		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static));
 	}
 }
 

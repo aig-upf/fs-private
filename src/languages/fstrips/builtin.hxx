@@ -64,16 +64,6 @@ public:
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 };
 
-class ExternallyDefinedFormula : public AtomicFormula {
-public:
-	ExternallyDefinedFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
-	
-	virtual std::string name() const = 0;
-	
-	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
-};
-
 class AlldiffFormula : public ExternallyDefinedFormula {
 public:
 	AlldiffFormula(const std::vector<const Term*>& subterms) : ExternallyDefinedFormula(subterms) {}

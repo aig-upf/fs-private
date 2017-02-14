@@ -6,90 +6,17 @@
 #include <aptk2/tools/logging.hxx>
 #include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
 #include <lapkt/algorithms/generic_search.hxx>
-#include <search/drivers/bfws/iw_novelty_evaluator.hxx>
-#include <problem_info.hxx>
+#include <search/novelty/fs_novelty.hxx>
+#include <search/drivers/sbfws/relevant_atomset.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/relevant_atomset.hxx>
-#include <utils/atom_index.hxx>
 #include <state.hxx>
-#include <lapkt/novelty/features.hxx>
+// #include <lapkt/novelty/features.hxx>
 #include <lapkt/components/open_lists.hxx>
 // #include <boost/pool/pool_alloc.hpp>
 
 
 namespace fs0 { namespace bfws {
-
-//! A RelevantAtomSet contains information about which of the atoms of a problem are relevant for a certain
-//! goal, and, among those, which have already been reached and which others have not.
-class RelevantAtomSet {
-public:
-	enum class STATUS : unsigned char {IRRELEVANT, UNREACHED, REACHED};
-
-	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
-	RelevantAtomSet(const AtomIndex* atomidx) :
-		_atomidx(atomidx), _num_reached(0), _num_unreached(0), _status(atomidx ? atomidx->size() : 0, STATUS::IRRELEVANT)
-	{}
-
-	~RelevantAtomSet() = default;
-	RelevantAtomSet(const RelevantAtomSet&) = default;
-	RelevantAtomSet(RelevantAtomSet&&) = default;
-	RelevantAtomSet& operator=(const RelevantAtomSet&) = default;
-	RelevantAtomSet& operator=(RelevantAtomSet&&) = default;
-
-	//! Marks all the atoms in the state with the given 'status'.
-	//! If 'mark_negative_propositions' is false, predicative atoms of the form X=false are ignored
-	//! If 'only_if_relevant' is true, only those atoms that were not deemed _irrelevant_ (i.e. their status was either reached or unreached)
-	//! are marked
-	void mark(const State& state, const State* parent, STATUS status, bool mark_negative_propositions, bool only_if_relevant) {
-		assert(_atomidx);
-		const ProblemInfo& info = ProblemInfo::getInstance();
-		for (VariableIdx var = 0; var < state.numAtoms(); ++var) {
-			ObjectIdx val = state.getValue(var);
-			if (!mark_negative_propositions && info.isPredicativeVariable(var) && val==0) continue; // We don't want to mark negative propositions
-			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
-			mark(_atomidx->to_index(var, val), status, only_if_relevant);
-		}
-	}
-
-	//! Marks the atom with given index with the given status.
-	//! If 'only_if_relevant' is true, then only marks the atom if it was previously
-	//! marked as relevant (i.e. its status was _not_ STATUS::IRRELEVANT).
-	void mark(AtomIdx idx, STATUS status, bool only_if_relevant) {
-		assert(status==STATUS::REACHED || status==STATUS::UNREACHED);
-		auto& st = _status[idx];
-		if (only_if_relevant && (st == STATUS::IRRELEVANT)) return;
-
-		if (st != status) {
-			if (status==STATUS::REACHED) ++_num_reached;
-			else if (status==STATUS::UNREACHED) ++_num_unreached;
-			
-			if (st==STATUS::REACHED) --_num_reached; // The old status was reached, and will not be anymore, so we decrease the counter.
-			else if (st==STATUS::UNREACHED) --_num_unreached;
-			
-			st = status;
-		}
-	}
-
-	unsigned num_reached() const { return _num_reached; }
-	unsigned num_unreached() const { return _num_unreached; }
-	
-	bool valid() const { return _atomidx != nullptr; }
-
-	friend class print::relevant_atomset;
-
-protected:
-	//! A reference to the global atom index
-	const AtomIndex* _atomidx;
-
-	//! The total number of reached / unreached atoms
-	unsigned _num_reached;
-	unsigned _num_unreached;
-
-	//! The status of each atom (indexed by its atom index)
-	std::vector<STATUS> _status;
-};
-
-
 
 template <typename StateT, typename ActionType>
 class IWRunNode {
@@ -100,9 +27,6 @@ public:
 	//! The state in this node
 	StateT state;
 
-	//! The (cached) feature valuation that corresponds to the state in this node.
-	lapkt::novelty::FeatureValuation feature_valuation;
-
 	//! The action that led to this node
 	typename ActionT::IdType action;
 
@@ -111,6 +35,8 @@ public:
 	
 	//! Accummulated cost
 	unsigned g;
+	
+	bool satisfies_subgoal; // Whether the node satisfies some subgoal
 
 
 	IWRunNode() = default;
@@ -126,14 +52,12 @@ public:
 	//! Constructor with move of the state (cheaper)
 	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT _parent, unsigned long gen_order = 0) :
 		state(std::move(_state)),
-		feature_valuation(0),
+//		feature_valuation(0),
 		action(_action),
 		parent(_parent),
 		g(parent ? parent->g+1 : 0)
 	{}
 
-	//! The novelty type (for the IWRun node, will always be 0)
-	unsigned type() const { return 0; }
 
 	bool has_parent() const { return parent != nullptr; }
 
@@ -143,7 +67,7 @@ public:
 		os << "{@ = " << this;
 		os << ", s = " << state ;
 		os << ", g=" << g ;
-		os << ", features= " << fs0::print::container(feature_valuation);
+// 		os << ", features= " << fs0::print::container(feature_valuation);
 		os << ", parent = " << parent << "}";
 		return os;
 	}
@@ -156,28 +80,36 @@ public:
 
 //! This is the acceptor for an open list with width-based node pruning
 //! - a node is pruned iff its novelty is higher than a given threshold.
-template <typename NodeT>
+template <typename NodeT, typename FeatureSetT, typename NoveltyEvaluatorT>
 class IWRunAcceptor : public lapkt::QueueAcceptorI<NodeT> {
 protected:
 	//! The set of features used to compute the novelty
-	const lapkt::novelty::FeatureSet<State>& _features;
+	const FeatureSetT& _features;
 
 	//! A single novelty evaluator will be in charge of evaluating all nodes
-	IWNoveltyEvaluator _novelty_evaluator;
+	NoveltyEvaluatorT* _evaluator;
 
 public:
-	IWRunAcceptor(const lapkt::novelty::FeatureSet<State>& features, const IWNoveltyEvaluator& novelty_evaluator) :
+	IWRunAcceptor(const FeatureSetT& features, NoveltyEvaluatorT* evaluator) :
 		_features(features),
-		_novelty_evaluator(novelty_evaluator) // Copy the evaluator
+		_evaluator(evaluator)
 	{}
 
-	~IWRunAcceptor() = default;
+	~IWRunAcceptor() {
+		delete _evaluator;
+	}
 
 	//! Returns false iff we want to prune this node during the search
 	bool accept(NodeT& node) {
-		assert(node.feature_valuation.empty()); // We should not be computing the feature valuation twice!
-		node.feature_valuation = _features.evaluate(node.state);
-		unsigned novelty = _novelty_evaluator.evaluate(node);
+		unsigned novelty = 0;
+		
+		if (node.parent) {
+			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
+			novelty = _evaluator->evaluate(_features.evaluate(node.state), _features.evaluate(node.parent->state));
+		} else {
+			novelty = _evaluator->evaluate(_features.evaluate(node.state));
+		}
+		
 		return novelty < std::numeric_limits<unsigned>::max();
 	}
 };
@@ -203,6 +135,7 @@ public:
 	using StateT = typename StateModel::StateT;
 	using PlanT = typename Base::PlanT;
 	using NodePT = typename Base::NodePT;
+	
 
 	using NodeOpenEvent = typename Base::NodeOpenEvent;
 	using NodeExpansionEvent = typename Base::NodeExpansionEvent;
@@ -210,9 +143,11 @@ public:
 
 
 	//! Factory method
-	static IWRun* build(const StateModel& model, const lapkt::novelty::FeatureSet<State>& featureset, const IWNoveltyEvaluator& novelty_evaluator, bool mark_negative_propositions) {
-		auto acceptor = new IWRunAcceptor<NodeT>(featureset, novelty_evaluator);
-		return new IWRun(model, OpenListT(acceptor), false, mark_negative_propositions);
+	template <typename FeatureSetT, typename NoveltyEvaluatorT>
+	static IWRun* build(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, bool complete, bool mark_negative_propositions) {
+		using AcceptorT = IWRunAcceptor<NodeT, FeatureSetT, NoveltyEvaluatorT>;
+		auto acceptor = new AcceptorT(featureset, evaluator);
+		return new IWRun(model, OpenListT(acceptor), complete, mark_negative_propositions);
 	}
 
 	//! The constructor requires the user of the algorithm to inject both
@@ -221,8 +156,9 @@ public:
 	IWRun(const StateModel& model, OpenListT&& open, bool complete, bool mark_negative_propositions) :
 		Base(model, std::move(open), ClosedListT()),
 		_complete(complete),
-		_reached(model.num_subgoals(), nullptr),
+		_all_paths(model.num_subgoals()),
 		_unreached(),
+		_in_seed(model.num_subgoals(), false),
 		_mark_negative_propositions(mark_negative_propositions),
 		_visited()
 	{
@@ -243,11 +179,14 @@ public:
 	}
 
 	void run(const StateT& seed) {
+		mark_seed_subgoals(seed);
+		
 		NodePT n = std::make_shared<NodeT>(seed);
 		//NodePT n = std::allocate_shared<NodeT>(_allocator, seed);
 		this->notify(NodeCreationEvent(*n));
 		
 		if (process_node(n)) return;
+		
 		this->_open.insert(n);
 
 		while (!this->_open.empty()) {
@@ -280,14 +219,16 @@ public:
 protected:
 
 	//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
-	//! NOTE - as of yet, this is unused
 	bool _complete;
 
-	//! _reached[i] contains the first node that reaches goal atom 'i'.
-	std::vector<NodePT> _reached;
+	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
+	std::vector<std::vector<NodePT>> _all_paths;
 
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
 	std::unordered_set<unsigned> _unreached;
+	
+	//! Contains the indexes of all those goal atoms that were already reached in the seed state
+	std::vector<bool> _in_seed;
 
 	bool _mark_negative_propositions;
 
@@ -299,7 +240,9 @@ protected:
 
 
 	//! Returns true iff all goal atoms have been reached in the IW search
-	bool process_node(const NodePT& node) {
+	bool process_node(NodePT& node) {
+		if (_complete) return process_node_complete(node);
+		
 		const StateT& state = node->state;
 
 		// We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
@@ -308,7 +251,8 @@ protected:
 			unsigned subgoal_idx = *it;
 
 			if (this->_model.goal(state, subgoal_idx)) {
-				_reached[subgoal_idx] = node;
+				node->satisfies_subgoal = true;
+				_all_paths[subgoal_idx].push_back(node);
 				it = _unreached.erase(it);
 			} else {
 				++it;
@@ -317,6 +261,29 @@ protected:
 		// As soon as all nodes have been processed, we return true so that we can stop the search
 		return _unreached.empty();
 	}
+	
+	//! Returns true iff all goal atoms have been reached in the IW search
+	bool process_node_complete(NodePT& node) {
+		const StateT& state = node->state;
+
+		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
+			if (!_in_seed[i] && this->_model.goal(state, i)) {
+				node->satisfies_subgoal = true;
+				_all_paths[i].push_back(node);
+			}
+		}
+		return false;
+	}
+	
+	bool mark_seed_subgoals(const StateT& seed) {
+		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
+			if (this->_model.goal(seed, i)) {
+				_unreached.erase(i);
+				_in_seed[i] = true;
+			}
+		}
+		return false;
+	}	
 
 public:
 	//! Retrieve the set of atoms which are relevant to reach at least one of the subgoals
@@ -326,41 +293,44 @@ public:
 		const AtomIndex& atomidx = this->_model.getTask().get_tuple_index();
 		RelevantAtomSet atomset(&atomidx);
 
-		LPT_EDEBUG("simulation-relevant", "Computing set of relevant atoms from state: " << std::endl << seed << std::endl);
-
 		// atomset.mark(seed, RelevantAtomSet::STATUS::UNREACHED); // This is not necessary, since all these atoms will be made true by the "root" state of the simulation
 
 		_visited.clear();
 
 		// Iterate through all the subgoals that have been reached, and rebuild the path from the seed state to reach them
 		// adding all atoms encountered in the path to the RelevantAtomSet as "relevant but unreached"
-		for (unsigned subgoal_idx = 0; subgoal_idx < _reached.size(); ++subgoal_idx) {
-			NodePT node = _reached[subgoal_idx];
-			if (!node) { // No solution for the subgoal was found
-				LPT_EDEBUG("simulation-relevant", "Goal atom #" << subgoal_idx << " unreachable");
-				continue;
-			}
-			++reachable;
-
-			// Traverse from the solution node to the root node, adding all atoms on the way
-			// if (node->has_parent()) node = node->parent; // (Don't) skip the last node
-			while (node->has_parent()) {
-				// If the node has already been processed, no need to do it again, nor to process the parents,
-				// which will necessarily also have been processed.
-				if (_visited.find(node) != _visited.end()) break;
-				
-				// Mark all the atoms in the state as "yet to be reached"
-				atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
-				_visited.insert(node);
-				node = node->parent;
+		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
+			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
+			
+			if (_in_seed[subgoal_idx] || !paths.empty()) {
+				++reachable;
 			}
 			
-			_visited.insert(node); // Insert the root anyway to mark it as a relevant node
+			for (const NodePT& node:paths) {
+				process_path_node(node, atomset);
+			}
 		}
-		LPT_EDEBUG("simulation-relevant", atomset.num_unreached() << " relevant atoms (" << reachable << "/" << _reached.size() << " reachable subgoals): " << print::relevant_atomset(atomset) << std::endl << std::endl);
 
 		return atomset;
 	}
+	
+	void process_path_node(NodePT node, RelevantAtomSet& atomset) {
+		// Traverse from the solution node to the root node, adding all atoms on the way
+		// if (node->has_parent()) node = node->parent; // (Don't) skip the last node
+		while (node->has_parent()) {
+			// If the node has already been processed, no need to do it again, nor to process the parents,
+			// which will necessarily also have been processed.
+			if (_visited.find(node) != _visited.end()) break;
+			
+			// Mark all the atoms in the state as "yet to be reached"
+			atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _mark_negative_propositions, false);
+			_visited.insert(node);
+			node = node->parent;
+		}
+		
+		_visited.insert(node); // Insert the root anyway to mark it as a relevant node
+	}
+	
 	
 	const std::unordered_set<NodePT>& get_relevant_nodes() const { return _visited; }
 };

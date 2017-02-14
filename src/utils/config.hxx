@@ -120,7 +120,7 @@ public:
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
 
-	bool validate() const { return getOption("validate"); }
+	bool validate() const { return getOption("validate", false); }
 
 	//! A generic getter
 	template <typename T>

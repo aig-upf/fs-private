@@ -2,6 +2,7 @@
     Some basic utility methods.
 """
 import os
+import errno
 import sys
 import unicodedata
 import re
@@ -32,6 +33,14 @@ def mkdirp(directory):
     """" mkdir -p -like functionality """
     if not os.path.isdir(directory):
         os.makedirs(directory)
+
+
+def silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError as e:
+        if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
+            raise  # re-raise exception if a different error occured
 
 
 def load_file(filename):
@@ -129,6 +138,7 @@ class IndexDictionary(object):
     """
     def __init__(self, elements=None):
         self.data = OrderedDict()
+        self.objects = []
         elements = [] if elements is None else elements
         for element in elements:
             self.add(element)
@@ -136,10 +146,14 @@ class IndexDictionary(object):
     def get_index(self, key):
         return self.data[key]
 
+    def get_object(self, index):
+        return self.objects[index]
+
     def add(self, obj):
         if obj in self.data:
             raise RuntimeError("Duplicate element '{}'".format(obj))
         self.data[obj] = len(self.data)
+        self.objects.append(obj)
 
     def dump(self):
         return [str(o) for o in self.data.keys()]

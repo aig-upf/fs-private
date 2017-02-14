@@ -29,10 +29,6 @@ std::ostream& ConditionSetFeature::print(std::ostream& os) const {
 	return os << "UNIMPLEMENTED";
 }
 
-ArbitraryTermFeature::ArbitraryTermFeature(const fs::Term* term) 
-	: _term(term)
-{}
-
 ArbitraryTermFeature::~ArbitraryTermFeature() {
 	delete _term;
 }
@@ -49,5 +45,24 @@ ArbitraryTermFeature::evaluate(const State& s) const {
 std::ostream& ArbitraryTermFeature::print(std::ostream& os) const {
 	return os << *_term;
 }
+
+
+ArbitraryFormulaFeature::~ArbitraryFormulaFeature() {
+	delete _formula;
+}
+
+ArbitraryFormulaFeature::ArbitraryFormulaFeature(const ArbitraryFormulaFeature& other)
+	: _formula(other._formula->clone())
+{}
+
+FSFeatureValueT
+ArbitraryFormulaFeature::evaluate(const State& s) const {
+	return _formula->interpret(s);
+}
+
+std::ostream& ArbitraryFormulaFeature::print(std::ostream& os) const {
+	return os << *_formula;
+}
+
 
 }
