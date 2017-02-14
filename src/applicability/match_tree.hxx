@@ -25,30 +25,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fs_types.hxx>
 #include <applicability/action_managers.hxx>
+#include <boost/concept_check.hpp>
+
+
+namespace fs0 {	class ProblemInfo; class MatchTreeActionManager;}
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
 
 
 namespace fs0 {
-	class ProblemInfo;
-    class MatchTreeActionManager;
 
-    class NodeCreationContext {
-    public:
-        NodeCreationContext(    std::vector<ActionIdx>& actions,
-                                const AtomIndex& tuple_index,
-                                const std::vector<std::vector<ActionIdx>>& app_index,
-                                const std::vector<std::vector<AtomIdx>>& rev_app_index);
 
-        std::vector<ActionIdx>&                     _actions;
-        const AtomIndex&                            _tuple_index;
-        const std::vector<std::vector<ActionIdx>>&  _app_index;
-        const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
+class NodeCreationContext {
+public:
+	NodeCreationContext(std::vector<ActionIdx>& actions,
+						const AtomIndex& tuple_index,
+						const std::vector<unsigned>& sorted_atoms,
+						const std::vector<std::vector<AtomIdx>>& rev_app_index,
+						std::vector<bool>& seen) : 
+						_actions( actions ), _tuple_index( tuple_index ), _sorted_atoms(sorted_atoms), _rev_app_index(rev_app_index), _seen(seen) {}
 
-		//! _seen[i] is true iff  the tuple with index i has already been "seen"
-		std::vector<bool>                           _seen;
-    };
+	NodeCreationContext(const NodeCreationContext& other, std::vector<ActionIdx>& actions) : 
+		_actions(actions), _tuple_index(other._tuple_index), _sorted_atoms(other._sorted_atoms), _rev_app_index(other._rev_app_index), _seen(other._seen)
+	{}
+						
+	std::vector<ActionIdx>&                     _actions;
+	const AtomIndex&                            _tuple_index;
+	const std::vector<unsigned>&                _sorted_atoms;
+	const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
+
+	//! _seen[i] is true iff  the tuple with index i has already been "seen"
+	std::vector<bool>&                           _seen;
+};
 
     class BaseNode {
     public:
@@ -92,7 +101,7 @@ namespace fs0 {
     class LeafNode : public BaseNode {
     	std::vector<ActionIdx> _applicable_items;
     public:
-    	LeafNode( std::vector<ActionIdx>& actions );
+    	LeafNode(std::vector<ActionIdx>& actions) : _applicable_items() { _applicable_items.swap(actions); }
     	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) override;
     	virtual int count() const { return _applicable_items.size(); }
         virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
@@ -139,6 +148,10 @@ namespace fs0 {
 
 	protected:
 		std::vector<ActionIdx> compute_whitelist(const State& state) const override;
+		
+		//! Returns all the atoms indexes sorted in descending order of appeareance count in action preconditions
+		//! (i.e. the one that appears most goes first), breaking ties lexicographically
+		std::vector<unsigned> sort_atom_idxs(const std::vector<std::vector<ActionIdx>>& applicability_idx) const;
     };
 
 }
