@@ -9,6 +9,8 @@
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <utils/system.hxx>
+#include <utils/printers/vector.hxx>
+#include <problem.hxx>
 
 namespace fs0 {
 
@@ -26,6 +28,9 @@ namespace fs0 {
     			all_done = false;
     		}
     	}
+    	
+// 		if (_immediate_items.size() > 0) throw std::runtime_error("YES");
+
     	
     	if (all_done) return new LeafNode(std::move(actions));
 		else return new SwitchNode(actions, context);
@@ -95,7 +100,6 @@ namespace fs0 {
 		for (ActionIdx action:actions) {
 			const std::unordered_set<AtomIdx>& required = context._rev_app_index[action];
 			
-			
             if (action_done(action, context)) {
                 _immediate_items.push_back(action);
             
@@ -106,8 +110,20 @@ namespace fs0 {
 				default_items.push_back(action);
 			}
         }
-
-
+        
+        auto printer = [](const unsigned& action, std::ostream& os) { 
+			os << *(Problem::getInstance().getGroundActions()[action]);
+		};
+        
+		LPT_INFO("cout", "Creating a switch node on pivot: " << context._tuple_index.to_atom(_pivot) << " with a set of " << actions.size() << " actions");
+		LPT_INFO("cout", "Actions which are done: " << print::container(_immediate_items, printer));
+		LPT_INFO("cout", "Actions which are relevant(" << value_items[0].size() << "): " << print::container(value_items[0], printer));
+// 		LPT_INFO("cout", "(Index of) Actions which are irrelevant: " << print::container(default_items));
+		LPT_INFO("cout", "(Number of) Actions which are irrelevant: " << default_items.size());
+		
+// 		if (_immediate_items.size() > 0) throw std::runtime_error("YES");
+		
+        
         context._seen[_pivot] = true;
 
         _children.push_back(create_tree(std::move(value_items[0]), context)); // Create the switch generators
@@ -236,10 +252,14 @@ namespace fs0 {
     
     std::vector<unsigned> MatchTreeActionManager::sort_atom_idxs(const std::vector<std::vector<ActionIdx>>& applicability_idx) const {
 		
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		
 		// This will contain pairs (x,y), where 'x' is the number of times that atom with index 'y'
 		// appears on some action precondition
 		 std::vector<std::pair<int, unsigned>> atom_count(_tuple_idx.size());
 		for (unsigned i = 0; i < _tuple_idx.size(); ++i) {
+			const Atom& atom = _tuple_idx.to_atom(i);
+// 			if (info.isPredicativeVariable(atom.getVariable()) && atom.getValue() == 0) continue;
 			atom_count[i] = std::make_pair(applicability_idx[i].size(), i);
 		}
 
