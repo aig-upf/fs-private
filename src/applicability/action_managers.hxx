@@ -51,6 +51,8 @@ public:
 	const std::vector<std::vector<ActionIdx>>& getApplicable() const { return _applicable; }
 	
 	const std::vector<std::unordered_set<AtomIdx>>& getRevApplicable() const { return _rev_applicable; }
+	
+	const std::vector<unsigned>& getVariableRelevance() const { return _variable_relevance; }
 
 	unsigned total_actions() const { return _total_actions; }
 
@@ -68,6 +70,9 @@ protected:
 	
 	//! A map from each action index to the set of atoms that appear on its precondition
 	std::vector<std::unordered_set<AtomIdx>> _rev_applicable;
+	
+	//! '_variable_relevance[i]' is the number of times that state variable 'i' appears on a (distinct) action precondition
+	std::vector<unsigned> _variable_relevance;
 
 	unsigned _total_actions;
 };

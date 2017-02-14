@@ -40,18 +40,18 @@ namespace fs0 {
 class NodeCreationContext {
 public:
 	NodeCreationContext(const AtomIndex& tuple_index,
-						const std::vector<unsigned>& sorted_atoms,
+						const std::vector<VariableIdx>& sorted_vars,
 						const std::vector<std::unordered_set<AtomIdx>>& rev_app_index,
 						std::vector<bool>& seen) : 
-						_tuple_index( tuple_index ), _sorted_atoms(sorted_atoms), _rev_app_index(rev_app_index), _seen(seen) {}
+						_tuple_index( tuple_index ), _sorted_variables(sorted_vars), _rev_app_index(rev_app_index), _seen(seen) {}
 
 	NodeCreationContext(const NodeCreationContext&) = default;
 						
 	const AtomIndex&                            _tuple_index;
-	const std::vector<unsigned>&                _sorted_atoms;
+	const std::vector<VariableIdx>&             _sorted_variables;
 	const std::vector<std::unordered_set<AtomIdx>>&    _rev_app_index;
 
-	//! _seen[i] is true iff  the tuple with index i has already been "seen"
+	//! _seen[i] is true iff variable with index 'i' has been processed
 	std::vector<bool>&                           _seen;
 };
 
@@ -69,8 +69,8 @@ public:
     	static BaseNode::ptr
         create_tree(std::vector<ActionIdx>&& actions, NodeCreationContext& context);
 
-    	static AtomIdx
-        get_best_atom( const NodeCreationContext& context );
+    	static VariableIdx
+        get_best_variable( const NodeCreationContext& context );
 
     	static bool
         action_done( unsigned i, const NodeCreationContext& context );
@@ -78,7 +78,7 @@ public:
 
 
     class SwitchNode : public BaseNode {
-    	AtomIdx _pivot;
+    	VariableIdx _pivot;
     	std::vector<int>           _immediate_items;
     	std::vector<BaseNode *>    _children;
     	BaseNode *                 _default_child;
@@ -154,7 +154,7 @@ public:
 		
 		//! Returns all the atoms indexes sorted in descending order of appeareance count in action preconditions
 		//! (i.e. the one that appears most goes first), breaking ties lexicographically
-		std::vector<unsigned> sort_atom_idxs(const std::vector<std::vector<ActionIdx>>& applicability_idx) const;
+		std::vector<VariableIdx> sort_variables(const std::vector<unsigned>& variable_relevance) const;
     };
 
 }
