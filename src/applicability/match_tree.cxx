@@ -36,13 +36,13 @@ namespace fs0 {
 		else return new SwitchNode(actions, context);
     }
 
-    AtomIdx
-    BaseNode::get_best_atom( const NodeCreationContext& context ) {
+    VariableIdx
+    BaseNode::get_best_variable( const NodeCreationContext& context ) {
 
 		// Return the most-frequent atom that has not yet been seen
-		for (AtomIdx atom:context._sorted_atoms) {
-			if (!context._seen[atom]) {
-				return atom;
+		for (VariableIdx var:context._sorted_variables) {
+			if (!context._seen[var]) {
+				return var;
 			}
 		}
 		
@@ -51,8 +51,10 @@ namespace fs0 {
 
     bool
     BaseNode::action_done( unsigned i, const NodeCreationContext& context ) {
-		for (const AtomIdx atom:context._rev_app_index[i]) {
-			if (!context._seen[atom]) return false;
+		const AtomIndex& index = context._tuple_index;
+		for (const AtomIdx atom_idx:context._rev_app_index[i]) {
+			const Atom& atom = index.to_atom(atom_idx);
+			if (!context._seen[atom.getVariable()]) return false;
 		}
     	return true;
     }
@@ -77,58 +79,74 @@ namespace fs0 {
         // SAS+, where the only atoms that occur on preconditions are of the form
         // X=v.
 
-        Atom pivot_atom = tuple_index.to_atom( _pivot );
-        if (s.contains(pivot_atom))
-            _children[0]->generate_applicable_items( s, tuple_index, actions );
-
+		ObjectIdx val = s.getValue(_pivot);
+		if (val < 0 || val > 1) throw std::runtime_error("Not yet prepared for this");
+		_children[val]->generate_applicable_items(s, tuple_index, actions);
+		
         _default_child->generate_applicable_items( s, tuple_index, actions );
     }
 
     SwitchNode::SwitchNode(const std::vector<ActionIdx>& actions,  NodeCreationContext& context) {
-        _pivot = get_best_atom(context);
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		_pivot = get_best_variable(context);
+		const std::vector<ObjectIdx>& values = info.getTypeObjects(info.getVariableType(_pivot));
 
-        // MRJ: default_items contains the "false" branches
-        std::vector<ActionIdx> default_items;
+		// MRJ: default_items contains the "false" branches
+		std::vector<ActionIdx> default_items;
 
-        // MRJ: Atoms can be either false or true, so actions
-        // either feature or not those atoms
-		std::vector<std::vector<ActionIdx>> value_items;
-		value_items.push_back( std::vector<ActionIdx>() );
+		// MRJ: Atoms can be either false or true, so actions
+		// either feature or not those atoms
+		if (values.size() != 2) throw std::runtime_error("Not yet prepared for this");
+		std::vector<std::vector<ActionIdx>> value_items(values.size());
 
 
-        // Sort out the regression items
+		// Sort out the regression items
 		for (ActionIdx action:actions) {
 			const std::unordered_set<AtomIdx>& required = context._rev_app_index[action];
 			
-            if (action_done(action, context)) {
-                _immediate_items.push_back(action);
-            
-			} else if (required.find(_pivot) != required.end()) {
-				value_items[0].push_back(action);
+			if (action_done(action, context)) {
+				_immediate_items.push_back(action);
 			
 			} else {
-				default_items.push_back(action);
+				
+				bool is_relevant = false;
+				for (unsigned val_idx = 0; val_idx < values.size(); ++val_idx) {
+					ObjectIdx value = values[val_idx];
+					if (value != val_idx || value < 0 || value > 1) throw std::runtime_error("Not yet prepared for this");
+					AtomIdx atom = context._tuple_index.to_index(_pivot, value);
+					if (required.find(atom) != required.end()) {
+						is_relevant = true;
+						value_items[val_idx].push_back(action);
+					}
+				}
+				
+				if (!is_relevant) {
+					default_items.push_back(action);
+				}
 			}
-        }
-        
-        auto printer = [](const unsigned& action, std::ostream& os) { 
-			os << *(Problem::getInstance().getGroundActions()[action]);
-		};
-        
-		LPT_INFO("cout", "Creating a switch node on pivot: " << context._tuple_index.to_atom(_pivot) << " with a set of " << actions.size() << " actions");
-		LPT_INFO("cout", "Actions which are done: " << print::container(_immediate_items, printer));
-		LPT_INFO("cout", "Actions which are relevant(" << value_items[0].size() << "): " << print::container(value_items[0], printer));
-// 		LPT_INFO("cout", "(Index of) Actions which are irrelevant: " << print::container(default_items));
-		LPT_INFO("cout", "(Number of) Actions which are irrelevant: " << default_items.size());
-		
-// 		if (_immediate_items.size() > 0) throw std::runtime_error("YES");
-		
-        
-        context._seen[_pivot] = true;
+		}
 
-        _children.push_back(create_tree(std::move(value_items[0]), context)); // Create the switch generators
-        _default_child = create_tree(std::move(default_items), context); // Create the default generator
-		
+		auto printer = [](const unsigned& action, std::ostream& os) { 
+			os << *(Problem::getInstance().getGroundActions()[action]) << "(" << action << ")";
+		};
+
+		// 		LPT_INFO("cout", "Creating a switch node on pivot: " << context._tuple_index.to_atom(_pivot) << " with a set of " << actions.size() << " actions");
+		// 		LPT_INFO("cout", "Actions which are done: " << print::container(_immediate_items, printer));
+		// 		LPT_INFO("cout", "Actions which are relevant(" << value_items[0].size() << "): " << print::container(value_items[0], printer));
+		// 		LPT_INFO("cout", "(Index of) Actions which are irrelevant: " << print::container(default_items));
+		// 		LPT_INFO("cout", "(Number of) Actions which are irrelevant: " << default_items.size());
+		// 		if (_immediate_items.size() > 0) throw std::runtime_error("YES");
+
+
+		context._seen[_pivot] = true;
+
+		// Create the switch generators
+		for (unsigned i = 0; i < value_items.size(); i++) {
+			_children.push_back(create_tree(std::move(value_items[i]), context));
+		}
+
+		_default_child = create_tree(std::move(default_items), context); // Create the default generator
+
 		context._seen[_pivot] = false;
     }
 
@@ -222,10 +240,10 @@ namespace fs0 {
         std::iota( all_actions.begin(), all_actions.end(), 0);
 		
 		
-		std::vector<bool> seen(_tuple_idx.size(), false);
-		std::vector<unsigned> sorted_atoms = sort_atom_idxs(analyzer.getApplicable());
+		std::vector<bool> seen(info.getNumVariables(), false);
+		std::vector<VariableIdx> sorted_vars = sort_variables(analyzer.getVariableRelevance());
 		
-        NodeCreationContext helper(_tuple_idx, sorted_atoms, analyzer.getRevApplicable(), seen);
+        NodeCreationContext helper(_tuple_idx, sorted_vars, analyzer.getRevApplicable(), seen);
 		
 		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		_tree = new SwitchNode(all_actions, helper);
@@ -250,30 +268,28 @@ namespace fs0 {
     }
     
     
-    std::vector<unsigned> MatchTreeActionManager::sort_atom_idxs(const std::vector<std::vector<ActionIdx>>& applicability_idx) const {
-		
+    std::vector<VariableIdx> MatchTreeActionManager::sort_variables(const std::vector<unsigned>& variable_relevance) const {
 		const ProblemInfo& info = ProblemInfo::getInstance();
-		
-		// This will contain pairs (x,y), where 'x' is the number of times that atom with index 'y'
-		// appears on some action precondition
-		 std::vector<std::pair<int, unsigned>> atom_count(_tuple_idx.size());
-		for (unsigned i = 0; i < _tuple_idx.size(); ++i) {
-			const Atom& atom = _tuple_idx.to_atom(i);
-// 			if (info.isPredicativeVariable(atom.getVariable()) && atom.getValue() == 0) continue;
-			atom_count[i] = std::make_pair(applicability_idx[i].size(), i);
+
+				
+		// This will contain pairs (x,y), where 'x' is the number of times that variable with index 'y'
+		// appears on some (distinct) action precondition
+		 std::vector<std::pair<unsigned, VariableIdx>> count;
+		for (unsigned var = 0; var < info.getNumVariables(); ++var) {
+			count.push_back(std::make_pair(variable_relevance[var], var));
 		}
 
-		// This will sort by count, breaking ties lexicographically by atom index.
-		std::sort(atom_count.begin(), atom_count.end());
+		// This will sort by count, breaking ties lexicographically by variable index.
+		std::sort(count.begin(), count.end());
 		
-		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << atom_count.size() );
+		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << count.size() );
 		LPT_INFO("cout", "(B2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 			
-		std::vector<unsigned> indexes_only;
-		indexes_only.reserve(atom_count.size());
+		std::vector<VariableIdx> indexes_only;
+		indexes_only.reserve(count.size());
 		
-		for (int i = atom_count.size()-1; i >= 0; --i) {
-			indexes_only.push_back(atom_count[i].second);
+		for (int i = count.size()-1; i >= 0; --i) {
+			indexes_only.push_back(count[i].second);
 		}
 		return indexes_only;
 	}
