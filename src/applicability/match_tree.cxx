@@ -45,11 +45,9 @@ namespace fs0 {
     }
 
     bool
-    BaseNode::action_done( unsigned i, const NodeCreationContext& context  ) {
-    	for (unsigned j = 0; j < context._rev_app_index[i].size(); ++j) {
-    		if (!context._seen[context._rev_app_index[i][j]]) {
-    			return false;
-			}
+    BaseNode::action_done( unsigned i, const NodeCreationContext& context ) {
+		for (const AtomIdx atom:context._rev_app_index[i]) {
+			if (!context._seen[atom]) return false;
 		}
     	return true;
     }
@@ -95,17 +93,18 @@ namespace fs0 {
 
         // Sort out the regression items
 		for (ActionIdx action:actions) {
+			const std::unordered_set<AtomIdx>& required = context._rev_app_index[action];
+			
+			
             if (action_done(action, context)) {
                 _immediate_items.push_back(action);
-                continue;
-            }
-            const std::vector<AtomIdx>& required = context._rev_app_index[action];
-			// std::cout << "std::find() on vector of size: " << required.size() << std::endl;
-            if ( std::find( required.begin(), required.end(), _pivot ) != required.end() )  {
-                value_items[0].push_back(action);
-                continue;
-            }
-            default_items.push_back(action);
+            
+			} else if (required.find(_pivot) != required.end()) {
+				value_items[0].push_back(action);
+			
+			} else {
+				default_items.push_back(action);
+			}
         }
 
 

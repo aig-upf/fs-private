@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <unordered_set>
+
 #include <fs_types.hxx>
 #include "base.hxx"
 
@@ -48,7 +50,7 @@ public:
 
 	const std::vector<std::vector<ActionIdx>>& getApplicable() const { return _applicable; }
 	
-	const std::vector<std::vector<AtomIdx>>& getRevApplicable() const { return _rev_applicable; }
+	const std::vector<std::unordered_set<AtomIdx>>& getRevApplicable() const { return _rev_applicable; }
 
 	unsigned total_actions() const { return _total_actions; }
 
@@ -65,7 +67,7 @@ protected:
 	std::vector<std::vector<ActionIdx>> _applicable;
 	
 	//! A map from each action index to the set of atoms that appear on its precondition
-	std::vector<std::vector<AtomIdx>> _rev_applicable;
+	std::vector<std::unordered_set<AtomIdx>> _rev_applicable;
 
 	unsigned _total_actions;
 };

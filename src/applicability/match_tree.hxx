@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <unordered_set>
 #include <fs_types.hxx>
 #include <applicability/action_managers.hxx>
-#include <boost/concept_check.hpp>
 
 
 namespace fs0 {	class ProblemInfo; class MatchTreeActionManager;}
@@ -41,7 +41,7 @@ class NodeCreationContext {
 public:
 	NodeCreationContext(const AtomIndex& tuple_index,
 						const std::vector<unsigned>& sorted_atoms,
-						const std::vector<std::vector<AtomIdx>>& rev_app_index,
+						const std::vector<std::unordered_set<AtomIdx>>& rev_app_index,
 						std::vector<bool>& seen) : 
 						_tuple_index( tuple_index ), _sorted_atoms(sorted_atoms), _rev_app_index(rev_app_index), _seen(seen) {}
 
@@ -49,7 +49,7 @@ public:
 						
 	const AtomIndex&                            _tuple_index;
 	const std::vector<unsigned>&                _sorted_atoms;
-	const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
+	const std::vector<std::unordered_set<AtomIdx>>&    _rev_app_index;
 
 	//! _seen[i] is true iff  the tuple with index i has already been "seen"
 	std::vector<bool>&                           _seen;
