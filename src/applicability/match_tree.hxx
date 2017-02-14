@@ -62,6 +62,8 @@ public:
     	virtual ~BaseNode() = default;
     	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const = 0;
     	virtual unsigned count() const = 0;
+		virtual unsigned count_nodes() const = 0;
+		virtual void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const = 0;
         virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const = 0;
 
     	static BaseNode::ptr
@@ -88,6 +90,9 @@ public:
     	void generate_applicable_items(const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const override;
 
     	unsigned count() const override;
+		unsigned count_nodes() const override;
+		void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const override;
+		
         void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
@@ -98,6 +103,8 @@ public:
     	LeafNode(std::vector<ActionIdx>&& actions) : _applicable_items(std::move(actions)) {}
     	void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const override;
     	unsigned count() const override { return _applicable_items.size(); }
+    	unsigned count_nodes() const override { return 1; }
+    	void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const override { ++leaf; }
         void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
@@ -106,6 +113,8 @@ public:
     public:
     	void generate_applicable_items( const State &, const AtomIndex& tuple_index, std::vector<ActionIdx>& ) const override {}
     	unsigned count() const override { return 0; }
+    	unsigned count_nodes() const override { return 1; }
+    	void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const override { ++empty; }
         void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
