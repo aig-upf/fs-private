@@ -47,6 +47,8 @@ public:
 	virtual void build();
 
 	const std::vector<std::vector<ActionIdx>>& getApplicable() const { return _applicable; }
+	
+	const std::vector<std::vector<AtomIdx>>& getRevApplicable() const { return _rev_applicable; }
 
 	unsigned total_actions() const { return _total_actions; }
 
@@ -61,6 +63,9 @@ protected:
 	//! A map from each atom index to the set of actions that might be applicable when
 	//! that atom is true in a certain state
 	std::vector<std::vector<ActionIdx>> _applicable;
+	
+	//! A map from each action index to the set of atoms that appear on its precondition
+	std::vector<std::vector<AtomIdx>> _rev_applicable;
 
 	unsigned _total_actions;
 };

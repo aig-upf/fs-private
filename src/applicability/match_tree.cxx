@@ -82,8 +82,6 @@ namespace fs0 {
     }
 
     SwitchNode::SwitchNode(const std::vector<ActionIdx>& actions,  NodeCreationContext& context) {
-		static unsigned __count = 0;
-		if (__count++ % 100000 == 0) std::cout << "SwitchNode::SwitchNode count " << __count << std::endl;
         _pivot = get_best_atom(context);
 
         // MRJ: default_items contains the "false" branches
@@ -128,6 +126,23 @@ namespace fs0 {
         total += _immediate_items.size();
         return total;
     }
+    
+    unsigned SwitchNode::count_nodes() const {
+        unsigned total = 1 + _default_child->count_nodes();
+		for (const auto child:_children) {
+            total += child->count_nodes();
+		}
+        return total;
+    }
+    
+	void SwitchNode::count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const {
+		++sw;
+		_default_child->count_nodes(sw, leaf, empty);
+		for (const auto child:_children) {
+			child->count_nodes(sw, leaf, empty);
+		}
+	}
+
 
     void EmptyNode::print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const {
     	stream << indent << "<empty>" << std::endl;
@@ -176,74 +191,13 @@ namespace fs0 {
 		
 		check_match_tree_can_be_used(info);
 		
-        LPT_INFO("cout", "[Match Tree]  MatchTreeActionManager::MatchTreeActionManager() starts...");
-        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
-
-
-		// MRJ: This code below builds the reverse applicability index, mapping action indices into sets of atoms making up their preconditions
-        std::vector<std::vector<AtomIdx>>    rev_app_index(actions.size());
-
-        for (unsigned i = 0; i < _actions.size(); ++i) {
-    		const GroundAction& action = *_actions[i];
-
-
-    		const fs::Conjunction* precondition = dynamic_cast<const fs::Conjunction*>(action.getPrecondition());
-    		if (!precondition) { // If the precondition is not a conjunction, we cannot say much, so we consider the action as always potentially applicable
-    			continue;
-    		}
-
-
-    		std::set<VariableIdx> referenced; // The state variables already made reference to by some precondition
-    		for (const fs::AtomicFormula* conjunct:precondition->getConjuncts()) {
-
-    			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
-    			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
-    			const fs::NEQAtomicFormula* neq = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
-    			unsigned nestedness = conjunct->nestedness();
-    			std::vector<VariableIdx> all_relevant = fs::ScopeUtils::computeDirectScope(conjunct);
-
-    			// This implements a very rudimentary test that indexes only preconditions of the form X = x or X != x,
-    			// furthermore assuming that there are no two preconditions making reference to the same state variable
-    			if (nestedness > 0 || all_relevant.size() != 1 || !(eq || neq)) continue;
-
-    			const fs::StateVariable* sv = dynamic_cast<const fs::StateVariable*>(rel->lhs());
-    			if (!sv) continue;
-
-    // 			std::cout << "Processing action #" << i << ": " << action << std::endl;
-    // 			std::cout << "Processing conjunct: " << *conjunct << std::endl;
-
-    			VariableIdx relevant = all_relevant[0];
-    			const std::vector<ObjectIdx>& values = info.getVariableObjects(relevant);
-
-    			if (!referenced.insert(relevant).second) {
-    				throw std::runtime_error("BasicApplicabilityAnalyzer requires that no two preconditions make reference to the same state variable");
-    			}
-
-    			if (eq) { // Prec is of the form X=x
-    				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
-    				AtomIdx tup = _tuple_idx.to_index(relevant, value);
-    				rev_app_index[i].push_back(tup);
-
-    			} else { // Prec is of the form X!=x
-    				assert(neq);
-    				ObjectIdx value = _extract_constant_val(neq->lhs(), neq->rhs());
-    				for (ObjectIdx v2:values) {
-    					if (v2 != value) {
-    						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
-    						rev_app_index[i].push_back(tup);
-    					}
-    				}
-    			}
-    		}
-        }
-        LPT_INFO( "cout", "[Match Tree]  Atom -> Action Index built...");
-        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
-
+		LPT_INFO("cout", "Mem. usage before applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
         BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build();
-        LPT_INFO( "cout", "[Match Tree]  Basic Analyzer built...");
-        LPT_INFO("cout", "Current mem. usage: " << get_current_memory_in_kb() << " kB.");
+		
+		LPT_INFO("cout", "Mem. usage after applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		
 
         // MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
         // lots of methods with absurdly long signatures. The idea is to progressively move
@@ -256,12 +210,20 @@ namespace fs0 {
 		std::vector<bool> seen(_tuple_idx.size(), false);
 		std::vector<unsigned> sorted_atoms = sort_atom_idxs(analyzer.getApplicable());
 		
-        NodeCreationContext helper(_tuple_idx, sorted_atoms, rev_app_index, seen);
+        NodeCreationContext helper(_tuple_idx, sorted_atoms, analyzer.getRevApplicable(), seen);
 		
 		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		_tree = new SwitchNode(all_actions, helper);
 		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-        LPT_INFO("cout", "Match Tree created");
+        LPT_INFO("cout", "Match Tree created"); 
+		
+		
+		unsigned sw = 0, leaf = 0, empty = 0;
+		_tree->count_nodes(sw, leaf, empty);
+		LPT_INFO("cout", "TOTAL NODE COUNT: " <<_tree->count_nodes());
+		LPT_INFO("cout", "\tSWITCH: " << sw);
+		LPT_INFO("cout", "\tLEAF: " << leaf);
+		LPT_INFO("cout", "\tEMPTY: " << empty);
 		
 		/*
         #ifdef EDEBUG
