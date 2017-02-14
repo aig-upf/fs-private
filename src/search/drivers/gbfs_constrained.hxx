@@ -9,7 +9,6 @@
 #include <state.hxx>
 #include <actions/actions.hxx>
 
-namespace fs0 { class SearchStats; }
 namespace fs0 { namespace gecode { class GecodeCRPG; } }
 
 
@@ -34,9 +33,6 @@ protected:
 
 	//!
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
-
-	//!
-	SearchStats* _stats;
 };
 
 } } // namespaces

@@ -22,7 +22,6 @@ namespace fs0 { namespace drivers {
 
 GBFS_CRPGDriver::~GBFS_CRPGDriver() {
 	delete _heuristic;
-	delete _stats;
 }
 
 ExitCode
@@ -53,11 +52,13 @@ GBFS_CRPGDriver::search(Problem& problem, const Config& config, const std::strin
 	using EngineT = lapkt::StlBestFirstSearch<NodeT, GroundStateModel>;
 	auto engine = std::unique_ptr<EngineT>(new EngineT(model));
 	
-	drivers::EventUtils::setup_stats_observer<NodeT>(*_stats, _handlers);
-	drivers::EventUtils::setup_evaluation_observer<NodeT, GecodeCRPG>(config, *_heuristic, *_stats, _handlers);
+	SearchStats stats;
+	
+	drivers::EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
+	drivers::EventUtils::setup_evaluation_observer<NodeT, GecodeCRPG>(config, *_heuristic, stats, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
 	
-	return drivers::Utils::do_search(*engine, model, out_dir, start_time, *_stats);
+	return drivers::Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
 
 
