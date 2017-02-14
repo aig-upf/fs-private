@@ -39,18 +39,14 @@ namespace fs0 {
 
 class NodeCreationContext {
 public:
-	NodeCreationContext(std::vector<ActionIdx>& actions,
-						const AtomIndex& tuple_index,
+	NodeCreationContext(const AtomIndex& tuple_index,
 						const std::vector<unsigned>& sorted_atoms,
 						const std::vector<std::vector<AtomIdx>>& rev_app_index,
 						std::vector<bool>& seen) : 
-						_actions( actions ), _tuple_index( tuple_index ), _sorted_atoms(sorted_atoms), _rev_app_index(rev_app_index), _seen(seen) {}
+						_tuple_index( tuple_index ), _sorted_atoms(sorted_atoms), _rev_app_index(rev_app_index), _seen(seen) {}
 
-	NodeCreationContext(const NodeCreationContext& other, std::vector<ActionIdx>& actions) : 
-		_actions(actions), _tuple_index(other._tuple_index), _sorted_atoms(other._sorted_atoms), _rev_app_index(other._rev_app_index), _seen(other._seen)
-	{}
+	NodeCreationContext(const NodeCreationContext&) = default;
 						
-	std::vector<ActionIdx>&                     _actions;
 	const AtomIndex&                            _tuple_index;
 	const std::vector<unsigned>&                _sorted_atoms;
 	const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
@@ -64,12 +60,12 @@ public:
         typedef BaseNode*   ptr;
 
     	virtual ~BaseNode() = default;
-    	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) = 0;
-    	virtual int count() const = 0;
+    	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const = 0;
+    	virtual unsigned count() const = 0;
         virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const = 0;
 
     	static BaseNode::ptr
-        create_tree(  NodeCreationContext& context );
+        create_tree(std::vector<ActionIdx>&& actions, NodeCreationContext& context);
 
     	static AtomIdx
         get_best_atom( const NodeCreationContext& context );
@@ -86,33 +82,31 @@ public:
     	BaseNode *                 _default_child;
 
     public:
-    	SwitchNode( NodeCreationContext& context );
+    	SwitchNode(const std::vector<ActionIdx>& actions, NodeCreationContext& context);
 		~SwitchNode();
 
-    	virtual void generate_applicable_items(     const State& s,
-                                                    const AtomIndex& tuple_index,
-                                                    std::vector<ActionIdx>& actions ) override;
+    	void generate_applicable_items(const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const override;
 
-    	virtual int    count() const;
-        virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
+    	unsigned count() const override;
+        void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
 
     class LeafNode : public BaseNode {
     	std::vector<ActionIdx> _applicable_items;
     public:
-    	LeafNode(std::vector<ActionIdx>& actions) : _applicable_items() { _applicable_items.swap(actions); }
-    	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) override;
-    	virtual int count() const { return _applicable_items.size(); }
-        virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
+    	LeafNode(std::vector<ActionIdx>&& actions) : _applicable_items(std::move(actions)) {}
+    	void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const override;
+    	unsigned count() const override { return _applicable_items.size(); }
+        void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
 
     class EmptyNode : public BaseNode {
     public:
-    	virtual void generate_applicable_items( const State &, const AtomIndex& tuple_index, std::vector<ActionIdx>& ) override {}
-    	virtual int count() const { return 0; }
-        virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
+    	void generate_applicable_items( const State &, const AtomIndex& tuple_index, std::vector<ActionIdx>& ) const override {}
+    	unsigned count() const override { return 0; }
+        void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
 
