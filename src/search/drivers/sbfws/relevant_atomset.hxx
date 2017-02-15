@@ -144,9 +144,10 @@ public:
 
 	void init(const State& state) {
 		_reached = std::vector<bool>(_helper.size(), false);
-		update(state, nullptr);
-// 		_num_reached = std::count(_reached.begin(), _reached.end(), true);
 		_num_reached = 0;
+		update(state, nullptr);
+ 		assert(_num_reached = std::count(_reached.begin(), _reached.end(), true));
+ 		_num_reached = 0;
 	}
 	
 // 	bool valid() const { return _updated; }

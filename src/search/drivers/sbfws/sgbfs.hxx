@@ -453,8 +453,8 @@ public:
 		if (node._relevant_atoms != nullptr) return *node._relevant_atoms;
 
 		// If the node increases the number of reached subgoals, we reset the counter of reached atoms.
-// 		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
-		if (!node.has_parent()) {
+//#		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
+ 		if (!node.has_parent()) {
 // 			LPT_INFO("cout", "Running simulation from node: " << node << ")");
 			const AtomIndex& index = _problem.get_tuple_index();
 			auto relevant = compute_R_IW1(node.state);
@@ -480,9 +480,10 @@ public:
 			
 			
 			if (node.decreases_unachieved_subgoals()) {
-				node._relevant_atoms->init(node.state);
+ 				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
 			} else {
-				node._relevant_atoms->update(node.state, &(node.parent->state));
+// 				node._relevant_atoms->update(node.state, &(node.parent->state));
+				node._relevant_atoms->update(node.state, nullptr);
 			}
 		}
 		

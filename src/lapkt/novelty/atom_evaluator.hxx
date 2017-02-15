@@ -342,7 +342,7 @@ public:
 		_seen_tuples_sz_2(num_combined_indexes, false),
 		_num_atom_indexes(num_atom_indexes)
 	{
-		LPT_INFO("cout", "Created a Novelty-2 table of approx. size " << expected_size(num_combined_indexes) / 1024 << "KB");
+// 		LPT_INFO("cout", "Created a Novelty-2 table of approx. size " << expected_size(num_combined_indexes) / 1024 << "KB");
 	}
 	
 	virtual ~BoolVectorTuple2Marker() = default;

@@ -355,19 +355,56 @@ public:
 		throw std::runtime_error("This no longer works :-)");
 	}
 	
+	
+	
+	//! Mark all atoms in the path to some goal. 'seed_nodes' contains all nodes satisfying some subgoal.
+	std::vector<bool> compute_relevant_w1_atoms(const std::vector<NodePT>& seed_nodes) const {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		std::unordered_set<NodePT> all_visited;
+		std::vector<bool> seen_atoms(index.size());
+		
+		for (NodePT node:seed_nodes) {
+			
+			
+			NodePT root = node;
+			// We ignore s0
+			while (node->has_parent()) {
+				// If the node has already been processed, no need to do it again, nor to process the parents,
+				// which will necessarily also have been processed.
+				auto res = all_visited.insert(node);
+				if (!res.second) break;
+				
+				const StateT& state = node->state;
+				for (unsigned var = 0; var < state.numAtoms(); ++var) {
+					if (state.getValue(var) == 0) continue; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
+					AtomIdx atom = index.to_index(var, state.getValue(var));
+					seen_atoms[atom] = true;
+				}
+				
+				node = node->parent;
+			}			
+		}
+		return seen_atoms;
+	}
+	
 	std::vector<bool> compute_R_IW1(const StateT& seed) {
 		_config._max_width = 1;
 		_config._bound = -1; // No bound
-		compute_R(seed);
-		auto rset = _evaluator.reached_atoms();
-// 		LPT_INFO("cout", "IW Simulation - |R_{IW(1)}| = " << std::count(rset.begin(), rset.end(), true)); // TODO REMOVE THIS, IT'S EXPENSIVE
+		std::vector<NodePT> w1_seed_nodes;
+		compute_R(seed, w1_seed_nodes);
+		
+		
+		auto rset = compute_relevant_w1_atoms(w1_seed_nodes);
+// 		auto rset = _evaluator.reached_atoms();
+		LPT_INFO("cout", "IW Simulation - |R_{IW(1)}| = " << std::count(rset.begin(), rset.end(), true)); // TODO REMOVE THIS, IT'S EXPENSIVE
 		return rset;
 	}
 
 	std::vector<bool> compute_R_union_Rs(const StateT& seed) {
 		_config._max_width = 2;
 // 		_config._bound = -1; // No bound
-		auto atoms = compute_R(seed);
+		std::vector<NodePT> w1_seed_nodes;
+		auto atoms = compute_R(seed, w1_seed_nodes);
 		
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		std::vector<bool> res(index.size(), false);
@@ -379,26 +416,25 @@ public:
 
 	
 	
-	std::vector<AtomIdx> compute_R(const StateT& seed) {
+	std::vector<AtomIdx> compute_R(const StateT& seed, std::vector<NodePT>& w1_seed_nodes) {
 		
 		_config._complete = false;
 		
-		_run(seed);
-// 		bool all_reached_before_bound = _run(seed);
+ 		bool all_reached_before_bound = _run(seed);
 		
-		/*
-		std::vector<NodePT> w1_seed_nodes;
+		
 		if (all_reached_before_bound) {
+			
 			for (const auto& n:_w1_nodes) {
 				if (n->satisfies_subgoal) w1_seed_nodes.push_back(n);
 			}
 		} else {
 			w1_seed_nodes = _w1_nodes;
 		}
-		*/
 		
-		/*
+		
 		LPT_INFO("cout", "IW Simulation - All subgoals reached before bound? " << all_reached_before_bound);
+		/*
 		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << this->_model.num_subgoals());
 		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
 		LPT_INFO("cout", "IW Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);

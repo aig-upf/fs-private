@@ -38,19 +38,19 @@ FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFW
 		if (persistent) {
 			auto evaluator = FSAtomBinaryNoveltyEvaluatorPersistent::create(index, true, max_width);
 			if (evaluator) {
-				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator WITH PERSISTENCE");
+// 				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator WITH PERSISTENCE");
 				return evaluator;
 			}			
 		} else {
 			auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
 			if (evaluator) {
-				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
+// 				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
 				return evaluator;
 			}
 		}
 	}
 	
-	LPT_INFO("cout", "NOVELTY EVALUATION: Using a binary novelty evaluator");
+// 	LPT_INFO("cout", "NOVELTY EVALUATION: Using a binary novelty evaluator");
 	return new FSGenericBinaryNoveltyEvaluator(max_width);
 }
 
