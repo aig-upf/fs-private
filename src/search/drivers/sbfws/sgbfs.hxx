@@ -213,7 +213,6 @@ public:
 		_problem(model.getTask()),
 		_featureset(features),
 		_search_evaluator(search_evaluator),
-		_simulation_evaluator(simulation_evaluator),
 		_wg_novelty_evaluators(),
 		_wg_half_novelty_evaluators(),
 		_wgr_novelty_evaluators(),
