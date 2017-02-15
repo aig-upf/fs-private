@@ -69,8 +69,6 @@ template <typename StateModelT>
 ExitCode
 LazyBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	const StateAtomIndexer& indexer = model.getTask().getStateAtomIndexer();
-	
-	
 	if (config.getOption<bool>("bfws.extra_features", false)) {
 	FeatureSelector<StateT> selector(ProblemInfo::getInstance());
 	

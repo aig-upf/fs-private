@@ -64,6 +64,7 @@ public:
 	//! The number of unachieved goals (#g)
 	unsigned unachieved_subgoals;
 
+
 	bool _processed;
 	
 	//! Whether a simulation has already been run from this node
@@ -145,9 +146,6 @@ public:
 		else os << ", a = None";
 		return os << "}";
 	}
-
-
-
 
 	bool decreases_unachieved_subgoals() const {
 		return (!has_parent() || unachieved_subgoals < parent->unachieved_subgoals);
@@ -372,7 +370,6 @@ public:
 		
 		unsigned reachable = 0, max_reachable = _model.num_subgoals();
 		_unused(max_reachable);
-
 		if (_aptk_rpg) {
 			compute_relevant_aptk_hff(state, atomset);
 		} else if (_use_simulation_nodes) {
@@ -452,7 +449,7 @@ public:
 	const LightRelevantAtomSet& compute_relevant_atoms(NodeT& node) {
 		// Only for the root node _or_ whenever the number of unachieved nodes decreases
 		// do we recompute the set of relevant atoms.
-
+		State* marking_parent = nullptr;
 
 		if (node._relevant_atoms != nullptr) return *node._relevant_atoms;
 
@@ -475,7 +472,6 @@ public:
 
 		// For the seed of the simulation, we want to mark all the initial atoms as reached.
 		// But otherwise, we might want to mark as reached those atoms that change of value with respect to the parent.
-
 
 		else { // Copy the set from the parent and update the set of relevant nodes with those that have been reached.
 			assert(node.has_parent());
@@ -543,7 +539,7 @@ public:
 		_stats.simulation();
 		SimulationT simulator(_model, _featureset, _simconfig);
 		return simulator.compute_R_union_Rs(state);
-	}	
+	}
 
 	unsigned compute_unachieved(const State& state) {
 		return _unsat_goal_atoms_heuristic.evaluate(state);
