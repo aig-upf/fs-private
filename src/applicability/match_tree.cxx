@@ -28,10 +28,10 @@ namespace fs0 {
     			all_done = false;
     		}
     	}
-    	
+
 // 		if (_immediate_items.size() > 0) throw std::runtime_error("YES");
 
-    	
+
     	if (all_done) return new LeafNode(std::move(actions));
 		else return new SwitchNode(actions, context);
     }
@@ -45,7 +45,7 @@ namespace fs0 {
 				return var;
 			}
 		}
-		
+
 		throw std::runtime_error("Shouldn't get here");
     }
 
@@ -82,7 +82,7 @@ namespace fs0 {
 		ObjectIdx val = s.getValue(_pivot);
 		if (val < 0 || val > 1) throw std::runtime_error("Not yet prepared for this");
 		_children[val]->generate_applicable_items(s, tuple_index, actions);
-		
+
         _default_child->generate_applicable_items( s, tuple_index, actions );
     }
 
@@ -103,12 +103,12 @@ namespace fs0 {
 		// Sort out the regression items
 		for (ActionIdx action:actions) {
 			const std::unordered_set<AtomIdx>& required = context._rev_app_index[action];
-			
+
 			if (action_done(action, context)) {
 				_immediate_items.push_back(action);
-			
+
 			} else {
-				
+
 				bool is_relevant = false;
 				for (unsigned val_idx = 0; val_idx < values.size(); ++val_idx) {
 					ObjectIdx value = values[val_idx];
@@ -119,14 +119,14 @@ namespace fs0 {
 						value_items[val_idx].push_back(action);
 					}
 				}
-				
+
 				if (!is_relevant) {
 					default_items.push_back(action);
 				}
 			}
 		}
 
-		auto printer = [](const unsigned& action, std::ostream& os) { 
+		auto printer = [](const unsigned& action, std::ostream& os) {
 			os << *(Problem::getInstance().getGroundActions()[action]) << "(" << action << ")";
 		};
 
@@ -159,7 +159,7 @@ namespace fs0 {
         total += _immediate_items.size();
         return total;
     }
-    
+
     unsigned SwitchNode::count_nodes() const {
         unsigned total = 1 + _default_child->count_nodes();
 		for (const auto child:_children) {
@@ -167,7 +167,7 @@ namespace fs0 {
 		}
         return total;
     }
-    
+
 	void SwitchNode::count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const {
 		++sw;
 		_default_child->count_nodes(sw, leaf, empty);
@@ -200,8 +200,8 @@ namespace fs0 {
             _children[i]->print(stream, indent + "  ", manager);
         }
     }
-    
-    void 
+
+    void
     MatchTreeActionManager::check_match_tree_can_be_used(const ProblemInfo& info) {
 		for (unsigned var = 0; var < info.getNumVariables(); ++var) {
 			TypeIdx type = info.getVariableType(var);
@@ -221,16 +221,16 @@ namespace fs0 {
         _tree(nullptr)
     {
         const ProblemInfo& info = ProblemInfo::getInstance();
-		
+
 		check_match_tree_can_be_used(info);
-		
+
 		LPT_INFO("cout", "Mem. usage before applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
         BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build();
-		
+
 		LPT_INFO("cout", "Mem. usage after applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-		
+
 
         // MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
         // lots of methods with absurdly long signatures. The idea is to progressively move
@@ -238,26 +238,26 @@ namespace fs0 {
         // much from Chris' original implementation to help with debugging.
         std::vector<ActionIdx> all_actions(_actions.size());
         std::iota( all_actions.begin(), all_actions.end(), 0);
-		
-		
+
+
 		std::vector<bool> seen(info.getNumVariables(), false);
 		std::vector<VariableIdx> sorted_vars = sort_variables(analyzer.getVariableRelevance());
-		
+
         NodeCreationContext helper(_tuple_idx, sorted_vars, analyzer.getRevApplicable(), seen);
-		
+
 		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		_tree = new SwitchNode(all_actions, helper);
 		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-        LPT_INFO("cout", "Match Tree created"); 
-		
-		
+        LPT_INFO("cout", "Match Tree created");
+
+
 		unsigned sw = 0, leaf = 0, empty = 0;
 		_tree->count_nodes(sw, leaf, empty);
 		LPT_INFO("cout", "TOTAL NODE COUNT: " <<_tree->count_nodes());
 		LPT_INFO("cout", "\tSWITCH: " << sw);
 		LPT_INFO("cout", "\tLEAF: " << leaf);
 		LPT_INFO("cout", "\tEMPTY: " << empty);
-		
+
 		/*
         #ifdef EDEBUG
         std::stringstream buffer;
@@ -266,12 +266,12 @@ namespace fs0 {
         #endif
         */
     }
-    
-    
+
+
     std::vector<VariableIdx> MatchTreeActionManager::sort_variables(const std::vector<unsigned>& variable_relevance) const {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 
-				
+
 		// This will contain pairs (x,y), where 'x' is the number of times that variable with index 'y'
 		// appears on some (distinct) action precondition
 		 std::vector<std::pair<unsigned, VariableIdx>> count;
@@ -281,14 +281,15 @@ namespace fs0 {
 
 		// This will sort by count, breaking ties lexicographically by variable index.
 		std::sort(count.begin(), count.end());
-		
+
 		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << count.size() );
 		LPT_INFO("cout", "(B2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-			
+
 		std::vector<VariableIdx> indexes_only;
 		indexes_only.reserve(count.size());
-		
+
 		for (int i = count.size()-1; i >= 0; --i) {
+            if ( count[i].first == 0 ) continue;
 			indexes_only.push_back(count[i].second);
 		}
 		return indexes_only;
