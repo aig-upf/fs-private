@@ -1,17 +1,15 @@
 
 #pragma once
 
-#include <iomanip>
-
 #include <aptk2/tools/logging.hxx>
-#include <problem_info.hxx>
+
 #include <utils/atom_index.hxx>
 #include <state.hxx>
 
 
 namespace fs0 { namespace bfws {
 
-
+ //! A helper object to reduce the memory footprint of RelevantAtomSets
 class AtomsetHelper {
 public:
 	//! '_relevant[i]' iff the atom with index 'i' is relevant
@@ -79,10 +77,6 @@ public:
  		_num_reached = 0;
 	}
 	
-// 	bool valid() const { return _updated; }
-	
-
-// 	friend class print::relevant_atomset;
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const LightRelevantAtomSet& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const {

@@ -438,7 +438,6 @@ protected:
 	//! A list with all nodes that have novelty w_{#g}=1
 	UnachievedOpenList _q1;
 
-	
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 1 novelty tables
 	UnachievedOpenList _qwgr1;
 
@@ -465,9 +464,6 @@ protected:
 
 	BFWSStats& _stats;
 
-	//! Whether we want to run a simulation from the root node before starting the search
-	bool _run_simulation_from_root;
-
 	//! Whether we want to prune those nodes with novelty w_{#g, #r} > 2 or not
 	bool _prune_wgr2_gt_2;
 
@@ -480,11 +476,6 @@ protected:
 	//! How many novelty levels we want to use in the search.
 	unsigned _novelty_levels;
 	
-	//! The set R of "specially relevant" atoms (i.e. AtomIndexes)	
-// 	std::vector<AtomIdx>  _R;
-	
-	//! A bitset indicating which atoms have been reached in a simulation run from s0
-// 	std::unique_ptr<AtomsetHelper> _helper;
 public:
 
 	//! The only allowed constructor requires the user of the algorithm to inject both
@@ -504,12 +495,10 @@ public:
 		_featureset(std::move(featureset)),
 		_heuristic(conf, config, model, _featureset, *_search_evaluator, stats),
 		_stats(stats),
-		_run_simulation_from_root(config.getOption<bool>("bfws.sim0", true)),
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
 		_novelty_levels(setup_novelty_levels(model))
-// 		_helper(nullptr)
 	{
 	}
 

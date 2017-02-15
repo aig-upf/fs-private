@@ -341,13 +341,6 @@ public:
 		return set_union;
 	}
 	
-	void _print_atomset(std::unordered_set<AtomIdx>& atoms) const {
-		const AtomIndex& index = this->_model.getTask().get_tuple_index();
-		for (AtomIdx atom:atoms) {
-			LPT_INFO("cout", "IW Simulation - \t" << index.to_atom(atom));
-		}		
-	}
-	
 	void run(const StateT& seed) {
 		throw std::runtime_error("This no longer works :-)");
 	}
@@ -451,7 +444,6 @@ public:
 		
 // 		LPT_INFO("cout", "IW Simulation - union-based R (|R|=" << su.size() << ")");
 // 		_print_atomset(su);
-		
 		
 // 		LPT_INFO("cout", "IW Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
 // 		_print_atomset(hs);
