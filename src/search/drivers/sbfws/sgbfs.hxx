@@ -64,12 +64,9 @@ public:
 	//! The number of unachieved goals (#g)
 	unsigned unachieved_subgoals;
 
-
+	//! Whether the node has been processed
 	bool _processed;
 	
-	//! Whether a simulation has already been run from this node
-	bool _simulated;
-
 	//! The generation order, uniquely identifies the node
 	unsigned long _gen_order;
 
@@ -86,14 +83,6 @@ public:
 	//! made true along the path (#r)
 	std::unique_ptr<LightRelevantAtomSet> _relevant_atoms;
 	
-	LazyBFWSNode() = delete;
-	~LazyBFWSNode() = default;
-
-	LazyBFWSNode(const LazyBFWSNode&) = delete;
-	LazyBFWSNode(LazyBFWSNode&&) = delete;
-	LazyBFWSNode& operator=(const LazyBFWSNode&) = delete;
-	LazyBFWSNode& operator=(LazyBFWSNode&&) = delete;
-
 	//! Constructor with full copying of the state (expensive)
 	LazyBFWSNode(const StateT& s, unsigned long gen_order) : LazyBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
@@ -102,7 +91,6 @@ public:
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		unachieved_subgoals(std::numeric_limits<unsigned>::max()),
 		_processed(false),
-		_simulated(false),
 		_gen_order(gen_order),
 		w_g(Novelty::Unknown),
 		w_gr(Novelty::Unknown),
@@ -110,17 +98,13 @@ public:
 		_relevant_atoms(nullptr)
 	{}
 	
+	~LazyBFWSNode() = default;
+	LazyBFWSNode(const LazyBFWSNode&) = delete;
+	LazyBFWSNode(LazyBFWSNode&&) = delete;
+	LazyBFWSNode& operator=(const LazyBFWSNode&) = delete;
+	LazyBFWSNode& operator=(LazyBFWSNode&&) = delete;	
 	
-	inline std::string print_novelty(const Novelty& novelty) const { 
-		if (novelty == Novelty::Unknown) return "=?";
-		if (novelty == Novelty::One) return "=1";
-		if (novelty == Novelty::OneAndAHalf) return "=1.5";
-		if (novelty == Novelty::GTOne) return ">1";
-		if (novelty == Novelty::Two) return "=2";
-		if (novelty == Novelty::GTTwo) return ">2";
-		throw std::runtime_error("Unknown novelty value");
-	}
-
+	
 	bool has_parent() const { return parent != nullptr; }
 
 	bool operator==( const LazyBFWSNode<StateT, ActionT>& o ) const { return state == o.state; }
@@ -138,8 +122,8 @@ public:
 			reached = std::to_string(_relevant_atoms->num_reached()) + " / " + std::to_string(_relevant_atoms->getHelper()._num_relevant);
 		}
 		os << "{@ = " << this << ", #" << _gen_order << ", s = " << state;
-// 		os << ", g = " << g << ", w_g" << print_novelty(w_g) <<  ", w_gr" << print_novelty(w_gr) << ", #g=" << unachieved_subgoals << ", #r=" << reached;
-		os << ", g = " << g << ", w_g" << print_novelty(w_g) <<  ", w_gr" << print_novelty(w_gr) << ", #g=" << unachieved_subgoals << ", #r=" << reached;
+// 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
+		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
 		if (action < ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
@@ -231,7 +215,6 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wg1(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
-// 		bool has_parent = node.has_parent() && (node.parent->w_g != Novelty::Unknown);
 		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
 		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, has_parent, type, ptype);
@@ -243,7 +226,6 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wg2(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
-// 		bool has_parent = node.has_parent() && (node.parent->w_g == Novelty::Two || node.parent->w_g == Novelty::GTTwo); // i.e. the state has been evaluated on the novelty-two tables
 		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
 		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 2, node.has_parent(), type, ptype);
@@ -279,7 +261,6 @@ public:
 		}
 		
 		unsigned type = compute_node_complex_type(node);
-// 		bool has_parent = node.has_parent() && (node.parent->w_gr != Novelty::Unknown);
 		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? compute_node_complex_type(*(node.parent)) : 0;
 		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 1, node.has_parent(), type, ptype);
@@ -291,9 +272,7 @@ public:
 
 	template <typename NodeT>
 	unsigned evaluate_wgr2(NodeT& node) {
-// 		assert(node._relevant_atoms.valid());
 		unsigned type = compute_node_complex_type(node);
-// 		bool has_parent = node.has_parent() && (node.parent->w_gr == Novelty::Two || node.parent->w_gr == Novelty::GTTwo); // i.e. the state has been evaluated on the novelty-two tables
 		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? compute_node_complex_type(*(node.parent)) : 0;
 		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 2, node.has_parent(), type, ptype);
@@ -302,8 +281,6 @@ public:
 		if (node.w_gr != Novelty::One) {
 			node.w_gr = (nov == 2) ? Novelty::Two : Novelty::GTTwo;
 		}		
-// 		LPT_INFO("types", "Type=" << compute_node_complex_type(node) << " for node: " << std::endl << node << std::endl)
-// 		LPT_INFO("types", "Relevant atoms=" << std::endl << node._relevant_atoms << std::endl)
 		return nov;
 	}
 	
@@ -346,8 +323,6 @@ public:
 		}
 
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
-
-
 	}
 
 	template <typename NodeT>

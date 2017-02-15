@@ -8,8 +8,12 @@
 
 namespace lapkt { namespace novelty {
 
+//! Discrete novelty values
 enum class Novelty { Unknown, One, GTOne, OneAndAHalf, GTOneAndAHalf, Two, GTTwo};
 
+//! A printer for discrete novelty values
+std::ostream& operator<<(std::ostream& os, const Novelty& nov);
+	
 //! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
 template <typename FeatureValueT>
 std::vector<unsigned> derive_novel(const std::vector<FeatureValueT>& current, const std::vector<FeatureValueT>& parent) {

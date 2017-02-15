@@ -11,13 +11,10 @@
 #include <search/drivers/sbfws/relevant_atomset.hxx>
 #include "base.hxx"
 #include <utils/printers/vector.hxx>
-#include <utils/printers/relevant_atomset.hxx>
 #include <utils/printers/actions.hxx>
 #include <state.hxx>
-// #include <lapkt/novelty/features.hxx>
 #include <lapkt/components/open_lists.hxx>
 #include <problem.hxx>
-// #include <boost/pool/pool_alloc.hpp>
 
 
 namespace fs0 { namespace bfws {

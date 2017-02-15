@@ -195,6 +195,7 @@ namespace fs0 { namespace bfws {
         return s;
     }
 
+    /*
     RelevantAtomSet
     HFFRun::compute_r_ff(const fs0::State& s, const AtomIndex& atomidx) {
 		aptk::Fluent_Vec rp_vec;
@@ -255,6 +256,5 @@ namespace fs0 { namespace bfws {
 			}
 		}
 	}
-
-
+	*/
 }}
