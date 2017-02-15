@@ -80,6 +80,10 @@ namespace fs0 {
         // X=v.
 
 		ObjectIdx val = s.getValue(_pivot);
+		
+// 		const ProblemInfo& info = ProblemInfo::getInstance();		
+// 		LPT_INFO( "cout", "[Match Tree] Branching on atom " << Atom(_pivot, val) << "");
+
 		if (val < 0 || val > 1) throw std::runtime_error("Not yet prepared for this");
 		_children[val]->generate_applicable_items(s, tuple_index, actions);
 		
@@ -126,9 +130,9 @@ namespace fs0 {
 			}
 		}
 
-		auto printer = [](const unsigned& action, std::ostream& os) { 
-			os << *(Problem::getInstance().getGroundActions()[action]) << "(" << action << ")";
-		};
+// 		auto printer = [](const unsigned& action, std::ostream& os) { 
+// 			os << *(Problem::getInstance().getGroundActions()[action]) << "(" << action << ")";
+// 		};
 
 		// 		LPT_INFO("cout", "Creating a switch node on pivot: " << context._tuple_index.to_atom(_pivot) << " with a set of " << actions.size() << " actions");
 		// 		LPT_INFO("cout", "Actions which are done: " << print::container(_immediate_items, printer));
@@ -282,15 +286,17 @@ namespace fs0 {
 		// This will sort by count, breaking ties lexicographically by variable index.
 		std::sort(count.begin(), count.end());
 		
-		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << count.size() );
-		LPT_INFO("cout", "(B2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-			
 		std::vector<VariableIdx> indexes_only;
 		indexes_only.reserve(count.size());
 		
+// 		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << count.size() );
+		LPT_INFO( "cout", "[Match Tree] Variables ordered by frequency:");
+		
 		for (int i = count.size()-1; i >= 0; --i) {
 			indexes_only.push_back(count[i].second);
+// 			LPT_INFO( "cout", info.getVariableName(count[i].second) << " (" << count[i].first << ")");
 		}
+		
 		return indexes_only;
 	}
 
