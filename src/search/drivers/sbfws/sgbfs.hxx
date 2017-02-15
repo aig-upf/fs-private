@@ -178,12 +178,9 @@ protected:
 	// to perform all the feature selection, etc. anew.
 	const NoveltyEvaluatorT& _search_evaluator;
 
-
-
 	//! The novelty evaluators for the different #g values
 	NoveltyEvaluatorMapT _wg_novelty_evaluators;
 
-	NoveltyEvaluatorMapT _wg_half_novelty_evaluators; // 1.5 nov evaluators
 	//! The novelty evaluators for the different <#g, #r> values
 	NoveltyEvaluatorMapT _wgr_novelty_evaluators;
 
@@ -210,7 +207,6 @@ public:
 		_featureset(features),
 		_search_evaluator(search_evaluator),
 		_wg_novelty_evaluators(),
-		_wg_half_novelty_evaluators(),
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
@@ -228,7 +224,6 @@ public:
 
 	~LazyBFWSHeuristic() {
 		for (auto& p:_wg_novelty_evaluators) delete p.second;
-		for (auto& p:_wg_half_novelty_evaluators) delete p.second;
 		for (auto& p:_wgr_novelty_evaluators) delete p.second;
 	};
 
@@ -245,31 +240,6 @@ public:
 		return nov;
 	}
 
-	template <typename NodeT>
-	bool evaluate_wg1_5(NodeT& node, const std::vector<AtomIdx>& special) {
-		// LPT_DEBUG("cout", "Let's compute whether node has novelty 1,5: " << node);
-
-		assert(node.w_g != Novelty::Unknown);
-		unsigned type = node.unachieved_subgoals;
-		bool has_parent = node.has_parent();
-		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
-
-		// A somewhat special routine for dealing with 1.5 computations
-		bool res;
-		NoveltyEvaluatorT* evaluator = fetch_evaluator(_wg_half_novelty_evaluators, type);
-		
-		if (has_parent && type == ptype) {
-			res = evaluator->evaluate_1_5(_featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), special);
-		} else {
-			res = evaluator->evaluate_1_5(_featureset.evaluate(node.state), special);
-		}
-		
-		if (node.w_g != Novelty::One) {
-			node.w_g = res ? Novelty::OneAndAHalf : Novelty::GTOneAndAHalf;
-		}
-		return res;
-	}
-	
 	template <typename NodeT>
 	unsigned evaluate_wg2(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
@@ -493,8 +463,7 @@ protected:
 	//! A list with all nodes that have novelty w_{#g}=1
 	UnachievedOpenList _q1;
 
-	//! A list with all nodes that have novelty w_{#g}=1.5
-// 	UnachievedOpenList _q1half;
+	
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 1 novelty tables
 	UnachievedOpenList _qwgr1;
 
@@ -687,38 +656,6 @@ protected:
 			return true;
 		}
 
-		/*
-		///// 1.5-width QUEUE /////
-		// Check whether there are nodes with w_{#g, #r} = 1
-		
-		if (!_q1half.empty()) {
-			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g} = 1.5");
-			NodePT node = _q1half.next();
-
-			// Greedy 1,5-novelty evaluation
-			
-// 			if (!node->_processed) {
-// 				_stats.wg1_5_node();
-// 				process_node(node);
-// 			}
-			
-			
-			// Lazy 1,5-novelty evaluation:
-			
-			bool novel = _heuristic.evaluate_wg1_5(*node, _R);
-			if (!node->_processed && novel) {
-				_stats.wg1_5_node();
-				process_node(node);
-			} else if (_novelty_levels == 2) {
-				_qrest.insert(node);
-			}
-			
-
-			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
-			return true;
-		}
-		*/
-
 		///// QWGR1 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 1
 		if (!_qwgr1.empty()) {
@@ -800,15 +737,6 @@ protected:
 			_q1.insert(node);
 		}
 
-		// Greedy 1,5-novelty evaluation
-		/*
-		if (_heuristic.evaluate_wg1_5(*node, _R)) {
-			_q1half.insert(node);
-		}
-		*/
-		
-		// Lazy 1,5-novelty evaluation
-// 		_q1half.insert(node);
 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
 		
 		if (_novelty_levels == 3) {
@@ -858,7 +786,6 @@ protected:
 
 	bool is_open(const NodePT& node) const {
 		return _q1.contains(node) ||
-// 			   _q1half.contains(node) ||
 		       _qwgr1.contains(node) ||
 		       _qwgr2.contains(node) ||
 		       _qrest.contains(node);
@@ -866,7 +793,6 @@ protected:
 
 	bool some_queue_nonempty() const {
 		return !_q1.empty() ||
-// 			   !_q1half.empty() ||
 		       !_qwgr1.empty() ||
 		       !_qwgr2.empty() ||
 		       !_qrest.empty();

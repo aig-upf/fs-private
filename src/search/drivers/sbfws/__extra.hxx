@@ -56,6 +56,7 @@ class IWRun : public lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateMo
 		_visited.insert(node); // Insert the root anyway to mark it as a relevant node
 	}
 
+	
 };
 
 template <typename StateModelT, typename NoveltyIndexerT, typename FeatureSetT, typename NoveltyEvaluatorT>
@@ -160,4 +161,100 @@ void dump_simulation_nodes(NodePT& node) {
 	*/
 
 const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _simulator->get_relevant_nodes(); }
+
+
+	~LazyBFWSHeuristic() {
+		for (auto& p:_wg_half_novelty_evaluators) delete p.second;
+	};
+	NoveltyEvaluatorMapT _wg_half_novelty_evaluators; // 1.5 nov evaluators
+
+	template <typename NodeT>
+	bool evaluate_wg1_5(NodeT& node, const std::vector<AtomIdx>& special) {
+		// LPT_DEBUG("cout", "Let's compute whether node has novelty 1,5: " << node);
+
+		assert(node.w_g != Novelty::Unknown);
+		unsigned type = node.unachieved_subgoals;
+		bool has_parent = node.has_parent();
+		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
+
+		// A somewhat special routine for dealing with 1.5 computations
+		bool res;
+		NoveltyEvaluatorT* evaluator = fetch_evaluator(_wg_half_novelty_evaluators, type);
+		
+		if (has_parent && type == ptype) {
+			res = evaluator->evaluate_1_5(_featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), special);
+		} else {
+			res = evaluator->evaluate_1_5(_featureset.evaluate(node.state), special);
+		}
+		
+		if (node.w_g != Novelty::One) {
+			node.w_g = res ? Novelty::OneAndAHalf : Novelty::GTOneAndAHalf;
+		}
+		return res;
+	}
+
 };
+
+
+
+
+
+template <typename StateModelT, typename FeatureSetT, typename NoveltyEvaluatorT>
+class LazyBFWS {
+	//! A list with all nodes that have novelty w_{#g}=1.5
+// 	UnachievedOpenList _q1half;
+	
+			/*
+		///// 1.5-width QUEUE /////
+		// Check whether there are nodes with w_{#g, #r} = 1
+		
+		if (!_q1half.empty()) {
+			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g} = 1.5");
+			NodePT node = _q1half.next();
+
+			// Greedy 1,5-novelty evaluation
+			
+// 			if (!node->_processed) {
+// 				_stats.wg1_5_node();
+// 				process_node(node);
+// 			}
+			
+			
+			// Lazy 1,5-novelty evaluation:
+			
+			bool novel = _heuristic.evaluate_wg1_5(*node, _R);
+			if (!node->_processed && novel) {
+				_stats.wg1_5_node();
+				process_node(node);
+			} else if (_novelty_levels == 2) {
+				_qrest.insert(node);
+			}
+			
+
+			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
+			return true;
+		}
+		*/
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
