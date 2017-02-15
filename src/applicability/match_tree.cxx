@@ -290,7 +290,7 @@ namespace fs0 {
 		indexes_only.reserve(count.size());
 		
 // 		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << count.size() );
-		LPT_INFO( "cout", "[Match Tree] Variables ordered by frequency:");
+// 		LPT_INFO( "cout", "[Match Tree] Variables ordered by frequency:");
 		
 		for (int i = count.size()-1; i >= 0; --i) {
 			indexes_only.push_back(count[i].second);

@@ -164,5 +164,6 @@ struct SBFWSNoveltyIndexer {
 template <typename NoveltyEvaluatorT>
 NoveltyEvaluatorT* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width, bool persistent = false);
 
+
 } } // namespaces
 

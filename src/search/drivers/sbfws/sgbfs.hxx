@@ -344,8 +344,8 @@ public:
 			node._relevant_atoms->init(node.state);
 			
 			if (!node.has_parent()) { // Log some info for the seed state
-				LPT_INFO("cout", "R_{IW(1)}(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ")");
-				LPT_INFO("cout", *(node._relevant_atoms));
+				LPT_DEBUG("cout", "R_{IW(1)}(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ")");
+				LPT_DEBUG("cout", *(node._relevant_atoms));
 		}
 		}
 
@@ -784,10 +784,6 @@ protected:
 };
 
 
-//! A helper to create a novelty evaluator of the appropriate type
-template <typename NoveltyEvaluatorT>
-NoveltyEvaluatorT* create_novelty_evaluator(const Problem& problem, const Config& config, unsigned max_width);
-	
 
 //! The main Simulated BFWS driver, sets everything up and runs the search.
 //! The basic setup is:
@@ -816,12 +812,6 @@ protected:
 
 	//! Helper methods to set up the correct template parameters
 	ExitCode do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
-	
-	/*
-	template <typename NoveltyEvaluatorT>
-	ExitCode
-	do_search1(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
-	*/
 	
 	template <typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 	ExitCode
