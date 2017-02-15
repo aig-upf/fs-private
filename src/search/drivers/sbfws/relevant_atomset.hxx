@@ -107,8 +107,8 @@ class LightRelevantAtomSet {
 public:
 
 	//! A LightRelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
-	LightRelevantAtomSet(const AtomsetHelper* helper) :
-		_helper(helper), _num_reached(0), _reached(helper->size(), false) //, _updated(false)
+	LightRelevantAtomSet(const AtomsetHelper& helper) :
+		_helper(helper), _num_reached(0), _reached(helper.size(), false) //, _updated(false)
 	{}
 
 	~LightRelevantAtomSet() = default;
@@ -127,8 +127,8 @@ public:
 			ObjectIdx val = state.getValue(var);
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 			
-			AtomIdx atom = _helper->_atomidx.to_index(var, val);
-			if (!_helper->_relevant[atom]) continue; // we're not concerned about this atom
+			AtomIdx atom = _helper._atomidx.to_index(var, val);
+			if (!_helper._relevant[atom]) continue; // we're not concerned about this atom
 			
 			std::vector<bool>::reference ref = _reached[atom];
 			if (!ref) {
@@ -140,11 +140,10 @@ public:
 	
 
 	unsigned num_reached() const { return _num_reached; }
-// 	unsigned num_unreached() const { return _helper->_num_relevant - _num_reached; }
+// 	unsigned num_unreached() const { return _helper._num_relevant - _num_reached; }
 
-	void reset() { _num_reached = 0; }
-	void update_counter(const State& state) {
-		_reached = std::vector<bool>(_helper->size(), false);
+	void init(const State& state) {
+		_reached = std::vector<bool>(_helper.size(), false);
 		update(state, nullptr);
 // 		_num_reached = std::count(_reached.begin(), _reached.end(), true);
 		_num_reached = 0;
@@ -157,13 +156,12 @@ public:
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const LightRelevantAtomSet& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		assert(_helper);
-		const AtomIndex& atomidx = _helper->_atomidx;
+		const AtomIndex& atomidx = _helper._atomidx;
 		
 		os << "{";
 		for (unsigned i = 0; i < _reached.size(); ++i) {
 			const Atom& atom = atomidx.to_atom(i);
-			if (!_helper->_relevant[i]) continue;
+			if (!_helper._relevant[i]) continue;
 			
 			std::string mark = (_reached[i]) ? "*" : "";
 			os << atom << mark << ", ";
@@ -173,9 +171,11 @@ public:
 		return os;		
 	}
 
+	const AtomsetHelper& getHelper() const { return _helper; }
+	
 protected:
 	//! A reference to the global atom index
-	const AtomsetHelper* _helper;
+	const AtomsetHelper& _helper;
 
 	//! The total number of reached / unreached atoms
 	unsigned _num_reached;

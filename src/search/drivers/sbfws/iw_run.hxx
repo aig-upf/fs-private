@@ -359,7 +359,9 @@ public:
 		_config._max_width = 1;
 		_config._bound = -1; // No bound
 		compute_R(seed);
-		return _evaluator.reached_atoms();
+		auto rset = _evaluator.reached_atoms();
+		LPT_INFO("cout", "IW Simulation - |R_{IW(1)}| = " << std::count(rset.begin(), rset.end(), true)); // TODO REMOVE THIS, IT'S EXPENSIVE
+		return rset;
 	}
 
 	std::vector<bool> compute_R_union_Rs(const StateT& seed) {
@@ -415,11 +417,11 @@ public:
 		auto hs = compute_hitting_set(relevant_w2_nodes);
 		
 		LPT_INFO("cout", "IW Simulation - union-based R (|R|=" << su.size() << ")");
-		_print_atomset(su);
+// 		_print_atomset(su);
 		
 		
 		LPT_INFO("cout", "IW Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
-		_print_atomset(hs);
+// 		_print_atomset(hs);
 		
 		//std::vector<AtomIdx> relevant(hs.begin(), hs.end());
 		std::vector<AtomIdx> relevant(su.begin(), su.end());
