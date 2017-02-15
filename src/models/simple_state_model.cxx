@@ -127,13 +127,12 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 
 	} else if (strategy == Config::SuccessorGenerationStrategy::match_tree) {
 		LPT_INFO( "cout", "Successor Generator Strategy: Match Tree");
-		LPT_INFO("cout", "Peak mem. usage before match-tree construction: " << get_peak_memory_in_kb() << " kB.");
-		LPT_INFO("cout", "Current mem. usage before match-tree construction: " << get_current_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Mem. usage before match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+
 
 		auto mng = new MatchTreeActionManager(actions, constraints, tuple_idx);
 		LPT_INFO("cout", "Match-tree built with " << mng->count() << " nodes.");
-		LPT_INFO("cout", "Peak mem. usage after match-tree construction: " << get_peak_memory_in_kb() << " kB.");
-		LPT_INFO("cout", "Current mem. usage after match-tree construction: " << get_current_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Mem. usage after match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		return mng;
 	}
 

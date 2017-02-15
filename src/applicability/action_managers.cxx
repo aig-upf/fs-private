@@ -140,7 +140,8 @@ BasicApplicabilityAnalyzer::build() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
 	_applicable.resize(_tuple_idx.size());
-// 	std::vector<std::vector<ActionIdx>> index(_tuple_idx.size());
+	_rev_applicable.resize(_actions.size());
+	_variable_relevance = std::vector<unsigned>(info.getNumVariables(), 0);
 
 
 	for (unsigned i = 0; i < _actions.size(); ++i) {
@@ -184,18 +185,27 @@ BasicApplicabilityAnalyzer::build() {
 				throw std::runtime_error("BasicApplicabilityAnalyzer requires that no two preconditions make reference to the same state variable");
 			}
 
+			_variable_relevance[relevant]++;
+			
 			if (eq) { // Prec is of the form X=x
+// 				std::cout << "Precondition: " << *eq << std::endl;
 				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
 				AtomIdx tup = _tuple_idx.to_index(relevant, value);
+				
+// 				std::cout << "Corresponding Atom: " << _tuple_idx.to_atom(tup) << std::endl;
+				
 				_applicable[tup].push_back(i);
+				_rev_applicable[i].insert(tup);
 
 			} else { // Prec is of the form X!=x
 				assert(neq);
+// 				std::cout << "Precondition: " << *eq << std::endl;
 				ObjectIdx value = _extract_constant_val(neq->lhs(), neq->rhs());
 				for (ObjectIdx v2:values) {
 					if (v2 != value) {
 						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
 						_applicable[tup].push_back(i);
+						_rev_applicable[i].insert(tup);
 					}
 				}
 			}

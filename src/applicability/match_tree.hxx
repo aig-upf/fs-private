@@ -23,47 +23,54 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <unordered_set>
 #include <fs_types.hxx>
 #include <applicability/action_managers.hxx>
+
+
+namespace fs0 {	class ProblemInfo; class MatchTreeActionManager;}
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
 
 
 namespace fs0 {
-	class ProblemInfo;
-    class MatchTreeActionManager;
 
-    class NodeCreationContext {
-    public:
-        NodeCreationContext(    std::vector<ActionIdx>& actions,
-                                const AtomIndex& tuple_index,
-                                const std::vector<std::vector<ActionIdx>>& app_index,
-                                const std::vector<std::vector<AtomIdx>>& rev_app_index);
 
-        std::vector<ActionIdx>&                     _actions;
-        const AtomIndex&                            _tuple_index;
-        const std::vector<std::vector<ActionIdx>>&  _app_index;
-        const std::vector<std::vector<AtomIdx>>&    _rev_app_index;
+class NodeCreationContext {
+public:
+	NodeCreationContext(const AtomIndex& tuple_index,
+						const std::vector<VariableIdx>& sorted_vars,
+						const std::vector<std::unordered_set<AtomIdx>>& rev_app_index,
+						std::vector<bool>& seen) : 
+						_tuple_index( tuple_index ), _sorted_variables(sorted_vars), _rev_app_index(rev_app_index), _seen(seen) {}
 
-		//! _seen[i] is true iff  the tuple with index i has already been "seen"
-		std::vector<bool>                           _seen;
-    };
+	NodeCreationContext(const NodeCreationContext&) = default;
+						
+	const AtomIndex&                            _tuple_index;
+	const std::vector<VariableIdx>&             _sorted_variables;
+	const std::vector<std::unordered_set<AtomIdx>>&    _rev_app_index;
+
+	//! _seen[i] is true iff variable with index 'i' has been processed
+	std::vector<bool>&                           _seen;
+};
 
     class BaseNode {
     public:
         typedef BaseNode*   ptr;
 
     	virtual ~BaseNode() = default;
-    	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) = 0;
-    	virtual int count() const = 0;
+    	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const = 0;
+    	virtual unsigned count() const = 0;
+		virtual unsigned count_nodes() const = 0;
+		virtual void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const = 0;
         virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const = 0;
 
     	static BaseNode::ptr
-        create_tree(  NodeCreationContext& context );
+        create_tree(std::vector<ActionIdx>&& actions, NodeCreationContext& context);
 
-    	static AtomIdx
-        get_best_atom( const NodeCreationContext& context );
+    	static VariableIdx
+        get_best_variable( const NodeCreationContext& context );
 
     	static bool
         action_done( unsigned i, const NodeCreationContext& context );
@@ -71,39 +78,44 @@ namespace fs0 {
 
 
     class SwitchNode : public BaseNode {
-    	AtomIdx _pivot;
+    	VariableIdx _pivot;
     	std::vector<int>           _immediate_items;
     	std::vector<BaseNode *>    _children;
     	BaseNode *                 _default_child;
 
     public:
-    	SwitchNode( NodeCreationContext& context );
+    	SwitchNode(const std::vector<ActionIdx>& actions, NodeCreationContext& context);
 		~SwitchNode();
 
-    	virtual void generate_applicable_items(     const State& s,
-                                                    const AtomIndex& tuple_index,
-                                                    std::vector<ActionIdx>& actions ) override;
+    	void generate_applicable_items(const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const override;
 
-    	virtual int    count() const;
-        virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
+    	unsigned count() const override;
+		unsigned count_nodes() const override;
+		void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const override;
+		
+        void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
 
     class LeafNode : public BaseNode {
     	std::vector<ActionIdx> _applicable_items;
     public:
-    	LeafNode( std::vector<ActionIdx>& actions );
-    	virtual void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) override;
-    	virtual int count() const { return _applicable_items.size(); }
-        virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
+    	LeafNode(std::vector<ActionIdx>&& actions) : _applicable_items(std::move(actions)) {}
+    	void generate_applicable_items( const State& s, const AtomIndex& tuple_index, std::vector<ActionIdx>& actions ) const override;
+    	unsigned count() const override { return _applicable_items.size(); }
+    	unsigned count_nodes() const override { return 1; }
+    	void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const override { ++leaf; }
+        void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
 
     class EmptyNode : public BaseNode {
     public:
-    	virtual void generate_applicable_items( const State &, const AtomIndex& tuple_index, std::vector<ActionIdx>& ) override {}
-    	virtual int count() const { return 0; }
-        virtual void print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const;
+    	void generate_applicable_items( const State &, const AtomIndex& tuple_index, std::vector<ActionIdx>& ) const override {}
+    	unsigned count() const override { return 0; }
+    	unsigned count_nodes() const override { return 1; }
+    	void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const override { ++empty; }
+        void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
 
@@ -139,6 +151,10 @@ namespace fs0 {
 
 	protected:
 		std::vector<ActionIdx> compute_whitelist(const State& state) const override;
+		
+		//! Returns all the atoms indexes sorted in descending order of appeareance count in action preconditions
+		//! (i.e. the one that appears most goes first), breaking ties lexicographically
+		std::vector<VariableIdx> sort_variables(const std::vector<unsigned>& variable_relevance) const;
     };
 
 }

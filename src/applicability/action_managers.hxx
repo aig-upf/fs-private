@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <unordered_set>
+
 #include <fs_types.hxx>
 #include "base.hxx"
 
@@ -47,6 +49,10 @@ public:
 	virtual void build();
 
 	const std::vector<std::vector<ActionIdx>>& getApplicable() const { return _applicable; }
+	
+	const std::vector<std::unordered_set<AtomIdx>>& getRevApplicable() const { return _rev_applicable; }
+	
+	const std::vector<unsigned>& getVariableRelevance() const { return _variable_relevance; }
 
 	unsigned total_actions() const { return _total_actions; }
 
@@ -61,6 +67,12 @@ protected:
 	//! A map from each atom index to the set of actions that might be applicable when
 	//! that atom is true in a certain state
 	std::vector<std::vector<ActionIdx>> _applicable;
+	
+	//! A map from each action index to the set of atoms that appear on its precondition
+	std::vector<std::unordered_set<AtomIdx>> _rev_applicable;
+	
+	//! '_variable_relevance[i]' is the number of times that state variable 'i' appears on a (distinct) action precondition
+	std::vector<unsigned> _variable_relevance;
 
 	unsigned _total_actions;
 };
