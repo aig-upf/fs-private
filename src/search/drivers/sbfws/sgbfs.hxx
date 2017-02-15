@@ -179,9 +179,6 @@ protected:
 
 	APTKFFHeuristicPT _aptk_rpg;
 	
-	//! The last used iw-simulator, if any
-	std::unique_ptr<SimulationT> _simulator;
-	
 	SBFWSConfig::RelevantSetType _rstype;
 	
 public:
@@ -380,9 +377,10 @@ public:
 	
 	template <typename StateT>
 	std::vector<bool> compute_R_union_Rs(const StateT& state) {
-		_stats.simulation();
-		SimulationT simulator(_model, _featureset, _simconfig);
-		return simulator.compute_R_union_Rs(state);
+		throw std::runtime_error("Revise");
+// 		_stats.simulation();
+// 		SimulationT simulator(_model, _featureset, _simconfig);
+// 		return simulator.compute_R_union_Rs(state);
 	}
 
 	unsigned compute_unachieved(const State& state) {

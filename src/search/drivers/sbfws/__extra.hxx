@@ -55,7 +55,96 @@ class IWRun : public lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateMo
 		
 		_visited.insert(node); // Insert the root anyway to mark it as a relevant node
 	}
+	
+	
+	AtomIdx select_atom(const std::unordered_set<NodePT>& nodes) const {
+		std::unordered_map<AtomIdx, unsigned> counts;
+		
+		for (const auto& node:nodes) {
+			for (const AtomIdx atom:node->_relevant_atoms) {
+				counts[atom]++;
+			}
+		}
+		
+// 		for (const auto& c:counts) LPT_INFO("cout", "Atom " << c.first << " count: " << c.second);
+		
+		using T = typename std::unordered_map<AtomIdx, unsigned>::value_type;
+		return std::max_element(counts.begin(), counts.end(), [](T a, T b){ return a.second < b.second; })->first;
+	}
+	
+	// TODO Optimize this very inefficient prototype
+	std::unordered_set<AtomIdx> compute_hitting_set(std::unordered_set<NodePT>& nodes) const {
+		std::unordered_set<AtomIdx> hs;
+		while (!nodes.empty()) {
+			AtomIdx selected = select_atom(nodes);
+			
+// 			LPT_INFO("cout", "IW Simulation - Selected atom: " << selected << ": " << index.to_atom(selected));
+			
+			for (auto it = nodes.begin(); it != nodes.end();) {
+				const std::unordered_set<unsigned>& rset = (*it)->_relevant_atoms;
+				if (rset.find(selected) != rset.end()) {
+					it = nodes.erase(it);
+				} else {
+					++it;
+				}
+			}
+			hs.insert(selected);
+		}
+		
+		return hs;
+		
+	}
+	
+	std::unordered_set<AtomIdx> compute_union(std::unordered_set<NodePT>& nodes) const {
+		std::unordered_set<AtomIdx> set_union;
+		for (const auto& node:nodes) {
+			set_union.insert(node->_relevant_atoms.begin(), node->_relevant_atoms.end());
+		}
+		return set_union;
+	}
+	
 
+	
+	std::vector<bool> compute_R_union_Rs(const StateT& seed) {
+		_config._max_width = 2;
+// 		_config._bound = -1; // No bound
+		std::vector<NodePT> w1_seed_nodes;
+		auto atoms = compute_R(seed, w1_seed_nodes);
+		
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		std::vector<bool> res(index.size(), false);
+		for (AtomIdx atom:atoms) {
+			res[atom] = true;
+		}
+		return res;
+	}
+	
+	std::unordered_set<NodePT> compute_relevant_w2_nodes() const {
+		std::unordered_set<NodePT> all_visited;
+		std::unordered_set<NodePT> w2_nodes;
+		for (NodePT node:_w1_nodes) {
+			process_w1_node(node, w2_nodes, all_visited);
+		}
+		return w2_nodes;
+	}
+	
+	void process_w1_node(NodePT node, std::unordered_set<NodePT>& w2_nodes, std::unordered_set<NodePT>& all_visited) const {
+		// Traverse from the solution node to the root node
+		
+		NodePT root = node;
+		// We ignore s0
+		while (node->has_parent()) {
+			// If the node has already been processed, no need to do it again, nor to process the parents,
+			// which will necessarily also have been processed.
+			auto res = all_visited.insert(node);
+			if (!res.second) break;
+			
+			if (node->_w == 2) {
+				w2_nodes.insert(node);
+			}
+			node = node->parent;
+		}
+	}	
 	
 };
 
