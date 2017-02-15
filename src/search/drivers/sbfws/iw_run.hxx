@@ -246,7 +246,7 @@ public:
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 		_visited(),
-		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, 1, true)),
+		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, 1, false)),
 		_w1_nodes(),
 		_generated(0),
 		_w1_nodes_expanded(0),
@@ -360,7 +360,7 @@ public:
 		_config._bound = -1; // No bound
 		compute_R(seed);
 		auto rset = _evaluator.reached_atoms();
-		LPT_INFO("cout", "IW Simulation - |R_{IW(1)}| = " << std::count(rset.begin(), rset.end(), true)); // TODO REMOVE THIS, IT'S EXPENSIVE
+// 		LPT_INFO("cout", "IW Simulation - |R_{IW(1)}| = " << std::count(rset.begin(), rset.end(), true)); // TODO REMOVE THIS, IT'S EXPENSIVE
 		return rset;
 	}
 
@@ -383,8 +383,10 @@ public:
 		
 		_config._complete = false;
 		
-		bool all_reached_before_bound = _run(seed);
+		_run(seed);
+// 		bool all_reached_before_bound = _run(seed);
 		
+		/*
 		std::vector<NodePT> w1_seed_nodes;
 		if (all_reached_before_bound) {
 			for (const auto& n:_w1_nodes) {
@@ -393,40 +395,39 @@ public:
 		} else {
 			w1_seed_nodes = _w1_nodes;
 		}
+		*/
 		
+		/*
 		LPT_INFO("cout", "IW Simulation - All subgoals reached before bound? " << all_reached_before_bound);
 		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << this->_model.num_subgoals());
 		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
 		LPT_INFO("cout", "IW Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
 		LPT_INFO("cout", "IW Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
-		
 		LPT_INFO("cout", "IW Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
 		LPT_INFO("cout", "IW Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
 		LPT_INFO("cout", "IW Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
-		
-		
 		LPT_INFO("cout", "IW Simulation - Total number of generated nodes (incl. pruned): " << _generated);
-		
-		
 		LPT_INFO("cout", "IW Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
+		*/
 		
-		auto relevant_w2_nodes = compute_relevant_w2_nodes();
-		LPT_INFO("cout", "IW Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
+// 		auto relevant_w2_nodes = compute_relevant_w2_nodes();
+// 		LPT_INFO("cout", "IW Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
 		
-		auto su = compute_union(relevant_w2_nodes); // Order matters!
-		auto hs = compute_hitting_set(relevant_w2_nodes);
+// 		auto su = compute_union(relevant_w2_nodes); // Order matters!
+// 		auto hs = compute_hitting_set(relevant_w2_nodes);
 		
-		LPT_INFO("cout", "IW Simulation - union-based R (|R|=" << su.size() << ")");
+// 		LPT_INFO("cout", "IW Simulation - union-based R (|R|=" << su.size() << ")");
 // 		_print_atomset(su);
 		
 		
-		LPT_INFO("cout", "IW Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
+// 		LPT_INFO("cout", "IW Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
 // 		_print_atomset(hs);
 		
 		//std::vector<AtomIdx> relevant(hs.begin(), hs.end());
-		std::vector<AtomIdx> relevant(su.begin(), su.end());
-		std::sort(relevant.begin(), relevant.end());
-		return relevant;
+// 		std::vector<AtomIdx> relevant(su.begin(), su.end());
+// 		std::sort(relevant.begin(), relevant.end());
+// 		return relevant;
+		return {};
 	}
 	
 	bool _run(const StateT& seed) {
@@ -440,7 +441,7 @@ public:
 		auto nov =_evaluator.evaluate(*n);
 		_unused(nov);
 		assert(nov==1);
-		LPT_INFO("cout", "IW Simulation - Seed node: " << *n);
+// 		LPT_INFO("cout", "IW Simulation - Seed node: " << *n);
 
 		
 // 		if (process_node(n)) return;
@@ -483,7 +484,7 @@ public:
 // 				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
 				
 				if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
-					LPT_INFO("cout", "IW Simulation - All subgoals reached after processing " << accepted << " nodes");
+// 					LPT_INFO("cout", "IW Simulation - All subgoals reached after processing " << accepted << " nodes");
 					return true;
 				}
 				
@@ -500,13 +501,13 @@ public:
 				}
 				
 				if (_config._bound > 0 && accepted >= _config._bound) {
-					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
+// 					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
 					return false;
 				}
 			}
 		}
-		LPT_INFO("cout", "IW Simulation - State space exhausted after exploring " << accepted << " nodes");
-		LPT_INFO("cout", "IW Simulation - # unreached subgoals: " << _unreached.size());
+// 		LPT_INFO("cout", "IW Simulation - State space exhausted after exploring " << accepted << " nodes");
+// 		LPT_INFO("cout", "IW Simulation - # unreached subgoals: " << _unreached.size());
 		return false; // Or the state space is exhausted before either reaching all subgoals or reaching the bound
 	}	
 

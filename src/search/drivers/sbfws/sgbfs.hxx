@@ -295,12 +295,14 @@ public:
 	template <typename NodeT>
 	unsigned get_hash_r(NodeT& node) {
 		if (_rstype == SBFWSConfig::RelevantSetType::None) return 0;
+		
 		return compute_relevant_atoms(node).num_reached();
 	}
 	
 	template <typename NodeT>
 	unsigned compute_node_complex_type(NodeT& node) {
 // 		LPT_INFO("types", "Type=" << compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node)) << " for node: " << std::endl << node)
+// 		LPT_INFO("hash_r", "#r=" << get_hash_r(node) << " for node: " << std::endl << node)
 		return compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node));
 	}
 	
@@ -451,8 +453,9 @@ public:
 		if (node._relevant_atoms != nullptr) return *node._relevant_atoms;
 
 		// If the node increases the number of reached subgoals, we reset the counter of reached atoms.
-		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
-			LPT_INFO("cout", "Running simulation from node: " << node << ")");
+// 		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
+		if (!node.has_parent()) {
+// 			LPT_INFO("cout", "Running simulation from node: " << node << ")");
 			const AtomIndex& index = _problem.get_tuple_index();
 			auto relevant = compute_R_IW1(node.state);
 			// auto relevant = _heuristic.compute_R_union_Rs(s);
@@ -466,6 +469,7 @@ public:
 			}
 		}
 		
+		
 		// For the seed of the simulation, we want to mark all the initial atoms as reached.
 		// But otherwise, we might want to mark as reached those atoms that change of value with respect to the parent.
 
@@ -473,7 +477,13 @@ public:
 			assert(node.has_parent());
 			assert(!node._relevant_atoms);
 			node._relevant_atoms = std::unique_ptr<LightRelevantAtomSet>(new LightRelevantAtomSet(compute_relevant_atoms(*node.parent))); // This might trigger a recursive computation
-			node._relevant_atoms->update(node.state, &(node.parent->state));
+			
+			
+			if (node.decreases_unachieved_subgoals()) {
+				node._relevant_atoms->init(node.state);
+			} else {
+				node._relevant_atoms->update(node.state, &(node.parent->state));
+			}
 		}
 		
 		
