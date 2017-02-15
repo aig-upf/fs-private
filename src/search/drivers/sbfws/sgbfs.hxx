@@ -198,8 +198,6 @@ protected:
 
 	APTKFFHeuristicPT _aptk_rpg;
 	
-	bool _use_simulation_nodes;
-
 	//! The last used iw-simulator, if any
 	std::unique_ptr<SimulationT> _simulator;
 	
@@ -219,16 +217,13 @@ public:
 		_simconfig(c.getOption<int>("sim.bound", 10000), config.complete_simulation, config.mark_negative_propositions),
 		_stats(stats),
 		_aptk_rpg(nullptr),
-		_use_simulation_nodes(false),
 		_rstype(config.relevant_set_type)
 	{
+		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim || _rstype == SBFWSConfig::RelevantSetType::APTK_HFF);
+		
 		if (_rstype == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
 			_aptk_rpg = APTKFFHeuristicPT(APTKFFHeuristicT::create(_problem, true));
-		} else if (_rstype == SBFWSConfig::RelevantSetType::Macro) {
-			_use_simulation_nodes = true;
 		}
-		
-		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
 	}
 
 	~LazyBFWSHeuristic() {
@@ -343,66 +338,6 @@ public:
 	}
 	
 
-	//! Return a newly-computed set of atoms which are relevant to reach the goal from the given state, with
-	//! all those atoms marked as "unreached", and the rest as irrelevant.
-	//! If 'log_stats' is true, the stats of this simulation will be logged in the '_stats' atribute.
-	/*
-	RelevantAtomSet compute_relevant_simulation(const State& state, unsigned& reachable) {
-		reachable = 0;
-
-		_simulator = std::unique_ptr<SimulationT>(new SimulationT(_model, _featureset, _simconfig));
-
-		//BFWSStats stats;
-		//StatsObserver<IWNodeT, BFWSStats> st_obs(stats, false);
-		//iw->subscribe(st_obs);
-
-		_simulator->run(state);
-
-		RelevantAtomSet relevant = _simulator->retrieve_relevant_atoms(state, reachable);
-
-		//LPT_INFO("cout", "IW Simulation: Node expansions: " << stats.expanded());
-		//LPT_INFO("cout", "IW Simulation: Node generations: " << stats.generated());
-
-		return relevant;
-	}
-
-	void compute_relevant(const State& state, bool log_stats, LightRelevantAtomSet& atomset) {
-		
-		unsigned reachable = 0, max_reachable = _model.num_subgoals();
-		_unused(max_reachable);
-		if (_aptk_rpg) {
-			compute_relevant_aptk_hff(state, atomset);
-		} else if (_use_simulation_nodes) {
-			// Leave the relevant atom set empty
-			assert(false); // This needs to be rethought
-// 			compute_relevant_simulation(state, reachable);
-		} else {
-			compute_relevant_simulation(state, reachable, atomset);
-		}
-
-		LPT_EDEBUG("simulation-relevant", "Computing R(s) from state: " << std::endl << state << std::endl);
-		LPT_EDEBUG("simulation-relevant", relevant.num_unreached() << " relevant atoms (" << reachable << "/" << max_reachable << " reachable subgoals): " << print::relevant_atomset(atomset) << std::endl << std::endl);
-
-		if (log_stats) {
-			_stats.set_initial_reachable_subgoals(reachable);
-			_stats.set_initial_relevant_atoms(atomset.num_unreached());
-		}
-		_stats.reachable_subgoals(reachable);
-		_stats.relevant_atoms(atomset.num_unreached());
-		_stats.simulation();
-
-	}
-
-	void compute_relevant_aptk_hff(const State& state, LightRelevantAtomSet& atomset) {
-		assert(_aptk_rpg);
-		const AtomIndex& atomidx = _problem.get_tuple_index();
-		return _aptk_rpg->compute_r_ff(state, atomidx);
-	}
-	*/
-
-
-	const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _simulator->get_relevant_nodes(); }
-
 	//! This is a hackish way to obtain an integer index that uniquely identifies the tuple <#g, #r>
 	unsigned compute_node_complex_type(unsigned unachieved, unsigned relaxed_achieved) {
 		auto ind = _indexer(unachieved, relaxed_achieved);
@@ -449,7 +384,6 @@ public:
 	const LightRelevantAtomSet& compute_relevant_atoms(NodeT& node) {
 		// Only for the root node _or_ whenever the number of unachieved nodes decreases
 		// do we recompute the set of relevant atoms.
-		State* marking_parent = nullptr;
 
 		if (node._relevant_atoms != nullptr) return *node._relevant_atoms;
 
@@ -490,42 +424,7 @@ public:
 		return *node._relevant_atoms;
 	}
 	
-	/*
-	template <typename NodeT>
-	void run_simulation(NodeT& node) {
-// 		assert(_use_simulation_nodes);
-		if (node._simulated) return;
-		
-		node._simulated = true;
-		
-		unsigned reachable = 0, max_reachable = _model.num_subgoals();
-		_unused(max_reachable);
-		// Leave the relevant atom set empty
-		compute_relevant_simulation(node.state, reachable);
 
-		LPT_EDEBUG("simulation-relevant", "Running simulation from state: " << std::endl << node.state << std::endl);
-		LPT_EDEBUG("simulation-relevant", " " << reachable << "/" << max_reachable << " reachable subgoals" << std::endl << std::endl);
-
-		if (!node.has_parent()) {
-			_stats.set_initial_reachable_subgoals(reachable);
-		}
-		_stats.reachable_subgoals(reachable);
-		_stats.simulation();
-	}
-	*/
-	
-	template <typename NodeT>
-	std::vector<AtomIdx> run_simulation2(NodeT& node) {
-// 		assert(_use_simulation_nodes);
-		assert(!node._simulated);
-		node._simulated = true;
-		
-		LPT_DEBUG("cout", "Running Simulation!");
-		_stats.simulation();
-		
-		SimulationT simulator(_model, _featureset, _simconfig);
-		return simulator.compute_R(node.state);
-	}
 	
 	template <typename StateT>
 	std::vector<bool> compute_R_IW1(const StateT& state) {
@@ -627,8 +526,6 @@ protected:
 
 	//! Whether we want to prune those nodes with novelty w_{#g, #r} > 2 or not
 	bool _prune_wgr2_gt_2;
-	
-	bool _use_simulation_as_macros_only;
 
 	//! The number of generated nodes so far
 	unsigned long _generated;
@@ -665,7 +562,6 @@ public:
 		_stats(stats),
 		_run_simulation_from_root(config.getOption<bool>("bfws.sim0", true)),
 		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
-		_use_simulation_as_macros_only(conf.relevant_set_type==SBFWSConfig::RelevantSetType::Macro),
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
 		_novelty_levels(setup_novelty_levels(model))
@@ -765,11 +661,6 @@ public:
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 
-// 		if (false) {
-// 			_R = _heuristic.run_simulation2(*root); // Preprocess the root node
-// 		if (_R.empty()) return false;
-// 		} else {
-// 		}
 
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
@@ -782,20 +673,7 @@ public:
 	}
 
 protected:
-	/*
-	void dump_simulation_nodes(NodePT& node) {
-		_heuristic.run_simulation(*node);
-		const auto& simulation_nodes = _heuristic.get_last_simulation_nodes();
-		auto search_nodes = convert_simulation_nodes(node, simulation_nodes);
-		// std::cout << "Got " << simulation_nodes.size() << " simulation nodes, of which " << search_nodes.size() << " reused" << std::endl;
-		for (const auto& n:search_nodes) {
-			//create_node(n);
-			_q1.insert(n);
-			_stats.simulation_node_reused();
-			// std::cout << "Simulation node reused: " << *n << std::endl;
-		}
-	}
-	*/
+
 
 	//! Process one node from some of the queues, according to their priorities
 	bool process_one_node() {
@@ -843,7 +721,7 @@ protected:
 
 		///// QWGR1 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 1
-		if (!_use_simulation_as_macros_only && !_qwgr1.empty()) {
+		if (!_qwgr1.empty()) {
 			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 1");
 			NodePT node = _qwgr1.next();
 
@@ -869,17 +747,8 @@ protected:
 			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 2");
 			NodePT node = _qwgr2.next();
 
-			unsigned nov;
-			// nov = _heuristic.evaluate_wg2(*node);
-			
-// 			if (_use_simulation_as_macros_only) {
-// 				if ( node->decreases_unachieved_subgoals()) {
-// 					dump_simulation_nodes(node);
-// 				}
-// 				nov = _heuristic.evaluate_wg2(*node);
-// 			} else {
-				nov = _heuristic.evaluate_wgr2(*node);
-// 			}
+			// unsigned nov = _heuristic.evaluate_wg2(*node);
+			unsigned nov = _heuristic.evaluate_wgr2(*node);
 
 			// If the node has already been processed, no need to do anything else with it,
 			// since we've already run it through all novelty tables.

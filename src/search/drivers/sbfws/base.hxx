@@ -29,7 +29,7 @@ struct SBFWSConfig {
 	enum class NoveltyEvaluatorType {Adaptive, Generic};
 	NoveltyEvaluatorType evaluator_t;
 	
-	enum class RelevantSetType {None, Sim, APTK_HFF, Macro};
+	enum class RelevantSetType {None, Sim, APTK_HFF};
 	RelevantSetType relevant_set_type;
 };
 

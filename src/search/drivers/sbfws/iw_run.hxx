@@ -596,51 +596,6 @@ protected:
 	}	
 
 public:
-	//! Retrieve the set of atoms which are relevant to reach at least one of the subgoals
-	//! Additionally, leaves in the class attribute '_visited' pointers to all those nodes which
-	//! are on at least one of the paths from the seed state to one of the nodes that satisfies a subgoal.
-	RelevantAtomSet retrieve_relevant_atoms(const StateT& seed, unsigned& reachable) {
-		const AtomIndex& atomidx = this->_model.getTask().get_tuple_index();
-		RelevantAtomSet atomset(&atomidx);
-
-		// atomset.mark(seed, RelevantAtomSet::STATUS::UNREACHED); // This is not necessary, since all these atoms will be made true by the "root" state of the simulation
-
-		_visited.clear();
-
-		// Iterate through all the subgoals that have been reached, and rebuild the path from the seed state to reach them
-		// adding all atoms encountered in the path to the RelevantAtomSet as "relevant but unreached"
-		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
-			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
-			
-			if (_in_seed[subgoal_idx] || !paths.empty()) {
-				++reachable;
-			}
-			
-			for (const NodePT& node:paths) {
-				process_path_node(node, atomset);
-			}
-		}
-
-		return atomset;
-	}
-	
-	void process_path_node(NodePT node, RelevantAtomSet& atomset) {
-		// Traverse from the solution node to the root node, adding all atoms on the way
-		// if (node->has_parent()) node = node->parent; // (Don't) skip the last node
-		while (node->has_parent()) {
-			// If the node has already been processed, no need to do it again, nor to process the parents,
-			// which will necessarily also have been processed.
-			if (_visited.find(node) != _visited.end()) break;
-			
-			// Mark all the atoms in the state as "yet to be reached"
-			atomset.mark(node->state, &(node->parent->state), RelevantAtomSet::STATUS::UNREACHED, _config._mark_negative, false);
-			_visited.insert(node);
-			node = node->parent;
-		}
-		
-		_visited.insert(node); // Insert the root anyway to mark it as a relevant node
-	}
-	
 	
 	const std::unordered_set<NodePT>& get_relevant_nodes() const { return _visited; }
 };
