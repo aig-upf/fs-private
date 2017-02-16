@@ -495,7 +495,7 @@ public:
 		_pruning(config.getOption<bool>("bfws.prune", false)),
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
-		_novelty_levels(setup_novelty_levels(model))
+		_novelty_levels(setup_novelty_levels(model, config))
 	{
 	}
 
@@ -505,7 +505,19 @@ public:
 	LazyBFWS& operator=(const LazyBFWS&) = delete;
 	LazyBFWS& operator=(LazyBFWS&&) = default;
 	
-	unsigned setup_novelty_levels(const StateModelT& model) const {
+	unsigned setup_novelty_levels(const StateModelT& model, const Config& config) const {
+		
+		int user_option = config.getOption<int>("novelty_levels", -1);
+		if (user_option != -1) {
+			if (user_option != 2 && user_option != 3) {
+				throw std::runtime_error("Unsupported novelty levels: " + std::to_string(user_option));
+			}
+			
+			LPT_INFO("cout", "(User-specified) Novelty levels of the search:  " << user_option);
+			return user_option;
+		}
+		
+		
 		const AtomIndex& atomidx = model.getTask().get_tuple_index();
 		const unsigned num_subgoals = model.num_subgoals();
 		const unsigned partition_size = num_subgoals * 10;   /// ???? What value expected for |R|??

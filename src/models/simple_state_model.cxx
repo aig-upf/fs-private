@@ -107,25 +107,41 @@ SimpleStateModel::applicable_actions(const StateT& state) const {
 
 ActionManagerI*
 SimpleStateModel::build_action_manager(const Problem& problem) {
+	using StrategyT = Config::SuccessorGenerationStrategy;
+	const Config& config = Config::instance();
 	const auto& actions = problem.getGroundActions();
 	const auto& constraints = problem.getStateConstraints();
 	const auto& tuple_idx =  problem.get_tuple_index();
-	Config::SuccessorGenerationStrategy strategy = Config::instance().getSuccessorGeneratorType();
+	StrategyT strategy = config.getSuccessorGeneratorType();
 
+	if (strategy == StrategyT::adaptive) {
+		// Choose match-tree if number of actions is large enough, otherwise naive.
+		unsigned cutoff = config.getOption<unsigned>("mt_cutoff", 20000);
+		if (actions.size() > cutoff) {
+			strategy = StrategyT::match_tree;
+			LPT_INFO("cout", "Adapted Successor Generator Strategy to Match-Tree (" << actions.size() << " > " << cutoff << ")");
 
-	if (strategy == Config::SuccessorGenerationStrategy::naive) {
+		} else {
+			strategy = StrategyT::naive;
+			LPT_INFO("cout", "Adapted Successor Generator Strategy to Naive (" << actions.size() << " <= " << cutoff << ")");
+		}
+	}
+	
+	LPT_INFO( "cout", "Ground actions: " << actions.size());
+
+	if (strategy == StrategyT::naive) {
 		LPT_INFO( "cout", "Successor Generator Strategy: Naive");
 		return new NaiveActionManager(actions, constraints);
 	}
 
-	if (strategy == Config::SuccessorGenerationStrategy::functional_aware) {
+	if (strategy == StrategyT::functional_aware) {
 		LPT_INFO( "cout", "Successor Generator Strategy: Functional Aware");
 		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build();
 		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
 
 
-	} else if (strategy == Config::SuccessorGenerationStrategy::match_tree) {
+	} else if (strategy == StrategyT::match_tree) {
 		LPT_INFO( "cout", "Successor Generator Strategy: Match Tree");
 		LPT_INFO("cout", "Mem. usage before match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
