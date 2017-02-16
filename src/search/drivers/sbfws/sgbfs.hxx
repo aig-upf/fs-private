@@ -322,32 +322,32 @@ public:
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
 	}
 
+	//! Compute the RelevantAtomSet that corresponds to the given node, and from which
+	//! the counter #r(node) can be obtained. This implements a lazy version which
+	//! can recursively compute the parent RelevantAtomSet.
+	//! Additionally, this caches the set within the node for future reference.
 	template <typename NodeT>
 	const LightRelevantAtomSet& compute_relevant_atoms(NodeT& node) {
-		// Only for the root node _or_ whenever the number of unachieved nodes decreases
-		// do we recompute the set of relevant atoms.
-
+		
+		// If the set was cached, simply return it
 		if (node._relevant_atoms != nullptr) return *node._relevant_atoms;
+		
 
-		// If the node increases the number of reached subgoals, we reset the counter of reached atoms.
 //#		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
  		if (!node.has_parent()) {
-// 			LPT_INFO("cout", "Running simulation from node: " << node << ")");
-			const AtomIndex& index = _problem.get_tuple_index();
+			// Throw a simulation from the node, and compute a set R[IW1] from there.
 			auto relevant = compute_R_IW1(node.state);
 			// auto relevant = _heuristic.compute_R_union_Rs(s);
-			node._helper = std::unique_ptr<AtomsetHelper>(new AtomsetHelper(index, relevant));
+			node._helper = std::unique_ptr<AtomsetHelper>(new AtomsetHelper(_problem.get_tuple_index(), relevant));
 			node._relevant_atoms = std::unique_ptr<LightRelevantAtomSet>(new LightRelevantAtomSet(*node._helper));
 			node._relevant_atoms->init(node.state);
 			
 			if (!node.has_parent()) { // Log some info for the seed state
 				LPT_DEBUG("cout", "R_{IW(1)}(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ")");
 				LPT_DEBUG("cout", *(node._relevant_atoms));
-		}
+			}
 		}
 
-		// For the seed of the simulation, we want to mark all the initial atoms as reached.
-		// But otherwise, we might want to mark as reached those atoms that change of value with respect to the parent.
 
 		else { // Copy the set from the parent and update the set of relevant nodes with those that have been reached.
 			assert(node.has_parent());
@@ -366,7 +366,6 @@ public:
 		return *node._relevant_atoms;
 	}
 	
-
 	
 	template <typename StateT>
 	std::vector<bool> compute_R_IW1(const StateT& state) {
@@ -463,7 +462,7 @@ protected:
 	BFWSStats& _stats;
 
 	//! Whether we want to prune those nodes with novelty w_{#g, #r} > 2 or not
-	bool _prune_wgr2_gt_2;
+	bool _pruning;
 
 	//! The number of generated nodes so far
 	unsigned long _generated;
@@ -493,7 +492,7 @@ public:
 		_featureset(std::move(featureset)),
 		_heuristic(conf, config, model, _featureset, *_search_evaluator, stats),
 		_stats(stats),
-		_prune_wgr2_gt_2(config.getOption<bool>("bfws.prune", false)),
+		_pruning(config.getOption<bool>("bfws.prune", false)),
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
 		_novelty_levels(setup_novelty_levels(model))
@@ -592,7 +591,6 @@ public:
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 
-
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
 
@@ -607,11 +605,11 @@ protected:
 
 
 	//! Process one node from some of the queues, according to their priorities
+	//! Returns true if some action has been performed, false if all queues were empty
 	bool process_one_node() {
 		///// Q1 QUEUE /////
 		// First process nodes with w_{#g}=1
 		if (!_q1.empty()) {
-			LPT_EDEBUG("multiqueue-search", "Picking node from Q1");
 			NodePT node = _q1.next();
 			process_node(node);
 			_stats.wg1_node();
@@ -621,29 +619,29 @@ protected:
 		///// QWGR1 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 1
 		if (!_qwgr1.empty()) {
-			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 1");
 			NodePT node = _qwgr1.next();
 
 			// Compute wgr1 (this will compute #r lazily if necessary), and if novelty is one, expand the node.
 			// Note that we _need_ to process the node through the wgr1 tables even if the node itself
 			// has already been processed, for the sake of complying with the proper definition of novelty.
 			unsigned nov = _heuristic.evaluate_wgr1(*node);
-			if (!node->_processed && nov == 1) {
-				_stats.wgr1_node();
-				process_node(node);
-			} else if (_novelty_levels == 2) {
-				_qrest.insert(node);
-			}
+			
+			if (!node->_processed) {
+				if (nov == 1) {
+					_stats.wgr1_node();
+					process_node(node);	 
+				} else {
+					handle_unprocessed_node(node, (_novelty_levels == 2));
+				}
+			} 		
 
 			// We might have processed one node but found no goal, let's start the loop again in case some node with higher priority was generated
 			return true;
 		}
 
-
 		///// QWGR2 QUEUE /////
 		// Check whether there are nodes with w_{#g, #r} = 2
 		if (_novelty_levels == 3 && !_qwgr2.empty()) {
-			LPT_EDEBUG("multiqueue-search", "Checking for open nodes with w_{#g,#r} = 2");
 			NodePT node = _qwgr2.next();
 
 			// unsigned nov = _heuristic.evaluate_wg2(*node);
@@ -656,9 +654,7 @@ protected:
 					_stats.wgr2_node();
 					process_node(node);
 				} else {
-					if (!_prune_wgr2_gt_2) {
-						_qrest.insert(node);
-					}
+					handle_unprocessed_node(node, true);
 				}
 			}
 
@@ -666,11 +662,11 @@ protected:
 		}
 
 		///// Q_REST QUEUE /////
-		// Process the rest of the nodes, i.e. those with w_{#g, #r} > 1
+		// Process the rest of the nodes, i.e. those with w_{#g, #r} > 2
 		// We only extract one node and process it, as this will hopefully yield nodes with low novelty
 		// that will thus have more priority than the rest of nodes in this queue.
 		if (!_qrest.empty()) {
-			LPT_EDEBUG("multiqueue-search", "Expanding one remaining node with w_{#g, #r} > 1");
+			LPT_EDEBUG("multiqueue-search", "Expanding one remaining node with w_{#g, #r} > 2");
 			NodePT node = _qrest.next();
 			if (!node->_processed) {
 				_stats.wgr_gt2_node();
@@ -680,6 +676,12 @@ protected:
 		}
 
 		return false;
+	}
+	
+	inline void handle_unprocessed_node(const NodePT& node, bool is_last_queue) {
+		if (is_last_queue && !_pruning) {
+			_qrest.insert(node);
+		}
 	}
 
 
@@ -725,12 +727,10 @@ protected:
 	}
 
 	// Return true iff at least one node was created
-	unsigned expand_node(const NodePT& node) {
+	void expand_node(const NodePT& node) {
 		LPT_DEBUG("cout", *node);
 		_stats.expansion();
 		if (node->decreases_unachieved_subgoals()) _stats.expansion_g_decrease();
-
-		unsigned created = 0;
 
 		for (const auto& action:_model.applicable_actions(node->state)) {
 			// std::cout << *(Problem::getInstance().getGroundActions()[action]) << std::endl;
@@ -741,9 +741,7 @@ protected:
 			if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it
 
 			create_node(successor);
-			++created;
 		}
-		return created;
 	}
 
 	bool is_open(const NodePT& node) const {
@@ -751,13 +749,6 @@ protected:
 		       _qwgr1.contains(node) ||
 		       _qwgr2.contains(node) ||
 		       _qrest.contains(node);
-	}
-
-	bool some_queue_nonempty() const {
-		return !_q1.empty() ||
-		       !_qwgr1.empty() ||
-		       !_qwgr2.empty() ||
-		       !_qrest.empty();
 	}
 
 	inline bool is_goal(const NodePT& node) const {

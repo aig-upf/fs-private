@@ -65,9 +65,7 @@ public:
 		}
 	}	
 	
-
 	unsigned num_reached() const { return _num_reached; }
-// 	unsigned num_unreached() const { return _helper._num_relevant - _num_reached; }
 
 	void init(const State& state) {
 		_reached = std::vector<bool>(_helper.size(), false);
