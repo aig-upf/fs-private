@@ -228,6 +228,22 @@ int get_process_id() {
     return getpid();
 }
 
+void limit_core_dump_size() {
+	// Set core max size to 0
+	struct rlimit rlim;
+	rlim.rlim_cur = rlim.rlim_max = 0;
+	setrlimit(RLIMIT_CORE, &rlim);
+}
+
+void init_fs_system() {
+#if !defined(DEBUG)
+	limit_core_dump_size();
+#endif
+	
+	register_event_handlers();
+}
+
+
 } // namespaces
 
 namespace fs0 { namespace utils {
