@@ -209,6 +209,8 @@ protected:
 	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
  	std::vector<std::vector<NodePT>> _all_paths;
 
+ 	std::vector<NodePT> _optimal_paths;
+
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
 	// TODO REMOVE
 	std::unordered_set<unsigned> _unreached;
@@ -243,6 +245,7 @@ public:
 		Base(model, OpenListT(), ClosedListT()),
 		_config(config),
 		_all_paths(model.num_subgoals()),
+		_optimal_paths(model.num_subgoals()),
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 // 		_visited(),
@@ -333,7 +336,7 @@ public:
 	
 	std::vector<AtomIdx> compute_R(const StateT& seed, std::vector<NodePT>& seed_nodes) {
 		
-		_config._complete = true;
+		_config._complete = false;
 		
  		_run(seed);
 		
@@ -348,12 +351,20 @@ public:
 // 		std::vector<NodePT> wgt2_goal_reaching_nodes;
 		
 		
+		/*
 		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
 			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
 			assert(_in_seed[subgoal_idx] || !paths.empty());
 			seed_nodes.insert(seed_nodes.end(), paths.begin(), paths.end());
 		}
-		
+		*/
+
+		for (unsigned subgoal_idx = 0; subgoal_idx < _optimal_paths.size(); ++subgoal_idx) {
+			if (!_in_seed[subgoal_idx]) {
+				assert(_optimal_paths[subgoal_idx] != nullptr);
+				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
+			}
+		}		
 		
 		
 		/*
@@ -387,9 +398,8 @@ public:
 	}
 	
 	bool _run(const StateT& seed) {
-		mark_seed_subgoals(seed);
-		
 		NodePT n = std::make_shared<NodeT>(seed, _generated++);
+		mark_seed_subgoals(n);
 		
 		auto nov =_evaluator.evaluate(*n);
 		_unused(nov);
@@ -484,17 +494,19 @@ protected:
 		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
 			if (!_in_seed[i] && this->_model.goal(state, i)) {
 				node->satisfies_subgoal = true;
-				_all_paths[i].push_back(node);
+				if (!_optimal_paths[i]) {
+					_optimal_paths[i] = node;
+				}
 				_unreached.erase(i);
 			}
 		}
-// 		return _unreached.empty();
-		return false; // return false so we don't interrupt the processing
+ 		return _unreached.empty();
+		//return false; // return false so we don't interrupt the processing
 	}
 	
-	void mark_seed_subgoals(const StateT& seed) {
+	void mark_seed_subgoals(const NodePT& node) {
 		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
-			if (this->_model.goal(seed, i)) {
+			if (this->_model.goal(node->state, i)) {
 				_in_seed[i] = true;
 			} else {
 				_unreached.insert(i);
