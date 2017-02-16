@@ -1,4 +1,5 @@
 
+#include <numeric>
 
 #include <constraints/direct/alldiff_constraint.hxx>
 #include <utils/printers/helper.hxx>

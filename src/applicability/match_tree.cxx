@@ -1,4 +1,6 @@
 
+#include <numeric>
+
 #include <applicability/match_tree.hxx>
 #include <algorithm>
 #include <aptk2/tools/logging.hxx>
@@ -116,7 +118,7 @@ namespace fs0 {
 				bool is_relevant = false;
 				for (unsigned val_idx = 0; val_idx < values.size(); ++val_idx) {
 					ObjectIdx value = values[val_idx];
-					if (value != val_idx || value < 0 || value > 1) throw std::runtime_error("Not yet prepared for this");
+					if ( val_idx > 1 || value < 0 || value > 1) throw std::runtime_error("Not yet prepared for this");
 					AtomIdx atom = context._tuple_index.to_index(_pivot, value);
 					if (required.find(atom) != required.end()) {
 						is_relevant = true;

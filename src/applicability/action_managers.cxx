@@ -10,6 +10,7 @@
 #include <languages/fstrips/scopes.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/vector.hxx>
+#include <numeric>
 
 namespace fs0 {
 
