@@ -191,7 +191,12 @@ public:
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
-		_simconfig(c.getOption<int>("sim.bound", 10000), config.complete_simulation, config.mark_negative_propositions),
+		_simconfig(c.getOption<int>("sim.bound", 10000),
+				   config.complete_simulation,
+				   config.mark_negative_propositions,
+				   config.simulation_width,
+			       c.getOption<bool>("goal_directed", false)
+		),
 		_stats(stats),
 		_aptk_rpg(nullptr),
 		_rstype(config.relevant_set_type)

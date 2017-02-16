@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <iomanip>
 #include <unordered_set>
 
@@ -192,9 +195,10 @@ public:
 		//!
 		unsigned _max_width;
 		
-		Config(int bound, bool complete, bool mark_negative) :
-			_bound(bound), _complete(complete), _mark_negative(mark_negative), _max_width(1) {}
+		bool _use_goal_directed_info;
 		
+		Config(int bound, bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info) :
+			_bound(bound), _complete(complete), _mark_negative(mark_negative), _max_width(max_width), _use_goal_directed_info(goal_directed_info) {}
 		
 	};
 	
@@ -203,7 +207,7 @@ protected:
 	Config _config;
 
 	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
-// 	std::vector<std::vector<NodePT>> _all_paths;
+ 	std::vector<std::vector<NodePT>> _all_paths;
 
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
 	// TODO REMOVE
@@ -238,7 +242,7 @@ public:
 	IWRun(const StateModel& model, const FeatureSetT& featureset, const IWRun::Config& config) :
 		Base(model, OpenListT(), ClosedListT()),
 		_config(config),
-// 		_all_paths(model.num_subgoals()),
+		_all_paths(model.num_subgoals()),
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 // 		_visited(),
@@ -267,13 +271,12 @@ public:
 	
 	
 	//! Mark all atoms in the path to some goal. 'seed_nodes' contains all nodes satisfying some subgoal.
-	std::vector<bool> compute_relevant_w1_atoms(const std::vector<NodePT>& seed_nodes) const {
+	void mark_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes, std::vector<bool>& atoms) const {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		std::unordered_set<NodePT> all_visited;
-		std::vector<bool> seen_atoms(index.size());
+		assert(atoms.size() == index.size());
 		
 		for (NodePT node:seed_nodes) {
-			
 			
 			NodePT root = node;
 			// We ignore s0
@@ -287,44 +290,72 @@ public:
 				for (unsigned var = 0; var < state.numAtoms(); ++var) {
 					if (state.getValue(var) == 0) continue; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
 					AtomIdx atom = index.to_index(var, state.getValue(var));
-					seen_atoms[atom] = true;
+					atoms[atom] = true;
 				}
 				
 				node = node->parent;
 			}			
 		}
-		return seen_atoms;
 	}
+	
 	
 	std::vector<bool> compute_R_IW1(const StateT& seed) {
-		_config._max_width = 1;
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+// 		_config._max_width = 1;
 		_config._bound = -1; // No bound
-		std::vector<NodePT> w1_seed_nodes;
-		compute_R(seed, w1_seed_nodes);
+		std::vector<NodePT> seed_nodes;
+		compute_R(seed, seed_nodes);
+
+
+		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
 		
-// 		auto rset = compute_relevant_w1_atoms(w1_seed_nodes);
- 		auto rset = _evaluator.reached_atoms();
-		LPT_INFO("cout", "IW Simulation - |R_{IW(1)}| = " << std::count(rset.begin(), rset.end(), true)); // TODO REMOVE THIS, IT'S EXPENSIVE
-		return rset;
+		// COMPUTE BOTH OPTIONS, FOR THE SAKE OF INFORMATIVENESS
+		std::vector<bool> rel_goal_directed(index.size(), false);
+		mark_atoms_in_path_to_subgoal(seed_nodes, rel_goal_directed);
+		
+		std::vector<bool> rel_blind = _evaluator.reached_atoms();
+
+		
+		LPT_INFO("cout", "IW Simulation - Goal-directed |R| = " << std::count(rel_goal_directed.begin(), rel_goal_directed.end(), true));
+		LPT_INFO("cout", "IW Simulation - Blind |R|         = " << std::count(rel_blind.begin(), rel_blind.end(), true));
+		
+		if (_config._use_goal_directed_info) {
+			LPT_INFO("cout", "IW Simulation - Using goal-directed R");
+			return rel_goal_directed;
+		} else {
+			LPT_INFO("cout", "IW Simulation - Using blind R");
+			return rel_blind;
+		}
 	}
 
+
 	
-	std::vector<AtomIdx> compute_R(const StateT& seed, std::vector<NodePT>& w1_seed_nodes) {
+	
+	std::vector<AtomIdx> compute_R(const StateT& seed, std::vector<NodePT>& seed_nodes) {
 		
-		_config._complete = false;
+		_config._complete = true;
 		
- 		bool all_reached_before_bound = _run(seed);
+ 		_run(seed);
 		
-		if (all_reached_before_bound) {
-			for (const auto& n:_w1_nodes) {
-				if (n->satisfies_subgoal) w1_seed_nodes.push_back(n);
-			}
-		} else {
-			w1_seed_nodes = _w1_nodes;
+		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << this->_model.num_subgoals());
+		if (!_unreached.empty()) {
+			LPT_INFO("cout", "Some subgoals not reached during the simulation. ABORTING");
+			exit(1);
+		}
+		
+// 		std::vector<NodePT> w1_goal_reaching_nodes;
+// 		std::vector<NodePT> w2_goal_reaching_nodes;
+// 		std::vector<NodePT> wgt2_goal_reaching_nodes;
+		
+		
+		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
+			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
+			assert(_in_seed[subgoal_idx] || !paths.empty());
+			seed_nodes.insert(seed_nodes.end(), paths.begin(), paths.end());
 		}
 		
 		
-		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << this->_model.num_subgoals());
+		
 		/*
 		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
 		LPT_INFO("cout", "IW Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
@@ -365,9 +396,6 @@ public:
 		assert(nov==1);
 // 		LPT_INFO("cout", "IW Simulation - Seed node: " << *n);
 
-		
-// 		if (process_node(n)) return;
-		
 		this->_open.insert(n);
 
 		unsigned accepted = 1; // (the root node counts as accepted)
@@ -439,7 +467,7 @@ protected:
 
 			if (this->_model.goal(state, subgoal_idx)) {
 				node->satisfies_subgoal = true;
-// 				_all_paths[subgoal_idx].push_back(node);
+				_all_paths[subgoal_idx].push_back(node);
 				it = _unreached.erase(it);
 			} else {
 				++it;
@@ -456,10 +484,12 @@ protected:
 		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
 			if (!_in_seed[i] && this->_model.goal(state, i)) {
 				node->satisfies_subgoal = true;
-// 				_all_paths[i].push_back(node);
+				_all_paths[i].push_back(node);
+				_unreached.erase(i);
 			}
 		}
-		return false;
+// 		return _unreached.empty();
+		return false; // return false so we don't interrupt the processing
 	}
 	
 	void mark_seed_subgoals(const StateT& seed) {
