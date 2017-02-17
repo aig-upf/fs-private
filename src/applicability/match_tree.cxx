@@ -287,15 +287,6 @@ namespace fs0 {
 
 		// This will sort by count, breaking ties lexicographically by variable index.
 		std::sort(count.begin(), count.end());
-<<<<<<< HEAD
-
-		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << count.size() );
-		LPT_INFO("cout", "(B2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-
-		std::vector<VariableIdx> indexes_only;
-		indexes_only.reserve(count.size());
-
-=======
 
 		std::vector<VariableIdx> indexes_only;
 		indexes_only.reserve(count.size());
@@ -303,7 +294,6 @@ namespace fs0 {
 // 		LPT_INFO( "cout", "[Match Tree] Size of Variable Selection Heuristic array: " << count.size() );
 // 		LPT_INFO( "cout", "[Match Tree] Variables ordered by frequency:");
 
->>>>>>> upstream/bfws-v1.0-beta1
 		for (int i = count.size()-1; i >= 0; --i) {
             if ( count[i].first == 0 ) continue;
 			indexes_only.push_back(count[i].second);
