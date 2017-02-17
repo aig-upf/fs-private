@@ -478,6 +478,7 @@ protected:
 			if (this->_model.goal(state, subgoal_idx)) {
 				node->satisfies_subgoal = true;
 				_all_paths[subgoal_idx].push_back(node);
+				if (!_optimal_paths[subgoal_idx]) _optimal_paths[subgoal_idx] = node;
 				it = _unreached.erase(it);
 			} else {
 				++it;
@@ -494,9 +495,7 @@ protected:
 		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
 			if (!_in_seed[i] && this->_model.goal(state, i)) {
 				node->satisfies_subgoal = true;
-				if (!_optimal_paths[i]) {
-					_optimal_paths[i] = node;
-				}
+				if (!_optimal_paths[i]) _optimal_paths[i] = node;
 				_unreached.erase(i);
 			}
 		}
