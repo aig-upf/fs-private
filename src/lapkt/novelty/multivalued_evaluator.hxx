@@ -94,8 +94,8 @@ public:
 	
 	//! Evaluate assuming all elements in the valuation can be novel
 	unsigned evaluate(const ValuationT& valuation, unsigned k) override {
-		setup_all_features_novel(valuation);
-		return _evaluate(valuation, _all_features_novel, k);
+		this->setup_all_features_novel(valuation);
+		return _evaluate(valuation, this->_all_features_novel, k);
 	}	
 	
 protected:
@@ -110,17 +110,6 @@ protected:
 	//! Maximum novelty value to be computed
 	unsigned _max_novelty;
 
-	
-	//! This is used to cache a vector <0,1,...,k> of appropriate length and spare the creation of one each time we need it.
-	mutable std::vector<unsigned> _all_features_novel;	
-	
-	void setup_all_features_novel(const ValuationT& valuation) {
-		std::size_t num_features = valuation.size();
-		if (_all_features_novel.size() != num_features) {
-			_all_features_novel.resize(num_features);
-			std::iota(_all_features_novel.begin(), _all_features_novel.end(), 0);
-		}		
-	}
 	
 	//! A tuple of width 1 simply contains the identifier of the variable and the value
 	using Width1Tuple = std::pair<unsigned, FeatureValueT>;

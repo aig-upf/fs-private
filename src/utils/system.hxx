@@ -4,7 +4,11 @@
  */
 
 #pragma once
+
 #include <stddef.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 /*
  * Author:  David Robert Nadeau
@@ -23,6 +27,10 @@ size_t getPeakRSS( );
 
 namespace fs0 {
 
+//! Entry point to perform some calls to the system
+//! relevant to the well-functioning of FS.
+void init_fs_system();
+
 enum ExitCode {
     PLAN_FOUND = 0,
     CRITICAL_ERROR = 1,
@@ -40,6 +48,9 @@ void register_event_handlers();
 int get_process_id();
 
 size_t get_current_memory_in_kb();
+
+//! Disable unix core dumps
+void limit_core_dump_size();
 
 } // namespaces
 

@@ -35,7 +35,7 @@ public:
 	enum class EvaluationT {eager, delayed, delayed_for_unhelpful};
 
 	//! The type of successor generator to use
-	enum class SuccessorGenerationStrategy { naive, functional_aware, match_tree };
+	enum class SuccessorGenerationStrategy { naive, functional_aware, match_tree, adaptive };
 
 	//! Explicit initizalition of the singleton
 	static void init(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);

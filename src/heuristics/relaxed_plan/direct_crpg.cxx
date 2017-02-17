@@ -1,5 +1,6 @@
 
 #include <limits>
+#include <numeric>
 
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
 #include <constraints/direct/action_manager.hxx>

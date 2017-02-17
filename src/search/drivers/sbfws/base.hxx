@@ -9,7 +9,7 @@
 #include <ios>
 #include <iomanip>
 
-namespace fs0 { class Config; }
+namespace fs0 { class Config; class Problem; }
 
 namespace fs0 { namespace bfws {
 
@@ -20,16 +20,17 @@ struct SBFWSConfig {
 	SBFWSConfig(SBFWSConfig&&) = default;
 	SBFWSConfig& operator=(SBFWSConfig&&) = default;
 
-	enum class RelevantSetType {None, Sim, APTK_HFF, Macro};
-	
 	//! The maximum levels of width for search and simulation
 	const unsigned search_width;
 	const unsigned simulation_width;
 	const bool mark_negative_propositions;
 	const bool complete_simulation;
 	
-	RelevantSetType relevant_set_type;
+	enum class NoveltyEvaluatorType {Adaptive, Generic};
+	NoveltyEvaluatorType evaluator_t;
 	
+	enum class RelevantSetType {None, Sim, APTK_HFF};
+	RelevantSetType relevant_set_type;
 };
 
 class BFWSStats {
@@ -50,6 +51,7 @@ public:
 	
 	void wg1_node() { ++_num_wg1_nodes; }
 	void wgr1_node() { ++_num_wgr1_nodes; }
+	void wg1_5_node() { ++_num_wg1_5_nodes; }
 	void wgr2_node() { ++_num_wgr2_nodes; }
 	void wgr_gt2_node() { ++_num_wgr_gt2_nodes; }
 	
@@ -60,6 +62,7 @@ public:
 
 	unsigned long num_wg1_nodes() const { return _num_wg1_nodes; }
 	unsigned long num_wgr1_nodes() const { return _num_wgr1_nodes; }
+	unsigned long num_wg1_5_nodes() const { return _num_wg1_5_nodes; }
 	unsigned long num_wgr2_nodes() const { return _num_wgr2_nodes; }
 	unsigned long num_wgr_gt2_nodes() const { return _num_wgr_gt2_nodes; }
 	
@@ -99,6 +102,7 @@ public:
 
 			std::make_tuple("_num_wg1_nodes", "w_{#g}(n)=1", std::to_string(_num_wg1_nodes)),
 			std::make_tuple("_num_wgr1_nodes", "w_{#g,#r}(n)=1", std::to_string(_num_wgr1_nodes)),
+			std::make_tuple("_num_wg1_5_nodes", "w_{#g}(n)=1.5", std::to_string(_num_wg1_5_nodes)),
 			std::make_tuple("_num_wgr2_nodes", "w_{#g,#r}(n)=2", std::to_string(_num_wgr2_nodes)),
 			std::make_tuple("_num_wgr_gt2_nodes", "w_{#g,#r}(n)>2", std::to_string(_num_wgr_gt2_nodes)),
 			
@@ -131,6 +135,7 @@ protected:
 	
 	unsigned long _num_wg1_nodes; // The number of nodes with w_{#g} = 1 that have been processed.
 	unsigned long _num_wgr1_nodes; // The number of nodes with w_{#g,#r} = 1 (and w_{#g} > 1) that have been processed.
+	unsigned long _num_wg1_5_nodes;
 	unsigned long _num_wgr2_nodes; // The number of nodes with w_{#g,#r} = 2 (and w_{#g} > 1) that have been processed.
 	unsigned long _num_wgr_gt2_nodes; // The number of nodes with w_{#g,#r} > 2 (and w_{#g} > 1) that have been processed.
 	unsigned long _num_expanded_g_decrease; // The number of nodes with a decrease in #g that are expanded
@@ -154,6 +159,10 @@ struct SBFWSNoveltyIndexer {
 		return std::make_tuple(unachieved, relaxed_achieved);
 	}
 };
+
+//! A helper to create a novelty evaluator of the appropriate type
+template <typename NoveltyEvaluatorT>
+NoveltyEvaluatorT* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width, bool persistent = false);
 
 
 } } // namespaces

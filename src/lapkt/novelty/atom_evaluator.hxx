@@ -7,6 +7,9 @@
 
 #include "base.hxx"
 #include <aptk2/tools/logging.hxx>
+#include <utils/utils.hxx>
+#include <problem.hxx>
+
 
 
 namespace lapkt { namespace novelty {
@@ -142,7 +145,7 @@ protected:
 	}	
 
 	bool evaluate_pairs(const ValuationT& valuation, const std::vector<unsigned>& novel) {
-		if(this->_max_novelty < 2) {  // i.e. make sure the evaluator was prepared for this widths!
+		if(this->_max_novelty < 2) {  // i.e. make sure the evaluator was prepared for this width!
 			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
 		}
 		
@@ -158,6 +161,8 @@ protected:
 		
 		auto all_indexes = index_valuation(valuation);
 		auto novel_indexes = index_valuation(novel, valuation);
+		
+		_t2marker.start();
 
 		bool exists_novel_tuple = false;
 		for (unsigned feat_index1:novel_indexes) {
@@ -179,6 +184,8 @@ protected:
 	bool evaluate_pairs_from_index(const std::vector<unsigned>& indexes) {
 		bool exists_novel_tuple = false;
 		unsigned sz = indexes.size();
+		
+		_t2marker.start();
 
 		for (unsigned i = 0; i < sz; ++i) {
 			unsigned index_i = indexes[i];
@@ -226,7 +233,99 @@ protected:
 			return true;
 		}
 		return false;
+	}
+	
+	static void print_indexes(const std::vector<unsigned>& indexes) {
+		for (auto ind:indexes) print_index(ind);
+	}
+	
+	static void print_index(unsigned ind) {
+		const fs0::AtomIndex& index = fs0::Problem::getInstance().get_tuple_index();
+		_unused(index);
+		LPT_DEBUG("cout", "\t" << index.to_atom(ind));
 	}	
+	
+	
+	//! 'valuation' contains feature values
+	//! 'novel' contains the indexes of 'valuation' which contain values that are novel wrt the parent valuation
+	//! 'special' contains indexes of feature-value pairs;
+	bool evaluate_1_5(const ValuationT& valuation, const std::vector<unsigned>& novel, const std::vector<unsigned>& special) override {
+		if(this->_max_novelty < 2) {  // i.e. make sure the evaluator was prepared for this width!
+			throw std::runtime_error("The AtomNoveltyEvaluator was not prepared for width-2 computation. You need to invoke the creator with max_width=2");
+		}
+		
+		_t2marker.start();
+		
+		// LPT_DEBUG("cout", "Computing 1,5-Novelty...");
+		
+
+		auto all_indexes = index_valuation(valuation);
+		auto novel_indexes = index_valuation(novel, valuation);
+		
+		// Compute intersection and set differences in one pass
+		std::vector<unsigned> intersect, novel_wo_special, special_wo_novel;
+		fs0::Utils::intersection_and_set_diff(novel_indexes, special, intersect, novel_wo_special, special_wo_novel);
+		
+		
+		/*
+		LPT_DEBUG("cout", "All atoms: ");
+		print_indexes(all_indexes);
+		LPT_DEBUG("cout", "Novel atoms: ");
+		print_indexes(novel_indexes);
+		LPT_DEBUG("cout", "Special atoms: ");
+		print_indexes(special);
+		
+		LPT_DEBUG("cout", "Special AND novel: ");
+		print_indexes(intersect);
+		LPT_DEBUG("cout", "Special \\ Novel: ");
+		print_indexes(special_wo_novel);
+		LPT_DEBUG("cout", "Novel \\ special: ");
+		print_indexes(novel_wo_special);				
+		*/
+		
+		
+		
+		bool exists_novel_tuple = false;
+		
+		// 1. Check if there is a novel pair involving one element in the intersection plus any other element 
+		for (unsigned feat_idx1:intersect) {
+			for (unsigned feat_idx2:all_indexes) {
+				if (feat_idx1==feat_idx2) continue;
+				if (_t2marker.update_sz2_table(feat_idx1, feat_idx2)) {
+					exists_novel_tuple = true ;
+					//LPT_DEBUG("cout", "Tuple makes novelty 1.5!: "); print_indexes({feat_idx1, feat_idx2});
+				}
+				
+			}
+		}
+		
+		
+		// 2. Check if there is a novel pair involving one element from novel \ special and one element from special \ novel
+		for (unsigned feat_idx1:novel_wo_special) {
+			for (unsigned feat_idx2:special_wo_novel) {
+				if (feat_idx1==feat_idx2) continue;
+				if (_t2marker.update_sz2_table(feat_idx1, feat_idx2)) {
+					exists_novel_tuple = true ;
+					//LPT_DEBUG("cout", "Tuple makes novelty 1.5!: "); print_indexes({feat_idx1, feat_idx2});
+				}
+			}
+		}		
+		
+		return exists_novel_tuple;
+	}
+	
+	
+	void atoms_in_novel_tuple(std::unordered_set<unsigned>& atoms) override {
+		_t2marker.atoms_in_novel_tuple(atoms);
+	}
+	
+	void mark_atoms_in_novelty1_table(std::vector<bool>& atoms) const override {
+		atoms = _seen_tuples_sz_1;
+	}	
+	
+	virtual void explain(unsigned atom) const { _t2marker.explain(atom); }
+	
+	
 	
 };
 
@@ -243,8 +342,12 @@ public:
 		_seen_tuples_sz_2(num_combined_indexes, false),
 		_num_atom_indexes(num_atom_indexes)
 	{
-		LPT_INFO("cout", "Created a Novelty-2 table of approx. size " << expected_size(num_combined_indexes) / 1024 << "KB");
+// 		LPT_INFO("cout", "Created a Novelty-2 table of approx. size " << expected_size(num_combined_indexes) / 1024 << "KB");
 	}
+	
+	virtual ~BoolVectorTuple2Marker() = default;
+	
+	virtual void start() {} // Required by template	
 
 	bool update_sz2_table(unsigned atom1_index, unsigned atom2_index) {
 		uint32_t combined = _combine_indexes(atom1_index, atom2_index, _num_atom_indexes);
@@ -257,6 +360,9 @@ public:
 		return false;
 	}
 
+	virtual void atoms_in_novel_tuple(std::unordered_set<unsigned>& atoms) {}
+	virtual void explain(unsigned atom) const {}
+	
 	//! Return the approx. expected size (in bytes) of novelty-2 table.
 	static uint64_t expected_size(unsigned num_combined_indexes) {
 		return num_combined_indexes / 8;
@@ -267,6 +373,51 @@ protected:
 
 	unsigned _num_atom_indexes;
 };
+
+
+//! Same than the parent class, but stores exactly those atoms in each state are part of a novel 2-tuple of atoms
+class PersistentBoolVectorTuple2Marker : public BoolVectorTuple2Marker {
+public:
+	PersistentBoolVectorTuple2Marker(unsigned num_combined_indexes, unsigned num_atom_indexes) : BoolVectorTuple2Marker(num_combined_indexes, num_atom_indexes) {}
+
+	void start() override {
+		_part_of_a_novel_tuple.clear();
+// 		_explanation.clear();
+	}
+	
+	bool update_sz2_table(unsigned atom1_index, unsigned atom2_index) {
+		uint32_t combined = _combine_indexes(atom1_index, atom2_index, _num_atom_indexes);
+		assert(combined < _seen_tuples_sz_2.size());
+		std::vector<bool>::reference value = _seen_tuples_sz_2[combined];
+		if (!value) { // The tuple is new
+			value = true;
+			_part_of_a_novel_tuple.insert(atom1_index);
+			_part_of_a_novel_tuple.insert(atom2_index);
+// 			_explanation.insert(std::make_pair(atom1_index, atom2_index));
+// 			_explanation.insert(std::make_pair(atom2_index, atom1_index));
+			return true;
+		}
+		return false;
+	}
+	
+	void atoms_in_novel_tuple(std::unordered_set<unsigned>& atoms) override {
+		atoms = std::move(_part_of_a_novel_tuple);
+		_part_of_a_novel_tuple = std::unordered_set<unsigned>();
+	}
+	
+	void explain(unsigned atom) const {
+// 		auto it = _explanation.find(atom);
+// 		assert(it != _explanation.end());
+// 		LPT_INFO("cout", "Atom " << atom << " is part of the novel 2-tuple: (" <<  atom << ", " << it->second  << ")");
+	}
+
+
+
+protected:
+	std::unordered_set<unsigned> _part_of_a_novel_tuple;
+// 	std::unordered_map<unsigned, unsigned> _explanation;
+};
+
 
 
 } } // namespaces

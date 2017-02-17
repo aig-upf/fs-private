@@ -53,10 +53,9 @@ public:
 	aptk::State _convert_state(const fs0::State& state);
 
 	//! Compute the set or relevant atoms R_{FF}(s)
-	RelevantAtomSet compute_r_ff(const fs0::State& s, const AtomIndex& atomidx);
+// 	RelevantAtomSet compute_r_ff(const fs0::State& s, const AtomIndex& atomidx);
 
-
-	void compute_r_ff(const aptk::State& s, aptk::Fluent_Vec& rp_vec, aptk::Fluent_Set& rp_set);
+// 	void compute_r_ff(const aptk::State& s, aptk::Fluent_Vec& rp_vec, aptk::Fluent_Set& rp_set);
 
 protected:
 

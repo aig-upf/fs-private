@@ -74,7 +74,8 @@ void Config::load(const std::string& filename) {
 	_succ_gen_type = parseOption<SuccessorGenerationStrategy>(_root, _user_options, "successor_generation", {
 		{"naive", SuccessorGenerationStrategy::naive},
 		{"functional_aware", SuccessorGenerationStrategy::functional_aware},
-		{"match_tree", SuccessorGenerationStrategy::match_tree}}
+		{"match_tree", SuccessorGenerationStrategy::match_tree},
+		{"adaptive", SuccessorGenerationStrategy::adaptive}}
 	);
 }
 

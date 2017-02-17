@@ -1,4 +1,6 @@
 
+#include <numeric>
+
 #include <languages/fstrips/builtin.hxx>
 #include <problem.hxx>
 #include <utils/utils.hxx>
