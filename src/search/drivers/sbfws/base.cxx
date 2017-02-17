@@ -31,17 +31,20 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 template<>
 FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width, bool persistent) {
 	
+	const Config& config = Config::instance(); // TODO - Remove the singleton use and inject the config here by other means
+	bool ignore_neg_literals = config.getOption<bool>("ignore_neg_literals", true);
+	
 	if (evaluator_t == SBFWSConfig::NoveltyEvaluatorType::Adaptive) {
 		const AtomIndex& index = problem.get_tuple_index();
 		
 		if (persistent) {
-			auto evaluator = FSAtomBinaryNoveltyEvaluatorPersistent::create(index, true, max_width);
+			auto evaluator = FSAtomBinaryNoveltyEvaluatorPersistent::create(index, ignore_neg_literals, max_width);
 			if (evaluator) {
 // 				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator WITH PERSISTENCE");
 				return evaluator;
 			}			
 		} else {
-			auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
+			auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, ignore_neg_literals, max_width);
 			if (evaluator) {
 // 				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
 				return evaluator;
