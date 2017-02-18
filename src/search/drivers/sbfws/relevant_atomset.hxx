@@ -71,7 +71,6 @@ public:
 		_reached = std::vector<bool>(_helper.size(), false);
 		_num_reached = 0;
 		update(state, nullptr);
-        LPT_DEBUG("cout", "# reached: " << _num_reached << " std::cout " <<  std::count(_reached.begin(), _reached.end(), true));
  		assert(_num_reached == std::count(_reached.begin(), _reached.end(), true));
  		_num_reached = 0;
 	}
