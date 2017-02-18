@@ -7,8 +7,11 @@
 #include <utils/loader.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/binding_iterator.hxx>
+#include <utils/config.hxx>
 #include <constraints/registry.hxx>
 #include <languages/fstrips/language.hxx>
+#include <problem.hxx>
+#include <actions/actions.hxx>
 
 namespace fs = fs0::language::fstrips;
 
@@ -34,6 +37,10 @@ FeatureSelector<StateT>::select() {
 template <typename StateT>
 bool
 FeatureSelector<StateT>::has_extra_features() const {
+	
+	// TODO This is a hack, should use a specially named feature in extra.json perhaps¿??
+	if (Config::instance().getOption<bool>("use_precondition_counts", false)) return true;
+	
 	// TODO - This is repeating work that is done afterwards when loading the features - can be optimized
 	try {
 		auto data = Loader::loadJSONObject(_info.getDataDir() + "/extra.json");
@@ -71,8 +78,27 @@ lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemI
 	}
 }
 
-void process_feature(const ProblemInfo& info, const std::string& feat_name, std::vector<lapkt::novelty::NoveltyFeature<State>*>& features) {
+void process_precondition_count(const ProblemInfo& info, std::vector<lapkt::novelty::NoveltyFeature<State>*>& features) {
+	const auto& actions = Problem::getInstance().getGroundActions();
 	
+	for (const GroundAction* action:actions) {
+		auto precondition = dynamic_cast<const fs::Conjunction*>(action->getPrecondition());
+		if (!precondition) throw std::runtime_error("Cannot use precondition-counts as a feature for non-conjunctive preconditions");
+		ConditionSetFeature* feature = new ConditionSetFeature();
+		for (const auto atom:precondition->getConjuncts()) feature->addCondition(atom);
+		
+		features.push_back(feature);
+	}
+	
+	LPT_INFO("cout", "Added " << actions.size() << " precondition-count features");
+}
+
+void process_feature(const ProblemInfo& info, const std::string& feat_name, std::vector<lapkt::novelty::NoveltyFeature<State>*>& features) {
+	//! Some specially-named features receive a distinct treatment
+// 	if (feat_name == "precondition_count") return process_precondition_count(info, features);
+	
+	
+	// Otherwise, we apply thestandard treatment
 	unsigned symbol_id = info.getSymbolId(feat_name);
 	const SymbolData& sdata = info.getSymbolData(symbol_id);
 	const Signature& signature = sdata.getSignature();
@@ -91,6 +117,10 @@ template <typename StateT>
 void
 FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector<FeatureT*>& features) {
 	
+	if (Config::instance().getOption<bool>("use_precondition_counts", false)) {
+		process_precondition_count(info, features);
+	}
+	
 	try {
 		auto data = Loader::loadJSONObject(info.getDataDir() + "/extra.json");
 		const auto& features_node = data["features"];
@@ -102,6 +132,7 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 	} catch(const std::exception& e) {
 		return; // No extra.json file could be loaded, therefore we assume there's no extra feature info.
 	}
+
 }
 
 // explicit template instantiation
