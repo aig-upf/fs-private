@@ -68,7 +68,8 @@ class ProblemRepresentation(object):
             return [self.index.state_variables.get_index(atom.var), self.get_value_idx(atom.value)]
 
         indexed_atoms = [indexer(atom) for atom in self.index.initial_fluent_atoms]
-        return dict(variables=len(self.index.state_variables), atoms=indexed_atoms)
+        sorted_atoms = sorted(indexed_atoms)
+        return dict(variables=len(self.index.state_variables), atoms=sorted_atoms)
 
     def dump_variable_data(self):
         res = []
