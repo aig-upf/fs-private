@@ -705,6 +705,11 @@ protected:
 	//! When opening a node, we compute #g and evaluates whether the given node has <#g>-novelty 1 or not;
 	//! if that is the case, we insert it into a special queue.
 	void create_node(const NodePT& node) {
+		if (is_goal(node)) {
+			LPT_INFO("cout", "Goal found. Node: " << std::endl << *node);
+			_solution = node;
+			return;
+		}
 		node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
 		
 		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
