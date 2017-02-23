@@ -5,7 +5,6 @@
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
-#include "hff_run.hxx"
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 
 #include <lapkt/components/open_lists.hxx>
@@ -148,9 +147,6 @@ public:
 	using SimConfigT = typename SimulationT::Config;
 	using IWNodePT = typename SimulationT::NodePT;
 
-	using APTKFFHeuristicT = HFFRun;
-	using APTKFFHeuristicPT = std::unique_ptr<APTKFFHeuristicT>;
-
 protected:
 	const StateModelT& _model;
 
@@ -177,7 +173,6 @@ protected:
 
 	BFWSStats& _stats;
 
-	APTKFFHeuristicPT _aptk_rpg;
 	
 	SBFWSConfig::RelevantSetType _rstype;
 	
@@ -198,14 +193,9 @@ public:
 			       c.getOption<bool>("goal_directed", false)
 		),
 		_stats(stats),
-		_aptk_rpg(nullptr),
 		_rstype(config.relevant_set_type)
 	{
-		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim || _rstype == SBFWSConfig::RelevantSetType::APTK_HFF);
-		
-		if (_rstype == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
-			_aptk_rpg = APTKFFHeuristicPT(APTKFFHeuristicT::create(_problem, true));
-		}
+		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
 	}
 
 	~LazyBFWSHeuristic() {

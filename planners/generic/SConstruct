@@ -53,7 +53,7 @@ else:
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
 include_paths = ['.', env['fs'] + '/src', env['lapkt']]
 isystem_paths = [HOME + '/local/include']
-lib_paths = [env['fs'] + '/lib', lapkt2_dir + '/lib', lapkt1_dir, HOME + '/local/lib']
+lib_paths = [env['fs'] + '/lib', lapkt2_dir + '/lib', HOME + '/local/lib']
     
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
 env.Append(CCFLAGS = ['-isystem' + os.path.abspath(p) for p in isystem_paths])
@@ -62,12 +62,6 @@ src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both t
 
 # Note: order matters. If A depends on B, A should go _before_ B.
 env.Append(LIBS=[fs_libname, lapkt_libname, 'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
-
-env.Append(LIBS=[File(lapkt1_dir + '/libaptk.a'),
-				 File(lapkt1_dir + '/interfaces/agnostic/libaptk-base.a'),
-				 File(lapkt1_dir + '/interfaces/ff-wrapped/libaptk-ff-wrap.a'),
-				 File(lapkt1_dir + '/external/libff/libff.a'),
-])
 
 
 # Add necessary Gecode libraries
