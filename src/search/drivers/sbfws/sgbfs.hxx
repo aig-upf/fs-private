@@ -732,13 +732,6 @@ protected:
 	void process_node(const NodePT& node) {
 		//assert(!node->_processed); // Don't process a node twice!
 		node->_processed = true; // Mark the node as processed
-
-		if (is_goal(node)) {
-			LPT_INFO("cout", "Goal found. Node: " << std::endl << *node);
-			_solution = node;
-			return;
-		}
-
 		_closed.put(node);
 		expand_node(node);
 	}
