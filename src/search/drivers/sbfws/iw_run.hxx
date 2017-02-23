@@ -207,7 +207,7 @@ protected:
 	Config _config;
 
 	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
- 	std::vector<std::vector<NodePT>> _all_paths;
+//  	std::vector<std::vector<NodePT>> _all_paths;
 
  	std::vector<NodePT> _optimal_paths;
 
@@ -244,7 +244,7 @@ public:
 	IWRun(const StateModel& model, const FeatureSetT& featureset, const IWRun::Config& config) :
 		Base(model, OpenListT(), ClosedListT()),
 		_config(config),
-		_all_paths(model.num_subgoals()),
+// 		_all_paths(model.num_subgoals()),
 		_optimal_paths(model.num_subgoals()),
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
@@ -302,39 +302,46 @@ public:
 	}
 	
 	
+	std::vector<bool> compute_R(const StateT& seed) {
+		if (_config._use_goal_directed_info) {
+			return compute_goal_directed_R(seed);
+		} else {
+			return compute_R_IW1(seed);
+		}
+	}
+	
 	std::vector<bool> compute_R_IW1(const StateT& seed) {
-		const AtomIndex& index = Problem::getInstance().get_tuple_index();
-// 		_config._max_width = 1;
+		LPT_INFO("cout", "IW Simulation - Computing blind R");
+		_config._max_width = 1;
 		_config._bound = -1; // No bound
 		std::vector<NodePT> seed_nodes;
-		compute_R(seed, seed_nodes);
+		_compute_R(seed, seed_nodes);
+
+		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
+		std::vector<bool> rel_blind = _evaluator.reached_atoms();
+		LPT_INFO("cout", "IW Simulation - Blind |R|         = " << std::count(rel_blind.begin(), rel_blind.end(), true));
+		return rel_blind;
+	}
+	
+	std::vector<bool> compute_goal_directed_R(const StateT& seed) {
+		LPT_INFO("cout", "IW Simulation - Computing goal-directed R");
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		_config._max_width = 2;
+		_config._bound = -1; // No bound
+		std::vector<NodePT> seed_nodes;
+		_compute_R(seed, seed_nodes);
 
 
 		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
 		
-		// COMPUTE BOTH OPTIONS, FOR THE SAKE OF INFORMATIVENESS
 		std::vector<bool> rel_goal_directed(index.size(), false);
 		mark_atoms_in_path_to_subgoal(seed_nodes, rel_goal_directed);
-		
-		std::vector<bool> rel_blind = _evaluator.reached_atoms();
-
-		
 		LPT_INFO("cout", "IW Simulation - Goal-directed |R| = " << std::count(rel_goal_directed.begin(), rel_goal_directed.end(), true));
-		LPT_INFO("cout", "IW Simulation - Blind |R|         = " << std::count(rel_blind.begin(), rel_blind.end(), true));
-		
-		if (_config._use_goal_directed_info) {
-			LPT_INFO("cout", "IW Simulation - Using goal-directed R");
-			return rel_goal_directed;
-		} else {
-			LPT_INFO("cout", "IW Simulation - Using blind R");
-			return rel_blind;
-		}
-	}
-
-
+		return rel_goal_directed;		
+	}	
 	
 	
-	std::vector<AtomIdx> compute_R(const StateT& seed, std::vector<NodePT>& seed_nodes) {
+	std::vector<AtomIdx> _compute_R(const StateT& seed, std::vector<NodePT>& seed_nodes) {
 		
 		_config._complete = false;
 		
@@ -477,7 +484,7 @@ protected:
 
 			if (this->_model.goal(state, subgoal_idx)) {
 				node->satisfies_subgoal = true;
-				_all_paths[subgoal_idx].push_back(node);
+// 				_all_paths[subgoal_idx].push_back(node);
 				if (!_optimal_paths[subgoal_idx]) _optimal_paths[subgoal_idx] = node;
 				it = _unreached.erase(it);
 			} else {
