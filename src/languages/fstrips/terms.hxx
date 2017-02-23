@@ -150,9 +150,6 @@ class StaticHeadedNestedTerm : public NestedTerm {
 public:
 	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
 
-	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
-	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
-
 	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state, const Binding& binding) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	
@@ -211,10 +208,10 @@ public:
 
 	virtual std::string name() const = 0;
 		
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("Not yet implemented"); }
-	ObjectIdx interpret(const State& state, const Binding& binding) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Not yet implemented"); }
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 	
 	//! This needs to be overriden by the particular implementation
 	virtual ObjectIdx compute(const State& state, std::vector<ObjectIdx>& arguments) const = 0;

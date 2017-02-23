@@ -323,7 +323,7 @@ protected:
 		atoms = _seen_tuples_sz_1;
 	}	
 	
-	virtual void explain(unsigned atom) const { _t2marker.explain(atom); }
+	virtual void explain(unsigned atom) const override { _t2marker.explain(atom); }
 	
 	
 	
@@ -405,7 +405,7 @@ public:
 		_part_of_a_novel_tuple = std::unordered_set<unsigned>();
 	}
 	
-	void explain(unsigned atom) const {
+	void explain(unsigned atom) const override {
 // 		auto it = _explanation.find(atom);
 // 		assert(it != _explanation.end());
 // 		LPT_INFO("cout", "Atom " << atom << " is part of the novel 2-tuple: (" <<  atom << ", " << it->second  << ")");

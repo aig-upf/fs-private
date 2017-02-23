@@ -63,12 +63,7 @@ if env['edebug']:
 
 
 # Base include directories
-include_paths = ['src',
-				 env['lapkt'],
-				 env['lapkt'] + '/include',
-				 env['lapkt'] + '/interfaces/agnostic',
-				 env['lapkt'] + '/external',
-]
+include_paths = ['src', env['lapkt']]
 isystem_paths = []
 	
 # Gecode tweaks

@@ -5,7 +5,6 @@
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
-#include "hff_run.hxx"
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 
 #include <lapkt/components/open_lists.hxx>
@@ -148,9 +147,6 @@ public:
 	using SimConfigT = typename SimulationT::Config;
 	using IWNodePT = typename SimulationT::NodePT;
 
-	using APTKFFHeuristicT = HFFRun;
-	using APTKFFHeuristicPT = std::unique_ptr<APTKFFHeuristicT>;
-
 protected:
 	const StateModelT& _model;
 
@@ -177,7 +173,6 @@ protected:
 
 	BFWSStats& _stats;
 
-	APTKFFHeuristicPT _aptk_rpg;
 	
 	SBFWSConfig::RelevantSetType _rstype;
 	
@@ -191,16 +186,16 @@ public:
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
-		_simconfig(c.getOption<int>("sim.bound", 10000), config.complete_simulation, config.mark_negative_propositions),
+		_simconfig(c.getOption<int>("sim.bound", 10000),
+				   config.complete_simulation,
+				   config.mark_negative_propositions,
+				   config.simulation_width,
+			       c.getOption<bool>("goal_directed", false)
+		),
 		_stats(stats),
-		_aptk_rpg(nullptr),
 		_rstype(config.relevant_set_type)
 	{
-		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim || _rstype == SBFWSConfig::RelevantSetType::APTK_HFF);
-		
-		if (_rstype == SBFWSConfig::RelevantSetType::APTK_HFF) { // Setup the HFF heuristic from LAPKT
-			_aptk_rpg = APTKFFHeuristicPT(APTKFFHeuristicT::create(_problem, true));
-		}
+		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
 	}
 
 	~LazyBFWSHeuristic() {
@@ -700,6 +695,11 @@ protected:
 	//! When opening a node, we compute #g and evaluates whether the given node has <#g>-novelty 1 or not;
 	//! if that is the case, we insert it into a special queue.
 	void create_node(const NodePT& node) {
+		if (is_goal(node)) {
+			LPT_INFO("cout", "Goal found. Node: " << std::endl << *node);
+			_solution = node;
+			return;
+		}
 		node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
 		
 		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
@@ -727,13 +727,6 @@ protected:
 	void process_node(const NodePT& node) {
 		//assert(!node->_processed); // Don't process a node twice!
 		node->_processed = true; // Mark the node as processed
-
-		if (is_goal(node)) {
-			LPT_INFO("cout", "Goal found. Node: " << std::endl << *node);
-			_solution = node;
-			return;
-		}
-
 		_closed.put(node);
 		expand_node(node);
 	}

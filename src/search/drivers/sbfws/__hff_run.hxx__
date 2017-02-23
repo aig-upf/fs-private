@@ -12,7 +12,7 @@
 #include <interfaces/agnostic/action.hxx>
 #include <interfaces/agnostic/cond_eff.hxx>
 
-#include "nir/rp_heuristic_bfws.hxx"
+#include "rp_heuristic_bfws.hxx"
 #include <state.hxx>
 
 #include <languages/fstrips/formulae.hxx>

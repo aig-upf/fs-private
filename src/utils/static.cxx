@@ -32,8 +32,8 @@ StaticExtension::load_static_extension(const std::string& name, const ProblemInf
 		else extension = new Arity3Function(Serializer::deserializeArity3Map(filename));
 		
 	} else if (arity == 4) {
-		if (type == SymbolData::Type::PREDICATE) extension = new Arity4Function(Serializer::deserializeArity4Map(filename));
-		else extension = new Arity4Predicate(Serializer::deserializeArity4Set(filename));
+		if (type == SymbolData::Type::PREDICATE) extension = new Arity4Predicate(Serializer::deserializeArity4Set(filename));
+		else extension = new Arity4Function(Serializer::deserializeArity4Map(filename));
 
 
 	} else WORK_IN_PROGRESS("Such high symbol arities have not yet been implemented");
