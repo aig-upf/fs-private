@@ -79,7 +79,7 @@ public:
 
 	//! Clone the type of formula assigning the given subterms
 	virtual AtomicFormula* clone(const std::vector<const Term*>& subterms) const = 0;
-	AtomicFormula* clone() const;
+	AtomicFormula* clone() const override;
 
 	const Formula* bind(const fs0::Binding& binding, const fs0::ProblemInfo& info) const override;
 
@@ -89,19 +89,19 @@ public:
 	bool interpret(const State& state, const Binding& binding) const override;
 	using Formula::interpret;
 
-	unsigned nestedness() const;
+	unsigned nestedness() const override;
 
-	std::vector<const Formula*> all_formulae() const { return std::vector<const Formula*>(1, this); }
+	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
+// 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
 
 	std::vector<const Term*> all_terms() const;
 
-	virtual Formula* conjunction(const Formula* 							other) const { return other->conjunction(this); }
-	virtual Formula* conjunction(const AtomicFormula* 						other) const { throw std::runtime_error("Unimplemented"); }
-	virtual Formula* conjunction(const Conjunction* 						other) const { throw std::runtime_error("Unimplemented"); }
-	virtual Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const { throw std::runtime_error("Unimplemented"); }
+	Formula* conjunction(const Formula* 							other) const override { return other->conjunction(this); }
+	Formula* conjunction(const AtomicFormula* 						other) const override { throw std::runtime_error("Unimplemented"); }
+	Formula* conjunction(const Conjunction* 						other) const override { throw std::runtime_error("Unimplemented"); }
+	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const override { throw std::runtime_error("Unimplemented"); }
 
 	//! A helper to recursively evaluate the formula - must be subclassed
 	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
@@ -122,7 +122,7 @@ public:
        virtual std::string name() const = 0;
        
        //! Prints a representation of the object to the given stream.
-       std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+       std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 
@@ -133,9 +133,9 @@ public:
 	//! To be subclassed
 	virtual std::string name() const = 0;
 	
-	const AxiomaticFormula* bind(const Binding& binding, const ProblemInfo& info) const override;
+	virtual AxiomaticFormula* clone(const std::vector<const Term*>& subterms) const override = 0;
 	
-	virtual AxiomaticFormula* clone(const std::vector<const Term*>& subterms) const = 0;
+	const AxiomaticFormula* bind(const Binding& binding, const ProblemInfo& info) const override;
 	
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
@@ -146,56 +146,56 @@ public:
 
 	
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 
 //! The True truth value
 class Tautology : public Formula {
 public:
-	Tautology* bind(const Binding& binding, const ProblemInfo& info) const { return new Tautology; }
-	Tautology* clone() const { return new Tautology; }
+	Tautology* bind(const Binding& binding, const ProblemInfo& info) const override { return new Tautology; }
+	Tautology* clone() const override { return new Tautology; }
 
-	unsigned nestedness() const { return 0; }
+	unsigned nestedness() const override { return 0; }
 
-	std::vector<const Formula*> all_formulae() const { return std::vector<const Formula*>(1, this); }
+	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return true; }
 	bool interpret(const State& state, const Binding& binding) const override { return true; }
 
-	bool is_tautology() const { return true; }
+	bool is_tautology() const override { return true; }
 
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const { os << "True"; return os; }
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { os << "True"; return os; }
 
-	Formula* conjunction(const Formula* 							other) const;
-	Formula* conjunction(const AtomicFormula* 						other) const;
-	Formula* conjunction(const Conjunction* 						other) const;
-	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const;
+	Formula* conjunction(const Formula* 							other) const override;
+	Formula* conjunction(const AtomicFormula* 						other) const override;
+	Formula* conjunction(const Conjunction* 						other) const override;
+	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const override;
 };
 
 //! The False truth value
 class Contradiction : public Formula {
 public:
-	Contradiction* bind(const Binding& binding, const ProblemInfo& info) const { return new Contradiction; }
-	Contradiction* clone() const { return new Contradiction; }
+	Contradiction* bind(const Binding& binding, const ProblemInfo& info) const override { return new Contradiction; }
+	Contradiction* clone() const override { return new Contradiction; }
 
-	unsigned nestedness() const { return 0; }
+	unsigned nestedness() const override { return 0; }
 
-	std::vector<const Formula*> all_formulae() const { return std::vector<const Formula*>(1, this); }
+	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return false; }
 	bool interpret(const State& state, const Binding& binding) const override { return false; }
 
-	bool is_contradiction() const { return true; }
+	bool is_contradiction() const override { return true; }
 
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const { os << "False"; return os; }
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { os << "False"; return os; }
 
-	Formula* conjunction(const Formula* 							other) const;
-	Formula* conjunction(const AtomicFormula* 						other) const;
-	Formula* conjunction(const Conjunction* 						other) const;
-	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const;
+	Formula* conjunction(const Formula* 							other) const override;
+	Formula* conjunction(const AtomicFormula* 						other) const override;
+	Formula* conjunction(const Conjunction* 						other) const override;
+	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const override;
 };
 
 //! A logical conjunction
@@ -211,26 +211,26 @@ public:
 		for (const auto ptr:_conjuncts) delete ptr;
 	}
 
-	Conjunction* clone() const { return new Conjunction(*this); }
+	Conjunction* clone() const override { return new Conjunction(*this); }
 
-	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const;
+	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const override;
 
 	const std::vector<const AtomicFormula*>& getConjuncts() const { return _conjuncts; }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
 
-	unsigned nestedness() const;
+	unsigned nestedness() const override;
 
-	std::vector<const Formula*> all_formulae() const;
+	std::vector<const Formula*> all_formulae() const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	Formula* conjunction(const fs0::language::fstrips::Formula* other) const;
-	Formula* conjunction(const fs0::language::fstrips::AtomicFormula* other) const;
-	Conjunction* conjunction(const Conjunction* 						other) const;
-	Formula* conjunction(const fs0::language::fstrips::ExistentiallyQuantifiedFormula* other) const;
+	Formula* conjunction(const fs0::language::fstrips::Formula* other) const override;
+	Formula* conjunction(const fs0::language::fstrips::AtomicFormula* other) const override;
+	Conjunction* conjunction(const Conjunction* 						other) const override;
+	Formula* conjunction(const fs0::language::fstrips::ExistentiallyQuantifiedFormula* other) const override;
 
 protected:
 	//! The formula subterms
@@ -252,7 +252,7 @@ public:
 	AtomConjunction& operator=(const AtomConjunction&) = default;
 	AtomConjunction(AtomConjunction&&) = default;
 	AtomConjunction& operator=(AtomConjunction&&) = default;
-	AtomConjunction* clone() const {return new AtomConjunction(*this); }
+	AtomConjunction* clone() const override {return new AtomConjunction(*this); }
 	
 	using Conjunction::interpret;
 	bool interpret(const State& state, const Binding& binding) const override { return interpret(state); }
@@ -276,26 +276,26 @@ public:
 
 	ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula& other);
 
-	ExistentiallyQuantifiedFormula* clone() const { return new ExistentiallyQuantifiedFormula(*this); }
+	ExistentiallyQuantifiedFormula* clone() const override { return new ExistentiallyQuantifiedFormula(*this); }
 
-	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const;
+	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const override;
 
 	const Conjunction* getSubformula() const { return _subformula; }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
 
-	unsigned nestedness() const { return _subformula->nestedness(); }
+	unsigned nestedness() const override { return _subformula->nestedness(); }
 
-	std::vector<const Formula*> all_formulae() const;
+	std::vector<const Formula*> all_formulae() const override;
 
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	Formula* conjunction(const Formula* 							other) const;
-	Formula* conjunction(const AtomicFormula* 						other) const;
-	Formula* conjunction(const Conjunction* 						other) const;
-	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const;
+	Formula* conjunction(const Formula* 							other) const override;
+	Formula* conjunction(const AtomicFormula* 						other) const override;
+	Formula* conjunction(const Conjunction* 						other) const override;
+	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const override;
 
 protected:
 	//! The binding IDs of the existentially quantified variables
@@ -338,13 +338,13 @@ public:
 	RelationalFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {
 		assert(subterms.size() == 2);
 	}
+	
+	virtual RelationalFormula* clone(const std::vector<const Term*>& subterms) const override = 0;
 
 	virtual Symbol symbol() const = 0;
 
-	virtual RelationalFormula* clone(const std::vector<const Term*>& subterms) const = 0;
-
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
 
 	const static std::map<RelationalFormula::Symbol, std::string> symbol_to_string;
@@ -354,7 +354,7 @@ public:
 	const Term* rhs() const { return _subterms[1]; }
 
 protected:
-	inline bool _satisfied(const ObjectIdxVector& values) const { return _satisfied(values[0], values[1]); }
+	inline bool _satisfied(const ObjectIdxVector& values) const override { return _satisfied(values[0], values[1]); }
 	virtual bool _satisfied(ObjectIdx o1, ObjectIdx o2) const = 0;
 };
 
