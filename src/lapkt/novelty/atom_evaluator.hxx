@@ -7,7 +7,7 @@
 
 #include "base.hxx"
 #include <aptk2/tools/logging.hxx>
-#include <utils/utils.hxx>
+#include <aptk2/tools/utils.hxx>
 #include <problem.hxx>
 
 
