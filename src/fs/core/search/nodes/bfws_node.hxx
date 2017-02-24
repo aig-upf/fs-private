@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <limits>
+
 #include <lapkt/tools/logging.hxx>
 
 namespace fs0 { namespace drivers {
