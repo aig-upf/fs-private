@@ -13,7 +13,7 @@ namespace lapkt {
 namespace printers {
 	template <typename _T>
 	std::ostream& print(std::ostream &os, const _T&  o) { return os << "Undefined Printer"; }
-};
+}
 
 template <typename _ValueT = int> //, typename PrinterT = DefaultPrinter>
 class MultivaluedState {
