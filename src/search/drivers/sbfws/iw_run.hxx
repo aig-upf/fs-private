@@ -458,7 +458,7 @@ public:
 					++_w_gt2_nodes_generated;
 				}
 				
-				if (_config._bound > 0 && accepted >= _config._bound) {
+				if (_config._bound > 0 && accepted >= (unsigned) _config._bound) {
  					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
 					return false;
 				}
