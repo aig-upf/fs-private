@@ -264,7 +264,7 @@ protected:
 		
 		// Compute intersection and set differences in one pass
 		std::vector<unsigned> intersect, novel_wo_special, special_wo_novel;
-		fs0::Utils::intersection_and_set_diff(novel_indexes, special, intersect, novel_wo_special, special_wo_novel);
+		lapkt::utils::intersection_and_set_diff(novel_indexes, special, intersect, novel_wo_special, special_wo_novel);
 		
 		
 		/*
