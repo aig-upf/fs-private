@@ -395,6 +395,9 @@ class Grounder(object):
 
             (Problem, str, str) -> None
         """
+        if not os.path.isfile(grounder_path):
+            raise RuntimeError("In order to use the ASP-based grounder, you need to set the environment variable"
+                               "'GRINGO_PATH' to the path where the 'gringo' binary is located")
         self.rename_asp_components()
         self.write_asp()
         reachable_goal = False

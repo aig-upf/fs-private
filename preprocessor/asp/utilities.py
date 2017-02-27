@@ -17,7 +17,7 @@ solving_error_code       = -5
 extracting_error_code    = -6
 
 #Paths
-grounder_path = os.path.join(os.path.dirname(__file__), "gringo", "gringo")
+grounder_path = os.path.join(os.environ.get('GRINGO_PATH', ''), "gringo")
 tmp_path = os.path.join(os.path.dirname(__file__), "tmp_files")
 
 grounder_run_success_code = 0
