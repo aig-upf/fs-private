@@ -7,10 +7,9 @@
 #include <lapkt/components/open_lists.hxx>
 #include <lapkt/algorithms/breadth_first_search.hxx>
 
-#include <search/components/single_novelty.hxx>
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
-#include <ground_state_model.hxx>
+
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 
 #include <search/events.hxx>
@@ -31,9 +30,6 @@ public:
 	
 	//! IW uses a simple blind-search node
 	using NodeT = lapkt::BlindSearchNode<State, ActionT>;
-	
-	//! IW uses a single novelty component as the open list evaluator
-	using SearchNoveltyEvaluator = SingleNoveltyComponent<StateModelT, NodeT>;
 	
 	//! IW uses an unsorted queue with a NoveltyEvaluator acceptor
 	using OpenList = lapkt::SearchableQueue<NodeT>;
@@ -86,8 +82,6 @@ protected:
 	SearchStats& _stats;
 };
 
-// explicit instantiations
-template class FS0IWAlgorithm<GroundStateModel>;
-template class FS0IWAlgorithm<LiftedStateModel>;
+
 
 } } // namespaces
