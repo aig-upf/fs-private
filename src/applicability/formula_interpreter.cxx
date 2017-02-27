@@ -2,7 +2,7 @@
 #include <applicability/formula_interpreter.hxx>
 #include <languages/fstrips/language.hxx>
 #include <utils/utils.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <constraints/gecode/handlers/formula_csp.hxx>
 
 namespace fs0 {

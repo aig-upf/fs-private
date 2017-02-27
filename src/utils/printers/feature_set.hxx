@@ -4,7 +4,7 @@
 #include <vector>
 #include <ostream>
 #include <fs_types.hxx>
-#include <aptk2/heuristics/novelty/tuples.hxx>
+#include <lapkt/heuristics/novelty/tuples.hxx>
 
 namespace fs0 { namespace print {
 

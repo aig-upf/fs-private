@@ -20,13 +20,13 @@ def parse_arguments(args):
 
 def single_build(directory, command):
 	# First build the LAPKT production library
-	lapkt_dir = os.environ['LAPKT2_PATH']
-	print('\n')
-	print("Building LAPKT library...")
-	sys.stdout.flush()
-	output = subprocess.call(command.split(), cwd=lapkt_dir)
-	if output:
-		sys.exit(output)
+	#lapkt_dir = os.environ['LAPKT2_PATH']
+	#print('\n')
+	#print("Building LAPKT library...")
+	#sys.stdout.flush()
+	#output = subprocess.call(command.split(), cwd=lapkt_dir)
+	#if output:
+		#sys.exit(output)
 
 	
 	# Build the FS planner production library

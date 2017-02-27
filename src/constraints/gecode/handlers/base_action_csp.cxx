@@ -5,7 +5,7 @@
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <gecode/driver.hh>
 #include <utils/printers/gecode.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>

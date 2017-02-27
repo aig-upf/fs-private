@@ -9,7 +9,7 @@
 #include <problem.hxx>
 #include <actions/actions.hxx>
 #include <utils/system.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 { namespace bfws {
 

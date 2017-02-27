@@ -3,7 +3,7 @@
 #include <constraints/gecode/utils/element_constraint.hxx>
 
 #include <problem.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <utils/printers/gecode.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/handlers/base_csp.hxx>

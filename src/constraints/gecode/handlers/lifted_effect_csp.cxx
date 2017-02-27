@@ -8,7 +8,7 @@
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <constraints/gecode/supports.hxx>
 #include <utils/printers/actions.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <gecode/search.hh>
 

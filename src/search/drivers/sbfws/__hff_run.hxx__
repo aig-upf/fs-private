@@ -19,7 +19,7 @@
 #include <languages/fstrips/effects.hxx>
 
 
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <search/drivers/sbfws/relevant_atomset.hxx>
 #include <atom.hxx>
 #include <map>

@@ -6,7 +6,7 @@
 #include <constraints/gecode/gecode_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/extensions.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <utils/printers/gecode.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 

@@ -2,7 +2,7 @@
 #include <search/drivers/sbfws/sbfws_driver.hxx>
 #include <search/utils.hxx>
 #include <models/simple_state_model.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 { namespace bfws {
 

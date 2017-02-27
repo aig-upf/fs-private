@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <aptk2/search/interfaces/det_state_model.hxx>
+#include <lapkt/search/interfaces/det_state_model.hxx>
 #include <actions/actions.hxx>
 #include <applicability/base.hxx>
 

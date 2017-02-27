@@ -6,7 +6,7 @@
 #include <constraints/direct/compiled.hxx>
 #include <problem.hxx>
 #include <constraints/registry.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <utils/projections.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <constraints/direct/translators/effects.hxx>

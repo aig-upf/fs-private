@@ -5,7 +5,7 @@
 #include <applicability/formula_interpreter.hxx>
 #include <utils/config.hxx>
 #include <applicability/match_tree.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <utils/system.hxx>
 
 namespace fs0 {

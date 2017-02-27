@@ -12,7 +12,7 @@
 #include <utils/utils.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/printers/actions.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <utils/config.hxx>
 #include <actions/action_id.hxx>
 

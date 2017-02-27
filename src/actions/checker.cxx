@@ -7,7 +7,7 @@
 #include <applicability/action_managers.hxx>
 #include <state.hxx>
 #include <iomanip>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 {
 

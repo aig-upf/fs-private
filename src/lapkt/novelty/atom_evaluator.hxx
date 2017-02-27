@@ -6,8 +6,8 @@
 #include <algorithm>
 
 #include "base.hxx"
-#include <aptk2/tools/logging.hxx>
-#include <aptk2/tools/utils.hxx>
+#include <lapkt/tools/logging.hxx>
+#include <lapkt/tools/utils.hxx>
 #include <problem.hxx>
 
 

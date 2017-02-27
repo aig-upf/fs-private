@@ -8,7 +8,7 @@
 #include <actions/grounding.hxx>
 #include <utils/component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/registry.hxx>
 #include <utils/printers/registry.hxx>

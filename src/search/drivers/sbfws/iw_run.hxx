@@ -7,8 +7,8 @@
 #include <iomanip>
 #include <unordered_set>
 
-#include <aptk2/tools/logging.hxx>
-#include <aptk2/search/components/stl_unordered_map_closed_list.hxx>
+#include <lapkt/tools/logging.hxx>
+#include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 #include <lapkt/algorithms/generic_search.hxx>
 #include <search/novelty/fs_novelty.hxx>
 #include <search/drivers/sbfws/relevant_atomset.hxx>

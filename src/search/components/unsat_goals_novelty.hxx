@@ -3,7 +3,7 @@
 
 #include <fs_types.hxx>
 #include <ground_state_model.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>

@@ -1,5 +1,5 @@
 
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 
 #include "base.hxx"
 #include <search/drivers/sbfws/sgbfs.hxx>

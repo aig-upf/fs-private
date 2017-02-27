@@ -7,7 +7,7 @@
 #include <constraints/gecode/handlers/base_csp.hxx>
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <utils/printers/gecode.hxx>
 
 namespace fs0 { namespace gecode {

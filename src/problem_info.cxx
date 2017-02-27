@@ -6,7 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <utils/lexical_cast.hxx>
 #include <atom.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 {
 

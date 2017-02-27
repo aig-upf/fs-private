@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <aptk2/heuristics/novelty/fd_novelty_evaluator.hxx>
+#include <lapkt/heuristics/novelty/fd_novelty_evaluator.hxx>
 #include <heuristics/novelty/features.hxx>
 #include <state.hxx>
 #include <problem.hxx>

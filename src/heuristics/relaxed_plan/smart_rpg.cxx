@@ -10,7 +10,7 @@
 #include <applicability/formula_interpreter.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <utils/config.hxx>
 #include <problem.hxx>
 

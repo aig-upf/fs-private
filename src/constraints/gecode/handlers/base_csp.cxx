@@ -4,7 +4,7 @@
 #include <constraints/gecode/handlers/base_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <constraints/registry.hxx>
 #include <gecode/driver.hh>
 #include <constraints/gecode/translators/component_translator.hxx>

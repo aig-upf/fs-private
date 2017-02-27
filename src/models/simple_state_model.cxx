@@ -7,7 +7,7 @@
 #include <utils/config.hxx>
 #include <utils/system.hxx>
 #include <applicability/match_tree.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 
 #include <languages/fstrips/language.hxx>
 

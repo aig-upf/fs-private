@@ -3,7 +3,7 @@
 
 #include <applicability/match_tree.hxx>
 #include <algorithm>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <problem_info.hxx>
 #include <utils/atom_index.hxx>
 #include <actions/actions.hxx>

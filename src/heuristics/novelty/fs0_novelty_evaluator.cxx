@@ -6,7 +6,7 @@
 #include <heuristics/novelty/fs0_novelty_evaluator.hxx>
 #include <heuristics/novelty/novelty_features_configuration.hxx>
 #include <languages/fstrips/scopes.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <utils/printers/feature_set.hxx>
 #include <actions/actions.hxx>
 #include <problem_info.hxx>

@@ -4,8 +4,8 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 
-#include <aptk2/tools/resources_control.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/resources_control.hxx>
+#include <lapkt/tools/logging.hxx>
 
 #include <fs_types.hxx>
 #include <languages/fstrips/language.hxx>

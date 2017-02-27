@@ -10,7 +10,7 @@ vars.Add(BoolVariable('debug', 'Debug build', 'no'))
 vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
 
 # The LAPKT path can be optionally specified, otherwise we fetch it from the corresponding environment variable.
-vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT_PATH', ''), PathVariable.PathIsDir))
+vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT', ''), PathVariable.PathIsDir))
 
 def which(program):
 	""" Helper function emulating unix 'which' command """
@@ -63,7 +63,7 @@ if env['edebug']:
 
 
 # Base include directories
-include_paths = ['src', env['lapkt']]
+include_paths = ['src', os.path.join(env['lapkt'], 'include')]
 isystem_paths = []
 	
 # Gecode tweaks

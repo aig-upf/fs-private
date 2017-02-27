@@ -1,6 +1,6 @@
 
-#include <aptk2/tools/resources_control.hxx>
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/resources_control.hxx>
+#include <lapkt/tools/logging.hxx>
 
 #include <problem.hxx>
 #include <utils/loader.hxx>

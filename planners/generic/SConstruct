@@ -9,7 +9,7 @@ HOME = os.path.expanduser("~")
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Whether this is a debug build', 'no'))
 vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
-vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT_PATH', ''), PathVariable.PathIsDir))
+vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT', ''), PathVariable.PathIsDir))
 vars.Add(PathVariable('fs', 'Path where the FS library is installed', os.getenv('FS_PATH', ''), PathVariable.PathIsDir))
 
 def which(program):
@@ -27,8 +27,8 @@ gcc = os.environ.get('CXX', default_compiler)
 
 env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 
-lapkt1_dir  = env['lapkt']
-lapkt2_dir = env['lapkt'] + '/aptk2'
+lapkt2_header_dir = os.path.join(env['lapkt'], 'include')
+lapkt2_lib_dir = os.path.join(env['lapkt'], 'lib')
 
 env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ] )  # Flags common to all options
 env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
@@ -51,9 +51,9 @@ else:
 
 # Header and library directories.
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
-include_paths = ['.', env['fs'] + '/src', env['lapkt']]
+include_paths = ['.', env['fs'] + '/src', lapkt2_header_dir]
 isystem_paths = [HOME + '/local/include']
-lib_paths = [env['fs'] + '/lib', lapkt2_dir + '/lib', HOME + '/local/lib']
+lib_paths = [env['fs'] + '/lib', lapkt2_lib_dir, HOME + '/local/lib']
     
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
 env.Append(CCFLAGS = ['-isystem' + os.path.abspath(p) for p in isystem_paths])

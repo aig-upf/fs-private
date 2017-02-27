@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <aptk2/tools/logging.hxx>
+#include <lapkt/tools/logging.hxx>
 
 #include <utils/atom_index.hxx>
 #include <state.hxx>
