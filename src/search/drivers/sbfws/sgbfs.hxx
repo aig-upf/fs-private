@@ -809,7 +809,7 @@ protected:
 	
 	template <typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 	ExitCode
-	do_search2(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time);
+	do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time);
 };
 
 
