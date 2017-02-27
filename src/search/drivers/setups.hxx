@@ -5,7 +5,7 @@
 #include <models/ground_state_model.hxx>
 #include <models/simple_state_model.hxx>
 
-#include <lapkt/events.hxx>
+#include <lapkt/tools/events.hxx>
 #include <search/events.hxx>
 
 namespace fs0 { class Problem; }

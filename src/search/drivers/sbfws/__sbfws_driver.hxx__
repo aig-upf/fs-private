@@ -9,7 +9,7 @@
 #include <search/drivers/smart_effect_driver.hxx>
 #include <search/nodes/bfws_node.hxx>
 #include <search/components/unsat_goals_novelty.hxx>
-#include <lapkt/events.hxx>
+#include <lapkt/tools/events.hxx>
 #include <lapkt/algorithms/best_first_search.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <search/drivers/bfws/iw_novelty_evaluator.hxx>

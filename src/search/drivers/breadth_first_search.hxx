@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include <lapkt/events.hxx>
+#include <lapkt/tools/events.hxx>
 
 #include <search/drivers/registry.hxx>
 #include <search/stats.hxx>

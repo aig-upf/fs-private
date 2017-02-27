@@ -3,7 +3,7 @@
 
 #include <search/drivers/registry.hxx>
 #include <search/nodes/heuristic_search_node.hxx>
-#include <lapkt/events.hxx>
+#include <lapkt/tools/events.hxx>
 #include <lapkt/algorithms/best_first_search.hxx>
 #include <utils/config.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
