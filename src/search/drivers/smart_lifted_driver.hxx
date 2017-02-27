@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <lifted_state_model.hxx>
+#include <models/lifted_state_model.hxx>
 #include <actions/action_id.hxx>
 #include <search/nodes/heuristic_search_node.hxx>
 #include <search/drivers/registry.hxx>

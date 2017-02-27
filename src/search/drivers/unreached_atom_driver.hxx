@@ -6,7 +6,7 @@
 #include <lapkt/algorithms/best_first_search.hxx>
 #include <utils/config.hxx>
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
-#include <lifted_state_model.hxx>
+#include <models/lifted_state_model.hxx>
 
 namespace fs0 { class GroundStateModel; class SearchStats; }
 

@@ -4,7 +4,7 @@
 #include <search/drivers/setups.hxx>
 #include <search/drivers/validation.hxx>
 #include <constraints/gecode/handlers/lifted_action_csp.hxx>
-#include <ground_state_model.hxx>
+#include <models/ground_state_model.hxx>
 
 
 namespace fs0 { namespace drivers {

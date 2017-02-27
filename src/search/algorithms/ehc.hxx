@@ -2,7 +2,7 @@
 #pragma once
 
 #include <search/nodes/heuristic_search_node.hxx>
-#include <ground_state_model.hxx>
+#include <models/ground_state_model.hxx>
 #include <state.hxx>
 #include <problem.hxx>
 #include <utils/printers/vector.hxx>

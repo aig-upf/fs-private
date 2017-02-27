@@ -7,7 +7,7 @@
 #include <lapkt/algorithms/best_first_search.hxx>
 #include <utils/config.hxx>
 #include <heuristics/relaxed_plan/direct_crpg.hxx>
-#include <ground_state_model.hxx>
+#include <models/ground_state_model.hxx>
 
 namespace fs0 { class GroundStateModel; class Problem; class SearchStats; }
 

@@ -3,7 +3,7 @@
 
 #include <state.hxx>
 #include <actions/actions.hxx>
-#include <ground_state_model.hxx>
+#include <models/ground_state_model.hxx>
 
 namespace fs0 {
 

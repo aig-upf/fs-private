@@ -1,5 +1,5 @@
 
-#include <ground_state_model.hxx>
+#include <models/ground_state_model.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>

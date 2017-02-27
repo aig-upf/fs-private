@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <lifted_state_model.hxx>
-#include <ground_state_model.hxx>
+#include <models/lifted_state_model.hxx>
+#include <models/ground_state_model.hxx>
 #include <models/simple_state_model.hxx>
 
 #include <lapkt/events.hxx>

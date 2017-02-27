@@ -1,5 +1,5 @@
 
-#include <lifted_state_model.hxx>
+#include <models/lifted_state_model.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 #include <applicability/formula_interpreter.hxx>
