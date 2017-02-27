@@ -25,8 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <lapkt/tools/logging.hxx>
+#include <limits>
 #include <vector>
+
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 { class Atom; }
 
