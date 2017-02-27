@@ -12,7 +12,7 @@ generated
 analysis
 
 # Build files
-build
+_build
 lib
 
 # Compiled Object files
