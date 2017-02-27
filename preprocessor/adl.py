@@ -3,7 +3,7 @@
 """
 
 import pddl
-import smart.problem as sproblem
+import asp.problem as sproblem
 from exceptions import UnimplementedFeature
 
 

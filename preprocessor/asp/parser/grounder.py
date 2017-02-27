@@ -6,11 +6,11 @@
     atoms. It is very efficient.
 """
 
-from smart.utilities import grounding_error_code, grounder_run_success_code, \
+from asp.utilities import grounding_error_code, grounder_run_success_code, \
     asp_convert, grounder_path, var_alphabet, neg_prec_prefix, equality_prefix, \
     inequality_prefix, default_type_name
 from .parser import ParsingException
-from smart.problem import Object, Type, Function, Predicate, \
+from asp.problem import Object, Type, Function, Predicate, \
     PredicateCondition, NotCondition, AndCondition, \
     OrCondition, ForAllCondition, ExistsCondition, \
     IncreaseCondition, EqualsCondition, ConditionalEffect
@@ -296,7 +296,7 @@ class Grounder(object):
 
             (Grounder, file, bool) -> None
         """
-        from smart.parser import asp
+        from asp.parser import asp
         problem = self.problem
         translator = asp.Translator()
         writer = asp.FileWriter(self.pre_file_name)

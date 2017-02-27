@@ -14,7 +14,7 @@
 import itertools
 
 from exceptions import UnimplementedFeature
-from smart.utilities import ProblemException, default_type_name, cond_prefix,\
+from asp.utilities import ProblemException, default_type_name, cond_prefix,\
     inequality_prefix, grounding_error_code, lower_var_alphabet, NOT_CONDITION,\
     AND_CONDITION, OR_CONDITION, IMPLY_CONDITION, FORALL_CONDITION,\
     EXISTS_CONDITION, INCREASE_CONDITION, EQUALS_CONDITION, CONDITIONAL_EFFECT,\

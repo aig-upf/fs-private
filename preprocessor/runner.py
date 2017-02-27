@@ -34,7 +34,7 @@ def parse_arguments(args):
     parser.add_argument("--driver", help='The solver driver file', default=None)
     parser.add_argument("--defaults", help='The solver default options file', default=None)
     parser.add_argument("--options", help='The solver extra options', default="")
-    parser.add_argument("--gringo", action='store_true', help='Use ASP grounder (strict ADL, without numerics etc.)')
+    parser.add_argument("--asp", action='store_true', help='Use ASP grounder (strict ADL, without numerics etc.)')
 
     args = parser.parse_args(args)
     args.instance_dir = os.path.dirname(args.instance)
@@ -180,12 +180,12 @@ def main(args):
     print("{0:<30}{1}".format("Translation directory:", translation_dir))
 
     # Parse the task with FD's parser and transform it to our format
-    if not args.gringo:
+    if not args.asp:
         fd_task = parse_pddl_task(args.domain, args.instance)
         fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:
-        import smart.processor
-        adl_task = smart.processor.parse_and_ground(args.domain, args.instance, translation_dir)
+        import asp.processor
+        adl_task = asp.processor.parse_and_ground(args.domain, args.instance, translation_dir)
         fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile

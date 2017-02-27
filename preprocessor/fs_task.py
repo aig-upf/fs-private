@@ -12,7 +12,7 @@ import pddl
 import static
 import util
 from exceptions import ParseException
-from smart.problem import get_effect_symbols
+from asp.problem import get_effect_symbols
 from util import IndexDictionary
 from language_processor import ActionSchemaProcessor, FormulaProcessor
 from object_types import process_problem_types

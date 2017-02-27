@@ -25,7 +25,7 @@
     All Propositions which are mutex at step N are also mutex at steps > N.
 """
 
-from smart.utilities import ProblemException
+from asp.utilities import ProblemException
 
 class Proposition(object):
     """ A state proposition. """
