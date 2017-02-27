@@ -8,6 +8,9 @@ generated
 # Automatically-generated documentation
 # doc
 
+# Clang static analysis output
+analysis
+
 # Build files
 build
 lib
