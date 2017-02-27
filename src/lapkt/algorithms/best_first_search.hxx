@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 
 #include <lapkt/algorithms/generic_search.hxx>
-#include <lapkt/components/open_lists.hxx>
+#include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
 namespace lapkt {

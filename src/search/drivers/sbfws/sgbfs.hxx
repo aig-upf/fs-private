@@ -7,7 +7,7 @@
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
 
-#include <lapkt/components/open_lists.hxx>
+#include <lapkt/search/components/open_lists.hxx>
 
 
 namespace fs0 { namespace bfws {

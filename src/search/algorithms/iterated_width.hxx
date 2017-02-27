@@ -4,7 +4,7 @@
 #include <functional>
 
 #include <lapkt/nodes/blind_node.hxx>
-#include <lapkt/components/open_lists.hxx>
+#include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/algorithms/breadth_first_search.hxx>
 
 #include <lapkt/novelty/novelty_based_acceptor.hxx>

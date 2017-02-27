@@ -16,7 +16,7 @@
 #include <utils/printers/vector.hxx>
 #include <utils/printers/actions.hxx>
 #include <state.hxx>
-#include <lapkt/components/open_lists.hxx>
+#include <lapkt/search/components/open_lists.hxx>
 #include <problem.hxx>
 
 
