@@ -19,7 +19,7 @@ Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator)
 {}
 
 int Runner::run() {
-	aptk::Logger::init(_options.getOutputDir() + "/logs");
+	lapkt::tools::Logger::init(_options.getOutputDir() + "/logs");
 	Config::init(_options.getDriver(), _options.getUserOptions(), _options.getDefaultConfigurationFilename());
 
 	std::cout << "Loading problem data" << std::endl;
