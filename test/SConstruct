@@ -3,42 +3,60 @@
 #
 
 import os
+import fnmatch
 
-common_env = Environment()
+HOME = os.path.expanduser("~")
+TESTS = ['constraints']
 
-#tests = ['heuristics', 'basics', 'problems', 'constraints']  # Currently deactivated
-tests = ['constraints']
+def locate_source_files(base_dir, pattern):
+	matches = []
+	for root, dirnames, filenames in os.walk(base_dir):
+		for filename in fnmatch.filter(filenames, pattern):
+			matches.append(os.path.join(root, filename))
+	return matches
 
-GTEST_DIR = os.path.abspath('/home/gfrances/lib/gtest-1.7.0')
+
+gtest_dir = os.getenv('GTEST_DIR', None)
+if gtest_dir is None:
+	raise RuntimeError("You need to set up a 'GTEST_ROOT' environment variable to compile the tests")
+
+lapkt_dir = os.getenv('LAPKT', None)
+if lapkt_dir is None:
+	raise RuntimeError("You need to set up a 'LAPKT' environment variable to compile the tests")
+
+
+env = Environment()
+
 
 # GTest includes
-compiler_flags = '-std=c++0x -g -Wall -Wno-unused-variable -Wno-unused-parameter -Wextra -isystem ' + GTEST_DIR + '/include'
-
-base = os.path.abspath('../')  # The LWAPTK base path
-def make_abs(path):
-    return base + '/' + path
+compiler_flags = '-std=c++0x -g -Wall -Wno-unused-variable -Wno-unused-parameter -Wextra -isystem ' + gtest_dir + '/include'
 
 
-core_paths = map(make_abs, ['include', 'interfaces/agnostic', 'interfaces/core'])
-include_paths = core_paths + [os.path.abspath('./')]
+include_paths = ['.', os.path.join(lapkt_dir, 'include')]
+env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
+env.Append( CXXFLAGS = compiler_flags.split(' ') )
 
-lib_paths = map(make_abs, ['interfaces/core'])
-gtest_lib = File(GTEST_DIR + '/lib/.libs/libgtest.a' )
-libs = [gtest_lib, 'aptk-core', 'pthread']  # Order matters
-
-
-common_env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
-common_env.Append( CXXFLAGS = Split(compiler_flags) )
-
-src_objs = [common_env.Object(s) for s in Glob('./main.cxx')]
+src_objs = [env.Object(s) for s in Glob('./main.cxx')]
 for t in tests:
-	files = list(Glob(t + '/*.cxx')) + list(Glob(t + '/*/*.cxx')) # First- and second- level source files.
-	src_objs += [ common_env.Object(s) for s in files ]
+	src_objs += [ env.Object(s) for s in locate_source_files(t, '*.cxx') ]
 
 
-common_env.Append( LIBS=libs)
-common_env.Append( LIBPATH=[ os.path.abspath(p) for p in lib_paths ] )
+# Note: order matters. If A depends on B, A should go _before_ B.
 
-solver = common_env.Program( 'runtests.bin', src_objs )
+# LAPKT lib dependencies:
+lapkt_lib_sufix = ''
+env.Append(LIBS=[
+	'liblapkt-novelty' + lapkt_lib_sufix + '.so',
+	'liblapkt' + lapkt_lib_sufix + '.so',
+])
+
+# Other dependencies:
+env.Append(LIBS=[File(gtest_dir + '/libgtest.a'), 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm', 'pthread'])
+
+lapkt2_lib_dir = os.path.join(lapkt_dir, 'lib')
+lib_paths = [lapkt2_lib_dir, HOME + '/local/lib']
+env.Append( LIBPATH=[ os.path.abspath(p) for p in lib_paths ] )
+
+solver = env.Program('runtests.bin', src_objs)
 
 
