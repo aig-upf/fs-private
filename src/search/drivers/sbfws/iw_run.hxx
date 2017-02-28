@@ -331,8 +331,11 @@ public:
 		std::vector<NodePT> seed_nodes;
 		_compute_R(seed, seed_nodes);
 
-
 		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
+		if (!_unreached.empty()) {
+			LPT_INFO("cout", "Some subgoals not reached during the simulation. ABORTING");
+			exit(1);
+		}
 		
 		std::vector<bool> rel_goal_directed(index.size(), false);
 		mark_atoms_in_path_to_subgoal(seed_nodes, rel_goal_directed);
@@ -348,10 +351,6 @@ public:
  		_run(seed);
 		
 		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << this->_model.num_subgoals());
-		if (!_unreached.empty()) {
-			LPT_INFO("cout", "Some subgoals not reached during the simulation. ABORTING");
-			exit(1);
-		}
 		
 // 		std::vector<NodePT> w1_goal_reaching_nodes;
 // 		std::vector<NodePT> w2_goal_reaching_nodes;
@@ -371,8 +370,7 @@ public:
 				assert(_optimal_paths[subgoal_idx] != nullptr);
 				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
 			}
-		}		
-		
+		}
 		
 		/*
 		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
