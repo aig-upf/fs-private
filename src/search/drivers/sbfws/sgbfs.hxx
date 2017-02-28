@@ -695,11 +695,12 @@ protected:
 
 	//! When opening a node, we compute #g and evaluates whether the given node has <#g>-novelty 1 or not;
 	//! if that is the case, we insert it into a special queue.
-	void create_node(const NodePT& node) {
+	//! Returns true iff the newly-created node is a solution
+	bool create_node(const NodePT& node) {
 		if (is_goal(node)) {
 			LPT_INFO("cout", "Goal found. Node: " << std::endl << *node);
 			_solution = node;
-			return;
+			return true;
 		}
 		node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
 		
@@ -722,6 +723,8 @@ protected:
 
 		_stats.generation();
 		if (node->decreases_unachieved_subgoals()) _stats.generation_g_decrease();
+		
+		return false;
 	}
 
 	//! Process the node. Return true iff at least one node was created during the processing.
@@ -746,7 +749,9 @@ protected:
 			if (_closed.check(successor)) continue; // The node has already been closed
 			if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it
 
-			create_node(successor);
+			if (create_node(successor)) {
+				break;
+			}
 		}
 	}
 
