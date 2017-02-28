@@ -115,7 +115,7 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const LazyBFWSNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		const Problem& problem = Problem::getInstance();
+// 		const Problem& problem = Problem::getInstance();
 		std::string reached = "?";
 		if (_relevant_atoms) {
 			reached = std::to_string(_relevant_atoms->num_reached()) + " / " + std::to_string(_relevant_atoms->getHelper()._num_relevant);
@@ -125,7 +125,8 @@ public:
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
-		if (action < ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
+// 		if (action != ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
+		if (action != ActionT::invalid_action_id) os << ", a = " << action;
 		else os << ", a = None";
 		return os << "}";
 	}

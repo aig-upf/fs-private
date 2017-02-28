@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <lapkt/search/interfaces/det_state_model.hxx>
 #include <actions/actions.hxx>
 #include <applicability/base.hxx>
 #include <atom.hxx>

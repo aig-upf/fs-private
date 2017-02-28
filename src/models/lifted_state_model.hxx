@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <lapkt/search/interfaces/det_state_model.hxx>
 #include <actions/action_id.hxx>
 #include <actions/lifted_action_iterator.hxx>
 
@@ -16,12 +15,11 @@ class GroundAction;
 
 
 //! A state model that works with lifted actions instead of grounded actions
-class LiftedStateModel //: public aptk::DetStateModel<State, LiftedActionID>
+class LiftedStateModel
 {
 public:
-	using BaseT = aptk::DetStateModel<State, LiftedActionID>;
 	using StateT = State;
-	using ActionType = BaseT::ActionType;
+	using ActionType = LiftedActionID;
 	
 protected:
 	LiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
