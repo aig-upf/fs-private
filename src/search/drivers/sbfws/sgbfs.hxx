@@ -332,7 +332,7 @@ public:
 //#		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
  		if (!node.has_parent()) {
 			// Throw a simulation from the node, and compute a set R[IW1] from there.
-			auto relevant = compute_R_IW1(node.state);
+			auto relevant = compute_R(node.state);
 			// auto relevant = _heuristic.compute_R_union_Rs(s);
 			node._helper = std::unique_ptr<AtomsetHelper>(new AtomsetHelper(_problem.get_tuple_index(), relevant));
 			node._relevant_atoms = std::unique_ptr<LightRelevantAtomSet>(new LightRelevantAtomSet(*node._helper));
@@ -364,10 +364,10 @@ public:
 	
 	
 	template <typename StateT>
-	std::vector<bool> compute_R_IW1(const StateT& state) {
+	std::vector<bool> compute_R(const StateT& state) {
 		_stats.simulation();
 		SimulationT simulator(_model, _featureset, _simconfig);
-		return simulator.compute_R_IW1(state);
+		return simulator.compute_R(state);
 	}
 	
 	template <typename StateT>
