@@ -42,8 +42,6 @@ public:
 	State next(const State& state, const GroundAction::IdType& id) const;
 	State next(const State& state, const GroundAction& a) const;
 
-	void print(std::ostream &os) const;
-
 	const Problem& getTask() const { return _task; }
 
 	unsigned get_action_idx(const ActionId& action) const { return static_cast<unsigned>(action); }

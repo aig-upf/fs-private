@@ -16,13 +16,21 @@ class GroundAction;
 
 
 //! A state model that works with lifted actions instead of grounded actions
-class LiftedStateModel : public aptk::DetStateModel<State, LiftedActionID> {
+class LiftedStateModel //: public aptk::DetStateModel<State, LiftedActionID>
+{
 public:
 	using BaseT = aptk::DetStateModel<State, LiftedActionID>;
 	using StateT = State;
 	using ActionType = BaseT::ActionType;
+	
+protected:
+	LiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
+	
+public:
+	
+	//! Factory method
+	static LiftedStateModel build(const Problem& problem);
 
-	LiftedStateModel(const Problem& problem) : task(problem) {}
 	~LiftedStateModel() = default;
 	
 	LiftedStateModel(const LiftedStateModel&) = default;
@@ -46,18 +54,25 @@ public:
 	State next(const State& state, const ActionType& action) const;
 	State next(const State& state, const GroundAction& a) const;
 
-	void print(std::ostream &os) const;
 	
-	const Problem& getTask() const { return task; }
+	const Problem& getTask() const { return _task; }
 	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>>&& handlers) { _handlers = std::move(handlers); }
 	
 	unsigned get_action_idx(const LiftedActionID& action) const { return 0; }
+	
+	//! Returns the number of subgoals into which the goal can be decomposed
+	unsigned num_subgoals() const { return _subgoals.size(); }
+	
+	//! Returns true iff the given state satisfies the i-th subgoal
+	bool goal(const StateT& s, unsigned i) const;	
 
 protected:
 	// The underlying planning problem.
-	const Problem& task;
+	const Problem& _task;
 	
 	std::vector<std::shared_ptr<gecode::LiftedActionCSP>> _handlers;
+	
+	const std::vector<const fs::Formula*> _subgoals;
 };
 
 } // namespaces

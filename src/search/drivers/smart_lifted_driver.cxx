@@ -5,7 +5,6 @@
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
-#include <constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <constraints/gecode/handlers/formula_csp.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
 
@@ -57,19 +56,9 @@ SmartLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchS
 }
 
 
-LiftedStateModel
-SmartLiftedDriver::setup(Problem& problem) const {
-	// We set up a lifted model with the action schemas
-	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
-	LiftedStateModel model(problem);
-	model.set_handlers(LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
-	return model;
-}
-
-
 ExitCode 
 SmartLiftedDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
-	LiftedStateModel model = setup(problem);
+	LiftedStateModel model = GroundingSetup::fully_lifted_model(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
 	return Utils::do_search(*engine, model, out_dir, start_time, stats);

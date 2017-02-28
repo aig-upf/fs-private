@@ -7,6 +7,29 @@
 #include <actions/lifted_action_iterator.hxx>
 #include <actions/actions.hxx>
 
+#include <languages/fstrips/language.hxx>
+#include <constraints/gecode/handlers/lifted_action_csp.hxx>
+
+
+//! A helper to derive the distinct goal atoms
+std::vector<const fs::Formula*>
+obtain_goal_atoms(const fs::Formula* goal) {
+	std::vector<const fs::Formula*> goal_atoms;
+	
+	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
+	if (!conjunction) {
+		goal_atoms.push_back(goal);
+	} else {
+
+		for (const fs::AtomicFormula* atom:conjunction->getConjuncts()) {
+			goal_atoms.push_back(atom);
+		}
+	
+	}
+
+	return goal_atoms;
+}
+
 
 namespace fs0 {
 
@@ -14,11 +37,11 @@ State LiftedStateModel::init() const {
 	// We need to make a copy so that we can return it as non-const.
 	// Ugly, but this way we make it fit the search engine interface without further changes,
 	// and this is only called once per search.
-	return State(task.getInitialState());
+	return State(_task.getInitialState());
 }
 
 bool LiftedStateModel::goal(const State& state) const {
-	return task.getGoalSatManager().satisfied(state);
+	return _task.getGoalSatManager().satisfied(state);
 }
 
 bool LiftedStateModel::is_applicable(const State& state, const ActionType& action) const {
@@ -29,7 +52,7 @@ bool LiftedStateModel::is_applicable(const State& state, const ActionType& actio
 }
 
 bool LiftedStateModel::is_applicable(const State& state, const GroundAction& action) const {
-	NaiveApplicabilityManager manager(task.getStateConstraints());
+	NaiveApplicabilityManager manager(_task.getStateConstraints());
 	return manager.isApplicable(state, action);
 }
 
@@ -41,19 +64,36 @@ State LiftedStateModel::next(const State& state, const LiftedActionID& action) c
 }
 
 State LiftedStateModel::next(const State& state, const GroundAction& action) const { 
-	NaiveApplicabilityManager manager(task.getStateConstraints());
+	NaiveApplicabilityManager manager(_task.getStateConstraints());
 	assert(manager.isApplicable(state, action));
 	return State(state, NaiveApplicabilityManager::computeEffects(state, action)); // Copy everything into the new state and apply the changeset
 }
 
 
-void LiftedStateModel::print(std::ostream& os) const {
-	os << task;
+gecode::LiftedActionIterator LiftedStateModel::applicable_actions(const State& state) const {
+	return gecode::LiftedActionIterator(state, _handlers, _task.getStateConstraints());
 }
 
-gecode::LiftedActionIterator LiftedStateModel::applicable_actions(const State& state) const {
-	return gecode::LiftedActionIterator(state, _handlers, task.getStateConstraints());
+
+bool
+LiftedStateModel::goal(const StateT& s, unsigned i) const {
+	return _subgoals.at(i)->interpret(s, Binding::EMPTY_BINDING);
+// 	return s.contains(_subgoals.at(i)); // TODO SHOULD BE:
+	// const Atom& subgoal = _subgoals.at(i);
+	// return s.check(subgoal.getVariable(), s.getValue());
 }
+
+LiftedStateModel
+LiftedStateModel::build(const Problem& problem) {
+	auto model = LiftedStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
+	model.set_handlers(gecode::LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
+	return model;
+}
+
+LiftedStateModel::LiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals) :
+	_task(problem),
+	_subgoals(subgoals)
+{}
 
 } // namespaces
 

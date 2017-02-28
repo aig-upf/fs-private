@@ -42,8 +42,6 @@ State GroundStateModel::next(const State& state, const GroundAction& a) const {
 	return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
 }
 
-void GroundStateModel::print(std::ostream& os) const { os << _task; }
-
 GroundApplicableSet GroundStateModel::applicable_actions(const State& state) const {
 	return _manager->applicable(state);
 }

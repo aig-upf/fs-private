@@ -29,6 +29,14 @@ LazyBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config,
 	return do_search(drivers::GroundingSetup::fully_ground_simple_model(problem), config, out_dir, start_time);
 }
 
+/*
+template <>
+ExitCode
+LazyBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+	return do_search(drivers::GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time);
+}
+*/
+
 
 template <typename StateModelT>
 ExitCode

@@ -11,8 +11,6 @@
 
 #include <languages/fstrips/language.hxx>
 
-// #include <lapkt/multivalued_state.hxx>
-
 namespace fs0 {
 
 

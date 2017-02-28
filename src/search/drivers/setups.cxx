@@ -11,15 +11,11 @@ namespace fs0 { namespace drivers {
 
 LiftedStateModel 
 GroundingSetup::fully_lifted_model(Problem& problem) {
-	
 	Validation::check_no_conditional_effects(problem);
-	std::vector<const PartiallyGroundedAction*> actions = ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance());
 	
 	// We don't ground any action
-	problem.setPartiallyGroundedActions(std::move(actions));
-	LiftedStateModel model(problem);
-	model.set_handlers(gecode::LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
-	return model;
+	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
+	return LiftedStateModel::build(problem);
 }
 
 GroundStateModel

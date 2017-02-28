@@ -25,8 +25,6 @@ protected:
 public:
 	EnginePT create(const Config& config, LiftedStateModel& model, SearchStats& stats);
 	
-	LiftedStateModel setup(Problem& problem) const;
-
 	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
 
 protected:
