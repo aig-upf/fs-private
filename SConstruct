@@ -2,8 +2,6 @@
 import fnmatch
 import os
 
-CLINGO = False
-
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Debug build', 'no'))
@@ -71,17 +69,6 @@ isystem_paths += ['/usr/local/include'] # MRJ: This probably should be acquired 
 isystem_paths += [os.environ['HOME'] + '/local/include']
 
 sources = locate_source_files('src', '*.cxx')
-
-clingo_path = os.getenv('CLINGO_PATH', '')
-if CLINGO:
-	if not clingo_path:
-		raise RuntimeError("You need to specify the path where Clingo is installed in the environment variable CLINGO_PATH")
-	# Clingo paths
-	isystem_paths += [clingo_path + '/' + subdir for subdir in ["libclasp", "libprogram_opts", "libclingo", "libgringo"]]
-	env.Append( CCFLAGS = [ '-DWITH_THREADS=0'] )  # Needed by Clingo
-else:
-	forbidden = ['src/search/drivers/asp_engine.cxx', 'src/utils/printers/asp.cxx']
-	sources = [s for s in sources if (not s.startswith('src/asp') and s not in forbidden)]  # Filter out clingo-specific sources
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
