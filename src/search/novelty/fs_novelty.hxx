@@ -4,8 +4,7 @@
 #include <memory>
 #include <cassert>
 
-#include <lapkt/novelty/multivalued_evaluator.hxx>
-#include <lapkt/novelty/atom_evaluator.hxx>
+#include <lapkt/novelty/evaluators.hxx>
 #include <utils/atom_index.hxx>
 
 
