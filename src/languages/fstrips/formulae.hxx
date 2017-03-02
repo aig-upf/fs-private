@@ -201,8 +201,6 @@ public:
 //! A logical conjunction
 class Conjunction : public Formula {
 public:
-	friend class LogicalOperations;
-
 	Conjunction(const std::vector<const AtomicFormula*>& conjuncts) : _conjuncts(conjuncts) {}
 
 	Conjunction(const Conjunction& conjunction);
@@ -227,10 +225,10 @@ public:
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	Formula* conjunction(const fs0::language::fstrips::Formula* other) const override;
-	Formula* conjunction(const fs0::language::fstrips::AtomicFormula* other) const override;
+	Formula* conjunction(const Formula* other) const override;
+	Formula* conjunction(const AtomicFormula* other) const override;
 	Conjunction* conjunction(const Conjunction* 						other) const override;
-	Formula* conjunction(const fs0::language::fstrips::ExistentiallyQuantifiedFormula* other) const override;
+	Formula* conjunction(const ExistentiallyQuantifiedFormula* other) const override;
 
 protected:
 	//! The formula subterms
@@ -241,8 +239,6 @@ protected:
 class AtomConjunction : public Conjunction {
 public:
 	using AtomT = std::pair<VariableIdx, ObjectIdx>;
-
-	friend class LogicalOperations;
 
 	AtomConjunction(const std::vector<const AtomicFormula*>& conjuncts, const std::vector<AtomT>& atoms)
 		: Conjunction(conjuncts), _atoms(atoms) {}
@@ -266,8 +262,6 @@ protected:
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
 class ExistentiallyQuantifiedFormula : public Formula {
 public:
-	friend class LogicalOperations;
-
 	ExistentiallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : _variables(variables), _subformula(subformula) {}
 
 	virtual ~ExistentiallyQuantifiedFormula() {
