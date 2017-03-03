@@ -2,6 +2,8 @@
 #include <limits>
 
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
+#include <languages/fstrips/scopes.hxx>
 #include <heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
@@ -11,7 +13,6 @@
 #include <constraints/gecode/handlers/base_action_csp.hxx>
 #include <constraints/gecode/handlers/ground_effect_csp.hxx>
 #include <constraints/gecode/lifted_plan_extractor.hxx>
-#include <languages/fstrips/scopes.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -20,7 +21,7 @@ UnreachedAtomRPG::UnreachedAtomRPG(const Problem& problem, const fs::Formula* go
 	_problem(problem),
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
-	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(goal_formula->conjunction(state_constraints), _tuple_index, false))),
+	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(fs::conjunction(*goal_formula, *state_constraints), _tuple_index, false))),
 	_extension_handler(extension_handler),
 	_atom_achievers(build_achievers_index(_managers, _tuple_index))
 {

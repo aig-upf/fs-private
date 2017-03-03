@@ -9,6 +9,7 @@
 #include <utils/utils.hxx>
 #include <utils/loader.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <unordered_set>
 
 namespace fs0 {
@@ -165,7 +166,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 		
 		subterms[i] = new fs::IntConstant(value);
 		auto extra_condition = new fs::EQAtomicFormula({subterm_to_replace->clone(), subterms[i]->clone()});
-		auto new_condition = effect->condition()->conjunction(extra_condition);
+		auto new_condition = fs::conjunction(*effect->condition(), *extra_condition);
 		delete extra_condition;
 		
 		auto tmp_head = new fs::FluentHeadedNestedTerm(head->getSymbolId(), subterms);

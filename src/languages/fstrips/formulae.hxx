@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <fs_types.hxx>
+#include <utils/visitor.hxx>
 
 namespace fs0 {
 class State;
@@ -22,10 +23,16 @@ class Tautology;
 class Contradiction;
 
 //! The base interface for a logic formula
-class Formula {
+class Formula :
+// 	public Loki::BaseVisitable<>
+ 	public Loki::BaseVisitable<void, Loki::DefaultCatchAll, true>
+//	public fs0::utils::BaseVisitable<void>
+		
+{
 public:
 	Formula() {}
 	virtual ~Formula() {}
+	
 
 	//! Clone idiom
 	virtual Formula* clone() const = 0;
@@ -60,19 +67,13 @@ public:
 	//! By default, formulae are not tautology nor contradiction
 	virtual bool is_tautology() const { return false; }
 	virtual bool is_contradiction() const { return false; }
-
-	//! Logical operations - ugly, but simple
-	virtual Formula* conjunction(const Formula* 						other) const = 0;
-	virtual Formula* conjunction(const AtomicFormula* 					other) const = 0;
-	virtual Formula* conjunction(const Conjunction* 					other) const = 0;
-	virtual Formula* conjunction(const ExistentiallyQuantifiedFormula*	other) const = 0;
-	virtual Formula* conjunction(const Tautology* 						other) const { return clone(); }
-	virtual Formula* conjunction(const Contradiction* 					other) const;
 };
 
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
 class AtomicFormula : public Formula {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	AtomicFormula(const std::vector<const Term*>& subterms) : _subterms(subterms), _interpreted_subterms(subterms.size(), -1) {}
 
 	virtual ~AtomicFormula();
@@ -97,11 +98,6 @@ public:
 // 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
 
 	std::vector<const Term*> all_terms() const;
-
-	Formula* conjunction(const Formula* 							other) const override { return other->conjunction(this); }
-	Formula* conjunction(const AtomicFormula* 						other) const override { throw std::runtime_error("Unimplemented"); }
-	Formula* conjunction(const Conjunction* 						other) const override { throw std::runtime_error("Unimplemented"); }
-	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const override { throw std::runtime_error("Unimplemented"); }
 
 	//! A helper to recursively evaluate the formula - must be subclassed
 	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
@@ -153,6 +149,7 @@ public:
 //! The True truth value
 class Tautology : public Formula {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
 	Tautology* bind(const Binding& binding, const ProblemInfo& info) const override { return new Tautology; }
 	Tautology* clone() const override { return new Tautology; }
 
@@ -167,16 +164,12 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { os << "True"; return os; }
-
-	Formula* conjunction(const Formula* 							other) const override;
-	Formula* conjunction(const AtomicFormula* 						other) const override;
-	Formula* conjunction(const Conjunction* 						other) const override;
-	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const override;
 };
 
 //! The False truth value
 class Contradiction : public Formula {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
 	Contradiction* bind(const Binding& binding, const ProblemInfo& info) const override { return new Contradiction; }
 	Contradiction* clone() const override { return new Contradiction; }
 
@@ -191,16 +184,12 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { os << "False"; return os; }
-
-	Formula* conjunction(const Formula* 							other) const override;
-	Formula* conjunction(const AtomicFormula* 						other) const override;
-	Formula* conjunction(const Conjunction* 						other) const override;
-	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const override;
 };
 
 //! A logical conjunction
 class Conjunction : public Formula {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
 	Conjunction(const std::vector<const AtomicFormula*>& conjuncts) : _conjuncts(conjuncts) {}
 
 	Conjunction(const Conjunction& conjunction);
@@ -224,11 +213,6 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
-
-	Formula* conjunction(const Formula* other) const override;
-	Formula* conjunction(const AtomicFormula* other) const override;
-	Conjunction* conjunction(const Conjunction* 						other) const override;
-	Formula* conjunction(const ExistentiallyQuantifiedFormula* other) const override;
 
 protected:
 	//! The formula subterms
@@ -262,6 +246,7 @@ protected:
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
 class ExistentiallyQuantifiedFormula : public Formula {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
 	ExistentiallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : _variables(variables), _subformula(subformula) {}
 
 	virtual ~ExistentiallyQuantifiedFormula() {
@@ -275,6 +260,8 @@ public:
 	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const override;
 
 	const Conjunction* getSubformula() const { return _subformula; }
+	
+	const std::vector<const BoundVariable*> getVariables() const { return _variables; }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
@@ -285,11 +272,6 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
-
-	Formula* conjunction(const Formula* 							other) const override;
-	Formula* conjunction(const AtomicFormula* 						other) const override;
-	Formula* conjunction(const Conjunction* 						other) const override;
-	Formula* conjunction(const ExistentiallyQuantifiedFormula*		other) const override;
 
 protected:
 	//! The binding IDs of the existentially quantified variables

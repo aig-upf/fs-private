@@ -3,6 +3,7 @@
 
 #include <state.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <heuristics/relaxed_plan/smart_rpg.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
@@ -22,7 +23,7 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
 	_extension_handler(extension_handler),
-	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(goal_formula->conjunction(state_constraints), _tuple_index, false)))
+	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(fs::conjunction(*goal_formula, *state_constraints), _tuple_index, false)))
 {
 	LPT_INFO("heuristic", "SmartRPG heuristic initialized");
 	if (_managers.empty()) {

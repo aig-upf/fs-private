@@ -276,32 +276,5 @@ bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, const Bi
 	return false;
 }
 
-Formula* Formula::conjunction(const Contradiction* formula) const { return new Contradiction; }
-
-Formula* Tautology::conjunction(const Formula* 								other) const { return other->conjunction(this); }
-Formula* Tautology::conjunction(const AtomicFormula* 						other) const { return other->clone(); }
-Formula* Tautology::conjunction(const Conjunction* 							other) const { return other->clone(); }
-Formula* Tautology::conjunction(const ExistentiallyQuantifiedFormula*		other) const { return other->clone(); }
-Formula* Contradiction::conjunction(const Formula* 							other) const { return other->conjunction(this); }
-Formula* Contradiction::conjunction(const AtomicFormula* 					other) const { return new Contradiction; }
-Formula* Contradiction::conjunction(const Conjunction* 						other) const { return new Contradiction; }
-Formula* Contradiction::conjunction(const ExistentiallyQuantifiedFormula*	other) const { return new Contradiction; }
-Formula* Conjunction::conjunction(const Formula* 							other) const { return other->conjunction(this); }
-Formula* Conjunction::conjunction(const AtomicFormula* 						other) const { throw std::runtime_error("Unimplemented"); }
-Formula* Conjunction::conjunction(const ExistentiallyQuantifiedFormula*		other) const { return other->conjunction(this); }
-Formula* ExistentiallyQuantifiedFormula::conjunction(const Formula* 							other) const { return other->conjunction(this); }
-Formula* ExistentiallyQuantifiedFormula::conjunction(const AtomicFormula* 						other) const { throw std::runtime_error("Unimplemented"); }
-Formula* ExistentiallyQuantifiedFormula::conjunction(const ExistentiallyQuantifiedFormula*		other) const { throw std::runtime_error("Unimplemented"); }
-
-Conjunction* Conjunction::conjunction(const Conjunction* other) const {
-	auto all_subterms = Utils::merge(Utils::clone(_conjuncts), Utils::clone(other->_conjuncts));
-	return new Conjunction(all_subterms);
-}
-
-Formula* ExistentiallyQuantifiedFormula::conjunction(const Conjunction* other) const {
-	// We simply return the existentially quantified formula that results from conjuncting the LHS subconjunction with the RHS conjunction, with the same quantified variables.
-	return new ExistentiallyQuantifiedFormula(_variables, other->conjunction(_subformula));
-}
-
 
 } } } // namespaces

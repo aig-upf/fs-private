@@ -2,6 +2,7 @@
 #include <limits>
 
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <relaxed_state.hxx>
@@ -19,7 +20,7 @@ GecodeCRPG::GecodeCRPG(const Problem& problem, const fs::Formula* goal_formula, 
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
 	_extension_handler(extension_handler),
-	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(goal_formula->conjunction(state_constraints), _tuple_index, false)))
+	_goal_handler(std::unique_ptr<FormulaCSP>(new FormulaCSP(fs::conjunction(*goal_formula, *state_constraints), _tuple_index, false)))
 {
 	LPT_DEBUG("heuristic", "Standard CRPG heuristic initialized");
 }
