@@ -17,6 +17,7 @@
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <validator.hxx>
 
 
@@ -189,7 +190,7 @@ Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& inf
 	const fs::Formula* unprocessed = fs::Loader::parseFormula(data["conditions"], info);
 	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
 	// to detect tautologies, contradictions, etc., and to consolidate state variables
-	auto processed = unprocessed->bind(Binding::EMPTY_BINDING, info);
+	auto processed = fs::bind(*unprocessed, Binding::EMPTY_BINDING, info);
 	delete unprocessed;
 	return processed;
 }

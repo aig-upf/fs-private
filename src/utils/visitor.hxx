@@ -153,6 +153,13 @@ struct DefaultCatchAll
     { return R(); }
 };
 
+template <typename R, typename Visited>
+struct ThrowCatchAll
+{
+    static R OnUnknownVisitor(Visited&, BaseVisitor&)
+    { throw std::runtime_error("Unknown visited type"); }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // class template BaseVisitable
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +167,7 @@ struct DefaultCatchAll
     template 
     <
         typename R = void, 
-        template <typename, class> class CatchAll = DefaultCatchAll,
+        template <typename, class> class CatchAll = ThrowCatchAll,
         bool ConstVisitable = false
     >
     class BaseVisitable;

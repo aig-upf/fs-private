@@ -282,7 +282,7 @@ _bind_effects(const ActionData& action_data, const Binding& binding, const Probl
 
 PartiallyGroundedAction*
 ActionGrounder::partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
-	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
+	const fs::Formula* precondition = fs::bind(*action_data.getPrecondition(), binding, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
 		return nullptr;
@@ -300,7 +300,7 @@ ActionGrounder::partial_binding(const ActionData& action_data, const Binding& bi
 GroundAction*
 ActionGrounder::full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
 	assert(binding.is_complete()); // Grounding only possible for full bindings
-	const fs::Formula* precondition = action_data.getPrecondition()->bind(binding, info);
+	const fs::Formula* precondition = fs::bind(*action_data.getPrecondition(), binding, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
 		return nullptr;
@@ -317,7 +317,7 @@ ActionGrounder::full_binding(unsigned id, const ActionData& action_data, const B
 
 ActionData*
 ActionGrounder::process_action_data(const ActionData& action_data, const ProblemInfo& info) {
-	auto precondition = action_data.getPrecondition()->bind(Binding::EMPTY_BINDING, info);
+	auto precondition = fs::bind(*action_data.getPrecondition(), Binding::EMPTY_BINDING, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
 		throw std::runtime_error("The precondition of the action schema is (statically) unsatisfiable!");

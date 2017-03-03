@@ -29,7 +29,7 @@ class BindingVisitor
 	
 {
 public:
-	BindingVisitor(const Binding& binding, const ProblemInfo& info) : _binding(binding), _info(info) {}
+	BindingVisitor(const Binding& binding, const ProblemInfo& info) : _binding(binding), _info(info), _result(nullptr) {}
 	~BindingVisitor() = default;
 	
  	void Visit(const Formula& lhs) override { throw UnimplementedFeatureException(""); }

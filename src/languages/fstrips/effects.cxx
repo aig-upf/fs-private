@@ -3,6 +3,7 @@
 #include <languages/fstrips/effects.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <problem.hxx>
 #include <state.hxx>
 
@@ -56,7 +57,7 @@ std::ostream& ActionEffect::print(std::ostream& os, const fs0::ProblemInfo& info
 }
 
 const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo& info) const {
-	const fs::Formula* condition = _condition->bind(binding, info);
+	const fs::Formula* condition = fs0::language::fstrips::bind(*_condition, binding, info);
 	if (condition->is_contradiction()) {
 		delete condition;
 		return nullptr;

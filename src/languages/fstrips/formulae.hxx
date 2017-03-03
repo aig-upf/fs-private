@@ -25,7 +25,7 @@ class Contradiction;
 //! The base interface for a logic formula
 class Formula :
 // 	public Loki::BaseVisitable<>
- 	public Loki::BaseVisitable<void, Loki::DefaultCatchAll, true>
+ 	public Loki::BaseVisitable<void, Loki::ThrowCatchAll, true>
 //	public fs0::utils::BaseVisitable<void>
 		
 {
@@ -35,10 +35,6 @@ public:
 
 	//! Clone idiom
 	virtual Formula* clone() const = 0;
-
-	//! Processes a formula possibly containing bound variables and non-consolidated state variables,
-	//! consolidating all possible state variables and performing the bindings according to the given variable binding
-	virtual const Formula* bind(const Binding& binding, const ProblemInfo& info) const = 0;
 
 	//! Return the boolean interpretation of the current formula under the given assignment and binding.
 	virtual bool interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
@@ -70,8 +66,6 @@ public:
 	virtual AtomicFormula* clone(const std::vector<const Term*>& subterms) const = 0;
 	AtomicFormula* clone() const override;
 
-	const Formula* bind(const fs0::Binding& binding, const fs0::ProblemInfo& info) const override;
-
 	const std::vector<const Term*>& getSubterms() const { return _subterms; }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
@@ -95,25 +89,24 @@ protected:
 
 class ExternallyDefinedFormula : public AtomicFormula {
 public:
-       ExternallyDefinedFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
-       
-       virtual std::string name() const = 0;
-       
-       //! Prints a representation of the object to the given stream.
-       std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+	ExternallyDefinedFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
+	
+	virtual std::string name() const = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 
 class AxiomaticFormula : public AtomicFormula {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
 	AxiomaticFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
 	
 	//! To be subclassed
 	virtual std::string name() const = 0;
 	
 	virtual AxiomaticFormula* clone(const std::vector<const Term*>& subterms) const override = 0;
-	
-	const AxiomaticFormula* bind(const Binding& binding, const ProblemInfo& info) const override;
 	
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
@@ -132,7 +125,6 @@ public:
 class Tautology : public Formula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	Tautology* bind(const Binding& binding, const ProblemInfo& info) const override { return new Tautology; }
 	Tautology* clone() const override { return new Tautology; }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return true; }
@@ -148,7 +140,6 @@ public:
 class Contradiction : public Formula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	Contradiction* bind(const Binding& binding, const ProblemInfo& info) const override { return new Contradiction; }
 	Contradiction* clone() const override { return new Contradiction; }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return false; }
@@ -173,8 +164,6 @@ public:
 	}
 
 	Conjunction* clone() const override { return new Conjunction(*this); }
-
-	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const override;
 
 	const std::vector<const AtomicFormula*>& getConjuncts() const { return _conjuncts; }
 
@@ -226,8 +215,6 @@ public:
 	ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula& other);
 
 	ExistentiallyQuantifiedFormula* clone() const override { return new ExistentiallyQuantifiedFormula(*this); }
-
-	const Formula* bind(const Binding& binding, const fs0::ProblemInfo& info) const override;
 
 	const Conjunction* getSubformula() const { return _subformula; }
 	

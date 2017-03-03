@@ -44,7 +44,7 @@ class ConjunctionVisitor
 	, public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 {
 public:
-	ConjunctionVisitor() = default;
+	ConjunctionVisitor() : _result(nullptr) {}
 	virtual ~ConjunctionVisitor() = default;
 
 	Formula* _result;	
