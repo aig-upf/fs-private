@@ -50,7 +50,7 @@ protected:
 	// The underlying planning problem.
 	const Problem& _task;
 
-	const ActionManagerI* _manager;
+	std::unique_ptr<ActionManagerI> _manager;
 
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
