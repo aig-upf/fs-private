@@ -21,7 +21,7 @@ ExistentiallyQuantifiedFormula
 */
 
 
-//! The main operation: a conjunction between two arbitrary formulas.
+//! The level of nestedness of a given formula
 unsigned nestedness(const Formula& element);
 
 
