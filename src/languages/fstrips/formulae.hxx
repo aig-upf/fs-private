@@ -251,25 +251,6 @@ protected:
 	bool interpret_rec(const T& assignment, const Binding& binding, unsigned i) const;
 };
 
-/*
-//! A formula such as 'clear(b)', where clear is one of the problem's fluents.
-class FluentAtom : public AtomicFormula {
-public:
-	FluentAtom(unsigned symbol_id, const std::vector<const Term*>& subterms) : AtomicFormula(subterms), _symbol_id(symbol_id)
-	{}
-
-	FluentAtom* clone(const std::vector<const Term*>& subterms) const = 0;
-
-	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
-
-protected:
-	bool _satisfied(const ObjectIdxVector& values) const;
-
-	unsigned _symbol_id;
-};
-*/
-
 
 //! A formula of the form t_1 <op> t_2, where t_i are terms and <op> is a basic relational
 //! operator such as =, !=, >, etc.
