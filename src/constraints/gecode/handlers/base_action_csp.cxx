@@ -1,5 +1,6 @@
 
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <actions/actions.hxx>
 #include <constraints/gecode/handlers/base_action_csp.hxx>
 #include <constraints/gecode/helper.hxx>
@@ -79,15 +80,15 @@ void BaseActionCSP::process(RPGIndex& graph) const {
 //! In the case of grounded actions and action schemata, we need to retrieve both the atoms and terms
 //! appearing in the precondition, _and_ the terms appearing in the effects, except the root LHS atom.
 void BaseActionCSP::index() {
-	std::vector<const fs::AtomicFormula*> conditions = get_precondition()->all_atoms();
-	std::vector<const fs::Term*> terms = get_precondition()->all_terms();
+	std::vector<const fs::AtomicFormula*> conditions = fs::all_atoms(*get_precondition());
+	std::vector<const fs::Term*> terms = fs::all_terms(*get_precondition());
 	
 	// If using the effect conditions, we'll want to index their components too
 	if (_use_effect_conditions) {
 		for (const fs::ActionEffect* effect:get_effects()) {
 			auto condition = effect->condition();
-			conditions = Utils::merge(conditions, condition->all_atoms());
-			terms = Utils::merge(terms, condition->all_terms());
+			conditions = Utils::merge(conditions, fs::all_atoms(*condition));
+			terms = Utils::merge(terms, fs::all_terms(*condition));
 		}
 	}
 	

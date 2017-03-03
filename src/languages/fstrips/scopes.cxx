@@ -2,6 +2,8 @@
 #include <problem.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
+
 #include <actions/actions.hxx>
 #include <constraints/gecode/utils/nested_fluent_iterator.hxx>
 
@@ -58,11 +60,11 @@ std::vector<VariableIdx> ScopeUtils::computeDirectScope(const Formula* formula) 
 }
 
 void ScopeUtils::computeDirectScope(const Formula* formula, std::set<VariableIdx>& scope) {
-	for (const Term* subterm:formula->all_terms()) ScopeUtils::computeDirectScope(subterm, scope);
+	for (const Term* subterm:fs::all_terms(*formula)) ScopeUtils::computeDirectScope(subterm, scope);
 }
 
 void ScopeUtils::computeIndirectScope(const Formula* formula, TermSet& scope) {
-	for (const Term* term:formula->all_terms()) {
+	for (const Term* term:fs::all_terms(*formula)) {
 		if (auto fluent = dynamic_cast<const FluentHeadedNestedTerm*>(term)) {
 			scope.insert(fluent);
 		}
@@ -118,10 +120,9 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 	return affected;
 }
 
-template <typename T>
-void _computeRelevantElements(const T& element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols, bool preds_as_state_vars=false) {
+void _computeRelevantElements(const std::vector<const Term*>& all_terms, std::set<VariableIdx>& variables, std::set<unsigned>& symbols, bool preds_as_state_vars=false) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	for (const Term* term:element->all_terms()) {
+	for (const Term* term:all_terms) {
 		auto statevar = dynamic_cast<const StateVariable*>(term);
 		auto fluent = dynamic_cast<const FluentHeadedNestedTerm*>(term);
 		
@@ -157,27 +158,27 @@ void _computeRelevantElements(const T& element, std::set<VariableIdx>& variables
 
 
 void ScopeUtils::computeRelevantElements(const Term* element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
-	_computeRelevantElements(element, variables, symbols);
+	_computeRelevantElements(element->all_terms(), variables, symbols);
 }
 
 void ScopeUtils::computeRelevantElements(const Formula* element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
-	_computeRelevantElements(element, variables, symbols);
+	_computeRelevantElements(fs::all_terms(*element), variables, symbols);
 }
 
 void ScopeUtils::computeFullScope(const Formula* formula, std::set<VariableIdx>& scope) {
 	std::set<unsigned> _;
-	_computeRelevantElements(formula, scope, _, true);
+	_computeRelevantElements(fs::all_terms(*formula), scope, _, true);
 }
 
 void ScopeUtils::computeActionFullScope(const ActionBase& action, std::set<VariableIdx>& scope) {
 	std::set<unsigned> _;
-	_computeRelevantElements(action.getPrecondition(), scope, _, true);
+	_computeRelevantElements(fs::all_terms(*action.getPrecondition()), scope, _, true);
 }
 
 void ScopeUtils::compute_affected(const ActionBase& action, std::set<VariableIdx>& scope) {
 	std::set<unsigned> _;
 	for (const fs::ActionEffect* eff:action.getEffects()) {
-		_computeRelevantElements(eff->lhs(), scope, _, true);
+		_computeRelevantElements(eff->lhs()->all_terms(), scope, _, true);
 	}
 }
 

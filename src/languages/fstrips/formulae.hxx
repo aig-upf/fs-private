@@ -32,7 +32,6 @@ class Formula :
 public:
 	Formula() {}
 	virtual ~Formula() {}
-	
 
 	//! Clone idiom
 	virtual Formula* clone() const = 0;
@@ -52,15 +51,7 @@ public:
 	std::ostream& print(std::ostream& os) const;
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
 
-	//! Returns a vector with all the terms involved in the current formula
-	std::vector<const Term*> all_terms() const;
-
-	//! Returns a vector with all the subformulae involved in the current formula
-	virtual std::vector<const Formula*> all_formulae() const = 0;
-
-	//! A small helper - returns a vector with all the atomic formulae involved in the current formula
-	std::vector<const AtomicFormula*> all_atoms() const;
-
+	
 	//! By default, formulae are not tautology nor contradiction
 	virtual bool is_tautology() const { return false; }
 	virtual bool is_contradiction() const { return false; }
@@ -87,12 +78,8 @@ public:
 	bool interpret(const State& state, const Binding& binding) const override;
 	using Formula::interpret;
 
-	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
-
 	//! Prints a representation of the object to the given stream.
 // 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
-
-	std::vector<const Term*> all_terms() const;
 
 	//! A helper to recursively evaluate the formula - must be subclassed
 	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
@@ -148,8 +135,6 @@ public:
 	Tautology* bind(const Binding& binding, const ProblemInfo& info) const override { return new Tautology; }
 	Tautology* clone() const override { return new Tautology; }
 
-	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
-
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return true; }
 	bool interpret(const State& state, const Binding& binding) const override { return true; }
 
@@ -165,8 +150,6 @@ public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	Contradiction* bind(const Binding& binding, const ProblemInfo& info) const override { return new Contradiction; }
 	Contradiction* clone() const override { return new Contradiction; }
-
-	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return false; }
 	bool interpret(const State& state, const Binding& binding) const override { return false; }
@@ -197,8 +180,6 @@ public:
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
-
-	std::vector<const Formula*> all_formulae() const override;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -254,8 +235,6 @@ public:
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
-
-	std::vector<const Formula*> all_formulae() const override;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;

@@ -1,5 +1,6 @@
 
 
+#include <languages/fstrips/operations.hxx>
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <utils/utils.hxx>
 #include <utils/projections.hxx>
@@ -16,7 +17,7 @@ namespace fs0 {
 std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula* goal_formula, const fs::Formula* state_constraints) {
 	auto goal_conjunction = dynamic_cast<const fs::Conjunction*>(goal_formula);
 	assert(goal_conjunction);
-	auto directGoalConstraints = DirectTranslator::generate(goal_conjunction->all_atoms());
+	auto directGoalConstraints = DirectTranslator::generate(fs::all_atoms(*goal_conjunction));
 	ConstraintCompiler::compileConstraints(directGoalConstraints);
 
 	// Process the state constraints, if any
@@ -24,7 +25,7 @@ std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula* go
 	if (!state_constraints->is_tautology()) {
 		auto sc_conjunction = dynamic_cast<const fs::Conjunction*>(state_constraints);
 		assert(sc_conjunction);
-		directStateConstraints = DirectTranslator::generate(sc_conjunction->all_atoms());
+		directStateConstraints = DirectTranslator::generate(fs::all_atoms(*sc_conjunction));
 		ConstraintCompiler::compileConstraints(directStateConstraints);
 	}
 	

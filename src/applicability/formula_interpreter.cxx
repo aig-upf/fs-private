@@ -1,6 +1,7 @@
 
 #include <applicability/formula_interpreter.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <utils/utils.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <constraints/gecode/handlers/formula_csp.hxx>
@@ -9,7 +10,7 @@ namespace fs0 {
 
 FormulaInterpreter* FormulaInterpreter::create(const fs::Formula* formula, const AtomIndex& tuple_index) {
 	// If there is some quantified variable in the formula, we will use a CSP-based interpreter
-	auto existential_formulae = Utils::filter_by_type<const fs::ExistentiallyQuantifiedFormula*>(formula->all_formulae());
+	auto existential_formulae = Utils::filter_by_type<const fs::ExistentiallyQuantifiedFormula*>(fs::all_formulae(*formula));
 	if (!existential_formulae.empty()) {
 		LPT_INFO("main", "Created a CSP sat. manager for formula: " << *formula);
 		// TODO - Note that we are cloning the formula here because otherwise the destructor of the interpreter will attempt to

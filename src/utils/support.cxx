@@ -5,9 +5,8 @@
 #include <utils/utils.hxx>
 #include <problem_info.hxx>
 #include <actions/actions.hxx>
-#include <languages/fstrips/formulae.hxx>
-#include <languages/fstrips/effects.hxx>
-#include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 
 
 namespace fs0 { namespace support {
@@ -41,7 +40,7 @@ std::vector<bool> compute_managed_symbols(const std::vector<const ActionBase*>& 
 		}
 	}
 	
-	for (const fs::FluentHeadedNestedTerm* fluent:Utils::filter_by_type<const fs::FluentHeadedNestedTerm*>(goal_formula->all_terms())) {
+	for (const fs::FluentHeadedNestedTerm* fluent:Utils::filter_by_type<const fs::FluentHeadedNestedTerm*>(fs::all_terms(*goal_formula))) {
 		managed.at(fluent->getSymbolId()) = true;
 	}
 	

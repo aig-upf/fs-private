@@ -1,6 +1,7 @@
 
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <constraints/gecode/handlers/formula_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
@@ -80,8 +81,8 @@ void FormulaCSP::index_scopes() {
 
 // In the case of a single formula, we just retrieve and index all terms and atoms
 void FormulaCSP::index() {
-	const auto conditions =  _formula->all_atoms();
-	const auto terms = _formula->all_terms();
+	const auto conditions = fs::all_atoms(*_formula);
+	const auto terms = fs::all_terms(*_formula);
 	
 	// Index formula elements
 	index_formula_elements(conditions, terms);

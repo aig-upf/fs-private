@@ -8,6 +8,7 @@
 #include <lapkt/tools/logging.hxx>
 #include <utils/binding.hxx>
 
+
 namespace fs0 { namespace language { namespace fstrips {
 
 
@@ -19,19 +20,6 @@ const std::map<AFSymbol, std::string> RelationalFormula::symbol_to_string{
 // const std::map<std::string, AFSymbol> RelationalFormula::string_to_symbol(Utils::flip_map(symbol_to_string));
 
 
-std::vector<const Term*> Formula::all_terms() const {
-	std::vector<const Term*> res;
-	for (auto atom:all_atoms()) {
-		auto tmp = atom->all_terms();
-		res.insert(res.end(), tmp.cbegin(), tmp.cend());
-	}
-	return res;
-}
-
-std::vector<const AtomicFormula*> Formula::all_atoms() const {
-	return Utils::filter_by_type<const AtomicFormula*>(all_formulae());
-}
-
 bool Formula::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
 bool Formula::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
 
@@ -41,15 +29,6 @@ std::ostream& Formula::print(std::ostream& os) const { return print(os, ProblemI
 
 AtomicFormula::~AtomicFormula() {
 	for (const auto ptr:_subterms) delete ptr;
-}
-
-std::vector<const Term*> AtomicFormula::all_terms() const {
-	std::vector<const Term*> res;
-	for (const Term* term:_subterms) {
-		auto tmp = term->all_terms();
-		res.insert(res.end(), tmp.cbegin(), tmp.cend());
-	}
-	return res;
 }
 
 AtomicFormula* AtomicFormula::clone() const { return clone(Utils::clone(_subterms)); }
@@ -182,16 +161,6 @@ std::ostream& Conjunction::print(std::ostream& os, const fs0::ProblemInfo& info)
 	return os;
 }
 
-std::vector<const Formula*> Conjunction::all_formulae() const {
-	std::vector<const Formula*> res(1, this);
-	for (auto elem:_conjuncts) {
-		auto tmp = elem->all_formulae();
-		res.insert(res.end(), tmp.cbegin(), tmp.cend());
-	}
-	return res;
-}
-
-
 
 bool
 AtomConjunction::interpret(const State& state) const {
@@ -206,12 +175,6 @@ ExistentiallyQuantifiedFormula::ExistentiallyQuantifiedFormula(const Existential
 _variables(Utils::clone(other._variables)), _subformula(other._subformula->clone())
 {}
 
-std::vector<const Formula*> ExistentiallyQuantifiedFormula::all_formulae() const {
-	std::vector<const Formula*> res(1, this);
-	auto tmp = _subformula->all_formulae();
-	res.insert(res.end(), tmp.cbegin(), tmp.cend());
-	return res;
-}
 
 const Formula* ExistentiallyQuantifiedFormula::bind(const Binding& binding, const ProblemInfo& info) const {
 	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
