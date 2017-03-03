@@ -7,6 +7,7 @@
 #include <constraints/direct/direct_rpg_builder.hxx>
 #include <constraints/direct/action_manager.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/events.hxx>
 
@@ -65,7 +66,7 @@ NativeDriver<StateModelT>::check_supported(const Problem& problem) {
 	if (!state_constraints->is_tautology() && !dynamic_cast<const fs::Conjunction*>(state_constraints)) return false;
 	
 	// Nested fluents in any of the formulas are not supported
-	if (goal->nestedness() > 0 || state_constraints->nestedness() > 0) return false;
+	if (fs::nestedness(*goal) > 0 || fs::nestedness(*state_constraints) > 0) return false;
 	
 	return true;
 }

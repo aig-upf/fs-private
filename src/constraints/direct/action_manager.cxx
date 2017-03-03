@@ -8,6 +8,7 @@
 #include <lapkt/tools/logging.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <relaxed_state.hxx>
 #include <actions/action_id.hxx>
 #include <actions/actions.hxx>
@@ -59,7 +60,7 @@ DirectActionManager::is_supported(const GroundAction& action) {
 	if (!precondition) return false; 
 	
 	for (const fs::AtomicFormula* condition:precondition->getConjuncts()) {
-		if (condition->nestedness() > 0) return false;
+		if (fs::nestedness(*condition) > 0) return false;
 		
 		std::size_t arity = fs::ScopeUtils::computeDirectScope(condition).size();
 		if (arity == 0) throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");

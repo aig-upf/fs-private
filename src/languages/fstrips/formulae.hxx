@@ -47,9 +47,6 @@ public:
 	virtual bool interpret(const PartialAssignment& assignment) const;
 	virtual bool interpret(const State& state) const;
 
-	//! The level of nestedness of the formula
-	virtual unsigned nestedness() const = 0;
-
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Formula& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
@@ -89,8 +86,6 @@ public:
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
 	using Formula::interpret;
-
-	unsigned nestedness() const override;
 
 	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
 
@@ -153,8 +148,6 @@ public:
 	Tautology* bind(const Binding& binding, const ProblemInfo& info) const override { return new Tautology; }
 	Tautology* clone() const override { return new Tautology; }
 
-	unsigned nestedness() const override { return 0; }
-
 	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return true; }
@@ -172,8 +165,6 @@ public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	Contradiction* bind(const Binding& binding, const ProblemInfo& info) const override { return new Contradiction; }
 	Contradiction* clone() const override { return new Contradiction; }
-
-	unsigned nestedness() const override { return 0; }
 
 	std::vector<const Formula*> all_formulae() const override { return std::vector<const Formula*>(1, this); }
 
@@ -206,8 +197,6 @@ public:
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
-
-	unsigned nestedness() const override;
 
 	std::vector<const Formula*> all_formulae() const override;
 
@@ -265,8 +254,6 @@ public:
 
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
-
-	unsigned nestedness() const override { return _subformula->nestedness(); }
 
 	std::vector<const Formula*> all_formulae() const override;
 

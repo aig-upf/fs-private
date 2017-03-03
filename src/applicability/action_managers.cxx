@@ -8,6 +8,7 @@
 #include <problem.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/vector.hxx>
 #include <numeric>
@@ -165,7 +166,7 @@ BasicApplicabilityAnalyzer::build() {
 			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
 			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
 			const fs::NEQAtomicFormula* neq = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
-			unsigned nestedness = conjunct->nestedness();
+			unsigned nestedness = fs::nestedness(*conjunct);
 			std::vector<VariableIdx> all_relevant = fs::ScopeUtils::computeDirectScope(conjunct);
 
 			// This implements a very rudimentary test that indexes only preconditions of the form X = x or X != x,

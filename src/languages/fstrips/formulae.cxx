@@ -38,11 +38,6 @@ bool Formula::interpret(const State& state) const  { return interpret(state, Bin
 
 std::ostream& Formula::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
-unsigned AtomicFormula::nestedness() const {
-	unsigned max = 0;
-	for (const Term* subterm:_subterms) max = std::max(max, subterm->nestedness());
-	return max;
-}
 
 AtomicFormula::~AtomicFormula() {
 	for (const auto ptr:_subterms) delete ptr;
@@ -164,12 +159,6 @@ const Formula* Conjunction::bind(const Binding& binding, const fs0::ProblemInfo&
 	return new Conjunction(conjuncts);
 }
 
-
-unsigned Conjunction::nestedness() const {
-	unsigned max = 0;
-	for (auto element:_conjuncts) max = std::max(max, element->nestedness());
-	return max;
-}
 
 bool Conjunction::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	for (auto elem:_conjuncts) {
