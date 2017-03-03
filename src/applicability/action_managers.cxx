@@ -161,7 +161,7 @@ BasicApplicabilityAnalyzer::build() {
 
 
 		std::set<VariableIdx> referenced; // The state variables already made reference to by some precondition
-		for (const fs::AtomicFormula* conjunct:precondition->getConjuncts()) {
+		for (const fs::AtomicFormula* conjunct:precondition->getSubformulae()) {
 
 			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
 			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
@@ -305,7 +305,7 @@ _process_state_constraints(const fs::Formula* state_constraints) {
 	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(state_constraints);
 	if (!conjunction) throw std::runtime_error("Unsupported State Constraint type");
 
-	return conjunction->getConjuncts();
+	return conjunction->getSubformulae();
 }
 
 

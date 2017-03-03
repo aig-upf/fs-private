@@ -48,7 +48,7 @@ namespace fs0 { namespace bfws {
         }
 
         std::set<VariableIdx> referenced; // The state variables already made reference to by some precondition
-        for (const fs::AtomicFormula* conjunct:precondition->getConjuncts()) {
+        for (const fs::AtomicFormula* conjunct:precondition->getSubformulae()) {
 
             const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
             const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);

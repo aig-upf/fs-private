@@ -51,7 +51,7 @@ void BindingVisitor::
 Visit(const Conjunction& lhs) {
 	std::vector<const AtomicFormula*> conjuncts;
 	std::vector<AtomConjunction::AtomT> atoms;
-	for (const AtomicFormula* c:lhs.getConjuncts()) {
+	for (const AtomicFormula* c:lhs.getSubformulae()) {
 		auto processed = bind(*c, _binding, _info);
 		// Static checks
 		if (processed->is_tautology()) { // No need to add the condition, which is always true

@@ -37,7 +37,7 @@ DirectActionManager::create(const GroundAction& action) {
 	if (!dynamic_cast<const fs::Tautology*>(action.getPrecondition())) { // If the precondition is a tautology, we'll have no constraints
 		auto precondition = dynamic_cast<const fs::Conjunction*>(action.getPrecondition());
 		assert(precondition);
-		constraints = DirectTranslator::generate(precondition->getConjuncts());
+		constraints = DirectTranslator::generate(precondition->getSubformulae());
 	}
 	
 	std::vector<const DirectEffect*> effects = DirectTranslator::generate(action.getEffects());
@@ -59,7 +59,7 @@ DirectActionManager::is_supported(const GroundAction& action) {
 	// Only conjunctions of atoms are supported by the direct translator
 	if (!precondition) return false; 
 	
-	for (const fs::AtomicFormula* condition:precondition->getConjuncts()) {
+	for (const fs::AtomicFormula* condition:precondition->getSubformulae()) {
 		if (fs::nestedness(*condition) > 0) return false;
 		
 		std::size_t arity = fs::ScopeUtils::computeDirectScope(condition).size();

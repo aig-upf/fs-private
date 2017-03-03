@@ -23,7 +23,7 @@ Visit(const AtomicFormula& lhs) {
 void NestednessVisitor::	
 Visit(const Conjunction& lhs) {
 	_result = 0;
-	for (const auto* conjunct:lhs.getConjuncts()) _result = std::max(_result, nestedness(*conjunct));
+	for (const auto* conjunct:lhs.getSubformulae()) _result = std::max(_result, nestedness(*conjunct));
 }
 	
 void NestednessVisitor::

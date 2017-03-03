@@ -21,7 +21,7 @@ obtain_goal_atoms(const fs::Formula* goal) {
 		goal_atoms.push_back(goal);
 	} else {
 
-		for (const fs::AtomicFormula* atom:conjunction->getConjuncts()) {
+		for (const fs::AtomicFormula* atom:conjunction->getSubformulae()) {
 			goal_atoms.push_back(atom);
 		}
 	

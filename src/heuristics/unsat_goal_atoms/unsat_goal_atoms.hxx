@@ -21,7 +21,7 @@ public:
 	}
 	
 	const std::vector<const fs::AtomicFormula*>& get_goal_conjuncts() const {
-		return _goal_conjunction->getConjuncts();
+		return _goal_conjunction->getSubformulae();
 	}
 	
 	

@@ -79,7 +79,7 @@ public:
 	void Visit(const AtomicFormula& lhs) override { _result.push_back(&lhs); }
 	void Visit(const Conjunction& lhs) override {
 		_result.push_back(&lhs);
-		for (auto elem:lhs.getConjuncts()) {
+		for (auto elem:lhs.getSubformulae()) {
 			auto tmp = all_formulae(*elem);
 			_result.insert(_result.end(), tmp.cbegin(), tmp.cend());
 		}

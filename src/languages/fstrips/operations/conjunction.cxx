@@ -16,7 +16,7 @@ Formula* conjunction(const Formula& lhs, const Formula& rhs) {
 
 
 Conjunction* _conjunction(const Conjunction& lhs, const Conjunction& rhs) {
-	auto all_subterms = Utils::merge(Utils::clone(lhs.getConjuncts()), Utils::clone(rhs.getConjuncts()));
+	auto all_subterms = Utils::merge(Utils::clone(lhs.getSubformulae()), Utils::clone(rhs.getSubformulae()));
 	return new Conjunction(all_subterms);
 }
 

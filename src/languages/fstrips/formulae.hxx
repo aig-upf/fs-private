@@ -30,8 +30,8 @@ class Formula :
 		
 {
 public:
-	Formula() {}
-	virtual ~Formula() {}
+	Formula() = default;
+	virtual ~Formula() = default;
 
 	//! Clone idiom
 	virtual Formula* clone() const = 0;
@@ -151,31 +151,40 @@ public:
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { os << "False"; return os; }
 };
 
-//! A logical conjunction
-class Conjunction : public Formula {
+//! A formula made of some logical connective applied to a number of subarguments
+//! Will tipically be negation, conjunction, disjunction
+class OpenFormula : public Formula {
 public:
-	LOKI_DEFINE_CONST_VISITABLE();
-	Conjunction(const std::vector<const AtomicFormula*>& conjuncts) : _conjuncts(conjuncts) {}
+	OpenFormula(const std::vector<const AtomicFormula*>& subformulae) : _subformulae(subformulae) {}
+	~OpenFormula() { for (const auto ptr:_subformulae) delete ptr; }
+	OpenFormula(const OpenFormula& other);
 
-	Conjunction(const Conjunction& conjunction);
-
-	virtual ~Conjunction() {
-		for (const auto ptr:_conjuncts) delete ptr;
-	}
-
-	Conjunction* clone() const override { return new Conjunction(*this); }
-
-	const std::vector<const AtomicFormula*>& getConjuncts() const { return _conjuncts; }
-
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
+	const std::vector<const AtomicFormula*>& getSubformulae() const { return _subformulae; }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
+	virtual inline std::string name() const = 0;
+	
 protected:
 	//! The formula subterms
-	std::vector<const AtomicFormula*> _conjuncts;
+	std::vector<const AtomicFormula*> _subformulae;
+};
+
+//! A logical conjunction
+class Conjunction : public OpenFormula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	Conjunction(const std::vector<const AtomicFormula*>& conjuncts) : OpenFormula(conjuncts) {}
+	~Conjunction() = default;
+	Conjunction(const Conjunction& conjunction) = default;
+
+	Conjunction* clone() const override { return new Conjunction(*this); }
+
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
+
+	inline std::string name() const override { return "and"; }
 };
 
 //! A conjunctive formula made up of atoms X=x - geared towards optimizing the `interpret` method
@@ -201,6 +210,42 @@ protected:
 	//! Each pair (X,x) represents a conjunct X=x
 	std::vector<AtomT> _atoms;
 };
+
+
+//! Logical Disjunction
+class Disjunction : public OpenFormula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	Disjunction(const std::vector<const AtomicFormula*>& conjuncts) : OpenFormula(conjuncts) {}
+	~Disjunction() = default;
+	Disjunction(const Disjunction& conjunction) = default;
+
+	Disjunction* clone() const override { return new Disjunction(*this); }
+
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
+
+	inline std::string name() const override { return "or"; }
+};
+
+//! Negation
+class Negation : public OpenFormula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+
+	Negation(const AtomicFormula* subformula) : OpenFormula( {subformula} ) {}
+	~Negation() = default;
+	Negation(const Negation& other) = default;
+	
+	Negation* clone() const override { return new Negation(*this); }
+
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
+
+	inline std::string name() const override { return "not"; }
+};
+
+
 
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
 class ExistentiallyQuantifiedFormula : public Formula {

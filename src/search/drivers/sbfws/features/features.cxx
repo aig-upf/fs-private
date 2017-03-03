@@ -85,7 +85,7 @@ void process_precondition_count(const ProblemInfo& info, std::vector<lapkt::nove
 		auto precondition = dynamic_cast<const fs::Conjunction*>(action->getPrecondition());
 		if (!precondition) throw std::runtime_error("Cannot use precondition-counts as a feature for non-conjunctive preconditions");
 		ConditionSetFeature* feature = new ConditionSetFeature();
-		for (const auto atom:precondition->getConjuncts()) feature->addCondition(atom);
+		for (const auto atom:precondition->getSubformulae()) feature->addCondition(atom);
 		
 		features.push_back(feature);
 	}

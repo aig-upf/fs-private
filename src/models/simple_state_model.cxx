@@ -22,7 +22,7 @@ obtain_goal_atoms(const fs::Formula* goal) {
 	if (!conjunction) {
 		throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
 	}
-	return conjunction->getConjuncts();
+	return conjunction->getSubformulae();
 }
 */
 
@@ -37,7 +37,7 @@ obtain_goal_atoms(const fs::Formula* goal) {
 
 	std::vector<const fs::Formula*> goal_atoms;
 
-	for (const fs::AtomicFormula* atom:conjunction->getConjuncts()) {
+	for (const fs::AtomicFormula* atom:conjunction->getSubformulae()) {
 		goal_atoms.push_back(atom);
 	}
 

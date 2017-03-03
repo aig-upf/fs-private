@@ -73,39 +73,72 @@ bool AxiomaticFormula::interpret(const State& state, const Binding& binding) con
 	return compute(state, _interpreted_subterms);
 }
 
-Conjunction::Conjunction(const Conjunction& other) :
-	_conjuncts(Utils::clone(other._conjuncts))
+OpenFormula::OpenFormula(const OpenFormula& other) :
+	_subformulae(Utils::clone(other._subformulae))
 {}
 
-bool Conjunction::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	for (auto elem:_conjuncts) {
+	
+std::ostream& OpenFormula::
+print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << name() << " ( ";
+	for (unsigned i = 0; i < _subformulae.size(); ++i) {
+		os << *_subformulae.at(i);
+		if (i < _subformulae.size() - 1) os << ", ";
+	}
+	os << name() << " ) ";
+	return os;
+}
+
+bool Conjunction::
+interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	for (auto elem:_subformulae) {
 		if (!elem->interpret(assignment, binding)) return false;
 	}
 	return true;
 }
 
-bool Conjunction::interpret(const State& state, const Binding& binding) const {
-	for (auto elem:_conjuncts) {
+bool Conjunction::
+interpret(const State& state, const Binding& binding) const {
+	for (auto elem:_subformulae) {
 		if (!elem->interpret(state, binding)) return false;
 	}
 	return true;
 }
 
-std::ostream& Conjunction::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	for (unsigned i = 0; i < _conjuncts.size(); ++i) {
-		os << *_conjuncts.at(i);
-		if (i < _conjuncts.size() - 1) os << " and ";
-	}
-	return os;
-}
 
-
-bool
-AtomConjunction::interpret(const State& state) const {
+bool AtomConjunction::
+interpret(const State& state) const {
 	for (const auto& atom:_atoms) {
 		if ( state.getValue(atom.first) != atom.second) return false;
 	}
 	return true;
+}
+
+bool Disjunction::
+interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	for (auto elem:_subformulae) {
+		if (elem->interpret(assignment, binding)) return true;
+	}
+	return false;
+}
+
+bool Disjunction::
+interpret(const State& state, const Binding& binding) const {
+	for (auto elem:_subformulae) {
+		if (elem->interpret(state, binding)) return true;
+	}
+	return false;
+}
+
+
+bool Negation::
+interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	return !_subformulae[0]->interpret(assignment, binding);
+}
+
+bool Negation::
+interpret(const State& state, const Binding& binding) const {
+	return !_subformulae[0]->interpret(state, binding);
 }
 
 
