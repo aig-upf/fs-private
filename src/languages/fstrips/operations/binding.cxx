@@ -26,13 +26,13 @@ Visit(const AtomicFormula& lhs) {
 
 	// Check if we can resolve the value of the formula statically
 	if (constant_values.size() == lhs.getSubterms().size()) {
-		auto resolved = processed->interpret({}) ? static_cast<const Formula*>(new Tautology) : static_cast<const Formula*>(new Contradiction);
+		auto resolved = processed->interpret(PartialAssignment()) ? static_cast<const Formula*>(new Tautology) : static_cast<const Formula*>(new Contradiction);
 		delete processed;
 		_result =  resolved;
 		return;
 	}
 
-	_result = processed;	
+	_result = processed;
 }
 
 
