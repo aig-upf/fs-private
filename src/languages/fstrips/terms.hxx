@@ -21,9 +21,6 @@ public:
 	//! consolidating all possible state variables and performing the bindings according to the given variable binding
 	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const = 0;
 	
-	//! Returns the level of nestedness of the term.
-	virtual unsigned nestedness() const = 0;
-
 	//! Returns true if the element is flat, i.e. is a state variable or a constant
 	virtual bool flat() const = 0;
 
@@ -58,8 +55,6 @@ public:
 //! the functional symbol 'f' is fluent or not.
 class NestedTerm : public Term {
 public:
-	LOKI_DEFINE_CONST_VISITABLE();
-	
 	//! Factory method to create a nested term of the appropriate type
 	static const Term* create(const std::string& symbol, const std::vector<const Term*>& subterms);
 
@@ -123,25 +118,18 @@ protected:
 	
 	//! The last interpretation of the subterms (acts as a cache)
 	mutable std::vector<ObjectIdx> _interpreted_subterms;
-
-	unsigned maxSubtermNestedness() const {
-		unsigned max = 0;
-		for (const Term* subterm:_subterms) max = std::max(max, subterm->nestedness());
-		return max;
-	}
 };
 
 
 //! A nested term headed by a static functional symbol
 class StaticHeadedNestedTerm : public NestedTerm {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
 
 	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
-	
-	// A nested term headed by a static symbol has as many levels of nestedness as the maximum of its subterms
-	unsigned nestedness() const override { return maxSubtermNestedness(); }
 };
 
 //! A statically-headed term that performs some arithmetic operation to its two subterms
@@ -208,6 +196,8 @@ public:
 //! A nested term headed by a fluent functional symbol
 class FluentHeadedNestedTerm : public NestedTerm {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+
 	FluentHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 		: NestedTerm(symbol_id, subterms) {}
 
@@ -222,9 +212,6 @@ public:
 	std::pair<int, int> getBounds() const override;
 	
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
-
-	// A nested term headed by a fluent symbol has as many levels of nestedness as the maximum of its subterms plus one (standing for itself)
-	unsigned nestedness() const override { return maxSubtermNestedness() + 1; }
 };
 
 //! A logical variable bound to some existential or universal quantifier
@@ -237,8 +224,6 @@ public:
 	BoundVariable* clone() const override { return new BoundVariable(*this); }
 	
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
-
-	unsigned nestedness() const override { return 1; }
 
 	bool flat() const override { return true; }
 	
@@ -294,8 +279,6 @@ public:
 	//! Nothing to be done for binding, simply return a clone of the element
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
 
-	unsigned nestedness() const override { return 0; }
-
 	bool flat() const override { return true; }
 	
 	TypeIdx getType() const override;
@@ -345,8 +328,6 @@ public:
 	
 	//! Nothing to be done for binding, simply return a clone of the element
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
-
-	unsigned nestedness() const override { return 0; }
 
 	bool flat() const override { return true; }
 	

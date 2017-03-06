@@ -68,7 +68,7 @@ DirectActionManager::is_supported(const GroundAction& action) {
 	}
 	
 	for (const fs::ActionEffect* effect:action.getEffects()) {
-		if (effect->lhs()->nestedness() > 0 || effect->rhs()->nestedness() > 0 || fs::ScopeUtils::computeDirectScope(effect).size() > 1) return false;
+		if (fs::nestedness(*effect->lhs()) > 0 || fs::nestedness(*effect->rhs()) > 0 || fs::ScopeUtils::computeDirectScope(effect).size() > 1) return false;
 	}
 	
 	return true;

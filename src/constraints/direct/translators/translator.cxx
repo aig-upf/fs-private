@@ -9,6 +9,7 @@
 #include <lapkt/tools/logging.hxx>
 #include <utils/projections.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <constraints/direct/translators/effects.hxx>
 
 
@@ -16,8 +17,8 @@ namespace fs0 {
 
 
 void DirectTranslator::checkSupported(const fs::Term* lhs, const fs::Term* rhs) {
-	unsigned l1 = lhs->nestedness();
-	unsigned l2 = rhs->nestedness();
+	unsigned l1 = fs::nestedness(*lhs);
+	unsigned l2 = fs::nestedness(*rhs);
 	if (l1 > 0 || l2 > 0) throw UnimplementedFeatureException("Cannot translate nested fluents to DirectConstraints --- try Gecode instead!");
 }
 
