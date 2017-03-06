@@ -1,7 +1,7 @@
 
 #include <languages/fstrips/loader.hxx>
+#include <problem_info.hxx>
 #include <languages/fstrips/builtin.hxx>
-#include <problem.hxx>
 #include <constraints/registry.hxx>
 
 

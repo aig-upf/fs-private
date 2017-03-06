@@ -1,6 +1,6 @@
 
+#include <problem_info.hxx>
 #include <languages/fstrips/language.hxx>
-#include <problem.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <lapkt/tools/logging.hxx>

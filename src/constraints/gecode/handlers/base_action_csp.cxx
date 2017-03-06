@@ -14,7 +14,9 @@
 #include <languages/fstrips/scopes.hxx>
 #include <utils/config.hxx>
 #include <utils/utils.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
+#include <utils/atom_index.hxx>
+
 
 namespace fs0 { namespace gecode {
 

@@ -1,9 +1,12 @@
 
-#include <languages/fstrips/terms.hxx>
-#include <constraints/gecode/utils/element_constraint.hxx>
+#include <algorithm>
+
+#include <lapkt/tools/logging.hxx>
 
 #include <problem.hxx>
-#include <lapkt/tools/logging.hxx>
+#include <problem_info.hxx>
+#include <languages/fstrips/terms.hxx>
+#include <constraints/gecode/utils/element_constraint.hxx>
 #include <utils/printers/gecode.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/handlers/base_csp.hxx>
@@ -11,6 +14,21 @@
 
 namespace fs0 { namespace gecode {
 
+std::ostream& VariableCounter::
+print(std::ostream& os) const {
+	auto printer = [&os](const std::pair<VariableIdx, unsigned> count) {
+		os <<  "\t\t" << ProblemInfo::getInstance().getVariableName(count.first) << ": " << count.second << std::endl;
+	};
+	
+	os << "\tDirect State Variables: " << std::endl;
+	std::for_each(_in_flat_term.cbegin(), _in_flat_term.cend(), printer);
+	
+	os << "\tDerived State Variables: " << std::endl;
+	std::for_each(_in_nested_term.cbegin(), _in_nested_term.cend(), printer);
+	
+	return os;
+}
+	
 NestedFluentElementTranslator::NestedFluentElementTranslator(const fs::FluentHeadedNestedTerm* term)
 	: _term(term)
 {}

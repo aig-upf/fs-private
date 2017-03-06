@@ -1,5 +1,6 @@
 
-#include <problem.hxx>
+#include <problem_info.hxx>
+#include <utils/atom_index.hxx>
 #include <languages/fstrips/language.hxx>
 #include <constraints/gecode/handlers/base_csp.hxx>
 #include <constraints/gecode/helper.hxx>

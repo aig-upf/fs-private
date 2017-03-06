@@ -1,6 +1,6 @@
 
 #include <constraints/gecode/utils/nested_fluent_iterator.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <constraints/gecode/utils/term_list_iterator.hxx>
 #include <languages/fstrips/terms.hxx>
 

@@ -1,9 +1,10 @@
 
+#include <problem.hxx>
+#include <problem_info.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/csp_translator.hxx>
-#include <problem.hxx>
 #include <constraints/gecode/gecode_csp.hxx>
 #include <constraints/gecode/utils/term_list_iterator.hxx>
 

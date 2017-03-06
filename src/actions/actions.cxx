@@ -3,7 +3,7 @@
 #include <sstream>
 
 #include <actions/actions.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/utils.hxx>

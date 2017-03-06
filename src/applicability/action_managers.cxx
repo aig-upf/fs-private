@@ -1,17 +1,19 @@
 
+#include <numeric>
 #include <unordered_set>
 
 #include <lapkt/tools/logging.hxx>
+
 #include <applicability/action_managers.hxx>
 #include <actions/actions.hxx>
 #include <state.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
+#include <utils/atom_index.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <languages/fstrips/operations.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/vector.hxx>
-#include <numeric>
 
 namespace fs0 {
 

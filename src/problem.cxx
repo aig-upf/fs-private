@@ -1,5 +1,6 @@
 
 #include <problem.hxx>
+#include <problem_info.hxx>
 #include <state.hxx>
 #include <actions/actions.hxx>
 #include <lapkt/tools/logging.hxx>

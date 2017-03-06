@@ -16,8 +16,6 @@ ObjectIdx Term::interpret(const State& state) const  { return interpret(state, B
 VariableIdx Term::interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding::EMPTY_BINDING); }
 VariableIdx Term::interpretVariable(const State& state) const { return interpretVariable(state, Binding::EMPTY_BINDING); }
 	
-std::ostream& Term::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
-
 std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << "<unnamed term>";
 	return os;
@@ -155,6 +153,18 @@ const Term* ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info
 
 TypeIdx NestedTerm::getType() const {
 	return ProblemInfo::getInstance().getSymbolData(_symbol_id).getCodomainType();
+}
+
+//! A quick helper to print functions
+template <typename T>
+std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {
+	os << info.getSymbolName(symbol_id) << "(";
+	for (unsigned i = 0; i < subterms.size(); ++i) {
+		os << *subterms[i];
+		if (i < subterms.size() - 1) os << ", ";
+	}
+	os << ")";
+	return os;
 }
 
 std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {

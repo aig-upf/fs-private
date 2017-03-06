@@ -1,4 +1,5 @@
 
+#include <problem_info.hxx>
 #include <languages/fstrips/effects.hxx>
 #include <constraints/gecode/handlers/ground_action_csp.hxx>
 #include <lapkt/tools/logging.hxx>

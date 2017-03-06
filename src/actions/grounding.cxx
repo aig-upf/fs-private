@@ -1,7 +1,11 @@
 
+#include <unordered_set>
+
+#include <lapkt/tools/logging.hxx>
+
+#include <problem_info.hxx>
 #include <actions/grounding.hxx>
 #include <actions/actions.hxx>
-#include <lapkt/tools/logging.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/config.hxx>
@@ -10,7 +14,7 @@
 #include <utils/loader.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/operations.hxx>
-#include <unordered_set>
+
 
 namespace fs0 {
 

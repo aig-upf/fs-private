@@ -1,22 +1,22 @@
 
 #pragma once
 
+#include <languages/fstrips/base.hxx>
 #include <fs_types.hxx>
-#include <problem_info.hxx>
 
-namespace fs0 { class State; class Binding; }
+namespace fs0 { class State; class Binding; class ProblemInfo; class SymbolData; }
 
 namespace fs0 { namespace language { namespace fstrips {
 
+	
 //! A logical term in FSTRIPS
-class Term {
+class Term : public LogicalElement {
 public:
-	Term() {}
-	virtual ~Term() {}
+	Term() = default;
+	virtual ~Term() = default;
 
-	//! Clone idiom
-	virtual Term* clone() const = 0;
-
+	Term* clone() const override = 0;
+	
 	//! Processes a term possibly containing bound variables and non-consolidated state variables,
 	//! consolidating all possible state variables and performing the bindings according to the given variable binding
 	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const = 0;
@@ -46,10 +46,7 @@ public:
 	
 	virtual std::pair<int, int> getBounds() const = 0;
 
-	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const Term& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const;
-	virtual std::ostream& print(std::ostream& os, const ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
 
 	virtual bool operator==(const Term& other) const = 0;
 	inline bool operator!=(const Term& rhs) const { return !this->operator==(rhs); }
@@ -61,6 +58,8 @@ public:
 //! the functional symbol 'f' is fluent or not.
 class NestedTerm : public Term {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	//! Factory method to create a nested term of the appropriate type
 	static const Term* create(const std::string& symbol, const std::vector<const Term*>& subterms);
 
@@ -74,28 +73,16 @@ public:
 	
 	NestedTerm(const NestedTerm& term);
 	
-	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 
-	bool flat() const { return false; }
+	bool flat() const override { return false; }
 
-	std::vector<const Term*> all_terms() const;
+	std::vector<const Term*> all_terms() const override;
 	
-	virtual TypeIdx getType() const;
+	TypeIdx getType() const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
-
-	//! A small helper
-	template <typename T>
-	static std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {
-		os << info.getSymbolName(symbol_id) << "(";
-		for (unsigned i = 0; i < subterms.size(); ++i) {
-			os << *subterms[i];
-			if (i < subterms.size() - 1) os << ", ";
-		}
-		os << ")";
-		return os;
-	}
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
 	//! A helper to interpret a vector of terms
 	template <typename T>
@@ -119,8 +106,8 @@ public:
 
 	const std::vector<const Term*>& getSubterms() const { return _subterms; }
 
-	bool operator==(const Term& other) const;
-	virtual std::size_t hash_code() const;
+	bool operator==(const Term& other) const override;
+	std::size_t hash_code() const override;
 
 	//! A helper to process lists of subterms
 	static std::vector<const Term*> bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants);
@@ -150,11 +137,11 @@ class StaticHeadedNestedTerm : public NestedTerm {
 public:
 	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 	
 	// A nested term headed by a static symbol has as many levels of nestedness as the maximum of its subterms
-	unsigned nestedness() const { return maxSubtermNestedness(); }
+	unsigned nestedness() const override { return maxSubtermNestedness(); }
 };
 
 //! A statically-headed term that performs some arithmetic operation to its two subterms
@@ -162,9 +149,9 @@ class ArithmeticTerm : public StaticHeadedNestedTerm {
 public:
 	ArithmeticTerm(const std::vector<const Term*>& subterms);
 	
-	ArithmeticTerm* clone() const = 0;
+	virtual ArithmeticTerm* clone() const override = 0;
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 	
 	//! Creates an arithmetic term of the same type than the current one but with the given subterms
 	// TODO - This is ATM somewhat inefficient because of the redundancy of cloning the whole array of subterms only to delete it.
@@ -181,15 +168,15 @@ class UserDefinedStaticTerm : public StaticHeadedNestedTerm {
 public:
 	UserDefinedStaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
 
-	UserDefinedStaticTerm* clone() const { return new UserDefinedStaticTerm(*this); }
+	UserDefinedStaticTerm* clone() const override { return new UserDefinedStaticTerm(*this); }
 
-	virtual TypeIdx getType() const;
-	virtual std::pair<int, int> getBounds() const;
+	TypeIdx getType() const override;
+	std::pair<int, int> getBounds() const override;
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	ObjectIdx interpret(const State& state, const Binding& binding) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 
 protected:
 	// The (static) logical function implementation
@@ -224,55 +211,57 @@ public:
 	FluentHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 		: NestedTerm(symbol_id, subterms) {}
 
-	FluentHeadedNestedTerm* clone() const { return new FluentHeadedNestedTerm(*this); }
+	FluentHeadedNestedTerm* clone() const override { return new FluentHeadedNestedTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	ObjectIdx interpret(const State& state, const Binding& binding) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const;
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const;
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override;
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const override;
 
-	virtual std::pair<int, int> getBounds() const;
+	std::pair<int, int> getBounds() const override;
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 
 	// A nested term headed by a fluent symbol has as many levels of nestedness as the maximum of its subterms plus one (standing for itself)
-	unsigned nestedness() const { return maxSubtermNestedness() + 1; }
+	unsigned nestedness() const override { return maxSubtermNestedness() + 1; }
 };
 
 //! A logical variable bound to some existential or universal quantifier
 class BoundVariable : public Term {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	BoundVariable(unsigned id, TypeIdx type) : _id(id), _type(type) {}
 
-	BoundVariable* clone() const { return new BoundVariable(*this); }
+	BoundVariable* clone() const override { return new BoundVariable(*this); }
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const;
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 
-	virtual unsigned nestedness() const { return 1; }
+	unsigned nestedness() const override { return 1; }
 
-	bool flat() const { return true; }
+	bool flat() const override { return true; }
 	
-	virtual TypeIdx getType() const;
+	TypeIdx getType() const override;
 
-	std::vector<const Term*> all_terms() const { return std::vector<const Term*>(1, this); }
+	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
 
 	//! Returns the unique quantified variable ID
 	unsigned getVariableId() const { return _id; }
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	ObjectIdx interpret(const State& state, const Binding& binding) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("Bound variables cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const { throw std::runtime_error("Bound variables terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Bound variables cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("Bound variables terms cannot resolve to an state variable"); }
 
-	std::pair<int, int> getBounds() const;
+	std::pair<int, int> getBounds() const override;
 
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	bool operator==(const Term& other) const;
-	virtual std::size_t hash_code() const;
+	bool operator==(const Term& other) const override;
+	std::size_t hash_code() const override;
 
 protected:
 	//! The ID of the variable, which will be unique throughout the whole binding unit.
@@ -285,6 +274,8 @@ protected:
 //! 'loc(a)', with a being an object, for instance, is a state variable
 class StateVariable : public Term {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	StateVariable(VariableIdx variable_id, const FluentHeadedNestedTerm* origin) 
 		: _variable_id(variable_id), _origin(origin)
 	{}
@@ -298,27 +289,27 @@ public:
 		  _origin(variable._origin->clone())
 	{}
 
-	StateVariable* clone() const { return new StateVariable(*this); }
+	StateVariable* clone() const override { return new StateVariable(*this); }
 	
 	//! Nothing to be done for binding, simply return a clone of the element
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
 
-	virtual unsigned nestedness() const { return 0; }
+	unsigned nestedness() const override { return 0; }
 
-	bool flat() const { return true; }
+	bool flat() const override { return true; }
 	
-	virtual TypeIdx getType() const;
+	TypeIdx getType() const override;
 
-	std::vector<const Term*> all_terms() const { return std::vector<const Term*>(1, this); }
+	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
 
 	//! Returns the index of the state variable
 	VariableIdx getValue() const { return _variable_id; }
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const { return assignment.at(_variable_id); }
-	ObjectIdx interpret(const State& state, const Binding& binding) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { return assignment.at(_variable_id); }
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { return _variable_id; }
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const { return _variable_id; }
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { return _variable_id; }
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { return _variable_id; }
 	
 	const FluentHeadedNestedTerm* getOrigin() const { return _origin; }
 	
@@ -326,13 +317,13 @@ public:
  
 	virtual const std::vector<const Term*>& getSubterms() const { return _origin->getSubterms(); }
 
-	virtual std::pair<int, int> getBounds() const;
+	std::pair<int, int> getBounds() const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	bool operator==(const Term& other) const;
-	virtual std::size_t hash_code() const;
+	bool operator==(const Term& other) const override;
+	std::size_t hash_code() const override;
 
 protected:
 	//! The ID of the state variable
@@ -346,40 +337,40 @@ protected:
 //! A simple constant term.
 class Constant : public Term {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	Constant(ObjectIdx value)  : _value(value) {}
 
-	Constant* clone() const { return new Constant(*this); }
+	Constant* clone() const override { return new Constant(*this); }
 	
 	//! Nothing to be done for binding, simply return a clone of the element
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const { return clone(); }
+	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
 
-	virtual unsigned nestedness() const { return 0; }
+	unsigned nestedness() const override { return 0; }
 
-	bool flat() const { return true; }
+	bool flat() const override { return true; }
 	
-	virtual TypeIdx getType() const {
-		throw std::runtime_error("Unimplemented");
-	}
+	TypeIdx getType() const override { throw std::runtime_error("Unimplemented"); }
 
-	std::vector<const Term*> all_terms() const { return std::vector<const Term*>(1, this); }
+	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
 
 	//! Returns the actual value of the constant
 	ObjectIdx getValue() const { return _value; }
 
 	// The value of a constant is independent of the assignment
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const { return _value; }
-	ObjectIdx interpret(const State& state, const Binding& binding) const { { return _value; }}
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { return _value; }
+	ObjectIdx interpret(const State& state, const Binding& binding) const override { { return _value; }}
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
+	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 
-	virtual std::pair<int, int> getBounds() const { return std::make_pair(_value, _value); }
+	std::pair<int, int> getBounds() const override { return std::make_pair(_value, _value); }
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	bool operator==(const Term& other) const;
-	virtual std::size_t hash_code() const;
+	bool operator==(const Term& other) const override;
+	std::size_t hash_code() const override;
 
 protected:
 	//! The actual value of the constant
@@ -392,12 +383,10 @@ class IntConstant : public Constant {
 public:
 	IntConstant(ObjectIdx value)  : Constant(value) {}
 
-	IntConstant* clone() const { return new IntConstant(*this); }
-
-	virtual std::pair<int, int> getBounds() const { return std::make_pair(_value, _value); }
+	IntConstant* clone() const override { return new IntConstant(*this); }
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 

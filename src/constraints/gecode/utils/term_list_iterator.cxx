@@ -1,6 +1,6 @@
 
 
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <constraints/gecode/utils/term_list_iterator.hxx>
 #include <utils/cartesian_iterator.hxx>
 #include <languages/fstrips/terms.hxx>

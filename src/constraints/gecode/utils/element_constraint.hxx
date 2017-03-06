@@ -35,19 +35,7 @@ public:
 	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const VariableCounter& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const {
-		auto printer = [&os](const std::pair<VariableIdx, unsigned> count) {
-			os <<  "\t\t" << ProblemInfo::getInstance().getVariableName(count.first) << ": " << count.second << std::endl;
-		};
-		
-		os << "\tDirect State Variables: " << std::endl;
-		std::for_each(_in_flat_term.cbegin(), _in_flat_term.cend(), printer);
-		
-		os << "\tDerived State Variables: " << std::endl;
-		std::for_each(_in_nested_term.cbegin(), _in_nested_term.cend(), printer);
-		
-		return os;
-	}
+	std::ostream& print(std::ostream& os) const;
 	
 	bool symbol_requires_element_constraint(unsigned symbol_id) const {
 		unsigned flat = num_flat_occurrences(symbol_id);

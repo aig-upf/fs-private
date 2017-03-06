@@ -24,9 +24,6 @@ bool Formula::interpret(const PartialAssignment& assignment) const { return inte
 bool Formula::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
 
 
-std::ostream& Formula::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
-
-
 AtomicFormula::~AtomicFormula() {
 	for (const auto ptr:_subterms) delete ptr;
 }

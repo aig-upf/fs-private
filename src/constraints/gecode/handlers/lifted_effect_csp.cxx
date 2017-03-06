@@ -1,6 +1,7 @@
 	
 #include <languages/fstrips/language.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
+#include <utils/atom_index.hxx>
 #include <actions/actions.hxx>
 #include <actions/grounding.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>

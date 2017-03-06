@@ -1,6 +1,7 @@
 
 #include <limits>
 
+#include <problem_info.hxx>
 #include <state.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/operations.hxx>

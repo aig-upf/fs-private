@@ -7,7 +7,7 @@
 #include <utils/printers/actions.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <actions/action_id.hxx>
-#include <problem.hxx>
+#include <problem_info.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <state.hxx>
 #include <gecode/driver.hh>

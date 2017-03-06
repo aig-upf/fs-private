@@ -1,7 +1,7 @@
 
+#include <problem_info.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <constraints/gecode/utils/extensional_constraint.hxx>
-#include <problem.hxx>
 #include <state.hxx>
 #include <constraints/gecode/gecode_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>

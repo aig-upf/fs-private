@@ -1,5 +1,6 @@
 
 #include <problem.hxx>
+#include <problem_info.hxx>
 #include <actions/grounding.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/drivers/validation.hxx>

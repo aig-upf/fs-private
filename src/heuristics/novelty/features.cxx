@@ -1,4 +1,5 @@
 
+#include <problem_info.hxx>
 #include <heuristics/novelty/features.hxx>
 #include <state.hxx>
 #include <languages/fstrips/language.hxx>
