@@ -1,5 +1,6 @@
 
 #include <languages/fstrips/builtin.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <constraints/direct/translators/effects.hxx>
 #include <constraints/direct/builtin.hxx>
 
@@ -22,7 +23,7 @@ const DirectEffect* AdditiveTermRhsTranslator::translate(const fs::StateVariable
 	auto sum_lhs = subterms[0], sum_rhs = subterms[1];
 	
 	// If some of the subterms is a static expression itself, cannot convert this into an arithmetic DirectEffect.
-	if (!sum_lhs->flat() || ! sum_rhs->flat()) return nullptr; 
+	if (!fs::flat(*sum_lhs) || !fs::flat(*sum_rhs)) return nullptr; 
 	
 	auto lhs_var = dynamic_cast<const fs::StateVariable*>(sum_lhs);
 	auto rhs_var = dynamic_cast<const fs::StateVariable*>(sum_rhs);
@@ -41,7 +42,7 @@ const DirectEffect* SubtractiveTermRhsTranslator::translate(const fs::StateVaria
 	auto sum_lhs = subterms[0], sum_rhs = subterms[1];
 	
 	// If some of the subterms is a static expression itself, cannot convert this into an arithmetic DirectEffect.
-	if (!sum_lhs->flat() || ! sum_rhs->flat()) return nullptr; 
+	if (!fs::flat(*sum_lhs) || !fs::flat(*sum_rhs)) return nullptr; 
 	
 	auto lhs_var = dynamic_cast<const fs::StateVariable*>(sum_lhs);
 	auto rhs_var = dynamic_cast<const fs::StateVariable*>(sum_rhs);
@@ -60,7 +61,7 @@ const DirectEffect* MultiplicativeTermRhsTranslator::translate(const fs::StateVa
 	auto sum_lhs = subterms[0], sum_rhs = subterms[1];
 	
 	// If some of the subterms is a static expression itself, cannot convert this into an arithmetic DirectEffect.
-	if (!sum_lhs->flat() || ! sum_rhs->flat()) return nullptr; 
+	if (!fs::flat(*sum_lhs) || !fs::flat(*sum_rhs)) return nullptr; 
 	
 	auto lhs_var = dynamic_cast<const fs::StateVariable*>(sum_lhs);
 	auto rhs_var = dynamic_cast<const fs::StateVariable*>(sum_rhs);

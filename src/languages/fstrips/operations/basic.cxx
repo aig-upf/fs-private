@@ -107,6 +107,12 @@ Visit(const ExistentiallyQuantifiedFormula& lhs) {
 }
 
 
+unsigned flat(const Term& element) {
+	FlatVisitor visitor;
+	element.Accept(visitor);
+	return visitor._result;
+}
+
 
 
 

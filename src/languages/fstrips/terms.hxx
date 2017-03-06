@@ -21,9 +21,6 @@ public:
 	//! consolidating all possible state variables and performing the bindings according to the given variable binding
 	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const = 0;
 	
-	//! Returns true if the element is flat, i.e. is a state variable or a constant
-	virtual bool flat() const = 0;
-
 	// Returns a list with all terms contained in this term's tree, including itself (possibly with repetitions)
 	virtual std::vector<const Term*> all_terms() const = 0;
 
@@ -55,6 +52,8 @@ public:
 //! the functional symbol 'f' is fluent or not.
 class NestedTerm : public Term {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	//! Factory method to create a nested term of the appropriate type
 	static const Term* create(const std::string& symbol, const std::vector<const Term*>& subterms);
 
@@ -69,8 +68,6 @@ public:
 	NestedTerm(const NestedTerm& term);
 	
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
-
-	bool flat() const override { return false; }
 
 	std::vector<const Term*> all_terms() const override;
 	
@@ -225,8 +222,6 @@ public:
 	
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 
-	bool flat() const override { return true; }
-	
 	TypeIdx getType() const override;
 
 	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
@@ -279,8 +274,6 @@ public:
 	//! Nothing to be done for binding, simply return a clone of the element
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
 
-	bool flat() const override { return true; }
-	
 	TypeIdx getType() const override;
 
 	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
@@ -329,8 +322,6 @@ public:
 	//! Nothing to be done for binding, simply return a clone of the element
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
 
-	bool flat() const override { return true; }
-	
 	TypeIdx getType() const override { throw std::runtime_error("Unimplemented"); }
 
 	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }

@@ -2,6 +2,7 @@
 
 #include <constraints/gecode/utils/novelty_constraints.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/gecode_csp.hxx>
@@ -81,7 +82,7 @@ void WeakNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& laye
 //! The constraint is applicable if none of the effects' LHS contains a nested fluent
 bool StrongNoveltyConstraint::applicable(const std::vector<const fs::ActionEffect*>& effects) {
 	for (const auto effect:effects) {
-		if (!effect->lhs()->flat()) return false;
+		if (!fs::flat(*effect->lhs())) return false;
 	}
 	return true;
 }
@@ -123,7 +124,7 @@ void StrongNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& la
 }
 
 
-bool EffectNoveltyConstraint::applicable(const fs::ActionEffect* effect) { return effect->lhs()->flat(); }
+bool EffectNoveltyConstraint::applicable(const fs::ActionEffect* effect) { return fs::flat(*effect->lhs()); }
 
 EffectNoveltyConstraint::EffectNoveltyConstraint(CSPTranslator& translator, const fs::ActionEffect* effect)  {
 	assert(applicable(effect));

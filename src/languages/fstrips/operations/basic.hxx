@@ -26,8 +26,10 @@ class Term;
 class StateVariable;
 class BoundVariable;
 class Constant;
+class NestedTerm;
 class StaticHeadedNestedTerm;
 class FluentHeadedNestedTerm;
+
 
 //! The level of nestedness of a given formula
 unsigned nestedness(const LogicalElement& element);
@@ -35,11 +37,17 @@ unsigned nestedness(const LogicalElement& element);
 
 class NestednessVisitor
     : public Loki::BaseVisitor
-//     , public Loki::Visitor<Tautology, void, true>
-// 	, public Loki::Visitor<Contradiction, void, true>
-// 	, public Loki::Visitor<AtomicFormula, void, true>
-// 	, public Loki::Visitor<Conjunction, void, true>
-// 	, public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
+    , public Loki::Visitor<Tautology, void, true>
+    , public Loki::Visitor<Contradiction, void, true>
+    , public Loki::Visitor<AtomicFormula, void, true>
+    , public Loki::Visitor<Conjunction, void, true>
+    , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
+    
+    , public Loki::Visitor<StateVariable, void, true>
+    , public Loki::Visitor<BoundVariable, void, true>
+    , public Loki::Visitor<Constant, void, true>
+    , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
+    , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
 {
 public:
 	NestednessVisitor() = default;
@@ -76,11 +84,11 @@ std::vector<const AtomicFormula*> all_atoms(const Formula& element);
 
 class AllFormulaVisitor
     : public Loki::BaseVisitor
-//     , public Loki::Visitor<Tautology, void, true>
-// 	, public Loki::Visitor<Contradiction, void, true>
-// 	, public Loki::Visitor<AtomicFormula, void, true>
-// 	, public Loki::Visitor<Conjunction, void, true>
-// 	, public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
+    , public Loki::Visitor<Tautology, void, true>
+    , public Loki::Visitor<Contradiction, void, true>
+    , public Loki::Visitor<AtomicFormula, void, true>
+    , public Loki::Visitor<Conjunction, void, true>
+    , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 {
 public:
 	AllFormulaVisitor() = default;
@@ -95,6 +103,29 @@ public:
 	std::vector<const Formula*> _result;
 };
 
+
+////////////////////////////////////////////////////////////
+//! Returns true if the element is flat, i.e. is a state variable or a constant
+////////////////////////////////////////////////////////////
+unsigned flat(const Term& element);
+
+class FlatVisitor
+    : public Loki::BaseVisitor
+    , public Loki::Visitor<StateVariable, void, true>
+    , public Loki::Visitor<BoundVariable, void, true>
+    , public Loki::Visitor<Constant, void, true>
+    , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
+    , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
+{
+public:
+	void Visit(const StateVariable& lhs) { _result = true; }
+	void Visit(const BoundVariable& lhs) { _result = true; }
+	void Visit(const Constant& lhs) { _result = true; }
+	void Visit(const StaticHeadedNestedTerm& lhs) { _result = false; }
+	void Visit(const FluentHeadedNestedTerm& lhs) { _result = false; }
+
+	bool _result;
+};
 
 
 } } } // namespaces

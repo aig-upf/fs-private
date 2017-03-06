@@ -154,7 +154,7 @@ void BaseActionCSP::index_scopes() {
 		
 		_has_nested_relevant_terms = _has_nested_relevant_terms || !effect_nested_fluents[i].empty();
 		
-		if (!effects[i]->lhs()->flat()) {
+		if (!fs::flat(*effects[i]->lhs())) {
 			_has_nested_lhs = true;
 		} else {
 			effect_lhs_variables[i] = effects[i]->lhs()->interpretVariable(PartialAssignment());
