@@ -27,12 +27,6 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment) const;
 	ObjectIdx interpret(const State& state) const;
 
-	//! Returns the index of the state variable to which the current term resolves under the given state.
-	virtual VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const = 0;
-	virtual VariableIdx interpretVariable(const State& state, const Binding& binding) const = 0;
-	VariableIdx interpretVariable(const PartialAssignment& assignment) const;
-	VariableIdx interpretVariable(const State& state) const;
-
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
 
 	virtual bool operator==(const Term& other) const = 0;
@@ -66,14 +60,6 @@ public:
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
 	//! A helper to interpret a vector of terms
-	template <typename T>
-	static std::vector<ObjectIdx>
-	interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding) {
-		std::vector<ObjectIdx> interpreted(subterms.size());
-		interpret_subterms(subterms, assignment, binding);
-		return interpreted;
-	}
-
 	template <typename T>
 	static void
 	interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding, std::vector<ObjectIdx>& interpreted) {
@@ -113,9 +99,6 @@ public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
 	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
-
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
 };
 
 //! A statically-headed term that performs some arithmetic operation to its two subterms
@@ -191,9 +174,6 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override;
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const override;
-
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 };
 
@@ -215,9 +195,6 @@ public:
 
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
-
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Bound variables cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("Bound variables terms cannot resolve to an state variable"); }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -262,9 +239,6 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { return assignment.at(_variable_id); }
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { return _variable_id; }
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { return _variable_id; }
-	
 	const FluentHeadedNestedTerm* getOrigin() const { return _origin; }
 	
 	unsigned getSymbolId() const { return _origin->getSymbolId(); }
@@ -304,9 +278,6 @@ public:
 	// The value of a constant is independent of the assignment
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { return _value; }
 	ObjectIdx interpret(const State& state, const Binding& binding) const override { { return _value; }}
-
-	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
-	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;

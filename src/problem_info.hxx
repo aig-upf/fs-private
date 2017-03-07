@@ -233,8 +233,6 @@ public:
 		return typeBounds.at(type);
 	}
 	
-	const std::pair<int,int>& getVariableBounds(VariableIdx variable) const { return getTypeBounds(getVariableType(variable)); }
-	
 	void setDomainName(const std::string& domain) { _domain = domain; }
 	void setInstanceName(const std::string& instance) { _instance_name = instance; }
 	const std::string& getDomainName() const { return _domain; }

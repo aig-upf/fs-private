@@ -157,7 +157,7 @@ void BaseActionCSP::index_scopes() {
 		if (!fs::flat(*effects[i]->lhs())) {
 			_has_nested_lhs = true;
 		} else {
-			effect_lhs_variables[i] = effects[i]->lhs()->interpretVariable(PartialAssignment());
+			effect_lhs_variables[i] = fs::interpret_variable(*effects[i]->lhs(), PartialAssignment());
 		}
 	}
 	
@@ -216,7 +216,7 @@ void BaseActionCSP::process_solution(GecodeCSP* solution, RPGIndex& graph) const
 	// We compute, effect by effect, the atom produced by the effect for the given solution, as well as its supports
 	for (unsigned i = 0; i < get_effects().size(); ++i) {
 		const fs::ActionEffect* effect = get_effects()[i];
-		VariableIdx variable = _has_nested_lhs ? effect->lhs()->interpretVariable(assignment, binding) : effect_lhs_variables[i];
+		VariableIdx variable = _has_nested_lhs ? fs::interpret_variable(*effect->lhs(), assignment, binding) : effect_lhs_variables[i];
 		ObjectIdx value = _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution);
 		AtomIdx reached_tuple = _tuple_index.to_index(variable, value);
 		LPT_EDEBUG("heuristic", "Processing effect \"" << *effect << "\"");

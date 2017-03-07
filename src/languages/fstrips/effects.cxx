@@ -39,7 +39,7 @@ bool ActionEffect::isWellFormed() const {
 }
 
 Atom ActionEffect::apply(const State& state) const {
-	return Atom(_lhs->interpretVariable(state), _rhs->interpret(state));
+	return Atom(fs::interpret_variable(*_lhs, state), _rhs->interpret(state));
 }
 
 bool ActionEffect::applicable(const State& state) const {

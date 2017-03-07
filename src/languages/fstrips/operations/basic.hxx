@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include <vector>
+#include <utility>
+
 #include <utils/visitor.hxx>
 
 //!

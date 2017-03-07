@@ -9,12 +9,13 @@
 #include <lapkt/tools/logging.hxx>
 #include <utils/binding.hxx>
 
+#include <languages/fstrips/operations/interpretation.hxx>
+
 namespace fs0 { namespace language { namespace fstrips {
 
 ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
 ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
-VariableIdx Term::interpretVariable(const PartialAssignment& assignment) const { return interpretVariable(assignment, Binding::EMPTY_BINDING); }
-VariableIdx Term::interpretVariable(const State& state) const { return interpretVariable(state, Binding::EMPTY_BINDING); }
+
 	
 std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << "<unnamed term>";
@@ -193,26 +194,12 @@ ObjectIdx AxiomaticTerm::interpret(const State& state, const Binding& binding) c
 }
 
 
-
 ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	return assignment.at(interpretVariable(assignment, binding));
+	return assignment.at(fs::interpret_variable(*this, assignment, binding));
 }
 
 ObjectIdx FluentHeadedNestedTerm::interpret(const State& state, const Binding& binding) const {
-	return state.getValue(interpretVariable(state, binding));
-}
-
-VariableIdx FluentHeadedNestedTerm::interpretVariable(const PartialAssignment& assignment, const Binding& binding) const {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
-	VariableIdx variable = info.resolveStateVariable(_symbol_id, _interpreted_subterms);
-	return variable;
-}
-VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state, const Binding& binding) const {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
-	VariableIdx variable = info.resolveStateVariable(_symbol_id, _interpreted_subterms);
-	return variable;
+	return state.getValue(fs::interpret_variable(*this, state, binding));
 }
 
 
