@@ -4,6 +4,7 @@
 #include <constraints/gecode/utils/term_list_iterator.hxx>
 #include <utils/cartesian_iterator.hxx>
 #include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/operations.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -45,7 +46,7 @@ std::vector<const std::vector<ObjectIdx>*> term_list_iterator::compute_possible_
 		
 		// By default, we consider all types according to the declared signature
 		// Note that in the case of bound variables, the declared type might be a subtype of that of the signature
-		TypeIdx type = subterm->getType();
+		TypeIdx type = fs::type(*subterm);
 		possible_values.push_back(&(info.getTypeObjects(type)));
 	}
 	

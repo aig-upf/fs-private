@@ -28,14 +28,6 @@ ObjectIdx AdditionTerm::interpret(const State& state, const Binding& binding) co
 	return _subterms[0]->interpret(state, binding) + _subterms[1]->interpret(state, binding);
 }
 
-std::pair<int, int> AdditionTerm::getBounds() const {
-	// see https://en.wikipedia.org/wiki/Interval_arithmetic
-	auto b0 = _subterms[0]->getBounds();
-	auto b1 = _subterms[1]->getBounds();
-	auto min = b0.first + b1.first; 
-	auto max = b0.second + b1.second; 
-	return std::make_pair(min, max);
-}
 
 std::ostream& AdditionTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_subterms[0] << " + " << *_subterms[1];
@@ -53,20 +45,10 @@ ObjectIdx SubtractionTerm::interpret(const State& state, const Binding& binding)
 	return _subterms[0]->interpret(state, binding) - _subterms[1]->interpret(state, binding);
 }
 
-std::pair<int, int> SubtractionTerm::getBounds() const {
-	// see https://en.wikipedia.org/wiki/Interval_arithmetic
-	auto b0 = _subterms[0]->getBounds();
-	auto b1 = _subterms[1]->getBounds();
-	auto min = b0.first - b1.second; 
-	auto max = b0.second - b1.first; 
-	return std::make_pair(min, max);
-}
-
 std::ostream& SubtractionTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_subterms[0] << " - " << *_subterms[1];
 	return os;
 }
-
 
 MultiplicationTerm::MultiplicationTerm(const std::vector<const Term*>& subterms)
 	: ArithmeticTerm(subterms) {}
@@ -79,14 +61,6 @@ ObjectIdx MultiplicationTerm::interpret(const State& state, const Binding& bindi
 	return _subterms[0]->interpret(state, binding) * _subterms[1]->interpret(state, binding);
 }
 
-std::pair<int, int> MultiplicationTerm::getBounds() const {
-	// see https://en.wikipedia.org/wiki/Interval_arithmetic
-	auto b0 = _subterms[0]->getBounds();
-	auto b1 = _subterms[1]->getBounds();
-	std::vector<int> all{b0.first * b1.first, b0.first * b1.second, b0.second * b1.first, b0.second * b1.second};
-	auto minmax = std::minmax_element(all.begin(), all.end());
-	return std::make_pair(*minmax.first, *minmax.second);
-}
 
 std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << *_subterms[0] << " * " << *_subterms[1];

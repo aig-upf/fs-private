@@ -164,7 +164,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 	std::vector<const fs::ActionEffect*> compiled;
 	
 	const fs::Term* subterm_to_replace = original_subterms[i];
-	for (ObjectIdx value:info.getTypeObjects(subterm_to_replace->getType())) {
+	for (ObjectIdx value:info.getTypeObjects(fs::type(*subterm_to_replace))) {
 		auto subterms = Utils::clone(original_subterms);
 		delete subterms[i];
 		

@@ -36,10 +36,6 @@ public:
 	VariableIdx interpretVariable(const PartialAssignment& assignment) const;
 	VariableIdx interpretVariable(const State& state) const;
 
-	virtual TypeIdx getType() const = 0;
-	
-	virtual std::pair<int, int> getBounds() const = 0;
-
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
 
 	virtual bool operator==(const Term& other) const = 0;
@@ -71,8 +67,6 @@ public:
 
 	std::vector<const Term*> all_terms() const override;
 	
-	TypeIdx getType() const override;
-
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
@@ -151,17 +145,18 @@ public:
 //! A statically-headed term defined extensionally or otherwise by the concrete planning instance
 class UserDefinedStaticTerm : public StaticHeadedNestedTerm {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	UserDefinedStaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
 
 	UserDefinedStaticTerm* clone() const override { return new UserDefinedStaticTerm(*this); }
-
-	TypeIdx getType() const override;
-	std::pair<int, int> getBounds() const override;
 
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 	
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
+	
+	const SymbolData& getFunction() const { return _function; }
 
 protected:
 	// The (static) logical function implementation
@@ -175,8 +170,6 @@ public:
 
 	AxiomaticTerm* clone() const override;
 	virtual AxiomaticTerm* clone(const std::vector<const Term*>& subterms) const = 0;
-
-	std::pair<int, int> getBounds() const override;
 
 	virtual std::string name() const = 0;
 		
@@ -206,8 +199,6 @@ public:
 	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override;
 	VariableIdx interpretVariable(const State& state, const Binding& binding) const override;
 
-	std::pair<int, int> getBounds() const override;
-	
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 };
 
@@ -222,7 +213,7 @@ public:
 	
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 
-	TypeIdx getType() const override;
+	TypeIdx getType() const { return _type; }
 
 	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
 
@@ -234,8 +225,6 @@ public:
 
 	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Bound variables cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("Bound variables terms cannot resolve to an state variable"); }
-
-	std::pair<int, int> getBounds() const override;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -274,8 +263,6 @@ public:
 	//! Nothing to be done for binding, simply return a clone of the element
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
 
-	TypeIdx getType() const override;
-
 	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
 
 	//! Returns the index of the state variable
@@ -292,8 +279,6 @@ public:
 	unsigned getSymbolId() const { return _origin->getSymbolId(); }
  
 	virtual const std::vector<const Term*>& getSubterms() const { return _origin->getSubterms(); }
-
-	std::pair<int, int> getBounds() const override;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -322,8 +307,6 @@ public:
 	//! Nothing to be done for binding, simply return a clone of the element
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
 
-	TypeIdx getType() const override { throw std::runtime_error("Unimplemented"); }
-
 	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
 
 	//! Returns the actual value of the constant
@@ -335,8 +318,6 @@ public:
 
 	VariableIdx interpretVariable(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
 	VariableIdx interpretVariable(const State& state, const Binding& binding) const override { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
-
-	std::pair<int, int> getBounds() const override { return std::make_pair(_value, _value); }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;

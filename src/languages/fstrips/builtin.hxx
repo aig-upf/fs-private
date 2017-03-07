@@ -19,49 +19,49 @@ public:
 //! A statically-headed term that adds up the values of the two subterms
 class AdditionTerm : public ArithmeticTerm {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	AdditionTerm(const std::vector<const Term*>& subterms);
 	
-	AdditionTerm* clone() const { return new AdditionTerm(*this); }
+	AdditionTerm* clone() const override { return new AdditionTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	ObjectIdx interpret(const State& state, const Binding& binding) const;
-	
-	std::pair<int, int> getBounds() const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 	
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 //! A statically-headed term that subtracts up the values of the two subterms
 class SubtractionTerm : public ArithmeticTerm {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	SubtractionTerm(const std::vector<const Term*>& subterms);
 	
-	SubtractionTerm* clone() const { return new SubtractionTerm(*this); }
+	SubtractionTerm* clone() const override { return new SubtractionTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	ObjectIdx interpret(const State& state, const Binding& binding) const;
-	
-	std::pair<int, int> getBounds() const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 	
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 //! A statically-headed term that multiplies the values of the two subterms
 class MultiplicationTerm : public ArithmeticTerm {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	MultiplicationTerm(const std::vector<const Term*>& subterms);
 	
-	MultiplicationTerm* clone() const { return new MultiplicationTerm(*this); }
+	MultiplicationTerm* clone() const override { return new MultiplicationTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const;
-	ObjectIdx interpret(const State& state, const Binding& binding) const;
-	
-	std::pair<int, int> getBounds() const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 	
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class AlldiffFormula : public ExternallyDefinedFormula {
@@ -69,13 +69,13 @@ public:
 	AlldiffFormula(const std::vector<const Term*>& subterms) : ExternallyDefinedFormula(subterms) {}
 	AlldiffFormula(const AlldiffFormula& formula);
 	
-	AlldiffFormula* clone() const { return new AlldiffFormula(*this); }
-	AlldiffFormula* clone(const std::vector<const Term*>& subterms) const { return new AlldiffFormula(subterms); }
+	AlldiffFormula* clone() const override { return new AlldiffFormula(*this); }
+	AlldiffFormula* clone(const std::vector<const Term*>& subterms) const override { return new AlldiffFormula(subterms); }
 
-	std::string name() const { return "alldiff"; }
+	std::string name() const override { return "alldiff"; }
 	
 protected:
-	bool _satisfied(const ObjectIdxVector& values) const;
+	bool _satisfied(const ObjectIdxVector& values) const override;
 };
 
 class SumFormula : public ExternallyDefinedFormula {
@@ -83,13 +83,13 @@ public:
 	SumFormula(const std::vector<const Term*>& subterms) : ExternallyDefinedFormula(subterms) {}
 	SumFormula(const SumFormula& formula);
 	
-	SumFormula* clone() const { return new SumFormula(*this); }
-	SumFormula* clone(const std::vector<const Term*>& subterms) const { return new SumFormula(subterms); }
+	SumFormula* clone() const override { return new SumFormula(*this); }
+	SumFormula* clone(const std::vector<const Term*>& subterms) const override { return new SumFormula(subterms); }
 	
-	std::string name() const { return "sum"; }
+	std::string name() const override { return "sum"; }
 	
 protected:
-	bool _satisfied(const ObjectIdxVector& values) const;
+	bool _satisfied(const ObjectIdxVector& values) const override;
 };
 
 
@@ -98,13 +98,13 @@ public:
 	NValuesFormula(const std::vector<const Term*>& subterms) : ExternallyDefinedFormula(subterms) {}
 	NValuesFormula(const NValuesFormula& formula);
 	
-	NValuesFormula* clone() const { return new NValuesFormula(*this); }	
-	NValuesFormula* clone(const std::vector<const Term*>& subterms) const { return new NValuesFormula(subterms); }
+	NValuesFormula* clone() const override { return new NValuesFormula(*this); }	
+	NValuesFormula* clone(const std::vector<const Term*>& subterms) const override { return new NValuesFormula(subterms); }
 	
-	std::string name() const { return "nvalues"; }
+	std::string name() const override { return "nvalues"; }
 	
 protected:
-	bool _satisfied(const ObjectIdxVector& values) const;
+	bool _satisfied(const ObjectIdxVector& values) const override;
 };
 
 

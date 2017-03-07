@@ -59,16 +59,14 @@ FeatureSelector<StateT>::add_state_variables(const ProblemInfo& info, std::vecto
 }
 
 lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemInfo& info,  const std::string& feat_name, const std::vector<ObjectIdx>& parameters) {
-	
 	unsigned symbol_id = info.getSymbolId(feat_name);
-	const SymbolData& sdata = info.getSymbolData(symbol_id);
 	
 	std::vector<const fs::Term*> subterms;
 	for (ObjectIdx value:parameters) {
 		subterms.push_back(new fs::IntConstant(value));
 	}
 	
-	if (sdata.getType() == SymbolData::Type::PREDICATE) {
+	if (info.isPredicate(symbol_id)) {
 		auto formula =  LogicalComponentRegistry::instance().instantiate_formula(feat_name, subterms);
 		return new ArbitraryFormulaFeature(formula);
 		

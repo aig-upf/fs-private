@@ -1,11 +1,11 @@
 
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <constraints/gecode/translators/component_translator.hxx>
 #include <constraints/gecode/gecode_csp.hxx>
 #include <constraints/gecode/csp_translator.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/gecode/handlers/base_csp.hxx>
-#include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <utils/printers/gecode.hxx>
@@ -53,7 +53,7 @@ void StaticNestedTermTranslator::registerVariables(const fs::Term* term, CSPTran
 void ArithmeticTermTranslator::registerVariables(const fs::Term* term, CSPTranslator& translator) const {
 	auto nested = dynamic_cast<const fs::NestedTerm*>(term);
 	assert(nested);
-	auto bounds = nested->getBounds();
+	auto bounds = fs::bounds(*nested);
 	translator.registerNestedTerm(nested, bounds.first, bounds.second);
 }
 

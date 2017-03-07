@@ -148,13 +148,6 @@ const Term* ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info
 	else return processed;
 }
 
-
-
-
-TypeIdx NestedTerm::getType() const {
-	return ProblemInfo::getInstance().getSymbolData(_symbol_id).getCodomainType();
-}
-
 //! A quick helper to print functions
 template <typename T>
 std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {
@@ -188,16 +181,6 @@ UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vect
 {}
 
 
-TypeIdx UserDefinedStaticTerm::getType() const {
-	return _function.getCodomainType();
-}
-
-std::pair<int, int> UserDefinedStaticTerm::getBounds() const {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	return info.getTypeBounds(getType());
-}
-
-
 ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
 	return _function.getFunction()(_interpreted_subterms);
@@ -213,10 +196,6 @@ AxiomaticTerm::AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>&
 	: StaticHeadedNestedTerm(symbol_id, subterms)
 {}
 
-std::pair<int, int> AxiomaticTerm::getBounds() const {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	return info.getTypeBounds(getType());
-}
 
 ObjectIdx AxiomaticTerm::interpret(const State& state, const Binding& binding) const {
 	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
@@ -246,34 +225,16 @@ VariableIdx FluentHeadedNestedTerm::interpretVariable(const State& state, const 
 	return variable;
 }
 
-std::pair<int, int> FluentHeadedNestedTerm::getBounds() const {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	auto type = ProblemInfo::getInstance().getSymbolData(_symbol_id).getCodomainType();
-	return info.getTypeBounds(type);
-}
-
 
 ObjectIdx StateVariable::interpret(const State& state, const Binding& binding) const {
 	return state.getValue(_variable_id);
 }
 
-TypeIdx StateVariable::getType() const {
-	return ProblemInfo::getInstance().getVariableType(_variable_id);
-}
-
-std::pair<int, int> StateVariable::getBounds() const {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	return info.getVariableBounds(_variable_id);
-}
 
 std::ostream& StateVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << info.getVariableName(_variable_id);
 	return os;
 }
-
-TypeIdx BoundVariable::getType() const { return _type; }
-
-std::pair<int, int> BoundVariable::getBounds() const { return ProblemInfo::getInstance().getTypeBounds(_type); }
 
 const Term* BoundVariable::bind(const Binding& binding, const ProblemInfo& info) const {
 	if (!binding.binds(_id)) return clone();

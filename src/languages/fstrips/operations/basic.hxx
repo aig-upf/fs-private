@@ -29,6 +29,10 @@ class Constant;
 class NestedTerm;
 class StaticHeadedNestedTerm;
 class FluentHeadedNestedTerm;
+class UserDefinedStaticTerm;
+class AdditionTerm;
+class SubtractionTerm;
+class MultiplicationTerm;
 
 
 //! The level of nestedness of a given formula
@@ -48,6 +52,7 @@ class NestednessVisitor
     , public Loki::Visitor<Constant, void, true>
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
+    , public Loki::Visitor<UserDefinedStaticTerm, void, true>    
 {
 public:
 	NestednessVisitor() = default;
@@ -65,6 +70,10 @@ public:
 	void Visit(const Constant& lhs) { _result = 0; }
 	void Visit(const StaticHeadedNestedTerm& lhs);
 	void Visit(const FluentHeadedNestedTerm& lhs);
+	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AdditionTerm& lhs);
+	void Visit(const SubtractionTerm& lhs);
+	void Visit(const MultiplicationTerm& lhs);
 	
 
 	unsigned _result;
@@ -100,6 +109,7 @@ public:
 	void Visit(const Conjunction& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
 
+
 	std::vector<const Formula*> _result;
 };
 
@@ -116,6 +126,10 @@ class FlatVisitor
     , public Loki::Visitor<Constant, void, true>
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
+    , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AdditionTerm, void, true>
+    , public Loki::Visitor<SubtractionTerm, void, true>
+    , public Loki::Visitor<MultiplicationTerm, void, true>
 {
 public:
 	void Visit(const StateVariable& lhs) { _result = true; }
@@ -123,8 +137,78 @@ public:
 	void Visit(const Constant& lhs) { _result = true; }
 	void Visit(const StaticHeadedNestedTerm& lhs) { _result = false; }
 	void Visit(const FluentHeadedNestedTerm& lhs) { _result = false; }
+	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AdditionTerm& lhs);
+	void Visit(const SubtractionTerm& lhs);
+	void Visit(const MultiplicationTerm& lhs);	
 
 	bool _result;
+};
+
+////////////////////////////////////////////////////////////
+//! Returns the type of the term
+////////////////////////////////////////////////////////////
+unsigned type(const Term& element);
+
+class TypeVisitor
+    : public Loki::BaseVisitor
+    , public Loki::Visitor<StateVariable, void, true>
+    , public Loki::Visitor<BoundVariable, void, true>
+    , public Loki::Visitor<Constant, void, true>
+    , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
+    , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
+    , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AdditionTerm, void, true>
+    , public Loki::Visitor<SubtractionTerm, void, true>
+    , public Loki::Visitor<MultiplicationTerm, void, true>
+{
+public:
+	void Visit(const StateVariable& lhs);
+	void Visit(const BoundVariable& lhs);
+	void Visit(const Constant& lhs) { throw std::runtime_error("Unimplemented"); }
+	void Visit(const StaticHeadedNestedTerm& lhs);
+	void Visit(const FluentHeadedNestedTerm& lhs);
+	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AdditionTerm& lhs);
+	void Visit(const SubtractionTerm& lhs);
+	void Visit(const MultiplicationTerm& lhs);
+	
+	
+	//! The index of the type
+	unsigned _result;
+};
+
+////////////////////////////////////////////////////////////
+//! Returns the bounds of the term
+////////////////////////////////////////////////////////////
+std::pair<int, int> bounds(const Term& element);
+std::pair<int, int> type_based_bounds(const Term& element);
+
+class BoundVisitor
+    : public Loki::BaseVisitor
+    , public Loki::Visitor<StateVariable, void, true>
+    , public Loki::Visitor<BoundVariable, void, true>
+    , public Loki::Visitor<Constant, void, true>
+    , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
+    , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
+    , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AdditionTerm, void, true>
+    , public Loki::Visitor<SubtractionTerm, void, true>
+    , public Loki::Visitor<MultiplicationTerm, void, true>
+{
+public:
+	void Visit(const StateVariable& lhs);
+	void Visit(const BoundVariable& lhs);
+	void Visit(const Constant& lhs);
+	void Visit(const StaticHeadedNestedTerm& lhs);
+	void Visit(const FluentHeadedNestedTerm& lhs);
+	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AdditionTerm& lhs);
+	void Visit(const SubtractionTerm& lhs);
+	void Visit(const MultiplicationTerm& lhs);
+	
+	
+	std::pair<int, int> _result;
 };
 
 

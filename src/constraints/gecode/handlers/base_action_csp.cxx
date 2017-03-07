@@ -183,9 +183,9 @@ void BaseActionCSP::registerEffectConstraints(const fs::ActionEffect* effect) {
 	// Gecode::rel(_base_csp, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
 	
 	// Impose a bound on the RHS based on the type of the LHS
-	if (ProblemInfo::getInstance().isBoundedType(effect->lhs()->getType())) {
+	if (ProblemInfo::getInstance().isBoundedType(fs::type(*effect->lhs()))) {
 		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), *_base_csp);
-		const auto& lhs_bounds = effect->lhs()->getBounds();
+		const auto& lhs_bounds = fs::bounds(*effect->lhs());
 		Gecode::dom(*_base_csp, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
 	}
 }

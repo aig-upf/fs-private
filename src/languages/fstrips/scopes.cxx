@@ -111,7 +111,7 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 			const ProblemInfo& info = ProblemInfo::getInstance();
 			
 		// 	TypeIdx type = effect->rhs()->getType(); // This doesn't work for RHS such as X + 1
-			TypeIdx type = effect->lhs()->getType();
+			TypeIdx type = fs::type(*effect->lhs());
 			for (auto value:info.getTypeObjects(type)) {
 				affected.push_back(Atom(variable, value));
 			}
