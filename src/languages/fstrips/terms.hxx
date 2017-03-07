@@ -21,9 +21,6 @@ public:
 	//! consolidating all possible state variables and performing the bindings according to the given variable binding
 	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const = 0;
 	
-	// Returns a list with all terms contained in this term's tree, including itself (possibly with repetitions)
-	virtual std::vector<const Term*> all_terms() const = 0;
-
 	//! Returns the value of the current term under the given (possibly partial) interpretation
 	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
@@ -65,8 +62,6 @@ public:
 	
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 
-	std::vector<const Term*> all_terms() const override;
-	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
@@ -215,8 +210,6 @@ public:
 
 	TypeIdx getType() const { return _type; }
 
-	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
-
 	//! Returns the unique quantified variable ID
 	unsigned getVariableId() const { return _id; }
 
@@ -263,8 +256,6 @@ public:
 	//! Nothing to be done for binding, simply return a clone of the element
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
 
-	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
-
 	//! Returns the index of the state variable
 	VariableIdx getValue() const { return _variable_id; }
 
@@ -306,8 +297,6 @@ public:
 	
 	//! Nothing to be done for binding, simply return a clone of the element
 	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
-
-	std::vector<const Term*> all_terms() const override { return std::vector<const Term*>(1, this); }
 
 	//! Returns the actual value of the constant
 	ObjectIdx getValue() const { return _value; }

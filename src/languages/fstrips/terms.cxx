@@ -28,16 +28,6 @@ NestedTerm::NestedTerm(const NestedTerm& term) :
 {}
 
 
-std::vector<const Term*> NestedTerm::all_terms() const {
-	std::vector<const Term*> res;
-	res.push_back(this);
-	for (const Term* term:_subterms) {
-		auto tmp = term->all_terms();
-		res.insert(res.end(), tmp.cbegin(), tmp.cend());
-	}
-	return res;
-}
-
 
 std::vector<const Term*> NestedTerm::bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants) {
 	assert(constants.empty());

@@ -107,13 +107,13 @@ void BaseActionCSP::index() {
 	
 	// Index effect elements
 	for (const fs::ActionEffect* effect:get_effects()) {
-		const auto terms = effect->rhs()->all_terms();
+		const auto terms = fs::all_terms(*effect->rhs());
 		_all_terms.insert(terms.cbegin(), terms.cend());
 		
 		// As for the LHS of the effect, ATM we only register the LHS subterms (if any)
 		if (auto lhs = dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs())) {
 			for (const fs::Term* term:lhs->getSubterms()) {
-				auto subterms = term->all_terms();
+				auto subterms = fs::all_terms(*term);
 				_all_terms.insert(subterms.cbegin(), subterms.cend());
 			}
 		}

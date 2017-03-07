@@ -6,22 +6,23 @@
 
 #include <actions/actions.hxx>
 #include <constraints/gecode/utils/nested_fluent_iterator.hxx>
+#include <utils/utils.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
-std::vector<VariableIdx> ScopeUtils::computeDirectScope(const Term* term) {
+std::vector<VariableIdx> ScopeUtils::computeDirectScope(const LogicalElement* element) {
 	std::set<VariableIdx> set;
-	computeDirectScope(term, set);
+	computeDirectScope(element, set);
 	return std::vector<VariableIdx>(set.cbegin(), set.cend());
 }
 
-void ScopeUtils::computeDirectScope(const Term* term, std::set<VariableIdx>& scope) {
-	for (const Term* subterm:term->all_terms()) {
-		if (auto sv = dynamic_cast<const StateVariable*>(subterm)) {
-			scope.insert(sv->getValue());
-		}
+void ScopeUtils::computeDirectScope(const LogicalElement* element, std::set<VariableIdx>& scope) {
+	auto state_variables = Utils::filter_by_type<const StateVariable*>(all_nodes(*element));
+	for (const StateVariable* sv:state_variables) {
+		scope.insert(sv->getValue());
 	}
 }
+
 
 std::vector<const FluentHeadedNestedTerm*> ScopeUtils::computeIndirectScope(const ActionEffect* effect) {
 	TermSet set;
@@ -53,15 +54,6 @@ void ScopeUtils::computeDirectScope(const ActionEffect* effect, std::set<Variabl
 	computeDirectScope(effect->rhs(), scope);
 }
 
-std::vector<VariableIdx> ScopeUtils::computeDirectScope(const Formula* formula) {
-	std::set<VariableIdx> set;
-	computeDirectScope(formula, set);
-	return std::vector<VariableIdx>(set.cbegin(), set.cend());
-}
-
-void ScopeUtils::computeDirectScope(const Formula* formula, std::set<VariableIdx>& scope) {
-	for (const Term* subterm:fs::all_terms(*formula)) ScopeUtils::computeDirectScope(subterm, scope);
-}
 
 void ScopeUtils::computeIndirectScope(const Formula* formula, TermSet& scope) {
 	for (const Term* term:fs::all_terms(*formula)) {
@@ -157,11 +149,7 @@ void _computeRelevantElements(const std::vector<const Term*>& all_terms, std::se
 }
 
 
-void ScopeUtils::computeRelevantElements(const Term* element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
-	_computeRelevantElements(element->all_terms(), variables, symbols);
-}
-
-void ScopeUtils::computeRelevantElements(const Formula* element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
+void ScopeUtils::computeRelevantElements(const LogicalElement* element, std::set<VariableIdx>& variables, std::set<unsigned>& symbols) {
 	_computeRelevantElements(fs::all_terms(*element), variables, symbols);
 }
 
@@ -178,7 +166,7 @@ void ScopeUtils::computeActionFullScope(const ActionBase& action, std::set<Varia
 void ScopeUtils::compute_affected(const ActionBase& action, std::set<VariableIdx>& scope) {
 	std::set<unsigned> _;
 	for (const fs::ActionEffect* eff:action.getEffects()) {
-		_computeRelevantElements(eff->lhs()->all_terms(), scope, _, true);
+		_computeRelevantElements(fs::all_terms(*eff->lhs()), scope, _, true);
 	}
 }
 

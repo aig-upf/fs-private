@@ -26,8 +26,8 @@ ActionEffect::ActionEffect(const ActionEffect& other) :
 {}
 
 std::vector<const Term*> ActionEffect::all_terms() const {
-	std::vector<const Term*> res = _lhs->all_terms();
-	auto rhsf = _rhs->all_terms();
+	std::vector<const Term*> res = fs::all_terms(*_lhs);
+	auto rhsf = fs::all_terms(*_rhs);
 	res.insert(res.end(), rhsf.cbegin(), rhsf.cend());
 	return res;
 }

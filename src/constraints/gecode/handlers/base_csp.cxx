@@ -2,6 +2,7 @@
 #include <problem_info.hxx>
 #include <utils/atom_index.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations.hxx>
 #include <constraints/gecode/handlers/base_csp.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <heuristics/relaxed_plan/rpg_data.hxx>
@@ -238,7 +239,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 							
 							// Insert subterms properly - TODO - Perhaps StateVariable::all_terms should already return these terms?
 							for (auto term:origin->getSubterms()) {
-								auto tmp = term->all_terms();
+								auto tmp = fs::all_terms(*term);
 								_all_terms.insert(tmp.cbegin(), tmp.cend()); // TODO These should go away once we deal with constants separately
 							}
 							

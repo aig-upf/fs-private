@@ -113,7 +113,7 @@ std::vector<const PartiallyGroundedAction*>
 ActionGrounder::compile_action_parameters_away(const PartiallyGroundedAction* schema, unsigned effect_idx, const ProblemInfo& info) {
 	const fs::ActionEffect* effect = schema->getEffects().at(effect_idx);
 	
-	auto head_parameters = Utils::filter_by_type<const fs::BoundVariable*>(effect->lhs()->all_terms());
+	auto head_parameters = Utils::filter_by_type<const fs::BoundVariable*>(fs::all_nodes(*effect->lhs()));
 	
 	// If there are no parameters on the effect head, we simply return a vector with a clone of the action
 	if (head_parameters.empty()) {
