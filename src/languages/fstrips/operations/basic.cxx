@@ -10,6 +10,79 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
+std::vector<const Formula*> all_formulae(const Formula& element) {
+	return Utils::filter_by_type<const Formula*>(all_nodes(element));
+}
+
+std::vector<const AtomicFormula*> all_atoms(const Formula& element) {
+	return Utils::filter_by_type<const AtomicFormula*>(all_nodes(element));
+}
+
+std::vector<const Term*> all_terms(const LogicalElement& element) {
+	return Utils::filter_by_type<const Term*>(all_nodes(element));
+}
+
+
+std::vector<const LogicalElement*> all_nodes(const LogicalElement& element) {
+	AllNodesVisitor visitor;
+	element.Accept(visitor);
+	return visitor._result;
+}
+
+void AllNodesVisitor::
+Visit(const Tautology& lhs) {
+	_result.push_back(&lhs);
+}
+
+void AllNodesVisitor::
+Visit(const Contradiction& lhs) {
+	_result.push_back(&lhs);
+}
+
+void AllNodesVisitor::
+Visit(const AtomicFormula& lhs) {
+	_result.push_back(&lhs);
+	for (const Term* subterm:lhs.getSubterms()) {
+		subterm->Accept(*this);
+	}
+}
+
+void AllNodesVisitor::
+Visit(const Conjunction& lhs) {
+	_result.push_back(&lhs);
+	for (auto element:lhs.getSubformulae()) {
+		element->Accept(*this);
+	}
+}
+
+void AllNodesVisitor::
+Visit(const ExistentiallyQuantifiedFormula& lhs) {
+	_result.push_back(&lhs);
+	for (auto element:lhs.getVariables()) {
+		element->Accept(*this);
+	}	
+	lhs.getSubformula()->Accept(*this);
+}
+	
+void AllNodesVisitor::Visit(const StateVariable& lhs) { _result.push_back(&lhs); }
+void AllNodesVisitor::Visit(const BoundVariable& lhs) { _result.push_back(&lhs); }
+void AllNodesVisitor::Visit(const Constant& lhs) { _result.push_back(&lhs); }
+void AllNodesVisitor::Visit(const StaticHeadedNestedTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const FluentHeadedNestedTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const UserDefinedStaticTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+
+void AllNodesVisitor::Visit(const NestedTerm& lhs) {
+	_result.push_back(&lhs);
+	for (const Term* subterm:lhs.getSubterms()) {
+		subterm->Accept(*this);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 unsigned nestedness(const LogicalElement& element) {
 	NestednessVisitor visitor;
@@ -57,59 +130,6 @@ void NestednessVisitor::Visit(const UserDefinedStaticTerm& lhs) { Visit(static_c
 void NestednessVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void NestednessVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void NestednessVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
-
-
-std::vector<const Formula*> all_formulae(const Formula& element) {
-	AllFormulaVisitor visitor;
-	element.Accept(visitor);
-	return visitor._result;
-}
-
-
-std::vector<const AtomicFormula*> all_atoms(const Formula& element) {
-	return Utils::filter_by_type<const AtomicFormula*>(all_formulae(element));
-}
-
-std::vector<const Term*> all_terms(const Formula& element) {
-	std::vector<const Term*> res;
-	
-	for (const AtomicFormula* atom:fs::all_atoms(element)) {
-		for (const Term* term:atom->getSubterms()) {
-			auto tmp = term->all_terms();
-			res.insert(res.end(), tmp.cbegin(), tmp.cend());
-		}
-	}
-	
-	return res;
-}
-
-
-
-
-void AllFormulaVisitor::
-Visit(const Tautology& lhs) { _result.push_back(&lhs); }
-
-void AllFormulaVisitor::
-Visit(const Contradiction& lhs) { _result.push_back(&lhs); }
-
-void AllFormulaVisitor::
-Visit(const AtomicFormula& lhs) { _result.push_back(&lhs); }
-
-void AllFormulaVisitor::
-Visit(const Conjunction& lhs) {
-	_result.push_back(&lhs);
-	for (auto elem:lhs.getSubformulae()) {
-		auto tmp = all_formulae(*elem);
-		_result.insert(_result.end(), tmp.cbegin(), tmp.cend());
-	}
-}
-
-void AllFormulaVisitor::
-Visit(const ExistentiallyQuantifiedFormula& lhs) {
-	_result.push_back(&lhs);
-	auto tmp = all_formulae(*lhs.getSubformula());
-	_result.insert(_result.end(), tmp.cbegin(), tmp.cend());
-}
 
 
 unsigned flat(const Term& element) {

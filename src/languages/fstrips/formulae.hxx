@@ -63,12 +63,8 @@ public:
 	bool interpret(const State& state, const Binding& binding) const override;
 	using Formula::interpret;
 
-	//! Prints a representation of the object to the given stream.
-// 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
-
 	//! A helper to recursively evaluate the formula - must be subclassed
 	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
-
 
 protected:
 	//! The formula subterms

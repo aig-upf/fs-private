@@ -57,7 +57,7 @@ public:
 		: _symbol_id(symbol_id), _subterms(subterms), _interpreted_subterms(subterms.size(), -1)
 	{}
 
-	virtual ~NestedTerm() {
+	~NestedTerm() {
 		for (const Term* term:_subterms) delete term;
 	}
 	
