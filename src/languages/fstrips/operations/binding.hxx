@@ -2,11 +2,8 @@
 #pragma once
 
 #include <utils/visitor.hxx>
-#include <languages/fstrips/formulae.hxx>
+#include <languages/fstrips/language_fwd.hxx>
 
-//!
-//!
-//!
 
 namespace fs0 { class Binding; class ProblemInfo; }
 
@@ -32,9 +29,9 @@ public:
 	BindingVisitor(const Binding& binding, const ProblemInfo& info) : _binding(binding), _info(info), _result(nullptr) {}
 	~BindingVisitor() = default;
 	
- 	void Visit(const Formula& lhs) override { throw UnimplementedFeatureException(""); }
-	void Visit(const Tautology& lhs) override { _result = new Tautology; }
-	void Visit(const Contradiction& lhs) override { _result = new Contradiction; }
+ 	void Visit(const Formula& lhs) override;
+	void Visit(const Tautology& lhs) override;
+	void Visit(const Contradiction& lhs) override;
 	void Visit(const AtomicFormula& lhs) override;
 	void Visit(const Conjunction& lhs) override;
 	void Visit(const ExistentiallyQuantifiedFormula& lhs) override;

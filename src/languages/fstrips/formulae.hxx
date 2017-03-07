@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <languages/fstrips/base.hxx>
+#include <languages/fstrips/language_fwd.hxx>
 #include <fs_types.hxx>
 
 

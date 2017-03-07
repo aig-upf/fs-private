@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include <languages/fstrips/operations/binding.hxx>
+#include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <utils/binding.hxx>
 
@@ -13,7 +14,9 @@ const Formula* bind(const Formula& element, const Binding& binding, const Proble
 	return visitor._result;
 }
 
-
+void BindingVisitor::Visit(const Formula& lhs) { throw UnimplementedFeatureException(""); }
+void BindingVisitor::Visit(const Tautology& lhs) { _result = new Tautology; }
+void BindingVisitor::Visit(const Contradiction& lhs) { _result = new Contradiction; }
 
 void BindingVisitor::
 Visit(const AtomicFormula& lhs) {

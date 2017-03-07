@@ -5,37 +5,9 @@
 #include <utility>
 
 #include <utils/visitor.hxx>
-
-//!
-//!
-//!
+#include <languages/fstrips/language_fwd.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
-
-class LogicalElement;
-
-// Formulas
-class Formula;
-class Tautology;
-class Contradiction;
-class AtomicFormula;
-class Conjunction;
-class Disjunction;
-class Negation;
-class ExistentiallyQuantifiedFormula;
-
-// Terms
-class Term;
-class StateVariable;
-class BoundVariable;
-class Constant;
-class NestedTerm;
-class StaticHeadedNestedTerm;
-class FluentHeadedNestedTerm;
-class UserDefinedStaticTerm;
-class AdditionTerm;
-class SubtractionTerm;
-class MultiplicationTerm;
 
 
 ////////////////////////////////////////////////////////////
