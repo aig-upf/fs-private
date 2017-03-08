@@ -13,10 +13,10 @@ from util import is_external
 
 class ProblemRepresentation(object):
 
-    def __init__(self, index, translation_dir, edebug):
+    def __init__(self, index, translation_dir, debug):
         self.index = index
         self.translation_dir = translation_dir
-        self.edebug = edebug
+        self.debug = debug
 
     def generate(self):
 
@@ -161,7 +161,7 @@ class ProblemRepresentation(object):
                 for symbol in self.index.static_symbols if is_external(symbol)]
 
     def print_debug_data(self, data):
-        if not self.edebug:
+        if not self.debug:
             return
 
         self.dump_data('debug.problem', json.dumps(data, indent=2), ext='json', subdir='debug')
@@ -178,6 +178,42 @@ class ProblemRepresentation(object):
         # Print all (ordered) action schema names in a separate file
         names = [action['name'] for action in data['action_schemata']]
         self.dump_data("schemas", names, ext='txt', subdir='debug')
+
+        # Types
+        lines = list()
+        for t in data['types']:
+            objects = t[2]
+            if objects == 'int':
+                objects = "int[{}..{}]".format(t[3][0], t[3][1])
+            lines.append("{}: {}. Objects: {}".format(t[0], t[1], objects))
+        self.dump_data("types", lines, ext='txt', subdir='debug')
+
+        # Variables
+        lines = list()
+        for elem in data['variables']:
+            lines.append('{}: "{}" ({})'.format(elem['id'], elem['name'], elem['type']))
+        self.dump_data("variables", lines, ext='txt', subdir='debug')
+
+        # Symbols
+        lines = list()
+        for elem in data['symbols']:
+            signature = ', '.join(elem[3])
+            lines.append('{}: "{}" ({}). Signature: ({})'.format(elem[0], elem[1], elem[2], signature))
+        self.dump_data("symbols", lines, ext='txt', subdir='debug')
+
+        # Objects
+        lines = list()
+        for elem in data['objects']:
+            lines.append('{}: "{}"'.format(elem['id'], elem['name']))
+        self.dump_data("objects", lines, ext='txt', subdir='debug')
+
+        # Init
+        lines = list()
+        for elem in data['init']['atoms']:
+            lines.append('Variable {} has value "{}"'.format(elem[0], elem[1]))
+        self.dump_data("init", lines, ext='txt', subdir='debug')
+
+
 
     def print_groundings_if_available(self, schemas, all_groundings, object_idx):
         groundings_filename = "groundings"
