@@ -17,10 +17,6 @@ public:
 
 	Term* clone() const override = 0;
 	
-	//! Processes a term possibly containing bound variables and non-consolidated state variables,
-	//! consolidating all possible state variables and performing the bindings according to the given variable binding
-	virtual const Term* bind(const Binding& binding, const ProblemInfo& info) const = 0;
-	
 	//! Returns the value of the current term under the given (possibly partial) interpretation
 	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
@@ -54,8 +50,6 @@ public:
 	
 	NestedTerm(const NestedTerm& term);
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
-
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
@@ -75,9 +69,6 @@ public:
 
 	bool operator==(const Term& other) const override;
 	std::size_t hash_code() const override;
-
-	//! A helper to process lists of subterms
-	static std::vector<const Term*> bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants);
 
 
 protected:
@@ -108,8 +99,6 @@ public:
 	
 	virtual ArithmeticTerm* clone() const override = 0;
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
-	
 	//! Creates an arithmetic term of the same type than the current one but with the given subterms
 	// TODO - This is ATM somewhat inefficient because of the redundancy of cloning the whole array of subterms only to delete it.
 	const Term* create(const std::vector<const Term*>& subterms) const {
@@ -132,8 +121,6 @@ public:
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
-	
 	const SymbolData& getFunction() const { return _function; }
 
 protected:
@@ -144,7 +131,8 @@ protected:
 //! 
 class AxiomaticTerm : public StaticHeadedNestedTerm {
 public:
-	AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
+	AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
+		 : StaticHeadedNestedTerm(symbol_id, subterms) {}
 
 	AxiomaticTerm* clone() const override;
 	virtual AxiomaticTerm* clone(const std::vector<const Term*>& subterms) const = 0;
@@ -153,8 +141,6 @@ public:
 		
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Not yet implemented"); }
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
-	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 	
 	//! This needs to be overriden by the particular implementation
 	virtual ObjectIdx compute(const State& state, std::vector<ObjectIdx>& arguments) const = 0;
@@ -173,8 +159,6 @@ public:
 
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
-
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
 };
 
 //! A logical variable bound to some existential or universal quantifier
@@ -186,8 +170,6 @@ public:
 
 	BoundVariable* clone() const override { return new BoundVariable(*this); }
 	
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const override;
-
 	TypeIdx getType() const { return _type; }
 
 	//! Returns the unique quantified variable ID
@@ -230,9 +212,6 @@ public:
 
 	StateVariable* clone() const override { return new StateVariable(*this); }
 	
-	//! Nothing to be done for binding, simply return a clone of the element
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
-
 	//! Returns the index of the state variable
 	VariableIdx getValue() const { return _variable_id; }
 
@@ -269,9 +248,6 @@ public:
 
 	Constant* clone() const override { return new Constant(*this); }
 	
-	//! Nothing to be done for binding, simply return a clone of the element
-	const Term* bind(const Binding& binding, const ProblemInfo& info) const override { return clone(); }
-
 	//! Returns the actual value of the constant
 	ObjectIdx getValue() const { return _value; }
 

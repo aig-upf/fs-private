@@ -174,7 +174,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 		delete extra_condition;
 		
 		auto tmp_head = new fs::FluentHeadedNestedTerm(head->getSymbolId(), subterms);
-		auto processed_head = tmp_head->bind({}, info);
+		auto processed_head = fs::bind(*tmp_head, {}, info);
 		delete tmp_head;
 		
 		// Now the recursive call

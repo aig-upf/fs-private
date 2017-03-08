@@ -17,32 +17,6 @@ ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return in
 ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
 
 	
-std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << "<unnamed term>";
-	return os;
-}
-
-NestedTerm::NestedTerm(const NestedTerm& term) :
-	_symbol_id(term._symbol_id),
-	_subterms(Utils::clone(term._subterms)),
-	_interpreted_subterms(term._interpreted_subterms)
-{}
-
-
-
-std::vector<const Term*> NestedTerm::bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants) {
-	assert(constants.empty());
-	std::vector<const Term*> result;
-	for (auto unprocessed:subterms) {
-		auto processed = unprocessed->bind(binding, info);
-		result.push_back(processed);
-		
-		if (const Constant* constant = dynamic_cast<const Constant*>(processed)) {
-			constants.push_back(constant->getValue());
-		}
-	}
-	return result;
-}
 
 const Term* NestedTerm::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
@@ -59,106 +33,22 @@ const Term* NestedTerm::create(const std::string& symbol, const std::vector<cons
 	}
 }
 
-const Term* NestedTerm::bind(const Binding& binding, const ProblemInfo& info) const {
-	std::vector<ObjectIdx> constant_values;
-	std::vector<const Term*> st = bind_subterms(_subterms, binding, info, constant_values);
-	
-	// We process the 4 different possible cases separately:
-	const auto& function = info.getSymbolData(_symbol_id);
-	if (function.isStatic() && constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
-		for (const auto ptr:st) delete ptr;
-		auto value = function.getFunction()(constant_values);
-		return info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
-	}
-	else if (function.isStatic() && constant_values.size() != _subterms.size()) { // We have a statically-headed nested term
-		return new UserDefinedStaticTerm(_symbol_id, st);
-	}
-	else if (!function.isStatic() && constant_values.size() == _subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
-		VariableIdx id = info.resolveStateVariable(_symbol_id, constant_values);
-// 		for (const auto ptr:st) delete ptr;
-		return new StateVariable(id, new FluentHeadedNestedTerm(_symbol_id, st));
-	}
-	else {
-		return new FluentHeadedNestedTerm(_symbol_id, st);
-	}
-}
-
-const Term* FluentHeadedNestedTerm::bind(const Binding& binding, const ProblemInfo& info) const {
-	std::vector<ObjectIdx> constant_values;
-	std::vector<const Term*> processed = bind_subterms(_subterms, binding, info, constant_values);
-	
-	if (constant_values.size() == _subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
-// 		for (const auto ptr:processed) delete ptr;
-		
-		VariableIdx id = info.resolveStateVariable(_symbol_id, constant_values);
-		return new StateVariable(id, new FluentHeadedNestedTerm(_symbol_id, processed));
-	}
-	return new FluentHeadedNestedTerm(_symbol_id, processed);
-}
-
-
-const Term* UserDefinedStaticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
-	std::vector<ObjectIdx> constant_values;
-	std::vector<const Term*> processed = bind_subterms(_subterms, binding, info, constant_values);
-	
-	if (constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
-		for (const auto ptr:processed) delete ptr;
-		
-		const auto& function = info.getSymbolData(_symbol_id);
-		auto value = function.getFunction()(constant_values);
-		return info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
-	}
-	
-	// Otherwise we simply return a user-defined static term with the processed/bound subterms
-	return new UserDefinedStaticTerm(_symbol_id, processed);
-}
-
-
-const Term* AxiomaticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
-	std::vector<ObjectIdx> constant_values;
-	std::vector<const Term*> processed = bind_subterms(_subterms, binding, info, constant_values);
-	
-	// We simply return a user-defined static term with the processed/bound subterms
-	return clone(processed);
-}
-
-AxiomaticTerm* AxiomaticTerm::clone() const { return clone(Utils::clone(_subterms)); }
-
-
-const Term* ArithmeticTerm::bind(const Binding& binding, const ProblemInfo& info) const {
-	std::vector<ObjectIdx> constant_values;
-	std::vector<const Term*> st = bind_subterms(_subterms, binding, info, constant_values);
-	
-	auto processed = create(st);
-	
-	if (constant_values.size() == _subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
-		auto value = processed->interpret({}, Binding::EMPTY_BINDING);
-		delete processed;
-		return new IntConstant(value); // Arithmetic terms necessarily involve integer subterms
-	}
-	else return processed;
-}
-
-//! A quick helper to print functions
-template <typename T>
-std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {
-	os << info.getSymbolName(symbol_id) << "(";
-	for (unsigned i = 0; i < subterms.size(); ++i) {
-		os << *subterms[i];
-		if (i < subterms.size() - 1) os << ", ";
-	}
-	os << ")";
-	return os;
-}
-
-std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	return printFunction(os, info, _symbol_id, _subterms);
-}
+NestedTerm::NestedTerm(const NestedTerm& term) :
+	_symbol_id(term._symbol_id),
+	_subterms(Utils::clone(term._subterms)),
+	_interpreted_subterms(term._interpreted_subterms)
+{}
 
 
 StaticHeadedNestedTerm::StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 	: NestedTerm(symbol_id, subterms)
 {}
+
+UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
+	: StaticHeadedNestedTerm(symbol_id, subterms),
+	_function(ProblemInfo::getInstance().getSymbolData(symbol_id))
+{}
+
 
 ArithmeticTerm::ArithmeticTerm(const std::vector<const Term*>& subterms)
 	: StaticHeadedNestedTerm(-1, subterms)
@@ -166,10 +56,10 @@ ArithmeticTerm::ArithmeticTerm(const std::vector<const Term*>& subterms)
 	assert(subterms.size() == 2);
 }
 
-UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
-	: StaticHeadedNestedTerm(symbol_id, subterms),
-	_function(ProblemInfo::getInstance().getSymbolData(symbol_id))
-{}
+
+
+AxiomaticTerm* AxiomaticTerm::clone() const { return clone(Utils::clone(_subterms)); }
+
 
 
 ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
@@ -181,11 +71,6 @@ ObjectIdx UserDefinedStaticTerm::interpret(const State& state, const Binding& bi
 	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
 	return _function.getFunction()(_interpreted_subterms);
 }
-
-
-AxiomaticTerm::AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
-	: StaticHeadedNestedTerm(symbol_id, subterms)
-{}
 
 
 ObjectIdx AxiomaticTerm::interpret(const State& state, const Binding& binding) const {
@@ -208,23 +93,6 @@ ObjectIdx StateVariable::interpret(const State& state, const Binding& binding) c
 }
 
 
-std::ostream& StateVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << info.getVariableName(_variable_id);
-	return os;
-}
-
-const Term* BoundVariable::bind(const Binding& binding, const ProblemInfo& info) const {
-	if (!binding.binds(_id)) return clone();
-	ObjectIdx value = binding.value(_id);
-	return info.isBoundedType(_type) ? new IntConstant(value) : new Constant(value);
-}
-
-std::ostream& BoundVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << "?" << _id;
-	return os;
-}
-
-
 ObjectIdx BoundVariable::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	if (!binding.binds(_id)) throw std::runtime_error("Cannot interpret bound variable without a suitable binding");
 	return binding.value(_id);
@@ -237,7 +105,36 @@ ObjectIdx BoundVariable::interpret(const State& state, const Binding& binding) c
 
 
 
+//! A quick helper to print functions
+template <typename T>
+std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {
+	os << info.getSymbolName(symbol_id) << "(";
+	for (unsigned i = 0; i < subterms.size(); ++i) {
+		os << *subterms[i];
+		if (i < subterms.size() - 1) os << ", ";
+	}
+	os << ")";
+	return os;
+}
 
+std::ostream& Term::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << "<unnamed term>";
+	return os;
+}
+
+std::ostream& NestedTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	return printFunction(os, info, _symbol_id, _subterms);
+}
+
+std::ostream& StateVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << info.getVariableName(_variable_id);
+	return os;
+}
+
+std::ostream& BoundVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << "?" << _id;
+	return os;
+}
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << info.getCustomObjectName(_value); // We are sure that this is a custom object, otherwise the IntConstant::print() would be executed
 	return os;

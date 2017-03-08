@@ -66,11 +66,11 @@ const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo
 	const Term* bound_lhs = nullptr;
 	try {
 		// TODO - This is a big ___TEMPORARY___ HACK :-). Which btw might be leaking memory. See issue #18
-		bound_lhs = _lhs->bind(binding, info);
+		bound_lhs = fs::bind(*_lhs, binding, info);
 	} catch (const std::out_of_range& e) {
 		return nullptr;
 	}
-	auto bound_rhs = _rhs->bind(binding, info);
+	auto bound_rhs = fs::bind(*_rhs, binding, info);
 	// As of now, the rationale is: if the effect LHS provokes an exception, it must involve 
 	// a static state variable, and thus we can ignore it and prune it. It is clearly a flawed
 	// reasoning if the expression is complex and involves nested terms, etc., but works for now.
