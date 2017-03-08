@@ -1,6 +1,5 @@
 
-#ifndef __APTK_CORE_TEST_PROBLEMS_SIMPLE_1_GENERATOR__
-#define __APTK_CORE_TEST_PROBLEMS_SIMPLE_1_GENERATOR__
+#pragma once
 
 #include <core_parametrized_action.hxx>
 #include <core_goal_evaluator.hxx>
@@ -69,5 +68,3 @@ public:
 void generate(aptk::core::Problem& problem);
 
 } } } } // namespaces
-
-#endif

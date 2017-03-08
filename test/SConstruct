@@ -6,7 +6,7 @@ import os
 import fnmatch
 
 HOME = os.path.expanduser("~")
-TESTS = ['constraints']
+tests = ['fstrips']
 
 def locate_source_files(base_dir, pattern):
 	matches = []
@@ -32,7 +32,7 @@ env = Environment()
 compiler_flags = '-std=c++0x -g -Wall -Wno-unused-variable -Wno-unused-parameter -Wextra -isystem ' + gtest_dir + '/include'
 
 
-include_paths = ['.', os.path.join(lapkt_dir, 'include')]
+include_paths = ['../src', '.', os.path.join(lapkt_dir, 'include')]
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CXXFLAGS = compiler_flags.split(' ') )
 
@@ -43,18 +43,33 @@ for t in tests:
 
 # Note: order matters. If A depends on B, A should go _before_ B.
 
+# FS main library:
+env.Append(LIBS=['fs-debug'])
+
 # LAPKT lib dependencies:
-lapkt_lib_sufix = ''
 env.Append(LIBS=[
-	'liblapkt-novelty' + lapkt_lib_sufix + '.so',
-	'liblapkt' + lapkt_lib_sufix + '.so',
+	'liblapkt-novelty-debug.so',
+	'liblapkt-debug.so'
 ])
 
+# Gtest
+env.Append(LIBS=[File(gtest_dir + '/libgtest.a')])
+
 # Other dependencies:
-env.Append(LIBS=[File(gtest_dir + '/libgtest.a'), 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm', 'pthread'])
+env.Append(LIBS=['boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
+
+# Add necessary Gecode libraries
+gecode_libs = [
+	'gecodesearch',
+	'gecodeint',
+	'gecodekernel',
+	'gecodesupport'
+]
+env.Append( LIBS = gecode_libs + ['pthread'])
+
 
 lapkt2_lib_dir = os.path.join(lapkt_dir, 'lib')
-lib_paths = [lapkt2_lib_dir, HOME + '/local/lib']
+lib_paths = ['../lib', lapkt2_lib_dir, HOME + '/local/lib']
 env.Append( LIBPATH=[ os.path.abspath(p) for p in lib_paths ] )
 
 solver = env.Program('runtests.bin', src_objs)

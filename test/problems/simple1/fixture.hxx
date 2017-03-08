@@ -1,6 +1,6 @@
 
-#ifndef __APTK_CORE_TEST_PROBLEMS_SIMPLE_1_FIXTURE__
-#define __APTK_CORE_TEST_PROBLEMS_SIMPLE_1_FIXTURE__
+
+#pragma once
 
 #include "fixtures/base_fixture.hxx"
 #include "generator.hxx"
@@ -10,7 +10,7 @@ using namespace aptk::core;
 
 namespace aptk { namespace test { namespace problems { namespace simple1 {
 
-class SimpleProblem1Fixture : public BaseFixture {
+class SimpleProblem1Fixture : public testing::Test {
 
 protected:
 	virtual void SetUp() {
@@ -35,5 +35,3 @@ protected:
 };
 
 } } } } // namespaces
-
-#endif

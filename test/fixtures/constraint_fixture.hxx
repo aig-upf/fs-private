@@ -12,7 +12,7 @@ using namespace aptk::core;
 
 namespace aptk { namespace test { namespace constraints {
 
-class ConstraintFixture : public BaseFixture {
+class ConstraintFixture : public testing::Test {
 protected:
 	//! Little helper to write more concise tests.
 	DomainSet buildDomainSet(std::map<unsigned, std::vector<ObjectIdx>> domains) {
