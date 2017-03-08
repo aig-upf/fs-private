@@ -3,7 +3,7 @@
 
 #include "base.hxx"
 #include "features/features.hxx"
-#include <search/drivers/sbfws/sgbfs.hxx>
+#include <search/drivers/sbfws/sbfws.hxx>
 #include <search/utils.hxx>
 #include <models/simple_state_model.hxx>
 
@@ -14,9 +14,9 @@ namespace fs0 { namespace bfws {
 
 //! Factory method
 template <typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEvaluatorT>
-std::unique_ptr<LazyBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>>
+std::unique_ptr<SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>>
 create(const Config& config, FeatureEvaluatorT&& featureset, SBFWSConfig& conf, const StateModelT& model, BFWSStats& stats) {
-	using EngineT = LazyBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>;
+	using EngineT = SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>;
 	
 	auto search_evaluator = create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), conf.evaluator_t, conf.search_width);
 	
@@ -25,14 +25,14 @@ create(const Config& config, FeatureEvaluatorT&& featureset, SBFWSConfig& conf, 
 
 template <>
 ExitCode
-LazyBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+SBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_ground_simple_model(problem), config, out_dir, start_time);
 }
 
 
 template <>
 ExitCode
-LazyBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+SBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time);
 }
 
@@ -40,7 +40,7 @@ LazyBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config,
 
 template <typename StateModelT>
 ExitCode
-LazyBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
+SBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	const StateAtomIndexer& indexer = model.getTask().getStateAtomIndexer();
 	if (config.getOption<bool>("bfws.extra_features", false)) {
 		FeatureSelector<StateT> selector(ProblemInfo::getInstance());
@@ -73,7 +73,7 @@ LazyBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& c
 template <typename StateModelT>
 template <typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 ExitCode
-LazyBFWSDriver<StateModelT>::do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time) {
+SBFWSDriver<StateModelT>::do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time) {
 	SBFWSConfig bfws_config(config);
 	
 	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>(config, std::move(featureset), bfws_config, model, _stats);

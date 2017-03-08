@@ -4,7 +4,7 @@
 #include <search/drivers/gbfs_constrained.hxx>
 #include <search/drivers/iterated_width.hxx>
 #include <search/drivers/breadth_first_search.hxx>
-#include <search/drivers/sbfws/sgbfs.hxx>
+#include <search/drivers/sbfws/sbfws.hxx>
 #include <search/drivers/unreached_atom_driver.hxx>
 #include <search/drivers/native_driver.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
@@ -41,12 +41,8 @@ EngineRegistry::EngineRegistry() {
 	add("iw",  new IteratedWidthDriver<GroundStateModel>());
 	add("liw",  new IteratedWidthDriver<LiftedStateModel>());
 	
-// 	add("sbfws",  new bfws::SimulatedBFWSDriver<SimpleStateModel>());
-// 	add("lsbfws",  new bfws::SimulatedBFWSDriver<LiftedStateModel>());
-	
-	add("lazybfws",  new bfws::LazyBFWSDriver<SimpleStateModel>());
-	add("llazybfws",  new bfws::LazyBFWSDriver<LiftedStateModel>());
-	
+	add("sbfws",  new bfws::SBFWSDriver<SimpleStateModel>());
+	add("lsbfws",  new bfws::SBFWSDriver<LiftedStateModel>());
 	
 	add("bfs",  new BreadthFirstSearchDriver<GroundStateModel>());
 	add("lbfs",  new BreadthFirstSearchDriver<LiftedStateModel>());

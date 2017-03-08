@@ -43,9 +43,9 @@ struct novelty_comparer {
 
 //! The node type we'll use for the Simulated BFWS search, parametrized by type of state and action action
 template <typename StateT, typename ActionT>
-class LazyBFWSNode {
+class SBFWSNode {
 public:
-	using ptr_t = std::shared_ptr<LazyBFWSNode<StateT, ActionT>>;
+	using ptr_t = std::shared_ptr<SBFWSNode<StateT, ActionT>>;
 	using action_t = typename ActionT::IdType;
 	
 	//! The state corresponding to the search node
@@ -83,10 +83,10 @@ public:
 	std::unique_ptr<LightRelevantAtomSet> _relevant_atoms;
 	
 	//! Constructor with full copying of the state (expensive)
-	LazyBFWSNode(const StateT& s, unsigned long gen_order) : LazyBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
+	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	LazyBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, unsigned long gen_order) :
+	SBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, unsigned long gen_order) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		unachieved_subgoals(std::numeric_limits<unsigned>::max()),
 		_processed(false),
@@ -97,23 +97,23 @@ public:
 		_relevant_atoms(nullptr)
 	{}
 	
-	~LazyBFWSNode() = default;
-	LazyBFWSNode(const LazyBFWSNode&) = delete;
-	LazyBFWSNode(LazyBFWSNode&&) = delete;
-	LazyBFWSNode& operator=(const LazyBFWSNode&) = delete;
-	LazyBFWSNode& operator=(LazyBFWSNode&&) = delete;	
+	~SBFWSNode() = default;
+	SBFWSNode(const SBFWSNode&) = delete;
+	SBFWSNode(SBFWSNode&&) = delete;
+	SBFWSNode& operator=(const SBFWSNode&) = delete;
+	SBFWSNode& operator=(SBFWSNode&&) = delete;	
 	
 	
 	bool has_parent() const { return parent != nullptr; }
 
-	bool operator==( const LazyBFWSNode<StateT, ActionT>& o ) const { return state == o.state; }
+	bool operator==( const SBFWSNode<StateT, ActionT>& o ) const { return state == o.state; }
 
 	bool dead_end() const { return false; }
 
 	std::size_t hash() const { return state.hash(); }
 
 	//! Print the node into the given stream
-	friend std::ostream& operator<<(std::ostream &os, const LazyBFWSNode<StateT, ActionT>& object) { return object.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const SBFWSNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
 // 		const Problem& problem = Problem::getInstance();
 		std::string reached = "?";
@@ -139,7 +139,7 @@ public:
 
 
 template <typename StateModelT, typename NoveltyIndexerT, typename FeatureSetT, typename NoveltyEvaluatorT>
-class LazyBFWSHeuristic {
+class SBFWSHeuristic {
 public:
 	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT*>;
 	using ActionT = typename StateModelT::ActionType;
@@ -178,7 +178,7 @@ protected:
 	SBFWSConfig::RelevantSetType _rstype;
 	
 public:
-	LazyBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, BFWSStats& stats) :
+	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, BFWSStats& stats) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
@@ -199,7 +199,7 @@ public:
 		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
 	}
 
-	~LazyBFWSHeuristic() {
+	~SBFWSHeuristic() {
 		for (auto& p:_wg_novelty_evaluators) delete p.second;
 		for (auto& p:_wgr_novelty_evaluators) delete p.second;
 	};
@@ -393,16 +393,16 @@ protected:
 //! A specialized BFWS search schema with multiple queues to implement
 //! effectively lazy novelty evaluation.
 template <typename StateModelT, typename FeatureSetT, typename NoveltyEvaluatorT>
-class LazyBFWS {
+class SBFWS {
 public:
 	using StateT = typename StateModelT::StateT;
 	using ActionT = typename StateModelT::ActionType;
 	using ActionIdT = typename ActionT::IdType;
-	using NodeT = LazyBFWSNode<fs0::State, ActionT>;
+	using NodeT = SBFWSNode<fs0::State, ActionT>;
 	using PlanT =  std::vector<ActionIdT>;
 	using NodePT = std::shared_ptr<NodeT>;
 	using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
-	using HeuristicT = LazyBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer, FeatureSetT, NoveltyEvaluatorT>;
+	using HeuristicT = SBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer, FeatureSetT, NoveltyEvaluatorT>;
 	using SimulationNodeT = typename HeuristicT::IWNodeT;
 	using SimulationNodePT = typename HeuristicT::IWNodePT;
 	
@@ -475,7 +475,7 @@ public:
 	//! (1) the state model to be used in the search
 	//! (2) the open list object to be used in the search
 	//! (3) the closed list object to be used in the search
-	LazyBFWS(const StateModelT& model,
+	SBFWS(const StateModelT& model,
 			 FeatureSetT&& featureset,
              NoveltyEvaluatorT* search_evaluator,
              BFWSStats& stats,
@@ -495,11 +495,11 @@ public:
 	{
 	}
 
-	~LazyBFWS() = default;
-	LazyBFWS(const LazyBFWS&) = delete;
-	LazyBFWS(LazyBFWS&&) = default;
-	LazyBFWS& operator=(const LazyBFWS&) = delete;
-	LazyBFWS& operator=(LazyBFWS&&) = default;
+	~SBFWS() = default;
+	SBFWS(const SBFWS&) = delete;
+	SBFWS(SBFWS&&) = default;
+	SBFWS& operator=(const SBFWS&) = delete;
+	SBFWS& operator=(SBFWS&&) = default;
 	
 	unsigned setup_novelty_levels(const StateModelT& model, const Config& config) const {
 		
@@ -799,7 +799,7 @@ protected:
 //! - Instantiate the (GBFS) search object, and start the search with it.
 //!
 template <typename StateModelT>
-class LazyBFWSDriver : public drivers::Driver {
+class SBFWSDriver : public drivers::Driver {
 public:
 	using StateT = typename StateModelT::StateT;
 	

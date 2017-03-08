@@ -149,7 +149,7 @@ class IWRun : public lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateMo
 };
 
 template <typename StateModelT, typename NoveltyIndexerT, typename FeatureSetT, typename NoveltyEvaluatorT>
-class LazyBFWSHeuristic {
+class SBFWSHeuristic {
 
 /*
 void dump_simulation_nodes(NodePT& node) {
@@ -252,7 +252,7 @@ void dump_simulation_nodes(NodePT& node) {
 const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _simulator->get_relevant_nodes(); }
 
 
-	~LazyBFWSHeuristic() {
+	~SBFWSHeuristic() {
 		for (auto& p:_wg_half_novelty_evaluators) delete p.second;
 	};
 	NoveltyEvaluatorMapT _wg_half_novelty_evaluators; // 1.5 nov evaluators
@@ -289,7 +289,7 @@ const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _
 
 
 template <typename StateModelT, typename FeatureSetT, typename NoveltyEvaluatorT>
-class LazyBFWS {
+class SBFWS {
 	//! A list with all nodes that have novelty w_{#g}=1.5
 // 	UnachievedOpenList _q1half;
 	
