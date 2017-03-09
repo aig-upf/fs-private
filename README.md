@@ -59,8 +59,6 @@ To begin with, you will need the following software components:
 1. The [LAPKT Planning Toolkit](http://lapkt.org/), which provides the base search algorithms used with our heuristics.
 You should use the branch `v2_work`, as explained [here](https://github.com/miquelramirez/LAPKT-public/blob/v2-work/aptk2/README.md).
 
-1. A [custom version](https://bitbucket.org/gfrances/downward-aig) of the Fast Downward PDDL 3.0 parser (written in Python), modified with the purpose of fully supporting the functional capabilities of the language and allowing for constraints and external procedures to be used on the specification of the domain.
-
 1. The [Gecode CSP Solver](http://www.gecode.org/) (tested with version 4.4.0 only). The recommended way to install it is on `~/local`, i.e. by running `./configure --prefix=~/local` before the actual compilation.
 
 
@@ -71,7 +69,6 @@ e.g. by setting them up in your  `~/.bashrc` configuration file:
 ```shell
 export LAPKT_PATH="${HOME}/projects/code/lapkt"
 export LAPKT2_PATH="${LAPKT_PATH}/aptk2"
-export FD_AIG_PATH="${HOME}/projects/code/downward/downward-aig"
 export FS_PATH="${HOME}/projects/code/fs"
 
 # Local C++ library installations
@@ -83,12 +80,6 @@ fi
 # LAPKT and FS libraries
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${FS_PATH}/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${LAPKT2_PATH}/lib
-
-# AIG Fast Downward PDDL Parser
-if [[ -d ${FD_AIG_PATH}/src/translate ]]; then
-	export PYTHONPATH="${FD_AIG_PATH}/src/translate:$PYTHONPATH"
-fi
-
 ```
 
 Once all this is set up, you can build the project library by doing

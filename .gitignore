@@ -2,8 +2,8 @@
 # config files
 config.json
 
-# Generated planners
-generated
+# The main FS workspace
+workspace
 
 # Automatically-generated documentation
 # doc

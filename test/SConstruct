@@ -36,7 +36,7 @@ include_paths = ['../src', './src', os.path.join(lapkt_dir, 'include')]
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CXXFLAGS = compiler_flags.split(' ') )
 
-src_objs = [env.Object(s) for s in Glob('./main.cxx')]
+src_objs = [env.Object(s) for s in Glob('./src/main.cxx')]
 for t in tests:
 	src_objs += [ env.Object(s) for s in locate_source_files(os.path.join('./src', t), '*.cxx') ]
 

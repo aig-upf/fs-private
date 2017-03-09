@@ -3,10 +3,12 @@ import sys
 import os
 import time
 import importlib
-import itertools
-sys.path.insert(0, os.path.abspath('../preprocessor'))
-import runner
-from util import mkdirp
+
+# Import FS python module
+FS_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+sys.path.insert(0, FS_PATH)
+
+from python import utils, runner, algorithms, FS_WORKSPACE
 
 current_module = importlib.import_module(__name__)
 timestamp = time.strftime("%Y%m%d_%H%M")
@@ -20,34 +22,32 @@ BENCHMARKS = {
 }
 
 
-def create_runner(**kwargs):
+def create_runner(instance, driver, **kwargs):
     """ Creates an anonymous runner for a certain instance and planner configuration """
     tag = "test_{}".format(timestamp)
-    output = os.path.abspath(os.path.join('.', 'workspace', "{}".format(tag)))
-    args = ['--debug', '--run', '--tag', tag, '--output', output]
+    args = ['--run', '--tag', tag, '--instance', instance, '--driver', driver]
+    name_args = [tag, driver, os.path.basename(instance)]
 
-    mkdirp(output)
-
-    mandatory = ['instance', 'driver']
     optional = ['domain', 'options']
-
-    for argument in mandatory:
-        if argument not in kwargs or kwargs[argument] is None:
-            raise RuntimeError("FS requires mandatory parameter {}".format(argument))
-        args += ['--{}'.format(argument), '{}'.format(kwargs[argument])]
-
     for argument in optional:
         if argument in kwargs and kwargs[argument] is not None:
             args += ['--{}'.format(argument), '{}'.format(kwargs[argument])]
+            name_args += [argument, kwargs[argument]]
 
     if 'asp' in kwargs and kwargs['asp']:
         args += ['--asp']
+        name_args += ['asp']
 
-    def anon_runner():
+    exp_name = '.'.join(name_args).replace("=", '_').replace(',', '.')
+    output = os.path.join(FS_WORKSPACE, exp_name)
+    utils.mkdirp(output)
+    args += ['--output', output]
+
+    def _runner():
         exit_code = runner.main(args)
         assert exit_code == 0
 
-    return anon_runner
+    return _runner
 
 
 def add_run(name, run):
@@ -55,26 +55,6 @@ def add_run(name, run):
 
 
 inst = os.path.join(BENCHMARKS['dw'], 'blocks', 'probBLOCKS-4-0.pddl')
-drivers = ['sbfws', 'native', 'smart']
-
-add_run('hola', create_runner(instance=inst, driver=drivers[0],
-                              options="successor_generation=naive,bfws.rs=sim,evaluator_t=adaptive,goal_directed=true"))
-
-
-
-options = []
-
-options.append(("successor_generation", "naive,match_tree"))
-options.append(("bfws.rs", "none,sim"))
-options.append(("evaluator_t", "adaptive,generic"))
-options.append(("goal_directed", "true,false"))
-
-
-
-
-
-def dict_product(dicts):
-    return (list(zip(dicts, x)) for x in itertools.product(*dicts.values()))
 
 
 #
@@ -86,19 +66,34 @@ class ConfigManager(object):
         self.options[name] = values.split(',') if isinstance(values, str) else values
 
     def all_configs(self):
-        return list(dict_product(self.options))
+        return list(algorithms.dict_product(self.options))
+
+
+class FSTestManager(object):
+    DRIVERS = ['sbfws', 'native', 'smart']
+
+    def __init__(self):
+        self.manager = ConfigManager()
+        self.bootstrap_options()
+
+    def bootstrap_options(self):
+        self.manager.register_option("successor_generation", "naive,match_tree")
+        self.manager.register_option("bfws.rs", "none,sim")
+        self.manager.register_option("evaluator_t", "adaptive,generic")
+        self.manager.register_option("goal_directed", "true,false")
+
+    def add_runs(self):
+        for i, opt in enumerate(map(opt_str, self.manager.all_configs()), 1):
+            add_run('config_{}'.format(i), create_runner(instance=inst, driver=self.DRIVERS[0], options=opt))
 
 
 def opt_str(option):
-    return ','.join('{}={}'.format(name,val) for name, val in option)
+    return ','.join('{}={}'.format(name, val) for name, val in option)
 
 
-mng = ConfigManager()
-mng.register_option("successor_generation", "naive,match_tree")
-mng.register_option("bfws.rs", "none,sim")
+mng = FSTestManager()
+mng.add_runs()
 
-for i, opt in enumerate(map(opt_str, mng.all_configs()), 1):
-    add_run('config_{}'.format(i), create_runner(instance=inst, driver=drivers[0], options=opt))
 
 
 

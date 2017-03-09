@@ -1,7 +1,6 @@
+#!/usr/bin/env python3
 
 import pytest
 
-
-
-pytest.main(['-s'], plugins=[])
+pytest.main([], plugins=[])
 
