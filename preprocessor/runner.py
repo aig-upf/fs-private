@@ -161,7 +161,7 @@ def solver_name(args):
     return "solver.edebug.bin" if args.edebug else ("solver.debug.bin" if args.debug else "solver.bin")
 
 
-def main(args):
+def run(args):
     # Determine the proper domain and instance filenames
     if args.domain is None:
         args.domain = pddl_file.extract_domain_name(args.instance)
@@ -197,9 +197,14 @@ def main(args):
     move_files(args.instance_dir, args.instance, args.domain, translation_dir, use_vanilla)
     compile_translation(translation_dir, use_vanilla, args)
     run_solver(translation_dir, args)
+    return 0
+
+
+def main(args):
+    return run(parse_arguments(args))
 
 
 if __name__ == "__main__":
     # Run only if the hash seed has been set
     if not util.fix_seed_and_possibly_rerun():
-        main(parse_arguments(sys.argv[1:]))
+        main(sys.argv[1:])
