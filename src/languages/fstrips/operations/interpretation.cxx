@@ -22,6 +22,9 @@ VariableIdx interpret_variable(const Term& element, const AssignmentT& assignmen
 	return visitor._result;
 }
 
+// Explicit instantiations
+template VariableIdx interpret_variable(const Term& element, const State& assignment, const Binding& binding);
+template VariableIdx interpret_variable(const Term& element, const PartialAssignment& assignment, const Binding& binding);
 
 	
 template <typename AssignmentT>
