@@ -4,6 +4,7 @@
 import json
 import operator
 
+import python.utils
 from python import utils
 from . import fstrips
 from . import util
@@ -80,7 +81,7 @@ class ProblemRepresentation(object):
 
     def dump_state_variable(self, var):
         head = self.index.symbol_index[var.symbol]
-        constants = [arg if util.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
+        constants = [arg if python.utils.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
         return [head, constants]
 
     def dump_object_data(self):

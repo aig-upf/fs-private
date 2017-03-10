@@ -2,6 +2,7 @@
     This module contains a number of classes and routines to handle the static (external) data, including its
     declaration and serialization.
 """
+import python.utils
 from . import fstrips
 from . import util
 
@@ -28,7 +29,7 @@ def instantiate_predicate(name, arity):
 
 
 def serialize_symbol(symbol, table):
-    serialized = symbol if util.is_int(symbol) else table[symbol]
+    serialized = symbol if python.utils.is_int(symbol) else table[symbol]
     return str(serialized)
 
 

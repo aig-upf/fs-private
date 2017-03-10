@@ -2,58 +2,15 @@
   A number of classes to deal with FSTRIPS language actions and formulas and compile them into suitable data structures
   that can be afterwards exported to JSON.
 """
-from collections import namedtuple
 import copy
 
 from . import pddl
 from .pddl import Effect, Atom, NegatedAtom
 from .pddl.effects import AssignmentEffect
 from .pddl.f_expression import FunctionalTerm
+
+from . import fstrips as fs
 from .parser import Parser
-
-
-TypedVar = namedtuple('TypedVar', ['name', 'type'])
-
-
-class BindingUnit(object):
-    def __init__(self):
-        self.typed_vars = []
-        self.index = {}  # An index from variable names to (ID, type) tuples
-
-    @staticmethod
-    def from_parameters(parameters):
-        unit = BindingUnit()
-        for param in parameters:
-            unit.add(param.name, param.type)
-        return unit
-
-    def dump(self):
-        return self.dump_selected(self.typed_vars)
-
-    def add(self, name, _type):
-        if name in self.index:
-            raise RuntimeError("The current binding unit already has a variable with name {}".format(name))
-
-        self.index[name] = (len(self.typed_vars), _type)
-        self.typed_vars.append(TypedVar(name, _type))
-
-    def merge(self, binding):
-        """ Merge the given binding into the current binding, in-place """
-        for var in binding.typed_vars:
-            self.add(var.name, var.type)
-
-    def id(self, name):
-        """ Return the ID (within the current binding unit) of the parameter with given name """
-        return self.index[name][0]
-
-    def typename(self, name):
-        """ Return the typename of the parameter with given name """
-        return self.index[name][1]
-
-    @staticmethod
-    def dump_selected(variables):
-        """ Performs a selective dump, dumping only the info about the given variables"""
-        return [[i, var.name, var.type] for i, var in enumerate(variables)]
 
 
 def ensure_conjunction(node):
@@ -73,13 +30,13 @@ def ground_atom(atom, grounding):
     if isinstance(atom, (pddl.Truth, pddl.Falsity)):
         return atom
 
-    if isinstance(atom,str) :
-        if atom[0] != '?' :
+    if isinstance(atom, str):
+        if atom[0] != '?':
             return atom
-        if grounding.variable == atom :
+        if grounding.variable == atom:
             return grounding.value
 
-    if isinstance(atom, AssignmentEffect) :
+    if isinstance(atom, AssignmentEffect):
         grounded = copy.deepcopy(atom)
         grounded.lhs = ground_atom(grounded.lhs, grounding)
         grounded.rhs = ground_atom(grounded.rhs, grounding)
@@ -87,9 +44,11 @@ def ground_atom(atom, grounding):
 
     grounded = copy.deepcopy(atom)
     for i, arg in enumerate(atom.args, 0):
-        if isinstance( arg, FunctionalTerm ) :
+        if isinstance(arg, FunctionalTerm):
             grounded_arg = copy.deepcopy(arg)
-            grounded.args = grounded.args[:i] + (ground_atom(grounded_arg, grounding),) + grounded.args[i+1:]  # i.e. atom.args[i] = grounding.value
+
+            # i.e. atom.args[i] = grounding.value
+            grounded.args = grounded.args[:i] + (ground_atom(grounded_arg, grounding),) + grounded.args[i+1:]
             continue
         if grounding.variable == arg:
             grounded.args = atom.args[:i] + (grounding.value,) + atom.args[i+1:]  # i.e. atom.args[i] = grounding.value
@@ -101,7 +60,7 @@ class BaseComponentProcessor(object):
         self.parser = Parser(index)
         self.index = index
         self.data = self.init_data()
-        self.binding_unit = BindingUnit()
+        self.binding_unit = fs.BindingUnit()
 
     def init_data(self):
         raise RuntimeError("Must subclass")
@@ -123,7 +82,7 @@ class BaseComponentProcessor(object):
         if isinstance(node, pddl.conditions.ExistentialCondition):
             assert len(node.parts) == 1, "An existentially quantified formula can have one only subformula"
             subformula = node.parts[0]
-            self.binding_unit.merge(BindingUnit.from_parameters(node.parameters))
+            self.binding_unit.merge(fs.BindingUnit.from_parameters(node.parameters))
             return {'type': 'existential',
                     'variables': self.binding_unit.dump_selected(node.parameters),
                     'subformula': self.process_formula(subformula)}
@@ -150,7 +109,7 @@ class ActionSchemaProcessor(BaseComponentProcessor):
     def __init__(self, index, action):
         self.action = action
         super().__init__(index)
-        self.binding_unit = BindingUnit.from_parameters(action.parameters)
+        self.binding_unit = fs.BindingUnit.from_parameters(action.parameters)
 
     def init_data(self):
         name = self.action.name

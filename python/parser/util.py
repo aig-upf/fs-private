@@ -2,8 +2,8 @@
     Some basic utility methods.
 """
 import os
-import unicodedata
 import re
+import unicodedata
 from collections import OrderedDict
 
 
@@ -40,14 +40,6 @@ def load_file_safely(filename):
     with open(filename, 'r') as f:
         c = f.read()
     return c
-
-
-def is_int(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
 
 
 def bool_string(value):

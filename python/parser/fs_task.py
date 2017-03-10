@@ -4,6 +4,7 @@
 from collections import OrderedDict
 import itertools
 
+import python.utils
 from . import pddl
 
 from . import adl
@@ -240,7 +241,7 @@ class FSTaskIndex(object):
             if isinstance(atom, pddl.Assign):
                 name = atom.fluent.symbol
                 if _check_symbol_in_initial_state(name, self.symbols):
-                    args = tuple(int(a) if util.is_int(a) else a for a in atom.fluent.args)
+                    args = tuple(int(a) if python.utils.is_int(a) else a for a in atom.fluent.args)
                     value = self.parse_value(atom.expression)
                     names.append((name, args, value))
 

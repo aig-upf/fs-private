@@ -1,27 +1,11 @@
 """
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
-
+from . import exceptions
+from . import fstrips as fs
 from .pddl import Atom, NegatedAtom, UniversalCondition, ExistentialCondition, Conjunction, conditions
 from .pddl.f_expression import FunctionalTerm
-
-from . import exceptions
-from .fstrips import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
-    ArithmeticExpression, FunctionalExpression, StaticFunctionalExpression, \
-    ConjunctivePredicate, PredicativeExpression, Truth
-from .util import is_int, is_external
-
-
-def is_relational_operator(symbol):
-    return symbol in {"=", "!=", ">", "<", ">=", "<="}
-
-
-def is_arithmetic_operator(symbol):
-    return symbol in {"*", "+", "-", "/"}
-
-
-def is_builtin_operator(symbol):
-    return is_relational_operator(symbol) or is_arithmetic_operator(symbol)
+from .util import is_external
 
 
 class Parser(object):
@@ -42,21 +26,20 @@ class Parser(object):
         elif isinstance(exp, UniversalCondition):
             return self.process_universal_expression(exp)
         elif isinstance(exp, Conjunction):
-            return ConjunctivePredicate(self.process_arguments(exp.parts))
+            # return fs.ConjunctivePredicate(self.process_arguments(exp.parts))
+            return fs.OpenExpression(fs.OpenExpression.CONNECTIVE.AND, self.process_arguments(exp.parts))
         elif isinstance(exp, conditions.Truth):
-            return Truth()
+            return fs.Tautology()
         elif isinstance(exp, str):
             if exp[0] == '?':
-                return ParameterExpression(exp)
-            elif is_int(exp):
-                return NumericExpression(exp)
+                return fs.LogicalVariable(exp)
             else:
-                return ObjectExpression(exp)
+                return fs.Constant(exp)
         else:
             raise exceptions.ParseException("Unknown expression type for expression '{}'".format(exp))
 
     def is_static(self, symbol):
-        return symbol in self.index.static_symbols or is_builtin_operator(symbol) or is_external(symbol)
+        return symbol in self.index.static_symbols or fs.is_builtin_operator(symbol) or is_external(symbol)
 
     # def process_existential_expression(self, exp):
     #     """  Parse an existentially-quantified expression """
@@ -72,12 +55,7 @@ class Parser(object):
     def process_functional_expression(self, exp):
         """  Parse a functional expression """
         assert isinstance(exp, FunctionalTerm)
-
-        if is_arithmetic_operator(exp.symbol):
-            return ArithmeticExpression(exp.symbol, self.process_arguments(exp.args))
-
-        c = StaticFunctionalExpression if self.is_static(exp.symbol) else FunctionalExpression
-        return c(exp.symbol, self.process_arguments(exp.args))
+        return fs.FunctionalTerm(exp.symbol, self.process_arguments(exp.args))
 
     def process_predicative_expression(self, exp):
         assert isinstance(exp, (Atom, NegatedAtom))
@@ -87,15 +65,12 @@ class Parser(object):
         if is_external(name) and (exp.negated or not self.is_static(name)):
             raise RuntimeError("External symbols cannot be fluent nor negated")
 
-        if is_relational_operator(name):
-            return RelationalExpression(exp.predicate, exp.negated, args)
-        else:
-            return PredicativeExpression(name, exp.negated, args, static=self.is_static(name))
+        return fs.AtomicExpression(name, args, exp.negated)
 
     def process_arguments(self, args):
         """ Parses a list of predicate / function arguments """
         return [self.process_expression(arg) for arg in args]
 
     def check_declared(self, symbol):
-        if not is_builtin_operator(symbol) and symbol not in self.index.all_symbols and not is_external(symbol):
+        if not fs.is_builtin_operator(symbol) and symbol not in self.index.all_symbols and not is_external(symbol):
             raise exceptions.UndeclaredSymbol("Undeclared symbol '{0}'".format(symbol))

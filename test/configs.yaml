@@ -17,6 +17,13 @@ domain_features:
     functions: false
     integers: false
 
+  simple-sokoban-fn:
+    functions: true
+    integers: false
+
+  sokoban-sat08-strips:
+    functions: false
+    integers: false
 
 options:
   successor_generation:

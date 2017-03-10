@@ -15,9 +15,9 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 	
 	if (formula_type == "conjunction") {
 		std::vector<const AtomicFormula*> list;
-		const rapidjson::Value& elements = tree["elements"];
-		for (unsigned i = 0; i < elements.Size(); ++i) {
-			const AtomicFormula* atomic = dynamic_cast<const AtomicFormula*>(parseFormula(elements[i], info));
+		const rapidjson::Value& children = tree["children"];
+		for (unsigned i = 0; i < children.Size(); ++i) {
+			const AtomicFormula* atomic = dynamic_cast<const AtomicFormula*>(parseFormula(children[i], info));
 			if (!atomic) {
 				throw std::runtime_error("Only conjunctions of atoms supported so far");
 			}
@@ -38,7 +38,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 	} else if (formula_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
 		bool negated = tree["negated"].GetBool();
-		std::vector<const Term*> subterms = parseTermList(tree["elements"], info);
+		std::vector<const Term*> subterms = parseTermList(tree["children"], info);
 		
 		// HACK - WONT WORK FOR NEGATED FORMULAS
 		try { return LogicalComponentRegistry::instance().instantiate_formula(symbol, subterms); }
@@ -81,12 +81,12 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["typename"].GetString()));
 	} else if (term_type == "function") {
 		std::string symbol = tree["symbol"].GetString();
-		std::vector<const Term*> subterms = parseTermList(tree["subterms"], info);
+		std::vector<const Term*> children = parseTermList(tree["children"], info);
 		
-		try { return LogicalComponentRegistry::instance().instantiate_term(symbol, subterms); }
+		try { return LogicalComponentRegistry::instance().instantiate_term(symbol, children); }
 		catch(const std::runtime_error& e) {}
 		
-		return NestedTerm::create(symbol, subterms);
+		return NestedTerm::create(symbol, children);
 	} else throw std::runtime_error("Unknown node type " + term_type);
 }
 

@@ -32,17 +32,17 @@ def check_type(element, type_):
 
 def unwrap_conjunction(element):
     check_type(element['conditions'], 'conjunction')
-    return element['conditions']['elements']
+    return element['conditions']['children']
 
 
 def unwrap_predicate(element):
     check_type(element, 'atom')
-    return element['symbol'], element['negated'], element['elements']
+    return element['symbol'], element['negated'], element['children']
 
 
 def unwrap_function(element):
     check_type(element, 'function')
-    return element['symbol'], element['subterms']
+    return element['symbol'], element['children']
 
 
 def test_predicate(bw_task):
