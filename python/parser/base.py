@@ -60,35 +60,6 @@ class Function(Symbol):
         self.codomain = codomain
 
 
-class FunctionInstantiation(object):
-    def __init__(self, symbol, mapping=None):
-        self.symbol = symbol
-        self.mapping = mapping if mapping else {}
-
-    def add(self, point, value):
-        assert point not in self.mapping
-        self.mapping[point] = value
-
-
-class PredicateInstantiation(object):
-    def __init__(self, symbol, mapping=None):
-        self.symbol = symbol
-        self.set = mapping if mapping else set()
-
-    def add(self, point):
-        assert point not in self.set
-        self.set.add(point)
-
-
-class Parameter(object):
-    def __init__(self, name, typename):
-        self.name = name
-        self.typename = typename
-
-    def __str__(self):
-        return '{}: {}'.format(self.name, self.typename)
-
-
 class Expression(object):
     def __init__(self, symbol, arguments=None):
         self.symbol = symbol
