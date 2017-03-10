@@ -26,14 +26,19 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 		return new Conjunction(list);
 	
 		
-	} else if (formula_type == "existential") {
+	} else if (formula_type == "existential" || formula_type == "forall") {
 		auto subformula = parseFormula(tree["subformula"], info);
 		auto subformula_conjunction = dynamic_cast<const Conjunction*>(subformula);
-		if (!subformula_conjunction) {
-			throw std::runtime_error("Only existentially quantified conjunctions are supported so far");
+		if (!subformula_conjunction) {  // TODO - REMOVE LIMITATION
+			throw std::runtime_error("Only quantified conjunctions are supported so far");
 		}
 		std::vector<const BoundVariable*> variables = parseVariables(tree["variables"], info);
-		return new ExistentiallyQuantifiedFormula(variables, subformula_conjunction);
+		
+		if (formula_type == "existential") {
+			return new ExistentiallyQuantifiedFormula(variables, subformula_conjunction);
+		} else {
+			return new UniversallyQuantifiedFormula(variables, subformula_conjunction);
+		}
 	
 	} else if (formula_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
@@ -66,7 +71,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 		return new Contradiction;
 	}
 	
-	throw std::runtime_error("Unknown formula type " + formula_type);
+	throw std::runtime_error("Unknown formula type \"" + formula_type + "\"");
 }
 
 

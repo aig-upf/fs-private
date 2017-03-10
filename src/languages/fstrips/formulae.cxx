@@ -139,13 +139,13 @@ interpret(const State& state, const Binding& binding) const {
 }
 
 
-ExistentiallyQuantifiedFormula::ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula& other) :
+QuantifiedFormula::QuantifiedFormula(const QuantifiedFormula& other) :
 _variables(Utils::clone(other._variables)), _subformula(other._subformula->clone())
 {}
 
 //! Prints a representation of the object to the given stream.
-std::ostream& ExistentiallyQuantifiedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << "Exists ";
+std::ostream& QuantifiedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << name();
 	for (const BoundVariable* var:_variables) {
 		os << *var << ": " << info.getTypename(var->getType()) << ", ";
 	}
@@ -178,6 +178,40 @@ bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, const Bi
 	}
 	return false;
 }
+
+
+bool UniversallyQuantifiedFormula::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	assert(binding.size()==0); // ATM we do not allow for nested quantifications
+	return interpret_rec(assignment, Binding(_variables.size()), 0);
+}
+
+bool UniversallyQuantifiedFormula::interpret(const State& state, const Binding& binding) const {
+	assert(binding.size()==0); // ATM we do not allow for nested quantifications
+	return interpret_rec(state, Binding(_variables.size()), 0);
+}
+
+template <typename T>
+bool UniversallyQuantifiedFormula::interpret_rec(const T& assignment, const Binding& binding, unsigned i) const {
+	// Base case - all existentially quantified variables have been bound
+	if (i == _variables.size()) return _subformula->interpret(assignment, binding);
+
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	const BoundVariable* variable = _variables.at(i);
+	Binding copy(binding);
+	//! Otherwise, iterate through all possible assignments to the currently analyzed variable 'i'
+	for (ObjectIdx elem:info.getTypeObjects(variable->getType())) {
+		copy.set(variable->getVariableId(), elem);
+		if (!interpret_rec(assignment, copy, i + 1)) return false;
+	}
+	return true;
+}
+
+
+
+
+
+
+
 
 
 } } } // namespaces

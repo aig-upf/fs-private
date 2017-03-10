@@ -233,31 +233,25 @@ public:
 	std::string name() const override { return "not"; }
 };
 
-
-
-//! A formula quantified by at least one existential variable
-class ExistentiallyQuantifiedFormula : public Formula {
+//! A formula quantified by at least one variable
+class QuantifiedFormula : public Formula {
 public:
-	LOKI_DEFINE_CONST_VISITABLE();
-	ExistentiallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : _variables(variables), _subformula(subformula) {}
+	QuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : _variables(variables), _subformula(subformula) {}
 
-	virtual ~ExistentiallyQuantifiedFormula() {
+	virtual ~QuantifiedFormula() {
 		delete _subformula;
 	}
 
-	ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula& other);
-
-	ExistentiallyQuantifiedFormula* clone() const override { return new ExistentiallyQuantifiedFormula(*this); }
+	QuantifiedFormula(const QuantifiedFormula& other);
 
 	const Conjunction* getSubformula() const { return _subformula; }
 	
 	const std::vector<const BoundVariable*> getVariables() const { return _variables; }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
-
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+	
+	virtual std::string name() const = 0;
 
 protected:
 	//! The binding IDs of the existentially quantified variables
@@ -265,11 +259,50 @@ protected:
 
 	//! ATM we only allow quantification of conjunctions
 	const Conjunction* _subformula;
+};
 
+//! A formula quantified by at least one existential variable
+class ExistentiallyQuantifiedFormula : public QuantifiedFormula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	ExistentiallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : QuantifiedFormula(variables, subformula) {}
+
+	ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula&) = default;
+
+	ExistentiallyQuantifiedFormula* clone() const override { return new ExistentiallyQuantifiedFormula(*this); }
+
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
+	
+	std::string name() const override { return "exists"; }
+
+protected:
 	//! A naive recursive implementation of the interpretation routine
 	template <typename T>
 	bool interpret_rec(const T& assignment, const Binding& binding, unsigned i) const;
 };
+
+//! A formula quantified by at least one universal variable
+class UniversallyQuantifiedFormula : public QuantifiedFormula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	UniversallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : QuantifiedFormula(variables, subformula) {}
+
+	UniversallyQuantifiedFormula(const UniversallyQuantifiedFormula&) = default;
+
+	UniversallyQuantifiedFormula* clone() const override { return new UniversallyQuantifiedFormula(*this); }
+
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
+	
+	std::string name() const override { return "exists"; }
+
+protected:
+	//! A naive recursive implementation of the interpretation routine
+	template <typename T>
+	bool interpret_rec(const T& assignment, const Binding& binding, unsigned i) const;	
+};
+
 
 
 //! A formula of the form t_1 <op> t_2, where t_i are terms and <op> is a basic relational
