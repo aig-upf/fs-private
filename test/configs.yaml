@@ -1,0 +1,39 @@
+
+
+domain_features:
+  blocks:
+    functions: false
+    integers: false
+
+  counters-fn:
+    functions: true
+    integers: true
+
+  visitall-sat11-strips:
+    functions: false
+    integers: false
+
+  gripper:
+    functions: false
+    integers: false
+
+
+options:
+  successor_generation:
+    values:
+      naive:
+        exclude_features: []  # i.e. valid for all types of problems
+        exclude_drivers: []  # i.e. valid for all drivers
+      match_tree:
+        exclude_features: [functions, integers]
+
+
+  bfws.rs:
+    include_drivers: [sbfws]
+
+    values:
+      none:
+      sim:
+
+#        self.manager.register_option("evaluator_t", "adaptive,generic")
+#        self.manager.register_option("goal_directed", "true,false")
