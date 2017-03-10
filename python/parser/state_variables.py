@@ -4,7 +4,7 @@
 
 import itertools
 
-from .base import Variable
+from .fstrips import Variable
 from .util import is_external, IndexDictionary
 
 

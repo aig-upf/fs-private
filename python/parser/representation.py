@@ -5,7 +5,7 @@ import json
 import operator
 
 from python import utils
-from . import base
+from . import fstrips
 from . import util
 from .static import DataElement
 from .templates import tplManager
@@ -91,7 +91,7 @@ class ProblemRepresentation(object):
         for name, symbol in self.index.symbols.items():
             i = self.index.symbol_index[name]
 
-            type_ = "predicate" if isinstance(symbol, base.Predicate) else "function"
+            type_ = "predicate" if isinstance(symbol, fstrips.Predicate) else "function"
 
             # Collect the list of variables that arise from this particular symbol
             f_variables = [(i, str(v)) for i, v in enumerate(self.index.state_variables) if v.symbol == name]

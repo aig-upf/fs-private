@@ -7,7 +7,7 @@ import itertools
 from . import pddl
 
 from . import adl
-from . import base
+from . import fstrips
 from . import pddl_helper
 from . import static
 from . import util
@@ -87,9 +87,9 @@ def _process_fluent_atoms(fd_initial_fluent_atoms):
     for name, args, value in fd_initial_fluent_atoms:
         if value is None:  # A predicate
             # TODO - We should also initialize the non-specified points to 0? (done by the compiler anyway)
-            initial_fluent_atoms.append(base.Atom(base.Variable(name, args), 1))  # '1' because it is non-negated
+            initial_fluent_atoms.append(fstrips.Atom(fstrips.Variable(name, args), 1))  # '1' because it is non-negated
         else:  # A function
-            initial_fluent_atoms.append(base.Atom(base.Variable(name, args), value))
+            initial_fluent_atoms.append(fstrips.Atom(fstrips.Variable(name, args), value))
     return initial_fluent_atoms
 
 
@@ -186,7 +186,7 @@ class FSTaskIndex(object):
 
         for s in predicates:
             argtypes = [t.type for t in s.arguments]
-            symbols[s.name] = base.Predicate(s.name, argtypes)
+            symbols[s.name] = fstrips.Predicate(s.name, argtypes)
             symbol_types[s.name] = 'bool'
 
         for s in functions:
@@ -194,7 +194,7 @@ class FSTaskIndex(object):
                 action_cost_symbols.add(s.name)
             else:
                 argtypes = [t.type for t in s.arguments]
-                symbols[s.name] = base.Function(s.name, argtypes, s.type)
+                symbols[s.name] = fstrips.Function(s.name, argtypes, s.type)
                 symbol_types[s.name] = s.type
 
         return symbols, symbol_types, action_cost_symbols

@@ -2,12 +2,12 @@
     This module contains a number of classes and routines to handle the static (external) data, including its
     declaration and serialization.
 """
-from . import base
+from . import fstrips
 from . import util
 
 
 def instantiate_extension(symbol):
-    if isinstance(symbol, base.Predicate):
+    if isinstance(symbol, fstrips.Predicate):
         return instantiate_predicate(symbol.name, len(symbol.arguments))
     else:  # We have a function
         return instantiate_function(symbol.name, len(symbol.arguments))

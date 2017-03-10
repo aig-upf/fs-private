@@ -2,11 +2,11 @@
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
 
-from .pddl import Atom, NegatedAtom, ExistentialCondition, Conjunction, conditions
+from .pddl import Atom, NegatedAtom, UniversalCondition, ExistentialCondition, Conjunction, conditions
 from .pddl.f_expression import FunctionalTerm
 
 from . import exceptions
-from .base import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
+from .fstrips import ParameterExpression, NumericExpression, ObjectExpression, RelationalExpression, \
     ArithmeticExpression, FunctionalExpression, StaticFunctionalExpression, \
     ConjunctivePredicate, PredicativeExpression, Truth
 from .util import is_int, is_external
@@ -39,6 +39,8 @@ class Parser(object):
         elif isinstance(exp, ExistentialCondition):
             # return self.process_existential_expression(exp)
             return exp
+        elif isinstance(exp, UniversalCondition):
+            return self.process_universal_expression(exp)
         elif isinstance(exp, Conjunction):
             return ConjunctivePredicate(self.process_arguments(exp.parts))
         elif isinstance(exp, conditions.Truth):
@@ -63,6 +65,9 @@ class Parser(object):
     #     assert len(exp.parts) == 1, "An existentially quantified formula can have one only subformula"
     #     subformula = exp.parts[0]
     #     return ExistentialFormula(exp.parameters)
+
+    def process_universal_expression(self, exp):
+        return exp
 
     def process_functional_expression(self, exp):
         """  Parse a functional expression """
