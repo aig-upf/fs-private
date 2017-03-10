@@ -19,17 +19,15 @@ INSTANCES = [
     ('fs', 'counters-fn', 'counters-fn/instance_5.pddl'),
     ('dw', 'blocks', 'blocks/probBLOCKS-4-0.pddl'),
     ('dw', 'gripper', 'gripper/prob01.pddl'),
-    ('dw', 'visitall-sat11-strips', 'visitall-sat11-strips/problem12.pddl'),
-    ('dw', 'sokoban-sat08-strips', 'sokoban-sat08-strips/p01.pddl'),
-
+    # ('dw', 'visitall-sat11-strips', 'visitall-sat11-strips/problem12.pddl'),
+    # ('dw', 'sokoban-sat08-strips', 'sokoban-sat08-strips/p01.pddl'),
+    # ('fs', 'counters-strips-ex', 'counters-strips-ex/instance_5.pddl'),
     # ('fs', 'simple-sokoban-fn', 'simple-sokoban-fn/instance_4_1.pddl'),
 
 
     # 'block-grouping-strips/instance_5_5_2_1.pddl',
-    # 'counters-strips-ex/instance_5.pddl',
     # 'n-puzzle-fn-v1-nested/eight01x.pddl',
     # 'blocksworld-fn-nested/instance_5_1.pddl',
-    # 'sokoban-sat11-strips/p01.pddl',
     # 'graph-coloring-agent-fn/instance_5_4_1.8_1.pddl'
 ]
 

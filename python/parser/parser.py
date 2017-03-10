@@ -1,10 +1,11 @@
 """
     Methods to validate and transform PDDL parser expressions into our convenient data structures.
 """
+from . import pddl
+from .pddl.f_expression import FunctionalTerm
+
 from . import exceptions
 from . import fstrips as fs
-from .pddl import Atom, NegatedAtom, UniversalCondition, ExistentialCondition, Conjunction, conditions
-from .pddl.f_expression import FunctionalTerm
 from .util import is_external
 
 
@@ -12,23 +13,25 @@ class Parser(object):
     def __init__(self, index):
         self.index = index
 
-    def process_expression(self, exp):
-        """  Process an arbitrary expression """
+    def process_expression(self, exp, binding_unit):
+        """
+         Parse an arbitrary expression (term or formula), and return a built-in equivalent.
+         Might modify the binding unit depending on the type of the expression.
+        """
         if isinstance(exp, FunctionalTerm):
-            self.check_declared(exp.symbol)
             return self.process_functional_expression(exp)
-        elif isinstance(exp, (Atom, NegatedAtom)):
+        elif isinstance(exp, (pddl.Atom, pddl.NegatedAtom)):
             self.check_declared(exp.predicate)
-            return self.process_predicative_expression(exp)
-        elif isinstance(exp, ExistentialCondition):
-            # return self.process_existential_expression(exp)
-            return exp
-        elif isinstance(exp, UniversalCondition):
-            return self.process_universal_expression(exp)
-        elif isinstance(exp, Conjunction):
-            # return fs.ConjunctivePredicate(self.process_arguments(exp.parts))
-            return fs.OpenExpression(fs.OpenExpression.CONNECTIVE.AND, self.process_arguments(exp.parts))
-        elif isinstance(exp, conditions.Truth):
+            return self.process_atomic_expression(exp)
+        elif isinstance(exp, pddl.ExistentialCondition):
+            return self.process_quantified_expression(exp, 'exists', binding_unit)
+        elif isinstance(exp, pddl.UniversalCondition):
+            return self.process_quantified_expression(exp, 'forall', binding_unit)
+        elif isinstance(exp, pddl.Conjunction):
+            return fs.OpenExpression(fs.OpenExpression.CONNECTIVE.AND, self.process_children(exp.parts, binding_unit))
+        elif isinstance(exp, pddl.Disjunction):
+            return fs.OpenExpression(fs.OpenExpression.CONNECTIVE.AND, self.process_children(exp.parts, binding_unit))
+        elif isinstance(exp, pddl.conditions.Truth):
             return fs.Tautology()
         elif isinstance(exp, str):
             if exp[0] == '?':
@@ -41,35 +44,28 @@ class Parser(object):
     def is_static(self, symbol):
         return symbol in self.index.static_symbols or fs.is_builtin_operator(symbol) or is_external(symbol)
 
-    # def process_existential_expression(self, exp):
-    #     """  Parse an existentially-quantified expression """
-    #     assert isinstance(exp, ExistentialCondition)
-    #
-    #     assert len(exp.parts) == 1, "An existentially quantified formula can have one only subformula"
-    #     subformula = exp.parts[0]
-    #     return ExistentialFormula(exp.parameters)
-
-    def process_universal_expression(self, exp):
-        return exp
+    def process_quantified_expression(self, exp, quantifier, binding_unit):
+        assert len(exp.parts) == 1, "A quantified expression can have one only subformula"
+        binding_unit.merge(fs.BindingUnit.from_parameters(exp.parameters))
+        subformula = self.process_expression(exp.parts[0], binding_unit)
+        return fs.QuantifiedExpression(quantifier, exp.parameters, subformula)
 
     def process_functional_expression(self, exp):
-        """  Parse a functional expression """
-        assert isinstance(exp, FunctionalTerm)
-        return fs.FunctionalTerm(exp.symbol, self.process_arguments(exp.args))
+        self.check_declared(exp.symbol)
+        return fs.FunctionalTerm(exp.symbol, self.process_children(exp.args, None))
 
-    def process_predicative_expression(self, exp):
-        assert isinstance(exp, (Atom, NegatedAtom))
+    def process_atomic_expression(self, exp):
         name = exp.predicate
-        args = self.process_arguments(exp.args)
+        self.check_declared(name)
 
         if is_external(name) and (exp.negated or not self.is_static(name)):
             raise RuntimeError("External symbols cannot be fluent nor negated")
 
-        return fs.AtomicExpression(name, args, exp.negated)
+        return fs.AtomicExpression(name, self.process_children(exp.args, None), exp.negated)
 
-    def process_arguments(self, args):
+    def process_children(self, children, binding_unit):
         """ Parses a list of predicate / function arguments """
-        return [self.process_expression(arg) for arg in args]
+        return [self.process_expression(node, binding_unit) for node in children]
 
     def check_declared(self, symbol):
         if not fs.is_builtin_operator(symbol) and symbol not in self.index.all_symbols and not is_external(symbol):

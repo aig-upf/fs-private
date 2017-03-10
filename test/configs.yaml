@@ -9,6 +9,11 @@ domain_features:
     functions: true
     integers: true
 
+  counters-strips-ex:
+    functions: false
+    integers: true
+    existential: true
+
   visitall-sat11-strips:
     functions: false
     integers: false

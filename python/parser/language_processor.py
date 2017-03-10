@@ -77,18 +77,8 @@ class BaseComponentProcessor(object):
             self.data['unit'] = self.binding_unit.dump()
 
     def process_formula(self, node):
-
-        # ATM we treat existential expressions differently to be able to properly compose the binding unit
-        if isinstance(node, pddl.conditions.ExistentialCondition):
-            assert len(node.parts) == 1, "An existentially quantified formula can have one only subformula"
-            subformula = node.parts[0]
-            self.binding_unit.merge(fs.BindingUnit.from_parameters(node.parameters))
-            return {'type': 'existential',
-                    'variables': self.binding_unit.dump_selected(node.parameters),
-                    'subformula': self.process_formula(subformula)}
-        else:
-            exp = self.parser.process_expression(ensure_conjunction(node))
-            return exp.dump(self.index.objects, self.binding_unit)
+        exp = self.parser.process_expression(ensure_conjunction(node), self.binding_unit)
+        return exp.dump(self.index.objects, self.binding_unit)
 
 
 class FormulaProcessor(BaseComponentProcessor):
@@ -163,7 +153,7 @@ class ActionSchemaProcessor(BaseComponentProcessor):
                 rhs = "1"
                 type_ = 'add'
 
-        elems = [self.parser.process_expression(elem) for elem in (lhs, rhs, condition)]
+        elems = [self.parser.process_expression(elem, self.binding_unit) for elem in (lhs, rhs, condition)]
         return dict(
             lhs=elems[0].dump(self.index.objects, self.binding_unit),
             rhs=elems[1].dump(self.index.objects, self.binding_unit),

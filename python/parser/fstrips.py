@@ -163,17 +163,15 @@ class OpenExpression(Relation):
 
 
 class QuantifiedExpression(Relation):
-    QUANTIFIER = Enum('QUANTIFIER', 'EXISTS FORALL')
-
     def __init__(self, quantifier, variables, subformula):
+        assert quantifier in ['exists', 'forall']
         super().__init__(quantifier)
         self.variables = variables
         self.subformula = subformula
-        self.binding_unit = BindingUnit.from_parameters(variables)
 
     def dump(self, objects, binding_unit):
         subformula = self.subformula.dump(objects, binding_unit)
-        return dict(type=self.head.name, variables=binding_unit.dump_selected(self.variables), subformula=subformula)
+        return dict(type=self.head, variables=binding_unit.dump_selected(self.variables), subformula=subformula)
 
 
 TypedVar = namedtuple('TypedVar', ['name', 'type'])
