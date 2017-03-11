@@ -19,7 +19,7 @@ INSTANCES = [
     ('fs', 'counters-fn', 'counters-fn/instance_5.pddl'),
     ('dw', 'blocks', 'blocks/probBLOCKS-4-0.pddl'),
     ('dw', 'gripper', 'gripper/prob01.pddl'),
-    # ('dw', 'visitall-sat11-strips', 'visitall-sat11-strips/problem12.pddl'),
+    ('dw', 'visitall-sat11-strips', 'visitall-sat11-strips/problem12.pddl'),
     # ('dw', 'sokoban-sat08-strips', 'sokoban-sat08-strips/p01.pddl'),
     # ('fs', 'counters-strips-ex', 'counters-strips-ex/instance_5.pddl'),
     # ('fs', 'simple-sokoban-fn', 'simple-sokoban-fn/instance_4_1.pddl'),

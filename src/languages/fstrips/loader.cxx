@@ -28,16 +28,12 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 		
 	} else if (formula_type == "existential" || formula_type == "forall") {
 		auto subformula = parseFormula(tree["subformula"], info);
-		auto subformula_conjunction = dynamic_cast<const Conjunction*>(subformula);
-		if (!subformula_conjunction) {  // TODO - REMOVE LIMITATION
-			throw std::runtime_error("Only quantified conjunctions are supported so far");
-		}
 		std::vector<const BoundVariable*> variables = parseVariables(tree["variables"], info);
 		
 		if (formula_type == "existential") {
-			return new ExistentiallyQuantifiedFormula(variables, subformula_conjunction);
+			return new ExistentiallyQuantifiedFormula(variables, subformula);
 		} else {
-			return new UniversallyQuantifiedFormula(variables, subformula_conjunction);
+			return new UniversallyQuantifiedFormula(variables, subformula);
 		}
 	
 	} else if (formula_type == "atom") {

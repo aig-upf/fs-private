@@ -236,7 +236,7 @@ public:
 //! A formula quantified by at least one variable
 class QuantifiedFormula : public Formula {
 public:
-	QuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : _variables(variables), _subformula(subformula) {}
+	QuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Formula* subformula) : _variables(variables), _subformula(subformula) {}
 
 	virtual ~QuantifiedFormula() {
 		delete _subformula;
@@ -244,7 +244,7 @@ public:
 
 	QuantifiedFormula(const QuantifiedFormula& other);
 
-	const Conjunction* getSubformula() const { return _subformula; }
+	const Formula* getSubformula() const { return _subformula; }
 	
 	const std::vector<const BoundVariable*> getVariables() const { return _variables; }
 
@@ -258,14 +258,14 @@ protected:
 	std::vector<const BoundVariable*> _variables;
 
 	//! ATM we only allow quantification of conjunctions
-	const Conjunction* _subformula;
+	const Formula* _subformula;
 };
 
 //! A formula quantified by at least one existential variable
 class ExistentiallyQuantifiedFormula : public QuantifiedFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	ExistentiallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : QuantifiedFormula(variables, subformula) {}
+	ExistentiallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Formula* subformula) : QuantifiedFormula(variables, subformula) {}
 
 	ExistentiallyQuantifiedFormula(const ExistentiallyQuantifiedFormula&) = default;
 
@@ -286,7 +286,7 @@ protected:
 class UniversallyQuantifiedFormula : public QuantifiedFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	UniversallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Conjunction* subformula) : QuantifiedFormula(variables, subformula) {}
+	UniversallyQuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Formula* subformula) : QuantifiedFormula(variables, subformula) {}
 
 	UniversallyQuantifiedFormula(const UniversallyQuantifiedFormula&) = default;
 

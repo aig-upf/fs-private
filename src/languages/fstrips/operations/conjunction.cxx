@@ -15,11 +15,6 @@ Formula* conjunction(const Formula& lhs, const Formula& rhs) {
 }
 
 
-Conjunction* _conjunction(const Conjunction& lhs, const Conjunction& rhs) {
-	auto all_subterms = Utils::merge(Utils::clone(lhs.getSubformulae()), Utils::clone(rhs.getSubformulae()));
-	return new Conjunction(all_subterms);
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 // LHS: TAUTOLOGY
@@ -103,12 +98,15 @@ void ConjunctionLhsConjunction::
 Visit(const AtomicFormula& rhs) { throw UnimplementedFeatureException(""); }
 
 void ConjunctionLhsConjunction::
-Visit(const Conjunction& rhs) { _result = _conjunction(_lhs, rhs); }
+Visit(const Conjunction& rhs) { 
+	auto all_subterms = Utils::merge(Utils::clone(_lhs.getSubformulae()), Utils::clone(rhs.getSubformulae()));
+	_result = new Conjunction(all_subterms);
+}
 
 void ConjunctionLhsConjunction::
 Visit(const ExistentiallyQuantifiedFormula& rhs) {
 	// We simply return the existentially quantified formula that results from conjuncting the LHS subconjunction with the RHS conjunction, with the same quantified variables.
-	_result = new ExistentiallyQuantifiedFormula(rhs.getVariables(), _conjunction(_lhs, *rhs.getSubformula()));
+	_result = new ExistentiallyQuantifiedFormula(rhs.getVariables(), conjunction(_lhs, *rhs.getSubformula()));
 }
 
 
@@ -130,7 +128,7 @@ Visit(const AtomicFormula& rhs) { throw UnimplementedFeatureException(""); }
 void ExistentiallyQuantifiedFormulaLhsConjunction::
 Visit(const Conjunction& rhs) {
 	// We simply return the existentially quantified formula that results from conjuncting the LHS subconjunction with the RHS conjunction, with the same quantified variables.
-	_result = new ExistentiallyQuantifiedFormula(_lhs.getVariables(), _conjunction(rhs, *_lhs.getSubformula()));
+	_result = new ExistentiallyQuantifiedFormula(_lhs.getVariables(), conjunction(rhs, *_lhs.getSubformula()));
 }
 
 void ExistentiallyQuantifiedFormulaLhsConjunction::
