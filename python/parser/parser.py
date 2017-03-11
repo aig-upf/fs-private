@@ -28,9 +28,9 @@ class Parser(object):
         elif isinstance(exp, pddl.UniversalCondition):
             return self.process_quantified_expression(exp, 'forall', binding_unit)
         elif isinstance(exp, pddl.Conjunction):
-            return fs.OpenExpression(fs.OpenExpression.CONNECTIVE.AND, self.process_children(exp.parts, binding_unit))
+            return fs.OpenExpression('conjunction', self.process_children(exp.parts, binding_unit))
         elif isinstance(exp, pddl.Disjunction):
-            return fs.OpenExpression(fs.OpenExpression.CONNECTIVE.AND, self.process_children(exp.parts, binding_unit))
+            return fs.OpenExpression('disjunction', self.process_children(exp.parts, binding_unit))
         elif isinstance(exp, pddl.conditions.Truth):
             return fs.Tautology()
         elif isinstance(exp, str):

@@ -3,7 +3,6 @@
  which are necessary to define FSTRIPS domains and problems.
 """
 from collections import namedtuple
-from enum import Enum
 
 from python.utils import is_int
 
@@ -149,22 +148,23 @@ class AtomicExpression(Relation):
 
 
 class OpenExpression(Relation):
-    CONNECTIVE = Enum('CONNECTIVE', 'AND OR NOT')
-    KEY = {CONNECTIVE.AND: 'conjunction', CONNECTIVE.OR: 'disjunction', CONNECTIVE.NOT: 'negation'}
+    CONNECTIVES = {'conjunction', 'disjunction', 'negation'}
 
     def __init__(self, connective, children):
+        assert connective in self.CONNECTIVES
         super().__init__(connective)
         self.children = children
 
     def dump(self, objects, binding_unit):
-        name = self.KEY[self.head]
         children = [elem.dump(objects, binding_unit) for elem in self.children]
-        return dict(type=name, symbol=name, children=children, negated=False)
+        return dict(type=self.head, symbol=self.head, children=children, negated=False)
 
 
 class QuantifiedExpression(Relation):
+    QUANTIFIERS = {'exists', 'forall'}
+
     def __init__(self, quantifier, variables, subformula):
-        assert quantifier in ['exists', 'forall']
+        assert quantifier in self.QUANTIFIERS
         super().__init__(quantifier)
         self.variables = variables
         self.subformula = subformula
