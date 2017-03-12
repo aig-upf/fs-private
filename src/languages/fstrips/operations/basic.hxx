@@ -24,6 +24,8 @@ class AllNodesVisitor
     , public Loki::Visitor<AtomicFormula, void, true>
     , public Loki::Visitor<Conjunction, void, true>
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
+	, public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
+
     
     , public Loki::Visitor<StateVariable, void, true>
     , public Loki::Visitor<BoundVariable, void, true>
@@ -41,7 +43,10 @@ public:
 	void Visit(const Contradiction& lhs);
 	void Visit(const AtomicFormula& lhs);
 	void Visit(const Conjunction& lhs);
+	void Visit(const QuantifiedFormula& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
+	void Visit(const UniversallyQuantifiedFormula& lhs);
+	
 
 	void Visit(const StateVariable& lhs);
 	void Visit(const BoundVariable& lhs);
@@ -89,6 +94,7 @@ class NestednessVisitor
     , public Loki::Visitor<AtomicFormula, void, true>
     , public Loki::Visitor<Conjunction, void, true>
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
+    , public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
     
     , public Loki::Visitor<StateVariable, void, true>
     , public Loki::Visitor<BoundVariable, void, true>
@@ -106,6 +112,7 @@ public:
 	void Visit(const AtomicFormula& lhs);
 	void Visit(const Conjunction& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
+	void Visit(const UniversallyQuantifiedFormula& lhs);
 	
 	void Visit(const StateVariable& lhs) { _result = 0; }
 	void Visit(const BoundVariable& lhs) { _result = 1; }

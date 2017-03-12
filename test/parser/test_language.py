@@ -4,7 +4,7 @@
 """
 import pytest
 
-from python.parser.language_processor import FormulaProcessor
+from python.parser.fstrips_components import FSFormula
 from python.parser.pddl.conditions import Conjunction, Atom
 from python.parser.pddl.f_expression import FunctionalTerm
 from .common import generate_base_fs_task, generate_fd_function, generate_fd_predicate, generate_fd_dummy_action
@@ -31,7 +31,7 @@ def check_type(element, type_):
 
 
 def unwrap_conjunction(element):
-    check_type(element['conditions'], 'conjunction')
+    check_type(element['conditions'], 'and')
     return element['conditions']['children']
 
 
@@ -47,7 +47,7 @@ def unwrap_function(element):
 
 def test_predicate(bw_task):
     atom = Atom('on', ['b1', 'b2'])
-    processed = FormulaProcessor(bw_task, atom).process()
+    processed = FSFormula(bw_task, atom).dump()
 
     elements = unwrap_conjunction(processed)  # We're also testing that the atom is wrapped as a conjunction
     assert len(elements) == 1
@@ -58,7 +58,7 @@ def test_predicate(bw_task):
 
 def test_conjunction(bw_task):
     conjunction = Conjunction([Atom('on', ['b1', 'b2']), Atom('on', ['b2', 'b1'])])
-    processed = FormulaProcessor(bw_task, conjunction).process()
+    processed = FSFormula(bw_task, conjunction).dump()
 
     elements = unwrap_conjunction(processed)
     assert len(elements) == 2
@@ -71,7 +71,7 @@ def test_conjunction(bw_task):
 
 def test_function(bw_task):
     conjunction = Atom('=', [FunctionalTerm('loc', ['b1']), 'b2'])
-    processed = FormulaProcessor(bw_task, conjunction).process()
+    processed = FSFormula(bw_task, conjunction).dump()
 
     elements = unwrap_conjunction(processed)
     assert len(elements) == 1
@@ -87,7 +87,7 @@ def test_function(bw_task):
 def test_relational_expression(bw_task):
     subterms = [FunctionalTerm('val', ['b1']), FunctionalTerm('val', ['b2'])]
     atom = Atom('<', subterms)
-    processed = FormulaProcessor(bw_task, atom).process()
+    processed = FSFormula(bw_task, atom).dump()
 
     elements = unwrap_conjunction(processed)  # We're also testing that the atom is wrapped as a conjunction
     assert len(elements) == 1

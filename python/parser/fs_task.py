@@ -15,7 +15,7 @@ from . import util
 from .exceptions import ParseException
 from .asp.problem import get_effect_symbols
 from .util import IndexDictionary
-from .language_processor import ActionSchemaProcessor, FormulaProcessor
+from .fstrips_components import FSActionSchema, FSFormula
 from .object_types import process_problem_types
 from .state_variables import create_all_possible_state_variables, create_all_possible_state_variables_from_groundings
 
@@ -270,21 +270,21 @@ class FSTaskIndex(object):
         self.state_variables = state_variables
 
     def process_actions(self, actions):
-        self.action_schemas = [ActionSchemaProcessor(self, action).process() for action in actions]
+        self.action_schemas = [FSActionSchema(self, action).dump() for action in actions]
 
     def process_adl_actions(self, actions, sorted_action_names):
         sorted_act = [actions[name] for name in sorted_action_names if name in actions]
-        self.action_schemas = [ActionSchemaProcessor(self, adl.convert_adl_action(act)).process() for act in sorted_act]
+        self.action_schemas = [FSActionSchema(self, adl.convert_adl_action(act)).dump() for act in sorted_act]
         self.groundings = {act.name: act.groundings for act in sorted_act}
 
     def process_goal(self, goal):
-        self.goal = FormulaProcessor(self, goal).process()
+        self.goal = FSFormula(self, goal).dump()
 
     def process_adl_goal(self, adl_task):
         self.process_goal(adl.process_adl_flat_formula(adl_task.flat_ground_goal_preconditions))
 
     def process_state_constraints(self, constraints):
-        self.state_constraints = FormulaProcessor(self, constraints).process()
+        self.state_constraints = FSFormula(self, constraints).dump()
 
 
 def _check_symbol_in_initial_state(s, symbols):  # A small helper
