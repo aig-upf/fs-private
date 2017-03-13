@@ -48,12 +48,18 @@ Visit(const AtomicFormula& lhs) {
 }
 
 void AllNodesVisitor::
-Visit(const Conjunction& lhs) {
+Visit(const OpenFormula& lhs) {
 	_result.push_back(&lhs);
 	for (auto element:lhs.getSubformulae()) {
 		element->Accept(*this);
 	}
 }
+
+void AllNodesVisitor::
+Visit(const Conjunction& lhs) { Visit(static_cast<const OpenFormula&>(lhs)); }
+
+void AllNodesVisitor::
+Visit(const Disjunction& lhs) { Visit(static_cast<const OpenFormula&>(lhs)); }
 
 void AllNodesVisitor::
 Visit(const QuantifiedFormula& lhs) {
@@ -106,11 +112,18 @@ Visit(const AtomicFormula& lhs) {
 }
 
 void NestednessVisitor::	
-Visit(const Conjunction& lhs) {
+Visit(const OpenFormula& lhs) {
 	_result = 0;
 	for (const auto* conjunct:lhs.getSubformulae()) _result = std::max(_result, nestedness(*conjunct));
 }
-	
+
+void NestednessVisitor::	
+Visit(const Conjunction& lhs) { Visit(static_cast<const OpenFormula&>(lhs)); }
+
+void NestednessVisitor::	
+Visit(const Disjunction& lhs) { Visit(static_cast<const OpenFormula&>(lhs)); }
+
+
 void NestednessVisitor::
 Visit(const ExistentiallyQuantifiedFormula& lhs) {
 	_result = nestedness(*lhs.getSubformula());
