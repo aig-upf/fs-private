@@ -160,7 +160,7 @@ class AtomicExpression(Relation):
 
     def __str__(self):
         neg = "not " if self.negated else ""
-        return "{}{} ({})".format(neg, self.head, ','.join(str(child) for child in self.children))
+        return "{}{}({})".format(neg, self.head, ','.join(str(child) for child in self.children))
 
 
 class OpenExpression(Relation):
@@ -176,7 +176,7 @@ class OpenExpression(Relation):
         return dict(type=self.head, symbol=self.head, children=children, negated=False)
 
     def __str__(self):
-        return "{} ({})".format(self.head, ','.join(str(child) for child in self.children))
+        return "{}({})".format(self.head, ', '.join(str(child) for child in self.children))
 
 
 class QuantifiedExpression(Relation):

@@ -102,6 +102,30 @@ class FSFormula(FSBaseComponent):
                     unit=self.binding_unit.dump())
 
 
+class FSAxiom(FSBaseComponent):
+    """ A FSTRIPS axiom, which is a formula with a name and possibly some lifted parameters """
+    def __init__(self, index, axiom):
+        super().__init__(index)
+        self.axiom = axiom
+
+        # Order matters: the binding unit needs to be created when the effects are processed
+        self.binding_unit = fs.BindingUnit.from_parameters(axiom.parameters)
+        self.formula = self.process_conditions(self.axiom.condition)
+
+    def dump(self):
+        return dict(name=self.axiom.name,
+                    signature=[self.index.types[p.type] for p in self.axiom.parameters],
+                    parameters=[p.name for p in self.axiom.parameters],
+                    conditions=self.formula.dump(self.index.objects, self.binding_unit))
+
+    def __str__(self):
+        if self.axiom.parameters:
+            params = "({})".format(', '.join("{}: {}".format(p.name, p.type) for p in self.axiom.parameters))
+        else:
+            params = ""
+        return "{}{}\n\t{}".format(self.axiom.name, params, self.formula)
+
+
 class FSActionSchema(FSBaseComponent):
     """ A FSTRIPS action schema """
     def __init__(self, index, action):

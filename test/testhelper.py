@@ -19,8 +19,8 @@ INSTANCES = [
     ('fs', 'counters-fn', 'counters-fn/instance_5.pddl'),
     ('dw', 'blocks', 'blocks/probBLOCKS-4-0.pddl'),
     ('dw', 'gripper', 'gripper/prob01.pddl'),
-    ('dw', 'visitall-sat11-strips', 'visitall-sat11-strips/problem12.pddl'),
-    ('dw', 'sokoban-sat08-strips', 'sokoban-sat08-strips/p01.pddl'),
+    # ('dw', 'visitall-sat11-strips', 'visitall-sat11-strips/problem12.pddl'),
+    # ('dw', 'sokoban-sat08-strips', 'sokoban-sat08-strips/p01.pddl'),
 
 
     # ('fs', 'counters-strips-ex', 'counters-strips-ex/instance_5.pddl'),
@@ -37,7 +37,7 @@ INSTANCES = [
 def run_planner(instance, driver, options, asp=False):
     """ Creates an anonymous runner for a certain instance and planner configuration """
     tag = "test_{}".format(timestamp)
-    args = ['--run', '--tag', tag, '--instance', instance, '--driver', driver]
+    args = ['--debug', '--run', '--tag', tag, '--instance', instance, '--driver', driver]
     name_args = [tag, driver, os.path.basename(instance)]
 
     if options is not None:

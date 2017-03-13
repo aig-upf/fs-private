@@ -27,9 +27,6 @@ public:
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
 	
-	//! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector
-	static std::vector<const GroundAction*> loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const ActionData*>& action_data);
-	
 protected:
 	
 	 //! Loads a state specification for a given text file.
@@ -39,9 +36,9 @@ protected:
 	//! Load the data related to the problem functions and predicates into the info object
 	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);
 	
-	static std::vector<const ActionData*> loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info);
+	static std::vector<const ActionData*> loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info, bool load_effects);
 	
-	static const ActionData* loadActionData(const rapidjson::Value& data, unsigned id, const ProblemInfo& info);
+	static const ActionData* loadActionData(const rapidjson::Value& data, unsigned id, const ProblemInfo& info, bool load_effects);
 	
 	//! Load a formula and process it
 	static const fs::Formula* loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);

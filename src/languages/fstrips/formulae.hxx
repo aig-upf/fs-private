@@ -109,6 +109,26 @@ public:
 };
 
 
+//! An axiomatic formula whose definition is given declaratively
+class DeclarativeAxiomaticFormula : public Formula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	DeclarativeAxiomaticFormula(const std::string& name, const Formula* formula) : _name(name), _formula(formula) {}
+	DeclarativeAxiomaticFormula(const DeclarativeAxiomaticFormula& other);
+	DeclarativeAxiomaticFormula* clone() const override { return new DeclarativeAxiomaticFormula(*this); }
+	
+	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	bool interpret(const State& state, const Binding& binding) const override;
+	
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+
+protected:
+	const std::string& _name;
+	
+	const Formula* _formula;
+};
+
 //! The True truth value
 class Tautology : public Formula {
 public:

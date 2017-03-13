@@ -70,6 +70,28 @@ bool AxiomaticFormula::interpret(const State& state, const Binding& binding) con
 	return compute(state, _interpreted_subterms);
 }
 
+
+DeclarativeAxiomaticFormula::DeclarativeAxiomaticFormula(const DeclarativeAxiomaticFormula& other) :
+	_name(other._name), _formula(other._formula->clone())
+{
+}
+
+
+bool DeclarativeAxiomaticFormula::
+interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	return _formula->interpret(assignment, binding);
+}
+
+bool DeclarativeAxiomaticFormula::
+interpret(const State& state, const Binding& binding) const {
+	return _formula->interpret(state, binding);
+}
+
+std::ostream&
+DeclarativeAxiomaticFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	return os << _name << ": " << *_formula;
+}
+
 OpenFormula::OpenFormula(const OpenFormula& other) :
 	_subformulae(Utils::clone(other._subformulae))
 {}

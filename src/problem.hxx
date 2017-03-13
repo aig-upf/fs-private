@@ -4,7 +4,7 @@
 #include <fs_types.hxx>
 #include <utils/atom_index.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
+namespace fs0 { namespace language { namespace fstrips { class Formula; class DeclarativeAxiomaticFormula;  }}}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -19,8 +19,9 @@ class GroundAction;
 
 class Problem {
 public:
+	using AxiomMap = std::map<std::pair<SymbolIdx, std::vector<ObjectIdx>>, const fs::DeclarativeAxiomaticFormula*>;
 
-	Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index);
+	Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const std::vector<const ActionData*>& axiom_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index);
 	~Problem();
 	
 	Problem(const Problem& other);
@@ -37,9 +38,20 @@ public:
 	//! Get the set of action schemata of the problem
 	const std::vector<const ActionData*>& getActionData() const { return _action_data; }
 	
+	//!
+	const std::vector<const ActionData*>& getAxiomData() const { return _axiom_data; }
+	
 	//! Get the set of ground actions of the problem
 	const std::vector<const GroundAction*>& getGroundActions() const { return _ground; }
 	void setGroundActions(std::vector<const GroundAction*>&& ground) { _ground = std::move(ground); }
+	
+	const fs::DeclarativeAxiomaticFormula* getGroundAxiom(SymbolIdx symbol, const std::vector<ObjectIdx> arguments) const {
+		auto it = _ground_axioms.find(std::make_pair(symbol, arguments));
+		if (it == _ground_axioms.end()) throw std::runtime_error("The requested ground axiom is not available");
+		return it->second;
+	}
+	
+	void setGroundAxioms(AxiomMap&& axioms) { _ground_axioms = std::move(axioms); }
 	
 	const std::vector<const PartiallyGroundedAction*>& getPartiallyGroundedActions() const { return _partials; }
 	void setPartiallyGroundedActions(std::vector<const PartiallyGroundedAction*>&& actions) { _partials = std::move(actions); }
@@ -87,8 +99,14 @@ protected:
 	
 	const std::vector<const ActionData*> _action_data;
 	
+	const std::vector<const ActionData*> _axiom_data;
+	
 	// The set of grounded actions of the problem
 	std::vector<const GroundAction*> _ground;
+	
+	// The set of grounded axioms of the problem
+// 	std::vector<const fs::DeclarativeAxiomaticFormula*> _ground_axioms;
+	AxiomMap _ground_axioms;
 	
 	// The possible set of partially grounded actions of the problem
 	std::vector<const PartiallyGroundedAction*> _partials;

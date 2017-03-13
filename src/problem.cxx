@@ -3,6 +3,7 @@
 #include <problem_info.hxx>
 #include <state.hxx>
 #include <actions/actions.hxx>
+#include "actions/grounding.hxx"
 #include <lapkt/tools/logging.hxx>
 #include <utils/printers/language.hxx>
 #include <utils/printers/actions.hxx>
@@ -13,11 +14,12 @@ namespace fs0 {
 
 std::unique_ptr<Problem> Problem::_instance = nullptr;
 
-Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index) :
+Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const std::vector<const ActionData*>& axiom_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index) :
 	_tuple_index(std::move(tuple_index)),
 	_init(init),
 	_state_indexer(state_indexer),
 	_action_data(action_data),
+	_axiom_data(axiom_data),
 	_ground(),
 	_partials(),
 	_state_constraint_formula(state_constraints),
@@ -25,6 +27,8 @@ Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector
 	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
 	_is_predicative(check_is_predicative())
 {
+	// Ground axioms greedily
+	setGroundAxioms(ActionGrounder::ground_axioms(_axiom_data, ProblemInfo::getInstance()));
 }
 
 Problem::~Problem() {

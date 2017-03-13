@@ -36,7 +36,11 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto init = loadState(*indexer, data["init"]);
 	
 	LPT_INFO("main", "Loading action data...");
-	auto action_data = loadAllActionData(data["action_schemata"], info);
+	auto action_data = loadAllActionData(data["action_schemata"], info, true);
+	
+	LPT_INFO("main", "Loading axiom data...");
+	// Axiom schemas are simply action schemas but without effects
+	auto axiom_data = loadAllActionData(data["axioms"], info, false);
 	
 	LPT_INFO("main", "Loading goal formula...");
 	auto goal = loadGroundedFormula(data["goal"], info);
@@ -45,7 +49,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the singleton global instance
-	Problem* problem = new Problem(init, indexer, action_data, goal, sc, AtomIndex(info));
+	Problem* problem = new Problem(init, indexer, action_data, axiom_data, goal, sc, AtomIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
@@ -97,10 +101,10 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data)
 
 
 std::vector<const ActionData*>
-Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info) {
+Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info, bool load_effects) {
 	std::vector<const ActionData*> schemata;
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		if (const ActionData* adata = loadActionData(data[i], i, info)) {
+		if (const ActionData* adata = loadActionData(data[i], i, info, load_effects)) {
 			schemata.push_back(adata);
 		}
 	}
@@ -108,17 +112,21 @@ Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info)
 }
 
 const ActionData*
-Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemInfo& info) {
+Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemInfo& info, bool load_effects) {
 	const std::string& name = node["name"].GetString();
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	
 	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
-	const std::vector<const fs::ActionEffect*> effects = fs::Loader::parseEffectList(node["effects"], info);
+	std::vector<const fs::ActionEffect*> effects;
+	
+	if (load_effects) {
+		effects = fs::Loader::parseEffectList(node["effects"], info);
+	}
 	
 	ActionData adata(id, name, signature, parameters, precondition, effects);
 	if (adata.has_empty_parameter()) {
-		LPT_INFO("cout", "Action schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
+		LPT_INFO("cout", "Schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
 		return nullptr;
 	}
 	
@@ -127,63 +135,6 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 	return ActionGrounder::process_action_data(adata, info);
 }
 
-std::vector<const GroundAction*>
-Loader::loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const ActionData*>& action_data) {
-	std::vector<const GroundAction*> grounded;
-	if (action_data.empty()) return grounded;
-	
-	std::string filename = info.getDataDir() + "/groundings.data";
-	std::ifstream is(filename);
-	
-    if (!is.good()) { // File groundings.data does not exist
-		return grounded;
-	}
-	
-	LPT_INFO("cout", "Loading the list of reachable ground actions from \"" << filename << "\"");
-	
-	unsigned current_schema_groundings = 0;
-	unsigned id = 0;
-	unsigned schema_id = -1;
-	const ActionData* current = action_data[0];
-	std::string line;
-	
-	while (std::getline(is, line)) {
-		if (line.length() > 0 && line[0] == '#') { // We switch to the next action schema
-			
-			++schema_id;
-			if (schema_id >= action_data.size()) {
-				throw std::runtime_error("The number of action schemas in the groundings file does not match that in the problem description");
-			}
-			
-			if (schema_id > 0) {
-				LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
-			}
-			
-			current = action_data[schema_id];
-			current_schema_groundings = 0;
-			continue;
-		}
-		
-		std::vector<ObjectIdx> deserialized = Serializer::deserializeLine(line, ",");
-		if (current->getSignature().size() != deserialized.size()) {
-			throw std::runtime_error("Wrong number of action parameters");
-		}
-		
-		
-		if (deserialized.empty()) {
-			LPT_INFO("cout", "Grounding action schema '" << current->getName() << "' with no binding");
-			id = ActionGrounder::ground(id, current, Binding::EMPTY_BINDING, info, grounded);
-		} else {
-			Binding binding(std::move(deserialized));
-			id = ActionGrounder::ground(id, current, binding, info, grounded);
-		}
-		++current_schema_groundings;
-	}
-	
-	LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
-	LPT_INFO("cout", "Grounding process stats:\t" << grounded.size() << " grounded actions");
-	return grounded;
-}
 
 const fs::Formula*
 Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {

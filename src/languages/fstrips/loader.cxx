@@ -13,7 +13,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 	std::string formula_type = tree["type"].GetString();
 	
 	
-	if (formula_type == "and") {
+	if (formula_type == "and" || formula_type == "or") {
 		std::vector<const AtomicFormula*> list;
 		const rapidjson::Value& children = tree["children"];
 		for (unsigned i = 0; i < children.Size(); ++i) {
@@ -23,7 +23,12 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 			}
 			list.push_back(atomic);
 		}
-		return new Conjunction(list);
+		
+		if (formula_type == "and") {
+			return new Conjunction(list);
+		} else {
+			return new Disjunction(list);
+		}		
 	
 		
 	} else if (formula_type == "exists" || formula_type == "forall") {
