@@ -238,17 +238,18 @@ std::map<std::pair<SymbolIdx, std::vector<ObjectIdx>>, const fs::DeclarativeAxio
 ActionGrounder::ground_axioms(const std::vector<const ActionData*>& axiom_data, const ProblemInfo& info) {
 	std::map<std::pair<SymbolIdx, std::vector<ObjectIdx>>, const fs::DeclarativeAxiomaticFormula*> result;
 	
-	for (const GroundAction* ground:_ground_all_elements(axiom_data, info, false)) {
+	// This is kind of a dirty trick: we ground all of the axioms _as if_ they were actions (but note the boolean parameter:
+	// we need to allow that these actions have no effects, as axioms do); and then extract the actual ground axiom information from there
+	// (basically, the action precondition will be the ground axiom formula)
+	for (const GroundAction* ground:_ground_all_elements(axiom_data, info, true)) {
 		
-		std::cout << "Axiom name: " << ground->getName() << std::endl;
-//  		std::cout << "Axiom binding: " << ground->getBinding() << std::endl;
+		const std::string& symbol = ground->getName();
+		SymbolIdx symbol_id = info.getSymbolId(symbol);
 		const std::vector<ObjectIdx>& binding = ground->getBinding().get_full_binding();
-		
 		const fs::DeclarativeAxiomaticFormula* formula = dynamic_cast<fs::DeclarativeAxiomaticFormula*>(ground->getPrecondition()->clone());
+		if (!formula) throw std::runtime_error("Unexpected error: the ground axiom should be a declarative axiomatic formula object");
 		
-		assert(0); // TODO FINISH THIS
-		
-// 		result.insert();
+		result.insert(std::make_pair(std::make_pair(symbol_id, binding), formula));
 		delete ground;
 	}
 	

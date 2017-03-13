@@ -114,7 +114,7 @@ protected:
 	
 	//! Maps between predicate and function symbols names and IDs.
 	std::vector<std::string> symbolNames;
-	std::map<std::string, unsigned> symbolIds;
+	std::map<std::string, SymbolIdx> symbolIds;
 	
 	//! A map from function ID to the function data
 	std::vector<SymbolData> _functionData;
@@ -147,7 +147,7 @@ public:
 	inline ObjectIdx getObjectId(const std::string& name) const { return objectIds.at(name); }
 	
 	//! Return the ID of the function with given name
-	inline unsigned getSymbolId(const std::string& name) const { return symbolIds.at(name); }
+	inline SymbolIdx getSymbolId(const std::string& name) const { return symbolIds.at(name); }
 	const std::string& getSymbolName(unsigned symbol_id) const { return symbolNames.at(symbol_id); }
 	const std::vector<std::string>& getSymbolNames() const { return symbolNames; }
 	unsigned getNumLogicalSymbols() const { return symbolIds.size(); }

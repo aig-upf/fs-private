@@ -49,3 +49,4 @@ class MultiplicationTerm;
 	
 } } } // namespaces
 
+namespace fs = fs0::language::fstrips;
