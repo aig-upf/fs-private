@@ -5,7 +5,7 @@
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
-#include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
+#include <heuristics/unsat_goal_atoms.hxx>
 
 #include <lapkt/search/components/open_lists.hxx>
 

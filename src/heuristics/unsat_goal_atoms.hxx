@@ -14,13 +14,13 @@ public:
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& state) const { 
 		unsigned unsatisfied = 0;
-		for (const fs::AtomicFormula* condition:get_goal_conjuncts()) {
+		for (const fs::Formula* condition:get_goal_conjuncts()) {
 			if (!condition->interpret(state)) ++unsatisfied;
 		}
 		return unsatisfied;
 	}
 	
-	const std::vector<const fs::AtomicFormula*>& get_goal_conjuncts() const {
+	const std::vector<const fs::Formula*>& get_goal_conjuncts() const {
 		return _goal_conjunction->getSubformulae();
 	}
 	

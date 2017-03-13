@@ -37,7 +37,7 @@ obtain_goal_atoms(const fs::Formula* goal) {
 
 	std::vector<const fs::Formula*> goal_atoms;
 
-	for (const fs::AtomicFormula* atom:conjunction->getSubformulae()) {
+	for (const fs::Formula* atom:conjunction->getSubformulae()) {
 		goal_atoms.push_back(atom);
 	}
 

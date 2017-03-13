@@ -14,14 +14,10 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 	
 	
 	if (formula_type == "and" || formula_type == "or") {
-		std::vector<const AtomicFormula*> list;
+		std::vector<const Formula*> list;
 		const rapidjson::Value& children = tree["children"];
 		for (unsigned i = 0; i < children.Size(); ++i) {
-			const AtomicFormula* atomic = dynamic_cast<const AtomicFormula*>(parseFormula(children[i], info));
-			if (!atomic) {
-				throw std::runtime_error("Only conjunctions of atoms supported so far");
-			}
-			list.push_back(atomic);
+			list.push_back(parseFormula(children[i], info));
 		}
 		
 		if (formula_type == "and") {

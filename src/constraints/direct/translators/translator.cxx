@@ -92,6 +92,10 @@ DirectConstraint* DirectTranslator::extensionalize(const fs::AtomicFormula& form
 	else return nullptr;
 }
 
+std::vector<DirectConstraint*> DirectTranslator::generate(const std::vector<const fs::Formula*> formulae) {
+	return generate(fs::check_all_atomic_formulas(formulae));
+}
+
 std::vector<DirectConstraint*> DirectTranslator::generate(const std::vector<const fs::AtomicFormula*> formulae) {
 	std::vector<DirectConstraint*> generated;
 	for (const auto formula:formulae) {
@@ -101,6 +105,7 @@ std::vector<DirectConstraint*> DirectTranslator::generate(const std::vector<cons
 	}
 	return generated;
 }
+
 
 const DirectEffect* DirectTranslator::generate(const fs::ActionEffect& effect) {
 	checkSupported(effect.lhs(), effect.rhs());

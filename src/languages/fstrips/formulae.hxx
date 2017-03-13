@@ -163,11 +163,11 @@ public:
 //! Will tipically be negation, conjunction, disjunction
 class OpenFormula : public Formula {
 public:
-	OpenFormula(const std::vector<const AtomicFormula*>& subformulae) : _subformulae(subformulae) {}
+	OpenFormula(const std::vector<const Formula*>& subformulae) : _subformulae(subformulae) {}
 	~OpenFormula() { for (const auto ptr:_subformulae) delete ptr; }
 	OpenFormula(const OpenFormula& other);
 
-	const std::vector<const AtomicFormula*>& getSubformulae() const { return _subformulae; }
+	const std::vector<const Formula*>& getSubformulae() const { return _subformulae; }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -176,14 +176,14 @@ public:
 
 protected:
 	//! The formula subterms
-	std::vector<const AtomicFormula*> _subformulae;
+	std::vector<const Formula*> _subformulae;
 };
 
 //! A logical conjunction
 class Conjunction : public OpenFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	Conjunction(const std::vector<const AtomicFormula*>& conjuncts) : OpenFormula(conjuncts) {}
+	Conjunction(const std::vector<const Formula*>& conjuncts) : OpenFormula(conjuncts) {}
 	~Conjunction() = default;
 	Conjunction(const Conjunction& conjunction) = default;
 
@@ -200,7 +200,7 @@ class AtomConjunction : public Conjunction {
 public:
 	using AtomT = std::pair<VariableIdx, ObjectIdx>;
 
-	AtomConjunction(const std::vector<const AtomicFormula*>& conjuncts, const std::vector<AtomT>& atoms)
+	AtomConjunction(const std::vector<const Formula*>& conjuncts, const std::vector<AtomT>& atoms)
 		: Conjunction(conjuncts), _atoms(atoms) {}
 
 	~AtomConjunction() = default;
@@ -224,7 +224,7 @@ protected:
 class Disjunction : public OpenFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	Disjunction(const std::vector<const AtomicFormula*>& conjuncts) : OpenFormula(conjuncts) {}
+	Disjunction(const std::vector<const Formula*>& disjuncts) : OpenFormula(disjuncts) {}
 	~Disjunction() = default;
 	Disjunction(const Disjunction& conjunction) = default;
 
@@ -241,7 +241,7 @@ class Negation : public OpenFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 
-	Negation(const AtomicFormula* subformula) : OpenFormula( {subformula} ) {}
+	Negation(const Formula* subformula) : OpenFormula( {subformula} ) {}
 	~Negation() = default;
 	Negation(const Negation& other) = default;
 	
@@ -419,5 +419,8 @@ public:
 
 	Symbol symbol() const { return Symbol::GEQ; }
 };
+
+//! Check that all the given formulas are atomic
+std::vector<const AtomicFormula*>  check_all_atomic_formulas(const std::vector<const Formula*> formulas);
 
 } } } // namespaces

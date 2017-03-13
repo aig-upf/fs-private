@@ -246,6 +246,7 @@ ActionGrounder::ground_axioms(const std::vector<const ActionData*>& axiom_data, 
 		
 		const fs::DeclarativeAxiomaticFormula* formula = dynamic_cast<fs::DeclarativeAxiomaticFormula*>(ground->getPrecondition()->clone());
 		
+		assert(0); // TODO FINISH THIS
 		
 // 		result.insert();
 		delete ground;

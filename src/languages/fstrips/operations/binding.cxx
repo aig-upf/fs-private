@@ -53,9 +53,9 @@ Visit(const AxiomaticFormula& lhs) {
 
 void FormulaBindingVisitor::
 Visit(const Conjunction& lhs) {
-	std::vector<const AtomicFormula*> conjuncts;
+	std::vector<const Formula*> conjuncts;
 	std::vector<AtomConjunction::AtomT> atoms;
-	for (const AtomicFormula* c:lhs.getSubformulae()) {
+	for (const Formula* c:lhs.getSubformulae()) {
 		auto processed = bind(*c, _binding, _info);
 		// Static checks
 		if (processed->is_tautology()) { // No need to add the condition, which is always true
@@ -67,10 +67,8 @@ Visit(const Conjunction& lhs) {
 			_result = new Contradiction;
 			return;
 		}
-		auto processed_atomic = dynamic_cast<const AtomicFormula*>(processed);
-		assert(processed_atomic);
-		conjuncts.push_back(processed_atomic);
-		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(processed_atomic);
+		conjuncts.push_back(processed);
+		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(processed);
 		if( cc == nullptr ) continue;
 		const StateVariable* lhs = dynamic_cast<const StateVariable*>(cc->lhs());
 		if( lhs == nullptr ) continue;

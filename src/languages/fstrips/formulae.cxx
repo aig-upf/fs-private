@@ -228,7 +228,15 @@ bool UniversallyQuantifiedFormula::interpret_rec(const T& assignment, const Bind
 	return true;
 }
 
-
+std::vector<const AtomicFormula*> check_all_atomic_formulas(const std::vector<const Formula*> formulas) {
+	std::vector<const AtomicFormula*> downcasted;
+	for (const auto formula:formulas) {
+		const fs::AtomicFormula* sub = dynamic_cast<const fs::AtomicFormula*>(formula);
+		if (!sub) throw std::runtime_error("Only conjunctions of atoms supported so far");
+		downcasted.push_back(sub);
+	}
+	return downcasted;
+}
 
 
 
