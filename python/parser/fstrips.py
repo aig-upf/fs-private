@@ -240,10 +240,9 @@ class BindingUnit(object):
         """ Return the typename of the parameter with given name """
         return self.index[name][1]
 
-    @staticmethod
-    def dump_selected(variables):
+    def dump_selected(self, variables):
         """ Performs a selective dump, dumping only the info about the given variables"""
-        return [[i, var.name, var.type] for i, var in enumerate(variables)]
+        return [[self.index[var.name][0], var.name, var.type] for var in variables]
 
 
 def to_prenex_normal_form(exp):

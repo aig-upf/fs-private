@@ -116,7 +116,8 @@ class FSAxiom(FSBaseComponent):
         return dict(name=self.axiom.name,
                     signature=[self.index.types[p.type] for p in self.axiom.parameters],
                     parameters=[p.name for p in self.axiom.parameters],
-                    conditions=self.formula.dump(self.index.objects, self.binding_unit))
+                    conditions=self.formula.dump(self.index.objects, self.binding_unit),
+                    unit=self.binding_unit.dump())
 
     def __str__(self):
         if self.axiom.parameters:
@@ -142,7 +143,8 @@ class FSActionSchema(FSBaseComponent):
                     signature=[self.index.types[p.type] for p in self.action.parameters],
                     parameters=[p.name for p in self.action.parameters],
                     conditions=self.precondition.dump(self.index.objects, self.binding_unit),
-                    effects=[eff.dump() for eff in self.effects])
+                    effects=[eff.dump() for eff in self.effects],
+                    unit=self.binding_unit.dump())
 
     def process_effects(self):
         """  Generates the actual effects from the PDDL parser effect list"""
