@@ -19,27 +19,25 @@ class Parser(object):
          Might modify the binding unit depending on the type of the expression.
         """
         if isinstance(exp, FunctionalTerm):
-            return self.process_functional_expression(exp)
+            result = self.process_functional_expression(exp)
         elif isinstance(exp, (pddl.Atom, pddl.NegatedAtom)):
-            self.check_declared(exp.predicate)
-            return self.process_atomic_expression(exp)
+            result = self.process_atomic_expression(exp)
         elif isinstance(exp, pddl.ExistentialCondition):
-            return self.process_quantified_expression(exp, 'exists', binding_unit)
+            result = self.process_quantified_expression(exp, 'exists', binding_unit)
         elif isinstance(exp, pddl.UniversalCondition):
-            return self.process_quantified_expression(exp, 'forall', binding_unit)
+            result = self.process_quantified_expression(exp, 'forall', binding_unit)
         elif isinstance(exp, pddl.Conjunction):
-            return fs.OpenExpression('conjunction', self.process_children(exp.parts, binding_unit))
+            result = fs.OpenExpression('and', self.process_children(exp.parts, binding_unit))
         elif isinstance(exp, pddl.Disjunction):
-            return fs.OpenExpression('disjunction', self.process_children(exp.parts, binding_unit))
+            result = fs.OpenExpression('or', self.process_children(exp.parts, binding_unit))
         elif isinstance(exp, pddl.conditions.Truth):
-            return fs.Tautology()
+            result = fs.Tautology()
         elif isinstance(exp, str):
-            if exp[0] == '?':
-                return fs.LogicalVariable(exp)
-            else:
-                return fs.Constant(exp)
+            result = fs.LogicalVariable(exp) if exp[0] == '?' else fs.Constant(exp)
         else:
             raise exceptions.ParseException("Unknown expression type for expression '{}'".format(exp))
+
+        return fs.to_prenex_normal_form(result)
 
     def is_static(self, symbol):
         return symbol in self.index.static_symbols or fs.is_builtin_operator(symbol) or is_external(symbol)

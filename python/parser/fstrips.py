@@ -98,13 +98,16 @@ class Term(object):
 
 
 class FunctionalTerm(Term):
-    def __init__(self, symbol, arguments):
+    def __init__(self, symbol, children):
         super().__init__(symbol)
-        self.arguments = arguments
+        self.children = children
 
     def dump(self, objects, binding_unit):
-        children = [elem.dump(objects, binding_unit) for elem in self.arguments]
+        children = [elem.dump(objects, binding_unit) for elem in self.children]
         return dict(type='function', symbol=self.symbol, children=children)
+
+    def __str__(self):
+        return "{} ({})".format(self.symbol, ','.join(str(child) for child in self.children))
 
 
 class LogicalVariable(Term):
@@ -115,6 +118,9 @@ class LogicalVariable(Term):
         return dict(type='parameter', position=binding_unit.id(self.symbol),
                     typename=binding_unit.typename(self.symbol), name=self.symbol)
 
+    def __str__(self):
+        return "{}".format(self.symbol)
+
 
 class Constant(Term):
     def dump(self, objects, binding_unit):
@@ -124,15 +130,21 @@ class Constant(Term):
         else:  # We have a logical constant
             return dict(type='constant', value=objects.get_index(self.symbol))
 
-
-class Tautology(object):
-    def dump(self, objects, binding_unit):
-        return dict(type='tautology')
+    def __str__(self):
+        return "{}".format(self.symbol)
 
 
 class Relation(object):
     def __init__(self, head):
         self.head = head
+
+
+class Tautology(object):
+    def dump(self, *args):
+        return dict(type='tautology')
+
+    def __str__(self):
+        return "True"
 
 
 class AtomicExpression(Relation):
@@ -146,9 +158,13 @@ class AtomicExpression(Relation):
         children = [elem.dump(objects, binding_unit) for elem in self.children]
         return dict(type='atom', symbol=sym, children=children, negated=neg)
 
+    def __str__(self):
+        neg = "not " if self.negated else ""
+        return "{}{} ({})".format(neg, self.head, ','.join(str(child) for child in self.children))
+
 
 class OpenExpression(Relation):
-    CONNECTIVES = {'conjunction', 'disjunction', 'negation'}
+    CONNECTIVES = {'and', 'or', 'not'}
 
     def __init__(self, connective, children):
         assert connective in self.CONNECTIVES
@@ -158,6 +174,9 @@ class OpenExpression(Relation):
     def dump(self, objects, binding_unit):
         children = [elem.dump(objects, binding_unit) for elem in self.children]
         return dict(type=self.head, symbol=self.head, children=children, negated=False)
+
+    def __str__(self):
+        return "{} ({})".format(self.head, ','.join(str(child) for child in self.children))
 
 
 class QuantifiedExpression(Relation):
@@ -173,6 +192,9 @@ class QuantifiedExpression(Relation):
         subformula = self.subformula.dump(objects, binding_unit)
         return dict(type=self.head, variables=binding_unit.dump_selected(self.variables), subformula=subformula)
 
+    def __str__(self):
+        return "{}_({}) ({})".format(self.head, ','.join(str(child) for child in self.variables), self.subformula)
+
 
 TypedVar = namedtuple('TypedVar', ['name', 'type'])
 
@@ -187,6 +209,12 @@ class BindingUnit(object):
         unit = BindingUnit()
         for param in parameters:
             unit.add(param.name, param.type)
+        return unit
+
+    def clone(self):
+        unit = BindingUnit()
+        unit.typed_vars = self.typed_vars[:]
+        unit.index = self.index.copy()
         return unit
 
     def dump(self):
@@ -216,3 +244,42 @@ class BindingUnit(object):
     def dump_selected(variables):
         """ Performs a selective dump, dumping only the info about the given variables"""
         return [[i, var.name, var.type] for i, var in enumerate(variables)]
+
+
+def to_prenex_normal_form(exp):
+    """
+      Parse an arbitrary expression (term or formula), and return a built-in equivalent.
+      Might modify the binding unit depending on the type of the expression.
+     """
+    if isinstance(exp, Term):
+        return exp
+
+    elif isinstance(exp, (AtomicExpression, Tautology)):
+        return exp
+
+    if isinstance(exp, OpenExpression) and exp.head == 'not':
+        raise RuntimeError("UNIMPLEMENTED")
+
+    elif isinstance(exp, OpenExpression):
+        assert exp.head in ('and', 'or')
+        pnf_expression = exp
+
+        # First put all children of the open formula in PNF
+        pnf_expression.children = [to_prenex_normal_form(child) for child in pnf_expression.children]
+
+        # The recursively ensure that all quantifiers are pushed up
+        for i, quantified in enumerate(pnf_expression.children):
+            if isinstance(quantified, QuantifiedExpression):
+                pnf_expression.children[i] = quantified.subformula
+                head = QuantifiedExpression(quantified.head, quantified.variables, pnf_expression)
+                return to_prenex_normal_form(head)
+
+        # If we reach this point, there are no quantified expressions in the subtree rooted at this open formula
+        return pnf_expression
+
+    elif isinstance(exp, QuantifiedExpression):
+        exp.subformula = to_prenex_normal_form(exp.subformula)
+        return exp
+
+    else:
+        raise RuntimeError("Unknown expression type for expression '{}'".format(exp))

@@ -82,7 +82,7 @@ print(std::ostream& os, const fs0::ProblemInfo& info) const {
 		os << *_subformulae.at(i);
 		if (i < _subformulae.size() - 1) os << ", ";
 	}
-	os << name() << " ) ";
+	os << " ) ";
 	return os;
 }
 
@@ -145,9 +145,9 @@ _variables(Utils::clone(other._variables)), _subformula(other._subformula->clone
 
 //! Prints a representation of the object to the given stream.
 std::ostream& QuantifiedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << name();
+	os << name() << " ";
 	for (const BoundVariable* var:_variables) {
-		os << *var << ": " << info.getTypename(var->getType()) << ", ";
+		os << *var << ": " << info.getTypename(var->getType()) << " s.t. ";
 	}
 	os << "(" << *_subformula << ")";
 	return os;

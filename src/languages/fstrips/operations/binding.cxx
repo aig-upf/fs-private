@@ -105,12 +105,25 @@ Visit(const ExistentiallyQuantifiedFormula& lhs) {
 		return;
 	}
 
-	auto bound_conjunction = dynamic_cast<const Conjunction*>(bound_subformula);
-	assert(bound_conjunction);
-
-	_result = new ExistentiallyQuantifiedFormula(lhs.getVariables(), bound_conjunction);
+	_result = new ExistentiallyQuantifiedFormula(lhs.getVariables(), bound_subformula);
 }
 
+void FormulaBindingVisitor::
+Visit(const UniversallyQuantifiedFormula& lhs) {
+	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
+	for (const BoundVariable* var:lhs.getVariables()) {
+		if (_binding.binds(var->getVariableId())) throw std::runtime_error("Wrong binding - Duplicated variable");
+	}
+	// TODO Check if the binding is a complete binding and thus we can directly return the (variable-free) conjunction
+	// TODO Redesign this mess
+	auto bound_subformula = bind(*lhs.getSubformula(), _binding, _info);
+	if (dynamic_cast<const Tautology*>(bound_subformula) || dynamic_cast<const Contradiction*>(bound_subformula)) {
+		_result =  bound_subformula;
+		return;
+	}
+
+	_result = new UniversallyQuantifiedFormula(lhs.getVariables(), bound_subformula);
+}
 
 
 const Term* bind(const Term& element, const Binding& binding, const ProblemInfo& info) {

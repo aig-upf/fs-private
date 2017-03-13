@@ -56,13 +56,22 @@ Visit(const Conjunction& lhs) {
 }
 
 void AllNodesVisitor::
-Visit(const ExistentiallyQuantifiedFormula& lhs) {
+Visit(const QuantifiedFormula& lhs) {
 	_result.push_back(&lhs);
 	for (auto element:lhs.getVariables()) {
 		element->Accept(*this);
 	}	
 	lhs.getSubformula()->Accept(*this);
 }
+
+void AllNodesVisitor::
+Visit(const ExistentiallyQuantifiedFormula& lhs) { Visit(static_cast<const QuantifiedFormula&>(lhs)); }
+
+void AllNodesVisitor::
+Visit(const UniversallyQuantifiedFormula& lhs) { Visit(static_cast<const QuantifiedFormula&>(lhs)); }
+
+
+	
 	
 void AllNodesVisitor::Visit(const StateVariable& lhs) { _result.push_back(&lhs); }
 void AllNodesVisitor::Visit(const BoundVariable& lhs) { _result.push_back(&lhs); }
@@ -104,6 +113,11 @@ Visit(const Conjunction& lhs) {
 	
 void NestednessVisitor::
 Visit(const ExistentiallyQuantifiedFormula& lhs) {
+	_result = nestedness(*lhs.getSubformula());
+}
+
+void NestednessVisitor::
+Visit(const UniversallyQuantifiedFormula& lhs) {
 	_result = nestedness(*lhs.getSubformula());
 }
 

@@ -15,7 +15,7 @@ std::ostream& action_data_name::print(std::ostream& os) const {
 
 std::ostream& action_data::print(std::ostream& os) const {
 	os << action_data_name(_action) << std::endl;
-	os << "\t" << "Precondition:" << *_action.getPrecondition() << std::endl;
+	os << "\t" << "Precondition: " << *_action.getPrecondition() << std::endl;
 	os << "\t" << "Effects:" << std::endl;
 	for (auto elem:_action.getEffects()) os << "\t\t" << *elem << std::endl;
 	return os;
