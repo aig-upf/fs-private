@@ -143,13 +143,13 @@ void TermBindingVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cas
 
 
 void TermBindingVisitor::
-Visit(const NestedTerm& lhs) { 
+Visit(const NestedTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
-	
+
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> st = bind_subterms(subterms, _binding, _info, constant_values);
-	
+
 	// We process the 4 different possible cases separately:
 	const auto& function = _info.getSymbolData(symbol_id);
 	if (function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
@@ -173,16 +173,16 @@ Visit(const NestedTerm& lhs) {
 
 
 void TermBindingVisitor::
-Visit(const ArithmeticTerm& lhs) { 
+Visit(const ArithmeticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
-	
+
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> st = bind_subterms(subterms, _binding, _info, constant_values);
-	
+
 	auto processed = lhs.create(st);
-	
+
 	if (constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
-		auto value = processed->interpret({}, Binding::EMPTY_BINDING);
+		auto value = processed->interpret(PartialAssignment(), Binding::EMPTY_BINDING);
 		delete processed;
 		_result = new IntConstant(value); // Arithmetic terms necessarily involve integer subterms
 	}
@@ -196,17 +196,17 @@ void TermBindingVisitor::
 Visit(const UserDefinedStaticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
-	
+
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
-	
+
 	if (constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:processed) delete ptr;
-		
+
 		const auto& function = _info.getSymbolData(symbol_id);
 		auto value = function.getFunction()(constant_values);
 		_result = _info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
-	
+
 	} else {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms
 		_result =  new UserDefinedStaticTerm(symbol_id, processed);
@@ -219,26 +219,26 @@ Visit(const AxiomaticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
-	
+
 	// We simply return a user-defined static term with the processed/bound subterms
 	_result = lhs.clone(processed);
 }
 
 
 void TermBindingVisitor::
-Visit(const FluentHeadedNestedTerm& lhs) { 
+Visit(const FluentHeadedNestedTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
-	
+
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
-	
+
 	if (constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
 // 		for (const auto ptr:processed) delete ptr;
-		
+
 		VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
 		_result =  new StateVariable(id, new FluentHeadedNestedTerm(symbol_id, processed));
-	
+
 	} else {
 		_result = new FluentHeadedNestedTerm(symbol_id, processed);
 	}
@@ -253,7 +253,7 @@ bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, 
 	for (auto unprocessed:subterms) {
 		auto processed = bind(*unprocessed, binding, info);
 		result.push_back(processed);
-		
+
 		if (const Constant* constant = dynamic_cast<const Constant*>(processed)) {
 			constants.push_back(constant->getValue());
 		}
