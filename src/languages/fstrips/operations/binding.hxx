@@ -21,6 +21,7 @@ class FormulaBindingVisitor
 	, public Loki::Visitor<Contradiction, void, true>
 	, public Loki::Visitor<AtomicFormula, void, true>
 	, public Loki::Visitor<Conjunction, void, true>
+	, public Loki::Visitor<Disjunction, void, true>
 	, public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<AxiomaticFormula, void, true>
@@ -39,6 +40,7 @@ public:
 	void Visit(const Contradiction& lhs) override;
 	void Visit(const AtomicFormula& lhs) override;
 	void Visit(const Conjunction& lhs) override;
+	void Visit(const Disjunction& lhs) override;
 	void Visit(const ExistentiallyQuantifiedFormula& lhs) override;
 	void Visit(const UniversallyQuantifiedFormula& lhs) override;
 	void Visit(const AxiomaticFormula& lhs) override;

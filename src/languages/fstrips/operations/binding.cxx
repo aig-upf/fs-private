@@ -90,6 +90,34 @@ Visit(const Conjunction& lhs) {
 
 
 void FormulaBindingVisitor::
+Visit(const Disjunction& lhs) {
+	std::vector<const Formula*> disjuncts;
+	for (const Formula* c:lhs.getSubformulae()) {
+		auto processed = bind(*c, _binding, _info);
+		// Static checks
+		if (processed->is_tautology()) { // The whole disjunction statically resolves to true
+			delete processed;
+			for (auto elem:disjuncts) delete elem;
+			_result = new Tautology;
+			return;			
+			
+		} else if (processed->is_contradiction()) { // No need to add the condition, which is always false
+			delete processed;
+			continue;
+		}
+		disjuncts.push_back(processed);
+	}
+
+	if (disjuncts.empty()) {
+		_result = new Contradiction; // The empty disjunction is a Contradiction
+
+	} else {
+		_result =  new Disjunction(disjuncts);
+	}
+}
+
+
+void FormulaBindingVisitor::
 Visit(const ExistentiallyQuantifiedFormula& lhs) {
 	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
 	for (const BoundVariable* var:lhs.getVariables()) {
