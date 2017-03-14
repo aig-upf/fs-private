@@ -3,7 +3,7 @@ from __future__ import print_function
 from . import conditions
 from . import pddl_types
 from . import f_expression
-
+import copy
 
 def cartesian_product(*sequences):
     # TODO: Also exists in tools.py outside the pddl package (defined slightly
@@ -140,7 +140,9 @@ class Effect(object):
         renamings = {}
         self.parameters = [par.uniquify_name(type_map, renamings)
                            for par in self.parameters]
+        #print(self.condition)
         self.condition = self.condition.uniquify_variables(type_map, renamings)
+        #print(type(self.literal))
         self.literal = self.literal.rename_variables(renamings)
     def instantiate(self, var_mapping, init_facts, fluent_facts,
                     objects_by_type, result):
@@ -199,7 +201,7 @@ class ConditionalEffect(object):
                     message += ["Supported Types:"]
                     message += [str(t) for t in supported_effect_types]
                     raise RuntimeError( '\n'.join(message))
-                new_effects.append(ConditionalEffect(self.condition, effect))
+                new_effects.append(ConditionalEffect(copy.deepcopy(self.condition), effect))
             return ConjunctiveEffect(new_effects)
         elif isinstance(norm_effect, UniversalEffect):
             child = norm_effect.effect
@@ -228,7 +230,7 @@ class UniversalEffect(object):
             for effect in norm_effect.effects:
                 assert isinstance(effect, SimpleEffect) or isinstance(effect, ConditionalEffect)\
                        or isinstance(effect, UniversalEffect)
-                new_effects.append(UniversalEffect(self.parameters, effect))
+                new_effects.append(UniversalEffect(copy.deepcopy(self.parameters), effect))
             return ConjunctiveEffect(new_effects)
         else:
             return UniversalEffect(self.parameters, norm_effect)
@@ -327,6 +329,9 @@ class AssignmentEffect(object):
         return self.lhs.symbol
 
     def rename_variables(self, renamings):
+        if len(renamings)== 0 : return self
+        self.lhs.rename_variables(renamings)
+        self.rhs.rename_variables(renamings)
         # TODO - IMPLEMENT THIS
         #new_args = tuple(renamings.get(arg, arg) for arg in self.args)
         #return self.__class__(self.predicate, new_args)

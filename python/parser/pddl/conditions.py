@@ -95,15 +95,8 @@ class Condition(object):
         return self._postorder_visit("_relaxed")
     def untyped(self):
         return self._postorder_visit("_untyped")
-
     def uniquify_variables(self, type_map, renamings={}):
-        # Cannot used _postorder_visit because this requires preorder
-        # for quantified effects.
-        if not self.parts:
-            return self
-        else:
-            return self.__class__([part.uniquify_variables(type_map, renamings)
-                                   for part in self.parts])
+        raise RuntimeError("Error: abstract method called")
     def to_untyped_strips(self):
         raise ValueError("Not a STRIPS condition: %s" % self.__class__.__name__)
     def instantiate(self, var_mapping, init_facts, fluent_facts, result):
@@ -139,6 +132,8 @@ class ConstantCondition(Condition):
         return self
     def __eq__(self, other):
         return self.__class__ is other.__class__
+    def uniquify_variables(self, type_map, renamings={}) :
+        return self
 
 class Impossible(Exception):
     pass
@@ -167,6 +162,12 @@ class JunctorCondition(Condition):
                 self.parts == other.parts)
     def change_parts(self, parts):
         return self.__class__(parts)
+
+    def uniquify_variables(self, type_map, renamings={}):
+        # Cannot used _postorder_visit because this requires preorder
+        # for quantified effects.
+        return self.__class__([part.uniquify_variables(type_map, renamings)
+                               for part in self.parts])
 
 class Conjunction(JunctorCondition):
     def _simplified(self, parts):
@@ -310,8 +311,26 @@ class Literal(Condition):
     def uniquify_variables(self, type_map, renamings={}):
         return self.rename_variables(renamings)
     def rename_variables(self, renamings):
-        new_args = tuple(renamings.get(arg, arg) for arg in self.args)
-        return self.__class__(self.predicate, new_args)
+        from .f_expression import FunctionalTerm
+        if len(renamings) == 0 : return self
+        #print("Renaming literal {}".format(renamings))
+        #self.dump()
+        #print(self.args)
+        new_args = []
+        for arg in self.args :
+            if isinstance(arg,FunctionalTerm) :
+                arg.rename_variables(renamings)
+                new_args.append(arg)
+            elif isinstance(arg,str) :
+                arg = renamings.get(arg, arg)
+                new_args.append(arg)
+            else :
+                raise RuntimeError("Error renaming variables of literal, found unexpected {}".format(type(arg)))
+        #new_args = tuple(renamings.get(arg, arg) for arg in self.args)
+        new_args = tuple(new_args)
+        new_obj= self.__class__(self.predicate, new_args)
+        #new_obj.dump()
+        return new_obj
     def replace_argument(self, position, new_arg):
         new_args = list(self.args)
         new_args[position] = new_arg
