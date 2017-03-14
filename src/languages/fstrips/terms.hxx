@@ -36,9 +36,6 @@ public:
 class NestedTerm : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
-	//! Factory method to create a nested term of the appropriate type
-	static const Term* create(const std::string& symbol, const std::vector<const Term*>& subterms);
 
 	NestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 		: _symbol_id(symbol_id), _subterms(subterms), _interpreted_subterms(subterms.size(), -1)

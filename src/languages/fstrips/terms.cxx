@@ -16,22 +16,7 @@ namespace fs0 { namespace language { namespace fstrips {
 ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
 ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
 
-	
 
-const Term* NestedTerm::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	
-	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
-	if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return ArithmeticTermFactory::create(symbol, subterms);
-	
-	unsigned symbol_id = info.getSymbolId(symbol);
-	const auto& function = info.getSymbolData(symbol_id);
-	if (function.isStatic()) {
-		return new UserDefinedStaticTerm(symbol_id, subterms);
-	} else {
-		return new FluentHeadedNestedTerm(symbol_id, subterms);
-	}
-}
 
 NestedTerm::NestedTerm(const NestedTerm& term) :
 	_symbol_id(term._symbol_id),

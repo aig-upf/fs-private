@@ -35,6 +35,9 @@ public:
 	
 	//! Parse a list of atomic formulae from a JSON node
 	static std::vector<const ActionEffect*> parseEffectList(const rapidjson::Value& tree, const ProblemInfo& info);
+	
+	//! Factory method to create a nested term of the appropriate type
+	static const Term* create_nested_term(const std::string& symbol, const std::vector<const Term*>& subterms);
 };
 
 } } } // namespaces
