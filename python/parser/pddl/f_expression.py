@@ -55,6 +55,18 @@ class FunctionalTerm(object):
         self.args = tuple(args)
         self.hash = hash((self.__class__, self.symbol,self.args))
 
+    def rename_variables(self, renaming) :
+        new_args = []
+        for arg in self.args :
+            if isinstance(arg,FunctionalTerm) : # nesting
+                arg.rename_variables(renaming)
+                new_args.append(arg)
+            else :
+                new_args.append( renaming.get(arg,arg))
+        #self.args = tuple(renaming[x] for x in self.args)
+        self.args = tuple(new_args)
+        self.hash = hash((self.__class__, self.symbol,self.args))
+
     def __hash__(self):
         return self.hash
 
