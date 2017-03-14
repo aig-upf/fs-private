@@ -41,8 +41,12 @@ def add_effect(tmp_effect, result):
             parameters = tmp_effect.parameters
             if isinstance(tmp_effect.effect, ConditionalEffect):
                 condition = tmp_effect.effect.condition
-                assert isinstance(tmp_effect.effect.effect, SimpleEffect)
-                effect = tmp_effect.effect.effect.effect
+                if isinstance(tmp_effect.effect.effect, SimpleEffect) :
+                    effect = tmp_effect.effect.effect.effect
+                elif isinstance(tmp_effect.effect.effect, AssignmentEffect) :
+                    effect = tmp_effect.effect.effect
+                else :
+                    raise RuntimeError("Syntax Error: effect expr of conditional effects can only be a SimpleEffect or an Assignment Effect")
             elif isinstance(tmp_effect.effect, SimpleEffect) :
                 effect = tmp_effect.effect.effect
             else :
@@ -98,7 +102,11 @@ def parse_effect(alist):
         assignment = f_expression.parse_assignment(alist)
         return CostEffect(assignment)
     elif tag in ["assign"]:
-        assert len(alist) == 3
+        if len(alist) != 3 :
+            message = ["Syntax Error: invalid assign effect: <eff_expr> := (assign <lhs expr> <rhs expr>)"]
+            message += ["Tokens:"]
+            message += [str(alist)]
+            raise RuntimeError('\n'.join(message))
         lhs, rhs = f_expression.parse_functional_assignment(alist)
         return AssignmentEffect(lhs, rhs)
     else:
@@ -184,7 +192,13 @@ class ConditionalEffect(object):
         if isinstance(norm_effect, ConjunctiveEffect):
             new_effects = []
             for effect in norm_effect.effects:
-                assert isinstance(effect, SimpleEffect) or isinstance(effect, ConditionalEffect)
+                supported_effect_types = (SimpleEffect, AssignmentEffect, ConditionalEffect)
+                if type(effect) not in supported_effect_types :
+                    message = []
+                    message += ["Syntax Error: normalised conditional effect expression is not supported."]
+                    message += ["Supported Types:"]
+                    message += [str(t) for t in supported_effect_types]
+                    raise RuntimeError( '\n'.join(message))
                 new_effects.append(ConditionalEffect(self.condition, effect))
             return ConjunctiveEffect(new_effects)
         elif isinstance(norm_effect, UniversalEffect):
