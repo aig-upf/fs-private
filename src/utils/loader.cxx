@@ -132,7 +132,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 	
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
 	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it
-	return ActionGrounder::process_action_data(adata, info);
+	return ActionGrounder::process_action_data(adata, info, load_effects);
 }
 
 

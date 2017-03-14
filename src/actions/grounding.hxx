@@ -27,7 +27,7 @@ public:
 	static const unsigned long MAX_GROUND_ACTIONS = 100000000;
 	
 	//! Process the given action data to consolidate state variables, etc.
-	static ActionData* process_action_data(const ActionData& action_data, const ProblemInfo& info);
+	static ActionData* process_action_data(const ActionData& action_data, const ProblemInfo& info, bool process_effects);
 	
 	//! Binds a partially grounded action with a full binding, disregarding the ID of the resulting grounded action
 	static GroundAction* bind(const PartiallyGroundedAction& action, const Binding& binding, const ProblemInfo& info);
