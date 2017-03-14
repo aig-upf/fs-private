@@ -45,12 +45,14 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
 		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable
 	} else {
+        LPT_DEBUG("heuristic", "Updating extension for " << *_term );
 		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
 	}
 }
 
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const {
 	// Check whether the extension contains no tuples, then the CSP is unsolvable
+    assert( extension.finalized() );
 	if (extension.tuples() == 0 ) return false;
 
 	// Collect the references to the CSP variables

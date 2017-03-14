@@ -24,4 +24,4 @@ def get_effect_symbol(effect):
         assert isinstance(lhs, FunctionalTerm)
         return lhs.symbol
     else:
-        raise UnimplementedFeature('TODO - Effect type not yet supported')
+        raise UnimplementedFeature('TODO - Effect type not yet supported, type of lhs: {}'.format(effect.literal))

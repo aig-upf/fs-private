@@ -5,7 +5,7 @@
 namespace fs0 { namespace language { namespace fstrips {
 
 
-Formula* conjunction(const Formula& lhs, const Formula& rhs) { 
+Formula* conjunction(const Formula& lhs, const Formula& rhs) {
 	BootstrappingConjunctionVisitor bootstrapper;
 	lhs.Accept(bootstrapper);
 	ConjunctionVisitor& visitor = *bootstrapper._visitor;
@@ -95,10 +95,13 @@ void ConjunctionLhsConjunction::
 Visit(const Contradiction& rhs) { _result = new Contradiction; }
 
 void ConjunctionLhsConjunction::
-Visit(const AtomicFormula& rhs) { throw UnimplementedFeatureException(""); }
+Visit(const AtomicFormula& rhs) {
+    auto all_subterms = Utils::merge( Utils::clone(_lhs.getSubformulae()), { rhs.clone() });
+    _result = new Conjunction(all_subterms);
+}
 
 void ConjunctionLhsConjunction::
-Visit(const Conjunction& rhs) { 
+Visit(const Conjunction& rhs) {
 	auto all_subterms = Utils::merge(Utils::clone(_lhs.getSubformulae()), Utils::clone(rhs.getSubformulae()));
 	_result = new Conjunction(all_subterms);
 }
