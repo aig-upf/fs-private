@@ -250,6 +250,7 @@ ActionGrounder::ground_axioms(const std::vector<const ActionData*>& axiom_data, 
 		SymbolIdx symbol_id = info.getSymbolId(symbol);
 		const std::vector<ObjectIdx>& binding = ground->getBinding().get_full_binding();
 		const fs::DeclarativeAxiomaticFormula* formula = dynamic_cast<fs::DeclarativeAxiomaticFormula*>(ground->getPrecondition()->clone());
+		std::cout << "Ground axiom: " << *ground->getPrecondition() << std::endl;
 		if (!formula) throw std::runtime_error("Unexpected error: the ground axiom should be a declarative axiomatic formula object");
 		
 		result.insert(std::make_pair(std::make_pair(symbol_id, binding), formula));

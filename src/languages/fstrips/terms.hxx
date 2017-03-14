@@ -278,7 +278,7 @@ public:
 
 } } } // namespaces
 
-
+/*
 // std specializations for terms and term pointers that will allow us to use them in hash-table-like structures
 namespace fs = fs0::language::fstrips;
 namespace std {
@@ -294,3 +294,4 @@ namespace std {
         std::size_t operator()(const fs::Term* t1, const fs::Term* t2) const { return equal_to<fs::Term>()(*t1, *t2); }
     };
 }
+*/

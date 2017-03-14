@@ -160,6 +160,10 @@ interpret(const State& state, const Binding& binding) const {
 	return !_subformulae[0]->interpret(state, binding);
 }
 
+QuantifiedFormula::~QuantifiedFormula() {
+	delete _subformula;
+	for (auto ptr:_variables) delete ptr;
+}
 
 QuantifiedFormula::QuantifiedFormula(const QuantifiedFormula& other) :
 _variables(Utils::clone(other._variables)), _subformula(other._subformula->clone())

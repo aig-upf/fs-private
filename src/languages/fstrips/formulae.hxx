@@ -258,15 +258,13 @@ class QuantifiedFormula : public Formula {
 public:
 	QuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Formula* subformula) : _variables(variables), _subformula(subformula) {}
 
-	virtual ~QuantifiedFormula() {
-		delete _subformula;
-	}
+	virtual ~QuantifiedFormula();
 
 	QuantifiedFormula(const QuantifiedFormula& other);
 
 	const Formula* getSubformula() const { return _subformula; }
 	
-	const std::vector<const BoundVariable*> getVariables() const { return _variables; }
+	const std::vector<const BoundVariable*>& getVariables() const { return _variables; }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -315,7 +313,7 @@ public:
 	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	bool interpret(const State& state, const Binding& binding) const override;
 	
-	std::string name() const override { return "exists"; }
+	std::string name() const override { return "forall"; }
 
 protected:
 	//! A naive recursive implementation of the interpretation routine
