@@ -21,6 +21,9 @@ public:
 	//! Parse a formula from a JSON node
 	static const Formula* parseFormula(const rapidjson::Value& tree, const ProblemInfo& info);
 	
+	//! Parse a list of effects from a JSON node
+	static std::vector<const ActionEffect*> parseEffectList(const rapidjson::Value& tree, const ProblemInfo& info);
+	
 	//! Parse an (unprocessed) term from a JSON node
 	static const Term* parseTerm(const rapidjson::Value& tree, const ProblemInfo& info);
 	
@@ -30,14 +33,8 @@ public:
 	//! Parse a list of terms
 	static std::vector<const Term*> parseTermList(const rapidjson::Value& tree, const ProblemInfo& info);
 	
-	//! Parse an atomic formula from a JSON node
+	//! Parse a single effect from a JSON node
 	static const ActionEffect* parseEffect(const rapidjson::Value& tree, const fs0::ProblemInfo& info);
-	
-	//! Parse a list of atomic formulae from a JSON node
-	static std::vector<const ActionEffect*> parseEffectList(const rapidjson::Value& tree, const ProblemInfo& info);
-	
-	//! Factory method to create a nested term of the appropriate type
-	static const Term* create_nested_term(const std::string& symbol, const std::vector<const Term*>& subterms);
 };
 
 } } } // namespaces

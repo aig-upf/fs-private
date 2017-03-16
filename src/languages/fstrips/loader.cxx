@@ -7,7 +7,8 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
-const Term* Loader::create_nested_term(const std::string& symbol, const std::vector<const Term*>& subterms) {
+//! Factory method to create a nested term of the appropriate type
+const Term* _create_nested_term(const std::string& symbol, const std::vector<const Term*>& subterms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
@@ -68,7 +69,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 				// 
 				IntConstant* value = negated ? new IntConstant(0) : new IntConstant(1);
 				
-				subterms = {create_nested_term(symbol, subterms), value};
+				subterms = {_create_nested_term(symbol, subterms), value};
 				symbol = "=";
 			}
 		} catch(std::out_of_range& ex) {} // The symbol might be built-in, and thus not registered.
@@ -102,7 +103,7 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 		try { return LogicalComponentRegistry::instance().instantiate_term(symbol, children); }
 		catch(const std::runtime_error& e) {}
 		
-		return create_nested_term(symbol, children);
+		return _create_nested_term(symbol, children);
 	} else throw std::runtime_error("Unknown node type " + term_type);
 }
 
