@@ -17,10 +17,23 @@ const std::string to_string(Connective connective) {
 	throw std::runtime_error("Unknown connective");
 }
 
-const std::string to_string(Quantifier connective) {
-	if (connective == Quantifier::Universal) return "forall";
-	if (connective == Quantifier::Existential) return "exists";
+const std::string to_string(Quantifier quantifier) {
+	if (quantifier == Quantifier::Universal) return "forall";
+	if (quantifier == Quantifier::Existential) return "exists";
 	throw std::runtime_error("Unknown quantifier");
+}
+
+const Connective to_connective(const std::string& connective) {
+	if (connective == "and") return Connective::Conjunction;
+	if (connective == "or") return Connective::Disjunction;
+	if (connective == "not") return Connective::Negation;
+	throw std::runtime_error("Unknown connective");
+}
+
+const Quantifier to_quantifier(const std::string& quantifier) {
+	if (quantifier == "forall") return Quantifier::Universal;
+	if (quantifier == "exists") return Quantifier::Existential;
+	throw std::runtime_error("Unknown quantifier");	
 }
 
 template <typename T>

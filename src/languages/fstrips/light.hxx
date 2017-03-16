@@ -8,11 +8,18 @@ namespace fs0 { class ProblemInfo; } // TODO - REMOVE THIS DEPENDENCY
 
 namespace fs0 { namespace lang { namespace fstrips {
 
+//! A logical connective
 enum class Connective { Conjunction, Disjunction, Negation };
-const std::string to_string(Connective connective);
 
+//! A logical quantifier
 enum class Quantifier { Universal, Existential };
-const std::string to_string(Quantifier connective);
+
+//! Mappings from and to string representations of the above
+const std::string to_string(Connective connective);
+const std::string to_string(Quantifier quantifier);
+const Connective to_connective(const std::string& connective);
+const Quantifier to_quantifier(const std::string& quantifier);
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -116,6 +123,25 @@ public:
 	Formula* clone() const override = 0;
 };
 
+//! The True truth value
+class Tautology : public Formula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	Tautology* clone() const override { return new Tautology; }
+
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { return os << "True"; }
+};
+
+//! The False truth value
+class Contradiction : public Formula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	Contradiction* clone() const override { return new Contradiction; }
+
+	//! Prints a representation of the object to the given stream.
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { return os << "False"; }
+};
 
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
 class AtomicFormula : public Formula {
