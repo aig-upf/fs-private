@@ -33,10 +33,13 @@ Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector
 
 Problem::~Problem() {
 	for (const auto pointer:_action_data) delete pointer;
+	for (const auto pointer:_axiom_data) delete pointer;
 	for (const auto pointer:_ground) delete pointer;
 	for (const auto pointer:_partials) delete pointer;
 	delete _state_constraint_formula;
 	delete _goal_formula;
+	
+	for (const auto elem:_ground_axioms) delete elem.second;
 }
 
 Problem::Problem(const Problem& other) :
