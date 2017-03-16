@@ -115,6 +115,7 @@ class FSTaskIndex(object):
         self.types = util.UninitializedAttribute('types')
         self.type_map = util.UninitializedAttribute('type_map')
         self.objects = util.UninitializedAttribute('objects')
+        self.object_types = util.UninitializedAttribute('object_types')
         self.symbols = util.UninitializedAttribute('symbols')
         self.symbol_types = util.UninitializedAttribute('symbol_types')
         self.action_cost_symbols = util.UninitializedAttribute('action_cost_symbols')
@@ -138,7 +139,7 @@ class FSTaskIndex(object):
 
     def process_objects(self, objects):
         # Each object name points to it unique 0-based index / ID
-        self.objects = self._index_objects(objects)
+        self.objects, self.object_types = self._index_objects(objects)
 
     def process_symbols(self, actions, predicates, functions):
         self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
@@ -171,13 +172,15 @@ class FSTaskIndex(object):
 
     @staticmethod
     def _index_objects(objects):
+        o_types = {}
         idx = IndexDictionary()
         idx.add(util.bool_string(False))  # 0
         idx.add(util.bool_string(True))  # 1
         # idx.add('undefined')  # Do we need an undefined object?
         for o in objects:
             idx.add(o.name)
-        return idx
+            o_types[o.name] = o.type
+        return idx, o_types
 
     @staticmethod
     def _index_symbols(predicates, functions):

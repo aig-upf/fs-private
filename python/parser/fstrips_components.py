@@ -106,7 +106,7 @@ class FSFormula(FSBaseComponent):
         self.processed = self.process_conditions(self.formula)
 
     def dump(self):
-        return dict(conditions=self.processed.dump(self.index.objects, self.binding_unit),
+        return dict(conditions=self.processed.dump(self.index, self.binding_unit),
                     unit=self.binding_unit.dump())
 
 
@@ -124,7 +124,7 @@ class FSAxiom(FSBaseComponent):
         return dict(name=self.axiom.name,
                     signature=[self.index.types[p.type] for p in self.axiom.parameters],
                     parameters=[p.name for p in self.axiom.parameters],
-                    conditions=self.formula.dump(self.index.objects, self.binding_unit),
+                    conditions=self.formula.dump(self.index, self.binding_unit),
                     unit=self.binding_unit.dump())
 
     def __str__(self):
@@ -150,7 +150,7 @@ class FSActionSchema(FSBaseComponent):
         return dict(name=self.action.name,
                     signature=[self.index.types[p.type] for p in self.action.parameters],
                     parameters=[p.name for p in self.action.parameters],
-                    conditions=self.precondition.dump(self.index.objects, self.binding_unit),
+                    conditions=self.precondition.dump(self.index, self.binding_unit),
                     effects=[eff.dump() for eff in self.effects],
                     unit=self.binding_unit.dump())
 
@@ -202,8 +202,8 @@ class FSActionEffect(object):
     def dump(self):
         # print("{} --> {} := {}".format(self.condition, self.lhs, self.rhs))
         return dict(
-            lhs=self.lhs.dump(self.index.objects, self.binding_unit),
-            rhs=self.rhs.dump(self.index.objects, self.binding_unit),
-            condition=self.condition.dump(self.index.objects, self.binding_unit),
+            lhs=self.lhs.dump(self.index, self.binding_unit),
+            rhs=self.rhs.dump(self.index, self.binding_unit),
+            condition=self.condition.dump(self.index, self.binding_unit),
             type=self.type_
         )
