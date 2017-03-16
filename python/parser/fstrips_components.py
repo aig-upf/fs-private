@@ -175,6 +175,7 @@ class FSActionSchema(FSBaseComponent):
             type_ = 'functional'
         else:
             # The effect has form visited(c), and we want to give it functional form visited(c) := true
+            # TODO - THIS MUST GO AWAY - and will cause problems soon :-)
             lhs = FunctionalTerm(expression.predicate, expression.args)
 
             if expression.negated:

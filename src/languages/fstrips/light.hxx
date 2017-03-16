@@ -174,10 +174,13 @@ protected:
 //! Will tipically be negation, conjunction, disjunction
 class OpenFormula : public Formula {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
 	
 	OpenFormula(Connective connective, const std::vector<const Formula*>& subformulae) : _connective(connective), _children(subformulae) {}
 	~OpenFormula() { for (const auto ptr:_children) delete ptr; }
 	OpenFormula(const OpenFormula&);
+	
+	OpenFormula* clone() const override { return new OpenFormula(*this); }
 
 	Connective getConnective() const { return _connective; }
 	
@@ -197,6 +200,8 @@ protected:
 //! A formula quantified by at least one variable
 class QuantifiedFormula : public Formula {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	QuantifiedFormula(Quantifier quantifier, const std::vector<const LogicalVariable*>& variables, const Formula* subformula) : _quantifier(quantifier), _variables(variables), _subformula(subformula) {}
 
 	virtual ~QuantifiedFormula() {
@@ -205,6 +210,8 @@ public:
 	}
 
 	QuantifiedFormula(const QuantifiedFormula& other);
+	QuantifiedFormula* clone() const override { return new QuantifiedFormula(*this); }
+
 
 	const Formula* getSubformula() const { return _subformula; }
 	
@@ -236,7 +243,7 @@ protected:
 //! with the particularity that LHS must be either a state variable or a fluent-headed nested term.
 class ActionEffect {
 public:
-	ActionEffect(const Formula* condition);
+	ActionEffect(const Formula* condition) : _condition(condition) {}
 	
 	virtual ~ActionEffect() { delete _condition; };
 	
@@ -266,7 +273,7 @@ protected:
 };
 
 
-class FunctionalEffect : ActionEffect {
+class FunctionalEffect : public ActionEffect {
 public:
 	FunctionalEffect(const FunctionalTerm* lhs, const Term* rhs, const Formula* condition)
 		: ActionEffect(condition), _lhs(lhs), _rhs(rhs) {}
@@ -298,9 +305,10 @@ protected:
 	const Term* _rhs;
 };
 
-class AtomicEffect : ActionEffect {
+class AtomicEffect : public ActionEffect {
 public:
 	enum class Type {ADD, DEL};
+	static Type to_type(const std::string& type);
 	
 	AtomicEffect(const AtomicFormula* atom, Type type, const Formula* condition)
 		: ActionEffect(condition), _atom(atom), _type(type) {}

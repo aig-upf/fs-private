@@ -122,6 +122,12 @@ AtomicEffect::AtomicEffect(const AtomicEffect& other) :
 	ActionEffect(other), _atom(other._atom->clone()), _type(other._type)
 {}
 
+AtomicEffect::Type AtomicEffect::to_type(const std::string& type) {
+	if (type == "add") return Type::ADD;
+	if (type == "del") return Type::DEL;
+	throw std::runtime_error("Unknown effect type" + type);	
+}
+
 std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
 std::ostream& FunctionalEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
