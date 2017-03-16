@@ -26,6 +26,11 @@ public:
 	static ProblemInfo& loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
+
+	// Conversion to a C++ vector of values.
+	template<typename T>
+	static std::vector<T> parseNumberList(const rapidjson::Value& data);
+	static std::vector<std::string> parseStringList(const rapidjson::Value& data);
 	
 protected:
 	
@@ -42,11 +47,6 @@ protected:
 	
 	//! Load a formula and process it
 	static const fs::Formula* loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
-	
-	// Conversion to a C++ vector of values.
-	template<typename T>
-	static std::vector<T> parseNumberList(const rapidjson::Value& data);
-	static std::vector<std::string> parseStringList(const rapidjson::Value& data);
 	
 	template<typename T>
 	static std::vector<std::vector<T>> parseDoubleNumberList(const rapidjson::Value& data);

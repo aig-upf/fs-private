@@ -1,6 +1,10 @@
 
-#include "light_loader.hxx"
+#include <lapkt/tools/logging.hxx>
+
+#include <languages/fstrips/light_loader.hxx>
+#include <languages/fstrips/light_operations.hxx>
 #include <languages/fstrips/light.hxx>
+#include <utils/loader.hxx>
 
 #include <problem_info.hxx>
 #include <languages/fstrips/builtin.hxx>
@@ -130,6 +134,31 @@ std::vector<const ActionEffect*> Loader::parseEffectList(const rapidjson::Value&
 }
 
 
+const ActionSchema*
+Loader::parseActionSchema(const rapidjson::Value& node, unsigned id, const ProblemInfo& info, bool load_effects) {
+	const std::string& name = node["name"].GetString();
+	const Signature signature = fs0::Loader::parseNumberList<unsigned>(node["signature"]);
+	const std::vector<std::string> parameters = fs0::Loader::parseStringList(node["parameters"]);
+	
+	const Formula* precondition = parseFormula(node["conditions"], info);
+	std::vector<const ActionEffect*> effects;
+	
+	if (load_effects) {
+		effects = parseEffectList(node["effects"], info);
+	}
+	
+	ActionSchema* schema = new ActionSchema(id, name, signature, parameters, precondition, effects);
+	if (has_empty_parameter(*schema)) {
+		LPT_INFO("cout", "Schema \"" << schema->getName() << "\" discarded because of empty parameter type.");
+		delete schema;
+		return nullptr;
+	}
+	
+	return schema;
+	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
+	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it
+// 	return ActionGrounder::process_action_data(adata, info, load_effects);
+}
 
 
 } } } // namespaces
