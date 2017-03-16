@@ -94,9 +94,9 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 		return new Constant(tree["value"].GetInt());
 	} else if (term_type == "int_constant") {
 		return new IntConstant(tree["value"].GetInt());
-	} else if (term_type == "parameter") {
+	} else if (term_type == "variable") {
 		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["typename"].GetString()));
-	} else if (term_type == "function") {
+	} else if (term_type == "functional") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<const Term*> children = parseTermList(tree["children"], info);
 		
