@@ -4,9 +4,9 @@
 #include <languages/fstrips/base.hxx>
 #include <fs_types.hxx> // TODO - REMOVE THIS DEPENDENCY
 
-namespace fs0 { class ProblemInfo; }
+namespace fs0 { class ProblemInfo; } // TODO - REMOVE THIS DEPENDENCY
 
-namespace fs0 { namespace language { namespace fstrips {
+namespace fs0 { namespace lang { namespace fstrips {
 
 enum class Connective { Conjunction, Disjunction, Negation };
 const std::string to_string(Connective connective);
@@ -14,16 +14,21 @@ const std::string to_string(Connective connective);
 enum class Quantifier { Universal, Existential };
 const std::string to_string(Quantifier connective);
 
-//! A logical term in FSTRIPS
-class LTerm : public LogicalElement {
-public:
-	LTerm() = default;
-	virtual ~LTerm() = default;
 
-	LTerm* clone() const override = 0;
+///////////////////////////////////////////////////////////////////////////////
+// Terms and Formulas
+///////////////////////////////////////////////////////////////////////////////
+
+//! A logical term in FSTRIPS
+class Term : public language::fstrips::LogicalElement {
+public:
+	Term() = default;
+	virtual ~Term() = default;
+
+	Term* clone() const override = 0;
 };
 
-class LogicalVariable : public LTerm {
+class LogicalVariable : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 
@@ -49,14 +54,17 @@ protected:
 	TypeIdx _type;	
 };
 
-class LConstant : public LTerm {
+//! A constant is a term whose denotation is fixed throughout the whole planning process.
+//! Note that this is not exactly a constant in classical FOL terms (where a constant is defined as a 0-ary function)
+//! Thus we're making here a semantic distinction, but it is extremely useful to simplify computations.
+class Constant : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	LConstant(ObjectIdx value, TypeIdx type)  : _value(value), _type(type) {}
-	~LConstant() = default;
-	LConstant(const LConstant&) = default;
+	Constant(ObjectIdx value, TypeIdx type)  : _value(value), _type(type) {}
+	~Constant() = default;
+	Constant(const Constant&) = default;
 
-	LConstant* clone() const override { return new LConstant(*this); }
+	Constant* clone() const override { return new Constant(*this); }
 	
 	//! Returns the unique quantified variable ID
 	unsigned getValue() const { return _value; }	
@@ -75,11 +83,11 @@ protected:
 };
 
 
-class FunctionalTerm : public LTerm {
+class FunctionalTerm : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	FunctionalTerm(unsigned symbol_id, const std::vector<const LTerm*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
+	FunctionalTerm(unsigned symbol_id, const std::vector<const Term*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
 	~FunctionalTerm() = default;
 	FunctionalTerm(const FunctionalTerm&);
 
@@ -87,7 +95,7 @@ public:
 	
 	unsigned getSymbolId() const { return _symbol_id; }
 	
-	const std::vector<const LTerm*>& getChildren() const { return _children; }
+	const std::vector<const Term*>& getChildren() const { return _children; }
 
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
 
@@ -96,33 +104,33 @@ protected:
 	unsigned _symbol_id;
 	
 	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
-	const std::vector<const LTerm*> _children;
+	const std::vector<const Term*> _children;
 };
 
 
-class LFormula : public LogicalElement {
+class Formula : public language::fstrips::LogicalElement {
 public:
-	LFormula() = default;
-	virtual ~LFormula() = default;
+	Formula() = default;
+	virtual ~Formula() = default;
 
-	LFormula* clone() const override = 0;
+	Formula* clone() const override = 0;
 };
 
 
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
-class LAtomicFormula : public LFormula {
+class AtomicFormula : public Formula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	LAtomicFormula(unsigned symbol_id, const std::vector<const LTerm*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
-	~LAtomicFormula() = default;
-	LAtomicFormula(const LAtomicFormula&);
+	AtomicFormula(unsigned symbol_id, const std::vector<const Term*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
+	~AtomicFormula() = default;
+	AtomicFormula(const AtomicFormula&);
 
-	LAtomicFormula* clone() const override { return new LAtomicFormula(*this); }
+	AtomicFormula* clone() const override { return new AtomicFormula(*this); }
 
 	unsigned getSymbolId() const { return _symbol_id; }
 	
-	const std::vector<const LTerm*>& getChildren() const { return _children; }
+	const std::vector<const Term*>& getChildren() const { return _children; }
 
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
 
@@ -132,22 +140,22 @@ protected:
 	unsigned _symbol_id;
 	
 	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
-	const std::vector<const LTerm*> _children;
+	const std::vector<const Term*> _children;
 };
 
 
 //! A formula made of some logical connective applied to a number of subarguments
 //! Will tipically be negation, conjunction, disjunction
-class OpenLFormula : public LFormula {
+class OpenFormula : public Formula {
 public:
 	
-	OpenLFormula(Connective connective, const std::vector<const LFormula*>& subformulae) : _connective(connective), _children(subformulae) {}
-	~OpenLFormula() { for (const auto ptr:_children) delete ptr; }
-	OpenLFormula(const OpenLFormula&);
+	OpenFormula(Connective connective, const std::vector<const Formula*>& subformulae) : _connective(connective), _children(subformulae) {}
+	~OpenFormula() { for (const auto ptr:_children) delete ptr; }
+	OpenFormula(const OpenFormula&);
 
 	Connective getConnective() const { return _connective; }
 	
-	const std::vector<const LFormula*>& getChildren() const { return _children; }
+	const std::vector<const Formula*>& getChildren() const { return _children; }
 
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
@@ -156,23 +164,23 @@ protected:
 	Connective _connective;
 	
 	//! The formula subformulae
-	std::vector<const LFormula*> _children;
+	std::vector<const Formula*> _children;
 };
 
 
 //! A formula quantified by at least one variable
-class LQuantifiedFormula : public LFormula {
+class QuantifiedFormula : public Formula {
 public:
-	LQuantifiedFormula(Quantifier quantifier, const std::vector<const LogicalVariable*>& variables, const LFormula* subformula) : _quantifier(quantifier), _variables(variables), _subformula(subformula) {}
+	QuantifiedFormula(Quantifier quantifier, const std::vector<const LogicalVariable*>& variables, const Formula* subformula) : _quantifier(quantifier), _variables(variables), _subformula(subformula) {}
 
-	virtual ~LQuantifiedFormula() {
+	virtual ~QuantifiedFormula() {
 		delete _subformula;
 		for (auto ptr:_variables) delete ptr;
 	}
 
-	LQuantifiedFormula(const LQuantifiedFormula& other);
+	QuantifiedFormula(const QuantifiedFormula& other);
 
-	const LFormula* getSubformula() const { return _subformula; }
+	const Formula* getSubformula() const { return _subformula; }
 	
 	const std::vector<const LogicalVariable*>& getVariables() const { return _variables; }
 
@@ -187,8 +195,151 @@ protected:
 	std::vector<const LogicalVariable*> _variables;
 
 	//! ATM we only allow quantification of conjunctions
-	const LFormula* _subformula;
+	const Formula* _subformula;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Effects, Actions
+///////////////////////////////////////////////////////////////////////////////
+
+
+//! The effect of a planning (grounded) action, which is of the form
+//!     LHS := RHS
+//! where both LHS (left-hand side) and RHS (right-hand side) are terms in our language,
+//! with the particularity that LHS must be either a state variable or a fluent-headed nested term.
+class ActionEffect {
+public:
+	ActionEffect(const Formula* condition);
+	
+	virtual ~ActionEffect() { delete _condition; };
+	
+	ActionEffect(const ActionEffect&);
+	ActionEffect(ActionEffect&&) = default;
+	ActionEffect& operator=(const ActionEffect&) = delete;
+	ActionEffect& operator=(ActionEffect&&) = default;
+	
+	virtual ActionEffect* clone() const = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const ActionEffect& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
+
+	//! Accessor
+	const Formula* condition() const { return _condition; }
+	
+	virtual bool is_predicative() const = 0;
+	virtual bool is_add() const = 0;
+	virtual bool is_del() const = 0;
+	
+protected:
+	
+	//! The effect condition
+	const Formula* _condition;
+};
+
+
+class FunctionalEffect : ActionEffect {
+public:
+	FunctionalEffect(const FunctionalTerm* lhs, const Term* rhs, const Formula* condition)
+		: ActionEffect(condition), _lhs(lhs), _rhs(rhs) {}
+	virtual ~FunctionalEffect() { delete _lhs; delete _rhs; };
+	
+	FunctionalEffect(const FunctionalEffect&);
+	FunctionalEffect(FunctionalEffect&&) = default;
+	FunctionalEffect& operator=(const FunctionalEffect&) = delete;
+	FunctionalEffect& operator=(FunctionalEffect&&) = default;
+	
+	FunctionalEffect* clone() const override { return new FunctionalEffect(*this); }
+	
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+
+	//! Accessors for the left-hand side and right-hand side of the effect
+	const Term* lhs() const { return _lhs; }
+	const Term* rhs() const { return _rhs; }
+	
+	bool is_predicative() const override { return false; };
+	bool is_add() const override { return false; };
+	bool is_del() const override { return false; };
+	
+protected:
+	//! The LHS _must_ be a functional term, i.e. we cannot modify the
+	//! denotation of (i.e. assign to) a constant or a logical variable
+	const FunctionalTerm* _lhs;
+	
+	//! The effect RHS
+	const Term* _rhs;
+};
+
+class AtomicEffect : ActionEffect {
+public:
+	enum class Type {ADD, DEL};
+	
+	AtomicEffect(const AtomicFormula* atom, Type type, const Formula* condition)
+		: ActionEffect(condition), _atom(atom), _type(type) {}
+	virtual ~AtomicEffect() { delete _atom; };
+	
+	AtomicEffect(const AtomicEffect&);
+	AtomicEffect(AtomicEffect&&) = default;
+	AtomicEffect& operator=(const AtomicEffect&) = delete;
+	AtomicEffect& operator=(AtomicEffect&&) = default;
+	
+	AtomicEffect* clone() const override { return new AtomicEffect(*this); }
+	
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+
+	const AtomicFormula* getAtom() const { return _atom; }
+	const Type getType() const { return _type; }
+	
+	bool is_predicative() const override { return true; };
+	bool is_add() const override { return _type == Type::ADD; }
+	bool is_del() const override { return _type == Type::DEL; }
+	
+protected:
+	//! An AtomicEffect involves an atomic formula
+	const AtomicFormula* _atom;
+	
+	//! The type (add/del) of atomic effect
+	const Type _type;
+};
+
+
+
+class ActionSchema {
+protected:
+	//! The ID of the original action schema (not to be confused with the ID of resulting fully-grounded actions)
+	unsigned _id;
+	
+	const std::string _name;
+	const Signature _signature;
+	const std::vector<std::string> _parameter_names;
+	const Formula* _precondition;
+	const std::vector<const ActionEffect*> _effects;
+
+public:
+	ActionSchema(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names,
+                 const Formula* precondition, const std::vector<const ActionEffect*>& effects);
+	
+	~ActionSchema();
+	ActionSchema(const ActionSchema&);
+	
+	unsigned getId() const { return _id; }
+	const std::string& getName() const { return _name; }
+	const Signature& getSignature() const { return _signature; }
+	const std::vector<std::string>& getParameterNames() const { return _parameter_names; }
+	const Formula* getPrecondition() const { return _precondition; }
+	const std::vector<const ActionEffect*>& getEffects() const { return _effects; }
+	
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const ActionSchema& entity) { return entity.print(os); }
+	std::ostream& print(std::ostream& os) const;
+};
+
+
+
+
 
 
 } } } // namespaces
