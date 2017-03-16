@@ -66,7 +66,7 @@ _full_binding(unsigned id, const ActionData& action_data, const Binding& binding
 	
 	std::vector<const fs::ActionEffect*> effects;
 	if (bind_effects) {
-		auto effects = _bind_effects(action_data, binding, info);
+		effects = _bind_effects(action_data, binding, info);
 		if (effects.empty()) {
 			delete precondition;
 			return nullptr;
