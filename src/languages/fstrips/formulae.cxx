@@ -173,8 +173,9 @@ _variables(Utils::clone(other._variables)), _subformula(other._subformula->clone
 std::ostream& QuantifiedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << name() << " ";
 	for (const BoundVariable* var:_variables) {
-		os << *var << ": " << info.getTypename(var->getType()) << " s.t. ";
+		os << *var << ": " << info.getTypename(var->getType()) << " ";
 	}
+	os << " s.t. ";
 	os << "(" << *_subformula << ")";
 	return os;
 }
