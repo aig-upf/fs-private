@@ -278,8 +278,9 @@ public:
 
 } } } // namespaces
 
-/*
 // std specializations for terms and term pointers that will allow us to use them in hash-table-like structures
+// NOTE that these specializations are necessary for any use of term pointers in std::map/std::unordered_maps,
+// even if compilation will succeed without them as well.
 namespace fs = fs0::language::fstrips;
 namespace std {
     template<> struct hash<fs::Term> {
@@ -294,4 +295,3 @@ namespace std {
         std::size_t operator()(const fs::Term* t1, const fs::Term* t2) const { return equal_to<fs::Term>()(*t1, *t2); }
     };
 }
-*/
