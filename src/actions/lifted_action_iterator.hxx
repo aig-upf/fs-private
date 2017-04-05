@@ -36,7 +36,7 @@ public:
 		friend class LiftedActionIterator;
 		
 	public:
-		typedef Gecode::DFS<GecodeCSP> engine_t;
+		using engine_t = Gecode::DFS<GecodeCSP>;
 		
 		~Iterator();
 		
