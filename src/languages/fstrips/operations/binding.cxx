@@ -6,6 +6,7 @@
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <utils/binding.hxx>
+#include <utils/utils.hxx>
 #include <problem_info.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
@@ -120,8 +121,11 @@ Visit(const Disjunction& lhs) {
 void FormulaBindingVisitor::
 Visit(const ExistentiallyQuantifiedFormula& lhs) {
 	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
+	
 	for (const BoundVariable* var:lhs.getVariables()) {
-		if (_binding.binds(var->getVariableId())) throw std::runtime_error("Wrong binding - Duplicated variable");
+		if (_binding.binds(var->getVariableId())) {
+			throw std::runtime_error("Wrong binding - Duplicated variable");
+		}
 	}
 	// TODO Check if the binding is a complete binding and thus we can directly return the (variable-free) conjunction
 	// TODO Redesign this mess
@@ -131,7 +135,7 @@ Visit(const ExistentiallyQuantifiedFormula& lhs) {
 		return;
 	}
 
-	_result = new ExistentiallyQuantifiedFormula(lhs.getVariables(), bound_subformula);
+	_result = new ExistentiallyQuantifiedFormula(Utils::clone(lhs.getVariables()), bound_subformula);
 }
 
 void FormulaBindingVisitor::
@@ -148,7 +152,7 @@ Visit(const UniversallyQuantifiedFormula& lhs) {
 		return;
 	}
 
-	_result = new UniversallyQuantifiedFormula(lhs.getVariables(), bound_subformula);
+	_result = new UniversallyQuantifiedFormula(Utils::clone(lhs.getVariables()), bound_subformula);
 }
 
 
