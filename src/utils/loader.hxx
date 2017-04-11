@@ -4,7 +4,7 @@
 #include <vector>
 #include <lib/rapidjson/document.h>
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; } }}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -41,6 +41,8 @@ protected:
 	//! Load the data related to the problem functions and predicates into the info object
 	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);
 	
+	static std::vector<const fs::Axiom*> loadAxioms(const rapidjson::Value& data, const ProblemInfo& info);
+
 	static std::vector<const ActionData*> loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info, bool load_effects);
 	
 	static const ActionData* loadActionData(const rapidjson::Value& data, unsigned id, const ProblemInfo& info, bool load_effects);

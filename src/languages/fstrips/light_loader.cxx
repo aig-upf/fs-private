@@ -21,10 +21,10 @@ _parseVariables(const rapidjson::Value& tree, const ProblemInfo& info) {
 	for (unsigned i = 0; i < tree.Size(); ++i) {
 		const rapidjson::Value& node = tree[i];
 		unsigned id = node[0].GetUint();
-// 		std::string name = node[1].GetString();
+ 		std::string name = node[1].GetString();
 		std::string type_name = node[2].GetString();
 		TypeIdx type = info.getTypeId(type_name);
-		list.push_back(new LogicalVariable(id, type));
+		list.push_back(new LogicalVariable(id, name, type));
 	}
 	return list;
 }
@@ -83,7 +83,7 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 		return new Constant(tree["value"].GetInt(), info.getTypeId(tree["typename"].GetString()));
 
 	} else if (term_type == "variable") {
-		return new LogicalVariable(tree["position"].GetInt(), info.getTypeId(tree["typename"].GetString()));
+		return new LogicalVariable(tree["position"].GetInt(), tree["name"].GetString(), info.getTypeId(tree["typename"].GetString()));
 		
 	} else if (term_type == "functional") {
 		std::string symbol = tree["symbol"].GetString();

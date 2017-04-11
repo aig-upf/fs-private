@@ -201,18 +201,21 @@ _ground_all_elements(const std::vector<const ActionData*>& action_data, const Pr
 			LPT_INFO("cout", "WARNING - The number of ground elements is too high: " << num_bindings);
 		}
 		
-		float onepercent = ((float)num_bindings / 100);
-		int progress = 0;
-		unsigned i = 0;
+// 		float onepercent = ((float)num_bindings / 100);
+// 		int progress = 0;
+// 		unsigned i = 0;
 		for (; !binding_generator.ended(); ++binding_generator) {
 			id = _ground(id, data, *binding_generator, info, grounded, bind_effects);
-			++i;
+// 			++i;
 			
 			// Print 5%, 10%, 15%, ... progress indicators
+			/*
+			 * NOTE This is too expensive for problems with many ground actions!
 			while (i / onepercent > progress) {
 				++progress;
 				if (progress % 5 == 0) std::cout << progress << "%, " << std::flush;
 			}
+			*/
 			++total_num_bindings;
 		}
 		std::cout << std::endl;
@@ -234,30 +237,6 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 	}
 	
 	return _ground_all_elements(action_data, info, true);
-}
-
-
-std::map<std::pair<SymbolIdx, std::vector<ObjectIdx>>, const fs::DeclarativeAxiomaticFormula*> 
-ActionGrounder::ground_axioms(const std::vector<const ActionData*>& axiom_data, const ProblemInfo& info) {
-	std::map<std::pair<SymbolIdx, std::vector<ObjectIdx>>, const fs::DeclarativeAxiomaticFormula*> result;
-	
-	// This is kind of a dirty trick: we ground all of the axioms _as if_ they were actions (but note the boolean parameter:
-	// we need to allow that these actions have no effects, as axioms do); and then extract the actual ground axiom information from there
-	// (basically, the action precondition will be the ground axiom formula)
-	for (const GroundAction* ground:_ground_all_elements(axiom_data, info, false)) {
-		
-		const std::string& symbol = ground->getName();
-		SymbolIdx symbol_id = info.getSymbolId(symbol);
-		const std::vector<ObjectIdx>& binding = ground->getBinding().get_full_binding();
-		const fs::DeclarativeAxiomaticFormula* formula = dynamic_cast<fs::DeclarativeAxiomaticFormula*>(ground->getPrecondition()->clone());
-		std::cout << "Ground axiom: " << *ground->getPrecondition() << std::endl;
-		if (!formula) throw std::runtime_error("Unexpected error: the ground axiom should be a declarative axiomatic formula object");
-		
-		result.insert(std::make_pair(std::make_pair(symbol_id, binding), formula));
-		delete ground;
-	}
-	
-	return result;
 }
 
 
@@ -422,8 +401,8 @@ collect_effect_non_constant_subterms(const fs::ActionEffect* effect) {
 
 
 ActionData*
-ActionGrounder::process_action_data(const ActionData& action_data, const ProblemInfo& info, bool process_effects) {
-	auto precondition = fs::bind(*action_data.getPrecondition(), Binding::EMPTY_BINDING, info);
+ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo& info, bool process_effects) {
+	auto precondition = fs::bind(*action.getPrecondition(), Binding::EMPTY_BINDING, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
 		throw std::runtime_error("The precondition of the action schema is (statically) unsatisfiable!");
@@ -432,13 +411,13 @@ ActionGrounder::process_action_data(const ActionData& action_data, const Problem
 	std::vector<const fs::ActionEffect*> effects;
 
 	if (process_effects) {
-		effects = _bind_effects(action_data, Binding::EMPTY_BINDING, info);
+		effects = _bind_effects(action, Binding::EMPTY_BINDING, info);
 		if (effects.empty()) {
 			delete precondition;
 			throw std::runtime_error("The action schema has (statically) no applicable action effects!");
 		}
 	}
-	return new ActionData(action_data.getId(), action_data.getName(), action_data.getSignature(), action_data.getParameterNames(), precondition, effects);
+	return new ActionData(action.getId(), action.getName(), action.getSignature(), action.getParameterNames(), action.getBindingUnit(), precondition, effects);
 }
 
 GroundAction*

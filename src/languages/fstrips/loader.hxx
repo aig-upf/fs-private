@@ -15,6 +15,7 @@ class ActionEffect;
 class Formula;
 class AtomicFormula;
 class BoundVariable;
+class BindingUnit;
 
 class Loader {
 public:

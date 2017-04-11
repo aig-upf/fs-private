@@ -91,7 +91,8 @@ SimpleStateModel::next(const StateT& state, const GroundAction& a) const {
 
 bool
 SimpleStateModel::goal(const StateT& s, unsigned i) const {
-	return _subgoals.at(i)->interpret(s, Binding::EMPTY_BINDING);
+	Binding binding;
+	return _subgoals.at(i)->interpret(s, binding);
 // 	return s.contains(_subgoals.at(i)); // TODO SHOULD BE:
 	// const Atom& subgoal = _subgoals.at(i);
 	// return s.check(subgoal.getVariable(), s.getValue());

@@ -4,7 +4,7 @@
 #include <string>
 #include <fs_types.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Term; class ActionEffect; class DeclarativeAxiomaticFormula; }}}
+namespace fs0 { namespace language { namespace fstrips { class Term; class ActionEffect; }}}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -39,8 +39,6 @@ public:
 	static std::vector<const PartiallyGroundedAction*> fully_lifted(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);
 	
 	static std::vector<const GroundAction*> fully_ground(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);
-	
-	static std::map<std::pair<SymbolIdx, std::vector<ObjectIdx>>, const fs::DeclarativeAxiomaticFormula*> ground_axioms(const std::vector<const ActionData*>& axiom_data, const ProblemInfo& info);
 	
 	static const std::vector<const fs::ActionEffect*> compile_nested_fluents_away(const fs::ActionEffect* effect, const ProblemInfo& info);
 	

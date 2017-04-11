@@ -74,6 +74,7 @@ bool LiftedActionCSP::init(bool use_novelty_constraint) {
 void LiftedActionCSP::index_parameters() {
 	// Index in '_parameter_variables' the (ordered) CSP variables that correspond to the action parameters
 	const Signature& signature = _action.getSignature();
+	const fs::BindingUnit& unit =_action.getBindingUnit();
 	for (unsigned i = 0; i < signature.size(); ++i) {
 		if (_action.isBound(i)) {
 			// If the parameter is bound, we mark it specially so that we know the value cannot be retrieved from the CSP,
@@ -81,8 +82,7 @@ void LiftedActionCSP::index_parameters() {
 			_parameter_variables.push_back(std::numeric_limits<unsigned int>::max());
 		} else {
 			// We here assume that the parameter IDs are always 0..k-1, where k is the number of parameters
-			fs::BoundVariable variable(i, signature[i]);
-			_parameter_variables.push_back(_translator.resolveVariableIndex(&variable));
+			_parameter_variables.push_back(_translator.resolveVariableIndex(unit.getParameterVariable(i)));
 		}
 	}
 }
@@ -92,13 +92,13 @@ LiftedActionCSP::register_csp_variables() {
 	BaseCSP::register_csp_variables();
 	// We simply make sure all action parameters have been registered.
 	const Signature& signature = _action.getSignature();
+	const fs::BindingUnit& unit =_action.getBindingUnit();
 	for (unsigned i = 0; i < signature.size(); ++i) {
 		if (!_action.isBound(i)) {
 			// We here assume that the parameter IDs are always 0..k-1, where k is the number of parameters
-			fs::BoundVariable variable(i, signature[i]);
-			if (!_translator.isRegistered(&variable)) {
-				auto var = new fs::BoundVariable(i, signature[i]);
-				registerTermVariables(var,  _translator);
+			const fs::BoundVariable* variable = unit.getParameterVariable(i);
+			if (!_translator.isRegistered(variable)) {
+				registerTermVariables(variable,  _translator);
 			}
 		}
 	}

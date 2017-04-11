@@ -54,7 +54,7 @@ def get_command(cpus, debug):
 	
 def main(args):
 	current_dir = os.path.dirname(os.path.abspath(__file__))
-	cpus = min(5, multiprocessing.cpu_count() - 1)
+	cpus = min(5, multiprocessing.cpu_count())
 	print("Starting build process on directory '{}' with {} CPUs.".format(current_dir, cpus))
 	
 	if args.all:  # We launch a build for each possible debug config

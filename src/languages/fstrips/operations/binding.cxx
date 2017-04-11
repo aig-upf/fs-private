@@ -71,11 +71,11 @@ Visit(const Conjunction& lhs) {
 		conjuncts.push_back(processed);
 		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(processed);
 		if( cc == nullptr ) continue;
-		const StateVariable* lhs = dynamic_cast<const StateVariable*>(cc->lhs());
-		if( lhs == nullptr ) continue;
+		const StateVariable* lhs_ = dynamic_cast<const StateVariable*>(cc->lhs());
+		if( lhs_ == nullptr ) continue;
 		const Constant* rhs = dynamic_cast< const Constant*>(cc->rhs());
 		if( rhs == nullptr ) continue;
-		atoms.push_back(std::make_pair(lhs->getValue(), rhs->getValue()));
+		atoms.push_back(std::make_pair(lhs_->getValue(), rhs->getValue()));
 	}
 
 	if (conjuncts.empty()) {
@@ -239,7 +239,7 @@ void TermBindingVisitor::
 Visit(const UserDefinedStaticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
-
+	
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 
@@ -254,6 +254,18 @@ Visit(const UserDefinedStaticTerm& lhs) {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms
 		_result =  new UserDefinedStaticTerm(symbol_id, processed);
 	}
+}
+
+void TermBindingVisitor::
+Visit(const AxiomaticTermWrapper& lhs) {
+	const auto& subterms = lhs.getSubterms();
+	const auto& symbol_id = lhs.getSymbolId();
+	
+	std::vector<ObjectIdx> constant_values;
+	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
+
+	// we simply return a user-defined static term with the processed/bound subterms
+	_result =  new AxiomaticTermWrapper(lhs.getAxiom(), symbol_id, processed);
 }
 
 

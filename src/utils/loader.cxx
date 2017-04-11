@@ -8,6 +8,7 @@
 #include <actions/grounding.hxx>
 #include <utils/component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
+#include <languages/fstrips/axioms.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/registry.hxx>
@@ -24,6 +25,16 @@
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
+	
+std::unordered_map<std::string, const fs::Axiom*>
+_index_axioms(const std::vector<const fs::Axiom*>& axioms) {
+	std::unordered_map<std::string, const fs::Axiom*> index;
+	for (const fs::Axiom* axiom:axioms) {
+		index.insert(std::make_pair(axiom->getName(), axiom));
+	}
+	return index;
+}
+
 
 Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	const Config& config = Config::instance();
@@ -40,7 +51,8 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	
 	LPT_INFO("main", "Loading axiom data...");
 	// Axiom schemas are simply action schemas but without effects
-	auto axiom_data = loadAllActionData(data["axioms"], info, false);
+	auto axioms = loadAxioms(data["axioms"], info);
+	auto axiom_idx = _index_axioms(axioms);
 	
 	LPT_INFO("main", "Loading goal formula...");
 	auto goal = loadGroundedFormula(data["goal"], info);
@@ -48,9 +60,11 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	LPT_INFO("main", "Loading state constraints...");
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
-	//! Set the singleton global instance
-	Problem* problem = new Problem(init, indexer, action_data, axiom_data, goal, sc, AtomIndex(info));
+	//! Set the global singleton Problem instance
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc, AtomIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
+	
+	problem->consolidateAxioms();
 	
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
@@ -111,11 +125,22 @@ Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info,
 	return schemata;
 }
 
+std::vector<const fs::Axiom*>
+Loader::loadAxioms(const rapidjson::Value& data, const ProblemInfo& info) {
+	std::vector<const fs::Axiom*> axioms;
+	for (const ActionData* action:loadAllActionData(data, info, false)) {
+		axioms.push_back(new fs::Axiom(action->getName(), action->getSignature(), action->getParameterNames(), action->getBindingUnit(), action->getPrecondition()->clone()));
+		delete action;
+	}
+	return axioms;
+}
+
 const ActionData*
 Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemInfo& info, bool load_effects) {
 	const std::string& name = node["name"].GetString();
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
+	const fs::BindingUnit unit(parameters, fs::Loader::parseVariables(node["unit"], info));
 	
 	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
 	std::vector<const fs::ActionEffect*> effects;
@@ -124,7 +149,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 		effects = fs::Loader::parseEffectList(node["effects"], info);
 	}
 	
-	ActionData adata(id, name, signature, parameters, precondition, effects);
+	ActionData adata(id, name, signature, parameters, unit, precondition, effects);
 	if (adata.has_empty_parameter()) {
 		LPT_INFO("cout", "Schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
 		return nullptr;

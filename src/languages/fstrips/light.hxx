@@ -39,14 +39,18 @@ class LogicalVariable : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 
-	LogicalVariable(unsigned id, TypeIdx type) : _id(id), _type(type) {}
+	LogicalVariable(unsigned id, const std::string& name, TypeIdx type) : _id(id), _name(name), _type(type) {}
+
 	~LogicalVariable() = default;
 	LogicalVariable(const LogicalVariable&) = default;
 
 	LogicalVariable* clone() const override { return new LogicalVariable(*this); }
 	
 	//! Returns the unique quantified variable ID
-	unsigned getId() const { return _id; }	
+	unsigned getId() const { return _id; }
+	
+	//! Returns the name of the variable
+	const std::string& getName() const { return _name; }
 	
 	//! Returns the ID of the variable type
 	TypeIdx getType() const { return _type; }
@@ -56,6 +60,8 @@ public:
 protected:
 	//! The ID of the variable, which will be unique throughout the whole binding unit.
 	unsigned _id;
+	
+	const std::string _name;
 	
 	//! The type of the variable
 	TypeIdx _type;	
@@ -211,7 +217,6 @@ public:
 
 	QuantifiedFormula(const QuantifiedFormula& other);
 	QuantifiedFormula* clone() const override { return new QuantifiedFormula(*this); }
-
 
 	const Formula* getSubformula() const { return _subformula; }
 	

@@ -53,7 +53,7 @@ std::ostream& _print_nested(std::ostream& os, const fs0::ProblemInfo& info, unsi
 }
 
 std::ostream& LogicalVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << "?" << _id;
+	os << _name;
 	return os;
 }
 

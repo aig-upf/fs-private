@@ -4,7 +4,7 @@
 #include <fs_types.hxx>
 #include <utils/binding.hxx>
 #include <applicability/action_managers.hxx>
-
+#include <languages/fstrips/axioms.hxx>
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class ActionEffect; } }}
 namespace fs = fs0::language::fstrips;
@@ -22,11 +22,12 @@ protected:
 	const std::string _name;
 	const Signature _signature;
 	const std::vector<std::string> _parameter_names;
+	fs::BindingUnit _bunit;
 	const fs::Formula* _precondition;
 	const std::vector<const fs::ActionEffect*> _effects;
 
 public:
-	ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names,
+	ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names, const fs::BindingUnit& bunit,
 			   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	
 	~ActionData();
@@ -36,6 +37,7 @@ public:
 	const std::string& getName() const { return _name; }
 	const Signature& getSignature() const { return _signature; }
 	const std::vector<std::string>& getParameterNames() const { return _parameter_names; }
+	const fs::BindingUnit& getBindingUnit() const { return _bunit; }
 	const fs::Formula* getPrecondition() const { return _precondition; }
 	const std::vector<const fs::ActionEffect*>& getEffects() const { return _effects; }
 	
@@ -77,6 +79,7 @@ public:
 	const std::string& getName() const { return _data.getName(); }
 	const Signature& getSignature() const { return _data.getSignature(); }
 	const std::vector<std::string>& getParameterNames() const { return _data.getParameterNames(); }
+	const fs::BindingUnit& getBindingUnit() const { return _data.getBindingUnit(); }
 	unsigned numParameters() const { return getSignature().size(); }
 	
 	const fs::Formula* getPrecondition() const { return _precondition; }

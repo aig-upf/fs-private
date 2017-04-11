@@ -2,7 +2,9 @@
 #include <languages/fstrips/loader.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/builtin.hxx>
+#include <languages/fstrips/axioms.hxx>
 #include <constraints/registry.hxx>
+#include <problem.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips {
@@ -13,8 +15,8 @@ const Term* _create_nested_term(const std::string& symbol, const std::vector<con
 	
 	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
 	if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return ArithmeticTermFactory::create(symbol, subterms);
-	
-	unsigned symbol_id = info.getSymbolId(symbol);
+
+	unsigned symbol_id = info.getSymbolId(symbol);	
 	const auto& function = info.getSymbolData(symbol_id);
 	if (function.isStatic()) {
 		return new UserDefinedStaticTerm(symbol_id, subterms);
@@ -95,7 +97,7 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 	} else if (term_type == "int_constant") {
 		return new IntConstant(tree["value"].GetInt());
 	} else if (term_type == "variable") {
-		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["typename"].GetString()));
+		return new BoundVariable(tree["position"].GetInt(), tree["name"].GetString(), info.getTypeId(tree["typename"].GetString()));
 	} else if (term_type == "functional") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<const Term*> children = parseTermList(tree["children"], info);
@@ -112,10 +114,10 @@ std::vector<const BoundVariable*> Loader::parseVariables(const rapidjson::Value&
 	for (unsigned i = 0; i < tree.Size(); ++i) {
 		const rapidjson::Value& node = tree[i];
 		unsigned id = node[0].GetUint();
-// 		std::string name = node[1].GetString();
+		std::string name = node[1].GetString();
 		std::string type_name = node[2].GetString();
 		TypeIdx type = info.getTypeId(type_name);
-		list.push_back(new BoundVariable(id, type));
+		list.push_back(new BoundVariable(id, name, type));
 	}
 	return list;
 }
@@ -141,7 +143,6 @@ std::vector<const ActionEffect*> Loader::parseEffectList(const rapidjson::Value&
 	}
 	return list;
 }
-
 
 
 } } } // namespaces

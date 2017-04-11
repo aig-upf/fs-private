@@ -1,24 +1,22 @@
 
 #pragma once
 
-#include <fs_types.hxx>
 #include <ostream>
-#include <languages/fstrips/language.hxx>
 
+namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; } }}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace print {
 
-//! Prints only the name + binding of an action, e.g. "move(b1, c2)"
-class formula {
+class axiom_header {
 	protected:
-		const fs::Formula& _formula;
+		const fs::Axiom& _axiom;
+
 	public:
-		formula(const fs::Formula& formula) : _formula(formula) {}
+		axiom_header(const fs::Axiom& axiom) : _axiom(axiom) {}
 		
-		friend std::ostream& operator<<(std::ostream &os, const formula& o) { return o.print(os); }
+		friend std::ostream& operator<<(std::ostream &os, const axiom_header& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
-
 
 } } // namespaces
