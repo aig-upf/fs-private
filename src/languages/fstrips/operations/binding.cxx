@@ -258,14 +258,11 @@ Visit(const UserDefinedStaticTerm& lhs) {
 
 void TermBindingVisitor::
 Visit(const AxiomaticTermWrapper& lhs) {
-	const auto& subterms = lhs.getSubterms();
-	const auto& symbol_id = lhs.getSymbolId();
-	
 	std::vector<ObjectIdx> constant_values;
-	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
+	std::vector<const Term*> processed = bind_subterms(lhs.getSubterms(), _binding, _info, constant_values);
 
-	// we simply return a user-defined static term with the processed/bound subterms
-	_result =  new AxiomaticTermWrapper(lhs.getAxiom(), symbol_id, processed);
+	// we simply return a new axiomaticTerm with the processed/bound subterms
+	_result =  new AxiomaticTermWrapper(lhs.getAxiom(), lhs.getSymbolId(), processed);
 }
 
 
