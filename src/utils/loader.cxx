@@ -1,6 +1,5 @@
 
 #include <memory>
-#include <utils/lexical_cast.hxx>
 
 #include <problem.hxx>
 #include <utils/loader.hxx>
@@ -182,16 +181,6 @@ Loader::loadJSONObject(const std::string& filename) {
 	return data;
 }
 
-
-template<typename T>
-std::vector<T>
-Loader::parseNumberList(const rapidjson::Value& data) {
-	std::vector<T> output;
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		output.push_back(boost::lexical_cast<T>(data[i].GetInt()));
-	}
-	return output;
-}
 
 std::vector<std::string>
 Loader::parseStringList(const rapidjson::Value& data) {
