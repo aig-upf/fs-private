@@ -37,7 +37,7 @@ class ProblemRepresentation(object):
         self.dump_data('problem', json.dumps(data), ext='json')
 
         # Optionally, we'll want to print out the precomputed action groundings
-        self.print_groundings_if_available(self.index.action_schemas, self.index.groundings, self.index.objects)
+        self.print_groundings_if_available(data['action_schemata'], self.index.groundings, self.index.objects)
         self.print_debug_data(data)
         self.serialize_static_extensions()
 

@@ -279,7 +279,7 @@ class FSTaskIndex(object):
 
     def process_adl_actions(self, actions, sorted_action_names):
         sorted_act = [actions[name] for name in sorted_action_names if name in actions]
-        self.action_schemas = [FSActionSchema(self, adl.convert_adl_action(act)).dump() for act in sorted_act]
+        self.action_schemas = [FSActionSchema(self, adl.convert_adl_action(act)) for act in sorted_act]
         self.groundings = {act.name: act.groundings for act in sorted_act}
 
     def process_goal(self, goal):
