@@ -5,8 +5,8 @@ import os
 import sys
 import time
 
-from asp.parser import ParsingException, Parser, Grounder
-from asp.utilities import ProblemException
+from .parser import ParsingException, Parser, Grounder
+from .utilities import ProblemException
 
 def parse_and_ground( domain_file, problem_file, workspace_dir, remove_tmp = False ) :
     #Parse the input PDDL

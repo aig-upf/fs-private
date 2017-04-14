@@ -4,6 +4,9 @@
 #include <vector>
 #include <lib/rapidjson/document.h>
 
+#include <utils/lexical_cast.hxx>
+
+
 namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; } }}
 namespace fs = fs0::language::fstrips;
 
@@ -53,5 +56,15 @@ protected:
 	template<typename T>
 	static std::vector<std::vector<T>> parseDoubleNumberList(const rapidjson::Value& data);
 };
+
+template<typename T>
+std::vector<T>
+Loader::parseNumberList(const rapidjson::Value& data) {
+	std::vector<T> output;
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		output.push_back(boost::lexical_cast<T>(data[i].GetInt()));
+	}
+	return output;
+}
 
 } // namespaces

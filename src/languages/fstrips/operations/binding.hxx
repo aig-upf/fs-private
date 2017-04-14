@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include <utils/visitor.hxx>
 #include <languages/fstrips/language_fwd.hxx>
 
