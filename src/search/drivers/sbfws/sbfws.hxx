@@ -82,6 +82,10 @@ public:
 	//! made true along the path (#r)
 	std::unique_ptr<LightRelevantAtomSet> _relevant_atoms;
 	
+	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
+	//! atoms in s with novelty 1.
+	std::vector<unsigned> _nov1atom_idxs;	
+	
 	//! Constructor with full copying of the state (expensive)
 	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
@@ -94,7 +98,8 @@ public:
 		w_g(Novelty::Unknown),
 		w_gr(Novelty::Unknown),
 		_helper(nullptr),
-		_relevant_atoms(nullptr)
+		_relevant_atoms(nullptr),
+		_nov1atom_idxs()
 	{}
 	
 	~SBFWSNode() = default;
@@ -121,7 +126,6 @@ public:
 			reached = std::to_string(_relevant_atoms->num_reached()) + " / " + std::to_string(_relevant_atoms->getHelper()._num_relevant);
 		}
 		os << "#" << _gen_order << " (" << this << "), " << state;
-// 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
@@ -164,6 +168,8 @@ protected:
 
 	//! The novelty evaluators for the different <#g, #r> values
 	NoveltyEvaluatorMapT _wgr_novelty_evaluators;
+	
+	NoveltyEvaluatorMapT _wg_half_novelty_evaluators; // 1.5 nov evaluators	
 
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
 	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
@@ -202,6 +208,7 @@ public:
 	~SBFWSHeuristic() {
 		for (auto& p:_wg_novelty_evaluators) delete p.second;
 		for (auto& p:_wgr_novelty_evaluators) delete p.second;
+		for (auto& p:_wg_half_novelty_evaluators) delete p.second;
 	};
 
 	
@@ -210,6 +217,8 @@ public:
 		unsigned type = node.unachieved_subgoals;
 		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
+// 		assert(node._nov1atom_idxs.empty());
+// 		unsigned nov = evaluate_novelty1(node, _wg_novelty_evaluators, has_parent, type, ptype);
 		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, has_parent, type, ptype);
 		assert(node.w_g == Novelty::Unknown);
 		node.w_g = (nov == 1) ? Novelty::One : Novelty::GTOne;
@@ -256,8 +265,9 @@ public:
 		unsigned type = compute_node_complex_type(node);
 		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? compute_node_complex_type(*(node.parent)) : 0;
+// 		unsigned nov = evaluate_novelty1(node, _wgr_novelty_evaluators, has_parent, type, ptype);
 		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 1, node.has_parent(), type, ptype);
-		
+
 		assert(node.w_gr == Novelty::Unknown);
 		node.w_gr = (nov == 1) ? Novelty::One : Novelty::GTOne;
 		return nov;
@@ -316,6 +326,86 @@ public:
 		}
 
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
+	}
+	
+	template <typename NodeT>
+	unsigned evaluate_novelty1(NodeT& node, NoveltyEvaluatorMapT& evaluator_map, bool has_parent, unsigned type, unsigned parent_type) {
+		assert(node._nov1atom_idxs.empty());
+		NoveltyEvaluatorT* evaluator = fetch_evaluator(evaluator_map, type);
+		unsigned nov;
+		auto valuation = _featureset.evaluate(node.state);
+		if (has_parent && type == parent_type) {
+			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
+			std::vector<unsigned> new_atom_idxs;
+			std::vector<unsigned> repeated_atom_idxs;
+			
+			analyze_new(valuation, _featureset.evaluate(node.parent->state), new_atom_idxs, repeated_atom_idxs);
+			
+			std::vector<unsigned> from_current, from_parent;
+			nov = evaluator->evaluate_1(valuation, new_atom_idxs, from_current);
+			
+			// Now add to nov1atoms those atoms in the parent state that had novelty 1 and have not been deleted by the action leading to this state
+			const auto& parent_1s = node.parent->_nov1atom_idxs;
+			
+			std::set_intersection(parent_1s.begin(), parent_1s.end(), repeated_atom_idxs.begin(), repeated_atom_idxs.end(), std::back_inserter(from_parent));
+			std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));			
+			
+			// TODO Might want to remove this asserts at some point not to penalize the performance of the debug release too much
+			assert(std::is_sorted(repeated_atom_idxs.begin(), repeated_atom_idxs.end()));
+			assert(std::is_sorted(from_parent.begin(), from_parent.end()));
+			assert(std::is_sorted(from_current.begin(), from_current.end()));
+			
+		} else {
+			nov = evaluator->evaluate_1(valuation, node._nov1atom_idxs);
+		}
+		
+		return nov;
+	}
+	
+	template <typename NodeT>
+	bool evaluate_wg1_5(NodeT& node) {
+		LPT_DEBUG("cout", "Let's compute whether node has novelty 1,5: " << node);
+
+		assert(node.w_g != Novelty::Unknown);
+		unsigned type = node.unachieved_subgoals;
+		bool has_parent = node.has_parent();
+		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
+
+		// A somewhat special routine for dealing with 1.5 computations
+		NoveltyEvaluatorT* evaluator = fetch_evaluator(_wg_half_novelty_evaluators, type);
+		
+		const AtomIndex& atomidx = Problem::getInstance().get_tuple_index();
+		const std::vector<AtomIdx> special;
+		for (unsigned var:node._nov1atom_idxs) {
+			special.push_back(atomidx.to_index(var, node.state.getValue(var)));
+		}
+		
+		bool res;
+		if (has_parent && type == ptype) {
+			res = evaluator->evaluate_1_5(_featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), special);
+		} else {
+			res = evaluator->evaluate_1_5(_featureset.evaluate(node.state), special);
+		}
+		
+		if (node.w_g != Novelty::One) {
+			node.w_g = res ? Novelty::OneAndAHalf : Novelty::GTOneAndAHalf;
+		}
+		return res;
+	}	
+
+	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
+	template <typename FeatureValueT>
+	void analyze_new(const std::vector<FeatureValueT>& current, const std::vector<FeatureValueT>& parent, std::vector<unsigned>& new_atoms, std::vector<unsigned>& repeated_atoms) {
+		assert(current.size() == parent.size());
+		assert(new_atoms.empty());
+		assert(repeated_atoms.empty());
+		for (unsigned i = 0; i < current.size(); ++i) {
+			if (current[i] != parent[i]) {
+				new_atoms.push_back(i);
+			} else {
+				repeated_atoms.push_back(i);
+			}
+		}
 	}
 
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which

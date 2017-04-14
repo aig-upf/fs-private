@@ -50,6 +50,10 @@ public:
 	//!
 	std::unordered_set<unsigned> _relevant_atoms;
 	
+	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
+	//! atoms in s with novelty 1.
+	std::vector<unsigned> _nov1atom_idxs;
+	
 	//! The generation order, uniquely identifies the node
 	unsigned long _gen_order;
 
@@ -82,19 +86,20 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const IWRunNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		const Problem& problem = Problem::getInstance();
+// 		const Problem& problem = Problem::getInstance();
 		os << "{@ = " << this;
 		os << ", #=" << _gen_order ;
 		os << ", s = " << state ;
 		os << ", g=" << g ;
 		os << ", w=" << (_evaluated ? (_w == std::numeric_limits<unsigned>::max() ? "INF" : std::to_string(_w)) : "?") ;
 		
-		if (action < std::numeric_limits<unsigned>::max()) {
-			os << ", act=" << *(problem.getGroundActions()[action]) ;
+		os << ", act=" << action ;
+// 		if (action < std::numeric_limits<unsigned>::max()) {
+// 			os << ", act=" << *(problem.getGroundActions()[action]) ;
 // 			os << fs0::print::full_action(*(problem.getGroundActions()[action]));
-		} else {
-			os << ", act=" << "NONE" ;
-		}
+// 		} else {
+// 			os << ", act=" << "NONE" ;
+// 		}
 		
 		os << ", parent = " << parent << "}";
 		return os;
@@ -124,7 +129,7 @@ public:
 	~SimulationEvaluator() = default;
 
 	//! Returns false iff we want to prune this node during the search
-	unsigned evaluate(NodeT& node) {
+	unsigned evaluate_old(NodeT& node) {
 		assert(!node._evaluated); // i.e. don't evaluate a node twice!
 		node._evaluated = true;
 		
@@ -143,6 +148,81 @@ public:
 		
 		return node._w;
 	}
+	
+	unsigned evaluate(NodeT& node) {
+		assert(node._nov1atom_idxs.empty());
+		assert(!node._evaluated); // i.e. don't evaluate a node twice!
+		node._evaluated = true;		
+		unsigned nov;
+		auto valuation = _features.evaluate(node.state);
+		if (node.parent) {
+			auto parent_valuation = _features.evaluate(node.parent->state);
+			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
+			std::vector<unsigned> new_atom_idxs;
+			std::vector<unsigned> repeated_atom_idxs;
+			
+			analyze_new(valuation, parent_valuation, new_atom_idxs, repeated_atom_idxs);
+			
+			std::vector<unsigned> from_current, from_parent;
+			nov = _evaluator->evaluate_1(valuation, new_atom_idxs, from_current);
+			
+			// Now add to nov1atoms those atoms in the parent state that had novelty 1 and have not been deleted by the action leading to this state
+			const auto& parent_1s = node.parent->_nov1atom_idxs;
+			
+			std::set_intersection(parent_1s.begin(), parent_1s.end(), repeated_atom_idxs.begin(), repeated_atom_idxs.end(), std::back_inserter(from_parent));
+			std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));			
+			
+			// TODO Might want to remove this asserts at some point not to penalize the performance of the debug release too much
+			assert(std::is_sorted(repeated_atom_idxs.begin(), repeated_atom_idxs.end()));
+			assert(std::is_sorted(from_parent.begin(), from_parent.end()));
+			assert(std::is_sorted(from_current.begin(), from_current.end()));
+			
+			// NOW EVALUATE 1.5 novelty
+			auto special = to_atom_indexes(node);
+			if (_evaluator->evaluate_1_5(valuation, parent_valuation, special)) {
+				if (nov != 1) nov = 2;
+			}
+			
+		} else {
+			nov = _evaluator->evaluate_1(valuation, node._nov1atom_idxs);
+			
+			// NOW EVALUATE 1.5 novelty
+			auto special = to_atom_indexes(node);
+			if (_evaluator->evaluate_1_5(valuation, special)) {
+				if (nov != 1) nov = 2;
+			}
+			
+		}
+		
+		node._w = nov;
+		return nov;
+	}
+	
+	std::vector<AtomIdx> to_atom_indexes(const NodeT& node) {
+		std::vector<AtomIdx> special;
+		const AtomIndex& atomidx = Problem::getInstance().get_tuple_index();
+		for (unsigned var:node._nov1atom_idxs) {
+			special.push_back(atomidx.to_index(var, node.state.getValue(var)));
+		}
+		return special;
+	}		
+	
+
+	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
+	template <typename FeatureValueT>
+	void analyze_new(const std::vector<FeatureValueT>& current, const std::vector<FeatureValueT>& parent, std::vector<unsigned>& new_atoms, std::vector<unsigned>& repeated_atoms) {
+		assert(current.size() == parent.size());
+		assert(new_atoms.empty());
+		assert(repeated_atoms.empty());
+		for (unsigned i = 0; i < current.size(); ++i) {
+			if (current[i] != parent[i]) {
+				new_atoms.push_back(i);
+			} else {
+				repeated_atoms.push_back(i);
+			}
+		}
+	}
+		
 	
 	std::vector<bool> reached_atoms() const {
 		std::vector<bool> atoms;
@@ -436,7 +516,7 @@ public:
 					_w1_nodes.push_back(successor);
 				}
 				
-// 				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
+//  				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
 				
 				if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
 					LPT_INFO("cout", "IW Simulation - All subgoals reached after processing " << accepted << " nodes");
