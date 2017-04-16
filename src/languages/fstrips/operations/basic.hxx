@@ -22,6 +22,7 @@ class AllNodesVisitor
     , public Loki::Visitor<Tautology, void, true>
     , public Loki::Visitor<Contradiction, void, true>
     , public Loki::Visitor<AtomicFormula, void, true>
+    , public Loki::Visitor<AxiomaticFormula, void, true>
     , public Loki::Visitor<Conjunction, void, true>
     , public Loki::Visitor<Disjunction, void, true>
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
@@ -44,6 +45,7 @@ public:
 	void Visit(const Tautology& lhs);
 	void Visit(const Contradiction& lhs);
 	void Visit(const AtomicFormula& lhs);
+	void Visit(const AxiomaticFormula& lhs);
 	void Visit(const OpenFormula& lhs);
 	void Visit(const Conjunction& lhs);
 	void Visit(const Disjunction& lhs);

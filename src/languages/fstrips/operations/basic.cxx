@@ -47,6 +47,16 @@ Visit(const AtomicFormula& lhs) {
 	}
 }
 
+
+void AllNodesVisitor::
+Visit(const AxiomaticFormula& lhs) {
+	_result.push_back(&lhs);
+	for (const Term* subterm:lhs.getSubterms()) {
+		subterm->Accept(*this);
+	}
+}
+
+
 void AllNodesVisitor::
 Visit(const OpenFormula& lhs) {
 	_result.push_back(&lhs);
