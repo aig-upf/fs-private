@@ -22,7 +22,9 @@ class AllNodesVisitor
     , public Loki::Visitor<Tautology, void, true>
     , public Loki::Visitor<Contradiction, void, true>
     , public Loki::Visitor<AtomicFormula, void, true>
+    , public Loki::Visitor<AxiomaticFormula, void, true>
     , public Loki::Visitor<Conjunction, void, true>
+    , public Loki::Visitor<Disjunction, void, true>
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
 
@@ -33,7 +35,8 @@ class AllNodesVisitor
     , public Loki::Visitor<NestedTerm, void, true>
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
-    , public Loki::Visitor<UserDefinedStaticTerm, void, true>    
+    , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AxiomaticTermWrapper, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>    
 	, public Loki::Visitor<SubtractionTerm, void, true>    
 	, public Loki::Visitor<MultiplicationTerm, void, true>    
@@ -42,7 +45,10 @@ public:
 	void Visit(const Tautology& lhs);
 	void Visit(const Contradiction& lhs);
 	void Visit(const AtomicFormula& lhs);
+	void Visit(const AxiomaticFormula& lhs);
+	void Visit(const OpenFormula& lhs);
 	void Visit(const Conjunction& lhs);
+	void Visit(const Disjunction& lhs);
 	void Visit(const QuantifiedFormula& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
 	void Visit(const UniversallyQuantifiedFormula& lhs);
@@ -55,6 +61,7 @@ public:
 	void Visit(const StaticHeadedNestedTerm& lhs);
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AxiomaticTermWrapper& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
@@ -92,6 +99,7 @@ class NestednessVisitor
     , public Loki::Visitor<Tautology, void, true>
     , public Loki::Visitor<Contradiction, void, true>
     , public Loki::Visitor<AtomicFormula, void, true>
+    , public Loki::Visitor<Disjunction, void, true>
     , public Loki::Visitor<Conjunction, void, true>
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
     , public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
@@ -101,7 +109,8 @@ class NestednessVisitor
     , public Loki::Visitor<Constant, void, true>
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
-    , public Loki::Visitor<UserDefinedStaticTerm, void, true> 
+    , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AxiomaticTermWrapper, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>    
 	, public Loki::Visitor<SubtractionTerm, void, true>    
 	, public Loki::Visitor<MultiplicationTerm, void, true>     
@@ -110,6 +119,8 @@ public:
 	void Visit(const Tautology& lhs) { _result = 0; }
 	void Visit(const Contradiction& lhs) { _result = 0; }
 	void Visit(const AtomicFormula& lhs);
+	void Visit(const OpenFormula& lhs);
+	void Visit(const Disjunction& lhs);
 	void Visit(const Conjunction& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
 	void Visit(const UniversallyQuantifiedFormula& lhs);
@@ -120,6 +131,7 @@ public:
 	void Visit(const StaticHeadedNestedTerm& lhs);
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AxiomaticTermWrapper& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
@@ -143,6 +155,7 @@ class FlatVisitor
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AxiomaticTermWrapper, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
     , public Loki::Visitor<SubtractionTerm, void, true>
     , public Loki::Visitor<MultiplicationTerm, void, true>
@@ -154,6 +167,7 @@ public:
 	void Visit(const StaticHeadedNestedTerm& lhs) { _result = false; }
 	void Visit(const FluentHeadedNestedTerm& lhs) { _result = false; }
 	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AxiomaticTermWrapper& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);	
@@ -176,6 +190,7 @@ class TypeVisitor
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AxiomaticTermWrapper, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
     , public Loki::Visitor<SubtractionTerm, void, true>
     , public Loki::Visitor<MultiplicationTerm, void, true>
@@ -187,6 +202,7 @@ public:
 	void Visit(const StaticHeadedNestedTerm& lhs);
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AxiomaticTermWrapper& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
@@ -212,6 +228,7 @@ class BoundVisitor
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AxiomaticTermWrapper, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
     , public Loki::Visitor<SubtractionTerm, void, true>
     , public Loki::Visitor<MultiplicationTerm, void, true>
@@ -223,6 +240,7 @@ public:
 	void Visit(const StaticHeadedNestedTerm& lhs);
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AxiomaticTermWrapper& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);

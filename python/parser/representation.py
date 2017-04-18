@@ -24,18 +24,20 @@ class ProblemRepresentation(object):
         data = {'variables': self.dump_variable_data(),
                 'objects': self.dump_object_data(),
                 'types': self.dump_type_data(),
-                'action_schemata': self.index.action_schemas,
-                'state_constraints': self.index.state_constraints,
+                'action_schemata': [action.dump() for action in self.index.action_schemas],
+                'state_constraints': self.index.state_constraints.dump(),
+                'goal': self.index.goal.dump(),
+                'axioms': [axiom.dump() for axiom in self.index.axioms],
                 'init': self.dump_init_data(),
-                'goal': self.index.goal,
                 'symbols': self.dump_symbol_data(),
+
                 'problem': {'domain': self.index.domain_name, 'instance': self.index.instance_name}
                 }
 
         self.dump_data('problem', json.dumps(data), ext='json')
 
         # Optionally, we'll want to print out the precomputed action groundings
-        self.print_groundings_if_available(self.index.action_schemas, self.index.groundings, self.index.objects)
+        self.print_groundings_if_available(data['action_schemata'], self.index.groundings, self.index.objects)
         self.print_debug_data(data)
         self.serialize_static_extensions()
 
@@ -176,9 +178,17 @@ class ProblemRepresentation(object):
         for action in data['action_schemata']:
             self.dump_data("action.{}".format(action['name']), json.dumps(action, indent=2), ext='json', subdir='debug')
 
+        # Separate each axiom into a different file:
+        for axiom in data['axioms']:
+            self.dump_data("axiom.{}".format(axiom['name']), json.dumps(axiom, indent=2), ext='json', subdir='debug')
+
         # Print all (ordered) action schema names in a separate file
         names = [action['name'] for action in data['action_schemata']]
         self.dump_data("schemas", names, ext='txt', subdir='debug')
+
+        # Print all (ordered) axioms in a separate file
+        axiom_data = ["{}\n\n".format(axiom) for axiom in self.index.axioms]
+        self.dump_data("axioms", axiom_data, ext='txt', subdir='debug')
 
         # Types
         lines = list()

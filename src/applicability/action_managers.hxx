@@ -103,7 +103,7 @@ protected:
 	const std::vector<const GroundAction*>& _actions;	
 	
 	//! The state constraints relevant to this object
-	const std::vector<const fs::AtomicFormula*> _state_constraints;
+	const std::vector<const fs::Formula*> _state_constraints;
 	
 	//! A list <0,1, ..., num_actions>
 	const std::vector<ActionIdx> _all_actions_whitelist;

@@ -8,14 +8,14 @@ import python.utils
 from . import pddl
 
 from . import adl
-from . import fstrips
+from . import fstrips as fs
 from . import pddl_helper
 from . import static
 from . import util
 from .exceptions import ParseException
 from .asp.problem import get_effect_symbols
 from .util import IndexDictionary
-from .fstrips_components import FSActionSchema, FSFormula
+from .fstrips_components import FSActionSchema, FSFormula, FSAxiom
 from .object_types import process_problem_types
 from .state_variables import create_all_possible_state_variables, create_all_possible_state_variables_from_groundings
 
@@ -52,6 +52,7 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task.process_actions(fd_task.actions)
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
+    task.process_axioms(fd_task.axioms)
     return task
 
 
@@ -88,9 +89,9 @@ def _process_fluent_atoms(fd_initial_fluent_atoms):
     for name, args, value in fd_initial_fluent_atoms:
         if value is None:  # A predicate
             # TODO - We should also initialize the non-specified points to 0? (done by the compiler anyway)
-            initial_fluent_atoms.append(fstrips.Atom(fstrips.Variable(name, args), 1))  # '1' because it is non-negated
+            initial_fluent_atoms.append(fs.Atom(fs.Variable(name, args), 1))  # '1' because it is non-negated
         else:  # A function
-            initial_fluent_atoms.append(fstrips.Atom(fstrips.Variable(name, args), value))
+            initial_fluent_atoms.append(fs.Atom(fs.Variable(name, args), value))
     return initial_fluent_atoms
 
 
@@ -114,6 +115,7 @@ class FSTaskIndex(object):
         self.types = util.UninitializedAttribute('types')
         self.type_map = util.UninitializedAttribute('type_map')
         self.objects = util.UninitializedAttribute('objects')
+        self.object_types = util.UninitializedAttribute('object_types')
         self.symbols = util.UninitializedAttribute('symbols')
         self.symbol_types = util.UninitializedAttribute('symbol_types')
         self.action_cost_symbols = util.UninitializedAttribute('action_cost_symbols')
@@ -128,6 +130,7 @@ class FSTaskIndex(object):
         self.state_constraints = util.UninitializedAttribute('state_constraints')
         self.action_schemas = util.UninitializedAttribute('action_schemas')
         self.groundings = None
+        self.axioms = []
 
     def process_types(self, types, type_map):
         # Each typename points to its (unique) 0-based index
@@ -136,7 +139,7 @@ class FSTaskIndex(object):
 
     def process_objects(self, objects):
         # Each object name points to it unique 0-based index / ID
-        self.objects = self._index_objects(objects)
+        self.objects, self.object_types = self._index_objects(objects)
 
     def process_symbols(self, actions, predicates, functions):
         self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
@@ -169,13 +172,15 @@ class FSTaskIndex(object):
 
     @staticmethod
     def _index_objects(objects):
+        o_types = {}
         idx = IndexDictionary()
         idx.add(util.bool_string(False))  # 0
         idx.add(util.bool_string(True))  # 1
         # idx.add('undefined')  # Do we need an undefined object?
         for o in objects:
             idx.add(o.name)
-        return idx
+            o_types[o.name] = o.type
+        return idx, o_types
 
     @staticmethod
     def _index_symbols(predicates, functions):
@@ -187,7 +192,7 @@ class FSTaskIndex(object):
 
         for s in predicates:
             argtypes = [t.type for t in s.arguments]
-            symbols[s.name] = fstrips.Predicate(s.name, argtypes)
+            symbols[s.name] = fs.Predicate(s.name, argtypes)
             symbol_types[s.name] = 'bool'
 
         for s in functions:
@@ -195,7 +200,7 @@ class FSTaskIndex(object):
                 action_cost_symbols.add(s.name)
             else:
                 argtypes = [t.type for t in s.arguments]
-                symbols[s.name] = fstrips.Function(s.name, argtypes, s.type)
+                symbols[s.name] = fs.Function(s.name, argtypes, s.type)
                 symbol_types[s.name] = s.type
 
         return symbols, symbol_types, action_cost_symbols
@@ -270,21 +275,25 @@ class FSTaskIndex(object):
         self.state_variables = state_variables
 
     def process_actions(self, actions):
-        self.action_schemas = [FSActionSchema(self, action).dump() for action in actions]
+        self.action_schemas = [FSActionSchema(self, action) for action in actions]
 
     def process_adl_actions(self, actions, sorted_action_names):
         sorted_act = [actions[name] for name in sorted_action_names if name in actions]
-        self.action_schemas = [FSActionSchema(self, adl.convert_adl_action(act)).dump() for act in sorted_act]
+        self.action_schemas = [FSActionSchema(self, adl.convert_adl_action(act)) for act in sorted_act]
         self.groundings = {act.name: act.groundings for act in sorted_act}
 
     def process_goal(self, goal):
-        self.goal = FSFormula(self, goal).dump()
+        self.goal = FSFormula(self, goal)
 
     def process_adl_goal(self, adl_task):
         self.process_goal(adl.process_adl_flat_formula(adl_task.flat_ground_goal_preconditions))
 
     def process_state_constraints(self, constraints):
-        self.state_constraints = FSFormula(self, constraints).dump()
+        self.state_constraints = FSFormula(self, constraints)
+
+    def process_axioms(self, axioms):
+        """ An axiom is just a (possibly lifted) named formula. """
+        self.axioms = [FSAxiom(self, axiom) for axiom in axioms]
 
 
 def _check_symbol_in_initial_state(s, symbols):  # A small helper

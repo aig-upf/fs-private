@@ -21,7 +21,7 @@ obtain_goal_atoms(const fs::Formula* goal) {
 		goal_atoms.push_back(goal);
 	} else {
 
-		for (const fs::AtomicFormula* atom:conjunction->getSubformulae()) {
+		for (const fs::Formula* atom:conjunction->getSubformulae()) {
 			goal_atoms.push_back(atom);
 		}
 	
@@ -77,7 +77,8 @@ gecode::LiftedActionIterator LiftedStateModel::applicable_actions(const State& s
 
 bool
 LiftedStateModel::goal(const StateT& s, unsigned i) const {
-	return _subgoals.at(i)->interpret(s, Binding::EMPTY_BINDING);
+	Binding binding;
+	return _subgoals.at(i)->interpret(s, binding);
 // 	return s.contains(_subgoals.at(i)); // TODO SHOULD BE:
 	// const Atom& subgoal = _subgoals.at(i);
 	// return s.check(subgoal.getVariable(), s.getValue());

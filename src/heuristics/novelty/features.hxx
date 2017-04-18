@@ -39,7 +39,7 @@ public:
 
 	virtual lapkt::novelty::NoveltyFeature<State>* clone() const override { return new ConditionSetFeature(*this); }
 	
-	void addCondition(const fs::AtomicFormula* condition) { _conditions.push_back(condition); }
+	void addCondition(const fs::Formula* condition) { _conditions.push_back(condition); }
 
 	FSFeatureValueT evaluate(const State& s) const override;
 	
@@ -47,7 +47,7 @@ public:
 
 protected:
 	// formula pointers are NOT owned by this class
-	std::vector<const fs::AtomicFormula*> _conditions;
+	std::vector<const fs::Formula*> _conditions;
 };
 
 //! A feature representing the value of any arbitrary language term, e.g. X+Y, or @proc(Y,Z)

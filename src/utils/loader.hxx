@@ -4,7 +4,10 @@
 #include <vector>
 #include <lib/rapidjson/document.h>
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+#include <utils/lexical_cast.hxx>
+
+
+namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; } }}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -26,9 +29,11 @@ public:
 	static ProblemInfo& loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
-	
-	//! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector
-	static std::vector<const GroundAction*> loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const ActionData*>& action_data);
+
+	// Conversion to a C++ vector of values.
+	template<typename T>
+	static std::vector<T> parseNumberList(const rapidjson::Value& data);
+	static std::vector<std::string> parseStringList(const rapidjson::Value& data);
 	
 protected:
 	
@@ -39,20 +44,27 @@ protected:
 	//! Load the data related to the problem functions and predicates into the info object
 	static void loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info);
 	
-	static std::vector<const ActionData*> loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info);
+	static std::vector<const fs::Axiom*> loadAxioms(const rapidjson::Value& data, const ProblemInfo& info);
+
+	static std::vector<const ActionData*> loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info, bool load_effects);
 	
-	static const ActionData* loadActionData(const rapidjson::Value& data, unsigned id, const ProblemInfo& info);
+	static const ActionData* loadActionData(const rapidjson::Value& data, unsigned id, const ProblemInfo& info, bool load_effects);
 	
 	//! Load a formula and process it
 	static const fs::Formula* loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
 	
-	// Conversion to a C++ vector of values.
-	template<typename T>
-	static std::vector<T> parseNumberList(const rapidjson::Value& data);
-	static std::vector<std::string> parseStringList(const rapidjson::Value& data);
-	
 	template<typename T>
 	static std::vector<std::vector<T>> parseDoubleNumberList(const rapidjson::Value& data);
 };
+
+template<typename T>
+std::vector<T>
+Loader::parseNumberList(const rapidjson::Value& data) {
+	std::vector<T> output;
+	for (unsigned i = 0; i < data.Size(); ++i) {
+		output.push_back(boost::lexical_cast<T>(data[i].GetInt()));
+	}
+	return output;
+}
 
 } // namespaces

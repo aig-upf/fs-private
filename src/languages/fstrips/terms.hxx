@@ -8,7 +8,8 @@ namespace fs0 { class State; class Binding; class ProblemInfo; class SymbolData;
 
 namespace fs0 { namespace language { namespace fstrips {
 
-	
+class Axiom;
+
 //! A logical term in FSTRIPS
 class Term : public LogicalElement {
 public:
@@ -36,9 +37,6 @@ public:
 class NestedTerm : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
-	//! Factory method to create a nested term of the appropriate type
-	static const Term* create(const std::string& symbol, const std::vector<const Term*>& subterms);
 
 	NestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 		: _symbol_id(symbol_id), _subterms(subterms), _interpreted_subterms(subterms.size(), -1)
@@ -89,7 +87,7 @@ class StaticHeadedNestedTerm : public NestedTerm {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
+	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms) : NestedTerm(symbol_id, subterms) {}
 };
 
 //! A statically-headed term that performs some arithmetic operation to its two subterms
@@ -147,6 +145,30 @@ public:
 };
 
 
+
+//! 
+//! @deprecated This is to be replaced by the class AxiomaticAtom
+class AxiomaticTermWrapper : public StaticHeadedNestedTerm {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+
+	AxiomaticTermWrapper(const Axiom* axiom, unsigned symbol_id, const std::vector<const Term*>& subterms)
+		 : StaticHeadedNestedTerm(symbol_id, subterms), _axiom(axiom)
+	{}
+	AxiomaticTermWrapper(const AxiomaticTermWrapper& other);
+	AxiomaticTermWrapper* clone() const override { return new AxiomaticTermWrapper(*this); }
+
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	
+	const Axiom* getAxiom() const { return _axiom; }
+	
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+	
+protected:
+	const Axiom* _axiom;
+};
+
 //! A nested term headed by a fluent functional symbol
 class FluentHeadedNestedTerm : public NestedTerm {
 public:
@@ -166,7 +188,7 @@ class BoundVariable : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	BoundVariable(unsigned id, TypeIdx type) : _id(id), _type(type) {}
+	BoundVariable(unsigned id, const std::string& name, TypeIdx type) : _id(id), _name(name), _type(type) {}
 
 	BoundVariable* clone() const override { return new BoundVariable(*this); }
 	
@@ -174,6 +196,9 @@ public:
 
 	//! Returns the unique quantified variable ID
 	unsigned getVariableId() const { return _id; }
+	
+	//! Returns the name of the variable
+	const std::string& getName() const { return _name; }
 
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
@@ -187,6 +212,8 @@ public:
 protected:
 	//! The ID of the variable, which will be unique throughout the whole binding unit.
 	unsigned _id;
+	
+	const std::string _name;
 	
 	TypeIdx _type;
 };
@@ -281,8 +308,9 @@ public:
 
 } } } // namespaces
 
-
 // std specializations for terms and term pointers that will allow us to use them in hash-table-like structures
+// NOTE that these specializations are necessary for any use of term pointers in std::map/std::unordered_maps,
+// even if compilation will succeed without them as well.
 namespace fs = fs0::language::fstrips;
 namespace std {
     template<> struct hash<fs::Term> {

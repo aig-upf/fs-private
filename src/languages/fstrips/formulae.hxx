@@ -33,8 +33,8 @@ public:
 	Formula* clone() const override = 0;
 
 	//! Return the boolean interpretation of the current formula under the given assignment and binding.
-	virtual bool interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
-	virtual bool interpret(const State& state, const Binding& binding) const = 0;
+	virtual bool interpret(const PartialAssignment& assignment, Binding& binding) const = 0;
+	virtual bool interpret(const State& state, Binding& binding) const = 0;
 	virtual bool interpret(const PartialAssignment& assignment) const;
 	virtual bool interpret(const State& state) const;
 
@@ -60,8 +60,8 @@ public:
 
 	const std::vector<const Term*>& getSubterms() const { return _subterms; }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
+	bool interpret(const State& state, Binding& binding) const override;
 	using Formula::interpret;
 
 	//! A helper to recursively evaluate the formula - must be subclassed
@@ -96,8 +96,8 @@ public:
 	
 	virtual AxiomaticFormula* clone(const std::vector<const Term*>& subterms) const override = 0;
 	
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
+	bool interpret(const PartialAssignment& state, Binding& binding) const override;
+	bool interpret(const State& state, Binding& binding) const override;
 	
 	//! To be subclassed
 	virtual bool compute(const State& state, std::vector<ObjectIdx>& arguments) const = 0;
@@ -108,6 +108,28 @@ public:
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
+class AxiomaticAtom : public Formula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
+	AxiomaticAtom(const Axiom* axiom, const std::vector<const Term*>& subterms) : _axiom(axiom), _subterms(subterms) {}
+	virtual ~AxiomaticAtom();
+	AxiomaticAtom(const AxiomaticAtom& other);
+	AxiomaticAtom* clone() const override { return new AxiomaticAtom(*this); }
+
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
+	bool interpret(const State& state, Binding& binding) const override;
+
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+
+	const std::vector<const Term*>& getSubterms() const { return _subterms; }
+	
+protected:
+	const Axiom* _axiom;
+	
+	//! The formula subterms
+	std::vector<const Term*> _subterms;
+};
 
 //! The True truth value
 class Tautology : public Formula {
@@ -115,8 +137,8 @@ public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	Tautology* clone() const override { return new Tautology; }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return true; }
-	bool interpret(const State& state, const Binding& binding) const override { return true; }
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override { return true; }
+	bool interpret(const State& state, Binding& binding) const override { return true; }
 
 	bool is_tautology() const override { return true; }
 
@@ -130,8 +152,8 @@ public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	Contradiction* clone() const override { return new Contradiction; }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override { return false; }
-	bool interpret(const State& state, const Binding& binding) const override { return false; }
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override { return false; }
+	bool interpret(const State& state, Binding& binding) const override { return false; }
 
 	bool is_contradiction() const override { return true; }
 
@@ -143,11 +165,11 @@ public:
 //! Will tipically be negation, conjunction, disjunction
 class OpenFormula : public Formula {
 public:
-	OpenFormula(const std::vector<const AtomicFormula*>& subformulae) : _subformulae(subformulae) {}
+	OpenFormula(const std::vector<const Formula*>& subformulae) : _subformulae(subformulae) {}
 	~OpenFormula() { for (const auto ptr:_subformulae) delete ptr; }
 	OpenFormula(const OpenFormula& other);
 
-	const std::vector<const AtomicFormula*>& getSubformulae() const { return _subformulae; }
+	const std::vector<const Formula*>& getSubformulae() const { return _subformulae; }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -156,21 +178,21 @@ public:
 
 protected:
 	//! The formula subterms
-	std::vector<const AtomicFormula*> _subformulae;
+	std::vector<const Formula*> _subformulae;
 };
 
 //! A logical conjunction
 class Conjunction : public OpenFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	Conjunction(const std::vector<const AtomicFormula*>& conjuncts) : OpenFormula(conjuncts) {}
+	Conjunction(const std::vector<const Formula*>& conjuncts) : OpenFormula(conjuncts) {}
 	~Conjunction() = default;
 	Conjunction(const Conjunction& conjunction) = default;
 
 	Conjunction* clone() const override { return new Conjunction(*this); }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
+	bool interpret(const State& state, Binding& binding) const override;
 
 	std::string name() const override { return "and"; }
 };
@@ -180,7 +202,7 @@ class AtomConjunction : public Conjunction {
 public:
 	using AtomT = std::pair<VariableIdx, ObjectIdx>;
 
-	AtomConjunction(const std::vector<const AtomicFormula*>& conjuncts, const std::vector<AtomT>& atoms)
+	AtomConjunction(const std::vector<const Formula*>& conjuncts, const std::vector<AtomT>& atoms)
 		: Conjunction(conjuncts), _atoms(atoms) {}
 
 	~AtomConjunction() = default;
@@ -191,7 +213,7 @@ public:
 	AtomConjunction* clone() const override {return new AtomConjunction(*this); }
 	
 	using Conjunction::interpret;
-	bool interpret(const State& state, const Binding& binding) const override { return interpret(state); }
+	bool interpret(const State& state, Binding& binding) const override { return interpret(state); }
 	bool interpret(const State& state) const override;
 
 protected:
@@ -204,14 +226,14 @@ protected:
 class Disjunction : public OpenFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	Disjunction(const std::vector<const AtomicFormula*>& conjuncts) : OpenFormula(conjuncts) {}
+	Disjunction(const std::vector<const Formula*>& disjuncts) : OpenFormula(disjuncts) {}
 	~Disjunction() = default;
 	Disjunction(const Disjunction& conjunction) = default;
 
 	Disjunction* clone() const override { return new Disjunction(*this); }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
+	bool interpret(const PartialAssignment& state, Binding& binding) const override;
+	bool interpret(const State& state, Binding& binding) const override;
 
 	std::string name() const override { return "or"; }
 };
@@ -221,14 +243,14 @@ class Negation : public OpenFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 
-	Negation(const AtomicFormula* subformula) : OpenFormula( {subformula} ) {}
+	Negation(const Formula* subformula) : OpenFormula( {subformula} ) {}
 	~Negation() = default;
 	Negation(const Negation& other) = default;
 	
 	Negation* clone() const override { return new Negation(*this); }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
+	bool interpret(const State& state, Binding& binding) const override;
 
 	std::string name() const override { return "not"; }
 };
@@ -238,15 +260,13 @@ class QuantifiedFormula : public Formula {
 public:
 	QuantifiedFormula(const std::vector<const BoundVariable*>& variables, const Formula* subformula) : _variables(variables), _subformula(subformula) {}
 
-	virtual ~QuantifiedFormula() {
-		delete _subformula;
-	}
+	virtual ~QuantifiedFormula();
 
 	QuantifiedFormula(const QuantifiedFormula& other);
 
 	const Formula* getSubformula() const { return _subformula; }
 	
-	const std::vector<const BoundVariable*> getVariables() const { return _variables; }
+	const std::vector<const BoundVariable*>& getVariables() const { return _variables; }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -271,15 +291,15 @@ public:
 
 	ExistentiallyQuantifiedFormula* clone() const override { return new ExistentiallyQuantifiedFormula(*this); }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
+	bool interpret(const State& state, Binding& binding) const override;
 	
 	std::string name() const override { return "exists"; }
 
 protected:
 	//! A naive recursive implementation of the interpretation routine
 	template <typename T>
-	bool interpret_rec(const T& assignment, const Binding& binding, unsigned i) const;
+	bool interpret_rec(const T& assignment, Binding& binding, unsigned i) const;
 };
 
 //! A formula quantified by at least one universal variable
@@ -292,15 +312,15 @@ public:
 
 	UniversallyQuantifiedFormula* clone() const override { return new UniversallyQuantifiedFormula(*this); }
 
-	bool interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	bool interpret(const State& state, const Binding& binding) const override;
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
+	bool interpret(const State& state, Binding& binding) const override;
 	
-	std::string name() const override { return "exists"; }
+	std::string name() const override { return "forall"; }
 
 protected:
 	//! A naive recursive implementation of the interpretation routine
 	template <typename T>
-	bool interpret_rec(const T& assignment, const Binding& binding, unsigned i) const;	
+	bool interpret_rec(const T& assignment, Binding& binding, unsigned i) const;	
 };
 
 
@@ -399,5 +419,8 @@ public:
 
 	Symbol symbol() const { return Symbol::GEQ; }
 };
+
+//! Check that all the given formulas are atomic
+std::vector<const AtomicFormula*>  check_all_atomic_formulas(const std::vector<const Formula*> formulas);
 
 } } } // namespaces

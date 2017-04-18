@@ -12,9 +12,9 @@
 
 namespace fs0 {
 	
-ActionData::ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names,
+ActionData::ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names, const fs::BindingUnit& bunit,
 					   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects)
-	: _id(id), _name(name), _signature(signature), _parameter_names(parameter_names), _precondition(precondition), _effects(effects)
+	: _id(id), _name(name), _signature(signature), _parameter_names(parameter_names), _bunit(bunit), _precondition(precondition), _effects(effects)
 {
 	assert(parameter_names.size() == signature.size());
 }
@@ -29,6 +29,7 @@ ActionData::ActionData(const ActionData& other) :
 	_name(other._name),
 	_signature(other._signature),
 	_parameter_names(other._parameter_names),
+	_bunit(other._bunit),
 	_precondition(other._precondition->clone()),
 	_effects(Utils::copy(other._effects))
 {}

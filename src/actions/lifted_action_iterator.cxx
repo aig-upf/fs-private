@@ -26,6 +26,8 @@ LiftedActionIterator::Iterator::Iterator(const State& state, const std::vector<s
 
 LiftedActionIterator::Iterator::~Iterator() {
 	if (_action) delete _action;
+	if (_engine) delete _engine;
+	if (_csp) delete _csp;
 }
 
 void LiftedActionIterator::Iterator::advance() {

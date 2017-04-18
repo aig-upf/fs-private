@@ -1,4 +1,7 @@
 
+#include <iostream>
+#include <iomanip>
+
 #include <actions/checker.hxx>
 #include <actions/actions.hxx>
 #include <actions/action_id.hxx>
@@ -6,7 +9,6 @@
 #include <applicability/formula_interpreter.hxx>
 #include <applicability/action_managers.hxx>
 #include <state.hxx>
-#include <iomanip>
 #include <lapkt/tools/logging.hxx>
 
 namespace fs0 {

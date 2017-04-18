@@ -1,6 +1,7 @@
 
 #include <problem.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/light.hxx>
 #include <utils/printers/actions.hxx>
 #include <utils/printers/binding.hxx>
 #include <actions/actions.hxx>
@@ -12,6 +13,13 @@ std::ostream& action_data_name::print(std::ostream& os) const {
 	os << _action.getName() << "(" << print::signature(_action.getParameterNames(), _action.getSignature()) << ")";
 	return os;
 }
+
+
+std::ostream& action_signature::print(std::ostream& os) const {
+	os << _action.getName() << "(" << print::signature(_action.getParameterNames(), _action.getSignature()) << ")";
+	return os;
+}
+
 
 std::ostream& action_data::print(std::ostream& os) const {
 	os << action_data_name(_action) << std::endl;

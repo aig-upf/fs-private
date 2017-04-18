@@ -366,8 +366,7 @@ public:
 		*/
 
 		for (unsigned subgoal_idx = 0; subgoal_idx < _optimal_paths.size(); ++subgoal_idx) {
-			if (!_in_seed[subgoal_idx]) {
-				assert(_optimal_paths[subgoal_idx] != nullptr);
+			if (!_in_seed[subgoal_idx] && _optimal_paths[subgoal_idx] != nullptr) {
 				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
 			}
 		}

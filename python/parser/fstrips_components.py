@@ -106,8 +106,33 @@ class FSFormula(FSBaseComponent):
         self.processed = self.process_conditions(self.formula)
 
     def dump(self):
-        return dict(conditions=self.processed.dump(self.index.objects, self.binding_unit),
+        return dict(conditions=self.processed.dump(self.index, self.binding_unit),
                     unit=self.binding_unit.dump())
+
+
+class FSAxiom(FSBaseComponent):
+    """ A FSTRIPS axiom, which is a formula with a name and possibly some lifted parameters """
+    def __init__(self, index, axiom):
+        super().__init__(index)
+        self.axiom = axiom
+
+        # Order matters: the binding unit needs to be created when the effects are processed
+        self.binding_unit = fs.BindingUnit.from_parameters(axiom.parameters)
+        self.formula = self.process_conditions(self.axiom.condition)
+
+    def dump(self):
+        return dict(name=self.axiom.name,
+                    signature=[self.index.types[p.type] for p in self.axiom.parameters],
+                    parameters=[p.name for p in self.axiom.parameters],
+                    conditions=self.formula.dump(self.index, self.binding_unit),
+                    unit=self.binding_unit.dump())
+
+    def __str__(self):
+        if self.axiom.parameters:
+            params = "({})".format(', '.join("{}: {}".format(p.name, p.type) for p in self.axiom.parameters))
+        else:
+            params = ""
+        return "{}{}\n\t{}".format(self.axiom.name, params, self.formula)
 
 
 class FSActionSchema(FSBaseComponent):
@@ -125,8 +150,9 @@ class FSActionSchema(FSBaseComponent):
         return dict(name=self.action.name,
                     signature=[self.index.types[p.type] for p in self.action.parameters],
                     parameters=[p.name for p in self.action.parameters],
-                    conditions=self.precondition.dump(self.index.objects, self.binding_unit),
-                    effects=[eff.dump() for eff in self.effects])
+                    conditions=self.precondition.dump(self.index, self.binding_unit),
+                    effects=[eff.dump() for eff in self.effects],
+                    unit=self.binding_unit.dump())
 
     def process_effects(self):
         """  Generates the actual effects from the PDDL parser effect list"""
@@ -149,6 +175,7 @@ class FSActionSchema(FSBaseComponent):
             type_ = 'functional'
         else:
             # The effect has form visited(c), and we want to give it functional form visited(c) := true
+            # TODO - THIS MUST GO AWAY - and will cause problems soon :-)
             lhs = FunctionalTerm(expression.predicate, expression.args)
 
             if expression.negated:
@@ -176,8 +203,8 @@ class FSActionEffect(object):
     def dump(self):
         # print("{} --> {} := {}".format(self.condition, self.lhs, self.rhs))
         return dict(
-            lhs=self.lhs.dump(self.index.objects, self.binding_unit),
-            rhs=self.rhs.dump(self.index.objects, self.binding_unit),
-            condition=self.condition.dump(self.index.objects, self.binding_unit),
+            lhs=self.lhs.dump(self.index, self.binding_unit),
+            rhs=self.rhs.dump(self.index, self.binding_unit),
+            condition=self.condition.dump(self.index, self.binding_unit),
             type=self.type_
         )

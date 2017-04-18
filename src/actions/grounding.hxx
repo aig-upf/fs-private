@@ -26,12 +26,8 @@ class ActionGrounder {
 public:
 	static const unsigned long MAX_GROUND_ACTIONS = 100000000;
 	
-	//! Grounds the set of given action schemata with all parameter groundings that induce no false preconditions
-	//! Returns the new set of grounded actions
-// 	static std::vector<const ActionBase*> ground(const std::vector<const ActionData*>& action_data, const ProblemInfo& info);
-	
 	//! Process the given action data to consolidate state variables, etc.
-	static ActionData* process_action_data(const ActionData& action_data, const ProblemInfo& info);
+	static ActionData* process_action_data(const ActionData& action_data, const ProblemInfo& info, bool process_effects);
 	
 	//! Binds a partially grounded action with a full binding, disregarding the ID of the resulting grounded action
 	static GroundAction* bind(const PartiallyGroundedAction& action, const Binding& binding, const ProblemInfo& info);
@@ -48,14 +44,10 @@ public:
 	
 	//! Helper to ground a schema with a single binding. Returns the expected next action ID, which might be the same
 	//! ID that was received, if the grounding was unsuccessful, or a consecutive one, otherwise.
-	static unsigned ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded);
+// 	static unsigned ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded);
+	void partial_binding(ActionData getActionData, Binding binding, ProblemInfo info);
 	
 protected:
-	//! Process the action schema with a given parameter binding and return the corresponding GroundAction
-	//! A nullptr is returned if the action is detected to be statically non-applicable
-	static GroundAction* full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info);
-	static PartiallyGroundedAction* partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info);
-	
 	//! Return the non-constant terms that are present as first-level subterms of the head, i.e.
 	//! for an effect clear(loc(b), g(f(c))) := true, this would return _only_ loc(b) and g(f(c)), but not f(c).
 // 	static std::vector<const fs::Term*> collect_effect_non_constant_subterms(const fs::ActionEffect* effect);

@@ -1,28 +1,30 @@
 
 #pragma once
 
-#include <vector>
-
 #include <utils/visitor.hxx>
 #include <languages/fstrips/language_fwd.hxx>
 
 
-namespace fs0 { class Binding; class ProblemInfo; }
+namespace fs0 { class ProblemInfo; }
 
 namespace fs0 { namespace language { namespace fstrips {
 	
+class ActionEffect;
 
-//! Processes a formula possibly containing bound variables and non-consolidated state variables,
-//! consolidating all possible state variables and performing the bindings according to the given variable binding
-const Formula* bind(const Formula& formula, const Binding& binding, const ProblemInfo& info);
+//!
+const ActionEffect* process_axioms(const ActionEffect& effect, const ProblemInfo& info);
+
+//! Processes a formula possibly containing axiomatic term/formulas in order to instantiate the appropiate axiomatic subclasses
+const Formula* process_axioms(const Formula& formula, const ProblemInfo& info);
 	
-class FormulaBindingVisitor
+class FormulaAxiomVisitor
     : public Loki::BaseVisitor
-    , public Loki::Visitor<Formula, void, true>
+//     , public Loki::Visitor<Formula, void, true>
     , public Loki::Visitor<Tautology, void, true>
 	, public Loki::Visitor<Contradiction, void, true>
 	, public Loki::Visitor<AtomicFormula, void, true>
 	, public Loki::Visitor<Conjunction, void, true>
+	, public Loki::Visitor<AtomConjunction, void, true>
 	, public Loki::Visitor<Disjunction, void, true>
 	, public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
@@ -30,18 +32,18 @@ class FormulaBindingVisitor
 	
 {
 private:
-	const Binding& _binding;
 	const ProblemInfo& _info;
 
 public:
-	FormulaBindingVisitor(const Binding& binding, const ProblemInfo& info) : _binding(binding), _info(info), _result(nullptr) {}
-	~FormulaBindingVisitor() = default;
+	FormulaAxiomVisitor(const ProblemInfo& info) : _info(info), _result(nullptr) {}
+	~FormulaAxiomVisitor() = default;
 	
- 	void Visit(const Formula& lhs) override;
+//  	void Visit(const Formula& lhs) override;
 	void Visit(const Tautology& lhs) override;
 	void Visit(const Contradiction& lhs) override;
 	void Visit(const AtomicFormula& lhs) override;
 	void Visit(const Conjunction& lhs) override;
+	void Visit(const AtomConjunction& lhs) override;
 	void Visit(const Disjunction& lhs) override;
 	void Visit(const ExistentiallyQuantifiedFormula& lhs) override;
 	void Visit(const UniversallyQuantifiedFormula& lhs) override;
@@ -50,35 +52,34 @@ public:
 	const Formula* _result;
 };
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //! Processes a term possibly containing bound variables and non-consolidated state variables,
 //! consolidating all possible state variables and performing the bindings according to the given variable binding
 ////////////////////////////////////////////////////////////////////////////////
-const Term* bind(const Term& formula, const Binding& binding, const ProblemInfo& info);
+const Term* process_axioms(const Term& formula, const ProblemInfo& info);
 
-class TermBindingVisitor
+
+class TermAxiomVisitor
     : public Loki::BaseVisitor
-
     , public Loki::Visitor<StateVariable, void, true>
     , public Loki::Visitor<BoundVariable, void, true>
     , public Loki::Visitor<Constant, void, true>
     , public Loki::Visitor<NestedTerm, void, true>
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
-    , public Loki::Visitor<UserDefinedStaticTerm, void, true>
-    , public Loki::Visitor<AxiomaticTermWrapper, void, true>
+    , public Loki::Visitor<UserDefinedStaticTerm, void, true>    
     , public Loki::Visitor<AdditionTerm, void, true>    
 	, public Loki::Visitor<SubtractionTerm, void, true>    
 	, public Loki::Visitor<MultiplicationTerm, void, true> 
 	
 {
 private:
-	const Binding& _binding;
 	const ProblemInfo& _info;
 	
 public:
-	TermBindingVisitor(const Binding& binding, const ProblemInfo& info) : _binding(binding), _info(info), _result(nullptr) {}
-	~TermBindingVisitor() = default;
+	TermAxiomVisitor(const ProblemInfo& info) : _info(info), _result(nullptr) {}
+	~TermAxiomVisitor() = default;
 	
 
 	void Visit(const StateVariable& lhs);
@@ -88,7 +89,6 @@ public:
 	void Visit(const StaticHeadedNestedTerm& lhs);
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
-	void Visit(const AxiomaticTermWrapper& lhs);
 	void Visit(const AxiomaticTerm& lhs);
 	void Visit(const ArithmeticTerm& lhs);
 	void Visit(const AdditionTerm& lhs);
@@ -98,9 +98,5 @@ public:
 	const Term* _result;
 };
 
-//! A helper to process lists of subterms
-std::vector<const Term*>
-bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<int>& constants);
-	
 
 } } } // namespaces

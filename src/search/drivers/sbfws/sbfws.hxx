@@ -5,7 +5,7 @@
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
-#include <heuristics/unsat_goal_atoms/unsat_goal_atoms.hxx>
+#include <heuristics/unsat_goal_atoms.hxx>
 
 #include <lapkt/search/components/open_lists.hxx>
 
@@ -120,7 +120,7 @@ public:
 		if (_relevant_atoms) {
 			reached = std::to_string(_relevant_atoms->num_reached()) + " / " + std::to_string(_relevant_atoms->getHelper()._num_relevant);
 		}
-		os << "{@ = " << this << ", #" << _gen_order << ", s = " << state;
+		os << "#" << _gen_order << " (" << this << "), " << state;
 // 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
@@ -698,7 +698,8 @@ protected:
 	//! Returns true iff the newly-created node is a solution
 	bool create_node(const NodePT& node) {
 		if (is_goal(node)) {
-			LPT_INFO("cout", "Goal found. Node: " << std::endl << *node);
+			LPT_INFO("cout", "Goal found:");
+			LPT_INFO("cout", *node);
 			_solution = node;
 			return true;
 		}

@@ -7,6 +7,8 @@ namespace fs0 { namespace language { namespace fstrips {
 
 class LogicalElement;
 
+class Axiom;
+
 // Formulas
 class Formula;
 class Tautology;
@@ -41,6 +43,7 @@ class NestedTerm;
 class StaticHeadedNestedTerm;
 class FluentHeadedNestedTerm;
 class UserDefinedStaticTerm;
+class AxiomaticTermWrapper;
 class AxiomaticTerm;
 class ArithmeticTerm;
 class AdditionTerm;
@@ -49,3 +52,4 @@ class MultiplicationTerm;
 	
 } } } // namespaces
 
+namespace fs = fs0::language::fstrips;

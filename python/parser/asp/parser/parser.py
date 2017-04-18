@@ -5,20 +5,22 @@
 
 from pyparsing import OneOrMore, nestedExpr
 
-from asp.utilities import CodeException, parsing_error_code, NOT_CONDITION,\
+from ..utilities import CodeException, parsing_error_code, NOT_CONDITION,\
     AND_CONDITION, OR_CONDITION, IMPLY_CONDITION, FORALL_CONDITION,\
     EXISTS_CONDITION, INCREASE_CONDITION, EQUALS_CONDITION, NOT_EQUALS_CONDITION,\
     CONDITIONAL_EFFECT, valid_requirements
 
-from asp.problem   import Object, Type, Function, Predicate,\
+from ..problem import Object, Type, Function, Predicate,\
                       PredicateCondition, NotCondition, AndCondition,\
                       OrCondition, ForAllCondition, ExistsCondition,\
                       IncreaseCondition, EqualsCondition, ConditionalEffect,\
                       Action, Problem
 
+
 class ParsingException(CodeException):
     """ An exception to be raised in the even that something goes wrong with
         the parser process. """
+
 
 class Parser(object):
     """ Used to parse PDDL domains and problems. """

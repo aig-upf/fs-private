@@ -6,11 +6,11 @@
     atoms. It is very efficient.
 """
 
-from asp.utilities import grounding_error_code, grounder_run_success_code, \
+from ..utilities import grounding_error_code, grounder_run_success_code, \
     asp_convert, grounder_path, var_alphabet, neg_prec_prefix, equality_prefix, \
     inequality_prefix, default_type_name
 from .parser import ParsingException
-from asp.problem import Object, Type, Function, Predicate, \
+from ..problem import Object, Type, Function, Predicate, \
     PredicateCondition, NotCondition, AndCondition, \
     OrCondition, ForAllCondition, ExistsCondition, \
     IncreaseCondition, EqualsCondition, ConditionalEffect
@@ -296,7 +296,7 @@ class Grounder(object):
 
             (Grounder, file, bool) -> None
         """
-        from asp.parser import asp
+        from . import asp
         problem = self.problem
         translator = asp.Translator()
         writer = asp.FileWriter(self.pre_file_name)
@@ -395,8 +395,9 @@ class Grounder(object):
 
             (Problem, str, str) -> None
         """
+        print(grounder_path)
         if not os.path.isfile(grounder_path):
-            raise RuntimeError("In order to use the ASP-based grounder, you need to set the environment variable"
+            raise RuntimeError("In order to use the ASP-based grounder, you need to set the environment variable "
                                "'GRINGO_PATH' to the path where the 'gringo' binary is located")
         self.rename_asp_components()
         self.write_asp()

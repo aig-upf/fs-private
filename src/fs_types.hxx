@@ -31,6 +31,9 @@ namespace fs0 {
 	// A unique identifier for any of the domain data types.
 	using TypeIdx = unsigned;
 	const TypeIdx INVALID_TYPE = std::numeric_limits<unsigned>::max();
+	
+	//! The ID of a logical symbol
+	using SymbolIdx = unsigned;
 
 	// A unique identifier for any of the problem objects (might be an integer)
 	using ObjectIdx = int;

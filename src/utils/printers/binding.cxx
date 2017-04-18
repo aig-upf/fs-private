@@ -1,5 +1,6 @@
 
 #include <utils/printers/binding.hxx>
+#include <utils/binding.hxx>
 #include <problem_info.hxx>
 
 namespace fs0 { namespace print {
@@ -33,6 +34,9 @@ std::ostream& raw_signature::print(std::ostream& os) const {
 	return os;
 }
 
+partial_binding::partial_binding(const std::vector<std::string>& parameter_names, const Binding& binding, const Signature& signature) : _parameter_names(parameter_names), _binding(binding), _signature(signature) {
+	assert(parameter_names.size() == binding.size());
+}
 
 std::ostream& partial_binding::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();

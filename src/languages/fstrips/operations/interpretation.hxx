@@ -4,6 +4,8 @@
 #include <map>
 
 #include <utils/visitor.hxx>
+#include <languages/fstrips/language_fwd.hxx>
+
 
 //!
 //!
@@ -22,32 +24,6 @@ using PartialAssignment = std::map<VariableIdx, ObjectIdx>;
 
 namespace fs0 { namespace language { namespace fstrips {
 
-class LogicalElement;
-
-// Formulas
-class Formula;
-class Tautology;
-class Contradiction;
-class AtomicFormula;
-class Conjunction;
-class Disjunction;
-class Negation;
-class ExistentiallyQuantifiedFormula;
-
-// Terms
-class Term;
-class StateVariable;
-class BoundVariable;
-class Constant;
-class NestedTerm;
-class StaticHeadedNestedTerm;
-class FluentHeadedNestedTerm;
-class UserDefinedStaticTerm;
-class AdditionTerm;
-class SubtractionTerm;
-class MultiplicationTerm;
-
-	
 ////////////////////////////////////////////////////////////
 //! Returns the index of the state variable to which the given term resolves under the given state.
 ////////////////////////////////////////////////////////////
@@ -65,6 +41,7 @@ class VariableInterpretationVisitor
     , public Loki::Visitor<BoundVariable, void, true>
     , public Loki::Visitor<Constant, void, true>
     , public Loki::Visitor<StaticHeadedNestedTerm, void, true>
+    , public Loki::Visitor<AxiomaticTermWrapper, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>    
     , public Loki::Visitor<AdditionTerm, void, true>    
@@ -78,7 +55,8 @@ public:
 	void Visit(const StateVariable& lhs);
 	void Visit(const BoundVariable& lhs) { throw std::runtime_error("Bound variables cannot resolve to an state variable"); }
 	void Visit(const Constant& lhs) { throw std::runtime_error("Constant terms cannot resolve to an state variable"); }
-	void Visit(const StaticHeadedNestedTerm& lhs) { throw std::runtime_error("static-headed terms cannot resolve to an state variable"); }
+	void Visit(const StaticHeadedNestedTerm& lhs) { throw std::runtime_error("Static-headed terms cannot resolve to an state variable"); }
+	void Visit(const AxiomaticTermWrapper& lhs) { throw std::runtime_error("Axioms cannot resolve to an state variable"); }
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
 	void Visit(const AdditionTerm& lhs);

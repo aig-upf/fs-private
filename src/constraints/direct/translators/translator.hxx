@@ -23,6 +23,7 @@ public:
 	static DirectConstraint* generate(const fs::RelationalFormula& formula);
 	
 	//! Generates the set of DirectConstraints that corresponds to a given set of (atomic) formulae
+	static std::vector<DirectConstraint*> generate(const std::vector<const fs::Formula*> formulae);
 	static std::vector<DirectConstraint*> generate(const std::vector<const fs::AtomicFormula*> formulae);
 	
 	//! Generates the DirectEffect that corresponds to a given language effect

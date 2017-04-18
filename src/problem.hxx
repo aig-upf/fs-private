@@ -4,7 +4,7 @@
 #include <fs_types.hxx>
 #include <utils/atom_index.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
+namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; }}}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -19,8 +19,7 @@ class GroundAction;
 
 class Problem {
 public:
-
-	Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index);
+	Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const std::unordered_map<std::string, const fs::Axiom*>& axioms, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index);
 	~Problem();
 	
 	Problem(const Problem& other);
@@ -36,7 +35,7 @@ public:
 
 	//! Get the set of action schemata of the problem
 	const std::vector<const ActionData*>& getActionData() const { return _action_data; }
-	
+
 	//! Get the set of ground actions of the problem
 	const std::vector<const GroundAction*>& getGroundActions() const { return _ground; }
 	void setGroundActions(std::vector<const GroundAction*>&& ground) { _ground = std::move(ground); }
@@ -64,6 +63,12 @@ public:
 		return *_instance;
 	}
 	
+	const fs::Axiom* getAxiom(const std::string& name) const {
+		auto it = _axioms.find(name);
+		if (it == _axioms.end()) return nullptr;
+		return it->second;
+	}
+	
 	const AtomIndex& get_tuple_index() const { return _tuple_index; }
 	
 	//! Return true if all the symbols of the problem are predicates
@@ -75,6 +80,8 @@ public:
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
+	
+	void consolidateAxioms();
 
 protected:
 	//! An index of tuples and atoms
@@ -85,7 +92,10 @@ protected:
 
 	const std::unique_ptr<StateAtomIndexer> _state_indexer;
 	
-	const std::vector<const ActionData*> _action_data;
+	std::vector<const ActionData*> _action_data;
+	
+	//! An index mapping symbol names to the axiomatic definition of the symbol, if it exists.
+	std::unordered_map<std::string, const fs::Axiom*> _axioms;
 	
 	// The set of grounded actions of the problem
 	std::vector<const GroundAction*> _ground;

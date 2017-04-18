@@ -10,38 +10,19 @@
 #include <utils/binding.hxx>
 
 #include <languages/fstrips/operations/interpretation.hxx>
+#include "axioms.hxx"
 
 namespace fs0 { namespace language { namespace fstrips {
 
 ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
 ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
 
-	
 
-const Term* NestedTerm::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	
-	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
-	if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return ArithmeticTermFactory::create(symbol, subterms);
-	
-	unsigned symbol_id = info.getSymbolId(symbol);
-	const auto& function = info.getSymbolData(symbol_id);
-	if (function.isStatic()) {
-		return new UserDefinedStaticTerm(symbol_id, subterms);
-	} else {
-		return new FluentHeadedNestedTerm(symbol_id, subterms);
-	}
-}
 
 NestedTerm::NestedTerm(const NestedTerm& term) :
 	_symbol_id(term._symbol_id),
 	_subterms(Utils::clone(term._subterms)),
 	_interpreted_subterms(term._interpreted_subterms)
-{}
-
-
-StaticHeadedNestedTerm::StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
-	: NestedTerm(symbol_id, subterms)
 {}
 
 UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
@@ -57,6 +38,35 @@ ArithmeticTerm::ArithmeticTerm(const std::vector<const Term*>& subterms)
 }
 
 
+AxiomaticTermWrapper::AxiomaticTermWrapper(const AxiomaticTermWrapper& other) :
+	StaticHeadedNestedTerm(other),
+	_axiom(other._axiom)
+{}
+
+ObjectIdx AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	NestedTerm::interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
+	
+	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
+	Binding axiom_binding;
+	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
+	return _axiom->getDefinition()->interpret(assignment, axiom_binding);
+}
+
+ObjectIdx AxiomaticTermWrapper::interpret(const State& state, const Binding& binding) const {
+	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
+	
+	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
+	Binding axiom_binding;
+	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
+	return _axiom->getDefinition()->interpret(state, axiom_binding);
+}
+
+std::ostream& AxiomaticTermWrapper::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << _axiom->getName() << "(";
+	for (const auto ptr:_subterms) os << *ptr << ", ";
+	os << ")";
+	return os;
+}
 
 AxiomaticTerm* AxiomaticTerm::clone() const { return clone(Utils::clone(_subterms)); }
 
@@ -132,7 +142,7 @@ std::ostream& StateVariable::print(std::ostream& os, const fs0::ProblemInfo& inf
 }
 
 std::ostream& BoundVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << "?" << _id;
+	os << _name;
 	return os;
 }
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -188,6 +198,7 @@ std::size_t NestedTerm::hash_code() const {
 }
 
 std::size_t BoundVariable::hash_code() const {
+	// We explicitly ignore the name of the variable in the hash, as the ID should be enough to identify the variable?
 	std::size_t hash = 0;
 	boost::hash_combine(hash, typeid(*this).hash_code());
 	boost::hash_combine(hash, _id);

@@ -102,9 +102,9 @@ class FunctionalTerm(Term):
         super().__init__(symbol)
         self.children = children
 
-    def dump(self, objects, binding_unit):
-        children = [elem.dump(objects, binding_unit) for elem in self.children]
-        return dict(type='function', symbol=self.symbol, children=children)
+    def dump(self, index, binding_unit):
+        children = [elem.dump(index, binding_unit) for elem in self.children]
+        return dict(type='functional', symbol=self.symbol, children=children)
 
     def __str__(self):
         return "{} ({})".format(self.symbol, ','.join(str(child) for child in self.children))
@@ -114,8 +114,8 @@ class LogicalVariable(Term):
     def __init__(self, name):
         super().__init__(name)
 
-    def dump(self, objects, binding_unit):
-        return dict(type='parameter', position=binding_unit.id(self.symbol),
+    def dump(self, index, binding_unit):
+        return dict(type='variable', position=binding_unit.id(self.symbol),
                     typename=binding_unit.typename(self.symbol), name=self.symbol)
 
     def __str__(self):
@@ -123,12 +123,13 @@ class LogicalVariable(Term):
 
 
 class Constant(Term):
-    def dump(self, objects, binding_unit):
+    def dump(self, index, binding_unit):
         if is_int(self.symbol):  # We have a numeric constant
-            return dict(type='int_constant', value=int(self.symbol))
+            return dict(type='int_constant', value=int(self.symbol), typename="int")
 
         else:  # We have a logical constant
-            return dict(type='constant', value=objects.get_index(self.symbol))
+            return dict(type='constant', value=index.objects.get_index(self.symbol),
+                        typename=index.object_types[self.symbol])
 
     def __str__(self):
         return "{}".format(self.symbol)
@@ -153,14 +154,14 @@ class AtomicExpression(Relation):
         self.children = children
         self.negated = negated
 
-    def dump(self, objects, binding_unit):
+    def dump(self, index, binding_unit):
         sym, neg = negate_if_possible(self.head, self.negated)
-        children = [elem.dump(objects, binding_unit) for elem in self.children]
+        children = [elem.dump(index, binding_unit) for elem in self.children]
         return dict(type='atom', symbol=sym, children=children, negated=neg)
 
     def __str__(self):
         neg = "not " if self.negated else ""
-        return "{}{} ({})".format(neg, self.head, ','.join(str(child) for child in self.children))
+        return "{}{}({})".format(neg, self.head, ','.join(str(child) for child in self.children))
 
 
 class OpenExpression(Relation):
@@ -171,12 +172,12 @@ class OpenExpression(Relation):
         super().__init__(connective)
         self.children = children
 
-    def dump(self, objects, binding_unit):
-        children = [elem.dump(objects, binding_unit) for elem in self.children]
+    def dump(self, index, binding_unit):
+        children = [elem.dump(index, binding_unit) for elem in self.children]
         return dict(type=self.head, symbol=self.head, children=children, negated=False)
 
     def __str__(self):
-        return "{} ({})".format(self.head, ','.join(str(child) for child in self.children))
+        return "{}({})".format(self.head, ', '.join(str(child) for child in self.children))
 
 
 class QuantifiedExpression(Relation):
@@ -188,8 +189,8 @@ class QuantifiedExpression(Relation):
         self.variables = variables
         self.subformula = subformula
 
-    def dump(self, objects, binding_unit):
-        subformula = self.subformula.dump(objects, binding_unit)
+    def dump(self, index, binding_unit):
+        subformula = self.subformula.dump(index, binding_unit)
         return dict(type=self.head, variables=binding_unit.dump_selected(self.variables), subformula=subformula)
 
     def __str__(self):
@@ -240,10 +241,9 @@ class BindingUnit(object):
         """ Return the typename of the parameter with given name """
         return self.index[name][1]
 
-    @staticmethod
-    def dump_selected(variables):
+    def dump_selected(self, variables):
         """ Performs a selective dump, dumping only the info about the given variables"""
-        return [[i, var.name, var.type] for i, var in enumerate(variables)]
+        return [[self.index[var.name][0], var.name, var.type] for var in variables]
 
 
 def to_prenex_normal_form(exp):

@@ -39,6 +39,9 @@ options:
       match_tree:
         exclude_features: [functions, integers]
 
+  evaluator_t:
+    values:
+      adaptive:
 
   bfws.rs:
     include_drivers: [sbfws]
@@ -46,6 +49,7 @@ options:
     values:
       none:
       sim:
+        exclude_features: [functions]  # TODO Remove this restriction when the planner is ready for this
 
 #        self.manager.register_option("evaluator_t", "adaptive,generic")
 #        self.manager.register_option("goal_directed", "true,false")

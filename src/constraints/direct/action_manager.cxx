@@ -59,12 +59,15 @@ DirectActionManager::is_supported(const GroundAction& action) {
 	// Only conjunctions of atoms are supported by the direct translator
 	if (!precondition) return false; 
 	
-	for (const fs::AtomicFormula* condition:precondition->getSubformulae()) {
+	for (const fs::Formula* condition:precondition->getSubformulae()) {
 		if (fs::nestedness(*condition) > 0) return false;
+		
+		const fs::AtomicFormula* sub = dynamic_cast<const fs::AtomicFormula*>(condition);
+		if (!sub) return false;
 		
 		std::size_t arity = fs::ScopeUtils::computeDirectScope(condition).size();
 		if (arity == 0) throw std::runtime_error("Static applicability procedure that should have been detected in compilation time");
-		else if(arity > 1) return false;
+		else if (arity > 1) return false;
 	}
 	
 	for (const fs::ActionEffect* effect:action.getEffects()) {

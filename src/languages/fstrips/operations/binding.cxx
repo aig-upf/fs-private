@@ -6,6 +6,7 @@
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <utils/binding.hxx>
+#include <utils/utils.hxx>
 #include <problem_info.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
@@ -53,9 +54,9 @@ Visit(const AxiomaticFormula& lhs) {
 
 void FormulaBindingVisitor::
 Visit(const Conjunction& lhs) {
-	std::vector<const AtomicFormula*> conjuncts;
+	std::vector<const Formula*> conjuncts;
 	std::vector<AtomConjunction::AtomT> atoms;
-	for (const AtomicFormula* c:lhs.getSubformulae()) {
+	for (const Formula* c:lhs.getSubformulae()) {
 		auto processed = bind(*c, _binding, _info);
 		// Static checks
 		if (processed->is_tautology()) { // No need to add the condition, which is always true
@@ -67,16 +68,14 @@ Visit(const Conjunction& lhs) {
 			_result = new Contradiction;
 			return;
 		}
-		auto processed_atomic = dynamic_cast<const AtomicFormula*>(processed);
-		assert(processed_atomic);
-		conjuncts.push_back(processed_atomic);
-		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(processed_atomic);
+		conjuncts.push_back(processed);
+		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(processed);
 		if( cc == nullptr ) continue;
-		const StateVariable* lhs = dynamic_cast<const StateVariable*>(cc->lhs());
-		if( lhs == nullptr ) continue;
+		const StateVariable* lhs_ = dynamic_cast<const StateVariable*>(cc->lhs());
+		if( lhs_ == nullptr ) continue;
 		const Constant* rhs = dynamic_cast< const Constant*>(cc->rhs());
 		if( rhs == nullptr ) continue;
-		atoms.push_back(std::make_pair(lhs->getValue(), rhs->getValue()));
+		atoms.push_back(std::make_pair(lhs_->getValue(), rhs->getValue()));
 	}
 
 	if (conjuncts.empty()) {
@@ -92,10 +91,41 @@ Visit(const Conjunction& lhs) {
 
 
 void FormulaBindingVisitor::
+Visit(const Disjunction& lhs) {
+	std::vector<const Formula*> disjuncts;
+	for (const Formula* c:lhs.getSubformulae()) {
+		auto processed = bind(*c, _binding, _info);
+		// Static checks
+		if (processed->is_tautology()) { // The whole disjunction statically resolves to true
+			delete processed;
+			for (auto elem:disjuncts) delete elem;
+			_result = new Tautology;
+			return;			
+			
+		} else if (processed->is_contradiction()) { // No need to add the condition, which is always false
+			delete processed;
+			continue;
+		}
+		disjuncts.push_back(processed);
+	}
+
+	if (disjuncts.empty()) {
+		_result = new Contradiction; // The empty disjunction is a Contradiction
+
+	} else {
+		_result =  new Disjunction(disjuncts);
+	}
+}
+
+
+void FormulaBindingVisitor::
 Visit(const ExistentiallyQuantifiedFormula& lhs) {
 	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
+	
 	for (const BoundVariable* var:lhs.getVariables()) {
-		if (_binding.binds(var->getVariableId())) throw std::runtime_error("Wrong binding - Duplicated variable");
+		if (_binding.binds(var->getVariableId())) {
+			throw std::runtime_error("Wrong binding - Duplicated variable");
+		}
 	}
 	// TODO Check if the binding is a complete binding and thus we can directly return the (variable-free) conjunction
 	// TODO Redesign this mess
@@ -105,7 +135,7 @@ Visit(const ExistentiallyQuantifiedFormula& lhs) {
 		return;
 	}
 
-	_result = new ExistentiallyQuantifiedFormula(lhs.getVariables(), bound_subformula);
+	_result = new ExistentiallyQuantifiedFormula(Utils::clone(lhs.getVariables()), bound_subformula);
 }
 
 void FormulaBindingVisitor::
@@ -122,7 +152,7 @@ Visit(const UniversallyQuantifiedFormula& lhs) {
 		return;
 	}
 
-	_result = new UniversallyQuantifiedFormula(lhs.getVariables(), bound_subformula);
+	_result = new UniversallyQuantifiedFormula(Utils::clone(lhs.getVariables()), bound_subformula);
 }
 
 
@@ -209,7 +239,7 @@ void TermBindingVisitor::
 Visit(const UserDefinedStaticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
-
+	
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 
@@ -224,6 +254,15 @@ Visit(const UserDefinedStaticTerm& lhs) {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms
 		_result =  new UserDefinedStaticTerm(symbol_id, processed);
 	}
+}
+
+void TermBindingVisitor::
+Visit(const AxiomaticTermWrapper& lhs) {
+	std::vector<ObjectIdx> constant_values;
+	std::vector<const Term*> processed = bind_subterms(lhs.getSubterms(), _binding, _info, constant_values);
+
+	// we simply return a new axiomaticTerm with the processed/bound subterms
+	_result =  new AxiomaticTermWrapper(lhs.getAxiom(), lhs.getSymbolId(), processed);
 }
 
 

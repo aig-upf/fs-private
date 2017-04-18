@@ -6,6 +6,8 @@
 
 namespace fs0 { class ActionData; class ActionBase; class GroundAction; }
 
+namespace fs0 { namespace lang { namespace fstrips { class ActionSchema; } } }
+
 namespace fs0 { namespace print {
 
 //! Print only the header (e.g. "move(b: block, to: place)") of a lifted action
@@ -17,6 +19,17 @@ class action_data_name {
 		action_data_name(const ActionData& action) : _action(action) {}
 		
 		friend std::ostream& operator<<(std::ostream &os, const action_data_name& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
+class action_signature {
+	protected:
+		const fs0::lang::fstrips::ActionSchema& _action;
+
+	public:
+		action_signature(const fs0::lang::fstrips::ActionSchema& action) : _action(action) {}
+		
+		friend std::ostream& operator<<(std::ostream &os, const action_signature& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
 

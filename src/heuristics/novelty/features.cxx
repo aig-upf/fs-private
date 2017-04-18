@@ -20,7 +20,7 @@ std::ostream& StateVariableFeature::print(std::ostream& os) const {
 FSFeatureValueT
 ConditionSetFeature::evaluate( const State& s ) const {
 	FSFeatureValueT satisfied = 0;
-	for ( const fs::AtomicFormula* c : _conditions ) {
+	for ( const auto c : _conditions ) {
 		if (c->interpret(s)) satisfied++;
 	}
 	return satisfied;

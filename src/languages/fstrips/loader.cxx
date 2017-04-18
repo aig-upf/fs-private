@@ -2,28 +2,46 @@
 #include <languages/fstrips/loader.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/builtin.hxx>
+#include <languages/fstrips/axioms.hxx>
 #include <constraints/registry.hxx>
+#include <problem.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips {
 
+//! Factory method to create a nested term of the appropriate type
+const Term* _create_nested_term(const std::string& symbol, const std::vector<const Term*>& subterms) {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	
+	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
+	if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return ArithmeticTermFactory::create(symbol, subterms);
+
+	unsigned symbol_id = info.getSymbolId(symbol);	
+	const auto& function = info.getSymbolData(symbol_id);
+	if (function.isStatic()) {
+		return new UserDefinedStaticTerm(symbol_id, subterms);
+	} else {
+		return new FluentHeadedNestedTerm(symbol_id, subterms);
+	}
+}
 
 const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemInfo& info) {
 	// As of now we only accept either conjunctions of atoms or existentially quantified conjunctions
 	std::string formula_type = tree["type"].GetString();
 	
 	
-	if (formula_type == "and") {
-		std::vector<const AtomicFormula*> list;
+	if (formula_type == "and" || formula_type == "or") {
+		std::vector<const Formula*> list;
 		const rapidjson::Value& children = tree["children"];
 		for (unsigned i = 0; i < children.Size(); ++i) {
-			const AtomicFormula* atomic = dynamic_cast<const AtomicFormula*>(parseFormula(children[i], info));
-			if (!atomic) {
-				throw std::runtime_error("Only conjunctions of atoms supported so far");
-			}
-			list.push_back(atomic);
+			list.push_back(parseFormula(children[i], info));
 		}
-		return new Conjunction(list);
+		
+		if (formula_type == "and") {
+			return new Conjunction(list);
+		} else {
+			return new Disjunction(list);
+		}		
 	
 		
 	} else if (formula_type == "exists" || formula_type == "forall") {
@@ -53,7 +71,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 				// 
 				IntConstant* value = negated ? new IntConstant(0) : new IntConstant(1);
 				
-				subterms = {NestedTerm::create(symbol, subterms), value};
+				subterms = {_create_nested_term(symbol, subterms), value};
 				symbol = "=";
 			}
 		} catch(std::out_of_range& ex) {} // The symbol might be built-in, and thus not registered.
@@ -78,16 +96,16 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 		return new Constant(tree["value"].GetInt());
 	} else if (term_type == "int_constant") {
 		return new IntConstant(tree["value"].GetInt());
-	} else if (term_type == "parameter") {
-		return new BoundVariable(tree["position"].GetInt(), info.getTypeId(tree["typename"].GetString()));
-	} else if (term_type == "function") {
+	} else if (term_type == "variable") {
+		return new BoundVariable(tree["position"].GetInt(), tree["name"].GetString(), info.getTypeId(tree["typename"].GetString()));
+	} else if (term_type == "functional") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<const Term*> children = parseTermList(tree["children"], info);
 		
 		try { return LogicalComponentRegistry::instance().instantiate_term(symbol, children); }
 		catch(const std::runtime_error& e) {}
 		
-		return NestedTerm::create(symbol, children);
+		return _create_nested_term(symbol, children);
 	} else throw std::runtime_error("Unknown node type " + term_type);
 }
 
@@ -96,10 +114,10 @@ std::vector<const BoundVariable*> Loader::parseVariables(const rapidjson::Value&
 	for (unsigned i = 0; i < tree.Size(); ++i) {
 		const rapidjson::Value& node = tree[i];
 		unsigned id = node[0].GetUint();
-// 		std::string name = node[1].GetString();
+		std::string name = node[1].GetString();
 		std::string type_name = node[2].GetString();
 		TypeIdx type = info.getTypeId(type_name);
-		list.push_back(new BoundVariable(id, type));
+		list.push_back(new BoundVariable(id, name, type));
 	}
 	return list;
 }
@@ -125,7 +143,6 @@ std::vector<const ActionEffect*> Loader::parseEffectList(const rapidjson::Value&
 	}
 	return list;
 }
-
 
 
 } } } // namespaces

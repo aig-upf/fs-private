@@ -41,7 +41,7 @@ def unwrap_predicate(element):
 
 
 def unwrap_function(element):
-    check_type(element, 'function')
+    check_type(element, 'functional')
     return element['symbol'], element['children']
 
 

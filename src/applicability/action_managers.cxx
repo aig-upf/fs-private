@@ -77,7 +77,7 @@ SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& a
 	_app_index(analyzer.getApplicable()),
 	_total_applicable_actions(analyzer.total_actions())
 {
-	index_variables(actions, _state_constraints);
+	index_variables(actions, fs::check_all_atomic_formulas(_state_constraints));
 
 	/*
 	// DEBUG
@@ -160,11 +160,15 @@ BasicApplicabilityAnalyzer::build() {
 			for (auto& app_set:_applicable) app_set.push_back(i);
 			continue;
 		}
+		
+		auto preconditions = fs::check_all_atomic_formulas(precondition->getSubformulae());
 
 
 		std::set<VariableIdx> referenced; // The state variables already made reference to by some precondition
-		for (const fs::AtomicFormula* conjunct:precondition->getSubformulae()) {
-
+		for (const fs::AtomicFormula* sub:preconditions) {
+			const fs::AtomicFormula* conjunct = dynamic_cast<const fs::AtomicFormula*>(sub);
+			if (!conjunct) throw std::runtime_error("Only conjunctions of atoms supported for this type of applicability analyzer");
+			
 			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
 			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
 			const fs::NEQAtomicFormula* neq = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
@@ -300,7 +304,7 @@ std::vector<ActionIdx> _build_all_actions_whitelist(unsigned size) {
 }
 
 //! A local helper to ensure the provided state constraints are of the adequate form.
-std::vector<const fs::AtomicFormula*>
+std::vector<const fs::Formula*>
 _process_state_constraints(const fs::Formula* state_constraints) {
 	if (dynamic_cast<const fs::Tautology*>(state_constraints)) return {};
 
@@ -339,7 +343,7 @@ NaiveActionManager::applicable(const State& state) const {
 
 bool
 NaiveActionManager::check_constraints(unsigned applied_action_id, const State& state) const {
-	for (const fs::AtomicFormula* constraint:_state_constraints) { // Check all state constraints
+	for (const auto constraint:_state_constraints) { // Check all state constraints
 		if (!constraint->interpret(state)) return false;
 	}
 	return true;

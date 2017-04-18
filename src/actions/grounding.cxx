@@ -14,9 +14,84 @@
 #include <utils/loader.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/operations.hxx>
+#include <utils/printers/actions.hxx>
 
 
 namespace fs0 {
+
+	
+std::vector<const fs::ActionEffect*>
+_bind_effects(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
+	std::vector<const fs::ActionEffect*> effects;
+	for (const fs::ActionEffect* effect:action_data.getEffects()) {
+		if (const fs::ActionEffect* bound = effect->bind(binding, info)) {
+			effects.push_back(bound);
+		}
+	}
+	
+	if (effects.empty()) {
+		LPT_INFO("cout", "WARNING - " <<  action_data << " with binding " << binding << " has no applicable effects");
+	}
+	return effects;
+}
+
+PartiallyGroundedAction*
+_partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
+	const fs::Formula* precondition = fs::bind(*action_data.getPrecondition(), binding, info);
+	if (precondition->is_contradiction()) {
+		delete precondition;
+		return nullptr;
+	}
+	
+	auto effects = _bind_effects(action_data, binding, info);
+	if (effects.empty()) {
+		delete precondition;
+		return nullptr;
+	}
+	
+	return new PartiallyGroundedAction(action_data, binding, precondition, effects);
+}
+
+
+//! Process the action schema with a given parameter binding and return the corresponding GroundAction
+//! A nullptr is returned if the action is detected to be statically non-applicable	
+GroundAction*
+_full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info, bool bind_effects) {
+	assert(binding.is_complete()); // Grounding only possible for full bindings
+	const fs::Formula* precondition = fs::bind(*action_data.getPrecondition(), binding, info);
+	if (precondition->is_contradiction()) {
+		delete precondition;
+		return nullptr;
+	}
+	
+	std::vector<const fs::ActionEffect*> effects;
+	if (bind_effects) {
+		effects = _bind_effects(action_data, binding, info);
+		if (effects.empty()) {
+			delete precondition;
+			return nullptr;
+		}
+	}
+	
+	return new GroundAction(id, action_data, binding, precondition, effects);
+}
+
+//! Grounds the set of given action schemata with all parameter groundings that induce no false preconditions
+//! Returns the new set of grounded actions
+unsigned
+_ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded, bool bind_effects) {
+// 	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
+	
+	if (GroundAction* ground = _full_binding(id, *data, binding, info, bind_effects)) {
+		LPT_EDEBUG("groundings", "\t" << *ground);
+		grounded.push_back(ground);
+		return id + 1;
+	} else {
+		LPT_DEBUG("grounding", "Binding " << print::binding(binding, data->getSignature()) << " generates a statically non-applicable grounded action");
+	}
+	return id;
+}
+
 
 
 std::vector<const PartiallyGroundedAction*>
@@ -24,19 +99,75 @@ ActionGrounder::fully_lifted(const std::vector<const ActionData*>& action_data, 
 	std::vector<const PartiallyGroundedAction*> lifted;
 	// We simply pass an empty binding to each action schema to obtain a fully-lifted PartiallyGroundedAction
 	for (const ActionData* data:action_data) {
-		lifted.push_back(partial_binding(*data, Binding(data->getSignature().size()), info));
+		lifted.push_back(_partial_binding(*data, Binding(data->getSignature().size()), info));
 	}
 	LPT_INFO("grounding", "Generated " << lifted.size() << " fully-lifted actions");
 	return lifted;
 }
 
 
+//! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector
 std::vector<const GroundAction*>
-ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
-	std::vector<const GroundAction*> grounded = Loader::loadGroundActionsIfAvailable(info, action_data);
-	if (!grounded.empty()) { // A previous grounding was found, return it
+_loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const ActionData*>& action_data) {
+	std::vector<const GroundAction*> grounded;
+	if (action_data.empty()) return grounded;
+	
+	std::string filename = info.getDataDir() + "/groundings.data";
+	std::ifstream is(filename);
+	
+    if (!is.good()) { // File groundings.data does not exist
 		return grounded;
 	}
+	
+	LPT_INFO("cout", "Loading the list of reachable ground actions from \"" << filename << "\"");
+	
+	unsigned current_schema_groundings = 0;
+	unsigned id = 0;
+	unsigned schema_id = -1;
+	const ActionData* current = action_data[0];
+	std::string line;
+	
+	while (std::getline(is, line)) {
+		if (line.length() > 0 && line[0] == '#') { // We switch to the next action schema
+			
+			++schema_id;
+			if (schema_id >= action_data.size()) {
+				throw std::runtime_error("The number of action schemas in the groundings file does not match that in the problem description");
+			}
+			
+			if (schema_id > 0) {
+				LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+			}
+			
+			current = action_data[schema_id];
+			current_schema_groundings = 0;
+			continue;
+		}
+		
+		std::vector<ObjectIdx> deserialized = Serializer::deserializeLine(line, ",");
+		if (current->getSignature().size() != deserialized.size()) {
+			throw std::runtime_error("Wrong number of action parameters");
+		}
+		
+		
+		if (deserialized.empty()) {
+			LPT_INFO("cout", "Grounding action schema '" << current->getName() << "' with no binding");
+			id = _ground(id, current, Binding::EMPTY_BINDING, info, grounded, true);
+		} else {
+			Binding binding(std::move(deserialized));
+			id = _ground(id, current, binding, info, grounded, true);
+		}
+		++current_schema_groundings;
+	}
+	
+	LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+	LPT_INFO("cout", "Grounding process stats:\t" << grounded.size() << " grounded actions");
+	return grounded;
+}
+
+std::vector<const GroundAction*>
+_ground_all_elements(const std::vector<const ActionData*>& action_data, const ProblemInfo& info, bool bind_effects) {
+	std::vector<const GroundAction*> grounded;
 	
 	unsigned total_num_bindings = 0;
 	
@@ -47,67 +178,67 @@ ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, 
 		
 		// In case the action schema is directly not-lifted, we simply bind it with an empty binding and continue.
 		if (signature.empty()) { 
-			LPT_INFO("cout", "Grounding action schema '" << data->getName() << "' with no binding");
-			LPT_INFO("grounding", "Grounding the following action schema with no binding:" << *data << "\n");
-			id = ground(id, data, Binding::EMPTY_BINDING, info, grounded);
+			LPT_INFO("cout", "Grounding schema '" << data->getName() << "' with no binding");
+			LPT_INFO("grounding", "Grounding the following schema with no binding:" << *data << "\n");
+			id = _ground(id, data, Binding::EMPTY_BINDING, info, grounded, bind_effects);
 			++total_num_bindings;
 			continue;
 		}
 		
 		utils::binding_iterator binding_generator(signature, info);
 		if (binding_generator.ended()) {
-			LPT_INFO("cout", "Grounding of schema '" << data->getName() << "' yields no ground action, likely due to a parameter with empty type");
+			LPT_INFO("cout", "Grounding of schema '" << data->getName() << "' yields no ground element, likely due to a parameter with empty type");
 			continue;
 		}
 		
 		unsigned long num_bindings = binding_generator.num_bindings();
 		
-		LPT_INFO("cout", "Grounding action schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:" << std::flush);
-		LPT_INFO("grounding", "Grounding the following action schema with " << num_bindings << " possible bindings:" << print::action_data_name(*data));
+		LPT_INFO("cout", "Grounding schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:" << std::flush);
+		LPT_INFO("grounding", "Grounding the following schema with " << num_bindings << " possible bindings:" << print::action_data_name(*data));
 
-		if (num_bindings == 0 || num_bindings > MAX_GROUND_ACTIONS) { // num_bindings == 0 would indicate there's been an overflow
+		if (num_bindings == 0 || num_bindings > ActionGrounder::MAX_GROUND_ACTIONS) { // num_bindings == 0 would indicate there's been an overflow
 			//throw TooManyGroundActionsError(num_bindings);
-			LPT_INFO("cout", "WARNING - The number of ground actions is too high: " << num_bindings);
+			LPT_INFO("cout", "WARNING - The number of ground elements is too high: " << num_bindings);
 		}
 		
-		float onepercent = ((float)num_bindings / 100);
-		int progress = 0;
-		unsigned i = 0;
+// 		float onepercent = ((float)num_bindings / 100);
+// 		int progress = 0;
+// 		unsigned i = 0;
 		for (; !binding_generator.ended(); ++binding_generator) {
-			id = ground(id, data, *binding_generator, info, grounded);
-			++i;
+			id = _ground(id, data, *binding_generator, info, grounded, bind_effects);
+// 			++i;
 			
 			// Print 5%, 10%, 15%, ... progress indicators
+			/*
+			 * NOTE This is too expensive for problems with many ground actions!
 			while (i / onepercent > progress) {
 				++progress;
 				if (progress % 5 == 0) std::cout << progress << "%, " << std::flush;
 			}
+			*/
 			++total_num_bindings;
 		}
 		std::cout << std::endl;
-		LPT_INFO("cout", "Action schema \"" << print::action_data_name(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded actions");
-		std::cout << std::endl;
+		LPT_INFO("cout", "Schema \"" << print::action_data_name(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded elements");
+		LPT_INFO("cout", "");
 	}
 	
-	LPT_INFO("grounding", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
-	LPT_INFO("cout", "Grounding process stats:\n\t* " << grounded.size() << " grounded actions\n\t* " << total_num_bindings - grounded.size() << " pruned actions");
+	LPT_INFO("grounding", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
+	LPT_INFO("cout", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
 	LPT_DEBUG("grounding", "All ground actions " << std::endl << print::actions(grounded));
 	return grounded;
 }
 
-unsigned
-ActionGrounder::ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded) {
-// 	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
-	
-	if (GroundAction* ground = full_binding(id, *data, binding, info)) {
-		LPT_EDEBUG("groundings", "\t" << *ground);
-		grounded.push_back(ground);
-		return id + 1;
-	} else {
-		LPT_DEBUG("grounding", "Binding " << print::binding(binding, data->getSignature()) << " generates a statically non-applicable grounded action");
+std::vector<const GroundAction*>
+ActionGrounder::fully_ground(const std::vector<const ActionData*>& action_data, const ProblemInfo& info) {
+	std::vector<const GroundAction*> grounded = _loadGroundActionsIfAvailable(info, action_data);
+	if (!grounded.empty()) { // A previous grounding was found, return it
+		return grounded;
 	}
-	return id;
+	
+	return _ground_all_elements(action_data, info, true);
 }
+
 
 std::vector<const PartiallyGroundedAction*>
 ActionGrounder::compile_action_parameters_away(const PartiallyGroundedAction* schema, unsigned effect_idx, const ProblemInfo& info) {
@@ -134,7 +265,7 @@ ActionGrounder::compile_action_parameters_away(const PartiallyGroundedAction* sc
 		Binding binding = schema->getBinding(); // Copy the object
 		binding.merge_with(*binding_generator);
 
-		if (PartiallyGroundedAction* grounded_action = partial_binding(schema->getActionData(), binding, info)) {
+		if (PartiallyGroundedAction* grounded_action = _partial_binding(schema->getActionData(), binding, info)) {
 			grounded.push_back(grounded_action);
 		}
 	}
@@ -268,78 +399,32 @@ collect_effect_non_constant_subterms(const fs::ActionEffect* effect) {
 
 */
 
-std::vector<const fs::ActionEffect*>
-_bind_effects(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
-	std::vector<const fs::ActionEffect*> effects;
-	for (const fs::ActionEffect* effect:action_data.getEffects()) {
-		if (const fs::ActionEffect* bound = effect->bind(binding, info)) {
-			effects.push_back(bound);
-		}
-	}
-	
-	if (effects.empty()) {
-		LPT_INFO("cout", "WARNING - " <<  action_data << " with binding " << binding << " has no applicable effects");
-	}
-	return effects;
-}
-	
-
-PartiallyGroundedAction*
-ActionGrounder::partial_binding(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
-	const fs::Formula* precondition = fs::bind(*action_data.getPrecondition(), binding, info);
-	if (precondition->is_contradiction()) {
-		delete precondition;
-		return nullptr;
-	}
-	
-	auto effects = _bind_effects(action_data, binding, info);
-	if (effects.empty()) {
-		delete precondition;
-		return nullptr;
-	}
-	
-	return new PartiallyGroundedAction(action_data, binding, precondition, effects);
-}
-
-GroundAction*
-ActionGrounder::full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
-	assert(binding.is_complete()); // Grounding only possible for full bindings
-	const fs::Formula* precondition = fs::bind(*action_data.getPrecondition(), binding, info);
-	if (precondition->is_contradiction()) {
-		delete precondition;
-		return nullptr;
-	}
-	
-	auto effects = _bind_effects(action_data, binding, info);
-	if (effects.empty()) {
-		delete precondition;
-		return nullptr;
-	}
-	
-	return new GroundAction(id, action_data, binding, precondition, effects);
-}
 
 ActionData*
-ActionGrounder::process_action_data(const ActionData& action_data, const ProblemInfo& info) {
-	auto precondition = fs::bind(*action_data.getPrecondition(), Binding::EMPTY_BINDING, info);
+ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo& info, bool process_effects) {
+	auto precondition = fs::bind(*action.getPrecondition(), Binding::EMPTY_BINDING, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
 		throw std::runtime_error("The precondition of the action schema is (statically) unsatisfiable!");
 	}
 	
-	auto effects = _bind_effects(action_data, Binding::EMPTY_BINDING, info);
-	if (effects.empty()) {
-		delete precondition;
-		throw std::runtime_error("The action schema has (statically) no applicable action effects!");
+	std::vector<const fs::ActionEffect*> effects;
+
+	if (process_effects) {
+		effects = _bind_effects(action, Binding::EMPTY_BINDING, info);
+		if (effects.empty()) {
+			delete precondition;
+			throw std::runtime_error("The action schema has (statically) no applicable action effects!");
+		}
 	}
-	return new ActionData(action_data.getId(), action_data.getName(), action_data.getSignature(), action_data.getParameterNames(), precondition, effects);
+	return new ActionData(action.getId(), action.getName(), action.getSignature(), action.getParameterNames(), action.getBindingUnit(), precondition, effects);
 }
 
 GroundAction*
 ActionGrounder::bind(const PartiallyGroundedAction& action, const Binding& binding, const ProblemInfo& info) {
 	Binding full(action.getBinding());
 	full.merge_with(binding); // TODO We should bind not from the action data but from the partially bound action itself.
-	return full_binding(GroundAction::invalid_action_id, action.getActionData(), full, info);
+	return _full_binding(GroundAction::invalid_action_id, action.getActionData(), full, info, true);
 }
 
 
