@@ -54,6 +54,9 @@ public:
 	//! atoms in s with novelty 1.
 	std::vector<unsigned> _nov1atom_idxs;
 	
+	//! Whether the path-novely of the node is one
+	bool _path_novelty_is_1;
+	
 	//! The generation order, uniquely identifies the node
 	unsigned long _gen_order;
 
@@ -77,6 +80,7 @@ public:
 		g(parent ? parent->g+1 : 0),
 		_w(std::numeric_limits<unsigned>::max()),
 		_evaluated(false),
+		_path_novelty_is_1(false),
 		_gen_order(gen_order)
 	{}
 
@@ -156,6 +160,8 @@ public:
 	
 	unsigned evaluate_new(NodeT& node) {
 		assert(node._nov1atom_idxs.empty());
+		assert(!node._path_novelty_is_1); // We still haven't determined whether the node has been reached through a nov-1 path
+		
 		assert(!node._evaluated); // i.e. don't evaluate a node twice!
 		node._evaluated = true;		
 		unsigned nov;
@@ -164,6 +170,7 @@ public:
 		if (!node.parent) { // We're dealing with the root node
 			nov = _evaluator->evaluate_1(valuation, node._nov1atom_idxs);
 			assert(nov == 1);
+			node._path_novelty_is_1 = true;
 			
 			// NOW EVALUATE 1.5 novelty
 			_evaluator->evaluate_piw(valuation);
@@ -176,23 +183,31 @@ public:
 			
 			std::vector<unsigned> from_current, from_parent;
 			nov = _evaluator->evaluate_1(valuation, new_atom_idxs, from_current);
+			node._path_novelty_is_1 = node.parent->_path_novelty_is_1 && (nov == 1);
 			
 			// Now add to nov1atoms those atoms in the parent state that had novelty 1 and have not been deleted by the action leading to this state
 			const auto& parent_1s = node.parent->_nov1atom_idxs;
 			
 			std::set_intersection(parent_1s.begin(), parent_1s.end(), repeated_atom_idxs.begin(), repeated_atom_idxs.end(), std::back_inserter(from_parent));
-			std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));			
 			
 			// TODO Might want to remove this asserts at some point not to penalize the performance of the debug release too much
 			assert(std::is_sorted(repeated_atom_idxs.begin(), repeated_atom_idxs.end()));
 			assert(std::is_sorted(from_parent.begin(), from_parent.end()));
-			assert(std::is_sorted(from_current.begin(), from_current.end()));
+			assert(std::is_sorted(from_current.begin(), from_current.end()));			
+			
+			
+			// SET 1(s) to its appropriate value
+			if (node._path_novelty_is_1) {
+				std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));
+			} else {
+				node._nov1atom_idxs = std::move(from_current);
+			}
+			
 			
 			// NOW EVALUATE 1.5 novelty
 			auto special = to_atom_indexes(node);
 			
-			const AtomIndex& index = Problem::getInstance().get_tuple_index();
-
+			// XXX const AtomIndex& index = Problem::getInstance().get_tuple_index();
 			// XXX std::cout << std::endl << std::endl << "All state atoms: " << std::endl << node.state << std::endl;
 			// XXX std::cout << "1(s): " << std::endl;
 			// XXX for (AtomIdx ai:special) {
