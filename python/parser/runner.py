@@ -34,6 +34,7 @@ def parse_arguments(args):
     parser.add_argument("--defaults", help='The solver default options file', default=None)
     parser.add_argument("--options", help='The solver extra options', default="")
     parser.add_argument("--asp", action='store_true', help='Use ASP grounder (strict ADL, without numerics etc.)')
+    parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
 
     args = parser.parse_args(args)
     args.instance_dir = os.path.dirname(args.instance)
@@ -180,8 +181,13 @@ def run(args):
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
-        fd_task = parse_pddl_task(args.domain, args.instance)
-        fs_task = create_fs_task(fd_task, domain_name, instance_name)
+        if not args.hybrid :
+            import f_pddl_plus
+            hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
+            fs_task = create_fs_plus_task( fd_task, domain_name, instance_name)
+        else :
+            fd_task = parse_pddl_task(args.domain, args.instance)
+            fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:
         from .asp import processor
         adl_task = processor.parse_and_ground(args.domain, args.instance, translation_dir)

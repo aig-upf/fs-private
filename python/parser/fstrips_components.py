@@ -110,29 +110,30 @@ class FSFormula(FSBaseComponent):
                     unit=self.binding_unit.dump())
 
 
-class FSAxiom(FSBaseComponent):
+class FSNamedFormula(FSBaseComponent):
     """ A FSTRIPS axiom, which is a formula with a name and possibly some lifted parameters """
-    def __init__(self, index, axiom):
+    def __init__(self, index, name, parameters, formula):
         super().__init__(index)
-        self.axiom = axiom
+        self.name = name
+        self.parameters = parameters
 
         # Order matters: the binding unit needs to be created when the effects are processed
-        self.binding_unit = fs.BindingUnit.from_parameters(axiom.parameters)
-        self.formula = self.process_conditions(self.axiom.condition)
+        self.binding_unit = fs.BindingUnit.from_parameters(self.parameters)
+        self.formula = self.process_conditions(formula)
 
     def dump(self):
-        return dict(name=self.axiom.name,
-                    signature=[self.index.types[p.type] for p in self.axiom.parameters],
-                    parameters=[p.name for p in self.axiom.parameters],
-                    conditions=self.formula.dump(self.index, self.binding_unit),
-                    unit=self.binding_unit.dump())
+        return dict(name=self.name,
+            signature=[self.index.types[p.type] for p in self.parameters],
+            parameters=[p.name for p in self.parameters],
+            conditions=self.formula.dump(self.index.objects, self.binding_unit),
+            unit=self.binding_unit.dump())
 
     def __str__(self):
-        if self.axiom.parameters:
-            params = "({})".format(', '.join("{}: {}".format(p.name, p.type) for p in self.axiom.parameters))
+        if self.parameters:
+            params = "({})".format(', '.join("{}: {}".format(p.name, p.type) for p in self.parameters))
         else:
             params = ""
-        return "{}{}\n\t{}".format(self.axiom.name, params, self.formula)
+        return "{}{}\n\t{}".format(self.name, params, self.formula)
 
 
 class FSActionSchema(FSBaseComponent):
