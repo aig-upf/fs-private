@@ -31,6 +31,10 @@ public:
 		return _atom_index.to_index(variable, value);
 	}
 	
+	inline const Atom& to_atom(unsigned index) const {
+		return _atom_index.to_atom(index);
+	}	
+	
 protected:
 	const AtomIndex& _atom_index;
 };

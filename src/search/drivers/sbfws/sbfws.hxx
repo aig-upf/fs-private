@@ -688,6 +688,8 @@ public:
 		NodePT root = std::make_shared<NodeT>(s, _generated++);
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
+		
+		_heuristic.compute_node_complex_type(*root); // Force one simulation from the root node
 
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found

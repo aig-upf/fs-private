@@ -101,7 +101,7 @@ public:
 // 			os << ", act=" << "NONE" ;
 // 		}
 		
-		os << ", parent = " << parent << "}";
+		os << ", parent = " << (parent ? parent->_gen_order : -1) << "}";
 		return os;
 	}
 
@@ -128,6 +128,11 @@ public:
 
 	~SimulationEvaluator() = default;
 
+	unsigned evaluate(NodeT& node) {
+ 		return evaluate_new(node);
+		return evaluate_old(node);
+	}
+	
 	//! Returns false iff we want to prune this node during the search
 	unsigned evaluate_old(NodeT& node) {
 		assert(!node._evaluated); // i.e. don't evaluate a node twice!
@@ -149,15 +154,21 @@ public:
 		return node._w;
 	}
 	
-	unsigned evaluate(NodeT& node) {
+	unsigned evaluate_new(NodeT& node) {
 		assert(node._nov1atom_idxs.empty());
 		assert(!node._evaluated); // i.e. don't evaluate a node twice!
 		node._evaluated = true;		
 		unsigned nov;
 		auto valuation = _features.evaluate(node.state);
-		if (node.parent) {
+		
+		if (!node.parent) { // We're dealing with the root node
+			nov = _evaluator->evaluate_1(valuation, node._nov1atom_idxs);
+			assert(nov == 1);
+			
+			// NOW EVALUATE 1.5 novelty
+			_evaluator->evaluate_piw(valuation);
+		} else {
 			auto parent_valuation = _features.evaluate(node.parent->state);
-			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
 			std::vector<unsigned> new_atom_idxs;
 			std::vector<unsigned> repeated_atom_idxs;
 			
@@ -179,16 +190,18 @@ public:
 			
 			// NOW EVALUATE 1.5 novelty
 			auto special = to_atom_indexes(node);
-			if (_evaluator->evaluate_1_5(valuation, parent_valuation, special)) {
-				if (nov != 1) nov = 2;
-			}
 			
-		} else {
-			nov = _evaluator->evaluate_1(valuation, node._nov1atom_idxs);
+			const AtomIndex& index = Problem::getInstance().get_tuple_index();
+
+			// XXX std::cout << std::endl << std::endl << "All state atoms: " << std::endl << node.state << std::endl;
+			// XXX std::cout << "1(s): " << std::endl;
+			// XXX for (AtomIdx ai:special) {
+				// XXX std::cout << "\t" << index.to_atom(ai) << std::endl;
+			// XXX }
+			// XXX std::cout << std::endl << std::endl;
+
 			
-			// NOW EVALUATE 1.5 novelty
-			auto special = to_atom_indexes(node);
-			if (_evaluator->evaluate_1_5(valuation, special)) {
+			if (_evaluator->evaluate_piw(valuation, special)) {
 				if (nov != 1) nov = 2;
 			}
 			
@@ -202,7 +215,9 @@ public:
 		std::vector<AtomIdx> special;
 		const AtomIndex& atomidx = Problem::getInstance().get_tuple_index();
 		for (unsigned var:node._nov1atom_idxs) {
-			special.push_back(atomidx.to_index(var, node.state.getValue(var)));
+			auto val = node.state.getValue(var);
+			if (val == 0) continue;
+			special.push_back(atomidx.to_index(var, val));
 		}
 		return special;
 	}		
@@ -488,7 +503,7 @@ public:
 		auto nov =_evaluator.evaluate(*n);
 		_unused(nov);
 		assert(nov==1);
-// 		LPT_INFO("cout", "IW Simulation - Seed node: " << *n);
+// 		LPT_DEBUG("cout", "IW Simulation - Seed node: " << *n);
 
 		this->_open.insert(n);
 
@@ -516,10 +531,13 @@ public:
 					_w1_nodes.push_back(successor);
 				}
 				
-//  				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
+//   				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
 				
 				if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
 					LPT_INFO("cout", "IW Simulation - All subgoals reached after processing " << accepted << " nodes");
+					LPT_INFO("cout", "IW Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
+					LPT_INFO("cout", "IW Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
+					LPT_INFO("cout", "IW Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);					
 					return true;
 				}
 				
@@ -541,6 +559,11 @@ public:
 				}
 			}
 		}
+		
+		LPT_INFO("cout", "IW Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
+		LPT_INFO("cout", "IW Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
+		LPT_INFO("cout", "IW Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
+		
  		LPT_INFO("cout", "IW Simulation - State space exhausted after exploring " << accepted << " nodes");
 // 		LPT_INFO("cout", "IW Simulation - # unreached subgoals: " << _unreached.size());
 		return false; // Or the state space is exhausted before either reaching all subgoals or reaching the bound
