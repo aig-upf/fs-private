@@ -200,7 +200,7 @@ public:
 			if (node._path_novelty_is_1) {
 				std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));
 			} else {
-				node._nov1atom_idxs = std::move(from_current);
+				node._nov1atom_idxs = std::move(from_parent);
 			}
 			
 			
