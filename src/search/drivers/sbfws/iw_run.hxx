@@ -42,6 +42,8 @@ public:
 	
 	bool satisfies_subgoal; // Whether the node satisfies some subgoal
 	
+	unsigned _hashg;
+	
 	//! The novelty  of the state
 	unsigned _w;
 	
@@ -78,6 +80,7 @@ public:
 		action(_action),
 		parent(_parent),
 		g(parent ? parent->g+1 : 0),
+		_hashg(0),
 		_w(std::numeric_limits<unsigned>::max()),
 		_evaluated(false),
 		_path_novelty_is_1(false),
@@ -131,6 +134,8 @@ public:
 	{}
 
 	~SimulationEvaluator() = default;
+	
+	const FeatureSetT& getFeatures() const { return _features; }
 
 	unsigned evaluate(NodeT& node) {
  		return evaluate_new(node);
@@ -172,8 +177,8 @@ public:
 			assert(nov == 1);
 			node._path_novelty_is_1 = true;
 			
-			// NOW EVALUATE 1.5 novelty
-			_evaluator->evaluate_piw(valuation);
+// 			// NOW EVALUATE 1.5 novelty
+// 			_evaluator->evaluate_piw(valuation);
 		} else {
 			auto parent_valuation = _features.evaluate(node.parent->state);
 			std::vector<unsigned> new_atom_idxs;
@@ -216,9 +221,9 @@ public:
 			// XXX std::cout << std::endl << std::endl;
 
 			
-			if (_evaluator->evaluate_piw(valuation, special)) {
-				if (nov != 1) nov = 2;
-			}
+// 			if (_evaluator->evaluate_piw(valuation, special)) {
+// 				if (nov != 1) nov = 2;
+// 			}
 			
 		}
 		
@@ -335,7 +340,7 @@ protected:
 // 	std::unordered_set<NodePT> _visited;
 	
 	//! A single novelty evaluator will be in charge of evaluating all nodes
-	SimEvaluatorT _evaluator;
+	std::unique_ptr<SimEvaluatorT> _evaluator;
 	
 	//! All those nodes with width 1 on the first stage of the simulation
 	std::vector<NodePT> _w1_nodes;
@@ -359,7 +364,7 @@ public:
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 // 		_visited(),
-		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, _config._max_width, false)),
+		_evaluator(new SimEvaluatorT(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, _config._max_width, false))),
 		_w1_nodes(),
 		_generated(0),
 		_w1_nodes_expanded(0),
@@ -428,7 +433,7 @@ public:
 		_compute_R(seed, seed_nodes);
 
 		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
-		std::vector<bool> rel_blind = _evaluator.reached_atoms();
+		std::vector<bool> rel_blind = _evaluator->reached_atoms();
 		LPT_INFO("cout", "IW Simulation - Blind |R|         = " << std::count(rel_blind.begin(), rel_blind.end(), true));
 		return rel_blind;
 	}
@@ -436,7 +441,7 @@ public:
 	std::vector<bool> compute_goal_directed_R(const StateT& seed) {
 		LPT_INFO("cout", "IW Simulation - Computing goal-directed R");
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
-		_config._max_width = 2;
+		_config._max_width = 1;
 		_config._bound = -1; // No bound
 		std::vector<NodePT> seed_nodes;
 		_compute_R(seed, seed_nodes);
@@ -514,70 +519,89 @@ public:
 	bool _run(const StateT& seed) {
 		NodePT n = std::make_shared<NodeT>(seed, _generated++);
 		mark_seed_subgoals(n);
-		
-		auto nov =_evaluator.evaluate(*n);
-		_unused(nov);
-		assert(nov==1);
-// 		LPT_DEBUG("cout", "IW Simulation - Seed node: " << *n);
-
-		this->_open.insert(n);
-
 		unsigned accepted = 1; // (the root node counts as accepted)
 		
-		while (!this->_open.empty()) {
-			NodePT current = this->_open.next( );
-
-			// close the node before the actual expansion so that children which are identical to 'current' get properly discarded.
-			this->_closed.put(current);
+		NodePT best_so_far = nullptr;
+		for (unsigned restarts = 0; restarts < 500; ++restarts) {
 			
-			if (current->_w == 1) ++_w1_nodes_expanded;
-			else if (current->_w == 2) ++_w2_nodes_expanded;
+			auto nov =_evaluator->evaluate(*n);
+			_unused(nov);
+			assert(nov==1);
+	// 		LPT_DEBUG("cout", "IW Simulation - Seed node: " << *n);
+			this->_open.insert(n);			
+			
+			
+			NodePT current = nullptr;
+			while (!this->_open.empty()) {
+				current = this->_open.next( );
+				
+				// close the node before the actual expansion so that children which are identical to 'current' get properly discarded.
+				this->_closed.put(current);
+				
+				if (current->_w == 1) ++_w1_nodes_expanded;
+				else if (current->_w == 2) ++_w2_nodes_expanded;
 
-			for (const auto& a : this->_model.applicable_actions(current->state)) {
-				StateT s_a = this->_model.next( current->state, a );
-				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current, _generated++ );
-				
-				if (this->_closed.check(successor)) continue; // The node has already been closed
-				if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
+				for (const auto& a : this->_model.applicable_actions(current->state)) {
+					StateT s_a = this->_model.next( current->state, a );
+					NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current, _generated++ );
+					
+					if (this->_closed.check(successor)) continue; // The node has already been closed
+					if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
 
-				
-				unsigned novelty = _evaluator.evaluate(*successor);
-				if (novelty == 1) {
-					_w1_nodes.push_back(successor);
-				}
-				
-//   				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
-				
-				if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
-					LPT_INFO("cout", "IW Simulation - All subgoals reached after processing " << accepted << " nodes");
-					LPT_INFO("cout", "IW Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
-					LPT_INFO("cout", "IW Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
-					LPT_INFO("cout", "IW Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);					
-					return true;
-				}
-				
-				if (novelty <= _config._max_width) {
-					this->_open.insert(successor);
-					accepted++;
 					
-					assert(novelty == 1 || novelty == 2);
+					unsigned novelty = _evaluator->evaluate(*successor);
+					if (novelty == 1) {
+						_w1_nodes.push_back(successor);
+					}
 					
-					if (novelty==1) ++_w1_nodes_generated;
-					else  ++_w2_nodes_generated;
-				} else {
-					++_w_gt2_nodes_generated;
-				}
+	//   				LPT_INFO("cout", "IW Simulation - Node generated: " << *successor);
+					
+					if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
+						LPT_INFO("cout", "IW Simulation - All subgoals reached after processing " << accepted << " nodes");
+						LPT_INFO("cout", "IW Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
+						LPT_INFO("cout", "IW Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
+						LPT_INFO("cout", "IW Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);					
+						return true;
+					}
+					
+					if (novelty == 1) {
+						if (!best_so_far || best_so_far->_hashg <= successor->_hashg) {
+							best_so_far = successor;
+// 							LPT_INFO("cout", "IW Simulation - Best Node so far (" << successor->_hashg << "): " << *successor);
+						}
+					}					
 				
-				if (_config._bound > 0 && accepted >= (unsigned) _config._bound) {
- 					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
-					return false;
+					
+					if (novelty <= _config._max_width) {
+						this->_open.insert(successor);
+						accepted++;
+						
+						assert(novelty == 1 || novelty == 2);
+						
+						if (novelty==1) ++_w1_nodes_generated;
+						else  ++_w2_nodes_generated;
+					} else {
+						++_w_gt2_nodes_generated;
+					}
+					
+					if (_config._bound > 0 && accepted >= (unsigned) _config._bound) {
+						LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
+						return false;
+					}
 				}
 			}
+			
+			LPT_INFO("cout", "IW Simulation - Restarting Novelty Tables from last expanded node (" << restarts<< ")");
+			LPT_INFO("cout", "IW Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
+			LPT_INFO("cout", "IW Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
+			LPT_INFO("cout", "IW Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
+			
+			this->_closed.clear();
+			_evaluator = std::unique_ptr<SimEvaluatorT>(new SimEvaluatorT(_evaluator->getFeatures(), create_novelty_evaluator<NoveltyEvaluatorT>(this->_model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, _config._max_width, false)));
+// 			n = best_so_far ? best_so_far : current;
+			n = current;
 		}
 		
-		LPT_INFO("cout", "IW Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
-		LPT_INFO("cout", "IW Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
-		LPT_INFO("cout", "IW Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
 		
  		LPT_INFO("cout", "IW Simulation - State space exhausted after exploring " << accepted << " nodes");
 // 		LPT_INFO("cout", "IW Simulation - # unreached subgoals: " << _unreached.size());
@@ -594,16 +618,19 @@ protected:
 
 		// We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
 		// to check if the current node satisfies any of them - and if it does, we mark it appropriately.
-		for (auto it = _unreached.begin(); it != _unreached.end(); ) {
-			unsigned subgoal_idx = *it;
+		for (unsigned subgoal_idx  = 0; subgoal_idx < this->_model.num_subgoals(); ++subgoal_idx) {
+// 		for (auto it = _unreached.begin(); it != _unreached.end(); ) {
+// 			unsigned subgoal_idx = *it;
 
 			if (this->_model.goal(state, subgoal_idx)) {
+				node->_hashg++;
 				node->satisfies_subgoal = true;
 // 				_all_paths[subgoal_idx].push_back(node);
 				if (!_optimal_paths[subgoal_idx]) _optimal_paths[subgoal_idx] = node;
-				it = _unreached.erase(it);
+// 				it = _unreached.erase(it);
+				_unreached.erase(subgoal_idx);
 			} else {
-				++it;
+// 				++it;
 			}
 		}
 		// As soon as all nodes have been processed, we return true so that we can stop the search
