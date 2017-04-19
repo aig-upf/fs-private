@@ -177,8 +177,8 @@ public:
 			assert(nov == 1);
 			node._path_novelty_is_1 = true;
 			
-// 			// NOW EVALUATE 1.5 novelty
-// 			_evaluator->evaluate_piw(valuation);
+			// NOW EVALUATE 1.5 novelty
+			_evaluator->evaluate_piw(valuation);
 		} else {
 			auto parent_valuation = _features.evaluate(node.parent->state);
 			std::vector<unsigned> new_atom_idxs;
@@ -221,9 +221,9 @@ public:
 			// XXX std::cout << std::endl << std::endl;
 
 			
-// 			if (_evaluator->evaluate_piw(valuation, special)) {
-// 				if (nov != 1) nov = 2;
-// 			}
+			if (_evaluator->evaluate_piw(valuation, special)) {
+				if (nov != 1) nov = 2;
+			}
 			
 		}
 		
@@ -441,7 +441,7 @@ public:
 	std::vector<bool> compute_goal_directed_R(const StateT& seed) {
 		LPT_INFO("cout", "IW Simulation - Computing goal-directed R");
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
-		_config._max_width = 1;
+		_config._max_width = 2;
 		_config._bound = -1; // No bound
 		std::vector<NodePT> seed_nodes;
 		_compute_R(seed, seed_nodes);
@@ -598,7 +598,7 @@ public:
 			
 			this->_closed.clear();
 			_evaluator = std::unique_ptr<SimEvaluatorT>(new SimEvaluatorT(_evaluator->getFeatures(), create_novelty_evaluator<NoveltyEvaluatorT>(this->_model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, _config._max_width, false)));
-// 			n = best_so_far ? best_so_far : current;
+			n = best_so_far ? best_so_far : current;
 			n = current;
 		}
 		
