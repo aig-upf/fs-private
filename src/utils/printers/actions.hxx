@@ -17,7 +17,7 @@ class action_data_name {
 
 	public:
 		action_data_name(const ActionData& action) : _action(action) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const action_data_name& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
@@ -28,7 +28,7 @@ class action_signature {
 
 	public:
 		action_signature(const fs0::lang::fstrips::ActionSchema& action) : _action(action) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const action_signature& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
@@ -40,7 +40,7 @@ class action_data {
 
 	public:
 		action_data(const ActionData& action) : _action(action) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const action_data& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
@@ -52,7 +52,7 @@ class action_header {
 
 	public:
 		action_header(const ActionBase& action) : _action(action) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const action_header& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
@@ -64,7 +64,7 @@ class full_action {
 
 	public:
 		full_action(const ActionBase& action) : _action(action) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const full_action& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
@@ -76,7 +76,7 @@ class actions {
 
 	public:
 		actions(const std::vector<const GroundAction*>& acts) : _actions(acts) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const actions& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };

@@ -11,10 +11,11 @@
 
 
 namespace fs0 {
-	
+
 ActionData::ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names, const fs::BindingUnit& bunit,
-					   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects)
-	: _id(id), _name(name), _signature(signature), _parameter_names(parameter_names), _bunit(bunit), _precondition(precondition), _effects(effects)
+					   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects, ActionData::Type type)
+	: _id(id), _name(name), _signature(signature), _parameter_names(parameter_names),
+    _bunit(bunit), _precondition(precondition), _effects(effects), _type(type)
 {
 	assert(parameter_names.size() == signature.size());
 }
@@ -31,10 +32,11 @@ ActionData::ActionData(const ActionData& other) :
 	_parameter_names(other._parameter_names),
 	_bunit(other._bunit),
 	_precondition(other._precondition->clone()),
-	_effects(Utils::copy(other._effects))
+	_effects(Utils::copy(other._effects)),
+    _type(other._type)
 {}
 
-std::ostream& ActionData::print(std::ostream& os) const { 
+std::ostream& ActionData::print(std::ostream& os) const {
 	os <<  print::action_data_name(*this);
 	return os;
 }
@@ -71,7 +73,7 @@ PartiallyGroundedAction::PartiallyGroundedAction(const ActionData& action_data, 
 {}
 
 
-GroundAction::GroundAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects) : 
+GroundAction::GroundAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects) :
 	ActionBase(action_data, binding, precondition, effects), _id(id)
 {}
 

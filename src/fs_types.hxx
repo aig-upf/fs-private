@@ -31,7 +31,7 @@ namespace fs0 {
 	// A unique identifier for any of the domain data types.
 	using TypeIdx = unsigned;
 	const TypeIdx INVALID_TYPE = std::numeric_limits<unsigned>::max();
-	
+
 	//! The ID of a logical symbol
 	using SymbolIdx = unsigned;
 
@@ -48,14 +48,14 @@ namespace fs0 {
 	using VariableIdxVector = std::vector<VariableIdx>;
 
 	using ObjectIdxVector = std::vector<ObjectIdx>;
-	
+
 	//! A tuple of values
 	using ValueTuple = std::vector<ObjectIdx>;
-	
+
 	//! The index of a tuple of a FSTRIPS logical symbol, unique across all symbols.
 	using AtomIdx = unsigned;
 	const AtomIdx INVALID_TUPLE = std::numeric_limits<unsigned int>::max();
-	
+
 	using Support = std::vector<AtomIdx>;
 
 	//! A domain is a set of values (of a state variable)
@@ -67,14 +67,14 @@ namespace fs0 {
 
 	//! A map mapping state variable indexes to their possible domains.
 	using DomainMap = std::map<VariableIdx, DomainPtr>;
-	
+
 	//! A map mapping a subset of state variables to possible values
 	using PartialAssignment = std::map<VariableIdx, ObjectIdx>;
 
 	//! A function in the logical sense.
 	using Function = std::function<ObjectIdx(const ValueTuple&)>;
-	
-	
+
+
 	/**
 	 * Custom exceptions
 	 */
@@ -82,12 +82,12 @@ namespace fs0 {
 	public:
 		UnimplementedFeatureException(const std::string& msg) : std::runtime_error(msg) {}
 	};
-	
+
 	class InvalidConfiguration : public std::runtime_error {
 	public:
 		InvalidConfiguration(const std::string& msg) : std::runtime_error(msg) {}
 	};
-	
+
 	class UndefinedValueAccess : public std::runtime_error {
 	public:
 		UndefinedValueAccess(const std::string& msg) : std::runtime_error(msg) {}
