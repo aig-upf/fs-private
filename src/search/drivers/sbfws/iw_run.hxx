@@ -542,7 +542,7 @@ public:
 
 				
 				unsigned novelty = _evaluator.evaluate(*successor);
-				if (novelty <= 2) {
+				if (novelty == 1) {
 					_w1_nodes.push_back(successor);
 				}
 				

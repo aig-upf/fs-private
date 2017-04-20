@@ -646,20 +646,31 @@ public:
 			NodePT search_node ;
 			if (sim_node->parent == nullptr) { // We don't want to duplicate the root node
 				search_node = root;
+				simulation_to_search.insert(std::make_pair(sim_node, search_node));
+				search_to_simulation.insert(std::make_pair(search_node, sim_node));
+			
 			} else {
 				// We just update those attributes we're interested in
-				search_node = std::make_shared<NodeT>(sim_node->state, _generated++); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
-				search_node->g = sim_node->g;
-				search_node->action = sim_node->action;
-				search_node->w_g = Novelty::One; // we enforce this by definition
-				search_node->unachieved_subgoals = _heuristic.compute_unachieved(search_node->state);
+				SimulationNodePT tmp = sim_node;
+				while (tmp != nullptr) {
+					search_node = std::make_shared<NodeT>(tmp->state, _generated++); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
+					search_node->g = tmp->g;
+					search_node->action = tmp->action;
+					search_node->w_g = Novelty::One; // we enforce this by definition
+					search_node->unachieved_subgoals = _heuristic.compute_unachieved(search_node->state);
+				
+					simulation_to_search.insert(std::make_pair(tmp, search_node));
+					search_to_simulation.insert(std::make_pair(search_node, tmp));
+			
+					if (sim_node == tmp) search_nodes.push_back(search_node); // Insert only the first time
+					tmp = tmp->parent;
+				}
 			}
 
-			simulation_to_search.insert(std::make_pair(sim_node, search_node));
-			search_to_simulation.insert(std::make_pair(search_node, sim_node));
-			search_nodes.push_back(search_node);
-
-			//std::cout << "Simulation node " << sim_node << " corresponds to search node " << search_node << std::endl;
+			
+// 			search_nodes.push_back(search_node);
+			
+// 			std::cout << "Simulation node " << sim_node << " corresponds to search node " << search_node << std::endl;
 		}
 
 		// Let n be any search node (note that the root node has been already discarded), and s be its corresponding simulation node
@@ -674,10 +685,12 @@ public:
 			const auto& sim_node = it->second;
 			assert(sim_node->parent != nullptr);
 			auto it2 = simulation_to_search.find(sim_node->parent);
-			//std::cout << "Simulation node parent: " << sim_node->parent << std::endl;
-			if (it2 == simulation_to_search.end()) continue;
+// 			std::cout << "Simulation node " << sim_node << " has parent: " << sim_node->parent << std::endl;
+// 			if (it2 == simulation_to_search.end()) continue;
 			assert(it2 != simulation_to_search.end());
 			search_node->parent = it2->second;
+			
+// 			std::cout << "Search node " << search_node << " parent set to: " << search_node->parent << std::endl;
 			
 			// ATM we only want to process the subgoal-satisfiyng end node of the path, and thus will pretend
 			// pretend that intermediate nodes have already been processed
