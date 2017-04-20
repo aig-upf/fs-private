@@ -235,17 +235,16 @@ public:
 			if (_evaluator->evaluate_piw(valuation, B_of_s, novelty_contributors)) {
 				if (nov != 1) {
 					nov = 2;
-				}
-				
-				// UPDATE B(s)
-				assert(node._nov1atom_idxs.size() == novelty_contributors.size());
-				std::vector<unsigned> tmp;
-				for (unsigned i1 = 0; i1 < novelty_contributors.size(); ++i1) {
-					if (novelty_contributors[i1]) {
-						tmp.push_back(node._nov1atom_idxs[i1]);
+					// UPDATE B(s)
+					assert(node._nov1atom_idxs.size() == novelty_contributors.size());
+					std::vector<unsigned> tmp;
+					for (unsigned i1 = 0; i1 < novelty_contributors.size(); ++i1) {
+						if (novelty_contributors[i1]) {
+							tmp.push_back(node._nov1atom_idxs[i1]);
+						}
 					}
+					node._nov1atom_idxs = tmp;
 				}
-				node._nov1atom_idxs = tmp;				
 			}
 			
 		}
