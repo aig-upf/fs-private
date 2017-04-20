@@ -217,15 +217,16 @@ bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, Binding&
 	return false;
 }
 
-
-bool UniversallyQuantifiedFormula::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+bool UniversallyQuantifiedFormula::interpret(const PartialAssignment& assignment, Binding& binding) const {
 	//assert(binding.size()==0); // ATM we do not allow for nested quantifications
-	return interpret_rec(assignment, Binding(_variables.size()), 0);
+    Binding tmp(_variables.size());
+	return interpret_rec(assignment, tmp, 0);
 }
 
-bool UniversallyQuantifiedFormula::interpret(const State& state, const Binding& binding) const {
+bool UniversallyQuantifiedFormula::interpret(const State& state, Binding& binding) const {
 	//assert(binding.size()==0); // ATM we do not allow for nested quantifications
-	return interpret_rec(state, Binding(_variables.size()), 0);
+    Binding tmp(_variables.size());
+	return interpret_rec(state, tmp, 0);
 }
 
 template <typename T>
