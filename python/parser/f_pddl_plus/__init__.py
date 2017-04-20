@@ -1,7 +1,7 @@
-from fstrips.tasks import Task
+from .fstrips.tasks import Task
 
-def create_f_pddl_task( domain, instance ) :
-    from antlr4_parsers.fstrips.tasks import Task
+def parse_f_pddl_plus_task( domain, instance ) :
+    from .fstrips.tasks import Task
     task = Task.parse( domain, instance)
     # MRJ: Comment to avoid wanton verbosity
     task.dump()

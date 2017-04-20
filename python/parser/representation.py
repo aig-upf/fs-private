@@ -25,7 +25,9 @@ class ProblemRepresentation(object):
                 'objects': self.dump_object_data(),
                 'types': self.dump_type_data(),
                 'action_schemata': [action.dump() for action in self.index.action_schemas],
-                'state_constraints': self.index.state_constraints.dump(),
+                'process_schemata': [process.dump() for process in self.index.process_schemas],
+                'event_schemata': [event.dump() for event in self.index.event_schemas],
+                'state_constraints': [constraint.dump() for constraint in self.index.state_constraints],
                 'goal': self.index.goal.dump(),
                 'axioms': [axiom.dump() for axiom in self.index.axioms],
                 'init': self.dump_init_data(),
@@ -148,11 +150,17 @@ class ProblemRepresentation(object):
 
     def get_value_idx(self, value):
         """ Returns the appropriate integer index for the given value."""
+        from .pddl.pddl_types import TypedObject
+
         if isinstance(value, int):  # Variables of integer type are represented by the integer itself.
             return value
+        elif isinstance(value, float):
+            return value
+        elif isinstance(value, bool) :
+            return util.bool_string(value)
+        elif isinstance(value, TypedObject) :
+            return self.index.objects.get_index(value.name)
         else:
-            # bool variables also need to be treated specially
-            value = util.bool_string(value) if isinstance(value, bool) else value
             return self.index.objects.get_index(value)
 
     def requires_compilation(self):

@@ -9,6 +9,9 @@ from . import predicates
 from . import pddl_types
 from . import functions
 from . import f_expression
+from .bounds import DomainBound, parse_bounds
+from .constraints import Constraint
+from .limits import Limits
 import itertools
 
 
@@ -102,39 +105,6 @@ class Requirements(object):
               ":derived-predicates", ":action-costs"), req
     def __str__(self):
         return ", ".join(self.requirements)
-
-
-class Limits(object):
-    def __init__(self, limits):
-        self.limits = {}
-        for limit in limits:
-            domain, l = limit
-            self.limits[domain] = l
-
-    def __str__(self):
-        return ", ".join(self.limits)
-
-
-class Constraint(object):
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
-    def __str__(self):
-        return "{}({})".format(self.name, " ".join(self.args))
-
-class DomainBound(object):
-    def __init__(self, typename, bound):
-        self.typename = typename
-        self.bound = bound
-    def __str__(self):
-        return "{} - {}".format(self.typename, self.bound)
-
-def parse_bounds(bounds):
-    parsed = []
-    for bound in bounds:
-        assert len(bound) == 3 and bound[1] == '-'  # bound is of the form ["val", "-", "int[0..10]"]
-        parsed.append(DomainBound(bound[0], bound[2]))
-    return parsed
 
 def parse_domain(domain_pddl):
     iterator = iter(domain_pddl)
@@ -323,7 +293,7 @@ def check_atom_consistency(atom, same_truth_value, other_truth_value, atom_is_tr
         if not atom_is_true:
             atom = atom.negate()
         print("Warning: %s is specified twice in initial state specification" % atom)
-    
+
 
 def check_for_duplicates(elements, errmsg, finalmsg):
     seen = set()
@@ -335,4 +305,3 @@ def check_for_duplicates(elements, errmsg, finalmsg):
             seen.add(element)
     if errors:
         raise SystemExit("\n".join(errors) + "\n" + finalmsg)
-

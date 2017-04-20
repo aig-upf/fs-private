@@ -1,5 +1,6 @@
 from . import pddl_types
 
+built_in_functional_symbols = ['+', '-', '*', '/', '^', 'sin', 'cos', 'sqrt', 'tan', 'asin', 'acos', 'atan']
 
 class Function(object):
     def __init__(self, name, arguments):
@@ -17,6 +18,16 @@ class Function(object):
         result = "%s(%s)" % (self.name, ", ".join(map(str, self.arguments)))
         return result
 
+    def is_ground(self) :
+        for arg in self.args :
+            if isinstance( arg, fs_types.TypedObject ) :
+                if arg.name[0] == '?' :
+                    return False
+            elif isinstance(arg, str ) :
+                if arg[0] == '?' : return False
+            else :
+                if not arg.is_ground() : return False
+        return True
 
 class TypedFunction(Function):
     """

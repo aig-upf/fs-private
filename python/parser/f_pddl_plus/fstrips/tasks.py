@@ -1,12 +1,12 @@
 import sys
-from . import actions
-from . import axioms
-from . import conditions
-from . import predicates
-from . import fs_types
-from . import functions
-from . import metrics
-from . import f_expression
+from ...pddl import actions
+from ...pddl import axioms
+from ...pddl import conditions
+from ...pddl import predicates
+from ...pddl import pddl_types
+from ...pddl import functions
+from ...pddl import f_expression
+from ...pddl import metrics
 import itertools
 from antlr4 import *
 from .lexer import FunctionalStripsLexer

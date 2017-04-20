@@ -29,7 +29,12 @@ def instantiate_predicate(name, arity):
 
 
 def serialize_symbol(symbol, table):
-    serialized = symbol if python.utils.is_int(symbol) else table[symbol]
+    if python.utils.is_int(symbol) or python.utils.is_float(symbol):
+        return str(symbol)
+    try :
+        serialized = table[symbol.name]
+    except AttributeError :
+        serialized = table[symbol]
     return str(serialized)
 
 

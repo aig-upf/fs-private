@@ -13,7 +13,7 @@ from python import utils, FS_PATH, FS_WORKSPACE
 
 # This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
 from .pddl import tasks, pddl_file
-from .fs_task import create_fs_task, create_fs_task_from_adl
+from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
 from .representation import ProblemRepresentation
 from .templates import tplManager
 
@@ -181,10 +181,10 @@ def run(args):
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
-        if not args.hybrid :
-            import f_pddl_plus
+        if args.hybrid :
+            from . import f_pddl_plus
             hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
-            fs_task = create_fs_plus_task( fd_task, domain_name, instance_name)
+            fs_task = create_fs_plus_task( hybrid_task, domain_name, instance_name)
         else :
             fd_task = parse_pddl_task(args.domain, args.instance)
             fs_task = create_fs_task(fd_task, domain_name, instance_name)
@@ -195,6 +195,7 @@ def run(args):
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance
+    print("Generating problem representation...")
     representation = ProblemRepresentation(fs_task, translation_dir, args.edebug or args.debug)
     representation.generate()
     use_vanilla = not representation.requires_compilation()

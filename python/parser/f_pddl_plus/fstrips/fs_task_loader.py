@@ -1,15 +1,15 @@
-from .fs_types import *
-from .predicates import *
-from .functions import *
-from .bounds import *
-from .metrics import *
-from .actions import Action
-from .events import Event
-from .conditions import *
-from .effects import *
-from .f_expression import *
-from .constraints import *
-from . visitor import FunctionalStripsVisitor
+from ...pddl.pddl_types import *
+from ...pddl.predicates import *
+from ...pddl.functions import *
+from ...pddl.bounds import *
+from ...pddl.metrics import *
+from ...pddl.actions import Action
+from ...pddl.events import Event
+from ...pddl.conditions import *
+from ...pddl.effects import *
+from ...pddl.f_expression import *
+from ...pddl.constraints import *
+from .visitor import FunctionalStripsVisitor
 
 class UnresolvedVariableError( Exception ) :
     def __init__(self, value ) :
@@ -490,6 +490,8 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         params = self.visit( ctx.typedVariableList() )
         self.current_params += params
         formula = self.visit( ctx.goalDesc() )
+        if type(formula) not in (Conjunction,ConstantCondition,Literal) :
+            raise SystemExit("Error: Quantified non-conjunctive formulae are not supported: formula: {}".format(str(formula)))
         if hasattr(ctx, 'negated') and ctx.negated :
             return ExistentialCondition( params, formula )
         return UniversalCondition( params, formula )

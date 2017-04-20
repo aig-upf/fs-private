@@ -9,7 +9,7 @@ from .pddl.f_expression import FunctionalTerm
 from .pddl.conditions import Conjunction
 
 from . import fstrips as fs
-from .parser import Parser
+from .parser import Parser, exceptions
 
 
 def ensure_conjunction(node):
@@ -144,8 +144,16 @@ class FSActionSchema(FSBaseComponent):
 
         # Order matters: the binding unit needs to be created when the effects are processed
         self.binding_unit = fs.BindingUnit.from_parameters(action.parameters)
-        self.precondition = self.process_conditions(self.action.precondition)
-        self.effects = self.process_effects()
+        try :
+            self.precondition = self.process_conditions(self.action.precondition)
+        except exceptions.UndeclaredSymbol as e :
+            raise SystemExit('Found undeclared symbol in precondition of schema "{}", exception message follows: \n {}\n{}'.format(action.name,e,))
+
+        try :
+            self.effects = self.process_effects()
+        except exceptions.UndeclaredSymbol as e :
+            raise SystemExit('Found undeclared symbol in effects of schema "{}", exception message follows: \n {}'.format(action.name,e))
+
 
     def dump(self):
         return dict(name=self.action.name,
