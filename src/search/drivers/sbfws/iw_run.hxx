@@ -209,9 +209,10 @@ public:
 			*/
 			
 			std::vector<AtomIdx> B_of_s; // B(s)
+			B_of_s = to_atom_indexes(node, node._nov1atom_idxs);
 			
 // 			if (nov == 1) {
-				B_of_s = to_atom_indexes(node, node._nov1atom_idxs);
+				
 // 			} else {
 // 				std::set_intersection(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(B_of_s));
 // 			}
@@ -234,16 +235,17 @@ public:
 			if (_evaluator->evaluate_piw(valuation, B_of_s, novelty_contributors)) {
 				if (nov != 1) {
 					nov = 2;
-					// UPDATE B(s)
-					assert(node._nov1atom_idxs.size() == novelty_contributors.size());
-					std::vector<unsigned> tmp;
-					for (unsigned i1 = 0; i1 < novelty_contributors.size(); ++i1) {
-						if (novelty_contributors[i1]) {
-							tmp.push_back(node._nov1atom_idxs[i1]);
-						}
-					}
-					node._nov1atom_idxs = tmp;
 				}
+				
+				// UPDATE B(s)
+				assert(node._nov1atom_idxs.size() == novelty_contributors.size());
+				std::vector<unsigned> tmp;
+				for (unsigned i1 = 0; i1 < novelty_contributors.size(); ++i1) {
+					if (novelty_contributors[i1]) {
+						tmp.push_back(node._nov1atom_idxs[i1]);
+					}
+				}
+				node._nov1atom_idxs = tmp;				
 			}
 			
 		}
