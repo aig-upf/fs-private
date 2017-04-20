@@ -181,7 +181,7 @@ public:
 			
 			analyze_new(valuation, parent_valuation, new_atom_idxs, repeated_atom_idxs);
 			
-			std::vector<unsigned> from_current, from_parent;
+			std::vector<unsigned> from_current, from_parent; // 'from_current' contains the indexes of those variables that contain novel atoms
 			nov = _evaluator->evaluate_1(valuation, new_atom_idxs, from_current);
 			node._path_novelty_is_1 = node.parent->_path_novelty_is_1 && (nov == 1);
 			
@@ -190,6 +190,8 @@ public:
 			
 			std::set_intersection(parent_1s.begin(), parent_1s.end(), repeated_atom_idxs.begin(), repeated_atom_idxs.end(), std::back_inserter(from_parent));
 			
+			// 'from_parent' contains now the var-index of the undeleted atoms from 1(parent(s))
+			
 			// TODO Might want to remove this asserts at some point not to penalize the performance of the debug release too much
 			assert(std::is_sorted(repeated_atom_idxs.begin(), repeated_atom_idxs.end()));
 			assert(std::is_sorted(from_parent.begin(), from_parent.end()));
@@ -197,27 +199,51 @@ public:
 			
 			
 			// SET 1(s) to its appropriate value
+			std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));
+			/*
 			if (node._path_novelty_is_1) {
 				std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));
 			} else {
 				node._nov1atom_idxs = std::move(from_parent);
 			}
+			*/
+			
+			std::vector<AtomIdx> B_of_s; // B(s)
+			
+// 			if (nov == 1) {
+				B_of_s = to_atom_indexes(node, node._nov1atom_idxs);
+// 			} else {
+// 				std::set_intersection(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(B_of_s));
+// 			}
+			
 			
 			
 			// NOW EVALUATE 1.5 novelty
-			auto special = to_atom_indexes(node);
 			
 			// XXX const AtomIndex& index = Problem::getInstance().get_tuple_index();
 			// XXX std::cout << std::endl << std::endl << "All state atoms: " << std::endl << node.state << std::endl;
 			// XXX std::cout << "1(s): " << std::endl;
-			// XXX for (AtomIdx ai:special) {
+			// XXX for (AtomIdx ai:B_of_s) {
 				// XXX std::cout << "\t" << index.to_atom(ai) << std::endl;
 			// XXX }
 			// XXX std::cout << std::endl << std::endl;
 
 			
-			if (_evaluator->evaluate_piw(valuation, special)) {
-				if (nov != 1) nov = 2;
+				
+			std::vector<bool> novelty_contributors;
+			if (_evaluator->evaluate_piw(valuation, B_of_s, novelty_contributors)) {
+				if (nov != 1) {
+					nov = 2;
+					// UPDATE B(s)
+					assert(node._nov1atom_idxs.size() == novelty_contributors.size());
+					std::vector<unsigned> tmp;
+					for (unsigned i1 = 0; i1 < novelty_contributors.size(); ++i1) {
+						if (novelty_contributors[i1]) {
+							tmp.push_back(node._nov1atom_idxs[i1]);
+						}
+					}
+					node._nov1atom_idxs = tmp;
+				}
 			}
 			
 		}
@@ -226,16 +252,16 @@ public:
 		return nov;
 	}
 	
-	std::vector<AtomIdx> to_atom_indexes(const NodeT& node) {
+	std::vector<AtomIdx> to_atom_indexes(const NodeT& node, const std::vector<unsigned>& variables) {
 		std::vector<AtomIdx> special;
 		const AtomIndex& atomidx = Problem::getInstance().get_tuple_index();
-		for (unsigned var:node._nov1atom_idxs) {
+		for (unsigned var:variables) {
 			auto val = node.state.getValue(var);
 			if (val == 0) continue;
 			special.push_back(atomidx.to_index(var, val));
 		}
 		return special;
-	}		
+	}
 	
 
 	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
