@@ -179,6 +179,8 @@ protected:
 	const SimConfigT _simconfig;
 
 	BFWSStats& _stats;
+	
+	std::shared_ptr<SimulationT> _simulator;
 
 	
 	SBFWSConfig::RelevantSetType _rstype;
@@ -200,6 +202,7 @@ public:
 			       c.getOption<bool>("goal_directed", false)
 		),
 		_stats(stats),
+		_simulator(nullptr),
 		_rstype(config.relevant_set_type)
 	{
 		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
@@ -210,6 +213,11 @@ public:
 		for (auto& p:_wgr_novelty_evaluators) delete p.second;
 		for (auto& p:_wg_half_novelty_evaluators) delete p.second;
 	};
+	
+	const std::vector<IWNodePT>& get_last_simulation_nodes() const { 
+		assert(_simulator);
+		return _simulator->get_relevant_nodes();
+	}
 
 	
 	template <typename NodeT>
@@ -456,8 +464,8 @@ public:
 	template <typename StateT>
 	std::vector<bool> compute_R(const StateT& state) {
 		_stats.simulation();
-		SimulationT simulator(_model, _featureset, _simconfig);
-		return simulator.compute_R(state);
+		_simulator = std::make_shared<SimulationT>(_model, _featureset, _simconfig);
+		return _simulator->compute_R(state);
 	}
 	
 	template <typename StateT>
@@ -623,7 +631,7 @@ public:
 	//! Convenience method
 	bool solve_model(PlanT& solution) { return search(_model.init(), solution); }
 
-	std::vector<NodePT> convert_simulation_nodes(const NodePT& root, const std::unordered_set<SimulationNodePT>& sim_nodes) {
+	std::vector<NodePT> convert_simulation_nodes(const NodePT& root, const std::vector<SimulationNodePT>& sim_nodes) {
 
 		// Convert a set of simulation nodes into a set of search nodes
 		// This is straight-forward except for setting up correctly the pointers to the parent node,
@@ -667,6 +675,7 @@ public:
 			assert(sim_node->parent != nullptr);
 			auto it2 = simulation_to_search.find(sim_node->parent);
 			//std::cout << "Simulation node parent: " << sim_node->parent << std::endl;
+			if (it2 == simulation_to_search.end()) continue;
 			assert(it2 != simulation_to_search.end());
 			search_node->parent = it2->second;
 			
@@ -674,9 +683,12 @@ public:
 			// pretend that intermediate nodes have already been processed
 			// This works because we're using shared_ptrs!
 			if (sim_node->satisfies_subgoal) {
+				std::cout << "Converted one subgoal-satisfying simulation node" << std::endl;
 				relevant.push_back(search_node);
 			} else {
 // 				std::cout << "Does NOT satisfy subgoal" << std::endl;
+// 				std::cout << "NOT Converted one sbugoal-satisfying simulation node" << std::endl;
+
 			}
 		}
 
@@ -684,12 +696,27 @@ public:
 	}
 
 
+	void dump_simulation_nodes(NodePT& node) {
+		std::cout << "Dumping simulation nodes..." << std::endl;
+		const auto& simulation_nodes = _heuristic.get_last_simulation_nodes();
+		auto search_nodes = convert_simulation_nodes(node, simulation_nodes);
+		// std::cout << "Got " << simulation_nodes.size() << " simulation nodes, of which " << search_nodes.size() << " reused" << std::endl;
+		for (const auto& n:search_nodes) {
+			//create_node(n);
+			_q1.insert(n);
+			_stats.simulation_node_reused();
+			// std::cout << "Simulation node reused: " << *n << std::endl;
+		}
+	}
+	
+	
 	bool search(const StateT& s, PlanT& plan) {
 		NodePT root = std::make_shared<NodeT>(s, _generated++);
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 		
-		// _heuristic.compute_node_complex_type(*root); // Force one simulation from the root node
+		_heuristic.compute_node_complex_type(*root); // Force one simulation from the root node
+		dump_simulation_nodes(root);
 
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found

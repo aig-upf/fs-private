@@ -542,7 +542,7 @@ public:
 
 				
 				unsigned novelty = _evaluator.evaluate(*successor);
-				if (novelty == 1) {
+				if (novelty <= 2) {
 					_w1_nodes.push_back(successor);
 				}
 				
@@ -635,8 +635,8 @@ protected:
 		}
 	}	
 
-// public:
-// 	const std::unordered_set<NodePT>& get_relevant_nodes() const { return _visited; }
+public:
+	const std::vector<NodePT>& get_relevant_nodes() const { return _w1_nodes; }
 };
 
 } } // namespaces
