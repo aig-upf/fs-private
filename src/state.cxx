@@ -44,8 +44,29 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 
 	// Otherwise we need to deindex the variable
 	const IndexElemT& ind = _index[variable];
-	if (ind.first) return state._bool_values[ind.second];
-	else return state._int_values[ind.second];
+	if (ind.first)
+        // MRJ: Booleans get expanded to integers
+        return ObjectIdx((int)state._bool_values[ind.second]);
+	else {
+        if ( _info.isIntegerNumber(variable) )
+            return ObjectIdx(state._int_values[ind.second]);
+        else if (_info.isRationalNumber(variable) ) {
+            union {
+				int i;
+				float d;
+			} tmp;
+			tmp.i = state._int_values[ind.second];
+            return ObjectIdx(tmp.d);
+        }
+        else {
+            std::stream buffer;
+            buffer << "ERROR: Cannot retrieve variable from state ";
+            buffer << _info.getVariablename(variable) << std::endl;
+            buffer << "because its type is not currently supported!" << std::endl;
+            LPT_DEBUG("main", buffer.str());
+            throw std::runtime_error(buffer.str());
+        }
+    }
 }
 
 void
@@ -62,8 +83,28 @@ StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const
 	else if (n_vars == _n_int) state._int_values[variable] = value;
 	else {
 		const IndexElemT& ind = _index[variable];
-		if (ind.first) state._bool_values[ind.second] = value;
-		else state._int_values[ind.second] = value;
+		if (ind.first)
+            state._bool_values[ind.second] = value;
+		else {
+            if ( _info.isIntegerNumber(variable) )
+                state._int_values[ind.second] = value;
+            else if (_info.isRationalNumber(variable)) {
+                union {
+    				int i;
+    				float d;
+    			} tmp;
+                tmp.d = (float)value;
+                state._int_values[ind.second] = tmp.i;
+            }
+            else {
+                std::stream buffer;
+                buffer << "ERROR: Cannot store variable into state ";
+                buffer << _info.getVariablename(variable) << std::endl;
+                buffer << "because its type is not currently supported!" << std::endl;
+                LPT_DEBUG("main", buffer.str());
+                throw std::runtime_error(buffer.str());
+            }
+        }
 	}
 }
 
