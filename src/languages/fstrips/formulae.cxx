@@ -108,7 +108,7 @@ OpenFormula::OpenFormula(const OpenFormula& other) :
 	_subformulae(Utils::clone(other._subformulae))
 {}
 
-	
+
 std::ostream& OpenFormula::
 print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << name() << " ( ";
@@ -217,13 +217,16 @@ bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, Binding&
 	return false;
 }
 
-
 bool UniversallyQuantifiedFormula::interpret(const PartialAssignment& assignment, Binding& binding) const {
-	return interpret_rec(assignment, binding, 0);
+	//assert(binding.size()==0); // ATM we do not allow for nested quantifications
+    Binding tmp(_variables.size());
+	return interpret_rec(assignment, tmp, 0);
 }
 
 bool UniversallyQuantifiedFormula::interpret(const State& state, Binding& binding) const {
-	return interpret_rec(state, binding, 0);
+	//assert(binding.size()==0); // ATM we do not allow for nested quantifications
+    Binding tmp(_variables.size());
+	return interpret_rec(state, tmp, 0);
 }
 
 template <typename T>

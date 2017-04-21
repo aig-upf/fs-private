@@ -24,28 +24,12 @@ StateAtomIndexer::create(const ProblemInfo& info)
 	}
 	assert(index.size() == n_vars && n_vars == n_bool + n_int);
 
-	return new StateAtomIndexer(std::move(index), n_bool, n_int);
+	return new StateAtomIndexer(std::move(index), n_bool, n_int, info);
 }
 
-StateAtomIndexer::StateAtomIndexer(IndexT&& index, unsigned n_bool, unsigned n_int) :
-	_index(std::move(index)), _n_bool(n_bool), _n_int(n_int)
+StateAtomIndexer::StateAtomIndexer(IndexT&& index, unsigned n_bool, unsigned n_int, const ProblemInfo& info) :
+	_index(std::move(index)), _n_bool(n_bool), _n_int(n_int), _info(info)
 {
-}
-
-StateAtomIndexer::IndexT
-StateAtomIndexer::compute_index(const ProblemInfo& info) {
-	unsigned n_vars = info.getNumVariables(), n_bool = 0, n_int = 0;
-	IndexT index;
-	index.reserve(n_vars);
-	for (unsigned var = 0; var < n_vars; ++var) {
-		if (info.isPredicativeVariable(var)) {
-			index.push_back(std::make_pair(true, n_bool++)); // Important to post-increment
-		} else {
-			index.push_back(std::make_pair(false, n_int++)); // Important to post-increment
-		}
-	}
-	assert(index.size() == n_vars && n_vars == n_bool + n_int);
-	return index;
 }
 
 ObjectIdx

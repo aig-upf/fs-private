@@ -1,6 +1,9 @@
 from . import pddl_types
 
+built_in_predicative_symbols = ['=', '>', '<', '>', '<=', '>=']
+
 class Predicate(object):
+
     def __init__(self, name, arguments):
         self.name = name
         self.arguments = arguments

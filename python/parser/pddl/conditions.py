@@ -221,7 +221,13 @@ class QuantifiedCondition(Condition):
     __hash__ = Condition.__hash__
     def __init__(self, parameters, parts):
         self.parameters = tuple(parameters)
-        self.parts = tuple(parts)
+        try :
+            self.parts = tuple(parts)
+        except TypeError :
+            if isinstance(parts,Conjunction) :
+                self.parts = tuple(parts.parts)
+            else :
+                raise SystemExit("Quantified formulae need to be conjunctive formulae!")
         self.hash = hash((self.__class__, self.parameters, self.parts))
     def __eq__(self, other):
         # Compare hash first for speed reasons.
@@ -311,7 +317,7 @@ class Literal(Condition):
     def uniquify_variables(self, type_map, renamings={}):
         return self.rename_variables(renamings)
     def rename_variables(self, renamings):
-        from .f_expression import FunctionalTerm
+        from .f_expression import FunctionalTerm, NumericConstant
         if len(renamings) == 0 : return self
         #print("Renaming literal {}".format(renamings))
         #self.dump()
@@ -324,6 +330,8 @@ class Literal(Condition):
             elif isinstance(arg,str) :
                 arg = renamings.get(arg, arg)
                 new_args.append(arg)
+            elif isinstance(arg, NumericConstant) :
+                continue # nothing to do here
             else :
                 raise RuntimeError("Error renaming variables of literal, found unexpected {}".format(type(arg)))
         #new_args = tuple(renamings.get(arg, arg) for arg in self.args)
@@ -331,6 +339,14 @@ class Literal(Condition):
         new_obj= self.__class__(self.predicate, new_args)
         #new_obj.dump()
         return new_obj
+
+    def is_ground(self) :
+        for arg in self.args :
+            if isinstance( arg, pddl_types.TypedObject ) :
+                if arg.name[0] == '?' : return False
+            else :
+                if not arg.is_ground() : return False
+        return True
     def replace_argument(self, position, new_arg):
         new_args = list(self.args)
         new_args[position] = new_arg

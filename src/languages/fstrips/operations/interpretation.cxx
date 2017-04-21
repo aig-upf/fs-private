@@ -6,6 +6,9 @@
 #include <languages/fstrips/builtin.hxx>
 #include <utils/binding.hxx>
 #include <problem_info.hxx>
+#include <lapkt/tools/logging.hxx>
+#include <exception>
+#include <iostream>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -26,20 +29,32 @@ VariableIdx interpret_variable(const Term& element, const AssignmentT& assignmen
 template VariableIdx interpret_variable(const Term& element, const State& assignment, const Binding& binding);
 template VariableIdx interpret_variable(const Term& element, const PartialAssignment& assignment, const Binding& binding);
 
-	
+
 template <typename AssignmentT>
 void VariableInterpretationVisitor<AssignmentT>::
-Visit(const StateVariable& lhs) { 
+Visit(const StateVariable& lhs) {
 	_result = lhs.getValue();
 }
-	
+
 template <typename AssignmentT>
 void VariableInterpretationVisitor<AssignmentT>::
 Visit(const FluentHeadedNestedTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	std::vector<ObjectIdx> interpreted(subterms.size());
 	NestedTerm::interpret_subterms(subterms, _assignment, _binding, interpreted);
-	_result = ProblemInfo::getInstance().resolveStateVariable(lhs.getSymbolId(), interpreted);
+    try {
+        _result = ProblemInfo::getInstance().resolveStateVariable(lhs.getSymbolId(), interpreted);
+    }
+    catch ( std::exception& e ) {
+        LPT_INFO( "main", "Runtime Error: Could not resolve state variable for nested term!");
+        //LPT_INFO( "main", "Assignment: " << _assignment );
+        //LPT_INFO( "main", "Binding:" << _binding);
+        LPT_INFO( "main", "Term: " << lhs);
+        std::cerr << "Runtime Error: check main.log for details" << std::endl;
+        assert(false);// MRJ: to stop the debugger here
+        std::exit(1);
+    }
+
 }
 
 
@@ -64,9 +79,3 @@ Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNeste
 
 
 } } } // namespaces
-
-
-
-
-	
-	

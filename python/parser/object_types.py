@@ -26,6 +26,9 @@ def process_types(objects, supertypes, fd_bounds):
 
     # Always add the bool, object and int types
     type_map['bool'] = ['false', 'true']
+    type_map['object'] = []
+    type_map['int'] = []
+    type_map['number'] = []
 
     # for every type we append the corresponding object
     for o in objects:
@@ -51,7 +54,7 @@ def process_type_hierarchy(fd_types):
     """
     # The base 'object' and 'bool' type are always there.
     # Warning: the position in the list of types is important.
-    types = {'object': None, 'bool': 'object', 'int': 'object'}
+    types = {'object': None, 'bool': 'object', 'int': 'object', 'number' : 'object'}
     used_types = set()
     predeclared = set(types.keys())
     correctly_declared = set(types.keys())
@@ -74,12 +77,15 @@ def process_type_hierarchy(fd_types):
         parent_to_children[parent].append(typename)
 
     supertypes = {'object': []}
+    seen = set()
     pending = deque(['object'])
     while pending:
         current = pending.popleft()  # Invariant: supertypes[current] includes all of current's parent types
+        seen |= { current }
         for t in parent_to_children[current]:
             supertypes[t] = [current] + supertypes[current]
-            pending.append(t)
+            if t not in seen :
+                pending.append(t)
 
     return types, supertypes
 
