@@ -15,15 +15,17 @@ RPGData::RPGData(const State& seed, bool ignore_negated) :
 	_effects()
 {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	
+
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 		ObjectIdx value = seed.getValue(variable);
-		
-		if (ignore_negated && info.isPredicativeVariable(variable) && value == 0) { // TODO This check is expensive and should be optimized out
+
+		if (ignore_negated
+            && info.isPredicativeVariable(variable)
+            && boost::get<int>(value) == 0) { // TODO This check is expensive and should be optimized out
 			continue; // If requested, we ignore negated predicative atoms.
 		}
-		
+
 		_effects.insert(std::make_pair(Atom(variable, value),
 						createAtomSupport(nullptr, std::make_shared<std::vector<Atom>>())));
 	}
@@ -103,4 +105,3 @@ void RPGData::printAtoms(const Atom::vctrp vector, std::ostream& os) const {
 }
 
 } // namespaces
-

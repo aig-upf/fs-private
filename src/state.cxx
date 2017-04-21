@@ -4,6 +4,7 @@
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <atom.hxx>
+#include <lapkt/tools/logging.hxx>
 
 
 namespace fs0 {
@@ -59,9 +60,9 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
             return ObjectIdx(tmp.d);
         }
         else {
-            std::stream buffer;
+            std::stringstream buffer;
             buffer << "ERROR: Cannot retrieve variable from state ";
-            buffer << _info.getVariablename(variable) << std::endl;
+            buffer << _info.getVariableName(variable) << std::endl;
             buffer << "because its type is not currently supported!" << std::endl;
             LPT_DEBUG("main", buffer.str());
             throw std::runtime_error(buffer.str());
@@ -79,27 +80,27 @@ StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const
 
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
-	if (n_vars == _n_bool) state._bool_values[variable] = value;
-	else if (n_vars == _n_int) state._int_values[variable] = value;
+	if (n_vars == _n_bool) state._bool_values[variable] = (bool)boost::get<int>(value);
+	else if (n_vars == _n_int) state._int_values[variable] = boost::get<int>(value);
 	else {
 		const IndexElemT& ind = _index[variable];
 		if (ind.first)
-            state._bool_values[ind.second] = value;
+            state._bool_values[ind.second] = (bool)boost::get<int>(value);
 		else {
             if ( _info.isIntegerNumber(variable) )
-                state._int_values[ind.second] = value;
+                state._int_values[ind.second] = boost::get<int>(value);
             else if (_info.isRationalNumber(variable)) {
                 union {
     				int i;
     				float d;
     			} tmp;
-                tmp.d = (float)value;
+                tmp.d = boost::get<float>(value);
                 state._int_values[ind.second] = tmp.i;
             }
             else {
-                std::stream buffer;
+                std::stringstream buffer;
                 buffer << "ERROR: Cannot store variable into state ";
-                buffer << _info.getVariablename(variable) << std::endl;
+                buffer << _info.getVariableName(variable) << std::endl;
                 buffer << "because its type is not currently supported!" << std::endl;
                 LPT_DEBUG("main", buffer.str());
                 throw std::runtime_error(buffer.str());
@@ -159,7 +160,7 @@ std::ostream& State::print(std::ostream& os) const {
     for ( unsigned x = 0; x < info.getNumVariables(); x++ ) {
         ObjectIdx v = getValue(x);
         if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::BOOL ) {
-            if ( v == 0 ) continue;
+            if ( boost::get<int>(v) == 0 ) continue;
             os << info.getVariableName(x);
     		if (x < info.getNumVariables() - 1) os << ", ";
             continue;
