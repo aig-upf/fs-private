@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include <boost/container/flat_set.hpp>
+#include <boost/variant.hpp>
 
 #include <exception>
 
