@@ -36,7 +36,7 @@ namespace fs0 {
 	using SymbolIdx = unsigned;
 
 	// A unique identifier for any of the problem objects (might be an integer)
-	using ObjectIdx = int;
+	using ObjectIdx = boost::variant<int32_t,float>;
 
 	//! An action signature is a list of (positional) parameters with a given type.
 	using Signature = std::vector<TypeIdx>;
