@@ -133,7 +133,7 @@ BaseCSP::register_csp_variables() {
 			}
 			
 		} else if (auto statevar = dynamic_cast<const fs::StateVariable*>(term)) {
-			_translator.registerInputStateVariable(statevar->getValue());
+			_translator.registerInputStateVariable(boost::get<int>(statevar->getValue()));
 		}
 		
 		else {
@@ -223,7 +223,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
 						
 						auto value = dynamic_cast<const fs::IntConstant*>(relational->rhs());
-						if (!value || value->getValue() != 1) {
+						if (!value || boost::get<int>(value->getValue()) != 1) {
 							throw UnimplementedFeatureException("Only non-negated relational atoms are supported ATM");
 						}
 						
@@ -244,7 +244,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 							}
 							
 							// Mark the state variable to allow the later support recovery
-							true_tuples.insert(_tuple_index.to_index(statevar->getValue(), 1));
+							true_tuples.insert(_tuple_index.to_index(boost::get<int>(statevar->getValue()), 1));
 						}
 					}
 				}

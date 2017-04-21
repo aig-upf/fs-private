@@ -71,7 +71,7 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 }
 
 void
-StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), atom.getValue()); }
+StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), boost::get<int>(atom.getValue())); }
 
 void
 StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const {
@@ -137,7 +137,7 @@ void State::set(const Atom& atom) {
 }
 
 bool State::contains(const Atom& atom) const {
-	return getValue(atom.getVariable()) == atom.getValue();
+	return boost::get<int>(getValue(atom.getVariable())) == boost::get<int>(atom.getValue());
 }
 
 ObjectIdx

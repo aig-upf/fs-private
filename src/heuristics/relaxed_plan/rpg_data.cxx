@@ -18,7 +18,7 @@ RPGData::RPGData(const State& seed, bool ignore_negated) :
 
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
-		ObjectIdx value = seed.getValue(variable);
+		ObjectIdx value = boost::get<int>(seed.getValue(variable));
 
 		if (ignore_negated
             && info.isPredicativeVariable(variable)
@@ -66,7 +66,7 @@ std::pair<bool, RPGData::SupportMap::iterator> RPGData::getInsertionHint(const A
 
 void RPGData::add(const Atom& atom, const ActionID* action, Atom::vctrp support, SupportMap::iterator hint) {
 	_effects.insert(hint, std::make_pair(atom, createAtomSupport(action, support)));
-	_novel[atom.getVariable()].push_back(atom.getValue());
+	_novel[atom.getVariable()].push_back(boost::get<int>(atom.getValue()));
 	++_num_novel;
 }
 

@@ -291,8 +291,8 @@ public:
 				
 				const StateT& state = node->state;
 				for (unsigned var = 0; var < state.numAtoms(); ++var) {
-					if (state.getValue(var) == 0) continue; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
-					AtomIdx atom = index.to_index(var, state.getValue(var));
+					if (boost::get<int>(state.getValue(var)) == 0) continue; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
+					AtomIdx atom = index.to_index(var, boost::get<int>(state.getValue(var)));
 					atoms[atom] = true;
 				}
 				

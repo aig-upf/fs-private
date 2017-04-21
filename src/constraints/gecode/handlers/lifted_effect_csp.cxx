@@ -130,7 +130,7 @@ LiftedEffectCSP::detect_achievable_tuple() const {
 		auto constant = dynamic_cast<const fs::Constant*>(get_effect()->rhs());
 		if (constant) {
 			ValueTuple tuple(_effect_tuple);
-			tuple.push_back(constant->getValue());
+			tuple.push_back(boost::get<int>(constant->getValue()));
 			achievable_tuple_idx = _tuple_index.to_index(_lhs_symbol, tuple);
 		}
 	}
@@ -146,7 +146,7 @@ LiftedEffectCSP::index_tuple_indexes(const fs::ActionEffect* effect) {
 	for (auto subterm:lhs_statevar->getSubterms()) {
 		auto constant = dynamic_cast<const fs::Constant*>(subterm);
 		assert(constant);  // Otherwise this could not be a state variable
-		variables.push_back(constant->getValue());
+		variables.push_back(boost::get<int>(constant->getValue()));
 	}
 	return variables;
 }

@@ -124,7 +124,7 @@ void FormulaCSP::index_existential_variable_uses() {
 				}
 				
 				if (const fs::Constant* constant = dynamic_cast<const fs::Constant*>(term)) {
-					subterm_values.push_back(constant->getValue());
+					subterm_values.push_back(boost::get<int>(constant->getValue()));
 				} else {
 					rest_subterms_are_constant = false;
 					break;

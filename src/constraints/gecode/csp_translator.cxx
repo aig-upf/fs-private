@@ -41,7 +41,7 @@ bool CSPTranslator::registerConstant(const fs::Constant* constant) {
 	auto it = _registered.find(constant);
 	if (it!= _registered.end()) return false; // The element was already registered
 
-	int value = constant->getValue();
+	int value = boost::get<int>(constant->getValue());
 	unsigned id = add_intvar(Gecode::IntVar(_base_csp, value, value));
 
 	_registered.insert(it, std::make_pair(constant, id));
@@ -101,7 +101,7 @@ bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested, int min, in
 
 unsigned CSPTranslator::resolveVariableIndex(const fs::Term* term) const {
 	if (auto sv = dynamic_cast<const fs::StateVariable*>(term)) {
-		return resolveInputVariableIndex(sv->getValue());
+		return resolveInputVariableIndex(boost::get<int>(sv->getValue()));
 	}
 
 	auto it = _registered.find(term);
@@ -184,7 +184,7 @@ void CSPTranslator::updateStateVariableDomains(GecodeCSP& csp, const State& stat
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
 		const Gecode::IntVar& csp_variable = csp._intvars[it.second];
-		Gecode::rel(csp, csp_variable,  Gecode::IRT_EQ, state.getValue(variable));
+		Gecode::rel(csp, csp_variable,  Gecode::IRT_EQ, boost::get<int>(state.getValue(variable)));
 	}
 }
 

@@ -69,7 +69,7 @@ const std::string ProblemInfo::deduceObjectName(ObjectIdx object, TypeIdx type) 
 }
 
 const std::string& ProblemInfo::getCustomObjectName(ObjectIdx objIdx) const {
-    return objectNames.at(boost::get<int>(objIdx)); 
+    return objectNames.at(boost::get<int>(objIdx));
 }
 
 unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }
@@ -210,14 +210,20 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 }
 
 bool ProblemInfo::checkValueIsValid(const Atom& atom) const {
-	return checkValueIsValid(atom.getVariable(), atom.getValue());
+	return checkValueIsValid(atom.getVariable(), boost::get<int>(atom.getValue()));
 }
 
 bool ProblemInfo::checkValueIsValid(VariableIdx variable, ObjectIdx value) const {
 	TypeIdx type = getVariableType(variable);
 	if (!isTypeBounded[type]) return true;
 	const auto& bounds = typeBounds[type];
-	return value >= bounds.first && value <= bounds.second;
+    if (isRationalNumber(variable)) {
+        std::stringstream buffer;
+        buffer << "Error: ProblemInfo::checkValueIsValid(): FLOAT variables not supported!";
+        LPT_DEBUG("main",buffer.str());
+        throw std::runtime_error(buffer.str());
+    }
+	return boost::get<int>(value) >= bounds.first && boost::get<int>(value) <= bounds.second;
 }
 
 

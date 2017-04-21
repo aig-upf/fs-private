@@ -95,9 +95,9 @@ namespace fs0 { namespace bfws {
         }
         if ( eff->condition()->is_tautology() ) {
             if ( eff->is_add() )
-                add.push_back( _atom_to_fluent[ Atom( sv->getValue(), 1 )]);
+                add.push_back( _atom_to_fluent[ Atom( boost::get<int>(sv->getValue()), 1 )]);
             if ( eff->is_del() )
-                del.push_back( _atom_to_fluent[ Atom( sv->getValue(), 0 )]);
+                del.push_back( _atom_to_fluent[ Atom( boost::get<int>(sv->getValue()), 0 )]);
             return;
         }
 
@@ -106,9 +106,9 @@ namespace fs0 { namespace bfws {
         aptk::Fluent_Vec ceff_del;
         compile_to_STRIPS( eff->condition(), ceff_pre );
         if ( eff->is_add() )
-            ceff_add.push_back( _atom_to_fluent[ Atom( sv->getValue(), 1 )]);
+            ceff_add.push_back( _atom_to_fluent[ Atom( boost::get<int>(sv->getValue()), 1 )]);
         if ( eff->is_del() )
-            ceff_del.push_back( _atom_to_fluent[ Atom( sv->getValue(), 0 )]);
+            ceff_del.push_back( _atom_to_fluent[ Atom( boost::get<int>(sv->getValue()), 0 )]);
         aptk::Conditional_Effect* cond_eff = new aptk::Conditional_Effect(*_strips_task);
         cond_eff->define( ceff_pre, ceff_add, ceff_del );
         ceff.push_back(cond_eff);
@@ -159,7 +159,7 @@ namespace fs0 { namespace bfws {
         fs0::State s0 = _fs_problem.getInitialState();
         // initial state we can compile directly
         for ( unsigned x = 0; x < info.getNumVariables(); x++ ) {
-            ObjectIdx v = s0.getValue(x);
+            ObjectIdx v = boost::get<int>(s0.getValue(x));
             I.push_back( _atom_to_fluent[ Atom(x,v) ]);
         }
 
@@ -188,7 +188,7 @@ namespace fs0 { namespace bfws {
         const ProblemInfo& info = ProblemInfo::getInstance();
         aptk::State s(task());
         for ( unsigned x = 0; x < info.getNumVariables(); x++ ) {
-            ObjectIdx v = state.getValue(x);
+            ObjectIdx v = boost::get<int>(state.getValue(x));
             s.set( _atom_to_fluent[ Atom(x,v) ]);
         }
 

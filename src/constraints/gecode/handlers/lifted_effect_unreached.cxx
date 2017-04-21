@@ -131,7 +131,7 @@ void LiftedEffectUnreachedCSP::post_atom(GecodeCSP& csp, const Atom& atom) const
 	const auto& effect = get_effect();
 	if (auto statevar = dynamic_cast<const fs::StateVariable*>(effect->lhs())) {
 		_unused(statevar);
-		assert(statevar->getValue() == atom.getVariable()); // Otherwise we shouldn't be considering this effect as a potential achiever of atom.
+		assert(boost::get<int>(statevar->getValue()) == atom.getVariable()); // Otherwise we shouldn't be considering this effect as a potential achiever of atom.
 	} else if (auto nested = dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs())) {
 		_unused(nested);
 		const auto& data = info.getVariableData(atom.getVariable());
@@ -147,7 +147,7 @@ void LiftedEffectUnreachedCSP::post_atom(GecodeCSP& csp, const Atom& atom) const
 	// This is equivalent, but faster, to _translator.resolveVariable(effect->rhs(), csp);
 	assert(effect_rhs_variables.size()==1);
 	auto& rhs_term =_translator.resolveVariableFromIndex(effect_rhs_variables[0], csp);
-	Gecode::rel(csp, rhs_term,  Gecode::IRT_EQ, atom.getValue());
+	Gecode::rel(csp, rhs_term,  Gecode::IRT_EQ, boost::get<int>(atom.getValue()));
 }
 
 std::vector<unsigned> LiftedEffectUnreachedCSP::index_lhs_subterms() {

@@ -134,7 +134,7 @@ ObjectIdx _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
 	const fs::Constant* _lhs = dynamic_cast<const fs::Constant*>(lhs);
 	const fs::Constant* _rhs = dynamic_cast<const fs::Constant*>(rhs);
 	assert(_lhs || _rhs);
-	return _lhs ? _lhs->getValue() : _rhs->getValue();
+	return _lhs ? boost::get<int>(_lhs->getValue()) : boost::get<int>(_rhs->getValue());
 }
 
 
@@ -247,7 +247,7 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 	unsigned var_with_min_app_set = 0, min_size = std::numeric_limits<unsigned>::max();
 	std::vector<AtomIdx> tuples(num_vars);
 	for (unsigned i = 0; i < num_vars; ++i) {
-		AtomIdx tup = _tuple_idx.to_index(i, state.getValue(i));
+		AtomIdx tup = _tuple_idx.to_index(i, boost::get<int>(state.getValue(i)));
 		tuples[i] = tup;
 		unsigned s = _app_index[tup].size();
 

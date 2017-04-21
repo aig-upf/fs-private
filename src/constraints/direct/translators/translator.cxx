@@ -54,19 +54,19 @@ DirectConstraint* DirectTranslator::generate(const fs::RelationalFormula& formul
 	}
 	
 	if (lhs_var && rhs_var) { // X = Y
-		VariableIdxVector scope{lhs_var->getValue(), rhs_var->getValue()};
+		VariableIdxVector scope{boost::get<int>(lhs_var->getValue()), boost::get<int>(rhs_var->getValue())};
 		return instantiateBinaryConstraint(formula.symbol(), scope, {});
 	}
 	
 	if (lhs_var && rhs_const) { // X = c
-		VariableIdxVector scope{lhs_var->getValue()};
-		ObjectIdxVector parameters{rhs_const->getValue()};
+		VariableIdxVector scope{boost::get<int>(lhs_var->getValue())};
+		ObjectIdxVector parameters{boost::get<int>(rhs_const->getValue())};
 		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, false);
 	}
 	
 	if (lhs_const && rhs_var) { // c = X
-		VariableIdxVector scope{rhs_var->getValue()};
-		ObjectIdxVector parameters{lhs_const->getValue()};
+		VariableIdxVector scope{boost::get<int>(rhs_var->getValue())};
+		ObjectIdxVector parameters{boost::get<int>(lhs_const->getValue())};
 		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, true);
 	}
 	
@@ -111,7 +111,7 @@ const DirectEffect* DirectTranslator::generate(const fs::ActionEffect& effect) {
 	checkSupported(effect.lhs(), effect.rhs());
 	auto lhs_var = dynamic_cast<const fs::StateVariable*>(effect.lhs());
 	if (!lhs_var) throw std::runtime_error("Direct effects accept only state variables on the LHS of an effect");
-	VariableIdx affected = lhs_var->getValue();
+	VariableIdx affected = boost::get<int>(lhs_var->getValue());
 	
 	const fs::Term& rhs = *effect.rhs();
 	

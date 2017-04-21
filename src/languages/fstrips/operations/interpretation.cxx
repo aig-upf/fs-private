@@ -33,7 +33,7 @@ template VariableIdx interpret_variable(const Term& element, const PartialAssign
 template <typename AssignmentT>
 void VariableInterpretationVisitor<AssignmentT>::
 Visit(const StateVariable& lhs) {
-	_result = lhs.getValue();
+	_result = boost::get<int>(lhs.getValue());
 }
 
 template <typename AssignmentT>

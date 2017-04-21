@@ -3,10 +3,13 @@
 
 #include <languages/fstrips/base.hxx>
 #include <fs_types.hxx>
+#include <problem_info.hxx>
 
-namespace fs0 { class State; class Binding; class ProblemInfo; class SymbolData; }
+namespace fs0 { class State; class Binding;  class SymbolData; }
 
 namespace fs0 { namespace language { namespace fstrips {
+
+using ObjectType = fs0::ProblemInfo::ObjectType;
 
 class Axiom;
 
@@ -17,7 +20,7 @@ public:
 	virtual ~Term() = default;
 
 	Term* clone() const override = 0;
-	
+
 	//! Returns the value of the current term under the given (possibly partial) interpretation
 	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
 	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
@@ -45,9 +48,9 @@ public:
 	~NestedTerm() {
 		for (const Term* term:_subterms) delete term;
 	}
-	
+
 	NestedTerm(const NestedTerm& term);
-	
+
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
@@ -76,7 +79,7 @@ protected:
 	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
 	// TODO This should be const
 	std::vector<const Term*> _subterms;
-	
+
 	//! The last interpretation of the subterms (acts as a cache)
 	mutable std::vector<ObjectIdx> _interpreted_subterms;
 };
@@ -86,17 +89,17 @@ protected:
 class StaticHeadedNestedTerm : public NestedTerm {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
+
 	StaticHeadedNestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms) : NestedTerm(symbol_id, subterms) {}
 };
 
 //! A statically-headed term that performs some arithmetic operation to its two subterms
 class ArithmeticTerm : public StaticHeadedNestedTerm {
 public:
-	ArithmeticTerm(const std::vector<const Term*>& subterms);
-	
+	ArithmeticTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
+
 	virtual ArithmeticTerm* clone() const override = 0;
-	
+
 	//! Creates an arithmetic term of the same type than the current one but with the given subterms
 	// TODO - This is ATM somewhat inefficient because of the redundancy of cloning the whole array of subterms only to delete it.
 	const Term* create(const std::vector<const Term*>& subterms) const {
@@ -105,20 +108,26 @@ public:
 		term->_subterms = subterms;
 		return term;
 	}
+
+    ObjectType	getValueType() const { return _value_type; }
+
+private:
+
+    ObjectType  _value_type;
 };
 
 //! A statically-headed term defined extensionally or otherwise by the concrete planning instance
 class UserDefinedStaticTerm : public StaticHeadedNestedTerm {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
+
 	UserDefinedStaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms);
 
 	UserDefinedStaticTerm* clone() const override { return new UserDefinedStaticTerm(*this); }
 
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
-	
+
 	const SymbolData& getFunction() const { return _function; }
 
 protected:
@@ -126,7 +135,7 @@ protected:
 	const SymbolData& _function;
 };
 
-//! 
+//!
 class AxiomaticTerm : public StaticHeadedNestedTerm {
 public:
 	AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
@@ -136,17 +145,17 @@ public:
 	virtual AxiomaticTerm* clone(const std::vector<const Term*>& subterms) const = 0;
 
 	virtual std::string name() const = 0;
-		
+
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Not yet implemented"); }
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
-	
+
 	//! This needs to be overriden by the particular implementation
 	virtual ObjectIdx compute(const State& state, std::vector<ObjectIdx>& arguments) const = 0;
 };
 
 
 
-//! 
+//!
 //! @deprecated This is to be replaced by the class AxiomaticAtom
 class AxiomaticTermWrapper : public StaticHeadedNestedTerm {
 public:
@@ -160,11 +169,11 @@ public:
 
 	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
-	
+
 	const Axiom* getAxiom() const { return _axiom; }
-	
+
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
-	
+
 protected:
 	const Axiom* _axiom;
 };
@@ -187,16 +196,16 @@ public:
 class BoundVariable : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
+
 	BoundVariable(unsigned id, const std::string& name, TypeIdx type) : _id(id), _name(name), _type(type) {}
 
 	BoundVariable* clone() const override { return new BoundVariable(*this); }
-	
+
 	TypeIdx getType() const { return _type; }
 
 	//! Returns the unique quantified variable ID
 	unsigned getVariableId() const { return _id; }
-	
+
 	//! Returns the name of the variable
 	const std::string& getName() const { return _name; }
 
@@ -212,9 +221,9 @@ public:
 protected:
 	//! The ID of the variable, which will be unique throughout the whole binding unit.
 	unsigned _id;
-	
+
 	const std::string _name;
-	
+
 	TypeIdx _type;
 };
 
@@ -223,22 +232,22 @@ protected:
 class StateVariable : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
-	StateVariable(VariableIdx variable_id, const FluentHeadedNestedTerm* origin) 
+
+	StateVariable(VariableIdx variable_id, const FluentHeadedNestedTerm* origin)
 		: _variable_id(variable_id), _origin(origin)
 	{}
-	
+
 	virtual ~StateVariable() {
 		delete _origin;
 	}
 
 	StateVariable(const StateVariable& variable)
-		: _variable_id(variable._variable_id), 
+		: _variable_id(variable._variable_id),
 		  _origin(variable._origin->clone())
 	{}
 
 	StateVariable* clone() const override { return new StateVariable(*this); }
-	
+
 	//! Returns the index of the state variable
 	VariableIdx getValue() const { return _variable_id; }
 
@@ -246,9 +255,9 @@ public:
 	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	const FluentHeadedNestedTerm* getOrigin() const { return _origin; }
-	
+
 	unsigned getSymbolId() const { return _origin->getSymbolId(); }
- 
+
 	virtual const std::vector<const Term*>& getSubterms() const { return _origin->getSubterms(); }
 
 	//! Prints a representation of the object to the given stream.
@@ -270,11 +279,11 @@ protected:
 class Constant : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
+
 	Constant(ObjectIdx value)  : _value(value) {}
 
 	Constant* clone() const override { return new Constant(*this); }
-	
+
 	//! Returns the actual value of the constant
 	ObjectIdx getValue() const { return _value; }
 
@@ -320,7 +329,7 @@ namespace std {
     template<> struct hash<const fs::Term*> {
         std::size_t operator()(const fs::Term* term) const { return hash<fs::Term>()(*term); }
     };
-	
+
     template<> struct equal_to<const fs::Term*> {
         std::size_t operator()(const fs::Term* t1, const fs::Term* t2) const { return equal_to<fs::Term>()(*t1, *t2); }
     };

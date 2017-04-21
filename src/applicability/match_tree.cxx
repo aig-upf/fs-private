@@ -81,7 +81,7 @@ namespace fs0 {
         // SAS+, where the only atoms that occur on preconditions are of the form
         // X=v.
 
-		ObjectIdx val = s.getValue(_pivot);
+		ObjectIdx val = boost::get<int>(s.getValue(_pivot));
 
 // 		const ProblemInfo& info = ProblemInfo::getInstance();
 // 		LPT_INFO( "cout", "[Match Tree] Branching on atom " << Atom(_pivot, val) << "");

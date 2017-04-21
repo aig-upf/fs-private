@@ -24,7 +24,7 @@ RelaxedState::RelaxedState(const State& state) {
 	// For each vector index, we construct a new domain containing only the value from the non-relaxed state.
 	for (unsigned i = 0; i < n; ++i) {
 		DomainPtr domain = std::make_shared<Domain>();
-		domain->insert(state.getValue(i));
+		domain->insert(boost::get<int>(state.getValue(i)));
 		_domains.push_back(domain);
 	}
 }

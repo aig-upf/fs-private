@@ -51,7 +51,7 @@ public:
 // 		_updated = true;
 		unsigned n = state.numAtoms();
 		for (VariableIdx var = 0; var < n; ++var) {
-			ObjectIdx val = state.getValue(var);
+			ObjectIdx val = boost::get<int>(state.getValue(var));
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 
 			AtomIdx atom = _helper._atomidx.to_index(var, val);

@@ -31,8 +31,8 @@ UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vect
 {}
 
 
-ArithmeticTerm::ArithmeticTerm(const std::vector<const Term*>& subterms)
-	: StaticHeadedNestedTerm(-1, subterms)
+ArithmeticTerm::ArithmeticTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
+	: StaticHeadedNestedTerm(-1, subterms), _value_type(value_type)
 {
 	assert(subterms.size() == 2);
 }
@@ -45,7 +45,7 @@ AxiomaticTermWrapper::AxiomaticTermWrapper(const AxiomaticTermWrapper& other) :
 
 ObjectIdx AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
-	
+
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
 	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
@@ -54,7 +54,7 @@ ObjectIdx AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, c
 
 ObjectIdx AxiomaticTermWrapper::interpret(const State& state, const Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
-	
+
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
 	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
@@ -99,7 +99,7 @@ ObjectIdx FluentHeadedNestedTerm::interpret(const State& state, const Binding& b
 
 
 ObjectIdx StateVariable::interpret(const State& state, const Binding& binding) const {
-	return state.getValue(_variable_id);
+	return boost::get<int>(state.getValue(_variable_id));
 }
 
 

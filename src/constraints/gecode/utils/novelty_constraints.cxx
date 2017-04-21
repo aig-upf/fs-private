@@ -94,7 +94,7 @@ StrongNoveltyConstraint::StrongNoveltyConstraint(CSPTranslator& translator, cons
 		assert(variable);
 		unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs());
 		unsigned reified_id = translator.create_bool_variable();
-		_variables.push_back(std::make_tuple(variable->getValue(), csp_var_id, reified_id));
+		_variables.push_back(std::make_tuple(boost::get<int>(variable->getValue()), csp_var_id, reified_id));
 	}
 }
 
@@ -132,7 +132,7 @@ EffectNoveltyConstraint::EffectNoveltyConstraint(CSPTranslator& translator, cons
 	assert(variable);
 	unsigned csp_var_id = translator.resolveVariableIndex(effect->rhs());
 	unsigned reified_id = translator.create_bool_variable();
-	_variable = std::make_tuple(variable->getValue(), csp_var_id, reified_id);
+	_variable = std::make_tuple(boost::get<int>(variable->getValue()), csp_var_id, reified_id);
 }
 
 void EffectNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& layer) const {

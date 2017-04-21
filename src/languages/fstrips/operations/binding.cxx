@@ -75,7 +75,7 @@ Visit(const Conjunction& lhs) {
 		if( lhs_ == nullptr ) continue;
 		const Constant* rhs = dynamic_cast< const Constant*>(cc->rhs());
 		if( rhs == nullptr ) continue;
-		atoms.push_back(std::make_pair(lhs_->getValue(), rhs->getValue()));
+		atoms.push_back(std::make_pair(boost::get<int>(lhs_->getValue()), boost::get<int>(rhs->getValue())));
 	}
 
 	if (conjuncts.empty()) {
@@ -307,7 +307,7 @@ bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, 
 		result.push_back(processed);
 
 		if (const Constant* constant = dynamic_cast<const Constant*>(processed)) {
-			constants.push_back(constant->getValue());
+			constants.push_back(boost::get<int>(constant->getValue()));
 		}
 	}
 	return result;

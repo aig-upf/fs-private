@@ -9,12 +9,12 @@ namespace fs0 {
 	
 const DirectEffect* ConstantRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
 	const auto& constant = dynamic_cast<const fs::Constant&>(rhs);
-	return new ValueAssignmentEffect(affected.getValue(), constant.getValue());
+	return new ValueAssignmentEffect(boost::get<int>(affected.getValue()), boost::get<int>(constant.getValue()));
 }
 
 const DirectEffect* StateVariableRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
 	const auto& variable = dynamic_cast<const fs::StateVariable&>(rhs);
-	return new VariableAssignmentEffect(variable.getValue(), affected.getValue());
+	return new VariableAssignmentEffect(boost::get<int>(variable.getValue()), boost::get<int>(affected.getValue()));
 }
 
 const DirectEffect* AdditiveTermRhsTranslator::translate(const fs::StateVariable& affected, const fs::Term& rhs) const {
@@ -30,9 +30,9 @@ const DirectEffect* AdditiveTermRhsTranslator::translate(const fs::StateVariable
 	auto lhs_const = dynamic_cast<const fs::Constant*>(sum_lhs);
 	auto rhs_const = dynamic_cast<const fs::Constant*>(sum_rhs);
 	
-	if (lhs_var && rhs_var)            return new AdditiveBinaryEffect({lhs_var->getValue(), rhs_var->getValue()}, affected.getValue());
-	else if (lhs_var && rhs_const)     return new AdditiveUnaryEffect(lhs_var->getValue(), affected.getValue(), rhs_const->getValue());
-	else if (lhs_const && rhs_var)     return new AdditiveUnaryEffect(rhs_var->getValue(), affected.getValue(), lhs_const->getValue());
+	if (lhs_var && rhs_var)            return new AdditiveBinaryEffect({boost::get<int>(lhs_var->getValue()), boost::get<int>(rhs_var->getValue())}, boost::get<int>(affected.getValue()));
+	else if (lhs_var && rhs_const)     return new AdditiveUnaryEffect(boost::get<int>(lhs_var->getValue()), boost::get<int>(affected.getValue()), boost::get<int>(rhs_const->getValue()));
+	else if (lhs_const && rhs_var)     return new AdditiveUnaryEffect(boost::get<int>(rhs_var->getValue()), boost::get<int>(affected.getValue()), boost::get<int>(lhs_const->getValue()));
 	else throw std::runtime_error("Constant expression should have been compiled earlier");
 }
 
@@ -49,9 +49,9 @@ const DirectEffect* SubtractiveTermRhsTranslator::translate(const fs::StateVaria
 	auto lhs_const = dynamic_cast<const fs::Constant*>(sum_lhs);
 	auto rhs_const = dynamic_cast<const fs::Constant*>(sum_rhs);
 	
-	if (lhs_var && rhs_var)            return new SubtractiveBinaryEffect({lhs_var->getValue(), rhs_var->getValue()}, affected.getValue());
-	else if (lhs_var && rhs_const)     return new SubtractiveUnaryEffect(lhs_var->getValue(), affected.getValue(), rhs_const->getValue());
-	else if (lhs_const && rhs_var)     return new SubtractiveUnaryEffect(rhs_var->getValue(), affected.getValue(), lhs_const->getValue());
+	if (lhs_var && rhs_var)            return new SubtractiveBinaryEffect({boost::get<int>(lhs_var->getValue()), boost::get<int>(rhs_var->getValue())}, boost::get<int>(affected.getValue()));
+	else if (lhs_var && rhs_const)     return new SubtractiveUnaryEffect(boost::get<int>(lhs_var->getValue()), boost::get<int>(affected.getValue()), boost::get<int>(rhs_const->getValue()));
+	else if (lhs_const && rhs_var)     return new SubtractiveUnaryEffect(boost::get<int>(rhs_var->getValue()), boost::get<int>(affected.getValue()), boost::get<int>(lhs_const->getValue()));
 	else throw std::runtime_error("Constant expression should have been compiled earlier");
 }
 
@@ -68,9 +68,9 @@ const DirectEffect* MultiplicativeTermRhsTranslator::translate(const fs::StateVa
 	auto lhs_const = dynamic_cast<const fs::Constant*>(sum_lhs);
 	auto rhs_const = dynamic_cast<const fs::Constant*>(sum_rhs);
 	
-	if (lhs_var && rhs_var)            return new MultiplicativeBinaryEffect({lhs_var->getValue(), rhs_var->getValue()}, affected.getValue());
-	else if (lhs_var && rhs_const)     return new MultiplicativeUnaryEffect(lhs_var->getValue(), affected.getValue(), rhs_const->getValue());
-	else if (lhs_const && rhs_var)     return new MultiplicativeUnaryEffect(rhs_var->getValue(), affected.getValue(), lhs_const->getValue());
+	if (lhs_var && rhs_var)            return new MultiplicativeBinaryEffect({boost::get<int>(lhs_var->getValue()), boost::get<int>(rhs_var->getValue())}, boost::get<int>(affected.getValue()));
+	else if (lhs_var && rhs_const)     return new MultiplicativeUnaryEffect(boost::get<int>(lhs_var->getValue()), boost::get<int>(affected.getValue()), boost::get<int>(rhs_const->getValue()));
+	else if (lhs_const && rhs_var)     return new MultiplicativeUnaryEffect(boost::get<int>(rhs_var->getValue()), boost::get<int>(affected.getValue()), boost::get<int>(lhs_const->getValue()));
 	else throw std::runtime_error("Constant expression should have been compiled earlier");
 }
 

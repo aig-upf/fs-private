@@ -71,37 +71,37 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<VariableIdx> lhs_variables;
 	std::vector<Atom> affected;
-	
+
 	if (auto statevar = dynamic_cast<const StateVariable*>(effect->lhs())) {
 		lhs_variables.push_back(statevar->getValue());
 	} else if (auto nested = dynamic_cast<const FluentHeadedNestedTerm*>(effect->lhs())) {
 		lhs_variables = info.resolveStateVariable(nested->getSymbolId()); // TODO - This is a gross overapproximation
 	} else throw std::runtime_error("Unsupported effect type");
-	
+
 	// Now gather, for each possible variables, all possible values
 	for (VariableIdx variable:lhs_variables) {
 		const Constant* rhs_const = dynamic_cast<const Constant*>(effect->rhs());
-		
+
 		// TODO - All this should be greatly simplified when we have a proper distinction between functional effects
 		// and predicative add/del effects
 		if (info.isPredicativeVariable(variable)){
 			if (!rhs_const) throw std::runtime_error("A predicative effect cannot be assigned anything other than a constant");
-			if (rhs_const->getValue() == 1) { // Push only non-negated effects
+			if (boost::get<int>(rhs_const->getValue()) == 1) { // Push only non-negated effects
 				affected.push_back(Atom(variable, 1));
 			}
 			continue;
 		}
-		
+
 		// If we reached this point we surely have a non-predicative effect.
 		if (rhs_const) {
-			affected.push_back(Atom(variable, rhs_const->getValue()));
-			
+			affected.push_back(Atom(variable, boost::get<int>(rhs_const->getValue())));
+
 		} else {
-		
+
 			// Otherwise, ATM we simply overapproximate the set of all potentially affected atoms by considering
 			// that all values for that variable (consistent with the RHS type) can be achieved.
 			const ProblemInfo& info = ProblemInfo::getInstance();
-			
+
 		// 	TypeIdx type = effect->rhs()->getType(); // This doesn't work for RHS such as X + 1
 			TypeIdx type = fs::type(*effect->lhs());
 			for (auto value:info.getTypeObjects(type)) {
@@ -117,12 +117,12 @@ void _computeRelevantElements(const std::vector<const Term*>& all_terms, std::se
 	for (const Term* term:all_terms) {
 		auto statevar = dynamic_cast<const StateVariable*>(term);
 		auto fluent = dynamic_cast<const FluentHeadedNestedTerm*>(term);
-		
+
 		if (!statevar && !fluent) continue;
-		
+
 		if (statevar) {
 			unsigned symbol = statevar->getOrigin()->getSymbolId();
-			
+
 			if (info.isPredicate(symbol)) {
 				symbols.insert(symbol);
 				if (preds_as_state_vars) {
@@ -132,10 +132,10 @@ void _computeRelevantElements(const std::vector<const Term*>& all_terms, std::se
 				variables.insert(statevar->getValue());
 			}
 		}
-		
+
 		if (fluent) {
 			unsigned symbol = fluent->getSymbolId();
-			
+
 			if (info.isPredicate(symbol)) {
 				symbols.insert(symbol);
 			} else {

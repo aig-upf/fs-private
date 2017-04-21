@@ -103,7 +103,7 @@ void DirectRPGBuilder::extractGoalCauses(const State& seed, const DomainMap& dom
 	assert(selected_dom != nullptr);
 	
 	// 3. If the value that the variable had in the seed state is available, select it, otherwise select an arbitrary value
-	ObjectIdx selected_value = seed.getValue(selected_var);
+	ObjectIdx selected_value = boost::get<int>(seed.getValue(selected_var));
 	if (selected_dom->find(selected_value) == selected_dom->end()) {
 		selected_value = *(selected_dom->cbegin()); // We simply select an arbitrary value.
 		assert(selected_var >= 0 && selected_value >= 0);
@@ -135,7 +135,7 @@ void DirectRPGBuilder::extractGoalCausesArbitrarily(const State& seed, const Dom
 		if (set[variable]) continue;
 		set[variable] = true;
 		
-		ObjectIdx seed_value = seed.getValue(variable);
+		ObjectIdx seed_value = boost::get<int>(seed.getValue(variable));
 		if (domain.second->find(seed_value) == domain.second->end()) {  // If the original value makes the situation a goal, then we don't need to add anything for this variable.
 			ObjectIdx value = *(domain.second->cbegin());
 			causes.push_back(Atom(variable, value)); // Otherwise we simply select an arbitrary value.

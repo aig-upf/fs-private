@@ -204,7 +204,7 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEf
 		try {
 			auto atom = effect.apply(value);
 			assert(atom.getVariable() == effect.getAffected());
-			map.insert(std::make_pair(value, atom.getValue()));
+			map.insert(std::make_pair(value, boost::get<int>(atom.getValue())));
 		} catch(const std::out_of_range& e) {}  // If the effect produces an exception, we simply consider it non-applicable and go on.
 	}
 	return map;

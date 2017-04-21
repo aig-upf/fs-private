@@ -13,7 +13,7 @@ ObjectIdxVector Projections::project(const State& s, const VariableIdxVector& sc
 	ObjectIdxVector values;
 	values.reserve(scope.size());
 	for (VariableIdx idx:scope) {
-		values.push_back(s.getValue(idx));
+		values.push_back(boost::get<int>(s.getValue(idx)));
 	}
 	return values;
 }

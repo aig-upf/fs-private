@@ -222,7 +222,7 @@ Visit(const BoundVariable& lhs) {
 
 void TypeVisitor::
 Visit(const StateVariable& lhs) { 
-	_result = ProblemInfo::getInstance().getVariableType(lhs.getValue());
+	_result = ProblemInfo::getInstance().getVariableType(boost::get<int>(lhs.getValue()));
 }
 
 void TypeVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
@@ -253,7 +253,7 @@ void BoundVisitor::Visit(const AxiomaticTermWrapper& lhs) { _result = type_based
 
 void BoundVisitor::
 Visit(const Constant& lhs) { 
-	_result = std::make_pair(lhs.getValue(), lhs.getValue());
+	_result = std::make_pair(boost::get<int>(lhs.getValue()), boost::get<int>(lhs.getValue()));
 }
 
 void BoundVisitor::

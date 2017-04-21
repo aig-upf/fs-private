@@ -35,7 +35,7 @@ void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
 // with formulas involving existential variables
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const State& state) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
-		return state.getValue(_variable_idx) == 1;
+		return boost::get<int>(state.getValue(_variable_idx)) == 1;
 	} else {
 		return update(csp, translator, compute_extension(_term->getSymbolId(), state));
 	}
@@ -86,7 +86,7 @@ Gecode::TupleSet ExtensionalConstraint::compute_extension(unsigned symbol_id, co
 	ExtensionHandler extension_handler(_tuple_index, managed);
 
 	for (unsigned variable = 0; variable < state.numAtoms(); ++variable) {
-		ObjectIdx value = state.getValue(variable);
+		ObjectIdx value = boost::get<int>(state.getValue(variable));
 		extension_handler.process_atom(variable, value);
 	}
 

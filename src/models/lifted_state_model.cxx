@@ -81,7 +81,7 @@ LiftedStateModel::goal(const StateT& s, unsigned i) const {
 	return _subgoals.at(i)->interpret(s, binding);
 // 	return s.contains(_subgoals.at(i)); // TODO SHOULD BE:
 	// const Atom& subgoal = _subgoals.at(i);
-	// return s.check(subgoal.getVariable(), s.getValue());
+	// return s.check(subgoal.getVariable(), boost::get<int>(s.getValue()));
 }
 
 LiftedStateModel

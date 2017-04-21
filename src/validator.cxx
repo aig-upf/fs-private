@@ -25,7 +25,7 @@ Validator::validate_state(const State& state, const ProblemInfo& info) {
 
 	// Check that the value assigned to each state variable is of the right type
 	for (VariableIdx variable = 0; variable < num_atoms; ++variable) {
-		ObjectIdx value = state.getValue(variable);
+		ObjectIdx value = boost::get<int>(state.getValue(variable));
 		const auto& objects = info.getVariableObjects(variable);
 		
 		if (std::find(objects.begin(), objects.end(), value) == objects.end()) {
