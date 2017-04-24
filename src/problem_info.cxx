@@ -97,7 +97,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		// Load the info necessary to resolve state variables dynamically
 		const auto& var_data = data[i]["data"];
 		unsigned symbol_id = var_data[0].GetInt();
-		 std::vector<ObjectIdx> constants;
+		std::vector<ObjectIdx> constants;
 		for (unsigned j = 0; j < var_data[1].Size(); ++j) {
 			constants.push_back(var_data[1][j].GetInt());
 		}
@@ -227,7 +227,7 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 				try {
 				 	v = boost::lexical_cast<int>(token);
 				} catch ( const boost::bad_lexical_cast& e ) {
-					//v = boost::lexical_cast<float>(data[i][3][j].GetString());
+					//v = boost::lexical_cast<float>(token);
                     throw std::runtime_error("Invalid object identifier: '" + token + "' for type '" + type_name + "'");
 				}
 				typeObjects[type_id].push_back(ObjectIdx(v));
