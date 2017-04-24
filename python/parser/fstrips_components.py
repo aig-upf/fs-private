@@ -138,9 +138,10 @@ class FSNamedFormula(FSBaseComponent):
 
 class FSActionSchema(FSBaseComponent):
     """ A FSTRIPS action schema """
-    def __init__(self, index, action):
+    def __init__(self, index, action, type = "control"):
         super().__init__(index)
         self.action = action
+        self.type = type
 
         # Order matters: the binding unit needs to be created when the effects are processed
         self.binding_unit = fs.BindingUnit.from_parameters(action.parameters)
@@ -158,6 +159,7 @@ class FSActionSchema(FSBaseComponent):
     def dump(self):
         return dict(name=self.action.name,
                     signature=[self.index.types[p.type] for p in self.action.parameters],
+                    type =self.type,
                     parameters=[p.name for p in self.action.parameters],
                     conditions=self.precondition.dump(self.index, self.binding_unit),
                     effects=[eff.dump() for eff in self.effects],

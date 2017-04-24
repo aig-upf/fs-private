@@ -313,13 +313,13 @@ class FSTaskIndex(object):
         self.state_variables = state_variables
 
     def process_actions(self, actions):
-        self.action_schemas = [FSActionSchema(self, action) for action in actions]
+        self.action_schemas = [FSActionSchema(self, action, "control") for action in actions]
 
     def process_processes(self, processes) :
-        self.process_schemas = [FSActionSchema(self,proc) for proc in processes]
+        self.process_schemas = [FSActionSchema(self,proc, "natural") for proc in processes]
 
     def process_events( self, events ) :
-        self.event_schemas = [FSActionSchema(self,evt) for evt in events]
+        self.event_schemas = [FSActionSchema(self,evt, "exogenous") for evt in events]
 
     def process_adl_actions(self, actions, sorted_action_names):
         sorted_act = [actions[name] for name in sorted_action_names if name in actions]
