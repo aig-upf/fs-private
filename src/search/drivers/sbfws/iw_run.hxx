@@ -55,10 +55,13 @@ public:
 	
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
 	//! atoms in s with novelty 1.
-	std::vector<unsigned> _nov1atom_idxs;
+// 	std::vector<unsigned> _nov1atom_idxs;
+	
+	//! Implicit encoding of the atoms that contribute novelty 1 to the state
+	boost::dynamic_bitset<> _B_of_s;
 	
 	//! Whether the path-novely of the node is one
-	bool _path_novelty_is_1;
+// 	bool _path_novelty_is_1;
 	
 	//! The generation order, uniquely identifies the node
 	unsigned long _gen_order;
@@ -83,7 +86,8 @@ public:
 		g(parent ? parent->g+1 : 0),
 		_w(std::numeric_limits<unsigned>::max()),
 		_evaluated(false),
-		_path_novelty_is_1(false),
+// 		_path_novelty_is_1(false),
+		_B_of_s(state.numAtoms()),
 		_gen_order(gen_order)
 	{}
 
@@ -162,8 +166,10 @@ public:
 	}
 	
 	unsigned evaluate_new(NodeT& node) {
-		assert(node._nov1atom_idxs.empty());
-		assert(!node._path_novelty_is_1); // We still haven't determined whether the node has been reached through a nov-1 path
+// 		assert(node._nov1atom_idxs.empty());
+// 		assert(std::count(node._B_of_s.begin(),_B_of_s.end(), true) == 0);
+
+// 		assert(!node._path_novelty_is_1); // We still haven't determined whether the node has been reached through a nov-1 path
 		
 		assert(!node._evaluated); // i.e. don't evaluate a node twice!
 		node._evaluated = true;		
@@ -171,58 +177,42 @@ public:
 		auto valuation = _features.evaluate(node.state);
 		
 		if (!node.parent) { // We're dealing with the root node
-			nov = _evaluator->evaluate_1(valuation, node._nov1atom_idxs);
+			nov = _evaluator->evaluate_1(valuation, node._B_of_s);
 			assert(nov == 1);
-			node._path_novelty_is_1 = true;
+// 			node._path_novelty_is_1 = true;
 			node.nb_s = 0;
 			
 			// NOW EVALUATE 1.5 novelty
 			_evaluator->evaluate_piw(valuation);
 		} else {
 			auto parent_valuation = _features.evaluate(node.parent->state);
-			std::vector<unsigned> new_atom_idxs;
-			std::vector<unsigned> repeated_atom_idxs;
+			
+			
+			boost::dynamic_bitset<> new_atom_idxs, repeated_atom_idxs;
+// 			std::vector<unsigned> new_atom_idxs;
+// 			std::vector<unsigned> repeated_atom_idxs;
 			
 			analyze_new(valuation, parent_valuation, new_atom_idxs, repeated_atom_idxs);
 			
-			std::vector<unsigned> from_current, from_parent; // 'from_current' contains the indexes of those variables that contain novel atoms
+			boost::dynamic_bitset<> from_current(valuation.size()); // 'from_current' contains the indexes of those variables that contain novel atoms
 			nov = _evaluator->evaluate_1(valuation, new_atom_idxs, from_current);
-			node._path_novelty_is_1 = node.parent->_path_novelty_is_1 && (nov == 1);
+// 			node._path_novelty_is_1 = node.parent->_path_novelty_is_1 && (nov == 1);
 			
 			// Now add to nov1atoms those atoms in the parent state that had novelty 1 and have not been deleted by the action leading to this state
-			const auto& parent_1s = node.parent->_nov1atom_idxs;
-			
-			std::set_intersection(parent_1s.begin(), parent_1s.end(), repeated_atom_idxs.begin(), repeated_atom_idxs.end(), std::back_inserter(from_parent));
-			
-			// 'from_parent' contains now the var-index of the undeleted atoms from 1(parent(s))
-			
-			// TODO Might want to remove this asserts at some point not to penalize the performance of the debug release too much
-			assert(std::is_sorted(repeated_atom_idxs.begin(), repeated_atom_idxs.end()));
-			assert(std::is_sorted(from_parent.begin(), from_parent.end()));
-			assert(std::is_sorted(from_current.begin(), from_current.end()));			
+			node._B_of_s = node.parent->_B_of_s; // Copy B(s.parent)
+			node._B_of_s &= repeated_atom_idxs;
+			// 'B_of_s' contains now the var-index of the undeleted atoms from 1(parent(s))
 			
 			
 			// SET 1(s) to its appropriate value
-			std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));
-			/*
-			if (node._path_novelty_is_1) {
-				std::set_union(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(node._nov1atom_idxs));
-			} else {
-				node._nov1atom_idxs = std::move(from_parent);
-			}
-			*/
-			
-			std::vector<AtomIdx> B_of_s; // B(s)
-			B_of_s = to_atom_indexes(node, node._nov1atom_idxs);
-			
-			
+			node._B_of_s |= from_current;
+
 			
 			// NOW EVALUATE 1.5 novelty
-
 			node.nb_s = node.parent->nb_s;
 				
-			std::vector<bool> novelty_contributors;
-			if (_evaluator->evaluate_piw(valuation, B_of_s, novelty_contributors)) {
+			boost::dynamic_bitset<> pruned_B_of_s(valuation.size());
+			if (_evaluator->evaluate_piw(valuation, node._B_of_s, pruned_B_of_s)) {
 				if (nov != 1) {
 					nov = 2;
 					
@@ -232,23 +222,15 @@ public:
 						if (node.nb_s > 1) {
  							nov = 99; // Set novelty artificially high so that the node will get pruned.
 //  							std::cout << "Pruned node because NB(s) > 1" << std::endl;
-							
 						}
 					}
-					
+					 
 					
 					if (nov == 2) {
 						// UPDATE B(s)
-						assert(node._nov1atom_idxs.size() == novelty_contributors.size());
-						std::vector<unsigned> tmp;
-						for (unsigned i1 = 0; i1 < novelty_contributors.size(); ++i1) {
-							if (novelty_contributors[i1]) {
-								tmp.push_back(node._nov1atom_idxs[i1]);
-							}
-						}
-						
-	// 					std::cout << "Pruned 1(s) from " << node._nov1atom_idxs.size() << " to " << tmp.size()  << " (out of a max. of " << node.state.numAtoms() << " atoms in a state) "<< std::endl;
-						node._nov1atom_idxs = tmp;
+// 	 					std::cout << "Pruned 1(s) from " << node._B_of_s.count() << " to " << pruned_B_of_s.count() << " (out of a max. of " << node.state.numAtoms() << " atoms in a state) "<< std::endl;
+							
+						node._B_of_s = pruned_B_of_s;
 	// 					std::cout << "Simulation node - NB(s)=" << node.nb_s << std::endl;
 					}
 				}
@@ -275,15 +257,17 @@ public:
 
 	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
 	template <typename FeatureValueT>
-	void analyze_new(const std::vector<FeatureValueT>& current, const std::vector<FeatureValueT>& parent, std::vector<unsigned>& new_atoms, std::vector<unsigned>& repeated_atoms) {
+	void analyze_new(const std::vector<FeatureValueT>& current, const std::vector<FeatureValueT>& parent, boost::dynamic_bitset<>& new_atoms, boost::dynamic_bitset<>& repeated_atoms) {
 		assert(current.size() == parent.size());
 		assert(new_atoms.empty());
 		assert(repeated_atoms.empty());
 		for (unsigned i = 0; i < current.size(); ++i) {
 			if (current[i] != parent[i]) {
-				new_atoms.push_back(i);
+				new_atoms.push_back(true);
+				repeated_atoms.push_back(false);
 			} else {
-				repeated_atoms.push_back(i);
+				new_atoms.push_back(false);
+				repeated_atoms.push_back(true);
 			}
 		}
 	}
@@ -478,11 +462,11 @@ public:
 
 		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
 		if (!_unreached.empty()) {
-			LPT_INFO("cout", "Some subgoals not reached during the simulation. ABORTING");
+			LPT_INFO("cout", "WARNING: Some subgoals not reached during the simulation.");
 			for (unsigned x:_unreached) {
 				LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
 			}
-			exit(1);
+// 			exit(1);
 		}
 		
 		std::vector<bool> rel_goal_directed(index.size(), false);
