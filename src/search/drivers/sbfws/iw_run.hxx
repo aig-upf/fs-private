@@ -243,6 +243,8 @@ public:
 							tmp.push_back(node._nov1atom_idxs[i1]);
 						}
 					}
+					
+// 					std::cout << "Pruned 1(s) from " << node._nov1atom_idxs.size() << " to " << tmp.size()  << " (out of a max. of " << node.state.numAtoms() << " atoms in a state) "<< std::endl;
 					node._nov1atom_idxs = tmp;
 				}
 			}
@@ -471,6 +473,9 @@ public:
 		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
 		if (!_unreached.empty()) {
 			LPT_INFO("cout", "Some subgoals not reached during the simulation. ABORTING");
+			for (unsigned x:_unreached) {
+				LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
+			}
 			exit(1);
 		}
 		
