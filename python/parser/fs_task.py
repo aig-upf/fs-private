@@ -15,7 +15,7 @@ from . import util
 from .exceptions import ParseException
 from .asp.problem import get_effect_symbols
 from .util import IndexDictionary
-from .fstrips_components import FSActionSchema, FSFormula, FSNamedFormula
+from .fstrips_components import FSActionSchema, FSFormula, FSNamedFormula, FSMetric
 from .object_types import process_problem_types
 from .state_variables import create_all_possible_state_variables, create_all_possible_state_variables_from_groundings
 
@@ -83,6 +83,8 @@ def create_fs_plus_task( fsp_task, domain_name, instance_name ) :
     task.process_lifted_state_constraints(fsp_task.constraint_schemata)
     print("Creating FS+ task: Processing axioms...")
     task.process_axioms(fsp_task.axioms)
+    print("Creating FS+ task: Processing metric...")
+    task.process_metric(fsp_task.metric)
     return task
 
 
@@ -162,6 +164,7 @@ class FSTaskIndex(object):
         self.event_schemas = util.UninitializedAttribute('event_schemas')
         self.process_schemas = util.UninitializedAttribute('process_schemas')
         self.constraint_schemas = util.UninitializedAttribute('constraint_schemas')
+        self.metric = util.UninitializedAttribute('metric')
         self.groundings = None
 
     def process_types(self, types, type_map):
@@ -320,6 +323,9 @@ class FSTaskIndex(object):
 
     def process_events( self, events ) :
         self.event_schemas = [FSActionSchema(self,evt, "exogenous") for evt in events]
+
+    def process_metric(self, metric ) :
+        self.metric = FSMetric( self, metric.optimization, metric.expr)
 
     def process_adl_actions(self, actions, sorted_action_names):
         sorted_act = [actions[name] for name in sorted_action_names if name in actions]

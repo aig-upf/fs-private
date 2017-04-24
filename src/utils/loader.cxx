@@ -8,6 +8,7 @@
 #include <utils/component_factory.hxx>
 #include <languages/fstrips/loader.hxx>
 #include <languages/fstrips/axioms.hxx>
+#include <languages/fstrips/metrics.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/registry.hxx>
@@ -58,6 +59,9 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 
 	LPT_INFO("main", "Loading state constraints...");
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
+
+    LPT_INFO("main", "Loading Problem Metric...");
+    auto metric = loadMetric( data["metric"], info );
 
 	//! Set the global singleton Problem instance
 	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc, AtomIndex(info));
@@ -170,6 +174,31 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
 	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it
 	return ActionGrounder::process_action_data(adata, info, load_effects);
+}
+
+const Metric*
+Loader::loadMetric( const rapidjson::Value& data, const ProblemInfo& info ) {
+	// Get first the type of the metric
+	if ( !data.HasMember("optimization")) return nullptr; // Empty metric
+
+	MetricType optMode;
+	std::string optModeString( data["optimization"].GetString() );
+	if ( optModeString == "minimize" )
+		optMode = MetricType::MINIMIZE;
+	else if ( optModeString == "maximize" )
+		optMode = MetricType::MAXIMIZE;
+	else {
+		std::string errorMsg( "Unrecognized metric optimization mode ");
+		throw std::runtime_error(  errorMsg + optModeString );
+	}
+
+	LPT_INFO( "components", "Metric optimization mode is " << data["optimization"].GetString() );
+	auto expr = fs::Loader::parseTerm( data["objective_function"]["expression"], info );
+    auto processed = fs::bind(*expr, Binding::EMPTY_BINDING, info);
+
+	LPT_INFO( "components", "Metric loaded: " << processed );
+    delete expr;
+	return new fs::Metric(optMode, processed );
 }
 
 

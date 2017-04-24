@@ -109,6 +109,16 @@ class FSFormula(FSBaseComponent):
         return dict(conditions=self.processed.dump(self.index, self.binding_unit),
                     unit=self.binding_unit.dump())
 
+class FSMetric(FSBaseComponent) :
+    """ A state--dependant metric (i.e. a expression to optimise defined over state variables)"""
+    def __init__(self, index, opt_mode, expr ) :
+        super().__init__(index)
+        self.expression = self.parser.process_expression(expr, self.binding_unit)
+        self.opt_mode = opt_mode
+
+    def dump(self) :
+        return dict(optimization = self.opt_mode,
+                    expression=self.expression.dump(self.index,self.binding_unit))
 
 class FSNamedFormula(FSBaseComponent):
     """ A FSTRIPS axiom, which is a formula with a name and possibly some lifted parameters """
