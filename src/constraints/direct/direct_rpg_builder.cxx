@@ -28,17 +28,17 @@ std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula* go
 		directStateConstraints = DirectTranslator::generate(fs::all_atoms(*sc_conjunction));
 		ConstraintCompiler::compileConstraints(directStateConstraints);
 	}
-	
+
 	auto allGoalConstraints = Utils::merge(directGoalConstraints, directStateConstraints);
 	return std::make_shared<DirectRPGBuilder>(std::move(allGoalConstraints), std::move(directStateConstraints));
 }
-	
+
 // Note that we use both types of constraints as goal constraints
 DirectRPGBuilder::DirectRPGBuilder(std::vector<DirectConstraint*>&& goalConstraints, std::vector<DirectConstraint*>&& stateConstraints) :
 	_stateConstraints(std::move(stateConstraints)),
 	_allGoalConstraints(std::move(goalConstraints)), // Goal constraints include state constraints as well
 	_stateConstraintsHandler(_stateConstraints),
-	_goalConstraintsHandler(_allGoalConstraints) // We store all the constraints in a new vector so that we can pass a const reference 
+	_goalConstraintsHandler(_allGoalConstraints) // We store all the constraints in a new vector so that we can pass a const reference
 	                                            // - we're strongly interested in the ConstraintManager having only a reference, not the actual value,
 	                                            // since in some cases each grounded action will have a ConstraintManager
 {
@@ -59,10 +59,10 @@ bool DirectRPGBuilder::isGoal(const State& seed, const RelaxedState& state, std:
 	assert(causes.empty());
 	DomainMap domains = Projections::projectCopy(state, _goalConstraintsHandler.getAllRelevantVariables());  // This makes a copy of the domain.
 	if (!checkGoal(domains)) return false;
-	
+
 	unsigned numVariables = ProblemInfo::getInstance().getNumVariables(); // The total number of state variables
 	std::vector<bool> set(numVariables, false); // Variables that have been already set.
-	
+
 	DomainMap clone = Projections::clone(domains);  // We need a deep copy
 
 	extractGoalCauses(seed, domains, clone, causes, set, 0);
@@ -81,14 +81,14 @@ bool DirectRPGBuilder::checkGoal(const DomainMap& domains) const {
 
 //! Note that here we can guarantee that we'll always insert different atoms in `causes`, since all the inserted atoms have a different variable
 void DirectRPGBuilder::extractGoalCauses(const State& seed, const DomainMap& domains, const DomainMap& clone, std::vector<Atom>& causes, std::vector<bool>& set, unsigned num_set) const {
-	
+
 	// 0. Base case
 	if (num_set == domains.size()) return;
-	
+
 	VariableIdx selected_var = 0;
 	unsigned min_domain_size = std::numeric_limits<unsigned>::max();
 	DomainPtr selected_dom = nullptr;
-	
+
 	// 1. Select the variable with smallest domain that has not yet been set a value.
 	for (auto& domain:domains) {
 		VariableIdx variable = domain.first;
@@ -101,21 +101,21 @@ void DirectRPGBuilder::extractGoalCauses(const State& seed, const DomainMap& dom
 		}
 	}
 	assert(selected_dom != nullptr);
-	
+
 	// 3. If the value that the variable had in the seed state is available, select it, otherwise select an arbitrary value
 	ObjectIdx selected_value = boost::get<int>(seed.getValue(selected_var));
 	if (selected_dom->find(selected_value) == selected_dom->end()) {
 		selected_value = *(selected_dom->cbegin()); // We simply select an arbitrary value.
-		assert(selected_var >= 0 && selected_value >= 0);
+		assert(selected_var >= 0 && boost::get<int>(selected_value) >= 0);
 		causes.push_back(Atom(selected_var, selected_value)); // We only insert the fact if it wasn't true on the seed state.
 	}
 	set[selected_var] = true; // Tag the variable as already selected
-	
+
 	// 4 . Propagate the restrictions forward.
 	// 4.1 Prune the domain.
 	selected_dom->clear();
 	selected_dom->insert(selected_value);
-	
+
 	// 4.2 Apply the constraints again
 	FilteringOutput o = _goalConstraintsHandler.filter(domains);
 	if (o == FilteringOutput::Failure || !DirectCSPHandler::checkConsistency(domains)) {
@@ -131,10 +131,10 @@ void DirectRPGBuilder::extractGoalCauses(const State& seed, const DomainMap& dom
 void DirectRPGBuilder::extractGoalCausesArbitrarily(const State& seed, const DomainMap& domains, std::vector<Atom>& causes, std::vector<bool>& set) const {
 	for (const auto& domain:domains) {
 		VariableIdx variable = domain.first;
-		
+
 		if (set[variable]) continue;
 		set[variable] = true;
-		
+
 		ObjectIdx seed_value = boost::get<int>(seed.getValue(variable));
 		if (domain.second->find(seed_value) == domain.second->end()) {  // If the original value makes the situation a goal, then we don't need to add anything for this variable.
 			ObjectIdx value = *(domain.second->cbegin());
@@ -149,4 +149,3 @@ std::ostream& DirectRPGBuilder::print(std::ostream& os) const {
 }
 
 } // namespaces
-

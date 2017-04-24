@@ -5,6 +5,8 @@
 #include <problem.hxx>
 #include <utils/utils.hxx>
 #include <state.hxx>
+#include <cmath>
+#include <cfenv>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -27,7 +29,8 @@ bool ArithmeticTermFactory::isUnaryTerm( const std::string& symbol ) {
 }
 
 
-StaticHeadedNestedconst Term* ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const Term*>& subterms, ProblemInfo::ObjectType value_type) {
+const StaticHeadedNestedTerm*
+ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const Term*>& subterms, ProblemInfo::ObjectType value_type) {
 	if (symbol == "+")      return new AdditionTerm(subterms, value_type);
 	else if (symbol == "-") return new SubtractionTerm(subterms, value_type);
 	else if (symbol == "*") return new MultiplicationTerm(subterms, value_type);
@@ -49,21 +52,21 @@ StaticHeadedNestedconst Term* ArithmeticTermFactory::create(const std::string& s
 AdditionTerm::AdditionTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
 	: ArithmeticTerm(subterms, value_type) {}
 
-ObjectIdx AdditionTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx AdditionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(assignment)) + boost::get<int>(_subterms[1]->interpret(assignment));
+	 	res = boost::get<int>(_subterms[0]->interpret(assignment, binding)) + boost::get<int>(_subterms[1]->interpret(assignment, binding));
 	else
-		res = boost::get<float>(_subterms[0]->interpret(assignment)) + boost::get<float>(_subterms[1]->interpret(assignment));
+		res = boost::get<float>(_subterms[0]->interpret(assignment, binding)) + boost::get<float>(_subterms[1]->interpret(assignment, binding));
 	return res;
 }
 
-ObjectIdx AdditionTerm::interpret(const State& state) const {
+ObjectIdx AdditionTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(state)) + boost::get<int>(_subterms[1]->interpret(state));
+	 	res = boost::get<int>(_subterms[0]->interpret(state, binding)) + boost::get<int>(_subterms[1]->interpret(state, binding));
 	else
-		res = boost::get<float>(_subterms[0]->interpret(state)) + boost::get<float>(_subterms[1]->interpret(state));
+		res = boost::get<float>(_subterms[0]->interpret(state, binding)) + boost::get<float>(_subterms[1]->interpret(state, binding));
 	return res;
 }
 
@@ -75,21 +78,21 @@ std::ostream& AdditionTerm::print(std::ostream& os, const fs0::ProblemInfo& info
 SubtractionTerm::SubtractionTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
 	: ArithmeticTerm(subterms, value_type) {}
 
-ObjectIdx SubtractionTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx SubtractionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(assignment)) - boost::get<int>(_subterms[1]->interpret(assignment));
+	 	res = boost::get<int>(_subterms[0]->interpret(assignment, binding)) - boost::get<int>(_subterms[1]->interpret(assignment, binding));
 	else
-		res = boost::get<float>(_subterms[0]->interpret(assignment)) - boost::get<float>(_subterms[1]->interpret(assignment));
+		res = boost::get<float>(_subterms[0]->interpret(assignment, binding)) - boost::get<float>(_subterms[1]->interpret(assignment, binding));
 	return res;
 }
 
-ObjectIdx SubtractionTerm::interpret(const State& state) const {
+ObjectIdx SubtractionTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(state)) - boost::get<int>(_subterms[1]->interpret(state));
+	 	res = boost::get<int>(_subterms[0]->interpret(state, binding)) - boost::get<int>(_subterms[1]->interpret(state, binding));
 	else
-		res = boost::get<float>(_subterms[0]->interpret(state)) - boost::get<float>(_subterms[1]->interpret(state));
+		res = boost::get<float>(_subterms[0]->interpret(state, binding)) - boost::get<float>(_subterms[1]->interpret(state, binding));
 	return res;
 }
 
@@ -103,21 +106,21 @@ std::ostream& SubtractionTerm::print(std::ostream& os, const fs0::ProblemInfo& i
 MultiplicationTerm::MultiplicationTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
 	: ArithmeticTerm(subterms, value_type) {}
 
-ObjectIdx MultiplicationTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx MultiplicationTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(assignment)) * boost::get<int>(_subterms[1]->interpret(assignment));
+	 	res = boost::get<int>(_subterms[0]->interpret(assignment, binding)) * boost::get<int>(_subterms[1]->interpret(assignment, binding));
 	else
-		res = boost::get<float>(_subterms[0]->interpret(assignment)) * boost::get<float>(_subterms[1]->interpret(assignment));
+		res = boost::get<float>(_subterms[0]->interpret(assignment, binding)) * boost::get<float>(_subterms[1]->interpret(assignment, binding));
 	return res;
 }
 
-ObjectIdx MultiplicationTerm::interpret(const State& state) const {
+ObjectIdx MultiplicationTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(state)) * boost::get<int>(_subterms[1]->interpret(state));
+	 	res = boost::get<int>(_subterms[0]->interpret(state, binding)) * boost::get<int>(_subterms[1]->interpret(state, binding));
 	else
-		res = boost::get<float>(_subterms[0]->interpret(state)) * boost::get<float>(_subterms[1]->interpret(state));
+		res = boost::get<float>(_subterms[0]->interpret(state, binding)) * boost::get<float>(_subterms[1]->interpret(state, binding));
 	return res;
 }
 
@@ -129,21 +132,21 @@ std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo
 DivisionTerm::DivisionTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
 	: ArithmeticTerm(subterms, value_type) {}
 
-ObjectIdx DivisionTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx DivisionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(assignment)) / boost::get<int>(_subterms[1]->interpret(assignment));
+	 	res = boost::get<int>(_subterms[0]->interpret(assignment, binding)) / boost::get<int>(_subterms[1]->interpret(assignment, binding));
 	else
-		res = boost::get<float>(_subterms[0]->interpret(assignment)) / boost::get<float>(_subterms[1]->interpret(assignment));
+		res = boost::get<float>(_subterms[0]->interpret(assignment, binding)) / boost::get<float>(_subterms[1]->interpret(assignment, binding));
 	return res;
 }
 
-ObjectIdx DivisionTerm::interpret(const State& state) const {
+ObjectIdx DivisionTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(state)) / boost::get<int>(_subterms[1]->interpret(state));
+	 	res = boost::get<int>(_subterms[0]->interpret(state, binding)) / boost::get<int>(_subterms[1]->interpret(state, binding));
 	else
-		res = boost::get<float>(_subterms[0]->interpret(state)) / boost::get<float>(_subterms[1]->interpret(state));
+		res = boost::get<float>(_subterms[0]->interpret(state, binding)) / boost::get<float>(_subterms[1]->interpret(state, binding));
 	return res;
 }
 
@@ -156,21 +159,21 @@ std::ostream& DivisionTerm::print(std::ostream& os, const fs0::ProblemInfo& info
 PowerTerm::PowerTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
 	: ArithmeticTerm(subterms, value_type) {}
 
-ObjectIdx PowerTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx PowerTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
     ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = (int)std::pow(boost::get<int>(_subterms[0]->interpret(assignment)), boost::get<int>(_subterms[1]->interpret(assignment)));
+	 	res = (int)std::pow(boost::get<int>(_subterms[0]->interpret(assignment, binding)), boost::get<int>(_subterms[1]->interpret(assignment, binding)));
 	else
-		res = (float)std::pow(boost::get<float>(_subterms[0]->interpret(assignment)), boost::get<float>(_subterms[1]->interpret(assignment)));
+		res = (float)std::pow(boost::get<float>(_subterms[0]->interpret(assignment, binding)), boost::get<float>(_subterms[1]->interpret(assignment, binding)));
 	return res;
 }
 
-ObjectIdx PowerTerm::interpret(const State& state) const {
+ObjectIdx PowerTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
 	if ( getValueType() == ObjectType::INT )
-	 	res = (int)std::pow(boost::get<int>(_subterms[0]->interpret(state)), boost::get<int>(_subterms[1]->interpret(state)));
+	 	res = (int)std::pow(boost::get<int>(_subterms[0]->interpret(state, binding)), boost::get<int>(_subterms[1]->interpret(state, binding)));
 	else
-		res = (float)std::pow(boost::get<float>(_subterms[0]->interpret(state)), boost::get<float>(_subterms[1]->interpret(state)));
+		res = (float)std::pow(boost::get<float>(_subterms[0]->interpret(state, binding)), boost::get<float>(_subterms[1]->interpret(state, binding)));
 	return res;
 }
 
@@ -186,22 +189,22 @@ SqrtTerm::SqrtTerm(const std::vector<const Term*>& subterms, ObjectType value_ty
 		// Square root is a unary arithmetic term
 		throw std::runtime_error("Square root is a unary function");
 	}
-	if ( value_type != ObjectType::NUMBER ) {
+	if ( value_type != ObjectType::FLOAT ) {
 		// Square root only defined for reals
 		throw std::runtime_error("Square root is only defined for real numbers");
 	}
 
 }
 
-ObjectIdx SqrtTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx SqrtTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
     ObjectIdx res;
-	res = (float)std::sqrt(boost::get<float>(_subterms[0]->interpret(assignment)));
+	res = (float)std::sqrt(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
 	return res;
 }
 
-ObjectIdx SqrtTerm::interpret(const State& state) const {
+ObjectIdx SqrtTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
-	res = (float)std::sqrt(boost::get<float>(_subterms[0]->interpret(state)));
+	res = (float)std::sqrt(boost::get<float>(_subterms[0]->interpret(state, binding)));
 	return res;
 }
 
@@ -217,22 +220,22 @@ SineTerm::SineTerm(const std::vector<const Term*>& subterms, ObjectType value_ty
 		// sin(x) a unary arithmetic term
 		throw std::runtime_error("sin(x) is a unary function");
 	}
-	if ( value_type != ObjectType::NUMBER ) {
+	if ( value_type != ObjectType::FLOAT ) {
 		// sin(x) defined for reals
 		throw std::runtime_error("sin(x) is only defined for real numbers");
 	}
 
 }
 
-ObjectIdx SineTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx SineTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
     ObjectIdx res;
-	res = (float)std::sin(boost::get<float>(_subterms[0]->interpret(assignment)));
+	res = (float)std::sin(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
 	return res;
 }
 
-ObjectIdx SineTerm::interpret(const State& state) const {
+ObjectIdx SineTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
-	res = (float)std::sin(boost::get<float>(_subterms[0]->interpret(state)));
+	res = (float)std::sin(boost::get<float>(_subterms[0]->interpret(state, binding)));
 	return res;
 }
 
@@ -248,22 +251,22 @@ CosineTerm::CosineTerm(const std::vector<const Term*>& subterms, ObjectType valu
 		// cos(x) a unary arithmetic term
 		throw std::runtime_error("cos(x) is a unary function");
 	}
-	if ( value_type != ObjectType::NUMBER ) {
+	if ( value_type != ObjectType::FLOAT ) {
 		// cps(x) defined for reals
 		throw std::runtime_error("cos(x) is only defined for real numbers");
 	}
 
 }
 
-ObjectIdx CosineTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx CosineTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
     ObjectIdx res;
-	res = (float)std::cos(boost::get<float>(_subterms[0]->interpret(assignment)));
+	res = (float)std::cos(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
 	return res;
 }
 
-ObjectIdx CosineTerm::interpret(const State& state) const {
+ObjectIdx CosineTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
-	res = (float)std::cos(boost::get<float>(_subterms[0]->interpret(state)));
+	res = (float)std::cos(boost::get<float>(_subterms[0]->interpret(state, binding)));
 	return res;
 }
 
@@ -279,15 +282,15 @@ TangentTerm::TangentTerm(const std::vector<const Term*>& subterms, ObjectType va
 		// tan(x) a unary arithmetic term
 		throw std::runtime_error("tan(x) is a unary function");
 	}
-	if ( value_type != ObjectType::NUMBER ) {
+	if ( value_type != ObjectType::FLOAT ) {
 		// tan(x) defined for reals
 		throw std::runtime_error("tan(x) is only defined for real numbers");
 	}
 
 }
 
-ObjectIdx TangentTerm::interpret(const PartialAssignment& assignment) const {
-	float v = boost::get<float>(_subterms[0]->interpret(assignment));
+ObjectIdx TangentTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	float v = boost::get<float>(_subterms[0]->interpret(assignment, binding));
 	// Check for singularity
 	std::feclearexcept(FE_ALL_EXCEPT);
 	float res = (float)std::tan(v);
@@ -300,8 +303,8 @@ ObjectIdx TangentTerm::interpret(const PartialAssignment& assignment) const {
 	return ObjectIdx(res);
 }
 
-ObjectIdx TangentTerm::interpret(const State& state) const {
-	float v = boost::get<float>(_subterms[0]->interpret(state));
+ObjectIdx TangentTerm::interpret(const State& state, const Binding& binding) const {
+	float v = boost::get<float>(_subterms[0]->interpret(state, binding));
 	// Check for singularity
 	std::feclearexcept(FE_ALL_EXCEPT);
 	float res = (float)std::tan(v);
@@ -328,22 +331,22 @@ ArcSineTerm::ArcSineTerm(const std::vector<const Term*>& subterms, ObjectType va
 		// asin(x) a unary arithmetic term
 		throw std::runtime_error("asin(x) is a unary function");
 	}
-	if ( value_type != ObjectType::NUMBER ) {
+	if ( value_type != ObjectType::FLOAT ) {
 		// asin(x) defined for reals
 		throw std::runtime_error("asin(x) is only defined for real numbers");
 	}
 
 }
 
-ObjectIdx ArcSineTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx ArcSineTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
     ObjectIdx res;
-	res = (float)std::asin(boost::get<float>(_subterms[0]->interpret(assignment)));
+	res = (float)std::asin(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
 	return res;
 }
 
-ObjectIdx ArcSineTerm::interpret(const State& state) const {
+ObjectIdx ArcSineTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
-	res = (float)std::asin(boost::get<float>(_subterms[0]->interpret(state)));
+	res = (float)std::asin(boost::get<float>(_subterms[0]->interpret(state, binding)));
 	return res;
 }
 
@@ -360,22 +363,22 @@ ArcCosineTerm::ArcCosineTerm(const std::vector<const Term*>& subterms, ObjectTyp
 		// acos(x) a unary arithmetic term
 		throw std::runtime_error("acos(x) is a unary function");
 	}
-	if ( value_type != ObjectType::NUMBER ) {
+	if ( value_type != ObjectType::FLOAT ) {
 		// acos(x) defined for reals
 		throw std::runtime_error("acos(x) is only defined for real numbers");
 	}
 
 }
 
-ObjectIdx ArcCosineTerm::interpret(const PartialAssignment& assignment) const {
+ObjectIdx ArcCosineTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
     ObjectIdx res;
-	res = (float)std::acos(boost::get<float>(_subterms[0]->interpret(assignment)));
+	res = (float)std::acos(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
 	return res;
 }
 
-ObjectIdx ArcCosineTerm::interpret(const State& state) const {
+ObjectIdx ArcCosineTerm::interpret(const State& state, const Binding& binding) const {
 	ObjectIdx res;
-	res = (float)std::acos(boost::get<float>(_subterms[0]->interpret(state)));
+	res = (float)std::acos(boost::get<float>(_subterms[0]->interpret(state, binding)));
 	return res;
 }
 
@@ -391,15 +394,15 @@ ArcTangentTerm::ArcTangentTerm(const std::vector<const Term*>& subterms, ObjectT
 		// atan(x) a unary arithmetic term
 		throw std::runtime_error("atan(x) is a unary function");
 	}
-	if ( value_type != ObjectType::NUMBER ) {
+	if ( value_type != ObjectType::FLOAT ) {
 		// tan(x) defined for reals
 		throw std::runtime_error("atan(x) is only defined for real numbers");
 	}
 
 }
 
-ObjectIdx ArcTangentTerm::interpret(const PartialAssignment& assignment) const {
-	float v = boost::get<float>(_subterms[0]->interpret(assignment));
+ObjectIdx ArcTangentTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	float v = boost::get<float>(_subterms[0]->interpret(assignment, binding));
 	// Check for singularity
 	std::feclearexcept(FE_ALL_EXCEPT);
 	float res = (float)std::atan(v);
@@ -412,8 +415,8 @@ ObjectIdx ArcTangentTerm::interpret(const PartialAssignment& assignment) const {
 	return ObjectIdx(res);
 }
 
-ObjectIdx ArcTangentTerm::interpret(const State& state) const {
-	float v = boost::get<float>(_subterms[0]->interpret(state));
+ObjectIdx ArcTangentTerm::interpret(const State& state, const Binding& binding) const {
+	float v = boost::get<float>(_subterms[0]->interpret(state, binding));
 	// Check for singularity
 	std::feclearexcept(FE_ALL_EXCEPT);
 	float res = (float)std::atan(v);
@@ -438,15 +441,15 @@ ExpTerm::ExpTerm(const std::vector<const Term*>& subterms, ObjectType value_type
 		// atan(x) a unary arithmetic term
 		throw std::runtime_error("exp(x) is a unary function");
 	}
-	if ( value_type != ObjectType::NUMBER ) {
+	if ( value_type != ObjectType::FLOAT ) {
 		// tan(x) defined for reals
 		throw std::runtime_error("exp(x) is only defined for real numbers");
 	}
 
 }
 
-ObjectIdx ExpTerm::interpret(const PartialAssignment& assignment) const {
-	float v = boost::get<float>(_subterms[0]->interpret(assignment));
+ObjectIdx ExpTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+	float v = boost::get<float>(_subterms[0]->interpret(assignment, binding));
 	// Check for singularity
 	std::feclearexcept(FE_ALL_EXCEPT);
 	float res = (float)std::exp(v);
@@ -459,8 +462,8 @@ ObjectIdx ExpTerm::interpret(const PartialAssignment& assignment) const {
 	return ObjectIdx(res);
 }
 
-ObjectIdx ExpTerm::interpret(const State& state) const {
-	float v = boost::get<float>(_subterms[0]->interpret(state));
+ObjectIdx ExpTerm::interpret(const State& state, const Binding& binding) const {
+	float v = boost::get<float>(_subterms[0]->interpret(state, binding));
 	// Check for singularity
 	std::feclearexcept(FE_ALL_EXCEPT);
 	float res = (float)std::exp(v);
@@ -487,9 +490,9 @@ MinTerm::MinTerm(const std::vector<const Term*>& subterms, ObjectType value_type
 	}
 }
 
-ObjectIdx MinTerm::interpret(const PartialAssignment& assignment) const {
-    ObjectIdx lhs = _subterms[0]->interpret(assignment);
-    ObjectIdx rhs = _subterms[1]->interpret(assignment);
+ObjectIdx MinTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+    ObjectIdx lhs = _subterms[0]->interpret(assignment, binding);
+    ObjectIdx rhs = _subterms[1]->interpret(assignment, binding);
     if (getValueType() == ObjectType::INT) {
         return ObjectIdx(std::min( boost::get<int>(lhs), boost::get<int>(rhs)));
     }
@@ -497,9 +500,9 @@ ObjectIdx MinTerm::interpret(const PartialAssignment& assignment) const {
 
 }
 
-ObjectIdx MinTerm::interpret(const State& state) const {
-    ObjectIdx lhs = _subterms[0]->interpret(assignment);
-    ObjectIdx rhs = _subterms[1]->interpret(assignment);
+ObjectIdx MinTerm::interpret(const State& state, const Binding& binding) const {
+    ObjectIdx lhs = _subterms[0]->interpret(state, binding);
+    ObjectIdx rhs = _subterms[1]->interpret(state, binding);
     if (getValueType() == ObjectType::INT) {
         return ObjectIdx(std::min( boost::get<int>(lhs), boost::get<int>(rhs)));
     }
@@ -520,9 +523,9 @@ MaxTerm::MaxTerm(const std::vector<const Term*>& subterms, ObjectType value_type
 	}
 }
 
-ObjectIdx MaxTerm::interpret(const PartialAssignment& assignment) const {
-    ObjectIdx lhs = _subterms[0]->interpret(assignment);
-    ObjectIdx rhs = _subterms[1]->interpret(assignment);
+ObjectIdx MaxTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+    ObjectIdx lhs = _subterms[0]->interpret(assignment, binding);
+    ObjectIdx rhs = _subterms[1]->interpret(assignment, binding);
     if (getValueType() == ObjectType::INT) {
         return ObjectIdx(std::max( boost::get<int>(lhs), boost::get<int>(rhs)));
     }
@@ -530,9 +533,9 @@ ObjectIdx MaxTerm::interpret(const PartialAssignment& assignment) const {
 
 }
 
-ObjectIdx MaxTerm::interpret(const State& state) const {
-    ObjectIdx lhs = _subterms[0]->interpret(assignment);
-    ObjectIdx rhs = _subterms[1]->interpret(assignment);
+ObjectIdx MaxTerm::interpret(const State& state, const Binding& binding) const {
+    ObjectIdx lhs = _subterms[0]->interpret(state, binding);
+    ObjectIdx rhs = _subterms[1]->interpret(state, binding);
     if (getValueType() == ObjectType::INT) {
         return ObjectIdx(std::max( boost::get<int>(lhs), boost::get<int>(rhs)));
     }
@@ -560,8 +563,9 @@ SumFormula::SumFormula(const SumFormula& formula) : SumFormula(Utils::clone(form
 bool SumFormula::_satisfied(const ObjectIdxVector& values) const {
 	// sum(x_1, ..., x_n) meaning x_1 + ... + x_{n-1} = x_n
 	assert(values.size() > 1);
-	int expected_sum = values.back();
-	int addends_sum  = std::accumulate(values.begin(), values.end() - 1, 0);
+	int expected_sum = boost::get<int>(values.back());
+	int addends_sum  = 0;
+    std::for_each( values.begin(), values.end(), [&addends_sum](const ObjectIdx& obj){ addends_sum += boost::get<int>(obj); } );
 	return addends_sum == expected_sum;
 }
 
@@ -570,12 +574,12 @@ NValuesFormula::NValuesFormula(const NValuesFormula& formula) : NValuesFormula(U
 bool NValuesFormula::_satisfied(const ObjectIdxVector& values) const {
 	// nvalues(x_1, ..., x_n) meaning there are exactly x_n different values among variables <x_1, ... x_{n-1}>
 	assert(values.size() > 1);
-	assert(values[values.size()-1] > 0);
+	assert(boost::get<int>(values[values.size()-1]) > 0);
 	std::set<ObjectIdx> distinct;
 	for (unsigned i = 0; i < values.size() - 1; ++i) {
 		distinct.insert(values[i]);
 	}
-	return distinct.size() == (std::size_t) values[values.size()-1];
+	return distinct.size() == (std::size_t) boost::get<int>(values[values.size()-1]);
 }
 
 } } } // namespaces

@@ -12,30 +12,30 @@ class ProblemInfo;
 // X < Y
 class LTConstraint : public BinaryDirectConstraint {
 public:
-	LTConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : BinaryDirectConstraint(scope, parameters)
+	LTConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : BinaryDirectConstraint(scope, parameters)
 	{ assert(parameters.empty()); }
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const override { return o1 < o2; }
-	
+
 	FilteringOutput filter(unsigned variable) const override;
-	
+
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
 // X <= Y
 class LEQConstraint : public BinaryDirectConstraint {
 public:
-	LEQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : BinaryDirectConstraint(scope, parameters)
+	LEQConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : BinaryDirectConstraint(scope, parameters)
 	{ assert(parameters.empty()); }
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const override { return o1 <= o2; }
-	
+
 	FilteringOutput filter(unsigned variable) const override;
-	
+
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
@@ -43,78 +43,78 @@ public:
 // X = Y
 class EQConstraint : public BinaryDirectConstraint {
 public:
-	EQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : BinaryDirectConstraint(scope, parameters)
+	EQConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : BinaryDirectConstraint(scope, parameters)
 	{ assert(parameters.empty()); }
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const override { return o1 == o2; }
-	
+
 	FilteringOutput filter(unsigned variable) const override;
-	
+
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
 // X != Y
 class NEQConstraint : public BinaryDirectConstraint {
 public:
-	NEQConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : BinaryDirectConstraint(scope, parameters)
+	NEQConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : BinaryDirectConstraint(scope, parameters)
 	{ assert(parameters.empty()); }
 
 	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const override { return o1 != o2; }
-	
+
 	FilteringOutput filter(unsigned variable) const override;
-	
+
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
 // X = c
 class EQXConstraint : public UnaryDirectConstraint {
 public:
-	EQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : UnaryDirectConstraint(scope, parameters)
+	EQXConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
 	bool isSatisfied(ObjectIdx o) const override { return o == _parameters[0]; }
-	
+
 	FilteringOutput filter(const DomainMap& domains) const override;
-	
+
 	// No compilation
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
 // X != c
 class NEQXConstraint : public UnaryDirectConstraint {
 public:
-	NEQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : UnaryDirectConstraint(scope, parameters)
+	NEQXConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
 	bool isSatisfied(ObjectIdx o) const override { return o != _parameters[0]; }
-	
+
 	FilteringOutput filter(const DomainMap& domains) const override;
-	
+
 	// No compilation
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
 // X < c
 class LTXConstraint : public UnaryDirectConstraint {
 public:
-	LTXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : UnaryDirectConstraint(scope, parameters)
+	LTXConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
 	bool isSatisfied(ObjectIdx o) const override { return o < _parameters[0]; }
-	
+
 	FilteringOutput filter(const DomainMap& domains) const override;
-	
+
 	// No compilation
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
@@ -122,48 +122,48 @@ public:
 // X <= c
 class LEQXConstraint : public UnaryDirectConstraint {
 public:
-	LEQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : UnaryDirectConstraint(scope, parameters)
+	LEQXConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
 	bool isSatisfied(ObjectIdx o) const override { return o <= _parameters[0]; }
-	
+
 	FilteringOutput filter(const DomainMap& domains) const override;
-	
+
 	// No compilation
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
 // X > c
 class GTXConstraint : public UnaryDirectConstraint {
 public:
-	GTXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : UnaryDirectConstraint(scope, parameters)
+	GTXConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
 	bool isSatisfied(ObjectIdx o) const override { return o > _parameters[0]; }
-	
+
 	FilteringOutput filter(const DomainMap& domains) const override;
-	
+
 	// No compilation
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
 // X > c
 class GEQXConstraint : public UnaryDirectConstraint {
 public:
-	GEQXConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) : UnaryDirectConstraint(scope, parameters)
+	GEQXConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
 	bool isSatisfied(ObjectIdx o) const override { return o >= _parameters[0]; }
-	
+
 	FilteringOutput filter(const DomainMap& domains) const override;
-	
+
 	// No compilation
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
@@ -171,9 +171,9 @@ public:
 class ValueAssignmentEffect : public ZeroaryDirectEffect {
 public:
 	ValueAssignmentEffect(VariableIdx affected, ObjectIdx value);
-	
+
 	Atom apply() const override;
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
@@ -181,9 +181,9 @@ public:
 class VariableAssignmentEffect : public UnaryDirectEffect {
 public:
 	VariableAssignmentEffect(VariableIdx relevant, VariableIdx affected);
-	
+
 	Atom apply(ObjectIdx v1) const override;
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
@@ -258,4 +258,3 @@ public:
 };
 
 } // namespaces
-

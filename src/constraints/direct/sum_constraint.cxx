@@ -7,9 +7,9 @@
 namespace fs0 {
 
 
-SumConstraint::SumConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+SumConstraint::SumConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) :
 	SumConstraint(scope) {}
-	
+
 SumConstraint::SumConstraint(const VariableIdxVector& scope)
 	: DirectConstraint(scope)
 {
@@ -19,26 +19,27 @@ SumConstraint::SumConstraint(const VariableIdxVector& scope)
 
 FilteringOutput SumConstraint::filter() {
 	unsigned last_addend = _scope.size() - 1;
-	
+
 	FilteringOutput output = FilteringOutput::Unpruned;
 	DomainPtr sum_domain = projection[last_addend]; // Get a pointer to the last domain, which is the result of the sum
-	
+
 	unsigned sum_mins = 0; // The sum of the min values of the domains
-	
+
 	for (unsigned i = 0, max = last_addend; i < max; ++i) {
-		int minval = *(projection[i]->cbegin());
+		int minval = boost::get<int>(*(projection[i]->cbegin()));
 		assert(minval >= 0);  // The current naive filtering algorithm only works for positive domains.
 		sum_mins += (unsigned) minval;
 	}
-	
-	assert(*(sum_domain->cbegin()) >= 0); // The min value of the sum domain.
-	unsigned sum_maxval = (unsigned) *(sum_domain->crbegin());
+
+	assert(boost::get<int>(*(sum_domain->cbegin())) >= 0); // The min value of the sum domain.
+	unsigned sum_maxval = (unsigned) boost::get<int>(*(sum_domain->crbegin()));
 	if (sum_maxval < sum_mins) return FilteringOutput::Failure;
 
 
 	// First filter the min values of the sum domain.
 	Domain new_domain;
-	for (int val:(*sum_domain)) {
+	for (ObjectIdx wrapped_val:(*sum_domain)) {
+        int val = boost::get<int>(wrapped_val);
 		if ((unsigned) val >= sum_mins) {
 			new_domain.insert(new_domain.cend(), val);
 		} else {
@@ -47,13 +48,14 @@ FilteringOutput SumConstraint::filter() {
 	}
 	if (new_domain.size() == 0) return FilteringOutput::Failure;
 	*sum_domain = new_domain;
-	
+
 	// Now filter the max values of the regular domains
 	for (unsigned i = 0, max = last_addend; i < max; ++i) {
 		const auto dom = projection[i];
-		int max_allowed = sum_maxval - (sum_mins - *(dom->cbegin()));
+		int max_allowed = sum_maxval - (sum_mins - boost::get<int>(*(dom->cbegin())));
 		Domain new_domain;
-		for (int val:(*dom)) {
+		for (ObjectIdx wrapped_val:(*dom)) {
+            int val = boost::get<int>(wrapped_val);
 			if (val <= max_allowed) {
 				new_domain.insert(new_domain.cend(), val);
 			} else {
@@ -78,4 +80,3 @@ std::ostream& SumConstraint::print(std::ostream& os) const {
 }
 
 } // namespaces
-

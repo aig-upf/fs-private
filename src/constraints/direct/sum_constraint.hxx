@@ -8,27 +8,26 @@
 namespace fs0 {
 
 /**
- * A Sum constraint custom propagator. 
+ * A Sum constraint custom propagator.
  */
 class SumConstraint : public DirectConstraint
 {
 public:
-	
+
 	SumConstraint(const VariableIdxVector& scope);
-	SumConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
-	
+	SumConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters);
+
 	virtual ~SumConstraint() {}
-	
+
 	virtual FilteringType filteringType() const override { return FilteringType::Custom; };
-	
+
 	//! Filters from the set of currently loaded projections
 	FilteringOutput filter() override;
-	
+
 	virtual DirectConstraint* compile(const ProblemInfo& problemInfo) const override { return nullptr; }
-	
+
 	std::ostream& print(std::ostream& os) const override;
 };
 
 
 } // namespaces
-

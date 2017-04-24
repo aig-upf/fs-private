@@ -27,7 +27,7 @@ def locate_source_files(base_dir, pattern):
 	return matches
 
 # Read the preferred compiler from the environment - if none specified, choose CLANG if possible
-default_compiler = 'clang++' if which("clang++") else 'g++'
+default_compiler = 'g++' if which("g++") else 'clang++'
 gcc = os.environ.get('CXX', default_compiler)
 
 env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
@@ -44,7 +44,7 @@ Help(vars.GenerateHelpText(env))
 
 env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ])  # Flags common to all options
 env.Append(CCFLAGS = ['-Wno-deprecated-register' ]) # Get rid of annoying warning message from the Jenkins library
-	
+
 
 # Extreme debug implies normal debug as well
 if env['debug'] or env['edebug']:
@@ -63,7 +63,7 @@ if env['edebug']:
 # Base include directories
 include_paths = ['src', os.path.join(env['lapkt'], 'include')]
 isystem_paths = []
-	
+
 # Gecode tweaks
 isystem_paths += ['/usr/local/include'] # MRJ: This probably should be acquired from an environment variable
 isystem_paths += [os.environ['HOME'] + '/local/include']

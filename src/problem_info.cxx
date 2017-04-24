@@ -165,7 +165,7 @@ void ProblemInfo::loadObjectIndex(const rapidjson::Value& data) {
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		assert(data[i]["id"].GetInt() >= 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == objectNames.size()); // Check values are decoded in the proper order
 		const std::string& name = data[i]["name"].GetString();
-		objectIds.insert(std::make_pair(name, objectNames.size()));
+        objectIds.insert(std::make_pair(name, (int)objectNames.size()));
 		objectNames.push_back(name);
 	}
 }
@@ -203,7 +203,8 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 		} else { // We have an enumeration of object IDs
 			typeObjects[type_id].reserve(data[i][2].Size());
 			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
-				typeObjects[type_id].push_back(boost::lexical_cast<ObjectIdx>(data[i][2][j].GetString()));
+                int parsed = boost::lexical_cast<int>(data[i][2][j].GetString());
+				typeObjects[type_id].push_back(ObjectIdx(parsed));
 			}
 		}
 	}

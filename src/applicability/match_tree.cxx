@@ -81,8 +81,8 @@ namespace fs0 {
         // SAS+, where the only atoms that occur on preconditions are of the form
         // X=v.
 
-		ObjectIdx val = boost::get<int>(s.getValue(_pivot));
-
+		ObjectIdx wrapped_val = boost::get<int>(s.getValue(_pivot));
+        int val = boost::get<int>(wrapped_val);
 // 		const ProblemInfo& info = ProblemInfo::getInstance();
 // 		LPT_INFO( "cout", "[Match Tree] Branching on atom " << Atom(_pivot, val) << "");
 
@@ -117,7 +117,8 @@ namespace fs0 {
 
 				bool is_relevant = false;
 				for (unsigned val_idx = 0; val_idx < values.size(); ++val_idx) {
-					ObjectIdx value = values[val_idx];
+					ObjectIdx wrapped_value = values[val_idx];
+                    int value = boost::get<int>(wrapped_value);
 					if ( val_idx > 1 || value < 0 || value > 1) throw std::runtime_error("Not yet prepared for this");
 					AtomIdx atom = context._tuple_index.to_index(_pivot, value);
 					if (required.find(atom) != required.end()) {

@@ -52,7 +52,10 @@ void RPGIndex::advance() {
 	for (unsigned variable = 0; variable < _domains_raw.size(); ++variable) {
 		const auto& all = _domains_raw[variable];
 		// An intermediate IntArgs object seems to be necessary, since IntSets do not accept std-like range constructors.
-		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(all.cbegin(), all.cend()));
+        std::vector<int> tmp; // MRJ: Temporary necessary to hold the integer values wrapped by the variant ObjectIdx type
+        std::for_each( all.begin(), all.end(), [&tmp]( const ObjectIdx& obj ) { tmp.push_back(boost::get<int>(obj));} );
+
+		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(tmp.cbegin(), tmp.cend()));
 	}
 
 	next();

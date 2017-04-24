@@ -145,6 +145,13 @@ State::getValue(const VariableIdx& variable) const {
 	return _indexer.get(*this, variable);
 }
 
+int
+State::getIntValue(const VariableIdx& variable) const {
+    assert(ProblemInfo::getInstance().getVariableGenericType(variable) == ProblemInfo::ObjectType::INT );
+	return boost::get<int>(_indexer.get(*this, variable));
+}
+
+
 //! Applies the given changeset into the current state.
 void State::accumulate(const std::vector<Atom>& atoms) {
 	for (const Atom& fact:atoms) {

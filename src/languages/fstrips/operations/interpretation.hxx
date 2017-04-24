@@ -2,6 +2,7 @@
 #pragma once
 
 #include <map>
+#include <boost/variant.hpp>
 
 #include <utils/visitor.hxx>
 #include <languages/fstrips/language_fwd.hxx>

@@ -14,10 +14,10 @@ class DirectConstraint : public DirectComponent {
 protected:
 	//! The currently cached projection
 	mutable DomainVector projection;
-	
+
 public:
 	DirectConstraint(const VariableIdxVector& scope);
-	DirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	DirectConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters);
 	virtual ~DirectConstraint() = default;
 
 	virtual FilteringType filteringType() const = 0;
@@ -57,7 +57,7 @@ public:
 
 class UnaryDirectConstraint : public DirectConstraint {
 public:
-	UnaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	UnaryDirectConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters);
 
 	~UnaryDirectConstraint() = default;
 
@@ -76,7 +76,7 @@ public:
 
 class BinaryDirectConstraint : public DirectConstraint {
 public:
-	BinaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	BinaryDirectConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters);
 
 	~BinaryDirectConstraint() = default;
 

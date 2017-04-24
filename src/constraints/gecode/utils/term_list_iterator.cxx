@@ -21,7 +21,7 @@ term_list_iterator::~term_list_iterator() {
 
 std::vector<const std::vector<ObjectIdx>*> term_list_iterator::compute_possible_values(const std::vector<const fs::Term*>& subterms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	
+
 	// possible_values[i] will be a vector (pointer) with all possible values for the i-th subterm
 	// of the given nested fluent, __according to the signature of the fluent function declaration__
 	// But we can optimize this in at least two ways:
@@ -33,23 +33,23 @@ std::vector<const std::vector<ObjectIdx>*> term_list_iterator::compute_possible_
 	// and table is a constant, the only possible values we will want to iterate through are [person1, person2] for the first parameter, and [table] for the second,
 	// but none of the other "thing" objects.
 	std::vector<const std::vector<ObjectIdx>*> possible_values;
-	
+
 	for (unsigned i = 0; i < subterms.size(); ++i) {
 		const fs::Term* subterm = subterms[i];
-		
+
 		if (auto constant = dynamic_cast<const fs::Constant*>(subterm)) {
 			auto v = new std::vector<ObjectIdx>(1, boost::get<int>(constant->getValue())); // Create a temporary vector with the constant value as the only value
 			possible_values.push_back(v);
 			_temporary_vectors.push_back(v); // store the pointer so that we can delete it later
 			continue;
-		} 
-		
+		}
+
 		// By default, we consider all types according to the declared signature
 		// Note that in the case of bound variables, the declared type might be a subtype of that of the signature
 		TypeIdx type = fs::type(*subterm);
 		possible_values.push_back(&(info.getTypeObjects(type)));
 	}
-	
+
 	return possible_values;
 }
 
@@ -63,13 +63,17 @@ bool term_list_iterator::ended() const { return _iterator->ended(); }
 Gecode::IntArgs term_list_iterator::getIntArgsElement(int element) const {
 	std::vector<ObjectIdx> point = arguments(); // We copy the vector to be able to add an extra element
 	point.push_back(element);
-	return Gecode::IntArgs(point);
+    std::vector<int> tmp;
+    std::for_each( point.begin(), point.end(), [&tmp]( const ObjectIdx& obj) { tmp.push_back(boost::get<int>(obj)); });
+	return Gecode::IntArgs(tmp);
 }
 
 Gecode::IntArgs term_list_iterator::getIntArgsElement() const {
-	return Gecode::IntArgs(arguments());
+    std::vector<int> tmp;
+    std::for_each( arguments().begin(), arguments().end(), [&tmp]( const ObjectIdx& obj) { tmp.push_back(boost::get<int>(obj)); });
+	return Gecode::IntArgs(tmp);
 }
 
 const std::vector<ObjectIdx>& term_list_iterator::arguments() const { return *(*_iterator); }
-	
+
 } } // namespaces

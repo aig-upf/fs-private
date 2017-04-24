@@ -78,11 +78,11 @@ public:
 	DivisionTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
 	DivisionTerm* clone() const override { return new DivisionTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 //! A statically-headed term that divides the values of the two subterms
@@ -93,13 +93,13 @@ public:
 
 	PowerTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
 
-	PowerTerm* clone() const { return new PowerTerm(*this); }
+	PowerTerm* clone() const override{ return new PowerTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class SqrtTerm : public ArithmeticTerm {
@@ -109,13 +109,13 @@ public:
 
 	SqrtTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
 
-	SqrtTerm* clone() const { return new SqrtTerm(*this); }
+	SqrtTerm* clone() const override { return new SqrtTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class SineTerm : public ArithmeticTerm {
@@ -124,13 +124,13 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	SineTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	SineTerm* clone() const { return new SineTerm(*this); }
+	SineTerm* clone() const override { return new SineTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class CosineTerm : public ArithmeticTerm {
@@ -139,13 +139,13 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	CosineTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	CosineTerm* clone() const { return new CosineTerm(*this); }
+	CosineTerm* clone() const override { return new CosineTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+    ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class TangentTerm : public ArithmeticTerm {
@@ -154,13 +154,13 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	TangentTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	TangentTerm* clone() const { return new TangentTerm(*this); }
+	TangentTerm* clone() const override { return new TangentTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class ArcSineTerm : public ArithmeticTerm {
@@ -169,13 +169,13 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	ArcSineTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	ArcSineTerm* clone() const { return new ArcSineTerm(*this); }
+	ArcSineTerm* clone() const override { return new ArcSineTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class ArcCosineTerm : public ArithmeticTerm {
@@ -184,13 +184,13 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	ArcCosineTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	ArcCosineTerm* clone() const { return new ArcCosineTerm(*this); }
+	ArcCosineTerm* clone() const override { return new ArcCosineTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class ArcTangentTerm : public ArithmeticTerm {
@@ -199,13 +199,13 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	ArcTangentTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	ArcTangentTerm* clone() const { return new ArcTangentTerm(*this); }
+	ArcTangentTerm* clone() const override { return new ArcTangentTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 
@@ -215,13 +215,13 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	ExpTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	ExpTerm* clone() const { return new ExpTerm(*this); }
+	ExpTerm* clone() const override { return new ExpTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 class MinTerm : public ArithmeticTerm {
@@ -230,10 +230,10 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	MinTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	MinTerm* clone() const override { return new ArcTangentTerm(*this); }
+	MinTerm* clone() const override { return new MinTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -245,10 +245,10 @@ public:
     LOKI_DEFINE_CONST_VISITABLE();
 
 	MaxTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
-	MaxTerm* clone() const override { return new ArcTangentTerm(*this); }
+	MaxTerm* clone() const override { return new MaxTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	ObjectIdx interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;

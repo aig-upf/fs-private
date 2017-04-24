@@ -75,7 +75,7 @@ Visit(const Conjunction& lhs) {
 		if( lhs_ == nullptr ) continue;
 		const Constant* rhs = dynamic_cast< const Constant*>(cc->rhs());
 		if( rhs == nullptr ) continue;
-		atoms.push_back(std::make_pair(boost::get<int>(lhs_->getValue()), boost::get<int>(rhs->getValue())));
+		atoms.push_back(std::make_pair(lhs_->getValue(), boost::get<int>(rhs->getValue())));
 	}
 
 	if (conjuncts.empty()) {
@@ -100,8 +100,8 @@ Visit(const Disjunction& lhs) {
 			delete processed;
 			for (auto elem:disjuncts) delete elem;
 			_result = new Tautology;
-			return;			
-			
+			return;
+
 		} else if (processed->is_contradiction()) { // No need to add the condition, which is always false
 			delete processed;
 			continue;
@@ -121,7 +121,7 @@ Visit(const Disjunction& lhs) {
 void FormulaBindingVisitor::
 Visit(const ExistentiallyQuantifiedFormula& lhs) {
 	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
-	
+
 	for (const BoundVariable* var:lhs.getVariables()) {
 		if (_binding.binds(var->getVariableId())) {
 			throw std::runtime_error("Wrong binding - Duplicated variable");
@@ -239,7 +239,7 @@ void TermBindingVisitor::
 Visit(const UserDefinedStaticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
-	
+
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 
