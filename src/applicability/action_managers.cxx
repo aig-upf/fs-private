@@ -4,6 +4,8 @@
 
 #include <lapkt/tools/logging.hxx>
 
+#include <utils/system.hxx>
+
 #include <applicability/action_managers.hxx>
 #include <actions/actions.hxx>
 #include <state.hxx>
@@ -140,6 +142,7 @@ ObjectIdx _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
 
 void
 BasicApplicabilityAnalyzer::build() {
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [0]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
@@ -147,8 +150,15 @@ BasicApplicabilityAnalyzer::build() {
 	_rev_applicable.resize(_actions.size());
 	_variable_relevance = std::vector<unsigned>(info.getNumVariables(), 0);
 
-
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - TupleIdx size: " << _tuple_idx.size());
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - Actions size: " << _actions.size());
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - size of set of atomidx: " << sizeof(std::unordered_set<AtomIdx>));
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [1]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+	
 	for (unsigned i = 0; i < _actions.size(); ++i) {
+		if (i%100==0) {
+			LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [it. " << i << "]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		}
 		const GroundAction& action = *_actions[i];
 		if (dynamic_cast<const fs::Tautology*>(action.getPrecondition())) { // If there's no precondition, the action is always potentially applicable
 			for (auto& app_set:_applicable) app_set.push_back(i);
@@ -231,6 +241,7 @@ BasicApplicabilityAnalyzer::build() {
 	}
 
 	_total_actions =  _actions.size();
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [END]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 }
 
 
