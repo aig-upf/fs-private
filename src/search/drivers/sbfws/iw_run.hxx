@@ -45,9 +45,6 @@ public:
 	//! The novelty  of the state
 	unsigned _w;
 	
-	//! NB(s)
-	unsigned nb_s; 
-	
 	bool _evaluated;
 	
 	//!
@@ -180,7 +177,6 @@ public:
 			nov = _evaluator->evaluate_1(valuation, node._B_of_s);
 			assert(nov == 1);
 // 			node._path_novelty_is_1 = true;
-			node.nb_s = 0;
 			
 			// NOW EVALUATE 1.5 novelty
 			_evaluator->evaluate_piw(valuation);
@@ -209,30 +205,14 @@ public:
 
 			
 			// NOW EVALUATE 1.5 novelty
-			node.nb_s = node.parent->nb_s;
 				
 			boost::dynamic_bitset<> pruned_B_of_s(valuation.size());
 			if (_evaluator->evaluate_piw(valuation, node._B_of_s, pruned_B_of_s)) {
 				if (nov != 1) {
 					nov = 2;
-					
-					// UPDATE NB(s) and prune, if necessary
-					if (node.parent->_w == 1) {
-						node.nb_s += 1;
-						if (node.nb_s > 1) {
- 							nov = 99; // Set novelty artificially high so that the node will get pruned.
-//  							std::cout << "Pruned node because NB(s) > 1" << std::endl;
-						}
-					}
-					 
-					
-					if (nov == 2) {
-						// UPDATE B(s)
+					// Prune B(s)
 // 	 					std::cout << "Pruned 1(s) from " << node._B_of_s.count() << " to " << pruned_B_of_s.count() << " (out of a max. of " << node.state.numAtoms() << " atoms in a state) "<< std::endl;
-							
-						node._B_of_s = pruned_B_of_s;
-	// 					std::cout << "Simulation node - NB(s)=" << node.nb_s << std::endl;
-					}
+					node._B_of_s = pruned_B_of_s;
 				}
 			}
 			
