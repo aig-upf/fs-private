@@ -60,7 +60,7 @@ protected:
   */
 class ProblemInfo {
 public:
-	enum class ObjectType {INT, BOOL, OBJECT, FLOAT};
+	enum class ObjectType {INT, BOOL, OBJECT, FLOAT, UNKNOWN /* Semantic Errors*/};
 
 	//! Set the global singleton problem instance
 	static ProblemInfo& setInstance(std::unique_ptr<ProblemInfo>&& problem) {
@@ -109,8 +109,9 @@ protected:
 	std::vector<bool> isTypeBounded;
 
 	//! Maps between typenames and type IDs.
-	std::unordered_map<std::string, TypeIdx> name_to_type;
-	std::vector<std::string> type_to_name;
+	std::unordered_map<std::string, TypeIdx>   name_to_type;
+	std::vector<std::string>                   type_to_name;
+    std::vector<ObjectType>					   type_to_generic;
 
 	//! Maps between predicate and function symbols names and IDs.
 	std::vector<std::string> symbolNames;

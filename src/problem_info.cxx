@@ -148,13 +148,15 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 
 
 ProblemInfo::ObjectType ProblemInfo::getGenericType(TypeIdx typeId) const {
-	if (isTypeBounded[typeId]) return ObjectType::INT;
-// 	else if (type == "_bool_" || type == "bool") return ObjectType::BOOL;
-	else return ObjectType::OBJECT;
+    auto t = type_to_generic[ typeId ];
+    assert ( t != ObjectType::UNKNOWN );
+    return t;
 }
 
 ProblemInfo::ObjectType ProblemInfo::getGenericType(const std::string& type) const {
 	if (type == "bool") return ObjectType::BOOL;
+    if (type == "int") return ObjectType::INT;
+    if (type == "number" ) return ObjectType::FLOAT;
 	return getGenericType(getTypeId(type));
 }
 
@@ -187,6 +189,22 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 		name_to_type.insert(std::make_pair(type_name, type_id));
 		type_to_name.push_back(type_name);
 
+        std::string generic_type_name( data[i][2].GetString() );
+		if ( generic_type_name == "object")
+			type_to_generic.push_back( ObjectType::OBJECT );
+		else if ( generic_type_name == "number" )
+			type_to_generic.push_back( ObjectType::FLOAT );
+		else if ( generic_type_name == "int" )
+			type_to_generic.push_back( ObjectType::INT );
+        else if ( generic_type_name == "bool" )
+			type_to_generic.push_back( ObjectType::BOOL );
+        else if ( generic_type_name == "_bool_" )
+			type_to_generic.push_back( ObjectType::BOOL );
+		else {
+            type_to_generic.push_back( ObjectType::OBJECT );
+		}
+
+
 		// We read and convert to integer type the vector of Object indexes
 		if (data[i][2].IsString()) {
 			assert(std::string(data[i][2].GetString()) == "int" && data[i].Size() == 4);
@@ -201,10 +219,18 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 			typeObjects[type_id].reserve(upper - lower + 1);
 			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(v);
 		} else { // We have an enumeration of object IDs
+            isTypeBounded[type_idx] = false;
 			typeObjects[type_id].reserve(data[i][2].Size());
 			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
-                int parsed = boost::lexical_cast<int>(data[i][2][j].GetString());
-				typeObjects[type_id].push_back(ObjectIdx(parsed));
+                int v;
+                std::string token = data[i][2][j].GetString();
+				try {
+				 	v = boost::lexical_cast<int>(token);
+				} catch ( const boost::bad_lexical_cast& e ) {
+					//v = boost::lexical_cast<float>(data[i][3][j].GetString());
+                    throw std::runtime_error("Invalid object identifier: '" + token + "' for type '" + type_name + "'");
+				}
+				typeObjects[type_id].push_back(ObjectIdx(v));
 			}
 		}
 	}
