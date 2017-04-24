@@ -219,7 +219,7 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 			typeObjects[type_id].reserve(upper - lower + 1);
 			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(v);
 		} else { // We have an enumeration of object IDs
-            isTypeBounded[type_idx] = false;
+            isTypeBounded[type_id] = false;
 			typeObjects[type_id].reserve(data[i][2].Size());
 			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
                 int v;
