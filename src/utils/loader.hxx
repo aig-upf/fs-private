@@ -54,7 +54,7 @@ protected:
 	static const fs::Formula* loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
 
     //! Load the metric
-    static const Metric* loadMetric( const rapidjson::Value& data, const ProblemInfo& info );
+    static const fs::Metric* loadMetric( const rapidjson::Value& data, const ProblemInfo& info );
 
 	template<typename T>
 	static std::vector<std::vector<T>> parseDoubleNumberList(const rapidjson::Value& data);

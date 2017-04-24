@@ -12,6 +12,7 @@
 #include <lapkt/tools/logging.hxx>
 #include <constraints/gecode/helper.hxx>
 #include <constraints/registry.hxx>
+#include <utils/utils.hxx>
 #include <utils/printers/registry.hxx>
 #include <utils/config.hxx>
 #include <utils/static.hxx>
@@ -47,7 +48,13 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto init = loadState(*indexer, data["init"]);
 
 	LPT_INFO("main", "Loading action data...");
-	auto action_data = loadAllActionData(data["action_schemata"], info, true);
+	auto control_data = loadAllActionData(data["action_schemata"], info, true);
+    LPT_INFO("main", "Loading process data...");
+    auto process_data = loadAllActionData(data["process_schemata"], info, true);
+    LPT_INFO("main", "Loading event data...");
+    auto events_data = loadAllActionData(data["events_schemata"], info, true);
+    auto tmp = Utils::merge( control_data, process_data );
+    auto action_data = Utils::merge( tmp, events_data );
 
 	LPT_INFO("main", "Loading axiom data...");
 	// Axiom schemas are simply action schemas but without effects
@@ -176,7 +183,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 	return ActionGrounder::process_action_data(adata, info, load_effects);
 }
 
-const Metric*
+const fs::Metric*
 Loader::loadMetric( const rapidjson::Value& data, const ProblemInfo& info ) {
 	// Get first the type of the metric
 	if ( !data.HasMember("optimization")) return nullptr; // Empty metric

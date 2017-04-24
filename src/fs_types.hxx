@@ -76,6 +76,7 @@ namespace fs0 {
 	//! A function in the logical sense.
 	using Function = std::function<ObjectIdx(const ValueTuple&)>;
 
+    enum class MetricType { MINIMIZE = 0, MAXIMIZE = 1 };
 
 	/**
 	 * Custom exceptions

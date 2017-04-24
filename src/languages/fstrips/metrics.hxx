@@ -30,9 +30,6 @@ public:
 
     MetricType  optimization() const { return _type; }
 
-	//! Returns a vector with all the terms involved in the effect (possibly with repetitions)
-	std::vector<Term::cptr> flatten() const;
-
 	//! Applies the effect to the given state and returns the resulting value
 	ObjectIdx apply(const State& state) const;
 
@@ -42,7 +39,7 @@ public:
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const;
 
 	//! Accessors for the left-hand side and right-hand side of the effect
-	const Term::cptr expression() const { return _expression; }
+	const Term* expression() const { return _expression; }
 
 	void 	markAsInvalid() { _valid = false; }
 	bool 	isValid() const { return _valid; }
