@@ -52,6 +52,7 @@ protected:
 
 	//! Load a formula and process it
 	static const fs::Formula* loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
+    static std::vector<const fs::Axiom*> loadNamedStateConstraints(const rapidjson::Value& data, const ProblemInfo& info);
 
     //! Load the metric
     static const fs::Metric* loadMetric( const rapidjson::Value& data, const ProblemInfo& info );

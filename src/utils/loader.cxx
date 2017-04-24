@@ -65,7 +65,8 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto goal = loadGroundedFormula(data["goal"], info);
 
 	LPT_INFO("main", "Loading state constraints...");
-	auto sc = loadGroundedFormula(data["state_constraints"], info);
+    auto sc = loadGroundedFormula(data["state_constraints"], info);
+    auto named_sc = loadNamedStateConstraints( data["state_constraints"], info );
 
     LPT_INFO("main", "Loading Problem Metric...");
     auto metric = loadMetric( data["metric"], info );
@@ -209,14 +210,36 @@ Loader::loadMetric( const rapidjson::Value& data, const ProblemInfo& info ) {
 }
 
 
-const fs::Formula*
+std::vector<const fs::Formula*>
 Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
-	const fs::Formula* unprocessed = fs::Loader::parseFormula(data["conditions"], info);
-	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
-	// to detect tautologies, contradictions, etc., and to consolidate state variables
-	auto processed = fs::bind(*unprocessed, Binding::EMPTY_BINDING, info);
-	delete unprocessed;
-	return processed;
+    for (unsigned i = 0; i < data.Size(); ++i) {
+        if ( data[i].HasMember("name")) {
+            continue;
+        }
+        const fs::Formula* unprocessed = fs::Loader::parseFormula(data[i]["conditions"], info);
+        // The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
+        // to detect tautologies, contradictions, etc., and to consolidate state variables
+        auto processed = fs::bind(*unprocessed, Binding::EMPTY_BINDING, info);
+        delete unprocessed;
+        return processed;
+    }
+}
+
+std::vector<const fs::Axiom*>
+Loader::loadNamedStateConstraints(const rapidjson::Value& data, const ProblemInfo& info) {
+    std::vector<const fs::Axiom*> axioms;
+    for (unsigned i = 0; i < data.Size(); ++i) {
+        if ( !data[i].HasMember("name")) {
+            continue;
+        }
+        std::vector<const ActionData*> schemata;
+        for (unsigned i = 0; i < data.Size(); ++i) {
+            if (const ActionData* adata = loadActionData(data[i], i, info, load_effects)) {
+                axioms.push_back(new fs::Axiom(adata->getName(), adata->getSignature(), adata->getParameterNames(), adata->getBindingUnit(), adata->getPrecondition()->clone()));
+            }
+        }
+    }
+    return axioms;
 }
 
 rapidjson::Document
