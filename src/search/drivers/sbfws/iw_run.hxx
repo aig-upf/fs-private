@@ -45,6 +45,9 @@ public:
 	//! The novelty  of the state
 	unsigned _w;
 	
+	//! NB(s)
+	unsigned nb_s; 
+	
 	bool _evaluated;
 	
 	//!
@@ -171,6 +174,7 @@ public:
 			nov = _evaluator->evaluate_1(valuation, node._nov1atom_idxs);
 			assert(nov == 1);
 			node._path_novelty_is_1 = true;
+			node.nb_s = 0;
 			
 			// NOW EVALUATE 1.5 novelty
 			_evaluator->evaluate_piw(valuation);
@@ -211,45 +215,47 @@ public:
 			std::vector<AtomIdx> B_of_s; // B(s)
 			B_of_s = to_atom_indexes(node, node._nov1atom_idxs);
 			
-// 			if (nov == 1) {
-				
-// 			} else {
-// 				std::set_intersection(from_parent.begin(), from_parent.end(), from_current.begin(), from_current.end(), std::back_inserter(B_of_s));
-// 			}
-			
 			
 			
 			// NOW EVALUATE 1.5 novelty
-			
-			// XXX const AtomIndex& index = Problem::getInstance().get_tuple_index();
-			// XXX std::cout << std::endl << std::endl << "All state atoms: " << std::endl << node.state << std::endl;
-			// XXX std::cout << "1(s): " << std::endl;
-			// XXX for (AtomIdx ai:B_of_s) {
-				// XXX std::cout << "\t" << index.to_atom(ai) << std::endl;
-			// XXX }
-			// XXX std::cout << std::endl << std::endl;
 
-			
+			node.nb_s = node.parent->nb_s;
 				
 			std::vector<bool> novelty_contributors;
 			if (_evaluator->evaluate_piw(valuation, B_of_s, novelty_contributors)) {
 				if (nov != 1) {
 					nov = 2;
-					// UPDATE B(s)
-					assert(node._nov1atom_idxs.size() == novelty_contributors.size());
-					std::vector<unsigned> tmp;
-					for (unsigned i1 = 0; i1 < novelty_contributors.size(); ++i1) {
-						if (novelty_contributors[i1]) {
-							tmp.push_back(node._nov1atom_idxs[i1]);
+					
+					// UPDATE NB(s) and prune, if necessary
+					if (node.parent->_w == 1) {
+						node.nb_s += 1;
+						if (node.nb_s > 1) {
+ 							nov = 99; // Set novelty artificially high so that the node will get pruned.
+//  							std::cout << "Pruned node because NB(s) > 1" << std::endl;
+							
 						}
 					}
 					
-// 					std::cout << "Pruned 1(s) from " << node._nov1atom_idxs.size() << " to " << tmp.size()  << " (out of a max. of " << node.state.numAtoms() << " atoms in a state) "<< std::endl;
-					node._nov1atom_idxs = tmp;
+					
+					if (nov == 2) {
+						// UPDATE B(s)
+						assert(node._nov1atom_idxs.size() == novelty_contributors.size());
+						std::vector<unsigned> tmp;
+						for (unsigned i1 = 0; i1 < novelty_contributors.size(); ++i1) {
+							if (novelty_contributors[i1]) {
+								tmp.push_back(node._nov1atom_idxs[i1]);
+							}
+						}
+						
+	// 					std::cout << "Pruned 1(s) from " << node._nov1atom_idxs.size() << " to " << tmp.size()  << " (out of a max. of " << node.state.numAtoms() << " atoms in a state) "<< std::endl;
+						node._nov1atom_idxs = tmp;
+	// 					std::cout << "Simulation node - NB(s)=" << node.nb_s << std::endl;
+					}
 				}
 			}
 			
 		}
+		
 		
 		node._w = nov;
 		return nov;
