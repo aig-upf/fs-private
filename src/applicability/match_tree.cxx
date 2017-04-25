@@ -63,7 +63,8 @@ namespace fs0 {
 
 	SwitchNode::~SwitchNode() {
 		delete _default_child;
-		for (BaseNode* child:_children) delete child;
+		delete _positive_child;
+// 		for (BaseNode* child:_children) delete child;
 	}
 
 
@@ -77,15 +78,16 @@ namespace fs0 {
         // X=v.
 
 		ObjectIdx val = s.getValue(_pivot);
+		assert((val == 0 || val == 1) && "Match Tree not yet prepared for multivalued variables");
 
 // 		const ProblemInfo& info = ProblemInfo::getInstance();
 // 		LPT_INFO( "cout", "[Match Tree] Branching on atom " << Atom(_pivot, val) << "");
 
-		if (val != 0 && val != 1) throw std::runtime_error("Not yet prepared for multivalued match tree");
 		// TODO This won't work for a multi-valued match-tree. For that, we'll either need to change 'children' into a map
 		// (bad for time performance), or change it into a huge vector mapping any possible value of the variable into the
 		// actual node. This could be quite harmful when dealing with large-domain integer variables, etc.
-		_children[val]->generate_applicable_items(s, tuple_index, actions);
+		if (val == 1) _positive_child->generate_applicable_items(s, tuple_index, actions);
+// 		_children[val]->generate_applicable_items(s, tuple_index, actions);
 
         _default_child->generate_applicable_items( s, tuple_index, actions );
     }
@@ -141,9 +143,12 @@ namespace fs0 {
 		context._seen[_pivot] = true;
 
 		// Create the switch generators
+		/*
 		for (unsigned i = 0; i < actions_split_by_pivot_value.size(); i++) {
 			_children.push_back(create_tree(std::move(actions_split_by_pivot_value[i]), context));
-		}
+		}*/
+		if (!actions_split_by_pivot_value[0].empty()) throw std::runtime_error("Match Tree not ready for negated preconditions");
+		_positive_child = create_tree(std::move(actions_split_by_pivot_value[1]), context);
 
 		_default_child = create_tree(std::move(dont_care_actions), context); // Create the default generator
 
@@ -152,9 +157,11 @@ namespace fs0 {
 
     unsigned SwitchNode::count() const {
         unsigned total = 0;
+		/*
 		for (const auto child:_children) {
             total += child->count();
-		}
+		}*/
+		total += _positive_child->count();
         total += _default_child->count();
         total += _immediate_items.size();
         return total;
@@ -162,18 +169,24 @@ namespace fs0 {
 
     unsigned SwitchNode::count_nodes() const {
         unsigned total = 1 + _default_child->count_nodes();
+		/*
 		for (const auto child:_children) {
             total += child->count_nodes();
 		}
+		*/
+		total += _positive_child->count_nodes();
         return total;
     }
 
 	void SwitchNode::count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const {
 		++sw;
 		_default_child->count_nodes(sw, leaf, empty);
+		_positive_child->count_nodes(sw, leaf, empty);
+		/*
 		for (const auto child:_children) {
 			child->count_nodes(sw, leaf, empty);
 		}
+		*/
 	}
 
 
@@ -195,10 +208,14 @@ namespace fs0 {
         stream << indent << "always:" << std::endl;
         _default_child->print(stream, indent + "  ", manager);
 
+		/*
         for (unsigned i = 0; i < _children.size(); ++i) {
             stream << indent << "case " << i << ":" << std::endl;
             _children[i]->print(stream, indent + "  ", manager);
         }
+        */
+		stream << indent << "case True:" << std::endl;
+		_positive_child->print(stream, indent + "  ", manager);		
     }
 
     void
