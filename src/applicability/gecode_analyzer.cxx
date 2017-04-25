@@ -13,7 +13,7 @@ namespace fs0 {
 using namespace gecode;
 
 void
-GecodeApplicabilityAnalyzer::build() {
+GecodeApplicabilityAnalyzer::build(bool build_applicable_index) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	LPT_INFO("cout", "Analyzing applicability of actions...");

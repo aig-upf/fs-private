@@ -79,9 +79,10 @@ public:
 
     class SwitchNode : public BaseNode {
     	VariableIdx _pivot;
-    	std::vector<int>           _immediate_items;
-    	std::vector<BaseNode *>    _children;
-    	BaseNode *                 _default_child;
+    	std::vector<ActionIdx> _immediate_items;
+//     	std::vector<BaseNode*> _children;
+    	BaseNode* _positive_child;
+    	BaseNode* _default_child;
 
     public:
     	SwitchNode(const std::vector<ActionIdx>& actions, NodeCreationContext& context);

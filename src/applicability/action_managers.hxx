@@ -46,7 +46,7 @@ public:
 
 	virtual ~BasicApplicabilityAnalyzer() = default;
 
-	virtual void build();
+	virtual void build(bool build_applicable_index = true);
 
 	const std::vector<std::vector<ActionIdx>>& getApplicable() const { return _applicable; }
 	
