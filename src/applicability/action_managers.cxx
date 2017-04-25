@@ -141,12 +141,14 @@ ObjectIdx _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
 
 
 void
-BasicApplicabilityAnalyzer::build() {
+BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [0]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
-	_applicable.resize(_tuple_idx.size());
+	if (build_applicable_index) {
+		_applicable.resize(_tuple_idx.size());
+	}
 	_rev_applicable.resize(_actions.size());
 	_variable_relevance = std::vector<unsigned>(info.getNumVariables(), 0);
 
@@ -156,9 +158,20 @@ BasicApplicabilityAnalyzer::build() {
 	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [1]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 	
 	for (unsigned i = 0; i < _actions.size(); ++i) {
+		
+		/* DEBUGGING
+
 		if (i%100==0) {
 			LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [it. " << i << "]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+			unsigned cnt = 0;
+			for (auto& app_set:_applicable) cnt += app_set.size();
+			LPT_INFO("cout", "Aggregated '_applicable' size [it. " << i << "]: " << cnt);
+			
+			cnt = 0;
+			for (auto& app_set:_rev_applicable) cnt += app_set.size();
+			LPT_INFO("cout", "Aggregated '_rev_applicable' size [it. " << i << "]: " << cnt);
 		}
+		*/
 		const GroundAction& action = *_actions[i];
 		if (dynamic_cast<const fs::Tautology*>(action.getPrecondition())) { // If there's no precondition, the action is always potentially applicable
 			for (auto& app_set:_applicable) app_set.push_back(i);
@@ -212,7 +225,9 @@ BasicApplicabilityAnalyzer::build() {
 				
 // 				std::cout << "Corresponding Atom: " << _tuple_idx.to_atom(tup) << std::endl;
 				
-				_applicable[tup].push_back(i);
+				if (build_applicable_index) {
+					_applicable[tup].push_back(i);
+				}
 				_rev_applicable[i].insert(tup);
 
 			} else { // Prec is of the form X!=x
@@ -222,7 +237,9 @@ BasicApplicabilityAnalyzer::build() {
 				for (ObjectIdx v2:values) {
 					if (v2 != value) {
 						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
-						_applicable[tup].push_back(i);
+						if (build_applicable_index) {
+							_applicable[tup].push_back(i);
+						}
 						_rev_applicable[i].insert(tup);
 					}
 				}
@@ -230,12 +247,14 @@ BasicApplicabilityAnalyzer::build() {
 		}
 
 		// Now, for those state variables that have _not_ been referenced, the action is potentially applicable no matter what value the state variable takes.
-		for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-			if (referenced.find(var) != referenced.end()) continue;
+		if (build_applicable_index) {
+			for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
+				if (referenced.find(var) != referenced.end()) continue;
 
-			for (ObjectIdx val:info.getVariableObjects(var)) {
-				AtomIdx tup = _tuple_idx.to_index(var, val);
-				_applicable[tup].push_back(i);
+				for (ObjectIdx val:info.getVariableObjects(var)) {
+					AtomIdx tup = _tuple_idx.to_index(var, val);
+					_applicable[tup].push_back(i);
+				}
 			}
 		}
 	}
