@@ -456,7 +456,7 @@ public:
 	template <typename StateT>
 	std::vector<bool> compute_R(const StateT& state) {
 		_stats.simulation();
-		SimulationT simulator(_model, _featureset, _simconfig);
+		SimulationT simulator(_model, _featureset, _simconfig, _stats);
 		return simulator.compute_R(state);
 	}
 	
@@ -689,8 +689,12 @@ public:
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 		
-// 		_heuristic.compute_node_complex_type(*root); // Force one simulation from the root node
-
+		
+		// Force one simulation from the root node and abort the search
+ 		_heuristic.compute_node_complex_type(*root);
+		return false;
+		
+		
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
 

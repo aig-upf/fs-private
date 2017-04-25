@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <unordered_set>
 
+#include <lapkt/tools/resources_control.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 #include <lapkt/algorithms/generic_search.hxx>
@@ -346,11 +347,13 @@ protected:
 	unsigned long _w1_nodes_generated;
 	unsigned long _w2_nodes_generated;
 	unsigned long _w_gt2_nodes_generated;
+	
+	BFWSStats& _stats;
 
 public:
 
 	//! Constructor
-	IWRun(const StateModel& model, const FeatureSetT& featureset, const IWRun::Config& config) :
+	IWRun(const StateModel& model, const FeatureSetT& featureset, const IWRun::Config& config, BFWSStats& stats) :
 		Base(model, OpenListT(), ClosedListT()),
 		_config(config),
 // 		_all_paths(model.num_subgoals()),
@@ -365,7 +368,8 @@ public:
 		_w2_nodes_expanded(0),
 		_w1_nodes_generated(0),
 		_w2_nodes_generated(0),		
-		_w_gt2_nodes_generated(0)
+		_w_gt2_nodes_generated(0),
+		_stats(stats)
 	{
 	}
 
@@ -446,8 +450,10 @@ public:
 			for (unsigned x:_unreached) {
 				LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
 			}
-// 			exit(1);
 		}
+		_stats.sim_reached_subgoals(this->_model.num_subgoals() - _unreached.size());
+		_stats.set_num_subgoals(this->_model.num_subgoals());
+		
 		
 		std::vector<bool> rel_goal_directed(index.size(), false);
 		mark_atoms_in_path_to_subgoal(seed_nodes, rel_goal_directed);
@@ -460,7 +466,10 @@ public:
 		
 		_config._complete = false;
 		
+		float simt0 = aptk::time_used();
  		_run(seed);
+		_stats.sim_time(aptk::time_used() - simt0);
+
 		
 		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << this->_model.num_subgoals());
 		
@@ -482,6 +491,9 @@ public:
 				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
 			}
 		}
+		
+		_stats.sim_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
+		_stats.sim_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
 		
 		/*
 		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());

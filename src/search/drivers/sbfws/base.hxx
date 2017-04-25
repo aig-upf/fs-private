@@ -56,6 +56,10 @@ public:
 	void wgr_gt2_node() { ++_num_wgr_gt2_nodes; }
 	
 	void simulation_node_reused() { ++_reused_simulation_nodes; }
+	void sim_reached_subgoals(unsigned number) { _sim_reached_subgoals = number; }
+	void sim_expanded_nodes(unsigned number) { _sim_expanded_nodes = number; }
+	void sim_generated_nodes(unsigned number) { _sim_generated_nodes = number; }
+	void sim_time(float time) { _sim_time = time; }
 	
 	void expansion_g_decrease() { ++_num_expanded_g_decrease; }
 	void generation_g_decrease() { ++_num_generated_g_decrease; }
@@ -71,6 +75,8 @@ public:
 	unsigned long evaluated() const { return _evaluated; }
 	unsigned long simulated() const { return _simulations; }
 	
+	
+	void set_num_subgoals(unsigned num) { _num_subgoals = num; }
 	void set_initial_reachable_subgoals(unsigned num) { _initial_reachable_subgoals = num; }
 	void set_initial_relevant_atoms(unsigned num) { _initial_relevant_atoms = num; }
 	void reachable_subgoals(unsigned num) {
@@ -109,8 +115,13 @@ public:
 			std::make_tuple("_num_expanded_g_decrease", "Expansions with #g decrease", std::to_string(_num_expanded_g_decrease)),
 			std::make_tuple("_num_generated_g_decrease", "Generations with #g decrease", std::to_string(_num_generated_g_decrease)),
 			
-			std::make_tuple("_reused_simulation_nodes", "Simulation nodes reused in the search", std::to_string(_reused_simulation_nodes)),
-
+			std::make_tuple("num_subgoals", "Total number of conjunctive subgoals", std::to_string(_num_subgoals)),
+			std::make_tuple("sim_reached_subgoals", "Number of subgoals reached during a simulation from s0", std::to_string(_sim_reached_subgoals)),
+			std::make_tuple("sim_expanded_nodes", "Nodes expanded in the simulation", std::to_string(_sim_expanded_nodes)),
+			std::make_tuple("sim_generated_nodes", "Nodes generated in the simulation", std::to_string(_sim_generated_nodes)),
+			std::make_tuple("sim_time", "Total simulation time", std::to_string(_sim_time)),
+			std::make_tuple("reused_simulation_nodes", "Simulation nodes reused in the search", std::to_string(_reused_simulation_nodes)),
+			
 			std::make_tuple("simulations", "Simulations", std::to_string(simulated())),
 			std::make_tuple("reachable_0", "Reachable subgoals in initial state", _if_computed(_initial_reachable_subgoals)),
 			std::make_tuple("reachable_max", "Max. # reachable subgoals in any simulation", std::to_string(_max_reachable_subgoals)),
@@ -142,6 +153,14 @@ protected:
 	unsigned long _num_generated_g_decrease; // The number of nodes with a decrease in #g that are expanded
 	
 	unsigned _reused_simulation_nodes;
+	unsigned _sim_reached_subgoals;
+	
+	unsigned long _sim_expanded_nodes;
+	unsigned long _sim_generated_nodes;
+	float _sim_time;
+	
+	unsigned _num_subgoals;
+
 };
 
 //! TODO - TOO HACKY?
