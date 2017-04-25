@@ -9,8 +9,8 @@
 
 #include <lapkt/tools/resources_control.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
-#include <lapkt/algorithms/generic_search.hxx>
+// #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
+// #include <lapkt/algorithms/generic_search.hxx>
 #include <search/novelty/fs_novelty.hxx>
 #include <search/drivers/sbfws/relevant_atomset.hxx>
 #include "base.hxx"
@@ -274,23 +274,19 @@ template <typename NodeT,
           typename StateModel,
           typename NoveltyEvaluatorT,
 		  typename FeatureSetT,
-          typename OpenListT = lapkt::SearchableQueue<NodeT>,
-          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
+          typename OpenListT = lapkt::SimpleQueue<NodeT>
+//           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
-class IWRun : public lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>
+class IWRun
 {
 public:
-	using Base = lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>;
 	using ActionT = typename StateModel::ActionType;
 	using StateT = typename StateModel::StateT;
-	using PlanT = typename Base::PlanT;
-	using NodePT = typename Base::NodePT;
-	using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 	
-
-	using NodeOpenEvent = typename Base::NodeOpenEvent;
-	using NodeExpansionEvent = typename Base::NodeExpansionEvent;
-	using NodeCreationEvent = typename Base::NodeCreationEvent;
+	using ActionIdT = typename StateModel::ActionType::IdType;
+	using NodePT = std::shared_ptr<NodeT>;	
+	
+	using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 	
 	struct Config {
 		//! The bound on the simulation number of generated nodes
@@ -313,6 +309,15 @@ public:
 	};
 	
 protected:
+	//! The search model
+	const StateModel& _model;
+	
+	//! The open list
+	OpenListT _open;
+	
+	//! The closed list
+// 	ClosedList _closed;	
+	
 	//! The simulation configuration
 	Config _config;
 
@@ -354,7 +359,9 @@ public:
 
 	//! Constructor
 	IWRun(const StateModel& model, const FeatureSetT& featureset, const IWRun::Config& config, BFWSStats& stats) :
-		Base(model, OpenListT(), ClosedListT()),
+// 		Base(model, OpenListT(), ClosedListT()),
+		_model(model),
+		_open(),
 		_config(config),
 // 		_all_paths(model.num_subgoals()),
 		_optimal_paths(model.num_subgoals()),
@@ -381,10 +388,6 @@ public:
 	IWRun& operator=(const IWRun&) = delete;
 	IWRun& operator=(IWRun&&) = default;
 
-	bool search(const StateT& s, PlanT& solution) override {
-		throw std::runtime_error("Shouldn't be invoking this");
-	}
-	
 	
 	//! Mark all atoms in the path to some goal. 'seed_nodes' contains all nodes satisfying some subgoal.
 	void mark_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes, std::vector<bool>& atoms) const {
@@ -451,8 +454,8 @@ public:
 				LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
 			}
 		}
-		_stats.sim_reached_subgoals(this->_model.num_subgoals() - _unreached.size());
-		_stats.set_num_subgoals(this->_model.num_subgoals());
+		_stats.sim_reached_subgoals(_model.num_subgoals() - _unreached.size());
+		_stats.set_num_subgoals(_model.num_subgoals());
 		
 		
 		std::vector<bool> rel_goal_directed(index.size(), false);
@@ -467,11 +470,11 @@ public:
 		_config._complete = false;
 		
 		float simt0 = aptk::time_used();
- 		_run(seed);
+ 		run(seed);
 		_stats.sim_time(aptk::time_used() - simt0);
 
 		
-		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << this->_model.num_subgoals());
+		LPT_INFO("cout", "IW Simulation - Num unreached subgoals: " << _unreached.size() << " / " << _model.num_subgoals());
 		
 // 		std::vector<NodePT> w1_goal_reaching_nodes;
 // 		std::vector<NodePT> w2_goal_reaching_nodes;
@@ -525,7 +528,7 @@ public:
 		return {};
 	}
 	
-	bool _run(const StateT& seed) {
+	bool run(const StateT& seed) {
 		NodePT n = std::make_shared<NodeT>(seed, _generated++);
 		mark_seed_subgoals(n);
 		
@@ -542,17 +545,17 @@ public:
 			NodePT current = this->_open.next( );
 
 			// close the node before the actual expansion so that children which are identical to 'current' get properly discarded.
-			this->_closed.put(current);
+// 			this->_closed.put(current);
 			
 			if (current->_w == 1) ++_w1_nodes_expanded;
 			else if (current->_w == 2) ++_w2_nodes_expanded;
 
-			for (const auto& a : this->_model.applicable_actions(current->state)) {
-				StateT s_a = this->_model.next( current->state, a );
+			for (const auto& a : _model.applicable_actions(current->state)) {
+				StateT s_a = _model.next( current->state, a );
 				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current, _generated++ );
 				
-				if (this->_closed.check(successor)) continue; // The node has already been closed
-				if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
+// 				if (this->_closed.check(successor)) continue; // The node has already been closed
+// 				if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
 
 				
 				unsigned novelty = _evaluator.evaluate(*successor);
@@ -611,7 +614,7 @@ protected:
 		for (auto it = _unreached.begin(); it != _unreached.end(); ) {
 			unsigned subgoal_idx = *it;
 
-			if (this->_model.goal(state, subgoal_idx)) {
+			if (_model.goal(state, subgoal_idx)) {
 				node->satisfies_subgoal = true;
 // 				_all_paths[subgoal_idx].push_back(node);
 				if (!_optimal_paths[subgoal_idx]) _optimal_paths[subgoal_idx] = node;
@@ -628,8 +631,8 @@ protected:
 	bool process_node_complete(NodePT& node) {
 		const StateT& state = node->state;
 
-		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
-			if (!_in_seed[i] && this->_model.goal(state, i)) {
+		for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
+			if (!_in_seed[i] && _model.goal(state, i)) {
 				node->satisfies_subgoal = true;
 				if (!_optimal_paths[i]) _optimal_paths[i] = node;
 				_unreached.erase(i);
@@ -640,8 +643,8 @@ protected:
 	}
 	
 	void mark_seed_subgoals(const NodePT& node) {
-		for (unsigned i = 0; i < this->_model.num_subgoals(); ++i) {
-			if (this->_model.goal(node->state, i)) {
+		for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
+			if (_model.goal(node->state, i)) {
 				_in_seed[i] = true;
 			} else {
 				_unreached.insert(i);

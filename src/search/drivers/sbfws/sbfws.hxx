@@ -8,6 +8,7 @@
 #include <heuristics/unsat_goal_atoms.hxx>
 
 #include <lapkt/search/components/open_lists.hxx>
+#include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
 
 namespace fs0 { namespace bfws {
