@@ -453,9 +453,11 @@ public:
 	
 	template <typename StateT>
 	std::vector<bool> compute_R(const StateT& state) {
+		
+		/*
+		// R = all (positive) atoms
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 // 		const ProblemInfo& info = ProblemInfo::getInstance();
-		// Mark all positive atoms
 		std::vector<bool> R(index.size(), false);
 		for (unsigned i = 0; i < R.size(); ++i) {
 			const Atom& atom = index.to_atom(i);
@@ -464,10 +466,18 @@ public:
 			}
 		}
 		return R;
+		*/
 		
 		
 		_stats.simulation();
-		SimulationT simulator(_model, _featureset, _simconfig, _stats);
+		
+		// Force some properties of the simulation so that R = R[IW(1)]
+		SimConfigT forced(_simconfig);
+		forced._max_width = 1;
+		forced._use_goal_directed_info = false;
+		
+		
+		SimulationT simulator(_model, _featureset, forced, _stats);
 		return simulator.compute_R(state);
 	}
 	
@@ -811,12 +821,10 @@ protected:
 			}
 		}
 		
-		static bool all_reached_already = false;
-		if (!all_reached_already && num_reached == _model.num_subgoals()) {
-			all_reached_already = true;
+		if (num_reached == _model.num_subgoals()) {
 			LPT_INFO("cout", "ALL SUBGOALS FOUND");
-// 			_solution = node;
-// 			return true;
+			_solution = node;
+			return true;			
 		}
 		
 
