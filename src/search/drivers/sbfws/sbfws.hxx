@@ -811,10 +811,12 @@ protected:
 			}
 		}
 		
-		if (num_reached == _model.num_subgoals()) {
+		static bool all_reached_already = false;
+		if (!all_reached_already && num_reached == _model.num_subgoals()) {
+			all_reached_already = true;
 			LPT_INFO("cout", "ALL SUBGOALS FOUND");
-			_solution = node;
-			return true;			
+// 			_solution = node;
+// 			return true;
 		}
 		
 
