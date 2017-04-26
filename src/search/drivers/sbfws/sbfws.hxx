@@ -15,6 +15,17 @@ namespace fs0 { namespace bfws {
 
 using Novelty = lapkt::novelty::Novelty;
 
+
+//! Prioritize nodes with lower g(n).
+template <typename NodePT>
+struct g_comparer {
+	bool operator()(const NodePT& n1, const NodePT& n2) const {
+		if (n1->g > n2->g) return true;
+		if (n1->g < n2->g) return false;
+		return n1->_gen_order > n2->_gen_order;
+	}
+};
+
 //! Prioritize nodes with lower number of _un_achieved subgoals. Break ties with g.
 template <typename NodePT>
 struct unachieved_subgoals_comparer {
@@ -250,7 +261,7 @@ public:
 	unsigned compute_node_complex_type(NodeT& node) {
 // 		LPT_INFO("types", "Type=" << compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node)) << " for node: " << std::endl << node)
 // 		LPT_INFO("hash_r", "#r=" << get_hash_r(node) << " for node: " << std::endl << node)
-		return compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node));
+		return compute_node_complex_type(0, get_hash_r(node));
 	}
 	
 	template <typename NodeT>
@@ -274,20 +285,6 @@ public:
 		return nov;
 	}
 
-	template <typename NodeT>
-	unsigned evaluate_wgr2(NodeT& node) {
-		unsigned type = compute_node_complex_type(node);
-		bool has_parent = node.has_parent();
-		unsigned ptype = has_parent ? compute_node_complex_type(*(node.parent)) : 0;
-		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 2, node.has_parent(), type, ptype);
-		
-		assert(node.w_gr != Novelty::Unknown);
-		if (node.w_gr != Novelty::One) {
-			node.w_gr = (nov == 2) ? Novelty::Two : Novelty::GTTwo;
-		}		
-		return nov;
-	}
-	
 
 	//! This is a hackish way to obtain an integer index that uniquely identifies the tuple <#g, #r>
 	unsigned compute_node_complex_type(unsigned unachieved, unsigned relaxed_achieved) {
@@ -456,6 +453,19 @@ public:
 	
 	template <typename StateT>
 	std::vector<bool> compute_R(const StateT& state) {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+// 		const ProblemInfo& info = ProblemInfo::getInstance();
+		// Mark all positive atoms
+		std::vector<bool> R(index.size(), false);
+		for (unsigned i = 0; i < R.size(); ++i) {
+			const Atom& atom = index.to_atom(i);
+			if (atom.getValue()==1) {
+				R[i] = true;
+			}
+		}
+		return R;
+		
+		
 		_stats.simulation();
 		SimulationT simulator(_model, _featureset, _simconfig, _stats);
 		return simulator.compute_R(state);
@@ -504,7 +514,8 @@ protected:
 	
 // An open list sorted by #g
 	using UnachievedSubgoalsComparerT = unachieved_subgoals_comparer<NodePT>;
-	using UnachievedOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, UnachievedSubgoalsComparerT>;
+	using GComparerT = g_comparer<NodePT>;
+	using UnachievedOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, GComparerT>;
 	
 	//! An open list sorted by the numerical value of width, then #g
 	using NoveltyComparerT = novelty_comparer<NodePT>;
@@ -526,12 +537,12 @@ protected:
 	UnachievedOpenList _qwgr1;
 
 	//! A queue with those nodes that still need to be processed through the w_{#g, #r} = 2 novelty tables
-	UnachievedOpenList _qwgr2;
+// 	UnachievedOpenList _qwgr2;
 
 	//! A queue with those nodes that have been run through all relevant novelty tables
 	//! and for which it has been proven that they have w_{#g, #r} > 2 and have not
 	//! yet been processed.
-	UnachievedOpenList _qrest;
+// 	UnachievedOpenList _qrest;
 
 	//! The closed list
 	ClosedListT _closed;
@@ -560,6 +571,8 @@ protected:
 	//! How many novelty levels we want to use in the search.
 	unsigned _novelty_levels;
 	
+	std::vector<NodePT> _optimal_paths;
+	
 public:
 
 	//! The only allowed constructor requires the user of the algorithm to inject both
@@ -582,7 +595,8 @@ public:
 		_pruning(config.getOption<bool>("bfws.prune", false)),
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
-		_novelty_levels(setup_novelty_levels(model, config))
+		_novelty_levels(setup_novelty_levels(model, config)),
+		_optimal_paths(model.num_subgoals())
 	{
 	}
 
@@ -686,14 +700,18 @@ public:
 
 
 	bool search(const StateT& s, PlanT& plan) {
+		
+		
+		float simt0 = aptk::time_used();
+		
 		NodePT root = std::make_shared<NodeT>(s, _generated++);
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 		
 		
 		// Force one simulation from the root node and abort the search
- 		_heuristic.compute_node_complex_type(*root);
-		return false;
+//  		_heuristic.compute_node_complex_type(*root);
+// 		return false;
 		
 		
 		// The main search loop
@@ -703,7 +721,21 @@ public:
 			remaining_nodes = process_one_node();
 		}
 
-		return extract_plan(_solution, plan);
+		bool b = extract_plan(_solution, plan);
+		
+		// UPDATE STATS
+		unsigned num_reached = 0;
+		for (unsigned i = 0; i < _optimal_paths.size(); ++i) {
+			if (_optimal_paths[i]) ++num_reached;
+		} 
+		
+		_stats.sim_time(aptk::time_used() - simt0);
+		_stats.sim_expanded_nodes(_stats.expanded());
+		_stats.sim_generated_nodes(_stats.generated());
+		_stats.sim_reached_subgoals(num_reached);
+		_stats.set_num_subgoals(_model.num_subgoals());			
+		
+		return b;
 	}
 
 protected:
@@ -736,7 +768,7 @@ protected:
 					_stats.wgr1_node();
 					process_node(node);	 
 				} else {
-					handle_unprocessed_node(node, (_novelty_levels == 2));
+					// We simply prune the node - i.e. do nothing
 				}
 			} 		
 
@@ -744,51 +776,9 @@ protected:
 			return true;
 		}
 
-		///// QWGR2 QUEUE /////
-		// Check whether there are nodes with w_{#g, #r} = 2
-		if (_novelty_levels == 3 && !_qwgr2.empty()) {
-			NodePT node = _qwgr2.next();
-
-			// unsigned nov = _heuristic.evaluate_wg2(*node);
-			unsigned nov = _heuristic.evaluate_wgr2(*node);
-
-			// If the node has already been processed, no need to do anything else with it,
-			// since we've already run it through all novelty tables.
-			if (!node->_processed) {
-				if (nov == 2) { // i.e. the node has exactly w_{#, #r} = 2
-					_stats.wgr2_node();
-					process_node(node);
-				} else {
-					handle_unprocessed_node(node, true);
-				}
-			}
-
-			return true;
-		}
-
-		///// Q_REST QUEUE /////
-		// Process the rest of the nodes, i.e. those with w_{#g, #r} > 2
-		// We only extract one node and process it, as this will hopefully yield nodes with low novelty
-		// that will thus have more priority than the rest of nodes in this queue.
-		if (!_qrest.empty()) {
-			LPT_EDEBUG("multiqueue-search", "Expanding one remaining node with w_{#g, #r} > 2");
-			NodePT node = _qrest.next();
-			if (!node->_processed) {
-				_stats.wgr_gt2_node();
-				process_node(node);
-			}
-			return true;
-		}
-
 		return false;
 	}
 	
-	inline void handle_unprocessed_node(const NodePT& node, bool is_last_queue) {
-		if (is_last_queue && !_pruning) {
-			_qrest.insert(node);
-		}
-	}
-
 
 	//! When opening a node, we compute #g and evaluates whether the given node has <#g>-novelty 1 or not;
 	//! if that is the case, we insert it into a special queue.
@@ -806,6 +796,27 @@ protected:
 			_min_subgoals_to_reach = node->unachieved_subgoals;
 			LPT_INFO("cout", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
 		}
+		
+		
+		unsigned num_reached = 0;
+		for (unsigned subgoal_idx = 0; subgoal_idx < _model.num_subgoals(); ++subgoal_idx) {
+			
+			if (_optimal_paths[subgoal_idx]) {
+				num_reached++;
+			} else {
+				if (_model.goal(node->state, subgoal_idx)) {
+					_optimal_paths[subgoal_idx] = node;
+					num_reached++;
+				}				
+			}
+		}
+		
+		if (num_reached == _model.num_subgoals()) {
+			LPT_INFO("cout", "ALL SUBGOALS FOUND");
+			_solution = node;
+			return true;			
+		}
+		
 
 		// Now insert the node into the appropriate queues
 		_heuristic.evaluate_wg1(*node);
@@ -815,10 +826,6 @@ protected:
 
 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
 		
-		if (_novelty_levels == 3) {
-			_qwgr2.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=2 tables
-		}
-
 		_stats.generation();
 		if (node->decreases_unachieved_subgoals()) _stats.generation_g_decrease();
 		
@@ -855,9 +862,7 @@ protected:
 
 	bool is_open(const NodePT& node) const {
 		return _q1.contains(node) ||
-		       _qwgr1.contains(node) ||
-		       _qwgr2.contains(node) ||
-		       _qrest.contains(node);
+		       _qwgr1.contains(node);
 	}
 
 	inline bool is_goal(const NodePT& node) const {
