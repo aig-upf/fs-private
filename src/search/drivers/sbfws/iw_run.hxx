@@ -138,8 +138,8 @@ public:
 	~SimulationEvaluator() = default;
 
 	unsigned evaluate(NodeT& node) {
- 		return evaluate_new(node);
 		return evaluate_old(node);
+ 		return evaluate_new(node);
 	}
 	
 	//! Returns false iff we want to prune this node during the search
@@ -419,11 +419,14 @@ public:
 	
 	
 	std::vector<bool> compute_R(const StateT& seed) {
+		
+		std::vector<bool> R;
 		if (_config._use_goal_directed_info) {
-			return compute_goal_directed_R(seed);
+			R = compute_goal_directed_R(seed);
 		} else {
-			return compute_R_IW1(seed);
+			R = compute_R_IW1(seed);
 		}
+		return R;
 	}
 	
 	std::vector<bool> compute_R_IW1(const StateT& seed) {
@@ -446,17 +449,7 @@ public:
 		_config._bound = -1; // No bound
 		std::vector<NodePT> seed_nodes;
 		_compute_R(seed, seed_nodes);
-
 		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
-		if (!_unreached.empty()) {
-			LPT_INFO("cout", "WARNING: Some subgoals not reached during the simulation.");
-			for (unsigned x:_unreached) {
-				LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
-			}
-		}
-		_stats.sim_reached_subgoals(_model.num_subgoals() - _unreached.size());
-		_stats.set_num_subgoals(_model.num_subgoals());
-		
 		
 		std::vector<bool> rel_goal_directed(index.size(), false);
 		mark_atoms_in_path_to_subgoal(seed_nodes, rel_goal_directed);
@@ -497,6 +490,15 @@ public:
 		
 		_stats.sim_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
 		_stats.sim_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
+		
+		if (!_unreached.empty()) {
+			LPT_INFO("cout", "WARNING: Some subgoals not reached during the simulation.");
+			for (unsigned x:_unreached) {
+				LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
+			}
+		}
+		_stats.sim_reached_subgoals(_model.num_subgoals() - _unreached.size());
+		_stats.set_num_subgoals(_model.num_subgoals());		
 		
 		/*
 		LPT_INFO("cout", "IW Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
