@@ -46,10 +46,12 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task = FSTaskIndex(domain_name, instance_name)
     task.process_objects(fd_task.objects)
     task.process_types(types, type_map)
-    task.process_symbols(fd_task.actions, fd_task.predicates, fd_task.functions)
+    task.process_symbols(actions=fd_task.actions, predicates=fd_task.predicates, functions=fd_task.functions)
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
     task.process_actions(fd_task.actions)
+    task.process_processes([])
+    task.process_events([])
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
     task.process_axioms(fd_task.axioms)
@@ -65,7 +67,9 @@ def create_fs_plus_task( fsp_task, domain_name, instance_name ) :
     task.process_types(types, type_map)
     # MRJ: takes into account actions, events and processes
     print("Creating FS+ task: Processing symbols...")
-    task.process_symbols(fsp_task.actions, fsp_task.events, fsp_task.processes, fsp_task.constraint_schemata, fsp_task.predicates, fsp_task.functions)
+    task.process_symbols(   actions=fsp_task.actions, events=fsp_task.events,
+                            processes=fsp_task.processes, constraints=fsp_task.constraint_schemata,
+                            predicates=fsp_task.predicates, functions =fsp_task.functions )
     print("Creating FS+ task: Processing state variables...")
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     print("Creating FS+ task: Processing initial state...")
@@ -173,7 +177,14 @@ class FSTaskIndex(object):
         # Each object name points to it unique 0-based index / ID
         self.objects, self.object_types = self._index_objects(objects)
 
-    def process_symbols(self, actions, events, processes, constraints, predicates, functions):
+    def process_symbols(self, **kwargs ) :
+        actions = kwargs.get('actions', [])
+        events = kwargs.get('events', [])
+        processes = kwargs.get('processes', [])
+        constraints = kwargs.get('constraints', [])
+        predicates = kwargs.get('predicates', [])
+        functions = kwargs.get( 'functions', [])
+
         self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
         self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
 
