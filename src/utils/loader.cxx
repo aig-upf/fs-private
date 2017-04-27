@@ -24,7 +24,7 @@
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
-	
+
 std::unordered_map<std::string, const fs::Axiom*>
 _index_axioms(const std::vector<const fs::Axiom*>& axioms) {
 	std::unordered_map<std::string, const fs::Axiom*> index;
@@ -38,46 +38,58 @@ _index_axioms(const std::vector<const fs::Axiom*>& axioms) {
 Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	const Config& config = Config::instance();
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	
+
 	LPT_INFO("main", "Creating State Indexer...");
 	auto indexer = StateAtomIndexer::create(info);
-	
+
 	LPT_INFO("main", "Loading initial state...");
 	auto init = loadState(*indexer, data["init"]);
-	
+
 	LPT_INFO("main", "Loading action data...");
 	auto action_data = loadAllActionData(data["action_schemata"], info, true);
-	
+
 	LPT_INFO("main", "Loading axiom data...");
 	// Axiom schemas are simply action schemas but without effects
 	auto axioms = loadAxioms(data["axioms"], info);
 	auto axiom_idx = _index_axioms(axioms);
-	
+
 	LPT_INFO("main", "Loading goal formula...");
 	auto goal = loadGroundedFormula(data["goal"], info);
-	
+
 	LPT_INFO("main", "Loading state constraints...");
-	auto sc = loadGroundedFormula(data["state_constraints"], info);
-	
+    std::vector<const fs::Formula*> conjuncts;
+    for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
+	   auto sc = loadGroundedFormula(data["state_constraints"][i], info);
+       const fs::Conjunction* conj = dynamic_cast<const fs::Conjunction*>(sc);
+       if ( conj == nullptr ) {
+           conjuncts.push_back(sc);
+           continue;
+       }
+       for ( auto c : conj->getSubformulae() )
+            conjuncts.push_back(c->clone());
+        delete conj;
+    }
+    fs::Conjunction* sc = new fs::Conjunction(conjuncts);
+
 	//! Set the global singleton Problem instance
 	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc, AtomIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
-	
+
 	problem->consolidateAxioms();
-	
+
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
 	if (config.validate()) {
 		LPT_INFO("main", "Validating problem...");
 		Validator::validate_problem(*problem, info);
 	}
-	
+
 	return problem;
 }
 
-void 
+void
 Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
-	
+
 	// First load the extensions of the static symbols
 	for (auto name:info.getSymbolNames()) {
 		unsigned id = info.getSymbolId(name);
@@ -85,7 +97,7 @@ Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 			info.set_extension(id, StaticExtension::load_static_extension(name, info));
 		}
 	}
-	
+
 	// Load the function objects for externally-defined symbols
 	for (auto elem:factory.instantiateFunctions(info)) {
 		info.setFunction(info.getSymbolId(elem.first), elem.second);
@@ -140,20 +152,20 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	const fs::BindingUnit unit(parameters, fs::Loader::parseVariables(node["unit"], info));
-	
+
 	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
 	std::vector<const fs::ActionEffect*> effects;
-	
+
 	if (load_effects) {
 		effects = fs::Loader::parseEffectList(node["effects"], info);
 	}
-	
+
 	ActionData adata(id, name, signature, parameters, unit, precondition, effects);
 	if (adata.has_empty_parameter()) {
 		LPT_INFO("cout", "Schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
 		return nullptr;
 	}
-	
+
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
 	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it
 	return ActionGrounder::process_action_data(adata, info, load_effects);
@@ -162,6 +174,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 
 const fs::Formula*
 Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
+    assert( data.HasMember("conditions"));
 	const fs::Formula* unprocessed = fs::Loader::parseFormula(data["conditions"], info);
 	// The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
 	// to detect tautologies, contradictions, etc., and to consolidate state variables
