@@ -194,8 +194,7 @@ public:
 		_wgr_novelty_evaluators(),
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
-		_simconfig(c.getOption<int>("sim.bound", 10000),
-				   config.complete_simulation,
+		_simconfig(config.complete_simulation,
 				   config.mark_negative_propositions,
 				   config.simulation_width,
 			       c.getOption<bool>("goal_directed", false)
@@ -421,8 +420,8 @@ public:
 		
 
 		// Otherwise, we compute it anew
-		// if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
- 		if (!node.has_parent()) {
+		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
+ 		// if (!node.has_parent()) {
 			// Throw a simulation from the node, and compute a set R[IW1] from there.
 			_stats.simulation();
 			SimulationT simulator(_model, _featureset, _simconfig, _stats);

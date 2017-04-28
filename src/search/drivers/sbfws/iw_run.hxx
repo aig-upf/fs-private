@@ -290,9 +290,6 @@ public:
 	using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 	
 	struct Config {
-		//! The bound on the simulation number of generated nodes
-		int _bound;
-		
 		//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
 		bool _complete;
 		
@@ -304,8 +301,8 @@ public:
 		
 		bool _use_goal_directed_info;
 		
-		Config(int bound, bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info) :
-			_bound(bound), _complete(complete), _mark_negative(mark_negative), _max_width(max_width), _use_goal_directed_info(goal_directed_info) {}
+		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info) :
+			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _use_goal_directed_info(goal_directed_info) {}
 		
 	};
 	
@@ -428,9 +425,8 @@ public:
 	}
 	
 	std::vector<bool> compute_R_IW1(const StateT& seed) {
-		LPT_INFO("cout", "IW Simulation - Computing blind R");
-		_config._max_width = 1;
-		_config._bound = -1; // No bound
+		LPT_INFO("cout", "IW Simulation - Computing (goal-blind) R[" << _config._max_width << "]");
+// 		_config._max_width = 1;
 		std::vector<NodePT> seed_nodes;
 		_compute_R(seed, seed_nodes);
 
@@ -444,7 +440,6 @@ public:
 		LPT_INFO("cout", "IW Simulation - Computing goal-directed R_G[" << _config._max_width << "]");
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 // 		_config._max_width = 2;
-		_config._bound = -1; // No bound
 		std::vector<NodePT> seed_nodes;
 		_compute_R(seed, seed_nodes);
 
@@ -582,11 +577,6 @@ public:
 					else  ++_w2_nodes_generated;
 				} else {
 					++_w_gt2_nodes_generated;
-				}
-				
-				if (_config._bound > 0 && accepted >= (unsigned) _config._bound) {
- 					LPT_INFO("cout", "IW Simulation - Bound reached: " << accepted << " nodes processed");
-					return false;
 				}
 			}
 		}
