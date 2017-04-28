@@ -138,8 +138,8 @@ public:
 	~SimulationEvaluator() = default;
 
 	unsigned evaluate(NodeT& node) {
- 		return evaluate_new(node);
 		return evaluate_old(node);
+ 		return evaluate_new(node);
 	}
 	
 	//! Returns false iff we want to prune this node during the search
@@ -163,6 +163,7 @@ public:
 		return node._w;
 	}
 	
+	//! Deals with IW(1.5) & Friends. Perhaps we'll end up removing all this.
 	unsigned evaluate_new(NodeT& node) {
 // 		assert(node._nov1atom_idxs.empty());
 // 		assert(std::count(node._B_of_s.begin(),_B_of_s.end(), true) == 0);
@@ -440,9 +441,9 @@ public:
 	}
 	
 	std::vector<bool> compute_goal_directed_R(const StateT& seed) {
-		LPT_INFO("cout", "IW Simulation - Computing goal-directed R");
+		LPT_INFO("cout", "IW Simulation - Computing goal-directed R_G[" << _config._max_width << "]");
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
-		_config._max_width = 2;
+// 		_config._max_width = 2;
 		_config._bound = -1; // No bound
 		std::vector<NodePT> seed_nodes;
 		_compute_R(seed, seed_nodes);
@@ -450,9 +451,7 @@ public:
 		LPT_INFO("cout", "IW Simulation - Number of seed nodes: " << seed_nodes.size());
 		if (!_unreached.empty()) {
 			LPT_INFO("cout", "WARNING: Some subgoals not reached during the simulation.");
-			for (unsigned x:_unreached) {
-				LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
-			}
+// 			for (unsigned x:_unreached) LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
 		}
 		_stats.sim_reached_subgoals(_model.num_subgoals() - _unreached.size());
 		_stats.set_num_subgoals(_model.num_subgoals());

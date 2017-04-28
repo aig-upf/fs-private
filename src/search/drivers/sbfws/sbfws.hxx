@@ -81,7 +81,7 @@ public:
 
 	//! The number of atoms in the last relaxed plan computed in the way to the current state that have been
 	//! made true along the path (#r)
-	std::unique_ptr<LightRelevantAtomSet> _relevant_atoms;
+	std::unique_ptr<RelevantAtomSet> _relevant_atoms;
 	
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
 	//! atoms in s with novelty 1.
@@ -243,7 +243,7 @@ public:
 	template <typename NodeT>
 	unsigned get_hash_r(NodeT& node) {
 		if (_rstype == SBFWSConfig::RelevantSetType::None) return 0;
-		return compute_relevant_atoms(node).num_reached();
+		return compute_R(node).num_reached();
 	}
 	
 	template <typename NodeT>
@@ -414,61 +414,47 @@ public:
 	//! can recursively compute the parent RelevantAtomSet.
 	//! Additionally, this caches the set within the node for future reference.
 	template <typename NodeT>
-	const LightRelevantAtomSet& compute_relevant_atoms(NodeT& node) {
+	const RelevantAtomSet& compute_R(NodeT& node) {
 		
-		// If the set was cached, simply return it
+		// If the R(s) has been previously computed and is cached, we return it straight away
 		if (node._relevant_atoms != nullptr) return *node._relevant_atoms;
 		
 
-//#		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
+		// Otherwise, we compute it anew
+		// if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
  		if (!node.has_parent()) {
 			// Throw a simulation from the node, and compute a set R[IW1] from there.
-			auto relevant = compute_R(node.state);
-			// auto relevant = _heuristic.compute_R_union_Rs(s);
+			_stats.simulation();
+			SimulationT simulator(_model, _featureset, _simconfig, _stats);
+			std::vector<bool> relevant = simulator.compute_R(node.state);
+			
 			node._helper = std::unique_ptr<AtomsetHelper>(new AtomsetHelper(_problem.get_tuple_index(), relevant));
-			node._relevant_atoms = std::unique_ptr<LightRelevantAtomSet>(new LightRelevantAtomSet(*node._helper));
+			node._relevant_atoms = std::unique_ptr<RelevantAtomSet>(new RelevantAtomSet(*node._helper));
 			node._relevant_atoms->init(node.state);
 			
-			if (!node.has_parent()) { // Log some info for the seed state
-				LPT_DEBUG("cout", "R_{IW(1)}(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ")");
-				LPT_DEBUG("cout", *(node._relevant_atoms));
+			if (!node.has_parent()) { // Log some info, but only for the seed state
+				LPT_DEBUG("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
 			}
 		}
 
 
-		else { // Copy the set from the parent and update the set of relevant nodes with those that have been reached.
-			assert(node.has_parent());
-			assert(!node._relevant_atoms);
-			node._relevant_atoms = std::unique_ptr<LightRelevantAtomSet>(new LightRelevantAtomSet(compute_relevant_atoms(*node.parent))); // This might trigger a recursive computation
-			
+		else {
+			// Copy the set R from the parent and update the set of relevant nodes with those that have been reached.
+			node._relevant_atoms = std::unique_ptr<RelevantAtomSet>(new RelevantAtomSet(compute_R(*node.parent))); // This might trigger a recursive computation
 			
 			if (node.decreases_unachieved_subgoals()) {
  				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
 			} else {
-// 				node._relevant_atoms->update(node.state, &(node.parent->state));
 				node._relevant_atoms->update(node.state, nullptr);
+				// node._relevant_atoms->update(node.state, &(node.parent->state));
 			}
 	}
 	
 		return *node._relevant_atoms;
 	}
-	
-	
-	template <typename StateT>
-	std::vector<bool> compute_R(const StateT& state) {
-		_stats.simulation();
-		SimulationT simulator(_model, _featureset, _simconfig, _stats);
-		return simulator.compute_R(state);
-	}
-	
-	template <typename StateT>
-	std::vector<bool> compute_R_union_Rs(const StateT& state) {
-		throw std::runtime_error("Revise");
-// 		_stats.simulation();
-// 		SimulationT simulator(_model, _featureset, _simconfig);
-// 		return simulator.compute_R_union_Rs(state);
-	}
 
+	
+	
 	unsigned compute_unachieved(const State& state) {
 		return _unsat_goal_atoms_heuristic.evaluate(state);
 	}
@@ -692,8 +678,8 @@ public:
 		
 		
 		// Force one simulation from the root node and abort the search
- 		_heuristic.compute_node_complex_type(*root);
-		return false;
+//  		_heuristic.compute_node_complex_type(*root);
+// 		return false;
 		
 		
 		// The main search loop
