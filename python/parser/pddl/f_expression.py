@@ -2,12 +2,25 @@ from __future__ import print_function
 from . import pddl_types
 
 def parse_expression(exp):
+    def check_integer(s) :
+        try :
+            int(s)
+            return True
+        except ValueError :
+            return False
+    def check_float(s) :
+        try :
+            float(s)
+            return True
+        except ValueError :
+            return False
+
     if isinstance(exp, list):
         functionsymbol = exp[0]
         return PrimitiveNumericExpression(functionsymbol, exp[1:])
-    elif exp.replace(".", "").isdigit():
-        return NumericConstant(float(exp))
-    elif exp[0] == "-":
+    elif check_integer(exp) :
+        return NumericConstant(int(exp))
+    elif check_float(exp):
         return NumericConstant(float(exp))
     else:
         return PrimitiveNumericExpression(exp, [])

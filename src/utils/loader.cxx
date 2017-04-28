@@ -65,8 +65,26 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto goal = loadGroundedFormula(data["goal"], info);
 
 	LPT_INFO("main", "Loading state constraints...");
+<<<<<<< HEAD
     auto sc = loadGroundedFormula(data["state_constraints"], info);
     auto named_sc = loadNamedStateConstraints( data["state_constraints"], info );
+
+
+=======
+    std::vector<const fs::Formula*> conjuncts;
+    for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
+	   auto sc = loadGroundedFormula(data["state_constraints"][i], info);
+       const fs::Conjunction* conj = dynamic_cast<const fs::Conjunction*>(sc);
+       if ( conj == nullptr ) {
+           conjuncts.push_back(sc);
+           continue;
+       }
+       for ( auto c : conj->getSubformulae() )
+            conjuncts.push_back(c->clone());
+        delete conj;
+    }
+    fs::Conjunction* sc = new fs::Conjunction(conjuncts);
+>>>>>>> origin/bfws-v1.0-beta2
 
     LPT_INFO("main", "Loading Problem Metric...");
     auto metric = loadMetric( data["metric"], info );
@@ -152,7 +170,6 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	const fs::BindingUnit unit(parameters, fs::Loader::parseVariables(node["unit"], info));
-
     const std::string& action_type_str = node["type"].GetString();
     ActionData::Type action_type;
     if ( action_type_str == "control" )
@@ -164,7 +181,6 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
     else {
         throw std::runtime_error("Action '" + name +"' has unrecognized type '" + action_type_str + "'");
     }
-
 
 	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
 	std::vector<const fs::ActionEffect*> effects;
@@ -210,36 +226,29 @@ Loader::loadMetric( const rapidjson::Value& data, const ProblemInfo& info ) {
 }
 
 
-std::vector<const fs::Formula*>
+const fs::Formula*
 Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
-    for (unsigned i = 0; i < data.Size(); ++i) {
-        if ( data[i].HasMember("name")) {
-            continue;
-        }
-        const fs::Formula* unprocessed = fs::Loader::parseFormula(data[i]["conditions"], info);
-        // The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
-        // to detect tautologies, contradictions, etc., and to consolidate state variables
-        auto processed = fs::bind(*unprocessed, Binding::EMPTY_BINDING, info);
-        delete unprocessed;
-        return processed;
-    }
+    if (data.HasMember("name")) return nullptr;
+    assert( data.HasMember("conditions"));
+    const fs::Formula* unprocessed = fs::Loader::parseFormula(data[i]["conditions"], info);
+    // The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
+    // to detect tautologies, contradictions, etc., and to consolidate state variables
+    auto processed = fs::bind(*unprocessed, Binding::EMPTY_BINDING, info);
+    delete unprocessed;
+    return processed;
 }
 
-std::vector<const fs::Axiom*>
+const fs::Axiom*
 Loader::loadNamedStateConstraints(const rapidjson::Value& data, const ProblemInfo& info) {
     std::vector<const fs::Axiom*> axioms;
-    for (unsigned i = 0; i < data.Size(); ++i) {
-        if ( !data[i].HasMember("name")) {
-            continue;
-        }
-        std::vector<const ActionData*> schemata;
-        for (unsigned i = 0; i < data.Size(); ++i) {
-            if (const ActionData* adata = loadActionData(data[i], i, info, load_effects)) {
-                axioms.push_back(new fs::Axiom(adata->getName(), adata->getSignature(), adata->getParameterNames(), adata->getBindingUnit(), adata->getPrecondition()->clone()));
-            }
-        }
+    if ( !data[i].HasMember("name")) {
+        return nullptr
     }
-    return axioms;
+    const ActionData* adata = loadActionData(data[i], i, info, load_effects))
+    if (adata != nullptr )
+        return new fs::Axiom(adata->getName(), adata->getSignature(), adata->getParameterNames(), adata->getBindingUnit(), adata->getPrecondition()->clone());
+    assert(false)
+    return nullptr;
 }
 
 rapidjson::Document

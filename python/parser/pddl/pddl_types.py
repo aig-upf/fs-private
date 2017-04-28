@@ -11,7 +11,7 @@ class Type(object):
         self.name = name
         self.basetype_name = basetype_name
     def __str__(self):
-        return self.name
+        return '{} ({})'.format(self.name,self.basetype_name) 
     def __repr__(self):
         return "Type(%s, %s)" % (self.name, self.basetype_name)
 

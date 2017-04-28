@@ -172,6 +172,11 @@ std::ostream& State::print(std::ostream& os) const {
     		if (x < info.getNumVariables() - 1) os << ", ";
             continue;
         }
+        else if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::INT ) {
+            os << info.getVariableName(x) << "=" << v;
+            if (x < info.getNumVariables() - 1) os << ", ";
+            continue;
+        }
         os << info.getVariableName(x) << "=" << info.getObjectName(x, v);
         if (x < info.getNumVariables() - 1) os << ", ";
     }

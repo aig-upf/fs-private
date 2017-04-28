@@ -281,8 +281,9 @@ class PredicateCondition(Condition):
                 self.relevant_vars.append(var)
                 self.var_types[var] = var_types[var]
                 if var not in self.var_indices:
-                    self.var_indices[var] = []
-                self.var_indices[var].append(vid)
+                    self.var_indices[var] = None
+                else :
+                    self.var_indices[var] = vid
         return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
@@ -316,6 +317,7 @@ class PredicateCondition(Condition):
         for grounding in self.groundings:
             t_grounding = list(self.variables)
             for vid, var in enumerate(self.relevant_vars):
+                if self.var_indices[var] is None : continue
                 for vi in self.var_indices[var]:
                     t_grounding[vi] = grounding[vid]
             t_grounding = tuple(t_grounding)
@@ -485,7 +487,7 @@ class AndCondition(Condition):
         for rv in self.relevant_vars:
             assert rv in var_types
             self.var_types[rv] = var_types[rv]
-        self.var_indices = dict([(v, [i]) for i, v in enumerate(self.relevant_vars)])
+        self.var_indices = dict([(v, i) for i, v in enumerate(self.relevant_vars)])
         return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
@@ -520,7 +522,7 @@ class AndCondition(Condition):
             if isinstance(condition, AndCondition):
                 self.conditions += condition.conditions
             elif condition is not None:
-                sub_indices = [self.var_indices[v][0] for v in condition.relevant_vars]
+                sub_indices = [self.var_indices[v] for v in condition.relevant_vars]
                 ground_conditions = {}
                 for grounding in self.groundings:
                     sub_grounding = tuple(grounding[i] for i in sub_indices)
@@ -668,7 +670,7 @@ class OrCondition(Condition):
         for rv in self.relevant_vars:
             assert rv in var_types
             self.var_types[rv] = var_types[rv]
-        self.var_indices = dict([(v, [i]) for i, v in enumerate(self.relevant_vars)])
+        self.var_indices = dict([(v, i) for i, v in enumerate(self.relevant_vars)])
         return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
@@ -708,7 +710,7 @@ class OrCondition(Condition):
                     if sub_grounding in condition.groundings:
                         ground_conditions[grounding] = sub_grounding
                 if ground_conditions:
-                    self.ground_conditions.append(ground_condtions)
+                    self.ground_conditions.append(ground_conditions)
                     new_conditions.append(condition)
         self.conditions = new_conditions
 
@@ -844,8 +846,8 @@ class ForAllCondition(Condition):
         for rv in self.relevant_vars:
             assert rv in var_types
             self.var_types[rv] = var_types[rv]
-        self.var_indices = dict([(v, [i]) for i, v in enumerate(self.relevant_vars)])
-        self.var_indices[self.var] = [len(self.relevant_vars)]
+        self.var_indices = dict([(v, i) for i, v in enumerate(self.relevant_vars)])
+        self.var_indices[self.var] = len(self.relevant_vars)
         return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
@@ -885,7 +887,7 @@ class ForAllCondition(Condition):
         for cgrounding in self.condition.groundings:
             grounding = [None]*len(self.relevant_vars)
             for vid, var in enumerate(self.condition.relevant_vars):
-                index = self.var_indices[var][0]
+                index = self.var_indices[var]
                 if index >= len(self.relevant_vars):
                     var_val = cgrounding[vid]
                 else:
@@ -1040,8 +1042,8 @@ class ExistsCondition(Condition):
         for rv in self.relevant_vars:
             assert rv in var_types
             self.var_types[rv] = var_types[rv]
-        self.var_indices = dict([(v, [i]) for i, v in enumerate(self.relevant_vars)])
-        self.var_indices[self.var] = [len(self.relevant_vars)]
+        self.var_indices = dict([(v, i) for i, v in enumerate(self.relevant_vars)])
+        self.var_indices[self.var] = len(self.relevant_vars)
         return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
@@ -1166,8 +1168,9 @@ class IncreaseCondition(Condition):
             assert rv in var_types
             self.var_types[rv] = var_types[rv]
             if rv not in self.var_indices:
-                self.var_indices[rv] = []
-            self.var_indices[rv].append(vid)
+                self.var_indices[rv] = None
+            else :
+                self.var_indices[rv] = vid
         return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
@@ -1270,8 +1273,9 @@ class EqualsCondition(Condition):
                 self.relevant_vars.append(rv)
                 self.var_types[rv] = var_types[rv]
                 if rv not in self.var_indices:
-                    self.var_indices[rv] = []
-                self.var_indices[rv].append(vid)
+                    self.var_indices[rv] = None
+                else :
+                    self.var_indices[rv] = vid
         return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
@@ -1368,7 +1372,7 @@ class ConditionalEffect(Condition):
         for rv in self.relevant_vars:
             assert rv in var_types
             self.var_types[rv] = var_types[rv]
-        self.var_indices = dict([(v, [i]) for i, v in enumerate(self.relevant_vars)])
+        self.var_indices = dict([(v, i) for i, v in enumerate(self.relevant_vars)])
         return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
@@ -1653,6 +1657,8 @@ class Action(object):
         for grounding in self.groundings:
             precs = set()
             for prec in self.flat_ground_preconditions[grounding]:
+                if isinstance( prec[0], OrCondition) :
+                    raise SystemExit("Not Implemented Yet: ASP grounder cannot compile disjunctive preconditions away...")
                 assert isinstance(prec[0], PredicateCondition)
                 precs.add((prec[0].pred, prec[0].ground_conditions[prec[1]], prec[2]))
             self.strips_preconditions[grounding] = precs
@@ -1888,11 +1894,11 @@ class Problem(object):
                 cond.ground_dels[grounding] = set()
 
         for pred in self.predicates.values():
-            if pred.groundings:
-                pred.ground_precs = {}
-                pred.ground_nprecs = {}
-                pred.ground_adds = {}
-                pred.ground_dels = {}
+            #if pred.groundings:
+            pred.ground_precs = {}
+            pred.ground_nprecs = {}
+            pred.ground_adds = {}
+            pred.ground_dels = {}
             for grounding in pred.groundings:
                 pred.ground_precs[grounding] = set()
                 pred.ground_nprecs[grounding] = set()
@@ -1904,19 +1910,32 @@ class Problem(object):
                 ag_pair = (action, grounding)
                 for prec in action.flat_ground_preconditions[grounding]:
                     if isinstance(prec[0], PredicateCondition):
+                        var = prec[0].ground_conditions[prec[1]]
                         if prec[2]:
-                            prec[0].pred.ground_precs[prec[0].ground_conditions[prec[1]]].add(ag_pair)
+                            try :
+                                prec[0].pred.ground_precs[var].add(ag_pair)
+                            except KeyError :
+                                prec[0].pred.ground_precs[var] = { ag_pair }
                         else:
-                            prec[0].pred.ground_nprecs[prec[0].ground_conditions[prec[1]]].add(ag_pair)
+                            try :
+                                prec[0].pred.ground_nprecs[var].add(ag_pair)
+                            except KeyError :
+                                prec[0].pred.ground_nprecs[var] = { ag_pair }
                     else:
                         prec[0].ground_precs[prec[1]].add(ag_pair)
 
                 for eff in action.flat_ground_effects[grounding]:
                     if isinstance(eff[0], PredicateCondition):
                         if eff[2]:
-                            eff[0].pred.ground_adds[eff[0].ground_conditions[eff[1]]].add(ag_pair)
+                            try :
+                                eff[0].pred.ground_adds[eff[0].ground_conditions[eff[1]]].add(ag_pair)
+                            except KeyError :
+                                eff[0].pred.ground_adds[eff[0].ground_conditions[eff[1]]] = { ag_pair }
                         else:
-                            eff[0].pred.ground_dels[eff[0].ground_conditions[eff[1]]].add(ag_pair)
+                            try :
+                                eff[0].pred.ground_dels[eff[0].ground_conditions[eff[1]]].add(ag_pair)
+                            except KeyError :
+                                eff[0].pred.ground_dels[eff[0].ground_conditions[eff[1]]] = { ag_pair }
                     elif not isinstance(eff[0], IncreaseCondition):
                         eff[0].ground_adds[eff[1]].add(ag_pair)
 
