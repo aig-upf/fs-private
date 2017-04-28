@@ -48,9 +48,6 @@ public:
 	
 	bool _evaluated;
 	
-	//!
-	std::unordered_set<unsigned> _relevant_atoms;
-	
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
 	//! atoms in s with novelty 1.
 // 	std::vector<unsigned> _nov1atom_idxs;
@@ -155,10 +152,6 @@ public:
 		}
 		
 // 		LPT_INFO("evaluated", "Evaluated: " << node << std::endl);
-		
-		if (node._w == 2) { // If the novelty is two, we want to store the set R_s of atoms that belong to a novel 2-tuple
-			_evaluator->atoms_in_novel_tuple(node._relevant_atoms);
-		}
 		
 		return node._w;
 	}
@@ -371,7 +364,7 @@ public:
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 // 		_visited(),
-		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, _config._max_width, false)),
+		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, _config._max_width)),
 		_w1_nodes(),
 		_generated(0),
 		_w1_nodes_expanded(0),

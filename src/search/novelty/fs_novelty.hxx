@@ -53,6 +53,5 @@ using FSGenericMultivaluedNoveltyEvaluator = lapkt::novelty::GenericNoveltyEvalu
 
 //! An specialized evaluator for sets of atom-based-only novelty features which additionally have to be binary
 using FSAtomBinaryNoveltyEvaluator = lapkt::novelty::AtomNoveltyEvaluator<bool, FSAtomValuationIndexer, lapkt::novelty::BoolVectorTuple2Marker>;
-using FSAtomBinaryNoveltyEvaluatorPersistent = lapkt::novelty::AtomNoveltyEvaluator<bool, FSAtomValuationIndexer, lapkt::novelty::PersistentBoolVectorTuple2Marker>;
 
 } } // namespaces

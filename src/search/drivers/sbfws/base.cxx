@@ -33,47 +33,38 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 
 
 template<>
-FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width, bool persistent) {
-	
+FSBinaryNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width) {
+	const AtomIndex& index = problem.get_tuple_index();	
 	const Config& config = Config::instance(); // TODO - Remove the singleton use and inject the config here by other means
 	bool ignore_neg_literals = config.getOption<bool>("ignore_neg_literals", true);
 	
 	if (evaluator_t == SBFWSConfig::NoveltyEvaluatorType::Adaptive) {
-		const AtomIndex& index = problem.get_tuple_index();
-		
-		if (persistent) {
-			auto evaluator = FSAtomBinaryNoveltyEvaluatorPersistent::create(index, ignore_neg_literals, max_width);
-			if (evaluator) {
-// 				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator WITH PERSISTENCE");
-				return evaluator;
-			}			
-		} else {
-			auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, ignore_neg_literals, max_width);
-			if (evaluator) {
-// 				LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
-				return evaluator;
-			}
+		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, ignore_neg_literals, max_width);
+		if (evaluator) {
+			LPT_INFO("cout", "NOVELTY EVALUATION: Using a specialized FS Atom Novelty Evaluator");
+			return evaluator;
 		}
 	}
 	
-// 	LPT_INFO("cout", "NOVELTY EVALUATION: Using a binary novelty evaluator");
+ 	LPT_INFO("cout", "NOVELTY EVALUATION: Using a binary novelty evaluator");
 	return new FSGenericBinaryNoveltyEvaluator(max_width);
 }
 
 template<>
-FSMultivaluedNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width, bool persistent) {
-	
-	/*
-	 * TODO - IMPLEMENT THIS FOR MULTIVALUED TYPES
+FSMultivaluedNoveltyEvaluatorI* create_novelty_evaluator(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType evaluator_t, unsigned max_width) {
+	const Config& config = Config::instance(); // TODO - Remove the singleton use and inject the config here by other means
 	if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
+		// TODO - IMPLEMENT THIS FOR MULTIVALUED TYPES
+		/*
 		const AtomIndex& index = problem.get_tuple_index();
 		auto evaluator = FSAtomBinaryNoveltyEvaluator::create(index, true, max_width);
 		if (evaluator) {
 			LPT_INFO("cout", "Using a specialized FS Atom Novelty Evaluator");
 			return evaluator;
 		}
+		*/
 	}
-	*/
+	
 	
 	LPT_INFO("cout", "NOVELTY EVALUATION: Using a generic multivalued novelty evaluator");
 	return new FSGenericMultivaluedNoveltyEvaluator(max_width);
