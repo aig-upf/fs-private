@@ -51,8 +51,8 @@ protected:
 	static const ActionData* loadActionData(const rapidjson::Value& data, unsigned id, const ProblemInfo& info, bool load_effects);
 
 	//! Load a formula and process it
-	static const fs::Formula* loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
-    static std::vector<const fs::Axiom*> loadNamedStateConstraints(const rapidjson::Value& data, const ProblemInfo& info);
+	static const fs::Formula*  loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
+    const fs::Axiom*           loadNamedStateConstraints(const rapidjson::Value& data, const ProblemInfo& info);
 
     //! Load the metric
     static const fs::Metric* loadMetric( const rapidjson::Value& data, const ProblemInfo& info );
