@@ -47,19 +47,19 @@ public:
 	void expansion() { ++_expanded; }
 	void generation() { ++_generated; }
 	void evaluation() { ++_evaluated; }
-	void simulation() { ++_simulations; }
 	
 	void wg1_node() { ++_num_wg1_nodes; }
 	void wgr1_node() { ++_num_wgr1_nodes; }
 	void wg1_5_node() { ++_num_wg1_5_nodes; }
 	void wgr2_node() { ++_num_wgr2_nodes; }
 	void wgr_gt2_node() { ++_num_wgr_gt2_nodes; }
-	
+
+	void simulation() { ++_simulations; }
 	void simulation_node_reused() { ++_reused_simulation_nodes; }
-	void sim_reached_subgoals(unsigned number) { _sim_reached_subgoals = number; }
-	void sim_expanded_nodes(unsigned number) { _sim_expanded_nodes = number; }
-	void sim_generated_nodes(unsigned number) { _sim_generated_nodes = number; }
-	void sim_time(float time) { _sim_time = time; }
+	void sim_add_reached_subgoals(unsigned number) { _sim_reached_subgoals += number; }
+	void sim_add_expanded_nodes(unsigned number) { _sim_expanded_nodes += number; }
+	void sim_add_generated_nodes(unsigned number) { _sim_generated_nodes += number; }
+	void sim_add_time(float time) { _sim_time += time; }
 	
 	void expansion_g_decrease() { ++_num_expanded_g_decrease; }
 	void generation_g_decrease() { ++_num_generated_g_decrease; }
@@ -116,19 +116,27 @@ public:
 			std::make_tuple("_num_generated_g_decrease", "Generations with #g decrease", std::to_string(_num_generated_g_decrease)),
 			
 			std::make_tuple("num_subgoals", "Total number of conjunctive subgoals", std::to_string(_num_subgoals)),
-			std::make_tuple("sim_reached_subgoals", "Number of subgoals reached during a simulation from s0", std::to_string(_sim_reached_subgoals)),
-			std::make_tuple("sim_expanded_nodes", "Nodes expanded in the simulation", std::to_string(_sim_expanded_nodes)),
-			std::make_tuple("sim_generated_nodes", "Nodes generated in the simulation", std::to_string(_sim_generated_nodes)),
+			
+			std::make_tuple("sim_num_simulations", "Total number of simulations", std::to_string(simulated())),
+			
 			std::make_tuple("sim_time", "Total simulation time", std::to_string(_sim_time)),
+			std::make_tuple("sim_expanded_nodes", "Total nodes expanded during simulations", std::to_string(_sim_expanded_nodes)),
+			std::make_tuple("sim_generated_nodes", "Total nodes generated during simulation", std::to_string(_sim_generated_nodes)),
+			
+			std::make_tuple("sim_avg_time", "Avg. simulation time", _avg(_sim_time, _simulations)),
+			std::make_tuple("sim_avg_expanded_nodes", "Avg. nodes expanded during simulations", _avg(_sim_expanded_nodes, _simulations)),
+			std::make_tuple("sim_avg_generated_nodes", "Avg. nodes generated during simulation", _avg(_sim_generated_nodes, _simulations)),
+			
+			std::make_tuple("sim_avg_reached_subgoals", "Avg. number of subgoals reached during simulations", std::to_string(_sim_reached_subgoals)),
+			
 			std::make_tuple("reused_simulation_nodes", "Simulation nodes reused in the search", std::to_string(_reused_simulation_nodes)),
 			
-			std::make_tuple("simulations", "Simulations", std::to_string(simulated())),
-			std::make_tuple("reachable_0", "Reachable subgoals in initial state", _if_computed(_initial_reachable_subgoals)),
-			std::make_tuple("reachable_max", "Max. # reachable subgoals in any simulation", std::to_string(_max_reachable_subgoals)),
-			std::make_tuple("reachable_avg", "Avg. # reachable subgoals in any simulation", _avg(_sum_reachable_subgoals, _simulations)),
-			std::make_tuple("relevant_atoms_0", "|R|_0", _if_computed(_initial_relevant_atoms)),
-			std::make_tuple("relevant_atoms_max", "|R|_max", std::to_string(_max_relevant_atoms)),
-			std::make_tuple("relevant_atoms_avg", "|R|_avg", _avg(_sum_relevant_atoms, _simulations))
+			std::make_tuple("sim_reachable_0", "Reachable subgoals in initial state", _if_computed(_initial_reachable_subgoals)),
+			std::make_tuple("sim_reachable_max", "Max. # reachable subgoals in any simulation", std::to_string(_max_reachable_subgoals)),
+			std::make_tuple("sim_reachable_avg", "Avg. # reachable subgoals in any simulation", _avg(_sum_reachable_subgoals, _simulations)),
+			std::make_tuple("sim_relevant_atoms_0", "|R|_0", _if_computed(_initial_relevant_atoms)),
+			std::make_tuple("sim_relevant_atoms_max", "|R|_max", std::to_string(_max_relevant_atoms)),
+			std::make_tuple("sim_relevant_atoms_avg", "|R|_avg", _avg(_sum_relevant_atoms, _simulations))
 		};
 	}
 	

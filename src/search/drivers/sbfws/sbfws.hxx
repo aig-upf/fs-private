@@ -202,7 +202,6 @@ public:
 		_stats(stats),
 		_rstype(config.relevant_set_type)
 	{
-		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
 	}
 
 	~SBFWSHeuristic() {
@@ -423,8 +422,8 @@ public:
 		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
  		// if (!node.has_parent()) {
 			// Throw a simulation from the node, and compute a set R[IW1] from there.
-			_stats.simulation();
-			SimulationT simulator(_model, _featureset, _simconfig, _stats);
+			bool verbose = !node.has_parent(); // Print info only on the s0 simulation
+			SimulationT simulator(_model, _featureset, _simconfig, _stats, verbose);
 			std::vector<bool> relevant = simulator.compute_R(node.state);
 			
 			node._helper = std::unique_ptr<AtomsetHelper>(new AtomsetHelper(_problem.get_tuple_index(), relevant));
