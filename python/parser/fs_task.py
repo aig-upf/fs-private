@@ -336,6 +336,9 @@ class FSTaskIndex(object):
         self.event_schemas = [FSActionSchema(self,evt, "exogenous") for evt in events]
 
     def process_metric(self, metric ) :
+        if metric is None :
+            self.metric = FSMetric( self, None, None)
+            return
         self.metric = FSMetric( self, metric.optimization, metric.expr)
 
     def process_adl_actions(self, actions, sorted_action_names):

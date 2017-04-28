@@ -91,7 +91,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
     auto sc_idx = _index_axioms(sc_set);
 
     LPT_INFO("main", "Loading Problem Metric...");
-    auto metric = loadMetric( data["metric"], info );
+    const fs::Metric* metric = data.HasMember("metric") ? loadMetric( data["metric"], info ) : nullptr;
 
 	//! Set the global singleton Problem instance
 	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info));

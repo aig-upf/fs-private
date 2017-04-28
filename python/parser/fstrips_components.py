@@ -113,10 +113,15 @@ class FSMetric(FSBaseComponent) :
     """ A state--dependant metric (i.e. a expression to optimise defined over state variables)"""
     def __init__(self, index, opt_mode, expr ) :
         super().__init__(index)
+        if opt_mode is None or expr is None :
+            self.opt_mode = self.expr = None
+            return
         self.expression = self.parser.process_expression(expr, self.binding_unit)
         self.opt_mode = opt_mode
 
     def dump(self) :
+        if self.opt_mode is None :
+            return dict()
         return dict(optimization = self.opt_mode,
                     expression=self.expression.dump(self.index,self.binding_unit))
 
