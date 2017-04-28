@@ -65,15 +65,12 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto goal = loadGroundedFormula(data["goal"], info);
 
 	LPT_INFO("main", "Loading state constraints...");
-<<<<<<< HEAD
-    auto sc = loadGroundedFormula(data["state_constraints"], info);
-    auto named_sc = loadNamedStateConstraints( data["state_constraints"], info );
 
 
-=======
     std::vector<const fs::Formula*> conjuncts;
     for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
 	   auto sc = loadGroundedFormula(data["state_constraints"][i], info);
+       if (sc == nullptr ) continue;
        const fs::Conjunction* conj = dynamic_cast<const fs::Conjunction*>(sc);
        if ( conj == nullptr ) {
            conjuncts.push_back(sc);
@@ -84,7 +81,14 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
         delete conj;
     }
     fs::Conjunction* sc = new fs::Conjunction(conjuncts);
->>>>>>> origin/bfws-v1.0-beta2
+
+    std::vector<fs::Axiom*> named_sc_set;
+    for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
+        auto named_sc = loadNamedStateConstraint(data["state_constraints"][i], info);
+        if ( named_sc == nullptr ) continue;
+        named_sc_set.push_back( named_sc );
+    }
+
 
     LPT_INFO("main", "Loading Problem Metric...");
     auto metric = loadMetric( data["metric"], info );
