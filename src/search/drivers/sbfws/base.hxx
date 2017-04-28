@@ -31,6 +31,10 @@ struct SBFWSConfig {
 	
 	enum class RelevantSetType {None, Sim};
 	RelevantSetType relevant_set_type;
+	
+	//! When to recompute R: only in seed node, or each time number of unachieved goals #g decreases
+	enum class RComputation {Seed, GDecr};
+	RComputation r_computation;
 };
 
 class BFWSStats {

@@ -23,6 +23,11 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 	} else {
 		evaluator_t = NoveltyEvaluatorType::Generic;
 	}
+	
+	std::string rcomp = config.getOption<std::string>("bfws.rcomp", "seed");
+	if  (rcomp == "seed") r_computation = RComputation::Seed;
+	else if  (rcomp == "decrease") r_computation = RComputation::GDecr;
+	else throw std::runtime_error("Unknown option value \"bfws.rcomp\"=" + rcomp);
 }
 
 

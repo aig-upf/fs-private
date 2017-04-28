@@ -181,8 +181,8 @@ protected:
 
 	BFWSStats& _stats;
 
+	SBFWSConfig _sbfwsconfig;
 	
-	SBFWSConfig::RelevantSetType _rstype;
 	
 public:
 	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, BFWSStats& stats) :
@@ -200,7 +200,7 @@ public:
 			       c.getOption<bool>("goal_directed", false)
 		),
 		_stats(stats),
-		_rstype(config.relevant_set_type)
+		_sbfwsconfig(config)
 	{
 	}
 
@@ -240,7 +240,7 @@ public:
 	
 	template <typename NodeT>
 	unsigned get_hash_r(NodeT& node) {
-		if (_rstype == SBFWSConfig::RelevantSetType::None) return 0;
+		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) return 0;
 		return compute_R(node).num_reached();
 	}
 	
@@ -256,7 +256,7 @@ public:
 		
 		// A temporary hack: if we want no R computation at all, then return INF novelty w_{#g,#r} so that nodes on QWRG1 are ignored.
 		// This poses a small overhead, but it is only temporary.
-		if (_rstype == SBFWSConfig::RelevantSetType::None) {
+		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
 			node.w_gr = Novelty::GTOne;
 			return std::numeric_limits<unsigned>::max();
 		}
@@ -419,8 +419,8 @@ public:
 		
 
 		// Otherwise, we compute it anew
-		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
- 		// if (!node.has_parent()) {
+		if (computation_of_R_necessary(node)) {
+
 			// Throw a simulation from the node, and compute a set R[IW1] from there.
 			bool verbose = !node.has_parent(); // Print info only on the s0 simulation
 			SimulationT simulator(_model, _featureset, _simconfig, _stats, verbose);
@@ -451,7 +451,11 @@ public:
 		return *node._relevant_atoms;
 	}
 
-	
+	template <typename NodeT>
+	inline bool computation_of_R_necessary(const NodeT& node) const {
+		if (_sbfwsconfig.r_computation == SBFWSConfig::RComputation::Seed) return (!node.has_parent());
+		else return !node.has_parent() || node.decreases_unachieved_subgoals();
+	}
 	
 	unsigned compute_unachieved(const State& state) {
 		return _unsat_goal_atoms_heuristic.evaluate(state);
