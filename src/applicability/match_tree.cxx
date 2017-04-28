@@ -221,7 +221,7 @@ namespace fs0 {
 
 
     MatchTreeActionManager::MatchTreeActionManager( const std::vector<const GroundAction*>& actions,
-                                                    const fs::Formula* state_constraints,
+                                                    const std::vector<const fs::Formula*>& state_constraints,
                                                     const AtomIndex& tuple_idx)
         : NaiveActionManager(actions, state_constraints),
         _tuple_idx(tuple_idx),

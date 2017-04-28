@@ -80,21 +80,21 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
             conjuncts.push_back(c->clone());
         delete conj;
     }
-    fs::Conjunction* sc = new fs::Conjunction(conjuncts);
 
-    std::vector<fs::Axiom*> named_sc_set;
+    std::vector<const fs::Axiom*> sc_set;
+    sc_set.push_back( new fs::Axiom("variable_bounds", {}, {}, fs::BindingUnit({},{}), new fs::Conjunction(conjuncts)));
     for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
         auto named_sc = loadNamedStateConstraint(data["state_constraints"][i], info);
         if ( named_sc == nullptr ) continue;
-        named_sc_set.push_back( named_sc );
+        sc_set.push_back( named_sc );
     }
-
+    auto sc_idx = _index_axioms(sc_set);
 
     LPT_INFO("main", "Loading Problem Metric...");
     auto metric = loadMetric( data["metric"], info );
 
 	//! Set the global singleton Problem instance
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc, AtomIndex(info));
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 
 	problem->consolidateAxioms();
@@ -234,7 +234,7 @@ const fs::Formula*
 Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info) {
     if (data.HasMember("name")) return nullptr;
     assert( data.HasMember("conditions"));
-    const fs::Formula* unprocessed = fs::Loader::parseFormula(data[i]["conditions"], info);
+    const fs::Formula* unprocessed = fs::Loader::parseFormula(data["conditions"], info);
     // The conditions are by definition already grounded, and hence we need no binding, but we process the formula anyway
     // to detect tautologies, contradictions, etc., and to consolidate state variables
     auto processed = fs::bind(*unprocessed, Binding::EMPTY_BINDING, info);
@@ -243,15 +243,15 @@ Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& inf
 }
 
 const fs::Axiom*
-Loader::loadNamedStateConstraints(const rapidjson::Value& data, const ProblemInfo& info) {
+Loader::loadNamedStateConstraint(const rapidjson::Value& data, const ProblemInfo& info) {
     std::vector<const fs::Axiom*> axioms;
-    if ( !data[i].HasMember("name")) {
-        return nullptr
+    if ( !data.HasMember("name")) {
+        return nullptr;
     }
-    const ActionData* adata = loadActionData(data[i], i, info, load_effects))
+    const ActionData* adata = loadActionData(data, 0, info, false);
     if (adata != nullptr )
         return new fs::Axiom(adata->getName(), adata->getSignature(), adata->getParameterNames(), adata->getBindingUnit(), adata->getPrecondition()->clone());
-    assert(false)
+    assert(false);
     return nullptr;
 }
 

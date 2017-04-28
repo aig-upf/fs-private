@@ -6,6 +6,11 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
+Metric::Metric( const Metric& other )
+    : _type(other._type),
+    _expression( other._expression->clone() ),
+    _valid(other._valid) {}
+
 bool Metric::isWellFormed() const {
     return true;
 }

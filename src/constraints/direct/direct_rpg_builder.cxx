@@ -14,7 +14,7 @@
 
 namespace fs0 {
 
-std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula* goal_formula, const fs::Formula* state_constraints) {
+std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula* goal_formula, const std::vector<const fs::Formula*>& state_constraints) {
 	auto goal_conjunction = dynamic_cast<const fs::Conjunction*>(goal_formula);
 	assert(goal_conjunction);
 	auto directGoalConstraints = DirectTranslator::generate(fs::all_atoms(*goal_conjunction));
@@ -22,10 +22,14 @@ std::shared_ptr<DirectRPGBuilder> DirectRPGBuilder::create(const fs::Formula* go
 
 	// Process the state constraints, if any
 	std::vector<DirectConstraint*> directStateConstraints;
-	if (!state_constraints->is_tautology()) {
-		auto sc_conjunction = dynamic_cast<const fs::Conjunction*>(state_constraints);
-		assert(sc_conjunction);
-		directStateConstraints = DirectTranslator::generate(fs::all_atoms(*sc_conjunction));
+	if (!state_constraints.empty()) {
+        const fs::Formula* conj = fs::conjunction( *(state_constraints[0]), *(state_constraints[1]) );
+        for ( unsigned i = 2; i < state_constraints.size(); i++ ) {
+            auto tmp = conj;
+            conj = fs::conjunction( *conj, *(state_constraints[i]));
+            delete tmp;
+        }
+		directStateConstraints = DirectTranslator::generate(fs::all_atoms(*conj));
 		ConstraintCompiler::compileConstraints(directStateConstraints);
 	}
 

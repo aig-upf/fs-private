@@ -244,7 +244,7 @@ bool UniversallyQuantifiedFormula::interpret_rec(const T& assignment, Binding& b
 	return true;
 }
 
-std::vector<const AtomicFormula*> check_all_atomic_formulas(const std::vector<const Formula*> formulas) {
+std::vector<const AtomicFormula*> check_all_atomic_formulas(const std::vector<const Formula*>& formulas) {
 	std::vector<const AtomicFormula*> downcasted;
 	for (const auto formula:formulas) {
 		const fs::AtomicFormula* sub = dynamic_cast<const fs::AtomicFormula*>(formula);

@@ -21,6 +21,8 @@ public:
 		if (!isWellFormed()) throw std::runtime_error("Ill-formed effect");
 	}
 
+    Metric( const Metric& other );
+
 	virtual ~Metric() {
 		delete _expression;
 	}

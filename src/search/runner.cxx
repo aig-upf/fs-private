@@ -17,7 +17,7 @@
 
 namespace fs0 { namespace drivers {
 
-Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator) 
+Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator)
 	: _options(options), _generator(generator), _start_time(aptk::time_used())
 {}
 
@@ -30,13 +30,13 @@ int Runner::run() {
 	auto data = Loader::loadJSONObject(_options.getDataDir() + "/problem.json");
 	Problem* problem = _generator(data, _options.getDataDir());
 	const Config& config = Config::instance();
-	
+
 	LPT_INFO("main", "Problem instance loaded:" << std::endl << *problem);
 	report_stats(*problem, _options.getOutputDir());
-	
+
 	LPT_INFO("main", "Planner configuration: " << std::endl << config);
 	LPT_INFO("cout", "Deriving control to search engine...");
-	
+
 	auto driver = EngineRegistry::instance().get(_options.getDriver());
 	ExitCode code = driver->search(*problem, config, _options.getOutputDir(), _start_time);
 	report_stats(*problem, _options.getOutputDir()); // Report stats here again so that the number of ground actions, etc. is correctly reported.
@@ -49,10 +49,13 @@ void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
 	unsigned n_actions = problem.getGroundActions().size();
 	std::ofstream json_out( out_dir + "/problem_stats.json" );
 	json_out << "{" << std::endl;
-	
+
 	unsigned num_goal_atoms = fs::all_atoms(*problem.getGoalConditions()).size();
-	unsigned num_sc_atoms = fs::all_atoms(*problem.getStateConstraints()).size();
-	
+	unsigned num_sc_atoms = 0;
+    for ( auto sc : problem.getStateConstraints() ) {
+        fs::all_atoms(*sc).size();
+    }
+
 	LPT_INFO("cout", "Number of objects: " << info.getNumObjects());
 	LPT_INFO("cout", "Number of state variables: " << info.getNumVariables());
 	LPT_INFO("cout", "Number of problem atoms: " << tuple_index.size());
@@ -60,7 +63,7 @@ void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
 	LPT_INFO("cout", "Number of (perhaps partially) ground actions: " << n_actions);
 	LPT_INFO("cout", "Number of goal atoms: " << num_goal_atoms);
 	LPT_INFO("cout", "Number of state constraint atoms: " << num_sc_atoms);
-	
+
 
 	json_out << "\t\"num_objects\": " << info.getNumObjects() << "," << std::endl;
 	json_out << "\t\"num_state_variables\": " << info.getNumVariables() << "," << std::endl;
