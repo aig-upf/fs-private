@@ -68,7 +68,8 @@ public:
 	bool _processed;
 	
 	//! The generation order, uniquely identifies the node
-	unsigned long _gen_order;
+	//! NOTE We're assuming we won't generate more than 2^32 ~ 4.2 billion nodes.
+	uint32_t _gen_order;
 
 	//! The novelty w_{#g} of the state
 	Novelty w_g;
@@ -76,22 +77,24 @@ public:
 	//! The novelty w_{#g,#r} of the state
 	Novelty w_gr;
 	
-	//! The reference AtomsetHelper
-	std::unique_ptr<AtomsetHelper> _helper;
+	//! A reference atomset helper wrt which the sets R of descendent nodes with same #g are computed
+	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
+	AtomsetHelper* _helper;
 
 	//! The number of atoms in the last relaxed plan computed in the way to the current state that have been
 	//! made true along the path (#r)
-	std::unique_ptr<RelevantAtomSet> _relevant_atoms;
+	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
+	RelevantAtomSet* _relevant_atoms;
 	
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
 	//! atoms in s with novelty 1.
-	std::vector<unsigned> _nov1atom_idxs;	
+// 	std::vector<unsigned> _nov1atom_idxs;	
 	
 	//! Constructor with full copying of the state (expensive)
 	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	SBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, unsigned long gen_order) :
+	SBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, uint32_t gen_order) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		unachieved_subgoals(std::numeric_limits<unsigned>::max()),
 		_processed(false),
@@ -99,11 +102,13 @@ public:
 		w_g(Novelty::Unknown),
 		w_gr(Novelty::Unknown),
 		_helper(nullptr),
-		_relevant_atoms(nullptr),
-		_nov1atom_idxs()
-	{}
+		_relevant_atoms(nullptr)
+// 		_nov1atom_idxs()
+	{
+		assert(_gen_order > 0); // Very silly way to detect overflow, in case we ever generate > 4 billion nodes :-)
+	}
 	
-	~SBFWSNode() = default;
+	~SBFWSNode() { delete _helper; delete _relevant_atoms; }
 	SBFWSNode(const SBFWSNode&) = delete;
 	SBFWSNode(SBFWSNode&&) = delete;
 	SBFWSNode& operator=(const SBFWSNode&) = delete;
@@ -327,6 +332,7 @@ public:
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
 	}
 	
+	/*
 	template <typename NodeT>
 	unsigned evaluate_novelty1(NodeT& node, NoveltyEvaluatorMapT& evaluator_map, bool has_parent, unsigned type, unsigned parent_type) {
 		assert(node._nov1atom_idxs.empty());
@@ -390,7 +396,7 @@ public:
 			node.w_g = res ? Novelty::OneAndAHalf : Novelty::GTOneAndAHalf;
 		}
 		return res;
-	}	
+	}
 
 	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
 	template <typename FeatureValueT>
@@ -406,6 +412,7 @@ public:
 			}
 		}
 	}
+	*/
 
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which
 	//! the counter #r(node) can be obtained. This implements a lazy version which
@@ -426,8 +433,8 @@ public:
 			SimulationT simulator(_model, _featureset, _simconfig, _stats, verbose);
 			std::vector<bool> relevant = simulator.compute_R(node.state);
 			
-			node._helper = std::unique_ptr<AtomsetHelper>(new AtomsetHelper(_problem.get_tuple_index(), relevant));
-			node._relevant_atoms = std::unique_ptr<RelevantAtomSet>(new RelevantAtomSet(*node._helper));
+			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
+			node._relevant_atoms = new RelevantAtomSet(*node._helper);
 			node._relevant_atoms->init(node.state);
 			
 			if (!node.has_parent()) { // Log some info, but only for the seed state
@@ -438,7 +445,7 @@ public:
 
 		else {
 			// Copy the set R from the parent and update the set of relevant nodes with those that have been reached.
-			node._relevant_atoms = std::unique_ptr<RelevantAtomSet>(new RelevantAtomSet(compute_R(*node.parent))); // This might trigger a recursive computation
+			node._relevant_atoms = new RelevantAtomSet(compute_R(*node.parent)); // This might trigger a recursive computation
 			
 			if (node.decreases_unachieved_subgoals()) {
  				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
@@ -540,7 +547,7 @@ protected:
 	bool _pruning;
 
 	//! The number of generated nodes so far
-	unsigned long _generated;
+	uint32_t _generated;
 	
 	//! The minimum number of subgoals-to-reach that we have achieved at any moment of the search
 	unsigned _min_subgoals_to_reach;
@@ -568,7 +575,7 @@ public:
 		_heuristic(conf, config, model, _featureset, *_search_evaluator, stats),
 		_stats(stats),
 		_pruning(config.getOption<bool>("bfws.prune", false)),
-		_generated(0),
+		_generated(1),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
 		_novelty_levels(setup_novelty_levels(model, config))
 	{
@@ -612,6 +619,7 @@ public:
 	//! Convenience method
 	bool solve_model(PlanT& solution) { return search(_model.init(), solution); }
 
+	/*
 	std::vector<NodePT> convert_simulation_nodes(const NodePT& root, const std::unordered_set<SimulationNodePT>& sim_nodes) {
 
 		// Convert a set of simulation nodes into a set of search nodes
@@ -671,10 +679,11 @@ public:
 
 		return relevant;
 	}
+	*/
 
 
 	bool search(const StateT& s, PlanT& plan) {
-		NodePT root = std::make_shared<NodeT>(s, _generated++);
+		NodePT root = std::make_shared<NodeT>(s, ++_generated);
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 		
@@ -830,7 +839,7 @@ protected:
 		for (const auto& action:_model.applicable_actions(node->state)) {
 			// std::cout << *(Problem::getInstance().getGroundActions()[action]) << std::endl;
 			StateT s_a = _model.next(node->state, action);
-			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, _generated++);
+			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, ++_generated);
 
 			if (_closed.check(successor)) continue; // The node has already been closed
 			if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it

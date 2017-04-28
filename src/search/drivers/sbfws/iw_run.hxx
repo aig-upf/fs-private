@@ -133,11 +133,11 @@ public:
 	{}
 
 	~SimulationEvaluator() = default;
-
-	unsigned evaluate(NodeT& node) {
-		return evaluate(node);
+// 
+// 	unsigned evaluate(NodeT& node) {
+// 		return evaluate(node);
 //  		return evaluate_new(node);
-	}
+// 	}
 	
 	//! Returns false iff we want to prune this node during the search
 	unsigned evaluate(NodeT& node) {
