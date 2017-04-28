@@ -135,12 +135,12 @@ public:
 	~SimulationEvaluator() = default;
 
 	unsigned evaluate(NodeT& node) {
-		return evaluate_old(node);
- 		return evaluate_new(node);
+		return evaluate(node);
+//  		return evaluate_new(node);
 	}
 	
 	//! Returns false iff we want to prune this node during the search
-	unsigned evaluate_old(NodeT& node) {
+	unsigned evaluate(NodeT& node) {
 		assert(!node._evaluated); // i.e. don't evaluate a node twice!
 		node._evaluated = true;
 		
@@ -156,6 +156,13 @@ public:
 		return node._w;
 	}
 	
+	std::vector<bool> reached_atoms() const {
+		std::vector<bool> atoms;
+		_evaluator->mark_atoms_in_novelty1_table(atoms);
+		return atoms;
+	}	
+	
+	/*
 	//! Deals with IW(1.5) & Friends. Perhaps we'll end up removing all this.
 	unsigned evaluate_new(NodeT& node) {
 // 		assert(node._nov1atom_idxs.empty());
@@ -246,14 +253,7 @@ public:
 			}
 		}
 	}
-		
-	
-	std::vector<bool> reached_atoms() const {
-		std::vector<bool> atoms;
-		_evaluator->mark_atoms_in_novelty1_table(atoms);
-		return atoms;
-	}
-	
+	*/
 };
 
 
