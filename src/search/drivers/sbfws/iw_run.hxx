@@ -3,22 +3,21 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <iomanip>
 #include <unordered_set>
 
 #include <lapkt/tools/resources_control.hxx>
 #include <lapkt/tools/logging.hxx>
-// #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
-// #include <lapkt/algorithms/generic_search.hxx>
-#include <search/novelty/fs_novelty.hxx>
-#include <search/drivers/sbfws/relevant_atomset.hxx>
+
+#include <problem.hxx>
 #include "base.hxx"
+#include "stats.hxx"
+#include <search/drivers/sbfws/relevant_atomset.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/actions.hxx>
 #include <state.hxx>
 #include <lapkt/search/components/open_lists.hxx>
-#include <problem.hxx>
+
 
 
 namespace fs0 { namespace bfws {
@@ -41,25 +40,24 @@ public:
 	//! Accummulated cost
 	unsigned g;
 	
-	bool satisfies_subgoal; // Whether the node satisfies some subgoal
+// 	bool satisfies_subgoal; // Whether the node satisfies some subgoal
 	
 	//! The novelty  of the state
 	unsigned _w;
-	
-	bool _evaluated;
 	
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
 	//! atoms in s with novelty 1.
 // 	std::vector<unsigned> _nov1atom_idxs;
 	
 	//! Implicit encoding of the atoms that contribute novelty 1 to the state
-	boost::dynamic_bitset<> _B_of_s;
+// 	boost::dynamic_bitset<> _B_of_s;
 	
 	//! Whether the path-novely of the node is one
 // 	bool _path_novelty_is_1;
 	
 	//! The generation order, uniquely identifies the node
-	unsigned long _gen_order;
+	//! NOTE We're assuming we won't generate more than 2^32 ~ 4.2 billion nodes.
+	uint32_t _gen_order;
 
 
 	IWRunNode() = default;
@@ -73,18 +71,19 @@ public:
 	IWRunNode(const StateT& s, unsigned long gen_order) : IWRunNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT _parent, unsigned long gen_order) :
+	IWRunNode(StateT&& _state, typename ActionT::IdType _action, PT _parent, uint32_t gen_order) :
 		state(std::move(_state)),
 //		feature_valuation(0),
 		action(_action),
 		parent(_parent),
 		g(parent ? parent->g+1 : 0),
 		_w(std::numeric_limits<unsigned>::max()),
-		_evaluated(false),
 // 		_path_novelty_is_1(false),
-		_B_of_s(state.numAtoms()),
+// 		_B_of_s(state.numAtoms()),
 		_gen_order(gen_order)
-	{}
+	{
+		assert(_gen_order > 0); // Very silly way to detect overflow, in case we ever generate > 4 billion nodes :-)
+	}
 
 
 	bool has_parent() const { return parent != nullptr; }
@@ -97,7 +96,8 @@ public:
 		os << ", #=" << _gen_order ;
 		os << ", s = " << state ;
 		os << ", g=" << g ;
-		os << ", w=" << (_evaluated ? (_w == std::numeric_limits<unsigned>::max() ? "INF" : std::to_string(_w)) : "?") ;
+		//os << ", w=" << (_evaluated ? (_w == std::numeric_limits<unsigned>::max() ? "INF" : std::to_string(_w)) : "?") ;
+		os << ", w=" << (_w == std::numeric_limits<unsigned>::max() ? "INF" : std::to_string(_w));
 		
 		os << ", act=" << action ;
 // 		if (action < std::numeric_limits<unsigned>::max()) {
@@ -107,7 +107,7 @@ public:
 // 			os << ", act=" << "NONE" ;
 // 		}
 		
-		os << ", parent = " << (parent ? parent->_gen_order : -1) << "}";
+		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		return os;
 	}
 
@@ -133,26 +133,15 @@ public:
 	{}
 
 	~SimulationEvaluator() = default;
-// 
-// 	unsigned evaluate(NodeT& node) {
-// 		return evaluate(node);
-//  		return evaluate_new(node);
-// 	}
 	
 	//! Returns false iff we want to prune this node during the search
 	unsigned evaluate(NodeT& node) {
-		assert(!node._evaluated); // i.e. don't evaluate a node twice!
-		node._evaluated = true;
-		
 		if (node.parent) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
 			node._w = _evaluator->evaluate(_features.evaluate(node.state), _features.evaluate(node.parent->state));
 		} else {
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
-		
-// 		LPT_INFO("evaluated", "Evaluated: " << node << std::endl);
-		
 		return node._w;
 	}
 	
@@ -162,98 +151,6 @@ public:
 		return atoms;
 	}	
 	
-	/*
-	//! Deals with IW(1.5) & Friends. Perhaps we'll end up removing all this.
-	unsigned evaluate_new(NodeT& node) {
-// 		assert(node._nov1atom_idxs.empty());
-// 		assert(std::count(node._B_of_s.begin(),_B_of_s.end(), true) == 0);
-
-// 		assert(!node._path_novelty_is_1); // We still haven't determined whether the node has been reached through a nov-1 path
-		
-		assert(!node._evaluated); // i.e. don't evaluate a node twice!
-		node._evaluated = true;		
-		unsigned nov;
-		auto valuation = _features.evaluate(node.state);
-		
-		if (!node.parent) { // We're dealing with the root node
-			nov = _evaluator->evaluate_1(valuation, node._B_of_s);
-			assert(nov == 1);
-// 			node._path_novelty_is_1 = true;
-			
-			// NOW EVALUATE 1.5 novelty
-			_evaluator->evaluate_piw(valuation);
-		} else {
-			auto parent_valuation = _features.evaluate(node.parent->state);
-			
-			
-			boost::dynamic_bitset<> new_atom_idxs, repeated_atom_idxs;
-// 			std::vector<unsigned> new_atom_idxs;
-// 			std::vector<unsigned> repeated_atom_idxs;
-			
-			analyze_new(valuation, parent_valuation, new_atom_idxs, repeated_atom_idxs);
-			
-			boost::dynamic_bitset<> from_current(valuation.size()); // 'from_current' contains the indexes of those variables that contain novel atoms
-			nov = _evaluator->evaluate_1(valuation, new_atom_idxs, from_current);
-// 			node._path_novelty_is_1 = node.parent->_path_novelty_is_1 && (nov == 1);
-			
-			// Now add to nov1atoms those atoms in the parent state that had novelty 1 and have not been deleted by the action leading to this state
-			node._B_of_s = node.parent->_B_of_s; // Copy B(s.parent)
-			node._B_of_s &= repeated_atom_idxs;
-			// 'B_of_s' contains now the var-index of the undeleted atoms from 1(parent(s))
-			
-			
-			// SET 1(s) to its appropriate value
-			node._B_of_s |= from_current;
-
-			
-			// NOW EVALUATE 1.5 novelty
-				
-			boost::dynamic_bitset<> pruned_B_of_s(valuation.size());
-			if (_evaluator->evaluate_piw(valuation, node._B_of_s, pruned_B_of_s)) {
-				if (nov != 1) {
-					nov = 2;
-					// Prune B(s)
-// 	 					std::cout << "Pruned 1(s) from " << node._B_of_s.count() << " to " << pruned_B_of_s.count() << " (out of a max. of " << node.state.numAtoms() << " atoms in a state) "<< std::endl;
-					node._B_of_s = pruned_B_of_s;
-				}
-			}
-			
-		}
-		
-		
-		node._w = nov;
-		return nov;
-	}
-	
-	std::vector<AtomIdx> to_atom_indexes(const NodeT& node, const std::vector<unsigned>& variables) {
-		std::vector<AtomIdx> special;
-		const AtomIndex& atomidx = Problem::getInstance().get_tuple_index();
-		for (unsigned var:variables) {
-			auto val = node.state.getValue(var);
-			if (val == 0) continue;
-			special.push_back(atomidx.to_index(var, val));
-		}
-		return special;
-	}
-	
-
-	//! Compute a vector with the indexes of those elements in a given valuation that are novel wrt a "parent" valuation.
-	template <typename FeatureValueT>
-	void analyze_new(const std::vector<FeatureValueT>& current, const std::vector<FeatureValueT>& parent, boost::dynamic_bitset<>& new_atoms, boost::dynamic_bitset<>& repeated_atoms) {
-		assert(current.size() == parent.size());
-		assert(new_atoms.empty());
-		assert(repeated_atoms.empty());
-		for (unsigned i = 0; i < current.size(); ++i) {
-			if (current[i] != parent[i]) {
-				new_atoms.push_back(true);
-				repeated_atoms.push_back(false);
-			} else {
-				new_atoms.push_back(false);
-				repeated_atoms.push_back(true);
-			}
-		}
-	}
-	*/
 };
 
 
@@ -278,9 +175,11 @@ public:
 	using StateT = typename StateModel::StateT;
 	
 	using ActionIdT = typename StateModel::ActionType::IdType;
-	using NodePT = std::shared_ptr<NodeT>;	
+	using NodePT = std::shared_ptr<NodeT>;
 	
 	using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
+	
+	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 	
 	struct Config {
 		//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
@@ -295,10 +194,8 @@ public:
 		//! Whether to extract goal-informed relevant sets R
 		bool _use_goal_directed_info;
 		
-		
 		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info) :
 			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _use_goal_directed_info(goal_directed_info) {}
-		
 	};
 	
 protected:
@@ -317,17 +214,16 @@ protected:
 	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
 //  	std::vector<std::vector<NodePT>> _all_paths;
 
+	// TODO REMOVE ?
  	std::vector<NodePT> _optimal_paths;
 
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
-	// TODO REMOVE
+	// TODO REMOVE ?
 	std::unordered_set<unsigned> _unreached;
 	
 	//! Contains the indexes of all those goal atoms that were already reached in the seed state
 	std::vector<bool> _in_seed;
 
-	//boost::fast_pool_allocator<NodeT> _allocator;
-	
 	//! Upon retrieval of the set of relevant atoms, this will contain all those nodes that are part
 	//! of the path to some subgoal
 // 	std::unordered_set<NodePT> _visited;
@@ -336,15 +232,15 @@ protected:
 	SimEvaluatorT _evaluator;
 	
 	//! All those nodes with width 1 on the first stage of the simulation
-	std::vector<NodePT> _w1_nodes;
+// 	std::vector<NodePT> _w1_nodes;
 	
 	//! Some node counts
-	unsigned long _generated;
-	unsigned long _w1_nodes_expanded;
-	unsigned long _w2_nodes_expanded;
-	unsigned long _w1_nodes_generated;
-	unsigned long _w2_nodes_generated;
-	unsigned long _w_gt2_nodes_generated;
+	uint32_t _generated;
+	uint32_t _w1_nodes_expanded;
+	uint32_t _w2_nodes_expanded;
+	uint32_t _w1_nodes_generated;
+	uint32_t _w2_nodes_generated;
+	uint32_t _w_gt2_nodes_generated;
 	
 	BFWSStats& _stats;
 	
@@ -354,7 +250,7 @@ protected:
 public:
 
 	//! Constructor
-	IWRun(const StateModel& model, const FeatureSetT& featureset, const IWRun::Config& config, BFWSStats& stats, bool verbose) :
+	IWRun(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const IWRun::Config& config, BFWSStats& stats, bool verbose) :
 // 		Base(model, OpenListT(), ClosedListT()),
 		_model(model),
 		_open(),
@@ -364,9 +260,9 @@ public:
 		_unreached(),
 		_in_seed(model.num_subgoals(), false),
 // 		_visited(),
-		_evaluator(featureset, create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), SBFWSConfig::NoveltyEvaluatorType::Adaptive, _config._max_width)),
-		_w1_nodes(),
-		_generated(0),
+		_evaluator(featureset, evaluator),
+// 		_w1_nodes(),
+		_generated(1),
 		_w1_nodes_expanded(0),
 		_w2_nodes_expanded(0),
 		_w1_nodes_generated(0),
@@ -545,9 +441,9 @@ public:
 				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current, _generated++ );
 				
 				unsigned novelty = _evaluator.evaluate(*successor);
-				if (novelty == 1) {
-					_w1_nodes.push_back(successor);
-				}
+// 				if (novelty == 1) {
+// 					_w1_nodes.push_back(successor);
+// 				}
 				
 //   				LPT_INFO("cout", "Simulation - Node generated: " << *successor);
 				
@@ -598,7 +494,7 @@ protected:
 			unsigned subgoal_idx = *it;
 
 			if (_model.goal(state, subgoal_idx)) {
-				node->satisfies_subgoal = true;
+// 				node->satisfies_subgoal = true;
 // 				_all_paths[subgoal_idx].push_back(node);
 				if (!_optimal_paths[subgoal_idx]) _optimal_paths[subgoal_idx] = node;
 				it = _unreached.erase(it);
@@ -616,7 +512,7 @@ protected:
 
 		for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
 			if (!_in_seed[i] && _model.goal(state, i)) {
-				node->satisfies_subgoal = true;
+// 				node->satisfies_subgoal = true;
 				if (!_optimal_paths[i]) _optimal_paths[i] = node;
 				_unreached.erase(i);
 			}

@@ -17,10 +17,7 @@ template <typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEval
 std::unique_ptr<SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>>
 create(const Config& config, FeatureEvaluatorT&& featureset, SBFWSConfig& conf, const StateModelT& model, BFWSStats& stats) {
 	using EngineT = SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>;
-	
-	auto search_evaluator = create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), conf.evaluator_t, conf.search_width);
-	
-	return std::unique_ptr<EngineT>(new EngineT(model, std::move(featureset), search_evaluator, stats, config, conf));
+	return std::unique_ptr<EngineT>(new EngineT(model, std::move(featureset), stats, config, conf));
 }
 
 template <>

@@ -5,8 +5,11 @@
 #include <cassert>
 
 #include <lapkt/novelty/evaluators.hxx>
-#include <utils/atom_index.hxx>
 
+namespace fs0 {
+	class Atom;
+	class AtomIndex;
+}
 
 namespace fs0 { namespace bfws {
 
@@ -23,35 +26,20 @@ public:
 	
 	FSAtomValuationIndexer(const FSAtomValuationIndexer&) = default;
 	
-	inline unsigned num_indexes() const {
-		return _atom_index.size();
-	}
+	unsigned num_indexes() const;
 	
-	inline unsigned to_index(unsigned variable, int value) const {
-		return _atom_index.to_index(variable, value);
-	}
+	unsigned to_index(unsigned variable, int value) const;
 	
-	inline const Atom& to_atom(unsigned index) const {
-		return _atom_index.to_atom(index);
-	}	
+	const Atom& to_atom(unsigned index) const;
 	
 protected:
 	const AtomIndex& _atom_index;
 };
 
 
-
 //! Interfaces for both binary and multivalued novelty evaluators
 using FSBinaryNoveltyEvaluatorI = lapkt::novelty::NoveltyEvaluatorI<bool>;
 using FSMultivaluedNoveltyEvaluatorI = lapkt::novelty::NoveltyEvaluatorI<int>;
 
-//! A generic evaluator for sets of binary novelty features
-using FSGenericBinaryNoveltyEvaluator = lapkt::novelty::GenericNoveltyEvaluator<bool>;
-
-//! A generic evaluator for sets of multivalued novelty features
-using FSGenericMultivaluedNoveltyEvaluator = lapkt::novelty::GenericNoveltyEvaluator<int>;
-
-//! An specialized evaluator for sets of atom-based-only novelty features which additionally have to be binary
-using FSAtomBinaryNoveltyEvaluator = lapkt::novelty::AtomNoveltyEvaluator<bool, FSAtomValuationIndexer, lapkt::novelty::BoolVectorTuple2Marker>;
 
 } } // namespaces
