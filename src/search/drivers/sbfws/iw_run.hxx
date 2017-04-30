@@ -2,8 +2,6 @@
 #pragma once
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <iomanip>
 #include <unordered_set>
 
 #include <lapkt/tools/resources_control.hxx>
@@ -15,13 +13,12 @@
 #include <search/drivers/sbfws/relevant_atomset.hxx>
 #include <utils/printers/vector.hxx>
 #include <utils/printers/actions.hxx>
-#include <state.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 
 
 
 namespace fs0 { namespace bfws {
-
+	
 template <typename StateT, typename ActionType>
 class IWRunNode {
 public:
@@ -164,9 +161,7 @@ public:
 template <typename NodeT,
           typename StateModel,
           typename NoveltyEvaluatorT,
-		  typename FeatureSetT,
-          typename OpenListT = lapkt::SimpleQueue<NodeT>
-//           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
+		  typename FeatureSetT
 >
 class IWRun
 {
@@ -180,6 +175,8 @@ public:
 	using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 	
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
+	
+	using OpenListT = lapkt::SimpleQueue<NodeT>;
 	
 	struct Config {
 		//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.

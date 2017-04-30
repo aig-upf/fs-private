@@ -10,6 +10,8 @@
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
+#include "stats.hxx"
+
 
 namespace fs0 { namespace bfws {
 
@@ -23,6 +25,8 @@ struct unachieved_subgoals_comparer {
 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
+		if (n1->w_g == Novelty::One && n2->w_g != Novelty::One) return false;
+// 		if (n1->w_gr == Novelty::One && n2->w_gr != Novelty::One) return false;
 		return n1->_gen_order > n2->_gen_order;
 	}
 };
@@ -62,7 +66,7 @@ public:
 	unsigned g;
 
 	//! The number of unachieved goals (#g)
-	unsigned unachieved_subgoals;
+	uint32_t unachieved_subgoals;
 
 	//! Whether the node has been processed
 	bool _processed;
