@@ -189,10 +189,10 @@ public:
 		unsigned _max_width;
 		
 		//! Whether to extract goal-informed relevant sets R
-		bool _use_goal_directed_info;
+		bool _goal_directed;
 		
 		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info) :
-			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _use_goal_directed_info(goal_directed_info) {}
+			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info) {}
 	};
 	
 protected:
@@ -309,32 +309,44 @@ public:
 	
 	
 	std::vector<bool> compute_R(const StateT& seed) {
-		if (_config._use_goal_directed_info) {
-			return compute_goal_directed_R(seed);
-		} else {
-			return compute_R_IW1(seed);
-		}
-	}
-	
-	std::vector<bool> compute_R_IW1(const StateT& seed) {
-// 		_config._max_width = 1;
-		_compute_R(seed);
 
-		std::vector<bool> rel_blind = _evaluator.reached_atoms();
-		if (_verbose) {
-			LPT_INFO("cout", "Simulation - |R[" << _config._max_width << "]| = " << std::count(rel_blind.begin(), rel_blind.end(), true));
+		_config._complete = false;
+		
+		float simt0 = aptk::time_used();
+ 		run(seed);
+		_stats.simulation();
+		_stats.sim_add_time(aptk::time_used() - simt0);
+		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
+		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
+		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
+		_stats.set_num_subgoals(_model.num_subgoals());	
+		
+		if (_config._goal_directed) {
+			// If we want the goal-aware R_G, we compute it, and use it _unless_ it is too small, in which case we fall back to the goal-unaware R.
+			unsigned R_G_size;
+			std::vector<bool> R_G = extract_R_G(R_G_size);
+// 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " seed nodes)");
+			
+			unsigned subgoals = _model.num_subgoals();
+			if (R_G_size > 0 && R_G_size > std::min(int(subgoals*0.5), 4)) {
+				return R_G;
+			} else {
+				LPT_INFO("cout", "R_G too small, falling back to goal-unaware R");
+			}
 		}
-		return rel_blind;
+		
+		
+		// Compute the goal-unaware version of R containing all atoms seen during the IW run
+		std::vector<bool> R = _evaluator.reached_atoms();
+		if (_verbose) {
+			LPT_INFO("cout", "Simulation - |R[" << _config._max_width << "]| = " << std::count(R.begin(), R.end(), true));
+		}
+		return R;
 	}
 	
-	std::vector<bool> compute_goal_directed_R(const StateT& seed) {
-		const AtomIndex& index = Problem::getInstance().get_tuple_index();
-// 		_config._max_width = 2;
-		
-		_compute_R(seed);
-		
-		
-		std::vector<NodePT> seed_nodes;
+	//! Extractes the goal-oriented set of relevant atoms after a simulation run
+	std::vector<bool> extract_R_G(unsigned& R_G_size) {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();		
 		/*
 		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
 			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
@@ -343,6 +355,7 @@ public:
 		}
 		*/
 
+		std::vector<NodePT> seed_nodes;
 		for (unsigned subgoal_idx = 0; subgoal_idx < _optimal_paths.size(); ++subgoal_idx) {
 			if (!_in_seed[subgoal_idx] && _optimal_paths[subgoal_idx] != nullptr) {
 				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
@@ -354,30 +367,31 @@ public:
 // 			for (unsigned x:_unreached) LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
 		}
 		
-		std::vector<bool> rel_goal_directed(index.size(), false);
-		mark_atoms_in_path_to_subgoal(seed_nodes, rel_goal_directed);
+		std::vector<bool> R_G(index.size(), false);
+		mark_atoms_in_path_to_subgoal(seed_nodes, R_G);
 		
+		R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
-			unsigned c = std::count(rel_goal_directed.begin(), rel_goal_directed.end(), true);
-			LPT_INFO("cout", "Simulation - (goal-directed) | R_G[" << _config._max_width << "]| = " << c << " (computed from " << seed_nodes.size() << " seed nodes)");
+			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " seed nodes)");
 		}
 		
-		return rel_goal_directed;		
+		return R_G;		
 	}	
 	
 	
-	std::vector<AtomIdx> _compute_R(const StateT& seed) {
+	
+// 	std::vector<AtomIdx> _compute_R(const StateT& seed) {
 		
-		_config._complete = false;
-		
-		float simt0 = aptk::time_used();
- 		run(seed);
-		_stats.simulation();
-		_stats.sim_add_time(aptk::time_used() - simt0);
-		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
-		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
-		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
-		_stats.set_num_subgoals(_model.num_subgoals());		
+// 		_config._complete = false;
+// 		
+// 		float simt0 = aptk::time_used();
+//  		run(seed);
+// 		_stats.simulation();
+// 		_stats.sim_add_time(aptk::time_used() - simt0);
+// 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
+// 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
+// 		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
+// 		_stats.set_num_subgoals(_model.num_subgoals());		
 		
 // 		std::vector<NodePT> w1_goal_reaching_nodes;
 // 		std::vector<NodePT> w2_goal_reaching_nodes;
@@ -411,17 +425,19 @@ public:
 // 		std::vector<AtomIdx> relevant(su.begin(), su.end());
 // 		std::sort(relevant.begin(), relevant.end());
 // 		return relevant;
-		return {};
-	}
+// 		return {};
+// 	}
 	
 	bool run(const StateT& seed) {
+		if (_verbose) LPT_INFO("cout", "Starting IW Simulation");
+		
 		NodePT n = std::make_shared<NodeT>(seed, _generated++);
 		mark_seed_subgoals(n);
 		
 		auto nov =_evaluator.evaluate(*n);
 		_unused(nov);
 		assert(nov==1);
-		++_w1_nodes_expanded;
+		++_w1_nodes_expanded; ++_w1_nodes_generated;
 // 		LPT_DEBUG("cout", "Simulation - Seed node: " << *n);
 
 		this->_open.insert(n);

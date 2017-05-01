@@ -57,7 +57,7 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
 		std::make_tuple("sim_avg_expanded_nodes", "Avg. nodes expanded during simulations", _avg(_sim_expanded_nodes, _simulations)),
 		std::make_tuple("sim_avg_generated_nodes", "Avg. nodes generated during simulation", _avg(_sim_generated_nodes, _simulations)),
 		
-		std::make_tuple("sim_avg_reached_subgoals", "Avg. number of subgoals reached during simulations", std::to_string(_sim_reached_subgoals)),
+		std::make_tuple("sim_avg_reached_subgoals", "Avg. number of subgoals reached during simulations", _avg(_sum_reachable_subgoals, _simulations)),
 		
 		std::make_tuple("reused_simulation_nodes", "Simulation nodes reused in the search", std::to_string(_reused_simulation_nodes)),
 		
