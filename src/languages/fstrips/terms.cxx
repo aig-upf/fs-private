@@ -145,11 +145,11 @@ std::ostream& BoundVariable::print(std::ostream& os, const fs0::ProblemInfo& inf
 	return os;
 }
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << info.getCustomObjectName(_value); // We are sure that this is a custom object, otherwise the IntConstant::print() would be executed
+	os << info.getCustomObjectName(_value); // We are sure that this is a custom object, otherwise the NumericConstant::print() would be executed
 	return os;
 }
 
-std::ostream& IntConstant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& NumericConstant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << _value;
 	return os;
 }

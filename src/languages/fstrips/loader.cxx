@@ -71,7 +71,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 			unsigned symbol_id = info.getSymbolId(symbol);
 			if (info.isPredicate(symbol_id)) {
 				//
-				IntConstant* value = negated ? new IntConstant(0) : new IntConstant(1);
+				NumericConstant* value = negated ? new NumericConstant(0) : new NumericConstant(1);
 
 				subterms = {_create_nested_term(symbol, subterms), value};
 				symbol = "=";
@@ -97,8 +97,11 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 	if (term_type == "constant") {
 		return new Constant(tree["value"].GetInt());
 	} else if (term_type == "int_constant") {
-		return new IntConstant(tree["value"].GetInt());
-	} else if (term_type == "variable") {
+		return new NumericConstant(tree["value"].GetInt());
+	} else if (term_type == "number_constant" ) {
+        return new NumericConstant((float)tree["value"].GetDouble());
+    }
+    else if (term_type == "variable") {
 		return new BoundVariable(tree["position"].GetInt(), tree["name"].GetString(), info.getTypeId(tree["typename"].GetString()));
 	} else if (term_type == "functional") {
 		std::string symbol = tree["symbol"].GetString();

@@ -302,7 +302,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 		auto subterms = Utils::clone(original_subterms);
 		delete subterms[i];
 
-		subterms[i] = new fs::IntConstant(value);
+		subterms[i] = new fs::NumericConstant(value);
 		auto extra_condition = new fs::EQAtomicFormula({subterm_to_replace->clone(), subterms[i]->clone()});
 		auto new_condition = fs::conjunction(*effect->condition(), *extra_condition);
 		delete extra_condition;
@@ -338,8 +338,8 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 
 		// For each possible value of the non-const subterm, we'll have an additional conditional effect.
 		for (ObjectIdx value:info.getTypeObjects(subterm->getType())) {
-			auto constant = new fs::IntConstant(value);
-// 			std::vector<const fs::Term*> subterms{subterm->clone(), new fs::IntConstant(value)};
+			auto constant = new fs::NumericConstant(value);
+// 			std::vector<const fs::Term*> subterms{subterm->clone(), new fs::NumericConstant(value)};
 			auto extra_condition = new fs::EQAtomicFormula({subterm->clone(), constant});
 
 		}
@@ -367,7 +367,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 	// For each possible value of the non-const subterm, we'll have an additional conditional effect.
 	for (ObjectIdx value:info.getTypeObjects(subterm->getType())) {
 
-		std::vector<const fs::Term*> subterms{subterm->clone(), new fs::IntConstant(value)};
+		std::vector<const fs::Term*> subterms{subterm->clone(), new fs::NumericConstant(value)};
 		auto extra_condition = new fs::EQAtomicFormula(subterms);
 
 		effect->add_condition(extra_condition);

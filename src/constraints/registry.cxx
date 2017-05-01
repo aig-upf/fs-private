@@ -38,7 +38,7 @@ void LogicalComponentRegistry::registerLogicalElementCreators() {
 
 void LogicalComponentRegistry::registerDirectTranslators() {
 	add(typeid(fs::Constant),           new ConstantRhsTranslator());
-	add(typeid(fs::IntConstant),        new ConstantRhsTranslator());
+	add(typeid(fs::NumericConstant),        new ConstantRhsTranslator());
 	add(typeid(fs::StateVariable),      new StateVariableRhsTranslator());
 	add(typeid(fs::AdditionTerm),       new AdditiveTermRhsTranslator());
 	add(typeid(fs::SubtractionTerm),    new SubtractiveTermRhsTranslator());
@@ -52,7 +52,7 @@ void LogicalComponentRegistry::registerDirectTranslators() {
 void LogicalComponentRegistry::registerGecodeTranslators() {
 	// Register the gecode translators for the basic terms
 	add(typeid(fs::Constant), new gecode::ConstantTermTranslator());
-	add(typeid(fs::IntConstant), new gecode::ConstantTermTranslator());
+	add(typeid(fs::NumericConstant), new gecode::ConstantTermTranslator());
 	add(typeid(fs::StaticHeadedNestedTerm), new gecode::StaticNestedTermTranslator());
 	add(typeid(fs::UserDefinedStaticTerm), new gecode::StaticNestedTermTranslator()); // user-defined terms can be translated with the "parent" static translator
 	add(typeid(fs::BoundVariable), new gecode::BoundVariableTermTranslator());

@@ -172,7 +172,7 @@ Visit(const BoundVariable& lhs) {
 		_result =  lhs.clone();
 	} else {
 		ObjectIdx value = _binding.value(lhs.getVariableId());
-		_result = _info.isBoundedType(lhs.getType()) ? new IntConstant(value) : new Constant(value);
+		_result = _info.isBoundedType(lhs.getType()) ? new NumericConstant(value) : new Constant(value);
 	}
 }
 
@@ -198,7 +198,7 @@ Visit(const NestedTerm& lhs) {
 	if (function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:st) delete ptr;
 		auto value = function.getFunction()(constant_values);
-		_result = _info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
+		_result = _info.isBoundedType(function.getCodomainType()) ? new NumericConstant(value) : new Constant(value);
 	}
 	else if (function.isStatic() && constant_values.size() != subterms.size()) { // We have a statically-headed nested term
 		_result = new UserDefinedStaticTerm(symbol_id, st);
@@ -227,7 +227,7 @@ Visit(const ArithmeticTerm& lhs) {
 	if (constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		auto value = processed->interpret(PartialAssignment(), Binding::EMPTY_BINDING);
 		delete processed;
-		_result = new IntConstant(value); // Arithmetic terms necessarily involve integer subterms
+		_result = new NumericConstant(value); // Arithmetic terms necessarily involve integer subterms
 	}
 	else {
 		_result = processed;
@@ -248,7 +248,7 @@ Visit(const UserDefinedStaticTerm& lhs) {
 
 		const auto& function = _info.getSymbolData(symbol_id);
 		auto value = function.getFunction()(constant_values);
-		_result = _info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
+		_result = _info.isBoundedType(function.getCodomainType()) ? new NumericConstant(value) : new Constant(value);
 
 	} else {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms

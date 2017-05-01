@@ -63,7 +63,7 @@ lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemI
 	
 	std::vector<const fs::Term*> subterms;
 	for (ObjectIdx value:parameters) {
-		subterms.push_back(new fs::IntConstant(value));
+		subterms.push_back(new fs::NumericConstant(value));
 	}
 	
 	if (info.isPredicate(symbol_id)) {

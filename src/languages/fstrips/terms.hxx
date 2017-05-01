@@ -300,11 +300,11 @@ protected:
 
 
 //! An integer constant
-class IntConstant : public Constant {
+class NumericConstant : public Constant {
 public:
-	IntConstant(ObjectIdx value)  : Constant(value) {}
+	NumericConstant(ObjectIdx value)  : Constant(value) {}
 
-	IntConstant* clone() const override { return new IntConstant(*this); }
+	NumericConstant* clone() const override { return new NumericConstant(*this); }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
