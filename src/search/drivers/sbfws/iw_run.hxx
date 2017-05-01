@@ -52,6 +52,8 @@ public:
 	//! Whether the path-novely of the node is one
 // 	bool _path_novelty_is_1;
 	
+	std::vector<std::pair<AtomIdx, AtomIdx>> _nov2_pairs;
+	
 	//! The generation order, uniquely identifies the node
 	//! NOTE We're assuming we won't generate more than 2^32 ~ 4.2 billion nodes.
 	uint32_t _gen_order;
@@ -139,6 +141,11 @@ public:
 		} else {
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
+		
+		if (node._w == 2) {
+			_evaluator->mark_nov2atoms_from_last_state(node._nov2_pairs);
+		}
+		
 		return node._w;
 	}
 	
@@ -296,11 +303,40 @@ public:
 				if (!res.second) break;
 				
 				const StateT& state = node->state;
+				const StateT& parent_state = node->parent->state;
+				_unused(state);
+				
+				for (const auto& p_q:node->_nov2_pairs) {
+					Atom p = index.to_atom(p_q.first);
+					Atom q = index.to_atom(p_q.second);
+					
+					assert(state.contains(p));
+					assert(state.contains(q));
+					assert(!(parent_state.contains(p) && parent_state.contains(q))); // Otherwise the tuple couldn't be new
+					
+					
+					std::vector<AtomIdx> to_mark;
+					if (parent_state.contains(p)) {
+						if (p.getValue() != 0) atoms[p_q.first] = true; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
+					}
+					else if (parent_state.contains(q)) {
+						if (q.getValue() != 0) atoms[p_q.second] = true;
+					}
+					else { // The parent state contains none
+						if (p.getValue() != 0) atoms[p_q.first] = true;
+						if (q.getValue() != 0) atoms[p_q.second] = true;
+					}
+					
+				}
+				
+				/*
+				const StateT& state = node->state;
 				for (unsigned var = 0; var < state.numAtoms(); ++var) {
 					if (state.getValue(var) == 0) continue; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
 					AtomIdx atom = index.to_index(var, state.getValue(var));
 					atoms[atom] = true;
 				}
+				*/
 				
 				node = node->parent;
 			}			
