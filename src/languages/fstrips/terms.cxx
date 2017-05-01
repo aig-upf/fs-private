@@ -98,7 +98,7 @@ ObjectIdx FluentHeadedNestedTerm::interpret(const State& state, const Binding& b
 
 
 ObjectIdx StateVariable::interpret(const State& state, const Binding& binding) const {
-	return boost::get<int>(state.getValue(_variable_id));
+	return state.getValue(_variable_id);
 }
 
 

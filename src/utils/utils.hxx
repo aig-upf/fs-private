@@ -113,17 +113,17 @@ public:
     }
 
     class reinterpreted_as_int
-        : public boost::static_visitor<> {
+        : public boost::static_visitor<int> {
     public:
 
-        int v;
-
-        void operator()(int i) {
-            v = i;
+        int operator()(int i) const {
+            return i;
         }
 
-        void operator()(float f){
+        int operator()(float f) const {
+            int v;
             type_punning_without_aliasing( f, v );
+            return v;
         }
 
     };

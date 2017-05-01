@@ -42,7 +42,24 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
 	if (n_vars == _n_bool) return state._bool_values[variable];
-	if (n_vars == _n_int) return state._int_values[variable];
+	if (n_vars == _n_int) {
+        if ( _info.isIntegerNumber(variable) )
+            return ObjectIdx(state._int_values[variable]);
+        else if (_info.isRationalNumber(variable) ) {
+            float tmp;
+            Utils::type_punning_without_aliasing( state._int_values[variable], tmp );
+            return ObjectIdx(tmp);
+        }
+        else {
+            std::stringstream buffer;
+            buffer << "ERROR: Cannot retrieve variable from state ";
+            buffer << _info.getVariableName(variable) << std::endl;
+            buffer << "because its type is not currently supported!" << std::endl;
+            LPT_DEBUG("main", buffer.str());
+            throw std::runtime_error(buffer.str());
+        }
+        return state._int_values[variable];
+    }
 
 	// Otherwise we need to deindex the variable
 	const IndexElemT& ind = _index[variable];
@@ -66,14 +83,13 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
             throw std::runtime_error(buffer.str());
         }
     }
+    return ObjectIdx(0);
 }
 
 void
 StateAtomIndexer::set(State& state, const Atom& atom) const {
-    Utils::reinterpreted_as_int r_value;
-    ObjectIdx value = atom.getValue();
-    boost::apply_visitor( r_value, value );
-    set(state,  atom.getVariable(), r_value.v);
+    ObjectIdx tmp =  atom.getValue();
+    set(state,  atom.getVariable(), boost::apply_visitor( Utils::reinterpreted_as_int(), tmp));
 }
 
 void
@@ -150,8 +166,8 @@ State::getValue(const VariableIdx& variable) const {
 
 int
 State::getIntValue(const VariableIdx& variable) const {
-    assert(ProblemInfo::getInstance().getVariableGenericType(variable) == ProblemInfo::ObjectType::INT );
-	return boost::get<int>(_indexer.get(*this, variable));
+    ObjectIdx tmp = _indexer.get(*this, variable);
+    return boost::apply_visitor( Utils::reinterpreted_as_int(), tmp );
 }
 
 
