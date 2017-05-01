@@ -307,7 +307,7 @@ bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, 
 		result.push_back(processed);
 
 		if (const Constant* constant = dynamic_cast<const Constant*>(processed)) {
-			constants.push_back(boost::get<int>(constant->getValue()));
+			constants.push_back(constant->getValue());
 		}
 	}
 	return result;
