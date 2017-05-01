@@ -181,6 +181,13 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 	isTypeBounded.resize(num_types);
 	typeBounds.resize(num_types);
 
+    std::map< std::string, ObjectType > type_name_translation_table = {
+        { "object", ObjectType::OBJECT},
+        { "number", ObjectType::FLOAT},
+        { "int", ObjectType::INT },
+        { "bool", ObjectType::BOOL }
+    };
+
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		TypeIdx type_id = data[i][0].GetInt();
 		std::string type_name(data[i][1].GetString());
@@ -189,37 +196,49 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 		name_to_type.insert(std::make_pair(type_name, type_id));
 		type_to_name.push_back(type_name);
 
-        std::string generic_type_name( data[i][2].GetString() );
-		if ( generic_type_name == "object")
-			type_to_generic.push_back( ObjectType::OBJECT );
-		else if ( generic_type_name == "number" )
-			type_to_generic.push_back( ObjectType::FLOAT );
-		else if ( generic_type_name == "int" )
-			type_to_generic.push_back( ObjectType::INT );
-        else if ( generic_type_name == "bool" )
-			type_to_generic.push_back( ObjectType::BOOL );
-        else if ( generic_type_name == "_bool_" )
-			type_to_generic.push_back( ObjectType::BOOL );
-		else {
-            type_to_generic.push_back( ObjectType::OBJECT );
-		}
-
-
+        isTypeBounded[type_id] = false;
 		// We read and convert to integer type the vector of Object indexes
 		if (data[i][2].IsString()) {
-			assert(std::string(data[i][2].GetString()) == "int" && data[i].Size() == 4);
-			int lower = data[i][3][0].GetInt();
-			int upper = data[i][3][1].GetInt();
-			if (lower > upper) throw std::runtime_error("Incorrect bounded integer expression: [" + std::to_string(lower) + ", " + std::to_string(upper) + "]");
+            std::string basetype_name = data[i][2].GetString();
+            //! Assign generic type
+            auto it = type_name_translation_table.find( basetype_name);
+            if (it == type_name_translation_table.end() ) // not a built-in
+                type_to_generic.push_back( ObjectType::OBJECT );
+            else
+                type_to_generic.push_back( it->second );
 
-			typeBounds[type_id] = std::make_pair(lower, upper);
-			isTypeBounded[type_id] = true;
+            if ( basetype_name == "int" ) {
+                if ( data[i].Size() == 4 ) {
+                    int lower = data[i][3][0].GetInt();
+        			int upper = data[i][3][1].GetInt();
+        			if (lower > upper) throw std::runtime_error("Incorrect bounded integer expression: [" + std::to_string(lower) + ", " + std::to_string(upper) + "]");
 
-			// Unfold the range
-			typeObjects[type_id].reserve(upper - lower + 1);
-			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(v);
+        			typeBounds[type_id] = std::make_pair(lower, upper);
+        			isTypeBounded[type_id] = true;
+
+        			// Unfold the range
+        			typeObjects[type_id].reserve(upper - lower + 1);
+        			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(v);
+                }
+            }
 		} else { // We have an enumeration of object IDs
-            isTypeBounded[type_id] = false;
+            //! Assign generic type
+            auto it = type_name_translation_table.find( type_name);
+            if (it == type_name_translation_table.end() ) // not a built-in
+                type_to_generic.push_back( ObjectType::OBJECT );
+            else
+                type_to_generic.push_back( it->second );
+
+            if (type_to_generic.back() == ObjectType::OBJECT ) {
+                if ( data[i][2].Size() == 0 ) {
+                    //! We have find an object type without any objects associated!
+                    std::stringstream buffer;
+                    buffer << "Error Loading Types: Type " << type_name << " is subtype of 'object' yet has no objects associated!";
+                    LPT_INFO( "main", buffer.str() );
+                    throw std::runtime_error( buffer.str() );
+                }
+            }
+
 			typeObjects[type_id].reserve(data[i][2].Size());
 			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
                 int v;

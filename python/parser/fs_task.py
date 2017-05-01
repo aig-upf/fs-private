@@ -65,6 +65,8 @@ def create_fs_plus_task( fsp_task, domain_name, instance_name ) :
     task.process_objects(fsp_task.objects)
     print("Creating FS+ task: Processing types...")
     task.process_types(types, type_map)
+    #print("Types:", types)
+    #print("Type -> Domain Map:", type_map)
     # MRJ: takes into account actions, events and processes
     print("Creating FS+ task: Processing symbols...")
     task.process_symbols(   actions=fsp_task.actions, events=fsp_task.events,

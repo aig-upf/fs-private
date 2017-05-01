@@ -63,7 +63,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         self.types.append( Type('object') )
         self.types.append( Type('number') )
         self.types.append( Type('int') )
-        self.types.append( Type('_bool_'))
+        self.types.append( Type('bool'))
         self.updateTypeTable()
 
     def doPostProcessing( self ) :
