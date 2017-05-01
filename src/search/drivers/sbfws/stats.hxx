@@ -23,7 +23,6 @@ public:
 
 	void simulation() { ++_simulations; }
 	void simulation_node_reused() { ++_reused_simulation_nodes; }
-	void sim_add_reached_subgoals(unsigned number) { _sim_reached_subgoals += number; }
 	void sim_add_expanded_nodes(unsigned number) { _sim_expanded_nodes += number; }
 	void sim_add_generated_nodes(unsigned number) { _sim_generated_nodes += number; }
 	void sim_add_time(float time) { _sim_time += time; }
@@ -94,7 +93,6 @@ protected:
 	unsigned long _num_generated_g_decrease; // The number of nodes with a decrease in #g that are expanded
 	
 	unsigned _reused_simulation_nodes;
-	unsigned _sim_reached_subgoals;
 	
 	unsigned long _sim_expanded_nodes;
 	unsigned long _sim_generated_nodes;
