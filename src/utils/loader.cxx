@@ -45,29 +45,53 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto indexer = StateAtomIndexer::create(info);
 
 	LPT_INFO("main", "Loading initial state...");
+    if (!data.HasMember("action_schemata")) {
+        throw std::runtime_error("Could not find initial state in data/problem.json!");
+    }
 	auto init = loadState(*indexer, data["init"], info);
 
 	LPT_INFO("main", "Loading action data...");
+    if (!data.HasMember("action_schemata")) {
+        throw std::runtime_error("Could not find action schemas in data/problem.json!");
+    }
 	auto control_data = loadAllActionData(data["action_schemata"], info, true);
+
     LPT_INFO("main", "Loading process data...");
+    if (!data.HasMember("process_schemata")) {
+        throw std::runtime_error("Could not find process schemas in data/problem.json!");
+    }
     auto process_data = loadAllActionData(data["process_schemata"], info, true);
+
     LPT_INFO("main", "Loading event data...");
-    auto events_data = loadAllActionData(data["events_schemata"], info, true);
+    if (!data.HasMember("event_schemata")) {
+        throw std::runtime_error("Could not find events schemas in data/problem.json!");
+    }
+    auto events_data = loadAllActionData(data["event_schemata"], info, true);
+
     auto tmp = Utils::merge( control_data, process_data );
     auto action_data = Utils::merge( tmp, events_data );
 
 	LPT_INFO("main", "Loading axiom data...");
 	// Axiom schemas are simply action schemas but without effects
 	auto axioms = loadAxioms(data["axioms"], info);
+    if (!data.HasMember("axioms")) {
+        throw std::runtime_error("Could not find axioms schemas in data/problem.json!");
+    }
 	auto axiom_idx = _index_axioms(axioms);
 
 	LPT_INFO("main", "Loading goal formula...");
+    if (!data.HasMember("goal")) {
+        throw std::runtime_error("Could not find axioms schemas in data/problem.json!");
+    }
 	auto goal = loadGroundedFormula(data["goal"], info);
 
 	LPT_INFO("main", "Loading state constraints...");
 
 
     std::vector<const fs::Formula*> conjuncts;
+    if (!data.HasMember("state_constraints")) {
+        throw std::runtime_error("Could not find state constraints in data/problem.json!");
+    }
     for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
 	   auto sc = loadGroundedFormula(data["state_constraints"][i], info);
        if (sc == nullptr ) continue;
