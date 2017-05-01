@@ -72,7 +72,10 @@ bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& 
 
 
 
-SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer) :
+SmartActionManager::SmartActionManager( const std::vector<const GroundAction*>& actions,
+                                        const std::vector<const fs::Formula*>& state_constraints,
+                                        const AtomIndex& tuple_idx,
+                                        const BasicApplicabilityAnalyzer& analyzer) :
 	Base(actions, state_constraints),
 	_tuple_idx(tuple_idx),
 	_vars_affected_by_actions(),
@@ -158,9 +161,9 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - Actions size: " << _actions.size());
 	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - size of set of atomidx: " << sizeof(std::unordered_set<AtomIdx>));
 	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [1]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-	
+
 	for (unsigned i = 0; i < _actions.size(); ++i) {
-		
+
 		/* DEBUGGING
 
 		if (i%100==0) {
@@ -168,7 +171,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			unsigned cnt = 0;
 			for (auto& app_set:_applicable) cnt += app_set.size();
 			LPT_INFO("cout", "Aggregated '_applicable' size [it. " << i << "]: " << cnt);
-			
+
 			cnt = 0;
 			for (auto& app_set:_rev_applicable) cnt += app_set.size();
 			LPT_INFO("cout", "Aggregated '_rev_applicable' size [it. " << i << "]: " << cnt);
@@ -185,7 +188,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			for (auto& app_set:_applicable) app_set.push_back(i);
 			continue;
 		}
-		
+
 		auto preconditions = fs::check_all_atomic_formulas(precondition->getSubformulae());
 
 
@@ -193,7 +196,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 		for (const fs::AtomicFormula* sub:preconditions) {
 			const fs::AtomicFormula* conjunct = dynamic_cast<const fs::AtomicFormula*>(sub);
 			if (!conjunct) throw std::runtime_error("Only conjunctions of atoms supported for this type of applicability analyzer");
-			
+
 			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
 			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
 			const fs::NEQAtomicFormula* neq = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
@@ -219,14 +222,14 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			}
 
 			_variable_relevance[relevant]++;
-			
+
 			if (eq) { // Prec is of the form X=x
 // 				std::cout << "Precondition: " << *eq << std::endl;
 				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
 				AtomIdx tup = _tuple_idx.to_index(relevant, value);
-				
+
 // 				std::cout << "Corresponding Atom: " << _tuple_idx.to_atom(tup) << std::endl;
-				
+
 				if (build_applicable_index) {
 					_applicable[tup].push_back(i);
 				}
@@ -347,9 +350,9 @@ _process_state_constraints(const fs::Formula* state_constraints) {
 }
 
 
-NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints) :
+NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& actions, const std::vector<const fs::Formula*>& state_constraints) :
 	_actions(actions),
-	_state_constraints(_process_state_constraints(state_constraints)),
+	_state_constraints(state_constraints),
 	_all_actions_whitelist(_build_all_actions_whitelist(actions.size()))
 {}
 
