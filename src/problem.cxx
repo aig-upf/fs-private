@@ -143,7 +143,7 @@ void Problem::consolidateAxioms() {
 	delete tmp;
 
 
-    for ( auto c : _state_constraints ) {
+    for ( auto& c : _state_constraints ) {
         const fs::Axiom* tmp = c.second;
 	    const fs::Formula* _new_definition = fs::process_axioms(*(tmp->getDefinition()), info);
         c.second= new fs::Axiom( tmp->getName(), tmp->getSignature(), tmp->getParameterNames(), tmp->getBindingUnit(), _new_definition );

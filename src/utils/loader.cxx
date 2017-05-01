@@ -106,7 +106,10 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
     }
 
     std::vector<const fs::Axiom*> sc_set;
-    sc_set.push_back( new fs::Axiom("variable_bounds", {}, {}, fs::BindingUnit({},{}), new fs::Conjunction(conjuncts)));
+
+    if ( !conjuncts.empty())
+        sc_set.push_back( new fs::Axiom("variable_bounds", {}, {}, fs::BindingUnit({},{}), new fs::Conjunction(conjuncts)));
+
     for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
         auto named_sc = loadNamedStateConstraint(data["state_constraints"][i], info);
         if ( named_sc == nullptr ) continue;
