@@ -8,6 +8,9 @@
 #include <heuristics/unsat_goal_atoms.hxx>
 
 #include <lapkt/search/components/open_lists.hxx>
+#include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
+
+#include "stats.hxx"
 
 
 namespace fs0 { namespace bfws {
@@ -22,6 +25,8 @@ struct unachieved_subgoals_comparer {
 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
+		if (n1->w_g == Novelty::One && n2->w_g != Novelty::One) return false;
+// 		if (n1->w_gr == Novelty::One && n2->w_gr != Novelty::One) return false;
 		return n1->_gen_order > n2->_gen_order;
 	}
 };
@@ -61,13 +66,14 @@ public:
 	unsigned g;
 
 	//! The number of unachieved goals (#g)
-	unsigned unachieved_subgoals;
+	uint32_t unachieved_subgoals;
 
 	//! Whether the node has been processed
 	bool _processed;
 	
 	//! The generation order, uniquely identifies the node
-	unsigned long _gen_order;
+	//! NOTE We're assuming we won't generate more than 2^32 ~ 4.2 billion nodes.
+	uint32_t _gen_order;
 
 	//! The novelty w_{#g} of the state
 	Novelty w_g;
@@ -75,18 +81,24 @@ public:
 	//! The novelty w_{#g,#r} of the state
 	Novelty w_gr;
 	
-	//! The reference AtomsetHelper
-	std::unique_ptr<AtomsetHelper> _helper;
+	//! A reference atomset helper wrt which the sets R of descendent nodes with same #g are computed
+	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
+	AtomsetHelper* _helper;
 
 	//! The number of atoms in the last relaxed plan computed in the way to the current state that have been
 	//! made true along the path (#r)
-	std::unique_ptr<LightRelevantAtomSet> _relevant_atoms;
+	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
+	RelevantAtomSet* _relevant_atoms;
+	
+	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
+	//! atoms in s with novelty 1.
+// 	std::vector<unsigned> _nov1atom_idxs;	
 	
 	//! Constructor with full copying of the state (expensive)
 	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
 	//! Constructor with move of the state (cheaper)
-	SBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, unsigned long gen_order) :
+	SBFWSNode(StateT&& _state, action_t action_, ptr_t parent_, uint32_t gen_order) :
 		state(std::move(_state)), action(action_), parent(parent_), g(parent ? parent->g+1 : 0),
 		unachieved_subgoals(std::numeric_limits<unsigned>::max()),
 		_processed(false),
@@ -95,9 +107,12 @@ public:
 		w_gr(Novelty::Unknown),
 		_helper(nullptr),
 		_relevant_atoms(nullptr)
-	{}
+// 		_nov1atom_idxs()
+	{
+		assert(_gen_order > 0); // Very silly way to detect overflow, in case we ever generate > 4 billion nodes :-)
+	}
 	
-	~SBFWSNode() = default;
+	~SBFWSNode() { delete _helper; delete _relevant_atoms; }
 	SBFWSNode(const SBFWSNode&) = delete;
 	SBFWSNode(SBFWSNode&&) = delete;
 	SBFWSNode& operator=(const SBFWSNode&) = delete;
@@ -121,7 +136,6 @@ public:
 			reached = std::to_string(_relevant_atoms->num_reached()) + " / " + std::to_string(_relevant_atoms->getHelper()._num_relevant);
 		}
 		os << "#" << _gen_order << " (" << this << "), " << state;
-// 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
@@ -147,6 +161,12 @@ public:
 	using SimulationT = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
 	using SimConfigT = typename SimulationT::Config;
 	using IWNodePT = typename SimulationT::NodePT;
+	
+	// Novelty evaluator pointer type
+	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
+	
+	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
+
 
 protected:
 	const StateModelT& _model;
@@ -155,16 +175,17 @@ protected:
 
 	const FeatureSetT& _featureset;
 
-	// We keep a base evaluator to be cloned each time a new one is needed, so that there's no need
-	// to perform all the feature selection, etc. anew.
-	const NoveltyEvaluatorT& _search_evaluator;
-
-	//! The novelty evaluators for the different #g values
-	NoveltyEvaluatorMapT _wg_novelty_evaluators;
+	const NoveltyFactory<FeatureValueT> _search_novelty_factory;
+	const NoveltyFactory<FeatureValueT> _sim_novelty_factory;
+	
+	//! The novelty evaluators for the different #g values.
+	//! The i-th position of the vector will actually contain the evaluator for novelty i+1
+	std::vector<NoveltyEvaluatorMapT> _wg_novelty_evaluators;
 
 	//! The novelty evaluators for the different <#g, #r> values
-	NoveltyEvaluatorMapT _wgr_novelty_evaluators;
-
+	//! The i-th position of the vector will actually contain the evaluator for novelty i+1
+	std::vector<NoveltyEvaluatorMapT> _wgr_novelty_evaluators;
+	
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
 	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
@@ -174,43 +195,41 @@ protected:
 
 	BFWSStats& _stats;
 
+	SBFWSConfig _sbfwsconfig;
 	
-	SBFWSConfig::RelevantSetType _rstype;
 	
 public:
-	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, BFWSStats& stats) :
+	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, BFWSStats& stats) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
-		_search_evaluator(search_evaluator),
-		_wg_novelty_evaluators(),
-		_wgr_novelty_evaluators(),
+		_search_novelty_factory(_problem, config.evaluator_t, config.search_width),
+		_sim_novelty_factory(_problem, config.evaluator_t, config.simulation_width),
+		_wg_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
+		_wgr_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_unsat_goal_atoms_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
-		_simconfig(c.getOption<int>("sim.bound", 10000),
-				   config.complete_simulation,
+		_simconfig(config.complete_simulation,
 				   config.mark_negative_propositions,
 				   config.simulation_width,
 			       c.getOption<bool>("goal_directed", false)
 		),
 		_stats(stats),
-		_rstype(config.relevant_set_type)
+		_sbfwsconfig(config)
 	{
-		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
 	}
 
 	~SBFWSHeuristic() {
-		for (auto& p:_wg_novelty_evaluators) delete p.second;
-		for (auto& p:_wgr_novelty_evaluators) delete p.second;
+		for (auto& elem:_wg_novelty_evaluators) for (auto& p:elem) delete p.second;
+		for (auto& elem:_wgr_novelty_evaluators) for (auto& p:elem) delete p.second;
 	};
 
 	
 	template <typename NodeT>
 	unsigned evaluate_wg1(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
-		bool has_parent = node.has_parent();
-		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
-		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, has_parent, type, ptype);
+		unsigned ptype = node.has_parent() ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
+		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, type, ptype);
 		assert(node.w_g == Novelty::Unknown);
 		node.w_g = (nov == 1) ? Novelty::One : Novelty::GTOne;
 		return nov;
@@ -219,9 +238,8 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wg2(NodeT& node) {
 		unsigned type = node.unachieved_subgoals;
-		bool has_parent = node.has_parent();
-		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
-		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 2, node.has_parent(), type, ptype);
+		unsigned ptype = node.has_parent() ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
+		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 2, type, ptype);
 		
 		assert(node.w_g != Novelty::Unknown);
 		if (node.w_g != Novelty::One) {
@@ -232,8 +250,8 @@ public:
 	
 	template <typename NodeT>
 	unsigned get_hash_r(NodeT& node) {
-		if (_rstype == SBFWSConfig::RelevantSetType::None) return 0;
-		return compute_relevant_atoms(node).num_reached();
+		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) return 0;
+		return compute_R(node).num_reached();
 	}
 	
 	template <typename NodeT>
@@ -248,16 +266,15 @@ public:
 		
 		// A temporary hack: if we want no R computation at all, then return INF novelty w_{#g,#r} so that nodes on QWRG1 are ignored.
 		// This poses a small overhead, but it is only temporary.
-		if (_rstype == SBFWSConfig::RelevantSetType::None) {
+		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
 			node.w_gr = Novelty::GTOne;
 			return std::numeric_limits<unsigned>::max();
 		}
 		
 		unsigned type = compute_node_complex_type(node);
-		bool has_parent = node.has_parent();
-		unsigned ptype = has_parent ? compute_node_complex_type(*(node.parent)) : 0;
-		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 1, node.has_parent(), type, ptype);
-		
+		unsigned ptype = node.has_parent() ? compute_node_complex_type(*(node.parent)) : 0;
+		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 1, type, ptype);
+
 		assert(node.w_gr == Novelty::Unknown);
 		node.w_gr = (nov == 1) ? Novelty::One : Novelty::GTOne;
 		return nov;
@@ -266,9 +283,8 @@ public:
 	template <typename NodeT>
 	unsigned evaluate_wgr2(NodeT& node) {
 		unsigned type = compute_node_complex_type(node);
-		bool has_parent = node.has_parent();
-		unsigned ptype = has_parent ? compute_node_complex_type(*(node.parent)) : 0;
-		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 2, node.has_parent(), type, ptype);
+		unsigned ptype = node.has_parent() ? compute_node_complex_type(*(node.parent)) : 0;
+		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 2, type, ptype);
 		
 		assert(node.w_gr != Novelty::Unknown);
 		if (node.w_gr != Novelty::One) {
@@ -296,88 +312,84 @@ public:
 	}
 
 
-
-	NoveltyEvaluatorT* fetch_evaluator(NoveltyEvaluatorMapT& evaluator_map, unsigned type) {
+	NoveltyEvaluatorT* fetch_evaluator(NoveltyEvaluatorMapT& evaluator_map,  unsigned k, unsigned type) {
 		auto it = evaluator_map.find(type);
 		if (it == evaluator_map.end()) {
-			auto inserted = evaluator_map.insert(std::make_pair(type, _search_evaluator.clone()));
+			auto inserted = evaluator_map.insert(std::make_pair(type, _search_novelty_factory.create_evaluator(k)));
+			_stats.search_table_created(k);
 			it = inserted.first;
 		}
 		return it->second;
 	}
 
 	template <typename NodeT>
-	unsigned evaluate_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map,  unsigned k, bool has_parent, unsigned type, unsigned parent_type) {
-		NoveltyEvaluatorT* evaluator = fetch_evaluator(evaluator_map, type);
+	unsigned evaluate_novelty(const NodeT& node, std::vector<NoveltyEvaluatorMapT>& evaluator_map,  unsigned k, unsigned type, unsigned parent_type) {
+		NoveltyEvaluatorT* evaluator = fetch_evaluator(evaluator_map[k], k, type);
 
-		if (has_parent && type == parent_type) {
+		if (node.has_parent() && type == parent_type) {
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
 			return evaluator->evaluate(_featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), k);
 		}
 
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
 	}
-
+	
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which
 	//! the counter #r(node) can be obtained. This implements a lazy version which
 	//! can recursively compute the parent RelevantAtomSet.
 	//! Additionally, this caches the set within the node for future reference.
 	template <typename NodeT>
-	const LightRelevantAtomSet& compute_relevant_atoms(NodeT& node) {
+	const RelevantAtomSet& compute_R(NodeT& node) {
 		
-		// If the set was cached, simply return it
+		// If the R(s) has been previously computed and is cached, we return it straight away
 		if (node._relevant_atoms != nullptr) return *node._relevant_atoms;
 		
 
-//#		if (!node.has_parent() || node.decreases_unachieved_subgoals()) {
- 		if (!node.has_parent()) {
+		// Otherwise, we compute it anew
+		if (computation_of_R_necessary(node)) {
+
 			// Throw a simulation from the node, and compute a set R[IW1] from there.
-			auto relevant = compute_R(node.state);
-			// auto relevant = _heuristic.compute_R_union_Rs(s);
-			node._helper = std::unique_ptr<AtomsetHelper>(new AtomsetHelper(_problem.get_tuple_index(), relevant));
-			node._relevant_atoms = std::unique_ptr<LightRelevantAtomSet>(new LightRelevantAtomSet(*node._helper));
+			bool verbose = !node.has_parent(); // Print info only on the s0 simulation
+			auto evaluator = _sim_novelty_factory.create_compound_evaluator(_sbfwsconfig.simulation_width);
+			// TODO Fix this horrible hack
+			if (_sbfwsconfig.simulation_width==2) { _stats.sim_table_created(1); _stats.sim_table_created(2); }
+			else  { assert(_sbfwsconfig.simulation_width); _stats.sim_table_created(1); }
+			
+			
+			SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
+			std::vector<bool> relevant = simulator.compute_R(node.state);
+			
+			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
+			node._relevant_atoms = new RelevantAtomSet(*node._helper);
 			node._relevant_atoms->init(node.state);
 			
-			if (!node.has_parent()) { // Log some info for the seed state
-				LPT_DEBUG("cout", "R_{IW(1)}(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ")");
-				LPT_DEBUG("cout", *(node._relevant_atoms));
+			if (!node.has_parent()) { // Log some info, but only for the seed state
+				LPT_DEBUG("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
 			}
 		}
 
 
-		else { // Copy the set from the parent and update the set of relevant nodes with those that have been reached.
-			assert(node.has_parent());
-			assert(!node._relevant_atoms);
-			node._relevant_atoms = std::unique_ptr<LightRelevantAtomSet>(new LightRelevantAtomSet(compute_relevant_atoms(*node.parent))); // This might trigger a recursive computation
-			
+		else {
+			// Copy the set R from the parent and update the set of relevant nodes with those that have been reached.
+			node._relevant_atoms = new RelevantAtomSet(compute_R(*node.parent)); // This might trigger a recursive computation
 			
 			if (node.decreases_unachieved_subgoals()) {
  				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
 			} else {
-// 				node._relevant_atoms->update(node.state, &(node.parent->state));
 				node._relevant_atoms->update(node.state, nullptr);
+				// node._relevant_atoms->update(node.state, &(node.parent->state));
 			}
 	}
 	
 		return *node._relevant_atoms;
 	}
-	
-	
-	template <typename StateT>
-	std::vector<bool> compute_R(const StateT& state) {
-		_stats.simulation();
-		SimulationT simulator(_model, _featureset, _simconfig);
-		return simulator.compute_R(state);
-	}
-	
-	template <typename StateT>
-	std::vector<bool> compute_R_union_Rs(const StateT& state) {
-		throw std::runtime_error("Revise");
-// 		_stats.simulation();
-// 		SimulationT simulator(_model, _featureset, _simconfig);
-// 		return simulator.compute_R_union_Rs(state);
-	}
 
+	template <typename NodeT>
+	inline bool computation_of_R_necessary(const NodeT& node) const {
+		if (_sbfwsconfig.r_computation == SBFWSConfig::RComputation::Seed) return (!node.has_parent());
+		else return !node.has_parent() || node.decreases_unachieved_subgoals();
+	}
+	
 	unsigned compute_unachieved(const State& state) {
 		return _unsat_goal_atoms_heuristic.evaluate(state);
 	}
@@ -406,8 +418,6 @@ public:
 	using SimulationNodeT = typename HeuristicT::IWNodeT;
 	using SimulationNodePT = typename HeuristicT::IWNodePT;
 	
-	// Novelty evaluator pointer type
-	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
 
 protected:
 	
@@ -445,9 +455,6 @@ protected:
 	//! The closed list
 	ClosedListT _closed;
 
-	//! We keep a "base" novelty evaluator with the appropriate features
-	NoveltyEvaluatorPT _search_evaluator;
-
 	//! The novelty feature evaluator.
 	//! We hold the object here so that we can reuse the same featureset for search and simulations
 	FeatureSetT _featureset;
@@ -461,7 +468,7 @@ protected:
 	bool _pruning;
 
 	//! The number of generated nodes so far
-	unsigned long _generated;
+	uint32_t _generated;
 	
 	//! The minimum number of subgoals-to-reach that we have achieved at any moment of the search
 	unsigned _min_subgoals_to_reach;
@@ -477,19 +484,17 @@ public:
 	//! (3) the closed list object to be used in the search
 	SBFWS(const StateModelT& model,
 			 FeatureSetT&& featureset,
-             NoveltyEvaluatorT* search_evaluator,
              BFWSStats& stats,
              const Config& config,
              SBFWSConfig& conf) :
              
 		_model(model),
 		_solution(nullptr),
-		_search_evaluator(search_evaluator),
 		_featureset(std::move(featureset)),
-		_heuristic(conf, config, model, _featureset, *_search_evaluator, stats),
+		_heuristic(conf, config, model, _featureset, stats),
 		_stats(stats),
 		_pruning(config.getOption<bool>("bfws.prune", false)),
-		_generated(0),
+		_generated(1),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
 		_novelty_levels(setup_novelty_levels(model, config))
 	{
@@ -502,7 +507,9 @@ public:
 	SBFWS& operator=(SBFWS&&) = default;
 	
 	unsigned setup_novelty_levels(const StateModelT& model, const Config& config) const {
+		const AtomIndex& atomidx = model.getTask().get_tuple_index();
 		
+		// Allow the user to override the automatic configuration of the levels of novelty
 		int user_option = config.getOption<int>("novelty_levels", -1);
 		if (user_option != -1) {
 			if (user_option != 2 && user_option != 3) {
@@ -513,17 +520,17 @@ public:
 			return user_option;
 		}
 		
-		
-		const AtomIndex& atomidx = model.getTask().get_tuple_index();
 		const unsigned num_subgoals = model.num_subgoals();
-		const unsigned partition_size = num_subgoals * 10;   /// ???? What value expected for |R|??
-		const unsigned num_positive_atoms = atomidx.size() / 2;
+		unsigned expected_R_size = 10; // TODO ???? What value expected for |R|??
+		const unsigned num_atoms = atomidx.size();
 		
-		float size_novelty2_tables = ( (float) pow(num_positive_atoms, 2) / 1024000.)  * (float) partition_size * 4;
-		
+		float size_novelty2_table = ((float) num_atoms*(num_atoms-1)+num_atoms) / (1024*1024*8.);
+		float size_novelty2_tables = num_subgoals * expected_R_size * size_novelty2_table;
+
 		unsigned levels = (size_novelty2_tables > 2048) ? 2 : 3;
 		
-		LPT_INFO("cout", "Size of the novelty-two tables estimated at: " << size_novelty2_tables);
+		LPT_INFO("cout", "Size of a single specialized novelty-2 table estimated at (MB): " << size_novelty2_table);
+		LPT_INFO("cout", "Expected overall size of all novelty-two tables (MB): " << size_novelty2_tables);
 		LPT_INFO("cout", "Novelty levels of the search:  " << levels);
 		
 		return levels;
@@ -533,72 +540,17 @@ public:
 	//! Convenience method
 	bool solve_model(PlanT& solution) { return search(_model.init(), solution); }
 
-	std::vector<NodePT> convert_simulation_nodes(const NodePT& root, const std::unordered_set<SimulationNodePT>& sim_nodes) {
-
-		// Convert a set of simulation nodes into a set of search nodes
-		// This is straight-forward except for setting up correctly the pointers to the parent node,
-		// for which we need a second pass and the help of a couple of maps.
-		std::unordered_map<SimulationNodePT, NodePT> simulation_to_search;
-		std::unordered_map<NodePT, SimulationNodePT> search_to_simulation;
-
-		std::vector<NodePT> search_nodes;
-		search_nodes.reserve(sim_nodes.size());
-
-		for (const SimulationNodePT& sim_node:sim_nodes) {
-			NodePT search_node ;
-			if (sim_node->parent == nullptr) { // We don't want to duplicate the root node
-				search_node = root;
-			} else {
-				// We just update those attributes we're interested in
-				search_node = std::make_shared<NodeT>(sim_node->state, _generated++); // TODO This is expensive, as it involves a full copy of the state, which could perhaps be moved.
-				search_node->g = sim_node->g;
-				search_node->action = sim_node->action;
-				search_node->w_g = Novelty::One; // we enforce this by definition
-				search_node->unachieved_subgoals = _heuristic.compute_unachieved(search_node->state);
-			}
-
-			simulation_to_search.insert(std::make_pair(sim_node, search_node));
-			search_to_simulation.insert(std::make_pair(search_node, sim_node));
-			search_nodes.push_back(search_node);
-
-			//std::cout << "Simulation node " << sim_node << " corresponds to search node " << search_node << std::endl;
-		}
-
-		// Let n be any search node (note that the root node has been already discarded), and s be its corresponding simulation node
-		// The parent of n is the search node that corresponds to parent(s)
-		std::vector<NodePT> relevant;
-		for (const NodePT& search_node:search_nodes) {
-			if (search_node == root) continue; // We won't return the root node of the simulation, as it is already processed elsewhere
-
-			auto it = search_to_simulation.find(search_node);
-			assert(it != search_to_simulation.end());
-
-			const auto& sim_node = it->second;
-			assert(sim_node->parent != nullptr);
-			auto it2 = simulation_to_search.find(sim_node->parent);
-			//std::cout << "Simulation node parent: " << sim_node->parent << std::endl;
-			assert(it2 != simulation_to_search.end());
-			search_node->parent = it2->second;
-			
-			// ATM we only want to process the subgoal-satisfiyng end node of the path, and thus will pretend
-			// pretend that intermediate nodes have already been processed
-			// This works because we're using shared_ptrs!
-			if (sim_node->satisfies_subgoal) {
-				relevant.push_back(search_node);
-			} else {
-// 				std::cout << "Does NOT satisfy subgoal" << std::endl;
-			}
-		}
-
-		return relevant;
-	}
-
-
 	bool search(const StateT& s, PlanT& plan) {
-		NodePT root = std::make_shared<NodeT>(s, _generated++);
+		NodePT root = std::make_shared<NodeT>(s, ++_generated);
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
-
+		
+		
+		// Force one simulation from the root node and abort the search
+ 		// _heuristic.compute_node_complex_type(*root);
+		// return false;
+		
+		
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
 
@@ -698,8 +650,7 @@ protected:
 	//! Returns true iff the newly-created node is a solution
 	bool create_node(const NodePT& node) {
 		if (is_goal(node)) {
-			LPT_INFO("cout", "Goal found:");
-			LPT_INFO("cout", *node);
+			LPT_INFO("cout", "Goal node was found");
 			_solution = node;
 			return true;
 		}
@@ -745,7 +696,7 @@ protected:
 		for (const auto& action:_model.applicable_actions(node->state)) {
 			// std::cout << *(Problem::getInstance().getGroundActions()[action]) << std::endl;
 			StateT s_a = _model.next(node->state, action);
-			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, _generated++);
+			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, ++_generated);
 
 			if (_closed.check(successor)) continue; // The node has already been closed
 			if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it

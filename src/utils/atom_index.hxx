@@ -32,6 +32,11 @@ protected:
 	//! to the tuple that corresponds to the atom <i, v>
 	std::vector<std::unordered_map<ObjectIdx, AtomIdx>> _atom_index_inv;
 	
+	//! A map from each variable index to all possible atoms that arise from that variable; e.g. for variable
+	//! 'loc(b)' with ID 7, _variable_to_atom_index[7] will contain the indexes of atoms loc(b)=a, loc(b)=c, etc.
+	//! (currently, note that '_variable_to_atom_index[i]' is the flattened version of _atom_index_inv['i'])
+	std::vector<std::vector<AtomIdx>> _variable_to_atom_index;
+	
 public:
 	//! Constructs a full tuple index
 	AtomIndex(const ProblemInfo& info);
@@ -60,6 +65,8 @@ public:
 	
 	//! Returns the logical symbol that corresponds to the given tuple index
 	unsigned symbol(AtomIdx tuple) const { return _symbol_index.at(tuple); }
+	
+	const std::vector<AtomIdx>& all_variable_atoms(VariableIdx variable) const { return _variable_to_atom_index[variable]; }
 	
 protected:
 	//! Add a new element to the index.

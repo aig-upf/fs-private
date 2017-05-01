@@ -22,7 +22,9 @@ create(const Config& config, FeatureEvaluatorT&& featureset, const StateModelT& 
 	using EnginePT = std::unique_ptr<EngineT>;
 	
 	unsigned max_novelty = config.getOption<int>("width.max");
-	auto evaluator = fs0::bfws::create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), fs0::bfws::SBFWSConfig::NoveltyEvaluatorType::Adaptive, max_novelty);
+	assert(0); // TO REIMPLEMENT
+// 	auto evaluator = fs0::bfws::create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), fs0::bfws::SBFWSConfig::NoveltyEvaluatorType::Adaptive, max_novelty);
+	auto evaluator = nullptr;
 	return EnginePT(new EngineT(model, 1, max_novelty, std::move(featureset), evaluator, stats));
 }
 

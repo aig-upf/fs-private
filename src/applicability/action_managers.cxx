@@ -4,6 +4,8 @@
 
 #include <lapkt/tools/logging.hxx>
 
+#include <utils/system.hxx>
+
 #include <applicability/action_managers.hxx>
 #include <actions/actions.hxx>
 #include <state.hxx>
@@ -70,7 +72,7 @@ bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& 
 
 
 
-SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer) :
+SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer) :
 	Base(actions, state_constraints),
 	_tuple_idx(tuple_idx),
 	_vars_affected_by_actions(),
@@ -141,16 +143,37 @@ ObjectIdx _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
 
 
 void
-BasicApplicabilityAnalyzer::build() {
+BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [0]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
-	_applicable.resize(_tuple_idx.size());
+	if (build_applicable_index) {
+		_applicable.resize(_tuple_idx.size());
+	}
 	_rev_applicable.resize(_actions.size());
 	_variable_relevance = std::vector<unsigned>(info.getNumVariables(), 0);
 
-
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - TupleIdx size: " << _tuple_idx.size());
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - Actions size: " << _actions.size());
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - size of set of atomidx: " << sizeof(std::unordered_set<AtomIdx>));
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [1]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+	
 	for (unsigned i = 0; i < _actions.size(); ++i) {
+		
+		/* DEBUGGING
+
+		if (i%100==0) {
+			LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [it. " << i << "]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+			unsigned cnt = 0;
+			for (auto& app_set:_applicable) cnt += app_set.size();
+			LPT_INFO("cout", "Aggregated '_applicable' size [it. " << i << "]: " << cnt);
+			
+			cnt = 0;
+			for (auto& app_set:_rev_applicable) cnt += app_set.size();
+			LPT_INFO("cout", "Aggregated '_rev_applicable' size [it. " << i << "]: " << cnt);
+		}
+		*/
 		const GroundAction& action = *_actions[i];
 		if (dynamic_cast<const fs::Tautology*>(action.getPrecondition())) { // If there's no precondition, the action is always potentially applicable
 			for (auto& app_set:_applicable) app_set.push_back(i);
@@ -162,7 +185,7 @@ BasicApplicabilityAnalyzer::build() {
 			for (auto& app_set:_applicable) app_set.push_back(i);
 			continue;
 		}
-
+		
 		auto preconditions = fs::check_all_atomic_formulas(precondition->getSubformulae());
 
 
@@ -170,7 +193,7 @@ BasicApplicabilityAnalyzer::build() {
 		for (const fs::AtomicFormula* sub:preconditions) {
 			const fs::AtomicFormula* conjunct = dynamic_cast<const fs::AtomicFormula*>(sub);
 			if (!conjunct) throw std::runtime_error("Only conjunctions of atoms supported for this type of applicability analyzer");
-
+			
 			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
 			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
 			const fs::NEQAtomicFormula* neq = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
@@ -196,15 +219,17 @@ BasicApplicabilityAnalyzer::build() {
 			}
 
 			_variable_relevance[relevant]++;
-
+			
 			if (eq) { // Prec is of the form X=x
 // 				std::cout << "Precondition: " << *eq << std::endl;
 				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
 				AtomIdx tup = _tuple_idx.to_index(relevant, value);
-
+				
 // 				std::cout << "Corresponding Atom: " << _tuple_idx.to_atom(tup) << std::endl;
-
-				_applicable[tup].push_back(i);
+				
+				if (build_applicable_index) {
+					_applicable[tup].push_back(i);
+				}
 				_rev_applicable[i].insert(tup);
 
 			} else { // Prec is of the form X!=x
@@ -214,7 +239,9 @@ BasicApplicabilityAnalyzer::build() {
 				for (ObjectIdx v2:values) {
 					if (v2 != value) {
 						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
-						_applicable[tup].push_back(i);
+						if (build_applicable_index) {
+							_applicable[tup].push_back(i);
+						}
 						_rev_applicable[i].insert(tup);
 					}
 				}
@@ -222,17 +249,20 @@ BasicApplicabilityAnalyzer::build() {
 		}
 
 		// Now, for those state variables that have _not_ been referenced, the action is potentially applicable no matter what value the state variable takes.
-		for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-			if (referenced.find(var) != referenced.end()) continue;
+		if (build_applicable_index) {
+			for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
+				if (referenced.find(var) != referenced.end()) continue;
 
-			for (ObjectIdx val:info.getVariableObjects(var)) {
-				AtomIdx tup = _tuple_idx.to_index(var, val);
-				_applicable[tup].push_back(i);
+				for (ObjectIdx val:info.getVariableObjects(var)) {
+					AtomIdx tup = _tuple_idx.to_index(var, val);
+					_applicable[tup].push_back(i);
+				}
 			}
 		}
 	}
 
 	_total_actions =  _actions.size();
+	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [END]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 }
 
 
@@ -249,7 +279,7 @@ std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state)
 	unsigned var_with_min_app_set = 0, min_size = std::numeric_limits<unsigned>::max();
 	std::vector<AtomIdx> tuples(num_vars);
 	for (unsigned i = 0; i < num_vars; ++i) {
-		AtomIdx tup = _tuple_idx.to_index(i, boost::get<int>(state.getValue(i)));
+		AtomIdx tup = _tuple_idx.to_index(i, state.getValue(i));
 		tuples[i] = tup;
 		unsigned s = _app_index[tup].size();
 
@@ -317,9 +347,9 @@ _process_state_constraints(const fs::Formula* state_constraints) {
 }
 
 
-NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& actions, const std::vector<const fs::Formula*>& state_constraints) :
+NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints) :
 	_actions(actions),
-	_state_constraints(state_constraints),
+	_state_constraints(_process_state_constraints(state_constraints)),
 	_all_actions_whitelist(_build_all_actions_whitelist(actions.size()))
 {}
 

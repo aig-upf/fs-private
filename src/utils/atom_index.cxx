@@ -9,7 +9,8 @@ namespace fs0 {
 
 AtomIndex::AtomIndex(const ProblemInfo& info) :
 	_tuple_index_inv(info.getNumLogicalSymbols()),
-	_atom_index_inv(info.getNumVariables())
+	_atom_index_inv(info.getNumVariables()),
+	_variable_to_atom_index(info.getNumVariables())
 {
 	auto tuples_by_symbol = compute_all_reachable_tuples(info);
 	

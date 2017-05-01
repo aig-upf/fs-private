@@ -417,7 +417,8 @@ ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo&
 		effects = _bind_effects(action, Binding::EMPTY_BINDING, info);
 		if (effects.empty()) {
 			delete precondition;
-			throw std::runtime_error("The action schema has (statically) no applicable action effects!");
+			LPT_INFO("cout", "WARNING: Action schema has (statically) no applicable action effects: " << action.getName());
+			return nullptr;
 		}
 	}
 	return new ActionData(action.getId(), action.getName(), action.getSignature(), action.getParameterNames(), action.getBindingUnit(), precondition, effects);
