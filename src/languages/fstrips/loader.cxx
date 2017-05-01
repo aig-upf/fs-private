@@ -15,9 +15,8 @@ using ObjectType = fs0::ProblemInfo::ObjectType;
 const Term* _create_nested_term(const std::string& symbol, const std::vector<const Term*>& subterms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
-    assert(false);
 	// If the symbol corresponds to an arithmetic term, delegate the creation of the term
-	if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return ArithmeticTermFactory::create(symbol, subterms, ObjectType::FLOAT);
+	if (ArithmeticTermFactory::isBuiltinTerm(symbol)) return ArithmeticTermFactory::create(symbol, subterms );
 
 	unsigned symbol_id = info.getSymbolId(symbol);
 	const auto& function = info.getSymbolData(symbol_id);

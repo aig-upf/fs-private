@@ -30,44 +30,62 @@ bool ArithmeticTermFactory::isUnaryTerm( const std::string& symbol ) {
 
 
 const StaticHeadedNestedTerm*
-ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const Term*>& subterms, ProblemInfo::ObjectType value_type) {
-	if (symbol == "+")      return new AdditionTerm(subterms, value_type);
-	else if (symbol == "-") return new SubtractionTerm(subterms, value_type);
-	else if (symbol == "*") return new MultiplicationTerm(subterms, value_type);
-    else if (symbol == "/") return new DivisionTerm( subterms, value_type );
-    else if (symbol == "^") return new PowerTerm( subterms, value_type);
-    else if (symbol == "min") return new MinTerm( subterms, value_type);
-    else if (symbol == "max") return new MaxTerm( subterms, value_type);
-	else if (symbol == "sqrt") return new SqrtTerm( subterms, value_type);
-	else if (symbol == "sin") return new SineTerm( subterms, value_type );
-	else if (symbol == "cos") return new CosineTerm( subterms, value_type );
-	else if (symbol == "tan") return new TangentTerm( subterms, value_type );
-	else if (symbol == "asin") return new ArcSineTerm( subterms, value_type );
-	else if (symbol == "acos") return new ArcCosineTerm( subterms, value_type );
-	else if (symbol == "atan") return new ArcTangentTerm( subterms, value_type );
-    else if (symbol == "exp") return new ArcTangentTerm( subterms, value_type );
+ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const Term*>& subterms) {
+	if (symbol == "+")      return new AdditionTerm(subterms);
+	else if (symbol == "-") return new SubtractionTerm(subterms);
+	else if (symbol == "*") return new MultiplicationTerm(subterms);
+    else if (symbol == "/") return new DivisionTerm( subterms );
+    else if (symbol == "^") return new PowerTerm( subterms);
+    else if (symbol == "min") return new MinTerm( subterms);
+    else if (symbol == "max") return new MaxTerm( subterms);
+	else if (symbol == "sqrt") return new SqrtTerm( subterms);
+	else if (symbol == "sin") return new SineTerm( subterms );
+	else if (symbol == "cos") return new CosineTerm( subterms );
+	else if (symbol == "tan") return new TangentTerm( subterms );
+	else if (symbol == "asin") return new ArcSineTerm( subterms );
+	else if (symbol == "acos") return new ArcCosineTerm( subterms );
+	else if (symbol == "atan") return new ArcTangentTerm( subterms );
+    else if (symbol == "exp") return new ArcTangentTerm( subterms );
 	return nullptr;
 }
 
-AdditionTerm::AdditionTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {}
 
-ObjectIdx AdditionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(assignment, binding)) + boost::get<int>(_subterms[1]->interpret(assignment, binding));
-	else
-		res = boost::get<float>(_subterms[0]->interpret(assignment, binding)) + boost::get<float>(_subterms[1]->interpret(assignment, binding));
-	return res;
+UnaryArithmeticTerm::UnaryArithmeticTerm( const std::vector<const Term*>& subterms )
+    : ArithmeticTerm( subterms ) {}
+
+ObjectIdx UnaryArithmeticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+    ObjectIdx value = _subterms[0]->interpret(assignment, binding);
+    return boost::apply_visitor( _unary_interpreter, value );
 }
 
-ObjectIdx AdditionTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(state, binding)) + boost::get<int>(_subterms[1]->interpret(state, binding));
-	else
-		res = boost::get<float>(_subterms[0]->interpret(state, binding)) + boost::get<float>(_subterms[1]->interpret(state, binding));
-	return res;
+ObjectIdx UnaryArithmeticTerm::interpret(const State& state, const Binding& binding) const {
+    ObjectIdx value = _subterms[0]->interpret(state, binding);
+    return boost::apply_visitor( _unary_interpreter, value );
+}
+
+BinaryArithmeticTerm::BinaryArithmeticTerm( const std::vector<const Term*>& subterms )
+    : ArithmeticTerm( subterms ) {}
+
+ObjectIdx BinaryArithmeticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+    ObjectIdx lhs = _subterms[0]->interpret(assignment, binding);
+    ObjectIdx rhs = _subterms[1]->interpret(assignment, binding);
+    return boost::apply_visitor( _binary_interpreter, lhs, rhs );
+}
+
+ObjectIdx BinaryArithmeticTerm::interpret(const State& state, const Binding& binding) const {
+    ObjectIdx lhs = _subterms[0]->interpret(state, binding);
+    ObjectIdx rhs = _subterms[1]->interpret(state, binding);
+    return boost::apply_visitor( _binary_interpreter, lhs, rhs );
+}
+
+AdditionTerm::AdditionTerm(const std::vector<const Term*>& subterms)
+	: BinaryArithmeticTerm(subterms) {
+    if ( subterms.size() != 2 ) {
+		// tan(x) a unary arithmetic term
+		throw std::runtime_error("+(x,y) is a binary function");
+	}
+    _binary_interpreter.int_handler = [](int lhs, int rhs) { return lhs + rhs; };
+    _binary_interpreter.float_handler = [](float lhs, float rhs) { return lhs + rhs; };
 }
 
 std::ostream& AdditionTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -75,53 +93,29 @@ std::ostream& AdditionTerm::print(std::ostream& os, const fs0::ProblemInfo& info
 	return os;
 }
 
-SubtractionTerm::SubtractionTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {}
-
-ObjectIdx SubtractionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(assignment, binding)) - boost::get<int>(_subterms[1]->interpret(assignment, binding));
-	else
-		res = boost::get<float>(_subterms[0]->interpret(assignment, binding)) - boost::get<float>(_subterms[1]->interpret(assignment, binding));
-	return res;
+SubtractionTerm::SubtractionTerm(const std::vector<const Term*>& subterms)
+	: BinaryArithmeticTerm(subterms) {
+    if ( subterms.size() != 2 ) {
+		// tan(x) a unary arithmetic term
+		throw std::runtime_error("-(x,y) is a binary function");
+	}
+    _binary_interpreter.int_handler = [](int lhs, int rhs) { return lhs - rhs; };
+    _binary_interpreter.float_handler = [](float lhs, float rhs) { return lhs - rhs; };
 }
-
-ObjectIdx SubtractionTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(state, binding)) - boost::get<int>(_subterms[1]->interpret(state, binding));
-	else
-		res = boost::get<float>(_subterms[0]->interpret(state, binding)) - boost::get<float>(_subterms[1]->interpret(state, binding));
-	return res;
-}
-
 
 std::ostream& SubtractionTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << "(" << *_subterms[0] << " - " << *_subterms[1] << ")";
 	return os;
 }
 
-
-MultiplicationTerm::MultiplicationTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {}
-
-ObjectIdx MultiplicationTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(assignment, binding)) * boost::get<int>(_subterms[1]->interpret(assignment, binding));
-	else
-		res = boost::get<float>(_subterms[0]->interpret(assignment, binding)) * boost::get<float>(_subterms[1]->interpret(assignment, binding));
-	return res;
-}
-
-ObjectIdx MultiplicationTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(state, binding)) * boost::get<int>(_subterms[1]->interpret(state, binding));
-	else
-		res = boost::get<float>(_subterms[0]->interpret(state, binding)) * boost::get<float>(_subterms[1]->interpret(state, binding));
-	return res;
+MultiplicationTerm::MultiplicationTerm(const std::vector<const Term*>& subterms)
+	: BinaryArithmeticTerm(subterms) {
+    if ( subterms.size() != 2 ) {
+		// tan(x) a unary arithmetic term
+		throw std::runtime_error("*(x,y) is a binary function");
+	}
+    _binary_interpreter.int_handler = [](int lhs, int rhs) { return lhs * rhs; };
+    _binary_interpreter.float_handler = [](float lhs, float rhs) { return lhs * rhs; };
 }
 
 std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -129,52 +123,29 @@ std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo
 	return os;
 }
 
-DivisionTerm::DivisionTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {}
-
-ObjectIdx DivisionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(assignment, binding)) / boost::get<int>(_subterms[1]->interpret(assignment, binding));
-	else
-		res = boost::get<float>(_subterms[0]->interpret(assignment, binding)) / boost::get<float>(_subterms[1]->interpret(assignment, binding));
-	return res;
+DivisionTerm::DivisionTerm(const std::vector<const Term*>& subterms)
+	: BinaryArithmeticTerm(subterms) {
+    if ( subterms.size() != 2 ) {
+		// tan(x) a unary arithmetic term
+		throw std::runtime_error("/(x,y) is a binary function");
+	}
+    _binary_interpreter.int_handler = [](int lhs, int rhs) { return lhs / rhs; };
+    _binary_interpreter.float_handler = [](float lhs, float rhs) { return lhs / rhs; };
 }
-
-ObjectIdx DivisionTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = boost::get<int>(_subterms[0]->interpret(state, binding)) / boost::get<int>(_subterms[1]->interpret(state, binding));
-	else
-		res = boost::get<float>(_subterms[0]->interpret(state, binding)) / boost::get<float>(_subterms[1]->interpret(state, binding));
-	return res;
-}
-
 
 std::ostream& DivisionTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << "(" << *_subterms[0] << " / " << *_subterms[1] << ")";
 	return os;
 }
 
-PowerTerm::PowerTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {}
-
-ObjectIdx PowerTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-    ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = (int)std::pow(boost::get<int>(_subterms[0]->interpret(assignment, binding)), boost::get<int>(_subterms[1]->interpret(assignment, binding)));
-	else
-		res = (float)std::pow(boost::get<float>(_subterms[0]->interpret(assignment, binding)), boost::get<float>(_subterms[1]->interpret(assignment, binding)));
-	return res;
-}
-
-ObjectIdx PowerTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	if ( getValueType() == ObjectType::INT )
-	 	res = (int)std::pow(boost::get<int>(_subterms[0]->interpret(state, binding)), boost::get<int>(_subterms[1]->interpret(state, binding)));
-	else
-		res = (float)std::pow(boost::get<float>(_subterms[0]->interpret(state, binding)), boost::get<float>(_subterms[1]->interpret(state, binding)));
-	return res;
+PowerTerm::PowerTerm(const std::vector<const Term*>& subterms)
+	: BinaryArithmeticTerm(subterms) {
+    if ( subterms.size() != 2 ) {
+		// tan(x) a unary arithmetic term
+		throw std::runtime_error("^(x,y) is a binary function");
+	}
+    _binary_interpreter.int_handler = [](int lhs, int rhs) { return (float)std::pow(lhs,rhs); };
+    _binary_interpreter.float_handler = [](float lhs, float rhs) { return (float)std::pow(lhs,rhs); };
 }
 
 std::ostream& PowerTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -183,29 +154,14 @@ std::ostream& PowerTerm::print(std::ostream& os, const fs0::ProblemInfo& info) c
 }
 
 // Sqrt Term Implementation
-SqrtTerm::SqrtTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+SqrtTerm::SqrtTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
 	if ( subterms.size() > 1 ) {
 		// Square root is a unary arithmetic term
-		throw std::runtime_error("Square root is a unary function");
+		throw std::runtime_error("sqrt(x) is a unary function!");
 	}
-	if ( value_type != ObjectType::FLOAT ) {
-		// Square root only defined for reals
-		throw std::runtime_error("Square root is only defined for real numbers");
-	}
-
-}
-
-ObjectIdx SqrtTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-    ObjectIdx res;
-	res = (float)std::sqrt(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
-	return res;
-}
-
-ObjectIdx SqrtTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	res = (float)std::sqrt(boost::get<float>(_subterms[0]->interpret(state, binding)));
-	return res;
+    _unary_interpreter.int_handler = [](int v) { return std::sqrt((float)v); };
+    _unary_interpreter.float_handler = [](float v) { return std::sqrt(v); };
 }
 
 std::ostream& SqrtTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -214,29 +170,14 @@ std::ostream& SqrtTerm::print(std::ostream& os, const fs0::ProblemInfo& info) co
 }
 
 // Sine Term Implementation
-SineTerm::SineTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+SineTerm::SineTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
 	if ( subterms.size() > 1 ) {
 		// sin(x) a unary arithmetic term
 		throw std::runtime_error("sin(x) is a unary function");
 	}
-	if ( value_type != ObjectType::FLOAT ) {
-		// sin(x) defined for reals
-		throw std::runtime_error("sin(x) is only defined for real numbers");
-	}
-
-}
-
-ObjectIdx SineTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-    ObjectIdx res;
-	res = (float)std::sin(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
-	return res;
-}
-
-ObjectIdx SineTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	res = (float)std::sin(boost::get<float>(_subterms[0]->interpret(state, binding)));
-	return res;
+    _unary_interpreter.int_handler = [](int v) { return std::sin((float)v); };
+    _unary_interpreter.float_handler = [](float v) { return std::sin(v); };
 }
 
 std::ostream& SineTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -245,29 +186,14 @@ std::ostream& SineTerm::print(std::ostream& os, const fs0::ProblemInfo& info) co
 }
 
 // Cosine Term Implementation
-CosineTerm::CosineTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+CosineTerm::CosineTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
 	if ( subterms.size() > 1 ) {
 		// cos(x) a unary arithmetic term
 		throw std::runtime_error("cos(x) is a unary function");
 	}
-	if ( value_type != ObjectType::FLOAT ) {
-		// cps(x) defined for reals
-		throw std::runtime_error("cos(x) is only defined for real numbers");
-	}
-
-}
-
-ObjectIdx CosineTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-    ObjectIdx res;
-	res = (float)std::cos(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
-	return res;
-}
-
-ObjectIdx CosineTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	res = (float)std::cos(boost::get<float>(_subterms[0]->interpret(state, binding)));
-	return res;
+    _unary_interpreter.int_handler = [](int v) { return std::cos((float)v); };
+    _unary_interpreter.float_handler = [](float v) { return std::cos(v); };
 }
 
 std::ostream& CosineTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -276,45 +202,28 @@ std::ostream& CosineTerm::print(std::ostream& os, const fs0::ProblemInfo& info) 
 }
 
 // Tanget Term Implementation
-TangentTerm::TangentTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+TangentTerm::TangentTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
 	if ( subterms.size() > 1 ) {
 		// tan(x) a unary arithmetic term
 		throw std::runtime_error("tan(x) is a unary function");
 	}
-	if ( value_type != ObjectType::FLOAT ) {
-		// tan(x) defined for reals
-		throw std::runtime_error("tan(x) is only defined for real numbers");
-	}
+    auto impl = [](float v) -> float {
+        // Check for singularity
+    	std::feclearexcept(FE_ALL_EXCEPT);
+    	float res = (float)std::tan(v);
+    	if(std::fetestexcept(FE_INVALID)) {
+    		throw std::runtime_error("FE_INVALID thrown while evaluating tan(x)!");
+    	}
+    	if ( std::isnan(res)) {
+    		throw std::runtime_error("Evaluating tan(x) resulted in a NaN result");
+    	}
+        return res;
+    };
 
-}
+    _unary_interpreter.int_handler = [impl](int v) { return impl((float)v); };
+    _unary_interpreter.float_handler = [impl](float v) { return impl(v); };
 
-ObjectIdx TangentTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	float v = boost::get<float>(_subterms[0]->interpret(assignment, binding));
-	// Check for singularity
-	std::feclearexcept(FE_ALL_EXCEPT);
-	float res = (float)std::tan(v);
-	if(std::fetestexcept(FE_INVALID)) {
-		throw std::runtime_error("FE_INVALID thrown while evaluating tan(x)!");
-	}
-	if ( std::isnan(res)) {
-		throw std::runtime_error("Evaluating tan(x) resulted in a NaN result");
-	}
-	return ObjectIdx(res);
-}
-
-ObjectIdx TangentTerm::interpret(const State& state, const Binding& binding) const {
-	float v = boost::get<float>(_subterms[0]->interpret(state, binding));
-	// Check for singularity
-	std::feclearexcept(FE_ALL_EXCEPT);
-	float res = (float)std::tan(v);
-	if (std::fetestexcept(FE_INVALID)) {
-		throw std::runtime_error("FE_INVALID thrown while evaluating tan(x)!");
-	}
-	if ( std::isnan(res)) {
-		throw std::runtime_error("Evaluating tan(x) resulted in a NaN result");
-	}
-	return ObjectIdx(res);
 }
 
 std::ostream& TangentTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -325,29 +234,15 @@ std::ostream& TangentTerm::print(std::ostream& os, const fs0::ProblemInfo& info)
 // Inverse Trigonometric Functions
 
 // Sine Term Implementation
-ArcSineTerm::ArcSineTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+ArcSineTerm::ArcSineTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
 	if ( subterms.size() > 1 ) {
 		// asin(x) a unary arithmetic term
 		throw std::runtime_error("asin(x) is a unary function");
 	}
-	if ( value_type != ObjectType::FLOAT ) {
-		// asin(x) defined for reals
-		throw std::runtime_error("asin(x) is only defined for real numbers");
-	}
+    _unary_interpreter.int_handler = [](int v) { return std::asin((float)v); };
+    _unary_interpreter.float_handler = [](float v) { return std::asin(v); };
 
-}
-
-ObjectIdx ArcSineTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-    ObjectIdx res;
-	res = (float)std::asin(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
-	return res;
-}
-
-ObjectIdx ArcSineTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	res = (float)std::asin(boost::get<float>(_subterms[0]->interpret(state, binding)));
-	return res;
 }
 
 std::ostream& ArcSineTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -357,29 +252,14 @@ std::ostream& ArcSineTerm::print(std::ostream& os, const fs0::ProblemInfo& info)
 
 
 // Cosine Term Implementation
-ArcCosineTerm::ArcCosineTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+ArcCosineTerm::ArcCosineTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
 	if ( subterms.size() > 1 ) {
 		// acos(x) a unary arithmetic term
 		throw std::runtime_error("acos(x) is a unary function");
 	}
-	if ( value_type != ObjectType::FLOAT ) {
-		// acos(x) defined for reals
-		throw std::runtime_error("acos(x) is only defined for real numbers");
-	}
-
-}
-
-ObjectIdx ArcCosineTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-    ObjectIdx res;
-	res = (float)std::acos(boost::get<float>(_subterms[0]->interpret(assignment, binding)));
-	return res;
-}
-
-ObjectIdx ArcCosineTerm::interpret(const State& state, const Binding& binding) const {
-	ObjectIdx res;
-	res = (float)std::acos(boost::get<float>(_subterms[0]->interpret(state, binding)));
-	return res;
+    _unary_interpreter.int_handler = [](int v) { return std::acos((float)v); };
+    _unary_interpreter.float_handler = [](float v) { return std::acos(v); };
 }
 
 std::ostream& ArcCosineTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -388,45 +268,28 @@ std::ostream& ArcCosineTerm::print(std::ostream& os, const fs0::ProblemInfo& inf
 }
 
 // Tanget Term Implementation
-ArcTangentTerm::ArcTangentTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+ArcTangentTerm::ArcTangentTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
 	if ( subterms.size() > 1 ) {
 		// atan(x) a unary arithmetic term
 		throw std::runtime_error("atan(x) is a unary function");
 	}
-	if ( value_type != ObjectType::FLOAT ) {
-		// tan(x) defined for reals
-		throw std::runtime_error("atan(x) is only defined for real numbers");
-	}
+    auto impl = [](float v) -> float {
+        // Check for singularity
+    	std::feclearexcept(FE_ALL_EXCEPT);
+    	float res = (float)std::atan(v);
+    	if(std::fetestexcept(FE_INVALID)) {
+    		throw std::runtime_error("FE_INVALID thrown while evaluating atan(x)!");
+    	}
+    	if ( std::isnan(res)) {
+    		throw std::runtime_error("Evaluating tan(x) aresulted in a NaN result");
+    	}
+        return res;
+    };
 
-}
+    _unary_interpreter.int_handler = [impl](int v) { return impl((float)v); };
+    _unary_interpreter.float_handler = [impl](float v) { return impl(v); };
 
-ObjectIdx ArcTangentTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	float v = boost::get<float>(_subterms[0]->interpret(assignment, binding));
-	// Check for singularity
-	std::feclearexcept(FE_ALL_EXCEPT);
-	float res = (float)std::atan(v);
-	if(std::fetestexcept(FE_INVALID)) {
-		throw std::runtime_error("FE_INVALID thrown while evaluating atan(x)!");
-	}
-	if ( std::isnan(res)) {
-		throw std::runtime_error("Evaluating atan(x) resulted in a NaN result");
-	}
-	return ObjectIdx(res);
-}
-
-ObjectIdx ArcTangentTerm::interpret(const State& state, const Binding& binding) const {
-	float v = boost::get<float>(_subterms[0]->interpret(state, binding));
-	// Check for singularity
-	std::feclearexcept(FE_ALL_EXCEPT);
-	float res = (float)std::atan(v);
-	if (std::fetestexcept(FE_INVALID)) {
-		throw std::runtime_error("FE_INVALID thrown while evaluating tan(x)!");
-	}
-	if ( std::isnan(res)) {
-		throw std::runtime_error("Evaluating atan(x) resulted in a NaN result");
-	}
-	return ObjectIdx(res);
 }
 
 std::ostream& ArcTangentTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -435,45 +298,27 @@ std::ostream& ArcTangentTerm::print(std::ostream& os, const fs0::ProblemInfo& in
 }
 
 // Tanget Term Implementation
-ExpTerm::ExpTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+ExpTerm::ExpTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
 	if ( subterms.size() > 1 ) {
 		// atan(x) a unary arithmetic term
 		throw std::runtime_error("exp(x) is a unary function");
 	}
-	if ( value_type != ObjectType::FLOAT ) {
-		// tan(x) defined for reals
-		throw std::runtime_error("exp(x) is only defined for real numbers");
-	}
+    auto impl = [](float v) -> float {
+        // Check for singularity
+    	std::feclearexcept(FE_ALL_EXCEPT);
+    	float res = (float)std::exp(v);
+    	if(std::fetestexcept(FE_OVERFLOW)) {
+    		throw std::runtime_error("FE_OVERFLOW thrown while evaluating exp(x)!");
+    	}
+    	if ( std::isnan(res)) {
+    		throw std::runtime_error("Evaluating exp(x) aresulted in a NaN result");
+    	}
+        return res;
+    };
 
-}
-
-ObjectIdx ExpTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-	float v = boost::get<float>(_subterms[0]->interpret(assignment, binding));
-	// Check for singularity
-	std::feclearexcept(FE_ALL_EXCEPT);
-	float res = (float)std::exp(v);
-	if(std::fetestexcept(FE_OVERFLOW)) {
-		throw std::runtime_error("FE_OVERFLOW thrown while evaluating exp(x)!");
-	}
-	if ( std::isnan(res)) {
-		throw std::runtime_error("Evaluating exp(x) resulted in a NaN result");
-	}
-	return ObjectIdx(res);
-}
-
-ObjectIdx ExpTerm::interpret(const State& state, const Binding& binding) const {
-	float v = boost::get<float>(_subterms[0]->interpret(state, binding));
-	// Check for singularity
-	std::feclearexcept(FE_ALL_EXCEPT);
-	float res = (float)std::exp(v);
-    if(std::fetestexcept(FE_OVERFLOW)) {
-		throw std::runtime_error("FE_OVERFLOW thrown while evaluating exp(x)!");
-	}
-	if ( std::isnan(res)) {
-		throw std::runtime_error("Evaluating exp(x) resulted in a NaN result");
-	}
-	return ObjectIdx(res);
+    _unary_interpreter.int_handler = [impl](int v) { return impl((float)v); };
+    _unary_interpreter.float_handler = [impl](float v) { return impl(v); };
 }
 
 std::ostream& ExpTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -482,31 +327,14 @@ std::ostream& ExpTerm::print(std::ostream& os, const fs0::ProblemInfo& info) con
 }
 
 // Min Term Implementation
-MinTerm::MinTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+MinTerm::MinTerm(const std::vector<const Term*>& subterms)
+	: BinaryArithmeticTerm(subterms) {
 	if ( subterms.size() != 2 ) {
 		// tan(x) a unary arithmetic term
 		throw std::runtime_error("min(x,y) is a binary function");
 	}
-}
-
-ObjectIdx MinTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-    ObjectIdx lhs = _subterms[0]->interpret(assignment, binding);
-    ObjectIdx rhs = _subterms[1]->interpret(assignment, binding);
-    if (getValueType() == ObjectType::INT) {
-        return ObjectIdx(std::min( boost::get<int>(lhs), boost::get<int>(rhs)));
-    }
-    return ObjectIdx(std::min( boost::get<float>(lhs), boost::get<float>(rhs)));
-
-}
-
-ObjectIdx MinTerm::interpret(const State& state, const Binding& binding) const {
-    ObjectIdx lhs = _subterms[0]->interpret(state, binding);
-    ObjectIdx rhs = _subterms[1]->interpret(state, binding);
-    if (getValueType() == ObjectType::INT) {
-        return ObjectIdx(std::min( boost::get<int>(lhs), boost::get<int>(rhs)));
-    }
-    return ObjectIdx(std::min( boost::get<float>(lhs), boost::get<float>(rhs)));
+    _binary_interpreter.int_handler = [](int lhs, int rhs) { return std::min(lhs,rhs); };
+    _binary_interpreter.float_handler = [](float lhs, float rhs) { return std::min(lhs,rhs); };
 }
 
 std::ostream& MinTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -515,31 +343,14 @@ std::ostream& MinTerm::print(std::ostream& os, const fs0::ProblemInfo& info) con
 }
 
 // Max Term Implementation
-MaxTerm::MaxTerm(const std::vector<const Term*>& subterms, ObjectType value_type)
-	: ArithmeticTerm(subterms, value_type) {
+MaxTerm::MaxTerm(const std::vector<const Term*>& subterms)
+	: BinaryArithmeticTerm(subterms) {
 	if ( subterms.size() != 2 ) {
 		// tan(x) a unary arithmetic term
 		throw std::runtime_error("max(x,y) is a binary function");
 	}
-}
-
-ObjectIdx MaxTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
-    ObjectIdx lhs = _subterms[0]->interpret(assignment, binding);
-    ObjectIdx rhs = _subterms[1]->interpret(assignment, binding);
-    if (getValueType() == ObjectType::INT) {
-        return ObjectIdx(std::max( boost::get<int>(lhs), boost::get<int>(rhs)));
-    }
-    return ObjectIdx(std::max( boost::get<float>(lhs), boost::get<float>(rhs)));
-
-}
-
-ObjectIdx MaxTerm::interpret(const State& state, const Binding& binding) const {
-    ObjectIdx lhs = _subterms[0]->interpret(state, binding);
-    ObjectIdx rhs = _subterms[1]->interpret(state, binding);
-    if (getValueType() == ObjectType::INT) {
-        return ObjectIdx(std::max( boost::get<int>(lhs), boost::get<int>(rhs)));
-    }
-    return ObjectIdx(std::max( boost::get<float>(lhs), boost::get<float>(rhs)));
+    _binary_interpreter.int_handler = [](int lhs, int rhs) { return std::max(lhs,rhs); };
+    _binary_interpreter.float_handler = [](float lhs, float rhs) { return std::max(lhs,rhs); };
 }
 
 std::ostream& MaxTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -560,13 +371,62 @@ bool AlldiffFormula::_satisfied(const ObjectIdxVector& values) const {
 
 SumFormula::SumFormula(const SumFormula& formula) : SumFormula(Utils::clone(formula._subterms)) {}
 
+namespace sum_detail {
+    class add :
+        public boost::static_visitor<ObjectIdx> {
+    public:
+
+        ObjectIdx operator()( int lhs, int rhs ) const {
+            return lhs + rhs;
+        }
+
+        ObjectIdx operator()( float lhs, float rhs ) const {
+            return (int)lhs + (int)rhs;
+        }
+
+        ObjectIdx operator()( float lhs, int rhs ) const {
+            return (int)lhs + rhs ;
+        }
+
+        ObjectIdx operator()( int lhs, float rhs ) const {
+            return lhs + (int)rhs;
+        }
+    };
+
+    class eq :
+        public boost::static_visitor<bool> {
+    public:
+
+        bool operator()( int lhs, int rhs ) const {
+            return lhs == rhs;
+        }
+
+        bool operator()( float lhs, float rhs ) const{
+            return (int)lhs == (int)rhs;
+        }
+
+        bool operator()( float lhs, int rhs ) const {
+            return (int)lhs == rhs ;
+        }
+
+        bool operator()( int lhs, float rhs ) const {
+            return lhs == (int)rhs;
+        }
+    };
+}
 bool SumFormula::_satisfied(const ObjectIdxVector& values) const {
 	// sum(x_1, ..., x_n) meaning x_1 + ... + x_{n-1} = x_n
+    if ( values.size() < 3 ) {
+		throw std::runtime_error("sum(x_1,...,x_{n-1}) = x_n needs to have n > 2");
+    }
 	assert(values.size() > 1);
-	int expected_sum = boost::get<int>(values.back());
-	int addends_sum  = 0;
-    std::for_each( values.begin(), values.end(), [&addends_sum](const ObjectIdx& obj){ addends_sum += boost::get<int>(obj); } );
-	return addends_sum == expected_sum;
+	ObjectIdx expected_sum = values.back();
+	ObjectIdx addends_sum = values[0];
+    for ( unsigned i = 1; i < values.size() - 1; i++ ) {
+        addends_sum = boost::apply_visitor( sum_detail::add(), addends_sum, values[i] );
+    }
+
+	return boost::apply_visitor( sum_detail::eq(), addends_sum, expected_sum );
 }
 
 NValuesFormula::NValuesFormula(const NValuesFormula& formula) : NValuesFormula(Utils::clone(formula._subterms)) {}

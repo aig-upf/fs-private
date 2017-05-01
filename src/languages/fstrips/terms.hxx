@@ -4,6 +4,7 @@
 #include <languages/fstrips/base.hxx>
 #include <fs_types.hxx>
 #include <problem_info.hxx>
+#include <functional>
 
 namespace fs0 { class State; class Binding;  class SymbolData; }
 
@@ -96,7 +97,7 @@ public:
 //! A statically-headed term that performs some arithmetic operation to its two subterms
 class ArithmeticTerm : public StaticHeadedNestedTerm {
 public:
-	ArithmeticTerm(const std::vector<const Term*>& subterms, ObjectType value_type);
+	ArithmeticTerm(const std::vector<const Term*>& subterms);
 
 	virtual ArithmeticTerm* clone() const override = 0;
 
@@ -109,11 +110,6 @@ public:
 		return term;
 	}
 
-    ObjectType	getValueType() const { return _value_type; }
-
-private:
-
-    ObjectType  _value_type;
 };
 
 //! A statically-headed term defined extensionally or otherwise by the concrete planning instance
