@@ -149,6 +149,11 @@ void Problem::consolidateAxioms() {
         c.second= new fs::Axiom( tmp->getName(), tmp->getSignature(), tmp->getParameterNames(), tmp->getBindingUnit(), _new_definition );
         delete tmp;
     }
+    //! Store pointers to the state constraint definitions for ease of use
+    _state_constraints_formulae.clear();
+    for ( auto c : _state_constraints ) {
+        _state_constraints_formulae.push_back( c.second->getDefinition() );
+    }
 
 	// NOTE Order is important: we need to process the axioms first.
 	// TODO This won't work for recursive axioms. We need a better strategy, e.g. lazy retrieval of the axiom pointers whenever interpretation is required, etc.
