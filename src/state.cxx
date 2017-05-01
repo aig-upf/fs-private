@@ -5,6 +5,7 @@
 #include <problem_info.hxx>
 #include <atom.hxx>
 #include <lapkt/tools/logging.hxx>
+#include <utils/utils.hxx>
 
 
 namespace fs0 {
@@ -52,12 +53,9 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
         if ( _info.isIntegerNumber(variable) )
             return ObjectIdx(state._int_values[ind.second]);
         else if (_info.isRationalNumber(variable) ) {
-            union {
-				int i;
-				float d;
-			} tmp;
-			tmp.i = state._int_values[ind.second];
-            return ObjectIdx(tmp.d);
+            float tmp;
+            Utils::type_punning_without_aliasing( state._int_values[ind.second], tmp );
+            return ObjectIdx(tmp);
         }
         else {
             std::stringstream buffer;
@@ -71,7 +69,12 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 }
 
 void
-StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), boost::get<int>(atom.getValue())); }
+StateAtomIndexer::set(State& state, const Atom& atom) const {
+    Utils::reinterpreted_as_int r_value;
+    ObjectIdx value = atom.getValue();
+    boost::apply_visitor( r_value, value );
+    set(state,  atom.getVariable(), r_value.v);
+}
 
 void
 StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const {

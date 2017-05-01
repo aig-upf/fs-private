@@ -16,7 +16,7 @@ class StateAtomIndexer {
 public:
 	using IndexElemT = std::pair<bool, unsigned>;
 	using IndexT = std::vector<IndexElemT>;
-	
+
 protected:
 	//! Assume _index[v] = (b,i). This means that the value of the state variable v
 	//! is stored in the i-th position of the vector of bools (if b is true) or the vector
@@ -25,7 +25,7 @@ protected:
 
 	std::size_t                _n_bool;
 	std::size_t                _n_int;
-    	const ProblemInfo&         _info;
+    const ProblemInfo&         _info;
 
 	//! Private constructor
 	StateAtomIndexer(IndexT&& index, unsigned n_bool, unsigned n_int, const ProblemInfo& info );
@@ -33,18 +33,18 @@ protected:
 public:
 	//! Factory method
 	static StateAtomIndexer* create(const ProblemInfo& info);
-	
+
 	std::size_t size() const { return _index.size(); }
-	
+
 	std::size_t num_bool() const { return _n_bool; }
 	std::size_t num_int() const { return _n_int; }
 
 	bool is_fully_binary() const { return _n_int == 0; }
 	bool is_fully_multivalued() const { return _n_bool == 0; }
-	
+
 	//! Obtain and return the value of the given variable from the given state
 	ObjectIdx get(const State& state, VariableIdx variable) const;
-	
+
 	//! Set a value into the state
 	void set(State& state, const Atom& atom) const;
 	void set(State& state, VariableIdx variable, ObjectIdx value) const;
@@ -59,7 +59,7 @@ public:
 
 protected:
 	const StateAtomIndexer& _indexer;
-	
+
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
 	BitsetT _bool_values;
 	IntsetT _int_values;
@@ -74,10 +74,10 @@ protected:
 
 public:
 	~State() = default;
-	
+
 	//! Factory method
 	static State* create(const StateAtomIndexer& index, unsigned numAtoms, const std::vector<Atom>& atoms);
-	
+
 
 	//! A constructor that receives a number of atoms and constructs a state that is equal to the received
 	//! state plus the new atoms. Note that we do not check that there are no contradictory atoms.
@@ -128,4 +128,3 @@ public:
 };
 
 } // namespaces
-
