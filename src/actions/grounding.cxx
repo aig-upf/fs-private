@@ -145,7 +145,7 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 		}
 
 		std::vector<ObjectIdx> deserialized;
-        std::vector<int> tokens = Serializer::deserializeLine(line, ",");
+        std::vector<ObjectIdx> tokens = Serializer::deserializeLine(line, ",");
         std::for_each( tokens.begin(), tokens.end(), [&deserialized](const ObjectIdx& obj) {deserialized.push_back(obj);});
 
 		if (current->getSignature().size() != deserialized.size()) {
