@@ -97,7 +97,7 @@ public:
 	bool contains(const Atom& atom) const;
 
 	ObjectIdx getValue(const VariableIdx& variable) const;
-    	int       getIntValue( const VariableIdx& variable) const;
+    int       getIntValue( const VariableIdx& variable) const;
 
 	unsigned numAtoms() const { return _bool_values.size() + _int_values.size(); }
 
