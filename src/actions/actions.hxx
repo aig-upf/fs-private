@@ -110,6 +110,11 @@ public:
 	//! Returns true if some parameter of the action has a type with no associated object
 	bool has_empty_parameter() const { return _data.has_empty_parameter(); }
 
+    //! Type of action accessors
+    bool    isControl() const { return _data.getType() == ActionData::Type::Control; }
+    bool    isExogenous() const { return _data.getType() == ActionData::Type::Exogenous; }
+    bool    isNatural() const { return _data.getType() == ActionData::Type::Natural; }
+
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionBase&  entity) { return entity.print(os); }
 	virtual std::ostream& print(std::ostream& os) const;
