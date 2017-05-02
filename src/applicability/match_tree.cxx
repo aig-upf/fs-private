@@ -109,8 +109,6 @@ namespace fs0 {
 
 		// Classify all actions
 		for (ActionIdx action:actions) {
-			const std::unordered_set<AtomIdx>& required = context._rev_app_index[action];
-
 			if (action_done(action, context)) {
 				_immediate_items.push_back(action);
 
