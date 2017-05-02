@@ -254,6 +254,8 @@ public:
 
 	const std::string& getDataDir() const { return _data_dir; }
 
+    bool canExtensionalizeVarDomains() const { return _can_extensionalize_var_domains; }
+
 protected:
 	//! Load all the function-related data
 	void loadSymbolIndex(const rapidjson::Value& data);
@@ -273,6 +275,10 @@ protected:
 
 	//! The filesystem directory where the problem serialized data is found
 	const std::string _data_dir;
+
+    //! This flag is true whenever every variable domain can be extensionalized
+    //! (i.e. valuations can be indexed statically and efficiently)
+    bool _can_extensionalize_var_domains;
 };
 
 } // namespaces

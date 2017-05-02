@@ -13,7 +13,7 @@ namespace fs0 {
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
-	_data_dir(data_dir)
+	_data_dir(data_dir), _can_extensionalize_var_domains(true)
 {
 
 	LPT_INFO("main", "Loading Type index...");
@@ -87,7 +87,11 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		variableNames.push_back(name);
 		variableIds.insert(std::make_pair(name, id));
 
-		variableGenericTypes.push_back(getGenericType(type));
+        ObjectType generic_type = getGenericType(type);
+        if ( generic_type == ObjectType::INT || generic_type == ObjectType::FLOAT ) {
+            _can_extensionalize_var_domains = false;
+        }
+		variableGenericTypes.push_back(generic_type);
 		try {
 			variableTypes.push_back(name_to_type.at(type));
 		} catch( std::out_of_range& ex ) {
@@ -256,7 +260,7 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 }
 
 bool ProblemInfo::checkValueIsValid(const Atom& atom) const {
-	return checkValueIsValid(atom.getVariable(), boost::get<int>(atom.getValue()));
+	return checkValueIsValid(atom.getVariable(), atom.getValue());
 }
 
 bool ProblemInfo::checkValueIsValid(VariableIdx variable, ObjectIdx value) const {
