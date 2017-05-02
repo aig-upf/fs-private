@@ -37,6 +37,9 @@ public:
 	//! The type of successor generator to use
 	enum class SuccessorGenerationStrategy { naive, functional_aware, match_tree, adaptive };
 
+    //! Integrator
+	enum class IntegratorT { ExplicitEuler, RungeKutta2, RungeKutta4, ImplicitEuler };
+
 	//! Explicit initizalition of the singleton
 	static void init(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
 
@@ -73,6 +76,10 @@ protected:
 	std::string _heuristic;
 
 	SuccessorGenerationStrategy	_succ_gen_type;
+
+    IntegratorT	_successor_prediction;
+
+    double _integration_factor;
 
 	//! Private constructor
 	Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
@@ -119,6 +126,10 @@ public:
 	bool useApproximateGoalResolution() const {
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
+
+    void setIntegrationFactor( double nsteps ) { _integration_factor = nsteps; }
+
+    double getIntegrationFactor( ) const { return _integration_factor; }
 
 	bool validate() const { return getOption("validate", false); }
 

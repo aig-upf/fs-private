@@ -30,7 +30,6 @@ OptionType parseOption(const pt::ptree& tree, const std::unordered_map<std::stri
 	} else {
 		parsed = tree.get<std::string>(key);
 	}
-
 	auto it2 = allowed.find(parsed);
 	if (it2 == allowed.end()) {
 		throw std::runtime_error("Invalid configuration option for key " + key + ": " + parsed);
@@ -40,7 +39,9 @@ OptionType parseOption(const pt::ptree& tree, const std::unordered_map<std::stri
 }
 
 Config::Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename)
-	: _user_options(user_options)
+	: _user_options(user_options),
+    _successor_prediction( IntegratorT::ImplicitEuler ),
+    _integration_factor( 1.0 )
 {
 	load(filename); // Load the default options
 }
@@ -68,6 +69,23 @@ void Config::load(const std::string& filename) {
 		{"delayed", EvaluationT::delayed},
 		{"delayed_for_unhelpful", EvaluationT::delayed_for_unhelpful}}
 	);
+
+    try {
+        _successor_prediction = parseOption<IntegratorT>(_root, _user_options, "integrator",
+                                                                { {"explicit_euler", IntegratorT::ExplicitEuler},
+                                                                {"implicit_euler", IntegratorT::ImplicitEuler},
+                                                                {"runge_kutta_2", IntegratorT::RungeKutta2},
+                                                                {"runge_kutta_4", IntegratorT::RungeKutta4}});
+    } catch ( boost::property_tree::ptree_bad_path& e ) {
+        // Use default value in the constructor
+    }
+
+    try {
+        _integration_factor = getOption<double>("integration_factor");
+    } catch ( boost::property_tree::ptree_bad_path& e ) {
+        // Use default value in the constructor
+    }
+
 
 	_heuristic = parseOption<std::string>(_root, _user_options, "heuristic", {{"hff", "hff"}, {"hmax", "hmax"}});
 
