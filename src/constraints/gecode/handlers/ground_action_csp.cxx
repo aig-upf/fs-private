@@ -9,10 +9,10 @@
 
 
 namespace fs0 { namespace gecode {
-	
+
 std::vector<std::shared_ptr<BaseActionCSP>> GroundActionCSP::create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<BaseActionCSP>> managers;
-	
+
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
 		// auto x = new GroundActionCSP(*actions[idx], approximate, novelty, false); std::cout << *x << std::endl;
 		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
@@ -55,13 +55,13 @@ void GroundActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action: " << _action);
 }
 
-GecodeCSP* 
+GecodeCSP*
 GroundActionCSP::post(VariableIdx variable, ObjectIdx value) const {
 	if (_failed) return nullptr;
 	GecodeCSP* clone = static_cast<GecodeCSP*>(_base_csp->clone());
 	const auto& csp_var = _translator.resolveInputStateVariable(*clone, variable);
-	
-	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, value);
+
+	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, boost::get<int>(value));
 
 	if (!clone->checkConsistency()) { // This colaterally enforces propagation of constraints
 		delete clone;

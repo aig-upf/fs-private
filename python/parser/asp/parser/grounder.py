@@ -102,9 +102,7 @@ class Grounder(object):
             cond_strs = []
             for cond in condition.conditions:
                 if cond.relevant_vars:
-                    cond_strs.append("reachable(" + cond.cond_code + "(" + \
-                                     ", ".join([var_alphabet[condition.var_indices[v][0]] \
-                                                for v in cond.relevant_vars]) + "))")
+                    cond_strs.append("reachable(" + cond.cond_code + "(" + ", ".join([var_alphabet[condition.var_indices[v]] for v in cond.relevant_vars]) + "))")
                 else:
                     cond_strs.append("reachable(" + cond.cond_code + ")")
             if condition.relevant_vars:
@@ -128,7 +126,7 @@ class Grounder(object):
 
                 if cond.relevant_vars:
                     out_file.write("reachable(" + cond.cond_code + "(" + \
-                                   ", ".join([var_alphabet[condition.var_indices[v][0]] \
+                                   ", ".join([var_alphabet[condition.var_indices[v]] \
                                               for v in cond.relevant_vars]) + "))")
                 else:
                     out_file.write("reachable(" + cond.cond_code + ")")
@@ -153,7 +151,7 @@ class Grounder(object):
             if condition.condition.relevant_vars:
                 for obj in condition.v_type.objects:
                     cond_strs.append("reachable(" + condition.condition.cond_code + "(" + \
-                                     ", ".join([var_alphabet[condition.var_indices[v][0]] \
+                                     ", ".join([var_alphabet[condition.var_indices[v]] \
                                                     if v in condition.relevant_vars else obj.asp_name \
                                                 for v in condition.condition.relevant_vars]) + "))")
             else:
@@ -231,7 +229,7 @@ class Grounder(object):
             for cond in condition.conditions:
                 if cond.relevant_vars:
                     out_file.write("reachable(" + cond.cond_code + "(" + \
-                                   ", ".join([var_alphabet[condition.var_indices[v][0]] \
+                                   ", ".join([var_alphabet[condition.var_indices[v]] \
                                               for v in cond.relevant_vars]) + ")) :- " + and_str + ".\n")
                 else:
                     out_file.write("reachable(" + cond.cond_code + ") :- " + and_str + ".\n")

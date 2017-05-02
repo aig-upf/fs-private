@@ -14,7 +14,7 @@ public:
 	
 	~GecodeApplicabilityAnalyzer() = default;
 	
-	void build() override;
+	void build(bool build_applicable_index = true) override;
 
 };
 

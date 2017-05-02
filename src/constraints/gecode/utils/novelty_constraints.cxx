@@ -10,7 +10,7 @@
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {
-	
+
 NoveltyConstraint* NoveltyConstraint::createFromEffects(CSPTranslator& translator, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects) {
 	if (StrongNoveltyConstraint::applicable(effects)) {
 		return new StrongNoveltyConstraint(translator, effects);
@@ -28,15 +28,15 @@ WeakNoveltyConstraint* WeakNoveltyConstraint::create(CSPTranslator& translator, 
 	std::set<unsigned> symbols;
 
 	fs::ScopeUtils::computeRelevantElements(conditions, variables, symbols);
-	
+
 	for (auto effect:effects) {
 		fs::ScopeUtils::computeRelevantElements(effect->rhs(), variables, symbols);
 	}
-	
+
 	return new WeakNoveltyConstraint(translator, variables, std::vector<unsigned>(symbols.cbegin(), symbols.cend()));
 }
 
-WeakNoveltyConstraint::WeakNoveltyConstraint(CSPTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols) 
+WeakNoveltyConstraint::WeakNoveltyConstraint(CSPTranslator& translator, const std::set<VariableIdx>& variables, const std::vector<unsigned> symbols)
 	: _symbols(symbols)
 {
 	for (VariableIdx variable:variables) {
@@ -56,23 +56,23 @@ void WeakNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& laye
 	if (!_symbols.empty() && !Utils::empty_intersection(_symbols.cbegin(), _symbols.cend(), modified.begin(), modified.end())) {
 		return;
 	}
-	
+
 	// If there are no relevant state variables, then we are done.
 	if (_variables.empty()) return;
-	
+
 	Gecode::BoolVarArgs delta_reification_variables;
-	
+
 	for (const auto& element:_variables) {
 		VariableIdx variable = std::get<0>(element);
 		unsigned csp_variable_id = std::get<1>(element);
 		unsigned reified_variable_id = std::get<2>(element);
-		
+
 		const Gecode::IntVar& csp_variable = csp._intvars[csp_variable_id];
 		auto& novelty_reification_variable = csp._boolvars[reified_variable_id];
 		delta_reification_variables << novelty_reification_variable;
 		Gecode::dom(csp, csp_variable, layer.get_delta(variable), novelty_reification_variable);  // X_i in delta(i) (i.e. X_i is new)
 	}
-	
+
 	// Now post the global novelty constraint OR: X1 is new, or X2 is new, or...
 	Gecode::rel(csp, Gecode::BOT_OR, delta_reification_variables, 1);
 }
@@ -86,7 +86,7 @@ bool StrongNoveltyConstraint::applicable(const std::vector<const fs::ActionEffec
 	}
 	return true;
 }
-	
+
 StrongNoveltyConstraint::StrongNoveltyConstraint(CSPTranslator& translator, const std::vector<const fs::ActionEffect*>& effects)  {
 	assert(applicable(effects));
 	for (const auto effect:effects) {
@@ -103,7 +103,7 @@ Gecode::BoolVar& post_individual_constraint(GecodeCSP& csp, const RPGIndex& laye
 	VariableIdx variable = std::get<0>(element);
 	unsigned csp_variable_id = std::get<1>(element);
 	unsigned reified_variable_id = std::get<2>(element);
-	
+
 	const Gecode::IntVar& csp_variable = csp._intvars[csp_variable_id];
 	auto& reification_variable = csp._boolvars[reified_variable_id];
 	Gecode::dom(csp, csp_variable, layer.get_domain(variable), reification_variable);
@@ -112,12 +112,12 @@ Gecode::BoolVar& post_individual_constraint(GecodeCSP& csp, const RPGIndex& laye
 
 void StrongNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& layer) const {
 	if (_variables.empty()) return;
-	
+
 	Gecode::BoolVarArgs reification_variables;
 	for (const auto& element:_variables) {
 		reification_variables << post_individual_constraint(csp, layer, element);
 	}
-	
+
 	// Now post the strong novelty constraint: NOT (w_1 is OLD and ... and w_n is OLD),
 	// i.e. at least some of the LHS is new wrt to the already-accumulated values of the LHS
 	Gecode::rel(csp, Gecode::BOT_AND, reification_variables, 0);
@@ -139,10 +139,10 @@ void EffectNoveltyConstraint::post_constraint(GecodeCSP& csp, const RPGIndex& la
 	VariableIdx variable = std::get<0>(_variable);
 	unsigned csp_variable_id = std::get<1>(_variable);
 	unsigned reified_variable_id = std::get<2>(_variable);
-	
+
 	const Gecode::IntVar& csp_variable = csp._intvars[csp_variable_id];
 	const Gecode::BoolVar& reification_variable = csp._boolvars[reified_variable_id];
-	
+
 	// Now post the effect novelty constraint: NOT w is OLD,
 	// i.e. the LHS is new wrt to the already-accumulated values of the LHS
 	Gecode::dom(csp, csp_variable, layer.get_domain(variable), reification_variable);

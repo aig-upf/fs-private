@@ -10,7 +10,7 @@ FilteringOutput filter_lt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_max < y_max) return FilteringOutput::Unpruned;
 	if (x_min >= y_max) return FilteringOutput::Failure;
-	
+
 	// Otherwise there must be at least a value, but not all, in the new domain.
 	auto it = domain.lower_bound(y_max); // it points to the first x in domain such that x >= y_max
 	assert(it != domain.begin() && it != domain.end());
@@ -24,7 +24,7 @@ FilteringOutput filter_leq(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_max <= y_max) return FilteringOutput::Unpruned;
 	if (x_min > y_max) return FilteringOutput::Failure;
-	
+
 	// Otherwise there must be at least a value, but not all, in the new domain.
 	auto it = domain.lower_bound(y_max);
 	assert( it != domain.end() );
@@ -39,7 +39,7 @@ FilteringOutput filter_gt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_min > y_min) return FilteringOutput::Unpruned;
 	if (x_max <= y_min) return FilteringOutput::Failure;
-	
+
 	// Otherwise the domain has necessarily to be pruned, but is not inconsistent
 	auto it = domain.lower_bound(y_min);
 	assert(it != domain.end());
@@ -52,27 +52,27 @@ FilteringOutput filter_gt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 FilteringOutput filter_geq(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 	assert( domain.size() > 0 );
 	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
-	
+
 	if (x_min >= y_min) return FilteringOutput::Unpruned;
 	if (x_max < y_min) return FilteringOutput::Failure;
-	
+
 	// Otherwise the domain has necessarily to be pruned, but is not inconsistent
 	auto it = domain.lower_bound(y_min);
 	assert(it != domain.begin() && it != domain.end());
-	
+
 	domain = Domain(it, domain.end());  // Update the domain by using the assignment operator.
-	return FilteringOutput::Pruned;	
+	return FilteringOutput::Pruned;
 }
 
 FilteringOutput LTConstraint::filter(unsigned variable) const {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
-	
+
 	Domain& x_dom = *(projection[0]);
 	Domain& y_dom = *(projection[1]);
 	ObjectIdx x_min = *(x_dom.cbegin()), x_max = *(x_dom.crbegin());
 	ObjectIdx y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
-	
+
 	if (variable == 0) { // We filter x_dom, the domain of X
 		return filter_lt(x_dom, y_min, y_max);
 	} else { // We filter y_dom, the domain of Y
@@ -89,14 +89,14 @@ std::ostream& LTConstraint::print(std::ostream& os) const {
 FilteringOutput LEQConstraint::filter(unsigned variable) const {
 	assert(projection.size() == 2);
 	assert(variable == 0 || variable == 1);
-	
+
 	Domain& x_dom = *(projection[0]);
 	assert( x_dom.size() > 0 );
 	Domain& y_dom = *(projection[1]);
 	assert( y_dom.size() > 0 );
 	ObjectIdx x_min = *(x_dom.cbegin()), x_max = *(x_dom.crbegin());
 	ObjectIdx y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
-	
+
 	if (variable == 0) { // We filter x_dom, the domain of X
 		return filter_leq(x_dom, y_min, y_max);
 	} else { // We filter y_dom, the domain of Y
@@ -117,7 +117,7 @@ FilteringOutput EQConstraint::filter(unsigned variable) const {
 	Domain& domain = *(projection[variable]);
 	Domain& other_domain = *(projection[other]);
 	Domain new_domain;
-	
+
 	for (ObjectIdx x:domain) {
 		// We simply check that x is in the domain of the other variable
 		auto it = other_domain.lower_bound(x);
@@ -145,12 +145,12 @@ FilteringOutput NEQConstraint::filter(unsigned variable) const {
 	unsigned other = (variable == 0) ? 1 : 0;
 	Domain& domain = *(projection[variable]);
 	Domain& other_domain = *(projection[other]);
-	
+
 	if (other_domain.size() >= 2) return FilteringOutput::Unpruned; // If the other domain has at least two domains, we won't be able to prune anything
-	
+
 	assert(other_domain.size() == 1);
 	ObjectIdx other_val = *(other_domain.cbegin());
-	
+
 	// If we can erase the only value, i.e. it was in the domain, we do it, otherwise the result is an unpruned domain.
 	if (domain.erase(other_val) == 0) return FilteringOutput::Unpruned;
 	return domain.size() > 0 ? FilteringOutput::Pruned : FilteringOutput::Failure;
@@ -172,13 +172,13 @@ FilteringOutput EQXConstraint::filter(const DomainMap& domains) const {
 		domain.clear(); // Just in case
 		return FilteringOutput::Failure;
 	}
-	
+
 	if (domain.size() == 1) return FilteringOutput::Unpruned; // 'c' is the only value in the set
-	
+
 	Domain new_domain;
 	new_domain.insert(new_domain.cend(), _parameters[0]);
-	domain = new_domain; // Update the domain by using the assignment operator.	
-	
+	domain = new_domain; // Update the domain by using the assignment operator.
+
 	return FilteringOutput::Pruned;
 }
 
@@ -284,6 +284,11 @@ AdditiveUnaryEffect::AdditiveUnaryEffect(VariableIdx relevant, VariableIdx affec
 	: UnaryDirectEffect(relevant, affected, {value})
 {}
 
+ObjectIdx operator+( ObjectIdx lhs, ObjectIdx rhs ) {
+    int lval = boost::get<int>(lhs);
+    int rval = boost::get<int>(rhs);
+    return ObjectIdx( lval + rval );
+}
 
 Atom AdditiveUnaryEffect::apply(ObjectIdx v1) const {
 	assert(applicable(v1));
@@ -309,6 +314,12 @@ std::ostream& AdditiveBinaryEffect::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " + " << info.getVariableName(_scope[1]);
 	return os;
+}
+
+ObjectIdx operator-( ObjectIdx lhs, ObjectIdx rhs ) {
+    int lval = boost::get<int>(lhs);
+    int rval = boost::get<int>(rhs);
+    return ObjectIdx( lval - rval );
 }
 
 
@@ -359,6 +370,13 @@ std::ostream& SubtractiveBinaryEffect::print(std::ostream& os) const {
 	os << info.getVariableName(_affected) << " := " << info.getVariableName(_scope[0])  << " - " << info.getVariableName(_scope[1]);
 	return os;
 }
+
+ObjectIdx operator*( ObjectIdx lhs, ObjectIdx rhs ) {
+    int lval = boost::get<int>(lhs);
+    int rval = boost::get<int>(rhs);
+    return ObjectIdx( lval * rval );
+}
+
 
 MultiplicativeUnaryEffect::MultiplicativeUnaryEffect(VariableIdx relevant, VariableIdx affected, int value)
 	: UnaryDirectEffect(relevant, affected, {value})

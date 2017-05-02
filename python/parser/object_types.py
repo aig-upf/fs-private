@@ -63,14 +63,15 @@ def process_type_hierarchy(fd_types):
             continue
         if t.name in correctly_declared:
             raise RuntimeError("Duplicate type declaration for type '{}'".format(t.name))
-
-        used_types.update([t.name, t.basetype_name])  # Add both the type and the supertype
+        # Add both the type and the supertype
+        used_types.add(t.name)
+        if t.basetype_name is not None :
+            used_types.add(t.basetype_name)
         correctly_declared.add(t.name)
         types[t.name] = t.basetype_name
 
     # Add missing types: Some types declared without trailing " - object" sometimes are not recognized by the FD parser
     types.update({t: 'object' for t in used_types.difference(correctly_declared)})
-
     # Build a map from any type to all its direct children types to perform a BFS traversal.
     parent_to_children = defaultdict(list)
     for typename, parent in types.items():

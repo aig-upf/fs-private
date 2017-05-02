@@ -28,21 +28,21 @@ public:
 	unsigned size() const { return _atomidx.size(); }
 };
 
-//! A LightRelevantAtomSet contains information about which of the atoms of a problem are relevant for a certain
+//! A RelevantAtomSet contains information about which of the atoms of a problem are relevant for a certain
 //! goal, and, among those, which have already been reached and which others have not.
-class LightRelevantAtomSet {
+class RelevantAtomSet {
 public:
 
-	//! A LightRelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
-	LightRelevantAtomSet(const AtomsetHelper& helper) :
+	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
+	RelevantAtomSet(const AtomsetHelper& helper) :
 		_helper(helper), _num_reached(0), _reached(helper.size(), false) //, _updated(false)
 	{}
 
-	~LightRelevantAtomSet() = default;
-	LightRelevantAtomSet(const LightRelevantAtomSet&) = default;
-	LightRelevantAtomSet(LightRelevantAtomSet&&) = default;
-	LightRelevantAtomSet& operator=(const LightRelevantAtomSet&) = default;
-	LightRelevantAtomSet& operator=(LightRelevantAtomSet&&) = default;
+	~RelevantAtomSet() = default;
+	RelevantAtomSet(const RelevantAtomSet&) = default;
+	RelevantAtomSet(RelevantAtomSet&&) = default;
+	RelevantAtomSet& operator=(const RelevantAtomSet&) = default;
+	RelevantAtomSet& operator=(RelevantAtomSet&&) = default;
 
 
 	//! Update those atoms that have been reached in the given state
@@ -51,7 +51,7 @@ public:
 // 		_updated = true;
 		unsigned n = state.numAtoms();
 		for (VariableIdx var = 0; var < n; ++var) {
-			ObjectIdx val = state.getValue(var);
+			ObjectIdx val = boost::get<int>(state.getValue(var));
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 
 			AtomIdx atom = _helper._atomidx.to_index(var, val);
@@ -76,7 +76,7 @@ public:
 	}
 
 	//! Prints a representation of the state to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const LightRelevantAtomSet& o) { return o.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const RelevantAtomSet& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const {
 		const AtomIndex& atomidx = _helper._atomidx;
 

@@ -9,8 +9,8 @@ namespace fs0 {
 
 DirectConstraint::DirectConstraint(const VariableIdxVector& scope)
 	: DirectConstraint(scope, {}) {}
-	
-DirectConstraint::DirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters)
+
+DirectConstraint::DirectConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters)
 	: DirectComponent(scope, parameters) {}
 
 
@@ -69,7 +69,7 @@ FilteringOutput BinaryDirectConstraint::filter(unsigned variable) const {
 	return FilteringOutput::Unpruned;
 }
 
-UnaryDirectConstraint::UnaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+UnaryDirectConstraint::UnaryDirectConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) :
 	DirectConstraint(scope, parameters) {
 	assert(scope.size() == 1);
 }
@@ -78,11 +78,11 @@ DirectConstraint* UnaryDirectConstraint::compile(const ProblemInfo& problemInfo)
 	return nullptr;
 }
 
-BinaryDirectConstraint::BinaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+BinaryDirectConstraint::BinaryDirectConstraint(const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) :
 	DirectConstraint(scope, parameters) {
 	assert(scope.size() == 2);
 }
-	
+
 DirectConstraint* BinaryDirectConstraint::compile(const ProblemInfo& problemInfo) const {
 	return nullptr;
 }

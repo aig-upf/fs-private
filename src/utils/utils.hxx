@@ -8,13 +8,15 @@
 #include <map>
 #include <set>
 
+#include <boost/variant.hpp>
+
 namespace fs0 {
-	
+
 class Utils {
 public:
 	typedef std::vector<std::vector<unsigned>*> ValueSet;
 	typedef std::vector<unsigned> Point;
-	
+
 	//! Merge the two given vectors and return a new one with all the elements from (in order) the first and the second
 	template <typename T>
 	static std::vector<T> merge(const std::vector<T>& vector1, const std::vector<T>& vector2) {
@@ -22,8 +24,8 @@ public:
 		result.insert(result.end(), vector2.begin(), vector2.end());
 		return result;
 	}
-	
-	
+
+
 	//! Return a vector with only those elements in the given vector that are exactly of type OutputT
 	template <typename OutputT, typename InputT>
 	static std::vector<OutputT> filter_by_type(const std::vector<InputT>& elements) {
@@ -35,14 +37,14 @@ public:
 		}
 		return filtered;
 	}
-	
+
 	//! "Uniquifies" the given vector - but does not preserve element order
 	template <typename T>
 	static std::vector<T> unique(const std::vector<T>& vector) {
 		std::set<T> unique(vector.cbegin(), vector.cend());
 		return std::vector<T>(unique.cbegin(), unique.cend());
 	}
-	
+
 	//! Clones a vector of elements possessing a clone method.
 	template <typename T>
 	static std::vector<T> clone(const std::vector<T>& vector) {
@@ -52,7 +54,7 @@ public:
 		}
 		return cloned;
 	}
-	
+
 	template <typename T>
 	static std::vector<const T*> copy(const std::vector<const T*>& vector) {
 		std::vector<const T*> cloned;
@@ -78,7 +80,7 @@ public:
 		}
 		return true;
 	}
-	
+
 	//! Flips the elements of a one-to-one map.
 	template <typename T1, typename T2>
 	static std::map<T2, T1> flip_map(const std::map<T1, T2>& input) {
@@ -89,7 +91,7 @@ public:
 		}
 		return output;
 	}
-	
+
 	//! Reverse-indexes any given vector of objects into a map from object to (vector) index
 	template <typename T>
 	static std::map<T, unsigned> index(const std::vector<T>& elements) {
@@ -100,7 +102,32 @@ public:
 		return index;
 	}
 
-	
+    //! Type punning without aliasing, see discussion:
+    //! http://stackoverflow.com/questions/25664848/unions-and-type-punning/31080901#31080901
+    //! and this entry on C++ Reference
+    //! http://en.cppreference.com/w/cpp/string/byte/memcpy
+    template <typename T1, typename T2>
+    static void type_punning_without_aliasing( T1& src, T2& dst ) {
+        static_assert( sizeof(T1) == sizeof(T2), "Type punning between types of differnt size is not okay!" );
+        std::memcpy( &dst, &src, sizeof(T1) );
+    }
+
+    class reinterpreted_as_int
+        : public boost::static_visitor<int> {
+    public:
+
+        int operator()(int i) const {
+            return i;
+        }
+
+        int operator()(float f) const {
+            int v;
+            type_punning_without_aliasing( f, v );
+            return v;
+        }
+
+    };
+
 };
 
 

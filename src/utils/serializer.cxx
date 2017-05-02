@@ -10,12 +10,13 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/variant.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
 namespace fs0 {
 
-	
+
 template <typename T>
 void Serializer::BoostDeserialize(const std::string& filename, T& data) {
 	std::ifstream ifs(filename);
@@ -51,9 +52,9 @@ void Serializer::deserialize(const std::string& filename, DataInserter& inserter
 	}
 }
 
-int Serializer::deserialize0AryElement(const std::string& filename) {
-	int data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 1); data = elems[0]; };
+ObjectIdx Serializer::deserialize0AryElement(const std::string& filename) {
+	ObjectIdx data;
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 1); data = elems[0]; };
 	deserialize(filename, inserter);
 	return data;
 }
@@ -67,55 +68,55 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::UnaryMap
 
 Serializer::BoostUnaryMap Serializer::deserializeUnaryMap(const std::string& filename) {
 	BoostUnaryMap data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
 	deserialize(filename, inserter);
 	return data;
 }
 
 Serializer::BoostBinaryMap Serializer::deserializeBinaryMap(const std::string& filename) {
 	BoostBinaryMap data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 3); data.insert(std::make_pair(std::make_pair(elems[0], elems[1]), elems[2]));};
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 3); data.insert(std::make_pair(std::make_pair(elems[0], elems[1]), elems[2]));};
 	deserialize(filename, inserter);
 	return data;
 }
 
 Serializer::BoostArity3Map Serializer::deserializeArity3Map(const std::string& filename) {
 	BoostArity3Map data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 4); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2]), elems[3]));};
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 4); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2]), elems[3]));};
 	deserialize(filename, inserter);
-	return data;	
+	return data;
 }
 Serializer::BoostArity4Map Serializer::deserializeArity4Map(const std::string& filename) {
 	BoostArity4Map data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 5); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2], elems[3]), elems[4]));};
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 5); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2], elems[3]), elems[4]));};
 	deserialize(filename, inserter);
 	return data;
 }
 
 Serializer::BoostUnarySet Serializer::deserializeUnarySet(const std::string& filename) {
 	BoostUnarySet data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 1); data.insert(elems[0]);};
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 1); data.insert(elems[0]);};
 	deserialize(filename, inserter);
 	return data;
 }
 
 Serializer::BoostBinarySet Serializer::deserializeBinarySet(const std::string& filename) {
 	BoostBinarySet data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
 	deserialize(filename, inserter);
 	return data;
 }
 
 Serializer::BoostArity3Set Serializer::deserializeArity3Set(const std::string& filename) {
 	BoostArity3Set data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 3); data.insert(std::make_tuple(elems[0], elems[1], elems[2])); };
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 3); data.insert(std::make_tuple(elems[0], elems[1], elems[2])); };
 	deserialize(filename, inserter);
 	return data;
 }
 
 Serializer::BoostArity4Set Serializer::deserializeArity4Set(const std::string& filename) {
 	BoostArity4Set data;
-	DataInserter inserter = [&data](const std::vector<int>& elems) { assert(elems.size() == 4); data.insert(std::make_tuple(elems[0], elems[1], elems[2], elems[3])); };
+	DataInserter inserter = [&data](const std::vector<ObjectIdx>& elems) { assert(elems.size() == 4); data.insert(std::make_tuple(elems[0], elems[1], elems[2], elems[3])); };
 	deserialize(filename, inserter);
 	return data;
 }
@@ -142,15 +143,19 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::BinarySe
 }
 
 
-std::vector<int>
+std::vector<ObjectIdx>
 Serializer::deserializeLine(const std::string& line, const std::string& separators) {
 	if (line.size() == 0) return {};
 	std::vector<std::string> strings;
 	boost::split(strings, line, boost::is_any_of(separators));
-	std::vector<int> result;
+	std::vector<ObjectIdx> result;
 	result.reserve(strings.size());
 	for (const std::string& str:strings) {
-		result.push_back(boost::lexical_cast<int>(str));
+        try {
+		    result.push_back( ObjectIdx(boost::lexical_cast<int>(str)) );
+        } catch( boost::bad_lexical_cast& e ) {
+            result.push_back( ObjectIdx(boost::lexical_cast<float>(str)) );
+        }
 	}
 	return result;
 }

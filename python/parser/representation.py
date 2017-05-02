@@ -28,11 +28,11 @@ class ProblemRepresentation(object):
                 'process_schemata': [process.dump() for process in self.index.process_schemas],
                 'event_schemata': [event.dump() for event in self.index.event_schemas],
                 'state_constraints': [constraint.dump() for constraint in self.index.state_constraints],
+                'metric' : self.index.metric.dump(),
                 'goal': self.index.goal.dump(),
                 'axioms': [axiom.dump() for axiom in self.index.axioms],
                 'init': self.dump_init_data(),
                 'symbols': self.dump_symbol_data(),
-
                 'problem': {'domain': self.index.domain_name, 'instance': self.index.instance_name}
                 }
 

@@ -8,10 +8,10 @@
 namespace fs0 {
 
 
-AlldiffConstraint::AlldiffConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) 
+AlldiffConstraint::AlldiffConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters)
 	: AlldiffConstraint(scope) {}
 
-AlldiffConstraint::AlldiffConstraint(const VariableIdxVector& scope) 
+AlldiffConstraint::AlldiffConstraint(const VariableIdxVector& scope)
 	: DirectConstraint(scope), _arity(scope.size()), min(_arity), max(_arity), _sorted_vars(_arity), u(_arity)
 {}
 
@@ -21,15 +21,15 @@ AlldiffConstraint::AlldiffConstraint(const VariableIdxVector& scope)
 FilteringOutput AlldiffConstraint::filter() {
 	FilteringOutput res = bounds_consistency(projection);
 	if (res == FilteringOutput::Failure) return res;
-	
+
 	invertDomains(projection);
 	FilteringOutput inverted_res = bounds_consistency(projection);
 	if (inverted_res == FilteringOutput::Failure) return inverted_res;
 	else if (inverted_res == FilteringOutput::Pruned) res = FilteringOutput::Pruned;
-	
+
 	// Reinvert the domains again
 	invertDomains(projection);
-	
+
 	return res;
 }
 
@@ -37,7 +37,7 @@ FilteringOutput AlldiffConstraint::filter() {
 Domain AlldiffConstraint::invertDomain(const Domain& domain) const {
 	Domain inverted;
 	for (auto it = domain.crbegin(); it != domain.crend(); ++it) {
-		inverted.insert(inverted.end(), -1 * (*it));
+		inverted.insert(inverted.end(), -1 * boost::get<int>(*it));
 	}
 	return inverted;
 }
@@ -53,13 +53,13 @@ void AlldiffConstraint::invertDomains(const DomainVector& domains) {
 //! Sort the variables in increasing order of the max value of their domain, leaving them in the `_sorted_vars` attribute.
 void AlldiffConstraint::sortVariables(const DomainVector& domains) {
 	std::iota(std::begin(_sorted_vars), std::end(_sorted_vars), 0); // fill the index vector with the range [0..num_vars-1]
-	
+
 	// A lambda function to sort based on the max domain value.
 // 		const DomainVector& doms = domains; // To allow capture from the lambda expression
 	auto sorter = [&domains](int x, int y) {
-		const int max_x = *(domains[x]->crbegin()); // crbegin will get the max value, as the flat_set is sorted.
-		const int max_y = *(domains[y]->crbegin());
-		return max_x < max_y; 
+		const int max_x = boost::get<int>(*(domains[x]->crbegin())); // crbegin will get the max value, as the flat_set is sorted.
+		const int max_y = boost::get<int>(*(domains[y]->crbegin()));
+		return max_x < max_y;
 	};
 	std::sort(_sorted_vars.begin(), _sorted_vars.end(), sorter);
 }
@@ -67,8 +67,8 @@ void AlldiffConstraint::sortVariables(const DomainVector& domains) {
 void AlldiffConstraint::updateBounds(const DomainVector& domains) {
 	for (unsigned i = 0; i < _arity; ++i) {
 		const unsigned var = _sorted_vars[i];
-		min[i] = *(domains[var]->cbegin());
-		max[i] = *(domains[var]->crbegin());
+		min[i] = boost::get<int>(*(domains[var]->cbegin()));
+		max[i] = boost::get<int>(*(domains[var]->crbegin()));
 	}
 }
 
@@ -82,7 +82,8 @@ FilteringOutput AlldiffConstraint::incrMin(const DomainVector& domains, int a, i
 			const unsigned var = _sorted_vars[j];
 			Domain& old_domain = *(domains[var]);
 			Domain new_domain;
-			for (int val:old_domain) {
+			for (auto wrapped_val:old_domain) {
+                int val = boost::get<int>(wrapped_val);
 				if (val >= b+1) {
 					new_domain.insert(new_domain.cend(), val);
 				} else {
@@ -117,7 +118,7 @@ FilteringOutput AlldiffConstraint::insert(const DomainVector& domains, unsigned 
 		bestMin = min[i];
 		bestMinIdx = i;
 	}
-	
+
 	if (bestMinIdx <= _arity) {
 		output = incrMin(domains, bestMin, max[i], i);
 	}
@@ -126,19 +127,19 @@ FilteringOutput AlldiffConstraint::insert(const DomainVector& domains, unsigned 
 
 FilteringOutput AlldiffConstraint::bounds_consistency(const DomainVector& domains) {
 	FilteringOutput output = FilteringOutput::Unpruned;
-	
+
 	// 1. Sort the variables in increasing order of the max value of their domain.
 	sortVariables(domains);
-	
+
 	// 2. Update the bounds (min and max values) for each variable
 	updateBounds(domains);
-	
+
 	for (unsigned i = 0; i < _arity; ++i) {
 		FilteringOutput tmp = insert(domains, i);
 		if (tmp == FilteringOutput::Failure) return tmp;
 		if (tmp == FilteringOutput::Pruned) output = tmp;
 	}
-	
+
 	return output;
 }
 
@@ -148,4 +149,3 @@ std::ostream& AlldiffConstraint::print(std::ostream& os) const {
 }
 
 } // namespaces
-

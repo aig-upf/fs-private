@@ -7,7 +7,7 @@
 #include <lapkt/algorithms/best_first_search.hxx>
 #include <search/utils.hxx>
 #include <constraints/gecode/handlers/lifted_effect_csp.hxx>
-
+#include <languages/fstrips/operations.hxx>
 #include <heuristics/relaxed_plan/rpg_index.hxx>
 #include <utils/support.hxx>
 #include <search/drivers/setups.hxx>
@@ -21,23 +21,26 @@ gecode::SmartRPG*
 SmartEffectDriver::configure_heuristic(const Problem& problem, const Config& config) {
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = config.useApproximateActionResolution();
-	
+
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	auto managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
-	
-	bool use_state_constraints = config.getOption<bool>("use_state_constraints_in_heuristic_goal_evaluation");
-	const fs::Formula* state_constraints = use_state_constraints ? problem.getStateConstraints() : new fs::Tautology;
-	
-	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), state_constraints);
-	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
-	
-	auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), state_constraints, std::move(managers), extension_handler);
-	
-	// This is ugly, but the fastest way to ensure no memory leaks at the moment
-	if (!use_state_constraints) delete state_constraints;
-	
-	return heuristic;
+
+    if ( config.getOption<bool>("use_state_constraints_in_heuristic_goal_evaluation") ) {
+	    const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
+	    ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
+	    auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+
+	    return heuristic;
+    }
+
+    const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), {});
+    ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
+    auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), {}, std::move(managers), extension_handler);
+
+
+    return heuristic;
+
 }
 
 SmartEffectDriver::EnginePT
@@ -46,11 +49,11 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 	const Problem& problem = model.getTask();
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = config.useApproximateActionResolution();
-	
+
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
-	
+
 	_heuristic = std::unique_ptr<SmartRPG>(configure_heuristic(problem, config));
-	
+
 	// If necessary, we constrain the state variables domains and even action/effect CSPs that will be used henceforth
 	// by performing a reachability analysis.
 	if (config.getOption("reachability_analysis")) {
@@ -58,7 +61,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 		RPGIndex graph = _heuristic->compute_full_graph(problem.getInitialState());
 		LiftedEffectCSP::prune_unreachable(_heuristic->get_managers(), graph);
 	}
-	
+
 	EHCSearch<SmartRPG>* ehc = nullptr;
 	if (config.getOption("ehc")) {
 		// TODO Apply reachability analysis for the EHC heuristic as well
@@ -68,16 +71,16 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 		SmartRPG ehc_heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(ehc_managers), extension_handler);
 		ehc = new EHCSearch<SmartRPG>(model, std::move(ehc_heuristic), config.getOption("helpful_actions"), stats);
 	}
-	
+
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
 	EventUtils::setup_evaluation_observer<NodeT, SmartRPG>(config, *_heuristic, stats, _handlers);
 	if (config.requiresHelpfulnessAssessment()) {
 		EventUtils::setup_HA_observer<NodeT>(_handlers);
 	}
-	
+
 	auto engine = new GBFST(model);
 	lapkt::events::subscribe(*engine, _handlers);
-	
+
 	return EnginePT(new EngineT(problem, engine, ehc));
 }
 
@@ -87,7 +90,7 @@ SmartEffectDriver::setup(Problem& problem) {
 }
 
 
-ExitCode 
+ExitCode
 SmartEffectDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	GroundStateModel model = setup(problem);
 	SearchStats stats;
@@ -96,4 +99,3 @@ SmartEffectDriver::search(Problem& problem, const Config& config, const std::str
 }
 
 } } // namespaces
-

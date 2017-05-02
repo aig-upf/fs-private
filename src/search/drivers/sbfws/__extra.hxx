@@ -191,7 +191,7 @@ void dump_simulation_nodes(NodePT& node) {
 		return relevant;
 	}
 
-	void compute_relevant(const State& state, bool log_stats, LightRelevantAtomSet& atomset) {
+	void compute_relevant(const State& state, bool log_stats, RelevantAtomSet& atomset) {
 		
 		unsigned reachable = 0, max_reachable = _model.num_subgoals();
 		_unused(max_reachable);
@@ -218,7 +218,7 @@ void dump_simulation_nodes(NodePT& node) {
 
 	}
 
-	void compute_relevant_aptk_hff(const State& state, LightRelevantAtomSet& atomset) {
+	void compute_relevant_aptk_hff(const State& state, RelevantAtomSet& atomset) {
 		assert(_aptk_rpg);
 		const AtomIndex& atomidx = _problem.get_tuple_index();
 		return _aptk_rpg->compute_r_ff(state, atomidx);
@@ -249,6 +249,14 @@ void dump_simulation_nodes(NodePT& node) {
 	}
 	*/
 
+		template <typename StateT>
+	std::vector<bool> compute_R_union_Rs(const StateT& state) {
+		throw std::runtime_error("Revise");
+// 		_stats.simulation();
+// 		SimulationT simulator(_model, _featureset, _simconfig);
+// 		return simulator.compute_R_union_Rs(state);
+	}
+	
 const std::unordered_set<IWNodePT>& get_last_simulation_nodes() const { return _simulator->get_relevant_nodes(); }
 
 
@@ -354,7 +362,7 @@ public:
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		unsigned n = state.numAtoms();
 		for (VariableIdx var = 0; var < n; ++var) {
-			ObjectIdx val = state.getValue(var);
+			ObjectIdx val = boost::get<int>(state.getValue(var));
 			if (!mark_negative_propositions && info.isPredicativeVariable(var) && val==0) continue; // We don't want to mark negative propositions
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 			mark(_atomidx->to_index(var, val), status, only_if_relevant);

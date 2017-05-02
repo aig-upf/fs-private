@@ -8,6 +8,8 @@
 #include <map>
 #include <set>
 #include <boost/container/flat_set.hpp>
+#include <boost/variant.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <exception>
 
@@ -74,6 +76,7 @@ namespace fs0 {
 	//! A function in the logical sense.
 	using Function = std::function<ObjectIdx(const ValueTuple&)>;
 
+    enum class MetricType { MINIMIZE = 0, MAXIMIZE = 1 };
 
 	/**
 	 * Custom exceptions
@@ -95,3 +98,15 @@ namespace fs0 {
 	};
 
 } // namespaces
+
+// std specializations for terms and term pointers that will allow us to use them in hash-table-like structures
+// NOTE that these specializations are necessary for any use of term pointers in std::map/std::unordered_maps,
+// even if compilation will succeed without them as well.
+
+namespace std {
+    template<> struct hash<fs0::ObjectIdx> {
+        std::size_t operator()(const fs0::ObjectIdx& obj) const {
+            return boost::hash<fs0::ObjectIdx>()(obj);
+        }
+    };
+}

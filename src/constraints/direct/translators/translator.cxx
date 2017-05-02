@@ -25,7 +25,7 @@ void DirectTranslator::checkSupported(const fs::Term* lhs, const fs::Term* rhs) 
 
 DirectConstraint* DirectTranslator::generate(const fs::AtomicFormula& formula) {
 	if (auto relational = dynamic_cast<const fs::RelationalFormula*>(&formula)) return generate(*relational);
-	
+
 	// Else, it must be a built-in, or external condition
 	auto instance = LogicalComponentRegistry::instance().instantiate_direct_constraint(formula);
 	if (!instance) { // No constraint translator was registered, thus we try to extensionalize the formula
@@ -37,39 +37,39 @@ DirectConstraint* DirectTranslator::generate(const fs::AtomicFormula& formula) {
 
 DirectConstraint* DirectTranslator::generate(const fs::RelationalFormula& formula) {
 	checkSupported(formula.lhs(), formula.rhs());
-	
+
 	VariableIdxVector formula_scope = fs::ScopeUtils::computeDirectScope(&formula);
 	if (formula_scope.size() > 2) throw std::runtime_error("Too high a scope for direct constraints");
-	
+
 	// Here we can assume that the scope is <= 2 and there are no nested fluents
 	const fs::Term* lhs = formula.lhs(), *rhs = formula.rhs(); // shortcuts
-	
+
 	auto lhs_var = dynamic_cast<const fs::StateVariable*>(lhs);
 	auto rhs_var = dynamic_cast<const fs::StateVariable*>(rhs);
 	auto lhs_const = dynamic_cast<const fs::Constant*>(lhs);
 	auto rhs_const = dynamic_cast<const fs::Constant*>(rhs);
-	
+
 	if (lhs_const && rhs_const) { // A comparison between two constants... shouldn't get to this point
 		throw std::runtime_error("Comparison between two constants");
 	}
-	
+
 	if (lhs_var && rhs_var) { // X = Y
 		VariableIdxVector scope{lhs_var->getValue(), rhs_var->getValue()};
 		return instantiateBinaryConstraint(formula.symbol(), scope, {});
 	}
-	
+
 	if (lhs_var && rhs_const) { // X = c
 		VariableIdxVector scope{lhs_var->getValue()};
 		ObjectIdxVector parameters{rhs_const->getValue()};
 		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, false);
 	}
-	
+
 	if (lhs_const && rhs_var) { // c = X
 		VariableIdxVector scope{rhs_var->getValue()};
 		ObjectIdxVector parameters{lhs_const->getValue()};
 		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, true);
 	}
-	
+
 	// Otherwise we have some complex term of the form e.g. next(d, current) != undefined  (where next is static, current is fluent.
 	// We compile it into extensional form.
 	assert(formula_scope.size() == 1 || formula_scope.size() == 2);
@@ -78,7 +78,7 @@ DirectConstraint* DirectTranslator::generate(const fs::RelationalFormula& formul
 
 DirectConstraint* DirectTranslator::extensionalize(const fs::AtomicFormula& formula) {
 	VariableIdxVector scope = fs::ScopeUtils::computeDirectScope(&formula);
-	
+
 	if (scope.size() == 1) {
 		return new CompiledUnaryConstraint(scope, [&formula, &scope](ObjectIdx value) {
 			return formula.interpret(Projections::zip(scope, {value}));
@@ -112,18 +112,18 @@ const DirectEffect* DirectTranslator::generate(const fs::ActionEffect& effect) {
 	auto lhs_var = dynamic_cast<const fs::StateVariable*>(effect.lhs());
 	if (!lhs_var) throw std::runtime_error("Direct effects accept only state variables on the LHS of an effect");
 	VariableIdx affected = lhs_var->getValue();
-	
+
 	const fs::Term& rhs = *effect.rhs();
-	
+
 	VariableIdxVector rhs_scope = fs::ScopeUtils::computeDirectScope(effect.rhs());
 	if (rhs_scope.size() > 2) throw std::runtime_error("Too high a scope for direct effects");
-	
+
 	auto translator = LogicalComponentRegistry::instance().getDirectEffectTranslator(rhs);
 	if (translator) {
 		auto translated = translator->translate(*lhs_var, rhs);
 		if (translated) return translated;
 	}
-	
+
 	// If there was no particular translator registered for the type of term, or the registered translator couldn't handle the term,
 	// we fall back to (try to) extensionalize the constraint
 	LPT_DEBUG("components", "Could not find a suitable translator for the following effect, falling back to extensionalization: " << effect);
@@ -144,8 +144,8 @@ std::vector<const DirectEffect*> DirectTranslator::generate(const std::vector<co
 }
 
 
-DirectConstraint* DirectTranslator::instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters, bool invert) {
-	
+DirectConstraint* DirectTranslator::instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters, bool invert) {
+
 	// Note that in some cases we might want to "invert" the relation, so that e.g. for c < X we indeed post a X > c constraint.
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
 		case fs::RelationalFormula::Symbol::EQ:
@@ -159,37 +159,37 @@ DirectConstraint* DirectTranslator::instantiateUnaryConstraint(fs::RelationalFor
 
 		case fs::RelationalFormula::Symbol::LEQ:
 			return invert ?  static_cast<DirectConstraint*>(new GEQXConstraint(scope, parameters)) : static_cast<DirectConstraint*>(new LEQXConstraint(scope, parameters));
-			
+
 		case fs::RelationalFormula::Symbol::GT:
 			return invert ?  static_cast<DirectConstraint*>(new LTXConstraint(scope, parameters)) : static_cast<DirectConstraint*>(new GTXConstraint(scope, parameters));
-			
+
 		case fs::RelationalFormula::Symbol::GEQ:
 			return invert ?  static_cast<DirectConstraint*>(new LEQXConstraint(scope, parameters)) : static_cast<DirectConstraint*>(new GEQXConstraint(scope, parameters));
-		
+
 		default:
 			throw std::runtime_error("Unknown Relational formula type");
 	}
 }
 
-DirectConstraint* DirectTranslator::instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
-	
+DirectConstraint* DirectTranslator::instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<ObjectIdx>& parameters) {
+
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
 		case fs::RelationalFormula::Symbol::EQ:
 			return new EQConstraint(scope, parameters);
 			break;
-			
+
 		case fs::RelationalFormula::Symbol::NEQ:
 			return new NEQConstraint(scope, parameters);
 			break;
-			
+
 		case fs::RelationalFormula::Symbol::LT:
 			return new LTConstraint(scope, parameters);
 			break;
-		
+
 		case fs::RelationalFormula::Symbol::LEQ:
 			return new LEQConstraint(scope, parameters);
 			break;
-			
+
 		default:
 			throw UnimplementedFeatureException("This type of relation-based constraint has not yet been implemented");
 	}

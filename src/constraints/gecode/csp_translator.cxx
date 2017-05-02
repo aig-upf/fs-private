@@ -41,7 +41,7 @@ bool CSPTranslator::registerConstant(const fs::Constant* constant) {
 	auto it = _registered.find(constant);
 	if (it!= _registered.end()) return false; // The element was already registered
 
-	int value = constant->getValue();
+	int value = boost::get<int>(constant->getValue());
 	unsigned id = add_intvar(Gecode::IntVar(_base_csp, value, value));
 
 	_registered.insert(it, std::make_pair(constant, id));
@@ -67,7 +67,7 @@ bool CSPTranslator::isRegistered(const fs::Term* variable) const {
 void CSPTranslator::registerInputStateVariable(VariableIdx variable) {
 	auto it = _input_state_variables.find(variable);
 	if (it != _input_state_variables.end()) return; // The state variable was already registered, no need to register it again
-	
+
 	unsigned id = add_intvar(Helper::createPlanningVariable(_base_csp, variable), variable);
 	_input_state_variables.insert(std::make_pair(variable, id));
 }
@@ -150,12 +150,12 @@ std::vector<ObjectIdx> CSPTranslator::resolveValues(const std::vector<const fs::
 std::ostream& CSPTranslator::print(std::ostream& os, const GecodeCSP& csp) const {
 	const fs0::ProblemInfo& info = ProblemInfo::getInstance();
 	os << "Gecode CSP with " << _registered.size() + _input_state_variables.size() << " variables" << std::endl;
-	
+
 	os << std::endl << "State Variables: " << std::endl;
 	for (auto it:_input_state_variables) {
 		os << "\t " << info.getVariableName(it.first) << ": " << csp._intvars[it.second] << std::endl;
 	}
-	
+
 	os << std::endl << "CSP Variables corresponding to other terms: " << std::endl;
 	for (auto it:_registered) {
 		os << "\t ";
@@ -184,7 +184,7 @@ void CSPTranslator::updateStateVariableDomains(GecodeCSP& csp, const State& stat
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
 		const Gecode::IntVar& csp_variable = csp._intvars[it.second];
-		Gecode::rel(csp, csp_variable,  Gecode::IRT_EQ, state.getValue(variable));
+		Gecode::rel(csp, csp_variable,  Gecode::IRT_EQ, boost::get<int>(state.getValue(variable)));
 	}
 }
 
@@ -215,7 +215,7 @@ CSPTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
 			for (const fs::Term* subterm:nested->getSubterms()) {
 				indexes.push_back(resolveVariableIndex(subterm));
 			}
-			
+
 			if (!info.isPredicate(symbol)) { // If we have a functional symbol, we add the value of the term to the end of the tuple
 				indexes.push_back(resolveVariableIndex(nested));
 			}

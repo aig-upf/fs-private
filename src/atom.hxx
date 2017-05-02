@@ -35,12 +35,12 @@ public:
 };
 
 //! Comparison operators
-inline bool operator==(const Atom& lhs, const Atom& rhs){ return lhs.getVariable() == rhs.getVariable() && lhs.getValue() == rhs.getValue(); }
+inline bool operator==(const Atom& lhs, const Atom& rhs){ return lhs.getVariable() == rhs.getVariable() && boost::get<int>(lhs.getValue()) == boost::get<int>(rhs.getValue()); }
 inline bool operator!=(const Atom& lhs, const Atom& rhs){return !operator==(lhs,rhs);}
 inline bool operator< (const Atom& lhs, const Atom& rhs){
 	if (lhs.getVariable() < rhs.getVariable()) return true;
 	if (lhs.getVariable() > rhs.getVariable()) return false;
-	if (lhs.getValue() < rhs.getValue()) return true;
+	if (boost::get<int>(lhs.getValue()) < boost::get<int>(rhs.getValue())) return true;
 	return false;
 }
 inline bool operator> (const Atom& lhs, const Atom& rhs){return  operator< (rhs,lhs);}

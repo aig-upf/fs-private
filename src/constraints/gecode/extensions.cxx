@@ -20,9 +20,12 @@ void Extension::add_tuple(AtomIdx tuple) {
 Gecode::TupleSet Extension::generate() const {
 	Gecode::TupleSet ts;
 	if (is_tautology()) return ts; // We return an empty extension, since the symbol will be dealt with differently
-	
+
 	for (AtomIdx index:_tuples) {
-		ts.add(_tuple_index.to_tuple(index));
+        std::vector<int> tmp;
+        auto tuple = _tuple_index.to_tuple(index);
+        std::for_each( tuple.begin(), tuple.end(), [&tmp](const ObjectIdx& obj) { tmp.push_back(boost::get<int>(obj));} );
+		ts.add( tmp );
 	}
 	ts.finalize();
 	return ts;
@@ -52,15 +55,15 @@ AtomIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 	bool is_predicate = _info.isPredicativeVariable(variable); // TODO - MOVE FROM PROBLEM INFO INTO SOME PERFORMANT INDEX
 	Extension& extension = _extensions.at(symbol);
 // 	_modified.insert(symbol);  // Mark the extension as modified
-	
-	if (is_predicate && value == 1) {
+
+	if (is_predicate && boost::get<int>(value) == 1) {
 		AtomIdx index = _tuple_index.to_index(tuple_data);
 		if (managed) {
 			extension.add_tuple(index);
 		}
 		return index;
 	}
-	
+
 	if (!is_predicate) {
 		ValueTuple tuple = tuple_data.second; // (implicitly copies)
 		tuple.push_back(value);
@@ -70,7 +73,7 @@ AtomIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 		}
 		return index;
 	}
-	
+
 	return INVALID_TUPLE;
 }
 
@@ -89,7 +92,7 @@ void ExtensionHandler::process_delta(VariableIdx variable, const std::vector<Obj
 
 std::vector<Gecode::TupleSet> ExtensionHandler::generate_extensions() const {
 	std::vector<Gecode::TupleSet> result;
-	
+
 	for (unsigned symbol = 0; symbol < _extensions.size(); ++symbol) {
 		auto& generator = _extensions[symbol];
 		if (_managed.at(symbol)) {

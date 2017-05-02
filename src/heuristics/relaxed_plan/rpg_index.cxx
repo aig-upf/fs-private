@@ -21,18 +21,19 @@ RPGIndex::RPGIndex(const State& seed, const AtomIndex& tuple_index, ExtensionHan
 {
 	_domains.reserve(seed.numAtoms());
 	_extension_handler.reset();
-	
+
 	_domains_raw.resize(seed.numAtoms());
-	
+
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 		ObjectIdx value = seed.getValue(variable);
-		
+
 		AtomIdx tuple_index = _extension_handler.process_atom(variable, value);
 		if (tuple_index != INVALID_TUPLE) {
-			_domains.push_back(Gecode::IntSet(value, value));
+            int iv = boost::get<int>(value);
+			_domains.push_back(Gecode::IntSet(iv, iv));
 			add(tuple_index, nullptr, {});
-			
+
 		} else {
 			_domains.push_back(Gecode::IntSet()); // We simply push an empty domain for those predicative state variables that are set to false.
 		}
@@ -42,18 +43,21 @@ RPGIndex::RPGIndex(const State& seed, const AtomIndex& tuple_index, ExtensionHan
 
 void RPGIndex::advance() {
 	_extension_handler.advance();
-	
+
 	for (AtomIdx tuple:_novel_tuples) {
 		_extension_handler.process_tuple(tuple);
 	}
-	
+
 	// Now update the per-variable domains
 	for (unsigned variable = 0; variable < _domains_raw.size(); ++variable) {
 		const auto& all = _domains_raw[variable];
 		// An intermediate IntArgs object seems to be necessary, since IntSets do not accept std-like range constructors.
-		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(all.cbegin(), all.cend()));
+        std::vector<int> tmp; // MRJ: Temporary necessary to hold the integer values wrapped by the variant ObjectIdx type
+        std::for_each( all.begin(), all.end(), [&tmp]( const ObjectIdx& obj ) { tmp.push_back(boost::get<int>(obj));} );
+
+		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(tmp.cbegin(), tmp.cend()));
 	}
-	
+
 	next();
 }
 
@@ -97,8 +101,8 @@ void RPGIndex::add(AtomIdx tuple, const ActionID* action, std::vector<AtomIdx>&&
 	_novel_tuples.push_back(tuple);
 	const Atom& atom = _tuple_index.to_atom(tuple);
 	auto& domain = _domains_raw.at(atom.getVariable());
-	// assert(std::find(domain.cbegin(), domain.cend(), atom.getValue()) == domain.end()); // Warning: this is expensive
-	domain.push_back(atom.getValue());
+	// assert(std::find(domain.cbegin(), domain.cend(), boost::get<int>(atom.getValue())) == domain.end()); // Warning: this is expensive
+	domain.push_back(boost::get<int>(atom.getValue()));
 }
 
 /*
@@ -126,12 +130,12 @@ std::ostream& RPGIndex::print(std::ostream& os) const {
 		}
 	}
 	os << std::endl;
-	
+
 	os << "RPG State Variable Domains: " << std::endl;
 	for (unsigned variable = 0; variable < _domains.size(); ++variable) {
 		os << info.getVariableName(variable) << ": " << _domains[variable] << std::endl;
 	}
-	
+
 	return os;
 }
 
@@ -144,9 +148,9 @@ void RPGIndex::printAtoms(const std::vector<AtomIdx>& vector, std::ostream& os) 
 
 bool RPGIndex::is_true(VariableIdx variable) const {
 	const auto& domain = _domains_raw.at(variable);
-	 
+
 	assert(domain.size() <= 1); // The variable must be predicative, thus will contain at most the element true
-	assert(domain.empty() || domain[0] == 1); // If there is one element, it must be the True element
+	assert(domain.empty() || boost::get<int>(domain[0]) == 1); // If there is one element, it must be the True element
 	return !domain.empty();
 // 	return std::find(domain.cbegin(), domain.cend(), 1) != domain.end();
 }
@@ -167,4 +171,3 @@ const std::set<unsigned>& RPGIndex::get_modified_symbols() const {
 */
 
 } } // namespaces
-

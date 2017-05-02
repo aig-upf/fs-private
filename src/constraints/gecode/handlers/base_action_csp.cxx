@@ -101,7 +101,7 @@ void BaseActionCSP::index() {
 	assert(_action_support.size() == 0);
 	for (auto term:_all_terms) {
 		if (auto casted = dynamic_cast<const fs::StateVariable*>(term)) {
-			_action_support.insert(casted->getValue());
+			_action_support.insert(boost::get<int>(casted->getValue()));
 		}
 	}
 	

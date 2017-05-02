@@ -20,17 +20,17 @@ LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schem
 std::vector<std::shared_ptr<LiftedActionCSP>>
 LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
 	std::vector<std::shared_ptr<LiftedActionCSP>> handlers;
-	
+
 	for (auto schema:schemata) {
 		assert(!schema->has_empty_parameter());
 		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
 		auto handler = std::make_shared<LiftedActionCSP>(*schema, tuple_index, approximate, false);
-		
+
 		if (!handler->init(novelty)) {
 			LPT_DEBUG("grounding", "Action schema \"" << *schema << "\" detected as non-applicable before grounding");
 			continue;
 		}
-		
+
 		LPT_DEBUG("grounding", "Generated CSP for action schema " << *schema << std::endl <<  *handler << std::endl);
 		handlers.push_back(handler);
 	}
@@ -107,13 +107,13 @@ LiftedActionCSP::register_csp_variables() {
 
 
 Binding LiftedActionCSP::build_binding_from_solution(const GecodeCSP* solution) const {
-	std::vector<int> values;
+	std::vector<ObjectIdx> values;
 	std::vector<bool> valid;
 	values.reserve(_parameter_variables.size());
 	valid.reserve(_parameter_variables.size());
 	for (unsigned csp_var_idx:_parameter_variables) {
 		if (csp_var_idx == std::numeric_limits<unsigned int>::max()) {
-			values.push_back(0);
+			values.push_back(ObjectIdx(0));
 			valid.push_back(false);
 		} else {
 			values.push_back(_translator.resolveValueFromIndex(csp_var_idx, *solution));

@@ -34,7 +34,6 @@ UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vect
 ArithmeticTerm::ArithmeticTerm(const std::vector<const Term*>& subterms)
 	: StaticHeadedNestedTerm(-1, subterms)
 {
-	assert(subterms.size() == 2);
 }
 
 
@@ -45,7 +44,7 @@ AxiomaticTermWrapper::AxiomaticTermWrapper(const AxiomaticTermWrapper& other) :
 
 ObjectIdx AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
-	
+
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
 	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
@@ -54,7 +53,7 @@ ObjectIdx AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, c
 
 ObjectIdx AxiomaticTermWrapper::interpret(const State& state, const Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
-	
+
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
 	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
@@ -146,11 +145,11 @@ std::ostream& BoundVariable::print(std::ostream& os, const fs0::ProblemInfo& inf
 	return os;
 }
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << info.getCustomObjectName(_value); // We are sure that this is a custom object, otherwise the IntConstant::print() would be executed
+	os << info.getCustomObjectName(_value); // We are sure that this is a custom object, otherwise the NumericConstant::print() would be executed
 	return os;
 }
 
-std::ostream& IntConstant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& NumericConstant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << _value;
 	return os;
 }

@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs_types.hxx>
-#include <utils/bitsets.hxx>
+//#include <utils/bitsets.hxx>
 #include <problem_info.hxx>
 
 namespace fs0 {
@@ -97,6 +97,7 @@ public:
 	bool contains(const Atom& atom) const;
 
 	ObjectIdx getValue(const VariableIdx& variable) const;
+    int       getIntValue( const VariableIdx& variable) const;
 
 	unsigned numAtoms() const { return _bool_values.size() + _int_values.size(); }
 
@@ -111,7 +112,6 @@ public:
 		assert(_indexer.is_fully_multivalued());
 		return _int_values;
 	}
-
 protected:
 	void set(const Atom& atom);
 

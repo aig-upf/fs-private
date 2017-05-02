@@ -43,7 +43,10 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
 	else {
 		assert(generic_type == ProblemInfo::ObjectType::OBJECT);
 		const ObjectIdxVector& values = info.getTypeObjects(typeId);
-		return Gecode::IntVar(csp, Gecode::IntSet(values.data(), values.size())); // TODO - Check if we can change this for a range-like domain creation
+        std::vector<int> tmp;
+        std::for_each( values.begin(), values.end(), [&tmp](const ObjectIdx& obj){ tmp.push_back( boost::get<int>(obj)); } );
+        return Gecode::IntVar(csp, Gecode::IntSet(tmp.data(), tmp.size()));
+		//return Gecode::IntVar(csp, Gecode::IntSet(values.data(), values.size())); // TODO - Check if we can change this for a range-like domain creation
 	}
 }
 
@@ -64,7 +67,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm* term) 
 	for (term_list_iterator it(term->getSubterms()); !it.ended(); ++it) {
 		try {
 			ObjectIdx out = functor(it.arguments());
-			tuples.add(it.getIntArgsElement(out)); // Add the term value as the last element
+			tuples.add(it.getIntArgsElement(boost::get<int>(out))); // Add the term value as the last element
 		}
 		catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 		catch(const UndefinedValueAccess& e) {}
@@ -85,7 +88,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::AtomicFormula* formula) {
 		}
 		catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 		catch(const UndefinedValueAccess& e) {}
-		
+
 	}
 
 	tuples.finalize();

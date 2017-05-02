@@ -11,13 +11,20 @@
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/axioms.hxx>
 #include <languages/fstrips/operations/axioms.hxx>
+#include <languages/fstrips/metrics.hxx>
 
 
 namespace fs0 {
 
 std::unique_ptr<Problem> Problem::_instance = nullptr;
 
-Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const std::unordered_map<std::string, const fs::Axiom*>& axioms, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index) :
+Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
+                    const std::vector<const ActionData*>& action_data,
+                    const std::unordered_map<std::string, const fs::Axiom*>& axioms,
+                    const fs::Formula* goal,
+                    const std::unordered_map<std::string, const fs::Axiom*>& state_constraints,
+                    const fs::Metric* metric,
+                    AtomIndex&& tuple_index) :
 	_tuple_index(std::move(tuple_index)),
 	_init(init),
 	_state_indexer(state_indexer),
@@ -25,20 +32,26 @@ Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector
 	_axioms(axioms),
 	_ground(),
 	_partials(),
-	_state_constraint_formula(state_constraints),
+	_state_constraints(state_constraints),
 	_goal_formula(goal),
+    _metric(metric),
 	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
 	_is_predicative(check_is_predicative())
 {
+    //! Store pointers to the state constraint definitions for ease of use
+    for ( auto c : _state_constraints ) {
+        _state_constraints_formulae.push_back( c.second->getDefinition() );
+    }
 }
 
 Problem::~Problem() {
 	for (const auto pointer:_action_data) delete pointer;
 	for (const auto it:_axioms) delete it.second;
+    for (const auto it:_state_constraints) delete it.second;
 	for (const auto pointer:_ground) delete pointer;
 	for (const auto pointer:_partials) delete pointer;
-	delete _state_constraint_formula;
 	delete _goal_formula;
+    delete _metric;
 }
 
 std::unordered_map<std::string, const fs::Axiom*>
@@ -58,47 +71,53 @@ Problem::Problem(const Problem& other) :
 	_axioms(other._axioms),
 	_ground(Utils::copy(other._ground)),
 	_partials(Utils::copy(other._partials)),
-	_state_constraint_formula(other._state_constraint_formula->clone()),
+    _state_constraints(other._state_constraints),
 	_goal_formula(other._goal_formula->clone()),
+    _metric(new fs::Metric(*other._metric)),
 	_goal_sat_manager(other._goal_sat_manager->clone()),
 	_is_predicative(other._is_predicative)
-{}
-
-void Problem::set_state_constraints(const fs::Formula* state_constraint_formula) { 
-	delete _state_constraint_formula;
-	_state_constraint_formula = state_constraint_formula;
+{
+    //! Store pointers to the state constraint definitions for ease of use
+    for ( auto c : _state_constraints ) {
+        _state_constraints_formulae.push_back( c.second->getDefinition() );
+    }
 }
 
-void Problem::set_goal(const fs::Formula* goal) { 
+void Problem::set_state_constraints(const fs::Formula* state_constraint_formula) {
+    throw std::runtime_error("Runtime Error: Method Problem::set_state_constraints() is deprectated!");
+}
+
+void Problem::set_goal(const fs::Formula* goal) {
 	delete _goal_formula;
 	_goal_formula = goal;
 }
 
-std::ostream& Problem::print(std::ostream& os) const { 
+std::ostream& Problem::print(std::ostream& os) const {
 	const fs0::ProblemInfo& info = ProblemInfo::getInstance();
 	os << "Planning Problem [domain: " << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;
-	
+
 	os << "Goal Conditions:" << std::endl << "------------------" << std::endl;
 	os << "\t" << *getGoalConditions() << std::endl;
 	os << std::endl;
-	
+
 	os << "State Constraints:" << std::endl << "------------------" << std::endl;
-	os << "\t" << *getStateConstraints() << std::endl;
-	os << std::endl;
-	
+    for ( auto c : _state_constraints ) {
+        os << "\t" << c.first << ": " << *(c.second) << std::endl;
+    }
+
 	os << "Action data" << std::endl << "------------------" << std::endl;
 	for (const ActionData* data:_action_data) {
 		os << print::action_data(*data) << std::endl;
 	}
 	os << std::endl;
-	
+
 	os << "Ground Actions: " << _ground.size();
 	// os << std::endl << "------------------" << std::endl;
 	// for (const const GroundAction* elem:_ground) {
 	// 	os << *elem << std::endl;
 	// }
 	os << std::endl;
-	
+
 	return os;
 }
 
@@ -112,7 +131,7 @@ bool Problem::check_is_predicative() {
 
 //! TODO This is very hackyish. What we want to solve with this is the circular dependency
 //! between loading the actions and loading the axioms... we cannot properly identify
-//! as axioms those symbols which are axioms until all axioms have been loaded. Thus, we 
+//! as axioms those symbols which are axioms until all axioms have been loaded. Thus, we
 //! currently load them as static user-defined procedures, and afterwards invoke this method
 //! to replace them by axioms.
 //! This needs to be called before grounding actions.
@@ -122,10 +141,19 @@ void Problem::consolidateAxioms() {
 	auto tmp = _goal_formula;
 	_goal_formula = fs::process_axioms(*_goal_formula, info);
 	delete tmp;
-	
-	tmp = _state_constraint_formula;
-	_state_constraint_formula = fs::process_axioms(*_state_constraint_formula, info);
-	delete tmp;
+
+
+    for ( auto& c : _state_constraints ) {
+        const fs::Axiom* tmp = c.second;
+	    const fs::Formula* _new_definition = fs::process_axioms(*(tmp->getDefinition()), info);
+        c.second= new fs::Axiom( tmp->getName(), tmp->getSignature(), tmp->getParameterNames(), tmp->getBindingUnit(), _new_definition );
+        delete tmp;
+    }
+    //! Store pointers to the state constraint definitions for ease of use
+    _state_constraints_formulae.clear();
+    for ( auto c : _state_constraints ) {
+        _state_constraints_formulae.push_back( c.second->getDefinition() );
+    }
 
 	// NOTE Order is important: we need to process the axioms first.
 	// TODO This won't work for recursive axioms. We need a better strategy, e.g. lazy retrieval of the axiom pointers whenever interpretation is required, etc.
@@ -136,23 +164,23 @@ void Problem::consolidateAxioms() {
 		it.second = new fs::Axiom(axiom->getName(), axiom->getSignature(), axiom->getParameterNames(), axiom->getBindingUnit(), definition);
 		delete axiom;
 	}
-	
+
 	// Update the action schemas
 	std::vector<const ActionData*> processed_actions;
 	for (const ActionData* data:_action_data) {
 		auto precondition = fs::process_axioms(*(data->getPrecondition()), info);
-		
+
 		std::vector<const fs::ActionEffect*> effects;
 		for (const fs::ActionEffect* effect:data->getEffects()) {
 			effects.push_back(fs::process_axioms(*effect, info));
-		}		
-		
+		}
+
 		processed_actions.push_back(new ActionData(data->getId(), data->getName(), data->getSignature(), data->getParameterNames(), data->getBindingUnit(), precondition, effects));
 		delete data;
 	}
 	_action_data = processed_actions;
 }
 
-	
+
 
 } // namespaces

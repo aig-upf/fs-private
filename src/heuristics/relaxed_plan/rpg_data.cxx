@@ -15,15 +15,17 @@ RPGData::RPGData(const State& seed, bool ignore_negated) :
 	_effects()
 {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	
+
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
-		ObjectIdx value = seed.getValue(variable);
-		
-		if (ignore_negated && info.isPredicativeVariable(variable) && value == 0) { // TODO This check is expensive and should be optimized out
+		ObjectIdx value = boost::get<int>(seed.getValue(variable));
+
+		if (ignore_negated
+            && info.isPredicativeVariable(variable)
+            && boost::get<int>(value) == 0) { // TODO This check is expensive and should be optimized out
 			continue; // If requested, we ignore negated predicative atoms.
 		}
-		
+
 		_effects.insert(std::make_pair(Atom(variable, value),
 						createAtomSupport(nullptr, std::make_shared<std::vector<Atom>>())));
 	}
@@ -64,7 +66,7 @@ std::pair<bool, RPGData::SupportMap::iterator> RPGData::getInsertionHint(const A
 
 void RPGData::add(const Atom& atom, const ActionID* action, Atom::vctrp support, SupportMap::iterator hint) {
 	_effects.insert(hint, std::make_pair(atom, createAtomSupport(action, support)));
-	_novel[atom.getVariable()].push_back(atom.getValue());
+	_novel[atom.getVariable()].push_back(boost::get<int>(atom.getValue()));
 	++_num_novel;
 }
 
@@ -103,4 +105,3 @@ void RPGData::printAtoms(const Atom::vctrp vector, std::ostream& os) const {
 }
 
 } // namespaces
-

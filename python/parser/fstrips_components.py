@@ -109,6 +109,21 @@ class FSFormula(FSBaseComponent):
         return dict(conditions=self.processed.dump(self.index, self.binding_unit),
                     unit=self.binding_unit.dump())
 
+class FSMetric(FSBaseComponent) :
+    """ A state--dependant metric (i.e. a expression to optimise defined over state variables)"""
+    def __init__(self, index, opt_mode, expr ) :
+        super().__init__(index)
+        if opt_mode is None or expr is None :
+            self.opt_mode = self.expr = None
+            return
+        self.expression = self.parser.process_expression(expr, self.binding_unit)
+        self.opt_mode = opt_mode
+
+    def dump(self) :
+        if self.opt_mode is None :
+            return dict()
+        return dict(optimization = self.opt_mode,
+                    expression=self.expression.dump(self.index,self.binding_unit))
 
 class FSNamedFormula(FSBaseComponent):
     """ A FSTRIPS axiom, which is a formula with a name and possibly some lifted parameters """
@@ -138,9 +153,10 @@ class FSNamedFormula(FSBaseComponent):
 
 class FSActionSchema(FSBaseComponent):
     """ A FSTRIPS action schema """
-    def __init__(self, index, action):
+    def __init__(self, index, action, type = "control"):
         super().__init__(index)
         self.action = action
+        self.type = type
 
         # Order matters: the binding unit needs to be created when the effects are processed
         self.binding_unit = fs.BindingUnit.from_parameters(action.parameters)
@@ -158,6 +174,7 @@ class FSActionSchema(FSBaseComponent):
     def dump(self):
         return dict(name=self.action.name,
                     signature=[self.index.types[p.type] for p in self.action.parameters],
+                    type =self.type,
                     parameters=[p.name for p in self.action.parameters],
                     conditions=self.precondition.dump(self.index, self.binding_unit),
                     effects=[eff.dump() for eff in self.effects],

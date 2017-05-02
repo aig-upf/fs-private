@@ -9,7 +9,7 @@ namespace fs0 {
 
 FSFeatureValueT
 StateVariableFeature::evaluate( const State& s ) const {
-	return s.getValue(_variable);
+	return boost::get<int>(s.getValue(_variable));
 }
 
 std::ostream& StateVariableFeature::print(std::ostream& os) const {
@@ -40,7 +40,7 @@ ArbitraryTermFeature::ArbitraryTermFeature(const ArbitraryTermFeature& other)
 
 FSFeatureValueT
 ArbitraryTermFeature::evaluate(const State& s) const {
-	return _term->interpret(s);
+	return boost::get<int>(_term->interpret(s));
 }
 
 std::ostream& ArbitraryTermFeature::print(std::ostream& os) const {

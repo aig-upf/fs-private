@@ -15,7 +15,7 @@ from . import util
 from .exceptions import ParseException
 from .asp.problem import get_effect_symbols
 from .util import IndexDictionary
-from .fstrips_components import FSActionSchema, FSFormula, FSNamedFormula
+from .fstrips_components import FSActionSchema, FSFormula, FSNamedFormula, FSMetric
 from .object_types import process_problem_types
 from .state_variables import create_all_possible_state_variables, create_all_possible_state_variables_from_groundings
 
@@ -46,10 +46,12 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task = FSTaskIndex(domain_name, instance_name)
     task.process_objects(fd_task.objects)
     task.process_types(types, type_map)
-    task.process_symbols(fd_task.actions, fd_task.predicates, fd_task.functions)
+    task.process_symbols(actions=fd_task.actions, predicates=fd_task.predicates, functions=fd_task.functions)
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
     task.process_actions(fd_task.actions)
+    task.process_processes([])
+    task.process_events([])
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
     task.process_axioms(fd_task.axioms)
@@ -63,9 +65,13 @@ def create_fs_plus_task( fsp_task, domain_name, instance_name ) :
     task.process_objects(fsp_task.objects)
     print("Creating FS+ task: Processing types...")
     task.process_types(types, type_map)
+    #print("Types:", types)
+    #print("Type -> Domain Map:", type_map)
     # MRJ: takes into account actions, events and processes
     print("Creating FS+ task: Processing symbols...")
-    task.process_symbols(fsp_task.actions, fsp_task.events, fsp_task.processes, fsp_task.constraint_schemata, fsp_task.predicates, fsp_task.functions)
+    task.process_symbols(   actions=fsp_task.actions, events=fsp_task.events,
+                            processes=fsp_task.processes, constraints=fsp_task.constraint_schemata,
+                            predicates=fsp_task.predicates, functions =fsp_task.functions )
     print("Creating FS+ task: Processing state variables...")
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     print("Creating FS+ task: Processing initial state...")
@@ -83,6 +89,8 @@ def create_fs_plus_task( fsp_task, domain_name, instance_name ) :
     task.process_lifted_state_constraints(fsp_task.constraint_schemata)
     print("Creating FS+ task: Processing axioms...")
     task.process_axioms(fsp_task.axioms)
+    print("Creating FS+ task: Processing metric...")
+    task.process_metric(fsp_task.metric)
     return task
 
 
@@ -162,6 +170,7 @@ class FSTaskIndex(object):
         self.event_schemas = util.UninitializedAttribute('event_schemas')
         self.process_schemas = util.UninitializedAttribute('process_schemas')
         self.constraint_schemas = util.UninitializedAttribute('constraint_schemas')
+        self.metric = util.UninitializedAttribute('metric')
         self.groundings = None
 
     def process_types(self, types, type_map):
@@ -173,7 +182,14 @@ class FSTaskIndex(object):
         # Each object name points to it unique 0-based index / ID
         self.objects, self.object_types = self._index_objects(objects)
 
-    def process_symbols(self, actions, events, processes, constraints, predicates, functions):
+    def process_symbols(self, **kwargs ) :
+        actions = kwargs.get('actions', [])
+        events = kwargs.get('events', [])
+        processes = kwargs.get('processes', [])
+        constraints = kwargs.get('constraints', [])
+        predicates = kwargs.get('predicates', [])
+        functions = kwargs.get( 'functions', [])
+
         self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
         self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
 
@@ -313,13 +329,19 @@ class FSTaskIndex(object):
         self.state_variables = state_variables
 
     def process_actions(self, actions):
-        self.action_schemas = [FSActionSchema(self, action) for action in actions]
+        self.action_schemas = [FSActionSchema(self, action, "control") for action in actions]
 
     def process_processes(self, processes) :
-        self.process_schemas = [FSActionSchema(self,proc) for proc in processes]
+        self.process_schemas = [FSActionSchema(self,proc, "natural") for proc in processes]
 
     def process_events( self, events ) :
-        self.event_schemas = [FSActionSchema(self,evt) for evt in events]
+        self.event_schemas = [FSActionSchema(self,evt, "exogenous") for evt in events]
+
+    def process_metric(self, metric ) :
+        if metric is None :
+            self.metric = FSMetric( self, None, None)
+            return
+        self.metric = FSMetric( self, metric.optimization, metric.expr)
 
     def process_adl_actions(self, actions, sorted_action_names):
         sorted_act = [actions[name] for name in sorted_action_names if name in actions]

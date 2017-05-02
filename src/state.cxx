@@ -4,6 +4,8 @@
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <atom.hxx>
+#include <lapkt/tools/logging.hxx>
+#include <utils/utils.hxx>
 
 
 namespace fs0 {
@@ -40,16 +42,55 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
 	if (n_vars == _n_bool) return state._bool_values[variable];
-	if (n_vars == _n_int) return state._int_values[variable];
+	if (n_vars == _n_int) {
+        if ( _info.isIntegerNumber(variable) )
+            return ObjectIdx(state._int_values[variable]);
+        else if (_info.isRationalNumber(variable) ) {
+            float tmp;
+            Utils::type_punning_without_aliasing( state._int_values[variable], tmp );
+            return ObjectIdx(tmp);
+        }
+        else {
+            std::stringstream buffer;
+            buffer << "ERROR: Cannot retrieve variable from state ";
+            buffer << _info.getVariableName(variable) << std::endl;
+            buffer << "because its type is not currently supported!" << std::endl;
+            LPT_DEBUG("main", buffer.str());
+            throw std::runtime_error(buffer.str());
+        }
+        return state._int_values[variable];
+    }
 
 	// Otherwise we need to deindex the variable
 	const IndexElemT& ind = _index[variable];
-	if (ind.first) return state._bool_values[ind.second];
-	else return state._int_values[ind.second];
+	if (ind.first)
+        // MRJ: Booleans get expanded to integers
+        return ObjectIdx((int)state._bool_values[ind.second]);
+	else {
+        if ( _info.isIntegerNumber(variable) )
+            return ObjectIdx(state._int_values[ind.second]);
+        else if (_info.isRationalNumber(variable) ) {
+            float tmp;
+            Utils::type_punning_without_aliasing( state._int_values[ind.second], tmp );
+            return ObjectIdx(tmp);
+        }
+        else {
+            std::stringstream buffer;
+            buffer << "ERROR: Cannot retrieve variable from state ";
+            buffer << _info.getVariableName(variable) << std::endl;
+            buffer << "because its type is not currently supported!" << std::endl;
+            LPT_DEBUG("main", buffer.str());
+            throw std::runtime_error(buffer.str());
+        }
+    }
+    return ObjectIdx(0);
 }
 
 void
-StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), atom.getValue()); }
+StateAtomIndexer::set(State& state, const Atom& atom) const {
+    ObjectIdx tmp =  atom.getValue();
+    set(state,  atom.getVariable(), boost::apply_visitor( Utils::reinterpreted_as_int(), tmp));
+}
 
 void
 StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const {
@@ -58,12 +99,32 @@ StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const
 
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
-	if (n_vars == _n_bool) state._bool_values[variable] = value;
-	else if (n_vars == _n_int) state._int_values[variable] = value;
+	if (n_vars == _n_bool) state._bool_values[variable] = (bool)boost::get<int>(value);
+	else if (n_vars == _n_int) state._int_values[variable] = boost::get<int>(value);
 	else {
 		const IndexElemT& ind = _index[variable];
-		if (ind.first) state._bool_values[ind.second] = value;
-		else state._int_values[ind.second] = value;
+		if (ind.first)
+            state._bool_values[ind.second] = (bool)boost::get<int>(value);
+		else {
+            if ( _info.isIntegerNumber(variable) )
+                state._int_values[ind.second] = boost::get<int>(value);
+            else if (_info.isRationalNumber(variable)) {
+                union {
+    				int i;
+    				float d;
+    			} tmp;
+                tmp.d = boost::get<float>(value);
+                state._int_values[ind.second] = tmp.i;
+            }
+            else {
+                std::stringstream buffer;
+                buffer << "ERROR: Cannot store variable into state ";
+                buffer << _info.getVariableName(variable) << std::endl;
+                buffer << "because its type is not currently supported!" << std::endl;
+                LPT_DEBUG("main", buffer.str());
+                throw std::runtime_error(buffer.str());
+            }
+        }
 	}
 }
 
@@ -95,13 +156,20 @@ void State::set(const Atom& atom) {
 }
 
 bool State::contains(const Atom& atom) const {
-	return getValue(atom.getVariable()) == atom.getValue();
+	return boost::get<int>(getValue(atom.getVariable())) == boost::get<int>(atom.getValue());
 }
 
 ObjectIdx
 State::getValue(const VariableIdx& variable) const {
 	return _indexer.get(*this, variable);
 }
+
+int
+State::getIntValue(const VariableIdx& variable) const {
+    ObjectIdx tmp = _indexer.get(*this, variable);
+    return boost::apply_visitor( Utils::reinterpreted_as_int(), tmp );
+}
+
 
 //! Applies the given changeset into the current state.
 void State::accumulate(const std::vector<Atom>& atoms) {
@@ -118,9 +186,14 @@ std::ostream& State::print(std::ostream& os) const {
     for ( unsigned x = 0; x < info.getNumVariables(); x++ ) {
         ObjectIdx v = getValue(x);
         if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::BOOL ) {
-            if ( v == 0 ) continue;
+            if ( boost::get<int>(v) == 0 ) continue;
             os << info.getVariableName(x);
     		if (x < info.getNumVariables() - 1) os << ", ";
+            continue;
+        }
+        else if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::INT ) {
+            os << info.getVariableName(x) << "=" << v;
+            if (x < info.getNumVariables() - 1) os << ", ";
             continue;
         }
         os << info.getVariableName(x) << "=" << info.getObjectName(x, v);

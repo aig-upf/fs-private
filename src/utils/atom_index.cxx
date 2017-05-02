@@ -9,7 +9,8 @@ namespace fs0 {
 
 AtomIndex::AtomIndex(const ProblemInfo& info) :
 	_tuple_index_inv(info.getNumLogicalSymbols()),
-	_atom_index_inv(info.getNumVariables())
+	_atom_index_inv(info.getNumVariables()),
+	_variable_to_atom_index(info.getNumVariables())
 {
 	auto tuples_by_symbol = compute_all_reachable_tuples(info);
 	
@@ -47,14 +48,14 @@ void AtomIndex::add(const ProblemInfo& info, unsigned symbol, const ValueTuple& 
 	assert(_symbol_index.size() == idx);
 	_symbol_index.push_back(symbol);
 	
-	if (info.isFunction(symbol) || atom.getValue() == 1) { // For predicative symbols, we only map the logical symbol to the index of the corresponding "true" atom
+	if (info.isFunction(symbol) || boost::get<int>(atom.getValue()) == 1) { // For predicative symbols, we only map the logical symbol to the index of the corresponding "true" atom
 		_tuple_index_inv.at(symbol).insert(std::make_pair(tuple, idx));
 	}
 	
 	assert(_atom_index.size() == idx);
 	_atom_index.push_back(atom);
 	
-	_atom_index_inv.at(atom.getVariable()).insert(std::make_pair(atom.getValue(), idx));
+	_atom_index_inv.at(atom.getVariable()).insert(std::make_pair(boost::get<int>(atom.getValue()), idx));
 }
 
 AtomIdx AtomIndex::to_index(unsigned symbol, const ValueTuple& tuple) const {
@@ -65,7 +66,7 @@ AtomIdx AtomIndex::to_index(unsigned symbol, const ValueTuple& tuple) const {
 }
 
 AtomIdx AtomIndex::to_index(const Atom& atom) const {
-	return to_index(atom.getVariable(), atom.getValue());
+	return to_index(atom.getVariable(), boost::get<int>(atom.getValue()));
 }
 
 AtomIdx AtomIndex::to_index(VariableIdx variable, ObjectIdx value) const {

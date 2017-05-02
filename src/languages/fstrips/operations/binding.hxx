@@ -5,17 +5,18 @@
 
 #include <utils/visitor.hxx>
 #include <languages/fstrips/language_fwd.hxx>
+#include <fs_types.hxx>
 
 
 namespace fs0 { class Binding; class ProblemInfo; }
 
 namespace fs0 { namespace language { namespace fstrips {
-	
+
 
 //! Processes a formula possibly containing bound variables and non-consolidated state variables,
 //! consolidating all possible state variables and performing the bindings according to the given variable binding
 const Formula* bind(const Formula& formula, const Binding& binding, const ProblemInfo& info);
-	
+
 class FormulaBindingVisitor
     : public Loki::BaseVisitor
     , public Loki::Visitor<Formula, void, true>
@@ -27,7 +28,7 @@ class FormulaBindingVisitor
 	, public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<AxiomaticFormula, void, true>
-	
+
 {
 private:
 	const Binding& _binding;
@@ -36,7 +37,7 @@ private:
 public:
 	FormulaBindingVisitor(const Binding& binding, const ProblemInfo& info) : _binding(binding), _info(info), _result(nullptr) {}
 	~FormulaBindingVisitor() = default;
-	
+
  	void Visit(const Formula& lhs) override;
 	void Visit(const Tautology& lhs) override;
 	void Visit(const Contradiction& lhs) override;
@@ -46,7 +47,7 @@ public:
 	void Visit(const ExistentiallyQuantifiedFormula& lhs) override;
 	void Visit(const UniversallyQuantifiedFormula& lhs) override;
 	void Visit(const AxiomaticFormula& lhs) override;
-	
+
 	const Formula* _result;
 };
 
@@ -67,19 +68,19 @@ class TermBindingVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
-    , public Loki::Visitor<AdditionTerm, void, true>    
-	, public Loki::Visitor<SubtractionTerm, void, true>    
-	, public Loki::Visitor<MultiplicationTerm, void, true> 
-	
+    , public Loki::Visitor<AdditionTerm, void, true>
+	, public Loki::Visitor<SubtractionTerm, void, true>
+	, public Loki::Visitor<MultiplicationTerm, void, true>
+
 {
 private:
 	const Binding& _binding;
 	const ProblemInfo& _info;
-	
+
 public:
 	TermBindingVisitor(const Binding& binding, const ProblemInfo& info) : _binding(binding), _info(info), _result(nullptr) {}
 	~TermBindingVisitor() = default;
-	
+
 
 	void Visit(const StateVariable& lhs);
 	void Visit(const BoundVariable& lhs);
@@ -94,13 +95,13 @@ public:
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
-	
+
 	const Term* _result;
 };
 
 //! A helper to process lists of subterms
 std::vector<const Term*>
-bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<int>& constants);
-	
+bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants);
+
 
 } } } // namespaces
