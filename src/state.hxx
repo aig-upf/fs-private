@@ -58,7 +58,7 @@ public:
 	using IntsetT = std::vector<int>;
 
 protected:
-	const StateAtomIndexer& _indexer;
+	const StateAtomIndexer* _indexer;
 
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
 	BitsetT _bool_values;
@@ -105,16 +105,19 @@ public:
 	void accumulate(const std::vector<Atom>& atoms);
 
 	const BitsetT& get_boolean_values() const {
-		assert(_indexer.is_fully_binary());
+		assert(_indexer->is_fully_binary());
 		return _bool_values;
 	}
 	const IntsetT& get_int_values() const {
-		assert(_indexer.is_fully_multivalued());
+		assert(_indexer->is_fully_multivalued());
 		return _int_values;
 	}
-protected:
-	void set(const Atom& atom);
 
+    void set(const Atom& atom);
+    void set(VariableIdx x, ObjectIdx v);
+
+
+protected:
 	void updateHash() { _hash = computeHash(); }
 
 	std::size_t computeHash() const;

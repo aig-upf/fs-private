@@ -134,7 +134,7 @@ State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std
 }
 
 State::State(const StateAtomIndexer& index, const std::vector<Atom>& atoms) :
-	_indexer(index),
+	_indexer(&index),
 	_bool_values(index.num_bool(), 0),
 	_int_values(index.num_int(), 0)
 {
@@ -152,7 +152,11 @@ State::State(const State& state, const std::vector<Atom>& atoms) :
 
 void State::set(const Atom& atom) {
 // 	_bool_values.at(atom.getVariable()) = value;
-	_indexer.set(*this, atom);
+	_indexer->set(*this, atom);
+}
+
+void State::set(VariableIdx x, ObjectIdx v) {
+    set(Atom(x,v));
 }
 
 bool State::contains(const Atom& atom) const {
@@ -161,12 +165,12 @@ bool State::contains(const Atom& atom) const {
 
 ObjectIdx
 State::getValue(const VariableIdx& variable) const {
-	return _indexer.get(*this, variable);
+	return _indexer->get(*this, variable);
 }
 
 int
 State::getIntValue(const VariableIdx& variable) const {
-    ObjectIdx tmp = _indexer.get(*this, variable);
+    ObjectIdx tmp = _indexer->get(*this, variable);
     return boost::apply_visitor( Utils::reinterpreted_as_int(), tmp );
 }
 
