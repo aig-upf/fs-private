@@ -24,6 +24,7 @@ NaiveApplicabilityManager::NaiveApplicabilityManager(const std::vector<const fs:
 
 //! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
 bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAction& action) const {
+    if (!action.isControl()) return false;
 	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
 
 	auto atoms = computeEffects(state, action);

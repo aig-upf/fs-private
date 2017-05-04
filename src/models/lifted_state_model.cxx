@@ -15,7 +15,7 @@
 std::vector<const fs::Formula*>
 obtain_goal_atoms(const fs::Formula* goal) {
 	std::vector<const fs::Formula*> goal_atoms;
-	
+
 	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
 	if (!conjunction) {
 		goal_atoms.push_back(goal);
@@ -24,7 +24,7 @@ obtain_goal_atoms(const fs::Formula* goal) {
 		for (const fs::Formula* atom:conjunction->getSubformulae()) {
 			goal_atoms.push_back(atom);
 		}
-	
+
 	}
 
 	return goal_atoms;
@@ -63,10 +63,11 @@ State LiftedStateModel::next(const State& state, const LiftedActionID& action) c
 	return s1;
 }
 
-State LiftedStateModel::next(const State& state, const GroundAction& action) const { 
+State LiftedStateModel::next(const State& state, const GroundAction& action) const {
 	NaiveApplicabilityManager manager(_task.getStateConstraints());
 	assert(manager.isApplicable(state, action));
-	return State(state, NaiveApplicabilityManager::computeEffects(state, action)); // Copy everything into the new state and apply the changeset
+    action.apply( state, _effects_cache );
+	return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
 }
 
 
@@ -97,4 +98,3 @@ LiftedStateModel::LiftedStateModel(const Problem& problem, const std::vector<con
 {}
 
 } // namespaces
-

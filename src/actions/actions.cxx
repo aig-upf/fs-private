@@ -8,6 +8,8 @@
 #include <utils/printers/actions.hxx>
 #include <utils/utils.hxx>
 #include <languages/fstrips/language.hxx>
+#include <state.hxx>
+#include <atom.hxx>
 
 
 namespace fs0 {
@@ -72,13 +74,23 @@ PartiallyGroundedAction::PartiallyGroundedAction(const ActionData& action_data, 
 	ActionBase(action_data, binding, precondition, effects)
 {}
 
+void
+PartiallyGroundedAction::apply( const State& s, std::vector<Atom>& atoms ) const {
+    throw std::runtime_error("Runtime Error: Lifted actions cannot be executed!");
+}
 
 GroundAction::GroundAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects) :
 	ActionBase(action_data, binding, precondition, effects), _id(id)
 {}
 
+void
+GroundAction::apply( const State& s, std::vector<Atom>& atoms ) const {
+    NaiveApplicabilityManager::computeEffects(s, *this, atoms);
+}
 
 const ActionIdx GroundAction::invalid_action_id = std::numeric_limits<unsigned int>::max();
 
+ProceduralAction::ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding)
+        : GroundAction( id, action_data, binding, new fs::Tautology, {} ) {}
 
 } // namespaces
