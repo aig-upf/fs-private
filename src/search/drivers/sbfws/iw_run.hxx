@@ -315,12 +315,19 @@ public:
 					
 					std::vector<AtomIdx> to_mark;
 					if (parent_state.contains(p)) {
-						if (p.getValue() != 0) atoms[p_q.first] = true; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
+						if (p.getValue() != 0) {
+							atoms[p_q.first] = true; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
+// 							std::cout << "ATTENTION : Marking atom " << p << std::endl;
+						}
 					}
 					else if (parent_state.contains(q)) {
-						if (q.getValue() != 0) atoms[p_q.second] = true;
+						if (q.getValue() != 0) {
+							atoms[p_q.second] = true;
+// 							std::cout << "ATTENTION : Marking atom " << q << std::endl;
+						}
 					}
 					else { // The parent state contains none
+// 						std::cout << "ATTENTION : Would Mark pair " << p << ", " << q << std::endl;
 						if (p.getValue() != 0) atoms[p_q.first] = true;
 						if (q.getValue() != 0) atoms[p_q.second] = true;
 					}
@@ -346,7 +353,6 @@ public:
 		_stats.sim_add_time(aptk::time_used() - simt0);
 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
-		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());		
 	}
 	
 	std::vector<bool> compute_R(const StateT& seed) {
@@ -394,6 +400,7 @@ public:
 		if (_unreached.size() == 0) {
 			// If a single IW[1] run reaches all subgoals, we return R=emptyset
 			LPT_INFO("cout", "Simulation - IW(1) run reached all goals, thus R={}");
+			_stats.r_type(0);
 			return std::vector<bool>(index.size(), false);
 		} else {
 			LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
@@ -403,6 +410,7 @@ public:
 		reset();
 		run(seed, 2);
 		report_simulation_stats(simt0);
+		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 		
 		return extract_R_G();
 	}	
@@ -418,24 +426,27 @@ public:
 		}
 		*/
 
+		
+		if (!_unreached.empty()) {
+			if (_verbose) LPT_INFO("cout", "Simulation - Some subgoals were not reached during the simulation, falling back to R=R[All]");
+// 			for (unsigned x:_unreached) LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
+			return std::vector<bool>(index.size(), true);
+			_stats.r_type(1);
+		}
+		
+		
 		std::vector<NodePT> seed_nodes;
 		for (unsigned subgoal_idx = 0; subgoal_idx < _optimal_paths.size(); ++subgoal_idx) {
 			if (!_in_seed[subgoal_idx] && _optimal_paths[subgoal_idx] != nullptr) {
 				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
 			}
 		}		
-
-		if (!_unreached.empty()) {
-			if (_verbose) LPT_INFO("cout", "Simulation - Some subgoals were not reached during the simulation, falling back to R=R[All]");
-// 			for (unsigned x:_unreached) LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
-			return std::vector<bool>(index.size(), true);
-		}
 		
 		std::vector<bool> R_G(index.size(), false);
 		mark_atoms_in_path_to_subgoal(seed_nodes, R_G);
 		
+		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
-			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			if (R_G_size) {
 				LPT_INFO("cout", "Simulation - R_G:");
@@ -445,9 +456,9 @@ public:
 				}
 				std::cout << std::endl;
 			}
-			
 		}
-		
+		_stats.relevant_atoms(R_G_size);
+		_stats.r_type(2);
 		
 		return R_G;
 	}	

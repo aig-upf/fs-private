@@ -548,8 +548,8 @@ public:
 		
 		
 		// Force one simulation from the root node and abort the search
- 		_heuristic.compute_R(*root);
-		return false;
+//  		_heuristic.compute_R(*root);
+// 		return false;
 		
 		
 		// The main search loop

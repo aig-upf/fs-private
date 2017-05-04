@@ -64,6 +64,10 @@ public:
 		_sum_relevant_atoms += num;
 	}
 	
+	void r_type(unsigned type) {
+		_r_type = type;
+	}
+	
 	using DataPointT = std::tuple<std::string, std::string, std::string>;
 	std::vector<DataPointT> dump() const;
 	
@@ -82,6 +86,8 @@ protected:
 	unsigned int _initial_relevant_atoms; // The size of |R| on the initial state
 	unsigned int _max_relevant_atoms;
 	unsigned int _sum_relevant_atoms;
+	
+	unsigned _r_type;
 	
 	unsigned long _num_wg1_nodes; // The number of nodes with w_{#g} = 1 that have been processed.
 	unsigned long _num_wgr1_nodes; // The number of nodes with w_{#g,#r} = 1 (and w_{#g} > 1) that have been processed.
