@@ -1,6 +1,7 @@
 
 #include <utils/config.hxx>
 #include <fs_types.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <boost/property_tree/json_parser.hpp>
 
 namespace pt = boost::property_tree;
@@ -82,8 +83,9 @@ void Config::load(const std::string& filename) {
 
     try {
         _integration_factor = getOption<double>("integration_factor");
-    } catch ( boost::property_tree::ptree_bad_path& e ) {
+    } catch ( fs0::MissingOption& e ) {
         // Use default value in the constructor
+        LPT_INFO("main", "[Config::load] Option 'integration_factor' takes default value: " << _integration_factor );
     }
 
 
