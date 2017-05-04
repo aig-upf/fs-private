@@ -203,16 +203,21 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 	const Signature signature = parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	const fs::BindingUnit unit(parameters, fs::Loader::parseVariables(node["unit"], info));
-    const std::string& action_type_str = node["type"].GetString();
+
+    //! MRJ: this method is being re-used to load axioms and state constraints, so the "type"
+    //! member is actually optional
     ActionData::Type action_type;
-    if ( action_type_str == "control" )
-        action_type = ActionData::Type::Control;
-    else if ( action_type_str == "exogenous" )
-        action_type = ActionData::Type::Exogenous;
-    else if ( action_type_str == "natural" )
-        action_type = ActionData::Type::Natural;
-    else {
-        throw std::runtime_error("Action '" + name +"' has unrecognized type '" + action_type_str + "'");
+    if ( node.HasMember("type") ) {
+        const std::string& action_type_str = node["type"].GetString();
+        if ( action_type_str == "control" )
+            action_type = ActionData::Type::Control;
+        else if ( action_type_str == "exogenous" )
+            action_type = ActionData::Type::Exogenous;
+        else if ( action_type_str == "natural" )
+            action_type = ActionData::Type::Natural;
+        else {
+            throw std::runtime_error("Action '" + name +"' has unrecognized type '" + action_type_str + "'");
+        }
     }
 
 	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
