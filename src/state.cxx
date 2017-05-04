@@ -89,7 +89,7 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 void
 StateAtomIndexer::set(State& state, const Atom& atom) const {
     ObjectIdx tmp =  atom.getValue();
-    set(state,  atom.getVariable(), boost::apply_visitor( Utils::reinterpreted_as_int(), tmp));
+    set(state, atom.getVariable(), atom.getValue());
 }
 
 void
@@ -100,7 +100,24 @@ StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
 	if (n_vars == _n_bool) state._bool_values[variable] = (bool)boost::get<int>(value);
-	else if (n_vars == _n_int) state._int_values[variable] = boost::get<int>(value);
+	else if (n_vars == _n_int) {
+        const IndexElemT& ind = _index[variable];
+        if ( _info.isIntegerNumber(variable) )
+            state._int_values[ind.second] = boost::get<int>(value);
+        else if (_info.isRationalNumber(variable)) {
+            int tmp;
+            Utils::type_punning_without_aliasing( boost::get<float>(value), tmp);
+            state._int_values[ind.second] = tmp;
+        }
+        else {
+            std::stringstream buffer;
+            buffer << "ERROR: Cannot store variable into state ";
+            buffer << _info.getVariableName(variable) << std::endl;
+            buffer << "because its type is not currently supported!" << std::endl;
+            LPT_DEBUG("main", buffer.str());
+            throw std::runtime_error(buffer.str());
+        }
+    }
 	else {
 		const IndexElemT& ind = _index[variable];
 		if (ind.first)
@@ -109,12 +126,9 @@ StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const
             if ( _info.isIntegerNumber(variable) )
                 state._int_values[ind.second] = boost::get<int>(value);
             else if (_info.isRationalNumber(variable)) {
-                union {
-    				int i;
-    				float d;
-    			} tmp;
-                tmp.d = boost::get<float>(value);
-                state._int_values[ind.second] = tmp.i;
+                int tmp;
+                Utils::type_punning_without_aliasing( boost::get<float>(value), tmp);
+                state._int_values[ind.second] = tmp;
             }
             else {
                 std::stringstream buffer;
@@ -196,6 +210,11 @@ std::ostream& State::print(std::ostream& os) const {
             continue;
         }
         else if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::INT ) {
+            os << info.getVariableName(x) << "=" << v;
+            if (x < info.getNumVariables() - 1) os << ", ";
+            continue;
+        }
+        else if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::FLOAT ) {
             os << info.getVariableName(x) << "=" << v;
             if (x < info.getNumVariables() - 1) os << ", ";
             continue;
