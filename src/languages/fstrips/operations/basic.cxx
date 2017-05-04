@@ -77,6 +77,9 @@ void AllNodesVisitor::
 Visit(const UniversallyQuantifiedFormula& lhs) { Visit(static_cast<const QuantifiedFormula&>(lhs)); }
 
 
+void AllNodesVisitor::
+Visit(const AxiomaticFormula& lhs) { Visit(static_cast<const AtomicFormula&>(lhs)); }
+
 	
 	
 void AllNodesVisitor::Visit(const StateVariable& lhs) { _result.push_back(&lhs); }
