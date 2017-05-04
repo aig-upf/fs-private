@@ -49,6 +49,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
         throw std::runtime_error("Could not find initial state in data/problem.json!");
     }
 	auto init = loadState(*indexer, data["init"], info);
+    LPT_DEBUG("main", *init );
 
 	LPT_INFO("main", "Loading action data...");
     if (!data.HasMember("action_schemata")) {
@@ -169,7 +170,11 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data,
 	for (unsigned i = 0; i < data["atoms"].Size(); ++i) {
 		const rapidjson::Value& node = data["atoms"][i];
         VariableIdx var = node[0].GetInt();
-        ObjectIdx value = info.isRationalNumber(var) ? (float)node[1].GetDouble() : node[1].GetInt();
+        ObjectIdx value;
+        if (info.isRationalNumber(var))
+            value =  (float)node[1].GetDouble();
+        else
+            value =  node[1].GetInt();
 		facts.push_back(Atom(var,value));
 	}
 	return State::create(indexer, numAtoms, facts);
