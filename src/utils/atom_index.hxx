@@ -18,6 +18,10 @@ class Atom;
 //! in as efficient as possible a manner.
 class AtomIndex {
 protected:
+	const ProblemInfo& _info;
+	
+	const bool _indexes_negated_literals;
+	
 	//! Maps from tuple indexes to their corresponding tuples / atoms
 	std::vector<ValueTuple> _tuple_index;
 	std::vector<Atom> _atom_index;
@@ -39,7 +43,7 @@ protected:
 	
 public:
 	//! Constructs a full tuple index
-	AtomIndex(const ProblemInfo& info);
+	AtomIndex(const ProblemInfo& info, bool index_negated_literals = false);
 	AtomIndex(const AtomIndex&) = default;
 	AtomIndex(AtomIndex&&) = default;
 	AtomIndex& operator=(const AtomIndex& other) = default;
@@ -58,6 +62,8 @@ public:
 	//! Returns the index corresponding to the given atom
 	AtomIdx to_index(const Atom& atom) const;
 	AtomIdx to_index(VariableIdx variable, ObjectIdx value) const;
+	
+	bool is_indexed(VariableIdx variable, ObjectIdx value) const;
 
 	
 	//! Returns the actual value tuple that corresponds to the given tuple index, without the logical symbol 

@@ -45,7 +45,7 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
 		std::make_tuple("_num_expanded_g_decrease", "Expansions with #g decrease", std::to_string(_num_expanded_g_decrease)),
 		std::make_tuple("_num_generated_g_decrease", "Generations with #g decrease", std::to_string(_num_generated_g_decrease)),
 		
-		std::make_tuple("num_subgoals", "Total number of conjunctive subgoals", std::to_string(_num_subgoals)),
+// 		std::make_tuple("num_subgoals", "Total number of conjunctive subgoals", std::to_string(_num_subgoals)),
 		
 		std::make_tuple("sim_num_simulations", "Total number of simulations", std::to_string(simulated())),
 		

@@ -7,7 +7,14 @@
 
 namespace fs0 {
 
-AtomIndex::AtomIndex(const ProblemInfo& info) :
+bool AtomIndex::is_indexed(VariableIdx variable, ObjectIdx value) const {
+	return !_info.isPredicativeVariable(variable) || value == 1;
+}
+
+		
+AtomIndex::AtomIndex(const ProblemInfo& info, bool index_negated_literals) :
+	_info(info),
+	_indexes_negated_literals(index_negated_literals),
 	_tuple_index_inv(info.getNumLogicalSymbols()),
 	_atom_index_inv(info.getNumVariables()),
 	_variable_to_atom_index(info.getNumVariables())
@@ -31,9 +38,11 @@ AtomIndex::AtomIndex(const ProblemInfo& info) :
 				tuple.push_back(value);
 			}
 			
-			VariableIdx variable = info.resolveStateVariable(symbol, arguments);
-			add(info, symbol, tuple, idx, Atom(variable, value));
-			idx++;
+			if (_indexes_negated_literals || info.isFunction(symbol) || value) {
+				VariableIdx variable = info.resolveStateVariable(symbol, arguments);
+				add(info, symbol, tuple, idx, Atom(variable, value));
+				idx++;
+			}
 		}
 		
 		range.second = idx - 1;

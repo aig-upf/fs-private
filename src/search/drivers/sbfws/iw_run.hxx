@@ -40,7 +40,7 @@ public:
 // 	bool satisfies_subgoal; // Whether the node satisfies some subgoal
 	
 	//! The novelty  of the state
-	unsigned _w;
+	unsigned char _w;
 	
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
 	//! atoms in s with novelty 1.
@@ -76,7 +76,7 @@ public:
 		action(_action),
 		parent(_parent),
 		g(parent ? parent->g+1 : 0),
-		_w(std::numeric_limits<unsigned>::max()),
+		_w(std::numeric_limits<unsigned char>::max()),
 // 		_path_novelty_is_1(false),
 // 		_B_of_s(state.numAtoms()),
 		_gen_order(gen_order)
@@ -95,8 +95,8 @@ public:
 		os << ", #=" << _gen_order ;
 		os << ", s = " << state ;
 		os << ", g=" << g ;
-		//os << ", w=" << (_evaluated ? (_w == std::numeric_limits<unsigned>::max() ? "INF" : std::to_string(_w)) : "?") ;
-		os << ", w=" << (_w == std::numeric_limits<unsigned>::max() ? "INF" : std::to_string(_w));
+		//os << ", w=" << (_evaluated ? (_w == std::numeric_limits<unsigned char>::max() ? "INF" : std::to_string(_w)) : "?") ;
+		os << ", w=" << (_w == std::numeric_limits<unsigned char>::max() ? "INF" : std::to_string(_w));
 		
 		os << ", act=" << action ;
 // 		if (action < std::numeric_limits<unsigned>::max()) {
@@ -153,7 +153,11 @@ public:
 		std::vector<bool> atoms;
 		_evaluator->mark_atoms_in_novelty1_table(atoms);
 		return atoms;
-	}	
+	}
+	
+	void reset() {
+		_evaluator->reset();
+	}		
 	
 };
 
@@ -198,46 +202,32 @@ public:
 		//! Whether to extract goal-informed relevant sets R
 		bool _goal_directed;
 		
-		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info) :
-			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info) {}
+		//!
+		bool _force_hybrid_run;
+		
+		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info, bool force_hybrid_run) :
+			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info), _force_hybrid_run(force_hybrid_run) {}
 	};
 	
 protected:
 	//! The search model
 	const StateModel& _model;
 	
-	//! The open list
-	OpenListT _open;
-	
-	//! The closed list
-// 	ClosedList _closed;	
-	
 	//! The simulation configuration
 	Config _config;
 
-	//! _all_paths[i] contains all paths in the simulation that reach a node that satisfies goal atom 'i'.
-//  	std::vector<std::vector<NodePT>> _all_paths;
-
-	// TODO REMOVE ?
- 	std::vector<NodePT> _optimal_paths;
+	//!
+	std::vector<NodePT> _optimal_paths;
 
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
-	// TODO REMOVE ?
 	std::unordered_set<unsigned> _unreached;
 	
 	//! Contains the indexes of all those goal atoms that were already reached in the seed state
 	std::vector<bool> _in_seed;
-
-	//! Upon retrieval of the set of relevant atoms, this will contain all those nodes that are part
-	//! of the path to some subgoal
-// 	std::unordered_set<NodePT> _visited;
 	
 	//! A single novelty evaluator will be in charge of evaluating all nodes
 	SimEvaluatorT _evaluator;
-	
-	//! All those nodes with width 1 on the first stage of the simulation
-// 	std::vector<NodePT> _w1_nodes;
-	
+
 	//! Some node counts
 	uint32_t _generated;
 	uint32_t _w1_nodes_expanded;
@@ -246,6 +236,7 @@ protected:
 	uint32_t _w2_nodes_generated;
 	uint32_t _w_gt2_nodes_generated;
 	
+	//! The general statistics of the search
 	BFWSStats& _stats;
 	
 	//! Whether to print some useful extra information or not
@@ -255,17 +246,12 @@ public:
 
 	//! Constructor
 	IWRun(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const IWRun::Config& config, BFWSStats& stats, bool verbose) :
-// 		Base(model, OpenListT(), ClosedListT()),
 		_model(model),
-		_open(),
 		_config(config),
-// 		_all_paths(model.num_subgoals()),
 		_optimal_paths(model.num_subgoals()),
 		_unreached(),
-		_in_seed(model.num_subgoals(), false),
-// 		_visited(),
+		_in_seed(),
 		_evaluator(featureset, evaluator),
-// 		_w1_nodes(),
 		_generated(1),
 		_w1_nodes_expanded(0),
 		_w2_nodes_expanded(0),
@@ -275,6 +261,18 @@ public:
 		_stats(stats),
 		_verbose(verbose)		
 	{
+	}
+	
+	void reset() {
+		std::vector<NodePT> _(_optimal_paths.size(), nullptr);
+		_optimal_paths.swap(_);
+		_generated = 1;
+		_w1_nodes_expanded = 0;
+		_w2_nodes_expanded = 0;
+		_w1_nodes_generated = 0;
+		_w2_nodes_generated = 0;		
+		_w_gt2_nodes_generated = 0;
+		_evaluator.reset();
 	}
 
 	~IWRun() = default;
@@ -343,34 +341,39 @@ public:
 		}
 	}
 	
-	
-	std::vector<bool> compute_R(const StateT& seed) {
-
-		_config._complete = false;
-		
-		float simt0 = aptk::time_used();
- 		run(seed);
+	void report_simulation_stats(float simt0) {
 		_stats.simulation();
 		_stats.sim_add_time(aptk::time_used() - simt0);
 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
-		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
-		_stats.set_num_subgoals(_model.num_subgoals());	
+		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());		
+	}
+	
+	std::vector<bool> compute_R(const StateT& seed) {
+		if (!_config._force_hybrid_run) {
+			return compute_plain_R(seed);
+		} else {
+			return compute_hybrid_R(seed);
+		}
+	}
+	
+	std::vector<bool> compute_plain_R(const StateT& seed) {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		_config._complete = false;
 		
-		if (_config._goal_directed) {
-			// If we want the goal-aware R_G, we compute it, and use it _unless_ it is too small, in which case we fall back to the goal-unaware R.
-			unsigned R_G_size;
-			std::vector<bool> R_G = extract_R_G(R_G_size);
-// 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " seed nodes)");
-			
-			unsigned subgoals = _model.num_subgoals();
-			if (R_G_size > 0 && R_G_size > std::min(int(subgoals*0.5), 4)) {
-				return R_G;
-			} else {
-				LPT_INFO("cout", "R_G too small, falling back to goal-unaware R");
-			}
+		float simt0 = aptk::time_used();
+  		run(seed, _config._max_width);
+		report_simulation_stats(simt0);
+		
+		if (_unreached.size() == 0) {
+			// If a single IW[1] run reaches all subgoals, we return R=emptyset
+			LPT_INFO("cout", "Simulation - IW(1) run reached all goals, thus R={}");
+			return std::vector<bool>(index.size(), false);
 		}
 		
+		if (_config._goal_directed) {
+			return extract_R_G();
+		}
 		
 		// Compute the goal-unaware version of R containing all atoms seen during the IW run
 		std::vector<bool> R = _evaluator.reached_atoms();
@@ -380,9 +383,33 @@ public:
 		return R;
 	}
 	
+	std::vector<bool> compute_hybrid_R(const StateT& seed) {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		_config._complete = false;
+		
+		float simt0 = aptk::time_used();
+  		run(seed, 1);
+		report_simulation_stats(simt0);
+		
+		if (_unreached.size() == 0) {
+			// If a single IW[1] run reaches all subgoals, we return R=emptyset
+			LPT_INFO("cout", "Simulation - IW(1) run reached all goals, thus R={}");
+			return std::vector<bool>(index.size(), false);
+		} else {
+			LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
+		}
+		
+		// Otherwise, run IW(2)
+		reset();
+		run(seed, 2);
+		report_simulation_stats(simt0);
+		
+		return extract_R_G();
+	}	
+	
 	//! Extractes the goal-oriented set of relevant atoms after a simulation run
-	std::vector<bool> extract_R_G(unsigned& R_G_size) {
-		const AtomIndex& index = Problem::getInstance().get_tuple_index();		
+	std::vector<bool> extract_R_G() {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		/*
 		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
 			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
@@ -398,20 +425,31 @@ public:
 			}
 		}		
 
-		if (_verbose && !_unreached.empty()) {
-			LPT_INFO("cout", "WARNING: Some subgoals not reached during the simulation.");
+		if (!_unreached.empty()) {
+			if (_verbose) LPT_INFO("cout", "Simulation - Some subgoals were not reached during the simulation, falling back to R=R[All]");
 // 			for (unsigned x:_unreached) LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
+			return std::vector<bool>(index.size(), true);
 		}
 		
 		std::vector<bool> R_G(index.size(), false);
 		mark_atoms_in_path_to_subgoal(seed_nodes, R_G);
 		
-		R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
-			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " seed nodes)");
+			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			if (R_G_size) {
+				LPT_INFO("cout", "Simulation - R_G:");
+				std::cout << "\t\t";
+				for (unsigned i = 0; i < R_G.size(); ++i) {
+					if (R_G[i]) std::cout << index.to_atom(i) << ", ";
+				}
+				std::cout << std::endl;
+			}
+			
 		}
 		
-		return R_G;		
+		
+		return R_G;
 	}	
 	
 	
@@ -427,7 +465,6 @@ public:
 // 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
 // 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
 // 		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
-// 		_stats.set_num_subgoals(_model.num_subgoals());		
 		
 // 		std::vector<NodePT> w1_goal_reaching_nodes;
 // 		std::vector<NodePT> w2_goal_reaching_nodes;
@@ -464,58 +501,71 @@ public:
 // 		return {};
 // 	}
 	
-	bool run(const StateT& seed) {
-		if (_verbose) LPT_INFO("cout", "Starting IW Simulation");
+	bool run(const StateT& seed, unsigned max_width) {
+		if (_verbose) LPT_INFO("cout", "Simulation - Starting IW Simulation");
 		
-		NodePT n = std::make_shared<NodeT>(seed, _generated++);
-		mark_seed_subgoals(n);
+		NodePT root = std::make_shared<NodeT>(seed, _generated++);
+		mark_seed_subgoals(root);
 		
-		auto nov =_evaluator.evaluate(*n);
-		_unused(nov);
+		auto nov =_evaluator.evaluate(*root);
 		assert(nov==1);
-		++_w1_nodes_expanded; ++_w1_nodes_generated;
-// 		LPT_DEBUG("cout", "Simulation - Seed node: " << *n);
-
-		this->_open.insert(n);
-
-		// Note that we don't used any closed list / duplicate detection of any kind, but let the novelty engine take care of that
-		while (!this->_open.empty()) {
-			NodePT current = this->_open.next( );
-
-			if (current->_w == 1) ++_w1_nodes_expanded;
-			else if (current->_w == 2) ++_w2_nodes_expanded;
-
-			for (const auto& a : _model.applicable_actions(current->state)) {
-				StateT s_a = _model.next( current->state, a );
-				NodePT successor = std::make_shared<NodeT>( std::move(s_a), a, current, _generated++ );
+		update_novelty_counters_on_generation(nov);
+		
+// 		LPT_DEBUG("cout", "Simulation - Seed node: " << *root);
+		
+		assert(max_width <= 2); // The current swapping-queues method works only for up to width 2, but is trivial to generalize if necessary
+		
+		OpenListT open_w1, open_w2;
+		OpenListT open_w1_next, open_w2_next; // The queues for the next depth level.
+		
+		open_w1.insert(root);
+		
+		while (true) {
+			while (!open_w1.empty() || !open_w2.empty()) {
+				NodePT current = open_w1.empty() ? open_w2.next() : open_w1.next();
 				
-				unsigned novelty = _evaluator.evaluate(*successor);
-// 				if (novelty == 1) {
-// 					_w1_nodes.push_back(successor);
-// 				}
-				
-//   				LPT_INFO("cout", "Simulation - Node generated: " << *successor);
-				
-				if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
-					report("All subgoals reached");
-					return true;
+				// Expand the node
+				update_novelty_counters_on_expansion(current->_w);
+
+				for (const auto& a : _model.applicable_actions(current->state)) {
+					StateT s_a = _model.next( current->state, a );
+					NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
+					
+					unsigned char novelty = _evaluator.evaluate(*successor);
+					update_novelty_counters_on_generation(novelty);
+					
+					// LPT_INFO("cout", "Simulation - Node generated: " << *successor);
+					
+					if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
+						report("All subgoals reached");
+						return true;
+					}
+					
+					if (novelty <= max_width && novelty == 1) open_w1_next.insert(successor);
+					else if (novelty <= max_width && novelty == 2) open_w2_next.insert(successor);
 				}
 				
-				if (novelty <= _config._max_width) {
-					this->_open.insert(successor);
-					
-					assert(novelty == 1 || novelty == 2);
-					
-					if (novelty==1) ++_w1_nodes_generated;
-					else  ++_w2_nodes_generated;
-				} else {
-					++_w_gt2_nodes_generated;
-				}
 			}
+			// We've processed all nodes in the current depth level.
+			open_w1.swap(open_w1_next);
+			open_w2.swap(open_w2_next);
+			
+			if (open_w1.empty() && open_w2.empty()) break;
 		}
 		
 		report("State space exhausted");
 		return false;
+	}
+	
+	void update_novelty_counters_on_expansion(unsigned char novelty) {
+		if (novelty == 1) ++_w1_nodes_expanded;
+		else if (novelty== 2) ++_w2_nodes_expanded;
+	}
+	
+	void update_novelty_counters_on_generation(unsigned char novelty) {
+		if (novelty==1) ++_w1_nodes_generated;
+		else if (novelty==2)  ++_w2_nodes_generated;
+		else ++_w_gt2_nodes_generated;
 	}
 	
 	void report(const std::string& result) const {
@@ -571,6 +621,9 @@ protected:
 	}
 	
 	void mark_seed_subgoals(const NodePT& node) {
+		std::vector<bool> _(_model.num_subgoals(), false);
+		_in_seed.swap(_);
+		_unreached.clear();
 		for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
 			if (_model.goal(node->state, i)) {
 				_in_seed[i] = true;

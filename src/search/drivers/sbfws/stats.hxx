@@ -53,7 +53,6 @@ public:
 	unsigned long simulated() const { return _simulations; }
 	
 	
-	void set_num_subgoals(unsigned num) { _num_subgoals = num; }
 	void set_initial_reachable_subgoals(unsigned num) { _initial_reachable_subgoals = num; }
 	void set_initial_relevant_atoms(unsigned num) { _initial_relevant_atoms = num; }
 	void reachable_subgoals(unsigned num) {
@@ -97,8 +96,6 @@ protected:
 	unsigned long _sim_expanded_nodes;
 	unsigned long _sim_generated_nodes;
 	float _sim_time;
-	
-	unsigned _num_subgoals;
 	
 	//! _sim_wtables[w] contains the number of width-w novelty tables created during simulation
 	std::vector<unsigned> _sim_wtables;

@@ -212,7 +212,8 @@ public:
 		_simconfig(config.complete_simulation,
 				   config.mark_negative_propositions,
 				   config.simulation_width,
-			       c.getOption<bool>("goal_directed", false)
+			       c.getOption<bool>("goal_directed", false),
+				   c.getOption<bool>("sim.hybrid", false)
 		),
 		_stats(stats),
 		_sbfwsconfig(config)
@@ -547,8 +548,8 @@ public:
 		
 		
 		// Force one simulation from the root node and abort the search
- 		// _heuristic.compute_node_complex_type(*root);
-		// return false;
+ 		_heuristic.compute_R(*root);
+		return false;
 		
 		
 		// The main search loop

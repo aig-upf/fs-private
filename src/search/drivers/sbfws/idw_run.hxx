@@ -324,7 +324,6 @@ public:
 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
 		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
-		_stats.set_num_subgoals(_model.num_subgoals());	
 		
 		if (_config._goal_directed) {
 			// If we want the goal-aware R_G, we compute it, and use it _unless_ it is too small, in which case we fall back to the goal-unaware R.
@@ -396,7 +395,6 @@ public:
 // 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
 // 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
 // 		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
-// 		_stats.set_num_subgoals(_model.num_subgoals());		
 		
 // 		std::vector<NodePT> w1_goal_reaching_nodes;
 // 		std::vector<NodePT> w2_goal_reaching_nodes;
