@@ -81,6 +81,8 @@ protected:
 
     double _integration_factor;
 
+    double _discretization_step;
+
 	//! Private constructor
 	Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
 
@@ -130,6 +132,10 @@ public:
     void setIntegrationFactor( double nsteps ) { _integration_factor = nsteps; }
 
     double getIntegrationFactor( ) const { return _integration_factor; }
+
+    void setDiscretizationStep( double dT ) { _discretization_step = dT; }
+
+    double getDiscretizationStep( ) const { return _discretization_step; }
 
 	bool validate() const { return getOption("validate", false); }
 

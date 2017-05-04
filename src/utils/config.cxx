@@ -42,7 +42,8 @@ OptionType parseOption(const pt::ptree& tree, const std::unordered_map<std::stri
 Config::Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename)
 	: _user_options(user_options),
     _successor_prediction( IntegratorT::ImplicitEuler ),
-    _integration_factor( 1.0 )
+    _integration_factor( 1.0 ),
+    _discretization_step( 1.0 )
 {
 	load(filename); // Load the default options
 }
@@ -88,6 +89,12 @@ void Config::load(const std::string& filename) {
         LPT_INFO("main", "[Config::load] Option 'integration_factor' takes default value: " << _integration_factor );
     }
 
+    try {
+        _discretization_step = getOption<double>("dt");
+    } catch ( fs0::MissingOption& e ) {
+        // Use default value in the constructor
+        LPT_INFO("main", "[Config::load] Option 'dt' takes default value: " << _discretization_step );
+    }
 
 	_heuristic = parseOption<std::string>(_root, _user_options, "heuristic", {{"hff", "hff"}, {"hmax", "hmax"}});
 
