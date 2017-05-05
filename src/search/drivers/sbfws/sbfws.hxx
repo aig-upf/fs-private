@@ -11,6 +11,7 @@
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
 #include "stats.hxx"
+#include "idw_run.hxx"
 
 
 namespace fs0 { namespace bfws {
@@ -158,7 +159,8 @@ public:
 	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT*>;
 	using ActionT = typename StateModelT::ActionType;
 	using IWNodeT = IWRunNode<State, ActionT>;
-	using SimulationT = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
+ 	using SimulationT = IDWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
+// 	using SimulationT = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
 	using SimConfigT = typename SimulationT::Config;
 	using IWNodePT = typename SimulationT::NodePT;
 	
@@ -548,8 +550,8 @@ public:
 		
 		
 		// Force one simulation from the root node and abort the search
-//  		_heuristic.compute_R(*root);
-// 		return false;
+  		_heuristic.compute_R(*root);
+ 		return false;
 		
 		
 		// The main search loop

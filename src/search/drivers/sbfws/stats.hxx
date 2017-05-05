@@ -64,6 +64,10 @@ public:
 		_sum_relevant_atoms += num;
 	}
 	
+	void global_reachable_subgoals(unsigned num) { _global_reachable_subgoals = num; }
+	
+	
+	
 	void r_type(unsigned type) {
 		_r_type = type;
 	}
@@ -102,6 +106,8 @@ protected:
 	unsigned long _sim_expanded_nodes;
 	unsigned long _sim_generated_nodes;
 	float _sim_time;
+	
+	unsigned _global_reachable_subgoals;
 	
 	//! _sim_wtables[w] contains the number of width-w novelty tables created during simulation
 	std::vector<unsigned> _sim_wtables;
