@@ -45,7 +45,7 @@ protected:
 
 public:
 	ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names, const fs::BindingUnit& bunit,
-			   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects, Type t = Type::Control );
+			   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects, Type t );
 
 	~ActionData();
 	ActionData(const ActionData&);

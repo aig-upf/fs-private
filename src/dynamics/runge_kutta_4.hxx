@@ -10,7 +10,6 @@ namespace fs0 { namespace dynamics { namespace integrators {
     {
         mutable State*  tmp;
     public:
-        double      integration_factor;
         unsigned    order;
 
         //! Runge Kutta 2nd order integration method
@@ -29,7 +28,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
         //!
         RungeKutta4( );
 
-        void operator()( const State& s, const std::vector<DifferentialEquation>& eq, State& next, double h ) const override;
+        void operator()( const State& s, const std::vector<DifferentialEquation>& eq, State& next, double h, double factor ) const override;
 
 
     };

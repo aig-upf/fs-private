@@ -237,6 +237,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 		LPT_INFO("cout", "Schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
 		return nullptr;
 	}
+    LPT_DEBUG("loader", "Loaded action data: " << adata );
 
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
 	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it

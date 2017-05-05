@@ -15,7 +15,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
 
         Integrator();
         virtual ~Integrator();
-        virtual void operator()( const State& s, const std::vector<DifferentialEquation>& f_expr, State& next,  double H ) const = 0;
+        virtual void operator()( const State& s, const std::vector<DifferentialEquation>& f_expr, State& next,  double H, double factor) const = 0;
 
 
         mutable unsigned _num_evals;

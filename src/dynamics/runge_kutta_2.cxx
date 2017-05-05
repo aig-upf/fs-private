@@ -6,13 +6,12 @@ namespace fs0 { namespace dynamics { namespace integrators {
 
     RungeKutta2::RungeKutta2() {
         tmp = nullptr;
-        integration_factor = Config::instance().getIntegrationFactor();
     }
 
     void
-    RungeKutta2::operator()( const State& s, const std::vector<DifferentialEquation>& f_expr, State& next, double H) const {
+    RungeKutta2::operator()( const State& s, const std::vector<DifferentialEquation>& f_expr, State& next, double H, double factor) const {
 
-        const double base_duration = (H / integration_factor);
+        const double base_duration = (H / factor);
         std::vector<Atom>   f_un; // f(u_n)
         std::vector<Atom>   un;
         un.resize( f_expr.size() );

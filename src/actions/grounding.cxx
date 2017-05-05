@@ -421,7 +421,7 @@ ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo&
 			return nullptr;
 		}
 	}
-	return new ActionData(action.getId(), action.getName(), action.getSignature(), action.getParameterNames(), action.getBindingUnit(), precondition, effects);
+	return new ActionData(action.getId(), action.getName(), action.getSignature(), action.getParameterNames(), action.getBindingUnit(), precondition, effects,action.getType());
 }
 
 GroundAction*

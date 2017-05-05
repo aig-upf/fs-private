@@ -83,6 +83,10 @@ protected:
 
     double _discretization_step;
 
+    bool _zero_crossing_control;
+
+    double _horizon_time;
+
 	//! Private constructor
 	Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
 
@@ -129,6 +133,10 @@ public:
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
 
+    void setSuccessorPredictionType( IntegratorT method ) { _successor_prediction = method; }
+
+    IntegratorT getSuccessorPredictionType() const { return _successor_prediction; }
+
     void setIntegrationFactor( double nsteps ) { _integration_factor = nsteps; }
 
     double getIntegrationFactor( ) const { return _integration_factor; }
@@ -136,6 +144,11 @@ public:
     void setDiscretizationStep( double dT ) { _discretization_step = dT; }
 
     double getDiscretizationStep( ) const { return _discretization_step; }
+
+    bool getZeroCrossingControl() const { return _zero_crossing_control; }
+
+    double getHorizonTime() const { return _horizon_time; }
+    bool hasHorizon() const { return _horizon_time >= 1e-7; }
 
 	bool validate() const { return getOption("validate", false); }
 

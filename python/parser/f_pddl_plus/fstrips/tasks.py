@@ -7,6 +7,7 @@ from ...pddl import pddl_types
 from ...pddl import functions
 from ...pddl import f_expression
 from ...pddl import metrics
+from ...pddl import effects
 import itertools
 from antlr4 import *
 from .lexer import FunctionalStripsLexer
@@ -114,6 +115,13 @@ class Task(object):
         loader.functions.append(total_time)
         lhs_init_clock = f_expression.FunctionalTerm('clock_time', [])
         loader.init.append( f_expression.Assign( lhs_init_clock, f_expression.NumericConstant(0.0) ) )
+
+        print("Setting up 'second_law_thermodynamics' process")
+        second_law_rhs = f_expression.FunctionalTerm('+', [lhs_init_clock, f_expression.NumericConstant(1.0)])
+        second_law_effect = effects.Effect([], conditions.Truth(), effects.AssignmentEffect(lhs_init_clock, second_law_rhs))
+        second_law = actions.Action( '2nd_law_thermodynamics', [], 0, conditions.Truth(), [second_law_effect], None )
+        loader.processes.append(second_law)
+
 
         print( "Checking metric expression is a grounded functional term...")
         if loader.metric is not None :

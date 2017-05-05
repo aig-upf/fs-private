@@ -42,10 +42,12 @@ public:
 
 	//! Get the set of action schemata of the problem
 	const std::vector<const ActionData*>& getActionData() const { return _action_data; }
+    void addActionData( const ActionData* data ) { _action_data.push_back(data); }
 
 	//! Get the set of ground actions of the problem
 	const std::vector<const GroundAction*>& getGroundActions() const { return _ground; }
 	void setGroundActions(std::vector<const GroundAction*>&& ground) { _ground = std::move(ground); }
+    void addGroundAction( const GroundAction* a ) { _ground.push_back(a); }
 
 	const std::vector<const PartiallyGroundedAction*>& getPartiallyGroundedActions() const { return _partials; }
 	void setPartiallyGroundedActions(std::vector<const PartiallyGroundedAction*>&& actions) { _partials = std::move(actions); }
@@ -86,6 +88,8 @@ public:
 
 	//! Return true if all the symbols of the problem are predicates
 	bool is_predicative() const { return _is_predicative; }
+
+    bool requires_handling_continuous_change() const;
 
 	void set_state_constraints(const fs::Formula* state_constraint_formula);
 	void set_goal(const fs::Formula* goal);

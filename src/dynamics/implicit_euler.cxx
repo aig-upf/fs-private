@@ -8,12 +8,11 @@ namespace fs0 { namespace dynamics { namespace integrators {
 
     ImplicitEuler::ImplicitEuler() {
         tmp = nullptr;
-        integration_factor = Config::instance().getIntegrationFactor();
     }
 
     void
-    ImplicitEuler::operator()( const State& s, const std::vector<DifferentialEquation>& f_expr, State& next, double H ) const {
-        const double base_duration = H / integration_factor;
+    ImplicitEuler::operator()( const State& s, const std::vector<DifferentialEquation>& f_expr, State& next, double H, double factor ) const {
+        const double base_duration = H / factor;
 
         if ( tmp == nullptr ) {
             tmp = std::make_shared<State>(next);

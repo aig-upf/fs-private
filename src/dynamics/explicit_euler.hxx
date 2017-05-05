@@ -26,7 +26,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
         //!
         ExplicitEuler( );
 
-        void operator()( const State& s, const std::vector<DifferentialEquation>& eq, State& next, double h ) const override;
+        void operator()( const State& s, const std::vector<DifferentialEquation>& eq, State& next, double h, double factor ) const override;
 
     };
 

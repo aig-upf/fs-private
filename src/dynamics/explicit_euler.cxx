@@ -9,9 +9,9 @@ namespace fs0 { namespace dynamics { namespace integrators {
     }
 
     void
-    ExplicitEuler::operator()( const State& s, const std::vector<DifferentialEquation>& f_expr,  State& next, double H ) const {
+    ExplicitEuler::operator()( const State& s, const std::vector<DifferentialEquation>& f_expr,  State& next, double H, double factor ) const {
 
-        const double base_duration = (H / integration_factor);
+        const double base_duration = (H / factor);
         std::vector<Atom>   f_un; // f(u_n)
 
         while ( H > 0.0 ) {

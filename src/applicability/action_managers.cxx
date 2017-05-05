@@ -39,6 +39,12 @@ bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAct
 	return true;
 }
 
+bool NaiveApplicabilityManager::isActive(const State& state, const GroundAction& action) const {
+    if (!action.isNatural()) return false;
+	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
+	return true;
+}
+
 //! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
 std::vector<Atom>
 NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction& action) {
@@ -62,6 +68,13 @@ NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction
 bool NaiveApplicabilityManager::checkFormulaHolds(const fs::Formula* formula, const State& state) {
 	return formula->interpret(state);
 }
+
+bool NaiveApplicabilityManager::checkStateConstraints(const State& state) const {
+    for ( auto c : _state_constraints )
+        if (!NaiveApplicabilityManager::checkFormulaHolds(c, state)) return false;
+    return true;
+}
+
 
 bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& atoms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
@@ -359,6 +372,7 @@ NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& a
 
 bool
 NaiveActionManager::applicable(const State& state, const GroundAction& action) const {
+    if (!action.isControl()) return false;
 	if (!NaiveApplicabilityManager::checkFormulaHolds(action.getPrecondition(), state)) return false;
 
 	NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);

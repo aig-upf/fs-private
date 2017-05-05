@@ -14,8 +14,6 @@ namespace fs0 { namespace dynamics { namespace integrators {
         mutable std::shared_ptr<State>  tmp;
     public:
 
-        double              integration_factor;
-
         ImplicitEuler();
 
         //! Implicit Euler integration method via fixed point computation
@@ -40,7 +38,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
         //!     to the midpoint, this requires creating a temporary (TODO: optimise this out)
         //! 4 - Apply the update rule and return Atom with the new value
 
-        void operator()( const State& s, const std::vector<DifferentialEquation>& eq, State& next, double H ) const override;
+        void operator()( const State& s, const std::vector<DifferentialEquation>& eq, State& next, double H, double factor ) const override;
     };
 
 

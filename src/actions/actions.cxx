@@ -40,6 +40,9 @@ ActionData::ActionData(const ActionData& other) :
 
 std::ostream& ActionData::print(std::ostream& os) const {
 	os <<  print::action_data_name(*this);
+    if ( _type == Type::Control ) os << "[control]";
+    if ( _type == Type::Exogenous ) os << "[exogenous]";
+    if ( _type == Type::Natural ) os << "[natural]";
 	return os;
 }
 
