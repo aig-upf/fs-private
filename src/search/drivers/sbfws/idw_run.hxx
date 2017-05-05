@@ -274,11 +274,11 @@ public:
 		std::vector<NodePT> _(_optimal_paths.size(), nullptr);
 		_optimal_paths.swap(_);
 		_generated = 1;
-		_w1_nodes_expanded = 0;
-		_w2_nodes_expanded = 0;
-		_w1_nodes_generated = 0;
-		_w2_nodes_generated = 0;		
-		_w_gt2_nodes_generated = 0;
+// 		_w1_nodes_expanded = 0;
+// 		_w2_nodes_expanded = 0;
+// 		_w1_nodes_generated = 0;
+// 		_w2_nodes_generated = 0;		
+// 		_w_gt2_nodes_generated = 0;
 		_evaluator.reset();
 	}	
 
@@ -590,6 +590,18 @@ protected:
 				++it;
 			}
 		}
+		
+		/*
+		// Check whether the node is actually a goal state...!
+		bool any_unreached = false;
+		for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
+			if (!_model.goal(state, i)) {
+				any_unreached = true;
+				break;
+			}
+		}
+		if (!any_unreached) throw std::runtime_error("Goal State Found!");
+		*/
 		
 		all_subgoals_reached = _unreached.empty();
 	}
