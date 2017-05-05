@@ -96,7 +96,8 @@ namespace fs0 {
 		_pivot(get_best_variable(context))
 	{
 		const std::vector<AtomIdx>& pivot_atoms = context._tuple_index.all_variable_atoms(_pivot); // All the atoms that can be derived from the pivot variable
-		if (pivot_atoms.size() != 2) throw std::runtime_error("Match Tree only ready for propositional domains yet");
+		if (pivot_atoms.size() != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
+		if (context._tuple_index.to_atom(pivot_atoms[0]).getValue() != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
 		
 		// 'actions_split_by_pivot_value[i]' will contain all actions whose precondition requires the 'i'-th
 		// possible atom that can be derived from the pivot variable to hold
@@ -147,8 +148,7 @@ namespace fs0 {
 		for (unsigned i = 0; i < actions_split_by_pivot_value.size(); i++) {
 			_children.push_back(create_tree(std::move(actions_split_by_pivot_value[i]), context));
 		}*/
-		if (!actions_split_by_pivot_value[0].empty()) throw std::runtime_error("Match Tree not ready for negated preconditions");
-		_positive_child = create_tree(std::move(actions_split_by_pivot_value[1]), context);
+		_positive_child = create_tree(std::move(actions_split_by_pivot_value[0]), context);
 
 		_default_child = create_tree(std::move(dont_care_actions), context); // Create the default generator
 
