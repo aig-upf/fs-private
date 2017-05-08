@@ -40,7 +40,7 @@ protected:
 		if (_verbose) {
 			auto& node = static_cast<const OpenEvent&>(event).node;
 			_unused(node);
-			LPT_DEBUG("cout", node);
+			//LPT_DEBUG("cout", node);
 			LPT_DEBUG("search", std::setw(7) << "OPEN: " << node);
 		}
 	}

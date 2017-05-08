@@ -339,8 +339,8 @@ public:
 			node._relevant_atoms->init(node.state);
 			
 			if (!node.has_parent()) { // Log some info for the seed state
-				LPT_DEBUG("cout", "R_{IW(1)}(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ")");
-				LPT_DEBUG("cout", *(node._relevant_atoms));
+				//LPT_DEBUG("cout", "R_{IW(1)}(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ")");
+				//LPT_DEBUG("cout", *(node._relevant_atoms));
 			}
 		}
 
@@ -738,7 +738,7 @@ protected:
 
 	// Return true iff at least one node was created
 	void expand_node(const NodePT& node) {
-		LPT_DEBUG("cout", *node);
+		//LPT_DEBUG("cout", *node);
 		_stats.expansion();
 		if (node->decreases_unachieved_subgoals()) _stats.expansion_g_decrease();
 

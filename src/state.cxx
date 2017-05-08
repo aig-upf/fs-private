@@ -12,6 +12,8 @@ namespace fs0 {
 StateAtomIndexer*
 StateAtomIndexer::create(const ProblemInfo& info)
 {
+  
+
 	unsigned n_vars = info.getNumVariables(), n_bool = 0, n_int = 0;
 	IndexT index;
 	index.reserve(n_vars);

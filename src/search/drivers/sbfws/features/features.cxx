@@ -100,7 +100,6 @@ void process_feature(const ProblemInfo& info, const std::string& feat_name, std:
 	unsigned symbol_id = info.getSymbolId(feat_name);
 	const SymbolData& sdata = info.getSymbolData(symbol_id);
 	const Signature& signature = sdata.getSignature();
-	
 	LPT_DEBUG("cout", "Processing feature: " << feat_name << ", with signature: (" << print::raw_signature(signature) << ")");
 	
 	for (utils::binding_iterator binding_generator(signature, info); !binding_generator.ended(); ++binding_generator) {
