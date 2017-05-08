@@ -35,7 +35,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 float f_i = boost::get<float>(next.getValue( f_expr[i]._affected ));
                 float k1_i = boost::get<float>(k1[i].getValue());
                 float un1 =  f_i + 0.5f * h * k1_i;
-                next.set( f_expr[i]._affected, un1 );
+                next.__set( f_expr[i]._affected, un1 );
             }
 
             // Evaluate increment based on the slope at the midpoint of the interval
@@ -44,7 +44,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 float un_i = boost::get<float>(un[i].getValue());
                 float k2_i = boost::get<float>(k2[i].getValue());
                 float un1 = un_i +  0.5f * h * k2_i ;
-                next.set( f_expr[i]._affected, un1 );
+                next.__set( f_expr[i]._affected, un1 );
             }
 
             //! Again at the midpoint, but using the previous value
@@ -53,7 +53,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 float un_i = boost::get<float>(un[i].getValue());
                 float k3_i = boost::get<float>(k3[i].getValue());
                 float un1 = un_i +  h * k3_i;
-                next.set( f_expr[i]._affected, un1 );
+                next.__set( f_expr[i]._affected, un1 );
             }
 
             //! Increment at the end of the interval
@@ -66,7 +66,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 float k4_i = boost::get<float>(k4[i].getValue());
                 float blend = h/6.0f * (k1_i + 2.0f * k2_i + 2.0f * k3_i + k4_i);
                 float un_i = boost::get<float>(un[i].getValue());
-                next.set( f_expr[i]._affected, un_i + blend);
+                next.__set( f_expr[i]._affected, un_i + blend);
             }
 
             H -= h;

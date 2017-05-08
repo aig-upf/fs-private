@@ -113,12 +113,16 @@ public:
 		return _int_values;
 	}
 
-    void set(const Atom& atom);
-    void set(VariableIdx x, ObjectIdx v);
+    //! Sets values of state variable directly. Note that calling this method
+    //! invalidates the hash value computed for the state. A valid hash
+    //! can be set by calling the method updateHash().
+    void __set(const Atom& atom);
+    void __set(VariableIdx x, ObjectIdx v);
+
+    void updateHash() { _hash = computeHash(); }
 
 
 protected:
-	void updateHash() { _hash = computeHash(); }
 
 	std::size_t computeHash() const;
 

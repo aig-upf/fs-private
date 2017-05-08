@@ -35,6 +35,7 @@ namespace fs0 { namespace dynamics {
         setup();
         State next(s);
         I( s, _rates_of_change, next, delta_time, factor);
+        next.updateHash();
         return next;
     }
 

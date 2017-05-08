@@ -44,7 +44,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
             do {
                 max_error = 0.0;
                 for ( unsigned i = 0; i < f_expr.size(); i++ ) {
-                    tmp->set( f_expr[i]._affected, un[i].getValue());
+                    tmp->__set( f_expr[i]._affected, un[i].getValue());
                 }
                 evaluate_derivatives( *tmp, f_expr, f_un );
                 for ( unsigned i = 0; i < f_expr.size(); i++ ) {
@@ -60,7 +60,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 iterations++;
             } while( (max_error > 1e-5) && (iterations < _max_iterations));
             for ( unsigned i = 0; i < f_expr.size(); i++ ) {
-                next.set( f_expr[i]._affected, un[i].getValue());
+                next.__set( f_expr[i]._affected, un[i].getValue());
             }
             H -= h;
             LPT_DEBUG( "integrator", "Implicit Euler integration step");

@@ -154,7 +154,7 @@ State::State(const StateAtomIndexer& index, const std::vector<Atom>& atoms) :
 {
 	// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
 	for (const Atom& atom:atoms) { // Insert all the elements of the vector
-		set(atom);
+		__set(atom);
 	}
 	updateHash();
 }
@@ -164,13 +164,13 @@ State::State(const State& state, const std::vector<Atom>& atoms) :
 	accumulate(atoms);
 }
 
-void State::set(const Atom& atom) {
+void State::__set(const Atom& atom) {
 // 	_bool_values.at(atom.getVariable()) = value;
 	_indexer->set(*this, atom);
 }
 
-void State::set(VariableIdx x, ObjectIdx v) {
-    set(Atom(x,v));
+void State::__set(VariableIdx x, ObjectIdx v) {
+    __set(Atom(x,v));
 }
 
 bool State::contains(const Atom& atom) const {
@@ -192,7 +192,7 @@ State::getIntValue(const VariableIdx& variable) const {
 //! Applies the given changeset into the current state.
 void State::accumulate(const std::vector<Atom>& atoms) {
 	for (const Atom& fact:atoms) {
-		set(fact);
+		__set(fact);
 	}
 	updateHash(); // Important to update the hash value after all the changes have been applied!
 }

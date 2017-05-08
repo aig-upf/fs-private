@@ -24,7 +24,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 float f_i = boost::get<float>(next.getValue( f_expr[i]._affected ));
                 float f_un_i = boost::get<float>(f_un[i].getValue());
                 float un1 = f_i + h * f_un_i;
-                next.set( f_expr[i]._affected, un1 );
+                next.__set( f_expr[i]._affected, un1 );
             }
             H -= h;
         }

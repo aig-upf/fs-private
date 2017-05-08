@@ -28,7 +28,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 float f_i = boost::get<float>(next.getValue( f_expr[i]._affected ));
                 float un_i = boost::get<float>(f_un[i].getValue());
                 float un1 = f_i + 0.5f * h * un_i;
-                next.set( f_expr[i]._affected, un1 );
+                next.__set( f_expr[i]._affected, un1 );
             }
             //! evaluate the derivatives at the half-way point
             evaluate_derivatives( next, f_expr, f_un );
@@ -38,7 +38,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 float un_i = boost::get<float>(un[i].getValue());
                 float f_un_i = boost::get<float>(f_un[i].getValue());
                 float un1 = un_i +  h * f_un_i;
-                next.set( f_expr[i]._affected, un1 );
+                next.__set( f_expr[i]._affected, un1 );
             }
 
             H -= h;
