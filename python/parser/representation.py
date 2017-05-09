@@ -165,7 +165,7 @@ class ProblemRepresentation(object):
 
     def requires_compilation(self):
         # The problem requires compilation iff there are external symbols involved.
-        return len([s for s in self.index.static_symbols if util.is_external(s)])
+        return len([s for s in self.index.all_symbols if util.is_external(s)])
 
     def get_function_instantiations(self):
         return [tplManager.get('function_instantiation').substitute(name=symbol, accessor=symbol[1:])
