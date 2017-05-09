@@ -36,6 +36,8 @@ class Parser(object):
             result = fs.LogicalVariable(exp.name) if exp.name[0] == '?' else fs.Constant(exp.name)
         elif isinstance(exp, str):
             result = fs.LogicalVariable(exp) if exp[0] == '?' else fs.Constant(exp)
+        elif isinstance(exp, int):
+            result = fs.Constant(exp)
         elif isinstance(exp, pddl.f_expression.NumericConstant) :
             result = fs.Constant(exp.value)
         else:

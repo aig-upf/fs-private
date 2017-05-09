@@ -17,15 +17,15 @@ namespace fs0 {
 
 bool Checker::check_correctness(const Problem& problem, const std::vector<GroundAction>& plan, const State& s0) {
 	NaiveApplicabilityManager manager(problem.getStateConstraints());
-    LPT_INFO("validation", "Validating plan:")
+    LPT_DEBUG("validation", "Validating plan:")
 	// First we make sure that the whole plan is applicable
 	State state(s0);
-    LPT_INFO("validation", "s=" <<  state);
+    LPT_DEBUG("validation", "s=" <<  state);
 	for (const GroundAction& action:plan) {
 		if (!manager.isApplicable(state, action)) return false;
-        LPT_INFO("validation", "a=" <<  action);
+        LPT_DEBUG("validation", "a=" <<  action);
 		state.accumulate(NaiveApplicabilityManager::computeEffects(state, action)); // Accumulate the newly-produced atoms
-        LPT_INFO("validation", "s=" <<  state);
+        LPT_DEBUG("validation", "s=" <<  state);
 	}
 
 	// Now check that the resulting state is indeed a goal
