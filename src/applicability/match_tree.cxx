@@ -29,7 +29,6 @@ namespace fs0 {
     		}
     	}
 
-
     	if (all_done) return new LeafNode(std::move(actions));
 		else return new SwitchNode(actions, context);
     }
@@ -99,7 +98,8 @@ namespace fs0 {
 		_pivot(get_best_variable(context))
 	{
 		const std::vector<AtomIdx>& pivot_atoms = context._tuple_index.all_variable_atoms(_pivot); // All the atoms that can be derived from the pivot variable
-		if (pivot_atoms.size() != 2) throw std::runtime_error("Match Tree only ready for propositional domains yet");
+		if (pivot_atoms.size() != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
+		if (boost::get<int>(context._tuple_index.to_atom(pivot_atoms[0]).getValue()) != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
 
 		// 'actions_split_by_pivot_value[i]' will contain all actions whose precondition requires the 'i'-th
 		// possible atom that can be derived from the pivot variable to hold
@@ -109,6 +109,7 @@ namespace fs0 {
 
 		// Classify all actions
 		for (ActionIdx action:actions) {
+
 			if (action_done(action, context)) {
 				_immediate_items.push_back(action);
 
@@ -119,10 +120,9 @@ namespace fs0 {
 
 				for (unsigned i = 0; i < pivot_atoms.size(); ++i) {
 					AtomIdx atom = pivot_atoms[i];
-                    #ifdef DEBUG
-                    int unwrapped_value = boost::get<int>(context._tuple_index.to_atom(atom).getValue());
-                    #endif
-					assert( unwrapped_value == 0 || unwrapped_value == 1); // Not yet ready for multivalued match tree... soon!
+
+					assert( boost::get<int>(context._tuple_index.to_atom(atom).getValue()) == 0
+                            || boost::get<int>(context._tuple_index.to_atom(atom).getValue()) == 1); // Not yet ready for multivalued match tree... soon!
 					if (required.find(atom) != required.end()) {
 						is_relevant = true;
 						actions_split_by_pivot_value[i].push_back(action);

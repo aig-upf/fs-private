@@ -55,6 +55,7 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
     task.process_axioms(fd_task.axioms)
+    task.process_metric(None)
     return task
 
 def create_fs_plus_task( fsp_task, domain_name, instance_name ) :
@@ -362,7 +363,7 @@ class FSTaskIndex(object):
 
     def process_axioms(self, axioms):
         """ An axiom is just a (possibly lifted) named formula. """
-        self.axioms = [FSNamedFormula(self, axiom.name, axiom.paramters, axiom.condition) for axiom in axioms]
+        self.axioms = [FSNamedFormula(self, axiom.name, axiom.parameters, axiom.condition) for axiom in axioms]
 
 def _check_symbol_in_initial_state(s, symbols):  # A small helper
     if s == 'total-cost':  # We ignore the 'total-cost' initial specification

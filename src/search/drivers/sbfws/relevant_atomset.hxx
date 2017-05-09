@@ -54,6 +54,8 @@ public:
 			ObjectIdx val = boost::get<int>(state.getValue(var));
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 
+			if (!_helper._atomidx.is_indexed(var, val)) continue;
+			
 			AtomIdx atom = _helper._atomidx.to_index(var, val);
 			if (!_helper._relevant[atom]) continue; // we're not concerned about this atom
 

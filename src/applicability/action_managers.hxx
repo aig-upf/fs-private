@@ -23,12 +23,17 @@ public:
 
 	//! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
 	bool isApplicable(const State& state, const GroundAction& action) const;
+    //! A process (natural action) is active if its preconditions hold, note that state constraints
+    //! need to be validated over the interval [t, t+dt]
+    bool isActive( const State& state, const GroundAction& process ) const;
 
 	//! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
 	static std::vector<Atom> computeEffects(const State& state, const GroundAction& action);
 	static void computeEffects(const State& state, const GroundAction& action, std::vector<Atom>& atoms);
 
 	static bool checkFormulaHolds(const fs::Formula* formula, const State& state);
+
+    bool checkStateConstraints(const State& s) const;
 
 	//! Checks that all of the given new atoms do not violate domain bounds
 	static bool checkAtomsWithinBounds(const std::vector<Atom>& atoms);

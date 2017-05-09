@@ -6,12 +6,14 @@
 #include <applicability/action_managers.hxx>
 #include <languages/fstrips/axioms.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class ActionEffect; } }}
+namespace fs0 { namespace language { namespace fstrips {  class Term; class Formula; class ActionEffect; } }}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
 class ProblemInfo;
+class Atom;
+class State;
 
 //! All the data that fully characterizes a lifted action
 class ActionData {
@@ -43,7 +45,7 @@ protected:
 
 public:
 	ActionData(unsigned id, const std::string& name, const Signature& signature, const std::vector<std::string>& parameter_names, const fs::BindingUnit& bunit,
-			   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects, Type t = Type::Control );
+			   const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects, Type t );
 
 	~ActionData();
 	ActionData(const ActionData&);
@@ -110,6 +112,16 @@ public:
 	//! Returns true if some parameter of the action has a type with no associated object
 	bool has_empty_parameter() const { return _data.has_empty_parameter(); }
 
+    //! Type of action accessors
+    bool    isControl() const { return _data.getType() == ActionData::Type::Control; }
+    bool    isExogenous() const { return _data.getType() == ActionData::Type::Exogenous; }
+    bool    isNatural() const { return _data.getType() == ActionData::Type::Natural; }
+
+
+    //! Apply action effects
+    //! NOTE: clients need to clear the atoms vector
+    virtual void apply( const State& s, std::vector<Atom>& atoms ) const = 0;
+
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ActionBase&  entity) { return entity.print(os); }
 	virtual std::ostream& print(std::ostream& os) const;
@@ -121,6 +133,8 @@ public:
 	PartiallyGroundedAction(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
 	~PartiallyGroundedAction() = default;
 	PartiallyGroundedAction(const PartiallyGroundedAction&) = default;
+
+    virtual void apply( const State& s, std::vector<Atom>& atoms ) const override;
 };
 
 
@@ -142,10 +156,17 @@ public:
 	GroundAction(const GroundAction&) = default;
 
 	unsigned getId() const { return _id; }
+    virtual void apply( const State& s, std::vector<Atom>& atoms ) const override;
+
 };
 
+class ProceduralAction : public GroundAction {
 
+public:
 
+    ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding);
 
+    ~ProceduralAction() = default;
+};
 
 } // namespaces

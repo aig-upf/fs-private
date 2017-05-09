@@ -136,6 +136,8 @@ bool Problem::check_is_predicative() {
 //! to replace them by axioms.
 //! This needs to be called before grounding actions.
 void Problem::consolidateAxioms() {
+    if ( !_ground.empty() )
+        throw std::runtime_error("Problem::consolidateAxioms(): method called after grounding actions!");
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
 	auto tmp = _goal_formula;
@@ -175,12 +177,19 @@ void Problem::consolidateAxioms() {
 			effects.push_back(fs::process_axioms(*effect, info));
 		}
 
-		processed_actions.push_back(new ActionData(data->getId(), data->getName(), data->getSignature(), data->getParameterNames(), data->getBindingUnit(), precondition, effects));
+		processed_actions.push_back(new ActionData(data->getId(), data->getName(), data->getSignature(), data->getParameterNames(),
+                                        data->getBindingUnit(), precondition, effects, data->getType()));
 		delete data;
 	}
 	_action_data = processed_actions;
 }
 
+bool
+Problem::requires_handling_continuous_change() const {
+    for ( auto a : _action_data )
+        if ( a->getType() == ActionData::Type::Natural) return true;
+    return false;
+}
 
 
 } // namespaces

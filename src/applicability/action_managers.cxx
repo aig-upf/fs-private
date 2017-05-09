@@ -24,6 +24,7 @@ NaiveApplicabilityManager::NaiveApplicabilityManager(const std::vector<const fs:
 
 //! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
 bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAction& action) const {
+    if (!action.isControl()) return false;
 	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
 
 	auto atoms = computeEffects(state, action);
@@ -35,6 +36,12 @@ bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAct
             if ( !checkFormulaHolds( c, next ) ) return false;
     }
 
+	return true;
+}
+
+bool NaiveApplicabilityManager::isActive(const State& state, const GroundAction& action) const {
+    if (!action.isNatural()) return false;
+	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
 	return true;
 }
 
@@ -61,6 +68,13 @@ NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction
 bool NaiveApplicabilityManager::checkFormulaHolds(const fs::Formula* formula, const State& state) {
 	return formula->interpret(state);
 }
+
+bool NaiveApplicabilityManager::checkStateConstraints(const State& state) const {
+    for ( auto c : _state_constraints )
+        if (!NaiveApplicabilityManager::checkFormulaHolds(c, state)) return false;
+    return true;
+}
+
 
 bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& atoms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
@@ -358,6 +372,7 @@ NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& a
 
 bool
 NaiveActionManager::applicable(const State& state, const GroundAction& action) const {
+    if (!action.isControl()) return false;
 	if (!NaiveApplicabilityManager::checkFormulaHolds(action.getPrecondition(), state)) return false;
 
 	NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);

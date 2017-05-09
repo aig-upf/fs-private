@@ -42,7 +42,7 @@ env.VariantDir(build_dirname, '.')
 
 Help(vars.GenerateHelpText(env))
 
-env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++11' ])  # Flags common to all options
+env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ])  # Flags common to all options
 env.Append(CCFLAGS = ['-Wno-deprecated-register' ]) # Get rid of annoying warning message from the Jenkins library
 
 

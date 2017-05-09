@@ -89,7 +89,7 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 void
 StateAtomIndexer::set(State& state, const Atom& atom) const {
     ObjectIdx tmp =  atom.getValue();
-    set(state,  atom.getVariable(), boost::apply_visitor( Utils::reinterpreted_as_int(), tmp));
+    set(state, atom.getVariable(), atom.getValue());
 }
 
 void
@@ -100,7 +100,24 @@ StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
 	if (n_vars == _n_bool) state._bool_values[variable] = (bool)boost::get<int>(value);
-	else if (n_vars == _n_int) state._int_values[variable] = boost::get<int>(value);
+	else if (n_vars == _n_int) {
+        const IndexElemT& ind = _index[variable];
+        if ( _info.isIntegerNumber(variable) )
+            state._int_values[ind.second] = boost::get<int>(value);
+        else if (_info.isRationalNumber(variable)) {
+            int tmp;
+            Utils::type_punning_without_aliasing( boost::get<float>(value), tmp);
+            state._int_values[ind.second] = tmp;
+        }
+        else {
+            std::stringstream buffer;
+            buffer << "ERROR: Cannot store variable into state ";
+            buffer << _info.getVariableName(variable) << std::endl;
+            buffer << "because its type is not currently supported!" << std::endl;
+            LPT_DEBUG("main", buffer.str());
+            throw std::runtime_error(buffer.str());
+        }
+    }
 	else {
 		const IndexElemT& ind = _index[variable];
 		if (ind.first)
@@ -109,12 +126,9 @@ StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const
             if ( _info.isIntegerNumber(variable) )
                 state._int_values[ind.second] = boost::get<int>(value);
             else if (_info.isRationalNumber(variable)) {
-                union {
-    				int i;
-    				float d;
-    			} tmp;
-                tmp.d = boost::get<float>(value);
-                state._int_values[ind.second] = tmp.i;
+                int tmp;
+                Utils::type_punning_without_aliasing( boost::get<float>(value), tmp);
+                state._int_values[ind.second] = tmp;
             }
             else {
                 std::stringstream buffer;
@@ -134,13 +148,13 @@ State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std
 }
 
 State::State(const StateAtomIndexer& index, const std::vector<Atom>& atoms) :
-	_indexer(index),
+	_indexer(&index),
 	_bool_values(index.num_bool(), 0),
 	_int_values(index.num_int(), 0)
 {
 	// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
 	for (const Atom& atom:atoms) { // Insert all the elements of the vector
-		set(atom);
+		__set(atom);
 	}
 	updateHash();
 }
@@ -150,9 +164,13 @@ State::State(const State& state, const std::vector<Atom>& atoms) :
 	accumulate(atoms);
 }
 
-void State::set(const Atom& atom) {
+void State::__set(const Atom& atom) {
 // 	_bool_values.at(atom.getVariable()) = value;
-	_indexer.set(*this, atom);
+	_indexer->set(*this, atom);
+}
+
+void State::__set(VariableIdx x, ObjectIdx v) {
+    __set(Atom(x,v));
 }
 
 bool State::contains(const Atom& atom) const {
@@ -161,12 +179,12 @@ bool State::contains(const Atom& atom) const {
 
 ObjectIdx
 State::getValue(const VariableIdx& variable) const {
-	return _indexer.get(*this, variable);
+	return _indexer->get(*this, variable);
 }
 
 int
 State::getIntValue(const VariableIdx& variable) const {
-    ObjectIdx tmp = _indexer.get(*this, variable);
+    ObjectIdx tmp = _indexer->get(*this, variable);
     return boost::apply_visitor( Utils::reinterpreted_as_int(), tmp );
 }
 
@@ -174,7 +192,7 @@ State::getIntValue(const VariableIdx& variable) const {
 //! Applies the given changeset into the current state.
 void State::accumulate(const std::vector<Atom>& atoms) {
 	for (const Atom& fact:atoms) {
-		set(fact);
+		__set(fact);
 	}
 	updateHash(); // Important to update the hash value after all the changes have been applied!
 }
@@ -192,6 +210,11 @@ std::ostream& State::print(std::ostream& os) const {
             continue;
         }
         else if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::INT ) {
+            os << info.getVariableName(x) << "=" << v;
+            if (x < info.getNumVariables() - 1) os << ", ";
+            continue;
+        }
+        else if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::FLOAT ) {
             os << info.getVariableName(x) << "=" << v;
             if (x < info.getNumVariables() - 1) os << ", ";
             continue;

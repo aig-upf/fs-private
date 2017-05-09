@@ -90,6 +90,11 @@ def move_files(base_dir, instance, domain, target_dir, use_vanilla):
         for filename in glob.glob(os.path.join(origin_data_dir, '*')):
             if os.path.isfile(filename):
                 shutil.copy(filename, data_dir)
+            else :
+                dst = os.path.join(data_dir,os.path.basename(filename))
+                if os.path.exists( dst ) :
+                    shutil.rmtree(dst)
+                shutil.copytree(filename, dst)
 
 
 def compile_translation(translation_dir, use_vanilla, args):

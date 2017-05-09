@@ -55,7 +55,10 @@ def parse_term(exp):
     if isinstance(exp, list):  # We have a functional term
         function_symbol = exp[0]
         return FunctionalTerm(function_symbol, parse_term_list(exp[1:]))
-
+    elif isinstance(exp, FunctionalTerm) :
+        return exp
+    elif isinstance(exp, NumericConstant) :
+        return exp
     else:  # exp is a string and we have a non-functional term
         if exp[0] == '?':  # We have a variable
             return exp

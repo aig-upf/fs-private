@@ -53,7 +53,6 @@ public:
 	unsigned long simulated() const { return _simulations; }
 	
 	
-	void set_num_subgoals(unsigned num) { _num_subgoals = num; }
 	void set_initial_reachable_subgoals(unsigned num) { _initial_reachable_subgoals = num; }
 	void set_initial_relevant_atoms(unsigned num) { _initial_relevant_atoms = num; }
 	void reachable_subgoals(unsigned num) {
@@ -63,6 +62,10 @@ public:
 	void relevant_atoms(unsigned num) {
 		_max_relevant_atoms = std::max(num, _max_relevant_atoms);
 		_sum_relevant_atoms += num;
+	}
+	
+	void r_type(unsigned type) {
+		_r_type = type;
 	}
 	
 	using DataPointT = std::tuple<std::string, std::string, std::string>;
@@ -84,6 +87,8 @@ protected:
 	unsigned int _max_relevant_atoms;
 	unsigned int _sum_relevant_atoms;
 	
+	unsigned _r_type;
+	
 	unsigned long _num_wg1_nodes; // The number of nodes with w_{#g} = 1 that have been processed.
 	unsigned long _num_wgr1_nodes; // The number of nodes with w_{#g,#r} = 1 (and w_{#g} > 1) that have been processed.
 	unsigned long _num_wg1_5_nodes;
@@ -97,8 +102,6 @@ protected:
 	unsigned long _sim_expanded_nodes;
 	unsigned long _sim_generated_nodes;
 	float _sim_time;
-	
-	unsigned _num_subgoals;
 	
 	//! _sim_wtables[w] contains the number of width-w novelty tables created during simulation
 	std::vector<unsigned> _sim_wtables;

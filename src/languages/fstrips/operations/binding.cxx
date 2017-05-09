@@ -172,7 +172,7 @@ Visit(const BoundVariable& lhs) {
 		_result =  lhs.clone();
 	} else {
 		ObjectIdx value = _binding.value(lhs.getVariableId());
-		_result = _info.isBoundedType(lhs.getType()) ? new NumericConstant(value) : new Constant(value);
+		_result = _info.isBoundedType(lhs.getType()) ? new Constant(value) : new NumericConstant(value);
 	}
 }
 
@@ -198,7 +198,7 @@ Visit(const NestedTerm& lhs) {
 	if (function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:st) delete ptr;
 		auto value = function.getFunction()(constant_values);
-		_result = _info.isBoundedType(function.getCodomainType()) ? new NumericConstant(value) : new Constant(value);
+		_result = _info.isBoundedType(function.getCodomainType()) ? new Constant(value) : new NumericConstant(value) ;
 	}
 	else if (function.isStatic() && constant_values.size() != subterms.size()) { // We have a statically-headed nested term
 		_result = new UserDefinedStaticTerm(symbol_id, st);
@@ -248,7 +248,7 @@ Visit(const UserDefinedStaticTerm& lhs) {
 
 		const auto& function = _info.getSymbolData(symbol_id);
 		auto value = function.getFunction()(constant_values);
-		_result = _info.isBoundedType(function.getCodomainType()) ? new NumericConstant(value) : new Constant(value);
+		_result = _info.isBoundedType(function.getCodomainType()) ?  new Constant(value) : new NumericConstant(value);
 
 	} else {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms
