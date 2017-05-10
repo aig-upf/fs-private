@@ -6,13 +6,14 @@
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
-
+#include <search/drivers/sbfws/hm_heuristic.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 
 
 namespace fs0 { namespace bfws {
 
 using Novelty = lapkt::novelty::Novelty;
+using OffendingSet = std::unordered_set<fs0::ObjectIdx>;
 
 //! Prioritize nodes with lower number of _un_achieved subgoals. Break ties with g.
 template <typename NodePT>
@@ -82,6 +83,13 @@ public:
 	//! made true along the path (#r)
 	std::unique_ptr<LightRelevantAtomSet> _relevant_atoms;
 	
+	//! The value of hM heuristic
+	unsigned _hM;
+	
+	//! Number of offending configurations
+	unsigned _num_offending_confs;
+	
+	
 	//! Constructor with full copying of the state (expensive)
 	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
@@ -94,7 +102,9 @@ public:
 		w_g(Novelty::Unknown),
 		w_gr(Novelty::Unknown),
 		_helper(nullptr),
-		_relevant_atoms(nullptr)
+		_relevant_atoms(nullptr),
+		_hM(std::numeric_limits<unsigned>::max()),
+		_num_offending_confs(std::numeric_limits<unsigned>::max())
 	{}
 	
 	~SBFWSNode() = default;
@@ -173,9 +183,16 @@ protected:
 	const SimConfigT _simconfig;
 
 	BFWSStats& _stats;
-
 	
+	HMHeuristic _hm_heuristic;
+
 	SBFWSConfig::RelevantSetType _rstype;
+	
+	// A vector with the variable indexes that correspond to the configuration of each object.
+	std::vector<VariableIdx> _object_configurations;
+	
+	std::vector<OffendingSet> _offending;
+
 	
 public:
 	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, const NoveltyEvaluatorT& search_evaluator, BFWSStats& stats) :
@@ -194,15 +211,129 @@ public:
 			       c.getOption<bool>("goal_directed", false)
 		),
 		_stats(stats),
-		_rstype(config.relevant_set_type)
+		_rstype(config.relevant_set_type),
+		_hm_heuristic(_problem.getGoalConditions())//Not used to get the goal conditions for now
 	{
 		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		TypeIdx obj_t = info.getTypeId("object_id");
+		for (ObjectIdx obj_id:info.getTypeObjects(obj_t)) {
+			std::string obj_name = info.deduceObjectName(obj_id, obj_t);
+			VariableIdx confo_var = info.getVariableId("confo(" + obj_name  +  ")");
+			_object_configurations.push_back(confo_var);
+		}
 	}
 
 	~SBFWSHeuristic() {
 		for (auto& p:_wg_novelty_evaluators) delete p.second;
 		for (auto& p:_wgr_novelty_evaluators) delete p.second;
 	};
+	
+	unsigned compute_hm_heuristic(const State& state) {
+	    return _hm_heuristic.evaluate(state);
+	}
+	
+		//! Return the count of how many objects offend the consecution of at least one unachived goal atom.
+	/*template <typename NodeT>
+	unsigned compute_offending(const NodeT& node, ObjectIdx& picked_offending_object) {
+		const ProblemInfo& info = ProblemInfo::getInstance();		
+		const State& state = node.state;
+		
+		std::unordered_set<VariableIdx> offending; // We'll store here which problem objects are offending some unreached goal atom.
+		
+		
+		std::vector<unsigned> unsat_goal_indexes;
+		auto conjuncts = this->_unsat_goal_atoms_heuristic.get_goal_conjuncts();
+		for (unsigned i = 0; i < conjuncts.size(); ++i) {
+			const fs::AtomicFormula* condition = conjuncts[i];
+			
+			if (!condition->interpret(state)) {  // Let's check how many objects "offend" the consecution of this goal atom
+				unsat_goal_indexes.push_back(i);
+			}
+		}
+		
+		// For each object, we check whether the configuration of the object in the current state
+		// offends the consecution of _at least one_ unsatisfied goal atom (e.g. of the form confo(o3)=c15)
+		for (VariableIdx conf_var:_object_configurations) {
+			ObjectIdx confo = state.getValue(conf_var);
+			for (unsigned i:unsat_goal_indexes) {
+				
+				// 'offending_to_goal_atom' will contain all possible object configurations that offend the consecution of this particular unsatisfied goal atom
+				const auto& offending_to_goal_atom = _offending[i]; 
+				
+				if (offending_to_goal_atom.find(confo) != offending_to_goal_atom.end()) {
+					// The object configuration is actually an offending one
+					offending.insert(conf_var); // (the state variable IDs acts as an identifying proxy for the actual object ID)
+				}
+			}
+		}
+		
+		unsigned num_offending = 2 * offending.size();
+		
+// 		std::cout << "Num offending #1: " << num_offending << "   " << state.hash() <<std::endl;
+		
+		if (node.action == GroundAction::invalid_action_id || node.parent == nullptr) return num_offending;
+		
+		picked_offending_object = -1;
+		const GroundAction& action = *(_problem.getGroundActions().at(node.action));
+		const ValueTuple& values = action.getBinding().get_full_binding();
+		
+// 		bool yes = (node.parent->_num_offending == num_offending + 2);
+// 		if (yes) std::cout << "!!Num offending #2: " << num_offending << std::endl;
+// 		if (yes) std::cout << "!!Num offending #1.1: " << node.parent->_num_offending << ", " << num_offending << std::endl;
+		
+		if (action.getName() == "grasp-object" && (node.parent->_num_offending == num_offending + 2)) {
+			// It must be that we picked an offending configuration
+			
+// 			if (yes) std::cout << "Num offending #3: " << num_offending << std::endl;
+			
+			assert(values.size()==1); // The action has exactly one parameter
+			picked_offending_object = values[0];
+			
+			VariableIdx v_holding = info.getVariableId("holding()");
+			if (state.getValue(v_holding) != picked_offending_object) throw std::runtime_error("WRONG ASSUMPTION");
+			
+			num_offending += 1;
+			
+		} else {
+			ObjectIdx previously_picked =  node.parent->picked_offending_object;
+			
+// 			std::cout << "Num offending #4: " << num_offending << std::endl;
+			
+			if (previously_picked != -1) { // We were carrying a picked object in the parent
+				
+// 				std::cout << "Num offending #5: " << num_offending << std::endl;
+				
+				if (action.getName() == "place-object") { // We're placing the previously-picked offending object
+					// We must be placing the ex-offending object
+					if (values.size() != 1 ||  values[0] != previously_picked) throw std::runtime_error("WRONG ASSUMPTION");
+					
+				} else {
+					// Else we're still carrying a previously picked offending object, so we add a +1 to the num_offending
+					num_offending += 1;
+					picked_offending_object = previously_picked;
+				}
+			}
+		}
+		
+// 		std::cout << "Num offending FINAL: " << num_offending << "   " << state.hash() <<std::endl;
+		return num_offending;
+	}*/
+	
+	template <typename NodeT>
+	unsigned evaluate_ctmp(NodeT& node) {
+		unsigned num_unachieved = node.unachieved_subgoals;
+		bool has_parent = node.has_parent();
+		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
+		unsigned hM = compute_hm_heuristic(node.state);
+		//unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, has_parent, type, ptype);
+		//unsigned num_offending_confs = compute_offending();
+		unsigned num_offending_confs = 0;
+		unsigned nov = evaluate_ctmp_novelty(node, num_unachieved, hM, num_offending_confs);
+		assert(node.w_g == Novelty::Unknown);
+		node.w_g = (nov == 1) ? Novelty::One : Novelty::GTOne;
+		return nov;
+	}
 
 	
 	template <typename NodeT>
@@ -316,6 +447,22 @@ public:
 		}
 
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
+	}
+	
+	//Function to evaluate the novelty using the number of unachieved goals, the hM heuristic and the number of offending configurations
+	template <typename NodeT>
+	unsigned evaluate_ctmp_novelty(const NodeT& node, unsigned unachieved, unsigned heuristic, unsigned offending) {
+		
+	  /*NoveltyEvaluatorT* evaluator = fetch_evaluator(evaluator_map, type);
+
+		if (has_parent && type == parent_type) {
+			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
+			return evaluator->evaluate(_featureset.evaluate(node.state), _featureset.evaluate(node.parent->state), k);
+		}
+
+		return evaluator->evaluate(_featureset.evaluate(node.state), k);*/
+		NoveltyEvaluatorT* evaluator;
+		return 0;
 	}
 
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which

@@ -8,7 +8,7 @@
 using namespace fs0;
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace drivers {
+namespace fs0 { namespace bfws {
   
   
   //! Helper
@@ -46,7 +46,7 @@ VariableIdx derive_goal_config(ObjectIdx object_id, const fs::Formula* goal) {
 }
 
 
-void hMHeuristic::setup_goal_confs() {
+void HMHeuristic::setup_goal_confs() {
       const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<ObjectIdx> goals(info.getNumObjects(), std::numeric_limits<int>::max());
 	const UnaryFunction& target_f = info.get_extension<UnaryFunction>("goal_conf");
@@ -67,7 +67,7 @@ VariableIdx derive_goal_config(ObjectIdx object_id, const std::vector<const fs::
 
 
 
-hMHeuristic::hMHeuristic(const fs::Formula* goal):
+HMHeuristic::HMHeuristic(const fs::Formula* goal):
 	_external(ProblemInfo::getInstance().get_external()),
 	_idx_goal_atom(ProblemInfo::getInstance().getNumObjects(), -1)
 {
@@ -115,7 +115,7 @@ hMHeuristic::hMHeuristic(const fs::Formula* goal):
 
 //! h(s)= number of goal objects that still need to be picked up and moved in s  * 2
 //! -1; if goal object being held
-unsigned hMHeuristic::evaluate(const State& s, const std::vector<bool>& is_path_to_goal_atom_clear) const {
+unsigned HMHeuristic::evaluate(const State& s) const {
 	unsigned h = 0;
 	
 	ObjectIdx held_object = s.getValue(_holding_var); // The object which is currently being held
@@ -125,7 +125,8 @@ unsigned hMHeuristic::evaluate(const State& s, const std::vector<bool>& is_path_
 		VariableIdx object_conf = _all_objects_conf[i];
 		
 		auto it = _all_objects_goal.find(object_id);
-		if (it == _all_objects_goal.end()) continue; // The object does not appear on the goal formula
+		if (it == _all_objects_goal.end()) 
+		  continue; // The object does not appear on the goal formula
 		
 		// otherwise, we can deduce the goal configuration of the object
 		ObjectIdx goal_obj_conf =  it->second;
@@ -133,11 +134,10 @@ unsigned hMHeuristic::evaluate(const State& s, const std::vector<bool>& is_path_
 		ObjectIdx current_obj_conf = s.getValue(object_conf);
 		if (current_obj_conf != goal_obj_conf) {
 			
-			if (held_object == object_id) {
+			if (held_object == object_id) 
 				h = h+1;
-			} else {
+			 else 
 				h = h+2;
-			}
 		}
 	}
 

@@ -12,19 +12,19 @@ namespace fs0 { class Config; }
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace drivers {
+namespace fs0 { namespace bfws {
 
 //! A custom heuristic for the CTMP problem
 //! h(s)= number of goal objects that still need to be picked up and moved in s  * 2
 //! +  1; if goal object being held
-class hMHeuristic {
+class HMHeuristic {
 public:
-	hMHeuristic(const fs::Formula* goal);
-	~hMHeuristic() = default;
-	hMHeuristic(const hMHeuristic&) = default;
+	HMHeuristic(const fs::Formula* goal);
+	~HMHeuristic() = default;
+	HMHeuristic(const HMHeuristic&) = default;
 
 	void setup_goal_confs();
-	unsigned evaluate(const State& s, const std::vector<bool>& is_path_to_goal_atom_clear) const;
+	unsigned evaluate(const State& s) const;
 
 protected:
 	// The two following vectors are sync'd, i.e. _all_objects_conf[i] is the config of object _all_objects_ids[i]
