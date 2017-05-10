@@ -8,6 +8,7 @@
 #include <utils/binding.hxx>
 #include <utils/utils.hxx>
 #include <problem_info.hxx>
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -100,8 +101,8 @@ Visit(const Disjunction& lhs) {
 			delete processed;
 			for (auto elem:disjuncts) delete elem;
 			_result = new Tautology;
-			return;			
-			
+			return;
+
 		} else if (processed->is_contradiction()) { // No need to add the condition, which is always false
 			delete processed;
 			continue;
@@ -121,7 +122,7 @@ Visit(const Disjunction& lhs) {
 void FormulaBindingVisitor::
 Visit(const ExistentiallyQuantifiedFormula& lhs) {
 	// Check that the provided binding is not binding a variable which is actually re-bound again by the current existential quantifier
-	
+
 	for (const BoundVariable* var:lhs.getVariables()) {
 		if (_binding.binds(var->getVariableId())) {
 			throw std::runtime_error("Wrong binding - Duplicated variable");
@@ -195,21 +196,24 @@ Visit(const NestedTerm& lhs) {
 
 	// We process the 4 different possible cases separately:
 	const auto& function = _info.getSymbolData(symbol_id);
-	if (function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
+	if (function.isStatic() && !function.hasUnboundedArity() && constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:st) delete ptr;
 		auto value = function.getFunction()(constant_values);
 		_result = _info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
 	}
-	else if (function.isStatic() && constant_values.size() != subterms.size()) { // We have a statically-headed nested term
+	else if (function.isStatic() && constant_values.size() != subterms.size() ) { // We have a statically-headed nested term
 		_result = new UserDefinedStaticTerm(symbol_id, st);
 	}
-	else if (!function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
+	else if (!function.isStatic() && !function.hasUnboundedArity() && constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
 		VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
 // 		for (const auto ptr:st) delete ptr;
 		_result =  new StateVariable(id, new FluentHeadedNestedTerm(symbol_id, st));
 	}
 	else {
-		_result =  new FluentHeadedNestedTerm(symbol_id, st);
+        if ( function.hasUnboundedArity() )
+            _result = lhs.clone();
+        else
+		    _result =  new FluentHeadedNestedTerm(symbol_id, st);
 	}
 }
 
@@ -239,14 +243,14 @@ void TermBindingVisitor::
 Visit(const UserDefinedStaticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
-	
+
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
+    const auto& function = _info.getSymbolData(symbol_id);
 
 	if (constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:processed) delete ptr;
 
-		const auto& function = _info.getSymbolData(symbol_id);
 		auto value = function.getFunction()(constant_values);
 		_result = _info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
 
@@ -284,8 +288,10 @@ Visit(const FluentHeadedNestedTerm& lhs) {
 
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
+    const auto& function = _info.getSymbolData(symbol_id);
 
-	if (constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
+    LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
+	if (function.isStatic() && !function.hasUnboundedArity() && constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
 // 		for (const auto ptr:processed) delete ptr;
 
 		VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
