@@ -150,11 +150,6 @@ class FSTaskIndex(object):
         # All symbols appearing on some action effect are fluent
         self.fluent_symbols = set(pddl_helper.get_effect_symbol(eff) for action in actions for eff in action.effects)
 
-        # MRJ: very unsatisfying fix
-        for sym in self.all_symbols :
-            if util.is_external(sym) : # symbol is procedurally defined
-                self.fluent_symbols.add( sym )
-
         # The rest are static, including, by definition, the equality predicate
         self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")
 

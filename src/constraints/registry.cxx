@@ -10,7 +10,7 @@
 #include <constraints/direct/constraint.hxx>
 #include <constraints/direct/translators/effects.hxx>
 #include <constraints/gecode/translators/component_translator.hxx>
-
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 {
 
@@ -27,7 +27,7 @@ void LogicalComponentRegistry::registerLogicalElementCreators() {
 	addFormulaCreator("<=", [](const std::vector<const fs::Term*>& subterms){ return new fs::LEQAtomicFormula(subterms); });
 	addFormulaCreator(">",  [](const std::vector<const fs::Term*>& subterms){ return new fs::GTAtomicFormula(subterms); });
 	addFormulaCreator(">=", [](const std::vector<const fs::Term*>& subterms){ return new fs::GEQAtomicFormula(subterms); });
-	
+
 	// Register the builtin global constraints
 	addFormulaCreator("@alldiff", [](const std::vector<const fs::Term*>& subterms){ return new fs::AlldiffFormula(subterms); });
 	addFormulaCreator("@sum",     [](const std::vector<const fs::Term*>& subterms){ return new fs::SumFormula(subterms); });
@@ -43,7 +43,7 @@ void LogicalComponentRegistry::registerDirectTranslators() {
 	add(typeid(fs::AdditionTerm),       new AdditiveTermRhsTranslator());
 	add(typeid(fs::SubtractionTerm),    new SubtractiveTermRhsTranslator());
 	add(typeid(fs::MultiplicationTerm), new MultiplicativeTermRhsTranslator());
-	
+
 	// builtin global constraints
 	add(typeid(fs::AlldiffFormula), [](const fs::AtomicFormula& formula){ return new AlldiffConstraint(fs::ScopeUtils::computeDirectScope(&formula)); });
 	add(typeid(fs::SumFormula), [](const fs::AtomicFormula& formula){ return new SumConstraint(fs::ScopeUtils::computeDirectScope(&formula)); });
@@ -56,13 +56,13 @@ void LogicalComponentRegistry::registerGecodeTranslators() {
 	add(typeid(fs::StaticHeadedNestedTerm), new gecode::StaticNestedTermTranslator());
 	add(typeid(fs::UserDefinedStaticTerm), new gecode::StaticNestedTermTranslator()); // user-defined terms can be translated with the "parent" static translator
 	add(typeid(fs::BoundVariable), new gecode::BoundVariableTermTranslator());
-	
+
 	add(typeid(fs::AdditionTerm), new gecode::AdditionTermTranslator());
 	add(typeid(fs::SubtractionTerm), new gecode::SubtractionTermTranslator());
 	add(typeid(fs::MultiplicationTerm), new gecode::MultiplicationTermTranslator());
-	
-	
-	
+
+
+
 	add(typeid(fs::ExistentiallyQuantifiedFormula), new gecode::ExistentiallyQuantifiedFormulaTranslator());
 	add(typeid(fs::Conjunction), new gecode::ConjunctionTranslator());
 	add(typeid(fs::RelationalFormula), new gecode::RelationalFormulaTranslator());
@@ -72,13 +72,13 @@ void LogicalComponentRegistry::registerGecodeTranslators() {
 	add(typeid(fs::LEQAtomicFormula), new gecode::RelationalFormulaTranslator());
 	add(typeid(fs::GTAtomicFormula), new gecode::RelationalFormulaTranslator());
 	add(typeid(fs::GEQAtomicFormula), new gecode::RelationalFormulaTranslator());
-	
+
 	// Gecode translators for the supported global constraints
 	add(typeid(fs::AlldiffFormula), new gecode::AlldiffGecodeTranslator());
 	add(typeid(fs::SumFormula), new gecode::SumGecodeTranslator());
 	add(typeid(fs::NValuesFormula), new gecode::NValuesGecodeTranslator());
 }
-	
+
 
 LogicalComponentRegistry::LogicalComponentRegistry() {
 	// TODO - The actual initialization should probably be moved somewhere else
@@ -111,7 +111,7 @@ void LogicalComponentRegistry::add(const std::type_info& type, const DirectFormu
 
 void LogicalComponentRegistry::add(const std::type_info& type, const EffectTranslator* translator) {
 	auto res = _direct_effect_translators.insert(std::make_pair(std::type_index(type), translator));
-	if (!res.second) throw new std::runtime_error("Duplicate registration of effect translator for class " + print::type_info_name(type));	
+	if (!res.second) throw new std::runtime_error("Duplicate registration of effect translator for class " + print::type_info_name(type));
 }
 
 
@@ -133,6 +133,7 @@ const fs::AtomicFormula* LogicalComponentRegistry::instantiate_formula(const std
 
 const fs::Term* LogicalComponentRegistry::instantiate_term(const std::string symbol, const std::vector<const fs::Term*>& subterms) const {
 	auto it = _term_creators.find(symbol);
+    LPT_DEBUG("registry", "Instantiating Term: " << symbol);
 	if (it == _term_creators.end()) throw std::runtime_error("An externally defined symbol '" + symbol + "' is being used without having registered a suitable term/formula creator for it");
 	return it->second(subterms);
 }
@@ -169,5 +170,5 @@ template <typename T>
 std::string UnregisteredGecodeTranslator::message(const T& element) {
 	return printer() << "A Gecode translator is required for element \""<< element << "\", but none was registered";
 }
-	
+
 } // namespaces
