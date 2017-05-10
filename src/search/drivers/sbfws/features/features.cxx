@@ -102,6 +102,14 @@ void process_feature(const ProblemInfo& info, const std::string& feat_name, std:
 	const Signature& signature = sdata.getSignature();
 	LPT_DEBUG("cout", "Processing feature: " << feat_name << ", with signature: (" << print::raw_signature(signature) << ")");
 	
+	// Arity-0 feature, dealt with separately:
+	if (signature.empty()) { 
+		auto feature = generate_arbitrary_feature(info, feat_name, Binding::EMPTY_BINDING.get_full_binding());
+		LPT_DEBUG("cout", "Generated feature: " << *feature);
+		features.push_back(feature);
+		return;
+	}
+	
 	for (utils::binding_iterator binding_generator(signature, info); !binding_generator.ended(); ++binding_generator) {
 		auto feature = generate_arbitrary_feature(info, feat_name, (*binding_generator).get_full_binding());
 		LPT_DEBUG("cout", "Generated feature: " << *feature);
