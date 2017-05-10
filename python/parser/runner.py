@@ -9,9 +9,6 @@ import shutil
 import subprocess
 
 from python import utils, FS_PATH, FS_WORKSPACE
-
-
-# This should be imported from a custom-set PYTHONPATH containing the path to Fast Downward's PDDL parser
 from .pddl import tasks, pddl_file
 from .fs_task import create_fs_task, create_fs_task_from_adl
 from .representation import ProblemRepresentation
@@ -46,7 +43,6 @@ def parse_pddl_task(domain, instance):
     task_pddl = pddl_file.parse_pddl_file("task", instance)
     task = tasks.Task.parse(domain_pddl, task_pddl)
     return task
-
 
 
 def extract_names(domain_filename, instance_filename):
@@ -89,11 +85,12 @@ def move_files(base_dir, instance, domain, target_dir, use_vanilla):
         for filename in glob.glob(os.path.join(origin_data_dir, '*')):
             if os.path.isfile(filename):
                 shutil.copy(filename, data_dir)
-            else :
-                dst = os.path.join(data_dir,os.path.basename(filename))
-                if os.path.exists( dst ) :
+            else:
+                dst = os.path.join(data_dir, os.path.basename(filename))
+                if os.path.exists(dst):
                     shutil.rmtree(dst)
                 shutil.copytree(filename, dst)
+
 
 def compile_translation(translation_dir, use_vanilla, args):
     """
