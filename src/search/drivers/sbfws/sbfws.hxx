@@ -338,7 +338,7 @@ public:
 	
 	template <typename NodeT>
 	unsigned evaluate_wg1(NodeT& node) {
-		unsigned type = node.unachieved_subgoals;
+		unsigned type = node.unachieved_subgoals;//Type te en compte el num of unachieved goals
 		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
 		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, has_parent, type, ptype);

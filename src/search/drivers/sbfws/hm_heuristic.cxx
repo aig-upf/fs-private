@@ -4,6 +4,7 @@
 #include <utils/utils.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/operations.hxx>
 
 using namespace fs0;
 namespace fs = fs0::language::fstrips;
@@ -30,7 +31,8 @@ VariableIdx derive_goal_config(ObjectIdx object_id, const fs::Formula* goal) {
 	
 	
 	// This only works for goal atoms of the form "confo(o1) = co5". It is non-symmetrical.
-	/*for (auto atom:fs0::Utils::filter_by_type<const fs::EQAtomicFormula*>(goal->all_atoms())) {//this method does not exists!!!!!
+	//fs::all_atoms(*goal_formula)
+	/*for (auto atom:fs::all_atoms(*goal)) {
 		if (auto x = dynamic_cast<const fs::StateVariable*>(atom->lhs())) {
 			if (x->getValue() == obj_conf) {
 				auto y = dynamic_cast<const fs::Constant*>(atom->rhs());
@@ -116,8 +118,8 @@ HMHeuristic::HMHeuristic(const fs::Formula* goal):
 //! h(s)= number of goal objects that still need to be picked up and moved in s  * 2
 //! -1; if goal object being held
 unsigned HMHeuristic::evaluate(const State& s) const {
-	unsigned h = 0;
-	
+  
+	unsigned hM = 0;
 	ObjectIdx held_object = s.getValue(_holding_var); // The object which is currently being held
 	
 	for (unsigned i = 0; i < _all_objects_conf.size(); ++i) {
@@ -126,22 +128,19 @@ unsigned HMHeuristic::evaluate(const State& s) const {
 		
 		auto it = _all_objects_goal.find(object_id);
 		if (it == _all_objects_goal.end()) 
-		  continue; // The object does not appear on the goal formula
+		  continue; //The object does not appear on the goal formula
 		
 		// otherwise, we can deduce the goal configuration of the object
 		ObjectIdx goal_obj_conf =  it->second;
-		
 		ObjectIdx current_obj_conf = s.getValue(object_conf);
 		if (current_obj_conf != goal_obj_conf) {
-			
 			if (held_object == object_id) 
-				h = h+1;
+				hM = hM + 1;//If object is being held
 			 else 
-				h = h+2;
+				hM = hM + 2;
 		}
 	}
-
-	return h;
+	return hM;
 }
 
 
