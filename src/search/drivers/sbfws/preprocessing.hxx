@@ -23,6 +23,7 @@ public:
 	
 };
 
+//We can use the class IWRunNode as Node. We don't need to create another one!!!
 template <typename NodeT,
           typename StateModel,
           typename NoveltyEvaluatorT,
