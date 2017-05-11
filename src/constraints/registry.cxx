@@ -133,7 +133,6 @@ const fs::AtomicFormula* LogicalComponentRegistry::instantiate_formula(const std
 
 const fs::Term* LogicalComponentRegistry::instantiate_term(const std::string symbol, const std::vector<const fs::Term*>& subterms) const {
 	auto it = _term_creators.find(symbol);
-    LPT_DEBUG("registry", "Instantiating Term: " << symbol);
 	if (it == _term_creators.end()) throw std::runtime_error("An externally defined symbol '" + symbol + "' is being used without having registered a suitable term/formula creator for it");
 	return it->second(subterms);
 }
