@@ -3,6 +3,7 @@
 
 #include <string>
 #include <boost/lexical_cast.hpp>
+#include <linux/limits.h>
 
 #include <lapkt/tools/resources_control.hxx>
 #include <lapkt/tools/logging.hxx>
@@ -106,7 +107,10 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 			throw std::runtime_error("The plan output by the planner is not correct!");
 		}
 		LPT_INFO("cout", "Search Result: Found plan of length " << plan.size());
-		LPT_INFO("cout", "Plan was saved in file \"" << plan_filename << "\"");
+		
+		char resolved_path[PATH_MAX]; 
+        realpath(plan_filename.c_str(), resolved_path); 
+		LPT_INFO("cout", "Plan was saved in file \"" << resolved_path << "\"");
 		result = ExitCode::PLAN_FOUND;
 	} else if (oom) {
 		LPT_INFO("cout", "Search Result: Out of memory. Peak memory: " << get_peak_memory_in_kb());
