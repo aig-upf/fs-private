@@ -42,7 +42,8 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	const Problem& problem = model.getTask();
 
 	LPT_INFO("cout", "Starting search. Results written to " << out_dir);
-	std::ofstream plan_out(out_dir + "/first.plan");
+	std::string plan_filename = out_dir + "/first.plan";
+	std::ofstream plan_out(plan_filename);
 	std::ofstream json_out( out_dir + "/results.json" );
 
 	std::vector<typename StateModelT::ActionType::IdType> plan;
@@ -105,6 +106,7 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 			throw std::runtime_error("The plan output by the planner is not correct!");
 		}
 		LPT_INFO("cout", "Search Result: Found plan of length " << plan.size());
+		LPT_INFO("cout", "Plan was saved in file \"" << plan_filename << "\"");
 		result = ExitCode::PLAN_FOUND;
 	} else if (oom) {
 		LPT_INFO("cout", "Search Result: Out of memory. Peak memory: " << get_peak_memory_in_kb());
