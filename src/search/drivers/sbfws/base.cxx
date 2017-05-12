@@ -8,13 +8,19 @@ namespace fs0 { namespace bfws {
 
 template <typename FeatureValueT>
 NoveltyFactory<FeatureValueT>::
-NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired_evaluator_t, unsigned max_expected_width) :
+NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired_evaluator_t, bool use_extra_features, unsigned max_expected_width) :
 	_problem(problem), _indexer(_problem.get_tuple_index()), _desired_evaluator_t(desired_evaluator_t)
 {
 	const Config& config = Config::instance(); // TODO - Remove the singleton use and inject the config here by other means
 	_ignore_neg_literals = config.getOption<bool>("ignore_neg_literals", true);
 	
-	_chosen_evaluator_t.resize(max_expected_width+1);
+	_chosen_evaluator_t.resize(max_expected_width+1, ChosenEvaluatorT::Generic);
+	
+	// If we're using extra novelty features, we cannot use the specialized evaluators as of now.
+	if (use_extra_features) {
+		return;
+	}
+	
 	for (unsigned w = 1; w <= max_expected_width; ++w) {
 	
 		// If asked for, check first if a specialized Atom-Evaluator is suitable,

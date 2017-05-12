@@ -34,7 +34,7 @@ class Parser(object):
             result = fs.Tautology()
         elif isinstance(exp, str):
             result = fs.LogicalVariable(exp) if exp[0] == '?' else fs.Constant(exp)
-        elif isinstance(exp,int):
+        elif isinstance(exp, int):
             result = fs.Constant(exp)
         else:
             raise exceptions.ParseException("Unknown expression type for expression '{}'".format(exp))

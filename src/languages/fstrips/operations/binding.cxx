@@ -248,6 +248,9 @@ Visit(const UserDefinedStaticTerm& lhs) {
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
     const auto& function = _info.getSymbolData(symbol_id);
 
+	_result =  new UserDefinedStaticTerm(symbol_id, processed);
+	
+	/*
 	if (constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:processed) delete ptr;
 
@@ -258,6 +261,7 @@ Visit(const UserDefinedStaticTerm& lhs) {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms
 		_result =  new UserDefinedStaticTerm(symbol_id, processed);
 	}
+	*/
 }
 
 void TermBindingVisitor::
