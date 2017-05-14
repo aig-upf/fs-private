@@ -119,15 +119,7 @@ bool Problem::check_is_predicative() {
 void Problem::consolidateAxioms() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
-	auto tmp = _goal_formula;
-	_goal_formula = fs::process_axioms(*_goal_formula, info);
-	delete tmp;
-	
-	tmp = _state_constraint_formula;
-	_state_constraint_formula = fs::process_axioms(*_state_constraint_formula, info);
-	delete tmp;
-
-	// NOTE Order is important: we need to process the axioms first.
+	// NOTE Order is FUNDAMENTAL: we need to process the axioms first of all.
 	// TODO This won't work for recursive axioms. We need a better strategy, e.g. lazy retrieval of the axiom pointers whenever interpretation is required, etc.
 	// Update the axioms
 	for (auto& it:_axioms) {
@@ -136,6 +128,14 @@ void Problem::consolidateAxioms() {
 		it.second = new fs::Axiom(axiom->getName(), axiom->getSignature(), axiom->getParameterNames(), axiom->getBindingUnit(), definition);
 		delete axiom;
 	}
+	
+	auto tmp = _goal_formula;
+	_goal_formula = fs::process_axioms(*_goal_formula, info);
+	delete tmp;
+	
+	tmp = _state_constraint_formula;
+	_state_constraint_formula = fs::process_axioms(*_state_constraint_formula, info);
+	delete tmp;	
 	
 	// Update the action schemas
 	std::vector<const ActionData*> processed_actions;
