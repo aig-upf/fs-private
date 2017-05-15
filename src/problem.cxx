@@ -64,41 +64,41 @@ Problem::Problem(const Problem& other) :
 	_is_predicative(other._is_predicative)
 {}
 
-void Problem::set_state_constraints(const fs::Formula* state_constraint_formula) { 
+void Problem::set_state_constraints(const fs::Formula* state_constraint_formula) {
 	delete _state_constraint_formula;
 	_state_constraint_formula = state_constraint_formula;
 }
 
-void Problem::set_goal(const fs::Formula* goal) { 
+void Problem::set_goal(const fs::Formula* goal) {
 	delete _goal_formula;
 	_goal_formula = goal;
 }
 
-std::ostream& Problem::print(std::ostream& os) const { 
+std::ostream& Problem::print(std::ostream& os) const {
 	const fs0::ProblemInfo& info = ProblemInfo::getInstance();
 	os << "Planning Problem [domain: " << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;
-	
+
 	os << "Goal Conditions:" << std::endl << "------------------" << std::endl;
 	os << "\t" << *getGoalConditions() << std::endl;
 	os << std::endl;
-	
+
 	os << "State Constraints:" << std::endl << "------------------" << std::endl;
 	os << "\t" << *getStateConstraints() << std::endl;
 	os << std::endl;
-	
+
 	os << "Action data" << std::endl << "------------------" << std::endl;
 	for (const ActionData* data:_action_data) {
 		os << print::action_data(*data) << std::endl;
 	}
 	os << std::endl;
-	
+
 	os << "Ground Actions: " << _ground.size();
 	// os << std::endl << "------------------" << std::endl;
 	// for (const const GroundAction* elem:_ground) {
 	// 	os << *elem << std::endl;
 	// }
 	os << std::endl;
-	
+
 	return os;
 }
 
@@ -112,7 +112,7 @@ bool Problem::check_is_predicative() {
 
 //! TODO This is very hackyish. What we want to solve with this is the circular dependency
 //! between loading the actions and loading the axioms... we cannot properly identify
-//! as axioms those symbols which are axioms until all axioms have been loaded. Thus, we 
+//! as axioms those symbols which are axioms until all axioms have been loaded. Thus, we
 //! currently load them as static user-defined procedures, and afterwards invoke this method
 //! to replace them by axioms.
 //! This needs to be called before grounding actions.
@@ -128,31 +128,34 @@ void Problem::consolidateAxioms() {
 		it.second = new fs::Axiom(axiom->getName(), axiom->getSignature(), axiom->getParameterNames(), axiom->getBindingUnit(), definition);
 		delete axiom;
 	}
-	
+
 	auto tmp = _goal_formula;
 	_goal_formula = fs::process_axioms(*_goal_formula, info);
 	delete tmp;
-	
+    auto old_manager = _goal_sat_manager.release();
+    delete old_manager;
+	_goal_sat_manager = std::unique_ptr<FormulaInterpreter>(FormulaInterpreter::create(_goal_formula, get_tuple_index()));
+
 	tmp = _state_constraint_formula;
 	_state_constraint_formula = fs::process_axioms(*_state_constraint_formula, info);
-	delete tmp;	
-	
+	delete tmp;
+
 	// Update the action schemas
 	std::vector<const ActionData*> processed_actions;
 	for (const ActionData* data:_action_data) {
 		auto precondition = fs::process_axioms(*(data->getPrecondition()), info);
-		
+
 		std::vector<const fs::ActionEffect*> effects;
 		for (const fs::ActionEffect* effect:data->getEffects()) {
 			effects.push_back(fs::process_axioms(*effect, info));
-		}		
-		
+		}
+
 		processed_actions.push_back(new ActionData(data->getId(), data->getName(), data->getSignature(), data->getParameterNames(), data->getBindingUnit(), precondition, effects));
 		delete data;
 	}
 	_action_data = processed_actions;
 }
 
-	
+
 
 } // namespaces
