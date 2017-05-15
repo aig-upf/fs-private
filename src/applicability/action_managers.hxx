@@ -5,8 +5,9 @@
 
 #include <fs_types.hxx>
 #include "base.hxx"
+#include <languages/fstrips/formulae.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class AtomicFormula; } }}
+//namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
 namespace fs0 {
 

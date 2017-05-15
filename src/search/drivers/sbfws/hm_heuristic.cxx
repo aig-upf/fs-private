@@ -6,8 +6,8 @@
 #include <languages/fstrips/scopes.hxx>
 #include <languages/fstrips/operations.hxx>
 
-using namespace fs0;
-namespace fs = fs0::language::fstrips;
+//using namespace fs0;
+//namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace bfws {
   
@@ -33,9 +33,9 @@ VariableIdx derive_goal_config(ObjectIdx object_id, const fs::Formula* goal) {
 	// This only works for goal atoms of the form "confo(o1) = co5". It is non-symmetrical.
 	//fs::all_atoms(*goal_formula)
 	/*for (auto atom:fs::all_atoms(*goal)) {
-		if (auto x = dynamic_cast<const fs::StateVariable*>(atom->lhs())) {
+		if (auto x = dynamic_cast<const fs::StateVariable*>(atom->lhs())) {//Not available method
 			if (x->getValue() == obj_conf) {
-				auto y = dynamic_cast<const fs::Constant*>(atom->rhs());
+				auto y = dynamic_cast<const fs::Constant*>(atom->rhs());//Not available method
 				assert(y);
 				ObjectIdx goal_conf = y->getValue();
 				LPT_INFO("cout", "Goal config for object " << obj_name << ": " << info.deduceObjectName(goal_conf, info.getTypeId("conf_obj")));
@@ -47,7 +47,7 @@ VariableIdx derive_goal_config(ObjectIdx object_id, const fs::Formula* goal) {
 	return -1;
 }
 
-
+//Hack: Using goal_conf function as goals
 void HMHeuristic::setup_goal_confs() {
       const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<ObjectIdx> goals(info.getNumObjects(), std::numeric_limits<int>::max());
@@ -83,10 +83,10 @@ HMHeuristic::HMHeuristic(const fs::Formula* goal):
 		
 		
 		// If the object has a particular goal configuration, insert it.
-		/*ObjectIdx goal_config = derive_goal_config(obj_id, goal);
+		ObjectIdx goal_config = derive_goal_config(obj_id, goal);
 		if (goal_config != -1) {
 			_all_objects_goal.insert(std::make_pair(obj_id, goal_config));
-		}*/
+		}
 	}
 	setup_goal_confs();
 
@@ -142,6 +142,8 @@ unsigned HMHeuristic::evaluate(const State& s) const {
 	}
 	return hM;
 }
+
+
 
 
 

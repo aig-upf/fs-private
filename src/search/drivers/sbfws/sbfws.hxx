@@ -2,12 +2,17 @@
 #pragma once
 
 #include <search/drivers/sbfws/iw_run.hxx>
+//#include <search/drivers/sbfws/preprocessing.hxx>
 #include <search/drivers/registry.hxx>
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
 #include <search/drivers/sbfws/hm_heuristic.hxx>
 #include <lapkt/search/components/open_lists.hxx>
+
+namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs = fs0::language::fstrips;
+
 
 
 namespace fs0 { namespace bfws {
@@ -38,6 +43,23 @@ struct novelty_comparer {
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		return n1->_gen_order > n2->_gen_order;
+	}
+};
+
+//! For the problem at hand, 'unachieved' will typically range 0-100, 'offending': 0-100, heuristic: 0-200
+inline unsigned _index(unsigned unachieved, unsigned heuristic, unsigned offending) {
+	return (heuristic<<16) | (offending<<8) |  unachieved;
+}
+
+
+// h, #g, #off
+struct novelty_ctmp_comparer {
+	unsigned operator()(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return _index(unachieved, heuristic, offending);
+	}
+
+	std::tuple<unsigned, unsigned, unsigned> relevant(unsigned unachieved, unsigned heuristic, unsigned offending) const {
+		return std::make_tuple(unachieved, heuristic, offending);
 	}
 };
 
@@ -215,6 +237,7 @@ public:
 		_hm_heuristic(_problem.getGoalConditions())//Not used to get the goal conditions for now
 	{
 		assert(_rstype == SBFWSConfig::RelevantSetType::None || _rstype == SBFWSConfig::RelevantSetType::Sim);
+		
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		TypeIdx obj_t = info.getTypeId("object_id");
 		for (ObjectIdx obj_id:info.getTypeObjects(obj_t)) {
@@ -222,6 +245,9 @@ public:
 			VariableIdx confo_var = info.getVariableId("confo(" + obj_name  +  ")");
 			_object_configurations.push_back(confo_var);
 		}
+		
+		//Preprocessing
+		//_offending();//Get the vector of OffendingSet from the preprocessing
 	}
 
 	~SBFWSHeuristic() {
@@ -233,23 +259,22 @@ public:
 	    return _hm_heuristic.evaluate(state);
 	}
 	
-		//! Return the count of how many objects offend the consecution of at least one unachived goal atom.
-	/*template <typename NodeT>
-	unsigned compute_offending(const NodeT& node, ObjectIdx& picked_offending_object) {
+	//! Return the count of how many objects offend the consecution of at least one unachived goal atom.
+	template <typename NodeT>
+	unsigned compute_offending(const NodeT& node) {
+		ObjectIdx picked_offending_object = -1;
 		const ProblemInfo& info = ProblemInfo::getInstance();		
 		const State& state = node.state;
-		
 		std::unordered_set<VariableIdx> offending; // We'll store here which problem objects are offending some unreached goal atom.
-		
 		
 		std::vector<unsigned> unsat_goal_indexes;
 		auto conjuncts = this->_unsat_goal_atoms_heuristic.get_goal_conjuncts();
 		for (unsigned i = 0; i < conjuncts.size(); ++i) {
 			const fs::AtomicFormula* condition = conjuncts[i];
 			
-			if (!condition->interpret(state)) {  // Let's check how many objects "offend" the consecution of this goal atom
+			if (!condition->interpret(state))// Let's check how many objects "offend" the consecution of this goal atom
 				unsat_goal_indexes.push_back(i);
-			}
+			
 		}
 		
 		// For each object, we check whether the configuration of the object in the current state
@@ -272,9 +297,9 @@ public:
 		
 // 		std::cout << "Num offending #1: " << num_offending << "   " << state.hash() <<std::endl;
 		
-		if (node.action == GroundAction::invalid_action_id || node.parent == nullptr) return num_offending;
+		if (node.action == GroundAction::invalid_action_id || node.parent == nullptr) 
+		  return num_offending;
 		
-		picked_offending_object = -1;
 		const GroundAction& action = *(_problem.getGroundActions().at(node.action));
 		const ValueTuple& values = action.getBinding().get_full_binding();
 		
@@ -283,7 +308,7 @@ public:
 // 		if (yes) std::cout << "!!Num offending #1.1: " << node.parent->_num_offending << ", " << num_offending << std::endl;
 		
 		if (action.getName() == "grasp-object" && (node.parent->_num_offending == num_offending + 2)) {
-			// It must be that we picked an offending configuration
+		// It must be that we picked an offending configuration
 			
 // 			if (yes) std::cout << "Num offending #3: " << num_offending << std::endl;
 			
@@ -318,7 +343,7 @@ public:
 		
 // 		std::cout << "Num offending FINAL: " << num_offending << "   " << state.hash() <<std::endl;
 		return num_offending;
-	}*/
+	}
 	
 	template <typename NodeT>
 	unsigned evaluate_ctmp(NodeT& node) {
@@ -326,9 +351,7 @@ public:
 		bool has_parent = node.has_parent();
 		unsigned ptype = has_parent ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
 		unsigned hM = compute_hm_heuristic(node.state);
-		//unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, has_parent, type, ptype);
-		//unsigned num_offending_confs = compute_offending();
-		unsigned num_offending_confs = 0;
+		unsigned num_offending_confs = compute_offending(node);
 		unsigned nov = evaluate_ctmp_novelty(node, num_unachieved, hM, num_offending_confs);
 		assert(node.w_g == Novelty::Unknown);
 		node.w_g = (nov == 1) ? Novelty::One : Novelty::GTOne;
@@ -451,7 +474,7 @@ public:
 	
 	//Function to evaluate the novelty using the number of unachieved goals, the hM heuristic and the number of offending configurations
 	template <typename NodeT>
-	unsigned evaluate_ctmp_novelty(const NodeT& node, unsigned unachieved, unsigned heuristic, unsigned offending) {
+	unsigned evaluate_ctmp_novelty(const NodeT& node, NoveltyEvaluatorMapT& evaluator_map, unsigned hM, unsigned offending) {
 		
 	  /*NoveltyEvaluatorT* evaluator = fetch_evaluator(evaluator_map, type);
 

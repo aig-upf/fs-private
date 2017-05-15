@@ -163,7 +163,7 @@ public:
 template <typename NodeT,
           typename StateModel,
           typename NoveltyEvaluatorT,
-		  typename FeatureSetT,
+	typename FeatureSetT,
           typename OpenListT = lapkt::SearchableQueue<NodeT>,
           typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >

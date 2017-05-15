@@ -1,14 +1,12 @@
 #pragma once
 
 #include <fs_types.hxx>
-//#include <heuristics/novelty/features.hxx>
 #include <unordered_set>
 #include <search/drivers/sbfws/iw_run.hxx>
 
+namespace fs0 { class Config; class BasicApplicabilityAnalyzer; }
 
-namespace fs0 { class Config; class Problem; class BasicApplicabilityAnalyzer; }
-
-namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs0 { namespace language { namespace fstrips { class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;
 
 using OffendingSet = std::unordered_set<fs0::ObjectIdx>;
@@ -27,9 +25,9 @@ public:
 template <typename NodeT,
           typename StateModel,
           typename NoveltyEvaluatorT,
-		  typename FeatureSetT,
+	  typename FeatureSetT,
           typename OpenListT = lapkt::SearchableQueue<NodeT>,
-          typename ClosedListT = apkt::StlUnorderedMapClosedList<NodeT>
+          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
 >
 class AllSolutionsBreadthFirstSearch : public lapkt::GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>
 {
@@ -60,7 +58,7 @@ public:
 	{
 		VariableIdx holding_v = _info.getVariableId("holding()");
 		for (ObjectIdx obj:_info.getTypeObjects("object_id")) {
-			TupleIdx t = _tuple_idx.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
+			AtomIndex t = _tuple_idx.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
 			_obj_to_holding_tuple_idx.at(obj) = t;
 		}
 	
@@ -115,7 +113,7 @@ public:
 	
 protected:
 	const ProblemInfo& _info;
-	const TupleIndex& _tuple_idx;
+	const AtomIndex& _tuple_idx;
 	const StateT _init;
 	
 	//! Whether we want to compute IW up until the end or only until paths to all subgoals
@@ -137,7 +135,7 @@ protected:
 	std::vector<NodePT> _tuple_to_node;
 	
 	//! Object_id o to the index of the tuple "holding()=o"
-	std::vector<TupleIdx> _obj_to_holding_tuple_idx;
+	std::vector<AtomIndex> _obj_to_holding_tuple_idx;
 	
 	
 // 	void progress_node(NodePT& node) {
@@ -156,7 +154,7 @@ protected:
 		unsigned num_satisfied = 0;
 		
 		for (unsigned i = 0; i < state.numAtoms(); ++i) {
-			TupleIdx idx = _tuple_idx.to_index(i, state.getValue(i));
+			AtomIndex idx = _tuple_idx.to_index(i, state.getValue(i));
 			if (_tuple_to_node[idx] == nullptr) {
 				_tuple_to_node[idx] = node;
 			}
@@ -234,7 +232,7 @@ public:
 					
 					// Otherwise, object o is initially in an offending configuration
 					
-					TupleIdx holding_o = _obj_to_holding_tuple_idx.at(obj); // the tuple "holding(o)"
+					AtomIndex holding_o = _obj_to_holding_tuple_idx.at(obj); // the tuple "holding(o)"
 					NodePT& node = _tuple_to_node.at(holding_o);
 					flag_offending_configurations(node, offending);
 					processed[j] = true;
@@ -256,7 +254,7 @@ public:
 		VariableIdx holding_v = _info.getVariableId("holding()");
 		for (ObjectIdx obj:_info.getTypeObjects("object_id")) {
 			std::string o1_name = _info.deduceObjectName(obj, "object_id");
-			TupleIdx t = _tuple_idx.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
+			AtomIndex t = _tuple_idx.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
 			
 			OffendingSet offending;
 			NodePT& node = _tuple_to_node.at(t);
