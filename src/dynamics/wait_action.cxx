@@ -55,11 +55,15 @@ namespace fs0 { namespace dynamics {
             if ( do_zcc && !manager.checkStateConstraints(s_k_plus_1) ) {
                 // At least one state constraint was violated!
                 LPT_DEBUG("dynamics", "WaitAction::apply: State constraints violated at lattice point: " << k );
+                atoms.clear();
                 return; // we're done here
             }
             double t_k_plus_1 = boost::get<float>(s_k_plus_1.getValue(_clock_var));
-            if (  Config::instance().hasHorizon() && (t_k_plus_1 > Config::instance().getHorizonTime() ))
+            if (  Config::instance().hasHorizon() && (t_k_plus_1 > Config::instance().getHorizonTime() )) {
+                atoms.clear();
+                LPT_DEBUG("dynamics", "Time out!");
                 return; // we're done as well, time is implicitly bounded
+            }
             if ( t_k_plus_1 < -1e-2) {
                 LPT_DEBUG("dynamics", "WaitAction::apply : Negative clock_time()!");
                 LPT_DEBUG("dynamics", odes );
