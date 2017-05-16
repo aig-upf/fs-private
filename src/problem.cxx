@@ -129,13 +129,14 @@ void Problem::consolidateAxioms() {
 		delete axiom;
 	}
 
+	// Recreate the goal formula with axioms, delete the old one, and recreate the goal manager with the new one
+	// Yes, very messy.
 	auto tmp = _goal_formula;
 	_goal_formula = fs::process_axioms(*_goal_formula, info);
 	delete tmp;
-    auto old_manager = _goal_sat_manager.release();
-
 	_goal_sat_manager = std::unique_ptr<FormulaInterpreter>(FormulaInterpreter::create(_goal_formula, get_tuple_index()));
 
+	// Recreate the state-constraint formula with axioms, delete the old one
 	tmp = _state_constraint_formula;
 	_state_constraint_formula = fs::process_axioms(*_state_constraint_formula, info);
 	delete tmp;
