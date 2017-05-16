@@ -133,7 +133,7 @@ void Problem::consolidateAxioms() {
 	_goal_formula = fs::process_axioms(*_goal_formula, info);
 	delete tmp;
     auto old_manager = _goal_sat_manager.release();
-    delete old_manager;
+
 	_goal_sat_manager = std::unique_ptr<FormulaInterpreter>(FormulaInterpreter::create(_goal_formula, get_tuple_index()));
 
 	tmp = _state_constraint_formula;
