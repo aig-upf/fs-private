@@ -204,7 +204,6 @@ Visit(const NestedTerm& lhs) {
 	}
 
 
-
 	// We process the 4 different possible cases separately:
 	if (function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:st) delete ptr;
@@ -299,12 +298,9 @@ Visit(const FluentHeadedNestedTerm& lhs) {
 
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
-    const auto& function = _info.getSymbolData(symbol_id);
-
+	
     LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
-	if (function.isStatic() && !function.hasUnboundedArity() && constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
-// 		for (const auto ptr:processed) delete ptr;
-
+	if (constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
 		VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
 		_result =  new StateVariable(id, new FluentHeadedNestedTerm(symbol_id, processed));
 
