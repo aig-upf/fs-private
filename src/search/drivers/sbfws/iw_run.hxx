@@ -383,7 +383,6 @@ public:
 	
 	std::vector<bool> compute_plain_R1(const StateT& seed) {
 		assert(_config._max_width == 1);
-		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		_config._complete = false;
 		
 		float simt0 = aptk::time_used();

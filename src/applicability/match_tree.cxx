@@ -43,7 +43,7 @@ namespace fs0 {
 			}
 		}
 
-		throw std::runtime_error("Shouldn't get here");
+		throw std::runtime_error("Match-Tree runtime error - No best variable found");
     }
 
     bool
@@ -237,35 +237,35 @@ namespace fs0 {
         _tuple_idx(tuple_idx),
         _tree(nullptr)
     {
-        const ProblemInfo& info = ProblemInfo::getInstance();
+		const ProblemInfo& info = ProblemInfo::getInstance();
 
 		check_match_tree_can_be_used(info);
 
 		LPT_INFO("cout", "Mem. usage before applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
-        BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
+		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build(false);
 
 		LPT_INFO("cout", "Mem. usage after applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 
-        // MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
-        // lots of methods with absurdly long signatures. The idea is to progressively move
-        // towards a more visitor/creator like implementation, but I don't want to depart too
-        // much from Chris' original implementation to help with debugging.
-        std::vector<ActionIdx> all_actions(_actions.size());
-        std::iota( all_actions.begin(), all_actions.end(), 0);
+		// MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
+		// lots of methods with absurdly long signatures. The idea is to progressively move
+		// towards a more visitor/creator like implementation, but I don't want to depart too
+		// much from Chris' original implementation to help with debugging.
+		std::vector<ActionIdx> all_actions(_actions.size());
+		std::iota( all_actions.begin(), all_actions.end(), 0);
 
 
 		std::vector<bool> seen(info.getNumVariables(), false);
 		std::vector<VariableIdx> sorted_vars = sort_variables(analyzer.getVariableRelevance());
 
-        NodeCreationContext helper(_tuple_idx, sorted_vars, analyzer.getRevApplicable(), seen);
+		NodeCreationContext helper(_tuple_idx, sorted_vars, analyzer.getRevApplicable(), seen);
 
 		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		_tree = new SwitchNode(all_actions, helper);
 		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-        LPT_INFO("cout", "Match Tree created");
+		LPT_INFO("cout", "Match Tree created");
 
 
 		unsigned sw = 0, leaf = 0, empty = 0;
@@ -274,14 +274,6 @@ namespace fs0 {
 		LPT_INFO("cout", "\tSWITCH: " << sw);
 		LPT_INFO("cout", "\tLEAF: " << leaf);
 		LPT_INFO("cout", "\tEMPTY: " << empty);
-
-		/*
-        #ifdef EDEBUG
-        std::stringstream buffer;
-        _tree->print( buffer, "", *this );
-        LPT_EDEBUG("main", "\n" << buffer.str() );
-        #endif
-        */
     }
 
 
@@ -306,11 +298,12 @@ namespace fs0 {
 // 		LPT_INFO( "cout", "[Match Tree] Variables ordered by frequency:");
 
 		for (int i = count.size()-1; i >= 0; --i) {
-            if ( count[i].first == 0 ) continue;
+            if ( count[i].first == 0 ) continue; // the variable is not relevant to any action precondition
 			indexes_only.push_back(count[i].second);
 // 			LPT_INFO( "cout", info.getVariableName(count[i].second) << " (" << count[i].first << ")");
 		}
 
+		assert(!indexes_only.empty());
 		return indexes_only;
 	}
 
