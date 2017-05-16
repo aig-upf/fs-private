@@ -49,7 +49,6 @@ def parse_pddl_task(domain, instance):
     return task
 
 
-
 def extract_names(domain_filename, instance_filename):
     """ Extract the canonical domain and instance names from the corresponding filenames """
     domain = os.path.basename(os.path.dirname(domain_filename))
@@ -91,8 +90,8 @@ def move_files(base_dir, instance, domain, target_dir, use_vanilla):
             if os.path.isfile(filename):
                 shutil.copy(filename, data_dir)
             else :
-                dst = os.path.join(data_dir,os.path.basename(filename))
-                if os.path.exists( dst ) :
+                dst = os.path.join(data_dir, os.path.basename(filename))
+                if os.path.exists(dst) :
                     shutil.rmtree(dst)
                 shutil.copytree(filename, dst)
 

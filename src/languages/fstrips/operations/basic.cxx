@@ -76,7 +76,7 @@ Visit(const QuantifiedFormula& lhs) {
 	_result.push_back(&lhs);
 	for (auto element:lhs.getVariables()) {
 		element->Accept(*this);
-	}
+	}	
 	lhs.getSubformula()->Accept(*this);
 }
 
@@ -86,9 +86,11 @@ Visit(const ExistentiallyQuantifiedFormula& lhs) { Visit(static_cast<const Quant
 void AllNodesVisitor::
 Visit(const UniversallyQuantifiedFormula& lhs) { Visit(static_cast<const QuantifiedFormula&>(lhs)); }
 
+void AllNodesVisitor::
+Visit( const AxiomaticFormula& lhs ) { Visit(static_cast<const AtomicFormula&>(lhs)); }
 
-
-
+	
+	
 void AllNodesVisitor::Visit(const StateVariable& lhs) { _result.push_back(&lhs); }
 void AllNodesVisitor::Visit(const BoundVariable& lhs) { _result.push_back(&lhs); }
 void AllNodesVisitor::Visit(const Constant& lhs) { _result.push_back(&lhs); }
@@ -122,16 +124,16 @@ Visit(const AtomicFormula& lhs) {
 	for (const Term* subterm:lhs.getSubterms()) _result = std::max(_result, nestedness(*subterm));
 }
 
-void NestednessVisitor::
+void NestednessVisitor::	
 Visit(const OpenFormula& lhs) {
 	_result = 0;
 	for (const auto* conjunct:lhs.getSubformulae()) _result = std::max(_result, nestedness(*conjunct));
 }
 
-void NestednessVisitor::
+void NestednessVisitor::	
 Visit(const Conjunction& lhs) { Visit(static_cast<const OpenFormula&>(lhs)); }
 
-void NestednessVisitor::
+void NestednessVisitor::	
 Visit(const Disjunction& lhs) { Visit(static_cast<const OpenFormula&>(lhs)); }
 
 
@@ -151,7 +153,7 @@ unsigned _maxSubtermNestedness(const std::vector<const Term*>& subterms) {
 	for (const Term* subterm:subterms) max = std::max(max, nestedness(*subterm));
 	return max;
 }
-
+	
 void NestednessVisitor::
 Visit(const StaticHeadedNestedTerm& lhs) {
 	// A nested term headed by a static symbol has as many levels of nestedness as the maximum of its subterms
@@ -182,7 +184,7 @@ void FlatVisitor::Visit(const UserDefinedStaticTerm& lhs) { Visit(static_cast<co
 void FlatVisitor::Visit(const AxiomaticTermWrapper& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void FlatVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void FlatVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
-void FlatVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+void FlatVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }	
 
 
 ///////////////////////////////
@@ -196,39 +198,39 @@ unsigned type(const Term& element) {
 
 
 void TypeVisitor::
-Visit(const StaticHeadedNestedTerm& lhs) {
+Visit(const StaticHeadedNestedTerm& lhs) { 
 	_result = ProblemInfo::getInstance().getSymbolData(lhs.getSymbolId()).getCodomainType();
 }
 
 void TypeVisitor::
-Visit(const FluentHeadedNestedTerm& lhs) {
+Visit(const FluentHeadedNestedTerm& lhs) { 
 	_result = ProblemInfo::getInstance().getSymbolData(lhs.getSymbolId()).getCodomainType();
 }
 
 void TypeVisitor::
-Visit(const UserDefinedStaticTerm& lhs) {
+Visit(const UserDefinedStaticTerm& lhs) { 
 	_result = lhs.getFunction().getCodomainType();
 }
 
 void TypeVisitor::
-Visit(const AxiomaticTermWrapper& lhs) {
+Visit(const AxiomaticTermWrapper& lhs) { 
 	_result = ProblemInfo::getInstance().getSymbolData(lhs.getSymbolId()).getCodomainType();
 }
 
 void TypeVisitor::
-Visit(const BoundVariable& lhs) {
+Visit(const BoundVariable& lhs) { 
 	_result = lhs.getType();
 }
 
 void TypeVisitor::
-Visit(const StateVariable& lhs) {
+Visit(const StateVariable& lhs) { 
 	_result = ProblemInfo::getInstance().getVariableType(lhs.getValue());
 }
 
 void TypeVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void TypeVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void TypeVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
-
+	
 
 ///////////////////////////////
 
@@ -257,27 +259,27 @@ Visit(const Constant& lhs) {
 }
 
 void BoundVisitor::
-Visit(const AdditionTerm& lhs) {
+Visit(const AdditionTerm& lhs) { 
 	// see https://en.wikipedia.org/wiki/Interval_arithmetic
 	auto b0 = fs::bounds(*lhs.getSubterms()[0]);
 	auto b1 = fs::bounds(*lhs.getSubterms()[1]);
-	auto min = b0.first + b1.first;
-	auto max = b0.second + b1.second;
+	auto min = b0.first + b1.first; 
+	auto max = b0.second + b1.second; 	
 	_result = std::make_pair(min, max);
 }
 
 void BoundVisitor::
-Visit(const SubtractionTerm& lhs) {
+Visit(const SubtractionTerm& lhs) { 
 	// see https://en.wikipedia.org/wiki/Interval_arithmetic
 	auto b0 = fs::bounds(*lhs.getSubterms()[0]);
 	auto b1 = fs::bounds(*lhs.getSubterms()[1]);
-	auto min = b0.first - b1.second;
-	auto max = b0.second - b1.first;
+	auto min = b0.first - b1.second; 
+	auto max = b0.second - b1.first; 	
 	_result = std::make_pair(min, max);
 }
 
 void BoundVisitor::
-Visit(const MultiplicationTerm& lhs) {
+Visit(const MultiplicationTerm& lhs) { 
 	// see https://en.wikipedia.org/wiki/Interval_arithmetic
 	auto b0 = fs::bounds(*lhs.getSubterms()[0]);
 	auto b1 = fs::bounds(*lhs.getSubterms()[1]);

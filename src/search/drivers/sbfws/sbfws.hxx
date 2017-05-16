@@ -203,8 +203,8 @@ public:
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
-		_search_novelty_factory(_problem, config.evaluator_t, config.search_width),
-		_sim_novelty_factory(_problem, config.evaluator_t, config.simulation_width),
+		_search_novelty_factory(_problem, config.evaluator_t, _featureset.uses_extra_features(), config.search_width),
+		_sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
 		_wg_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_wgr_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_unsat_goal_atoms_heuristic(_problem),
@@ -479,15 +479,12 @@ protected:
 	
 public:
 
-	//! The only allowed constructor requires the user of the algorithm to inject both
-	//! (1) the state model to be used in the search
-	//! (2) the open list object to be used in the search
-	//! (3) the closed list object to be used in the search
+	//!
 	SBFWS(const StateModelT& model,
-			 FeatureSetT&& featureset,
-             BFWSStats& stats,
-             const Config& config,
-             SBFWSConfig& conf) :
+          FeatureSetT&& featureset,
+          BFWSStats& stats,
+          const Config& config,
+          SBFWSConfig& conf) :
              
 		_model(model),
 		_solution(nullptr),

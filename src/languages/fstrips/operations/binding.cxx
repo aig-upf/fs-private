@@ -5,9 +5,11 @@
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/builtin.hxx>
+#include <constraints/registry.hxx>
 #include <utils/binding.hxx>
 #include <utils/utils.hxx>
 #include <problem_info.hxx>
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -190,17 +192,26 @@ Visit(const NestedTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
 
-	std::vector<ObjectIdx> constant_values;
-	std::vector<const Term*> st = bind_subterms(subterms, _binding, _info, constant_values);
+	const auto& function = _info.getSymbolData(symbol_id);
+
+    std::vector<ObjectIdx> constant_values;
+    std::vector<const Term*> st = bind_subterms(subterms, _binding, _info, constant_values);
+
+	// If the function has unbounded arity, we cannot tell statically whether it can be resolved to a constant value or not
+	if (function.hasUnboundedArity()) {
+        _result = LogicalComponentRegistry::instance().instantiate_term( _info.getSymbolName(symbol_id), st);
+		return;
+	}
+
+
 
 	// We process the 4 different possible cases separately:
-	const auto& function = _info.getSymbolData(symbol_id);
 	if (function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:st) delete ptr;
 		auto value = function.getFunction()(constant_values);
 		_result = _info.isBoundedType(function.getCodomainType()) ? new Constant(value) : new NumericConstant(value) ;
 	}
-	else if (function.isStatic() && constant_values.size() != subterms.size()) { // We have a statically-headed nested term
+	else if (function.isStatic() && constant_values.size() != subterms.size() ) { // We have a statically-headed nested term
 		_result = new UserDefinedStaticTerm(symbol_id, st);
 	}
 	else if (!function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
@@ -243,10 +254,13 @@ Visit(const UserDefinedStaticTerm& lhs) {
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 
+	_result =  new UserDefinedStaticTerm(symbol_id, processed);
+
+//     const auto& function = _info.getSymbolData(symbol_id);
+	/*
 	if (constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:processed) delete ptr;
 
-		const auto& function = _info.getSymbolData(symbol_id);
 		auto value = function.getFunction()(constant_values);
 		_result = _info.isBoundedType(function.getCodomainType()) ?  new Constant(value) : new NumericConstant(value);
 
@@ -254,6 +268,7 @@ Visit(const UserDefinedStaticTerm& lhs) {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms
 		_result =  new UserDefinedStaticTerm(symbol_id, processed);
 	}
+	*/
 }
 
 void TermBindingVisitor::
@@ -284,8 +299,10 @@ Visit(const FluentHeadedNestedTerm& lhs) {
 
 	std::vector<ObjectIdx> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
+    const auto& function = _info.getSymbolData(symbol_id);
 
-	if (constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
+    LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
+	if (function.isStatic() && !function.hasUnboundedArity() && constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
 // 		for (const auto ptr:processed) delete ptr;
 
 		VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);

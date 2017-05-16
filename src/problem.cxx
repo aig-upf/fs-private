@@ -87,19 +87,19 @@ void Problem::set_state_constraints(const fs::Formula* state_constraint_formula)
     throw std::runtime_error("Runtime Error: Method Problem::set_state_constraints() is deprectated!");
 }
 
-void Problem::set_goal(const fs::Formula* goal) {
+void Problem::set_goal(const fs::Formula* goal) { 
 	delete _goal_formula;
 	_goal_formula = goal;
 }
 
-std::ostream& Problem::print(std::ostream& os) const {
+std::ostream& Problem::print(std::ostream& os) const { 
 	const fs0::ProblemInfo& info = ProblemInfo::getInstance();
 	os << "Planning Problem [domain: " << info.getDomainName() << ", instance: " << info.getInstanceName() <<  "]" << std::endl;
-
+	
 	os << "Goal Conditions:" << std::endl << "------------------" << std::endl;
 	os << "\t" << *getGoalConditions() << std::endl;
 	os << std::endl;
-
+	
 	os << "State Constraints:" << std::endl << "------------------" << std::endl;
     for ( auto c : _state_constraints ) {
         os << "\t" << c.first << ": " << *(c.second) << std::endl;
@@ -110,14 +110,14 @@ std::ostream& Problem::print(std::ostream& os) const {
 		os << print::action_data(*data) << std::endl;
 	}
 	os << std::endl;
-
+	
 	os << "Ground Actions: " << _ground.size();
 	// os << std::endl << "------------------" << std::endl;
 	// for (const const GroundAction* elem:_ground) {
 	// 	os << *elem << std::endl;
 	// }
 	os << std::endl;
-
+	
 	return os;
 }
 
@@ -139,11 +139,25 @@ void Problem::consolidateAxioms() {
     if ( !_ground.empty() )
         throw std::runtime_error("Problem::consolidateAxioms(): method called after grounding actions!");
 	const ProblemInfo& info = ProblemInfo::getInstance();
-
+	// NOTE Order is FUNDAMENTAL: we need to process the axioms first of all.
+	// TODO This won't work for recursive axioms. We need a better strategy, e.g. lazy retrieval of the axiom pointers whenever interpretation is required, etc.
+	// Update the axioms
+	for (auto& it:_axioms) {
+		const fs::Axiom* axiom = it.second;
+		auto definition = fs::process_axioms(*(axiom->getDefinition()), info);
+		it.second = new fs::Axiom(axiom->getName(), axiom->getSignature(), axiom->getParameterNames(), axiom->getBindingUnit(), definition);
+		delete axiom;
+	}
 	auto tmp = _goal_formula;
 	_goal_formula = fs::process_axioms(*_goal_formula, info);
 	delete tmp;
+    auto old_manager = _goal_sat_manager.release();
+    delete old_manager;
+	_goal_sat_manager = std::unique_ptr<FormulaInterpreter>(FormulaInterpreter::create(_goal_formula, get_tuple_index()));
 
+	tmp = _state_constraint_formula;
+	_state_constraint_formula = fs::process_axioms(*_state_constraint_formula, info);
+	delete tmp;
 
     for ( auto& c : _state_constraints ) {
         const fs::Axiom* tmp = c.second;
@@ -157,21 +171,12 @@ void Problem::consolidateAxioms() {
         _state_constraints_formulae.push_back( c.second->getDefinition() );
     }
 
-	// NOTE Order is important: we need to process the axioms first.
-	// TODO This won't work for recursive axioms. We need a better strategy, e.g. lazy retrieval of the axiom pointers whenever interpretation is required, etc.
-	// Update the axioms
-	for (auto& it:_axioms) {
-		const fs::Axiom* axiom = it.second;
-		auto definition = fs::process_axioms(*(axiom->getDefinition()), info);
-		it.second = new fs::Axiom(axiom->getName(), axiom->getSignature(), axiom->getParameterNames(), axiom->getBindingUnit(), definition);
-		delete axiom;
-	}
 
 	// Update the action schemas
 	std::vector<const ActionData*> processed_actions;
 	for (const ActionData* data:_action_data) {
 		auto precondition = fs::process_axioms(*(data->getPrecondition()), info);
-
+		
 		std::vector<const fs::ActionEffect*> effects;
 		for (const fs::ActionEffect* effect:data->getEffects()) {
 			effects.push_back(fs::process_axioms(*effect, info));
