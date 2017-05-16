@@ -4,6 +4,7 @@
 
 #include <problem_info.hxx>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include <utils/lexical_cast.hxx>
 #include <atom.hxx>
 #include <lapkt/tools/logging.hxx>
@@ -15,29 +16,29 @@ std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
 	_data_dir(data_dir), _can_extensionalize_var_domains(true)
 {
-	
+
 	LPT_INFO("main", "Loading Type index...");
 	loadTypeIndex(data["types"]); // Order matters
-	
+
 	LPT_INFO("main", "Loading Object index...");
 	loadObjectIndex(data["objects"]);
 
 	LPT_INFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
-	
+
 	LPT_INFO("main", "Loading Variable index...");
 	loadVariableIndex(data["variables"]);
-	
+
 	LPT_INFO("main", "Loading Metadata...");
 	loadProblemMetadata(data["problem"]);
-	
+
 	LPT_INFO("main", "All indexes loaded");
-	
+
 	// Load the cached map of predicative variables for more performant access
 	for (unsigned variable = 0; variable < getNumVariables(); ++variable) {
 		_predicative_variables.push_back(isPredicate(getVariableData(variable).first));
 	}
-	
+
 	_extensions.resize(getNumLogicalSymbols());
 }
 
@@ -53,8 +54,9 @@ unsigned ProblemInfo::getNumVariables() const { return variableNames.size(); }
 const std::string ProblemInfo::getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const {
 	const ObjectType generictype = variableGenericTypes.at(varIdx);
 	if (generictype == ObjectType::OBJECT) return getCustomObjectName(objIdx);
-	else if (generictype == ObjectType::INT) return std::to_string(objIdx);
-	else if (generictype == ObjectType::BOOL) return std::string((objIdx ? "true" : "false"));
+	else if (generictype == ObjectType::INT) return std::to_string(boost::get<int>(objIdx));
+    else if (generictype == ObjectType::FLOAT) return std::to_string(boost::get<float>(objIdx));
+	else if (generictype == ObjectType::BOOL) return std::string((boost::get<int>(objIdx) ? "true" : "false"));
 	throw std::runtime_error("Should never get here.");
 }
 
@@ -76,11 +78,11 @@ unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }
 
 void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 	assert(variableNames.empty());
-	
+
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		unsigned id = variableNames.size();
 		assert(data[i]["id"].GetInt() >= 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == id); // Check values are decoded in the proper order
-		
+
 		const std::string type(data[i]["type"].GetString());
 		const std::string name(data[i]["name"].GetString());
 		variableNames.push_back(name);
@@ -96,7 +98,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		} catch( std::out_of_range& ex ) {
 			throw std::runtime_error("Unknown type " + type);
 		}
-		
+
 		// Load the info necessary to resolve state variables dynamically
 		const auto& var_data = data[i]["data"];
 		unsigned symbol_id = var_data[0].GetInt();
@@ -104,7 +106,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		for (unsigned j = 0; j < var_data[1].Size(); ++j) {
 			constants.push_back(var_data[1][j].GetInt());
 		}
-		
+
 		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, constants),  id));
 		variableIdToData.push_back(std::make_pair(symbol_id, constants));
 	}
@@ -112,7 +114,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 
 void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 	assert(symbolIds.empty());
-	
+
 
 	// Symbol data is stored as: # <symbol_id, symbol_name, symbol_type, <function_domain>, function_codomain, state_variables, static?>
 	for (unsigned i = 0; i < data.Size(); ++i) {
@@ -126,26 +128,27 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 		const std::string symbol_type = data[i][2].GetString();
 		assert (symbol_type == "function" || symbol_type == "predicate");
 		const SymbolData::Type type = (symbol_type == "function") ? SymbolData::Type::FUNCTION : SymbolData::Type::PREDICATE;
-		
+
 		// Parse the domain IDs
 		const auto& domains = data[i][3];
 		Signature domain;
 		for (unsigned j = 0; j < domains.Size(); ++j) {
 			domain.push_back(getTypeId(domains[j].GetString()));
 		}
-		
+
 		// Parse the codomain ID
 		TypeIdx codomain = getTypeId(data[i][4].GetString());
-		
+
 		// Parse the function variables
 		std::vector<VariableIdx> variables;
 		const auto& list = data[i][5];
 		for (unsigned j = 0; j < list.Size(); ++j) {
 			variables.push_back(list[j][0].GetInt());
 		}
-		
+
 		bool is_static = data[i][6].GetBool();
-		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static));
+        bool has_unbounded_arity = data[i][7].GetBool();
+		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static, has_unbounded_arity));
 	}
 }
 
@@ -166,7 +169,7 @@ ProblemInfo::ObjectType ProblemInfo::getGenericType(const std::string& type) con
 //! Load the names of the problem objects from the specified file.
 void ProblemInfo::loadObjectIndex(const rapidjson::Value& data) {
 	assert(objectNames.empty());
-	
+
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		assert(data[i]["id"].GetInt() >= 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == objectNames.size()); // Check values are decoded in the proper order
 		const std::string& name = data[i]["name"].GetString();
@@ -179,7 +182,7 @@ void ProblemInfo::loadObjectIndex(const rapidjson::Value& data) {
 void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 	assert(type_to_name.empty());
 	unsigned num_types = data.Size();
-	
+
 	typeObjects.resize(num_types); // Resize the vector to the number of types that we have
 	isTypeBounded.resize(num_types);
 	typeBounds.resize(num_types);
@@ -195,7 +198,7 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 		TypeIdx type_id = data[i][0].GetInt();
 		std::string type_name(data[i][1].GetString());
 		assert(type_id == type_to_name.size()); // Check values are decoded in the proper order
-		
+
 		name_to_type.insert(std::make_pair(type_name, type_id));
 		type_to_name.push_back(type_name);
 

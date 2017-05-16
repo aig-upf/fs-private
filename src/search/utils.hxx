@@ -29,7 +29,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 		std::string val = std::get<2>(point);
 
 		try { double _ = boost::lexical_cast<double>(val); _unused(_); }
-		catch(boost::bad_lexical_cast& e) { 
+		catch(boost::bad_lexical_cast& e) {
 			// Not a number, we print a string
 			val = "\"" + val + "\"";
 		}
@@ -49,7 +49,7 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 
 	std::vector<typename StateModelT::ActionType::IdType> plan;
 	float t0 = aptk::time_used();
-	
+
 	bool solved = false, oom = false;
 	try {
 		solved = engine.solve_model( plan );
@@ -59,12 +59,12 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 		LPT_INFO("cout", "FAILED TO ALLOCATE MEMORY");
 		oom = true;
 	}
-	
+
 	float search_time = aptk::time_used() - t0;
 	float total_planning_time = aptk::time_used() - start_time;
 
 	bool valid = false;
-	
+
 	if ( solved ) {
 		PlanPrinter::print(plan, plan_out);
 		valid = Checker::check_correctness(problem, plan, problem.getInitialState());
@@ -73,7 +73,7 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 
 	std::string gen_speed = (search_time > 0) ? std::to_string((float) stats.generated() / search_time) : "0";
 	std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.evaluated() / search_time) : "0";
-	
+
 
 	json_out << "{" << std::endl;
 	dump_stats(json_out, stats);
@@ -92,14 +92,14 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	json_out << std::endl;
 	json_out << "}" << std::endl;
 	json_out.close();
-	
+
 	for (const auto& point:stats.dump()) {
 		LPT_INFO("cout", std::get<1>(point) << ": " << std::get<2>(point));
 	}
 	LPT_INFO("cout", "Total Planning Time: " << total_planning_time << " s.");
 	LPT_INFO("cout", "Actual Search Time: " << search_time << " s.");
 	LPT_INFO("cout", "Peak mem. usage: " << get_peak_memory_in_kb() << " kB.");
-	
+
 	ExitCode result;
 	if (solved) {
 		if (!valid) {
@@ -107,9 +107,13 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 			throw std::runtime_error("The plan output by the planner is not correct!");
 		}
 		LPT_INFO("cout", "Search Result: Found plan of length " << plan.size());
-		
-		char resolved_path[PATH_MAX]; 
-        realpath(plan_filename.c_str(), resolved_path); 
+
+		char resolved_path[PATH_MAX];
+        char* tmp = realpath(plan_filename.c_str(), resolved_path);
+        if (tmp == nullptr) {
+            std::string error_message( strerror( errno ));
+            throw std::runtime_error("Could not resolve the real path for the plan filename: \n" + error_message );
+        }
 		LPT_INFO("cout", "Plan was saved in file \"" << resolved_path << "\"");
 		result = ExitCode::PLAN_FOUND;
 	} else if (oom) {
@@ -119,7 +123,7 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 		LPT_INFO("cout", "Search Result: No plan was found.");
 		result = ExitCode::UNSOLVABLE;
 	}
-	
+
 	return result;
 }
 

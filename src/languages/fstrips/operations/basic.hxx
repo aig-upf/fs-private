@@ -27,8 +27,6 @@ class AllNodesVisitor
     , public Loki::Visitor<Disjunction, void, true>
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
-    , public Loki::Visitor<AxiomaticFormula, void, true>
-
 
     , public Loki::Visitor<StateVariable, void, true>
     , public Loki::Visitor<BoundVariable, void, true>
@@ -53,8 +51,6 @@ public:
 	void Visit(const QuantifiedFormula& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
 	void Visit(const UniversallyQuantifiedFormula& lhs);
-    void Visit(const AxiomaticFormula& lhs);
-
 
 	void Visit(const StateVariable& lhs);
 	void Visit(const BoundVariable& lhs);
