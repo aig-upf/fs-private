@@ -438,6 +438,8 @@ protected:
 
 	//! The solution node, if any. This will be set during the search process
 	NodePT _solution;
+    //! Best node found
+    NodePT _best_found;
 
 	//! A list with all nodes that have novelty w_{#g}=1
 	UnachievedOpenList _q1;
@@ -488,6 +490,7 @@ public:
 
 		_model(model),
 		_solution(nullptr),
+        _best_found(nullptr),
 		_featureset(std::move(featureset)),
 		_heuristic(conf, config, model, _featureset, stats),
 		_stats(stats),
@@ -555,6 +558,8 @@ public:
 		for (bool remaining_nodes = true; !_solution && remaining_nodes;) {
 			remaining_nodes = process_one_node();
 		}
+        if ( _solution == nullptr )
+            return extract_plan(_best_found, plan);
 
 		return extract_plan(_solution, plan);
 	}
@@ -656,7 +661,7 @@ protected:
 
 		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
 			_min_subgoals_to_reach = node->unachieved_subgoals;
-            _solution = node;
+            _best_found = node;
 			LPT_INFO("cout", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
 		}
 

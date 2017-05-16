@@ -52,7 +52,7 @@ float UnsatisfiedGoalAtomsHeuristic::evaluate(const State& state) const {
             }
             unsatisfied++;
             //MRJ: Magic constant!
-            std::vector<fs::RelationalFormula*> Rpoly = poly->relax(fs::NumericConstant(0.1f));
+            std::vector<fs::RelationalFormula*> Rpoly = poly->relax(fs::NumericConstant(0.01f));
             for ( auto f : Rpoly )
                 boundary.push_back(f);
             delete poly;
