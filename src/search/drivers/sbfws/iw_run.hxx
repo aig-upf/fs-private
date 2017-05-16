@@ -353,17 +353,36 @@ public:
 		_stats.sim_add_time(aptk::time_used() - simt0);
 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
+		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 	}
 	
 	std::vector<bool> compute_R(const StateT& seed) {
-		if (!_config._force_hybrid_run) {
-			return compute_plain_R(seed);
-		} else {
+		if (_config._force_hybrid_run) {
 			return compute_hybrid_R(seed);
+		} else if (_config._max_width == 1){
+			return compute_plain_R1(seed);
+		} else if (_config._max_width == 2){
+			return compute_plain_RG2(seed);
+		} else {
+			throw std::runtime_error("Simulation max_width too high");
 		}
 	}
 	
-	std::vector<bool> compute_plain_R(const StateT& seed) {
+	std::vector<bool> compute_plain_RG2(const StateT& seed) {
+		assert(_config._max_width == 2);
+		
+		_config._complete = false;
+		float simt0 = aptk::time_used();
+  		run(seed, 1);
+		report_simulation_stats(simt0);
+		
+		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
+		return extract_R_G(false);
+	}
+	
+	
+	std::vector<bool> compute_plain_R1(const StateT& seed) {
+		assert(_config._max_width == 1);
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		_config._complete = false;
 		
@@ -371,23 +390,21 @@ public:
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
 		
-		if (_unreached.size() == 0) {
-			// If a single IW[1] run reaches all subgoals, we return R=emptyset
-			LPT_INFO("cout", "Simulation - IW(1) run reached all goals, thus R={}");
-			return std::vector<bool>(index.size(), false);
+		if (_config._goal_directed && _unreached.size() == 0) {
+			LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
+			return extract_R_G(false);
 		}
 		
-		if (_config._goal_directed) {
-			return extract_R_G();
-		}
-		
-		// Compute the goal-unaware version of R containing all atoms seen during the IW run
+		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
 		std::vector<bool> R = _evaluator.reached_atoms();
+		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 		if (_verbose) {
-			LPT_INFO("cout", "Simulation - |R[" << _config._max_width << "]| = " << std::count(R.begin(), R.end(), true));
+			unsigned c = std::count(R.begin(), R.end(), true);
+			LPT_INFO("cout", "Simulation - |R[" << _config._max_width << "]| = " << c);
+			_stats.relevant_atoms(c);
 		}
 		return R;
-	}
+	}	
 	
 	std::vector<bool> compute_hybrid_R(const StateT& seed) {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
@@ -412,11 +429,11 @@ public:
 		report_simulation_stats(simt0);
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 		
-		return extract_R_G();
+		return extract_R_G(true);
 	}	
 	
-	//! Extractes the goal-oriented set of relevant atoms after a simulation run
-	std::vector<bool> extract_R_G() {
+	//! Extracts the goal-oriented set of relevant atoms after a simulation run
+	std::vector<bool> extract_R_G(bool r_all_fallback) {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		/*
 		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
@@ -427,7 +444,7 @@ public:
 		*/
 
 		
-		if (!_unreached.empty()) {
+		if (r_all_fallback && !_unreached.empty()) {
 			if (_verbose) LPT_INFO("cout", "Simulation - Some subgoals were not reached during the simulation, falling back to R=R[All]");
 // 			for (unsigned x:_unreached) LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
 			return std::vector<bool>(index.size(), true);
