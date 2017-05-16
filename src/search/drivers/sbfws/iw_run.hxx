@@ -373,7 +373,7 @@ public:
 		
 		_config._complete = false;
 		float simt0 = aptk::time_used();
-  		run(seed, 1);
+  		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
 		
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
