@@ -18,6 +18,10 @@ std::vector<const AtomicFormula*> all_atoms(const Formula& element) {
 	return Utils::filter_by_type<const AtomicFormula*>(all_nodes(element));
 }
 
+std::vector<const RelationalFormula*> all_relations(const Formula& element) {
+	return Utils::filter_by_type<const RelationalFormula*>(all_nodes(element));
+}
+
 std::vector<const Term*> all_terms(const LogicalElement& element) {
 	return Utils::filter_by_type<const Term*>(all_nodes(element));
 }

@@ -47,7 +47,7 @@ namespace fs0 { namespace dynamics {
         atoms.clear();
         for ( unsigned x = 0; x < info.getNumVariables(); x++ )
             atoms.push_back( Atom(x,s.getValue(x)));
-
+        LPT_DEBUG("dynamics", "Input State: " << s);
         while ( t < dt ) {
             State s_k( s, atoms );
             State s_k_plus_1 = odes.predictNextState( s_k, *integrator, h, 1.0 );
@@ -66,6 +66,7 @@ namespace fs0 { namespace dynamics {
                 throw std::runtime_error("WaitAction::apply: Time doesn't flow from the future towards the past");
             }
             // Atoms update
+            LPT_DEBUG("dynamics", "Resulting state: " << s_k_plus_1 );
             for ( unsigned j = 0; j < atoms.size(); j++ )
                 atoms[j] = Atom( atoms[j].getVariable(),  s_k_plus_1.getValue( atoms[j].getVariable() ) );
             t += h;

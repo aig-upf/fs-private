@@ -2,6 +2,7 @@
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/builtin.hxx>
 #include <languages/fstrips/axioms.hxx>
 #include <problem.hxx>
 #include <utils/utils.hxx>
@@ -254,6 +255,16 @@ std::vector<const AtomicFormula*> check_all_atomic_formulas(const std::vector<co
 	return downcasted;
 }
 
+std::vector< RelationalFormula* >
+LEQAtomicFormula::relax( const Constant& slack ) const {
+    std::vector< const Term* > st = { getSubterms()[0]->clone(), new AdditionTerm( {getSubterms()[1]->clone(), slack.clone()} )  };
+    return { new LEQAtomicFormula(st)};
+}
 
+std::vector< RelationalFormula* >
+GEQAtomicFormula::relax( const Constant& slack ) const {
+    std::vector< const Term* > st = { getSubterms()[0]->clone(), new SubtractionTerm( {getSubterms()[1]->clone(), slack.clone()} ) };
+    return { new GEQAtomicFormula(st)};
+}
 
 } } } // namespaces

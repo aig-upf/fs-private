@@ -80,6 +80,12 @@ std::vector<const Formula*> all_formulae(const Formula& element);
 std::vector<const AtomicFormula*> all_atoms(const Formula& element);
 
 ////////////////////////////////////////////////////////////
+//! A small helper - returns a vector with all the relational formulae involved in the current formula
+////////////////////////////////////////////////////////////
+std::vector<const RelationalFormula*> all_relations(const Formula& element);
+
+
+////////////////////////////////////////////////////////////
 //! Returns a list (possibly with repetitions) of all (sub-)terms that descend from the given formula or term.
 ////////////////////////////////////////////////////////////
 std::vector<const Term*> all_terms(const LogicalElement& element);

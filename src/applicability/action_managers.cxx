@@ -49,7 +49,8 @@ bool NaiveApplicabilityManager::isActive(const State& state, const GroundAction&
 std::vector<Atom>
 NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction& action) {
 	std::vector<Atom> atoms;
-	computeEffects(state, action, atoms);
+    action.apply(state,atoms);
+    LPT_DEBUG("dynamics", "NaiveApplicabilityManager::computeEffects(s,a) -> vector<Atom>")
 	return atoms;
 }
 
