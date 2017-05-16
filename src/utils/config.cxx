@@ -86,6 +86,7 @@ void Config::load(const std::string& filename) {
 
     try {
         _integration_factor = getOption<double>("integration_factor");
+        LPT_INFO("main", "[Config::load] Option 'integration_factor' was set to: " << _integration_factor );
     } catch ( fs0::MissingOption& e ) {
         // Use default value in the constructor
         LPT_INFO("main", "[Config::load] Option 'integration_factor' takes default value: " << _integration_factor );
@@ -93,6 +94,7 @@ void Config::load(const std::string& filename) {
 
     try {
         _discretization_step = getOption<double>("dt");
+        LPT_INFO("main", "[Config::load] Option 'dt' was set to: " << _discretization_step );
     } catch ( fs0::MissingOption& e ) {
         // Use default value in the constructor
         LPT_INFO("main", "[Config::load] Option 'dt' takes default value: " << _discretization_step );
@@ -101,6 +103,7 @@ void Config::load(const std::string& filename) {
 
     try {
         _zero_crossing_control = parseOption<bool>(_root, _user_options, "zcc",  {{"true", true}, {"false", false}});
+        LPT_INFO("main", "[Config::load] Option 'zcc' was set to: " << _zero_crossing_control );
     } catch (  boost::property_tree::ptree_bad_path& e ) {
         // Use default value in the constructor
         LPT_INFO("main", "[Config::load] Option 'zcc' takes default value: " << _zero_crossing_control );
@@ -108,6 +111,7 @@ void Config::load(const std::string& filename) {
 
     try {
         _horizon_time = getOption<double>("horizon");
+        LPT_INFO("main", "[Config::load] Option 'horizon' was set to: " << _horizon_time );
     } catch ( fs0::MissingOption& e ) {
         // Use default value in the constructor
         LPT_INFO("main", "[Config::load] Option 'horizon' takes default value: " << _horizon_time );
