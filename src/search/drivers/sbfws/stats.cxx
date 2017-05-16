@@ -78,7 +78,7 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
 	
 	for (unsigned k = 1; k < _search_wtables.size(); ++k) {
 		std::string kstr = std::to_string(k);
-		data.push_back(std::make_tuple("sim_w" + kstr + "_tables", "Number of width-" + kstr + " tables created during search", std::to_string(_search_wtables[k])));
+		data.push_back(std::make_tuple("search_w" + kstr + "_tables", "Number of width-" + kstr + " tables created during search", std::to_string(_search_wtables[k])));
 	}	
 	
 	
