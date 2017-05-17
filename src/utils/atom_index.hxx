@@ -43,7 +43,7 @@ protected:
 	
 public:
 	//! Constructs a full tuple index
-	AtomIndex(const ProblemInfo& info, bool index_negated_literals = false);
+	AtomIndex(const ProblemInfo& info, bool index_negated_literals = true);
 	AtomIndex(const AtomIndex&) = default;
 	AtomIndex(AtomIndex&&) = default;
 	AtomIndex& operator=(const AtomIndex& other) = default;
