@@ -16,24 +16,39 @@ from .templates import tplManager
 
 
 def parse_arguments(args):
-    parser = argparse.ArgumentParser(description='Parse a given problem instance from a given benchmark set.')
-    parser.add_argument('--tag', required=True, help="The name of the generation tag.")
-    parser.add_argument('--instance', required=True,
-                        help="The problem instance filename (heuristics are used to determine domain filename).")
-    parser.add_argument('--domain', required=False, help="The problem domain filename.", default=None)
-    parser.add_argument('--output', default=None, help="The final directory (without any added subdirectories)"
-                                                       "where the compiled planner will be left.")
-    parser.add_argument('--debug', action='store_true', help="Flag to compile in debug mode.")
-    parser.add_argument('--edebug', action='store_true', help="Flag to compile in extreme debug mode.")
-    parser.add_argument('--run', action='store_true', help="Set to run the solver after compiling it.")
+    parser = argparse.ArgumentParser(description='Bootstrap and run the FS planner on a given instance.'
+                                                 'The process might involve generating, compiling and linking'
+                                                 'some C++ code in order to accommodate externally-defined symbols.'
+                                                 'That code will be left in the "working directory", whose path is '
+                                                 'controlled through the "-t" and "-o" options.')
+    parser.add_argument('--instance', required=True, help="The path to the problem instance file.")
+    parser.add_argument('--domain', default=None, help="(Optional) The path to the problem domain file. If none is "
+                                                       "provided, the system will try to automatically deduce "
+                                                       "it from the instance filename.")
 
-    parser.add_argument("--driver", help='The solver driver file', default=None)
-    parser.add_argument("--defaults", help='The solver default options file', default=None)
+    parser.add_argument('-d', '--debug', action='store_true', help="Compile in debug mode.")
+    parser.add_argument('-e', '--edebug', action='store_true', help="Compile in _extreme_ debug mode.")
+    parser.add_argument('-p', '--parse-only', action='store_true', help="Parse the problem and compile the generated"
+                                                                        " code, if any, but don't run the solver yet.")
+
+    parser.add_argument("--driver", help='The solver driver (controller) to be used.', default=None)
     parser.add_argument("--options", help='The solver extra options', default="")
-    parser.add_argument("--asp", action='store_true', help='Use ASP grounder (strict ADL, without numerics etc.)')
+    parser.add_argument("--asp", action='store_true', help='(Experimental) Use the ASP-based parser+grounder '
+                                                           '(strict ADL, without numerics etc.).')
+
+    parser.add_argument('-t', '--tag', default=None,
+                        help="(Optional) An arbitrary name that will be used to create the working directory where "
+                             "intermediate files will be left, unless overriden by the '-o' option."
+                             "If none of both options is provided, a random tag will be generated.")
+
+    parser.add_argument('-o', '--output', default=None, help="(Optional) Path to the working directory. If provided,"
+                                                             "overrides the \"-t\" option.")
 
     args = parser.parse_args(args)
-    args.instance_dir = os.path.dirname(args.instance)
+
+    if not args.parse_only and args.driver is None:
+        parser.error('The "--driver" option is required to run the solver')
+
     return args
 
 
@@ -52,8 +67,9 @@ def extract_names(domain_filename, instance_filename):
     return domain, instance
 
 
-def move_files(base_dir, instance, domain, target_dir, use_vanilla):
+def move_files(instance, domain, target_dir, use_vanilla):
     """ Moves the domain and instance description files plus additional data files to the translation directory """
+    base_dir = os.path.dirname(instance)
     definition_dir = target_dir + '/definition'
     data_dir = target_dir + '/data'
 
@@ -106,8 +122,8 @@ def compile_translation(translation_dir, use_vanilla, args):
     vanilla_solver_path = os.path.join(planner_dir, vanilla_solver_name)
 
     if use_vanilla and not os.path.isfile(vanilla_solver_path):
-        raise RuntimeError("The problem could use the vanilla solver binary, but this cannot be found on "
-                           "the expected path. Please re-build the project with the appropriate debug configuration.")
+        raise RuntimeError("The problem requires using the pre-compiled vanilla solver binary, but it can't be found on"
+                           " the expected path. Please re-build the project with the appropriate debug configuration.")
 
     if use_vanilla:
         print("Using pre-compiled vanilla solver from '{}'".format(vanilla_solver_path))
@@ -128,19 +144,13 @@ def compile_translation(translation_dir, use_vanilla, args):
 
 def run_solver(translation_dir, args):
     """ Runs the solver binary resulting from the compilation """
-    if not args.run:  # Simply return without running anything
+    if args.parse_only:  # Simply return without running anything
         return
 
     solver = solver_name(args)
     solver = os.path.join(translation_dir, solver)
 
-    if not args.driver:
-        raise RuntimeError("Need to specify a driver to be able to run the solver")
-
     command = [solver, "--driver", args.driver]
-
-    if args.defaults:
-        command += ["--defaults", args.defaults]
 
     if args.options:
         command += ["--options", args.options]
@@ -161,6 +171,18 @@ def solver_name(args):
     return "solver.edebug.bin" if args.edebug else ("solver.debug.bin" if args.debug else "solver.bin")
 
 
+def create_output_dir(args, domain_name, instance_name):
+    """ Determine what the output dir should be and create it. Return the output dir path. """
+    translation_dir = args.output
+    if not translation_dir:
+        if args.tag is None:
+            import time
+            args.tag = time.strftime("%y%m%d")
+        translation_dir = os.path.abspath(os.path.join(*[FS_WORKSPACE, args.tag, domain_name, instance_name]))
+    utils.mkdirp(translation_dir)
+    return translation_dir
+
+
 def run(args):
     # Determine the proper domain and instance filenames
     if args.domain is None:
@@ -169,15 +191,11 @@ def run(args):
     domain_name, instance_name = extract_names(args.domain, args.instance)
 
     # Determine the appropriate output directory for the problem solver, and create it, if necessary
-    translation_dir = args.output
-    if not translation_dir:
-        dir_components = [FS_WORKSPACE, args.tag, domain_name, instance_name]
-        translation_dir = os.path.abspath(os.path.join(*dir_components))
-    utils.mkdirp(translation_dir)
+    out_dir = create_output_dir(args, domain_name, instance_name)
 
     print("{0:<30}{1}".format("Problem domain:", domain_name))
     print("{0:<30}{1}".format("Problem instance:", instance_name))
-    print("{0:<30}{1}".format("Translation directory:", translation_dir))
+    print("{0:<30}{1}".format("Working directory:", out_dir))
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
@@ -185,18 +203,18 @@ def run(args):
         fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:
         from .asp import processor
-        adl_task = processor.parse_and_ground(args.domain, args.instance, translation_dir)
+        adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir)
         fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance
-    representation = ProblemRepresentation(fs_task, translation_dir, args.edebug or args.debug)
+    representation = ProblemRepresentation(fs_task, out_dir, args.edebug or args.debug)
     representation.generate()
     use_vanilla = not representation.requires_compilation()
 
-    move_files(args.instance_dir, args.instance, args.domain, translation_dir, use_vanilla)
-    compile_translation(translation_dir, use_vanilla, args)
-    run_solver(translation_dir, args)
+    move_files(args.instance, args.domain, out_dir, use_vanilla)
+    compile_translation(out_dir, use_vanilla, args)
+    run_solver(out_dir, args)
     return 0
 
 
