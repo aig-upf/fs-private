@@ -262,9 +262,9 @@ namespace fs0 {
 
 		NodeCreationContext helper(_tuple_idx, sorted_vars, analyzer.getRevApplicable(), seen);
 
-		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+// 		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		_tree = new SwitchNode(all_actions, helper);
-		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+// 		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		LPT_INFO("cout", "Match Tree created");
 
 
