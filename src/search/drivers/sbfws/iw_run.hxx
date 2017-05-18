@@ -348,6 +348,32 @@ public:
 		}
 	}
 	
+	void mark_w1_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes, std::vector<bool>& atoms) const {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		std::unordered_set<NodePT> all_visited;
+		assert(atoms.size() == index.size());
+		
+		for (NodePT node:seed_nodes) {
+			// We ignore s0
+			while (node->has_parent()) {
+				// If the node has already been processed, no need to do it again, nor to process the parents,
+				// which will necessarily also have been processed.
+				auto res = all_visited.insert(node);
+				if (!res.second) break;
+				
+				const StateT& state = node->state;
+				for (unsigned var = 0; var < state.numAtoms(); ++var) {
+					ObjectIdx val = state.getValue(var);
+					if (val != 0) {
+						atoms[index.to_index(var, val)] = true;
+					}
+				}
+				
+				node = node->parent;
+			}			
+		}
+	}	
+	
 	void report_simulation_stats(float simt0) {
 		_stats.simulation();
 		_stats.sim_add_time(aptk::time_used() - simt0);
@@ -391,7 +417,7 @@ public:
 		
 		if (_config._goal_directed && _unreached.size() == 0) {
 			LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
-			return extract_R_G(false);
+			return extract_R_G_1();
 		}
 		
 		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
@@ -480,6 +506,37 @@ public:
 				}
 				std::cout << std::endl;
 			}
+		}
+		_stats.relevant_atoms(R_G_size);
+		_stats.r_type(2);
+		
+		return R_G;
+	}
+	
+	std::vector<bool> extract_R_G_1() {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		
+		std::vector<NodePT> seed_nodes;
+		for (unsigned subgoal_idx = 0; subgoal_idx < _optimal_paths.size(); ++subgoal_idx) {
+			if (!_in_seed[subgoal_idx] && _optimal_paths[subgoal_idx] != nullptr) {
+				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
+			}
+		}		
+		
+		std::vector<bool> R_G(index.size(), false);
+		mark_w1_atoms_in_path_to_subgoal(seed_nodes, R_G);
+		
+		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+		if (_verbose) {
+			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+// 			if (R_G_size) {
+// 				LPT_INFO("cout", "Simulation - R_G:");
+// 				std::cout << "\t\t";
+// 				for (unsigned i = 0; i < R_G.size(); ++i) {
+// 					if (R_G[i]) std::cout << index.to_atom(i) << ", ";
+// 				}
+// 				std::cout << std::endl;
+// 			}
 		}
 		_stats.relevant_atoms(R_G_size);
 		_stats.r_type(2);
