@@ -203,10 +203,10 @@ public:
 		bool _goal_directed;
 		
 		//!
-		bool _force_hybrid_run;
+		bool _force_adaptive_run;
 		
-		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info, bool force_hybrid_run) :
-			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info), _force_hybrid_run(force_hybrid_run) {}
+		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info, bool force_adaptive_run) :
+			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info), _force_adaptive_run(force_adaptive_run) {}
 	};
 	
 protected:
@@ -357,8 +357,8 @@ public:
 	}
 	
 	std::vector<bool> compute_R(const StateT& seed) {
-		if (_config._force_hybrid_run) {
-			return compute_hybrid_R(seed);
+		if (_config._force_adaptive_run) {
+			return compute_adaptive_R(seed);
 		} else if (_config._max_width == 1){
 			return compute_plain_R1(seed);
 		} else if (_config._max_width == 2){
@@ -377,7 +377,7 @@ public:
 		report_simulation_stats(simt0);
 		
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
-		return extract_R_G(false);
+		return extract_R_G(true);
 	}
 	
 	
@@ -405,7 +405,7 @@ public:
 		return R;
 	}	
 	
-	std::vector<bool> compute_hybrid_R(const StateT& seed) {
+	std::vector<bool> compute_adaptive_R(const StateT& seed) {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		_config._complete = false;
 		
@@ -443,11 +443,19 @@ public:
 		*/
 
 		
-		if (r_all_fallback && !_unreached.empty()) {
-			if (_verbose) LPT_INFO("cout", "Simulation - Some subgoals were not reached during the simulation, falling back to R=R[All]");
-// 			for (unsigned x:_unreached) LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
-			return std::vector<bool>(index.size(), true);
-			_stats.r_type(1);
+		if (r_all_fallback) {
+			unsigned num_subgoals = _model.num_subgoals();
+			unsigned initially_reached = std::count(_in_seed.begin(), _in_seed.end(), true);
+			unsigned reached_by_simulation = num_subgoals - _unreached.size() - initially_reached;
+			if (_verbose) LPT_INFO("cout", "Simulation - " << reached_by_simulation << " subgoals were newly reached by the simulation.");
+			bool decide_r_all = (reached_by_simulation < (0.5*num_subgoals));
+			if (decide_r_all) {
+				if (_verbose) LPT_INFO("cout", "Simulation - Falling back to R=R[All]");	
+				_stats.r_type(1);
+				return std::vector<bool>(index.size(), true);
+			} else {
+				if (_verbose) LPT_INFO("cout", "Simulation - Computing R_G");
+			}
 		}
 		
 		
