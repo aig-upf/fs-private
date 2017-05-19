@@ -670,7 +670,8 @@ protected:
 		if (node->w_g == Novelty::One) {
 			_q1.insert(node);
 		}
-
+        return false;
+        
 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
 
 		if (_novelty_levels == 3) {
