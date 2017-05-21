@@ -21,13 +21,13 @@ def parse_arguments(args):
                                                  'some C++ code in order to accommodate externally-defined symbols.'
                                                  'That code will be left in the "working directory", whose path is '
                                                  'controlled through the "-t" and "-o" options.')
-    parser.add_argument('--instance', required=True, help="The path to the problem instance file.")
+    parser.add_argument('-i', '--instance', required=True, help="The path to the problem instance file.")
     parser.add_argument('--domain', default=None, help="(Optional) The path to the problem domain file. If none is "
                                                        "provided, the system will try to automatically deduce "
                                                        "it from the instance filename.")
 
-    parser.add_argument('-d', '--debug', action='store_true', help="Compile in debug mode.")
-    parser.add_argument('-e', '--edebug', action='store_true', help="Compile in _extreme_ debug mode.")
+    parser.add_argument('--debug', action='store_true', help="Compile in debug mode.")
+    parser.add_argument('--edebug', action='store_true', help="Compile in _extreme_ debug mode.")
     parser.add_argument('-p', '--parse-only', action='store_true', help="Parse the problem and compile the generated"
                                                                         " code, if any, but don't run the solver yet.")
 
