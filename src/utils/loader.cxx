@@ -17,6 +17,7 @@
 #include <state.hxx>
 #include <problem_info.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/operations.hxx>
 #include <validator.hxx>
 
@@ -34,6 +35,22 @@ _index_axioms(const std::vector<const fs::Axiom*>& axioms) {
 	return index;
 }
 
+// UGLY HACK. This should not be here.
+bool
+_check_negated_preconditions(std::vector<const ActionData*>& schemas) {
+	for (const ActionData* schema:schemas) {
+		for (const fs::AtomicFormula* atom:fs::all_atoms(*schema->getPrecondition())) {
+			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(atom);
+			if (!eq) continue;
+			const fs::IntConstant* cnst = dynamic_cast<const fs::IntConstant*>(eq->rhs());
+			if (!cnst) continue;
+			auto val = cnst->getValue();
+			if (val==0) return true;
+		}
+	}
+	
+	return false;
+}
 
 Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	const Config& config = Config::instance();
@@ -60,7 +77,9 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto sc = loadGroundedFormula(data["state_constraints"], info);
 	
 	//! Set the global singleton Problem instance
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc, AtomIndex(info));
+	bool has_negated_preconditions = _check_negated_preconditions(action_data);
+	LPT_INFO("cout", "Quick Negated-Precondition Test: Does the problem have negated preconditions? " << has_negated_preconditions);
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc, AtomIndex(info, has_negated_preconditions));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 	
 	problem->consolidateAxioms();

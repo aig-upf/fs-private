@@ -93,7 +93,7 @@ namespace fs0 {
 		_pivot(get_best_variable(context))
 	{
 		const std::vector<AtomIdx>& pivot_atoms = context._tuple_index.all_variable_atoms(_pivot); // All the atoms that can be derived from the pivot variable
-		if (pivot_atoms.size() != 2) throw std::runtime_error("Match Tree only ready for propositional domains yet");
+		if (pivot_atoms.size() > 2) throw std::runtime_error("Match Tree only ready for propositional domains yet");
 		// if (context._tuple_index.to_atom(pivot_atoms[0]).getValue() != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
 		
 		// 'actions_split_by_pivot_value[i]' will contain all actions whose precondition requires the 'i'-th
@@ -142,6 +142,11 @@ namespace fs0 {
 
 		// Create the switch generators
 		
+		if (actions_split_by_pivot_value.size() == 1) {
+			// We need to account for the X=0 value
+			std::vector<ActionIdx> empty;
+			actions_split_by_pivot_value.insert(actions_split_by_pivot_value.begin(), empty);
+		}
 		for (unsigned i = 0; i < actions_split_by_pivot_value.size(); i++) {
 			_children.push_back(create_tree(std::move(actions_split_by_pivot_value[i]), context));
 		}

@@ -387,13 +387,23 @@ public:
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 	}
 	
+	std::vector<bool> compute_R_all() {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		_stats.r_type(1);
+		std::vector<bool> all(index.size(), false);
+		for (unsigned i = 0; i < all.size(); ++i) {
+			const Atom& atom = index.to_atom(i);
+			if (atom.getValue()!=0) all[i] = true;
+		}
+		LPT_INFO("cout", "Simulation - Computed R_All set with " << std::count(all.cbegin(), all.cend(), true) << " atoms");
+		return all;
+	}
+	
 	std::vector<bool> compute_R(const StateT& seed) {
 		
 		if (_config._force_R_all) {
-			const AtomIndex& index = Problem::getInstance().get_tuple_index();
 			if (_verbose) LPT_INFO("cout", "Simulation - R=R[All] is the user-preferred option");	
-			_stats.r_type(1);
-			return std::vector<bool>(index.size(), true);
+			return compute_R_all();
 		}
 		
 		if (_config._force_adaptive_run) {
@@ -454,7 +464,7 @@ public:
 // 		const ProblemInfo& info = ProblemInfo::getInstance();
 		unsigned num_actions = Problem::getInstance().getGroundActions().size();
 		unsigned num_atoms = index.size() / 2; // (i.e. count positive atoms only)
-		assert(num_actions < 0);
+		assert(num_actions > 0);
 		_config._complete = false;
 		
 		
@@ -485,7 +495,6 @@ public:
 				_stats.r_type(1);
 				return std::vector<bool>(index.size(), true);				
 			}
-			
 		}
 		
 		// Otherwise, run IW(2)
