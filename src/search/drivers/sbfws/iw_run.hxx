@@ -205,8 +205,13 @@ public:
 		//!
 		bool _force_adaptive_run;
 		
-		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info, bool force_adaptive_run) :
-			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info), _force_adaptive_run(force_adaptive_run) {}
+		//!
+		bool _force_R_all;		
+		
+		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info, bool force_adaptive_run, bool force_r_all) :
+			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info), 
+			_force_adaptive_run(force_adaptive_run), _force_R_all(force_r_all)
+		{}
 	};
 	
 protected:
@@ -383,6 +388,14 @@ public:
 	}
 	
 	std::vector<bool> compute_R(const StateT& seed) {
+		
+		if (_config._force_R_all) {
+			const AtomIndex& index = Problem::getInstance().get_tuple_index();
+			if (_verbose) LPT_INFO("cout", "Simulation - R=R[All] is the user-preferred option");	
+			_stats.r_type(1);
+			return std::vector<bool>(index.size(), true);
+		}
+		
 		if (_config._force_adaptive_run) {
 			return compute_adaptive_R(seed);
 		} else if (_config._max_width == 1){
