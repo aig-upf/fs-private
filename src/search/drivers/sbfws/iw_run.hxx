@@ -416,7 +416,8 @@ public:
 		report_simulation_stats(simt0);
 		
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
-		return extract_R_G(true);
+		std::vector<bool> empty;
+		return extract_R_G(true, false, empty);
 	}
 	
 	
@@ -434,19 +435,28 @@ public:
 		}
 		
 		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
+		return extract_R_1();
+	}
+	
+	std::vector<bool> extract_R_1() {
 		std::vector<bool> R = _evaluator.reached_atoms();
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 		if (_verbose) {
 			unsigned c = std::count(R.begin(), R.end(), true);
-			LPT_INFO("cout", "Simulation - |R[" << _config._max_width << "]| = " << c);
+			LPT_INFO("cout", "Simulation - |R[1]| = " << c);
 			_stats.relevant_atoms(c);
 		}
-		return R;
-	}	
+		return R;		
+	}
 	
 	std::vector<bool> compute_adaptive_R(const StateT& seed) {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+// 		const ProblemInfo& info = ProblemInfo::getInstance();
+		unsigned num_actions = Problem::getInstance().getGroundActions().size();
+		unsigned num_atoms = index.size() / 2; // (i.e. count positive atoms only)
+		assert(num_actions < 0);
 		_config._complete = false;
+		
 		
 		float simt0 = aptk::time_used();
   		run(seed, 1);
@@ -458,7 +468,24 @@ public:
 			_stats.r_type(0);
 			return std::vector<bool>(index.size(), false);
 		} else {
-			LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
+			LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals.");
+		}
+		
+		auto r1 = extract_R_1();
+		
+		if (num_actions > 5000) { // Too many actions to compute IW(2)
+			LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << ") considered too high to run IW(2).");
+			
+			if (num_atoms > 1300) {
+				LPT_INFO("cout", "Simulation - Because number of atoms is too high (" << num_atoms << "), R=R[1] will be used.");
+				return r1;
+				
+			} else {
+				LPT_INFO("cout", "Simulation - Because number of atoms is small enough (" << num_atoms << "), R=R_all will be used.");
+				_stats.r_type(1);
+				return std::vector<bool>(index.size(), true);				
+			}
+			
 		}
 		
 		// Otherwise, run IW(2)
@@ -467,11 +494,11 @@ public:
 		report_simulation_stats(simt0);
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 		
-		return extract_R_G(true);
+		return extract_R_G(true, true, r1);
 	}	
 	
 	//! Extracts the goal-oriented set of relevant atoms after a simulation run
-	std::vector<bool> extract_R_G(bool r_all_fallback) {
+	std::vector<bool> extract_R_G(bool r_all_fallback, bool r_1_fallback, const std::vector<bool>& r1) {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		/*
 		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
@@ -519,6 +546,12 @@ public:
 				}
 				std::cout << std::endl;
 			}
+		}
+		
+		
+		if (r_1_fallback && R_G_size <= 2) {
+			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| too small. Falling back to R[1]");
+			return r1;
 		}
 		_stats.relevant_atoms(R_G_size);
 		_stats.r_type(2);
