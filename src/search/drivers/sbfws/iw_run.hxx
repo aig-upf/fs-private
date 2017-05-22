@@ -206,11 +206,14 @@ public:
 		bool _force_adaptive_run;
 		
 		//!
-		bool _force_R_all;		
+		bool _force_R_all;
+
+		//!
+		bool _r_g_prime;
 		
-		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info, bool force_adaptive_run, bool force_r_all) :
+		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info, bool force_adaptive_run, bool force_r_all, bool r_g_prime) :
 			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info), 
-			_force_adaptive_run(force_adaptive_run), _force_R_all(force_r_all)
+			_force_adaptive_run(force_adaptive_run), _force_R_all(force_r_all), _r_g_prime(r_g_prime)
 		{}
 	};
 	
@@ -353,8 +356,9 @@ public:
 		}
 	}
 	
-	void mark_w1_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes, std::vector<bool>& atoms) const {
+	std::vector<bool> mark_all_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes) const {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		std::vector<bool> atoms(index.size(), false);
 		std::unordered_set<NodePT> all_visited;
 		assert(atoms.size() == index.size());
 		
@@ -377,6 +381,7 @@ public:
 				node = node->parent;
 			}			
 		}
+		return atoms;
 	}	
 	
 	void report_simulation_stats(float simt0) {
@@ -405,6 +410,11 @@ public:
 			if (_verbose) LPT_INFO("cout", "Simulation - R=R[All] is the user-preferred option");	
 			return compute_R_all();
 		}
+		
+		if (_config._r_g_prime) {
+			if (_verbose) LPT_INFO("cout", "Simulation - R=R'_G is the user-preferred option");	
+			return compute_R_g_prime(seed);
+		}		
 		
 		if (_config._force_adaptive_run) {
 			return compute_adaptive_R(seed);
@@ -458,6 +468,47 @@ public:
 		return R;		
 	}
 	
+	std::vector<bool> compute_R_g_prime(const StateT& seed) {
+		_config._complete = false;
+	
+		
+		float simt0 = aptk::time_used();
+  		run(seed, 1);
+		report_simulation_stats(simt0);
+		
+		if (_unreached.size() == 0) {
+			std::vector<NodePT> seed_nodes = extract_seed_nodes();
+			std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
+			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+			LPT_INFO("cout", "Simulation - IW(1) run reached all goals");
+			LPT_INFO("cout", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			_stats.relevant_atoms(R_G_size);
+			return R_G;
+			
+		}
+		
+		LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
+		reset();
+		run(seed, 2);
+		report_simulation_stats(simt0);
+		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
+		
+		if (_unreached.size() == 0) {
+			std::vector<NodePT> seed_nodes = extract_seed_nodes();
+			std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
+			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+			LPT_INFO("cout", "Simulation - IW(2) run reached all goals");
+			LPT_INFO("cout", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			_stats.relevant_atoms(R_G_size);
+			return R_G;
+		}
+		
+		LPT_INFO("cout", "Simulation - IW(2) run did not reach all goals, falling back to R=R_all");
+		return compute_R_all();
+	}	
+	
+	
+	
 	std::vector<bool> compute_adaptive_R(const StateT& seed) {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		_config._complete = false;
@@ -503,23 +554,18 @@ public:
 			unsigned reached_by_simulation = num_subgoals - _unreached.size() - initially_reached;
 			if (_verbose) LPT_INFO("cout", "Simulation - " << reached_by_simulation << " subgoals were newly reached by the simulation.");
 			bool decide_r_all = (reached_by_simulation < (0.5*num_subgoals));
+			decide_r_all = _unreached.size() != 0; // XXX Use R_All is any non-reached
 			if (decide_r_all) {
 				if (_verbose) LPT_INFO("cout", "Simulation - Falling back to R=R[All]");	
 				_stats.r_type(1);
-				return std::vector<bool>(index.size(), true);
+				return compute_R_all();
 			} else {
 				if (_verbose) LPT_INFO("cout", "Simulation - Computing R_G");
 			}
 		}
 		
 		
-		std::vector<NodePT> seed_nodes;
-		for (unsigned subgoal_idx = 0; subgoal_idx < _optimal_paths.size(); ++subgoal_idx) {
-			if (!_in_seed[subgoal_idx] && _optimal_paths[subgoal_idx] != nullptr) {
-				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
-			}
-		}		
-		
+		std::vector<NodePT> seed_nodes = extract_seed_nodes();
 		std::vector<bool> R_G(index.size(), false);
 		mark_atoms_in_path_to_subgoal(seed_nodes, R_G);
 		
@@ -541,30 +587,23 @@ public:
 		return R_G;
 	}
 	
-	std::vector<bool> extract_R_G_1() {
-		const AtomIndex& index = Problem::getInstance().get_tuple_index();
-		
+	std::vector<NodePT> extract_seed_nodes() {
 		std::vector<NodePT> seed_nodes;
 		for (unsigned subgoal_idx = 0; subgoal_idx < _optimal_paths.size(); ++subgoal_idx) {
 			if (!_in_seed[subgoal_idx] && _optimal_paths[subgoal_idx] != nullptr) {
 				seed_nodes.push_back(_optimal_paths[subgoal_idx]);
 			}
-		}		
-		
-		std::vector<bool> R_G(index.size(), false);
-		mark_w1_atoms_in_path_to_subgoal(seed_nodes, R_G);
+		}
+		return seed_nodes;
+	}
+	
+	std::vector<bool> extract_R_G_1() {
+		std::vector<NodePT> seed_nodes = extract_seed_nodes();
+		std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
 		
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
-// 			if (R_G_size) {
-// 				LPT_INFO("cout", "Simulation - R_G:");
-// 				std::cout << "\t\t";
-// 				for (unsigned i = 0; i < R_G.size(); ++i) {
-// 					if (R_G[i]) std::cout << index.to_atom(i) << ", ";
-// 				}
-// 				std::cout << std::endl;
-// 			}
 		}
 		_stats.relevant_atoms(R_G_size);
 		_stats.r_type(2);

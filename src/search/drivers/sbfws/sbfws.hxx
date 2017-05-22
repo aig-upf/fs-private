@@ -214,7 +214,8 @@ public:
 				   config.simulation_width,
 			       c.getOption<bool>("goal_directed", false),
 				   c.getOption<bool>("sim.hybrid", false),
-				   c.getOption<bool>("sim.r_all", false)
+				   c.getOption<bool>("sim.r_all", false),
+				   c.getOption<bool>("sim.r_g_prime", false)
 		),
 		_stats(stats),
 		_sbfwsconfig(config)
