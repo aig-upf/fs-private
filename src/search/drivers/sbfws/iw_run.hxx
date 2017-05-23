@@ -14,7 +14,7 @@
 #include <utils/printers/vector.hxx>
 #include <utils/printers/actions.hxx>
 #include <lapkt/search/components/open_lists.hxx>
-
+#include <utils/config.hxx>
 
 
 namespace fs0 { namespace bfws {
@@ -199,6 +199,9 @@ public:
 		//! The maximum levels of novelty to be considered
 		unsigned _max_width;
 		
+		//!
+		const fs0::Config& _global_config;
+		
 		//! Whether to extract goal-informed relevant sets R
 		bool _goal_directed;
 		
@@ -211,9 +214,19 @@ public:
 		//!
 		bool _r_g_prime;
 		
-		Config(bool complete, bool mark_negative, unsigned max_width, bool goal_directed_info, bool force_adaptive_run, bool force_r_all, bool r_g_prime) :
-			_complete(complete), _mark_negative(mark_negative), _max_width(max_width), _goal_directed(goal_directed_info), 
-			_force_adaptive_run(force_adaptive_run), _force_R_all(force_r_all), _r_g_prime(r_g_prime)
+		//!
+		int _gr_actions_cutoff;
+		
+		Config(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config) :
+			_complete(complete),
+			_mark_negative(mark_negative),
+			_max_width(max_width),
+			_global_config(global_config),
+			_goal_directed(global_config.getOption<bool>("goal_directed", false)), 
+			_force_adaptive_run(global_config.getOption<bool>("sim.hybrid", false)),
+			_force_R_all(global_config.getOption<bool>("sim.r_all", false)),
+			_r_g_prime(global_config.getOption<bool>("sim.r_g_prime", false)),
+			_gr_actions_cutoff(global_config.getOption<int>("sim.act_cutoff", -1))
 		{}
 	};
 	
@@ -488,6 +501,18 @@ public:
 		}
 		
 		LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
+
+		
+		if (_config._gr_actions_cutoff > 0) {
+			unsigned num_actions = Problem::getInstance().getGroundActions().size();
+			if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(2)
+				LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
+				return compute_R_all();
+			} else {
+					LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " <= " << _config._gr_actions_cutoff << ") considered low enough to run IW(2).");
+			}
+		}
+			
 		reset();
 		run(seed, 2);
 		report_simulation_stats(simt0);
