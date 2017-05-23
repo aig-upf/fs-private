@@ -215,7 +215,7 @@ public:
 		bool _r_g_prime;
 		
 		//!
-		int _gr_actions_cutoff;
+		unsigned _gr_actions_cutoff;
 		
 		Config(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config) :
 			_complete(complete),
@@ -226,7 +226,7 @@ public:
 			_force_adaptive_run(global_config.getOption<bool>("sim.hybrid", false)),
 			_force_R_all(global_config.getOption<bool>("sim.r_all", false)),
 			_r_g_prime(global_config.getOption<bool>("sim.r_g_prime", false)),
-			_gr_actions_cutoff(global_config.getOption<int>("sim.act_cutoff", -1))
+			_gr_actions_cutoff(global_config.getOption<unsigned>("sim.act_cutoff", std::numeric_limits<unsigned>::max()))
 		{}
 	};
 	
@@ -503,9 +503,9 @@ public:
 		LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
 
 		
-		if (_config._gr_actions_cutoff > 0) {
+		if (_config._gr_actions_cutoff < std::numeric_limits<unsigned>::max()) {
 			unsigned num_actions = Problem::getInstance().getGroundActions().size();
-			if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(2)
+			if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(º2)
 				LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
 				return compute_R_all();
 			} else {
