@@ -34,7 +34,7 @@ Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
 	_partials(),
 	_state_constraints(state_constraints),
 	_goal_formula(goal),
-    _metric(metric),
+    	_metric(metric),
 	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
 	_is_predicative(check_is_predicative())
 {
@@ -47,11 +47,11 @@ Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
 Problem::~Problem() {
 	for (const auto pointer:_action_data) delete pointer;
 	for (const auto it:_axioms) delete it.second;
-    for (const auto it:_state_constraints) delete it.second;
+    	for (const auto it:_state_constraints) delete it.second;
 	for (const auto pointer:_ground) delete pointer;
 	for (const auto pointer:_partials) delete pointer;
 	delete _goal_formula;
-    delete _metric;
+    	delete _metric;
 }
 
 std::unordered_map<std::string, const fs::Axiom*>
@@ -71,9 +71,9 @@ Problem::Problem(const Problem& other) :
 	_axioms(other._axioms),
 	_ground(Utils::copy(other._ground)),
 	_partials(Utils::copy(other._partials)),
-    _state_constraints(other._state_constraints),
+    	_state_constraints(other._state_constraints),
 	_goal_formula(other._goal_formula->clone()),
-    _metric(new fs::Metric(*other._metric)),
+    	_metric(new fs::Metric(*other._metric)),
 	_goal_sat_manager(other._goal_sat_manager->clone()),
 	_is_predicative(other._is_predicative)
 {
@@ -101,9 +101,9 @@ std::ostream& Problem::print(std::ostream& os) const {
 	os << std::endl;
 
 	os << "State Constraints:" << std::endl << "------------------" << std::endl;
-    for ( auto c : _state_constraints ) {
-        os << "\t" << c.first << ": " << *(c.second) << std::endl;
-    }
+	for ( auto c : _state_constraints ) {
+	os << "\t" << c.first << ": " << *(c.second) << std::endl;
+	}
 
 	os << "Action data" << std::endl << "------------------" << std::endl;
 	for (const ActionData* data:_action_data) {
@@ -139,6 +139,7 @@ void Problem::consolidateAxioms() {
     if ( !_ground.empty() )
         throw std::runtime_error("Problem::consolidateAxioms(): method called after grounding actions!");
 	const ProblemInfo& info = ProblemInfo::getInstance();
+
 	// NOTE Order is FUNDAMENTAL: we need to process the axioms first of all.
 	// TODO This won't work for recursive axioms. We need a better strategy, e.g. lazy retrieval of the axiom pointers whenever interpretation is required, etc.
 	// Update the axioms
@@ -148,24 +149,27 @@ void Problem::consolidateAxioms() {
 		it.second = new fs::Axiom(axiom->getName(), axiom->getSignature(), axiom->getParameterNames(), axiom->getBindingUnit(), definition);
 		delete axiom;
 	}
+
+	// Recreate the goal formula with axioms, delete the old one, and recreate the goal manager with the new one
+	// Yes, very messy.
 	auto tmp = _goal_formula;
 	_goal_formula = fs::process_axioms(*_goal_formula, info);
 	delete tmp;
-    auto old_manager = _goal_sat_manager.release();
-    //delete old_manager;
+	auto old_manager = _goal_sat_manager.release();
+	//delete old_manager;
 	_goal_sat_manager = std::unique_ptr<FormulaInterpreter>(FormulaInterpreter::create(_goal_formula, get_tuple_index()));
 
-    for ( auto& c : _state_constraints ) {
-        const fs::Axiom* tmp = c.second;
+	for ( auto& c : _state_constraints ) {
+	const fs::Axiom* tmp = c.second;
 	    const fs::Formula* _new_definition = fs::process_axioms(*(tmp->getDefinition()), info);
-        c.second= new fs::Axiom( tmp->getName(), tmp->getSignature(), tmp->getParameterNames(), tmp->getBindingUnit(), _new_definition );
-        delete tmp;
-    }
-    //! Store pointers to the state constraint definitions for ease of use
-    _state_constraints_formulae.clear();
-    for ( auto c : _state_constraints ) {
-        _state_constraints_formulae.push_back( c.second->getDefinition() );
-    }
+	c.second= new fs::Axiom( tmp->getName(), tmp->getSignature(), tmp->getParameterNames(), tmp->getBindingUnit(), _new_definition );
+	delete tmp;
+	}
+	//! Store pointers to the state constraint definitions for ease of use
+	_state_constraints_formulae.clear();
+	for ( auto c : _state_constraints ) {
+	_state_constraints_formulae.push_back( c.second->getDefinition() );
+	}
 
 
 	// Update the action schemas

@@ -212,9 +212,7 @@ public:
 		_simconfig(config.complete_simulation,
 				   config.mark_negative_propositions,
 				   config.simulation_width,
-			       c.getOption<bool>("goal_directed", false),
-				   c.getOption<bool>("sim.hybrid", false)
-		),
+					c),
 		_stats(stats),
 		_sbfwsconfig(config)
 	{

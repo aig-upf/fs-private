@@ -43,7 +43,7 @@ namespace fs0 {
 			}
 		}
 
-		throw std::runtime_error("Shouldn't get here");
+		throw std::runtime_error("Match-Tree runtime error - No best variable found");
     }
 
     bool
@@ -63,8 +63,7 @@ namespace fs0 {
 
 	SwitchNode::~SwitchNode() {
 		delete _default_child;
-		delete _positive_child;
-// 		for (BaseNode* child:_children) delete child;
+ 		for (BaseNode* child:_children) delete child;
 	}
 
 
@@ -88,8 +87,7 @@ namespace fs0 {
 		// TODO This won't work for a multi-valued match-tree. For that, we'll either need to change 'children' into a map
 		// (bad for time performance), or change it into a huge vector mapping any possible value of the variable into the
 		// actual node. This could be quite harmful when dealing with large-domain integer variables, etc.
-		if (unwrapped_val == 1) _positive_child->generate_applicable_items(s, tuple_index, actions);
-// 		_children[val]->generate_applicable_items(s, tuple_index, actions);
+		_children[val]->generate_applicable_items(s, tuple_index, actions);
 
         _default_child->generate_applicable_items( s, tuple_index, actions );
     }
@@ -98,15 +96,15 @@ namespace fs0 {
 		_pivot(get_best_variable(context))
 	{
 		const std::vector<AtomIdx>& pivot_atoms = context._tuple_index.all_variable_atoms(_pivot); // All the atoms that can be derived from the pivot variable
-		if (pivot_atoms.size() != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
-		if (boost::get<int>(context._tuple_index.to_atom(pivot_atoms[0]).getValue()) != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
-
+		if (pivot_atoms.size() > 2) throw std::runtime_error("Match Tree only ready for propositional domains yet");
+		// if (context._tuple_index.to_atom(pivot_atoms[0]).getValue() != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
+		
 		// 'actions_split_by_pivot_value[i]' will contain all actions whose precondition requires the 'i'-th
 		// possible atom that can be derived from the pivot variable to hold
 		std::vector<std::vector<ActionIdx>> actions_split_by_pivot_value(pivot_atoms.size());
 
 		std::vector<ActionIdx> dont_care_actions; // All actions for which the value of the pivot variable is irrelevant
-
+			
 		// Classify all actions
 		for (ActionIdx action:actions) {
 
@@ -120,9 +118,8 @@ namespace fs0 {
 
 				for (unsigned i = 0; i < pivot_atoms.size(); ++i) {
 					AtomIdx atom = pivot_atoms[i];
-
-					assert( boost::get<int>(context._tuple_index.to_atom(atom).getValue()) == 0
-                            || boost::get<int>(context._tuple_index.to_atom(atom).getValue()) == 1); // Not yet ready for multivalued match tree... soon!
+					
+					assert(context._tuple_index.to_atom(atom).getValue() == 0 || context._tuple_index.to_atom(atom).getValue() == 1); // Not yet ready for multivalued match tree... soon!
 					if (required.find(atom) != required.end()) {
 						is_relevant = true;
 						actions_split_by_pivot_value[i].push_back(action);
@@ -147,12 +144,15 @@ namespace fs0 {
 		context._seen[_pivot] = true;
 
 		// Create the switch generators
-		/*
+		
+		if (actions_split_by_pivot_value.size() == 1) {
+			// We need to account for the X=0 value
+			std::vector<ActionIdx> empty;
+			actions_split_by_pivot_value.insert(actions_split_by_pivot_value.begin(), empty);
+		}
 		for (unsigned i = 0; i < actions_split_by_pivot_value.size(); i++) {
 			_children.push_back(create_tree(std::move(actions_split_by_pivot_value[i]), context));
-		}*/
-		if (!actions_split_by_pivot_value[0].empty()) throw std::runtime_error("Match Tree not ready for negated preconditions");
-		_positive_child = create_tree(std::move(actions_split_by_pivot_value[1]), context);
+		}
 
 		_default_child = create_tree(std::move(dont_care_actions), context); // Create the default generator
 
@@ -161,11 +161,9 @@ namespace fs0 {
 
     unsigned SwitchNode::count() const {
         unsigned total = 0;
-		/*
 		for (const auto child:_children) {
             total += child->count();
-		}*/
-		total += _positive_child->count();
+		}
         total += _default_child->count();
         total += _immediate_items.size();
         return total;
@@ -173,24 +171,18 @@ namespace fs0 {
 
     unsigned SwitchNode::count_nodes() const {
         unsigned total = 1 + _default_child->count_nodes();
-		/*
 		for (const auto child:_children) {
             total += child->count_nodes();
 		}
-		*/
-		total += _positive_child->count_nodes();
         return total;
     }
 
 	void SwitchNode::count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const {
 		++sw;
 		_default_child->count_nodes(sw, leaf, empty);
-		_positive_child->count_nodes(sw, leaf, empty);
-		/*
 		for (const auto child:_children) {
 			child->count_nodes(sw, leaf, empty);
 		}
-		*/
 	}
 
 
@@ -212,14 +204,10 @@ namespace fs0 {
         stream << indent << "always:" << std::endl;
         _default_child->print(stream, indent + "  ", manager);
 
-		/*
         for (unsigned i = 0; i < _children.size(); ++i) {
             stream << indent << "case " << i << ":" << std::endl;
             _children[i]->print(stream, indent + "  ", manager);
         }
-        */
-		stream << indent << "case True:" << std::endl;
-		_positive_child->print(stream, indent + "  ", manager);
     }
 
     void
@@ -235,41 +223,41 @@ namespace fs0 {
 
 
     MatchTreeActionManager::MatchTreeActionManager( const std::vector<const GroundAction*>& actions,
-                                                    const std::vector<const fs::Formula*>& state_constraints,
+                                                    const fs::Formula* state_constraints,
                                                     const AtomIndex& tuple_idx)
         : NaiveActionManager(actions, state_constraints),
         _tuple_idx(tuple_idx),
         _tree(nullptr)
     {
-        const ProblemInfo& info = ProblemInfo::getInstance();
+		const ProblemInfo& info = ProblemInfo::getInstance();
 
 		check_match_tree_can_be_used(info);
 
 		LPT_INFO("cout", "Mem. usage before applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
-        BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
+		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build(false);
 
 		LPT_INFO("cout", "Mem. usage after applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 
-        // MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
-        // lots of methods with absurdly long signatures. The idea is to progressively move
-        // towards a more visitor/creator like implementation, but I don't want to depart too
-        // much from Chris' original implementation to help with debugging.
-        std::vector<ActionIdx> all_actions(_actions.size());
-        std::iota( all_actions.begin(), all_actions.end(), 0);
+		// MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
+		// lots of methods with absurdly long signatures. The idea is to progressively move
+		// towards a more visitor/creator like implementation, but I don't want to depart too
+		// much from Chris' original implementation to help with debugging.
+		std::vector<ActionIdx> all_actions(_actions.size());
+		std::iota( all_actions.begin(), all_actions.end(), 0);
 
 
 		std::vector<bool> seen(info.getNumVariables(), false);
 		std::vector<VariableIdx> sorted_vars = sort_variables(analyzer.getVariableRelevance());
 
-        NodeCreationContext helper(_tuple_idx, sorted_vars, analyzer.getRevApplicable(), seen);
+		NodeCreationContext helper(_tuple_idx, sorted_vars, analyzer.getRevApplicable(), seen);
 
-		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+// 		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		_tree = new SwitchNode(all_actions, helper);
-		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-        LPT_INFO("cout", "Match Tree created");
+// 		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("cout", "Match Tree created");
 
 
 		unsigned sw = 0, leaf = 0, empty = 0;
@@ -278,14 +266,6 @@ namespace fs0 {
 		LPT_INFO("cout", "\tSWITCH: " << sw);
 		LPT_INFO("cout", "\tLEAF: " << leaf);
 		LPT_INFO("cout", "\tEMPTY: " << empty);
-
-		/*
-        #ifdef EDEBUG
-        std::stringstream buffer;
-        _tree->print( buffer, "", *this );
-        LPT_EDEBUG("main", "\n" << buffer.str() );
-        #endif
-        */
     }
 
 
@@ -310,11 +290,12 @@ namespace fs0 {
 // 		LPT_INFO( "cout", "[Match Tree] Variables ordered by frequency:");
 
 		for (int i = count.size()-1; i >= 0; --i) {
-            if ( count[i].first == 0 ) continue;
+            if ( count[i].first == 0 ) continue; // the variable is not relevant to any action precondition
 			indexes_only.push_back(count[i].second);
 // 			LPT_INFO( "cout", info.getVariableName(count[i].second) << " (" << count[i].first << ")");
 		}
 
+		assert(!indexes_only.empty());
 		return indexes_only;
 	}
 
