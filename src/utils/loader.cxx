@@ -27,7 +27,7 @@
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
-	
+
 std::unordered_map<std::string, const fs::Axiom*>
 _index_axioms(const std::vector<const fs::Axiom*>& axioms) {
 	std::unordered_map<std::string, const fs::Axiom*> index;
@@ -41,32 +41,32 @@ _index_axioms(const std::vector<const fs::Axiom*>& axioms) {
 Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	const Config& config = Config::instance();
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	
+
 	LPT_INFO("main", "Creating State Indexer...");
 	auto indexer = StateAtomIndexer::create(info);
-	
+
 	LPT_INFO("main", "Loading initial state...");
 	if (!data.HasMember("init")) {
-	throw std::runtime_error("Could not find initial state in data/problem.json!");
+	       throw std::runtime_error("Could not find initial state in data/problem.json!");
 	}
 	auto init = loadState(*indexer, data["init"], info);
 	LPT_DEBUG("main", *init );
 
 	LPT_INFO("main", "Loading action data...");
 	if (!data.HasMember("action_schemata")) {
-	throw std::runtime_error("Could not find action schemas in data/problem.json!");
+	       throw std::runtime_error("Could not find action schemas in data/problem.json!");
 	}
 	auto control_data = loadAllActionData(data["action_schemata"], info, true);
 
 	LPT_INFO("main", "Loading process data...");
 	if (!data.HasMember("process_schemata")) {
-	throw std::runtime_error("Could not find process schemas in data/problem.json!");
+	       throw std::runtime_error("Could not find process schemas in data/problem.json!");
 	}
 	auto process_data = loadAllActionData(data["process_schemata"], info, true);
 
 	LPT_INFO("main", "Loading event data...");
 	if (!data.HasMember("event_schemata")) {
-	throw std::runtime_error("Could not find events schemas in data/problem.json!");
+	       throw std::runtime_error("Could not find events schemas in data/problem.json!");
 	}
 	auto events_data = loadAllActionData(data["event_schemata"], info, true);
 
@@ -77,22 +77,22 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	// Axiom schemas are simply action schemas but without effects
 	auto axioms = loadAxioms(data["axioms"], info);
 	if (!data.HasMember("axioms")) {
-	throw std::runtime_error("Could not find axioms schemas in data/problem.json!");
+	       throw std::runtime_error("Could not find axioms schemas in data/problem.json!");
 	}
 	auto axiom_idx = _index_axioms(axioms);
-	
+
 	LPT_INFO("main", "Loading goal formula...");
 	if (!data.HasMember("goal")) {
-	throw std::runtime_error("Could not find axioms schemas in data/problem.json!");
+	       throw std::runtime_error("Could not find axioms schemas in data/problem.json!");
 	}
 	auto goal = loadGroundedFormula(data["goal"], info);
-	
+
 	LPT_INFO("main", "Loading state constraints...");
 
 
 	std::vector<const fs::Formula*> conjuncts;
 	if (!data.HasMember("state_constraints")) {
-	throw std::runtime_error("Could not find state constraints in data/problem.json!");
+	       throw std::runtime_error("Could not find state constraints in data/problem.json!");
 	}
 	for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
 	   auto sc = loadGroundedFormula(data["state_constraints"][i], info);
@@ -115,7 +115,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
 	auto named_sc = loadNamedStateConstraint(data["state_constraints"][i], info);
 	if ( named_sc == nullptr ) continue;
-	sc_set.push_back( named_sc );
+	   sc_set.push_back( named_sc );
 	}
 	auto sc_idx = _index_axioms(sc_set);
 
@@ -125,24 +125,24 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	//! Set the global singleton Problem instance
 	bool has_negated_preconditions = _check_negated_preconditions(action_data);
 	LPT_INFO("cout", "Quick Negated-Precondition Test: Does the problem have negated preconditions? " << has_negated_preconditions);
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc, AtomIndex(info, has_negated_preconditions));
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_set, AtomIndex(info, has_negated_preconditions));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
-	
+
 	problem->consolidateAxioms();
-	
+
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
 	if (config.validate()) {
 		LPT_INFO("main", "Validating problem...");
 		Validator::validate_problem(*problem, info);
 	}
-	
+
 	return problem;
 }
 
-void 
+void
 Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
-	
+
 	// First load the extensions of the static symbols
 	for (auto name:info.getSymbolNames()) {
 		unsigned id = info.getSymbolId(name);
@@ -150,7 +150,7 @@ Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 			info.set_extension(id, StaticExtension::load_static_extension(name, info));
 		}
 	}
-	
+
 	// Load the function objects for externally-defined symbols
 	for (auto elem:factory.instantiateFunctions(info)) {
 		info.setFunction(info.getSymbolId(elem.first), elem.second);
@@ -230,11 +230,11 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 
 	const fs::Formula* precondition = fs::Loader::parseFormula(node["conditions"], info);
 	std::vector<const fs::ActionEffect*> effects;
-	
+
 	if (load_effects) {
 		effects = fs::Loader::parseEffectList(node["effects"], info);
 	}
-	
+
 	ActionData adata(id, name, signature, parameters, unit, precondition, effects);
 	if (adata.has_empty_parameter()) {
 		LPT_INFO("cout", "Schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
