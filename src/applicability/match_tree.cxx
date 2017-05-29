@@ -87,7 +87,7 @@ namespace fs0 {
 		// TODO This won't work for a multi-valued match-tree. For that, we'll either need to change 'children' into a map
 		// (bad for time performance), or change it into a huge vector mapping any possible value of the variable into the
 		// actual node. This could be quite harmful when dealing with large-domain integer variables, etc.
-		_children[val]->generate_applicable_items(s, tuple_index, actions);
+		_children[unwrapped_val]->generate_applicable_items(s, tuple_index, actions);
 
         _default_child->generate_applicable_items( s, tuple_index, actions );
     }
@@ -98,13 +98,13 @@ namespace fs0 {
 		const std::vector<AtomIdx>& pivot_atoms = context._tuple_index.all_variable_atoms(_pivot); // All the atoms that can be derived from the pivot variable
 		if (pivot_atoms.size() > 2) throw std::runtime_error("Match Tree only ready for propositional domains yet");
 		// if (context._tuple_index.to_atom(pivot_atoms[0]).getValue() != 1) throw std::runtime_error("Match Tree only ready for propositional domains yet");
-		
+
 		// 'actions_split_by_pivot_value[i]' will contain all actions whose precondition requires the 'i'-th
 		// possible atom that can be derived from the pivot variable to hold
 		std::vector<std::vector<ActionIdx>> actions_split_by_pivot_value(pivot_atoms.size());
 
 		std::vector<ActionIdx> dont_care_actions; // All actions for which the value of the pivot variable is irrelevant
-			
+
 		// Classify all actions
 		for (ActionIdx action:actions) {
 
@@ -118,8 +118,9 @@ namespace fs0 {
 
 				for (unsigned i = 0; i < pivot_atoms.size(); ++i) {
 					AtomIdx atom = pivot_atoms[i];
-					
-					assert(context._tuple_index.to_atom(atom).getValue() == 0 || context._tuple_index.to_atom(atom).getValue() == 1); // Not yet ready for multivalued match tree... soon!
+
+					assert( boost::get<int>(context._tuple_index.to_atom(atom).getValue()) == 0
+                            || boost::get<int>(context._tuple_index.to_atom(atom).getValue()) == 1 ); // Not yet ready for multivalued match tree... soon!
 					if (required.find(atom) != required.end()) {
 						is_relevant = true;
 						actions_split_by_pivot_value[i].push_back(action);
@@ -144,7 +145,7 @@ namespace fs0 {
 		context._seen[_pivot] = true;
 
 		// Create the switch generators
-		
+
 		if (actions_split_by_pivot_value.size() == 1) {
 			// We need to account for the X=0 value
 			std::vector<ActionIdx> empty;
@@ -223,7 +224,7 @@ namespace fs0 {
 
 
     MatchTreeActionManager::MatchTreeActionManager( const std::vector<const GroundAction*>& actions,
-                                                    const fs::Formula* state_constraints,
+                                                    const std::vector<const fs::Formula*>& state_constraints,
                                                     const AtomIndex& tuple_idx)
         : NaiveActionManager(actions, state_constraints),
         _tuple_idx(tuple_idx),

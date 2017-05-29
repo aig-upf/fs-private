@@ -37,6 +37,22 @@ _index_axioms(const std::vector<const fs::Axiom*>& axioms) {
 	return index;
 }
 
+// UGLY HACK. This should not be here.
+bool
+_check_negated_preconditions(std::vector<const ActionData*>& schemas) {
+	for (const ActionData* schema:schemas) {
+		for (const fs::AtomicFormula* atom:fs::all_atoms(*schema->getPrecondition())) {
+			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(atom);
+			if (!eq) continue;
+			const fs::NumericConstant* cnst = dynamic_cast<const fs::NumericConstant*>(eq->rhs());
+			if (!cnst) continue;
+			auto val = boost::get<int>(cnst->getValue());
+			if (val==0) return true;
+		}
+	}
+
+	return false;
+}
 
 Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	const Config& config = Config::instance();
@@ -125,7 +141,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	//! Set the global singleton Problem instance
 	bool has_negated_preconditions = _check_negated_preconditions(action_data);
 	LPT_INFO("cout", "Quick Negated-Precondition Test: Does the problem have negated preconditions? " << has_negated_preconditions);
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_set, AtomIndex(info, has_negated_preconditions));
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, has_negated_preconditions));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 
 	problem->consolidateAxioms();
@@ -214,7 +230,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 
     //! MRJ: this method is being re-used to load axioms and state constraints, so the "type"
     //! member is actually optional
-    ActionData::Type action_type;
+    ActionData::Type action_type = ActionData::Type::Control;
     if ( node.HasMember("type") ) {
         const std::string& action_type_str = node["type"].GetString();
         if ( action_type_str == "control" )
@@ -235,7 +251,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 		effects = fs::Loader::parseEffectList(node["effects"], info);
 	}
 
-	ActionData adata(id, name, signature, parameters, unit, precondition, effects);
+	ActionData adata(id, name, signature, parameters, unit, precondition, effects, action_type);
 	if (adata.has_empty_parameter()) {
 		LPT_INFO("cout", "Schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
 		return nullptr;
