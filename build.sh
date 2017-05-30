@@ -8,4 +8,4 @@ cd $LAPKT && rm -rf include lib
 cd $LAPKT2_PATH && ./build.py && ./install.py
 cd $LAPKT_NOVELTY_PATH && ./build.py && ./install.py
 
-cd $FS_PATH && ./build.py
+cd $FS_PATH && ./build.py -p

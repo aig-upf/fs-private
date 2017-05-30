@@ -8,7 +8,7 @@
 namespace fs0 {
 
 bool AtomIndex::is_indexed(VariableIdx variable, ObjectIdx value) const {
-	return !_info.isPredicativeVariable(variable) || boost::get<int>(value) == 1;
+	return !_info.isPredicativeVariable(variable) || _indexes_negated_literals || boost::get<int>(value) == 1;
 }
 
 
@@ -64,7 +64,8 @@ void AtomIndex::add(const ProblemInfo& info, unsigned symbol, const ValueTuple& 
 	assert(_atom_index.size() == idx);
 	_atom_index.push_back(atom);
 
-	_atom_index_inv.at(atom.getVariable()).insert(std::make_pair(boost::get<int>(atom.getValue()), idx));
+	_atom_index_inv.at(atom.getVariable()).insert(std::make_pair(atom.getValue(), idx));
+	_variable_to_atom_index.at(atom.getVariable()).push_back(idx);
 }
 
 AtomIdx AtomIndex::to_index(unsigned symbol, const ValueTuple& tuple) const {

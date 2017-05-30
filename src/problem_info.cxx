@@ -4,6 +4,7 @@
 
 #include <problem_info.hxx>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include <utils/lexical_cast.hxx>
 #include <atom.hxx>
 #include <lapkt/tools/logging.hxx>
@@ -101,7 +102,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		// Load the info necessary to resolve state variables dynamically
 		const auto& var_data = data[i]["data"];
 		unsigned symbol_id = var_data[0].GetInt();
-		std::vector<ObjectIdx> constants;
+		 std::vector<ObjectIdx> constants;
 		for (unsigned j = 0; j < var_data[1].Size(); ++j) {
 			constants.push_back(var_data[1][j].GetInt());
 		}
@@ -146,7 +147,8 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 		}
 
 		bool is_static = data[i][6].GetBool();
-		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static));
+        bool has_unbounded_arity = data[i][7].GetBool();
+		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static, has_unbounded_arity));
 	}
 }
 

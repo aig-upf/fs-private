@@ -8,6 +8,7 @@
 #include <languages/fstrips/builtin.hxx>
 #include <dynamics/integrator.hxx>
 #include <utils/config.hxx>
+#include <languages/fstrips/operations.hxx>
 
 #include <lapkt/tools/logging.hxx>
 
@@ -32,7 +33,7 @@ namespace fs0 { namespace dynamics {
 
     State
     ActiveODESet::predictNextState( const State& s, const integrators::Integrator& I, double delta_time, double factor ) const {
-        setup();
+        setup(s);
         State next(s);
         I( s, _rates_of_change, next, delta_time, factor);
         next.updateHash();
@@ -40,7 +41,7 @@ namespace fs0 { namespace dynamics {
     }
 
     void
-    ActiveODESet::setup() const {
+    ActiveODESet::setup(const State& state) const {
         if (_ready ) return;
         // Collect affected variables and effects
         const Problem& problem = Problem::getInstance();
@@ -50,15 +51,13 @@ namespace fs0 { namespace dynamics {
 
             LPT_DEBUG( "dynamics","\t" << *proc );
             for ( auto eff : proc->getEffects() ) {
-                const fs::StateVariable* var = dynamic_cast<const fs::StateVariable*>( eff->lhs() );
-                if ( var == nullptr ) {
-                    throw std::runtime_error("Symbol on left hand side of process '" + proc->getName() +  "' is not a State Variable!");
-                }
+                LPT_DEBUG( "dynamics", "\t\t" << *(eff->lhs()) << " := " << *(eff->rhs()));
+                VariableIdx affected = fs::interpret_variable(*(eff->lhs()), state);
                 const fs::BinaryArithmeticTerm* rhs = dynamic_cast<const fs::BinaryArithmeticTerm*>(eff->rhs());
                 if ( rhs == nullptr ) {
                     throw std::runtime_error("Right hand side of process '" + proc->getName() +  "' is not a binary arithmetic term!");
                 }
-                VariableIdx affected = var->getValue();
+
                 auto eq = [affected]( const DifferentialEquation& eq ) { return eq._affected == affected; };
                 auto it = std::find_if( _rates_of_change.begin(), _rates_of_change.end(), eq );
                 if ( it == _rates_of_change.end() ) {

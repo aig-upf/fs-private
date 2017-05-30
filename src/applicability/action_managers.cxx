@@ -49,7 +49,7 @@ bool NaiveApplicabilityManager::isActive(const State& state, const GroundAction&
 std::vector<Atom>
 NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction& action) {
 	std::vector<Atom> atoms;
-	computeEffects(state, action, atoms);
+    action.apply(state,atoms);
 	return atoms;
 }
 

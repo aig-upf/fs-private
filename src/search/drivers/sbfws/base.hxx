@@ -53,7 +53,7 @@ protected:
 public:
 	using NoveltyEvaluatorT = lapkt::novelty::NoveltyEvaluatorI<FeatureValueT>;
 	
-	NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired_evaluator_t, unsigned max_expected_width);
+	NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired_evaluator_t, bool use_extra_features, unsigned max_expected_width);
 	
 	NoveltyEvaluatorT* create_evaluator(unsigned width) const;
 	

@@ -4,6 +4,7 @@
 #include <lapkt/novelty/features.hxx>
 #include <fs_types.hxx>
 #include <state.hxx>
+#include <memory>
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class AtomicFormula; class Formula; }}}
 namespace fs = fs0::language::fstrips;
@@ -20,29 +21,29 @@ public:
 	StateVariableFeature(const StateVariableFeature&) = default;
 	virtual lapkt::novelty::NoveltyFeature<State>* clone() const override { return new StateVariableFeature(*this); }
 	FSFeatureValueT evaluate( const State& s ) const override;
-	
+
 	std::ostream& print(std::ostream& os) const override;
 
 protected:
 	VariableIdx _variable;
 };
 
-//! A feature based on a set of conditions (typically the set of preconditions of an action, 
+//! A feature based on a set of conditions (typically the set of preconditions of an action,
 //! or the goal conditions), that evaluates to the number of satisfied conditions in the set for a given state.
 class ConditionSetFeature : public lapkt::novelty::NoveltyFeature<State> {
 public:
 	ConditionSetFeature() {}
 	~ConditionSetFeature() = default;
-	
+
 	// we can use the default copy constructor, as formula pointers are NOT owned by this class
 	ConditionSetFeature(const ConditionSetFeature&) = default;
 
 	virtual lapkt::novelty::NoveltyFeature<State>* clone() const override { return new ConditionSetFeature(*this); }
-	
+
 	void addCondition(const fs::Formula* condition) { _conditions.push_back(condition); }
 
 	FSFeatureValueT evaluate(const State& s) const override;
-	
+
 	std::ostream& print(std::ostream& os) const override;
 
 protected:
@@ -58,7 +59,7 @@ public:
 	ArbitraryTermFeature(const ArbitraryTermFeature&);
 	lapkt::novelty::NoveltyFeature<State>* clone() const override { return new ArbitraryTermFeature(*this); }
 	FSFeatureValueT evaluate(const State& s) const override;
-	
+
 	std::ostream& print(std::ostream& os) const override;
 
 protected:
@@ -66,17 +67,41 @@ protected:
 };
 
 class ArbitraryFormulaFeature : public lapkt::novelty::NoveltyFeature<State> {
+
 public:
 	ArbitraryFormulaFeature(const fs::Formula* formula) : _formula(formula) {}
 	~ArbitraryFormulaFeature();
 	ArbitraryFormulaFeature(const ArbitraryFormulaFeature&);
 	lapkt::novelty::NoveltyFeature<State>* clone() const override { return new ArbitraryFormulaFeature(*this); }
 	FSFeatureValueT evaluate(const State& s) const override;
-	
+
 	std::ostream& print(std::ostream& os) const override;
 
 protected:
 	const fs::Formula* _formula;
+};
+
+// MRJ: Why this convoluted design?
+// -> We don't want to change the LAPKT class NoveltyFeature<T>
+// -> We want to make easy to re-integrate this code into the FS "main" development
+//    branch.
+//
+// Notes:
+// -> The 2nd and 3rd template parameters are dependant, we could do away with FeatureDefinition
+//    if FeatureT provided a trait "DefinitionT" for instance. We haven't proceeded in this fashion
+//    to make the future merge easier.
+//
+template <typename FeatureDefinition, typename FeatureT, typename Manager >
+class ManagedFeature : public FeatureT {
+public:
+    typedef std::shared_ptr<Manager>    ManagerPtr;
+
+    ManagedFeature(const FeatureDefinition* def, ManagerPtr mgr )
+        : FeatureT( def ), _manager(mgr) {}
+
+protected:
+
+    ManagerPtr  _manager;
 };
 
 /*
@@ -86,20 +111,20 @@ protected:
 class LambdaFeature : public lapkt::novelty::NoveltyFeature<State> {
 public:
 	using EvaluatorT = std::function<int(const State&)>; // TODO Generalize this to return bools too
-	
+
 	LambdaFeature(const EvaluatorT& evaluator) : _evaluator(evaluator) {}
 	~LambdaFeature() = default;
 // 	LambdaFeature(const LambdaFeature&) = default;
-	
+
 	LambdaFeature* clone() const override { return new LambdaFeature(*this); }
 	FSFeatureValueT evaluate(const State& s) const override { // TODO Generalize this to return bools too
 		return _evaluator(s);
 	}
-	
+
 	std::ostream& print(std::ostream& os) const override {
 		return os << "Anonymous Lambda Feature";
 	}
-	
+
 protected:
 	EvaluatorT _evaluator;
 };

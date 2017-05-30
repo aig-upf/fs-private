@@ -65,6 +65,8 @@ public:
 
 	unsigned get_action_idx(const ActionId& action) const { return static_cast<unsigned>(action); }
 
+	static ActionManagerI* build_action_manager(const Problem& problem);
+
 protected:
 	// The underlying planning problem.
 	const Problem& _task;
@@ -73,8 +75,6 @@ protected:
 
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
-
-	static ActionManagerI* build_action_manager(const Problem& problem);
 
 	const std::vector<const fs::Formula*> _subgoals;
 };

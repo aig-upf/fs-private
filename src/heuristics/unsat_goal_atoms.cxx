@@ -1,18 +1,29 @@
 
 
 #include <problem.hxx>
+#include <state.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
 #include <languages/fstrips/formulae.hxx>
+#include <languages/fstrips/terms.hxx>
+#include <languages/fstrips/operations/basic.hxx>
+#include <lapkt/tools/logging.hxx>
+#include <deque>
 
 namespace fs0 {
 
-UnsatisfiedGoalAtomsHeuristic::UnsatisfiedGoalAtomsHeuristic(const Problem& problem) : _goal_conjunction(extract_goal_conjunction(problem)) {}
-	
-float UnsatisfiedGoalAtomsHeuristic::evaluate(const State& state) const { 
+UnsatisfiedGoalAtomsHeuristic::UnsatisfiedGoalAtomsHeuristic(const Problem& problem)
+    : _goal_conjunction(extract_goal_conjunction(problem)) {
+}
+
+UnsatisfiedGoalAtomsHeuristic::~UnsatisfiedGoalAtomsHeuristic() {
+}
+
+
+float UnsatisfiedGoalAtomsHeuristic::evaluate(const State& state) const {
 	unsigned unsatisfied = 0;
-	for (const fs::Formula* condition:get_goal_conjuncts()) {
-		if (!condition->interpret(state)) ++unsatisfied;
-	}
+    for ( auto f : get_goal_conjuncts() )
+        if ( !f->interpret(state) )
+            unsatisfied++;
 	return unsatisfied;
 }
 

@@ -49,6 +49,9 @@ def bool_string(value):
 def is_external(symbol):
     return symbol[0] == '@'
 
+def has_unbounded_arity(symbol) :
+    return symbol[0:2] == '@@'
+
 
 class UninitializedAttribute(object):
     def __init__(self, name):

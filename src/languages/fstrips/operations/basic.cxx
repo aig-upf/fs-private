@@ -18,6 +18,10 @@ std::vector<const AtomicFormula*> all_atoms(const Formula& element) {
 	return Utils::filter_by_type<const AtomicFormula*>(all_nodes(element));
 }
 
+std::vector<const RelationalFormula*> all_relations(const Formula& element) {
+	return Utils::filter_by_type<const RelationalFormula*>(all_nodes(element));
+}
+
 std::vector<const Term*> all_terms(const LogicalElement& element) {
 	return Utils::filter_by_type<const Term*>(all_nodes(element));
 }
@@ -85,8 +89,6 @@ Visit(const ExistentiallyQuantifiedFormula& lhs) { Visit(static_cast<const Quant
 
 void AllNodesVisitor::
 Visit(const UniversallyQuantifiedFormula& lhs) { Visit(static_cast<const QuantifiedFormula&>(lhs)); }
-
-
 
 
 void AllNodesVisitor::Visit(const StateVariable& lhs) { _result.push_back(&lhs); }

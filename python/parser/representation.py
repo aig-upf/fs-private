@@ -4,7 +4,6 @@
 import json
 import operator
 
-import python.utils
 from python import utils
 from . import fstrips
 from . import util
@@ -85,7 +84,7 @@ class ProblemRepresentation(object):
 
     def dump_state_variable(self, var):
         head = self.index.symbol_index[var.symbol]
-        constants = [arg if python.utils.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
+        constants = [arg if utils.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
         return [head, constants]
 
     def dump_object_data(self):
@@ -102,10 +101,11 @@ class ProblemRepresentation(object):
             f_variables = [(i, str(v)) for i, v in enumerate(self.index.state_variables) if v.symbol == name]
 
             static = name in self.index.static_symbols
+            unbounded = util.has_unbounded_arity(name)
 
             # Store the symbol info as a tuple:
-            # <symbol_id, symbol_name, symbol_type, <function_domain>, function_codomain, state_variables, static?>
-            res.append([i, name, type_, symbol.arguments, symbol.codomain, f_variables, static])
+            # <ID, name, type, <function_domain>, function_codomain, state_variables, static?, unbounded_arity?>
+            res.append([i, name, type_, symbol.arguments, symbol.codomain, f_variables, static, unbounded])
         return res
 
     def dump_type_data(self):
@@ -165,10 +165,10 @@ class ProblemRepresentation(object):
 
     def requires_compilation(self):
         # The problem requires compilation iff there are external symbols involved.
-        return len([s for s in self.index.static_symbols if util.is_external(s)])
+        return len([s for s in self.index.all_symbols if util.is_external(s)])
 
     def get_function_instantiations(self):
-        return [tplManager.get('function_instantiation').substitute(name=symbol, accessor=symbol[1:])
+        return [tplManager.get('function_instantiation').substitute(name=symbol, accessor=symbol.replace('@', ''))
                 for symbol in self.index.static_symbols if util.is_external(symbol)]
 
     def print_debug_data(self, data):
@@ -231,8 +231,6 @@ class ProblemRepresentation(object):
         for elem in data['init']['atoms']:
             lines.append('Variable {} has value "{}"'.format(elem[0], elem[1]))
         self.dump_data("init", lines, ext='txt', subdir='debug')
-
-
 
     def print_groundings_if_available(self, schemas, all_groundings, object_idx):
         groundings_filename = "groundings"

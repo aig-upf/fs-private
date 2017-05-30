@@ -9,16 +9,16 @@ namespace fs0 { namespace bfws {
 
 template <typename FeatureValueT>
 NoveltyFactory<FeatureValueT>::
-NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired_evaluator_t, unsigned max_expected_width) :
+NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired_evaluator_t, bool use_extra_features, unsigned max_expected_width) :
 	_problem(problem), _indexer(_problem.get_tuple_index()), _desired_evaluator_t(desired_evaluator_t)
 {
 	const Config& config = Config::instance(); // TODO - Remove the singleton use and inject the config here by other means
 	_ignore_neg_literals = config.getOption<bool>("ignore_neg_literals", true);
 
     const auto& info = ProblemInfo::getInstance();
-
-
 	_chosen_evaluator_t.resize(max_expected_width+1);
+
+
 	for (unsigned w = 1; w <= max_expected_width; ++w) {
         if ( !info.canExtensionalizeVarDomains() ) {
             _chosen_evaluator_t[w] = ChosenEvaluatorT::Generic;
@@ -27,7 +27,8 @@ NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired
 
 		// If asked for, check first if a specialized Atom-Evaluator is suitable,
 		// i.e. because its memory requirements are not too high.
-		if (can_use_atom_evaluator(w)) {
+        // If we're using extra novelty features, we cannot use the specialized evaluators as of now.
+		if (can_use_atom_evaluator(w) && !use_extra_features) {
 			if (w == 1) {
 				LPT_INFO("cout", "NOVELTY EVALUATION: Chosen a specialized width-1 atom evaluator");
 				_chosen_evaluator_t[w] = ChosenEvaluatorT::W1Atom;

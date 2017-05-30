@@ -28,7 +28,6 @@ class AllNodesVisitor
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
 
-    
     , public Loki::Visitor<StateVariable, void, true>
     , public Loki::Visitor<BoundVariable, void, true>
     , public Loki::Visitor<Constant, void, true>
@@ -37,9 +36,9 @@ class AllNodesVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
-    , public Loki::Visitor<AdditionTerm, void, true>    
-	, public Loki::Visitor<SubtractionTerm, void, true>    
-	, public Loki::Visitor<MultiplicationTerm, void, true>    
+    , public Loki::Visitor<AdditionTerm, void, true>
+	, public Loki::Visitor<SubtractionTerm, void, true>
+	, public Loki::Visitor<MultiplicationTerm, void, true>
 {
 public:
 	void Visit(const Tautology& lhs);
@@ -52,7 +51,6 @@ public:
 	void Visit(const QuantifiedFormula& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
 	void Visit(const UniversallyQuantifiedFormula& lhs);
-	
 
 	void Visit(const StateVariable& lhs);
 	void Visit(const BoundVariable& lhs);
@@ -65,7 +63,7 @@ public:
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
-	
+
 	std::vector<const LogicalElement*> _result;
 };
 
@@ -80,6 +78,12 @@ std::vector<const Formula*> all_formulae(const Formula& element);
 //! A small helper - returns a vector with all the atomic formulae involved in the current formula
 ////////////////////////////////////////////////////////////
 std::vector<const AtomicFormula*> all_atoms(const Formula& element);
+
+////////////////////////////////////////////////////////////
+//! A small helper - returns a vector with all the relational formulae involved in the current formula
+////////////////////////////////////////////////////////////
+std::vector<const RelationalFormula*> all_relations(const Formula& element);
+
 
 ////////////////////////////////////////////////////////////
 //! Returns a list (possibly with repetitions) of all (sub-)terms that descend from the given formula or term.
@@ -103,7 +107,7 @@ class NestednessVisitor
     , public Loki::Visitor<Conjunction, void, true>
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
     , public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
-    
+
     , public Loki::Visitor<StateVariable, void, true>
     , public Loki::Visitor<BoundVariable, void, true>
     , public Loki::Visitor<Constant, void, true>
@@ -111,9 +115,9 @@ class NestednessVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
-    , public Loki::Visitor<AdditionTerm, void, true>    
-	, public Loki::Visitor<SubtractionTerm, void, true>    
-	, public Loki::Visitor<MultiplicationTerm, void, true>     
+    , public Loki::Visitor<AdditionTerm, void, true>
+	, public Loki::Visitor<SubtractionTerm, void, true>
+	, public Loki::Visitor<MultiplicationTerm, void, true>
 {
 public:
 	void Visit(const Tautology& lhs) { _result = 0; }
@@ -124,7 +128,7 @@ public:
 	void Visit(const Conjunction& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
 	void Visit(const UniversallyQuantifiedFormula& lhs);
-	
+
 	void Visit(const StateVariable& lhs) { _result = 0; }
 	void Visit(const BoundVariable& lhs) { _result = 1; }
 	void Visit(const Constant& lhs) { _result = 0; }
@@ -135,7 +139,7 @@ public:
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
-	
+
 
 	unsigned _result;
 };
@@ -170,7 +174,7 @@ public:
 	void Visit(const AxiomaticTermWrapper& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
-	void Visit(const MultiplicationTerm& lhs);	
+	void Visit(const MultiplicationTerm& lhs);
 
 	bool _result;
 };
@@ -206,8 +210,8 @@ public:
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
-	
-	
+
+
 	//! The index of the type
 	unsigned _result;
 };
@@ -244,11 +248,10 @@ public:
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
-	
-	
+
+
 	std::pair<int, int> _result;
 };
 
 
 } } } // namespaces
-

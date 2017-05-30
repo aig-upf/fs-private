@@ -49,7 +49,7 @@ namespace fs0 {
 
     protected:
 
-        void setup() const;
+        void setup( const State& s) const;
     };
 
     template <typename ModePtrT>

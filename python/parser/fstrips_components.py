@@ -7,7 +7,6 @@ import copy
 from . import pddl
 from .pddl.f_expression import FunctionalTerm
 from .pddl.conditions import Conjunction
-
 from . import fstrips as fs
 from .parser import Parser, exceptions
 
@@ -41,10 +40,10 @@ def ground_atom(atom, grounding):
         grounded.rhs = ground_atom(grounded.rhs, grounding)
         return grounded
 
-    if isinstance(atom, Conjunction) :
+    if isinstance(atom, Conjunction):
         grounded_parts = []
-        for p in atom.parts :
-            grounded_parts.append( ground_atom( p, grounding))
+        for p in atom.parts:
+            grounded_parts.append(ground_atom(p, grounding))
         return pddl.conditions.Conjunction(grounded_parts)
 
     for i, arg in enumerate(atom.args, 0):
@@ -67,7 +66,6 @@ def ground_possibly_quantified_effect(effect, type_map):
        formula.
     """
     assert isinstance(effect, pddl.Effect)
-    #print(effect.dump())
     if not effect.parameters:
         return [effect]
 
