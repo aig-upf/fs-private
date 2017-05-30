@@ -12,16 +12,17 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 {
 	std::string rs = config.getOption<std::string>("bfws.rs");
 	if  (rs == "sim") relevant_set_type = RelevantSetType::Sim;
+    else if  (rs == "l0" ) relevant_set_type = RelevantSetType::L0;
 	else if  (rs == "none") relevant_set_type = RelevantSetType::None;
 	else throw std::runtime_error("Unknown option value \"bfws.rs\"=" + rs);
-	
-	
+
+
 	if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
 		evaluator_t = NoveltyEvaluatorType::Adaptive;
 	} else {
 		evaluator_t = NoveltyEvaluatorType::Generic;
 	}
-	
+
 	std::string rcomp = config.getOption<std::string>("bfws.rcomp", "seed");
 	if  (rcomp == "seed") r_computation = RComputation::Seed;
 	else if  (rcomp == "decrease") r_computation = RComputation::GDecr;

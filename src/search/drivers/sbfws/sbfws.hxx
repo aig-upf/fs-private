@@ -6,6 +6,7 @@
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
+#include <heuristics/l0.hxx>
 
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
@@ -189,6 +190,9 @@ protected:
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
 	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
+    //! L0Heuristic: counts number of trivial numeric landmarks
+    L0Heuristic _l0_heuristic;
+
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;
 	const SimConfigT _simconfig;
@@ -208,6 +212,7 @@ public:
 		_wg_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_wgr_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_unsat_goal_atoms_heuristic(_problem),
+        _l0_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
 		_simconfig(config.complete_simulation,
 				   config.mark_negative_propositions,
@@ -250,6 +255,8 @@ public:
 	template <typename NodeT>
 	unsigned get_hash_r(NodeT& node) {
 		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) return 0;
+        if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::L0 )
+            return compute_R_via_L0(node);
 		return compute_R(node).num_reached();
 	}
 
@@ -378,10 +385,15 @@ public:
 				node._relevant_atoms->update(node.state, nullptr);
 				// node._relevant_atoms->update(node.state, &(node.parent->state));
 			}
-	}
+        }
 
 		return *node._relevant_atoms;
 	}
+
+    template <typename NodeT>
+    unsigned compute_R_via_L0(NodeT& node) {
+        return _l0_heuristic.evaluate(node.state);
+    }
 
 	template <typename NodeT>
 	inline bool computation_of_R_necessary(const NodeT& node) const {
@@ -668,8 +680,7 @@ protected:
 		if (node->w_g == Novelty::One) {
 			_q1.insert(node);
 		}
-        return false;
-        
+
 		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
 
 		if (_novelty_levels == 3) {

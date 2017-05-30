@@ -1,7 +1,7 @@
 
 #include <problem.hxx>
 #include <state.hxx>
-#include <heuristics/unsat_goal_atoms.hxx>
+#include <heuristics/l0.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/operations/basic.hxx>
