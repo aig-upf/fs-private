@@ -116,9 +116,13 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     task.process_state_variables(state_var_list)
 
     task.process_adl_initial_state(adl_task)
+    task.process_processes([])
+    task.process_events([])
     task.process_adl_actions(adl_task.actions, adl_task.sorted_action_names)
     task.process_adl_goal(adl_task)
     task.process_state_constraints([])  # No state constr. possible in ADL, but this needs to be invoked nevertheless
+    task.process_axioms([])
+    task.process_metric(None)
 
     return task
 
