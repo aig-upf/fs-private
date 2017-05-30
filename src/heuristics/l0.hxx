@@ -18,6 +18,8 @@ public:
 
 	const std::vector<const fs::Formula*>& get_goal_conjuncts() const;
 
+    const std::vector<const fs::Formula*>& non_relational() const { return _non_relational_goals; }
+    const std::vector<const fs::Formula*>& relational() const { return _goal_oriented_hyperplanes; }
 
 protected:
 	const std::unique_ptr<const fs::Conjunction> _goal_conjunction;

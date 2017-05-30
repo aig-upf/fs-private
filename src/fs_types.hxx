@@ -49,6 +49,9 @@ namespace fs0 {
 
 	using VariableIdxVector = std::vector<VariableIdx>;
 
+    using FeatureIdx = unsigned;
+    const FeatureIdx INVALID_FEATURE = std::numeric_limits<unsigned>::max();
+
 	using ObjectIdxVector = std::vector<ObjectIdx>;
 
 	//! A tuple of values

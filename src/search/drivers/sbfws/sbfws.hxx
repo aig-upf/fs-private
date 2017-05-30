@@ -367,7 +367,11 @@ public:
 
 			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
-			node._relevant_atoms->init(node.state);
+
+			//! MRJ: over states
+            // node._relevant_atoms->init(node.state);
+            //! Over feature sets
+            node._relevant_atoms->init(_featureset.evaluate(node.state));
 
 			if (!node.has_parent()) { // Log some info, but only for the seed state
 				LPT_DEBUG("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
@@ -380,10 +384,18 @@ public:
 			node._relevant_atoms = new RelevantAtomSet(compute_R(*node.parent)); // This might trigger a recursive computation
 
 			if (node.decreases_unachieved_subgoals()) {
- 				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
+                //! MRJ:
+                //! Over states
+ 				//node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
+                //! MRJ:  Over feature sets
+                node._relevant_atoms->init(_featureset.evaluate(node.state));
 			} else {
-				node._relevant_atoms->update(node.state, nullptr);
+                //! MRJ: Over states
+				//! node._relevant_atoms->update(node.state, nullptr);
+                //! Old, deprecated use
 				// node._relevant_atoms->update(node.state, &(node.parent->state));
+                //! MRJ: Over feature sets
+                node._relevant_atoms->update(_featureset.evaluate(node.state));
 			}
         }
 

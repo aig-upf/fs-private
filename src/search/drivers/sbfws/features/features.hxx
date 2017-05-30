@@ -19,8 +19,6 @@ public:
 
 	bool has_extra_features() const;
 
-    bool projecting_away_vars() const;
-
 	EvaluatorT select();
 
 	void add_state_variables(const ProblemInfo& info, std::vector<FeatureT*>& features);
