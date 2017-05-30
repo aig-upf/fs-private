@@ -15,6 +15,8 @@
 #include <utils/printers/actions.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 #include <utils/config.hxx>
+#include <languages/fstrips/formulae.hxx>
+
 
 
 namespace fs0 { namespace bfws {
@@ -282,6 +284,8 @@ public:
 		_stats(stats),
 		_verbose(verbose)		
 	{
+	  Problem p(model.getTask());
+	  std::cout << "Is tautology: " << p.getStateConstraints()->is_tautology() << std::endl;
 	}
 	
 	void reset() {

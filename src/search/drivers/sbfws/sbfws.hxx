@@ -7,6 +7,7 @@
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
 
+
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
@@ -354,8 +355,12 @@ public:
 			if (_sbfwsconfig.simulation_width==2) { _stats.sim_table_created(1); _stats.sim_table_created(2); }
 			else  { assert(_sbfwsconfig.simulation_width); _stats.sim_table_created(1); }
 			
-			
-			SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
+			Problem relaxed(_model.getTask());
+			relaxed.set_state_constraints(new fs::Tautology);
+ 			StateModelT model = _model.build(relaxed);
+			std::cout << "Running IW preprocessing with state constraints relaxation" << std::endl;
+			SimulationT simulator(model, _featureset, evaluator, _simconfig, _stats, verbose);
+			//SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
 			std::vector<bool> relevant = simulator.compute_R(node.state);
 			
 			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
