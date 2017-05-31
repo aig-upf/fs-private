@@ -142,10 +142,6 @@ public:
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
 		
-		if (node._w == 2) {
-			_evaluator->mark_nov2atoms_from_last_state(node._nov2_pairs);
-		}
-		
 		return node._w;
 	}
 	
