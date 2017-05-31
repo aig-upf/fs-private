@@ -30,23 +30,21 @@ def single_build(directory, command):
     # sys.exit(output)
 
     # Build the FS planner production library
-    print('\n')
-    print("Building FS library...")
+    print("\nBuilding FS library: \"{}\" @ {}".format(command, directory))
     sys.stdout.flush()
     output = subprocess.call(command.split(), cwd=directory)
     if output:
         sys.exit(output)
 
     # Build the vanilla generic FS planner
-    generic_planner_dir = os.path.join(directory, 'planners', 'generic')
-    print('\n')
-    print("Building FS vanilla planner...")
+    planner_dir = os.path.join(directory, 'planners', 'generic')
+    print("\nBuilding FS vanilla planner: \"{}\" @ {}".format(command, planner_dir))
     sys.stdout.flush()
-    output = subprocess.call(command.split(), cwd=generic_planner_dir)
+    output = subprocess.call(command.split(), cwd=planner_dir)
     if output:
         sys.exit(output)
 
-    print('\n')
+    print('')
 
 
 def get_command(cpus, debug):
