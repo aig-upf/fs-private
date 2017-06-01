@@ -168,7 +168,7 @@ class Grounder(object):
 
             if condition.condition.relevant_vars:
                 cond_str = "reachable(" + condition.condition.cond_code + "(" + \
-                           ", ".join([var_alphabet[condition.var_indices[v][0]] \
+                           ", ".join([var_alphabet[condition.var_indices[v]] \
                                           if v in condition.relevant_vars \
                                           else var_alphabet[len(condition.relevant_vars)] \
                                       for v in condition.condition.relevant_vars]) + "))"
@@ -247,7 +247,7 @@ class Grounder(object):
                           var_alphabet[len(condition.relevant_vars)] + ")"
             if condition.condition.relevant_vars:
                 v_str = "reachable(" + condition.condition.cond_code + "(" + \
-                        ", ".join([var_alphabet[condition.var_indices[v][0]] \
+                        ", ".join([var_alphabet[condition.var_indices[v]] \
                                        if v in condition.relevant_vars else \
                                        var_alphabet[len(condition.relevant_vars)] \
                                    for v in condition.condition.relevant_vars]) + "))"
@@ -269,13 +269,13 @@ class Grounder(object):
                 self_str = "reachable(" + condition.cond_code + ")"
             if condition.condition.relevant_vars:
                 cond_str = "reachable(" + condition.condition.cond_code + "(" + \
-                           ", ".join([var_alphabet[condition.var_indices[v][0]] \
+                           ", ".join([var_alphabet[condition.var_indices[v]] \
                                       for v in condition.condition.relevant_vars]) + "))"
             else:
                 cond_str = "reachable(" + condition.condition.cond_code + ")"
             if condition.effect.relevant_vars:
                 eff_str = "reachable(" + condition.effect.cond_code + "(" + \
-                          ", ".join([var_alphabet[condition.var_indices[v][0]] \
+                          ", ".join([var_alphabet[condition.var_indices[v]] \
                                      for v in condition.effect.relevant_vars]) + "))"
             else:
                 eff_str = "reachable(" + condition.effect.cond_code + ")"

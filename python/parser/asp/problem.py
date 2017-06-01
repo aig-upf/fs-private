@@ -1411,9 +1411,9 @@ class ConditionalEffect(Condition):
         self.condition.preserve_statics = True
         self.condition = self.condition.link_groundings(static_preds, neg_static_preds)
 
-        pre_sub_indices = [self.var_indices[v][0] for v in self.condition.relevant_vars]
+        pre_sub_indices = [self.var_indices[v] for v in self.condition.relevant_vars]
         pre_groundings = set(self.condition.groundings)
-        eff_sub_indices = [self.var_indices[v][0] for v in self.effect.relevant_vars]
+        eff_sub_indices = [self.var_indices[v] for v in self.effect.relevant_vars]
         eff_groundings = set(self.effect.groundings)
 
         new_groundings = []
