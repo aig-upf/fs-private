@@ -1188,7 +1188,15 @@ class IncreaseCondition(Condition):
         """
         sub_indices = [self.var_indices[v] for v in self.value_args]
         for grounding in self.groundings:
-            f_args = tuple([grounding[ii] for i in sub_indices for ii in i])
+            f_args = []
+            for i in sub_indices :
+                if i is None : continue
+                f_args.append(grounding[i])
+            if len(f_args) == 0 :
+                f_args = tuple(grounding)
+            else :
+                f_args = tuple(f_args)
+            #f_args = tuple([grounding[ii] for i in sub_indices for ii in i])
             if isinstance(self.value, Function):
                 if f_args not in self.value.values:
                     raise ProblemException("Unknown increase function args: " +
