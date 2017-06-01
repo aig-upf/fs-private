@@ -2,9 +2,9 @@
 #pragma once
 
 #include <languages/fstrips/base.hxx>
-#include <fs_types.hxx> // TODO - REMOVE THIS DEPENDENCY
+#include <fs_types.hxx> //  TODO[LAMBDA] - REMOVE THIS DEPENDENCY ?
 
-namespace fs0 { class ProblemInfo; } // TODO - REMOVE THIS DEPENDENCY
+namespace fs0 { class ProblemInfo; } //  TODO[LAMBDA] - REMOVE THIS DEPENDENCY
 
 namespace fs0 { namespace lang { namespace fstrips {
 

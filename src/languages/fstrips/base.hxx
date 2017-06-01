@@ -5,7 +5,7 @@
 
 #include <utils/visitor.hxx>
 
-namespace fs0 { class ProblemInfo; }
+namespace fs0 { class ProblemInfo; } // TODO[LAMBDA] - REMOVE THIS DEPENDENCY
 
 namespace fs0 { namespace language { namespace fstrips {
 

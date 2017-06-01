@@ -71,5 +71,41 @@ private:
 };
 
 
+
+//! Base interface for all interpreters.
+class InterpreterI {
+public:
+	InterpreterI(const language::fstrips::LogicalElement* root)
+		: _root(root)
+	{}
+	
+	//! Return the index of the element in the universe that corresponds to the root, if it is a term,
+	//! or a (int-coerced) truth value, if the root is a formula.
+	virtual ObjectIdx interpret() = 0;
+	
+protected:
+	const language::fstrips::LogicalElement* _root;
+};
+
+
+//! An interpreter that applies the standard First-Order Logic inductive definition
+//! of models and truth - no additional sophistication.
+class StandardInterpreter : public InterpreterI {
+public:
+	StandardInterpreter(const language::fstrips::LogicalElement* root)
+		: InterpreterI(root)
+	{}
+	
+	//! Return the index of the element in the universe that corresponds to the root, if it is a term,
+	//! or a (int-coerced) truth value, if the root is a formula.
+	ObjectIdx interpret() override;
+	
+protected:
+};
+
+
+ObjectIdx interpret();
+
+
 } } } // namespaces
 
