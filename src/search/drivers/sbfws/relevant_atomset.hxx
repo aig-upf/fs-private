@@ -35,12 +35,13 @@ public:
 //! goal, and, among those, which have already been reached and which others have not.
 class RelevantAtomSet {
 public:
-    typedef std::pair< FeatureIdx, int >    ValuationT;
-    typedef std::unordered_set< ValuationT, boost::hash<ValuationT> >        ValuationSet;
+//     typedef std::pair< FeatureIdx, int >    ValuationT;
+//     typedef std::unordered_set< ValuationT, boost::hash<ValuationT> >        ValuationSet;
 
 	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
 	RelevantAtomSet(const AtomsetHelper& helper) :
-		_helper(helper), _num_reached(0), _bool_reached(helper.size(), false), _int_reached() //, _updated(false)
+		_helper(helper), _num_reached(0), _bool_reached(helper.size(), false)
+// 		, _int_reached() //, _updated(false)
 	{}
 
 	~RelevantAtomSet() = default;
@@ -60,12 +61,14 @@ public:
 			ObjectIdx val = state.getValue(var);
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 
+			/*
             if ( ProblemInfo::getInstance().getVariableGenericType(var) == ProblemInfo::ObjectType::FLOAT
                 || ProblemInfo::getInstance().getVariableGenericType(var) == ProblemInfo::ObjectType::INT ) {
                 auto hint = _int_reached.insert(ValuationT(var,boost::apply_visitor(Utils::reinterpreted_as_int(),val)));
                 if (hint.second) { ++_num_reached; }
                 continue;
             }
+            */
 
             if (!_helper._atomidx.is_indexed(var, val)) continue;
 
@@ -82,6 +85,7 @@ public:
 
 	unsigned num_reached() const { return _num_reached; }
 
+	/*
     template <typename FeatureValuationT>
     void init( const FeatureValuationT& phi ) {
         _int_reached = ValuationSet();
@@ -89,7 +93,9 @@ public:
         update(phi);
         _num_reached = 0;
     }
+    */
 
+	/*
     template <typename FeatureValuationT>
     void update(const FeatureValuationT& phi) {
 		for (unsigned k = 0; k < phi.size(); k++ ) {
@@ -97,10 +103,11 @@ public:
             if (hint.second) { ++_num_reached; }
         }
 	}
+	*/
 
 	void init(const State& state) {
 		_bool_reached = std::vector<bool>(_helper.size(), false);
-        _int_reached = ValuationSet();
+//         _int_reached = ValuationSet();
 		_num_reached = 0;
 		update(state, nullptr);
  		assert(_num_reached == std::count(_bool_reached.begin(), _bool_reached.end(), true));
@@ -138,7 +145,7 @@ protected:
 	//! since the count of reached subgoals was last increased.
 	std::vector<bool> _bool_reached;
 
-    ValuationSet _int_reached;
+//     ValuationSet _int_reached;
 
 // 	bool _updated;
 };

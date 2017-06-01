@@ -369,9 +369,9 @@ public:
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
 
 			//! MRJ: over states
-            // node._relevant_atoms->init(node.state);
+            node._relevant_atoms->init(node.state);
             //! Over feature sets
-            node._relevant_atoms->init(_featureset.evaluate(node.state));
+//             node._relevant_atoms->init(_featureset.evaluate(node.state));
 
 			if (!node.has_parent()) { // Log some info, but only for the seed state
 				LPT_DEBUG("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
@@ -386,16 +386,16 @@ public:
 			if (node.decreases_unachieved_subgoals()) {
                 //! MRJ:
                 //! Over states
- 				//node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
+ 				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
                 //! MRJ:  Over feature sets
-                node._relevant_atoms->init(_featureset.evaluate(node.state));
+//                 node._relevant_atoms->init(_featureset.evaluate(node.state));
 			} else {
                 //! MRJ: Over states
-				//! node._relevant_atoms->update(node.state, nullptr);
+				node._relevant_atoms->update(node.state, nullptr);
                 //! Old, deprecated use
 				// node._relevant_atoms->update(node.state, &(node.parent->state));
                 //! MRJ: Over feature sets
-                node._relevant_atoms->update(_featureset.evaluate(node.state));
+//                 node._relevant_atoms->update(_featureset.evaluate(node.state));
 			}
         }
 
