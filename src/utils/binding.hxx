@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <fs_types.hxx>
 
 namespace fs0 {
@@ -49,10 +50,7 @@ public:
 	
 	//! Returns true iff all variables in the binding are complete
 	bool is_complete() const {
-		for (bool b:_set) {
-			if (!b) return false;
-		}
-		return true;
+		return std::find(_set.cbegin(), _set.cend(), false) == _set.cend();
 	}
 	
 	//! (Only) if the binding is full, we can obtain the raw vector of integer values 
