@@ -20,7 +20,7 @@ using Signature = std::vector<TypeId>;
 //! A signature with variable names
 class NamedSignature {
 public:
-	NamedSignature(const signature_t& types, const std::vector<std::string>& names);
+	NamedSignature(const Signature& types, const std::vector<std::string>& names);
 };
 
 //! The type of a logical symbol, function or predicate
@@ -52,6 +52,23 @@ public:
 
 //! 
 class FixedInterpretation : public InterpretationI {
+protected:
+public:
+	bool defined(SymbolId symbol, DomainPoint) override;
+	ObjectIdx value(SymbolId symbol, DomainPoint) override;
+};
+
+//! 
+class StateInterpretation : public InterpretationI {
+protected:
+public:
+	bool defined(SymbolId symbol, DomainPoint) override;
+	ObjectIdx value(SymbolId symbol, DomainPoint) override;
+};
+
+//! 
+class PartialInterpretation : public InterpretationI {
+protected:
 public:
 	bool defined(SymbolId symbol, DomainPoint) override;
 	ObjectIdx value(SymbolId symbol, DomainPoint) override;
