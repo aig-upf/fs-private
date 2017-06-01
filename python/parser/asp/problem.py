@@ -318,8 +318,7 @@ class PredicateCondition(Condition):
             t_grounding = list(self.variables)
             for vid, var in enumerate(self.relevant_vars):
                 if self.var_indices[var] is None : continue
-                for vi in self.var_indices[var]:
-                    t_grounding[vi] = grounding[vid]
+                t_grounding[self.var_indices[var]] = grounding[vid]
             t_grounding = tuple(t_grounding)
             pg_pair = (self.pred, t_grounding)
             if hasattr(self,"preserve_statics") :
