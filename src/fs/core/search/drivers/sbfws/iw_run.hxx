@@ -459,11 +459,14 @@ public:
 			LPT_INFO("search", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			_stats.relevant_atoms(R_G_size);
 			return R_G;
-
 		}
 
-		LPT_INFO("search", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
+		LPT_INFO("search", "Simulation - IW(1) run did not reach all goals");
 
+		if (_config._max_width == 1) {
+			LPT_INFO("cout", "Simulation - Max. simulation width set to 1, falling back to R=R_all");
+			return compute_R_all();
+		}
 
 		if (_config._gr_actions_cutoff < std::numeric_limits<unsigned>::max()) {
 			unsigned num_actions = Problem::getInstance().getGroundActions().size();
@@ -474,7 +477,7 @@ public:
 					LPT_INFO("search", "Simulation - Number of actions (" << num_actions << " <= " << _config._gr_actions_cutoff << ") considered low enough to run IW(2).");
 			}
 		}
-
+        LPT_INFO("cout", "Simulation - Throwing IW(2) simulation");
 		reset();
 		run(seed, 2);
 		report_simulation_stats(simt0);
