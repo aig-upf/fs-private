@@ -105,7 +105,7 @@ protected:
 	std::map<std::string, ObjectIdx> objectIds;
 
 	//! A map from type ID to all of the object indexes of that type
-	std::vector<ObjectIdxVector> typeObjects;
+	std::vector<std::vector<ObjectIdx>> typeObjects;
 
 	//! An integer type will have associated lower and upper bounds.
 	std::vector<std::pair<int, int>> typeBounds;
@@ -186,12 +186,12 @@ public:
 	}
 
 	//! Returns all the objects of the given type _or of a descendant type_
-	inline const std::vector<ObjectIdxVector>& getTypeObjects() const { return typeObjects; }
-	inline const ObjectIdxVector& getTypeObjects(TypeIdx type) const { return typeObjects.at(type); }
-	inline const ObjectIdxVector& getTypeObjects(const std::string& type_name) const { return typeObjects.at(getTypeId(type_name)); }
+	inline const std::vector<std::vector<ObjectIdx>>& getTypeObjects() const { return typeObjects; }
+	inline const std::vector<ObjectIdx>& getTypeObjects(TypeIdx type) const { return typeObjects.at(type); }
+	inline const std::vector<ObjectIdx>& getTypeObjects(const std::string& type_name) const { return typeObjects.at(getTypeId(type_name)); }
 
 	//! Returns all the objects of the type of the given variable
-	inline const ObjectIdxVector& getVariableObjects(const VariableIdx variable) const {
+	inline const std::vector<ObjectIdx>& getVariableObjects(const VariableIdx variable) const {
 		return getTypeObjects(getVariableType(variable));
 	}
 

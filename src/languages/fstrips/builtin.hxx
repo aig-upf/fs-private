@@ -75,7 +75,7 @@ public:
 	std::string name() const override { return "alldiff"; }
 	
 protected:
-	bool _satisfied(const ObjectIdxVector& values) const override;
+	bool _satisfied(const std::vector<ObjectIdx>& values) const override;
 };
 
 class SumFormula : public ExternallyDefinedFormula {
@@ -89,7 +89,7 @@ public:
 	std::string name() const override { return "sum"; }
 	
 protected:
-	bool _satisfied(const ObjectIdxVector& values) const override;
+	bool _satisfied(const std::vector<ObjectIdx>& values) const override;
 };
 
 
@@ -104,7 +104,7 @@ public:
 	std::string name() const override { return "nvalues"; }
 	
 protected:
-	bool _satisfied(const ObjectIdxVector& values) const override;
+	bool _satisfied(const std::vector<ObjectIdx>& values) const override;
 };
 
 

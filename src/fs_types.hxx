@@ -47,8 +47,6 @@ namespace fs0 {
 
 	using VariableIdxVector = std::vector<VariableIdx>;
 
-	using ObjectIdxVector = std::vector<ObjectIdx>;
-	
 	//! A tuple of values
 	using ValueTuple = std::vector<ObjectIdx>;
 	

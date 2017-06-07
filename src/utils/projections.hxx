@@ -11,10 +11,10 @@ class State; class RelaxedState; class GroundAction;
 class Projections {
 public:
 	//! Projects a non-relaxed state into a subset of relevant values, which returns.
-	static ObjectIdxVector project(const State& s, const VariableIdxVector& scope);
+	static std::vector<ObjectIdx> project(const State& s, const VariableIdxVector& scope);
 
 	//! Zip a scope and a values to an equivalent partial assignment
-	static PartialAssignment zip(const VariableIdxVector& scope, const ObjectIdxVector& values);
+	static PartialAssignment zip(const VariableIdxVector& scope, const std::vector<ObjectIdx>& values);
 	
 	//! Project values only - no copy, const version
 	static const DomainVector projectValues(const RelaxedState& state, const VariableIdxVector& scope);

@@ -69,7 +69,7 @@ std::ostream& MultiplicationTerm::print(std::ostream& os, const fs0::ProblemInfo
 
 AlldiffFormula::AlldiffFormula(const AlldiffFormula& formula) : AlldiffFormula(Utils::clone(formula._subterms)) {}
 
-bool AlldiffFormula::_satisfied(const ObjectIdxVector& values) const {
+bool AlldiffFormula::_satisfied(const std::vector<ObjectIdx>& values) const {
 	std::set<ObjectIdx> distinct;
 	for (ObjectIdx val:values) {
 		auto res = distinct.insert(val);
@@ -80,7 +80,7 @@ bool AlldiffFormula::_satisfied(const ObjectIdxVector& values) const {
 
 SumFormula::SumFormula(const SumFormula& formula) : SumFormula(Utils::clone(formula._subterms)) {}
 
-bool SumFormula::_satisfied(const ObjectIdxVector& values) const {
+bool SumFormula::_satisfied(const std::vector<ObjectIdx>& values) const {
 	// sum(x_1, ..., x_n) meaning x_1 + ... + x_{n-1} = x_n
 	assert(values.size() > 1);
 	int expected_sum = values.back();
@@ -90,7 +90,7 @@ bool SumFormula::_satisfied(const ObjectIdxVector& values) const {
 
 NValuesFormula::NValuesFormula(const NValuesFormula& formula) : NValuesFormula(Utils::clone(formula._subterms)) {}
 
-bool NValuesFormula::_satisfied(const ObjectIdxVector& values) const {
+bool NValuesFormula::_satisfied(const std::vector<ObjectIdx>& values) const {
 	// nvalues(x_1, ..., x_n) meaning there are exactly x_n different values among variables <x_1, ... x_{n-1}>
 	assert(values.size() > 1);
 	assert(values[values.size()-1] > 0);

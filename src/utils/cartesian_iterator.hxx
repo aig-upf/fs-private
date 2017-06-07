@@ -12,16 +12,16 @@ namespace fs0 { namespace utils {
 //! Returns an iterable container 
 class cartesian_iterator {
 protected:
-	const std::vector<const ObjectIdxVector*> _values;
+	const std::vector<const std::vector<ObjectIdx>*> _values;
 	
-	std::vector<ObjectIdxVector::const_iterator> _iterators;
+	std::vector<std::vector<ObjectIdx>::const_iterator> _iterators;
 	
 	std::vector<ObjectIdx> _element; // The current element
 
 	bool _ended;
 
 public:
-	cartesian_iterator(std::vector<const ObjectIdxVector*>&& values);
+	cartesian_iterator(std::vector<const std::vector<ObjectIdx>*>&& values);
 
 	cartesian_iterator(const cartesian_iterator& o) = default;
 	

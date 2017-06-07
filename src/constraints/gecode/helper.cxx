@@ -42,7 +42,7 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
 	}
 	else {
 		assert(generic_type == ProblemInfo::ObjectType::OBJECT);
-		const ObjectIdxVector& values = info.getTypeObjects(typeId);
+		const std::vector<ObjectIdx>& values = info.getTypeObjects(typeId);
 		return Gecode::IntVar(csp, Gecode::IntSet(values.data(), values.size())); // TODO - Check if we can change this for a range-like domain creation
 	}
 }

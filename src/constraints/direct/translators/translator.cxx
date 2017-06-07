@@ -60,13 +60,13 @@ DirectConstraint* DirectTranslator::generate(const fs::RelationalFormula& formul
 	
 	if (lhs_var && rhs_const) { // X = c
 		VariableIdxVector scope{lhs_var->getValue()};
-		ObjectIdxVector parameters{rhs_const->getValue()};
+		std::vector<ObjectIdx> parameters{rhs_const->getValue()};
 		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, false);
 	}
 	
 	if (lhs_const && rhs_var) { // c = X
 		VariableIdxVector scope{rhs_var->getValue()};
-		ObjectIdxVector parameters{lhs_const->getValue()};
+		std::vector<ObjectIdx> parameters{lhs_const->getValue()};
 		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, true);
 	}
 	

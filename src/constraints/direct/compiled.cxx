@@ -92,7 +92,7 @@ CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scop
 bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
 	auto iter = _extension1.find(o1);
 	assert(iter != _extension1.end());
-	const ObjectIdxVector& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
+	const std::vector<ObjectIdx>& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
 	return std::binary_search(D_y.begin(), D_y.end(), o2); // TODO - Change for a O(1) lookup in a std::unordered_set ?
 }
 
@@ -127,7 +127,7 @@ CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::index(const Compi
 
 	ExtensionT res;
 	for (const auto& element:values) {
-		res.insert(std::make_pair(element.first, ObjectIdxVector(element.second.begin(), element.second.end()) ));
+		res.insert(std::make_pair(element.first, std::vector<ObjectIdx>(element.second.begin(), element.second.end()) ));
 	}
 	return res;
 }
@@ -197,7 +197,7 @@ Atom CompiledUnaryEffect::apply(ObjectIdx value) const {
 
 CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEffect& effect, const fs0::ProblemInfo& info) {
 	VariableIdx relevant = effect.getScope()[0];
-	const ObjectIdxVector& all_values = info.getVariableObjects(relevant);
+	const std::vector<ObjectIdx>& all_values = info.getVariableObjects(relevant);
 	
 	ExtensionT map;
 	for(ObjectIdx value:all_values) {

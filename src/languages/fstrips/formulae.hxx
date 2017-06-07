@@ -65,7 +65,7 @@ public:
 	using Formula::interpret;
 
 	//! A helper to recursively evaluate the formula - must be subclassed
-	virtual bool _satisfied(const ObjectIdxVector& values) const = 0;
+	virtual bool _satisfied(const std::vector<ObjectIdx>& values) const = 0;
 
 protected:
 	//! The formula subterms
@@ -101,7 +101,7 @@ public:
 	
 	//! To be subclassed
 	virtual bool compute(const State& state, std::vector<ObjectIdx>& arguments) const = 0;
-	bool _satisfied(const ObjectIdxVector& values) const override { throw std::runtime_error("This shouldn't be called"); };
+	bool _satisfied(const std::vector<ObjectIdx>& values) const override { throw std::runtime_error("This shouldn't be called"); };
 
 	
 	//! Prints a representation of the object to the given stream.
@@ -350,7 +350,7 @@ public:
 	const Term* rhs() const { return _subterms[1]; }
 
 protected:
-	inline bool _satisfied(const ObjectIdxVector& values) const override { return _satisfied(values[0], values[1]); }
+	inline bool _satisfied(const std::vector<ObjectIdx>& values) const override { return _satisfied(values[0], values[1]); }
 	virtual bool _satisfied(ObjectIdx o1, ObjectIdx o2) const = 0;
 };
 

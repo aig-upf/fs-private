@@ -9,8 +9,8 @@
 
 namespace fs0 {
 
-ObjectIdxVector Projections::project(const State& s, const VariableIdxVector& scope) {
-	ObjectIdxVector values;
+std::vector<ObjectIdx> Projections::project(const State& s, const VariableIdxVector& scope) {
+	std::vector<ObjectIdx> values;
 	values.reserve(scope.size());
 	for (VariableIdx idx:scope) {
 		values.push_back(s.getValue(idx));
@@ -27,7 +27,7 @@ DomainMap Projections::project(RelaxedState& state, const VariableIdxVector& sco
 	return projection;
 }
 
-PartialAssignment Projections::zip(const VariableIdxVector& scope, const ObjectIdxVector& values) {
+PartialAssignment Projections::zip(const VariableIdxVector& scope, const std::vector<ObjectIdx>& values) {
 	assert(scope.size() == values.size());
 	PartialAssignment assignment;
 	for (unsigned i = 0; i < scope.size(); ++i) {
