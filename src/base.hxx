@@ -66,7 +66,16 @@ public:
 };
 static_assert(sizeof(object_id) == 8, "object_id should have overall size equal to 64 bits");
 
-uint64_t hash(const object_id& o);
+//! Compute a hash of the object ID
+//! The method name is important, as it is the one used by boost:hash.
+uint64_t hash_value(const object_id& o);
+
+// inline bool operator==(const object_id& lhs, const object_id& rhs) { return lhs.type == rhs.type && lhs.value == rhs.value; }
+// inline bool operator!=(const object_id& lhs, const object_id& rhs) { return !operator==(lhs,rhs); }
+// inline bool operator< (const object_id& lhs, const object_id& rhs) { return lhs.type <= rhs.type || (lhs.type == rhs.type && lhs.value < rhs.value); }
+// inline bool operator> (const object_id& lhs, const object_id& rhs) { return  operator< (rhs,lhs); }
+// inline bool operator<=(const object_id& lhs, const object_id& rhs) { return !operator> (lhs,rhs); }
+// inline bool operator>=(const object_id& lhs, const object_id& rhs) { return !operator< (lhs,rhs); }
 
 
 
@@ -130,6 +139,14 @@ set_t value(const object_id& o, const ObjectTable& itp) {
 }
 */
 
-
-
 } // namespaces
+
+
+namespace std {
+  template <> struct hash<fs0::object_id> {
+    size_t operator()(const fs0::object_id& o) const { return fs0::hash_value(o); }
+  };
+}
+
+
+

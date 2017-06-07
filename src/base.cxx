@@ -16,12 +16,15 @@ void dummy_test() {
 }
 
 
-uint64_t hash(const object_id& o) {
+std::size_t hash_value(const object_id& o) {
 	static_assert(sizeof(o) == sizeof(uint64_t), "Size mismatch");
+	static_assert(sizeof(uint64_t) == sizeof(std::size_t), "Size mismatch");
+	
 	uint64_t result;
 	std::memcpy(&result, &o, sizeof result);
 	return result;
 }
+
 
 template <typename T>
 T value(const object_id& o, const ObjectTable& itp) {

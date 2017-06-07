@@ -15,7 +15,7 @@ protected:
 	std::size_t _hash;
 	
 	
-	std::size_t compute_hash() const { return hash(_values[0]); }
+// 	std::size_t compute_hash() const { return hash_value(_values[0]); }
 public:
 	
 };
