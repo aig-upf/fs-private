@@ -82,14 +82,14 @@ AxiomaticAtom::AxiomaticAtom(const AxiomaticAtom& other) :
 {}
 
 bool AxiomaticAtom::interpret(const PartialAssignment& assignment, Binding& binding) const {
-	std::vector<ObjectIdx> _interpreted_subterms;
+	std::vector<object_id> _interpreted_subterms;
 	NestedTerm::interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
 	Binding axiom_binding(_interpreted_subterms);
 	return _axiom->getDefinition()->interpret(assignment, axiom_binding);
 }
 
 bool AxiomaticAtom::interpret(const State& state, Binding& binding) const {
-	std::vector<ObjectIdx> _interpreted_subterms;
+	std::vector<object_id> _interpreted_subterms;
 	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
 	Binding axiom_binding(_interpreted_subterms);
 	return _axiom->getDefinition()->interpret(state, axiom_binding);
@@ -210,7 +210,7 @@ bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, Binding&
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	const BoundVariable* variable = _variables.at(i);
 	//! Otherwise, iterate through all possible assignments to the currently analyzed variable 'i'
-	for (ObjectIdx elem:info.getTypeObjects(variable->getType())) {
+	for (object_id elem:info.getTypeObjects(variable->getType())) {
 		binding.set(variable->getVariableId(), elem);
 		if (interpret_rec(assignment, binding, i + 1)) return true;
 	}
@@ -234,7 +234,7 @@ bool UniversallyQuantifiedFormula::interpret_rec(const T& assignment, Binding& b
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	const BoundVariable* variable = _variables.at(i);
 	//! Otherwise, iterate through all possible assignments to the currently analyzed variable 'i'
-	for (ObjectIdx elem:info.getTypeObjects(variable->getType())) {
+	for (object_id elem:info.getTypeObjects(variable->getType())) {
 		binding.set(variable->getVariableId(), elem);
 		if (!interpret_rec(assignment, binding, i + 1)) return false;
 	}

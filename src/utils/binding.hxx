@@ -62,13 +62,13 @@ public:
 	//! Returns true iff the current binding contains a binding for the given variable
 	bool binds(unsigned variable) const { return variable < _set.size() && _set.at(variable); }
 	
-	ObjectIdx value(unsigned variable) const {
+	object_id value(unsigned variable) const {
 		if (!binds(variable)) throw std::runtime_error("Attempted to access unset binding position");
 		return _values.at(variable);
 	}
 	
 	//! Sets the given position of the binding to the given value; if necessary, resizes the binding.
-	void set(unsigned variable, ObjectIdx value) {
+	void set(unsigned variable, object_id value) {
 		unsigned min_size = variable + 1;
 		if (min_size > _set.size()) {
 			_values.resize(min_size);

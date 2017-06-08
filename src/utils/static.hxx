@@ -20,12 +20,12 @@ public:
 
 class ZeroaryFunction : public StaticExtension {
 protected:
-	ObjectIdx _data;
+	object_id _data;
 	
 public:
-	ZeroaryFunction(ObjectIdx data) : _data(data) {}
+	ZeroaryFunction(object_id data) : _data(data) {}
 	
-	ObjectIdx value() const { return _data; }
+	object_id value() const { return _data; }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -43,7 +43,7 @@ protected:
 public:
 	UnaryFunction(Serializer::BoostUnaryMap&& data) : _data(std::move(data)) {}
 	
-	ObjectIdx value(ObjectIdx x) const { return _data.at(x); }
+	object_id value(object_id x) const { return _data.at(x); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -61,13 +61,13 @@ protected:
 public:
 	UnaryPredicate(Serializer::BoostUnarySet&& data) : _data(std::move(data)) {}
 	
-	bool value(ObjectIdx x) const { return _data.find(x) != _data.end(); }
+	bool value(object_id x) const { return _data.find(x) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
 			assert(parameters.size() == 1);
-			return data.find(parameters[0]) != data.end();
+			return make_obj(data.find(parameters[0]) != data.end());
 		};
 	}
 };
@@ -80,7 +80,7 @@ protected:
 public:
 	BinaryFunction(Serializer::BoostBinaryMap&& data) : _data(std::move(data)) {}
 	
-	ObjectIdx value(ObjectIdx x, ObjectIdx y) const { return _data.at({x, y}); }
+	object_id value(object_id x, object_id y) const { return _data.at({x, y}); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -100,13 +100,13 @@ protected:
 public:
 	BinaryPredicate(Serializer::BoostBinarySet&& data) : _data(std::move(data)) {}
 	
-	bool value(ObjectIdx x, ObjectIdx y) const { return _data.find({x,y}) != _data.end(); }
+	bool value(object_id x, object_id y) const { return _data.find({x,y}) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
 			assert(parameters.size() == 2);
-			return data.find({parameters[0], parameters[1]}) != data.end();
+			return make_obj(data.find({parameters[0], parameters[1]}) != data.end());
 		};
 	}
 };
@@ -118,7 +118,7 @@ protected:
 public:
 	Arity3Function(Serializer::BoostArity3Map&& data) : _data(std::move(data)) {}
 	
-	ObjectIdx value(ObjectIdx x0, ObjectIdx x1, ObjectIdx x2) const { return _data.at(std::make_tuple(x0,x1,x2)); }
+	object_id value(object_id x0, object_id x1, object_id x2) const { return _data.at(std::make_tuple(x0,x1,x2)); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -136,13 +136,13 @@ protected:
 public:
 	Arity3Predicate(Serializer::BoostArity3Set&& data) : _data(std::move(data)) {}
 	
-	bool value(ObjectIdx x0, ObjectIdx x1, ObjectIdx x2) const { return _data.find(std::make_tuple(x0,x1,x2)) != _data.end(); }
+	bool value(object_id x0, object_id x1, object_id x2) const { return _data.find(std::make_tuple(x0,x1,x2)) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
 			assert(parameters.size() == 3);
-			return data.find(std::make_tuple(parameters[0], parameters[1], parameters[2])) != data.end();
+			return make_obj(data.find(std::make_tuple(parameters[0], parameters[1], parameters[2])) != data.end());
 		};
 	}
 };
@@ -154,7 +154,7 @@ protected:
 public:
 	Arity4Function(Serializer::BoostArity4Map&& data) : _data(std::move(data)) {}
 	
-	ObjectIdx value(ObjectIdx x0, ObjectIdx x1, ObjectIdx x2, ObjectIdx x3) const { return _data.at(std::make_tuple(x0,x1,x2,x3)); }
+	object_id value(object_id x0, object_id x1, object_id x2, object_id x3) const { return _data.at(std::make_tuple(x0,x1,x2,x3)); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -172,13 +172,13 @@ protected:
 public:
 	Arity4Predicate(Serializer::BoostArity4Set&& data) : _data(std::move(data)) {}
 	
-	bool value(ObjectIdx x0, ObjectIdx x1, ObjectIdx x2, ObjectIdx x3) const { return _data.find(std::make_tuple(x0,x1,x2,x3)) != _data.end(); }
+	bool value(object_id x0, object_id x1, object_id x2, object_id x3) const { return _data.find(std::make_tuple(x0,x1,x2,x3)) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
 			assert(parameters.size() == 4);
-			return data.find(std::make_tuple(parameters[0], parameters[1], parameters[2], parameters[3])) != data.end();
+			return make_obj(data.find(std::make_tuple(parameters[0], parameters[1], parameters[2], parameters[3])) != data.end());
 		};
 	}
 };

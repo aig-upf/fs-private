@@ -12,7 +12,7 @@ using TypeId = unsigned;
 using SymbolId = unsigned;
 
 //!
-using DomainPoint = std::vector<ObjectIdx>;
+using DomainPoint = std::vector<object_id>;
 
 //!
 using Signature = std::vector<TypeId>;
@@ -47,7 +47,7 @@ public:
 class InterpretationI {
 public:
 	virtual bool defined(SymbolId symbol, DomainPoint) = 0;
-	virtual ObjectIdx value(SymbolId symbol, DomainPoint) = 0;
+	virtual object_id value(SymbolId symbol, DomainPoint) = 0;
 };
 
 //! 
@@ -55,7 +55,7 @@ class FixedInterpretation : public InterpretationI {
 protected:
 public:
 	bool defined(SymbolId symbol, DomainPoint) override;
-	ObjectIdx value(SymbolId symbol, DomainPoint) override;
+	object_id value(SymbolId symbol, DomainPoint) override;
 };
 
 //! 
@@ -63,7 +63,7 @@ class StateInterpretation : public InterpretationI {
 protected:
 public:
 	bool defined(SymbolId symbol, DomainPoint) override;
-	ObjectIdx value(SymbolId symbol, DomainPoint) override;
+	object_id value(SymbolId symbol, DomainPoint) override;
 };
 
 //! 
@@ -71,7 +71,7 @@ class PartialInterpretation : public InterpretationI {
 protected:
 public:
 	bool defined(SymbolId symbol, DomainPoint) override;
-	ObjectIdx value(SymbolId symbol, DomainPoint) override;
+	object_id value(SymbolId symbol, DomainPoint) override;
 };
 
 

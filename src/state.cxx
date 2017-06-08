@@ -48,19 +48,19 @@ StateAtomIndexer::compute_index(const ProblemInfo& info) {
 	return index;
 }
 
-ObjectIdx
+object_id
 StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 	std::size_t n_vars = _index.size();
 	assert(variable < n_vars);
 
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
-	if (n_vars == _n_bool) return state._bool_values[variable];
+	if (n_vars == _n_bool) return make_obj<int>(state._bool_values[variable]); // HACK - Temporarily return this as an integer object_id
 	if (n_vars == _n_int) return state._int_values[variable];
 
 	// Otherwise we need to deindex the variable
 	const IndexElemT& ind = _index[variable];
-	if (ind.first) return state._bool_values[ind.second];
+	if (ind.first) return make_obj(state._bool_values[ind.second]);
 	else return state._int_values[ind.second];
 }
 
@@ -68,17 +68,17 @@ void
 StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), atom.getValue()); }
 
 void
-StateAtomIndexer::set(State& state, VariableIdx variable, ObjectIdx value) const {
+StateAtomIndexer::set(State& state, VariableIdx variable, object_id value) const {
 	std::size_t n_vars = _index.size();
 	assert(variable < n_vars);
 
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
-	if (n_vars == _n_bool) state._bool_values[variable] = value;
+	if (n_vars == _n_bool) state._bool_values[variable] = bool(value);
 	else if (n_vars == _n_int) state._int_values[variable] = value;
 	else {
 		const IndexElemT& ind = _index[variable];
-		if (ind.first) state._bool_values[ind.second] = value;
+		if (ind.first) state._bool_values[ind.second] = bool(value);
 		else state._int_values[ind.second] = value;
 	}
 }
@@ -91,7 +91,7 @@ State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std
 State::State(const StateAtomIndexer& index, const std::vector<Atom>& atoms) :
 	_indexer(index),
 	_bool_values(index.num_bool(), 0),
-	_int_values(index.num_int(), 0)
+	_int_values(index.num_int(), object_id::INVALID)
 {
 	// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
 	for (const Atom& atom:atoms) { // Insert all the elements of the vector
@@ -114,7 +114,7 @@ bool State::contains(const Atom& atom) const {
 	return getValue(atom.getVariable()) == atom.getValue();
 }
 
-ObjectIdx
+object_id
 State::getValue(const VariableIdx& variable) const {
 	return _indexer.get(*this, variable);
 }
@@ -132,9 +132,9 @@ std::ostream& State::print(std::ostream& os) const {
 	os << "State";
 	os << "(" << _hash << ")[";
     for ( unsigned x = 0; x < info.getNumVariables(); x++ ) {
-        ObjectIdx v = getValue(x);
+        object_id v = getValue(x);
         if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::BOOL ) {
-            if ( v == 0 ) continue;
+            if ( v == object_id::FALSE ) continue;
             os << info.getVariableName(x);
     		if (x < info.getNumVariables() - 1) os << ", ";
             continue;
@@ -157,6 +157,21 @@ std::size_t State::computeHash() const {
 	boost::hash_combine(seed, boost::hash_value( _int_values));
 	return seed;
 
+}
+
+
+template <>
+const std::vector<bool>&
+State::dump() const {
+	assert(_indexer.is_fully_binary());
+	return _bool_values;
+}
+
+template <>
+const std::vector<object_id>&
+State::dump() const {
+	assert(_indexer.is_fully_multivalued());
+	return _int_values;
 }
 
 

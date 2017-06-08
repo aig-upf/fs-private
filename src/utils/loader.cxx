@@ -45,7 +45,7 @@ _check_negated_preconditions(std::vector<const ActionData*>& schemas) {
 			const fs::IntConstant* cnst = dynamic_cast<const fs::IntConstant*>(eq->rhs());
 			if (!cnst) continue;
 			auto val = cnst->getValue();
-			if (val==0) return true;
+			if (int(val)==0) return true;
 		}
 	}
 	

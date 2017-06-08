@@ -15,10 +15,10 @@ namespace fs0 {
 	
 class State;
 class Binding;
+class object_id;
 // (kind of) forward declarations
 using VariableIdx = unsigned;
-using ObjectIdx = int;
-using PartialAssignment = std::map<VariableIdx, ObjectIdx>;
+using PartialAssignment = std::map<VariableIdx, object_id>;
 
 }
 
@@ -81,7 +81,7 @@ public:
 	
 	//! Return the index of the element in the universe that corresponds to the root, if it is a term,
 	//! or a (int-coerced) truth value, if the root is a formula.
-	virtual ObjectIdx interpret() = 0;
+	virtual object_id interpret() = 0;
 	
 protected:
 	const language::fstrips::LogicalElement* _root;
@@ -98,13 +98,13 @@ public:
 	
 	//! Return the index of the element in the universe that corresponds to the root, if it is a term,
 	//! or a (int-coerced) truth value, if the root is a formula.
-	ObjectIdx interpret() override;
+	object_id interpret() override;
 	
 protected:
 };
 
 
-ObjectIdx interpret();
+object_id interpret();
 
 
 } } } // namespaces

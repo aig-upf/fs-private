@@ -25,8 +25,8 @@ public:
 	
 	AdditionTerm* clone() const override { return new AdditionTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	object_id interpret(const State& state, const Binding& binding) const override;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -41,8 +41,8 @@ public:
 	
 	SubtractionTerm* clone() const override { return new SubtractionTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	object_id interpret(const State& state, const Binding& binding) const override;
 	
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -57,8 +57,8 @@ public:
 	
 	MultiplicationTerm* clone() const override { return new MultiplicationTerm(*this); }
 	
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	object_id interpret(const State& state, const Binding& binding) const override;
 	
 	//! Prints a representation of the object to the given stream.
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -75,7 +75,7 @@ public:
 	std::string name() const override { return "alldiff"; }
 	
 protected:
-	bool _satisfied(const std::vector<ObjectIdx>& values) const override;
+	bool _satisfied(const std::vector<object_id>& values) const override;
 };
 
 class SumFormula : public ExternallyDefinedFormula {
@@ -89,7 +89,7 @@ public:
 	std::string name() const override { return "sum"; }
 	
 protected:
-	bool _satisfied(const std::vector<ObjectIdx>& values) const override;
+	bool _satisfied(const std::vector<object_id>& values) const override;
 };
 
 
@@ -104,7 +104,7 @@ public:
 	std::string name() const override { return "nvalues"; }
 	
 protected:
-	bool _satisfied(const std::vector<ObjectIdx>& values) const override;
+	bool _satisfied(const std::vector<object_id>& values) const override;
 };
 
 

@@ -22,7 +22,8 @@ Gecode::TupleSet Extension::generate() const {
 	if (is_tautology()) return ts; // We return an empty extension, since the symbol will be dealt with differently
 	
 	for (AtomIdx index:_tuples) {
-		ts.add(_tuple_index.to_tuple(index));
+		const ValueTuple& objects = _tuple_index.to_tuple(index);
+		ts.add(values<int>(objects, ObjectTable::EMPTY_TABLE));
 	}
 	ts.finalize();
 	return ts;
@@ -45,7 +46,7 @@ void ExtensionHandler::advance() {
 // 	_modified.clear(); // Initially all symbols are untouched
 }
 
-AtomIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
+AtomIdx ExtensionHandler::process_atom(VariableIdx variable, object_id value) {
 	const auto& tuple_data = _info.getVariableData(variable); // TODO - MOVE FROM PROBLEM INFO INTO SOME PERFORMANT INDEX
 	unsigned symbol = tuple_data.first;
 	bool managed = _managed.at(symbol);
@@ -53,7 +54,7 @@ AtomIdx ExtensionHandler::process_atom(VariableIdx variable, ObjectIdx value) {
 	Extension& extension = _extensions.at(symbol);
 // 	_modified.insert(symbol);  // Mark the extension as modified
 	
-	if (is_predicate && value == 1) {
+	if (is_predicate && int(value) == 1) {
 		AtomIdx index = _tuple_index.to_index(tuple_data);
 		if (managed) {
 			extension.add_tuple(index);
@@ -82,8 +83,8 @@ void ExtensionHandler::process_tuple(AtomIdx tuple) {
 	}
 }
 
-void ExtensionHandler::process_delta(VariableIdx variable, const std::vector<ObjectIdx>& delta) {
-	for (ObjectIdx value:delta) process_atom(variable, value);
+void ExtensionHandler::process_delta(VariableIdx variable, const std::vector<object_id>& delta) {
+	for (object_id value:delta) process_atom(variable, value);
 }
 
 

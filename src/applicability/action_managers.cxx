@@ -132,7 +132,7 @@ SmartActionManager::index_variables(const std::vector<const GroundAction*>& acti
 }
 
 //! A small helper
-ObjectIdx _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
+object_id _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
 	const fs::Constant* _lhs = dynamic_cast<const fs::Constant*>(lhs);
 	const fs::Constant* _rhs = dynamic_cast<const fs::Constant*>(rhs);
 	assert(_lhs || _rhs);
@@ -209,7 +209,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 // 			std::cout << "Processing conjunct: " << *conjunct << std::endl;
 
 			VariableIdx relevant = all_relevant[0];
-			const std::vector<ObjectIdx>& values = info.getVariableObjects(relevant);
+			const std::vector<object_id>& values = info.getVariableObjects(relevant);
 
 			if (!referenced.insert(relevant).second) {
 				LPT_INFO("cout", "Conjunct \"" << *conjunct << "\" contains a duplicate reference to state variable \"" << info.getVariableName(relevant) << "\"");
@@ -220,7 +220,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			
 			if (eq) { // Prec is of the form X=x
 // 				std::cout << "Precondition: " << *eq << std::endl;
-				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
+				object_id value = _extract_constant_val(eq->lhs(), eq->rhs());
 				AtomIdx tup = _tuple_idx.to_index(relevant, value);
 				
 // 				std::cout << "Corresponding Atom: " << _tuple_idx.to_atom(tup) << std::endl;
@@ -233,8 +233,8 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			} else { // Prec is of the form X!=x
 				assert(neq);
 // 				std::cout << "Precondition: " << *eq << std::endl;
-				ObjectIdx value = _extract_constant_val(neq->lhs(), neq->rhs());
-				for (ObjectIdx v2:values) {
+				object_id value = _extract_constant_val(neq->lhs(), neq->rhs());
+				for (object_id v2:values) {
 					if (v2 != value) {
 						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
 						if (build_applicable_index) {
@@ -251,7 +251,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 				if (referenced.find(var) != referenced.end()) continue;
 
-				for (ObjectIdx val:info.getVariableObjects(var)) {
+				for (object_id val:info.getVariableObjects(var)) {
 					AtomIdx tup = _tuple_idx.to_index(var, val);
 					_applicable[tup].push_back(i);
 				}

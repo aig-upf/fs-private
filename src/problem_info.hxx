@@ -86,11 +86,11 @@ protected:
 	std::vector<std::string> variableNames;
 
 	//! A map from state variable name to state variable ID
-	std::map<std::string, VariableIdx> variableIds;
+	std::unordered_map<std::string, VariableIdx> variableIds;
 
 	//! A map from the actual data "f(t1, t2, ..., tn)" to the assigned variable ID
-	std::map<std::pair<unsigned, std::vector<ObjectIdx>>, VariableIdx> variableDataToId;
-	std::vector<std::pair<unsigned, std::vector<ObjectIdx>>> variableIdToData;
+	std::map<std::pair<unsigned, std::vector<object_id>>, VariableIdx> variableDataToId;
+	std::vector<std::pair<unsigned, std::vector<object_id>>> variableIdToData;
 
 	//! A map from state variable index to the type of the state variable
 	std::vector<ObjectType> variableGenericTypes;
@@ -99,13 +99,13 @@ protected:
 	std::vector<TypeIdx> variableTypes;
 
 	//! A map from object index to object name
-	std::vector<std::string> objectNames;
+	std::unordered_map<object_id, std::string> objectNames;
 
 	//! A map from object name to object index
-	std::map<std::string, ObjectIdx> objectIds;
+	std::unordered_map<std::string, object_id> objectIds;
 
 	//! A map from type ID to all of the object indexes of that type
-	std::vector<std::vector<ObjectIdx>> typeObjects;
+	std::vector<std::vector<object_id>> typeObjects;
 
 	//! An integer type will have associated lower and upper bounds.
 	std::vector<std::pair<int, int>> typeBounds;
@@ -117,7 +117,7 @@ protected:
 
 	//! Maps between predicate and function symbols names and IDs.
 	std::vector<std::string> symbolNames;
-	std::map<std::string, SymbolIdx> symbolIds;
+	std::unordered_map<std::string, SymbolIdx> symbolIds;
 
 	//! A map from function ID to the function data
 	std::vector<SymbolData> _functionData;
@@ -144,10 +144,10 @@ public:
 
 	unsigned getNumVariables() const;
 
-	const std::string getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const;
-	const std::string deduceObjectName(ObjectIdx object, TypeIdx type) const;
-	const std::string deduceObjectName(ObjectIdx object, const std::string& type) const { return deduceObjectName(object, getTypeId(type)); }
-	inline ObjectIdx getObjectId(const std::string& name) const { return objectIds.at(name); }
+	const std::string getObjectName(VariableIdx varIdx, object_id objIdx) const;
+	const std::string deduceObjectName(object_id object, TypeIdx type) const;
+	const std::string deduceObjectName(object_id object, const std::string& type) const { return deduceObjectName(object, getTypeId(type)); }
+	inline object_id getObjectId(const std::string& name) const { return objectIds.at(name); }
 
 	//! Return the ID of the function with given name
 	inline SymbolIdx getSymbolId(const std::string& name) const { return symbolIds.at(name); }
@@ -186,12 +186,12 @@ public:
 	}
 
 	//! Returns all the objects of the given type _or of a descendant type_
-	inline const std::vector<std::vector<ObjectIdx>>& getTypeObjects() const { return typeObjects; }
-	inline const std::vector<ObjectIdx>& getTypeObjects(TypeIdx type) const { return typeObjects.at(type); }
-	inline const std::vector<ObjectIdx>& getTypeObjects(const std::string& type_name) const { return typeObjects.at(getTypeId(type_name)); }
+	inline const std::vector<std::vector<object_id>>& getTypeObjects() const { return typeObjects; }
+	inline const std::vector<object_id>& getTypeObjects(TypeIdx type) const { return typeObjects.at(type); }
+	inline const std::vector<object_id>& getTypeObjects(const std::string& type_name) const { return typeObjects.at(getTypeId(type_name)); }
 
 	//! Returns all the objects of the type of the given variable
-	inline const std::vector<ObjectIdx>& getVariableObjects(const VariableIdx variable) const {
+	inline const std::vector<object_id>& getVariableObjects(const VariableIdx variable) const {
 		return getTypeObjects(getVariableType(variable));
 	}
 
@@ -207,11 +207,11 @@ public:
 
 
 	//! Resolves a pair of function ID + an assignment of values to their parameters to the corresponding state variable.
-	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<ObjectIdx>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, std::move(constants))); }
-	VariableIdx resolveStateVariable(unsigned symbol_id, const std::vector<ObjectIdx>& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
+	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<object_id>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, std::move(constants))); }
+	VariableIdx resolveStateVariable(unsigned symbol_id, const std::vector<object_id>& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
 
 	//! Return the data that originated a state variable
-	const std::pair<unsigned, std::vector<ObjectIdx>>& getVariableData(VariableIdx variable) const { return variableIdToData.at(variable); }
+	const std::pair<unsigned, std::vector<object_id>>& getVariableData(VariableIdx variable) const { return variableIdToData.at(variable); }
 
 
 
@@ -219,14 +219,14 @@ public:
 	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return getSymbolData(symbol_id).getStateVariables(); }
 
 
-	const std::string& getCustomObjectName(ObjectIdx objIdx) const;
+	const std::string& getCustomObjectName(object_id objIdx) const;
 
 	unsigned getNumObjects() const;
 
 	//! Both methods check that the value of a given variable is within the bounds of the variable,
 	//! in case it is a variable of a bounded type.
 	bool checkValueIsValid(const Atom& atom) const;
-	bool checkValueIsValid(VariableIdx variable, ObjectIdx value) const;
+	bool checkValueIsValid(VariableIdx variable, object_id value) const;
 
 	bool isBoundedType(TypeIdx type) const { return isTypeBounded[type];  }
 	bool isBoundedVariable(VariableIdx variable) const { return isBoundedType(getVariableType(variable));  }

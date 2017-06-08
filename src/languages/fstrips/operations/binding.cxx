@@ -26,7 +26,7 @@ void FormulaBindingVisitor::Visit(const Contradiction& lhs) { _result = new Cont
 void FormulaBindingVisitor::
 Visit(const AtomicFormula& lhs) {
 	// Process the subterms first
-	std::vector<ObjectIdx> constant_values;
+	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed_subterms = bind_subterms(lhs.getSubterms(), _binding, _info, constant_values);
 
 	// Create the corresponding relational or external formula object, according to the symbol
@@ -46,7 +46,7 @@ Visit(const AtomicFormula& lhs) {
 void FormulaBindingVisitor::
 Visit(const AxiomaticFormula& lhs) {
 	// Process the subterms first
-	std::vector<ObjectIdx> constant_values;
+	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed_subterms = bind_subterms(lhs.getSubterms(), _binding, _info, constant_values);
 
 	// Create the corresponding relational or external formula object, according to the symbol
@@ -173,7 +173,7 @@ Visit(const BoundVariable& lhs) {
 	if (!_binding.binds(lhs.getVariableId())) {
 		_result =  lhs.clone();
 	} else {
-		ObjectIdx value = _binding.value(lhs.getVariableId());
+		object_id value = _binding.value(lhs.getVariableId());
 		_result = _info.isBoundedType(lhs.getType()) ? new IntConstant(value) : new Constant(value);
 	}
 }
@@ -194,7 +194,7 @@ Visit(const NestedTerm& lhs) {
 
 	const auto& function = _info.getSymbolData(symbol_id);
 
-    std::vector<ObjectIdx> constant_values;
+    std::vector<object_id> constant_values;
     std::vector<const Term*> st = bind_subterms(subterms, _binding, _info, constant_values);
 
 	// If the function has unbounded arity, we cannot tell statically whether it can be resolved to a constant value or not
@@ -229,7 +229,7 @@ void TermBindingVisitor::
 Visit(const ArithmeticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 
-	std::vector<ObjectIdx> constant_values;
+	std::vector<object_id> constant_values;
 	std::vector<const Term*> st = bind_subterms(subterms, _binding, _info, constant_values);
 
 	auto processed = lhs.create(st);
@@ -250,7 +250,7 @@ Visit(const UserDefinedStaticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
 
-	std::vector<ObjectIdx> constant_values;
+	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 
 	_result =  new UserDefinedStaticTerm(symbol_id, processed);
@@ -272,7 +272,7 @@ Visit(const UserDefinedStaticTerm& lhs) {
 
 void TermBindingVisitor::
 Visit(const AxiomaticTermWrapper& lhs) {
-	std::vector<ObjectIdx> constant_values;
+	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed = bind_subterms(lhs.getSubterms(), _binding, _info, constant_values);
 
 	// we simply return a new axiomaticTerm with the processed/bound subterms
@@ -283,7 +283,7 @@ Visit(const AxiomaticTermWrapper& lhs) {
 void TermBindingVisitor::
 Visit(const AxiomaticTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
-	std::vector<ObjectIdx> constant_values;
+	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 
 	// We simply return a user-defined static term with the processed/bound subterms
@@ -296,7 +296,7 @@ Visit(const FluentHeadedNestedTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
 	const auto& symbol_id = lhs.getSymbolId();
 
-	std::vector<ObjectIdx> constant_values;
+	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 	
     LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
@@ -312,7 +312,7 @@ Visit(const FluentHeadedNestedTerm& lhs) {
 
 
 std::vector<const Term*>
-bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<ObjectIdx>& constants) {
+bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<object_id>& constants) {
 	assert(constants.empty());
 	std::vector<const Term*> result;
 	for (auto unprocessed:subterms) {

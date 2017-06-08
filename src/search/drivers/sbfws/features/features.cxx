@@ -58,11 +58,11 @@ FeatureSelector<StateT>::add_state_variables(const ProblemInfo& info, std::vecto
 	}
 }
 
-lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemInfo& info,  const std::string& feat_name, const std::vector<ObjectIdx>& parameters) {
+lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemInfo& info,  const std::string& feat_name, const std::vector<object_id>& parameters) {
 	unsigned symbol_id = info.getSymbolId(feat_name);
 	
 	std::vector<const fs::Term*> subterms;
-	for (ObjectIdx value:parameters) {
+	for (object_id value:parameters) {
 		subterms.push_back(new fs::IntConstant(value));
 	}
 	

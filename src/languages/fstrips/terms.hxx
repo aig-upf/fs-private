@@ -19,10 +19,10 @@ public:
 	Term* clone() const override = 0;
 	
 	//! Returns the value of the current term under the given (possibly partial) interpretation
-	virtual ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
-	virtual ObjectIdx interpret(const State& state, const Binding& binding) const = 0;
-	ObjectIdx interpret(const PartialAssignment& assignment) const;
-	ObjectIdx interpret(const State& state) const;
+	virtual object_id interpret(const PartialAssignment& assignment, const Binding& binding) const = 0;
+	virtual object_id interpret(const State& state, const Binding& binding) const = 0;
+	object_id interpret(const PartialAssignment& assignment) const;
+	object_id interpret(const State& state) const;
 
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
 
@@ -39,7 +39,7 @@ public:
 	LOKI_DEFINE_CONST_VISITABLE();
 
 	NestedTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
-		: _symbol_id(symbol_id), _subterms(subterms), _interpreted_subterms(subterms.size(), -1)
+		: _symbol_id(symbol_id), _subterms(subterms), _interpreted_subterms(subterms.size(), object_id::INVALID)
 	{}
 
 	~NestedTerm() {
@@ -54,7 +54,7 @@ public:
 	//! A helper to interpret a vector of terms
 	template <typename T>
 	static void
-	interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding, std::vector<ObjectIdx>& interpreted) {
+	interpret_subterms(const std::vector<const Term*>& subterms, const T& assignment, const Binding& binding, std::vector<object_id>& interpreted) {
 		assert(interpreted.size() == subterms.size());
 		for (unsigned i = 0, sz = subterms.size(); i < sz; ++i) {
 			interpreted[i] = subterms[i]->interpret(assignment, binding);
@@ -78,7 +78,7 @@ protected:
 	std::vector<const Term*> _subterms;
 	
 	//! The last interpretation of the subterms (acts as a cache)
-	mutable std::vector<ObjectIdx> _interpreted_subterms;
+	mutable std::vector<object_id> _interpreted_subterms;
 };
 
 
@@ -116,8 +116,8 @@ public:
 
 	UserDefinedStaticTerm* clone() const override { return new UserDefinedStaticTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	object_id interpret(const State& state, const Binding& binding) const override;
 	
 	const SymbolData& getFunction() const { return _function; }
 
@@ -137,11 +137,11 @@ public:
 
 	virtual std::string name() const = 0;
 		
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Not yet implemented"); }
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override { throw std::runtime_error("Not yet implemented"); }
+	object_id interpret(const State& state, const Binding& binding) const override;
 	
 	//! This needs to be overriden by the particular implementation
-	virtual ObjectIdx compute(const State& state, std::vector<ObjectIdx>& arguments) const = 0;
+	virtual object_id compute(const State& state, std::vector<object_id>& arguments) const = 0;
 };
 
 
@@ -158,8 +158,8 @@ public:
 	AxiomaticTermWrapper(const AxiomaticTermWrapper& other);
 	AxiomaticTermWrapper* clone() const override { return new AxiomaticTermWrapper(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	object_id interpret(const State& state, const Binding& binding) const override;
 	
 	const Axiom* getAxiom() const { return _axiom; }
 	
@@ -179,8 +179,8 @@ public:
 
 	FluentHeadedNestedTerm* clone() const override { return new FluentHeadedNestedTerm(*this); }
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	object_id interpret(const State& state, const Binding& binding) const override;
 };
 
 //! A logical variable bound to some existential or universal quantifier
@@ -200,8 +200,8 @@ public:
 	//! Returns the name of the variable
 	const std::string& getName() const { return _name; }
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override;
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override;
+	object_id interpret(const State& state, const Binding& binding) const override;
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -242,8 +242,8 @@ public:
 	//! Returns the index of the state variable
 	VariableIdx getValue() const { return _variable_id; }
 
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { return assignment.at(_variable_id); }
-	ObjectIdx interpret(const State& state, const Binding& binding) const override;
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override { return assignment.at(_variable_id); }
+	object_id interpret(const State& state, const Binding& binding) const override;
 
 	const FluentHeadedNestedTerm* getOrigin() const { return _origin; }
 	
@@ -271,16 +271,16 @@ class Constant : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	Constant(ObjectIdx value)  : _value(value) {}
+	Constant(object_id value)  : _value(value) {}
 
 	Constant* clone() const override { return new Constant(*this); }
 	
 	//! Returns the actual value of the constant
-	ObjectIdx getValue() const { return _value; }
+	object_id getValue() const { return _value; }
 
 	// The value of a constant is independent of the assignment
-	ObjectIdx interpret(const PartialAssignment& assignment, const Binding& binding) const override { return _value; }
-	ObjectIdx interpret(const State& state, const Binding& binding) const override { { return _value; }}
+	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override { return _value; }
+	object_id interpret(const State& state, const Binding& binding) const override { { return _value; }}
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
@@ -290,14 +290,14 @@ public:
 
 protected:
 	//! The actual value of the constant
-	ObjectIdx _value;
+	object_id _value;
 };
 
 
 //! An integer constant
 class IntConstant : public Constant {
 public:
-	IntConstant(ObjectIdx value)  : Constant(value) {}
+	IntConstant(object_id value)  : Constant(value) {}
 
 	IntConstant* clone() const override { return new IntConstant(*this); }
 

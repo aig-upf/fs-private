@@ -38,7 +38,7 @@ BindingUnit::BindingUnit(const BindingUnit& other) :
 {}
 
 void BindingUnit::
-update_binding(Binding& binding, const std::vector<ObjectIdx>& values) const {
+update_binding(Binding& binding, const std::vector<object_id>& values) const {
 	assert(values.size() == _binding_index.size());
 	for (unsigned i = 0; i < values.size(); ++i) {
 		binding.set(_binding_index[i], values[i]);

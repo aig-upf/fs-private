@@ -152,9 +152,9 @@ void GroundEffectCSP::solve_approximately(const Atom& atom, gecode::GecodeCSP* c
 			VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), *csp));
 	//		VariableIdx variable = fluent->interpretVariable(assignment, binding);
 			if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
-				// ObjectIdx value = fluent->interpret(assignment, binding);
+				// object_id value = fluent->interpret(assignment, binding);
 				
-				ObjectIdx value = 1; // i.e. assuming that there are no negated atoms on conditions.
+				object_id value = 1; // i.e. assuming that there are no negated atoms on conditions.
 				if (!info.isPredicate(fluent->getSymbolId())) {
 					value = _translator.resolveValue(fluent, *csp);
 				}

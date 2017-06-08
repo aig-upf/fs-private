@@ -54,7 +54,7 @@ GecodeApplicabilityAnalyzer::build(bool build_applicable_index) {
 		// (kind of a local consistency test _as if_ the whole precondition was a sole constraint)
 		// If that is the case, we consider the action potentially applicable when X=x
 		for (VariableIdx relevant:all_relevant) {
-			for (ObjectIdx value:info.getVariableObjects(relevant)) {
+			for (object_id value:info.getVariableObjects(relevant)) {
 				
 				GecodeCSP* restricted = manager.post(relevant, value);
 				if (manager.check_one_solution_exists(restricted)) {
@@ -69,7 +69,7 @@ GecodeApplicabilityAnalyzer::build(bool build_applicable_index) {
 		for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 			if (all_relevant.find(var) != all_relevant.end()) continue;
 			
-			for (ObjectIdx val:info.getVariableObjects(var)) {
+			for (object_id val:info.getVariableObjects(var)) {
 				AtomIdx tup = _tuple_idx.to_index(var, val);
 				_applicable[tup].push_back(i);
 				potentially_applicable.insert(i);

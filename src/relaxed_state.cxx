@@ -29,7 +29,7 @@ RelaxedState::RelaxedState(const State& state) {
 	}
 }
 
-void RelaxedState::accumulate(const std::vector<std::vector<ObjectIdx>>& atoms) {
+void RelaxedState::accumulate(const std::vector<std::vector<object_id>>& atoms) {
 	for (VariableIdx variable = 0; variable < atoms.size(); ++variable) {
 		const auto& var_atoms = atoms[variable];
 		_domains.at(variable)->insert(var_atoms.cbegin(), var_atoms.cend());

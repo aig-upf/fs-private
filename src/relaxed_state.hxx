@@ -25,7 +25,7 @@ public:
 	RelaxedState& operator=(const RelaxedState& rhs) = delete;
 	bool operator==(const RelaxedState& rhs) = delete;
 	
-	void accumulate(const std::vector<std::vector<ObjectIdx>>& atoms);
+	void accumulate(const std::vector<std::vector<object_id>>& atoms);
 	
 	const DomainVector& getDomains() const { return _domains; }
 	

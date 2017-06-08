@@ -15,7 +15,7 @@ UnaryDomainBoundsConstraint::UnaryDomainBoundsConstraint(const UnaryDirectEffect
 
 // The domain constraint is satisfied iff the application of the corresponding effect keeps the affected
 // value within the domain bounds.
-bool UnaryDomainBoundsConstraint::isSatisfied(ObjectIdx o) const {
+bool UnaryDomainBoundsConstraint::isSatisfied(object_id o) const {
 		return _effect->applicable(o) && _problemInfo.checkValueIsValid(_effect->apply(o));
 }
 
@@ -35,7 +35,7 @@ BinaryDomainBoundsConstraint::BinaryDomainBoundsConstraint(const BinaryDirectEff
 	BinaryDirectConstraint(effect->getScope(), {}), _problemInfo(problemInfo), _effect(effect)
 {}
 
-bool BinaryDomainBoundsConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
+bool BinaryDomainBoundsConstraint::isSatisfied(object_id o1, object_id o2) const {
 		return _effect->applicable(o1, o2) &&  _problemInfo.checkValueIsValid(_effect->apply(o1, o2));
 }
 

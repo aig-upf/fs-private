@@ -217,7 +217,7 @@ void BaseActionCSP::process_solution(GecodeCSP* solution, RPGIndex& graph) const
 	for (unsigned i = 0; i < get_effects().size(); ++i) {
 		const fs::ActionEffect* effect = get_effects()[i];
 		VariableIdx variable = _has_nested_lhs ? fs::interpret_variable(*effect->lhs(), assignment, binding) : effect_lhs_variables[i];
-		ObjectIdx value = _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution);
+		object_id value = _translator.resolveValueFromIndex(effect_rhs_variables[i], *solution);
 		AtomIdx reached_tuple = _tuple_index.to_index(variable, value);
 		LPT_EDEBUG("heuristic", "Processing effect \"" << *effect << "\"");
 		if (_hmaxsum_priority) WORK_IN_PROGRESS("This hasn't been adapted yet to the new tuple-based data structures"); // hmax_based_atom_processing(solution, graph, atom, i, assignment, binding);
@@ -248,7 +248,7 @@ std::vector<AtomIdx> BaseActionCSP::extract_support_from_solution(GecodeCSP* sol
 
 	// First extract the supports of the "direct" state variables
 	for (VariableIdx variable:effect_support_variables[effect_idx]) {
-		ObjectIdx value = _translator.resolveInputStateVariableValue(*solution, variable);
+		object_id value = _translator.resolveInputStateVariableValue(*solution, variable);
 		support.push_back(_tuple_index.to_index(variable, value));
 	}
 	
@@ -277,9 +277,9 @@ void BaseActionCSP::extract_nested_term_support(const GecodeCSP* solution, const
 		VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), *solution));
 //		VariableIdx variable = fluent->interpretVariable(assignment, binding);
 		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
-			// ObjectIdx value = fluent->interpret(assignment, binding);
+			// object_id value = fluent->interpret(assignment, binding);
 			
-			ObjectIdx value = 1; // i.e. assuming that there are no negated atoms on conditions.
+			object_id value = 1; // i.e. assuming that there are no negated atoms on conditions.
 			if (!info.isPredicate(fluent->getSymbolId())) {
 				value = _translator.resolveValue(fluent, *solution);
 			}

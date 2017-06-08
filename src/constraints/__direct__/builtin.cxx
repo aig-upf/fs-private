@@ -5,9 +5,9 @@
 namespace fs0 {
 
 //! <-filter the given domain wrt a domain with given min and max values.
-FilteringOutput filter_lt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
+FilteringOutput filter_lt(Domain& domain, object_id y_min, object_id y_max) {
 	assert( domain.size() > 0 );
-	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
+	object_id x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_max < y_max) return FilteringOutput::Unpruned;
 	if (x_min >= y_max) return FilteringOutput::Failure;
 	
@@ -19,9 +19,9 @@ FilteringOutput filter_lt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 }
 
 //! <=-filter the given domain wrt a domain with given min and max values.
-FilteringOutput filter_leq(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
+FilteringOutput filter_leq(Domain& domain, object_id y_min, object_id y_max) {
 	assert( domain.size() > 0 );
-	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
+	object_id x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_max <= y_max) return FilteringOutput::Unpruned;
 	if (x_min > y_max) return FilteringOutput::Failure;
 	
@@ -34,9 +34,9 @@ FilteringOutput filter_leq(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 }
 
 //! >-filter the given domain wrt a domain with given min and max values.
-FilteringOutput filter_gt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
+FilteringOutput filter_gt(Domain& domain, object_id y_min, object_id y_max) {
 	assert( domain.size() > 0 );
-	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
+	object_id x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_min > y_min) return FilteringOutput::Unpruned;
 	if (x_max <= y_min) return FilteringOutput::Failure;
 	
@@ -49,9 +49,9 @@ FilteringOutput filter_gt(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
 }
 
 //! >=-filter the given domain wrt a domain with given min and max values.
-FilteringOutput filter_geq(Domain& domain, ObjectIdx y_min, ObjectIdx y_max) {
+FilteringOutput filter_geq(Domain& domain, object_id y_min, object_id y_max) {
 	assert( domain.size() > 0 );
-	ObjectIdx x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
+	object_id x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	
 	if (x_min >= y_min) return FilteringOutput::Unpruned;
 	if (x_max < y_min) return FilteringOutput::Failure;
@@ -70,8 +70,8 @@ FilteringOutput LTConstraint::filter(unsigned variable) const {
 	
 	Domain& x_dom = *(projection[0]);
 	Domain& y_dom = *(projection[1]);
-	ObjectIdx x_min = *(x_dom.cbegin()), x_max = *(x_dom.crbegin());
-	ObjectIdx y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
+	object_id x_min = *(x_dom.cbegin()), x_max = *(x_dom.crbegin());
+	object_id y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
 	
 	if (variable == 0) { // We filter x_dom, the domain of X
 		return filter_lt(x_dom, y_min, y_max);
@@ -94,8 +94,8 @@ FilteringOutput LEQConstraint::filter(unsigned variable) const {
 	assert( x_dom.size() > 0 );
 	Domain& y_dom = *(projection[1]);
 	assert( y_dom.size() > 0 );
-	ObjectIdx x_min = *(x_dom.cbegin()), x_max = *(x_dom.crbegin());
-	ObjectIdx y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
+	object_id x_min = *(x_dom.cbegin()), x_max = *(x_dom.crbegin());
+	object_id y_min = *(y_dom.cbegin()), y_max = *(y_dom.crbegin());
 	
 	if (variable == 0) { // We filter x_dom, the domain of X
 		return filter_leq(x_dom, y_min, y_max);
@@ -118,7 +118,7 @@ FilteringOutput EQConstraint::filter(unsigned variable) const {
 	Domain& other_domain = *(projection[other]);
 	Domain new_domain;
 	
-	for (ObjectIdx x:domain) {
+	for (object_id x:domain) {
 		// We simply check that x is in the domain of the other variable
 		auto it = other_domain.lower_bound(x);
 		if (it != other_domain.end() && *it == x) { // `it` points to the first x in x_dom such that x >= y_max
@@ -149,7 +149,7 @@ FilteringOutput NEQConstraint::filter(unsigned variable) const {
 	if (other_domain.size() >= 2) return FilteringOutput::Unpruned; // If the other domain has at least two domains, we won't be able to prune anything
 	
 	assert(other_domain.size() == 1);
-	ObjectIdx other_val = *(other_domain.cbegin());
+	object_id other_val = *(other_domain.cbegin());
 	
 	// If we can erase the only value, i.e. it was in the domain, we do it, otherwise the result is an unpruned domain.
 	if (domain.erase(other_val) == 0) return FilteringOutput::Unpruned;
@@ -248,7 +248,7 @@ std::ostream& GEQXConstraint::print(std::ostream& os) const {
 	return os;
 }
 
-ValueAssignmentEffect::ValueAssignmentEffect(VariableIdx affected, ObjectIdx value)
+ValueAssignmentEffect::ValueAssignmentEffect(VariableIdx affected, object_id value)
 	: ZeroaryDirectEffect(affected, {value})
 {}
 
@@ -268,7 +268,7 @@ VariableAssignmentEffect::VariableAssignmentEffect(VariableIdx relevant, Variabl
 {}
 
 
-Atom VariableAssignmentEffect::apply(ObjectIdx v1) const {
+Atom VariableAssignmentEffect::apply(object_id v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, v1);
 }
@@ -285,7 +285,7 @@ AdditiveUnaryEffect::AdditiveUnaryEffect(VariableIdx relevant, VariableIdx affec
 {}
 
 
-Atom AdditiveUnaryEffect::apply(ObjectIdx v1) const {
+Atom AdditiveUnaryEffect::apply(object_id v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, v1 + _parameters[0]);
 }
@@ -300,7 +300,7 @@ AdditiveBinaryEffect::AdditiveBinaryEffect(const VariableIdxVector& scope, Varia
 	: BinaryDirectEffect(scope, affected, {})
 {}
 
-Atom AdditiveBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
+Atom AdditiveBinaryEffect::apply(object_id v1, object_id v2) const {
 	assert(applicable(v1, v2));
 	return Atom(_affected, v1 + v2);
 }
@@ -317,7 +317,7 @@ SubtractiveUnaryEffect::SubtractiveUnaryEffect(VariableIdx relevant, VariableIdx
 {}
 
 
-Atom SubtractiveUnaryEffect::apply(ObjectIdx v1) const {
+Atom SubtractiveUnaryEffect::apply(object_id v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, v1 - _parameters[0]);
 }
@@ -333,7 +333,7 @@ InvSubtractiveUnaryEffect::InvSubtractiveUnaryEffect(VariableIdx relevant, Varia
 {}
 
 
-Atom InvSubtractiveUnaryEffect::apply(ObjectIdx v1) const {
+Atom InvSubtractiveUnaryEffect::apply(object_id v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, _parameters[0] - v1);
 }
@@ -349,7 +349,7 @@ SubtractiveBinaryEffect::SubtractiveBinaryEffect(const VariableIdxVector& scope,
 	: BinaryDirectEffect(scope, affected, {})
 {}
 
-Atom SubtractiveBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
+Atom SubtractiveBinaryEffect::apply(object_id v1, object_id v2) const {
 	assert(applicable(v1, v2));
 	return Atom(_affected, v1 - v2);
 }
@@ -365,7 +365,7 @@ MultiplicativeUnaryEffect::MultiplicativeUnaryEffect(VariableIdx relevant, Varia
 {}
 
 
-Atom MultiplicativeUnaryEffect::apply(ObjectIdx v1) const {
+Atom MultiplicativeUnaryEffect::apply(object_id v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, v1 * _parameters[0]);
 }
@@ -380,7 +380,7 @@ MultiplicativeBinaryEffect::MultiplicativeBinaryEffect(const VariableIdxVector& 
 	: BinaryDirectEffect(scope, affected, {})
 {}
 
-Atom MultiplicativeBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
+Atom MultiplicativeBinaryEffect::apply(object_id v1, object_id v2) const {
 	assert(applicable(v1, v2));
 	return Atom(_affected, v1 * v2);
 }

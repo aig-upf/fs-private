@@ -66,6 +66,28 @@ protected:
 };
 
 
+//! A "straight" hybrid feature evaluator is aimed at working with states that can hold both int and bool values
+//! at the same time. As such, it can no longer return a const-ref to a vector of values, since it needs to compose
+//! a single vector containing all values. It is still, however, specialized, in the sense that it can be used
+//! only when we're not interested in additional features other than the values of all state variables.
+class IntegerFeatureEvaluator {
+public:
+	//!
+	template <typename StateT>
+	const std::vector<int> evaluate(const StateT& state) const {
+		unsigned sz = state.numAtoms();
+		std::vector<int> valuation;
+		valuation.reserve(sz);
+		
+		for (unsigned var = 0; var < sz; ++var) {
+			valuation.push_back(int(state.getValue(var)));
+		}
+		return valuation;
+	}
+	
+	bool uses_extra_features() const { return false; }
+};
+
 
 } } // namespaces
 

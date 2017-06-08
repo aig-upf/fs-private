@@ -14,13 +14,13 @@ class cartesian_iterator;
 //! A binding_iterator iterates through all possible bindings of a given signature
 class binding_iterator {
 protected:
-	static const std::vector<ObjectIdx> NIL;
+	static const std::vector<object_id> NIL;
 	
 	std::vector<bool> _valid;
 	
 	cartesian_iterator* _iterator;
 
-	std::vector<const std::vector<ObjectIdx>*> generate_values(const Signature& types, const ProblemInfo& info);
+	std::vector<const std::vector<object_id>*> generate_values(const Signature& types, const ProblemInfo& info);
 	
 public:
 	//! Constructor

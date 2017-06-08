@@ -17,11 +17,13 @@ std::ostream& logical_registry::print(std::ostream& os) const {
 	}
 	os << std::endl << std::endl;
 	
+	/*
 	os << "Direct translators for logical elements: " << std::endl;
 	for (const auto& it:_registry._direct_formula_translators) {
 		os << "\t* " << type_info_name(it.first) << std::endl;
 	}
 	os << std::endl;
+	*/
 	
 	os << "Gecode translators for logical elements: " << std::endl;
 	for (const auto& it:_registry._gecode_term_translators) {

@@ -43,11 +43,11 @@ public:
 	bool is_fully_multivalued() const { return _n_bool == 0; }
 	
 	//! Obtain and return the value of the given variable from the given state
-	ObjectIdx get(const State& state, VariableIdx variable) const;
+	object_id get(const State& state, VariableIdx variable) const;
 	
 	//! Set a value into the state
 	void set(State& state, const Atom& atom) const;
-	void set(State& state, VariableIdx variable, ObjectIdx value) const;
+	void set(State& state, VariableIdx variable, object_id value) const;
 
 protected:
 	IndexT compute_index(const ProblemInfo& info);
@@ -58,14 +58,13 @@ class State {
 public:
 	// using BitsetT = boost::dynamic_bitset<>;
 	using BitsetT = std::vector<bool>;
-	using IntsetT = std::vector<int>;
 
 protected:
 	const StateAtomIndexer& _indexer;
 	
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
 	BitsetT _bool_values;
-	IntsetT _int_values;
+	std::vector<object_id> _int_values;
 
 	std::size_t _hash;
 
@@ -99,21 +98,16 @@ public:
 
 	bool contains(const Atom& atom) const;
 
-	ObjectIdx getValue(const VariableIdx& variable) const;
+	object_id getValue(const VariableIdx& variable) const;
 
 	unsigned numAtoms() const { return _bool_values.size() + _int_values.size(); }
 
 	//! "Applies" the given atoms into the current state.
 	void accumulate(const std::vector<Atom>& atoms);
 
-	const BitsetT& get_boolean_values() const {
-		assert(_indexer.is_fully_binary());
-		return _bool_values;
-	}
-	const IntsetT& get_int_values() const {
-		assert(_indexer.is_fully_multivalued());
-		return _int_values;
-	}
+	template <typename ValueT>
+	const std::vector<ValueT>& dump() const;
+	
 	
 protected:
 	void set(const Atom& atom);

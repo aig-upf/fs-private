@@ -362,7 +362,7 @@ public:
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		unsigned n = state.numAtoms();
 		for (VariableIdx var = 0; var < n; ++var) {
-			ObjectIdx val = state.getValue(var);
+			object_id val = state.getValue(var);
 			if (!mark_negative_propositions && info.isPredicativeVariable(var) && val==0) continue; // We don't want to mark negative propositions
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 			mark(_atomidx->to_index(var, val), status, only_if_relevant);

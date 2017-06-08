@@ -19,7 +19,7 @@ term_list_iterator::~term_list_iterator() {
 	delete _iterator;
 }
 
-std::vector<const std::vector<ObjectIdx>*> term_list_iterator::compute_possible_values(const std::vector<const fs::Term*>& subterms) {
+std::vector<const std::vector<object_id>*> term_list_iterator::compute_possible_values(const std::vector<const fs::Term*>& subterms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	
 	// possible_values[i] will be a vector (pointer) with all possible values for the i-th subterm
@@ -32,13 +32,13 @@ std::vector<const std::vector<ObjectIdx>*> term_list_iterator::compute_possible_
 	// If our actual nested fluent term is f(?p, table), where ?p is a variable (think e.g. an action parameter) of type "person" (a subtype of thing),
 	// and table is a constant, the only possible values we will want to iterate through are [person1, person2] for the first parameter, and [table] for the second,
 	// but none of the other "thing" objects.
-	std::vector<const std::vector<ObjectIdx>*> possible_values;
+	std::vector<const std::vector<object_id>*> possible_values;
 	
 	for (unsigned i = 0; i < subterms.size(); ++i) {
 		const fs::Term* subterm = subterms[i];
 		
 		if (auto constant = dynamic_cast<const fs::Constant*>(subterm)) {
-			auto v = new std::vector<ObjectIdx>(1, constant->getValue()); // Create a temporary vector with the constant value as the only value
+			auto v = new std::vector<object_id>(1, constant->getValue()); // Create a temporary vector with the constant value as the only value
 			possible_values.push_back(v);
 			_temporary_vectors.push_back(v); // store the pointer so that we can delete it later
 			continue;
@@ -61,15 +61,16 @@ const term_list_iterator& term_list_iterator::operator++() {
 bool term_list_iterator::ended() const { return _iterator->ended(); }
 
 Gecode::IntArgs term_list_iterator::getIntArgsElement(int element) const {
-	std::vector<ObjectIdx> point = arguments(); // We copy the vector to be able to add an extra element
-	point.push_back(element);
-	return Gecode::IntArgs(point);
+	std::vector<object_id> point = arguments(); // We copy the vector to be able to add an extra element
+	std::vector<int> values = fs0::values<int>(point, ObjectTable::EMPTY_TABLE);
+	values.push_back(element);
+	return Gecode::IntArgs(values);
 }
 
 Gecode::IntArgs term_list_iterator::getIntArgsElement() const {
-	return Gecode::IntArgs(arguments());
+	return Gecode::IntArgs(fs0::values<int>(arguments(), ObjectTable::EMPTY_TABLE));
 }
 
-const std::vector<ObjectIdx>& term_list_iterator::arguments() const { return *(*_iterator); }
+const std::vector<object_id>& term_list_iterator::arguments() const { return *(*_iterator); }
 	
 } } // namespaces

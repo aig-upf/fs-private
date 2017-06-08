@@ -10,6 +10,14 @@
 
 namespace fs0 {
 
+class unregistered_object_error : public std::runtime_error {
+public:
+	unregistered_object_error(const object_id& o) : std::runtime_error(msg(o)) {}
+	std::string msg(const object_id& o) {
+		return "Unregistered object"; // TODO ENHANCE THIS
+	}
+};
+
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
@@ -43,27 +51,31 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& dat
 
 const std::string& ProblemInfo::getVariableName(VariableIdx index) const { return variableNames.at(index); }
 
-bool ProblemInfo::isNegatedPredicativeAtom(const Atom& atom) const { return isPredicativeVariable(atom.getVariable()) && atom.getValue() == 0; }
+bool ProblemInfo::isNegatedPredicativeAtom(const Atom& atom) const { return isPredicativeVariable(atom.getVariable()) && atom.getValue() == object_id::FALSE; }
 
 unsigned ProblemInfo::getNumVariables() const { return variableNames.size(); }
 
-const std::string ProblemInfo::getObjectName(VariableIdx varIdx, ObjectIdx objIdx) const {
+const std::string ProblemInfo::getObjectName(VariableIdx varIdx, object_id object) const {
 	const ObjectType generictype = variableGenericTypes.at(varIdx);
-	if (generictype == ObjectType::OBJECT) return getCustomObjectName(objIdx);
-	else if (generictype == ObjectType::INT) return std::to_string(objIdx);
-	else if (generictype == ObjectType::BOOL) return std::string((objIdx ? "true" : "false"));
+	if (generictype == ObjectType::OBJECT) return getCustomObjectName(object);
+	else if (generictype == ObjectType::INT) return std::to_string(fs0::value<int>(object, ObjectTable::EMPTY_TABLE));
+	else if (generictype == ObjectType::BOOL) return std::string((fs0::value<bool>(object, ObjectTable::EMPTY_TABLE) ? "true" : "false"));
 	throw std::runtime_error("Should never get here.");
 }
 
-const std::string ProblemInfo::deduceObjectName(ObjectIdx object, TypeIdx type) const {
+const std::string ProblemInfo::deduceObjectName(object_id object, TypeIdx type) const {
 	const ObjectType generictype = getGenericType(type);
 	if (generictype == ObjectType::OBJECT) return getCustomObjectName(object);
-	else if (generictype == ObjectType::INT) return std::to_string(object);
-	else if (generictype == ObjectType::BOOL) return std::string((object ? "true" : "false"));
+	else if (generictype == ObjectType::INT) return std::to_string(fs0::value<int>(object, ObjectTable::EMPTY_TABLE));
+	else if (generictype == ObjectType::BOOL) return std::string((fs0::value<bool>(object, ObjectTable::EMPTY_TABLE) ? "true" : "false"));
 	throw std::runtime_error("Should never get here.");
 }
 
-const std::string& ProblemInfo::getCustomObjectName(ObjectIdx objIdx) const { return objectNames.at(objIdx); }
+const std::string& ProblemInfo::getCustomObjectName(object_id o) const {
+	const auto& it = objectNames.find(o);
+	if (it == objectNames.end()) throw std::runtime_error("Unregistered Object");
+	return it->second;
+}
 
 unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }
 
@@ -90,9 +102,9 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		// Load the info necessary to resolve state variables dynamically
 		const auto& var_data = data[i]["data"];
 		unsigned symbol_id = var_data[0].GetInt();
-		 std::vector<ObjectIdx> constants;
+		 std::vector<object_id> constants;
 		for (unsigned j = 0; j < var_data[1].Size(); ++j) {
-			constants.push_back(var_data[1][j].GetInt());
+			constants.push_back(make_obj(var_data[1][j].GetInt()));
 		}
 
 		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, constants),  id));
@@ -159,8 +171,10 @@ void ProblemInfo::loadObjectIndex(const rapidjson::Value& data) {
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		assert(data[i]["id"].GetInt() >= 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == objectNames.size()); // Check values are decoded in the proper order
 		const std::string& name = data[i]["name"].GetString();
-		objectIds.insert(std::make_pair(name, objectNames.size()));
-		objectNames.push_back(name);
+		object_id oid = make_obj<int>(objectNames.size());
+		objectIds.insert(std::make_pair(name, oid));
+		objectNames.insert(std::make_pair(oid, name));
+// 		std::cout << "Inserted: " << oid << " - " << name << " [" << std::hash<object_id>()(oid) << "]" << std::endl;
 	}
 }
 
@@ -193,11 +207,12 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 
 			// Unfold the range
 			typeObjects[type_id].reserve(upper - lower + 1);
-			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(v);
+			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(make_obj(v));
 		} else { // We have an enumeration of object IDs
 			typeObjects[type_id].reserve(data[i][2].Size());
 			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
-				typeObjects[type_id].push_back(boost::lexical_cast<ObjectIdx>(data[i][2][j].GetString()));
+				int value = boost::lexical_cast<int>(data[i][2][j].GetString());
+				typeObjects[type_id].push_back(make_obj(value));
 			}
 		}
 	}
@@ -207,10 +222,11 @@ bool ProblemInfo::checkValueIsValid(const Atom& atom) const {
 	return checkValueIsValid(atom.getVariable(), atom.getValue());
 }
 
-bool ProblemInfo::checkValueIsValid(VariableIdx variable, ObjectIdx value) const {
+bool ProblemInfo::checkValueIsValid(VariableIdx variable, object_id object) const {
 	TypeIdx type = getVariableType(variable);
 	if (!isTypeBounded[type]) return true;
 	const auto& bounds = typeBounds[type];
+	int value = fs0::value<int>(object, ObjectTable::EMPTY_TABLE);
 	return value >= bounds.first && value <= bounds.second;
 }
 
@@ -220,6 +236,7 @@ void ProblemInfo::loadProblemMetadata(const rapidjson::Value& data) {
 	setInstanceName(data["instance"].GetString());
 }
 
+
 void
 ProblemInfo::set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&& extension) {
 	assert(_extensions.at(symbol_id) == nullptr); // Shouldn't be setting twice the same extension
@@ -227,10 +244,12 @@ ProblemInfo::set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&
 	_extensions.at(symbol_id) = std::move(extension);
 }
 
+
 const StaticExtension&
 ProblemInfo::get_extension(unsigned symbol_id) const {
 	assert(_extensions.at(symbol_id) != nullptr);
 	return *_extensions.at(symbol_id);
 }
+
 
 } // namespaces

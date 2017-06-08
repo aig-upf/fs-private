@@ -10,7 +10,7 @@
 
 namespace fs0 {
 
-CompiledUnaryConstraint::CompiledUnaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension) : 
+CompiledUnaryConstraint::CompiledUnaryConstraint(const VariableIdxVector& scope, const ValueTuple& parameters, ExtensionT&& extension) : 
 	UnaryDirectConstraint(scope, parameters), _extension(extension)
 {}
 
@@ -27,7 +27,7 @@ std::set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(con
 	assert(scope.size() == 1);
 	
 	std::set<ElementT> ordered;
-	for(ObjectIdx value:info.getVariableObjects(scope[0])) {
+	for(object_id value:info.getVariableObjects(scope[0])) {
 		if (tester(value)) ordered.insert(value);
 	}
 	return ordered;
@@ -45,7 +45,7 @@ CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const Unar
 	return ExtensionT(ordered.begin(), ordered.end());
 }
 
-bool CompiledUnaryConstraint::isSatisfied(ObjectIdx o) const {
+bool CompiledUnaryConstraint::isSatisfied(object_id o) const {
 	return std::binary_search(_extension.begin(), _extension.end(), o); // TODO - Change for a O(1) lookup in a std::unordered_set ?
 }
 
@@ -80,7 +80,7 @@ CompiledBinaryConstraint::CompiledBinaryConstraint(const BinaryDirectConstraint&
 	CompiledBinaryConstraint(constraint.getScope(), constraint.getParameters(), compile(constraint))
 {}
 
-CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, const CompiledBinaryConstraint::TupleExtension& extension) 
+CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scope, const ValueTuple& parameters, const CompiledBinaryConstraint::TupleExtension& extension) 
 	: BinaryDirectConstraint(scope, parameters), _extension1(index(extension, 0)),  _extension2(index(extension, 1))
 {}
 
@@ -89,10 +89,10 @@ CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scop
 {}
 
 
-bool CompiledBinaryConstraint::isSatisfied(ObjectIdx o1, ObjectIdx o2) const {
+bool CompiledBinaryConstraint::isSatisfied(object_id o1, object_id o2) const {
 	auto iter = _extension1.find(o1);
 	assert(iter != _extension1.end());
-	const std::vector<ObjectIdx>& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
+	const std::vector<object_id>& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
 	return std::binary_search(D_y.begin(), D_y.end(), o2); // TODO - Change for a O(1) lookup in a std::unordered_set ?
 }
 
@@ -102,8 +102,8 @@ CompiledBinaryConstraint::TupleExtension CompiledBinaryConstraint::compile(const
 	
 	TupleExtension extension;
 	
-	for(ObjectIdx x:info.getVariableObjects(scope[0])) {
-		for(ObjectIdx y:info.getVariableObjects(scope[1])) {
+	for(object_id x:info.getVariableObjects(scope[0])) {
+		for(object_id y:info.getVariableObjects(scope[1])) {
 			if (tester(x, y)) {
 				extension.insert(std::make_tuple(x, y));
 			}
@@ -115,19 +115,19 @@ CompiledBinaryConstraint::TupleExtension CompiledBinaryConstraint::compile(const
 
 CompiledBinaryConstraint::ExtensionT CompiledBinaryConstraint::index(const CompiledBinaryConstraint::TupleExtension& extension, unsigned variable) {
 	assert(variable == 0 || variable == 1);
-	std::map<ObjectIdx, std::set<ObjectIdx>> values;
+	std::map<object_id, std::set<object_id>> values;
 	
 	// We perform two passes to make sure that elements are sorted, although depending on the compilation flags this is unnecessary
 	
 	for (const auto& tuple:extension) {
-		ObjectIdx x = (variable == 0) ? std::get<0>(tuple) : std::get<1>(tuple);
-		ObjectIdx y = (variable == 0) ? std::get<1>(tuple) : std::get<0>(tuple);
+		object_id x = (variable == 0) ? std::get<0>(tuple) : std::get<1>(tuple);
+		object_id y = (variable == 0) ? std::get<1>(tuple) : std::get<0>(tuple);
 		values[x].insert(y);
 	}
 
 	ExtensionT res;
 	for (const auto& element:values) {
-		res.insert(std::make_pair(element.first, std::vector<ObjectIdx>(element.second.begin(), element.second.end()) ));
+		res.insert(std::make_pair(element.first, std::vector<object_id>(element.second.begin(), element.second.end()) ));
 	}
 	return res;
 }
@@ -143,7 +143,7 @@ FilteringOutput CompiledBinaryConstraint::filter(unsigned variable) const {
 	Domain& other_domain = *(projection[other]);
 	Domain new_domain;
 	
-	for (ObjectIdx x:domain) {
+	for (object_id x:domain) {
 		auto iter = extension_map.find(x);
 		assert(iter != extension_map.end());
 		const auto& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
@@ -191,16 +191,16 @@ CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affec
 {}
 	
 
-Atom CompiledUnaryEffect::apply(ObjectIdx value) const {
+Atom CompiledUnaryEffect::apply(object_id value) const {
 	return Atom(_affected, _extension.at(value));
 }
 
 CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEffect& effect, const fs0::ProblemInfo& info) {
 	VariableIdx relevant = effect.getScope()[0];
-	const std::vector<ObjectIdx>& all_values = info.getVariableObjects(relevant);
+	const std::vector<object_id>& all_values = info.getVariableObjects(relevant);
 	
 	ExtensionT map;
-	for(ObjectIdx value:all_values) {
+	for(object_id value:all_values) {
 		try {
 			auto atom = effect.apply(value);
 			assert(atom.getVariable() == effect.getAffected());
@@ -215,9 +215,9 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const fs::Term& ter
 	assert(scope.size() == 1);
 	ExtensionT map;
 	
-	for(ObjectIdx value:info.getVariableObjects(scope[0])) {
+	for(object_id value:info.getVariableObjects(scope[0])) {
 		try {
-			ObjectIdx out = term.interpret(Projections::zip(scope, {value}));
+			object_id out = term.interpret(Projections::zip(scope, {value}));
 			map.insert(std::make_pair(value, out));
 		} catch(const std::out_of_range& e) {}  // If the effect produces an exception, we simply consider it non-applicable and go on.
 	}
@@ -237,10 +237,10 @@ CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& t
 	assert(scope.size() == 2);
 	ExtensionT map;
 	
-	for(ObjectIdx x:info.getVariableObjects(scope[0])) {
-		for(ObjectIdx y:info.getVariableObjects(scope[1])) {
+	for(object_id x:info.getVariableObjects(scope[0])) {
+		for(object_id y:info.getVariableObjects(scope[1])) {
 			try {
-				ObjectIdx out = term.interpret(Projections::zip(scope, {x, y}));
+				object_id out = term.interpret(Projections::zip(scope, {x, y}));
 				map.insert(std::make_pair(std::make_pair(x, y), out));
 			} catch(const std::out_of_range& e) {}  // If the effect produces an exception, we simply consider it non-applicable and go on.
 		}
@@ -249,7 +249,7 @@ CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& t
 }
 
 
-Atom CompiledBinaryEffect::apply(ObjectIdx v1, ObjectIdx v2) const {
+Atom CompiledBinaryEffect::apply(object_id v1, object_id v2) const {
 	return Atom(_affected, _extension.at({v1, v2}));
 }
 

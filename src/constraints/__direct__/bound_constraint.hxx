@@ -32,7 +32,7 @@ public:
 
 	virtual ~UnaryDomainBoundsConstraint() {};
 
-	bool isSatisfied(ObjectIdx o) const override;
+	bool isSatisfied(object_id o) const override;
 	
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override;
 	
@@ -57,7 +57,7 @@ public:
 
 	virtual ~BinaryDomainBoundsConstraint() {};
 
-	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const override;
+	bool isSatisfied(object_id o1, object_id o2) const override;
 	
 	DirectConstraint* compile(const ProblemInfo& problemInfo) const override;
 	

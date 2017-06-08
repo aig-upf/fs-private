@@ -12,16 +12,16 @@ namespace fs0 { namespace utils {
 //! Returns an iterable container 
 class cartesian_iterator {
 protected:
-	const std::vector<const std::vector<ObjectIdx>*> _values;
+	const std::vector<const std::vector<object_id>*> _values;
 	
-	std::vector<std::vector<ObjectIdx>::const_iterator> _iterators;
+	std::vector<std::vector<object_id>::const_iterator> _iterators;
 	
-	std::vector<ObjectIdx> _element; // The current element
+	std::vector<object_id> _element; // The current element
 
 	bool _ended;
 
 public:
-	cartesian_iterator(std::vector<const std::vector<ObjectIdx>*>&& values);
+	cartesian_iterator(std::vector<const std::vector<object_id>*>&& values);
 
 	cartesian_iterator(const cartesian_iterator& o) = default;
 	
@@ -33,7 +33,7 @@ public:
 	
 	void updateElement(unsigned idx);
 
-	const std::vector<ObjectIdx>& operator*() const { return _element; }
+	const std::vector<object_id>& operator*() const { return _element; }
 	
 	const cartesian_iterator& operator++() {
 		advanceIterator(_iterators.size()-1);

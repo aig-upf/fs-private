@@ -10,6 +10,7 @@
 #include <boost/container/flat_set.hpp>
 
 #include <exception>
+#include <base.hxx>
 
 //! A handy macro for explicitly declaring a variable is not used and avoiding the corresponding warnings (see e.g. http://stackoverflow.com/q/777261)
 #define _unused(x) do { (void)sizeof(x);} while (0)
@@ -36,7 +37,7 @@ namespace fs0 {
 	using SymbolIdx = unsigned;
 
 	// A unique identifier for any of the problem objects (might be an integer)
-	using ObjectIdx = int;
+// 	using ObjectIdx = int;
 
 	//! An action signature is a list of (positional) parameters with a given type.
 	using Signature = std::vector<TypeIdx>;
@@ -48,7 +49,7 @@ namespace fs0 {
 	using VariableIdxVector = std::vector<VariableIdx>;
 
 	//! A tuple of values
-	using ValueTuple = std::vector<ObjectIdx>;
+	using ValueTuple = std::vector<object_id>;
 	
 	//! The index of a tuple of a FSTRIPS logical symbol, unique across all symbols.
 	using AtomIdx = unsigned;
@@ -57,7 +58,7 @@ namespace fs0 {
 	using Support = std::vector<AtomIdx>;
 
 	//! A domain is a set of values (of a state variable)
- 	using Domain = boost::container::flat_set<ObjectIdx>;
+ 	using Domain = boost::container::flat_set<object_id>;
 	using DomainPtr = std::shared_ptr<Domain>;
 
 	//! A vector of domains.
@@ -67,10 +68,10 @@ namespace fs0 {
 	using DomainMap = std::map<VariableIdx, DomainPtr>;
 	
 	//! A map mapping a subset of state variables to possible values
-	using PartialAssignment = std::map<VariableIdx, ObjectIdx>;
+	using PartialAssignment = std::map<VariableIdx, object_id>;
 
 	//! A function in the logical sense.
-	using Function = std::function<ObjectIdx(const ValueTuple&)>;
+	using Function = std::function<object_id(const ValueTuple&)>;
 	
 	
 	/**

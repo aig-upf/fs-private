@@ -18,8 +18,8 @@ namespace fs0 { namespace gecode { class TermTranslator; class FormulaTranslator
 
 namespace fs0 {
 
-class DirectConstraint;
-class EffectTranslator;
+// class DirectConstraint;
+// class EffectTranslator;
 
 //! The LogicalComponentRegistry is a singleton object that provides access to a number of classes and methods
 //! that know how to translate from and into FSTRIPS logical elements (terms, formulae).
@@ -37,7 +37,7 @@ public:
 	typedef std::function<const fs::Term*(const std::vector<const fs::Term*>&)> TermCreator;
 	
 	//!
-	typedef std::function<DirectConstraint*(const fs::AtomicFormula&)> DirectFormulaTranslator;
+// 	typedef std::function<DirectConstraint*(const fs::AtomicFormula&)> DirectFormulaTranslator;
 	
 	static LogicalComponentRegistry& instance();
 	
@@ -48,10 +48,10 @@ public:
 	void addTermCreator(const std::string& symbol, const TermCreator& creator);
 	
 	//! Add a Direct Formula translator of the given type to the registry
-	void add(const std::type_info& type, const DirectFormulaTranslator& translator);
+// 	void add(const std::type_info& type, const DirectFormulaTranslator& translator);
 	
 	//! Add a Direct effect translator for effects with RHS of the given type
-	void add(const std::type_info& type, const EffectTranslator* translator);
+// 	void add(const std::type_info& type, const EffectTranslator* translator);
 	
 	//! Add a Gecode Term translator for the given type to the registry
 	void add(const std::type_info& type, const gecode::TermTranslator* translator);
@@ -63,9 +63,9 @@ public:
 	
 	const fs::Term* instantiate_term(const std::string symbol, const std::vector<const fs::Term*>& subterms) const;
 	
-	DirectConstraint* instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
+// 	DirectConstraint* instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
 	
-	const EffectTranslator* getDirectEffectTranslator(const fs::Term& term) const;
+// 	const EffectTranslator* getDirectEffectTranslator(const fs::Term& term) const;
 	
 	const gecode::TermTranslator* getGecodeTranslator(const fs::Term& term) const;
 	
@@ -77,18 +77,16 @@ protected:
 	LogicalComponentRegistry();
 	
 	void registerLogicalElementCreators();
-	void registerDirectTranslators();
+// 	void registerDirectTranslators();
 	void registerGecodeTranslators();
 	
 	std::map<std::string, FormulaCreator> _formula_creators;
 	
 	std::map<std::string, TermCreator> _term_creators;
 	
-	typedef std::unordered_map<std::type_index, DirectFormulaTranslator> DirectTranslatorsTable;
-	DirectTranslatorsTable _direct_formula_translators;
-	
-	
-	std::unordered_map<std::type_index, const EffectTranslator*> _direct_effect_translators;
+// 	typedef std::unordered_map<std::type_index, DirectFormulaTranslator> DirectTranslatorsTable;
+// 	DirectTranslatorsTable _direct_formula_translators;
+// 	std::unordered_map<std::type_index, const EffectTranslator*> _direct_effect_translators;
 	
 	std::unordered_map<std::type_index, const gecode::TermTranslator*> _gecode_term_translators;
 	std::unordered_map<std::type_index, const gecode::FormulaTranslator*> _gecode_formula_translators;

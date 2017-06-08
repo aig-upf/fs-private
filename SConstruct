@@ -22,6 +22,7 @@ def which(program):
 def locate_source_files(base_dir, pattern):
 	matches = []
 	for root, dirnames, filenames in os.walk(base_dir):
+		if "__" in root: continue  # Don't process directories with double underscore on their names
 		for filename in fnmatch.filter(filenames, pattern):
 			matches.append(os.path.join(root, filename))
 	return matches
@@ -43,8 +44,6 @@ env.VariantDir(build_dirname, '.')
 Help(vars.GenerateHelpText(env))
 
 env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ])  # Flags common to all options
-env.Append(CCFLAGS = ['-Wno-deprecated-register' ]) # Get rid of annoying warning message from the Jenkins library
-	
 
 # Extreme debug implies normal debug as well
 if env['debug'] or env['edebug']:

@@ -76,14 +76,14 @@ public:
 	const Gecode::IntVar& resolveVariable(const fs::Term* term, const GecodeCSP& csp) const;
 	
 	//! Returns the value of the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
-	ObjectIdx resolveValue(const fs::Term* term, const GecodeCSP& csp) const;
+	object_id resolveValue(const fs::Term* term, const GecodeCSP& csp) const;
 	
 	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
-	ObjectIdx resolveValueFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
+	object_id resolveValueFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
 
 	//! Helper to resolve several variables at the same time
 	Gecode::IntVarArgs resolveVariables(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const;
-	std::vector<ObjectIdx> resolveValues(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const;
+	std::vector<object_id> resolveValues(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const;
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(GecodeCSP& csp, const RPGIndex& graph) const;
@@ -100,8 +100,8 @@ public:
 	const Gecode::IntVar& resolveInputStateVariable(const GecodeCSP& csp, VariableIdx variable) const;
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
-	const ObjectIdx resolveInputStateVariableValue(const GecodeCSP& csp, VariableIdx variable) const {
-		return resolveInputStateVariable(csp, variable).val();
+	const object_id resolveInputStateVariableValue(const GecodeCSP& csp, VariableIdx variable) const {
+		return make_obj(resolveInputStateVariable(csp, variable).val());
 	}
 
 	//! Creates a new boolean CSP variable and returns its index

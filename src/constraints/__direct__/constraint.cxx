@@ -10,7 +10,7 @@ namespace fs0 {
 DirectConstraint::DirectConstraint(const VariableIdxVector& scope)
 	: DirectConstraint(scope, {}) {}
 	
-DirectConstraint::DirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters)
+DirectConstraint::DirectConstraint(const VariableIdxVector& scope, const ValueTuple& parameters)
 	: DirectComponent(scope, parameters) {}
 
 
@@ -28,7 +28,7 @@ FilteringOutput UnaryDirectConstraint::filter(const DomainMap& domains) const {
 
 	FilteringOutput output = FilteringOutput::Unpruned;
 
-	for (ObjectIdx value:domain) {
+	for (object_id value:domain) {
 		if (this->isSatisfied(value)) {
 			new_domain.insert(new_domain.cend(), value); // We will insert on the end of the container, as it is already sorted.
 		} else {
@@ -51,8 +51,8 @@ FilteringOutput BinaryDirectConstraint::filter(unsigned variable) const {
 	Domain& other_domain = *(projection[other]);
 	Domain new_domain;
 
-	for (ObjectIdx x:domain) {
-		for (ObjectIdx z:other_domain) {
+	for (object_id x:domain) {
+		for (object_id z:other_domain) {
 			// We need to invoke isSatisfied with the parameters in the right order
 			if ((variable == 0 && this->isSatisfied(x, z)) || (variable == 1 && this->isSatisfied(z, x))) {
 				new_domain.insert(new_domain.cend(), x); // We will insert on the end of the container, as it is already sorted.
@@ -69,7 +69,7 @@ FilteringOutput BinaryDirectConstraint::filter(unsigned variable) const {
 	return FilteringOutput::Unpruned;
 }
 
-UnaryDirectConstraint::UnaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+UnaryDirectConstraint::UnaryDirectConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) :
 	DirectConstraint(scope, parameters) {
 	assert(scope.size() == 1);
 }
@@ -78,7 +78,7 @@ DirectConstraint* UnaryDirectConstraint::compile(const ProblemInfo& problemInfo)
 	return nullptr;
 }
 
-BinaryDirectConstraint::BinaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters) :
+BinaryDirectConstraint::BinaryDirectConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) :
 	DirectConstraint(scope, parameters) {
 	assert(scope.size() == 2);
 }

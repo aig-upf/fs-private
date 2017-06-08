@@ -34,7 +34,7 @@ protected:
 	
 	//! _atom_index_inv.at(i) contains a map mapping all possible values 'v' of variable 'i'
 	//! to the tuple that corresponds to the atom <i, v>
-	std::vector<std::unordered_map<ObjectIdx, AtomIdx>> _atom_index_inv;
+	std::vector<std::unordered_map<object_id, AtomIdx>> _atom_index_inv;
 	
 	//! A map from each variable index to all possible atoms that arise from that variable; e.g. for variable
 	//! 'loc(b)' with ID 7, _variable_to_atom_index[7] will contain the indexes of atoms loc(b)=a, loc(b)=c, etc.
@@ -61,9 +61,9 @@ public:
 	
 	//! Returns the index corresponding to the given atom
 	AtomIdx to_index(const Atom& atom) const;
-	AtomIdx to_index(VariableIdx variable, ObjectIdx value) const;
+	AtomIdx to_index(VariableIdx variable, object_id value) const;
 	
-	bool is_indexed(VariableIdx variable, ObjectIdx value) const;
+	bool is_indexed(VariableIdx variable, object_id value) const;
 
 	
 	//! Returns the actual value tuple that corresponds to the given tuple index, without the logical symbol 
@@ -81,7 +81,7 @@ protected:
 	//! A helper to compute and index all reachable tuples.
 	//! Returns an index from each logical symbol to all the tuples that are reachable / make sense for that particular
 	//! logical symbol.
-	static std::vector<std::vector<std::pair<ValueTuple, ObjectIdx>>> compute_all_reachable_tuples(const ProblemInfo& info);
+	static std::vector<std::vector<std::pair<ValueTuple, object_id>>> compute_all_reachable_tuples(const ProblemInfo& info);
 };
 
 } // namespaces

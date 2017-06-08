@@ -76,8 +76,8 @@ namespace fs0 {
         // SAS+, where the only atoms that occur on preconditions are of the form
         // X=v.
 
-		ObjectIdx val = s.getValue(_pivot);
-		assert((val == 0 || val == 1) && "Match Tree not yet prepared for multivalued variables");
+		object_id val = s.getValue(_pivot);
+		assert((int(val) == 0 || int(val) == 1) && "Match Tree not yet prepared for multivalued variables");
 
 // 		LPT_INFO( "cout", "[Match Tree] Branching on atom " << Atom(_pivot, val) << "");
 
@@ -116,7 +116,7 @@ namespace fs0 {
 				for (unsigned i = 0; i < pivot_atoms.size(); ++i) {
 					AtomIdx atom = pivot_atoms[i];
 					
-					assert(context._tuple_index.to_atom(atom).getValue() == 0 || context._tuple_index.to_atom(atom).getValue() == 1); // Not yet ready for multivalued match tree... soon!
+					assert(int(context._tuple_index.to_atom(atom).getValue()) == 0 || int(context._tuple_index.to_atom(atom).getValue()) == 1); // Not yet ready for multivalued match tree... soon!
 					if (required.find(atom) != required.end()) {
 						is_relevant = true;
 						actions_split_by_pivot_value[i].push_back(action);

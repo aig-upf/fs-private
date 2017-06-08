@@ -5,7 +5,7 @@
 
 namespace fs0 { namespace utils {
 
-const std::vector<ObjectIdx> binding_iterator::NIL{0};
+const std::vector<object_id> binding_iterator::NIL{0};
 
 binding_iterator::binding_iterator(const Signature& types, const ProblemInfo& info) :
 	_valid(), // To avoid two iterations, this will get initialized in the call to 'generate_values' below
@@ -16,8 +16,8 @@ binding_iterator::~binding_iterator() {
 	delete _iterator;
 }
 
-std::vector<const std::vector<ObjectIdx>*> binding_iterator::generate_values(const Signature& types, const ProblemInfo& info) {
-	std::vector<const std::vector<ObjectIdx>*> values;
+std::vector<const std::vector<object_id>*> binding_iterator::generate_values(const Signature& types, const ProblemInfo& info) {
+	std::vector<const std::vector<object_id>*> values;
 	
 	for (TypeIdx type:types) {
 		if (type == INVALID_TYPE) {

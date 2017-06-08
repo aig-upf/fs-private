@@ -140,7 +140,7 @@ DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionP
 
 		/***** Unary Effects *****/
 		else if(effectScope.size() == 1) {
-			for (ObjectIdx value:*(actionProjection.at(effectScope[0]))) { // Add to the RPG for every allowed value of the relevant variable
+			for (object_id value:*(actionProjection.at(effectScope[0]))) { // Add to the RPG for every allowed value of the relevant variable
 				if (!effect->applicable(value)) continue;
 				Atom atom = effect->apply(value);
 				auto hint = rpg.getInsertionHint(atom);
@@ -164,7 +164,7 @@ void
 DirectActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
 	for (VariableIdx variable:actionScope) {
 		if (effectScope.empty() || variable != effectScope[0]) { // (We know that the effect scope has at most one variable)
-			ObjectIdx value = *(actionProjection.at(variable)->cbegin());
+			object_id value = *(actionProjection.at(variable)->cbegin());
 			support->push_back(Atom(variable, value));
 		}
 	}

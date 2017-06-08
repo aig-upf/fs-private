@@ -27,7 +27,7 @@ public:
 	
 	BindingUnit(const BindingUnit&);
 	
-	void update_binding(Binding& binding, const std::vector<ObjectIdx>& values) const;
+	void update_binding(Binding& binding, const std::vector<object_id>& values) const;
 	
 	//! Return the variable that corresponds to parameter 'i'
 	const BoundVariable* getParameterVariable(unsigned i) const { return _variables.at(_binding_index.at(i)); }

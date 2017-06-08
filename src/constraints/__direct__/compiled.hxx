@@ -17,17 +17,17 @@ namespace fs0 {
 
 class CompiledUnaryConstraint : public UnaryDirectConstraint {
 protected:
-	typedef ObjectIdx ElementT;
+	typedef object_id ElementT;
 	typedef std::vector<ElementT> ExtensionT;
 	
 	//! Precondition: the vector is sorted.
 	const ExtensionT _extension;
 
 	//! Protected constructor to be used from the other constructor
-	CompiledUnaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, ExtensionT&& extension);
+	CompiledUnaryConstraint(const VariableIdxVector& scope, const ValueTuple& parameters, ExtensionT&& extension);
 	
 public:
-	typedef std::function<bool (ObjectIdx)> Tester;
+	typedef std::function<bool (object_id)> Tester;
 	
 	//! Construct a unary compiled constraint by compiling a standard unary constraint.
 	CompiledUnaryConstraint(const UnaryDirectConstraint& constraint);
@@ -37,7 +37,7 @@ public:
 	
 	~CompiledUnaryConstraint() {};
 	
-	bool isSatisfied(ObjectIdx o) const override;
+	bool isSatisfied(object_id o) const override;
 	
 	//! Filters from a new set of domains.
 	FilteringOutput filter(const DomainMap& domains) const override;
@@ -50,7 +50,7 @@ public:
 	
 	//! Helper to compile a standard unary constraint
 	static std::set<ElementT> compile(const UnaryDirectConstraint& constraint) {
-		return compile(constraint.getScope(), [&constraint](ObjectIdx value){ return constraint.isSatisfied(value); });
+		return compile(constraint.getScope(), [&constraint](object_id value){ return constraint.isSatisfied(value); });
 	}
 	
 	std::ostream& print(std::ostream& os) const override;
@@ -66,13 +66,13 @@ protected:
 class CompiledBinaryConstraint : public BinaryDirectConstraint
 {
 public:
-	typedef std::set<std::tuple<ObjectIdx, ObjectIdx>> TupleExtension;
-	typedef std::function<bool (ObjectIdx, ObjectIdx)> Tester;
+	typedef std::set<std::tuple<object_id, object_id>> TupleExtension;
+	typedef std::function<bool (object_id, object_id)> Tester;
 	
 protected:
 	// For a binary constraint with scope <X, Y>, the extension is a map mapping each possible x \in D_X to an ordered 
 	// vector containing all y \in D_Y s.t. <x, y> satisfies the constraint.
-	typedef std::unordered_map<ObjectIdx, std::vector<ObjectIdx>> ExtensionT;
+	typedef std::unordered_map<object_id, std::vector<object_id>> ExtensionT;
 	
 	//! Precondition: the vector is sorted.
 	const ExtensionT _extension1;
@@ -82,7 +82,7 @@ protected:
 public:
 	
 	//!
-	CompiledBinaryConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters, const TupleExtension& extension);
+	CompiledBinaryConstraint(const VariableIdxVector& scope, const ValueTuple& parameters, const TupleExtension& extension);
 	
 	//! Construct a binary compiled constraint by compiling a standard binary constraint.
 	CompiledBinaryConstraint(const BinaryDirectConstraint& constraint, const ProblemInfo& problemInfo);
@@ -91,7 +91,7 @@ public:
 	
 	~CompiledBinaryConstraint() {};
 
-	bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const override;
+	bool isSatisfied(object_id o1, object_id o2) const override;
 	
 	FilteringOutput filter(unsigned variable) const override;
 	
@@ -103,11 +103,11 @@ public:
 	static ExtensionT index(const CompiledBinaryConstraint::TupleExtension& extension, unsigned variable);
 	
 	//! Returns a set with all tuples for the given scope that satisfy the the given state
-// 	static std::map<ObjectIdx, std::set<ObjectIdx>> compile(const VariableIdxVector& scope, const Tester& tester);
+// 	static std::map<object_id, std::set<object_id>> compile(const VariableIdxVector& scope, const Tester& tester);
 	
 	//! Helper to compile a standard unary constraint
 	static TupleExtension compile(const fs0::BinaryDirectConstraint& constraint) {
-		return compile(constraint.getScope(), [&constraint](ObjectIdx x, ObjectIdx y){ return constraint.isSatisfied(x, y); });
+		return compile(constraint.getScope(), [&constraint](object_id x, object_id y){ return constraint.isSatisfied(x, y); });
 	}
 	
 	std::ostream& print(std::ostream& os) const override;
@@ -117,7 +117,7 @@ public:
 
 class CompiledUnaryEffect : public UnaryDirectEffect {
 protected:
-	typedef ObjectIdx ElementT;
+	typedef object_id ElementT;
 	typedef boost::container::flat_map<ElementT, ElementT> ExtensionT;
 	
 	// The extension is a map x -> y, implicitly encoding the current effect y := f(x)
@@ -130,7 +130,7 @@ public:
 	//! Construct a Compiled unary effect from a given logical term
 	CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, const fs::Term& term);
 	
-	Atom apply(ObjectIdx value) const;
+	Atom apply(object_id value) const;
 	
 	//! Returns a set with all values that satisfy the constraint
 	static ExtensionT compile(const UnaryDirectEffect& effect, const ProblemInfo& info);
@@ -139,7 +139,7 @@ public:
 
 class CompiledBinaryEffect : public BinaryDirectEffect {
 protected:
-	typedef ObjectIdx ElementT;
+	typedef object_id ElementT;
 	typedef boost::container::flat_map<std::pair<ElementT, ElementT>, ElementT> ExtensionT;
 	
 	// The extension is a map (x1, x2) -> y, implicitly encoding the current effect y := f(x1, x2)
@@ -152,7 +152,7 @@ public:
 	//! Construct a Compiled unary effect from a given logical term
 	CompiledBinaryEffect(const VariableIdxVector& scope, VariableIdx affected, const fs::Term& term);
 	
-	Atom apply(ObjectIdx v1, ObjectIdx v2) const;
+	Atom apply(object_id v1, object_id v2) const;
 	
 	//! Returns a set with all values that satisfy the constraint
 	static ExtensionT compile(const fs::Term& term, const ProblemInfo& info);

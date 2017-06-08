@@ -26,7 +26,7 @@ public:
 
 protected:
 	//! This keeps a reference to the novel atoms that have been inserted in the most recent layer of the RPG.
-	std::vector<std::vector<ObjectIdx>> _novel;
+	std::vector<std::vector<object_id>> _novel;
 	unsigned _num_novel;
 
 	//! The current number of layers.
@@ -62,7 +62,7 @@ public:
 	//! Get the number of novel atoms in the last layer of the RPG
 	unsigned getNumNovelAtoms() const { return _num_novel; }
 	
-	const std::vector<std::vector<ObjectIdx>>& getNovelAtoms() const { return _novel; }
+	const std::vector<std::vector<object_id>>& getNovelAtoms() const { return _novel; }
 
 
 	//! Returns a pair "<b, it>" such that b is true iff the given atom is not already tracked by the RPG.

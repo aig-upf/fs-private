@@ -22,6 +22,7 @@ class action_data_name {
 		std::ostream& print(std::ostream& os) const;
 };
 
+/*
 class action_signature {
 	protected:
 		const fs0::lang::fstrips::ActionSchema& _action;
@@ -32,6 +33,7 @@ class action_signature {
 		friend std::ostream& operator<<(std::ostream &os, const action_signature& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
+*/
 
 //! Print a full lifted action data, including preconditions and effects
 class action_data {

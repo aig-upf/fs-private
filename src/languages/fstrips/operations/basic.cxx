@@ -245,7 +245,7 @@ void BoundVisitor::Visit(const AxiomaticTermWrapper& lhs) { _result = type_based
 
 void BoundVisitor::
 Visit(const Constant& lhs) {
-	_result = std::make_pair(lhs.getValue(), lhs.getValue());
+	_result = std::make_pair(value<int>(lhs.getValue()), value<int>(lhs.getValue()));
 }
 
 void BoundVisitor::

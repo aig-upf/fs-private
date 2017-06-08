@@ -161,10 +161,6 @@ public:
 	using SimulationT = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
 	using SimConfigT = typename SimulationT::Config;
 	using IWNodePT = typename SimulationT::NodePT;
-	
-	// Novelty evaluator pointer type
-	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
-	
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 
 

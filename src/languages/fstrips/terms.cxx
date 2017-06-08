@@ -14,8 +14,8 @@
 
 namespace fs0 { namespace language { namespace fstrips {
 
-ObjectIdx Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
-ObjectIdx Term::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
+object_id Term::interpret(const PartialAssignment& assignment) const { return interpret(assignment, Binding::EMPTY_BINDING); }
+object_id Term::interpret(const State& state) const  { return interpret(state, Binding::EMPTY_BINDING); }
 
 
 
@@ -43,22 +43,23 @@ AxiomaticTermWrapper::AxiomaticTermWrapper(const AxiomaticTermWrapper& other) :
 	_axiom(other._axiom)
 {}
 
-ObjectIdx AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+object_id AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
 	
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
 	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
-	return _axiom->getDefinition()->interpret(assignment, axiom_binding);
+	bool res = _axiom->getDefinition()->interpret(assignment, axiom_binding);
+	return make_obj<int>(res); // The hack: transform the bool into an int
 }
 
-ObjectIdx AxiomaticTermWrapper::interpret(const State& state, const Binding& binding) const {
+object_id AxiomaticTermWrapper::interpret(const State& state, const Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
 	
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
-	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
-	return _axiom->getDefinition()->interpret(state, axiom_binding);
+	bool res = _axiom->getDefinition()->interpret(state, axiom_binding);
+	return make_obj<int>(res); // The hack: transform the bool into an int
 }
 
 std::ostream& AxiomaticTermWrapper::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -72,43 +73,43 @@ AxiomaticTerm* AxiomaticTerm::clone() const { return clone(Utils::clone(_subterm
 
 
 
-ObjectIdx UserDefinedStaticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+object_id UserDefinedStaticTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
 	return _function.getFunction()(_interpreted_subterms);
 }
 
-ObjectIdx UserDefinedStaticTerm::interpret(const State& state, const Binding& binding) const {
+object_id UserDefinedStaticTerm::interpret(const State& state, const Binding& binding) const {
 	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
 	return _function.getFunction()(_interpreted_subterms);
 }
 
 
-ObjectIdx AxiomaticTerm::interpret(const State& state, const Binding& binding) const {
+object_id AxiomaticTerm::interpret(const State& state, const Binding& binding) const {
 	interpret_subterms(_subterms, state, binding, _interpreted_subterms);
 	return compute(state, _interpreted_subterms);
 }
 
 
-ObjectIdx FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+object_id FluentHeadedNestedTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	return assignment.at(fs::interpret_variable(*this, assignment, binding));
 }
 
-ObjectIdx FluentHeadedNestedTerm::interpret(const State& state, const Binding& binding) const {
+object_id FluentHeadedNestedTerm::interpret(const State& state, const Binding& binding) const {
 	return state.getValue(fs::interpret_variable(*this, state, binding));
 }
 
 
-ObjectIdx StateVariable::interpret(const State& state, const Binding& binding) const {
+object_id StateVariable::interpret(const State& state, const Binding& binding) const {
 	return state.getValue(_variable_id);
 }
 
 
-ObjectIdx BoundVariable::interpret(const PartialAssignment& assignment, const Binding& binding) const {
+object_id BoundVariable::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	if (!binding.binds(_id)) throw std::runtime_error("Cannot interpret bound variable without a suitable binding");
 	return binding.value(_id);
 }
 
-ObjectIdx BoundVariable::interpret(const State& state, const Binding& binding) const {
+object_id BoundVariable::interpret(const State& state, const Binding& binding) const {
 	if (!binding.binds(_id)) throw std::runtime_error("Cannot interpret bound variable without a suitable binding");
 	return binding.value(_id);
 }

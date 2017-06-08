@@ -12,13 +12,13 @@ protected:
 	VariableIdx _variable;
 
 	//! The domain value.
-	ObjectIdx  _value;
+	object_id  _value;
 	
 public:
 	typedef std::vector<Atom> vctr;
 	typedef std::shared_ptr<Atom::vctr> vctrp;
 
-	Atom(VariableIdx variable, ObjectIdx value) : _variable(variable), _value(value) {};
+	Atom(VariableIdx variable, object_id value) : _variable(variable), _value(value) {};
 	Atom(const Atom& other) = default;
 	Atom(Atom&& other) = default;
 
@@ -26,7 +26,7 @@ public:
 	Atom& operator=(Atom&& other) = default;
 
 	inline VariableIdx getVariable() const { return _variable; }
-	inline ObjectIdx getValue() const { return _value; }
+	inline object_id getValue() const { return _value; }
 
 	std::size_t hash() const;
 	

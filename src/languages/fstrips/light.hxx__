@@ -73,7 +73,7 @@ protected:
 class Constant : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	Constant(ObjectIdx value, TypeIdx type)  : _value(value), _type(type) {}
+	Constant(object_id value, TypeIdx type)  : _value(value), _type(type) {}
 	~Constant() = default;
 	Constant(const Constant&) = default;
 
@@ -89,7 +89,7 @@ public:
 
 protected:
 	//! The actual value of the constant
-	ObjectIdx _value;
+	object_id _value;
 	
 	//! The type of the constant
 	TypeIdx _type;	

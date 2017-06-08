@@ -144,7 +144,7 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 			continue;
 		}
 		
-		std::vector<ObjectIdx> deserialized = Serializer::deserializeLine(line, ",");
+		std::vector<object_id> deserialized = Serializer::deserializeLine(line, ",");
 		if (current->getSignature().size() != deserialized.size()) {
 			throw std::runtime_error("Wrong number of action parameters");
 		}
@@ -295,7 +295,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 	std::vector<const fs::ActionEffect*> compiled;
 	
 	const fs::Term* subterm_to_replace = original_subterms[i];
-	for (ObjectIdx value:info.getTypeObjects(fs::type(*subterm_to_replace))) {
+	for (object_id value:info.getTypeObjects(fs::type(*subterm_to_replace))) {
 		auto subterms = Utils::clone(original_subterms);
 		delete subterms[i];
 		
@@ -334,7 +334,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 		// e.g. g(c)=d --> f(d) := t.
 		
 		// For each possible value of the non-const subterm, we'll have an additional conditional effect.
-		for (ObjectIdx value:info.getTypeObjects(subterm->getType())) {
+		for (object_id value:info.getTypeObjects(subterm->getType())) {
 			auto constant = new fs::IntConstant(value);
 // 			std::vector<const fs::Term*> subterms{subterm->clone(), new fs::IntConstant(value)};
 			auto extra_condition = new fs::EQAtomicFormula({subterm->clone(), constant});
@@ -362,7 +362,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 	const fs::Term* subterm = subterms.at(0); // Simply take the first state variable in the head.
 	
 	// For each possible value of the non-const subterm, we'll have an additional conditional effect.
-	for (ObjectIdx value:info.getTypeObjects(subterm->getType())) {
+	for (object_id value:info.getTypeObjects(subterm->getType())) {
 		
 		std::vector<const fs::Term*> subterms{subterm->clone(), new fs::IntConstant(value)};
 		auto extra_condition = new fs::EQAtomicFormula(subterms);

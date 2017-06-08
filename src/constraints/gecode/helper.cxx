@@ -42,7 +42,8 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
 	}
 	else {
 		assert(generic_type == ProblemInfo::ObjectType::OBJECT);
-		const std::vector<ObjectIdx>& values = info.getTypeObjects(typeId);
+		const std::vector<object_id>& objects = info.getTypeObjects(typeId);
+		const std::vector<int> values = fs0::values<int>(objects, ObjectTable::EMPTY_TABLE);
 		return Gecode::IntVar(csp, Gecode::IntSet(values.data(), values.size())); // TODO - Check if we can change this for a range-like domain creation
 	}
 }
@@ -63,7 +64,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm* term) 
 
 	for (term_list_iterator it(term->getSubterms()); !it.ended(); ++it) {
 		try {
-			ObjectIdx out = functor(it.arguments());
+			object_id out = functor(it.arguments());
 			tuples.add(it.getIntArgsElement(out)); // Add the term value as the last element
 		}
 		catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.

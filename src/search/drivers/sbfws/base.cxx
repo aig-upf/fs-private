@@ -103,4 +103,6 @@ template class NoveltyFactory<int>;
 
 
 
+
+
 } } // namespaces

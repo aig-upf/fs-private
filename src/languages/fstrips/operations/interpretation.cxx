@@ -37,7 +37,7 @@ template <typename AssignmentT>
 void VariableInterpretationVisitor<AssignmentT>::
 Visit(const FluentHeadedNestedTerm& lhs) {
 	const auto& subterms = lhs.getSubterms();
-	std::vector<ObjectIdx> interpreted(subterms.size());
+	std::vector<object_id> interpreted(subterms.size());
 	NestedTerm::interpret_subterms(subterms, _assignment, _binding, interpreted);
 	_result = ProblemInfo::getInstance().resolveStateVariable(lhs.getSymbolId(), interpreted);
 }

@@ -17,7 +17,7 @@ protected:
 	
 public:
 	DirectConstraint(const VariableIdxVector& scope);
-	DirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	DirectConstraint(const VariableIdxVector& scope, const ValueTuple& parameters);
 	virtual ~DirectConstraint() = default;
 
 	virtual FilteringType filteringType() const = 0;
@@ -57,14 +57,14 @@ public:
 
 class UnaryDirectConstraint : public DirectConstraint {
 public:
-	UnaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	UnaryDirectConstraint(const VariableIdxVector& scope, const ValueTuple& parameters);
 
 	~UnaryDirectConstraint() = default;
 
 	virtual FilteringType filteringType() const override { return FilteringType::Unary; };
 
 	//! To be overriden by the concrete constraint class.
-	virtual bool isSatisfied(ObjectIdx o) const = 0;
+	virtual bool isSatisfied(object_id o) const = 0;
 
 	//! Filters from a new set of domains.
 	virtual FilteringOutput filter(const DomainMap& domains) const override;
@@ -76,14 +76,14 @@ public:
 
 class BinaryDirectConstraint : public DirectConstraint {
 public:
-	BinaryDirectConstraint(const VariableIdxVector& scope, const std::vector<int>& parameters);
+	BinaryDirectConstraint(const VariableIdxVector& scope, const ValueTuple& parameters);
 
 	~BinaryDirectConstraint() = default;
 
 	virtual FilteringType filteringType() const override { return FilteringType::ArcReduction; };
 
 	//! To be overriden by the concrete constraint class.
-	virtual bool isSatisfied(ObjectIdx o1, ObjectIdx o2) const = 0;
+	virtual bool isSatisfied(object_id o1, object_id o2) const = 0;
 
 	virtual FilteringOutput filter(unsigned variable) const override;
 

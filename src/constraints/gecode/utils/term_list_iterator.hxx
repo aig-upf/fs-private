@@ -18,12 +18,12 @@ protected:
 	const std::vector<const fs::Term*>& _subterms;
 	
 	// We store the temporary vectors to delete them afterwards
-	std::vector<const std::vector<ObjectIdx>*> _temporary_vectors;
+	std::vector<const std::vector<object_id>*> _temporary_vectors;
 	
 	//! The iterator of the actual cartesian product of values
 	utils::cartesian_iterator* _iterator;
 	
-	std::vector<const std::vector<ObjectIdx>*> compute_possible_values(const std::vector<const fs::Term*>& subterms);
+	std::vector<const std::vector<object_id>*> compute_possible_values(const std::vector<const fs::Term*>& subterms);
 
 public:
 	term_list_iterator(const std::vector<const fs::Term*>& subterms);
@@ -40,7 +40,7 @@ public:
 	
 	Gecode::IntArgs getIntArgsElement() const;
 	
-	const std::vector<ObjectIdx>& arguments() const;
+	const std::vector<object_id>& arguments() const;
 
 };
 

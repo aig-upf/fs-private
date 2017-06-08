@@ -60,13 +60,13 @@ DirectConstraint* DirectTranslator::generate(const fs::RelationalFormula& formul
 	
 	if (lhs_var && rhs_const) { // X = c
 		VariableIdxVector scope{lhs_var->getValue()};
-		std::vector<ObjectIdx> parameters{rhs_const->getValue()};
+		std::vector<object_id> parameters{rhs_const->getValue()};
 		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, false);
 	}
 	
 	if (lhs_const && rhs_var) { // c = X
 		VariableIdxVector scope{rhs_var->getValue()};
-		std::vector<ObjectIdx> parameters{lhs_const->getValue()};
+		std::vector<object_id> parameters{lhs_const->getValue()};
 		return instantiateUnaryConstraint(formula.symbol(), scope, parameters, true);
 	}
 	
@@ -80,12 +80,12 @@ DirectConstraint* DirectTranslator::extensionalize(const fs::AtomicFormula& form
 	VariableIdxVector scope = fs::ScopeUtils::computeDirectScope(&formula);
 	
 	if (scope.size() == 1) {
-		return new CompiledUnaryConstraint(scope, [&formula, &scope](ObjectIdx value) {
+		return new CompiledUnaryConstraint(scope, [&formula, &scope](object_id value) {
 			return formula.interpret(Projections::zip(scope, {value}));
 		});
 	}
 	else if (scope.size() == 2) {
-		return new CompiledBinaryConstraint(scope, [&formula, &scope](ObjectIdx x1, ObjectIdx x2) {
+		return new CompiledBinaryConstraint(scope, [&formula, &scope](object_id x1, object_id x2) {
 			return formula.interpret(Projections::zip(scope, {x1, x2}));
 		});
 	}
@@ -144,7 +144,7 @@ std::vector<const DirectEffect*> DirectTranslator::generate(const std::vector<co
 }
 
 
-DirectConstraint* DirectTranslator::instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters, bool invert) {
+DirectConstraint* DirectTranslator::instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const ValueTuple& parameters, bool invert) {
 	
 	// Note that in some cases we might want to "invert" the relation, so that e.g. for c < X we indeed post a X > c constraint.
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
@@ -171,7 +171,7 @@ DirectConstraint* DirectTranslator::instantiateUnaryConstraint(fs::RelationalFor
 	}
 }
 
-DirectConstraint* DirectTranslator::instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters) {
+DirectConstraint* DirectTranslator::instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const ValueTuple& parameters) {
 	
 	switch (symbol) { // EQ, NEQ, LT, LEQ, GT, GEQ
 		case fs::RelationalFormula::Symbol::EQ:

@@ -25,7 +25,7 @@ Validator::validate_state(const State& state, const ProblemInfo& info) {
 
 	// Check that the value assigned to each state variable is of the right type
 	for (VariableIdx variable = 0; variable < num_atoms; ++variable) {
-		ObjectIdx value = state.getValue(variable);
+		object_id value = state.getValue(variable);
 		const auto& objects = info.getVariableObjects(variable);
 		
 		if (std::find(objects.begin(), objects.end(), value) == objects.end()) {
@@ -79,7 +79,7 @@ Validator::validate_problem_info(const ProblemInfo& info) {
 			const ValueTuple& point = binding.get_full_binding();
 			
 			try {
-				ObjectIdx image = data.getFunction()(point);
+				object_id image = data.getFunction()(point);
 				const auto& objects = info.getTypeObjects(data.getCodomainType());
 				if (std::find(objects.begin(), objects.end(), image) == objects.end()) {
 					std::cerr << "Value \"" << image << "\" assigned to symbol \"" << info.getSymbolName(symbol) << "\" at point " << print::container(print::Helper::name_objects(point, signature)) << " is not of the correct type" << std::endl;

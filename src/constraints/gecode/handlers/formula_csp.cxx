@@ -136,7 +136,7 @@ void FormulaCSP::index_existential_variable_uses() {
 			
 			std::unordered_map<int, AtomIdx> variable_resolutions;
 			
-			for (ObjectIdx value:info.getTypeObjects(variable->getType())) {
+			for (object_id value:info.getTypeObjects(variable->getType())) {
 				subterm_values.at(ex_var_position) = value;
 				AtomIdx tuple_id = _tuple_index.to_index(fluent->getSymbolId(), subterm_values);
 				variable_resolutions.insert(std::make_pair(value, tuple_id));

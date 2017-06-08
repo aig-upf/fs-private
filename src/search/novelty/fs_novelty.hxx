@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include <lapkt/novelty/evaluators.hxx>
+#include <base.hxx>
 
 namespace fs0 {
 	class Atom;
@@ -38,8 +39,8 @@ protected:
 
 
 //! Interfaces for both binary and multivalued novelty evaluators
-using FSBinaryNoveltyEvaluatorI = lapkt::novelty::NoveltyEvaluatorI<bool>;
-using FSMultivaluedNoveltyEvaluatorI = lapkt::novelty::NoveltyEvaluatorI<int>;
+using BoolNoveltyEvaluatorI = lapkt::novelty::NoveltyEvaluatorI<bool>;
+using IntNoveltyEvaluatorI = lapkt::novelty::NoveltyEvaluatorI<int>;
 
 
 } } // namespaces

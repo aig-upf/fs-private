@@ -332,21 +332,21 @@ public:
 					
 					std::vector<AtomIdx> to_mark;
 					if (parent_state.contains(p)) {
-						if (p.getValue() != 0) {
+						if (int(p.getValue()) != 0) {
 							atoms[p_q.first] = true; // TODO THIS WON'T GENERALIZE WELL TO FSTRIPS DOMAINS
 // 							std::cout << "ATTENTION : Marking atom " << p << std::endl;
 						}
 					}
 					else if (parent_state.contains(q)) {
-						if (q.getValue() != 0) {
+						if (int(q.getValue()) != 0) {
 							atoms[p_q.second] = true;
 // 							std::cout << "ATTENTION : Marking atom " << q << std::endl;
 						}
 					}
 					else { // The parent state contains none
 // 						std::cout << "ATTENTION : Would Mark pair " << p << ", " << q << std::endl;
-						if (p.getValue() != 0) atoms[p_q.first] = true;
-						if (q.getValue() != 0) atoms[p_q.second] = true;
+						if (int(p.getValue()) != 0) atoms[p_q.first] = true;
+						if (int(q.getValue()) != 0) atoms[p_q.second] = true;
 					}
 					
 				}
@@ -381,8 +381,8 @@ public:
 				
 				const StateT& state = node->state;
 				for (unsigned var = 0; var < state.numAtoms(); ++var) {
-					ObjectIdx val = state.getValue(var);
-					if (val != 0) {
+					object_id val = state.getValue(var);
+					if (int(val) != 0) {
 						atoms[index.to_index(var, val)] = true;
 					}
 				}
@@ -407,7 +407,7 @@ public:
 		std::vector<bool> all(index.size(), false);
 		for (unsigned i = 0; i < all.size(); ++i) {
 			const Atom& atom = index.to_atom(i);
-			if (atom.getValue()!=0) all[i] = true;
+			if (int(atom.getValue())!=0) all[i] = true;
 		}
 		LPT_INFO("cout", "Simulation - Computed R_All set with " << std::count(all.cbegin(), all.cend(), true) << " atoms");
 		return all;

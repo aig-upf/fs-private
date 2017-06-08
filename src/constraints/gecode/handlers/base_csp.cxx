@@ -223,7 +223,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
 						
 						auto value = dynamic_cast<const fs::IntConstant*>(relational->rhs());
-						if (!value || value->getValue() != 1) {
+						if (!value || int(value->getValue()) != 1) {
 							throw UnimplementedFeatureException("Only non-negated relational atoms are supported ATM");
 						}
 						

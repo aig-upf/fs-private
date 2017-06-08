@@ -51,7 +51,7 @@ public:
 // 		_updated = true;
 		unsigned n = state.numAtoms();
 		for (VariableIdx var = 0; var < n; ++var) {
-			ObjectIdx val = state.getValue(var);
+			object_id val = state.getValue(var);
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 
 			if (!_helper._atomidx.is_indexed(var, val)) continue;

@@ -18,9 +18,9 @@ RPGData::RPGData(const State& seed, bool ignore_negated) :
 	
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
-		ObjectIdx value = seed.getValue(variable);
+		object_id value = seed.getValue(variable);
 		
-		if (ignore_negated && info.isPredicativeVariable(variable) && value == 0) { // TODO This check is expensive and should be optimized out
+		if (ignore_negated && info.isPredicativeVariable(variable) && int(value) == 0) { // TODO This check is expensive and should be optimized out
 			continue; // If requested, we ignore negated predicative atoms.
 		}
 		
@@ -41,7 +41,7 @@ RPGData::~RPGData() {
 
 void RPGData::advanceLayer() {
 	_num_novel= 0;
-	_novel = std::vector<std::vector<ObjectIdx>>(_novel.size()); // completely clear the vector of novel atoms
+	_novel = std::vector<std::vector<object_id>>(_novel.size()); // completely clear the vector of novel atoms
 	++_current_layer;
 }
 

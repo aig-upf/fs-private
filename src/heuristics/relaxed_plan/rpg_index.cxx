@@ -26,7 +26,7 @@ RPGIndex::RPGIndex(const State& seed, const AtomIndex& tuple_index, ExtensionHan
 	
 	// Initially we insert the seed state atoms
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
-		ObjectIdx value = seed.getValue(variable);
+		object_id value = seed.getValue(variable);
 		
 		AtomIdx tuple_index = _extension_handler.process_atom(variable, value);
 		if (tuple_index != INVALID_TUPLE) {
@@ -146,7 +146,7 @@ bool RPGIndex::is_true(VariableIdx variable) const {
 	const auto& domain = _domains_raw.at(variable);
 	 
 	assert(domain.size() <= 1); // The variable must be predicative, thus will contain at most the element true
-	assert(domain.empty() || domain[0] == 1); // If there is one element, it must be the True element
+	assert(domain.empty() || int(domain[0]) == 1); // If there is one element, it must be the True element
 	return !domain.empty();
 // 	return std::find(domain.cbegin(), domain.cend(), 1) != domain.end();
 }

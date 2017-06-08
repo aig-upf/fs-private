@@ -35,10 +35,10 @@ public:
 protected:
 	
 	//! Helper to instantiate unary constraints
-	static DirectConstraint* instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters, bool invert);
+	static DirectConstraint* instantiateUnaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const ValueTuple& parameters, bool invert);
 	
 	//! Helper to instantiate binary constraints
-	static DirectConstraint* instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const std::vector<int>& parameters);
+	static DirectConstraint* instantiateBinaryConstraint(fs::RelationalFormula::Symbol symbol, const VariableIdxVector& scope, const ValueTuple& parameters);
 	
 	//! Perform some basic checks to ensure that the term is compatible with direct components
 	static void checkSupported(const fs::Term* lhs, const fs::Term* rhs);

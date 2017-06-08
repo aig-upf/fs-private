@@ -7,7 +7,7 @@
 #include <languages/fstrips/language_fwd.hxx>
 
 
-namespace fs0 { class Binding; class ProblemInfo; }
+namespace fs0 { class Binding; class ProblemInfo; class object_id; }
 
 namespace fs0 { namespace language { namespace fstrips {
 	
@@ -100,7 +100,7 @@ public:
 
 //! A helper to process lists of subterms
 std::vector<const Term*>
-bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<int>& constants);
+bind_subterms(const std::vector<const Term*>& subterms, const Binding& binding, const ProblemInfo& info, std::vector<object_id>& constants);
 	
 
 } } } // namespaces

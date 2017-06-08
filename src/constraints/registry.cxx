@@ -3,12 +3,12 @@
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <languages/fstrips/scopes.hxx>
-#include <constraints/direct/alldiff_constraint.hxx>
-#include <constraints/direct/sum_constraint.hxx>
+// #include <constraints/direct/alldiff_constraint.hxx>
+// #include <constraints/direct/sum_constraint.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/printers/helper.hxx>
-#include <constraints/direct/constraint.hxx>
-#include <constraints/direct/translators/effects.hxx>
+// #include <constraints/direct/constraint.hxx>
+// #include <constraints/direct/translators/effects.hxx>
 #include <constraints/gecode/translators/component_translator.hxx>
 #include <lapkt/tools/logging.hxx>
 
@@ -36,6 +36,7 @@ void LogicalComponentRegistry::registerLogicalElementCreators() {
 
 
 
+/*	
 void LogicalComponentRegistry::registerDirectTranslators() {
 	add(typeid(fs::Constant),           new ConstantRhsTranslator());
 	add(typeid(fs::IntConstant),        new ConstantRhsTranslator());
@@ -48,6 +49,8 @@ void LogicalComponentRegistry::registerDirectTranslators() {
 	add(typeid(fs::AlldiffFormula), [](const fs::AtomicFormula& formula){ return new AlldiffConstraint(fs::ScopeUtils::computeDirectScope(&formula)); });
 	add(typeid(fs::SumFormula), [](const fs::AtomicFormula& formula){ return new SumConstraint(fs::ScopeUtils::computeDirectScope(&formula)); });
 }
+*/
+
 
 void LogicalComponentRegistry::registerGecodeTranslators() {
 	// Register the gecode translators for the basic terms
@@ -83,7 +86,7 @@ void LogicalComponentRegistry::registerGecodeTranslators() {
 LogicalComponentRegistry::LogicalComponentRegistry() {
 	// TODO - The actual initialization should probably be moved somewhere else
 	registerLogicalElementCreators();
-	registerDirectTranslators();
+// 	registerDirectTranslators();
 	registerGecodeTranslators();
 }
 
@@ -91,7 +94,7 @@ LogicalComponentRegistry::~LogicalComponentRegistry() {
 	 // Delete all the pointers to gecode translators
 	for (const auto elem:_gecode_term_translators) delete elem.second;
 	for (const auto elem:_gecode_formula_translators) delete elem.second;
-	for (const auto elem:_direct_effect_translators) delete elem.second;
+// 	for (const auto elem:_direct_effect_translators) delete elem.second;
 }
 
 void LogicalComponentRegistry::addFormulaCreator(const std::string& symbol, const FormulaCreator& creator) {
@@ -104,6 +107,7 @@ void LogicalComponentRegistry::addTermCreator(const std::string& symbol, const T
 	if (!res.second) throw new std::runtime_error("Duplicate registration of term creator for symbol " + symbol);
 }
 
+/*
 void LogicalComponentRegistry::add(const std::type_info& type, const DirectFormulaTranslator& translator) {
 	auto res = _direct_formula_translators.insert(std::make_pair(std::type_index(type), translator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of formula translator for class " + print::type_info_name(type));
@@ -113,6 +117,7 @@ void LogicalComponentRegistry::add(const std::type_info& type, const EffectTrans
 	auto res = _direct_effect_translators.insert(std::make_pair(std::type_index(type), translator));
 	if (!res.second) throw new std::runtime_error("Duplicate registration of effect translator for class " + print::type_info_name(type));
 }
+*/
 
 
 void LogicalComponentRegistry::add(const std::type_info& type, const gecode::TermTranslator* translator) {
@@ -137,6 +142,7 @@ const fs::Term* LogicalComponentRegistry::instantiate_term(const std::string sym
 	return it->second(subterms);
 }
 
+/*
 DirectConstraint* LogicalComponentRegistry::instantiate_direct_constraint(const fs::AtomicFormula& formula) const {
 	auto it = _direct_formula_translators.find(std::type_index(typeid(formula)));
 	if (it == _direct_formula_translators.end()) return nullptr;
@@ -148,6 +154,7 @@ const EffectTranslator* LogicalComponentRegistry::getDirectEffectTranslator(cons
 	if (it == _direct_effect_translators.end()) return nullptr;
 	return it->second;
 }
+*/
 
 const gecode::TermTranslator* LogicalComponentRegistry::getGecodeTranslator(const fs::Term& term) const {
 	auto it = _gecode_term_translators.find(std::type_index(typeid(term)));

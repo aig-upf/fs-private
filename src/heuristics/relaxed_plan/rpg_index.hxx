@@ -54,7 +54,7 @@ protected:
 	std::vector<Gecode::IntSet> _domains;
 	
 	//! This is the set of all values reached so far for each state variable
-	std::vector<std::vector<ObjectIdx>> _domains_raw;
+	std::vector<std::vector<object_id>> _domains_raw;
 	
 	const AtomIndex& _tuple_index;
 	

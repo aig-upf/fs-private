@@ -51,12 +51,12 @@ public:
 	void reset();
 	
 	//! Processes an atom and returns the equivalent extension tuple.
-	AtomIdx process_atom(VariableIdx variable, ObjectIdx value);
+	AtomIdx process_atom(VariableIdx variable, object_id value);
 	
 	void process_tuple(AtomIdx tuple);
 
 	// TODO REMOVE?
-	void process_delta(VariableIdx variable, const std::vector<ObjectIdx>& delta);
+	void process_delta(VariableIdx variable, const std::vector<object_id>& delta);
 	
 	void advance();
 	

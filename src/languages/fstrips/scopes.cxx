@@ -86,8 +86,8 @@ std::vector<Atom> ScopeUtils::compute_affected_atoms(const ActionEffect* effect)
 		// and predicative add/del effects
 		if (info.isPredicativeVariable(variable)){
 			if (!rhs_const) throw std::runtime_error("A predicative effect cannot be assigned anything other than a constant");
-			if (rhs_const->getValue() == 1) { // Push only non-negated effects
-				affected.push_back(Atom(variable, 1));
+			if (int(rhs_const->getValue()) == 1) { // Push only non-negated effects
+				affected.push_back(Atom(variable, make_obj<int>(1)));
 			}
 			continue;
 		}

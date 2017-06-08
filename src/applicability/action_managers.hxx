@@ -79,7 +79,7 @@ protected:
 
 
 //! A small helper
-ObjectIdx _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs);
+object_id _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs);
 
 //!
 class NaiveActionManager : public ActionManagerI  {
