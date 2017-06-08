@@ -94,6 +94,9 @@ protected:
 
 	//! A map from state variable index to the type of the state variable
 	std::vector<ObjectType> variableGenericTypes;
+	
+	//! Mapping from state variable index to the type associated to the state variable
+	std::vector<type_id> _sv_types;
 
 	//! Maps variable index to type index
 	std::vector<TypeIdx> variableTypes;
@@ -140,13 +143,22 @@ public:
 
 
 	const TypeIdx getVariableType(VariableIdx index) const { return variableTypes.at(index); }
-	const ObjectType getVariableGenericType(VariableIdx index) const { return variableGenericTypes.at(index); }
+	
+	type_id sv_type(VariableIdx var) const { return _sv_types.at(var); }
 
 	unsigned getNumVariables() const;
 
-	const std::string getObjectName(VariableIdx varIdx, object_id objIdx) const;
-	const std::string deduceObjectName(object_id object, TypeIdx type) const;
-	const std::string deduceObjectName(object_id object, const std::string& type) const { return deduceObjectName(object, getTypeId(type)); }
+	
+	std::string object_name(const object_id& object) const;
+	
+	std::string object_name(const object_id& object, ObjectType type) const;
+	std::string object_name(const object_id& o, const std::string& type) const { return object_name(o, getTypeId(type)); }
+	std::string object_name(const object_id& o, TypeIdx type) const { return object_name(o, getGenericType(type)); }
+	
+	std::string object_name_from_var(const object_id& o, VariableIdx var) const { return object_name(o, variableGenericTypes.at(var)); }
+	
+	const std::string& custom_object_name(object_id objIdx) const;
+	
 	inline object_id getObjectId(const std::string& name) const { return objectIds.at(name); }
 
 	//! Return the ID of the function with given name
@@ -158,7 +170,6 @@ public:
 	bool isFunction(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::FUNCTION; }
 
 	bool isPredicativeVariable(VariableIdx variable) const { return _predicative_variables.at(variable); }
-	bool isNegatedPredicativeAtom(const Atom& atom) const;
 
 	void setFunction(unsigned functionId, const Function& function) {
 		_functionData.at(functionId).setFunction(function);
@@ -219,9 +230,7 @@ public:
 	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return getSymbolData(symbol_id).getStateVariables(); }
 
 
-	const std::string& getCustomObjectName(object_id objIdx) const;
-
-	unsigned getNumObjects() const;
+	unsigned num_objects() const;
 
 	//! Both methods check that the value of a given variable is within the bounds of the variable,
 	//! in case it is a variable of a bounded type.
@@ -244,6 +253,9 @@ public:
 	//! Returns the generic type (object, int, bool, etc.) corresponding to a concrete type
 	ObjectType getGenericType(TypeIdx typeId) const;
 	ObjectType getGenericType(const std::string& type) const;
+	
+	type_id get_type_id(const std::string& type) const;
+
 
 	const std::string& getDataDir() const { return _data_dir; }
 

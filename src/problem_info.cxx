@@ -18,6 +18,7 @@ public:
 	}
 };
 
+
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
@@ -51,33 +52,34 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& dat
 
 const std::string& ProblemInfo::getVariableName(VariableIdx index) const { return variableNames.at(index); }
 
-bool ProblemInfo::isNegatedPredicativeAtom(const Atom& atom) const { return isPredicativeVariable(atom.getVariable()) && atom.getValue() == object_id::FALSE; }
 
 unsigned ProblemInfo::getNumVariables() const { return variableNames.size(); }
 
-const std::string ProblemInfo::getObjectName(VariableIdx varIdx, object_id object) const {
-	const ObjectType generictype = variableGenericTypes.at(varIdx);
-	if (generictype == ObjectType::OBJECT) return getCustomObjectName(object);
-	else if (generictype == ObjectType::INT) return std::to_string(fs0::value<int>(object, ObjectTable::EMPTY_TABLE));
-	else if (generictype == ObjectType::BOOL) return std::string((fs0::value<bool>(object, ObjectTable::EMPTY_TABLE) ? "true" : "false"));
+
+
+std::string ProblemInfo::object_name(const object_id& object) const {
+	type_id t = o_type(object);
+	if (t == type_id::bool_t) return std::string((fs0::value<bool>(object) ? "true" : "false"));
+	else if (t == type_id::int_t) return std::to_string(fs0::value<int>(object));
+	else if (t == type_id::object_t) return custom_object_name(object);
+	throw std::runtime_error("Unaccounted-for type");
+}
+
+std::string ProblemInfo::object_name(const object_id& object, ObjectType type) const {
+	if (type == ObjectType::OBJECT) return custom_object_name(object);
+	else if (type == ObjectType::INT) return std::to_string(fs0::value<int>(object, ObjectTable::EMPTY_TABLE));
+	else if (type == ObjectType::BOOL) return std::string((fs0::value<bool>(object, ObjectTable::EMPTY_TABLE) ? "true" : "false"));
 	throw std::runtime_error("Should never get here.");
 }
 
-const std::string ProblemInfo::deduceObjectName(object_id object, TypeIdx type) const {
-	const ObjectType generictype = getGenericType(type);
-	if (generictype == ObjectType::OBJECT) return getCustomObjectName(object);
-	else if (generictype == ObjectType::INT) return std::to_string(fs0::value<int>(object, ObjectTable::EMPTY_TABLE));
-	else if (generictype == ObjectType::BOOL) return std::string((fs0::value<bool>(object, ObjectTable::EMPTY_TABLE) ? "true" : "false"));
-	throw std::runtime_error("Should never get here.");
-}
 
-const std::string& ProblemInfo::getCustomObjectName(object_id o) const {
+const std::string& ProblemInfo::custom_object_name(object_id o) const {
 	const auto& it = objectNames.find(o);
-	if (it == objectNames.end()) throw std::runtime_error("Unregistered Object");
+	if (it == objectNames.end()) throw unregistered_object_error(o);
 	return it->second;
 }
 
-unsigned ProblemInfo::getNumObjects() const { return objectNames.size(); }
+unsigned ProblemInfo::num_objects() const { return objectNames.size(); }
 
 
 void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
@@ -93,6 +95,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		variableIds.insert(std::make_pair(name, id));
 
 		variableGenericTypes.push_back(getGenericType(type));
+		_sv_types.push_back(get_type_id(type));
 		try {
 			variableTypes.push_back(name_to_type.at(type));
 		} catch( std::out_of_range& ex ) {
@@ -155,13 +158,19 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 
 ProblemInfo::ObjectType ProblemInfo::getGenericType(TypeIdx typeId) const {
 	if (isTypeBounded[typeId]) return ObjectType::INT;
-// 	else if (type == "_bool_" || type == "bool") return ObjectType::BOOL;
 	else return ObjectType::OBJECT;
 }
 
 ProblemInfo::ObjectType ProblemInfo::getGenericType(const std::string& type) const {
 	if (type == "bool") return ObjectType::BOOL;
 	return getGenericType(getTypeId(type));
+}
+
+type_id ProblemInfo::
+get_type_id(const std::string& type) const {
+	if (type == "bool") return type_id::bool_t;
+	if (isTypeBounded[getTypeId(type)]) return type_id::int_t;
+	else return type_id::object_t;
 }
 
 //! Load the names of the problem objects from the specified file.

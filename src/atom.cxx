@@ -8,7 +8,7 @@ namespace fs0 {
 
 std::ostream& Atom::print(std::ostream& os) const {
 	const ProblemInfo& problemInfo = ProblemInfo::getInstance();
-	os << "[" << problemInfo.getVariableName(_variable) << "=" << problemInfo.getObjectName(_variable, _value) << "]";
+	os << "[" << problemInfo.getVariableName(_variable) << "=" << problemInfo.object_name_from_var(_value, _variable) << "]";
 	return os;
 }
 

@@ -44,8 +44,8 @@ std::ostream& RelaxedState::print(std::ostream& os) const {
 		assert(vals->size() != 0);
 		
 		os << problemInfo.getVariableName(i) << "={";
-		for (const auto& objIdx:*vals) { // Iterate through the set elements.
-			os << problemInfo.getObjectName(i, objIdx) << ",";
+		for (const auto& obj:*vals) { // Iterate through the set elements.
+			os << problemInfo.object_name_from_var(obj, i) << ",";
 		}
 		if (i < _domains.size() - 1) os << "}, ";
 	}

@@ -50,10 +50,6 @@ T value(const object_id& o, const ObjectTable& itp) {
 }
 
 
-
-template <>
-bool value(const object_id& o, const ObjectTable& itp) { return value<bool>(o); }
-
 template <>
 bool value(const object_id& o) {
 	if (o.type() != type_id::bool_t) throw type_mismatch_error();
@@ -61,12 +57,13 @@ bool value(const object_id& o) {
 	return (bool) o.value();
 }
 
-template <>
-int32_t value(const object_id& o, const ObjectTable& itp) { return value<int32_t>(o); }
 
 template <>
 int32_t value(const object_id& o) {
-	if (o.type() != type_id::int_t) throw type_mismatch_error();
+	const auto& t = o.type();
+	if (t != type_id::int_t && t != type_id::object_t) {
+		throw type_mismatch_error();
+	}
 	return (int32_t) o.value();
 }
 

@@ -60,7 +60,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	auto indexer = StateAtomIndexer::create(info);
 	
 	LPT_INFO("main", "Loading initial state...");
-	auto init = loadState(*indexer, data["init"]);
+	auto init = loadState(info, *indexer, data["init"]);
 	
 	LPT_INFO("main", "Loading action data...");
 	auto action_data = loadAllActionData(data["action_schemata"], info, true);
@@ -120,13 +120,18 @@ Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data
 }
 
 State*
-Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data) {
-	// The state is an array of two-sized arrays [x,v], representing atoms x=v
+Loader::loadState(const ProblemInfo& info, const StateAtomIndexer& indexer, const rapidjson::Value& data) {
+	// The state is encoded as an array of two-sized arrays [x,v], representing atoms x=v
 	unsigned numAtoms = data["variables"].GetInt();
 	Atom::vctr facts;
 	for (unsigned i = 0; i < data["atoms"].Size(); ++i) {
 		const rapidjson::Value& node = data["atoms"][i];
-		facts.push_back(Atom(node[0].GetInt(), node[1].GetInt()));
+		
+		VariableIdx var = node[0].GetInt();
+		int value = node[1].GetInt();
+		type_id t = info.sv_type(var);
+		
+		facts.push_back(Atom(var, object_id(t, value)));
 	}
 	return State::create(indexer, numAtoms, facts);
 }

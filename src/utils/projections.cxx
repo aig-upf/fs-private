@@ -76,8 +76,8 @@ void Projections::printDomains(const DomainMap& domains) {
 	const ProblemInfo& problemInfo = ProblemInfo::getInstance();
 	for (const auto& domain:domains) {
 		std::cout << problemInfo.getVariableName(domain.first) << "={";
-		for (auto objIdx:*(domain.second)) {
-			std::cout << problemInfo.getObjectName(domain.first, objIdx) << ",";
+		for (auto obj:*(domain.second)) {
+			std::cout << problemInfo.object_name_from_var(obj, domain.first) << ",";
 		}
 		std::cout << "}" << std::endl;
 	}

@@ -147,7 +147,7 @@ std::ostream& BoundVariable::print(std::ostream& os, const fs0::ProblemInfo& inf
 	return os;
 }
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << info.getCustomObjectName(_value); // We are sure that this is a custom object, otherwise the IntConstant::print() would be executed
+	os << info.custom_object_name(_value); // We are sure that this is a custom object, otherwise the IntConstant::print() would be executed
 	return os;
 }
 

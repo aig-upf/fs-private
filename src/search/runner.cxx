@@ -53,7 +53,7 @@ void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
 	unsigned num_goal_atoms = fs::all_atoms(*problem.getGoalConditions()).size();
 	unsigned num_sc_atoms = fs::all_atoms(*problem.getStateConstraints()).size();
 	
-	LPT_INFO("cout", "Number of objects: " << info.getNumObjects());
+	LPT_INFO("cout", "Number of objects: " << info.num_objects());
 	LPT_INFO("cout", "Number of state variables: " << info.getNumVariables());
 	LPT_INFO("cout", "Number of problem atoms: " << tuple_index.size());
 	LPT_INFO("cout", "Number of action schemata: " << problem.getActionData().size());
@@ -62,7 +62,7 @@ void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
 	LPT_INFO("cout", "Number of state constraint atoms: " << num_sc_atoms);
 	
 
-	json_out << "\t\"num_objects\": " << info.getNumObjects() << "," << std::endl;
+	json_out << "\t\"num_objects\": " << info.num_objects() << "," << std::endl;
 	json_out << "\t\"num_state_variables\": " << info.getNumVariables() << "," << std::endl;
 	json_out << "\t\"num_atoms\": " << tuple_index.size() << "," << std::endl;
 	json_out << "\t\"num_action_schema\": " << problem.getActionData().size() << "," << std::endl;

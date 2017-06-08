@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 #include <stdexcept>
+#include <vector>
 
 namespace fs0 {
 
@@ -57,7 +58,7 @@ type_id type(object_id o) {
 class object_id {
 public:
 	const static object_id INVALID;
-	const static object_id FALSE; // For the sake of performance
+	const static object_id FALSE; // For the sake of performance?
 	const static object_id TRUE;
 	
     using value_t = uint32_t;
@@ -147,18 +148,21 @@ T value(const object_id& o, const ObjectTable& itp);
 template <typename T>
 T value(const object_id& o);
 
-template <>
-bool value(const object_id& o, const ObjectTable& itp);
 
 template <>
 bool value(const object_id& o);
-
-
 template <>
-int32_t value(const object_id& o, const ObjectTable& itp);
+inline bool value(const object_id& o, const ObjectTable& itp) { return value<bool>(o); }
+
+
 
 template <>
 int32_t value(const object_id& o);
+
+template <>
+inline int32_t value(const object_id& o, const ObjectTable& itp) { return value<int32_t>(o); }
+
+
 
 template <typename T>
 std::vector<T> values(const std::vector<object_id>& o, const ObjectTable& itp);
@@ -174,18 +178,10 @@ template <>
 object_id make_obj(const int32_t& value);
 
 
-/*
-template <>
-set_t value(const object_id& o, const ObjectTable& itp) {
-	if (o.type != type_id::set_t) throw type_mismatch_error();
-	// Even additional checks with assert: the value must be either 0 or 1!
-    return set_t();
-}
-*/
-
 } // namespaces
 
 
+//! Define std::hashing for object_ids
 namespace std {
   template <> struct hash<fs0::object_id> {
     size_t operator()(const fs0::object_id& o) const { return fs0::hash_value(o); }

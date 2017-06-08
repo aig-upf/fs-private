@@ -131,15 +131,14 @@ std::ostream& State::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "State";
 	os << "(" << _hash << ")[";
-    for ( unsigned x = 0; x < info.getNumVariables(); x++ ) {
-        object_id v = getValue(x);
-        if ( info.getVariableGenericType(x) == ProblemInfo::ObjectType::BOOL ) {
-            if ( v == object_id::FALSE ) continue;
-            os << info.getVariableName(x);
-    		if (x < info.getNumVariables() - 1) os << ", ";
-            continue;
-        }
-        os << info.getVariableName(x) << "=" << info.getObjectName(x, v);
+    for (unsigned x = 0; x < info.getNumVariables(); ++x) {
+        object_id o = getValue(x);
+		
+        if (o_type(o) == type_id::bool_t) {
+			if (value<bool>(o)) os << info.getVariableName(x); // print positive atoms only
+        } else {
+			os << info.getVariableName(x) << "=" << info.object_name_from_var(o, x);
+		}
         if (x < info.getNumVariables() - 1) os << ", ";
     }
 	os << "]";

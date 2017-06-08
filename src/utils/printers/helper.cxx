@@ -18,7 +18,7 @@ const std::vector<std::string> Helper::name_objects(const std::vector<object_id>
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::string> names;
 	for (unsigned i = 0; i < objects.size(); ++i) {
-		names.push_back(info.deduceObjectName(objects[i], signature[i]));
+		names.push_back(info.object_name(objects[i], signature[i]));
 	}
 	return names;
 }

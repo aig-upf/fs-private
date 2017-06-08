@@ -58,7 +58,7 @@ std::ostream& LogicalVariable::print(std::ostream& os, const fs0::ProblemInfo& i
 }
 
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << info.deduceObjectName(_value, _type);
+	os << info.object_name(_value, _type);
 	return os;
 }
 
