@@ -10,7 +10,7 @@ std::ostream& binding::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (unsigned i = 0; i < _binding.size(); ++i) {
 		if (!_binding.binds(i)) continue;
-		os << info.object_name(_binding.value(i), _signature[i]);
+		os << info.object_name(_binding.value(i));
 		if (i < _binding.size() - 1) os << ", ";
 	}
 	return os;
@@ -42,7 +42,7 @@ std::ostream& partial_binding::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (unsigned i = 0; i < _parameter_names.size(); ++i) {
 		if (_binding.binds(i)) {
-			os << info.object_name(_binding.value(i), _signature[i]);
+			os << info.object_name(_binding.value(i));
 		} else {
 			os << _parameter_names[i];
 		}

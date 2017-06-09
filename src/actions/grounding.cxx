@@ -299,7 +299,7 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 		auto subterms = Utils::clone(original_subterms);
 		delete subterms[i];
 		
-		subterms[i] = new fs::IntConstant(value);
+		subterms[i] = new fs::IntConstant(value, UNSPECIFIED_NUMERIC_TYPE);
 		auto extra_condition = new fs::EQAtomicFormula({subterm_to_replace->clone(), subterms[i]->clone()});
 		auto new_condition = fs::conjunction(*effect->condition(), *extra_condition);
 		delete extra_condition;

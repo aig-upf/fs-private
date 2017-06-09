@@ -33,6 +33,9 @@ namespace fs0 {
 	using TypeIdx = unsigned;
 	const TypeIdx INVALID_TYPE = std::numeric_limits<unsigned>::max();
 	
+	// TODO Temporal workaround, this should go to the bin, but it's good to quickly grep the places it's being used
+	const TypeIdx UNSPECIFIED_NUMERIC_TYPE = std::numeric_limits<unsigned>::max()-1;
+	
 	//! The ID of a logical symbol
 	using SymbolIdx = unsigned;
 

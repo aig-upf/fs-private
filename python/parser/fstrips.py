@@ -115,8 +115,10 @@ class LogicalVariable(Term):
         super().__init__(name)
 
     def dump(self, index, binding_unit):
-        return dict(type='variable', position=binding_unit.id(self.symbol),
-                    typename=binding_unit.typename(self.symbol), name=self.symbol)
+        return dict(type='variable',
+                    position=binding_unit.id(self.symbol),
+                    fstype=binding_unit.typename(self.symbol),
+                    symbol=self.symbol)
 
     def __str__(self):
         return "{}".format(self.symbol)
@@ -125,11 +127,18 @@ class LogicalVariable(Term):
 class Constant(Term):
     def dump(self, index, binding_unit):
         if is_int(self.symbol):  # We have a numeric constant
-            return dict(type='int_constant', value=int(self.symbol), typename="int")
+            return dict(type='constant',
+                        symbol=self.symbol,
+                        value=int(self.symbol),
+                        type_id="int_t",
+                        fstype="")  # TODO We should specify here of which bounded FS-type the constant is
 
         else:  # We have a logical constant
-            return dict(type='constant', value=index.objects.get_index(self.symbol),
-                        typename=index.object_types[self.symbol])
+            return dict(type='constant',
+                        symbol=self.symbol,
+                        value=index.objects.get_index(self.symbol),
+                        type_id="object_t",
+                        fstype=index.object_types[self.symbol])
 
     def __str__(self):
         return "{}".format(self.symbol)

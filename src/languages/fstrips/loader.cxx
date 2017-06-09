@@ -69,7 +69,8 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 			unsigned symbol_id = info.getSymbolId(symbol);
 			if (info.isPredicate(symbol_id)) {
 				// 
-				IntConstant* value = negated ? new IntConstant(make_obj<int>(0)) : new IntConstant(make_obj<int>(1));
+				IntConstant* value = negated ? new IntConstant(make_obj<int>(0), UNSPECIFIED_NUMERIC_TYPE)
+				                             : new IntConstant(make_obj<int>(1), UNSPECIFIED_NUMERIC_TYPE);
 				
 				subterms = {_create_nested_term(symbol, subterms), value};
 				symbol = "=";
@@ -93,11 +94,18 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 	std::string term_type = tree["type"].GetString();
 	
 	if (term_type == "constant") {
-		return new Constant(make_obj(tree["value"].GetInt()));
-	} else if (term_type == "int_constant") {
-		return new IntConstant(make_obj(tree["value"].GetInt()));
+		std::string type_id_str = tree["type_id"].GetString();
+		if (type_id_str == "int_t") {
+			return new IntConstant(make_obj(tree["value"].GetInt()), UNSPECIFIED_NUMERIC_TYPE);
+		} else if (type_id_str == "object_t") {
+			TypeIdx fstype = info.getTypeId(tree["fstype"].GetString());
+			object_id o = make_object(type_id::object_t, tree["value"].GetInt());
+			return new Constant(o, fstype);
+		}
+		else throw std::runtime_error("Unknown type id: " + type_id_str);
+		
 	} else if (term_type == "variable") {
-		return new BoundVariable(tree["position"].GetInt(), tree["name"].GetString(), info.getTypeId(tree["typename"].GetString()));
+		return new BoundVariable(tree["position"].GetInt(), tree["symbol"].GetString(), info.getTypeId(tree["fstype"].GetString()));
 	} else if (term_type == "functional") {
 		std::string symbol = tree["symbol"].GetString();
 		std::vector<const Term*> children = parseTermList(tree["children"], info);

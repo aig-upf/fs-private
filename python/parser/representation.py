@@ -74,16 +74,19 @@ class ProblemRepresentation(object):
         return dict(variables=len(self.index.state_variables), atoms=sorted_atoms)
 
     def dump_variable_data(self):
-        res = []
+        all_variables = []
         for i, var in enumerate(self.index.state_variables):
-            data = self.dump_state_variable(var)
-            res.append({'id': i, 'name': str(var), 'type': self.index.symbol_types[var.symbol], 'data': data})
-        return res
+            signature = [self.index.object_types[arg] for arg in var.args]
+            point = [arg if utils.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
 
-    def dump_state_variable(self, var):
-        head = self.index.symbol_index[var.symbol]
-        constants = [arg if utils.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
-        return [head, constants]
+            all_variables.append(dict(id=i, name=str(var),
+                                      fstype=self.index.symbol_types[var.symbol],
+                                      symbol_id=self.index.symbol_index[var.symbol],
+                                      signature=signature,
+                                      point=point))
+
+        return all_variables
+
 
     def dump_object_data(self):
         return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump())]
@@ -202,7 +205,7 @@ class ProblemRepresentation(object):
         # Variables
         lines = list()
         for elem in data['variables']:
-            lines.append('{}: "{}" ({})'.format(elem['id'], elem['name'], elem['type']))
+            lines.append('{}: "{}" ({})'.format(elem['id'], elem['name'], elem['fstype']))
         self.dump_data("variables", lines, ext='txt', subdir='debug')
 
         # Symbols

@@ -123,7 +123,7 @@ State*
 Loader::loadState(const ProblemInfo& info, const StateAtomIndexer& indexer, const rapidjson::Value& data) {
 	// The state is encoded as an array of two-sized arrays [x,v], representing atoms x=v
 	unsigned numAtoms = data["variables"].GetInt();
-	Atom::vctr facts;
+	std::vector<Atom> facts;
 	for (unsigned i = 0; i < data["atoms"].Size(); ++i) {
 		const rapidjson::Value& node = data["atoms"][i];
 		
@@ -131,7 +131,7 @@ Loader::loadState(const ProblemInfo& info, const StateAtomIndexer& indexer, cons
 		int value = node[1].GetInt();
 		type_id t = info.sv_type(var);
 		
-		facts.push_back(Atom(var, object_id(t, value)));
+		facts.push_back(Atom(var, make_object(t, value)));
 	}
 	return State::create(indexer, numAtoms, facts);
 }

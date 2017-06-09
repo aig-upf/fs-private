@@ -113,7 +113,7 @@ Binding LiftedActionCSP::build_binding_from_solution(const GecodeCSP* solution) 
 	valid.reserve(_parameter_variables.size());
 	for (unsigned csp_var_idx:_parameter_variables) {
 		if (csp_var_idx == std::numeric_limits<unsigned int>::max()) {
-			values.push_back(object_id());
+			values.push_back(object_id::INVALID);
 			valid.push_back(false);
 		} else {
 			values.push_back(_translator.resolveValueFromIndex(csp_var_idx, *solution));

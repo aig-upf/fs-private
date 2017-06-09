@@ -55,7 +55,7 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
-	if (n_vars == _n_bool) return make_obj<int>(state._bool_values[variable]); // HACK - Temporarily return this as an integer object_id
+	if (n_vars == _n_bool) return make_obj(state._bool_values[variable]);
 	if (n_vars == _n_int) return state._int_values[variable];
 
 	// Otherwise we need to deindex the variable
@@ -137,7 +137,7 @@ std::ostream& State::print(std::ostream& os) const {
         if (o_type(o) == type_id::bool_t) {
 			if (value<bool>(o)) os << info.getVariableName(x); // print positive atoms only
         } else {
-			os << info.getVariableName(x) << "=" << info.object_name_from_var(o, x);
+			os << info.getVariableName(x) << "=" << info.object_name(o);
 		}
         if (x < info.getNumVariables() - 1) os << ", ";
     }

@@ -152,7 +152,7 @@ Serializer::deserializeLine(const std::string& line, const std::string& separato
 	result.reserve(strings.size());
 	for (const std::string& str:strings) {
 		int val = boost::lexical_cast<int>(str);
-		result.push_back(make_obj(val));
+		result.push_back(make_obj(val)); // TODO This should check whether the type is type_id::int_t or type_id::object_t ?
 	}
 	return result;
 }

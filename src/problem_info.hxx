@@ -92,9 +92,6 @@ protected:
 	std::map<std::pair<unsigned, std::vector<object_id>>, VariableIdx> variableDataToId;
 	std::vector<std::pair<unsigned, std::vector<object_id>>> variableIdToData;
 
-	//! A map from state variable index to the type of the state variable
-	std::vector<ObjectType> variableGenericTypes;
-	
 	//! Mapping from state variable index to the type associated to the state variable
 	std::vector<type_id> _sv_types;
 
@@ -150,13 +147,6 @@ public:
 
 	
 	std::string object_name(const object_id& object) const;
-	
-	std::string object_name(const object_id& object, ObjectType type) const;
-	std::string object_name(const object_id& o, const std::string& type) const { return object_name(o, getTypeId(type)); }
-	std::string object_name(const object_id& o, TypeIdx type) const { return object_name(o, getGenericType(type)); }
-	
-	std::string object_name_from_var(const object_id& o, VariableIdx var) const { return object_name(o, variableGenericTypes.at(var)); }
-	
 	const std::string& custom_object_name(object_id objIdx) const;
 	
 	inline object_id getObjectId(const std::string& name) const { return objectIds.at(name); }

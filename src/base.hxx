@@ -65,11 +65,19 @@ public:
     
 	explicit object_id() : _type(type_id::invalid_t), _value(0) {}
 	
+private:
+	
     template <typename T>
     explicit object_id(type_id t, T value) 
         : _type(t), _value(value)
     { static_assert(sizeof(T) <= sizeof(value_t), "Unsupported object_id value type"); }
     
+    template <typename T> friend object_id make_object(type_id t, T value);
+	template <typename T> friend object_id make_obj(const T& value);
+	
+	
+public:
+	// TODO - REMOVE THIS CONSTRUCTOR
     object_id(int32_t value) : _type(type_id::int_t), _value(value) {}
 
     explicit operator bool() const { return (bool) _value; }
@@ -167,6 +175,10 @@ inline int32_t value(const object_id& o, const ObjectTable& itp) { return value<
 template <typename T>
 std::vector<T> values(const std::vector<object_id>& o, const ObjectTable& itp);
 
+
+template <typename T>
+inline object_id make_object(type_id t, T value) { return object_id(t, value); }
+	
 
 template <typename T>
 object_id make_obj(const T& value);

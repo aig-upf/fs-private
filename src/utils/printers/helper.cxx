@@ -13,12 +13,11 @@ const std::vector<std::string> Helper::name_variables(const std::vector<Variable
 	return names;
 }
 
-const std::vector<std::string> Helper::name_objects(const std::vector<object_id>& objects, const Signature& signature) {
-	assert(objects.size() == signature.size());
+const std::vector<std::string> Helper::name_objects(const std::vector<object_id>& objects) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::vector<std::string> names;
 	for (unsigned i = 0; i < objects.size(); ++i) {
-		names.push_back(info.object_name(objects[i], signature[i]));
+		names.push_back(info.object_name(objects[i]));
 	}
 	return names;
 }

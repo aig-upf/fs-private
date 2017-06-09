@@ -65,14 +65,6 @@ std::string ProblemInfo::object_name(const object_id& object) const {
 	throw std::runtime_error("Unaccounted-for type");
 }
 
-std::string ProblemInfo::object_name(const object_id& object, ObjectType type) const {
-	if (type == ObjectType::OBJECT) return custom_object_name(object);
-	else if (type == ObjectType::INT) return std::to_string(fs0::value<int>(object, ObjectTable::EMPTY_TABLE));
-	else if (type == ObjectType::BOOL) return std::string((fs0::value<bool>(object, ObjectTable::EMPTY_TABLE) ? "true" : "false"));
-	throw std::runtime_error("Should never get here.");
-}
-
-
 const std::string& ProblemInfo::custom_object_name(object_id o) const {
 	const auto& it = objectNames.find(o);
 	if (it == objectNames.end()) throw unregistered_object_error(o);
@@ -86,32 +78,35 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 	assert(variableNames.empty());
 
 	for (unsigned i = 0; i < data.Size(); ++i) {
+		const auto& var_data = data[i];
 		unsigned id = variableNames.size();
-		assert(data[i]["id"].GetInt() >= 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == id); // Check values are decoded in the proper order
+		assert(var_data["id"].GetInt() >= 0 && static_cast<unsigned>(var_data["id"].GetInt()) == id); // Check values are decoded in the proper order
 
-		const std::string type(data[i]["type"].GetString());
-		const std::string name(data[i]["name"].GetString());
+		const std::string type(var_data["fstype"].GetString());
+		const std::string name(var_data["name"].GetString());
 		variableNames.push_back(name);
 		variableIds.insert(std::make_pair(name, id));
-
-		variableGenericTypes.push_back(getGenericType(type));
+		
 		_sv_types.push_back(get_type_id(type));
+		
 		try {
 			variableTypes.push_back(name_to_type.at(type));
 		} catch( std::out_of_range& ex ) {
-			throw std::runtime_error("Unknown type " + type);
+			throw std::runtime_error("Unknown FS-type " + type);
 		}
 
 		// Load the info necessary to resolve state variables dynamically
-		const auto& var_data = data[i]["data"];
-		unsigned symbol_id = var_data[0].GetInt();
-		 std::vector<object_id> constants;
-		for (unsigned j = 0; j < var_data[1].Size(); ++j) {
-			constants.push_back(make_obj(var_data[1][j].GetInt()));
+		unsigned symbol_id = var_data["symbol_id"].GetInt();
+		
+		std::vector<object_id> point;
+		assert(var_data["point"].Size() == var_data["signature"].Size());
+		for (unsigned j = 0; j < var_data["point"].Size(); ++j) {
+			std::string point_type = var_data["signature"][j].GetString();
+			point.push_back(make_object(get_type_id(point_type), var_data["point"][j].GetInt()));
 		}
 
-		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, constants),  id));
-		variableIdToData.push_back(std::make_pair(symbol_id, constants));
+		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, point),  id));
+		variableIdToData.push_back(std::make_pair(symbol_id, point));
 	}
 }
 
@@ -180,7 +175,15 @@ void ProblemInfo::loadObjectIndex(const rapidjson::Value& data) {
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		assert(data[i]["id"].GetInt() >= 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == objectNames.size()); // Check values are decoded in the proper order
 		const std::string& name = data[i]["name"].GetString();
-		object_id oid = make_obj<int>(objectNames.size());
+		unsigned id = objectNames.size();
+		if ((id == 0 && name != "false") || (id == 1 && name != "true")) throw std::runtime_error("Object IDs 0 and 1 reserved for bool values");
+		
+		object_id oid;
+		if (id == 0 || id == 1) {
+			oid = make_obj<bool>((bool)id);
+		} else {
+			oid = make_object(type_id::object_t, id);
+		}
 		objectIds.insert(std::make_pair(name, oid));
 		objectNames.insert(std::make_pair(oid, name));
 // 		std::cout << "Inserted: " << oid << " - " << name << " [" << std::hash<object_id>()(oid) << "]" << std::endl;
@@ -216,12 +219,12 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 
 			// Unfold the range
 			typeObjects[type_id].reserve(upper - lower + 1);
-			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(make_obj(v));
+			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(make_obj<int>(v));
 		} else { // We have an enumeration of object IDs
 			typeObjects[type_id].reserve(data[i][2].Size());
 			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
 				int value = boost::lexical_cast<int>(data[i][2][j].GetString());
-				typeObjects[type_id].push_back(make_obj(value));
+				typeObjects[type_id].push_back(make_object(type_id::object_t, value));
 			}
 		}
 	}
@@ -235,7 +238,7 @@ bool ProblemInfo::checkValueIsValid(VariableIdx variable, object_id object) cons
 	TypeIdx type = getVariableType(variable);
 	if (!isTypeBounded[type]) return true;
 	const auto& bounds = typeBounds[type];
-	int value = fs0::value<int>(object, ObjectTable::EMPTY_TABLE);
+	int value = fs0::value<int>(object);
 	return value >= bounds.first && value <= bounds.second;
 }
 

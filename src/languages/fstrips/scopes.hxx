@@ -51,8 +51,6 @@ public:
 	//! Returns the state variables (both direct and indirect) affected by the given action
 	static void compute_affected(const ActionBase& action, std::set<VariableIdx>& scope);
 	
-	//!
-	static std::vector<Atom> compute_affected_atoms(const ActionEffect* effect);
 	
 	//! Adds to 'variables' all those state variables that can be derived from the given element (formula / term),
 	//! including variables which are directly present and those that are present through nested terms.

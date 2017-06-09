@@ -15,8 +15,7 @@ protected:
 	object_id  _value;
 	
 public:
-	typedef std::vector<Atom> vctr;
-	typedef std::shared_ptr<Atom::vctr> vctrp;
+	using vctrp = std::shared_ptr<std::vector<Atom>>;
 
 	Atom(VariableIdx variable, object_id value) : _variable(variable), _value(value) {};
 	Atom(const Atom& other) = default;

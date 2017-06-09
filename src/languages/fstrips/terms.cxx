@@ -115,7 +115,10 @@ object_id BoundVariable::interpret(const State& state, const Binding& binding) c
 }
 
 
-
+Constant* Constant::create(object_id value, TypeIdx fstype, const ProblemInfo& info) {
+	return info.isBoundedType(fstype) ? new IntConstant(value, fstype) : new Constant(value, fstype);	
+}	
+	
 //! A quick helper to print functions
 template <typename T>
 std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {
@@ -147,7 +150,7 @@ std::ostream& BoundVariable::print(std::ostream& os, const fs0::ProblemInfo& inf
 	return os;
 }
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << info.custom_object_name(_value); // We are sure that this is a custom object, otherwise the IntConstant::print() would be executed
+	os << info.object_name(_value);
 	return os;
 }
 

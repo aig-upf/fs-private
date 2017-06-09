@@ -5,7 +5,7 @@
 #include <search/drivers/iterated_width.hxx>
 #include <search/drivers/breadth_first_search.hxx>
 #include <search/drivers/sbfws/sbfws.hxx>
-#include <search/drivers/unreached_atom_driver.hxx>
+// #include <search/drivers/unreached_atom_driver.hxx>
 // #include <search/drivers/native_driver.hxx>
 #include <search/drivers/smart_effect_driver.hxx>
 #include <search/drivers/smart_lifted_driver.hxx>
@@ -33,7 +33,7 @@ EngineRegistry::EngineRegistry() {
 // 	add("native",  new NativeDriver<GroundStateModel>());
 // 	add("lnative",  new NativeDriver<LiftedStateModel>()); // The native driver is not ready for this
 	
-	add("lunreached",  new UnreachedAtomDriver<LiftedStateModel>());
+// 	add("lunreached",  new UnreachedAtomDriver<LiftedStateModel>());
 	add("lifted",  new FullyLiftedDriver());
 	
 	add("iw",  new IteratedWidthDriver<GroundStateModel>());

@@ -70,10 +70,8 @@ Validator::validate_problem_info(const ProblemInfo& info) {
 		const SymbolData& data = info.getSymbolData(symbol);
 		
 		if (!data.isStatic()) continue;
-		// We have a static symbol
+		// Otherwise, we have a static symbol
 		
-		const Signature& signature = data.getSignature();
-		 
 		for (utils::binding_iterator it(data.getSignature(), info); !it.ended(); ++it) {
 			auto binding = *it;
 			const ValueTuple& point = binding.get_full_binding();
@@ -82,14 +80,14 @@ Validator::validate_problem_info(const ProblemInfo& info) {
 				object_id image = data.getFunction()(point);
 				const auto& objects = info.getTypeObjects(data.getCodomainType());
 				if (std::find(objects.begin(), objects.end(), image) == objects.end()) {
-					std::cerr << "Value \"" << image << "\" assigned to symbol \"" << info.getSymbolName(symbol) << "\" at point " << print::container(print::Helper::name_objects(point, signature)) << " is not of the correct type" << std::endl;
+					std::cerr << "Value \"" << image << "\" assigned to symbol \"" << info.getSymbolName(symbol) << "\" at point " << print::container(print::Helper::name_objects(point)) << " is not of the correct type" << std::endl;
 				}
 				
 			} catch (const std::out_of_range& e) {
-				std::cerr << "The denotation of (static) symbol \"" << info.getSymbolName(symbol) << "\" is undefined at point " << print::container(print::Helper::name_objects(point, signature)) << std::endl;
+				std::cerr << "The denotation of (static) symbol \"" << info.getSymbolName(symbol) << "\" is undefined at point " << print::container(print::Helper::name_objects(point)) << std::endl;
 				error = true;
 			} catch (const UndefinedValueAccess& e) {
-				std::cerr << "The denotation of (static) symbol \"" << info.getSymbolName(symbol) << "\" is undefined at point " << print::container(print::Helper::name_objects(point, signature)) << std::endl;
+				std::cerr << "The denotation of (static) symbol \"" << info.getSymbolName(symbol) << "\" is undefined at point " << print::container(print::Helper::name_objects(point)) << std::endl;
 				error = true;
 			}			
 		}
