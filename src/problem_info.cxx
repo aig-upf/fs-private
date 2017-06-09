@@ -162,9 +162,9 @@ ProblemInfo::ObjectType ProblemInfo::getGenericType(const std::string& type) con
 }
 
 type_id ProblemInfo::
-get_type_id(const std::string& type) const {
-	if (type == "bool") return type_id::bool_t;
-	return get_type_id(getTypeId(type));
+get_type_id(const std::string& fstype) const {
+	if (fstype == "bool") return type_id::bool_t;
+	return get_type_id(getTypeId(fstype));
 }
 
 type_id ProblemInfo::

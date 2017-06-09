@@ -246,7 +246,7 @@ public:
 	ObjectType getGenericType(const std::string& type) const;
 	
 	//! Return the generic type_id corresponding to the given fs-type
-	type_id get_type_id(const std::string& type) const;
+	type_id get_type_id(const std::string& fstype) const;
 	type_id get_type_id(TypeIdx fstype) const;
 
 
