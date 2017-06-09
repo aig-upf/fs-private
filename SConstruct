@@ -34,11 +34,11 @@ gcc = os.environ.get('CXX', default_compiler)
 env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
 
 if env['edebug']:
-	build_dirname = '_build/edebug'
+	build_dirname = '.build/edebug'
 elif env['debug']:
-	build_dirname = '_build/debug'
+	build_dirname = '.build/debug'
 else:
-	build_dirname = '_build/prod'
+	build_dirname = '.build/prod'
 env.VariantDir(build_dirname, '.')
 
 Help(vars.GenerateHelpText(env))

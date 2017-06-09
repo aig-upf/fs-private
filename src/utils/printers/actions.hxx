@@ -6,7 +6,7 @@
 
 namespace fs0 { class ActionData; class ActionBase; class GroundAction; }
 
-namespace fs0 { namespace lang { namespace fstrips { class ActionSchema; } } }
+namespace fs0 { namespace fstrips { class ActionSchema; } }
 
 namespace fs0 { namespace print {
 
@@ -22,18 +22,18 @@ class action_data_name {
 		std::ostream& print(std::ostream& os) const;
 };
 
-/*
+
 class action_signature {
 	protected:
-		const fs0::lang::fstrips::ActionSchema& _action;
+		const fs0::fstrips::ActionSchema& _action;
 
 	public:
-		action_signature(const fs0::lang::fstrips::ActionSchema& action) : _action(action) {}
+		action_signature(const fs0::fstrips::ActionSchema& action) : _action(action) {}
 		
 		friend std::ostream& operator<<(std::ostream &os, const action_signature& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
-*/
+
 
 //! Print a full lifted action data, including preconditions and effects
 class action_data {

@@ -1,9 +1,9 @@
 
 #include <lapkt/tools/logging.hxx>
 
-#include <languages/fstrips/light_loader.hxx>
-#include <languages/fstrips/light_operations.hxx>
-#include <languages/fstrips/light.hxx>
+#include <fstrips/language.hxx>
+#include <fstrips/loader.hxx>
+#include <fstrips/operations.hxx>
 #include <utils/loader.hxx>
 
 #include <problem_info.hxx>
@@ -11,7 +11,7 @@
 #include <constraints/registry.hxx>
 
 
-namespace fs0 { namespace lang { namespace fstrips {
+namespace fs0 { namespace fstrips {
 	
 
 	
@@ -161,4 +161,4 @@ Loader::parseActionSchema(const rapidjson::Value& node, unsigned id, const Probl
 }
 
 
-} } } // namespaces
+} } // namespaces

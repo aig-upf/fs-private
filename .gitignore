@@ -12,7 +12,7 @@ workspace
 analysis
 
 # Build files
-_build
+.build
 lib
 
 # Compiled Object files

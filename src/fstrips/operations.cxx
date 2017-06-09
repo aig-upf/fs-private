@@ -1,10 +1,10 @@
 
-#include "light_operations.hxx"
+#include "operations.hxx"
 #include <problem_info.hxx>
 
 
 
-namespace fs0 { namespace lang { namespace fstrips {
+namespace fs0 { namespace fstrips {
 
 
 bool has_empty_parameter(const ActionSchema& schema) {
@@ -15,4 +15,4 @@ bool has_empty_parameter(const ActionSchema& schema) {
 	return false;
 }
 
-} } } // namespaces
+} } // namespaces

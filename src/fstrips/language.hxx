@@ -6,7 +6,7 @@
 
 namespace fs0 { class ProblemInfo; } //  TODO[LAMBDA] - REMOVE THIS DEPENDENCY
 
-namespace fs0 { namespace lang { namespace fstrips {
+namespace fs0 { namespace fstrips {
 
 //! A logical connective
 enum class Connective { Conjunction, Disjunction, Negation };
@@ -79,8 +79,8 @@ public:
 
 	Constant* clone() const override { return new Constant(*this); }
 	
-	//! Returns the unique quantified variable ID
-	unsigned getValue() const { return _value; }	
+	//! 
+	object_id getValue() const { return _value; }	
 	
 	//! Returns the ID of the variable type
 	TypeIdx getType() const { return _type; }
@@ -381,5 +381,5 @@ public:
 
 
 
-} } } // namespaces
+} } // namespaces
 

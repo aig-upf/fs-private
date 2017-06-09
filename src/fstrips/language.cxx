@@ -1,13 +1,13 @@
 
 
-#include "light.hxx"
+#include "language.hxx"
 
 #include <problem_info.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/actions.hxx>
 
 
-namespace fs0 { namespace lang { namespace fstrips {
+namespace fs0 { namespace fstrips {
 
 //! Some printing helpers
 const std::string to_string(Connective connective) {
@@ -58,7 +58,7 @@ std::ostream& LogicalVariable::print(std::ostream& os, const fs0::ProblemInfo& i
 }
 
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << info.object_name(_value, _type);
+	os << info.object_name(_value);
 	return os;
 }
 
@@ -175,4 +175,4 @@ std::ostream& ActionSchema::print(std::ostream& os) const {
 }
 
 
-} } } // namespaces
+} } // namespaces

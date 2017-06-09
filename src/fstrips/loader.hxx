@@ -6,7 +6,7 @@
 
 namespace fs0 {	class ProblemInfo; }
 
-namespace fs0 { namespace lang { namespace fstrips {
+namespace fs0 { namespace fstrips {
 
 class Term;
 class ActionEffect;
@@ -33,4 +33,4 @@ public:
 
 };
 
-} } } // namespaces
+} } // namespaces
