@@ -27,7 +27,7 @@ std::set<CompiledUnaryConstraint::ElementT> CompiledUnaryConstraint::compile(con
 	assert(scope.size() == 1);
 	
 	std::set<ElementT> ordered;
-	for(object_id value:info.getVariableObjects(scope[0])) {
+	for(const object_id& value:info.getVariableObjects(scope[0])) {
 		if (tester(value)) ordered.insert(value);
 	}
 	return ordered;
@@ -45,7 +45,7 @@ CompiledUnaryConstraint::ExtensionT CompiledUnaryConstraint::_compile(const Unar
 	return ExtensionT(ordered.begin(), ordered.end());
 }
 
-bool CompiledUnaryConstraint::isSatisfied(object_id o) const {
+bool CompiledUnaryConstraint::isSatisfied(const object_id& o) const {
 	return std::binary_search(_extension.begin(), _extension.end(), o); // TODO - Change for a O(1) lookup in a std::unordered_set ?
 }
 
@@ -89,7 +89,7 @@ CompiledBinaryConstraint::CompiledBinaryConstraint(const VariableIdxVector& scop
 {}
 
 
-bool CompiledBinaryConstraint::isSatisfied(object_id o1, object_id o2) const {
+bool CompiledBinaryConstraint::isSatisfied(const object_id& o1, const object_id& o2) const {
 	auto iter = _extension1.find(o1);
 	assert(iter != _extension1.end());
 	const std::vector<object_id>& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
@@ -102,8 +102,8 @@ CompiledBinaryConstraint::TupleExtension CompiledBinaryConstraint::compile(const
 	
 	TupleExtension extension;
 	
-	for(object_id x:info.getVariableObjects(scope[0])) {
-		for(object_id y:info.getVariableObjects(scope[1])) {
+	for(const object_id& x:info.getVariableObjects(scope[0])) {
+		for(const object_id& y:info.getVariableObjects(scope[1])) {
 			if (tester(x, y)) {
 				extension.insert(std::make_tuple(x, y));
 			}
@@ -143,7 +143,8 @@ FilteringOutput CompiledBinaryConstraint::filter(unsigned variable) const {
 	Domain& other_domain = *(projection[other]);
 	Domain new_domain;
 	
-	for (object_id x:domain) {
+	for (const object_id&
+ x:domain) {
 		auto iter = extension_map.find(x);
 		assert(iter != extension_map.end());
 		const auto& D_y = iter->second; // iter->second contains all the elements y of the domain of the second variable such that <x, y> satisfies the constraint
@@ -191,7 +192,7 @@ CompiledUnaryEffect::CompiledUnaryEffect(VariableIdx relevant, VariableIdx affec
 {}
 	
 
-Atom CompiledUnaryEffect::apply(object_id value) const {
+Atom CompiledUnaryEffect::apply(const object_id& value) const {
 	return Atom(_affected, _extension.at(value));
 }
 
@@ -200,7 +201,7 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const UnaryDirectEf
 	const std::vector<object_id>& all_values = info.getVariableObjects(relevant);
 	
 	ExtensionT map;
-	for(object_id value:all_values) {
+	for(const object_id& value:all_values) {
 		try {
 			auto atom = effect.apply(value);
 			assert(atom.getVariable() == effect.getAffected());
@@ -215,7 +216,7 @@ CompiledUnaryEffect::ExtensionT CompiledUnaryEffect::compile(const fs::Term& ter
 	assert(scope.size() == 1);
 	ExtensionT map;
 	
-	for(object_id value:info.getVariableObjects(scope[0])) {
+	for(const object_id& value:info.getVariableObjects(scope[0])) {
 		try {
 			object_id out = term.interpret(Projections::zip(scope, {value}));
 			map.insert(std::make_pair(value, out));
@@ -237,8 +238,8 @@ CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& t
 	assert(scope.size() == 2);
 	ExtensionT map;
 	
-	for(object_id x:info.getVariableObjects(scope[0])) {
-		for(object_id y:info.getVariableObjects(scope[1])) {
+	for(const object_id& x:info.getVariableObjects(scope[0])) {
+		for(const object_id& y:info.getVariableObjects(scope[1])) {
 			try {
 				object_id out = term.interpret(Projections::zip(scope, {x, y}));
 				map.insert(std::make_pair(std::make_pair(x, y), out));
@@ -249,7 +250,7 @@ CompiledBinaryEffect::ExtensionT CompiledBinaryEffect::compile(const fs::Term& t
 }
 
 
-Atom CompiledBinaryEffect::apply(object_id v1, object_id v2) const {
+Atom CompiledBinaryEffect::apply(const object_id& v1, const object_id& v2) const {
 	return Atom(_affected, _extension.at({v1, v2}));
 }
 

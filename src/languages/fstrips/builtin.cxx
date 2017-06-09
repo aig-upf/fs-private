@@ -85,7 +85,7 @@ AlldiffFormula::AlldiffFormula(const AlldiffFormula& formula) : AlldiffFormula(U
 
 bool AlldiffFormula::_satisfied(const std::vector<object_id>& values) const {
 	std::unordered_set<object_id> distinct;
-	for (object_id val:values) {
+	for (const object_id& val:values) {
 		auto res = distinct.insert(val);
 		if (!res.second) return false; // We found a duplicate, hence the formula is false
 	}

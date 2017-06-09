@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include <boost/functional/hash.hpp>
 
 #include <utils/atom_index.hxx>
@@ -7,7 +8,7 @@
 
 namespace fs0 {
 
-bool AtomIndex::is_indexed(VariableIdx variable, object_id value) const {
+bool AtomIndex::is_indexed(VariableIdx variable, const object_id& value) const {
 	return !_info.isPredicativeVariable(variable) || _indexes_negated_literals || int(value) == 1;
 }
 
@@ -79,7 +80,7 @@ AtomIdx AtomIndex::to_index(const Atom& atom) const {
 	return to_index(atom.getVariable(), atom.getValue());
 }
 
-AtomIdx AtomIndex::to_index(VariableIdx variable, object_id value) const {
+AtomIdx AtomIndex::to_index(VariableIdx variable, const object_id& value) const {
 	const auto& map = _atom_index_inv.at(variable);
 	auto it = map.find(value);
 	assert(it != map.end());
@@ -94,7 +95,7 @@ std::vector<std::vector<std::pair<ValueTuple, object_id>>> AtomIndex::compute_al
 		const auto& data = info.getVariableData(var);
 		auto& symbol_tuples = tuples_by_symbol.at(data.first); // The tupleset corresponding to the symbol index
 		
-		for (object_id value:info.getVariableObjects(var)) {
+		for (const object_id& value:info.getVariableObjects(var)) {
 			symbol_tuples.push_back(std::make_pair(data.second, value)); 
 		}
 	}

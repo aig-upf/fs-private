@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include <numeric>
 #include <unordered_set>
 
@@ -16,6 +17,7 @@
 #include <languages/fstrips/operations.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/vector.hxx>
+#include <utils/printers/actions.hxx>
 
 namespace fs0 {
 
@@ -234,7 +236,8 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 				assert(neq);
 // 				std::cout << "Precondition: " << *eq << std::endl;
 				object_id value = _extract_constant_val(neq->lhs(), neq->rhs());
-				for (object_id v2:values) {
+				for (const object_id&
+ v2:values) {
 					if (v2 != value) {
 						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
 						if (build_applicable_index) {
@@ -251,7 +254,8 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 				if (referenced.find(var) != referenced.end()) continue;
 
-				for (object_id val:info.getVariableObjects(var)) {
+				for (const object_id&
+ val:info.getVariableObjects(var)) {
 					AtomIdx tup = _tuple_idx.to_index(var, val);
 					_applicable[tup].push_back(i);
 				}
@@ -378,5 +382,30 @@ NaiveActionManager::check_constraints(unsigned applied_action_id, const State& s
 	}
 	return true;
 }
+
+
+
+
+void
+GroundApplicableSet::Iterator::advance() {
+	if (_manager.whitelist_guarantees_applicability()) {
+			// All actions in the whitelist guaranteed to be true, no need to check anything else
+		return; 
+	}
+	
+	const std::vector<const GroundAction*>& actions = _manager.getAllActions();
+	// std::cout << "Checking applicability " << std::endl;
+	for (unsigned sz = _whitelist.size();_index < sz; ++_index) {
+			unsigned action_idx = _whitelist[_index];
+
+			// std::cout << "Check applicable action: " << print::action_header(*actions[action_idx]) << std::endl;
+			if (_manager.applicable(_state, *actions[action_idx])) { // The action is applicable, break the for loop.
+			// std::cout << "Found applicable action: " << print::action_header(*actions[action_idx]) << std::endl;
+			return;
+		}
+	}
+
+}
+
 
 } // namespaces

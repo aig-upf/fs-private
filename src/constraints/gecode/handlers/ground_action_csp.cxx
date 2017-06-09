@@ -56,12 +56,12 @@ void GroundActionCSP::log() const {
 }
 
 GecodeCSP* 
-GroundActionCSP::post(VariableIdx variable, object_id value) const {
+GroundActionCSP::post(VariableIdx variable, const object_id& value) const {
 	if (_failed) return nullptr;
 	GecodeCSP* clone = static_cast<GecodeCSP*>(_base_csp->clone());
 	const auto& csp_var = _translator.resolveInputStateVariable(*clone, variable);
 	
-	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, value);
+	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, fs0::value<int>(value));
 
 	if (!clone->checkConsistency()) { // This colaterally enforces propagation of constraints
 		delete clone;

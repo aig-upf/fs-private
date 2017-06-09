@@ -23,7 +23,7 @@ protected:
 	object_id _data;
 	
 public:
-	ZeroaryFunction(object_id data) : _data(data) {}
+	ZeroaryFunction(const object_id& data) : _data(data) {}
 	
 	object_id value() const { return _data; }
 	
@@ -43,7 +43,7 @@ protected:
 public:
 	UnaryFunction(Serializer::BoostUnaryMap&& data) : _data(std::move(data)) {}
 	
-	object_id value(object_id x) const { return _data.at(x); }
+	object_id value(const object_id& x) const { return _data.at(x); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -61,7 +61,7 @@ protected:
 public:
 	UnaryPredicate(Serializer::BoostUnarySet&& data) : _data(std::move(data)) {}
 	
-	bool value(object_id x) const { return _data.find(x) != _data.end(); }
+	bool value(const object_id& x) const { return _data.find(x) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -80,7 +80,7 @@ protected:
 public:
 	BinaryFunction(Serializer::BoostBinaryMap&& data) : _data(std::move(data)) {}
 	
-	object_id value(object_id x, object_id y) const { return _data.at({x, y}); }
+	object_id value(const object_id& x, const object_id& y) const { return _data.at({x, y}); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -100,7 +100,7 @@ protected:
 public:
 	BinaryPredicate(Serializer::BoostBinarySet&& data) : _data(std::move(data)) {}
 	
-	bool value(object_id x, object_id y) const { return _data.find({x,y}) != _data.end(); }
+	bool value(const object_id& x, const object_id& y) const { return _data.find({x,y}) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -118,7 +118,7 @@ protected:
 public:
 	Arity3Function(Serializer::BoostArity3Map&& data) : _data(std::move(data)) {}
 	
-	object_id value(object_id x0, object_id x1, object_id x2) const { return _data.at(std::make_tuple(x0,x1,x2)); }
+	object_id value(const object_id& x0, const object_id& x1, const object_id& x2) const { return _data.at(std::make_tuple(x0,x1,x2)); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -136,7 +136,7 @@ protected:
 public:
 	Arity3Predicate(Serializer::BoostArity3Set&& data) : _data(std::move(data)) {}
 	
-	bool value(object_id x0, object_id x1, object_id x2) const { return _data.find(std::make_tuple(x0,x1,x2)) != _data.end(); }
+	bool value(const object_id& x0, const object_id& x1, const object_id& x2) const { return _data.find(std::make_tuple(x0,x1,x2)) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -154,7 +154,7 @@ protected:
 public:
 	Arity4Function(Serializer::BoostArity4Map&& data) : _data(std::move(data)) {}
 	
-	object_id value(object_id x0, object_id x1, object_id x2, object_id x3) const { return _data.at(std::make_tuple(x0,x1,x2,x3)); }
+	object_id value(const object_id& x0, const object_id& x1, const object_id& x2, const object_id& x3) const { return _data.at(std::make_tuple(x0,x1,x2,x3)); }
 	
 	Function get_function() const override {
 		auto& data = _data;
@@ -172,7 +172,7 @@ protected:
 public:
 	Arity4Predicate(Serializer::BoostArity4Set&& data) : _data(std::move(data)) {}
 	
-	bool value(object_id x0, object_id x1, object_id x2, object_id x3) const { return _data.find(std::make_tuple(x0,x1,x2,x3)) != _data.end(); }
+	bool value(const object_id& x0, const object_id& x1, const object_id& x2, const object_id& x3) const { return _data.find(std::make_tuple(x0,x1,x2,x3)) != _data.end(); }
 	
 	Function get_function() const override {
 		auto& data = _data;

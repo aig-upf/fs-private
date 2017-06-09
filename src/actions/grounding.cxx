@@ -105,6 +105,22 @@ ActionGrounder::fully_lifted(const std::vector<const ActionData*>& action_data, 
 	return lifted;
 }
 
+// TODO - Might want to move this somewhere else and make it public
+std::vector<object_id>
+deserialize_typed_objects(const ProblemInfo& info, const std::string& line, const Signature& signature) {
+	std::vector<object_id> result;
+	std::vector<int> values = Serializer::deserialize_line<int>(line, ",");
+	if (signature.size() != values.size()) {
+		throw std::runtime_error("Wrong number of action parameters");
+	}
+	
+	for (unsigned i = 0; i < signature.size(); ++i) {
+		type_id t = info.get_type_id(signature[i]);
+		result.push_back(make_object(t, values[i]));
+	}
+	
+	return result;
+}
 
 //! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector
 std::vector<const GroundAction*>
@@ -143,13 +159,8 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 			current_schema_groundings = 0;
 			continue;
 		}
-		
-		std::vector<object_id> deserialized = Serializer::deserializeLine(line, ",");
-		if (current->getSignature().size() != deserialized.size()) {
-			throw std::runtime_error("Wrong number of action parameters");
-		}
-		
-		
+
+		std::vector<object_id> deserialized = deserialize_typed_objects(info, line, current->getSignature());
 		if (deserialized.empty()) {
 			LPT_INFO("cout", "Grounding action schema '" << current->getName() << "' with no binding");
 			id = _ground(id, current, Binding::EMPTY_BINDING, info, grounded, true);
@@ -193,7 +204,7 @@ _ground_all_elements(const std::vector<const ActionData*>& action_data, const Pr
 		
 		unsigned long num_bindings = binding_generator.num_bindings();
 		
-		LPT_INFO("cout", "Grounding schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings:" << std::flush);
+		LPT_INFO("cout", "Grounding schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings" << std::flush);
 		LPT_INFO("grounding", "Grounding the following schema with " << num_bindings << " possible bindings:" << print::action_data_name(*data));
 
 		if (num_bindings == 0 || num_bindings > ActionGrounder::MAX_GROUND_ACTIONS) { // num_bindings == 0 would indicate there's been an overflow
@@ -218,9 +229,8 @@ _ground_all_elements(const std::vector<const ActionData*>& action_data, const Pr
 			*/
 			++total_num_bindings;
 		}
-		std::cout << std::endl;
+// 		std::cout << std::endl;	
 		LPT_INFO("cout", "Schema \"" << print::action_data_name(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded elements");
-		LPT_INFO("cout", "");
 	}
 	
 	LPT_INFO("grounding", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
@@ -295,7 +305,8 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 	std::vector<const fs::ActionEffect*> compiled;
 	
 	const fs::Term* subterm_to_replace = original_subterms[i];
-	for (object_id value:info.getTypeObjects(fs::type(*subterm_to_replace))) {
+	for (const object_id&
+ value:info.getTypeObjects(fs::type(*subterm_to_replace))) {
 		auto subterms = Utils::clone(original_subterms);
 		delete subterms[i];
 		
@@ -334,7 +345,8 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 		// e.g. g(c)=d --> f(d) := t.
 		
 		// For each possible value of the non-const subterm, we'll have an additional conditional effect.
-		for (object_id value:info.getTypeObjects(subterm->getType())) {
+		for (const object_id&
+ value:info.getTypeObjects(subterm->getType())) {
 			auto constant = new fs::IntConstant(value);
 // 			std::vector<const fs::Term*> subterms{subterm->clone(), new fs::IntConstant(value)};
 			auto extra_condition = new fs::EQAtomicFormula({subterm->clone(), constant});
@@ -362,7 +374,8 @@ ActionGrounder::compile_nested_fluents_away(const fs::ActionEffect* effect, cons
 	const fs::Term* subterm = subterms.at(0); // Simply take the first state variable in the head.
 	
 	// For each possible value of the non-const subterm, we'll have an additional conditional effect.
-	for (object_id value:info.getTypeObjects(subterm->getType())) {
+	for (const object_id&
+ value:info.getTypeObjects(subterm->getType())) {
 		
 		std::vector<const fs::Term*> subterms{subterm->clone(), new fs::IntConstant(value)};
 		auto extra_condition = new fs::EQAtomicFormula(subterms);

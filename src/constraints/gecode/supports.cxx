@@ -16,7 +16,7 @@ Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& transl
 	// First process the direct state variables
 	for (const auto& element:translator.getAllInputVariables()) {
 		VariableIdx variable = element.first;
-		object_id value = translator.resolveVariableFromIndex(element.second, *solution).val();
+		object_id value = make_obj(translator.resolveVariableFromIndex(element.second, *solution).val());
 		
 		support.push_back(tuple_index.to_index(variable, value));
 	}

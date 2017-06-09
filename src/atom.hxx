@@ -17,7 +17,7 @@ protected:
 public:
 	using vctrp = std::shared_ptr<std::vector<Atom>>;
 
-	Atom(VariableIdx variable, object_id value) : _variable(variable), _value(value) {};
+	Atom(VariableIdx variable, const object_id& value) : _variable(variable), _value(value) {};
 	Atom(const Atom& other) = default;
 	Atom(Atom&& other) = default;
 
@@ -25,7 +25,7 @@ public:
 	Atom& operator=(Atom&& other) = default;
 
 	inline VariableIdx getVariable() const { return _variable; }
-	inline object_id getValue() const { return _value; }
+	inline const object_id& getValue() const { return _value; }
 
 	std::size_t hash() const;
 	

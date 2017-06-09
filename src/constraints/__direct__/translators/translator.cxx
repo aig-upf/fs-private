@@ -80,12 +80,12 @@ DirectConstraint* DirectTranslator::extensionalize(const fs::AtomicFormula& form
 	VariableIdxVector scope = fs::ScopeUtils::computeDirectScope(&formula);
 	
 	if (scope.size() == 1) {
-		return new CompiledUnaryConstraint(scope, [&formula, &scope](object_id value) {
+		return new CompiledUnaryConstraint(scope, [&formula, &scope](const object_id& value) {
 			return formula.interpret(Projections::zip(scope, {value}));
 		});
 	}
 	else if (scope.size() == 2) {
-		return new CompiledBinaryConstraint(scope, [&formula, &scope](object_id x1, object_id x2) {
+		return new CompiledBinaryConstraint(scope, [&formula, &scope](const object_id& x1, const object_id& x2) {
 			return formula.interpret(Projections::zip(scope, {x1, x2}));
 		});
 	}

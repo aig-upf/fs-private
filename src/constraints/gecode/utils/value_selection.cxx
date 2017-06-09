@@ -39,7 +39,7 @@ int TupleMinHMaxValueSelector::select_state_variable_value(VariableIdx variable,
 	
 	for (; values(); ++values) {
 		int value = values.val();
-		const auto& support = _bookkeeping->getTupleSupport(_tuple_index->to_index(variable, value));
+		const auto& support = _bookkeeping->getTupleSupport(_tuple_index->to_index(variable, make_obj<int>(value)));
 		unsigned layer = std::get<0>(support); // The RPG layer on which this value was first achieved for this variable
 
 		if (layer == 0) return value; // If we found a seed-state value, no need to search anymore

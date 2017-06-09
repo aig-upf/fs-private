@@ -65,7 +65,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm* term) 
 	for (term_list_iterator it(term->getSubterms()); !it.ended(); ++it) {
 		try {
 			object_id out = functor(it.arguments());
-			tuples.add(it.getIntArgsElement(out)); // Add the term value as the last element
+			tuples.add(it.getIntArgsElement(fs0::value<int>(out))); // Add the term value as the last element
 		}
 		catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 		catch(const UndefinedValueAccess& e) {}

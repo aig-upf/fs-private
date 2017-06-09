@@ -68,7 +68,7 @@ void
 StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.getVariable(), atom.getValue()); }
 
 void
-StateAtomIndexer::set(State& state, VariableIdx variable, object_id value) const {
+StateAtomIndexer::set(State& state, VariableIdx variable, const object_id& value) const {
 	std::size_t n_vars = _index.size();
 	assert(variable < n_vars);
 
@@ -135,11 +135,14 @@ std::ostream& State::print(std::ostream& os) const {
         object_id o = getValue(x);
 		
         if (o_type(o) == type_id::bool_t) {
-			if (value<bool>(o)) os << info.getVariableName(x); // print positive atoms only
+			if (value<bool>(o)) {
+				os << info.getVariableName(x); // print positive atoms only
+				if (x < info.getNumVariables() - 1) os << ", ";
+			}
         } else {
 			os << info.getVariableName(x) << "=" << info.object_name(o);
+			if (x < info.getNumVariables() - 1) os << ", ";
 		}
-        if (x < info.getNumVariables() - 1) os << ", ";
     }
 	os << "]";
 	return os;

@@ -51,7 +51,7 @@ public:
 	void reset();
 	
 	//! Processes an atom and returns the equivalent extension tuple.
-	AtomIdx process_atom(VariableIdx variable, object_id value);
+	AtomIdx process_atom(VariableIdx variable, const object_id& value);
 	
 	void process_tuple(AtomIdx tuple);
 

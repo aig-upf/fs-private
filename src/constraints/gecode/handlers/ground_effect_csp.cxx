@@ -184,7 +184,7 @@ void GroundEffectCSP::post(GecodeCSP& csp, const Atom& atom) const {
 		assert(_lhs_subterm_variables.size() == data.second.size());
 		for (unsigned i = 0; i < _lhs_subterm_variables.size(); ++i) {
 			auto subterm_variable = _translator.resolveVariableFromIndex(_lhs_subterm_variables[i], csp);
-			Gecode::rel(csp, subterm_variable,  Gecode::IRT_EQ, data.second[i]);
+			Gecode::rel(csp, subterm_variable,  Gecode::IRT_EQ, fs0::value<int>(data.second[i]));
 		}
 		
 	} else throw std::runtime_error("Unknown effect type");
@@ -192,7 +192,7 @@ void GroundEffectCSP::post(GecodeCSP& csp, const Atom& atom) const {
 	// This is equivalent, but faster, to _translator.resolveVariable(effect->rhs(), csp);
 	assert(effect_rhs_variables.size()==1);
 	auto& rhs_term =_translator.resolveVariableFromIndex(effect_rhs_variables[0], csp);
-	Gecode::rel(csp, rhs_term,  Gecode::IRT_EQ, atom.getValue());
+	Gecode::rel(csp, rhs_term,  Gecode::IRT_EQ, fs0::value<int>(atom.getValue()));
 }
 
 std::vector<unsigned> GroundEffectCSP::index_lhs_subterms() {

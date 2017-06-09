@@ -75,6 +75,9 @@ public:
 	static BinaryMap bDeserializeBinaryMap(const std::string& filename);
 	
 	static std::vector<object_id> deserializeLine(const std::string& line, const std::string& separators = ",");
+	
+	template <typename T>
+	static std::vector<T> deserialize_line(const std::string& line, const std::string& separators = ",");
 };
 
 

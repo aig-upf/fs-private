@@ -68,7 +68,7 @@ public:
 	}
 	
 	//! Sets the given position of the binding to the given value; if necessary, resizes the binding.
-	void set(unsigned variable, object_id value) {
+	void set(unsigned variable, const object_id& value) {
 		unsigned min_size = variable + 1;
 		if (min_size > _set.size()) {
 			_values.resize(min_size);

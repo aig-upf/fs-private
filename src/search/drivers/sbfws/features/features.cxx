@@ -62,7 +62,8 @@ lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemI
 	unsigned symbol_id = info.getSymbolId(feat_name);
 	
 	std::vector<const fs::Term*> subterms;
-	for (object_id value:parameters) {
+	for (const object_id&
+ value:parameters) {
 		subterms.push_back(new fs::IntConstant(value, UNSPECIFIED_NUMERIC_TYPE));
 	}
 	

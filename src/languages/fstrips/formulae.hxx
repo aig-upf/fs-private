@@ -351,7 +351,7 @@ public:
 
 protected:
 	inline bool _satisfied(const std::vector<object_id>& values) const override { return _satisfied(values[0], values[1]); }
-	virtual bool _satisfied(object_id o1, object_id o2) const = 0;
+	virtual bool _satisfied(const object_id& o1, const object_id& o2) const = 0;
 };
 
 class EQAtomicFormula : public RelationalFormula {
@@ -360,7 +360,7 @@ public:
 
 	EQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new EQAtomicFormula(subterms); }
 
-	inline bool _satisfied(object_id o1, object_id o2) const { return o1 == o2; }
+	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 == o2; }
 
 	virtual Symbol symbol() const { return Symbol::EQ; }
 };
@@ -371,7 +371,7 @@ public:
 
 	NEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new NEQAtomicFormula(subterms); }
 
-	inline bool _satisfied(object_id o1, object_id o2) const { return o1 != o2; }
+	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 != o2; }
 
 	Symbol symbol() const { return Symbol::NEQ; }
 };
@@ -382,7 +382,7 @@ public:
 
 	LTAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new LTAtomicFormula(subterms); }
 
-	bool _satisfied(object_id o1, object_id o2) const { return o1 < o2; }
+	bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 < o2; }
 
 	Symbol symbol() const { return Symbol::LT; }
 };
@@ -393,7 +393,7 @@ public:
 
 	LEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new LEQAtomicFormula(subterms); }
 
-	inline bool _satisfied(object_id o1, object_id o2) const { return o1 <= o2; }
+	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 <= o2; }
 
 	Symbol symbol() const { return Symbol::LEQ; }
 };
@@ -404,7 +404,7 @@ public:
 
 	GTAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new GTAtomicFormula(subterms); }
 
-	inline bool _satisfied(object_id o1, object_id o2) const { return o1 > o2; }
+	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 > o2; }
 
 	Symbol symbol() const { return Symbol::GT; }
 };
@@ -415,7 +415,7 @@ public:
 
 	GEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new GEQAtomicFormula(subterms); }
 
-	inline bool _satisfied(object_id o1, object_id o2) const { return o1 >= o2; }
+	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 >= o2; }
 
 	Symbol symbol() const { return Symbol::GEQ; }
 };

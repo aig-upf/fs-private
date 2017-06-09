@@ -272,9 +272,9 @@ public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
 	//! Factory method
-	static Constant* create(object_id value, TypeIdx fstype, const ProblemInfo& info);
+	static Constant* create(const object_id& value, TypeIdx fstype, const ProblemInfo& info);
 	
-	Constant(object_id value, TypeIdx type)  : _value(value), _type(type) {}
+	Constant(const object_id& value, TypeIdx type)  : _value(value), _type(type) {}
 
 	Constant* clone() const override { return new Constant(*this); }
 	
@@ -302,7 +302,7 @@ protected:
 //! An integer constant
 class IntConstant : public Constant {
 public:
-	IntConstant(object_id value, TypeIdx type)  : Constant(value, type) {}
+	IntConstant(const object_id& value, TypeIdx type)  : Constant(value, type) {}
 
 	IntConstant* clone() const override { return new IntConstant(*this); }
 

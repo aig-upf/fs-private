@@ -119,7 +119,7 @@ void FormulaCSP::index_existential_variable_uses() {
 				if (*term == *variable) {
 					assert(ex_var_position == -1);
 					ex_var_position = i;
-					subterm_values.push_back(0);
+					subterm_values.push_back(make_obj<int>(0));
 					continue;
 				}
 				
@@ -136,10 +136,10 @@ void FormulaCSP::index_existential_variable_uses() {
 			
 			std::unordered_map<int, AtomIdx> variable_resolutions;
 			
-			for (object_id value:info.getTypeObjects(variable->getType())) {
+			for (const object_id& value:info.getTypeObjects(variable->getType())) {
 				subterm_values.at(ex_var_position) = value;
 				AtomIdx tuple_id = _tuple_index.to_index(fluent->getSymbolId(), subterm_values);
-				variable_resolutions.insert(std::make_pair(value, tuple_id));
+				variable_resolutions.insert(std::make_pair(fs0::value<int>(value), tuple_id));
 			}
 			
 			unsigned variable_idx = _translator.resolveVariableIndex(variable);

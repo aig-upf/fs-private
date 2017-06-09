@@ -64,7 +64,7 @@ public:
 	virtual FilteringType filteringType() const override { return FilteringType::Unary; };
 
 	//! To be overriden by the concrete constraint class.
-	virtual bool isSatisfied(object_id o) const = 0;
+	virtual bool isSatisfied(const object_id& o) const = 0;
 
 	//! Filters from a new set of domains.
 	virtual FilteringOutput filter(const DomainMap& domains) const override;
@@ -83,7 +83,7 @@ public:
 	virtual FilteringType filteringType() const override { return FilteringType::ArcReduction; };
 
 	//! To be overriden by the concrete constraint class.
-	virtual bool isSatisfied(object_id o1, object_id o2) const = 0;
+	virtual bool isSatisfied(const object_id& o1, const object_id& o2) const = 0;
 
 	virtual FilteringOutput filter(unsigned variable) const override;
 

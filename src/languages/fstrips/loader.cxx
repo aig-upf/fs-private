@@ -69,8 +69,8 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 			unsigned symbol_id = info.getSymbolId(symbol);
 			if (info.isPredicate(symbol_id)) {
 				// 
-				IntConstant* value = negated ? new IntConstant(make_obj<int>(0), UNSPECIFIED_NUMERIC_TYPE)
-				                             : new IntConstant(make_obj<int>(1), UNSPECIFIED_NUMERIC_TYPE);
+				IntConstant* value = negated ? new IntConstant(make_obj<bool>(0), UNSPECIFIED_NUMERIC_TYPE)
+				                             : new IntConstant(make_obj<bool>(1), UNSPECIFIED_NUMERIC_TYPE);
 				
 				subterms = {_create_nested_term(symbol, subterms), value};
 				symbol = "=";

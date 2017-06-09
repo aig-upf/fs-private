@@ -147,7 +147,7 @@ public:
 
 	
 	std::string object_name(const object_id& object) const;
-	const std::string& custom_object_name(object_id objIdx) const;
+	const std::string& custom_object_name(const object_id& objIdx) const;
 	
 	inline object_id getObjectId(const std::string& name) const { return objectIds.at(name); }
 
@@ -225,7 +225,7 @@ public:
 	//! Both methods check that the value of a given variable is within the bounds of the variable,
 	//! in case it is a variable of a bounded type.
 	bool checkValueIsValid(const Atom& atom) const;
-	bool checkValueIsValid(VariableIdx variable, object_id value) const;
+	bool checkValueIsValid(VariableIdx variable, const object_id& value) const;
 
 	bool isBoundedType(TypeIdx type) const { return isTypeBounded[type];  }
 	bool isBoundedVariable(VariableIdx variable) const { return isBoundedType(getVariableType(variable));  }
@@ -241,10 +241,13 @@ public:
 	const std::string& getInstanceName() const { return _instance_name; }
 
 	//! Returns the generic type (object, int, bool, etc.) corresponding to a concrete type
+	// TODO REMOVE IN FAVOR OF get_type_id
 	ObjectType getGenericType(TypeIdx typeId) const;
 	ObjectType getGenericType(const std::string& type) const;
 	
+	//! Return the generic type_id corresponding to the given fs-type
 	type_id get_type_id(const std::string& type) const;
+	type_id get_type_id(TypeIdx fstype) const;
 
 
 	const std::string& getDataDir() const { return _data_dir; }

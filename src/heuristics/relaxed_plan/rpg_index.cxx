@@ -30,7 +30,7 @@ RPGIndex::RPGIndex(const State& seed, const AtomIndex& tuple_index, ExtensionHan
 		
 		AtomIdx tuple_index = _extension_handler.process_atom(variable, value);
 		if (tuple_index != INVALID_TUPLE) {
-			_domains.push_back(Gecode::IntSet(value, value));
+			_domains.push_back(Gecode::IntSet(fs0::value<int>(value), fs0::value<int>(value)));
 			add(tuple_index, nullptr, {});
 			
 		} else {
@@ -50,8 +50,8 @@ void RPGIndex::advance() {
 	// Now update the per-variable domains
 	for (unsigned variable = 0; variable < _domains_raw.size(); ++variable) {
 		const auto& all = _domains_raw[variable];
-		// An intermediate IntArgs object seems to be necessary, since IntSets do not accept std-like range constructors.
-		_domains[variable] = Gecode::IntSet(Gecode::IntArgs(all.cbegin(), all.cend()));
+		std::vector<int> vals = fs0::values<int>(all, ObjectTable::EMPTY_TABLE);
+		_domains[variable] = Gecode::IntSet(vals.data(), vals.size());
 	}
 	
 	next();

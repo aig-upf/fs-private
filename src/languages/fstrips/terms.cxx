@@ -115,7 +115,7 @@ object_id BoundVariable::interpret(const State& state, const Binding& binding) c
 }
 
 
-Constant* Constant::create(object_id value, TypeIdx fstype, const ProblemInfo& info) {
+Constant* Constant::create(const object_id& value, TypeIdx fstype, const ProblemInfo& info) {
 	return info.isBoundedType(fstype) ? new IntConstant(value, fstype) : new Constant(value, fstype);	
 }	
 	

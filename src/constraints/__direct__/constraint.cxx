@@ -28,7 +28,8 @@ FilteringOutput UnaryDirectConstraint::filter(const DomainMap& domains) const {
 
 	FilteringOutput output = FilteringOutput::Unpruned;
 
-	for (object_id value:domain) {
+	for (const object_id&
+ value:domain) {
 		if (this->isSatisfied(value)) {
 			new_domain.insert(new_domain.cend(), value); // We will insert on the end of the container, as it is already sorted.
 		} else {
@@ -51,8 +52,10 @@ FilteringOutput BinaryDirectConstraint::filter(unsigned variable) const {
 	Domain& other_domain = *(projection[other]);
 	Domain new_domain;
 
-	for (object_id x:domain) {
-		for (object_id z:other_domain) {
+	for (const object_id&
+ x:domain) {
+		for (const object_id&
+ z:other_domain) {
 			// We need to invoke isSatisfied with the parameters in the right order
 			if ((variable == 0 && this->isSatisfied(x, z)) || (variable == 1 && this->isSatisfied(z, x))) {
 				new_domain.insert(new_domain.cend(), x); // We will insert on the end of the container, as it is already sorted.

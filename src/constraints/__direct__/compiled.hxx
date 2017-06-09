@@ -37,7 +37,7 @@ public:
 	
 	~CompiledUnaryConstraint() {};
 	
-	bool isSatisfied(object_id o) const override;
+	bool isSatisfied(const object_id& o) const override;
 	
 	//! Filters from a new set of domains.
 	FilteringOutput filter(const DomainMap& domains) const override;
@@ -50,7 +50,7 @@ public:
 	
 	//! Helper to compile a standard unary constraint
 	static std::set<ElementT> compile(const UnaryDirectConstraint& constraint) {
-		return compile(constraint.getScope(), [&constraint](object_id value){ return constraint.isSatisfied(value); });
+		return compile(constraint.getScope(), [&constraint](const object_id& value){ return constraint.isSatisfied(value); });
 	}
 	
 	std::ostream& print(std::ostream& os) const override;
@@ -91,7 +91,7 @@ public:
 	
 	~CompiledBinaryConstraint() {};
 
-	bool isSatisfied(object_id o1, object_id o2) const override;
+	bool isSatisfied(const object_id& o1, const object_id& o2) const override;
 	
 	FilteringOutput filter(unsigned variable) const override;
 	
@@ -107,7 +107,7 @@ public:
 	
 	//! Helper to compile a standard unary constraint
 	static TupleExtension compile(const fs0::BinaryDirectConstraint& constraint) {
-		return compile(constraint.getScope(), [&constraint](object_id x, object_id y){ return constraint.isSatisfied(x, y); });
+		return compile(constraint.getScope(), [&constraint](const object_id& x, const object_id& y){ return constraint.isSatisfied(x, y); });
 	}
 	
 	std::ostream& print(std::ostream& os) const override;
@@ -130,7 +130,7 @@ public:
 	//! Construct a Compiled unary effect from a given logical term
 	CompiledUnaryEffect(VariableIdx relevant, VariableIdx affected, const fs::Term& term);
 	
-	Atom apply(object_id value) const;
+	Atom apply(const object_id& value) const;
 	
 	//! Returns a set with all values that satisfy the constraint
 	static ExtensionT compile(const UnaryDirectEffect& effect, const ProblemInfo& info);
@@ -152,7 +152,7 @@ public:
 	//! Construct a Compiled unary effect from a given logical term
 	CompiledBinaryEffect(const VariableIdxVector& scope, VariableIdx affected, const fs::Term& term);
 	
-	Atom apply(object_id v1, object_id v2) const;
+	Atom apply(const object_id& v1, const object_id& v2) const;
 	
 	//! Returns a set with all values that satisfy the constraint
 	static ExtensionT compile(const fs::Term& term, const ProblemInfo& info);

@@ -65,7 +65,7 @@ std::string ProblemInfo::object_name(const object_id& object) const {
 	throw std::runtime_error("Unaccounted-for type");
 }
 
-const std::string& ProblemInfo::custom_object_name(object_id o) const {
+const std::string& ProblemInfo::custom_object_name(const object_id& o) const {
 	const auto& it = objectNames.find(o);
 	if (it == objectNames.end()) throw unregistered_object_error(o);
 	return it->second;
@@ -164,7 +164,12 @@ ProblemInfo::ObjectType ProblemInfo::getGenericType(const std::string& type) con
 type_id ProblemInfo::
 get_type_id(const std::string& type) const {
 	if (type == "bool") return type_id::bool_t;
-	if (isTypeBounded[getTypeId(type)]) return type_id::int_t;
+	return get_type_id(getTypeId(type));
+}
+
+type_id ProblemInfo::
+get_type_id(TypeIdx fstype) const {
+	if (isTypeBounded[fstype]) return type_id::int_t;
 	else return type_id::object_t;
 }
 
@@ -201,11 +206,17 @@ void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
 
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		TypeIdx type_id = data[i][0].GetInt();
-		std::string type_name(data[i][1].GetString());
+		std::string fstype(data[i][1].GetString());
 		assert(type_id == type_to_name.size()); // Check values are decoded in the proper order
 
-		name_to_type.insert(std::make_pair(type_name, type_id));
-		type_to_name.push_back(type_name);
+		name_to_type.insert(std::make_pair(fstype, type_id));
+		type_to_name.push_back(fstype);
+		
+		if (fstype == "bool") { // Bool type gets special treatment!
+			typeObjects[type_id].push_back(object_id::FALSE);
+			typeObjects[type_id].push_back(object_id::TRUE);
+			continue;
+		}
 
 		// We read and convert to integer type the vector of Object indexes
 		if (data[i][2].IsString()) {
@@ -234,7 +245,7 @@ bool ProblemInfo::checkValueIsValid(const Atom& atom) const {
 	return checkValueIsValid(atom.getVariable(), atom.getValue());
 }
 
-bool ProblemInfo::checkValueIsValid(VariableIdx variable, object_id object) const {
+bool ProblemInfo::checkValueIsValid(VariableIdx variable, const object_id& object) const {
 	TypeIdx type = getVariableType(variable);
 	if (!isTypeBounded[type]) return true;
 	const auto& bounds = typeBounds[type];

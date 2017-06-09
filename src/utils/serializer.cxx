@@ -157,4 +157,20 @@ Serializer::deserializeLine(const std::string& line, const std::string& separato
 	return result;
 }
 
+template <typename T>
+std::vector<T> Serializer::
+deserialize_line(const std::string& line, const std::string& separators) {
+	if (line.size() == 0) return {};
+	std::vector<std::string> strings;
+	boost::split(strings, line, boost::is_any_of(separators));
+	std::vector<T> result;
+	result.reserve(strings.size());
+	for (const std::string& str:strings) {
+		result.push_back(boost::lexical_cast<T>(str));
+	}
+	return result;
+}
+
+template std::vector<int> Serializer::deserialize_line<int>(const std::string& line, const std::string& separators); // explicit instantiation.
+
 } // namespaces

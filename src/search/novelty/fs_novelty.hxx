@@ -28,8 +28,9 @@ public:
 	FSAtomValuationIndexer(const FSAtomValuationIndexer&) = default;
 	
 	unsigned num_indexes() const;
-	
-	unsigned to_index(unsigned variable, int value) const;
+
+	template <typename T>
+	unsigned to_index(unsigned variable, const T& value) const;
 	
 	const Atom& to_atom(unsigned index) const;
 	

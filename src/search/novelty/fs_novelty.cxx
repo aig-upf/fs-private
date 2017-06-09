@@ -9,12 +9,17 @@ unsigned FSAtomValuationIndexer::num_indexes() const {
 	return _atom_index.size();
 }
 
-unsigned FSAtomValuationIndexer::to_index(unsigned variable, int value) const {
-	return _atom_index.to_index(variable, value);
+template <typename T>
+unsigned FSAtomValuationIndexer::to_index(unsigned variable, const T& value) const {
+	return _atom_index.to_index(variable, make_obj(value));
 }
 
 const Atom& FSAtomValuationIndexer::to_atom(unsigned index) const {
 	return _atom_index.to_atom(index);
 }
+
+ // explicit instantiations
+template unsigned FSAtomValuationIndexer::to_index<int>(unsigned variable, const int& value) const;
+template unsigned FSAtomValuationIndexer::to_index<bool>(unsigned variable, const bool& value) const;
 
 } } // namespaces

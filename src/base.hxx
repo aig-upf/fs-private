@@ -50,7 +50,7 @@ private:
     data_t _data;
 };
 
-type_id type(object_id o) {
+type_id type(const object_id& o) {
 	return (type_id) ((o & 0xFFFF000000000000) >> 48);
 }
 */
@@ -77,12 +77,9 @@ private:
 	
 	
 public:
-	// TODO - REMOVE THIS CONSTRUCTOR
-    object_id(int32_t value) : _type(type_id::int_t), _value(value) {}
-
+    //! TODO Might want to remove this operators in the future?
     explicit operator bool() const { return (bool) _value; }
-//     explicit 
-    operator int() const { return (int) _value; }
+    explicit operator int() const { return (int) _value; }
     
     
 	~object_id()                           = default;

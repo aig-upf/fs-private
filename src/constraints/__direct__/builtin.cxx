@@ -5,7 +5,7 @@
 namespace fs0 {
 
 //! <-filter the given domain wrt a domain with given min and max values.
-FilteringOutput filter_lt(Domain& domain, object_id y_min, object_id y_max) {
+FilteringOutput filter_lt(Domain& domain, const object_id& y_min, const object_id& y_max) {
 	assert( domain.size() > 0 );
 	object_id x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_max < y_max) return FilteringOutput::Unpruned;
@@ -19,7 +19,7 @@ FilteringOutput filter_lt(Domain& domain, object_id y_min, object_id y_max) {
 }
 
 //! <=-filter the given domain wrt a domain with given min and max values.
-FilteringOutput filter_leq(Domain& domain, object_id y_min, object_id y_max) {
+FilteringOutput filter_leq(Domain& domain, const object_id& y_min, const object_id& y_max) {
 	assert( domain.size() > 0 );
 	object_id x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_max <= y_max) return FilteringOutput::Unpruned;
@@ -34,7 +34,7 @@ FilteringOutput filter_leq(Domain& domain, object_id y_min, object_id y_max) {
 }
 
 //! >-filter the given domain wrt a domain with given min and max values.
-FilteringOutput filter_gt(Domain& domain, object_id y_min, object_id y_max) {
+FilteringOutput filter_gt(Domain& domain, const object_id& y_min, const object_id& y_max) {
 	assert( domain.size() > 0 );
 	object_id x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	if (x_min > y_min) return FilteringOutput::Unpruned;
@@ -49,7 +49,7 @@ FilteringOutput filter_gt(Domain& domain, object_id y_min, object_id y_max) {
 }
 
 //! >=-filter the given domain wrt a domain with given min and max values.
-FilteringOutput filter_geq(Domain& domain, object_id y_min, object_id y_max) {
+FilteringOutput filter_geq(Domain& domain, const object_id& y_min, const object_id& y_max) {
 	assert( domain.size() > 0 );
 	object_id x_min = *(domain.cbegin()), x_max = *(domain.crbegin());
 	
@@ -118,7 +118,8 @@ FilteringOutput EQConstraint::filter(unsigned variable) const {
 	Domain& other_domain = *(projection[other]);
 	Domain new_domain;
 	
-	for (object_id x:domain) {
+	for (const object_id&
+ x:domain) {
 		// We simply check that x is in the domain of the other variable
 		auto it = other_domain.lower_bound(x);
 		if (it != other_domain.end() && *it == x) { // `it` points to the first x in x_dom such that x >= y_max
@@ -248,7 +249,7 @@ std::ostream& GEQXConstraint::print(std::ostream& os) const {
 	return os;
 }
 
-ValueAssignmentEffect::ValueAssignmentEffect(VariableIdx affected, object_id value)
+ValueAssignmentEffect::ValueAssignmentEffect(VariableIdx affected, const object_id& value)
 	: ZeroaryDirectEffect(affected, {value})
 {}
 
@@ -268,7 +269,7 @@ VariableAssignmentEffect::VariableAssignmentEffect(VariableIdx relevant, Variabl
 {}
 
 
-Atom VariableAssignmentEffect::apply(object_id v1) const {
+Atom VariableAssignmentEffect::apply(const object_id& v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, v1);
 }
@@ -285,7 +286,7 @@ AdditiveUnaryEffect::AdditiveUnaryEffect(VariableIdx relevant, VariableIdx affec
 {}
 
 
-Atom AdditiveUnaryEffect::apply(object_id v1) const {
+Atom AdditiveUnaryEffect::apply(const object_id& v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, v1 + _parameters[0]);
 }
@@ -300,7 +301,7 @@ AdditiveBinaryEffect::AdditiveBinaryEffect(const VariableIdxVector& scope, Varia
 	: BinaryDirectEffect(scope, affected, {})
 {}
 
-Atom AdditiveBinaryEffect::apply(object_id v1, object_id v2) const {
+Atom AdditiveBinaryEffect::apply(const object_id& v1, const object_id& v2) const {
 	assert(applicable(v1, v2));
 	return Atom(_affected, v1 + v2);
 }
@@ -317,7 +318,7 @@ SubtractiveUnaryEffect::SubtractiveUnaryEffect(VariableIdx relevant, VariableIdx
 {}
 
 
-Atom SubtractiveUnaryEffect::apply(object_id v1) const {
+Atom SubtractiveUnaryEffect::apply(const object_id& v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, v1 - _parameters[0]);
 }
@@ -333,7 +334,7 @@ InvSubtractiveUnaryEffect::InvSubtractiveUnaryEffect(VariableIdx relevant, Varia
 {}
 
 
-Atom InvSubtractiveUnaryEffect::apply(object_id v1) const {
+Atom InvSubtractiveUnaryEffect::apply(const object_id& v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, _parameters[0] - v1);
 }
@@ -349,7 +350,7 @@ SubtractiveBinaryEffect::SubtractiveBinaryEffect(const VariableIdxVector& scope,
 	: BinaryDirectEffect(scope, affected, {})
 {}
 
-Atom SubtractiveBinaryEffect::apply(object_id v1, object_id v2) const {
+Atom SubtractiveBinaryEffect::apply(const object_id& v1, const object_id& v2) const {
 	assert(applicable(v1, v2));
 	return Atom(_affected, v1 - v2);
 }
@@ -365,7 +366,7 @@ MultiplicativeUnaryEffect::MultiplicativeUnaryEffect(VariableIdx relevant, Varia
 {}
 
 
-Atom MultiplicativeUnaryEffect::apply(object_id v1) const {
+Atom MultiplicativeUnaryEffect::apply(const object_id& v1) const {
 	assert(applicable(v1));
 	return Atom(_affected, v1 * _parameters[0]);
 }
@@ -380,7 +381,7 @@ MultiplicativeBinaryEffect::MultiplicativeBinaryEffect(const VariableIdxVector& 
 	: BinaryDirectEffect(scope, affected, {})
 {}
 
-Atom MultiplicativeBinaryEffect::apply(object_id v1, object_id v2) const {
+Atom MultiplicativeBinaryEffect::apply(const object_id& v1, const object_id& v2) const {
 	assert(applicable(v1, v2));
 	return Atom(_affected, v1 * v2);
 }

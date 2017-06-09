@@ -46,7 +46,7 @@ void ExtensionHandler::advance() {
 // 	_modified.clear(); // Initially all symbols are untouched
 }
 
-AtomIdx ExtensionHandler::process_atom(VariableIdx variable, object_id value) {
+AtomIdx ExtensionHandler::process_atom(VariableIdx variable, const object_id& value) {
 	const auto& tuple_data = _info.getVariableData(variable); // TODO - MOVE FROM PROBLEM INFO INTO SOME PERFORMANT INDEX
 	unsigned symbol = tuple_data.first;
 	bool managed = _managed.at(symbol);
@@ -84,9 +84,8 @@ void ExtensionHandler::process_tuple(AtomIdx tuple) {
 }
 
 void ExtensionHandler::process_delta(VariableIdx variable, const std::vector<object_id>& delta) {
-	for (object_id value:delta) process_atom(variable, value);
+	for (const object_id& value:delta) process_atom(variable, value);
 }
-
 
 std::vector<Gecode::TupleSet> ExtensionHandler::generate_extensions() const {
 	std::vector<Gecode::TupleSet> result;

@@ -30,11 +30,11 @@ public:
 	virtual bool applicable() const { throw std::runtime_error("This method can only be used by 0-ary effects"); };
 	virtual Atom apply() const { throw std::runtime_error("This method can only be used by 0-ary effects"); }
 	
-	virtual bool applicable(object_id value) const { throw std::runtime_error("This method can only be used by unary effects"); };
-	virtual Atom apply(object_id value) const { throw std::runtime_error("This method can only be used by unary effects"); }
+	virtual bool applicable(const object_id& value) const { throw std::runtime_error("This method can only be used by unary effects"); };
+	virtual Atom apply(const object_id& value) const { throw std::runtime_error("This method can only be used by unary effects"); }
 	
-	virtual bool applicable(object_id v1, object_id v2) const { throw std::runtime_error("This method can only be used by binary effects"); };
-	virtual Atom apply(object_id v1, object_id v2) const { throw std::runtime_error("This method can only be used by binary effects"); }
+	virtual bool applicable(const object_id& v1, const object_id& v2) const { throw std::runtime_error("This method can only be used by binary effects"); };
+	virtual Atom apply(const object_id& v1, const object_id& v2) const { throw std::runtime_error("This method can only be used by binary effects"); }
 	
 	//! A small helper
 	virtual Atom apply(const State& s) const;
@@ -75,13 +75,13 @@ public:
 	virtual ~UnaryDirectEffect() {}
 	
 	//! Effects are by default applicable, i.e. condition-less.
-	bool applicable(object_id value) const override { return true; };
+	bool applicable(const object_id& value) const override { return true; };
 	
 	//! Unary effects should use the specialized version
 	Atom apply(const std::vector<object_id>& values) const override { throw std::runtime_error("Unary effects are expected not to use this method"); };
 
 	//! To be overriden by the concrete effect.
-	virtual Atom apply(object_id value) const override = 0;
+	virtual Atom apply(const object_id& value) const override = 0;
 	
 	//! A small helper
 	Atom apply(const State& s) const override;
@@ -95,7 +95,7 @@ public:
 	virtual ~BinaryDirectEffect() {}
 	
 	//! Effects are by default applicable, i.e. condition-less.
-	virtual bool applicable(object_id v1, object_id v2) const override { return true; };
+	virtual bool applicable(const object_id& v1, const object_id& v2) const override { return true; };
 	
 	//! This might be necessary in some cases.
 	Atom apply(const std::vector<object_id>& values) const override {
@@ -104,7 +104,7 @@ public:
 	};
 	
 	//! To be overriden by the concrete effect.
-	virtual Atom apply(object_id v1, object_id v2) const override = 0;
+	virtual Atom apply(const object_id& v1, const object_id& v2) const override = 0;
 	
 	//! A small helper
 	Atom apply(const State& s) const override;

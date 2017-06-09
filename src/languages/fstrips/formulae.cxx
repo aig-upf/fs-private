@@ -210,7 +210,7 @@ bool ExistentiallyQuantifiedFormula::interpret_rec(const T& assignment, Binding&
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	const BoundVariable* variable = _variables.at(i);
 	//! Otherwise, iterate through all possible assignments to the currently analyzed variable 'i'
-	for (object_id elem:info.getTypeObjects(variable->getType())) {
+	for (const object_id& elem:info.getTypeObjects(variable->getType())) {
 		binding.set(variable->getVariableId(), elem);
 		if (interpret_rec(assignment, binding, i + 1)) return true;
 	}
@@ -234,7 +234,7 @@ bool UniversallyQuantifiedFormula::interpret_rec(const T& assignment, Binding& b
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	const BoundVariable* variable = _variables.at(i);
 	//! Otherwise, iterate through all possible assignments to the currently analyzed variable 'i'
-	for (object_id elem:info.getTypeObjects(variable->getType())) {
+	for (const object_id& elem:info.getTypeObjects(variable->getType())) {
 		binding.set(variable->getVariableId(), elem);
 		if (!interpret_rec(assignment, binding, i + 1)) return false;
 	}

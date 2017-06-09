@@ -76,8 +76,8 @@ namespace fs0 {
         // SAS+, where the only atoms that occur on preconditions are of the form
         // X=v.
 
-		object_id val = s.getValue(_pivot);
-		assert((int(val) == 0 || int(val) == 1) && "Match Tree not yet prepared for multivalued variables");
+		int val = fs0::value<int>(s.getValue(_pivot));
+		assert((val == 0 || val == 1) && "Match Tree not yet prepared for multivalued variables");
 
 // 		LPT_INFO( "cout", "[Match Tree] Branching on atom " << Atom(_pivot, val) << "");
 

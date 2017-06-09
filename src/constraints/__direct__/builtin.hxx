@@ -15,7 +15,7 @@ public:
 	LTConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : BinaryDirectConstraint(scope, parameters)
 	{ assert(parameters.empty()); }
 
-	bool isSatisfied(object_id o1, object_id o2) const override { return o1 < o2; }
+	bool isSatisfied(const object_id& o1, const object_id& o2) const override { return o1 < o2; }
 	
 	FilteringOutput filter(unsigned variable) const override;
 	
@@ -30,7 +30,7 @@ public:
 	LEQConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : BinaryDirectConstraint(scope, parameters)
 	{ assert(parameters.empty()); }
 
-	bool isSatisfied(object_id o1, object_id o2) const override { return o1 <= o2; }
+	bool isSatisfied(const object_id& o1, const object_id& o2) const override { return o1 <= o2; }
 	
 	FilteringOutput filter(unsigned variable) const override;
 	
@@ -46,7 +46,7 @@ public:
 	EQConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : BinaryDirectConstraint(scope, parameters)
 	{ assert(parameters.empty()); }
 
-	bool isSatisfied(object_id o1, object_id o2) const override { return o1 == o2; }
+	bool isSatisfied(const object_id& o1, const object_id& o2) const override { return o1 == o2; }
 	
 	FilteringOutput filter(unsigned variable) const override;
 	
@@ -61,7 +61,7 @@ public:
 	NEQConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : BinaryDirectConstraint(scope, parameters)
 	{ assert(parameters.empty()); }
 
-	bool isSatisfied(object_id o1, object_id o2) const override { return o1 != o2; }
+	bool isSatisfied(const object_id& o1, const object_id& o2) const override { return o1 != o2; }
 	
 	FilteringOutput filter(unsigned variable) const override;
 	
@@ -76,7 +76,7 @@ public:
 	EQXConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
-	bool isSatisfied(object_id o) const override { return o == _parameters[0]; }
+	bool isSatisfied(const object_id& o) const override { return o == _parameters[0]; }
 	
 	FilteringOutput filter(const DomainMap& domains) const override;
 	
@@ -92,7 +92,7 @@ public:
 	NEQXConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
-	bool isSatisfied(object_id o) const override { return o != _parameters[0]; }
+	bool isSatisfied(const object_id& o) const override { return o != _parameters[0]; }
 	
 	FilteringOutput filter(const DomainMap& domains) const override;
 	
@@ -108,7 +108,7 @@ public:
 	LTXConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
-	bool isSatisfied(object_id o) const override { return o < _parameters[0]; }
+	bool isSatisfied(const object_id& o) const override { return o < _parameters[0]; }
 	
 	FilteringOutput filter(const DomainMap& domains) const override;
 	
@@ -125,7 +125,7 @@ public:
 	LEQXConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
-	bool isSatisfied(object_id o) const override { return o <= _parameters[0]; }
+	bool isSatisfied(const object_id& o) const override { return o <= _parameters[0]; }
 	
 	FilteringOutput filter(const DomainMap& domains) const override;
 	
@@ -141,7 +141,7 @@ public:
 	GTXConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
-	bool isSatisfied(object_id o) const override { return o > _parameters[0]; }
+	bool isSatisfied(const object_id& o) const override { return o > _parameters[0]; }
 	
 	FilteringOutput filter(const DomainMap& domains) const override;
 	
@@ -157,7 +157,7 @@ public:
 	GEQXConstraint(const VariableIdxVector& scope, const ValueTuple& parameters) : UnaryDirectConstraint(scope, parameters)
 	{ assert(parameters.size() == 1); }
 
-	bool isSatisfied(object_id o) const override { return o >= _parameters[0]; }
+	bool isSatisfied(const object_id& o) const override { return o >= _parameters[0]; }
 	
 	FilteringOutput filter(const DomainMap& domains) const override;
 	
@@ -170,7 +170,7 @@ public:
 // X := c, where X os the affected variable, and c is the only parameter
 class ValueAssignmentEffect : public ZeroaryDirectEffect {
 public:
-	ValueAssignmentEffect(VariableIdx affected, object_id value);
+	ValueAssignmentEffect(VariableIdx affected, const object_id& value);
 	
 	Atom apply() const override;
 	
@@ -182,7 +182,7 @@ class VariableAssignmentEffect : public UnaryDirectEffect {
 public:
 	VariableAssignmentEffect(VariableIdx relevant, VariableIdx affected);
 	
-	Atom apply(object_id v1) const override;
+	Atom apply(const object_id& v1) const override;
 	
 	std::ostream& print(std::ostream& os) const override;
 };
@@ -192,7 +192,7 @@ class AdditiveUnaryEffect : public UnaryDirectEffect {
 public:
 	AdditiveUnaryEffect(VariableIdx relevant, VariableIdx affected, int value);
 
-	Atom apply(object_id v1) const override;
+	Atom apply(const object_id& v1) const override;
 
 	std::ostream& print(std::ostream& os) const override;
 };
@@ -202,7 +202,7 @@ class AdditiveBinaryEffect : public BinaryDirectEffect {
 public:
 	AdditiveBinaryEffect(const VariableIdxVector& scope, VariableIdx affected);
 
-	Atom apply(object_id v1, object_id v2) const override;
+	Atom apply(const object_id& v1, const object_id& v2) const override;
 
 	std::ostream& print(std::ostream& os) const override;
 };
@@ -212,7 +212,7 @@ class SubtractiveUnaryEffect : public UnaryDirectEffect {
 public:
 	SubtractiveUnaryEffect(VariableIdx relevant, VariableIdx affected, int value);
 
-	Atom apply(object_id v1) const override;
+	Atom apply(const object_id& v1) const override;
 
 	std::ostream& print(std::ostream& os) const override;
 };
@@ -222,7 +222,7 @@ class InvSubtractiveUnaryEffect : public UnaryDirectEffect {
 public:
 	InvSubtractiveUnaryEffect(VariableIdx relevant, VariableIdx affected, int value);
 
-	Atom apply(object_id v1) const override;
+	Atom apply(const object_id& v1) const override;
 
 	std::ostream& print(std::ostream& os) const override;
 };
@@ -232,7 +232,7 @@ class SubtractiveBinaryEffect : public BinaryDirectEffect {
 public:
 	SubtractiveBinaryEffect(const VariableIdxVector& scope, VariableIdx affected);
 
-	Atom apply(object_id v1, object_id v2) const override;
+	Atom apply(const object_id& v1, const object_id& v2) const override;
 
 	std::ostream& print(std::ostream& os) const override;
 };
@@ -242,7 +242,7 @@ class MultiplicativeUnaryEffect : public UnaryDirectEffect {
 public:
 	MultiplicativeUnaryEffect(VariableIdx relevant, VariableIdx affected, int value);
 
-	Atom apply(object_id v1) const override;
+	Atom apply(const object_id& v1) const override;
 
 	std::ostream& print(std::ostream& os) const override;
 };
@@ -252,7 +252,7 @@ class MultiplicativeBinaryEffect : public BinaryDirectEffect {
 public:
 	MultiplicativeBinaryEffect(const VariableIdxVector& scope, VariableIdx affected);
 
-	Atom apply(object_id v1, object_id v2) const override;
+	Atom apply(const object_id& v1, const object_id& v2) const override;
 
 	std::ostream& print(std::ostream& os) const override;
 };

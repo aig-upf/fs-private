@@ -59,7 +59,9 @@ Visit(const Conjunction& lhs) {
 	std::vector<const Formula*> conjuncts;
 	std::vector<AtomConjunction::AtomT> atoms;
 	for (const Formula* c:lhs.getSubformulae()) {
+// 		std::cout << "Formula : " << *c << std::endl;
 		auto processed = bind(*c, _binding, _info);
+// 		std::cout << "\tprocessed: : " << *processed << std::endl;
 		// Static checks
 		if (processed->is_tautology()) { // No need to add the condition, which is always true
 			delete processed;
@@ -77,6 +79,7 @@ Visit(const Conjunction& lhs) {
 		if( lhs_ == nullptr ) continue;
 		const Constant* rhs = dynamic_cast< const Constant*>(cc->rhs());
 		if( rhs == nullptr ) continue;
+// 		std::cout << "Atom detected: " << lhs_->getValue() << "=" << rhs->getValue() << std::endl;
 		atoms.push_back(std::make_pair(lhs_->getValue(), rhs->getValue()));
 	}
 

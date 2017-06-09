@@ -178,26 +178,7 @@ protected:
 
 		unsigned _index;
 
-		void advance() {
-			
-			if (_manager.whitelist_guarantees_applicability()) {
-				 // All actions in the whitelist guaranteed to be true, no need to check anything else
-				return; 
-			}
-			
-			const std::vector<const GroundAction*>& actions = _manager.getAllActions();
-
-			// std::cout << "Checking applicability " << std::endl;
-			for (unsigned sz = _whitelist.size();_index < sz; ++_index) {
-					unsigned action_idx = _whitelist[_index];
-
-					if (_manager.applicable(_state, *actions[action_idx])) { // The action is applicable, break the for loop.
-					// std::cout << "Found applicable action: " << *_actions[action_idx] << std::endl;
-					return;
-				}
-			}
-
-		}
+		void advance();
 
 	public:
 		Iterator(const State& state, const ActionManagerI& manager, const std::vector<ActionIdx>& action_whitelist, unsigned index) :
