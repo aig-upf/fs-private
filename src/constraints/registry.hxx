@@ -59,9 +59,9 @@ public:
 	//! Add a Gecode Formula translator for the given type to the registry
 	void add(const std::type_info& type, const gecode::FormulaTranslator* translator);
 	
-	const fs::AtomicFormula* instantiate_formula(const std::string symbol, const std::vector<const fs::Term*>& subterms) const;
+	const fs::AtomicFormula* instantiate_formula(const std::string& symbol, const std::vector<const fs::Term*>& subterms) const;
 	
-	const fs::Term* instantiate_term(const std::string symbol, const std::vector<const fs::Term*>& subterms) const;
+	const fs::Term* instantiate_term(const std::string& symbol, const std::vector<const fs::Term*>& subterms) const;
 	
 // 	DirectConstraint* instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
 	

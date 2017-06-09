@@ -130,13 +130,13 @@ void LogicalComponentRegistry::add(const std::type_info& type, const gecode::For
 	if (!res.second) throw new std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
 }
 
-const fs::AtomicFormula* LogicalComponentRegistry::instantiate_formula(const std::string symbol, const std::vector<const fs::Term*>& subterms) const {
+const fs::AtomicFormula* LogicalComponentRegistry::instantiate_formula(const std::string& symbol, const std::vector<const fs::Term*>& subterms) const {
 	auto it = _formula_creators.find(symbol);
 	if (it == _formula_creators.end()) throw std::runtime_error("An externally defined symbol '" + symbol + "' is being used without having registered a suitable term/formula creator for it");
 	return it->second(subterms);
 }
 
-const fs::Term* LogicalComponentRegistry::instantiate_term(const std::string symbol, const std::vector<const fs::Term*>& subterms) const {
+const fs::Term* LogicalComponentRegistry::instantiate_term(const std::string& symbol, const std::vector<const fs::Term*>& subterms) const {
 	auto it = _term_creators.find(symbol);
 	if (it == _term_creators.end()) throw std::runtime_error("An externally defined symbol '" + symbol + "' is being used without having registered a suitable term/formula creator for it");
 	return it->second(subterms);
