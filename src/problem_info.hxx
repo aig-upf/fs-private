@@ -138,6 +138,7 @@ public:
 	const std::string& getVariableName(VariableIdx index) const;
 	inline VariableIdx getVariableId(const std::string& name) const { return variableIds.at(name); }
 
+	const std::vector<std::string>& getObjectNames() const {return objectNames;}
 
 	const TypeIdx getVariableType(VariableIdx index) const { return variableTypes.at(index); }
 	const ObjectType getVariableGenericType(VariableIdx index) const { return variableGenericTypes.at(index); }
