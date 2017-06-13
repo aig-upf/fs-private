@@ -114,10 +114,6 @@ object_id BoundVariable::interpret(const State& state, const Binding& binding) c
 	return binding.value(_id);
 }
 
-
-Constant* Constant::create(const object_id& value, TypeIdx fstype, const ProblemInfo& info) {
-	return info.isBoundedType(fstype) ? new IntConstant(value, fstype) : new Constant(value, fstype);	
-}	
 	
 //! A quick helper to print functions
 template <typename T>
@@ -151,11 +147,6 @@ std::ostream& BoundVariable::print(std::ostream& os, const fs0::ProblemInfo& inf
 }
 std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << info.object_name(_value);
-	return os;
-}
-
-std::ostream& IntConstant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << _value;
 	return os;
 }
 

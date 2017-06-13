@@ -42,10 +42,10 @@ _check_negated_preconditions(std::vector<const ActionData*>& schemas) {
 		for (const fs::AtomicFormula* atom:fs::all_atoms(*schema->getPrecondition())) {
 			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(atom);
 			if (!eq) continue;
-			const fs::IntConstant* cnst = dynamic_cast<const fs::IntConstant*>(eq->rhs());
+			const fs::Constant* cnst = dynamic_cast<const fs::Constant*>(eq->rhs());
 			if (!cnst) continue;
 			auto val = cnst->getValue();
-			if (int(val)==0) return true;
+			if (o_type(val) == type_id::bool_t && bool(val) == false) return true;
 		}
 	}
 	

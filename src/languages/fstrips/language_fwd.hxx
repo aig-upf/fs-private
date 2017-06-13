@@ -38,7 +38,6 @@ class Term;
 class StateVariable;
 class BoundVariable;
 class Constant;
-class IntConstant;
 class NestedTerm;
 class StaticHeadedNestedTerm;
 class FluentHeadedNestedTerm;

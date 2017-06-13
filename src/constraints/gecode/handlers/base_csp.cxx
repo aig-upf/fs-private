@@ -222,7 +222,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 						// e.g. we had a condition clear(b) = 1, which we'll want to transform into an extensional constraint on the
 						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
 						
-						auto value = dynamic_cast<const fs::IntConstant*>(relational->rhs());
+						auto value = dynamic_cast<const fs::Constant*>(relational->rhs());
 						if (!value || int(value->getValue()) != 1) {
 							throw UnimplementedFeatureException("Only non-negated relational atoms are supported ATM");
 						}

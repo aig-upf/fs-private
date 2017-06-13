@@ -240,7 +240,7 @@ Visit(const ArithmeticTerm& lhs) {
 	if (constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		auto value = processed->interpret(PartialAssignment(), Binding::EMPTY_BINDING);
 		delete processed;
-		_result = new IntConstant(value, UNSPECIFIED_NUMERIC_TYPE); // Arithmetic terms necessarily involve integer subterms
+		_result = new Constant(value, UNSPECIFIED_NUMERIC_TYPE);
 
 	}
 	else {
@@ -265,7 +265,7 @@ Visit(const UserDefinedStaticTerm& lhs) {
 		for (const auto ptr:processed) delete ptr;
 
 		auto value = function.getFunction()(constant_values);
-		_result = _info.isBoundedType(function.getCodomainType()) ? new IntConstant(value) : new Constant(value);
+		_result = new Constant(value);
 
 	} else {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms

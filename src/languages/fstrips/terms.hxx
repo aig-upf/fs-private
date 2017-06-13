@@ -272,7 +272,7 @@ public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
 	//! Factory method
-	static Constant* create(const object_id& value, TypeIdx fstype, const ProblemInfo& info);
+	static Constant* create(const object_id& value, TypeIdx fstype, const ProblemInfo& info) { return new Constant(value, fstype); }
 	
 	Constant(const object_id& value, TypeIdx type)  : _value(value), _type(type) {}
 
@@ -296,18 +296,6 @@ protected:
 	object_id _value;
 	
 	TypeIdx _type;
-};
-
-
-//! An integer constant
-class IntConstant : public Constant {
-public:
-	IntConstant(const object_id& value, TypeIdx type)  : Constant(value, type) {}
-
-	IntConstant* clone() const override { return new IntConstant(*this); }
-
-	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
 
