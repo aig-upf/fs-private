@@ -8,6 +8,8 @@
 #include <utils/static.hxx>
 #include <utils/external.hxx>
 
+namespace fs0 { namespace fstrips { class LanguageInfo; }}
+
 namespace fs0 {
 
 class Atom;
@@ -18,14 +20,8 @@ public:
 
 	enum class Type {PREDICATE, FUNCTION};
 
-	SymbolData(Type type, const Signature& signature, TypeIdx codomain, std::vector<VariableIdx>& variables, bool stat, bool unbounded):
-		_type(type), _signature(signature), _codomain(codomain), _variables(variables), _static(stat), _unbounded_arity(unbounded) {}
-
-	//! Returns the state variables derived from the given function (e.g. for a function "f", f(1), f(2), ...)
-	const std::vector<VariableIdx>& getStateVariables() const {
-		assert(!_static);
-		return _variables;
-	}
+	SymbolData(Type type, const Signature& signature, TypeIdx codomain, bool stat, bool unbounded):
+		_type(type), _signature(signature), _codomain(codomain), _static(stat), _unbounded_arity(unbounded) {}
 
 	Type getType() const { return _type; }
 	const Signature& getSignature() const { return _signature; }
@@ -50,7 +46,6 @@ protected:
 	Type _type;
 	Signature _signature;
 	TypeIdx _codomain;
-	std::vector<VariableIdx> _variables;
 	bool _static;
     bool _unbounded_arity;
 
@@ -77,6 +72,8 @@ public:
 		assert(_instance);
 		return *_instance;
 	}
+	
+	const fstrips::LanguageInfo& get_language_info() const { throw std::runtime_error("UNIMPLEMENTED"); }
 
 protected:
 	//! The singleton instance
@@ -213,12 +210,6 @@ public:
 
 	//! Return the data that originated a state variable
 	const std::pair<unsigned, std::vector<object_id>>& getVariableData(VariableIdx variable) const { return variableIdToData.at(variable); }
-
-
-
-	//! Resolves a function ID to all state variables in which the function can result
-	const VariableIdxVector& resolveStateVariable(unsigned symbol_id) const { return getSymbolData(symbol_id).getStateVariables(); }
-
 
 	unsigned num_objects() const;
 

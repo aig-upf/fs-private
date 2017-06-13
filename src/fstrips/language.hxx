@@ -4,9 +4,9 @@
 #include <languages/fstrips/base.hxx>
 #include <fs_types.hxx> //  TODO[LAMBDA] - REMOVE THIS DEPENDENCY ?
 
-namespace fs0 { class ProblemInfo; } //  TODO[LAMBDA] - REMOVE THIS DEPENDENCY
-
 namespace fs0 { namespace fstrips {
+
+class LanguageInfo;
 
 //! A logical connective
 enum class Connective { Conjunction, Disjunction, Negation };
@@ -21,13 +21,32 @@ const Connective to_connective(const std::string& connective);
 const Quantifier to_quantifier(const std::string& quantifier);
 
 
+///////////////////////////////////////////////////////////////////////////////
+// A common base class for both terms and formulas
+///////////////////////////////////////////////////////////////////////////////
+class LogicalElement :
+ 	public Loki::BaseVisitable<void, Loki::ThrowCatchAll, true>
+// 	public Loki::BaseVisitable<>
+//	public fs0::utils::BaseVisitable<void>
+{
+public:
+	virtual ~LogicalElement() = default;
+	
+	//! Clone idiom
+	virtual LogicalElement* clone() const = 0;
+	
+	//! Prints a representation of the object to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const LogicalElement& o);
+	virtual std::ostream& print(std::ostream& os, const LanguageInfo& info) const = 0;
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Terms and Formulas
 ///////////////////////////////////////////////////////////////////////////////
 
 //! A logical term in FSTRIPS
-class Term : public language::fstrips::LogicalElement {
+class Term : public LogicalElement {
 public:
 	Term() = default;
 	virtual ~Term() = default;
@@ -55,7 +74,7 @@ public:
 	//! Returns the ID of the variable type
 	TypeIdx getType() const { return _type; }
 	
-	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 protected:
 	//! The ID of the variable, which will be unique throughout the whole binding unit.
@@ -85,7 +104,7 @@ public:
 	//! Returns the ID of the variable type
 	TypeIdx getType() const { return _type; }
 	
-	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 protected:
 	//! The actual value of the constant
@@ -110,7 +129,7 @@ public:
 	
 	const std::vector<const Term*>& getChildren() const { return _children; }
 
-	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 protected:
 	//! The ID of the function symbol, e.g. in the state variable loc(A), the id of 'loc'
@@ -121,7 +140,7 @@ protected:
 };
 
 
-class Formula : public language::fstrips::LogicalElement {
+class Formula : public LogicalElement {
 public:
 	Formula() = default;
 	virtual ~Formula() = default;
@@ -136,7 +155,7 @@ public:
 	Tautology* clone() const override { return new Tautology; }
 
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { return os << "True"; }
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override { return os << "True"; }
 };
 
 //! The False truth value
@@ -146,7 +165,7 @@ public:
 	Contradiction* clone() const override { return new Contradiction; }
 
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override { return os << "False"; }
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override { return os << "False"; }
 };
 
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
@@ -164,7 +183,7 @@ public:
 	
 	const std::vector<const Term*>& getChildren() const { return _children; }
 
-	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 
 protected:
@@ -192,7 +211,7 @@ public:
 	
 	const std::vector<const Formula*>& getChildren() const { return _children; }
 
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 protected:
 	//! The actual logical connective of the open formula
@@ -223,7 +242,7 @@ public:
 	const std::vector<const LogicalVariable*>& getVariables() const { return _variables; }
 
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 protected:
 	//! The actual type of quantifier
@@ -260,9 +279,8 @@ public:
 	virtual ActionEffect* clone() const = 0;
 	
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const ActionEffect& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const;
-	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
+	friend std::ostream& operator<<(std::ostream &os, const ActionEffect& o);
+	virtual std::ostream& print(std::ostream& os, const LanguageInfo& info) const = 0;
 
 	//! Accessor
 	const Formula* condition() const { return _condition; }
@@ -291,7 +309,7 @@ public:
 	
 	FunctionalEffect* clone() const override { return new FunctionalEffect(*this); }
 	
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 	//! Accessors for the left-hand side and right-hand side of the effect
 	const Term* lhs() const { return _lhs; }
@@ -326,7 +344,7 @@ public:
 	
 	AtomicEffect* clone() const override { return new AtomicEffect(*this); }
 	
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 	const AtomicFormula* getAtom() const { return _atom; }
 	const Type getType() const { return _type; }

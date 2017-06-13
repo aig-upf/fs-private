@@ -2,7 +2,16 @@
 
 #include "language.hxx"
 
-#include <problem_info.hxx>
+// TODO EVENTUALLY REMOVE THIS DEPENDENCY.
+// Object printers are the main hindrance for that... we might want to put a pointer
+// to the LanguageInfo object in each AST node to get rid of that?
+// Or, alternatively, get rid of object printers and have generic printers in fs0::print
+// that require a LanguageInfo object to print the actual AST node.
+// (i.e. one way or another, an AST node cannot be printed with the info contained in 
+// the corresponding LanguageInfo object)
+#include <problem_info.hxx> 
+
+#include <fstrips/language_info.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/actions.hxx>
 
@@ -36,6 +45,9 @@ const Quantifier to_quantifier(const std::string& quantifier) {
 	throw std::runtime_error("Unknown quantifier");	
 }
 
+std::ostream& operator<<(std::ostream &os, const LogicalElement& o) { return o.print(os, ProblemInfo::getInstance().get_language_info()); }
+std::ostream& operator<<(std::ostream &os, const ActionEffect& o)   { return o.print(os, ProblemInfo::getInstance().get_language_info()); }
+
 template <typename T>
 std::ostream& _print_nested(std::ostream& os, const std::string& name, const std::vector<const T*>& subelements) {
 	os << name << "(";
@@ -48,30 +60,29 @@ std::ostream& _print_nested(std::ostream& os, const std::string& name, const std
 }
 
 template <typename T>
-std::ostream& _print_nested(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<const T*>& subelements) {
-	return _print_nested(os, info.getSymbolName(symbol_id), subelements);
+std::ostream& _print_nested(std::ostream& os, const LanguageInfo& info, unsigned symbol_id, const std::vector<const T*>& subelements) {
+	return _print_nested(os, info.get_symbol_name(symbol_id), subelements);
 }
 
-std::ostream& LogicalVariable::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& LogicalVariable::print(std::ostream& os, const LanguageInfo& info) const {
 	os << _name;
 	return os;
 }
 
-std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << info.object_name(_value);
-	return os;
+std::ostream& Constant::print(std::ostream& os, const LanguageInfo& info) const {
+	return os << info.get_object_name(_value);
 }
 
 
-std::ostream& FunctionalTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& FunctionalTerm::print(std::ostream& os, const LanguageInfo& info) const {
 	return _print_nested(os, info, _symbol_id, _children);
 }
 
-std::ostream& AtomicFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& AtomicFormula::print(std::ostream& os, const LanguageInfo& info) const {
 	return _print_nested(os, info, _symbol_id, _children);
 }
 
-std::ostream& OpenFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& OpenFormula::print(std::ostream& os, const LanguageInfo& info) const {
 	return _print_nested(os, to_string(_connective), _children);
 }
 
@@ -98,10 +109,10 @@ QuantifiedFormula::QuantifiedFormula(const QuantifiedFormula& other) :
 {}
 
 //! Prints a representation of the object to the given stream.
-std::ostream& QuantifiedFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& QuantifiedFormula::print(std::ostream& os, const LanguageInfo& info) const {
 	os << to_string(_quantifier) << " ";
 	for (const LogicalVariable* var:_variables) {
-		os << *var << ": " << info.getTypename(var->getType()) << " ";
+		os << *var << ": " << info.get_typename(var->getType()) << " ";
 	}
 	os << " s.t. ";
 	os << "(" << *_subformula << ")";
@@ -129,9 +140,7 @@ AtomicEffect::Type AtomicEffect::to_type(const std::string& type) {
 	throw std::runtime_error("Unknown effect type" + type);	
 }
 
-std::ostream& ActionEffect::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
-
-std::ostream& FunctionalEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& FunctionalEffect::print(std::ostream& os, const LanguageInfo& info) const {
 	if (_condition) {
 		os << *_condition << " --> ";
 	}
@@ -139,7 +148,7 @@ std::ostream& FunctionalEffect::print(std::ostream& os, const fs0::ProblemInfo& 
 	return os;
 }
 
-std::ostream& AtomicEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+std::ostream& AtomicEffect::print(std::ostream& os, const LanguageInfo& info) const {
 	if (_condition) {
 		os << *_condition << " --> ";
 	}

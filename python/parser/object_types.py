@@ -49,9 +49,9 @@ def process_type_hierarchy(fd_types):
     Return a map mapping each type name to all of its parents.
     :param fd_types: The list of task types as returned by the FD PDDL parser
     """
-    # The base 'object' and 'bool' type are always there.
+    # The base 'object' type needs to be declared always
     # Warning: the position in the list of types is important.
-    types = {'object': None, 'bool': 'object', 'int': 'object'}
+    types = {'object': None}
     used_types = set()
     predeclared = set(types.keys())
     correctly_declared = set(types.keys())

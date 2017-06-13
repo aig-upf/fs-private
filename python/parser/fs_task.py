@@ -133,8 +133,8 @@ class FSTaskIndex(object):
         self.axioms = []
 
     def process_types(self, types, type_map):
-        # Each typename points to its (unique) 0-based index
-        self.types = {t: i for i, t in enumerate(types)}
+        # Each typename points to its (unique) 1-based index (index 0 is reserved for bools)
+        self.types = {t: i for i, t in enumerate(types, 1)}
         self.type_map = type_map
 
     def process_objects(self, objects):

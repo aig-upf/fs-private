@@ -113,7 +113,6 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 	assert(symbolIds.empty());
 
-
 	// Symbol data is stored as: # <symbol_id, symbol_name, symbol_type, <function_domain>, function_codomain, state_variables, static?>
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		const unsigned id = data[i][0].GetInt();
@@ -138,15 +137,15 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 		TypeIdx codomain = getTypeId(data[i][4].GetString());
 
 		// Parse the function variables
-		std::vector<VariableIdx> variables;
-		const auto& list = data[i][5];
-		for (unsigned j = 0; j < list.Size(); ++j) {
-			variables.push_back(list[j][0].GetInt());
-		}
+// 		std::vector<VariableIdx> variables;
+// 		const auto& list = data[i][5];
+// 		for (unsigned j = 0; j < list.Size(); ++j) {
+// 			variables.push_back(list[j][0].GetInt());
+// 		}
 
 		bool is_static = data[i][6].GetBool();
         bool has_unbounded_arity = data[i][7].GetBool();
-		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static, has_unbounded_arity));
+		_functionData.push_back(SymbolData(type, domain, codomain, is_static, has_unbounded_arity));
 	}
 }
 

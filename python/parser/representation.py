@@ -87,9 +87,16 @@ class ProblemRepresentation(object):
 
         return all_variables
 
-
     def dump_object_data(self):
-        return [{'id': i, 'name': obj} for i, obj in enumerate(self.index.objects.dump())]
+        types = self.index.object_types
+
+        def dump_o(i, obj):
+            if obj in ('true', 'false'):  # DON'T DUMP BOOLEAN OBJECTS
+                return None
+            return dict(id=i, name=obj, type=types[obj])
+        all_objs = [dump_o(i, obj) for i, obj in enumerate(self.index.objects.dump())]
+        return [x for x in all_objs if x is not None]
+
 
     def dump_symbol_data(self):
         res = []

@@ -24,6 +24,7 @@ enum class type_id : uint16_t {
 	// ...
 };
 
+std::string to_string(const type_id& t);
 std::ostream& operator<<(std::ostream &os, const type_id& t);
 
 /**
@@ -121,6 +122,10 @@ inline bool operator<=(const object_id& lhs, const object_id& rhs) { return !ope
 inline bool operator>=(const object_id& lhs, const object_id& rhs) { return !operator< (lhs,rhs); }
 
 
+//! A range is made up of a minimum and a maximum value
+//! both object_id types should coincide.
+using type_range = std::pair<object_id, object_id>;
+
 
 class ObjectTable {
 public:
@@ -185,6 +190,11 @@ object_id make_obj(const bool& value);
 
 template <>
 object_id make_obj(const int32_t& value);
+
+template <typename T>
+type_range make_range(const T& lower, const T& upper) {
+	return std::make_pair(make_obj<T>(lower), make_obj<T>(upper));
+}
 
 
 } // namespaces
