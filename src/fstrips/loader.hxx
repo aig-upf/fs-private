@@ -29,6 +29,8 @@ public:
 	
 	//!
 	static const ActionSchema* parseActionSchema(const rapidjson::Value& data, unsigned id, const LanguageInfo& lang, bool load_effects);
+	
+	static std::vector<const LogicalVariable*> parseVariables(const rapidjson::Value& tree, const LanguageInfo& lang);
 };
 
 class LanguageJsonLoader {

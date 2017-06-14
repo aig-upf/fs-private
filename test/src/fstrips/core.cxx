@@ -11,7 +11,7 @@ class FStripsCore : public testing::Test {
 };
 
 //!
-TEST_F(FStripsCore, ObjectIdProperties) {
+TEST_F(FStripsCore, ObjectId) {
 	
 	ASSERT_THROW(value<int>(object_id::TRUE), type_mismatch_error);
 	ASSERT_NO_THROW(value<bool>(object_id::TRUE));
@@ -31,11 +31,10 @@ TEST_F(FStripsCore, ObjectIdProperties) {
 	
 	ASSERT_EQ(int(int17a), 17);
 	ASSERT_EQ(value<int>(int17a), 17);
-	
 };
 
 
-TEST_F(FStripsCore, BasicProperties) {
+TEST_F(FStripsCore, LanguageInfo) {
 // 	fs::StateVariable sv(0, nullptr);
 // 	
 // 	ASSERT_TRUE(fs::flat(sv));
@@ -48,6 +47,8 @@ TEST_F(FStripsCore, BasicProperties) {
 	fstrips::LanguageInfo lang;
 	TypeIdx block_t = lang.add_fstype("block");
 	ASSERT_EQ(block_t, 1); // First type added
+	ASSERT_EQ(lang.get_typename(block_t), "block");
+	ASSERT_EQ(lang.get_type_id("block"), type_id::object_t);
 	
 	auto id = lang.add_object("b1", block_t);
 };

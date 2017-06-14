@@ -15,8 +15,8 @@ namespace fs0 { namespace fstrips {
 	
 
 	
-std::vector<const LogicalVariable*> 
-_parseVariables(const rapidjson::Value& tree, const LanguageInfo& lang) {
+std::vector<const LogicalVariable*> Loader::
+parseVariables(const rapidjson::Value& tree, const LanguageInfo& lang) {
 	std::vector<const LogicalVariable*> list;
 	for (unsigned i = 0; i < tree.Size(); ++i) {
 		const rapidjson::Value& node = tree[i];
@@ -53,7 +53,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const Language
 	
 		
 	} else if (formula_type == "exists" || formula_type == "forall") {
-		std::vector<const LogicalVariable*> variables = _parseVariables(tree["variables"], lang);
+		std::vector<const LogicalVariable*> variables = parseVariables(tree["variables"], lang);
 		auto subformula = parseFormula(tree["subformula"], lang);
 		
 		return new QuantifiedFormula(to_quantifier(formula_type), variables, subformula);
