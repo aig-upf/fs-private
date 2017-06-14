@@ -12,6 +12,7 @@ namespace fs0 { class Problem; }
 /* Generate the whole planning problem */
 inline fs0::Problem* generate(const rapidjson::Document& data, const std::string& data_dir) {
 	fs0::BaseComponentFactory factory;
+	fs0::Loader::LoadLanguageInfo(data, data_dir);
 	fs0::Loader::loadProblemInfo(data, data_dir, factory);
 	return fs0::Loader::loadProblem(data);
 }

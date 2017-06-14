@@ -10,6 +10,10 @@
 namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; } }}
 namespace fs = fs0::language::fstrips;
 
+
+namespace fs0 { namespace fstrips { class LanguageInfo; } }
+
+
 namespace fs0 {
 
 class BaseComponentFactory;
@@ -27,6 +31,8 @@ public:
 	
 	//! Load and set the singleton problemInfo instance
 	static ProblemInfo& loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory);
+	
+	static fstrips::LanguageInfo& LoadLanguageInfo(const rapidjson::Document& data, const std::string& data_dir);
 	
 	static rapidjson::Document loadJSONObject(const std::string& filename);
 

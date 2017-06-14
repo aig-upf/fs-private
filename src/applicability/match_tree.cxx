@@ -211,7 +211,7 @@ namespace fs0 {
     MatchTreeActionManager::check_match_tree_can_be_used(const ProblemInfo& info) {
 		for (unsigned var = 0; var < info.getNumVariables(); ++var) {
 			TypeIdx type = info.getVariableType(var);
-			if (info.getGenericType(type) == ProblemInfo::ObjectType::INT) {
+			if (info.get_type_id(type) != type_id::object_t) {
 				LPT_INFO("cout", "ERROR - Match Tree cannot be used with FSTRIPS encodings that contain bound integers. Try the \"naive\" successor generation instead");
 				throw std::runtime_error("ERROR - Match Tree cannot be used with FSTRIPS encodings that contain bound integers. Try the \"naive\" successor generation instead");
 			}

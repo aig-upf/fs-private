@@ -58,8 +58,6 @@ protected:
   */
 class ProblemInfo {
 public:
-	enum class ObjectType {INT, BOOL, OBJECT};
-
 	//! Set the global singleton problem instance
 	static ProblemInfo& setInstance(std::unique_ptr<ProblemInfo>&& problem) {
 		assert(!_instance);
@@ -93,23 +91,6 @@ protected:
 	//! Maps variable index to type index
 	std::vector<TypeIdx> variableTypes;
 
-	//! A map from object index to object name
-	std::unordered_map<object_id, std::string> objectNames;
-
-	//! A map from object name to object index
-	std::unordered_map<std::string, object_id> objectIds;
-
-	//! A map from type ID to all of the object indexes of that type
-	std::vector<std::vector<object_id>> typeObjects;
-
-	//! An integer type will have associated lower and upper bounds.
-	std::vector<std::pair<int, int>> typeBounds;
-	std::vector<bool> isTypeBounded;
-
-	//! Maps between typenames and type IDs.
-	std::unordered_map<std::string, TypeIdx> name_to_type;
-	std::vector<std::string> type_to_name;
-
 	//! Maps between predicate and function symbols names and IDs.
 	std::vector<std::string> symbolNames;
 	std::unordered_map<std::string, SymbolIdx> symbolIds;
@@ -139,13 +120,9 @@ public:
 	type_id sv_type(VariableIdx var) const { return _sv_types.at(var); }
 
 	unsigned getNumVariables() const;
-
 	
 	std::string object_name(const object_id& object) const;
-	const std::string& custom_object_name(const object_id& objIdx) const;
 	
-	inline object_id getObjectId(const std::string& name) const { return objectIds.at(name); }
-
 	//! Return the ID of the function with given name
 	inline SymbolIdx getSymbolId(const std::string& name) const { return symbolIds.at(name); }
 	const std::string& getSymbolName(unsigned symbol_id) const { return symbolNames.at(symbol_id); }
@@ -181,25 +158,20 @@ public:
 		return *extension;
 	}
 
-	//! Returns all the objects of the given type _or of a descendant type_
-	inline const std::vector<std::vector<object_id>>& getTypeObjects() const { return typeObjects; }
-	inline const std::vector<object_id>& getTypeObjects(TypeIdx type) const { return typeObjects.at(type); }
-	inline const std::vector<object_id>& getTypeObjects(const std::string& type_name) const { return typeObjects.at(getTypeId(type_name)); }
 
 	//! Returns all the objects of the type of the given variable
 	inline const std::vector<object_id>& getVariableObjects(const VariableIdx variable) const {
 		return getTypeObjects(getVariableType(variable));
 	}
 
-	inline TypeIdx getTypeId(const std::string& type_name) const {
-		auto it = name_to_type.find(type_name);
-		if (it == name_to_type.end()) {
-			throw std::runtime_error("Unknown object type " + type_name);
-		}
-		return it->second;
-	}
+	
+	//! Returns all the objects of the given type _or of a descendant type_
+	const std::vector<object_id>& getTypeObjects(TypeIdx type) const;
+	const std::vector<object_id>& getTypeObjects(const std::string& type_name) const { return getTypeObjects(getTypeId(type_name)); }
+	
+	TypeIdx getTypeId(const std::string& type_name) const;
 
-	inline const std::string& getTypename(TypeIdx type) const { return type_to_name.at(type); }
+	const std::string& getTypename(TypeIdx type) const;
 
 
 	//! Resolves a pair of function ID + an assignment of values to their parameters to the corresponding state variable.
@@ -216,23 +188,15 @@ public:
 	bool checkValueIsValid(const Atom& atom) const;
 	bool checkValueIsValid(VariableIdx variable, const object_id& value) const;
 
-	bool isBoundedType(TypeIdx type) const { return isTypeBounded[type];  }
+	bool isBoundedType(TypeIdx type) const;
 
-	const std::pair<int,int>& getTypeBounds(TypeIdx type) const {
-		assert(isBoundedType(type));
-		return typeBounds.at(type);
-	}
+	const std::pair<int,int> getTypeBounds(TypeIdx type) const;
 
 	void setDomainName(const std::string& domain) { _domain = domain; }
 	void setInstanceName(const std::string& instance) { _instance_name = instance; }
 	const std::string& getDomainName() const { return _domain; }
 	const std::string& getInstanceName() const { return _instance_name; }
 
-	//! Returns the generic type (object, int, bool, etc.) corresponding to a concrete type
-	// TODO REMOVE IN FAVOR OF get_type_id
-	ObjectType getGenericType(TypeIdx typeId) const;
-	ObjectType getGenericType(const std::string& type) const;
-	
 	//! Return the generic type_id corresponding to the given fs-type
 	type_id get_type_id(const std::string& fstype) const;
 	type_id get_type_id(TypeIdx fstype) const;
@@ -246,12 +210,6 @@ protected:
 
 	//! Load the names of the state variables
 	void loadVariableIndex(const rapidjson::Value& data);
-
-	//! Load the names of the problem objects
-	void loadObjectIndex(const rapidjson::Value& data);
-
-	//! Load all type-related info.
-	void loadTypeIndex(const rapidjson::Value& data);
 
 	void loadProblemMetadata(const rapidjson::Value& data);
 

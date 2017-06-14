@@ -30,7 +30,7 @@ public:
 	bool bounded() const { return _bounds != INVALID_TYPE_RANGE; }
 	
 	template <typename T>
-	const std::pair<T, T>& bounds() const {
+	const std::pair<T, T> bounds() const {
 		return std::make_pair<T>(value<T>(_bounds.first), value<T>(_bounds.second));
 	}	
 
@@ -150,6 +150,10 @@ public:
 	//! Return the symbol info associated to the given symbol
 	const SymbolInfo& symbolinfo(const symbol_id& fstype) const;
 	
+	//! Return all objects of a given FS-type, _including_ those which are
+	//! objects of a descending type in the type hierarchy
+	const std::vector<object_id>& type_objects(TypeIdx fstype) const;
+	
 	// ************************************************
 	// TODO THIS IS A TEMPORARY WORKAROUND
 	// TODO REMOVE THIS.
@@ -163,14 +167,14 @@ public:
 	static std::unique_ptr<LanguageInfo> _instance;
 
 	//! Set the singleton instance
-	static LanguageInfo& setInstance(std::unique_ptr<LanguageInfo>&& info) {
+	static LanguageInfo& instance(LanguageInfo* info) {
 		assert(!_instance);
-		_instance = std::move(info);
+		_instance = std::unique_ptr<LanguageInfo>(info);
 		return *_instance;
 	}
 
 	//! Singleton object accessor
-	static const LanguageInfo& getInstance() {
+	static const LanguageInfo& instance() {
 		assert(_instance);
 		return *_instance;
 	}
@@ -183,9 +187,5 @@ private:
 	Implementation& impl() const { return *_impl; };
 };
 
-class LanguageJsonLoader {
-public:
-	static LanguageInfo loadLanguageInfo(const std::string& filename);
-};
 
 } } // namespaces

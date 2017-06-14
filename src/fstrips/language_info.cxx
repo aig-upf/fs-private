@@ -95,11 +95,14 @@ private:
 	type_id get_type_id(TypeIdx fstype) const { return typeinfo(fstype).get_type_id(); }
 	const std::string& get_typename(const TypeIdx& fstype) const { return typeinfo(fstype).name(); }
 	
-	
-	const FSTypeInfo& typeinfo(const TypeIdx& fstype) const {
+	void _check_valid_fstype(const TypeIdx& fstype) const {
 		if (fstype >= _fstype_info.size()) {
 			throw unregistered_type("FS-Type with id \"" + std::to_string(fstype) + "\" has not been registered");
 		}
+	}
+	
+	const FSTypeInfo& typeinfo(const TypeIdx& fstype) const {
+		_check_valid_fstype(fstype);
 		return _fstype_info.at(fstype);
 	}
 	
@@ -235,6 +238,10 @@ private:
 		_fstype_objects.at(fstype).push_back(object);
 	}
 	
+	const std::vector<object_id>& type_objects(TypeIdx fstype) const {
+		_check_valid_fstype(fstype);
+		return _fstype_objects.at(fstype);
+	}
 	
 	
 	
@@ -336,111 +343,8 @@ typeinfo(const TypeIdx& fstype) const { return impl().typeinfo(fstype); }
 
 const SymbolInfo& LanguageInfo::
 symbolinfo(const symbol_id& fstype) const { return impl().symbolinfo(fstype); }
-		
-//! Load all the function-related data
-void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
-	// Symbol data is stored as: # <symbol_id, symbol_name, symbol_type, <function_domain>, function_codomain, state_variables, static?>
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		unsigned expected_id = data[i][0].GetInt();
-		std::string name(data[i][1].GetString());
 
-		// Parse the symbol type: function or predicate
-		const std::string symbol_type = data[i][2].GetString();
-		assert (symbol_type == "function" || symbol_type == "predicate");
-		symbol_t type = (symbol_type == "function") ? symbol_t::Function : symbol_t::Predicate;
-		
-
-		// Parse the symbol signature
-		Signature signature;
-		const auto& domains = data[i][3];
-		for (unsigned j = 0; j < domains.Size(); ++j) {
-			signature.push_back(lang.get_fstype_id(domains[j].GetString()));
-		}
-
-		if (type == symbol_t::Function) {
-			// Parse the codomain ID
-			signature.push_back(lang.get_fstype_id(data[i][4].GetString()));
-		}
-
-		bool static_ = data[i][6].GetBool();
-		/*
-        bool has_unbounded_arity = data[i][7].GetBool();
-		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static, has_unbounded_arity));
-		*/
-		
-		symbol_id id = lang.add_symbol(name, type, signature, static_);
-		assert(expected_id == id); // Check values are decoded in the proper order
-	}	
-}
-
-
-//! Load the names of the state variables
-// 	void loadVariableIndex(const rapidjson::Value& data, LanguageInfo& lang);
-
-
-//! Load the names of the problem objects
-void _loadObjectIndex(const rapidjson::Value& data, LanguageInfo& lang) {
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		unsigned expected_id = static_cast<unsigned>(data[i]["id"].GetInt());
-		const std::string& name = data[i]["name"].GetString();
-		const std::string& fstype = data[i]["type"].GetString();
-		
-		object_id id = lang.add_object(name, lang.get_fstype_id(fstype));
-		assert(expected_id == (int)id); // Check values are decoded in the proper order
-	}
-}
-
-
-//! Load all type-related info.
-void _loadTypeIndex(const rapidjson::Value& data, LanguageInfo& lang) {
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		TypeIdx expected_id = data[i][0].GetInt();
-		std::string fstype(data[i][1].GetString());
-		
-
-		// We read and convert to integer type the vector of Object indexes
-		if (data[i][2].IsString()) {
-			assert(std::string(data[i][2].GetString()) == "int" && data[i].Size() == 4);
-			int lower = data[i][3][0].GetInt();
-			int upper = data[i][3][1].GetInt();
-			
-			TypeIdx tid = lang.add_fstype(fstype, type_id::int_t, make_range(lower, upper));
-			assert(tid = expected_id);
-		
-		} else { // Assume we have an enumeration of object IDs
-			
-			TypeIdx tid = lang.add_fstype(fstype);
-			assert(tid = expected_id);
-			
-			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
-				int value = boost::lexical_cast<int>(data[i][2][j].GetString());
-				lang.bind_object_to_type(lang.get_fstype_id(fstype), make_object(type_id::object_t, value));
-			}
-		}
-	}
-}
-
-LanguageInfo LanguageJsonLoader::
-loadLanguageInfo(const std::string& filename) {
-	rapidjson::Document data = Loader::loadJSONObject(filename);
-	LanguageInfo lang;
-	
-	LPT_INFO("cout", "Loading FS types from JSON file \"" + filename + "\"");
-	_loadTypeIndex(data["types"], lang); // Order matters
-
-	LPT_INFO("cout", "Loading language objects from JSON file \"" + filename + "\"");
-	_loadObjectIndex(data["objects"], lang);
-
-	LPT_INFO("cout", "Loading language symbols from JSON file \"" + filename + "\"");
-	_loadSymbolIndex(data["symbols"], lang);
-
-	return lang;
-}
-
-
-
-
-
+const std::vector<object_id>& LanguageInfo::
+type_objects(TypeIdx fstype) const { return impl().type_objects(fstype); }
 
 } } // namespaces
-

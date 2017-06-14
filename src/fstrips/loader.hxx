@@ -4,7 +4,6 @@
 #include <vector>
 #include <lib/rapidjson/document.h>
 
-
 namespace fs0 { namespace fstrips {
 
 class LanguageInfo;
@@ -30,7 +29,11 @@ public:
 	
 	//!
 	static const ActionSchema* parseActionSchema(const rapidjson::Value& data, unsigned id, const LanguageInfo& lang, bool load_effects);
+};
 
+class LanguageJsonLoader {
+public:
+	static LanguageInfo* loadLanguageInfo(const rapidjson::Document& data);
 };
 
 } } // namespaces

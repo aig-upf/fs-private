@@ -27,7 +27,8 @@ int Runner::run() {
 
 	std::cout << "Loading problem data" << std::endl;
 	//! This will generate the problem and set it as the global singleton instance
-	auto data = Loader::loadJSONObject(_options.getDataDir() + "/problem.json");
+	const std::string problem_spec = _options.getDataDir() + "/problem.json";
+	auto data = Loader::loadJSONObject(problem_spec);
 	Problem* problem = _generator(data, _options.getDataDir());
 	const Config& config = Config::instance();
 	

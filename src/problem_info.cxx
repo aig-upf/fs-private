@@ -8,6 +8,8 @@
 #include <atom.hxx>
 #include <lapkt/tools/logging.hxx>
 
+#include <fstrips/language_info.hxx>
+
 namespace fs0 {
 
 class unregistered_object_error : public std::runtime_error {
@@ -24,13 +26,6 @@ std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
 	_data_dir(data_dir)
 {
-
-	LPT_INFO("main", "Loading Type index...");
-	loadTypeIndex(data["types"]); // Order matters
-
-	LPT_INFO("main", "Loading Object index...");
-	loadObjectIndex(data["objects"]);
-
 	LPT_INFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
 
@@ -57,25 +52,10 @@ unsigned ProblemInfo::getNumVariables() const { return variableNames.size(); }
 
 
 
-std::string ProblemInfo::object_name(const object_id& object) const {
-	type_id t = o_type(object);
-	if (t == type_id::bool_t) return std::string((fs0::value<bool>(object) ? "true" : "false"));
-	else if (t == type_id::int_t) return std::to_string(fs0::value<int>(object));
-	else if (t == type_id::object_t) return custom_object_name(object);
-	throw std::runtime_error("Unaccounted-for type");
-}
-
-const std::string& ProblemInfo::custom_object_name(const object_id& o) const {
-	const auto& it = objectNames.find(o);
-	if (it == objectNames.end()) throw unregistered_object_error(o);
-	return it->second;
-}
-
-unsigned ProblemInfo::num_objects() const { return objectNames.size(); }
-
-
 void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 	assert(variableNames.empty());
+	const fstrips::LanguageInfo lang = fstrips::LanguageInfo::instance();
+	
 
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		const auto& var_data = data[i];
@@ -90,7 +70,7 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		_sv_types.push_back(get_type_id(type));
 		
 		try {
-			variableTypes.push_back(name_to_type.at(type));
+			variableTypes.push_back(lang.get_fstype_id(type));
 		} catch( std::out_of_range& ex ) {
 			throw std::runtime_error("Unknown FS-type " + type);
 		}
@@ -150,109 +130,6 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 }
 
 
-ProblemInfo::ObjectType ProblemInfo::getGenericType(TypeIdx typeId) const {
-	if (isTypeBounded[typeId]) return ObjectType::INT;
-	else return ObjectType::OBJECT;
-}
-
-ProblemInfo::ObjectType ProblemInfo::getGenericType(const std::string& type) const {
-	if (type == "bool") return ObjectType::BOOL;
-	return getGenericType(getTypeId(type));
-}
-
-type_id ProblemInfo::
-get_type_id(const std::string& fstype) const {
-	if (fstype == "bool") return type_id::bool_t;
-	return get_type_id(getTypeId(fstype));
-}
-
-type_id ProblemInfo::
-get_type_id(TypeIdx fstype) const {
-	if (isTypeBounded[fstype]) return type_id::int_t;
-	else return type_id::object_t;
-}
-
-//! Load the names of the problem objects from the specified file.
-void ProblemInfo::loadObjectIndex(const rapidjson::Value& data) {
-	assert(objectNames.empty());
-
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		assert(data[i]["id"].GetInt() >= 0 && static_cast<unsigned>(data[i]["id"].GetInt()) == objectNames.size()); // Check values are decoded in the proper order
-		const std::string& name = data[i]["name"].GetString();
-		unsigned id = objectNames.size();
-		if ((id == 0 && name != "false") || (id == 1 && name != "true")) throw std::runtime_error("Object IDs 0 and 1 reserved for bool values");
-		
-		object_id oid;
-		if (id == 0 || id == 1) {
-			oid = make_obj<bool>((bool)id);
-		} else {
-			oid = make_object(type_id::object_t, id);
-		}
-		objectIds.insert(std::make_pair(name, oid));
-		objectNames.insert(std::make_pair(oid, name));
-// 		std::cout << "Inserted: " << oid << " - " << name << " [" << std::hash<object_id>()(oid) << "]" << std::endl;
-	}
-}
-
-
-void ProblemInfo::loadTypeIndex(const rapidjson::Value& data) {
-	assert(type_to_name.empty());
-	unsigned num_types = data.Size();
-
-	typeObjects.resize(num_types); // Resize the vector to the number of types that we have
-	isTypeBounded.resize(num_types);
-	typeBounds.resize(num_types);
-
-	for (unsigned i = 0; i < data.Size(); ++i) {
-		TypeIdx type_id = data[i][0].GetInt();
-		std::string fstype(data[i][1].GetString());
-		assert(type_id == type_to_name.size()); // Check values are decoded in the proper order
-
-		name_to_type.insert(std::make_pair(fstype, type_id));
-		type_to_name.push_back(fstype);
-		
-		if (fstype == "bool") { // Bool type gets special treatment!
-			typeObjects[type_id].push_back(object_id::FALSE);
-			typeObjects[type_id].push_back(object_id::TRUE);
-			continue;
-		}
-
-		// We read and convert to integer type the vector of Object indexes
-		if (data[i][2].IsString()) {
-			assert(std::string(data[i][2].GetString()) == "int" && data[i].Size() == 4);
-			int lower = data[i][3][0].GetInt();
-			int upper = data[i][3][1].GetInt();
-			if (lower > upper) throw std::runtime_error("Incorrect bounded integer expression: [" + std::to_string(lower) + ", " + std::to_string(upper) + "]");
-
-			typeBounds[type_id] = std::make_pair(lower, upper);
-			isTypeBounded[type_id] = true;
-
-			// Unfold the range
-			typeObjects[type_id].reserve(upper - lower + 1);
-			for (int v = lower; v <= upper; ++v) typeObjects[type_id].push_back(make_obj<int>(v));
-		} else { // We have an enumeration of object IDs
-			typeObjects[type_id].reserve(data[i][2].Size());
-			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
-				int value = boost::lexical_cast<int>(data[i][2][j].GetString());
-				typeObjects[type_id].push_back(make_object(type_id::object_t, value));
-			}
-		}
-	}
-}
-
-bool ProblemInfo::checkValueIsValid(const Atom& atom) const {
-	return checkValueIsValid(atom.getVariable(), atom.getValue());
-}
-
-bool ProblemInfo::checkValueIsValid(VariableIdx variable, const object_id& object) const {
-	TypeIdx type = getVariableType(variable);
-	if (!isTypeBounded[type]) return true;
-	const auto& bounds = typeBounds[type];
-	int value = fs0::value<int>(object);
-	return value >= bounds.first && value <= bounds.second;
-}
-
-
 void ProblemInfo::loadProblemMetadata(const rapidjson::Value& data) {
 	setDomainName(data["domain"].GetString());
 	setInstanceName(data["instance"].GetString());
@@ -273,5 +150,53 @@ ProblemInfo::get_extension(unsigned symbol_id) const {
 	return *_extensions.at(symbol_id);
 }
 
+bool ProblemInfo::isBoundedType(TypeIdx type) const {
+	return fstrips::LanguageInfo::instance().typeinfo(type).bounded();
+}
+
+type_id ProblemInfo::
+get_type_id(const std::string& fstype) const {
+	const fstrips::LanguageInfo& lang = fstrips::LanguageInfo::instance();
+	return lang.typeinfo(lang.get_fstype_id(fstype)).get_type_id();
+}
+
+type_id ProblemInfo::
+get_type_id(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().typeinfo(fstype).get_type_id(); }
+
+
+const std::vector<object_id>& ProblemInfo::
+getTypeObjects(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().type_objects(fstype); }
+
+TypeIdx ProblemInfo::
+getTypeId(const std::string& type_name) const { return fstrips::LanguageInfo::instance().get_fstype_id(type_name); }
+
+const std::string& ProblemInfo::
+getTypename(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().typeinfo(fstype).name(); }
+
+
+bool ProblemInfo::
+checkValueIsValid(const Atom& atom) const {
+	return checkValueIsValid(atom.getVariable(), atom.getValue());
+}
+
+bool ProblemInfo::
+checkValueIsValid(VariableIdx variable, const object_id& object) const {
+	TypeIdx type = getVariableType(variable);
+	const fstrips::FSTypeInfo tinfo = fstrips::LanguageInfo::instance().typeinfo(type);
+	if (!tinfo.bounded()) return true;
+	auto bounds = tinfo.bounds<int>();
+	int value = fs0::value<int>(object);
+	return value >= bounds.first && value <= bounds.second;
+}
+
+const std::pair<int,int> ProblemInfo::getTypeBounds(TypeIdx type) const {
+	return fstrips::LanguageInfo::instance().typeinfo(type).bounds<int>();
+}
+
+unsigned ProblemInfo::
+num_objects() const { return fstrips::LanguageInfo::instance().num_objects(); }
+
+std::string ProblemInfo::
+object_name(const object_id& object) const { return fstrips::LanguageInfo::instance().get_object_name(object); }
 
 } // namespaces

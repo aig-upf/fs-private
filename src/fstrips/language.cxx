@@ -36,8 +36,8 @@ const Quantifier to_quantifier(const std::string& quantifier) {
 	throw std::runtime_error("Unknown quantifier");	
 }
 
-std::ostream& operator<<(std::ostream &os, const LogicalElement& o) { return o.print(os, LanguageInfo::getInstance()); }
-std::ostream& operator<<(std::ostream &os, const ActionEffect& o)   { return o.print(os, LanguageInfo::getInstance()); }
+std::ostream& operator<<(std::ostream &os, const LogicalElement& o) { return o.print(os, LanguageInfo::instance()); }
+std::ostream& operator<<(std::ostream &os, const ActionEffect& o)   { return o.print(os, LanguageInfo::instance()); }
 
 template <typename T>
 std::ostream& _print_nested(std::ostream& os, const std::string& name, const std::vector<const T*>& subelements) {

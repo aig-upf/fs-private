@@ -31,17 +31,17 @@ Gecode::BoolVar Helper::createBoolVariable(Gecode::Space& csp) {
 
 Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
-	auto generic_type = info.getGenericType(typeId);
+	auto type = info.get_type_id(typeId);
 
-	if ( generic_type == ProblemInfo::ObjectType::INT ) {
+	if ( type == type_id::int_t ) {
 		const auto& bounds = info.getTypeBounds(typeId);
 		return Gecode::IntVar(csp, bounds.first, bounds.second);
 	}
-	else if ( generic_type == ProblemInfo::ObjectType::BOOL ) {
+	else if ( type == type_id::bool_t ) {
 		return Gecode::IntVar( csp, 0, 1 );
 	}
 	else {
-		assert(generic_type == ProblemInfo::ObjectType::OBJECT);
+		assert(type == type_id::object_t);
 		const std::vector<object_id>& objects = info.getTypeObjects(typeId);
 		const std::vector<int> values = fs0::values<int>(objects, ObjectTable::EMPTY_TABLE);
 		return Gecode::IntVar(csp, Gecode::IntSet(values.data(), values.size())); // TODO - Check if we can change this for a range-like domain creation

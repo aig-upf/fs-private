@@ -21,6 +21,8 @@
 #include <languages/fstrips/operations.hxx>
 #include <validator.hxx>
 
+#include <fstrips/language_info.hxx>
+#include <fstrips/loader.hxx>
 
 namespace fs = fs0::language::fstrips;
 
@@ -118,6 +120,13 @@ Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data
 	loadFunctions(factory, *info);
 	return ProblemInfo::setInstance(std::move(info));
 }
+
+fstrips::LanguageInfo&
+Loader::LoadLanguageInfo(const rapidjson::Document& data, const std::string& data_dir) {
+	fstrips::LanguageInfo* lang = fstrips::LanguageJsonLoader::loadLanguageInfo(data);
+	return fstrips::LanguageInfo::instance(lang);
+}
+
 
 State*
 Loader::loadState(const ProblemInfo& info, const StateAtomIndexer& indexer, const rapidjson::Value& data) {
