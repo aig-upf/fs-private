@@ -49,9 +49,6 @@ class ProblemRepresentation(object):
             method_factories=self.get_method_factories(),
         ))
 
-        # components.cxx:
-        self.save_translation('components.cxx', tplManager.get('components.cxx').substitute())
-
     def serialize_static_extensions(self):
         for elem in self.index.initial_static_data.values():
             assert isinstance(elem, DataElement)
