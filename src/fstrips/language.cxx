@@ -2,15 +2,6 @@
 
 #include "language.hxx"
 
-// TODO EVENTUALLY REMOVE THIS DEPENDENCY.
-// Object printers are the main hindrance for that... we might want to put a pointer
-// to the LanguageInfo object in each AST node to get rid of that?
-// Or, alternatively, get rid of object printers and have generic printers in fs0::print
-// that require a LanguageInfo object to print the actual AST node.
-// (i.e. one way or another, an AST node cannot be printed with the info contained in 
-// the corresponding LanguageInfo object)
-#include <problem_info.hxx> 
-
 #include <fstrips/language_info.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/actions.hxx>
@@ -45,8 +36,8 @@ const Quantifier to_quantifier(const std::string& quantifier) {
 	throw std::runtime_error("Unknown quantifier");	
 }
 
-std::ostream& operator<<(std::ostream &os, const LogicalElement& o) { return o.print(os, ProblemInfo::getInstance().get_language_info()); }
-std::ostream& operator<<(std::ostream &os, const ActionEffect& o)   { return o.print(os, ProblemInfo::getInstance().get_language_info()); }
+std::ostream& operator<<(std::ostream &os, const LogicalElement& o) { return o.print(os, LanguageInfo::getInstance()); }
+std::ostream& operator<<(std::ostream &os, const ActionEffect& o)   { return o.print(os, LanguageInfo::getInstance()); }
 
 template <typename T>
 std::ostream& _print_nested(std::ostream& os, const std::string& name, const std::vector<const T*>& subelements) {

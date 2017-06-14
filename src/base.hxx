@@ -125,7 +125,7 @@ inline bool operator>=(const object_id& lhs, const object_id& rhs) { return !ope
 //! A range is made up of a minimum and a maximum value
 //! both object_id types should coincide.
 using type_range = std::pair<object_id, object_id>;
-
+const type_range INVALID_TYPE_RANGE = std::make_pair(object_id::INVALID, object_id::INVALID);
 
 class ObjectTable {
 public:

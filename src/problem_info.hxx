@@ -72,8 +72,6 @@ public:
 		assert(_instance);
 		return *_instance;
 	}
-	
-	const fstrips::LanguageInfo& get_language_info() const { throw std::runtime_error("UNIMPLEMENTED"); }
 
 protected:
 	//! The singleton instance
@@ -219,7 +217,6 @@ public:
 	bool checkValueIsValid(VariableIdx variable, const object_id& value) const;
 
 	bool isBoundedType(TypeIdx type) const { return isTypeBounded[type];  }
-	bool isBoundedVariable(VariableIdx variable) const { return isBoundedType(getVariableType(variable));  }
 
 	const std::pair<int,int>& getTypeBounds(TypeIdx type) const {
 		assert(isBoundedType(type));

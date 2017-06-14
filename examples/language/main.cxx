@@ -27,4 +27,5 @@ int main(int argc, char** argv) {
 	
 	std::cout << "Object b1 has id "<< id << std::endl;
 	
+	
 }

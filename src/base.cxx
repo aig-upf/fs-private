@@ -17,17 +17,16 @@ const object_id object_id::TRUE = object_id(type_id::bool_t, true);
 
 const ObjectTable ObjectTable::EMPTY_TABLE = ObjectTable();
 
-
 std::string to_string(const type_id& t) {
 	if (t == type_id::invalid_t)     return "!";
-	if (t == type_id::object_t)      return "O";
-	if (t == type_id::bool_t)        return "B";
+	if (t == type_id::object_t)      return "o";
+	if (t == type_id::bool_t)        return "b";
 // 	if (t == type_id::ushort_t)      return "US";
 // 	if (t == type_id::short_t)       return "S";
 // 	if (t == type_id::uint_t)        return "UI";
-	if (t == type_id::int_t)         return "I";
+	if (t == type_id::int_t)         return "i";
 // 	if (t == type_id::ufloat_t)      return "UF";
-	if (t == type_id::float_t)       return "F";
+	if (t == type_id::float_t)       return "f";
 	if (t == type_id::set_t)         return "SET";
 	if (t == type_id::interval_t)    return "RNG";
 	return "?";

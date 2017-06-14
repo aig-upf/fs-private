@@ -31,6 +31,9 @@ class invalid_range : public std::runtime_error {
 public: invalid_range(const std::string& msg) : std::runtime_error(msg) {}
 };
 	
+// TODO - REMOVE THIS
+std::unique_ptr<LanguageInfo> LanguageInfo::_instance = nullptr;
+
 	
 class LanguageInfo::Implementation {
 private:
@@ -77,36 +80,36 @@ private:
 		return symbolIds.at(name);
 	}
 
-	const std::string& get_symbol_name(symbol_id symbol) const {
-		if (symbol >= symbolNames.size()) {
-			throw unregistered_symbol("Symbol with id \"" + std::to_string(symbol) + "\" has not been registered");
-		}
-		return symbolNames[symbol];
-	}
+	const std::string& get_symbol_name(symbol_id symbol) const { return symbolinfo(symbol).name(); }
 	
 	type_id get_type_id(const std::string& fstype) const {
 		if (fstype == "bool") return type_id::bool_t;
 		return get_type_id(get_fstype_id(fstype));
 	}
 
-	type_id get_type_id(TypeIdx fstype) const {
-		if (fstype >= _fstype_to_type_id.size()) {
-			throw unregistered_type("FS-Type with id \"" + std::to_string(fstype) + "\" has not been registered");
-		}			
-		return _fstype_to_type_id.at(fstype);
-	}
-	
 	
 	const std::string get_typename(const type_id& type) const {
 		return to_string(type);
 	}
 	
-	const std::string& get_typename(const TypeIdx& fstype) const {
-		if (fstype >= _type_to_name.size()) {
+	type_id get_type_id(TypeIdx fstype) const { return typeinfo(fstype).get_type_id(); }
+	const std::string& get_typename(const TypeIdx& fstype) const { return typeinfo(fstype).name(); }
+	
+	
+	const FSTypeInfo& typeinfo(const TypeIdx& fstype) const {
+		if (fstype >= _fstype_info.size()) {
 			throw unregistered_type("FS-Type with id \"" + std::to_string(fstype) + "\" has not been registered");
-		}			
-		return _type_to_name.at(fstype);
+		}
+		return _fstype_info.at(fstype);
 	}
+	
+	const SymbolInfo& symbolinfo(const symbol_id& symbol) const {
+		if (symbol >= _symbol_info.size()) {
+			throw unregistered_symbol("Symbol with id \"" + std::to_string(symbol) + "\" has not been registered");
+		}
+		return _symbol_info[symbol];		
+	}
+	
 	
 	const std::string get_object_name(const object_id& object) const {
 		type_id t = o_type(object);
@@ -123,11 +126,11 @@ private:
 		return it->second;		
 	}	
 	
-	symbol_id add_symbol(const std::string& name, const symbol_t& type, const Signature& signature) {
+	symbol_id add_symbol(const std::string& name, const symbol_t& type, const Signature& signature, bool static_) {
+		assert(_symbol_info.size() == symbolIds.size());
 		unsigned id = symbolIds.size();
 		symbolIds.insert(std::make_pair(name, id));
-		symbolNames.push_back(name);
-		// TODO finish this - record signature, etc.
+		_symbol_info.push_back(SymbolInfo(id, type, name, signature, static_));
 		return id;
 	}
 	
@@ -138,8 +141,6 @@ private:
 	}
 	
 	TypeIdx add_fstype(const std::string& name, type_id underlying_type, const type_range& range) {
-		assert(_type_to_name.size() == _type_ranges.size());
-		
 		type_id t = check_valid_range(range);
 		if (underlying_type != t) throw range_type_mismatch(underlying_type, t);
 		
@@ -152,6 +153,23 @@ private:
 		
 		return id;
 	}
+	
+	//! Private method - Add a fs-type with given underlying type_id
+	TypeIdx _add_fstype(const std::string& name, type_id underlying_type) {
+		assert(_fstype_info.size() == _name_to_type.size());
+		assert(_fstype_info.size() == _fstype_objects.size());
+		assert(_fstype_info.size() == _type_ranges.size());
+		
+		TypeIdx id = _fstype_info.size();
+		_name_to_type.insert(std::make_pair(name, id));
+		_fstype_objects.push_back(std::vector<object_id>()); // Push back an empty vector
+		
+		
+		
+		_fstype_info.push_back(FSTypeInfo(id, name, underlying_type));
+		
+		return id;
+	}	
 	
 	//! Check that the range is valid and return its type
 	type_id check_valid_range(const type_range& range) const {
@@ -193,23 +211,6 @@ private:
 		return result;
 	}
 
-
-	//! Private method - Add a fs-type with given underlying type_id
-	TypeIdx _add_fstype(const std::string& name, type_id underlying_type) {
-		assert(_type_to_name.size() == _name_to_type.size());
-		assert(_type_to_name.size() == _fstype_to_type_id.size());
-		assert(_type_to_name.size() == _fstype_objects.size());
-		
-		TypeIdx id = _type_to_name.size();
-		_type_to_name.push_back(name);		
-		_name_to_type.insert(std::make_pair(name, id));
-		_fstype_to_type_id.push_back(underlying_type);
-		_fstype_objects.push_back(std::vector<object_id>()); // Push back an empty vector
-		
-		return id;
-	}
-
-
 	object_id add_object(const std::string& name, TypeIdx fstype) {
 		assert(_object_ids.size() == _object_names.size());
 		unsigned id = _object_names.size();
@@ -235,35 +236,31 @@ private:
 	}
 	
 	
-	static const type_range INVALID_TYPE_RANGE;
+	
 	
 	//! The bounds of bounded types, e.g. bounded integer types
 	std::vector<type_range> _type_ranges;
 	
-	//! Maps between predicate and function symbols names and IDs.
-	std::vector<std::string> symbolNames;
+	//! Map between predicate and function symbols names and IDs.
 	std::unordered_map<std::string, SymbolIdx> symbolIds;
 	
-	//! Maps between (FSTRIPS) typenames and type IDs.
+	//! Map between (FSTRIPS) typenames and type IDs.
 	std::unordered_map<std::string, TypeIdx> _name_to_type;
-	std::vector<std::string> _type_to_name;
 	
-	//! A map between (implicit) TypeIdx and corresponding type_id
-	std::vector<type_id> _fstype_to_type_id;
-	
-	//! A map from object index to object name
+	//! Map from object index to object name
 	std::unordered_map<object_id, std::string> _object_names;
-	//! A map from object name to object index
+	//! Map from object name to object index
 	std::unordered_map<std::string, object_id> _object_ids;
 	
-	//! A map from fs-type ID to all of the object indexes of that type
+	//! Map from fs-type ID to all of the object indexes of that type
 	std::vector<std::vector<object_id>> _fstype_objects;
 	
+	
+	std::vector<FSTypeInfo> _fstype_info;
+	
+	std::vector<SymbolInfo> _symbol_info;
+	
 };
-
-const type_range
-LanguageInfo::Implementation::INVALID_TYPE_RANGE = std::make_pair(object_id::INVALID, object_id::INVALID);
-
 
 LanguageInfo::LanguageInfo() : _impl(new Implementation()) {}
 
@@ -289,8 +286,8 @@ get_symbol_id(const std::string& name) const { return impl().get_symbol_id(name)
 const std::string& LanguageInfo::
 get_symbol_name(symbol_id symbol) const { return impl().get_symbol_name(symbol); }
 
-const std::vector<std::string>& LanguageInfo::
-all_symbol_names() const { return impl().symbolNames; }
+const std::vector<SymbolInfo>& LanguageInfo::
+all_symbols() const { return impl()._symbol_info; }
 
 unsigned LanguageInfo::
 num_symbols() const { return impl().symbolIds.size(); }
@@ -316,7 +313,7 @@ const std::string LanguageInfo::
 get_object_name(const object_id& object) const { return impl().get_object_name(object); }
 
 symbol_id LanguageInfo::
-add_symbol(const std::string& name, const symbol_t& type, const Signature& signature) { return impl().add_symbol(name, type, signature); }
+add_symbol(const std::string& name, const symbol_t& type, const Signature& signature, bool static_) { return impl().add_symbol(name, type, signature, static_); }
 
 object_id LanguageInfo::
 add_object(const std::string& name, TypeIdx fstype) { return impl().add_object(name, fstype); }
@@ -331,11 +328,15 @@ add_fstype(const std::string& name) { return impl().add_fstype(name); }
 TypeIdx LanguageInfo::
 add_fstype(const std::string& name, type_id underlying_type, const type_range& range) { return impl().add_fstype(name, underlying_type, range); }
 
-
 void LanguageInfo::
 bind_object_to_type(TypeIdx fstype, object_id object) { return impl().bind_object_to_type(fstype, object); }
 
+const FSTypeInfo& LanguageInfo::
+typeinfo(const TypeIdx& fstype) const { return impl().typeinfo(fstype); }
 
+const SymbolInfo& LanguageInfo::
+symbolinfo(const symbol_id& fstype) const { return impl().symbolinfo(fstype); }
+		
 //! Load all the function-related data
 void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 	// Symbol data is stored as: # <symbol_id, symbol_name, symbol_type, <function_domain>, function_codomain, state_variables, static?>
@@ -360,15 +361,15 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 			// Parse the codomain ID
 			signature.push_back(lang.get_fstype_id(data[i][4].GetString()));
 		}
-		
-		symbol_id id = lang.add_symbol(name, type, signature);
-		assert(expected_id == id); // Check values are decoded in the proper order
 
+		bool static_ = data[i][6].GetBool();
 		/*
-		bool is_static = data[i][6].GetBool();
         bool has_unbounded_arity = data[i][7].GetBool();
 		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static, has_unbounded_arity));
 		*/
+		
+		symbol_id id = lang.add_symbol(name, type, signature, static_);
+		assert(expected_id == id); // Check values are decoded in the proper order
 	}	
 }
 
