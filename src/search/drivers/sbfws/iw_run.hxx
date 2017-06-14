@@ -448,7 +448,10 @@ public:
 		while (node->has_parent()) {
 			const StateT& state = node->state;
 			// const StateT& parent_state = node->parent->state;
-			
+
+			//auto *idx = dynamic_cast<unsigned*>(&node->action);
+			//assert(groundaction);
+			//const GroundAction& action = Problem::getInstance().getGroundActions()[*idx];			
 			// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
 			//if (action->getName() == "transition_arm") {
 				ObjectIdx o_confb = state.getValue(v_confb);
@@ -640,7 +643,7 @@ public:
 	
 	
 	std::vector<bool> extract_R_G_relaxed(bool r_all_fallback) {
-	  		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		const ProblemInfo& info = ProblemInfo::getInstance();
 
 		if (r_all_fallback) {
