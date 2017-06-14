@@ -99,6 +99,14 @@ public:
 		}
 		return index;
 	}
+	
+	template <typename T>
+	static T container_union(T& c1, T& c2) {
+	  T result;
+	  result = c1;
+	  result.insert(c2.begin(), c2.end());
+	  return result;
+	}
 
 	
 };

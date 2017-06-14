@@ -23,7 +23,9 @@
 
 
 
-using NoGoodAtomsSet = std::unordered_set<fs0::ObjectIdx>;
+//using NoGoodAtomsSet = std::unordered_set<fs0::ObjectIdx>;
+using NoGoodAtomsSet = std::unordered_set<fs0::Atom>;
+
 
 namespace fs0 { namespace bfws {
 	
@@ -273,6 +275,8 @@ protected:
 	
 	std::unordered_map<unsigned, NodePT> _plans;
 	
+	NoGoodAtomsSet _relevant_no_good_atoms;
+	
 
 public:
 
@@ -310,6 +314,9 @@ public:
 	}
 
 	~IWRun() = default;
+	
+	
+	NoGoodAtomsSet& get_relevant_no_good_atoms() {return _relevant_no_good_atoms;}
 
 	// Disallow copy, but allow move
 	IWRun(const IWRun&) = delete;
@@ -398,12 +405,9 @@ public:
 		
 		for (NodePT node:seed_nodes) {
 			// We ignore s0
-			_plans.insert(std::make_pair(subgoal_idx, node));
+			//_plans.insert(std::make_pair(subgoal_idx, node));
 			subgoal_idx++;
 			while (node->has_parent()) {
-				//std::cout << "Node idx: " << subgoal_idx << std::endl;
-				//std::cout << node->state << std::endl;
-				//std::cout << std::endl;
 				
 				// If the node has already been processed, no need to do it again, nor to process the parents,
 				// which will necessarily also have been processed.
@@ -425,17 +429,33 @@ public:
 	}
 	
 	//There is a set of no good atoms per each plan pi (per each goal atom)
-	std::vector<NoGoodAtomsSet> compute_offending_configurations() {
+	/*std::vector<NoGoodAtomsSet> compute_offending_configurations() {
 	  std::vector<NoGoodAtomsSet> relevant_no_good;
 	  NoGoodAtomsSet nogood;
 	  for(auto& plan: _plans) {
-	      flag_offending_configurations(plan.second, nogood);
+	      flag_relevant_no_good_atoms(plan.second, nogood);
 	    relevant_no_good.push_back(nogood);
 	  }
 	  return relevant_no_good;
 	}
 	
-	void flag_offending_configurations(NodePT& node, NoGoodAtomsSet& offending) {
+	//There is a set of no good atoms per each plan pi (per each goal atom)
+	NoGoodAtomsSet compute_no_good_atoms() {
+	  NoGoodAtomsSet nogood;
+	  for(auto& plan: _plans) 
+	      flag_relevant_no_good_atoms(plan.second, nogood);
+	  return nogood;
+	}*/
+	
+	//There is a set of no good atoms per each plan pi (per each goal atom)
+	void compute_no_good_atoms() {
+	  for(auto& plan: _optimal_paths) 
+	      flag_relevant_no_good_atoms(plan, _relevant_no_good_atoms);
+	}
+
+	
+	//NoGoodAtomsSet is an unordered_set of relevant no good atoms
+	void flag_relevant_no_good_atoms(NodePT& node, NoGoodAtomsSet& offending) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		const ExternalI& external = info.get_external();
 		const auto& ground_actions = this->_model.getTask().getGroundActions();
@@ -447,11 +467,7 @@ public:
 		
 		while (node->has_parent()) {
 			const StateT& state = node->state;
-			// const StateT& parent_state = node->parent->state;
-
-			//auto *idx = dynamic_cast<unsigned*>(&node->action);
-			//assert(groundaction);
-			//const GroundAction& action = Problem::getInstance().getGroundActions()[*idx];			
+			// const StateT& parent_state = node->parent->state;			
 			// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
 			//if (action->getName() == "transition_arm") {
 				ObjectIdx o_confb = state.getValue(v_confb);
@@ -461,15 +477,21 @@ public:
 				std::string obj_h_name = info.deduceObjectName(o_held, "nullable_object_id");
 				VariableIdx idx_gtype_h = info.getVariableId("gtype("+obj_h_name+")");
 				auto gtype_o_held = state.getValue(idx_gtype_h);
-				
-				for (ObjectIdx gtype_obj:info.getTypeObjects("geometry_type")) {
-				  if(gtype_obj == undef_gtype)
-				    continue;
-				  auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);
-				  offending.insert(v_off.begin(), v_off.end());
+				for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+				   std::string obj_name = info.deduceObjectName(obj, "object_id");
+				   VariableIdx idx_gtype_obj = info.getVariableId("gtype("+obj_name+")");
+				   auto gtype_obj = state.getValue(idx_gtype_obj);
+				   if(gtype_obj == undef_gtype)
+				      continue;
+				   //TODO: Improve this. There is no need to iterate through all offending configurations
+				   auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);//std::vector<ObjectIdx>
+				   VariableIdx confo = info.getVariableId("confo("+obj_name+")");
+				   for(auto& it: v_off) {
+				      Atom no_good(confo, it);
+				      offending.insert(no_good);
+				   }
 				}
-			//}
-			node = node->parent;
+				node = node->parent;
 		}
 	}
 	
@@ -643,7 +665,7 @@ public:
 	
 	
 	std::vector<bool> extract_R_G_relaxed(bool r_all_fallback) {
-		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	  		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		const ProblemInfo& info = ProblemInfo::getInstance();
 
 		if (r_all_fallback) {
@@ -666,25 +688,17 @@ public:
 		std::vector<NodePT> seed_nodes = extract_seed_nodes();
 		std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
 		
-		  //Each plan satisfie a goal_atom(TODO: get goal atom with its original and real id)
-		 for(auto& it: _plans) {
-		  std::cout << it.first << std::endl;
-		   std::cout << it.second->state << std::endl;
-		}
-		
+		compute_no_good_atoms();
+
+
 		//This is the set of relevant no good atoms
-		std::vector<NoGoodAtomsSet> relevant_no_good = compute_offending_configurations();
-		std::cout << "Size of relevant no good: " << relevant_no_good.size() << std::endl;
-		for(auto& it: relevant_no_good) {
-		  for(auto& no_good: it) {
-		   std::cout << info.deduceObjectName(no_good, "conf_obj") << " ";
-		   //std::cout << no_good << " ";
-		  }
-		  std::cout << std::endl;
+		//NoGoodAtomsSet relevant_no_good = compute_no_good_atoms();
+		/*std::cout << "Set of relevant no good atoms: \n" << std::endl;
+		for(auto& it: relevant_no_good) 
+		   std::cout << it << " ";
+		std::cout << std::endl;
+		  */		
 		  
-		}
-		  
-		
 		
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {

@@ -42,7 +42,7 @@ EngineRegistry::EngineRegistry() {
 	add("liw",  new IteratedWidthDriver<LiftedStateModel>());
 	
 	add("sbfws",  new bfws::SBFWSDriver<SimpleStateModel>());
-	add("lsbfws",  new bfws::SBFWSDriver<LiftedStateModel>());
+	//add("lsbfws",  new bfws::SBFWSDriver<LiftedStateModel>());
 	
 	add("bfs",  new BreadthFirstSearchDriver<GroundStateModel>());
 	add("lbfs",  new BreadthFirstSearchDriver<LiftedStateModel>());

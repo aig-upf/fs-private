@@ -91,6 +91,8 @@ public:
 	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
 	RelevantAtomSet* _relevant_atoms;
 	
+	NoGoodAtomsSet* _relevant_no_good_atoms;
+	
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
 	//! atoms in s with novelty 1.
 // 	std::vector<unsigned> _nov1atom_idxs;	
@@ -107,13 +109,14 @@ public:
 		w_g(Novelty::Unknown),
 		w_gr(Novelty::Unknown),
 		_helper(nullptr),
-		_relevant_atoms(nullptr)
+		_relevant_atoms(nullptr),
+		_relevant_no_good_atoms(nullptr)
 // 		_nov1atom_idxs()
 	{
 		assert(_gen_order > 0); // Very silly way to detect overflow, in case we ever generate > 4 billion nodes :-)
 	}
 	
-	~SBFWSNode() { delete _helper; delete _relevant_atoms; }
+	~SBFWSNode() { delete _helper; delete _relevant_atoms; delete _relevant_no_good_atoms; }
 	SBFWSNode(const SBFWSNode&) = delete;
 	SBFWSNode(SBFWSNode&&) = delete;
 	SBFWSNode& operator=(const SBFWSNode&) = delete;
@@ -362,6 +365,12 @@ public:
 			SimulationT simulator(model, _featureset, evaluator, _simconfig, _stats, verbose);
 			//SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
 			std::vector<bool> relevant = simulator.compute_R(node.state);
+			NoGoodAtomsSet relevant_no_good = simulator.get_relevant_no_good_atoms();
+			
+			std::cout << "Set of relevant no good atoms from SBFWS: \n" << std::endl;
+			for(auto& it: relevant_no_good) 
+			  std::cout << it << " ";
+			std::cout << std::endl;
 			
 			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
