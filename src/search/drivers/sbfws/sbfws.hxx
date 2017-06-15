@@ -91,7 +91,8 @@ public:
 	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
 	RelevantAtomSet* _relevant_atoms;
 	
-	NoGoodAtomsSet* _relevant_no_good_atoms;
+	//! The number of relevant no good atoms which are FALSE in state
+	unsigned _relevant_no_good_counter;
 	
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those 
 	//! atoms in s with novelty 1.
@@ -110,13 +111,13 @@ public:
 		w_gr(Novelty::Unknown),
 		_helper(nullptr),
 		_relevant_atoms(nullptr),
-		_relevant_no_good_atoms(nullptr)
+		_relevant_no_good_counter(0)
 // 		_nov1atom_idxs()
 	{
 		assert(_gen_order > 0); // Very silly way to detect overflow, in case we ever generate > 4 billion nodes :-)
 	}
 	
-	~SBFWSNode() { delete _helper; delete _relevant_atoms; delete _relevant_no_good_atoms; }
+	~SBFWSNode() { delete _helper; delete _relevant_atoms; }
 	SBFWSNode(const SBFWSNode&) = delete;
 	SBFWSNode(SBFWSNode&&) = delete;
 	SBFWSNode& operator=(const SBFWSNode&) = delete;
@@ -141,6 +142,8 @@ public:
 		}
 		os << "#" << _gen_order << " (" << this << "), " << state;
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
+	        os << ", #c=" << _relevant_no_good_counter;
+		os << ", #r'=" << _relevant_atoms->num_reached()+_relevant_no_good_counter;
 		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
 // 		if (action != ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
@@ -201,6 +204,9 @@ protected:
 
 	SBFWSConfig _sbfwsconfig;
 	
+	//! The set of relevant no good atoms
+	NoGoodAtomsSet _relevant_no_good_atoms;
+	
 	
 public:
 	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, BFWSStats& stats) :
@@ -230,6 +236,7 @@ public:
 	
 	template <typename NodeT>
 	unsigned evaluate_wg1(NodeT& node) {
+
 		unsigned type = node.unachieved_subgoals;
 		unsigned ptype = node.has_parent() ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
 		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 1, type, ptype);
@@ -240,6 +247,7 @@ public:
 
 	template <typename NodeT>
 	unsigned evaluate_wg2(NodeT& node) {
+
 		unsigned type = node.unachieved_subgoals;
 		unsigned ptype = node.has_parent() ? node.parent->unachieved_subgoals : 0; // If the node has no parent, this value doesn't matter.
 		unsigned nov = evaluate_novelty(node, _wg_novelty_evaluators, 2, type, ptype);
@@ -261,12 +269,15 @@ public:
 	unsigned compute_node_complex_type(NodeT& node) {
 // 		LPT_INFO("types", "Type=" << compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node)) << " for node: " << std::endl << node)
 // 		LPT_INFO("hash_r", "#r=" << get_hash_r(node) << " for node: " << std::endl << node)
-		return compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node));
+		//std::cout << "#r=" << get_hash_r(node) << " ";// " for node: " << node << std::endl;
+		unsigned hash = get_hash_r(node);
+		unsigned new_r = hash + node._relevant_no_good_counter;
+		//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
+		return compute_node_complex_type(node.unachieved_subgoals, new_r);
 	}
 	
 	template <typename NodeT>
 	unsigned evaluate_wgr1(NodeT& node) {
-		
 		// A temporary hack: if we want no R computation at all, then return INF novelty w_{#g,#r} so that nodes on QWRG1 are ignored.
 		// This poses a small overhead, but it is only temporary.
 		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
@@ -285,6 +296,7 @@ public:
 
 	template <typename NodeT>
 	unsigned evaluate_wgr2(NodeT& node) {
+	  	//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
 		unsigned type = compute_node_complex_type(node);
 		unsigned ptype = node.has_parent() ? compute_node_complex_type(*(node.parent)) : 0;
 		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 2, type, ptype);
@@ -337,6 +349,16 @@ public:
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
 	}
 	
+	
+	//! Compute the counter #c(s)
+	template<typename NodeT>
+	const unsigned compute_C(NodeT& node) {
+	  for(auto& it: _relevant_no_good_atoms)
+	    if(!node.state.contains(it))
+	      node._relevant_no_good_counter++;
+	  //std::cout << node._relevant_no_good_counter << " ";  
+	}
+	
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which
 	//! the counter #r(node) can be obtained. This implements a lazy version which
 	//! can recursively compute the parent RelevantAtomSet.
@@ -365,10 +387,11 @@ public:
 			SimulationT simulator(model, _featureset, evaluator, _simconfig, _stats, verbose);
 			//SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
 			std::vector<bool> relevant = simulator.compute_R(node.state);
-			NoGoodAtomsSet relevant_no_good = simulator.get_relevant_no_good_atoms();
+			//NoGoodAtomsSet relevant_no_good = simulator.get_relevant_no_good_atoms();
+			_relevant_no_good_atoms = simulator.get_relevant_no_good_atoms();
 			
 			std::cout << "Set of relevant no good atoms from SBFWS: \n" << std::endl;
-			for(auto& it: relevant_no_good) 
+			for(auto& it: _relevant_no_good_atoms) 
 			  std::cout << it << " ";
 			std::cout << std::endl;
 			
@@ -378,6 +401,8 @@ public:
 			
 			if (!node.has_parent()) { // Log some info, but only for the seed state
 				LPT_DEBUG("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
+				//std::cout << "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " <<  *(node._relevant_atoms) << std::endl; 
+
 			}
 		}
 
@@ -385,7 +410,7 @@ public:
 		else {
 			// Copy the set R from the parent and update the set of relevant nodes with those that have been reached.
 			node._relevant_atoms = new RelevantAtomSet(compute_R(*node.parent)); // This might trigger a recursive computation
-			
+
 			if (node.decreases_unachieved_subgoals()) {
  				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
 			} else {
@@ -393,6 +418,10 @@ public:
 				// node._relevant_atoms->update(node.state, &(node.parent->state));
 			}
 	}
+			compute_C(node);
+			//std::cout << node._relevant_atoms->num_reached() << " ";
+			//std::cout << "R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " <<  *(node._relevant_atoms) << std::endl; 
+			//std::cout << std::endl;
 	
 		return *node._relevant_atoms;
 	}

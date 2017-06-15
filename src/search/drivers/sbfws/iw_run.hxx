@@ -401,12 +401,12 @@ public:
 		
 		//std::cout << "Marking atoms" << std::endl;
 		//std::cout << seed_nodes.size() << std::endl;
-		int subgoal_idx = 0;
+		//int subgoal_idx = 0;
 		
 		for (NodePT node:seed_nodes) {
 			// We ignore s0
 			//_plans.insert(std::make_pair(subgoal_idx, node));
-			subgoal_idx++;
+			//subgoal_idx++;
 			while (node->has_parent()) {
 				
 				// If the node has already been processed, no need to do it again, nor to process the parents,
@@ -428,25 +428,7 @@ public:
 		return atoms;
 	}
 	
-	//There is a set of no good atoms per each plan pi (per each goal atom)
-	/*std::vector<NoGoodAtomsSet> compute_offending_configurations() {
-	  std::vector<NoGoodAtomsSet> relevant_no_good;
-	  NoGoodAtomsSet nogood;
-	  for(auto& plan: _plans) {
-	      flag_relevant_no_good_atoms(plan.second, nogood);
-	    relevant_no_good.push_back(nogood);
-	  }
-	  return relevant_no_good;
-	}
-	
-	//There is a set of no good atoms per each plan pi (per each goal atom)
-	NoGoodAtomsSet compute_no_good_atoms() {
-	  NoGoodAtomsSet nogood;
-	  for(auto& plan: _plans) 
-	      flag_relevant_no_good_atoms(plan.second, nogood);
-	  return nogood;
-	}*/
-	
+
 	//There is a set of no good atoms per each plan pi (per each goal atom)
 	void compute_no_good_atoms() {
 	  for(auto& plan: _optimal_paths) 
@@ -467,8 +449,9 @@ public:
 		
 		while (node->has_parent()) {
 			const StateT& state = node->state;
-			// const StateT& parent_state = node->parent->state;			
-			// COMPUTE ALL OBJECT CONFIGURATIONS THAT (AT ANY TIME) CAN OVERLAP WITH THE POSITION OF THE ROBOT IN THIS STATE
+			//auto idx = dynamic_cast<const unsigned*>(&(node->action));
+			//const GroundAction& action = Problem::getInstance().getGroundActions()[node->action];
+
 			//if (action->getName() == "transition_arm") {
 				ObjectIdx o_confb = state.getValue(v_confb);
 				ObjectIdx o_traj_arm = state.getValue(v_traja);
@@ -516,7 +499,6 @@ public:
 	}
 	
 	std::vector<bool> compute_R(const StateT& seed) {
-		
 		if (_config._force_R_all) {
 			if (_verbose) LPT_INFO("cout", "Simulation - R=R[All] is the user-preferred option");	
 			return compute_R_all();
@@ -545,7 +527,7 @@ public:
 		_config._complete = false;
 		float simt0 = aptk::time_used();
   		run(seed, _config._max_width);
-		
+		compute_no_good_atoms();
 		report_simulation_stats(simt0);
 		
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
@@ -561,6 +543,7 @@ public:
 		
 		float simt0 = aptk::time_used();
   		run(seed, _config._max_width);
+		compute_no_good_atoms();
 		report_simulation_stats(simt0);
 		
 		if (_config._goal_directed && _unreached.size() == 0) {
@@ -589,6 +572,7 @@ public:
 		
 		float simt0 = aptk::time_used();
   		run(seed, 1);
+		compute_no_good_atoms();
 		report_simulation_stats(simt0);
 		
 		if (_unreached.size() == 0) {
@@ -617,7 +601,9 @@ public:
 		}
 			
 		reset();
+		_relevant_no_good_atoms.clear();
 		run(seed, 2);
+		compute_no_good_atoms();
 		report_simulation_stats(simt0);
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 		
@@ -688,19 +674,7 @@ public:
 		
 		std::vector<NodePT> seed_nodes = extract_seed_nodes();
 		std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
-		
-		compute_no_good_atoms();
 
-
-		//This is the set of relevant no good atoms
-		//NoGoodAtomsSet relevant_no_good = compute_no_good_atoms();
-		/*std::cout << "Set of relevant no good atoms: \n" << std::endl;
-		for(auto& it: relevant_no_good) 
-		   std::cout << it << " ";
-		std::cout << std::endl;
-		  */		
-		  
-		
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
@@ -890,7 +864,7 @@ public:
 //   				LPT_INFO("cout", "Simulation - Node generated: " << *successor);
 				
 				if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
-					report("All subgoals reached");					  
+					report("All subgoals reached");	
 					return true;
 				}
 				
