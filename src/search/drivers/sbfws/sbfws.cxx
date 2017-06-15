@@ -26,13 +26,13 @@ SBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config, co
 	return do_search(drivers::GroundingSetup::fully_ground_simple_model(problem), config, out_dir, start_time);
 }
 
-
+/*
 template <>
 ExitCode
 SBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_lifted_model(problem), config, out_dir, start_time);
 }
-
+*/
 
 
 template <typename StateModelT>
