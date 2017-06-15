@@ -152,9 +152,9 @@ public:
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
 		
-		if (node._w == 2) {
-			_evaluator->mark_nov2atoms_from_last_state(node._nov2_pairs);
-		}
+// 		if (node._w == 2) {
+// 			_evaluator->mark_nov2atoms_from_last_state(node._nov2_pairs);
+// 		}
 		
 		return node._w;
 	}
@@ -528,6 +528,7 @@ public:
 		}		
 		
 		if (_config._force_adaptive_run) {
+			throw std::runtime_error("DON'T USE THIS! Use R'_G instead");
 			return compute_adaptive_R(seed);
 		} else if (_config._max_width == 1){
 			return compute_plain_R1(seed);
@@ -720,14 +721,9 @@ public:
 	
 	//! Extracts the goal-oriented set of relevant atoms after a simulation run
 	std::vector<bool> extract_R_G(bool r_all_fallback) {
-		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		throw std::runtime_error("DON'T USE THIS");
 		/*
-		for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
-			const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
-			assert(_in_seed[subgoal_idx] || !paths.empty());
-			seed_nodes.insert(seed_nodes.end(), paths.begin(), paths.end());
-		}
-		*/
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 
 		
 		if (r_all_fallback) {
@@ -768,6 +764,7 @@ public:
 		_stats.r_type(2);
 		
 		return R_G;
+		*/
 	}
 	
 	std::vector<NodePT> extract_seed_nodes() {
