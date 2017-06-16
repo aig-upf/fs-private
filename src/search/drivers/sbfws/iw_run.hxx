@@ -437,7 +437,7 @@ public:
 
 	
 	//NoGoodAtomsSet is an unordered_set of relevant no good atoms
-	void flag_relevant_no_good_atoms(NodePT& node, NoGoodAtomsSet& offending) {
+	/*void flag_relevant_no_good_atoms(NodePT& node, NoGoodAtomsSet& offending) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		const ExternalI& external = info.get_external();
 		const auto& ground_actions = this->_model.getTask().getGroundActions();
@@ -449,10 +449,9 @@ public:
 		
 		while (node->has_parent()) {
 			const StateT& state = node->state;
-			//auto idx = dynamic_cast<const unsigned*>(&(node->action));
-			//const GroundAction& action = Problem::getInstance().getGroundActions()[node->action];
+			const GroundAction* action = Problem::getInstance().getGroundActions()[node->action];
 
-			//if (action->getName() == "transition_arm") {
+			if (action->getName() == "transition_arm") {
 				ObjectIdx o_confb = state.getValue(v_confb);
 				ObjectIdx o_traj_arm = state.getValue(v_traja);
 				ObjectIdx o_held = state.getValue(v_holding);
@@ -474,7 +473,51 @@ public:
 				      offending.insert(no_good);
 				   }
 				}
-				node = node->parent;
+			}
+		    node = node->parent;
+		}
+	}*/
+	
+	void flag_relevant_no_good_atoms(NodePT& node, NoGoodAtomsSet& offending) {
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		const ExternalI& external = info.get_external();
+		const auto& ground_actions = this->_model.getTask().getGroundActions();
+		assert(ground_actions.size());
+		VariableIdx v_confb = info.getVariableId("confb(rob)");//confb(rob) variable
+		VariableIdx v_traja = info.getVariableId("traj(rob)");//traj(rob) variable
+		VariableIdx v_holding = info.getVariableId("holding()");//holding variable
+		ObjectIdx undef_gtype = info.getObjectId("g0");//go object idx
+		
+		while (node->has_parent()) {
+			const StateT& state = node->state;
+			const GroundAction* action = Problem::getInstance().getGroundActions()[node->action];
+
+			if (action->getName() == "transition_arm") {
+				ObjectIdx o_confb = state.getValue(v_confb);//Base conf
+				ObjectIdx o_traj_arm = state.getValue(v_traja);//trajectory
+				ObjectIdx o_held = state.getValue(v_holding);//Object being held
+				//Holding object
+				std::string obj_h_name = info.deduceObjectName(o_held, "nullable_object_id");
+				VariableIdx idx_gtype_h = info.getVariableId("gtype("+obj_h_name+")");
+				auto gtype_o_held = state.getValue(idx_gtype_h);
+				
+				for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+				   std::string obj_name = info.deduceObjectName(obj, "object_id");
+				   VariableIdx idx_gtype_obj = info.getVariableId("gtype("+obj_name+")");
+				   auto gtype_obj = state.getValue(idx_gtype_obj);
+				   if(gtype_obj == undef_gtype)
+				      continue;
+				   //TODO: Improve this. There is no need to iterate through all offending configurations
+				   auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);//std::vector<ObjectIdx>
+				    VariableIdx confo = info.getVariableId("confo("+obj_name+")");
+				   for(auto& off: v_off) {
+				     ObjectIdx obj_conf = state.getValue(confo);
+				     if(obj_conf == off)
+				      offending.insert(Atom(confo, obj_conf));     
+				   }
+				}
+			}
+		    node = node->parent;
 		}
 	}
 	
