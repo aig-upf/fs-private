@@ -277,6 +277,12 @@ protected:
 	
 	NoGoodAtomsSet _relevant_no_good_atoms;
 	
+	//! The node first achieving each problem tuple
+	std::vector<NodePT> _tuple_to_node;
+	
+	//! Object_id o to the index of the tuple "holding()=o"
+	std::vector<AtomIdx> _obj_to_holding_tuple_idx;
+	
 
 public:
 
@@ -295,10 +301,24 @@ public:
 		_w2_nodes_generated(0),		
 		_w_gt2_nodes_generated(0),
 		_stats(stats),
-		_verbose(verbose)		
+		_verbose(verbose),
+		_tuple_to_node(_model.getTask().get_tuple_index().size(), nullptr),
+		_obj_to_holding_tuple_idx(ProblemInfo::getInstance().getNumObjects(), -1)
+		
 	{
 	  Problem p(model.getTask());
 	  std::cout << "Is tautology: " << p.getStateConstraints()->is_tautology() << std::endl;
+	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	  const ProblemInfo& info = ProblemInfo::getInstance();
+	  VariableIdx holding_v = info.getVariableId("holding()");
+	  
+	  for (ObjectIdx obj:info.getTypeObjects("object_id")) {
+	    AtomIdx t = index.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
+	    _obj_to_holding_tuple_idx.at(obj) = t;
+	  }
+	  
+
+	  
 	}
 	
 	void reset() {
@@ -431,8 +451,24 @@ public:
 
 	//There is a set of no good atoms per each plan pi (per each goal atom)
 	void compute_no_good_atoms() {
+	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	  const ProblemInfo& info = ProblemInfo::getInstance();
+
+	  //COmpute the set of relevant no good atoms for each goal atom
 	  for(auto& plan: _optimal_paths) 
 	      flag_relevant_no_good_atoms(plan, _relevant_no_good_atoms);
+	  
+	  std::cout << "Relevant no good atoms before holding(o) subgoals: " << _relevant_no_good_atoms.size() << std::endl;
+	  //Once the set of no good atoms is computed. Find the relevant no good atoms for each subgoal holding(o) where conf(o)=c is an atom in the set of relevant no good atoms
+	  for(auto& no_good: _relevant_no_good_atoms) {
+	      AtomIdx idx = index.to_index(no_good);
+	      ValueTuple tuple = index.to_tuple(idx);
+	      AtomIdx holding_o = _obj_to_holding_tuple_idx.at(tuple[0]); // the tuple "holding(o)"
+	      NodePT& node = _tuple_to_node.at(holding_o);
+	      flag_relevant_no_good_atoms(node, _relevant_no_good_atoms);
+	  }
+	  std::cout << "Relevant no good atoms after holding(o) subgoals: " << _relevant_no_good_atoms.size() << std::endl;
+
 	}
 
 	
@@ -665,7 +701,7 @@ public:
 	}	
 	
 	
-	
+	//Not reported in the IJCAI paper
 	std::vector<bool> compute_adaptive_R(const StateT& seed) {
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		_config._complete = false;
@@ -954,9 +990,20 @@ protected:
 
 	//! Returns true iff all goal atoms have been reached in the IW search
 	bool process_node(NodePT& node) {
-		if (_config._complete) return process_node_complete(node);
-		
+		if (_config._complete) 
+		  return process_node_complete(node);
+
 		const StateT& state = node->state;
+		
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		
+		for (unsigned i = 0; i < state.numAtoms(); ++i) {
+			AtomIdx idx = index.to_index(i, state.getValue(i));
+			if (_tuple_to_node[idx] == nullptr) {
+				_tuple_to_node[idx] = node;
+			}
+		}
+		
 
 		// We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
 		// to check if the current node satisfies any of them - and if it does, we mark it appropriately.
@@ -966,7 +1013,8 @@ protected:
 			if (_model.goal(state, subgoal_idx)) {
 // 				node->satisfies_subgoal = true;
 // 				_all_paths[subgoal_idx].push_back(node);
-				if (!_optimal_paths[subgoal_idx]) _optimal_paths[subgoal_idx] = node;
+				if (!_optimal_paths[subgoal_idx]) 
+				  _optimal_paths[subgoal_idx] = node;
 				it = _unreached.erase(it);
 			} else {
 				++it;
@@ -979,7 +1027,6 @@ protected:
 	//! Returns true iff all goal atoms have been reached in the IW search
 	bool process_node_complete(NodePT& node) {
 		const StateT& state = node->state;
-
 		for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
 			if (!_in_seed[i] && _model.goal(state, i)) {
 // 				node->satisfies_subgoal = true;
