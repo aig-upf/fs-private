@@ -523,7 +523,7 @@ public:
 
 
 	
-	void flag_relevant_no_good_atoms(NodePT& node, NoGoodAtomsSet& offending) {
+	void flag_relevant_no_good_atoms(NodePT node, NoGoodAtomsSet& offending) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		const ExternalI& external = info.get_external();
 		const auto& ground_actions = this->_model.getTask().getGroundActions();
@@ -761,9 +761,9 @@ public:
 		
 		
 		std::vector<NodePT> seed_nodes = extract_seed_nodes();
-		//std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
-		std::vector<bool> R_G(index.size(), false);
-		mark_atoms_in_path_to_subgoal(seed_nodes, R_G);
+		std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
+// 		std::vector<bool> R_G(index.size(), false);
+// 		mark_atoms_in_path_to_subgoal(seed_nodes, R_G);
 		//std::cout << "Size RG: " << R_G.size() << std::endl;
 
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
