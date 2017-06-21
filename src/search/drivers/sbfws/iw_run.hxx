@@ -762,7 +762,7 @@ public:
 		//std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
 		std::vector<bool> R_G(index.size(), false);
 		mark_atoms_in_path_to_subgoal(seed_nodes, R_G);
-
+		//std::cout << "Size RG: " << R_G.size() << std::endl;
 
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
@@ -785,7 +785,7 @@ public:
 	//! Extracts the goal-oriented set of relevant atoms after a simulation run
 	std::vector<bool> extract_R_G(bool r_all_fallback) {
 		throw std::runtime_error("DON'T USE THIS");
-		/*
+		
 		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 
 		
@@ -827,7 +827,7 @@ public:
 		_stats.r_type(2);
 		
 		return R_G;
-		*/
+		
 	}
 	
 	std::vector<NodePT> extract_seed_nodes() {

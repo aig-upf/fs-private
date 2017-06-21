@@ -143,7 +143,7 @@ public:
 		os << "#" << _gen_order << " (" << this << "), " << state;
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 	        os << ", #c=" << _relevant_no_good_counter;
-		os << ", #r'=" << _relevant_atoms->num_reached()+_relevant_no_good_counter;
+		//os << ", #r'=" << _relevant_atoms->num_reached() + _relevant_no_good_counter;
 		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
 // 		if (action != ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
@@ -270,8 +270,10 @@ public:
 // 		LPT_INFO("types", "Type=" << compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node)) << " for node: " << std::endl << node)
 // 		LPT_INFO("hash_r", "#r=" << get_hash_r(node) << " for node: " << std::endl << node)
 		//std::cout << "#r=" << get_hash_r(node) << " ";// " for node: " << node << std::endl;
+		//std::cout << node << std::endl;
 		unsigned hash = get_hash_r(node);
 		unsigned new_r = hash + node._relevant_no_good_counter;
+		//std::cout << "r' = " << new_r << " ";
 		//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
 		return compute_node_complex_type(node.unachieved_subgoals, new_r);
 	}
