@@ -253,6 +253,8 @@ protected:
 	//! '_unreached' contains the indexes of all those goal atoms that have yet not been reached.
 	std::unordered_set<unsigned> _unreached;
 	
+	std::vector<bool> _seen_w1_atoms;
+	
 	//! Contains the indexes of all those goal atoms that were already reached in the seed state
 	std::vector<bool> _in_seed;
 	
@@ -294,6 +296,7 @@ public:
 		_config(config),
 		_optimal_paths(model.num_subgoals()),
 		_unreached(),
+		_seen_w1_atoms(),
 		_in_seed(),
 		_evaluator(featureset, evaluator),
 		_generated(1),
@@ -642,14 +645,13 @@ public:
 	}
 	
 	std::vector<bool> extract_R_1() {
-		std::vector<bool> R = _evaluator.reached_atoms();
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 		if (_verbose) {
-			unsigned c = std::count(R.begin(), R.end(), true);
+			unsigned c = std::count(_seen_w1_atoms.begin(), _seen_w1_atoms.end(), true);
 			LPT_INFO("cout", "Simulation - |R[1]| = " << c);
 			_stats.relevant_atoms(c);
 		}
-		return R;		
+		return _seen_w1_atoms;		
 	}
 	
 	std::vector<bool> compute_R_g_prime(const StateT& seed) {
@@ -960,6 +962,8 @@ public:
 				if (novelty <= _config._max_width) {
 					open.insert(successor);
 					
+					if (novelty==1) save_w1_atoms(successor);
+					
 					assert(novelty == 1 || novelty == 2);
 					
 					if (novelty==1) ++_w1_nodes_generated;
@@ -1034,6 +1038,22 @@ protected:
 		return _unreached.empty();
 	}
 	
+	// store all of the atoms in the node
+	void save_w1_atoms(NodePT& node) {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+		assert(_seen_w1_atoms.size() == index.size());
+		const StateT& state = node->state;
+		for (unsigned var = 0; var < state.numAtoms(); ++var) {
+			ObjectIdx val = state.getValue(var);
+			if (val != 0) {
+				_seen_w1_atoms[index.to_index(var, val)] = true;
+			}			
+		}		
+	}
+	
+	
+	
+	
 	//! Returns true iff all goal atoms have been reached in the IW search
 	bool process_node_complete(NodePT& node) {
 		const StateT& state = node->state;
@@ -1050,8 +1070,10 @@ protected:
 	}
 	
 	void mark_seed_subgoals(const NodePT& node) {
+		const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		std::vector<bool> _(_model.num_subgoals(), false);
 		_in_seed.swap(_);
+		_seen_w1_atoms = std::vector<bool>(index.size(), false);
 		_unreached.clear();
 		for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
 			if (_model.goal(node->state, i)) {
