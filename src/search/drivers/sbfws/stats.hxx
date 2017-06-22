@@ -26,6 +26,8 @@ public:
 	void sim_add_expanded_nodes(unsigned number) { _sim_expanded_nodes += number; }
 	void sim_add_generated_nodes(unsigned number) { _sim_generated_nodes += number; }
 	void sim_add_time(float time) { _sim_time += time; }
+	void set_c_set(unsigned c) {_c_set = c;}
+	
 	
 	
 	void sim_table_created(unsigned k) {
@@ -51,6 +53,7 @@ public:
 	unsigned long generated() const { return _generated; }
 	unsigned long evaluated() const { return _evaluated; }
 	unsigned long simulated() const { return _simulations; }
+	unsigned int c_set() const {return _c_set;}
 	
 	
 	void set_initial_reachable_subgoals(unsigned num) { _initial_reachable_subgoals = num; }
@@ -102,6 +105,8 @@ protected:
 	unsigned long _sim_expanded_nodes;
 	unsigned long _sim_generated_nodes;
 	float _sim_time;
+	
+	unsigned int _c_set;
 	
 	//! _sim_wtables[w] contains the number of width-w novelty tables created during simulation
 	std::vector<unsigned> _sim_wtables;

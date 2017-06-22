@@ -137,15 +137,19 @@ public:
 	std::ostream& print(std::ostream& os) const {
 // 		const Problem& problem = Problem::getInstance();
 		std::string reached = "?";
+		std::string new_r = "";
 		if (_relevant_atoms) {
 			reached = std::to_string(_relevant_atoms->num_reached()) + " / " + std::to_string(_relevant_atoms->getHelper()._num_relevant);
+			new_r = std::to_string(_relevant_atoms->num_reached() + _relevant_no_good_counter);	
 		}
-		os << "#" << _gen_order << " (" << this << "), " << state;
+		else new_r = std::to_string(_relevant_no_good_counter);
+		
+		os << "#" << _gen_order << " (" << this << "), ";// << state;
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
 	        os << ", #c=" << _relevant_no_good_counter;
-		//os << ", #r'=" << _relevant_atoms->num_reached() + _relevant_no_good_counter;
-		os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
-		os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
+		os << ", #r'=" << new_r;
+		//os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
+		//os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
 // 		if (action != ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
 		if (action != ActionT::invalid_action_id) os << ", a = " << action;
 		else os << ", a = None";
@@ -266,13 +270,23 @@ public:
 	}
 	
 	template <typename NodeT>
+	unsigned get_c_counter(NodeT& node) {
+	  return compute_C(node);
+	}
+	
+	template <typename NodeT>
 	unsigned compute_node_complex_type(NodeT& node) {
 // 		LPT_INFO("types", "Type=" << compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node)) << " for node: " << std::endl << node)
 // 		LPT_INFO("hash_r", "#r=" << get_hash_r(node) << " for node: " << std::endl << node)
 		//std::cout << "#r=" << get_hash_r(node) << " ";// " for node: " << node << std::endl;
 		//std::cout << node << std::endl;
 		unsigned hash = get_hash_r(node);
-		unsigned new_r = hash + node._relevant_no_good_counter;
+		unsigned c_counter = get_c_counter(node);
+		//std::cout << "-----------------------------------" << std::endl;
+		//std::cout << "c= " << c_counter << std::endl;
+		//std::cout << node << std::endl;
+		//std::cout << "-----------------------------------" << std::endl;
+		unsigned new_r = hash + c_counter;
 		//std::cout << "r' = " << new_r << " ";
 		//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
 		return compute_node_complex_type(node.unachieved_subgoals, new_r);
@@ -355,10 +369,13 @@ public:
 	//! Compute the counter #c(s)
 	template<typename NodeT>
 	const unsigned compute_C(NodeT& node) {
+	  unsigned c = 0;
 	  for(auto& it: _relevant_no_good_atoms)
 	    if(!node.state.contains(it))
-	      node._relevant_no_good_counter++;
-	  //std::cout << node._relevant_no_good_counter << " ";  
+	      c++;
+	    return c;
+	      //node._relevant_no_good_counter++;
+	    //return node._relevant_no_good_counter;
 	}
 	
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which
@@ -391,11 +408,13 @@ public:
 			std::vector<bool> relevant = simulator.compute_R(node.state);
 			//NoGoodAtomsSet relevant_no_good = simulator.get_relevant_no_good_atoms();
 			_relevant_no_good_atoms = simulator.get_relevant_no_good_atoms();
+			//std::cout << "|C| = " << _relevant_no_good_atoms.size() << std::endl;
+			_stats.set_c_set(_relevant_no_good_atoms.size());
 			
-			std::cout << "Set of relevant no good atoms from SBFWS: \n" << std::endl;
+			/*std::cout << "Set of relevant no good atoms from SBFWS: \n" << std::endl;
 			for(auto& it: _relevant_no_good_atoms) 
 			  std::cout << it << " ";
-			std::cout << std::endl;
+			std::cout << std::endl;*/
 			
 			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
@@ -420,7 +439,7 @@ public:
 				// node._relevant_atoms->update(node.state, &(node.parent->state));
 			}
 	}
-			compute_C(node);
+			//compute_C(node);
 			//std::cout << node._relevant_atoms->num_reached() << " ";
 			//std::cout << "R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " <<  *(node._relevant_atoms) << std::endl; 
 			//std::cout << std::endl;

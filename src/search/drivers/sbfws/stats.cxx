@@ -62,7 +62,7 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
 		std::make_tuple("reused_simulation_nodes", "Simulation nodes reused in the search", std::to_string(_reused_simulation_nodes)),
 		
 		std::make_tuple("r_type", "Type of R set", std::to_string(_r_type)),
-		
+		std::make_tuple("|C|", "C set", std::to_string(_c_set)),
 		std::make_tuple("sim_reachable_0", "Reachable subgoals in initial state", _if_computed(_initial_reachable_subgoals)),
 		std::make_tuple("sim_reachable_max", "Max. # reachable subgoals in any simulation", std::to_string(_max_reachable_subgoals)),
 		std::make_tuple("sim_reachable_avg", "Avg. # reachable subgoals in any simulation", _avg(_sum_reachable_subgoals, _simulations)),

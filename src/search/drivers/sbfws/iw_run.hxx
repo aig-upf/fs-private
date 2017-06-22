@@ -1004,8 +1004,8 @@ protected:
 
 	//! Returns true iff all goal atoms have been reached in the IW search
 	bool process_node(NodePT& node) {
-		if (_config._complete) 
-		  return process_node_complete(node);
+		//if (_config._complete) 
+		  //return process_node_complete(node);
 
 		const StateT& state = node->state;
 		
@@ -1036,6 +1036,7 @@ protected:
 		}
 		// As soon as all nodes have been processed, we return true so that we can stop the search
 		return _unreached.empty();
+		//return false;
 	}
 	
 	// store all of the atoms in the node
