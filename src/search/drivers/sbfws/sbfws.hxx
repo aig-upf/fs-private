@@ -378,6 +378,39 @@ public:
 	    //return node._relevant_no_good_counter;
 	}
 	
+	void clean_relevant_atoms(std::vector<bool>& relevant) {
+	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	  const ProblemInfo& info = ProblemInfo::getInstance();
+	  State init = _model.init();
+	  for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+	    
+	    std::string obj_name = info.deduceObjectName(obj, "object_id");
+	    VariableIdx gtype_var = info.getVariableId("gtype("+obj_name+")");
+	    ObjectIdx geom = init.getValue(gtype_var);
+	    AtomIdx idx1 = index.to_index(gtype_var, geom);
+	    Atom g_atom1 = index.to_atom(idx1);
+	    relevant[idx1] = false;
+	    
+	    VariableIdx confgo_var = info.getVariableId("confgo("+obj_name+")");
+	    ObjectIdx rel_pose = init.getValue(confgo_var);
+	    AtomIdx idx2 = index.to_index(confgo_var, rel_pose);
+	    Atom g_atom2 = index.to_atom(idx2);
+	    relevant[idx2] = false;
+	    
+	  /*  VariableIdx goal_conf_var = info.getVariableId("goal_conf("+obj_name+")");
+	    ObjectIdx goal_conf = init.getValue(goal_conf_var);
+	    AtomIdx idx3 = index.to_index(goal_conf_var, goal_conf);
+	    Atom g_atom3 = index.to_atom(idx3);
+	    std::cout << "Idx/Atom: " << idx3 << "/" << g_atom3 << std::endl;*/
+
+
+	   // relevant[idx3] = false;
+	    
+	  }
+	  
+	}
+	
+	
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which
 	//! the counter #r(node) can be obtained. This implements a lazy version which
 	//! can recursively compute the parent RelevantAtomSet.
@@ -406,15 +439,20 @@ public:
 			SimulationT simulator(model, _featureset, evaluator, _simconfig, _stats, verbose);
 			//SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
 			std::vector<bool> relevant = simulator.compute_R(node.state);
+			std::cout << "Relevant before clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
+			clean_relevant_atoms(relevant);
+			std::cout << "Relevant after clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
+
+			
 			//NoGoodAtomsSet relevant_no_good = simulator.get_relevant_no_good_atoms();
 			_relevant_no_good_atoms = simulator.get_relevant_no_good_atoms();
 			//std::cout << "|C| = " << _relevant_no_good_atoms.size() << std::endl;
 			_stats.set_c_set(_relevant_no_good_atoms.size());
 			
-			/*std::cout << "Set of relevant no good atoms from SBFWS: \n" << std::endl;
+			std::cout << "Set of relevant no good atoms from SBFWS: \n" << std::endl;
 			for(auto& it: _relevant_no_good_atoms) 
 			  std::cout << it << " ";
-			std::cout << std::endl;*/
+			std::cout << std::endl;
 			
 			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
