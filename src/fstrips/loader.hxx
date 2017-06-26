@@ -12,6 +12,7 @@ class ActionEffect;
 class Formula;
 class AtomicFormula;
 class ActionSchema;
+class LogicalVariable;
 
 class Loader {
 public:
