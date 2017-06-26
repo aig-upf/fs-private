@@ -15,7 +15,7 @@ from . import util
 from .exceptions import ParseException
 from .asp.problem import get_effect_symbols
 from .util import IndexDictionary
-from .fstrips_components import FSActionSchema, FSFormula, FSAxiom
+from .fstrips_components import FSActionSchema, FSFormula, FSNamedFormula, FSMetric
 from .object_types import process_problem_types
 from .state_variables import create_all_possible_state_variables, create_all_possible_state_variables_from_groundings
 
@@ -46,13 +46,52 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task = FSTaskIndex(domain_name, instance_name)
     task.process_objects(fd_task.objects)
     task.process_types(types, type_map)
-    task.process_symbols(fd_task.actions, fd_task.predicates, fd_task.functions)
+    task.process_symbols(actions=fd_task.actions, predicates=fd_task.predicates, functions=fd_task.functions)
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
     task.process_actions(fd_task.actions)
+    task.process_processes([])
+    task.process_events([])
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
     task.process_axioms(fd_task.axioms)
+    task.process_metric(None)
+    return task
+
+def create_fs_plus_task( fsp_task, domain_name, instance_name ) :
+    """ Create a problem domain and instance and perform the appropiate validty checks """
+    types, type_map = process_problem_types( fsp_task.types, fsp_task.objects, fsp_task.bounds)
+    task = FSTaskIndex(domain_name, instance_name)
+    print("Creating FS+ task: Processing objects...")
+    task.process_objects(fsp_task.objects)
+    print("Creating FS+ task: Processing types...")
+    task.process_types(types, type_map)
+    #print("Types:", types)
+    #print("Type -> Domain Map:", type_map)
+    # MRJ: takes into account actions, events and processes
+    print("Creating FS+ task: Processing symbols...")
+    task.process_symbols(   actions=fsp_task.actions, events=fsp_task.events,
+                            processes=fsp_task.processes, constraints=fsp_task.constraint_schemata,
+                            predicates=fsp_task.predicates, functions =fsp_task.functions )
+    print("Creating FS+ task: Processing state variables...")
+    task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
+    print("Creating FS+ task: Processing initial state...")
+    task.process_initial_state(filter_out_action_cost_atoms(fsp_task.init, task.action_cost_symbols))
+    print("Creating FS+ task: Processing actions...")
+    task.process_actions(fsp_task.actions)
+    print("Creating FS+ task: Processing processes...")
+    task.process_processes(fsp_task.processes)
+    print("Creating FS+ task: Processing events...")
+    task.process_events(fsp_task.events)
+    print("Creating FS+ task: Processing the goal...")
+    task.process_goal(fsp_task.goal)
+    print("Creating FS+ task: Processing state constraints...")
+    task.process_state_constraints(fsp_task.constraints)
+    task.process_lifted_state_constraints(fsp_task.constraint_schemata)
+    print("Creating FS+ task: Processing axioms...")
+    task.process_axioms(fsp_task.axioms)
+    print("Creating FS+ task: Processing metric...")
+    task.process_metric(fsp_task.metric)
     return task
 
 
@@ -77,9 +116,13 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     task.process_state_variables(state_var_list)
 
     task.process_adl_initial_state(adl_task)
+    task.process_processes([])
+    task.process_events([])
     task.process_adl_actions(adl_task.actions, adl_task.sorted_action_names)
     task.process_adl_goal(adl_task)
     task.process_state_constraints([])  # No state constr. possible in ADL, but this needs to be invoked nevertheless
+    task.process_axioms([])
+    task.process_metric(None)
 
     return task
 
@@ -129,8 +172,11 @@ class FSTaskIndex(object):
         self.goal = util.UninitializedAttribute('goal')
         self.state_constraints = util.UninitializedAttribute('state_constraints')
         self.action_schemas = util.UninitializedAttribute('action_schemas')
+        self.event_schemas = util.UninitializedAttribute('event_schemas')
+        self.process_schemas = util.UninitializedAttribute('process_schemas')
+        self.constraint_schemas = util.UninitializedAttribute('constraint_schemas')
+        self.metric = util.UninitializedAttribute('metric')
         self.groundings = None
-        self.axioms = []
 
     def process_types(self, types, type_map):
         # Each typename points to its (unique) 1-based index (index 0 is reserved for bools)
@@ -141,14 +187,28 @@ class FSTaskIndex(object):
         # Each object name points to it unique 0-based index / ID
         self.objects, self.object_types = self._index_objects(objects)
 
-    def process_symbols(self, actions, predicates, functions):
+    def process_symbols(self, **kwargs ) :
+        actions = kwargs.get('actions', [])
+        events = kwargs.get('events', [])
+        processes = kwargs.get('processes', [])
+        constraints = kwargs.get('constraints', [])
+        predicates = kwargs.get('predicates', [])
+        functions = kwargs.get( 'functions', [])
+
         self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
         self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
 
         self.all_symbols = list(self.symbol_types.keys())
 
-        # All symbols appearing on some action effect are fluent
+        # All symbols appearing on some action, process or event effect are fluent
         self.fluent_symbols = set(pddl_helper.get_effect_symbol(eff) for action in actions for eff in action.effects)
+        self.fluent_symbols |= set(pddl_helper.get_effect_symbol(eff) for proc in processes for eff in proc.effects)
+        self.fluent_symbols |= set(pddl_helper.get_effect_symbol(eff) for evt in events for eff in evt.effects)
+
+        # MRJ: very unsatisfying fix
+        for sym in self.all_symbols :
+            if util.is_external(sym) : # symbol is procedurally defined
+                self.fluent_symbols.add( sym )
 
         # The rest are static, including, by definition, the equality predicate
         self.static_symbols = set(s for s in self.all_symbols if s not in self.fluent_symbols) | set("=")
@@ -196,7 +256,7 @@ class FSTaskIndex(object):
             symbol_types[s.name] = 'bool'
 
         for s in functions:
-            if s.name == 'total-cost' or s.type == 'number':  # Ignore action costs
+            if s.name == 'total-cost':  # Ignore action costs
                 action_cost_symbols.add(s.name)
             else:
                 argtypes = [t.type for t in s.arguments]
@@ -266,6 +326,10 @@ class FSTaskIndex(object):
     def parse_value(self, expression):
         if isinstance(expression, pddl.f_expression.NumericConstant):
             return expression.value
+        elif isinstance(expression, pddl.pddl_types.TypedObject ) :
+            if expression.name not in self.objects:
+                raise ParseException("Functions need to be instantiated to plain objects: symbol {} is not an object".format(expression.symbol))
+            return expression
         else:
             if expression.symbol not in self.objects:
                 raise ParseException("Functions need to be instantiated to plain objects: "
@@ -276,7 +340,19 @@ class FSTaskIndex(object):
         self.state_variables = state_variables
 
     def process_actions(self, actions):
-        self.action_schemas = [FSActionSchema(self, action) for action in actions]
+        self.action_schemas = [FSActionSchema(self, action, "control") for action in actions]
+
+    def process_processes(self, processes) :
+        self.process_schemas = [FSActionSchema(self,proc, "natural") for proc in processes]
+
+    def process_events( self, events ) :
+        self.event_schemas = [FSActionSchema(self,evt, "exogenous") for evt in events]
+
+    def process_metric(self, metric ) :
+        if metric is None :
+            self.metric = FSMetric( self, None, None)
+            return
+        self.metric = FSMetric( self, metric.optimization, metric.expr)
 
     def process_adl_actions(self, actions, sorted_action_names):
         sorted_act = [actions[name] for name in sorted_action_names if name in actions]
@@ -290,12 +366,14 @@ class FSTaskIndex(object):
         self.process_goal(adl.process_adl_flat_formula(adl_task.flat_ground_goal_preconditions))
 
     def process_state_constraints(self, constraints):
-        self.state_constraints = FSFormula(self, constraints)
+        self.state_constraints = [ FSFormula(self, constraints) ]
+
+    def process_lifted_state_constraints(self, constraint_schemas ) :
+        self.state_constraints += [ FSNamedFormula(self, c.name, c.args, c.condition) for c in constraint_schemas ]
 
     def process_axioms(self, axioms):
         """ An axiom is just a (possibly lifted) named formula. """
-        self.axioms = [FSAxiom(self, axiom) for axiom in axioms]
-
+        self.axioms = [FSNamedFormula(self, axiom.name, axiom.parameters, axiom.condition) for axiom in axioms]
 
 def _check_symbol_in_initial_state(s, symbols):  # A small helper
     if s == 'total-cost':  # We ignore the 'total-cost' initial specification

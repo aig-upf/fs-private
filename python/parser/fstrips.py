@@ -4,7 +4,8 @@
 """
 from collections import namedtuple
 
-from python.utils import is_int
+from python.utils import is_int, is_float
+from .pddl.pddl_types import TypedObject
 
 
 def is_relational_operator(symbol):
@@ -12,7 +13,7 @@ def is_relational_operator(symbol):
 
 
 def is_arithmetic_function(symbol):
-    return symbol in {"*", "+", "-", "/"}
+    return symbol in {"*", "+", "-", "/", "^", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan"}
 
 
 def is_builtin_operator(symbol):
@@ -60,7 +61,17 @@ class Variable(object):
     """
     def __init__(self, symbol, args):
         self.symbol = symbol
-        self.args = tuple(int(a) if is_int(a) else a for a in args)
+        self.args = []
+        for a in args :
+            if is_int(a) :
+                self.args.append(a)
+            elif is_float(a) :
+                self.args.append(a)
+            elif isinstance(a,TypedObject) :
+                self.args.append(a.name)
+            else :
+                self.args.append(a)
+        self.args = tuple(self.args)
 
     def __hash__(self):
         return hash((self.symbol, self.args))
@@ -125,12 +136,30 @@ class LogicalVariable(Term):
 
 
 class Constant(Term):
+
     def dump(self, index, binding_unit):
-        if is_int(self.symbol):  # We have a numeric constant
+        if is_int(self.symbol):  # We have an integer constant
+            return dict(type='int_constant', value=int(self.symbol), typename="int")
+        elif is_float(self.symbol) : # We have rational constant
+            return dict(type='number_constant', value=float(self.symbol), typename="number")
+        else:  # We have a logical constant
+            return dict(type='constant', value=index.objects.get_index(self.symbol),
+                        typename=index.object_types[self.symbol])
+
+    # Guillem:
+    def dump(self, index, binding_unit):
+        if is_int(self.symbol):  # We have an integer constant
             return dict(type='constant',
                         symbol=self.symbol,
                         value=int(self.symbol),
                         type_id="int_t",
+                        fstype="")  # TODO We should specify here of which bounded FS-type the constant is
+
+        elif is_float(self.symbol):  # We have a float constant
+            return dict(type='constant',
+                        symbol=self.symbol,
+                        value=float(self.symbol),
+                        type_id="float_t",
                         fstype="")  # TODO We should specify here of which bounded FS-type the constant is
 
         else:  # We have a logical constant

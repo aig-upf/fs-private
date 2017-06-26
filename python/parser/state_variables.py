@@ -16,7 +16,12 @@ def create_all_possible_state_variables(symbols, static_symbols, type_map):
         name = symbol.name
         if is_external(name) or name in static_symbols:  # The symbol won't yield any state variable
             continue
-        instantiations = [type_map[t] for t in symbol.arguments]
+        try :
+            instantiations = [type_map[t] for t in symbol.arguments]
+        except TypeError as e:
+            print(type_map)
+            print(symbol.arguments)
+            raise RuntimeError("Error processing symbol '{}' arguments: {}".format(symbol.name, symbol.arguments))
         for instantiation in itertools.product(*instantiations):
             variables.add(Variable(symbol.name, instantiation))
     return variables

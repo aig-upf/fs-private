@@ -8,7 +8,7 @@ from . import pddl
 from .pddl.f_expression import FunctionalTerm
 from .pddl.conditions import Conjunction
 from . import fstrips as fs
-from .parser import Parser
+from .parser import Parser, exceptions
 
 
 def ensure_conjunction(node):
@@ -107,46 +107,72 @@ class FSFormula(FSBaseComponent):
         return dict(conditions=self.processed.dump(self.index, self.binding_unit),
                     unit=self.binding_unit.dump())
 
-
-class FSAxiom(FSBaseComponent):
-    """ A FSTRIPS axiom, which is a formula with a name and possibly some lifted parameters """
-    def __init__(self, index, axiom):
+class FSMetric(FSBaseComponent) :
+    """ A state--dependant metric (i.e. a expression to optimise defined over state variables)"""
+    def __init__(self, index, opt_mode, expr ) :
         super().__init__(index)
-        self.axiom = axiom
+        if opt_mode is None or expr is None :
+            self.opt_mode = self.expr = None
+            return
+        self.expression = self.parser.process_expression(expr, self.binding_unit)
+        self.opt_mode = opt_mode
+
+    def dump(self) :
+        if self.opt_mode is None :
+            return dict()
+        return dict(optimization = self.opt_mode,
+                    expression=self.expression.dump(self.index,self.binding_unit))
+
+class FSNamedFormula(FSBaseComponent):
+    """ A FSTRIPS axiom, which is a formula with a name and possibly some lifted parameters """
+    def __init__(self, index, name, parameters, formula):
+        super().__init__(index)
+        self.name = name
+        self.parameters = parameters
 
         # Order matters: the binding unit needs to be created when the effects are processed
-        self.binding_unit = fs.BindingUnit.from_parameters(axiom.parameters)
-        self.formula = self.process_conditions(self.axiom.condition)
+        self.binding_unit = fs.BindingUnit.from_parameters(self.parameters)
+        self.formula = self.process_conditions(formula)
 
     def dump(self):
-        return dict(name=self.axiom.name,
-                    signature=[self.index.types[p.type] for p in self.axiom.parameters],
-                    parameters=[p.name for p in self.axiom.parameters],
-                    conditions=self.formula.dump(self.index, self.binding_unit),
-                    unit=self.binding_unit.dump())
+        return dict(name=self.name,
+            signature=[self.index.types[p.type] for p in self.parameters],
+            parameters=[p.name for p in self.parameters],
+            conditions=self.formula.dump(self.index.objects, self.binding_unit),
+            unit=self.binding_unit.dump())
 
     def __str__(self):
-        if self.axiom.parameters:
-            params = "({})".format(', '.join("{}: {}".format(p.name, p.type) for p in self.axiom.parameters))
+        if self.parameters:
+            params = "({})".format(', '.join("{}: {}".format(p.name, p.type) for p in self.parameters))
         else:
             params = ""
-        return "{}{}\n\t{}".format(self.axiom.name, params, self.formula)
+        return "{}{}\n\t{}".format(self.name, params, self.formula)
 
 
 class FSActionSchema(FSBaseComponent):
     """ A FSTRIPS action schema """
-    def __init__(self, index, action):
+    def __init__(self, index, action, type = "control"):
         super().__init__(index)
         self.action = action
+        self.type = type
 
         # Order matters: the binding unit needs to be created when the effects are processed
         self.binding_unit = fs.BindingUnit.from_parameters(action.parameters)
-        self.precondition = self.process_conditions(self.action.precondition)
-        self.effects = self.process_effects()
+        try :
+            self.precondition = self.process_conditions(self.action.precondition)
+        except exceptions.UndeclaredSymbol as e :
+            raise SystemExit('Found undeclared symbol in precondition of schema "{}", exception message follows: \n {}\n{}'.format(action.name,e,))
+
+        try :
+            self.effects = self.process_effects()
+        except exceptions.UndeclaredSymbol as e :
+            raise SystemExit('Found undeclared symbol in effects of schema "{}", exception message follows: \n {}'.format(action.name,e))
+
 
     def dump(self):
         return dict(name=self.action.name,
                     signature=[self.index.types[p.type] for p in self.action.parameters],
+                    type =self.type,
                     parameters=[p.name for p in self.action.parameters],
                     conditions=self.precondition.dump(self.index, self.binding_unit),
                     effects=[eff.dump() for eff in self.effects],

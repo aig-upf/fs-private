@@ -10,7 +10,7 @@ import subprocess
 
 from python import utils, FS_PATH, FS_WORKSPACE
 from .pddl import tasks, pddl_file
-from .fs_task import create_fs_task, create_fs_task_from_adl
+from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
 from .representation import ProblemRepresentation
 from .templates import tplManager
 
@@ -43,6 +43,7 @@ def parse_arguments(args):
 
     parser.add_argument('-o', '--output', default=None, help="(Optional) Path to the working directory. If provided,"
                                                              "overrides the \"-t\" option.")
+    parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
 
     args = parser.parse_args(args)
 
@@ -150,6 +151,9 @@ def run_solver(translation_dir, args):
     solver = solver_name(args)
     solver = os.path.join(translation_dir, solver)
 
+    if not args.driver:
+        raise RuntimeError("Need to specify a driver to be able to run the solver")
+
     command = [solver, "--driver", args.driver]
 
     if args.options:
@@ -199,8 +203,13 @@ def run(args):
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
-        fd_task = parse_pddl_task(args.domain, args.instance)
-        fs_task = create_fs_task(fd_task, domain_name, instance_name)
+        if args.hybrid :
+            from . import f_pddl_plus
+            hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
+            fs_task = create_fs_plus_task( hybrid_task, domain_name, instance_name)
+        else :
+            fd_task = parse_pddl_task(args.domain, args.instance)
+            fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:
         from .asp import processor
         adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir)

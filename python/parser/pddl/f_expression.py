@@ -1,14 +1,27 @@
 from __future__ import print_function
+from . import pddl_types
 
 def parse_expression(exp):
+    def check_integer(s) :
+        try :
+            int(s)
+            return True
+        except ValueError :
+            return False
+    def check_float(s) :
+        try :
+            float(s)
+            return True
+        except ValueError :
+            return False
+
     if isinstance(exp, list):
         functionsymbol = exp[0]
         return PrimitiveNumericExpression(functionsymbol, exp[1:])
-    elif exp.replace(".", "").isdigit():
+    elif check_integer(exp) :
+        return NumericConstant(int(exp))
+    elif check_float(exp):
         return NumericConstant(float(exp))
-    elif exp[0] == "-":
-        return NumericConstant(float(exp))
-        #raise ValueError("Negative numbers are not supported")
     else:
         return PrimitiveNumericExpression(exp, [])
 
@@ -16,7 +29,11 @@ def parse_assignment(alist):
     assert len(alist) == 3
     op = alist[0]
     head = parse_expression(alist[1])
-    exp = parse_expression(alist[2])
+    try :
+        exp = parse_expression(alist[2])
+    except IndexError :
+        exp_human_readable = '({0} ({1}) {2})'.format( alist[0], ' '.join(alist[1]), '??' )
+        raise RuntimeError ( 'Error parsing expression: {0} too few arguments for assignment'.format(exp_human_readable) )
     if op == "=":
         return Assign(head, exp)
     elif op == "increase":
@@ -38,7 +55,10 @@ def parse_term(exp):
     if isinstance(exp, list):  # We have a functional term
         function_symbol = exp[0]
         return FunctionalTerm(function_symbol, parse_term_list(exp[1:]))
-
+    elif isinstance(exp, FunctionalTerm) :
+        return exp
+    elif isinstance(exp, NumericConstant) :
+        return exp
     else:  # exp is a string and we have a non-functional term
         if exp[0] == '?':  # We have a variable
             return exp
@@ -73,6 +93,21 @@ class FunctionalTerm(object):
     def __str__(self):
         return "{self.symbol}({args})".format(self=self, args=', '.join(map(str, self.args)))
 
+    def dump( self, indent = "  " ) :
+        print("{0}{1}".format( indent, str(self)))
+
+    def is_ground( self ) :
+        for arg in self.args :
+            if isinstance( arg, pddl_types.TypedObject ) :
+                if arg.name[0] == '?' :
+                    return False
+            elif isinstance(arg, str ) :
+                if arg[0] == '?' : return False
+            else :
+                if not arg.is_ground() : return False
+        return True
+
+
     __repr__ = __str__
 
 
@@ -92,9 +127,16 @@ class FunctionalExpression(object):
 class NumericConstant(FunctionalExpression):
     parts = ()
     def __init__(self, value):
-        if value != int(value):
-            raise ValueError("Fractional numbers are not supported")
-        self.value = int(value)
+        self.value = value
+        if isinstance( value, int ) :
+            self.type = 'int'
+        elif isinstance( value, float ) :
+            self.type = 'number'
+        else :
+            raise ValueError("Numeric constant '{}' is not a number".format(value))
+        self.hash = hash(self.value)
+    def __hash__( self ) :
+        return self.hash
     def __eq__(self, other):
         return (self.__class__ == other.__class__ and self.value == other.value)
     def __str__(self):
@@ -103,6 +145,8 @@ class NumericConstant(FunctionalExpression):
         return str(self)
     def instantiate(self, var_mapping, init_facts):
         return self
+    def is_ground(self) :
+        return True
 
 class PrimitiveNumericExpression(FunctionalExpression):
     parts = ()

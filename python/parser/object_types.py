@@ -26,6 +26,9 @@ def process_types(objects, supertypes, fd_bounds):
 
     # Always add the bool, object and int types
     type_map['bool'] = ['false', 'true']
+    type_map['object'] = []
+    type_map['int'] = []
+    type_map['number'] = []
 
     # for every type we append the corresponding object
     for o in objects:
@@ -49,9 +52,9 @@ def process_type_hierarchy(fd_types):
     Return a map mapping each type name to all of its parents.
     :param fd_types: The list of task types as returned by the FD PDDL parser
     """
-    # The base 'object' type needs to be declared always
+    # The base 'object' and 'bool' type are always there.
     # Warning: the position in the list of types is important.
-    types = {'object': None}
+    types = {'object': None, 'bool': 'object', 'int': 'object', 'number' : 'object'}
     used_types = set()
     predeclared = set(types.keys())
     correctly_declared = set(types.keys())
@@ -60,8 +63,10 @@ def process_type_hierarchy(fd_types):
             continue
         if t.name in correctly_declared:
             raise RuntimeError("Duplicate type declaration for type '{}'".format(t.name))
-
-        used_types.update([t.name, t.basetype_name])  # Add both the type and the supertype
+        # Add both the type and the supertype
+        used_types.add(t.name)
+        if t.basetype_name is not None :
+            used_types.add(t.basetype_name)
         correctly_declared.add(t.name)
         types[t.name] = t.basetype_name
 
@@ -74,12 +79,15 @@ def process_type_hierarchy(fd_types):
         parent_to_children[parent].append(typename)
 
     supertypes = {'object': []}
+    seen = set()
     pending = deque(['object'])
     while pending:
         current = pending.popleft()  # Invariant: supertypes[current] includes all of current's parent types
+        seen |= { current }
         for t in parent_to_children[current]:
             supertypes[t] = [current] + supertypes[current]
-            pending.append(t)
+            if t not in seen :
+                pending.append(t)
 
     return types, supertypes
 
