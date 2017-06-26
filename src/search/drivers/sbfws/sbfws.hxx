@@ -378,6 +378,8 @@ public:
 	    //return node._relevant_no_good_counter;
 	}
 	
+	
+	//Remove atoms true in s0 from the relevant set |R|
 	void clean_relevant_atoms(std::vector<bool>& relevant) {
 	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
 	  const ProblemInfo& info = ProblemInfo::getInstance();
@@ -397,16 +399,37 @@ public:
 	    Atom g_atom2 = index.to_atom(idx2);
 	    relevant[idx2] = false;
 	    
-	  /*  VariableIdx goal_conf_var = info.getVariableId("goal_conf("+obj_name+")");
-	    ObjectIdx goal_conf = init.getValue(goal_conf_var);
-	    AtomIdx idx3 = index.to_index(goal_conf_var, goal_conf);
-	    Atom g_atom3 = index.to_atom(idx3);
-	    std::cout << "Idx/Atom: " << idx3 << "/" << g_atom3 << std::endl;*/
-
-
-	   // relevant[idx3] = false;
-	    
 	  }
+	  
+	}
+	
+	
+	//Remove undesired atoms (confb(rob) = cb, confa(rob)=ca, traj(rob)=t)
+	void remove_relevant_atoms(std::vector<bool>& relevant) {
+	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	  const ProblemInfo& info = ProblemInfo::getInstance();
+	  
+	  VariableIdx confb_var = info.getVariableId("confb(rob)");
+	  VariableIdx confa_var = info.getVariableId("confa(rob)");
+  	  VariableIdx traj_var = info.getVariableId("traj(rob)");
+
+	  
+	  for(ObjectIdx cb: info.getTypeObjects("conf_base")) {
+	    AtomIdx idx_cb = index.to_index(confb_var, cb);
+	    relevant[idx_cb] = false;
+	  }
+	  
+	  for(ObjectIdx ca: info.getTypeObjects("conf_arm")) {
+	    AtomIdx idx_ca = index.to_index(confa_var, ca);
+	    relevant[idx_ca] = false;
+	  }
+	  
+	  for(ObjectIdx t: info.getTypeObjects("trajectory")) {
+	    AtomIdx idx_t = index.to_index(traj_var, t);
+	    relevant[idx_t] = false;
+	  }
+
+	  
 	  
 	}
 	
@@ -442,6 +465,12 @@ public:
 			std::cout << "Relevant before clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			clean_relevant_atoms(relevant);
 			std::cout << "Relevant after clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
+			remove_relevant_atoms(relevant);
+			std::cout << "Relevant after remove: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
+
+			
+			unsigned R_size = std::count(relevant.begin(), relevant.end(), true);
+			_stats.set_relevant_atoms(R_size);
 
 			
 			//NoGoodAtomsSet relevant_no_good = simulator.get_relevant_no_good_atoms();
@@ -449,7 +478,8 @@ public:
 			//std::cout << "|C| = " << _relevant_no_good_atoms.size() << std::endl;
 			_stats.set_c_set(_relevant_no_good_atoms.size());
 			
-			std::cout << "Set of relevant no good atoms from SBFWS: \n" << std::endl;
+			std::cout << "Set of relevant no good atoms from SBFWS: " << std::endl;
+			std::cout << "\t";
 			for(auto& it: _relevant_no_good_atoms) 
 			  std::cout << it << " ";
 			std::cout << std::endl;

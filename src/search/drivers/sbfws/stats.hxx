@@ -27,6 +27,7 @@ public:
 	void sim_add_generated_nodes(unsigned number) { _sim_generated_nodes += number; }
 	void sim_add_time(float time) { _sim_time += time; }
 	void set_c_set(unsigned c) {_c_set = c;}
+	void set_relevant_atoms(unsigned r) {_relevant_atoms = r;}
 	
 	
 	
@@ -54,6 +55,7 @@ public:
 	unsigned long evaluated() const { return _evaluated; }
 	unsigned long simulated() const { return _simulations; }
 	unsigned int c_set() const {return _c_set;}
+	unsigned int relevant_atoms() const {return _relevant_atoms;}
 	
 	
 	void set_initial_reachable_subgoals(unsigned num) { _initial_reachable_subgoals = num; }
@@ -89,6 +91,7 @@ protected:
 	unsigned int _initial_relevant_atoms; // The size of |R| on the initial state
 	unsigned int _max_relevant_atoms;
 	unsigned int _sum_relevant_atoms;
+	unsigned int _relevant_atoms;
 	
 	unsigned _r_type;
 	

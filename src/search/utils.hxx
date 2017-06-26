@@ -74,6 +74,7 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	std::string gen_speed = (search_time > 0) ? std::to_string((float) stats.generated() / search_time) : "0";
 	std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.evaluated() / search_time) : "0";
 	
+	
 
 	json_out << "{" << std::endl;
 	dump_stats(json_out, stats);

@@ -52,7 +52,7 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
 		std::make_tuple("sim_time", "Total simulation time", std::to_string(_sim_time)),
 		std::make_tuple("sim_expanded_nodes", "Total nodes expanded during simulations", std::to_string(_sim_expanded_nodes)),
 		std::make_tuple("sim_generated_nodes", "Total nodes generated during simulation", std::to_string(_sim_generated_nodes)),
-		
+		std::make_tuple("sim_gen_per_sec", "Generated nodes per second during the simulation", std::to_string(_sim_generated_nodes/_sim_time)),
 		std::make_tuple("sim_avg_time", "Avg. simulation time", _avg(_sim_time, _simulations)),
 		std::make_tuple("sim_avg_expanded_nodes", "Avg. nodes expanded during simulations", _avg(_sim_expanded_nodes, _simulations)),
 		std::make_tuple("sim_avg_generated_nodes", "Avg. nodes generated during simulation", _avg(_sim_generated_nodes, _simulations)),
@@ -66,6 +66,7 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
 		std::make_tuple("sim_reachable_0", "Reachable subgoals in initial state", _if_computed(_initial_reachable_subgoals)),
 		std::make_tuple("sim_reachable_max", "Max. # reachable subgoals in any simulation", std::to_string(_max_reachable_subgoals)),
 		std::make_tuple("sim_reachable_avg", "Avg. # reachable subgoals in any simulation", _avg(_sum_reachable_subgoals, _simulations)),
+		std::make_tuple("sim_relevant_atoms", "|R|", std::to_string(_relevant_atoms)),
 		std::make_tuple("sim_relevant_atoms_0", "|R|_0", _if_computed(_initial_relevant_atoms)),
 		std::make_tuple("sim_relevant_atoms_max", "|R|_max", std::to_string(_max_relevant_atoms)),
 		std::make_tuple("sim_relevant_atoms_avg", "|R|_avg", _avg(_sum_relevant_atoms, _simulations)),

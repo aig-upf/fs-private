@@ -458,6 +458,7 @@ public:
 
 	//There is a set of no good atoms per each plan pi (per each goal atom)
 	void compute_no_good_atoms() {
+	  std::cout << "Computing relevant no good atoms" << std::endl;
 	  //const AtomIndex& index = Problem::getInstance().get_tuple_index();
 	  const ProblemInfo& info = ProblemInfo::getInstance();
 
