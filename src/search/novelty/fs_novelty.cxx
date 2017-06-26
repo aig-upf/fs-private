@@ -11,7 +11,7 @@ unsigned FSAtomValuationIndexer::num_indexes() const {
 
 template <typename T>
 unsigned FSAtomValuationIndexer::to_index(unsigned variable, const T& value) const {
-	return _atom_index.to_index(variable, make_obj(value));
+	return _atom_index.to_index(variable, make_object(value));
 }
 
 const Atom& FSAtomValuationIndexer::to_atom(unsigned index) const {

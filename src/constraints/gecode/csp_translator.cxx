@@ -116,7 +116,7 @@ const Gecode::IntVar& CSPTranslator::resolveVariable(const fs::Term* term, const
 }
 
 object_id CSPTranslator::resolveValue(const fs::Term* term, const GecodeCSP& csp) const {
-	return make_obj(resolveVariable(term, csp).val());
+	return make_object(resolveVariable(term, csp).val());
 }
 
 const Gecode::IntVar& CSPTranslator::resolveVariableFromIndex(unsigned variable_index, const GecodeCSP& csp) const {
@@ -124,7 +124,7 @@ const Gecode::IntVar& CSPTranslator::resolveVariableFromIndex(unsigned variable_
 }
 
 object_id CSPTranslator::resolveValueFromIndex(unsigned variable_index, const GecodeCSP& csp) const {
-	return make_obj(resolveVariableFromIndex(variable_index, csp).val());
+	return make_object(resolveVariableFromIndex(variable_index, csp).val());
 }
 
 const Gecode::IntVar& CSPTranslator::resolveInputStateVariable(const GecodeCSP& csp, VariableIdx variable) const {
@@ -193,7 +193,7 @@ PartialAssignment CSPTranslator::buildAssignment(GecodeCSP& solution) const {
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
 		const Gecode::IntVar& csp_variable = solution._intvars[it.second];
-		assignment.insert(std::make_pair(variable, make_obj(csp_variable.val())));
+		assignment.insert(std::make_pair(variable, make_object(csp_variable.val())));
 	}
 	return assignment;
 }

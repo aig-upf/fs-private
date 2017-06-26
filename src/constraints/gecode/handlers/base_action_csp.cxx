@@ -279,7 +279,7 @@ void BaseActionCSP::extract_nested_term_support(const GecodeCSP* solution, const
 		if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
 			// object_id value = fluent->interpret(assignment, binding);
 			
-			object_id value = make_obj<int>(1); // i.e. assuming that there are no negated atoms on conditions.
+			object_id value = make_object<int>(1); // i.e. assuming that there are no negated atoms on conditions.
 			if (!info.isPredicate(fluent->getSymbolId())) {
 				value = _translator.resolveValue(fluent, *solution);
 			}

@@ -50,7 +50,7 @@ object_id AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, c
 	Binding axiom_binding;
 	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
 	bool res = _axiom->getDefinition()->interpret(assignment, axiom_binding);
-	return make_obj<int>(res); // The hack: transform the bool into an int
+	return make_object<int>(res); // The hack: transform the bool into an int
 }
 
 object_id AxiomaticTermWrapper::interpret(const State& state, const Binding& binding) const {
@@ -59,7 +59,7 @@ object_id AxiomaticTermWrapper::interpret(const State& state, const Binding& bin
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
 	bool res = _axiom->getDefinition()->interpret(state, axiom_binding);
-	return make_obj<int>(res); // The hack: transform the bool into an int
+	return make_object<int>(res); // The hack: transform the bool into an int
 }
 
 std::ostream& AxiomaticTermWrapper::print(std::ostream& os, const fs0::ProblemInfo& info) const {

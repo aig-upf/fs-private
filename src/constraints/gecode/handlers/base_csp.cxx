@@ -244,7 +244,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 							}
 							
 							// Mark the state variable to allow the later support recovery
-							true_tuples.insert(_tuple_index.to_index(statevar->getValue(), make_obj<bool>(true)));
+							true_tuples.insert(_tuple_index.to_index(statevar->getValue(), make_object<bool>(true)));
 						}
 					}
 				}

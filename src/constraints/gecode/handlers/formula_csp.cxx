@@ -119,7 +119,7 @@ void FormulaCSP::index_existential_variable_uses() {
 				if (*term == *variable) {
 					assert(ex_var_position == -1);
 					ex_var_position = i;
-					subterm_values.push_back(make_obj<int>(0));
+					subterm_values.push_back(make_object<int>(0));
 					continue;
 				}
 				

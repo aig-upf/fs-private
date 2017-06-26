@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <cstring>
 #include <cassert>
 #include <vector>
 #include <ostream>
@@ -100,6 +101,14 @@ public:
 		return index;
 	}
 
+	//! Type punning without aliasing, see discussion:
+    //! https://stackoverflow.com/a/31080901
+    //! and this entry on C++ Reference: http://en.cppreference.com/w/cpp/string/byte/memcpy
+    template <typename T1, typename T2>
+    static void type_punning_without_aliasing( T1& src, T2& dst ) {
+        static_assert( sizeof(T1) == sizeof(T2), "Type punning between types of different size is not okay!" );
+        std::memcpy( &dst, &src, sizeof(T1) );
+    }
 	
 };
 

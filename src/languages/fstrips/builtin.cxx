@@ -25,13 +25,13 @@ AdditionTerm::AdditionTerm(const std::vector<const Term*>& subterms)
 object_id AdditionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	int x = value<int>(_subterms[0]->interpret(assignment, binding), ObjectTable::EMPTY_TABLE);
 	int y = value<int>(_subterms[1]->interpret(assignment, binding), ObjectTable::EMPTY_TABLE);
-	return make_obj(x+y);
+	return make_object(x+y);
 }
 
 object_id AdditionTerm::interpret(const State& state, const Binding& binding) const {
 	int x = value<int>(_subterms[0]->interpret(state, binding), ObjectTable::EMPTY_TABLE);
 	int y = value<int>(_subterms[1]->interpret(state, binding), ObjectTable::EMPTY_TABLE);
-	return make_obj(x+y);
+	return make_object(x+y);
 }
 
 
@@ -46,13 +46,13 @@ SubtractionTerm::SubtractionTerm(const std::vector<const Term*>& subterms)
 object_id SubtractionTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	int x = value<int>(_subterms[0]->interpret(assignment, binding), ObjectTable::EMPTY_TABLE);
 	int y = value<int>(_subterms[1]->interpret(assignment, binding), ObjectTable::EMPTY_TABLE);
-	return make_obj(x-y);
+	return make_object(x-y);
 }
 
 object_id SubtractionTerm::interpret(const State& state, const Binding& binding) const {
 	int x = value<int>(_subterms[0]->interpret(state, binding), ObjectTable::EMPTY_TABLE);
 	int y = value<int>(_subterms[1]->interpret(state, binding), ObjectTable::EMPTY_TABLE);
-	return make_obj(x-y);
+	return make_object(x-y);
 }
 
 std::ostream& SubtractionTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -66,13 +66,13 @@ MultiplicationTerm::MultiplicationTerm(const std::vector<const Term*>& subterms)
 object_id MultiplicationTerm::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	int x = value<int>(_subterms[0]->interpret(assignment, binding), ObjectTable::EMPTY_TABLE);
 	int y = value<int>(_subterms[1]->interpret(assignment, binding), ObjectTable::EMPTY_TABLE);
-	return make_obj(x*y);
+	return make_object(x*y);
 }
 
 object_id MultiplicationTerm::interpret(const State& state, const Binding& binding) const {
 	int x = value<int>(_subterms[0]->interpret(state, binding), ObjectTable::EMPTY_TABLE);
 	int y = value<int>(_subterms[1]->interpret(state, binding), ObjectTable::EMPTY_TABLE);
-	return make_obj(x*y);
+	return make_object(x*y);
 }
 
 

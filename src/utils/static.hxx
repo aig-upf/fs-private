@@ -67,7 +67,7 @@ public:
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
 			assert(parameters.size() == 1);
-			return make_obj(data.find(parameters[0]) != data.end());
+			return make_object(data.find(parameters[0]) != data.end());
 		};
 	}
 };
@@ -106,7 +106,7 @@ public:
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
 			assert(parameters.size() == 2);
-			return make_obj(data.find({parameters[0], parameters[1]}) != data.end());
+			return make_object(data.find({parameters[0], parameters[1]}) != data.end());
 		};
 	}
 };
@@ -142,7 +142,7 @@ public:
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
 			assert(parameters.size() == 3);
-			return make_obj(data.find(std::make_tuple(parameters[0], parameters[1], parameters[2])) != data.end());
+			return make_object(data.find(std::make_tuple(parameters[0], parameters[1], parameters[2])) != data.end());
 		};
 	}
 };
@@ -178,7 +178,7 @@ public:
 		auto& data = _data;
 		return [&data](const ValueTuple& parameters){
 			assert(parameters.size() == 4);
-			return make_obj(data.find(std::make_tuple(parameters[0], parameters[1], parameters[2], parameters[3])) != data.end());
+			return make_object(data.find(std::make_tuple(parameters[0], parameters[1], parameters[2], parameters[3])) != data.end());
 		};
 	}
 };

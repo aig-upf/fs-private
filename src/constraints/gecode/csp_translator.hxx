@@ -101,7 +101,7 @@ public:
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
 	const object_id resolveInputStateVariableValue(const GecodeCSP& csp, VariableIdx variable) const {
-		return make_obj(resolveInputStateVariable(csp, variable).val());
+		return make_object(resolveInputStateVariable(csp, variable).val());
 	}
 
 	//! Creates a new boolean CSP variable and returns its index

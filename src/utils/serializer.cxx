@@ -147,7 +147,7 @@ std::vector<object_id>
 Serializer::deserializeLine(const std::string& line, const std::string& separators) {
 	std::vector<object_id> result;
 	for (int val:deserialize_line<int>(line, separators)) {
-		result.push_back(make_obj(val)); // TODO This should check whether the type is type_id::int_t or type_id::object_t ?
+		result.push_back(make_object(val)); // TODO This should check whether the type is type_id::int_t or type_id::object_t ?
 	}
 	return result;
 }

@@ -55,12 +55,12 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 
 	// If the state is fully boolean or fully multivalued, we can optimize the operation,
 	// since the variable index will be exactly `variable`
-	if (n_vars == _n_bool) return make_obj(state._bool_values[variable]);
+	if (n_vars == _n_bool) return make_object(state._bool_values[variable]);
 	if (n_vars == _n_int) return state._int_values[variable];
 
 	// Otherwise we need to deindex the variable
 	const IndexElemT& ind = _index[variable];
-	if (ind.first) return make_obj(state._bool_values[ind.second]);
+	if (ind.first) return make_object(state._bool_values[ind.second]);
 	else return state._int_values[ind.second];
 }
 

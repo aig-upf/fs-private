@@ -6,6 +6,7 @@
 #include <climits>
 
 #include <base.hxx>
+#include "utils/utils.hxx"
 
 
 namespace fs0 {
@@ -68,6 +69,17 @@ int32_t value(const object_id& o) {
 	return (int32_t) o.value();
 }
 
+
+template <>
+float value(const object_id& o) {
+	if (o.type() != type_id::float_t) throw type_mismatch_error();
+	object_id::value_t val = o.value();
+	float tmp;
+	Utils::type_punning_without_aliasing(val, tmp);
+	return tmp;
+}
+
+
 template <typename T>
 std::vector<T> values(const std::vector<object_id>& os, const ObjectTable& itp) {
 	std::vector<T> result;
@@ -80,21 +92,28 @@ template std::vector<int> values<int>(const std::vector<object_id>& os, const Ob
 
 
 template <typename T>
-object_id make_obj(const T& value) {
+object_id make_object(const T& value) {
 	// Provoke a compile-time error if ever instantiated with an actual type T
-	static_assert(sizeof(T) == 0, "fs0::make_obj() needs to be defined for type");
+	static_assert(sizeof(T) == 0, "fs0::make_object() needs to be defined for type");
 	return object_id::INVALID; // prevents a g++ warning
 }
 
 template <>
-object_id make_obj(const bool& value) {
+object_id make_object(const bool& value) {
 	return object_id(type_id::bool_t, value);
 }
 
 
 template <>
-object_id make_obj(const int32_t& value) {
+object_id make_object(const int32_t& value) {
 	return object_id(type_id::int_t, value);
+}
+
+template <>
+object_id make_object(const float& value) {
+	int32_t tmp;
+	Utils::type_punning_without_aliasing(value, tmp);
+	return object_id(type_id::float_t, tmp);
 }
 
 std::ostream& object_id::print(std::ostream& os) const {

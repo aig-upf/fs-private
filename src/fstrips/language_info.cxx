@@ -208,7 +208,7 @@ private:
 		const T& valmax = value<T>(max);
 		
 		for (T v = valmin; v <= valmax; ++v) {
-			result.push_back(make_obj<T>(v));
+			result.push_back(make_object<T>(v));
 		}
 		
 		return result;

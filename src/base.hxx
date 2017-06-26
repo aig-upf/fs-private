@@ -74,7 +74,7 @@ private:
     { static_assert(sizeof(T) <= sizeof(value_t), "Unsupported object_id value type"); }
     
     template <typename T> friend object_id make_object(type_id t, T value);
-	template <typename T> friend object_id make_obj(const T& value);
+	template <typename T> friend object_id make_object(const T& value);
 	
 	
 public:
@@ -89,7 +89,8 @@ public:
 	object_id& operator=(const object_id&) = default;
 	object_id& operator=(object_id&&)      = default;
     
-    
+    // TODO - MAKE THESE TWO PRIVATE SO THAT THEY CAN ONLY BE ACCESSED
+	//        THROUGH THE APPROPRIATE friend METHODS value() and o_type()
 	inline type_id type() const { return _type; }
 	inline value_t value() const { return _value; }
 	
@@ -168,11 +169,15 @@ inline bool value(const object_id& o, const ObjectTable& itp) { return value<boo
 
 template <>
 int32_t value(const object_id& o);
-
 template <>
 inline int32_t value(const object_id& o, const ObjectTable& itp) { return value<int32_t>(o); }
 
 
+template <>
+float value(const object_id& o);
+
+template <>
+inline float value(const object_id& o, const ObjectTable& itp) { return value<float>(o); }
 
 template <typename T>
 std::vector<T> values(const std::vector<object_id>& o, const ObjectTable& itp);
@@ -183,17 +188,21 @@ inline object_id make_object(type_id t, T value) { return object_id(t, value); }
 	
 
 template <typename T>
-object_id make_obj(const T& value);
+object_id make_object(const T& value);
 
 template <>
-object_id make_obj(const bool& value);
+object_id make_object(const bool& value);
 
 template <>
-object_id make_obj(const int32_t& value);
+object_id make_object(const int32_t& value);
+
+template <>
+object_id make_object(const float& value);
+
 
 template <typename T>
 type_range make_range(const T& lower, const T& upper) {
-	return std::make_pair(make_obj<T>(lower), make_obj<T>(upper));
+	return std::make_pair(make_object<T>(lower), make_object<T>(upper));
 }
 
 
