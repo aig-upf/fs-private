@@ -25,7 +25,6 @@ def process_types(objects, supertypes, fd_bounds):
     type_map = {k: list() for k in supertypes.keys()}
 
     # Always add the bool, object and int types
-    type_map['bool'] = ['false', 'true']
     type_map['object'] = []
     type_map['int'] = []
     type_map['number'] = []
@@ -52,9 +51,9 @@ def process_type_hierarchy(fd_types):
     Return a map mapping each type name to all of its parents.
     :param fd_types: The list of task types as returned by the FD PDDL parser
     """
-    # The base 'object' and 'bool' type are always there.
+    # The base 'object' and type are always there.
     # Warning: the position in the list of types is important.
-    types = {'object': None, 'bool': 'object', 'int': 'object', 'number' : 'object'}
+    types = {'object': None, 'int': 'object', 'number' : 'object'}
     used_types = set()
     predeclared = set(types.keys())
     correctly_declared = set(types.keys())
