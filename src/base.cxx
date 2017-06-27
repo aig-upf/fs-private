@@ -10,7 +10,7 @@
 
 
 namespace fs0 {
-    
+
 
 const object_id object_id::INVALID = object_id();
 const object_id object_id::FALSE = object_id(type_id::bool_t, false);
@@ -39,7 +39,7 @@ std::ostream& operator<<(std::ostream &os, const type_id& t) { return os << to_s
 
 std::size_t hash_value(const object_id& o) {
 	static_assert(sizeof(object_id) <= sizeof(std::size_t), "Size mismatch");
-	
+
 	std::size_t ctype = (std::size_t) static_cast<std::underlying_type_t<type_id>>(o.type());
 	return (ctype << (CHAR_BIT * sizeof(object_id::value_t))) | o.value();
 }
@@ -99,6 +99,12 @@ object_id make_object(const T& value) {
 }
 
 template <>
+object_id make_object(const object_id& value) {
+	throw std::runtime_error("Suspicious use of make_object(): from object_id to object_id");
+}
+
+
+template <>
 object_id make_object(const bool& value) {
 	return object_id(type_id::bool_t, value);
 }
@@ -114,6 +120,11 @@ object_id make_object(const float& value) {
 	int32_t tmp;
 	Utils::type_punning_without_aliasing(value, tmp);
 	return object_id(type_id::float_t, tmp);
+}
+
+template <>
+object_id make_object(const double& value) {
+    throw std::runtime_error("Suspicious use of make_object(): from double to object_id");
 }
 
 std::ostream& object_id::print(std::ostream& os) const {

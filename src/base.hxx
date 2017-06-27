@@ -191,6 +191,9 @@ template <typename T>
 object_id make_object(const T& value);
 
 template <>
+object_id make_object(const object_id& value);
+
+template <>
 object_id make_object(const bool& value);
 
 template <>
@@ -198,6 +201,9 @@ object_id make_object(const int32_t& value);
 
 template <>
 object_id make_object(const float& value);
+
+template <>
+object_id make_object(const double& value);
 
 
 template <typename T>
