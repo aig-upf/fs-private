@@ -132,7 +132,7 @@ DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionP
 
 			if (hint.first) {
 				LPT_EDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
-				Atom::vctrp support = std::make_shared<Atom::vctr>();
+				std::shared_ptr<std::vector<Atom>> support = std::make_shared<std::vector<Atom>>();
 				completeAtomSupport(_scope, actionProjection, effectScope, support);
 				rpg.add(atom, get_action_id(actionIdx), support, hint.second);
 			}
@@ -148,7 +148,7 @@ DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionP
 
 				if (hint.first) {
 					LPT_EDEBUG("heuristic", "Processing effect \"" << *effect << "\" yields " << (hint.first ? "new" : "repeated") << " atom " << atom);
-					Atom::vctrp support = std::make_shared<Atom::vctr>();
+					std::shared_ptr<std::vector<Atom>> support = std::make_shared<std::vector<Atom>>();
 					support->push_back(Atom(effectScope[0], value));// Just insert the only value
 					completeAtomSupport(_scope, actionProjection, effectScope, support);
 					rpg.add(atom, get_action_id(actionIdx), support, hint.second);
@@ -162,7 +162,7 @@ DirectActionManager::processEffects(unsigned actionIdx, const DomainMap& actionP
 }
 
 void
-DirectActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, Atom::vctrp support) const {
+DirectActionManager::completeAtomSupport(const VariableIdxVector& actionScope, const DomainMap& actionProjection, const VariableIdxVector& effectScope, std::shared_ptr<std::vector<Atom>> support) const {
 	for (VariableIdx variable:actionScope) {
 		if (effectScope.empty() || variable != effectScope[0]) { // (We know that the effect scope has at most one variable)
 			const object_id& value = *(actionProjection.at(variable)->cbegin());

@@ -118,7 +118,7 @@ bool GroundEffectCSP::solve(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& gra
 void GroundEffectCSP::solve_approximately(const Atom& atom, gecode::GecodeCSP* csp, RPGData& rpg, const State& seed) const {
 	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
 	
-	Atom::vctrp support = std::make_shared<Atom::vctr>();
+	std::shared_ptr<std::vector<Atom>> support = std::make_shared<std::vector<Atom>>();
 
 	// First process the direct state variables
 	for (const auto& element:_translator.getAllInputVariables()) {

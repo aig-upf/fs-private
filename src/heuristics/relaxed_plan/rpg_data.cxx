@@ -45,7 +45,7 @@ void RPGData::advanceLayer() {
 	++_current_layer;
 }
 
-RPGData::AtomSupport RPGData::createAtomSupport(const ActionID* action, Atom::vctrp support) const {
+RPGData::AtomSupport RPGData::createAtomSupport(const ActionID* action, std::shared_ptr<std::vector<Atom>> support) const {
 	return std::make_tuple(_current_layer, action, support);
 }
 
@@ -62,13 +62,13 @@ std::pair<bool, RPGData::SupportMap::iterator> RPGData::getInsertionHint(const A
 	else return std::make_pair(true, lb);
 }
 
-void RPGData::add(const Atom& atom, const ActionID* action, Atom::vctrp support, SupportMap::iterator hint) {
+void RPGData::add(const Atom& atom, const ActionID* action, std::shared_ptr<std::vector<Atom>> support, SupportMap::iterator hint) {
 	_effects.insert(hint, std::make_pair(atom, createAtomSupport(action, support)));
 	_novel[atom.getVariable()].push_back(atom.getValue());
 	++_num_novel;
 }
 
-void RPGData::add(const Atom& atom, const ActionID* action, Atom::vctrp support) {
+void RPGData::add(const Atom& atom, const ActionID* action, std::shared_ptr<std::vector<Atom>> support) {
 	auto hint = getInsertionHint(atom);
 	if (!hint.first) return; // Don't insert the atom if it was already tracked by the RPG
 	add(atom, action, support, hint.second);
@@ -96,7 +96,7 @@ std::ostream& RPGData::print(std::ostream& os) const {
 	return os;
 }
 
-void RPGData::printAtoms(const Atom::vctrp vector, std::ostream& os) const {
+void RPGData::printAtoms(const std::shared_ptr<std::vector<Atom>> vector, std::ostream& os) const {
 	for (const auto& fact:*vector) {
 		os << fact << ", ";
 	}

@@ -42,11 +42,11 @@ public:
 	NodeCreationContext(const AtomIndex& tuple_index,
 						const std::vector<VariableIdx>& sorted_vars,
 						const std::vector<std::unordered_set<AtomIdx>>& rev_app_index,
-						std::vector<bool>& seen) : 
+						std::vector<bool>& seen) :
 						_tuple_index( tuple_index ), _sorted_variables(sorted_vars), _rev_app_index(rev_app_index), _seen(seen) {}
 
 	NodeCreationContext(const NodeCreationContext&) = default;
-						
+
 	const AtomIndex&                            _tuple_index;
 	const std::vector<VariableIdx>&             _sorted_variables;
 	const std::vector<std::unordered_set<AtomIdx>>&    _rev_app_index;
@@ -92,7 +92,7 @@ public:
     	unsigned count() const override;
 		unsigned count_nodes() const override;
 		void count_nodes(unsigned& sw, unsigned& leaf, unsigned& empty) const override;
-		
+
         void print(std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager) const override;
     };
 
@@ -130,7 +130,7 @@ public:
         friend class LeafNode;
         friend class EmptyNode;
 
-    	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx);
+    	MatchTreeActionManager(const std::vector<const GroundAction*>& actions, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_idx);
     	virtual ~MatchTreeActionManager() { if (_tree) delete _tree; };
     	MatchTreeActionManager(const MatchTreeActionManager&) = default;
 
@@ -138,7 +138,7 @@ public:
 		bool whitelist_guarantees_applicability() const override { return true; }
 
 		unsigned count() { return _tree->count(); }
-		
+
 		static void check_match_tree_can_be_used(const ProblemInfo& info);
 
 
@@ -151,7 +151,7 @@ public:
 
 	protected:
 		std::vector<ActionIdx> compute_whitelist(const State& state) const override;
-		
+
 		//! Returns all the atoms indexes sorted in descending order of appeareance count in action preconditions
 		//! (i.e. the one that appears most goes first), breaking ties lexicographically
 		std::vector<VariableIdx> sort_variables(const std::vector<unsigned>& variable_relevance) const;

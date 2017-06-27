@@ -17,13 +17,13 @@ namespace fs0 { namespace dynamics { namespace integrators {
         if ( tmp == nullptr ) {
             tmp = std::make_shared<State>(next);
         }
-        else
-            *tmp = next; // Avoid malloc
+        else {
+            for ( VariableIdx x = 0; x < next.numAtoms(); x++ )
+                tmp->__set( x, next.getValue(x));
+        }
 
-        std::vector<Atom>   f_un; // f(u_n)
-        std::vector<Atom>   un;
-        f_un.resize(f_expr.size());
-        un.resize(f_expr.size());
+        std::vector<Atom>   f_un( f_expr.size(), Atom(INVALID_VARIABLE, object_id::INVALID));
+        std::vector<Atom>   un( f_expr.size(), Atom(INVALID_VARIABLE, object_id::INVALID));
 
         while ( H > 0.0 ) {
             double h = std::min( base_duration, H  );
@@ -31,10 +31,10 @@ namespace fs0 { namespace dynamics { namespace integrators {
             for ( unsigned i = 0; i < f_expr.size(); i++ ) {
                 //! Euler method step
                 //! u_{n+1} = u_{n} + h f(u_{n})
-                float f_i = fs::value<float>(next.getValue( f_expr[i]._affected ));
-                float f_un_i = fs::value<float>(f_un[i].getValue());
+                float f_i = fs0::value<float>(next.getValue( f_expr[i]._affected ));
+                float f_un_i = fs0::value<float>(f_un[i].getValue());
                 float un1 = f_i + h * f_un_i;
-                un[i] = Atom( f_expr[i]._affected, un1 );
+                un[i] = Atom( f_expr[i]._affected, make_object(un1) );
             }
 
             //! un is the value of step u(n)
@@ -50,12 +50,12 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 for ( unsigned i = 0; i < f_expr.size(); i++ ) {
                     //! Euler method step
                     //! u_{n+1} = u_{n} + h f(u_{n+1})
-                    float f_i = fs::value<float>(next.getValue( f_expr[i]._affected ));
-                    float f_un_i = fs::value<float>(f_un[i].getValue());
+                    float f_i = fs0::value<float>(next.getValue( f_expr[i]._affected ));
+                    float f_un_i = fs0::value<float>(f_un[i].getValue());
                     float un1 = (float)f_i + h * f_un_i;
-                    float prev_un_i = fs::value<float>(un[i].getValue());
+                    float prev_un_i = fs0::value<float>(un[i].getValue());
                     max_error = std::max( max_error, std::fabs(un1 - prev_un_i ));
-                    un[i] = Atom( f_expr[i]._affected, un1 );
+                    un[i] = Atom( f_expr[i]._affected, make_object(un1) );
                 }
                 iterations++;
             } while( (max_error > 1e-5) && (iterations < _max_iterations));

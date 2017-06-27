@@ -109,18 +109,20 @@ class Task(object):
         axioms = []
         gconstraints = []
 
-        print( "Setting up 'clock_time' state variable" )
+        if len(loader.processes) > 0 :
+            print( "Domain specifies continuous change...")
+            print( "Setting up 'clock_time' state variable" )
 
-        total_time = functions.TypedFunction( 'clock_time', [], 'number' )
-        loader.functions.append(total_time)
-        lhs_init_clock = f_expression.FunctionalTerm('clock_time', [])
-        loader.init.append( f_expression.Assign( lhs_init_clock, f_expression.NumericConstant(0.0) ) )
+            total_time = functions.TypedFunction( 'clock_time', [], 'number' )
+            loader.functions.append(total_time)
+            lhs_init_clock = f_expression.FunctionalTerm('clock_time', [])
+            loader.init.append( f_expression.Assign( lhs_init_clock, f_expression.NumericConstant(0.0) ) )
 
-        print("Setting up 'second_law_thermodynamics' process")
-        second_law_rhs = f_expression.FunctionalTerm('+', [lhs_init_clock, f_expression.NumericConstant(1.0)])
-        second_law_effect = effects.Effect([], conditions.Truth(), effects.AssignmentEffect(lhs_init_clock, second_law_rhs))
-        second_law = actions.Action( '2nd_law_thermodynamics', [], 0, conditions.Truth(), [second_law_effect], None )
-        loader.processes.append(second_law)
+            print("Setting up 'second_law_thermodynamics' process")
+            second_law_rhs = f_expression.FunctionalTerm('+', [lhs_init_clock, f_expression.NumericConstant(1.0)])
+            second_law_effect = effects.Effect([], conditions.Truth(), effects.AssignmentEffect(lhs_init_clock, second_law_rhs))
+            second_law = actions.Action( '2nd_law_thermodynamics', [], 0, conditions.Truth(), [second_law_effect], None )
+            loader.processes.append(second_law)
 
 
         print( "Checking metric expression is a grounded functional term...")

@@ -8,7 +8,7 @@ from collections import defaultdict, deque
 def process_problem_types(fd_types, objects, fd_bounds):
     types, supertypes = process_type_hierarchy(fd_types)
     type_map = process_types(objects, supertypes, fd_bounds)
-    return types, type_map
+    return types, type_map, supertypes
 
 
 def process_types(objects, supertypes, fd_bounds):
@@ -25,7 +25,6 @@ def process_types(objects, supertypes, fd_bounds):
     type_map = {k: list() for k in supertypes.keys()}
 
     # Always add the bool, object and int types
-    type_map['bool'] = ['false', 'true']
     type_map['object'] = []
     type_map['int'] = []
     type_map['number'] = []
@@ -52,9 +51,9 @@ def process_type_hierarchy(fd_types):
     Return a map mapping each type name to all of its parents.
     :param fd_types: The list of task types as returned by the FD PDDL parser
     """
-    # The base 'object' and 'bool' type are always there.
+    # The base 'object' and type are always there.
     # Warning: the position in the list of types is important.
-    types = {'object': None, 'bool': 'object', 'int': 'object', 'number' : 'object'}
+    types = {'object': None, 'int': None, 'number' : None}
     used_types = set()
     predeclared = set(types.keys())
     correctly_declared = set(types.keys())
@@ -80,7 +79,7 @@ def process_type_hierarchy(fd_types):
 
     supertypes = {'object': []}
     seen = set()
-    pending = deque(['object'])
+    pending = deque(['object', 'int', 'number'])
     while pending:
         current = pending.popleft()  # Invariant: supertypes[current] includes all of current's parent types
         seen |= { current }

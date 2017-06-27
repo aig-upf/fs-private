@@ -16,7 +16,7 @@
 
 namespace fs0 {
 
-	
+
 template <typename T>
 void Serializer::BoostDeserialize(const std::string& filename, T& data) {
 	std::ifstream ifs(filename);
@@ -84,7 +84,7 @@ Serializer::BoostArity3Map Serializer::deserializeArity3Map(const std::string& f
 	BoostArity3Map data;
 	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 4); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2]), elems[3]));};
 	deserialize(filename, inserter);
-	return data;	
+	return data;
 }
 Serializer::BoostArity4Map Serializer::deserializeArity4Map(const std::string& filename) {
 	BoostArity4Map data;
@@ -146,8 +146,14 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::BinarySe
 std::vector<object_id>
 Serializer::deserializeLine(const std::string& line, const std::string& separators) {
 	std::vector<object_id> result;
-	for (int val:deserialize_line<int>(line, separators)) {
-		result.push_back(make_object(val)); // TODO This should check whether the type is type_id::int_t or type_id::object_t ?
+	try {
+		for (int val:deserialize_line<int>(line, separators)) {
+			result.push_back(make_object(val));
+		}
+	} catch( boost::bad_lexical_cast& e ) {
+		for (float val:deserialize_line<float>(line, separators)) {
+			result.push_back(make_object(val));
+		}
 	}
 	return result;
 }

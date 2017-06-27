@@ -4,13 +4,14 @@
 #include <iostream>
 #include <type_traits>
 #include <climits>
+#include <unordered_map>
 
 #include <base.hxx>
 #include "utils/utils.hxx"
 
 
 namespace fs0 {
-    
+
 
 const object_id object_id::INVALID = object_id();
 const object_id object_id::FALSE = object_id(type_id::bool_t, false);
@@ -33,13 +34,29 @@ std::string to_string(const type_id& t) {
 	return "?";
 }
 
+type_id from_string(const std::string& t) {
+	static std::unordered_map<std::string, type_id> mapping{
+		{ "object_t", type_id::object_t },
+		{ "bool_t", type_id::bool_t },
+		{ "int_t", type_id::int_t },
+		{ "float_t", type_id::float_t },
+		{ "set_t", type_id::set_t },
+		{ "interval_t", type_id::interval_t }
+	};
+
+	auto it = mapping.find( t );
+	if (it == mapping.end() )
+		throw std::runtime_error( "Error resolving underlying data type for identifier '" + t + "'" );
+	return it->second;
+}
+
 std::ostream& operator<<(std::ostream &os, const type_id& t) { return os << to_string(t); }
 
 
 
 std::size_t hash_value(const object_id& o) {
 	static_assert(sizeof(object_id) <= sizeof(std::size_t), "Size mismatch");
-	
+
 	std::size_t ctype = (std::size_t) static_cast<std::underlying_type_t<type_id>>(o.type());
 	return (ctype << (CHAR_BIT * sizeof(object_id::value_t))) | o.value();
 }
@@ -99,6 +116,12 @@ object_id make_object(const T& value) {
 }
 
 template <>
+object_id make_object(const object_id& value) {
+	throw std::runtime_error("Suspicious use of make_object(): from object_id to object_id");
+}
+
+
+template <>
 object_id make_object(const bool& value) {
 	return object_id(type_id::bool_t, value);
 }
@@ -114,6 +137,11 @@ object_id make_object(const float& value) {
 	int32_t tmp;
 	Utils::type_punning_without_aliasing(value, tmp);
 	return object_id(type_id::float_t, tmp);
+}
+
+template <>
+object_id make_object(const double& value) {
+    throw std::runtime_error("Suspicious use of make_object(): from double to object_id");
 }
 
 std::ostream& object_id::print(std::ostream& os) const {
