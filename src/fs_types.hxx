@@ -76,6 +76,11 @@ namespace fs0 {
 	//! A function in the logical sense.
 	using Function = std::function<object_id(const ValueTuple&)>;
 	
+	enum class MetricType { MINIMIZE = 0, MAXIMIZE = 1 };
+	
+	using FeatureIdx = unsigned;
+	const FeatureIdx INVALID_FEATURE = std::numeric_limits<unsigned>::max();
+	
 	
 	/**
 	 * Custom exceptions

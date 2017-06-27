@@ -37,6 +37,9 @@ public:
 	//! The type of successor generator to use
 	enum class SuccessorGenerationStrategy { naive, functional_aware, match_tree, adaptive };
 
+    //! Integrator
+	enum class IntegratorT { ExplicitEuler, RungeKutta2, RungeKutta4, ImplicitEuler };
+
 	//! Explicit initizalition of the singleton
 	static void init(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
 
@@ -73,6 +76,16 @@ protected:
 	std::string _heuristic;
 
 	SuccessorGenerationStrategy	_succ_gen_type;
+
+    IntegratorT	_successor_prediction;
+
+    double _integration_factor;
+
+    double _discretization_step;
+
+    bool _zero_crossing_control;
+
+    double _horizon_time;
 
 	//! Private constructor
 	Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
@@ -119,6 +132,23 @@ public:
 	bool useApproximateGoalResolution() const {
 		return getGoalResolutionType() == CSPResolutionType::Approximate;
 	}
+
+    void setSuccessorPredictionType( IntegratorT method ) { _successor_prediction = method; }
+
+    IntegratorT getSuccessorPredictionType() const { return _successor_prediction; }
+
+    void setIntegrationFactor( double nsteps ) { _integration_factor = nsteps; }
+
+    double getIntegrationFactor( ) const { return _integration_factor; }
+
+    void setDiscretizationStep( double dT ) { _discretization_step = dT; }
+
+    double getDiscretizationStep( ) const { return _discretization_step; }
+
+    bool getZeroCrossingControl() const { return _zero_crossing_control; }
+
+    double getHorizonTime() const { return _horizon_time; }
+    bool hasHorizon() const { return _horizon_time >= 1e-7; }
 
 	bool validate() const { return getOption("validate", false); }
 

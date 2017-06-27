@@ -24,7 +24,7 @@ public:
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
-	_data_dir(data_dir)
+	_data_dir(data_dir), _can_extensionalize_var_domains(true)
 {
 	LPT_INFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
@@ -67,13 +67,19 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		variableNames.push_back(name);
 		variableIds.insert(std::make_pair(name, id));
 		
-		_sv_types.push_back(get_type_id(type));
+		type_id t = get_type_id(type);
+		_sv_types.push_back(t);
 		
 		try {
 			variableTypes.push_back(lang.get_fstype_id(type));
 		} catch( std::out_of_range& ex ) {
 			throw std::runtime_error("Unknown FS-type " + type);
 		}
+		
+		if (t == type_id::int_t) {
+			_can_extensionalize_var_domains = false;			
+		}		
+		
 
 		// Load the info necessary to resolve state variables dynamically
 		unsigned symbol_id = var_data["symbol_id"].GetInt();
@@ -186,6 +192,14 @@ checkValueIsValid(VariableIdx variable, const object_id& object) const {
 	if (!tinfo.bounded()) return true;
 	auto bounds = tinfo.bounds<int>();
 	int value = fs0::value<int>(object);
+	
+	if (isRationalNumber(variable)) {
+		std::stringstream buffer;
+		buffer << "Error: ProblemInfo::checkValueIsValid(): FLOAT variables not supported!";
+		LPT_DEBUG("main",buffer.str());
+		throw std::runtime_error(buffer.str());
+	}	
+	
 	return value >= bounds.first && value <= bounds.second;
 }
 
@@ -198,5 +212,18 @@ num_objects() const { return fstrips::LanguageInfo::instance().num_objects(); }
 
 std::string ProblemInfo::
 object_name(const object_id& object) const { return fstrips::LanguageInfo::instance().get_object_name(object); }
+
+bool ProblemInfo::
+isIntegerNumber(VariableIdx x) const {
+	type_id t = fstrips::LanguageInfo::instance().get_type_id(getVariableType(x));
+	return t == type_id::int_t || t == type_id::object_t;
+}
+
+bool ProblemInfo::
+isRationalNumber(VariableIdx x) const {
+	type_id t = fstrips::LanguageInfo::instance().get_type_id(getVariableType(x));
+	return t == type_id::float_t;
+}
+
 
 } // namespaces

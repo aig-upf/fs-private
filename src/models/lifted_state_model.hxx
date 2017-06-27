@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <atom.hxx>
 #include <actions/action_id.hxx>
 #include <actions/lifted_action_iterator.hxx>
 
@@ -71,6 +72,9 @@ protected:
 	std::vector<std::shared_ptr<gecode::LiftedActionCSP>> _handlers;
 	
 	const std::vector<const fs::Formula*> _subgoals;
+	
+	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
+	mutable std::vector<Atom> _effects_cache;	
 };
 
 } // namespaces

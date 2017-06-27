@@ -85,8 +85,10 @@ SimpleStateModel::next(const StateT& state, const GroundAction::IdType& actionId
 
 SimpleStateModel::StateT
 SimpleStateModel::next(const StateT& state, const GroundAction& a) const {
-	NaiveApplicabilityManager::computeEffects(state, a, _effects_cache);
-	return StateT(state, _effects_cache); // Copy everything into the new state and apply the changeset
+	a.apply(state,_effects_cache);
+	StateT succ(state, _effects_cache); // Copy everything into the new state and apply the changeset
+	LPT_EDEBUG("generated", "New state generated: " << succ);
+	return succ;	
 }
 
 bool

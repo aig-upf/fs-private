@@ -11,13 +11,20 @@
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/axioms.hxx>
 #include <languages/fstrips/operations/axioms.hxx>
+#include <languages/fstrips/metrics.hxx>
 
 
 namespace fs0 {
 
 std::unique_ptr<Problem> Problem::_instance = nullptr;
 
-Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector<const ActionData*>& action_data, const std::unordered_map<std::string, const fs::Axiom*>& axioms, const fs::Formula* goal, const fs::Formula* state_constraints, AtomIndex&& tuple_index) :
+Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
+                    const std::vector<const ActionData*>& action_data,
+                    const std::unordered_map<std::string, const fs::Axiom*>& axioms,
+                    const fs::Formula* goal,
+                    const std::unordered_map<std::string, const fs::Axiom*>& state_constraints,
+                    const fs::Metric* metric,
+                    AtomIndex&& tuple_index) :
 	_tuple_index(std::move(tuple_index)),
 	_init(init),
 	_state_indexer(state_indexer),
@@ -25,20 +32,26 @@ Problem::Problem(State* init, StateAtomIndexer* state_indexer, const std::vector
 	_axioms(axioms),
 	_ground(),
 	_partials(),
-	_state_constraint_formula(state_constraints),
+	_state_constraints(state_constraints),
 	_goal_formula(goal),
+    	_metric(metric),
 	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
 	_is_predicative(check_is_predicative())
 {
+    //! Store pointers to the state constraint definitions for ease of use
+    for ( auto c : _state_constraints ) {
+        _state_constraints_formulae.push_back( c.second->getDefinition() );
+    }
 }
 
 Problem::~Problem() {
 	for (const auto pointer:_action_data) delete pointer;
 	for (const auto it:_axioms) delete it.second;
+    	for (const auto it:_state_constraints) delete it.second;
 	for (const auto pointer:_ground) delete pointer;
 	for (const auto pointer:_partials) delete pointer;
-	delete _state_constraint_formula;
 	delete _goal_formula;
+    	delete _metric;
 }
 
 std::unordered_map<std::string, const fs::Axiom*>
@@ -58,15 +71,20 @@ Problem::Problem(const Problem& other) :
 	_axioms(other._axioms),
 	_ground(Utils::copy(other._ground)),
 	_partials(Utils::copy(other._partials)),
-	_state_constraint_formula(other._state_constraint_formula->clone()),
+    	_state_constraints(other._state_constraints),
 	_goal_formula(other._goal_formula->clone()),
+    	_metric(new fs::Metric(*other._metric)),
 	_goal_sat_manager(other._goal_sat_manager->clone()),
 	_is_predicative(other._is_predicative)
-{}
+{
+    //! Store pointers to the state constraint definitions for ease of use
+    for ( auto c : _state_constraints ) {
+        _state_constraints_formulae.push_back( c.second->getDefinition() );
+    }
+}
 
 void Problem::set_state_constraints(const fs::Formula* state_constraint_formula) {
-	delete _state_constraint_formula;
-	_state_constraint_formula = state_constraint_formula;
+    throw std::runtime_error("Runtime Error: Method Problem::set_state_constraints() is deprectated!");
 }
 
 void Problem::set_goal(const fs::Formula* goal) {
@@ -83,8 +101,9 @@ std::ostream& Problem::print(std::ostream& os) const {
 	os << std::endl;
 
 	os << "State Constraints:" << std::endl << "------------------" << std::endl;
-	os << "\t" << *getStateConstraints() << std::endl;
-	os << std::endl;
+	for ( auto c : _state_constraints ) {
+	os << "\t" << c.first << ": " << *(c.second) << std::endl;
+	}
 
 	os << "Action data" << std::endl << "------------------" << std::endl;
 	for (const ActionData* data:_action_data) {
@@ -117,6 +136,8 @@ bool Problem::check_is_predicative() {
 //! to replace them by axioms.
 //! This needs to be called before grounding actions.
 void Problem::consolidateAxioms() {
+    if ( !_ground.empty() )
+        throw std::runtime_error("Problem::consolidateAxioms(): method called after grounding actions!");
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
 	// NOTE Order is FUNDAMENTAL: we need to process the axioms first of all.
@@ -134,12 +155,21 @@ void Problem::consolidateAxioms() {
 	auto tmp = _goal_formula;
 	_goal_formula = fs::process_axioms(*_goal_formula, info);
 	delete tmp;
+	_goal_sat_manager.release();
 	_goal_sat_manager = std::unique_ptr<FormulaInterpreter>(FormulaInterpreter::create(_goal_formula, get_tuple_index()));
 
-	// Recreate the state-constraint formula with axioms, delete the old one
-	tmp = _state_constraint_formula;
-	_state_constraint_formula = fs::process_axioms(*_state_constraint_formula, info);
+	for ( auto& c : _state_constraints ) {
+	const fs::Axiom* tmp = c.second;
+	    const fs::Formula* _new_definition = fs::process_axioms(*(tmp->getDefinition()), info);
+	c.second= new fs::Axiom( tmp->getName(), tmp->getSignature(), tmp->getParameterNames(), tmp->getBindingUnit(), _new_definition );
 	delete tmp;
+	}
+	//! Store pointers to the state constraint definitions for ease of use
+	_state_constraints_formulae.clear();
+	for ( auto c : _state_constraints ) {
+	_state_constraints_formulae.push_back( c.second->getDefinition() );
+	}
+
 
 	// Update the action schemas
 	std::vector<const ActionData*> processed_actions;
@@ -151,12 +181,19 @@ void Problem::consolidateAxioms() {
 			effects.push_back(fs::process_axioms(*effect, info));
 		}
 
-		processed_actions.push_back(new ActionData(data->getId(), data->getName(), data->getSignature(), data->getParameterNames(), data->getBindingUnit(), precondition, effects));
+		processed_actions.push_back(new ActionData(data->getId(), data->getName(), data->getSignature(), data->getParameterNames(),
+                                        data->getBindingUnit(), precondition, effects, data->getType()));
 		delete data;
 	}
 	_action_data = processed_actions;
 }
 
+bool
+Problem::requires_handling_continuous_change() const {
+    for ( auto a : _action_data )
+        if ( a->getType() == ActionData::Type::Natural) return true;
+    return false;
+}
 
 
 } // namespaces

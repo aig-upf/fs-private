@@ -1,6 +1,7 @@
 
 #include <utils/config.hxx>
 #include <fs_types.hxx>
+#include <lapkt/tools/logging.hxx>
 #include <boost/property_tree/json_parser.hpp>
 
 namespace pt = boost::property_tree;
@@ -30,7 +31,6 @@ OptionType parseOption(const pt::ptree& tree, const std::unordered_map<std::stri
 	} else {
 		parsed = tree.get<std::string>(key);
 	}
-
 	auto it2 = allowed.find(parsed);
 	if (it2 == allowed.end()) {
 		throw std::runtime_error("Invalid configuration option for key " + key + ": " + parsed);
@@ -40,7 +40,12 @@ OptionType parseOption(const pt::ptree& tree, const std::unordered_map<std::stri
 }
 
 Config::Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename)
-	: _user_options(user_options)
+	: _user_options(user_options),
+    _successor_prediction( IntegratorT::ExplicitEuler ),
+    _integration_factor( 1.0 ),
+    _discretization_step( 1.0 ),
+    _zero_crossing_control( true ),
+    _horizon_time(-1.0)
 {
 	load(filename); // Load the default options
 }
@@ -68,6 +73,49 @@ void Config::load(const std::string& filename) {
 		{"delayed", EvaluationT::delayed},
 		{"delayed_for_unhelpful", EvaluationT::delayed_for_unhelpful}}
 	);
+
+    try {
+        _successor_prediction = parseOption<IntegratorT>(_root, _user_options, "integrator",
+                                                                { {"explicit_euler", IntegratorT::ExplicitEuler},
+                                                                {"implicit_euler", IntegratorT::ImplicitEuler},
+                                                                {"runge_kutta_2", IntegratorT::RungeKutta2},
+                                                                {"runge_kutta_4", IntegratorT::RungeKutta4}});
+    } catch ( boost::property_tree::ptree_bad_path& e ) {
+        // Use default value in the constructor
+    }
+
+    try {
+        _integration_factor = getOption<double>("integration_factor");
+        LPT_INFO("main", "[Config::load] Option 'integration_factor' was set to: " << _integration_factor );
+    } catch ( fs0::MissingOption& e ) {
+        // Use default value in the constructor
+        LPT_INFO("main", "[Config::load] Option 'integration_factor' takes default value: " << _integration_factor );
+    }
+
+    try {
+        _discretization_step = getOption<double>("dt");
+        LPT_INFO("main", "[Config::load] Option 'dt' was set to: " << _discretization_step );
+    } catch ( fs0::MissingOption& e ) {
+        // Use default value in the constructor
+        LPT_INFO("main", "[Config::load] Option 'dt' takes default value: " << _discretization_step );
+    }
+
+
+    try {
+        _zero_crossing_control = parseOption<bool>(_root, _user_options, "zcc",  {{"true", true}, {"false", false}});
+        LPT_INFO("main", "[Config::load] Option 'zcc' was set to: " << _zero_crossing_control );
+    } catch (  boost::property_tree::ptree_bad_path& e ) {
+        // Use default value in the constructor
+        LPT_INFO("main", "[Config::load] Option 'zcc' takes default value: " << _zero_crossing_control );
+    }
+
+    try {
+        _horizon_time = getOption<double>("horizon");
+        LPT_INFO("main", "[Config::load] Option 'horizon' was set to: " << _horizon_time );
+    } catch ( fs0::MissingOption& e ) {
+        // Use default value in the constructor
+        LPT_INFO("main", "[Config::load] Option 'horizon' takes default value: " << _horizon_time );
+    }
 
 	_heuristic = parseOption<std::string>(_root, _user_options, "heuristic", {{"hff", "hff"}, {"hmax", "hmax"}});
 
