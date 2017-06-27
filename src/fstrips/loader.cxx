@@ -246,7 +246,7 @@ void _loadTypeIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 	}
 }
 
-LanguageInfo* LanguageJsonLoader::
+void LanguageJsonLoader::
 loadLanguageInfo(const rapidjson::Document& data) {
 	LanguageInfo* lang = new LanguageInfo();
 
@@ -259,7 +259,7 @@ loadLanguageInfo(const rapidjson::Document& data) {
 	LPT_INFO("cout", "Loading language symbols from JSON file");
 	_loadSymbolIndex(data["symbols"], *lang);
 
-	return lang;
+	LanguageInfo::instance(lang);
 }
 
 } } // namespaces
