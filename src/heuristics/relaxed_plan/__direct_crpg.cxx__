@@ -73,7 +73,7 @@ long DirectCRPG::evaluate(const State& seed, const std::vector<ActionIdx>& white
 }
 
 long DirectCRPG::computeHeuristic(const State& seed, const RelaxedState& state, const RPGData& bookkeeping) {
-	Atom::vctr causes;
+	std::vector<Atom> causes;
 	if (_builder->isGoal(seed, state, causes)) {
 		_last_extractor = std::unique_ptr<BaseRelaxedPlanExtractor<RPGData>>(RelaxedPlanExtractorFactory<RPGData>::create(seed, bookkeeping));
 		long cost = _last_extractor->computeRelaxedPlanCost(causes);

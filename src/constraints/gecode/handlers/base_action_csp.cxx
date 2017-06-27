@@ -296,7 +296,7 @@ void BaseActionCSP::hmax_based_atom_processing(GecodeCSP* solution, RPGIndex& gr
 	auto hint = bookkeeping.getInsertionHint(atom);
 	LPT_EDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
 	
-	Atom::vctrp support = extract_support_from_solution(solution, effect_idx, assignment, binding);
+	std::shared_ptr<std::vector<Atom>> support = extract_support_from_solution(solution, effect_idx, assignment, binding);
 	
 	if (hint.first) { // If the atom is new, we simply insert it
 		bookkeeping.add(atom, get_action_id(solution), support, hint.second);

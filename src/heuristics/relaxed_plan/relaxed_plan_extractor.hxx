@@ -21,9 +21,9 @@ namespace fs0 {
 class SupportedAction {
 public:
 	const ActionID* _action;
-	Atom::vctrp _support;
+	std::shared_ptr<std::vector<Atom>> _support;
 	
-	SupportedAction(const ActionID* action, Atom::vctrp support) : 
+	SupportedAction(const ActionID* action, std::shared_ptr<std::vector<Atom>> support) : 
 		_action(action), _support(support) {}
 	
 	inline bool operator==(const SupportedAction& rhs) const { 

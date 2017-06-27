@@ -12,9 +12,9 @@
 
 
 namespace fs0 { namespace fstrips {
-	
 
-	
+
+
 std::vector<const LogicalVariable*> Loader::
 parseVariables(const rapidjson::Value& tree, const LanguageInfo& lang) {
 	std::vector<const LogicalVariable*> list;
@@ -41,29 +41,29 @@ std::vector<const Term*> _parseTermList(const rapidjson::Value& tree, const Lang
 
 const Formula* Loader::parseFormula(const rapidjson::Value& tree, const LanguageInfo& lang) {
 	std::string formula_type = tree["type"].GetString();
-	
+
 	if (formula_type == "and" || formula_type == "or" || formula_type == "not") {
 		std::vector<const Formula*> subformulae;
 		const rapidjson::Value& children = tree["children"];
 		for (unsigned i = 0; i < children.Size(); ++i) {
 			subformulae.push_back(parseFormula(children[i], lang));
 		}
-		
+
 		return new OpenFormula(to_connective(formula_type), subformulae);
-	
-		
+
+
 	} else if (formula_type == "exists" || formula_type == "forall") {
 		std::vector<const LogicalVariable*> variables = parseVariables(tree["variables"], lang);
 		auto subformula = parseFormula(tree["subformula"], lang);
-		
+
 		return new QuantifiedFormula(to_quantifier(formula_type), variables, subformula);
-	
+
 	} else if (formula_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
 		unsigned symbol_id = lang.get_symbol_id(symbol);
 		bool negated = tree["negated"].GetBool(); // TODO NEGATED SHOULDN'T BE HERE, BUT RATHER A NEGATION.
 		std::vector<const Term*> subterms = _parseTermList(tree["children"], lang);
-		
+
 		return new AtomicFormula(symbol_id, subterms);
 
 	} else if (formula_type == "tautology") {
@@ -71,14 +71,14 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const Language
 	} else if (formula_type == "contradiction") {
 		return new Contradiction;
 	}
-	
+
 	throw std::runtime_error("Unknown formula type \"" + formula_type + "\"");
 }
 
 
 const Term* Loader::parseTerm(const rapidjson::Value& tree, const LanguageInfo& lang) {
 	std::string term_type = tree["type"].GetString();
-	
+
 	if (term_type == "constant") {
 		TypeIdx fstype = lang.get_fstype_id(tree["fstype"].GetString());
 		object_id object = make_object(lang.get_type_id(fstype), tree["value"].GetInt());
@@ -86,14 +86,14 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const LanguageInfo& 
 
 	} else if (term_type == "variable") {
 		return new LogicalVariable(tree["position"].GetInt(), tree["name"].GetString(), lang.get_fstype_id(tree["typename"].GetString()));
-		
+
 	} else if (term_type == "functional") {
 		std::string symbol = tree["symbol"].GetString();
 		unsigned symbol_id = lang.get_symbol_id(symbol);
 		std::vector<const Term*> children = _parseTermList(tree["children"], lang);
 		return new FunctionalTerm(symbol_id, children);
 	}
-	
+
 	throw std::runtime_error("Unknown term type " + term_type);
 }
 
@@ -104,13 +104,13 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const LanguageInfo& 
 const ActionEffect* Loader::parseEffect(const rapidjson::Value& tree, const LanguageInfo& lang) {
 	const std::string effect_type = tree["type"].GetString();
 	const Formula* condition = parseFormula(tree["condition"], lang);
-	
+
 	if (effect_type == "functional") {
 		const FunctionalTerm* lhs = dynamic_cast<const FunctionalTerm*>(parseTerm(tree["lhs"], lang));
 		if (!lhs) {
 			throw std::runtime_error("Invalid LHS of a functional effect");
 		}
-		
+
 		return new FunctionalEffect(lhs, parseTerm(tree["rhs"], lang), condition);
 
 	} else if (effect_type == "add" || effect_type == "del") {
@@ -119,12 +119,12 @@ const ActionEffect* Loader::parseEffect(const rapidjson::Value& tree, const Lang
 		if (!atom) {
 			throw std::runtime_error("Invalid LHS of an atomic effect");
 		}
-		
+
 		return new AtomicEffect(atom, type, condition);
-		
-	} 
-	
-	throw std::runtime_error("Unknown effect type " + effect_type);	
+
+	}
+
+	throw std::runtime_error("Unknown effect type " + effect_type);
 }
 
 std::vector<const ActionEffect*> Loader::parseEffectList(const rapidjson::Value& tree, const LanguageInfo& lang) {
@@ -141,21 +141,21 @@ Loader::parseActionSchema(const rapidjson::Value& node, unsigned id, const Langu
 	const std::string& name = node["name"].GetString();
 	const Signature signature = fs0::Loader::parseNumberList<unsigned>(node["signature"]);
 	const std::vector<std::string> parameters = fs0::Loader::parseStringList(node["parameters"]);
-	
+
 	const Formula* precondition = parseFormula(node["conditions"], lang);
 	std::vector<const ActionEffect*> effects;
-	
+
 	if (load_effects) {
 		effects = parseEffectList(node["effects"], lang);
 	}
-	
+
 	ActionSchema* schema = new ActionSchema(id, name, signature, parameters, precondition, effects);
 	if (has_empty_parameter(*schema)) {
 		LPT_INFO("cout", "Schema \"" << schema->getName() << "\" discarded because of empty parameter type.");
 		delete schema;
 		return nullptr;
 	}
-	
+
 	return schema;
 	// We perform a first binding on the action schema so that state variables, etc. get consolidated, but the parameters remain the same
 	// This is possibly not optimal, since for some configurations we might be duplicating efforts, but ATM we are happy with it
@@ -174,7 +174,7 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 		const std::string symbol_type = data[i][2].GetString();
 		assert (symbol_type == "function" || symbol_type == "predicate");
 		symbol_t type = (symbol_type == "function") ? symbol_t::Function : symbol_t::Predicate;
-		
+
 
 		// Parse the symbol signature
 		Signature signature;
@@ -193,10 +193,10 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
         bool has_unbounded_arity = data[i][7].GetBool();
 		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static, has_unbounded_arity));
 		*/
-		
+
 		symbol_id id = lang.add_symbol(name, type, signature, static_);
 		assert(expected_id == id); // Check values are decoded in the proper order
-	}	
+	}
 }
 
 
@@ -210,9 +210,9 @@ void _loadObjectIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 		unsigned expected_id = static_cast<unsigned>(data[i]["id"].GetInt());
 		const std::string& name = data[i]["name"].GetString();
 		const std::string& fstype = data[i]["type"].GetString();
-		
+
 		object_id id = lang.add_object(name, lang.get_fstype_id(fstype));
-		assert(expected_id == (int)id); // Check values are decoded in the proper order
+		assert((int)expected_id == (int)id); // Check values are decoded in the proper order
 	}
 }
 
@@ -222,22 +222,22 @@ void _loadTypeIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		TypeIdx expected_id = data[i][0].GetInt();
 		std::string fstype(data[i][1].GetString());
-		
+
 
 		// We read and convert to integer type the vector of Object indexes
 		if (data[i][2].IsString()) {
 			assert(std::string(data[i][2].GetString()) == "int" && data[i].Size() == 4);
 			int lower = data[i][3][0].GetInt();
 			int upper = data[i][3][1].GetInt();
-			
+
 			TypeIdx tid = lang.add_fstype(fstype, type_id::int_t, make_range(lower, upper));
 			assert(tid = expected_id);
-		
+
 		} else { // Assume we have an enumeration of object IDs
-			
+
 			TypeIdx tid = lang.add_fstype(fstype);
 			assert(tid = expected_id);
-			
+
 			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
 				int value = boost::lexical_cast<int>(data[i][2][j].GetString());
 				lang.bind_object_to_type(lang.get_fstype_id(fstype), make_object(type_id::object_t, value));
@@ -249,7 +249,7 @@ void _loadTypeIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 LanguageInfo* LanguageJsonLoader::
 loadLanguageInfo(const rapidjson::Document& data) {
 	LanguageInfo* lang = new LanguageInfo();
-	
+
 	LPT_INFO("cout", "Loading FS types from JSON file");
 	_loadTypeIndex(data["types"], *lang); // Order matters
 

@@ -44,9 +44,9 @@ _check_negated_preconditions(std::vector<const ActionData*>& schemas) {
 		for (const fs::AtomicFormula* atom:fs::all_atoms(*schema->getPrecondition())) {
 			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(atom);
 			if (!eq) continue;
-			const fs::NumericConstant* cnst = dynamic_cast<const fs::NumericConstant*>(eq->rhs());
+			const fs::Constant* cnst = dynamic_cast<const fs::Constant*>(eq->rhs());
 			if (!cnst) continue;
-			auto val = boost::get<int>(cnst->getValue());
+			auto val = fs0::value<int>(cnst->getValue());
 			if (val==0) return true;
 		}
 	}
@@ -185,16 +185,16 @@ State*
 Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data, const ProblemInfo& info ) {
 	// The state is an array of two-sized arrays [x,v], representing atoms x=v
 	unsigned numAtoms = data["variables"].GetInt();
-	Atom::vctr facts;
+	std::vector<Atom> facts;
 	for (unsigned i = 0; i < data["atoms"].Size(); ++i) {
 		const rapidjson::Value& node = data["atoms"][i];
 		VariableIdx var = node[0].GetInt();
-		ObjectIdx value;
+		object_id value;
 		if (info.isRationalNumber(var))
-		    value =  (float)node[1].GetDouble();
+		    value =  make_object(node[1].GetDouble());
 		else
-		    value =  node[1].GetInt();
-			facts.push_back(Atom(var,value));
+		    value =  make_object(node[1].GetInt());
+		facts.push_back(Atom(var,value));
 	}
 	return State::create(indexer, numAtoms, facts);
 }
