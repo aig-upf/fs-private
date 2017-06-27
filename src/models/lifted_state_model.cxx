@@ -66,7 +66,8 @@ State LiftedStateModel::next(const State& state, const LiftedActionID& action) c
 State LiftedStateModel::next(const State& state, const GroundAction& action) const { 
 	NaiveApplicabilityManager manager(_task.getStateConstraints());
 	assert(manager.isApplicable(state, action));
-	return State(state, NaiveApplicabilityManager::computeEffects(state, action)); // Copy everything into the new state and apply the changeset
+	action.apply( state, _effects_cache );
+	return State(state, _effects_cache); // Copy everything into the new state and apply the changeset	
 }
 
 

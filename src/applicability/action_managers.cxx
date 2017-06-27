@@ -1,5 +1,4 @@
 
-#include <iostream>
 #include <numeric>
 #include <unordered_set>
 
@@ -17,24 +16,32 @@
 #include <languages/fstrips/operations.hxx>
 #include <utils/utils.hxx>
 #include <utils/printers/vector.hxx>
-#include <utils/printers/actions.hxx>
 
 namespace fs0 {
 
-NaiveApplicabilityManager::NaiveApplicabilityManager(const fs::Formula* state_constraints)
+NaiveApplicabilityManager::NaiveApplicabilityManager(const std::vector<const fs::Formula*>& state_constraints)
 	: _state_constraints(state_constraints) {}
 
 //! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
 bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAction& action) const {
+    if (!action.isControl()) return false;
 	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
 
 	auto atoms = computeEffects(state, action);
 	if (!checkAtomsWithinBounds(atoms)) return false;
 
-	if (!_state_constraints->is_tautology()) { // If we have no constraints, we can spare the cost of creating the new state.
-		State next(state, atoms);
-		return checkFormulaHolds(_state_constraints, next);
-	}
+    if (!_state_constraints.empty()) { // If we have no constraints, we can spare the cost of creating the new state.
+        State next(state, atoms);
+        for ( auto c : _state_constraints )
+            if ( !checkFormulaHolds( c, next ) ) return false;
+    }
+
+	return true;
+}
+
+bool NaiveApplicabilityManager::isActive(const State& state, const GroundAction& action) const {
+    if (!action.isNatural()) return false;
+	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
 	return true;
 }
 
@@ -42,7 +49,7 @@ bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAct
 std::vector<Atom>
 NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction& action) {
 	std::vector<Atom> atoms;
-	computeEffects(state, action, atoms);
+    action.apply(state,atoms);
 	return atoms;
 }
 
@@ -62,6 +69,13 @@ bool NaiveApplicabilityManager::checkFormulaHolds(const fs::Formula* formula, co
 	return formula->interpret(state);
 }
 
+bool NaiveApplicabilityManager::checkStateConstraints(const State& state) const {
+    for ( auto c : _state_constraints )
+        if (!NaiveApplicabilityManager::checkFormulaHolds(c, state)) return false;
+    return true;
+}
+
+
 bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& atoms) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	for (const auto& atom:atoms) {
@@ -72,7 +86,10 @@ bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& 
 
 
 
-SmartActionManager::SmartActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer) :
+SmartActionManager::SmartActionManager( const std::vector<const GroundAction*>& actions,
+                                        const std::vector<const fs::Formula*>& state_constraints,
+                                        const AtomIndex& tuple_idx,
+                                        const BasicApplicabilityAnalyzer& analyzer) :
 	Base(actions, state_constraints),
 	_tuple_idx(tuple_idx),
 	_vars_affected_by_actions(),
@@ -158,9 +175,9 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - Actions size: " << _actions.size());
 	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - size of set of atomidx: " << sizeof(std::unordered_set<AtomIdx>));
 	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [1]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-	
+
 	for (unsigned i = 0; i < _actions.size(); ++i) {
-		
+
 		/* DEBUGGING
 
 		if (i%100==0) {
@@ -168,7 +185,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			unsigned cnt = 0;
 			for (auto& app_set:_applicable) cnt += app_set.size();
 			LPT_INFO("cout", "Aggregated '_applicable' size [it. " << i << "]: " << cnt);
-			
+
 			cnt = 0;
 			for (auto& app_set:_rev_applicable) cnt += app_set.size();
 			LPT_INFO("cout", "Aggregated '_rev_applicable' size [it. " << i << "]: " << cnt);
@@ -185,7 +202,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			for (auto& app_set:_applicable) app_set.push_back(i);
 			continue;
 		}
-		
+
 		auto preconditions = fs::check_all_atomic_formulas(precondition->getSubformulae());
 
 
@@ -193,7 +210,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 		for (const fs::AtomicFormula* sub:preconditions) {
 			const fs::AtomicFormula* conjunct = dynamic_cast<const fs::AtomicFormula*>(sub);
 			if (!conjunct) throw std::runtime_error("Only conjunctions of atoms supported for this type of applicability analyzer");
-			
+
 			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
 			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
 			const fs::NEQAtomicFormula* neq = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
@@ -211,7 +228,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 // 			std::cout << "Processing conjunct: " << *conjunct << std::endl;
 
 			VariableIdx relevant = all_relevant[0];
-			const std::vector<object_id>& values = info.getVariableObjects(relevant);
+			const std::vector<ObjectIdx>& values = info.getVariableObjects(relevant);
 
 			if (!referenced.insert(relevant).second) {
 				LPT_INFO("cout", "Conjunct \"" << *conjunct << "\" contains a duplicate reference to state variable \"" << info.getVariableName(relevant) << "\"");
@@ -219,14 +236,14 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			}
 
 			_variable_relevance[relevant]++;
-			
+
 			if (eq) { // Prec is of the form X=x
 // 				std::cout << "Precondition: " << *eq << std::endl;
-				object_id value = _extract_constant_val(eq->lhs(), eq->rhs());
+				ObjectIdx value = _extract_constant_val(eq->lhs(), eq->rhs());
 				AtomIdx tup = _tuple_idx.to_index(relevant, value);
-				
+
 // 				std::cout << "Corresponding Atom: " << _tuple_idx.to_atom(tup) << std::endl;
-				
+
 				if (build_applicable_index) {
 					_applicable[tup].push_back(i);
 				}
@@ -235,9 +252,8 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			} else { // Prec is of the form X!=x
 				assert(neq);
 // 				std::cout << "Precondition: " << *eq << std::endl;
-				object_id value = _extract_constant_val(neq->lhs(), neq->rhs());
-				for (const object_id&
- v2:values) {
+				ObjectIdx value = _extract_constant_val(neq->lhs(), neq->rhs());
+				for (ObjectIdx v2:values) {
 					if (v2 != value) {
 						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
 						if (build_applicable_index) {
@@ -254,8 +270,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 				if (referenced.find(var) != referenced.end()) continue;
 
-				for (const object_id&
- val:info.getVariableObjects(var)) {
+				for (ObjectIdx val:info.getVariableObjects(var)) {
 					AtomIdx tup = _tuple_idx.to_index(var, val);
 					_applicable[tup].push_back(i);
 				}
@@ -349,14 +364,15 @@ _process_state_constraints(const fs::Formula* state_constraints) {
 }
 
 
-NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& actions, const fs::Formula* state_constraints) :
+NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& actions, const std::vector<const fs::Formula*>& state_constraints) :
 	_actions(actions),
-	_state_constraints(_process_state_constraints(state_constraints)),
+	_state_constraints(state_constraints),
 	_all_actions_whitelist(_build_all_actions_whitelist(actions.size()))
 {}
 
 bool
 NaiveActionManager::applicable(const State& state, const GroundAction& action) const {
+    if (!action.isControl()) return false;
 	if (!NaiveApplicabilityManager::checkFormulaHolds(action.getPrecondition(), state)) return false;
 
 	NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);
@@ -382,30 +398,5 @@ NaiveActionManager::check_constraints(unsigned applied_action_id, const State& s
 	}
 	return true;
 }
-
-
-
-
-void
-GroundApplicableSet::Iterator::advance() {
-	if (_manager.whitelist_guarantees_applicability()) {
-			// All actions in the whitelist guaranteed to be true, no need to check anything else
-		return; 
-	}
-	
-	const std::vector<const GroundAction*>& actions = _manager.getAllActions();
-	// std::cout << "Checking applicability " << std::endl;
-	for (unsigned sz = _whitelist.size();_index < sz; ++_index) {
-			unsigned action_idx = _whitelist[_index];
-
-			// std::cout << "Check applicable action: " << print::action_header(*actions[action_idx]) << std::endl;
-			if (_manager.applicable(_state, *actions[action_idx])) { // The action is applicable, break the for loop.
-			// std::cout << "Found applicable action: " << print::action_header(*actions[action_idx]) << std::endl;
-			return;
-		}
-	}
-
-}
-
 
 } // namespaces

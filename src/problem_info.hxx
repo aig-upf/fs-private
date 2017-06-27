@@ -119,6 +119,10 @@ public:
 	
 	type_id sv_type(VariableIdx var) const { return _sv_types.at(var); }
 
+	bool isIntegerNumber(VariableIdx x) const;
+
+	bool isRationalNumber(VariableIdx x) const;
+	
 	unsigned getNumVariables() const;
 	
 	std::string object_name(const object_id& object) const;
@@ -163,6 +167,8 @@ public:
 	inline const std::vector<object_id>& getVariableObjects(const VariableIdx variable) const {
 		return getTypeObjects(getVariableType(variable));
 	}
+	
+	bool canExtensionalizeVarDomains() const { return _can_extensionalize_var_domains; }
 
 	
 	//! Returns all the objects of the given type _or of a descendant type_
@@ -217,6 +223,10 @@ protected:
 
 	//! The filesystem directory where the problem serialized data is found
 	const std::string _data_dir;
+	
+	//! This flag is true whenever every variable domain can be extensionalized
+	//! (i.e. valuations can be indexed statically and efficiently)
+	bool _can_extensionalize_var_domains;	
 };
 
 } // namespaces

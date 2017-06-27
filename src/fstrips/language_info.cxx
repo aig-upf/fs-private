@@ -118,6 +118,7 @@ private:
 		type_id t = o_type(object);
 		if (t == type_id::bool_t) return std::string((fs0::value<bool>(object) ? "true" : "false"));
 		else if (t == type_id::int_t) return std::to_string(fs0::value<int>(object));
+		else if (t == type_id::float_t) return std::to_string(fs0::value<float>(object));
 		else if (t == type_id::object_t) return get_custom_object_name(object);
 		throw unregistered_type("Unknown type_id \"" + to_string(t) + "\"");
 	}
