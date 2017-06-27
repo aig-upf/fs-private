@@ -27,7 +27,7 @@ class ProblemRepresentation(object):
                 'process_schemata': [process.dump() for process in self.index.process_schemas],
                 'event_schemata': [event.dump() for event in self.index.event_schemas],
                 'metric' : self.index.metric.dump(),
-                'state_constraints': self.index.state_constraints.dump(),
+                'state_constraints': [constraint.dump() for constraint in self.index.state_constraints],
                 'goal': self.index.goal.dump(),
                 'axioms': [axiom.dump() for axiom in self.index.axioms],
                 'init': self.dump_init_data(),
