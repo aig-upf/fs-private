@@ -25,8 +25,8 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 un[i] = Atom( f_expr[i]._affected, next.getValue(f_expr[i]._affected));
                 //! Step towards halfway
                 //! u_{n+1/2} = u_{n} + 0.5 h f(u_{n})
-                float f_i = fs::value<float>(next.getValue( f_expr[i]._affected ));
-                float un_i = fs::value<float>(f_un[i].getValue());
+                float f_i = fs0::value<float>(next.getValue( f_expr[i]._affected ));
+                float un_i = fs0::value<float>(f_un[i].getValue());
                 float un1 = f_i + 0.5f * h * un_i;
                 next.__set( f_expr[i]._affected, un1 );
             }
@@ -35,8 +35,8 @@ namespace fs0 { namespace dynamics { namespace integrators {
             for ( unsigned i = 0; i < f_expr.size(); i++ ) {
                 //! Step towards next
                 //! u_{n+1} = u_{n} +  h f(u_{n+1/2})
-                float un_i = fs::value<float>(un[i].getValue());
-                float f_un_i = fs::value<float>(f_un[i].getValue());
+                float un_i = fs0::value<float>(un[i].getValue());
+                float f_un_i = fs0::value<float>(f_un[i].getValue());
                 float un1 = un_i +  h * f_un_i;
                 next.__set( f_expr[i]._affected, un1 );
             }

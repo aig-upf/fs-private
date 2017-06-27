@@ -21,8 +21,8 @@ namespace fs0 { namespace dynamics { namespace integrators {
             for ( unsigned i = 0; i < f_expr.size(); i++ ) {
                 //! Euler method step
                 //! u_{n+1} = u_{n} + h f(u_{n})
-                float f_i = fs::value<float>(next.getValue( f_expr[i]._affected ));
-                float f_un_i = fs::value<float>(f_un[i].getValue());
+                float f_i = fs0::value<float>(next.getValue( f_expr[i]._affected ));
+                float f_un_i = fs0::value<float>(f_un[i].getValue());
                 float un1 = f_i + h * f_un_i;
                 next.__set( f_expr[i]._affected, un1 );
             }

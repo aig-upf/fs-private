@@ -20,7 +20,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
             for ( unsigned j = 0; j < f_expr[i]._terms.size(); j++ ) {
                 auto expr = f_expr[i]._terms[j];
                 double sign = f_expr[i]._signs[j];
-                float interpretation = fs::value<float>(expr->interpret( s ));
+                float interpretation = fs0::value<float>(expr->interpret( s ));
                 delta_xi += (sign * (double)interpretation);
             }
             update[i] = Atom( f_expr[i]._affected, delta_xi );

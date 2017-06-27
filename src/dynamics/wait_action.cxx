@@ -22,7 +22,7 @@ namespace fs0 { namespace dynamics {
 
     void
     WaitAction::apply( const State& s, std::vector<Atom>& atoms ) const {
-        if ( Config::instance().hasHorizon() && (fs::value<float>(s.getValue(_clock_var)) > Config::instance().getHorizonTime()) )
+        if ( Config::instance().hasHorizon() && (fs0::value<float>(s.getValue(_clock_var)) > Config::instance().getHorizonTime()) )
             throw std::runtime_error("WaitAction::apply: reached state beyond horizon");
 
         // MRJ: We collect the reference to the integrator selected by
@@ -58,7 +58,7 @@ namespace fs0 { namespace dynamics {
                 atoms.clear();
                 return; // we're done here
             }
-            double t_k_plus_1 = fs::value<float>(s_k_plus_1.getValue(_clock_var));
+            double t_k_plus_1 = fs0::value<float>(s_k_plus_1.getValue(_clock_var));
             if (  Config::instance().hasHorizon() && (t_k_plus_1 > Config::instance().getHorizonTime() )) {
                 atoms.clear();
                 LPT_DEBUG("dynamics", "Time out!");
