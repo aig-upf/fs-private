@@ -4,6 +4,7 @@
 #include <iostream>
 #include <type_traits>
 #include <climits>
+#include <unordered_map>
 
 #include <base.hxx>
 #include "utils/utils.hxx"
@@ -31,6 +32,22 @@ std::string to_string(const type_id& t) {
 	if (t == type_id::set_t)         return "SET";
 	if (t == type_id::interval_t)    return "RNG";
 	return "?";
+}
+
+type_id from_string(const std::string& t) {
+	static std::unordered_map<std::string, type_id> mapping{
+		{ "object_t", type_id::object_t },
+		{ "bool_t", type_id::bool_t },
+		{ "int_t", type_id::int_t },
+		{ "float_t", type_id::float_t },
+		{ "set_t", type_id::set_t },
+		{ "interval_t", type_id::interval_t }
+	};
+
+	auto it = mapping.find( t );
+	if (it == mapping.end() )
+		throw std::runtime_error( "Error resolving underlying data type for identifier '" + t + "'" );
+	return it->second;
 }
 
 std::ostream& operator<<(std::ostream &os, const type_id& t) { return os << to_string(t); }

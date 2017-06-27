@@ -25,6 +25,7 @@ enum class type_id : uint16_t {
 };
 
 std::string to_string(const type_id& t);
+type_id from_string(const std::string& t);
 std::ostream& operator<<(std::ostream &os, const type_id& t);
 
 /**

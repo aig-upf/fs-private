@@ -220,26 +220,30 @@ void _loadObjectIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 //! Load all type-related info.
 void _loadTypeIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		TypeIdx expected_id = data[i][0].GetInt();
-		std::string fstype(data[i][1].GetString());
+		const auto& node = data[i];
 
 
-		// We read and convert to integer type the vector of Object indexes
-		if (data[i][2].IsString()) {
-			assert(std::string(data[i][2].GetString()) == "int" && data[i].Size() == 4);
-			int lower = data[i][3][0].GetInt();
-			int upper = data[i][3][1].GetInt();
+		TypeIdx expected_id = node["id"].GetInt();
+		std::string fstype = node["fstype"].GetString();
+		std::string domain_type = node["domain_type"].GetString();
+		std::string type_id_str = node["type_id"].GetString();
 
-			TypeIdx tid = lang.add_fstype(fstype, type_id::int_t, make_range(lower, upper));
-			assert(tid = expected_id);
+		if (domain_type == "unbounded") {
+			TypeIdx tid = lang.add_fstype( fstype, from_string(type_id_str));
+			assert( tid == expected_id );
 
-		} else { // Assume we have an enumeration of object IDs
+		} else if (domain_type == "interval") {
+			int lower = node["interval"][0].GetInt();
+			int upper = node["interval"][1].GetInt();
 
-			TypeIdx tid = lang.add_fstype(fstype);
-			assert(tid = expected_id);
+			TypeIdx tid = lang.add_fstype(fstype, from_string(type_id_str), make_range(lower, upper));
+			assert(tid == expected_id);
+		} else if (domain_type == "set") {
+			TypeIdx tid = lang.add_fstype(fstype, from_string(type_id_str));
+			assert(tid == expected_id);
 
-			for (unsigned j = 0; j < data[i][2].Size(); ++j) {
-				int value = boost::lexical_cast<int>(data[i][2][j].GetString());
+			for (unsigned j = 0; j < node["set"].Size(); ++j) {
+				int value = boost::lexical_cast<int>(node["set"][j].GetString());
 				lang.bind_object_to_type(lang.get_fstype_id(fstype), make_object(type_id::object_t, value));
 			}
 		}
