@@ -42,10 +42,10 @@ def filter_out_action_cost_functions(adl_functions):
 
 def create_fs_task(fd_task, domain_name, instance_name):
     """ Create a problem domain and instance and perform the appropriate validity checks """
-    types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
+    types, type_map, supertypes = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
     task = FSTaskIndex(domain_name, instance_name)
     task.process_objects(fd_task.objects)
-    task.process_types(types, type_map)
+    task.process_types(types, type_map, supertypes )
     task.process_symbols(actions=fd_task.actions, predicates=fd_task.predicates, functions=fd_task.functions)
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
@@ -60,12 +60,12 @@ def create_fs_task(fd_task, domain_name, instance_name):
 
 def create_fs_plus_task( fsp_task, domain_name, instance_name ) :
     """ Create a problem domain and instance and perform the appropiate validty checks """
-    types, type_map = process_problem_types( fsp_task.types, fsp_task.objects, fsp_task.bounds)
+    types, type_map, supertypes = process_problem_types( fsp_task.types, fsp_task.objects, fsp_task.bounds)
     task = FSTaskIndex(domain_name, instance_name)
     print("Creating FS+ task: Processing objects...")
     task.process_objects(fsp_task.objects)
     print("Creating FS+ task: Processing types...")
-    task.process_types(types, type_map)
+    task.process_types(types, type_map, supertypes)
     #print("Types:", types)
     #print("Type -> Domain Map:", type_map)
     # MRJ: takes into account actions, events and processes
@@ -100,11 +100,11 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
 
     # types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
     sorted_objs = [adl_task.objects[name] for name in adl_task.sorted_object_names]
-    types, type_map = process_problem_types(adl_task.types.values(), sorted_objs, [])
+    types, type_map, supertypes = process_problem_types(adl_task.types.values(), sorted_objs, [])
     task = FSTaskIndex(domain_name, instance_name)
 
     task.process_objects(sorted_objs)
-    task.process_types(types, type_map)
+    task.process_types(types, type_map, supertypes)
 
     adl_functions = filter_out_action_cost_functions(adl_task.functions.values())
     adl_predicates = adl_task.predicates.values()
@@ -157,6 +157,7 @@ class FSTaskIndex(object):
 
         self.types = util.UninitializedAttribute('types')
         self.type_map = util.UninitializedAttribute('type_map')
+        self.supertypes = util.UninitializedAttribute('supertypes')
         self.objects = util.UninitializedAttribute('objects')
         self.object_types = util.UninitializedAttribute('object_types')
         self.symbols = util.UninitializedAttribute('symbols')
@@ -178,10 +179,11 @@ class FSTaskIndex(object):
         self.metric = util.UninitializedAttribute('metric')
         self.groundings = None
 
-    def process_types(self, types, type_map):
+    def process_types(self, types, type_map, supertypes):
         # Each typename points to its (unique) 1-based index (index 0 is reserved for bools)
         self.types = {t: i for i, t in enumerate(types, 1)}
         self.type_map = type_map
+        self.supertypes = supertypes
 
     def process_objects(self, objects):
         # Each object name points to it unique 0-based index / ID

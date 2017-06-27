@@ -118,15 +118,44 @@ class ProblemRepresentation(object):
 
     def dump_type_data(self):
         """ Dumps a map of types to corresponding objects"""
+
+        def resolve_type_id( type ) :
+            if type == 'int' : return 'int_t'
+            if type == 'number' : return 'float_t'
+            if type == 'object' : return 'object_t'
+            if 'int' in self.index.supertypes[type] : return 'int_t'
+            if 'number' in self.index.supertypes[type] : return 'float_t'
+            if 'object' in self.index.supertypes[type] : return 'object_t'
+            assert False
+
+        def resolve_domain_type( type_id, objects ) :
+            if len(objects) == 0 : return 'unbounded'
+            if isinstance(objects[0],int) : return 'interval'
+            return 'set'
+
         data = []
         _sorted = sorted(self.index.types.items(), key=operator.itemgetter(1))  # all types, sorted by type ID
         for t, i in _sorted:
             objects = self.index.type_map[t]
-            if objects and isinstance(objects[0], int):  # We have a bounded int variable
-                data.append([i, t, 'int', [objects[0], objects[-1]]])
-            else:
+            type_def_components  = [ ("id", i), ("fstype", t) ]
+
+            type_id = resolve_type_id(t)
+            type_def_components += [ ("type_id", type_id )]
+
+            dom_type = resolve_domain_type(type_id, objects)
+            type_def_components += [ ("domain_type", dom_type ) ]
+
+            if dom_type == 'interval' :
+                type_def_components += [ ("interval", [object[0], objects[-1]]), ("set", []) ]
+            elif dom_type == 'set' :
                 object_idxs = [str(self.index.objects.get_index(o)) for o in objects]
-                data.append([i, t, object_idxs])
+                type_def_components += [ ("interval", []), ("set", object_idxs) ]
+            elif dom_type == 'unbounded' :
+                type_def_components += [ ("interval", []), ("set", []) ]
+            else :
+                assert False
+
+            data.append( dict(type_def_components))
 
         return data
 
@@ -208,10 +237,11 @@ class ProblemRepresentation(object):
         # Types
         lines = list()
         for t in data['types']:
-            objects = t[2]
-            if objects == 'int':
-                objects = "int[{}..{}]".format(t[3][0], t[3][1])
-            lines.append("{}: {}. Objects: {}".format(t[0], t[1], objects))
+            lines.append('{}'.format(t))
+            #objects = t[2]
+            #if objects == 'int':
+            #    objects = "int[{}..{}]".format(t[3][0], t[3][1])
+            #lines.append("{}: {}. Objects: {}".format(t[0], t[1], objects))
         self.dump_data("types", lines, ext='txt', subdir='debug')
 
         # Variables
