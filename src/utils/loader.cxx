@@ -191,7 +191,7 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data,
 		VariableIdx var = node[0].GetInt();
 		object_id value;
 		if (info.isRationalNumber(var))
-		    value =  make_object(node[1].GetDouble());
+		    value =  make_object((float)node[1].GetDouble());
 		else
 		    value =  make_object(node[1].GetInt());
 		facts.push_back(Atom(var,value));
