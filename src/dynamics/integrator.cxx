@@ -13,7 +13,8 @@ namespace fs0 { namespace dynamics { namespace integrators {
 
     void
     Integrator::evaluate_derivatives( const State& s, const std::vector<DifferentialEquation>& f_expr, std::vector<Atom>& update) const {
-        update.resize( f_expr.size() );
+        //update.resize( f_expr.size() );
+        update.reserve(f_expr.size() );
 
         for ( unsigned i = 0; i < f_expr.size(); i++ ) {
             float delta_xi = 0.0f;
@@ -23,7 +24,8 @@ namespace fs0 { namespace dynamics { namespace integrators {
                 float interpretation = fs0::value<float>(expr->interpret( s ));
                 delta_xi += (sign * (double)interpretation);
             }
-            update[i] = Atom( f_expr[i]._affected, delta_xi );
+            //update[i] = Atom( f_expr[i]._affected, make_object(delta_xi) );
+            update.emplace_back( Atom( f_expr[i]._affected, make_object(delta_xi) ) );
         }
         _num_evals++;
     }

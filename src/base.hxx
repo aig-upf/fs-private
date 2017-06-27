@@ -18,7 +18,7 @@ enum class type_id : uint16_t {
 	int_t,
 // 	ufloat_t,
 	float_t,
-	
+
 	set_t,
 	interval_t
 	// ...
@@ -34,19 +34,19 @@ std::ostream& operator<<(std::ostream &os, const type_id& t);
 class object_id {
 public:
     using data_t = uint64_t;
-    
+
     template <typename T>
-    object_id(type_id t, T value) 
+    object_id(type_id t, T value)
         : _data(to_data(t, value))
     {}
-    
-    
+
+
     template <typename T>
     static data_t to_data(type_id t, T value) {
         static_assert(sizeof(T) <= 7, "Unsupported object_id value type");
-        return ((data_t) t << 56) | value; 
+        return ((data_t) t << 56) | value;
     }
-    
+
 private:
     data_t _data;
 };
@@ -61,50 +61,50 @@ public:
 	const static object_id INVALID;
 	const static object_id FALSE; // For the sake of performance?
 	const static object_id TRUE;
-	
+
     using value_t = uint32_t;
-    
+
 	explicit object_id() : _type(type_id::invalid_t), _value(0) {}
-	
+
 private:
-	
+
     template <typename T>
-    explicit object_id(type_id t, T value) 
+    explicit object_id(type_id t, T value)
         : _type(t), _value(value)
     { static_assert(sizeof(T) <= sizeof(value_t), "Unsupported object_id value type"); }
-    
+
     template <typename T> friend object_id make_object(type_id t, T value);
 	template <typename T> friend object_id make_object(const T& value);
-	
-	
+
+
 public:
     //! TODO Might want to remove this operators in the future?
     explicit operator bool() const { return (bool) _value; }
     explicit operator int() const { return (int) _value; }
-    
-    
+
+
 	~object_id()                           = default;
 	object_id(const object_id&)            = default;
 	object_id(object_id&&)                 = default;
 	object_id& operator=(const object_id&) = default;
 	object_id& operator=(object_id&&)      = default;
-    
+
     // TODO - MAKE THESE TWO PRIVATE SO THAT THEY CAN ONLY BE ACCESSED
 	//        THROUGH THE APPROPRIATE friend METHODS value() and o_type()
 	inline type_id type() const { return _type; }
 	inline value_t value() const { return _value; }
-	
+
 	// Required by Boost.serialization
 	template <typename Archive>
 	void serialize(Archive& ar, const unsigned int version) {
 		ar & _type;
 		ar & _value;
 	}
-	
+
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const object_id& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const;	
-	
+	std::ostream& print(std::ostream& os) const;
+
 private:
     type_id _type;
 	value_t _value;
@@ -131,12 +131,12 @@ const type_range INVALID_TYPE_RANGE = std::make_pair(object_id::INVALID, object_
 class ObjectTable {
 public:
 	const static ObjectTable EMPTY_TABLE;
-	
+
 };
 
 class set_t {
 public:
-    
+
 };
 
 
@@ -185,7 +185,7 @@ std::vector<T> values(const std::vector<object_id>& o, const ObjectTable& itp);
 
 template <typename T>
 inline object_id make_object(type_id t, T value) { return object_id(t, value); }
-	
+
 
 template <typename T>
 object_id make_object(const T& value);
@@ -215,6 +215,3 @@ namespace std {
     size_t operator()(const fs0::object_id& o) const { return fs0::hash_value(o); }
   };
 }
-
-
-
