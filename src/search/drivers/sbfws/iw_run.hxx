@@ -323,9 +323,7 @@ public:
 	    AtomIdx t = index.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
 	    _obj_to_holding_tuple_idx.at(obj) = t;
 	  }
-	  
-
-	  
+	  	  
 	}
 	
 	void reset() {
@@ -519,7 +517,6 @@ public:
 	  
 	  std::cout << "Relevant no good atoms after holding(o) subgoals: " << _relevant_no_good_atoms.size() << std::endl;
 
-	  
 	}
 
 
@@ -617,8 +614,9 @@ public:
 		_config._complete = false;
 		float simt0 = aptk::time_used();
   		run(seed, _config._max_width);
-		compute_no_good_atoms();
 		report_simulation_stats(simt0);
+		compute_no_good_atoms();
+		
 		
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 		//return extract_R_G(true);
@@ -862,7 +860,6 @@ public:
 	bool run(const StateT& seed, unsigned max_width) {
 		/*if (_verbose) LPT_INFO("cout", "Simulation - Starting IW Simulation");
 		
-		std::cout << "Run simulation" << std::endl;
 		NodePT root = std::make_shared<NodeT>(seed, _generated++);
 		mark_seed_subgoals(root);
 		
@@ -967,13 +964,17 @@ public:
 					
 					assert(novelty == 1 || novelty == 2);
 					
-					if (novelty==1) ++_w1_nodes_generated;
-					else  ++_w2_nodes_generated;
+					if (novelty==1) 
+					  ++_w1_nodes_generated;
+					else  
+					  ++_w2_nodes_generated;
 				} else {
 					++_w_gt2_nodes_generated;
 				}
 			}
 		}
+		
+				
 		
 		report("State space exhausted");
 		return false;
