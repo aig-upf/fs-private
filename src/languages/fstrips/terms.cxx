@@ -34,7 +34,6 @@ UserDefinedStaticTerm::UserDefinedStaticTerm(unsigned symbol_id, const std::vect
 ArithmeticTerm::ArithmeticTerm(const std::vector<const Term*>& subterms)
 	: StaticHeadedNestedTerm(-1, subterms)
 {
-	assert(subterms.size() == 2);
 }
 
 
