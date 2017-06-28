@@ -53,9 +53,9 @@ void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
 
 	unsigned num_goal_atoms = fs::all_atoms(*problem.getGoalConditions()).size();
 	unsigned num_sc_atoms = 0;
-    for ( auto sc : problem.getStateConstraints() ) {
-        num_sc_atoms += fs::all_atoms(*sc).size();
-    }
+	for ( auto sc : problem.getStateConstraints() ) {
+		num_sc_atoms += fs::all_atoms(*sc).size();
+	}
 
 	LPT_INFO("cout", "Number of objects: " << info.num_objects());
 	LPT_INFO("cout", "Number of state variables: " << info.getNumVariables());
