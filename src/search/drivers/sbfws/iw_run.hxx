@@ -287,6 +287,11 @@ protected:
 	
 	const StateT _init;
 	
+	//Domain dependent
+	std::vector<VariableIdx> _all_objects_gtype;
+	std::vector<VariableIdx> _all_objects_conf;
+
+	
 
 public:
 
@@ -309,7 +314,9 @@ public:
 		_verbose(verbose),
 		_tuple_to_node(_model.getTask().get_tuple_index().size(), nullptr),
 		_obj_to_holding_tuple_idx(ProblemInfo::getInstance().getNumObjects(), -1),
-		_init(model.init())
+		_init(model.init()),
+		_all_objects_gtype(ProblemInfo::getInstance().getNumObjects(), -1),
+		_all_objects_conf(ProblemInfo::getInstance().getNumObjects(), -1)
 
 		
 	{
@@ -320,6 +327,8 @@ public:
 	  VariableIdx holding_v = info.getVariableId("holding()");
 	  
 	  for (ObjectIdx obj:info.getTypeObjects("object_id")) {
+	    _all_objects_conf[obj] = derive_config_variable(info, obj);
+	    _all_objects_gtype[obj] = derive_gtype_variable(info, obj);
 	    AtomIdx t = index.to_index(holding_v, obj); // i.e. the tuple index of the atom holding()=o
 	    _obj_to_holding_tuple_idx.at(obj) = t;
 	  }
@@ -348,6 +357,19 @@ public:
 	IWRun(IWRun&&) = default;
 	IWRun& operator=(const IWRun&) = delete;
 	IWRun& operator=(IWRun&&) = default;
+	
+	
+	VariableIdx derive_config_variable(const ProblemInfo& info, ObjectIdx object_id) {
+	  std::string obj_name = info.deduceObjectName(object_id, info.getTypeId("object_id"));
+	  return info.getVariableId("confo(" + obj_name  +  ")");
+	  
+	}
+
+	VariableIdx derive_gtype_variable(const ProblemInfo& info, ObjectIdx object_id) {
+	  std::string obj_name = info.deduceObjectName(object_id, info.getTypeId("object_id"));
+	  return info.getVariableId("gtype(" + obj_name  +  ")");
+	  
+	}
 
 	
 	//! Mark all atoms in the path to some goal. 'seed_nodes' contains all nodes satisfying some subgoal.
@@ -423,15 +445,9 @@ public:
 		std::vector<bool> atoms(index.size(), false);
 		std::unordered_set<NodePT> all_visited;
 		assert(atoms.size() == index.size());
-		
-		//std::cout << "Marking atoms" << std::endl;
-		//std::cout << seed_nodes.size() << std::endl;
-		//int subgoal_idx = 0;
-		
+				
 		for (NodePT node:seed_nodes) {
 			// We ignore s0
-			//_plans.insert(std::make_pair(subgoal_idx, node));
-			//subgoal_idx++;
 			while (node->has_parent()) {
 				
 				// If the node has already been processed, no need to do it again, nor to process the parents,
@@ -464,24 +480,6 @@ public:
 	  for(auto& plan: _optimal_paths)
 	    if(plan != nullptr)
 	      flag_relevant_no_good_atoms(plan, _relevant_no_good_atoms);
-	  
-	  
-	  //Once the set of no good atoms is computed. Find the relevant no good atoms for each subgoal holding(o) where conf(o)=c is an atom in the set of relevant no good atoms
-	  /*for(auto& no_good: _relevant_no_good_atoms) {
-	      AtomIdx idx = index.to_index(no_good);
-	      ValueTuple tuple = index.to_tuple(idx);
-	     // if(processed[tuple[0] == 1])
-		//continue;
-	      AtomIdx holding_o = _obj_to_holding_tuple_idx.at(tuple[0]); // the tuple "holding(o)"
-	      std::string obj_name = info.deduceObjectName(tuple[0], "object_id");
-	      std::string conf_name = info.deduceObjectName(tuple[1], "object_id");
-	      std::cout << obj_name << " - " << conf_name << " / " << tuple[0] << " - " << tuple[1] << std::endl;
-
-	      NodePT& node = _tuple_to_node.at(holding_o);
-	      flag_relevant_no_good_atoms(node, _relevant_no_good_atoms);
-	      //processed[tuple[0]] = 1;  
-	  }*/
-	  
 	  
 	  
 	  std::cout << "Relevant no good atoms before holding(o) subgoals: " << _relevant_no_good_atoms.size() << std::endl;
@@ -518,9 +516,58 @@ public:
 	  std::cout << "Relevant no good atoms after holding(o) subgoals: " << _relevant_no_good_atoms.size() << std::endl;
 
 	}
-
-
 	
+	
+		
+	void flag_relevant_no_good_atoms(NodePT node, NoGoodAtomsSet& offending) {
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		const ExternalI& external = info.get_external();
+		const auto& ground_actions = this->_model.getTask().getGroundActions();
+		assert(ground_actions.size());
+
+		VariableIdx v_confb = info.getVariableId("confb(rob)");//confb(rob) variable
+		VariableIdx v_traja = info.getVariableId("traj(rob)");//traj(rob) variable
+		VariableIdx v_holding = info.getVariableId("holding()");//holding variable
+		ObjectIdx undef_gtype = info.getObjectId("g0");//go object idx
+		
+		while (node->has_parent()) {
+			const StateT& state = node->state;
+			const GroundAction* action = Problem::getInstance().getGroundActions()[node->action];
+
+			if (action->getName() == "transition_arm") {
+				ObjectIdx o_confb = state.getValue(v_confb);//Base conf
+				ObjectIdx o_traj_arm = state.getValue(v_traja);//trajectory
+				ObjectIdx o_held = state.getValue(v_holding);//Object being held
+				//Holding object
+				std::string obj_h_name = info.deduceObjectName(o_held, "nullable_object_id");
+				VariableIdx idx_gtype_h = info.getVariableId("gtype("+obj_h_name+")");
+				auto gtype_o_held = state.getValue(idx_gtype_h);
+				
+				for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+				  VariableIdx idx_gtype_obj = _all_objects_gtype[obj];
+				  auto gtype_obj = state.getValue(idx_gtype_obj);
+				   //if(gtype_obj == undef_gtype)
+				     // continue;
+				   auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);//std::vector<ObjectIdx>
+				   VariableIdx confo = _all_objects_conf[obj];
+				   ObjectIdx obj_conf = state.getValue(confo);
+				   for(auto& off: v_off) {//iterate through all offending configurations for this gtype
+				     if(obj_conf == off) {//If the conf(obj) is in an offending configuration
+				       for(auto& bad_conf: v_off)
+					 offending.insert(Atom(confo, bad_conf)); //We insert all the atoms of the form conf(obj) = bad_conf
+				       continue;
+				     }
+				   }
+				}
+			}
+		    node = node->parent;
+		}
+	}
+	
+	
+
+
+/*	
 	void flag_relevant_no_good_atoms(NodePT node, NoGoodAtomsSet& offending) {
 		const ProblemInfo& info = ProblemInfo::getInstance();
 		const ExternalI& external = info.get_external();
@@ -557,13 +604,16 @@ public:
 				   for(auto& off: v_off) {
 				     ObjectIdx obj_conf = state.getValue(confo);
 				     if(obj_conf == off)
-				      offending.insert(Atom(confo, obj_conf));     
+				       for(auto& bad: v_off)
+					  offending.insert(Atom(confo, bad));     
 				   }
 				}
 			}
 		    node = node->parent;
 		}
 	}
+	
+	*/
 	
 	void report_simulation_stats(float simt0) {
 		_stats.simulation();
@@ -616,6 +666,7 @@ public:
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
 		compute_no_good_atoms();
+
 		
 		
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
@@ -770,11 +821,11 @@ public:
 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			if (R_G_size) {
 				LPT_INFO("cout", "Simulation - R_G:");
-				std::cout << "\t\t";
+				/*std::cout << "\t\t";
 				for (unsigned i = 0; i < R_G.size(); ++i) {
 					if (R_G[i]) std::cout << index.to_atom(i) << ", ";
 				}
-				std::cout << std::endl;
+				std::cout << std::endl;*/
 			}
 		}
 		_stats.relevant_atoms(R_G_size);

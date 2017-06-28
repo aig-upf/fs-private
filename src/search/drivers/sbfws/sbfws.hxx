@@ -211,6 +211,10 @@ protected:
 	//! The set of relevant no good atoms
 	NoGoodAtomsSet _relevant_no_good_atoms;
 	
+	State _init;
+	
+	unsigned _c_init;
+		
 	
 public:
 	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, BFWSStats& stats) :
@@ -228,7 +232,9 @@ public:
 				   config.simulation_width,
 					c),
 		_stats(stats),
-		_sbfwsconfig(config)
+		_sbfwsconfig(config),
+		_init(model.init()),
+		_c_init(0)
 	{
 	}
 
@@ -286,7 +292,8 @@ public:
 		//std::cout << "c= " << c_counter << std::endl;
 		//std::cout << node << std::endl;
 		//std::cout << "-----------------------------------" << std::endl;
-		unsigned new_r = hash + c_counter;
+		unsigned new_r = hash + c_counter;// - _c_init;
+		//unsigned new_r = hash + c_counter;
 		//std::cout << "r' = " << new_r << " ";
 		//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
 		return compute_node_complex_type(node.unachieved_subgoals, new_r);
@@ -371,13 +378,24 @@ public:
 	const unsigned compute_C(NodeT& node) {
 	  unsigned c = 0;
 	  for(auto& it: _relevant_no_good_atoms)
-	    if(!node.state.contains(it))
+	    if(node.state.contains(it))
 	      c++;
 	    return c;
 	      //node._relevant_no_good_counter++;
 	    //return node._relevant_no_good_counter;
 	}
 	
+	const unsigned compute_C_init() {
+	  unsigned c = 0;
+	  for(auto& it: _relevant_no_good_atoms)
+	    if(!_init.contains(it))
+	      c++;
+	    return c;
+	      //node._relevant_no_good_counter++;
+	    //return node._relevant_no_good_counter;
+	}
+	
+
 	
 	//Remove atoms true in s0 from the relevant set |R|
 	void clean_relevant_atoms(std::vector<bool>& relevant) {
@@ -462,20 +480,17 @@ public:
 			SimulationT simulator(model, _featureset, evaluator, _simconfig, _stats, verbose);
 			//SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
 			std::vector<bool> relevant = simulator.compute_R(node.state);
+			
 			std::cout << "Relevant before clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			clean_relevant_atoms(relevant);
 			std::cout << "Relevant after clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			remove_relevant_atoms(relevant);
 			std::cout << "Relevant after remove: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 
-			
 			unsigned R_size = std::count(relevant.begin(), relevant.end(), true);
 			_stats.set_relevant_atoms(R_size);
 
-			
-			//NoGoodAtomsSet relevant_no_good = simulator.get_relevant_no_good_atoms();
-			_relevant_no_good_atoms = simulator.get_relevant_no_good_atoms();
-			//std::cout << "|C| = " << _relevant_no_good_atoms.size() << std::endl;
+			_relevant_no_good_atoms = simulator.get_relevant_no_good_atoms();			
 			_stats.set_c_set(_relevant_no_good_atoms.size());
 			
 			std::cout << "Set of relevant no good atoms from SBFWS: " << std::endl;
@@ -483,6 +498,10 @@ public:
 			for(auto& it: _relevant_no_good_atoms) 
 			  std::cout << it << " ";
 			std::cout << std::endl;
+			
+			_c_init = compute_C_init();
+			std::cout << "#c(s_0)= " << _c_init << std::endl;
+			
 			
 			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
