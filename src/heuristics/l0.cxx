@@ -5,6 +5,7 @@
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/operations/basic.hxx>
+#include <fstrips/language_info.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <deque>
 
@@ -28,6 +29,8 @@ L0Heuristic::L0Heuristic(const Problem& problem)
     LPT_DEBUG("heuristic", "Pushing boundaries out...");
     LPT_DEBUG("heuristic", "State:\n" << state );
 
+    TypeIdx number_type_id = fstrips::LanguageInfo::instance().get_fstype_id("number");
+
 	for (const fs::Formula* condition:get_goal_conjuncts()) {
         std::vector< const fs::RelationalFormula* > relationals = fs::all_relations(*condition);
 
@@ -48,7 +51,7 @@ L0Heuristic::L0Heuristic(const Problem& problem)
             if ( poly->interpret(state) ) {
                 continue;
             }
-            std::vector<fs::RelationalFormula*> Rpoly = poly->relax(fs::NumericConstant(0.1f));
+            std::vector<fs::RelationalFormula*> Rpoly = poly->relax(fs::Constant(make_object(0.1f), number_type_id));
             for ( auto f : Rpoly )
                 boundary.push_back(f);
         }
