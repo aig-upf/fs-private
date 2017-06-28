@@ -4,7 +4,12 @@
 #include <lapkt/tools/logging.hxx>
 
 #include <utils/atom_index.hxx>
+#include <utils/utils.hxx>
+
 #include <state.hxx>
+#include <problem_info.hxx>
+
+#include <boost/functional/hash.hpp>
 
 
 namespace fs0 { namespace bfws {
@@ -32,10 +37,12 @@ public:
 //! goal, and, among those, which have already been reached and which others have not.
 class RelevantAtomSet {
 public:
+    typedef std::pair< FeatureIdx, int >    ValuationT;
+    typedef std::unordered_set< ValuationT, boost::hash<ValuationT> >        ValuationSet;
 
 	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
 	RelevantAtomSet(const AtomsetHelper& helper) :
-		_helper(helper), _num_reached(0), _reached(helper.size(), false) //, _updated(false)
+		_helper(helper), _num_reached(0), _bool_reached(helper.size(), false), _int_reached() //, _updated(false)
 	{}
 
 	~RelevantAtomSet() = default;
@@ -54,12 +61,19 @@ public:
 			object_id val = state.getValue(var);
 			if (parent && (val == parent->getValue(var))) continue; // If a parent was provided, we check that the value is new wrt the parent
 
+			if ( ProblemInfo::getInstance().sv_type(var) == type_id::float_t
+			|| ProblemInfo::getInstance().sv_type(var) == type_id::int_t ) {
+				auto hint = _int_reached.insert(ValuationT(var,val.value()));
+				if (hint.second) { ++_num_reached; }
+				continue;
+			}
+
 			if (!_helper._atomidx.is_indexed(var, val)) continue;
-			
+
 			AtomIdx atom = _helper._atomidx.to_index(var, val);
 			if (!_helper._relevant[atom]) continue; // we're not concerned about this atom
 
-			std::vector<bool>::reference ref = _reached[atom];
+			std::vector<bool>::reference ref = _bool_reached[atom];
 			if (!ref) {
 				++_num_reached;
 				ref = true;
@@ -69,11 +83,28 @@ public:
 
 	unsigned num_reached() const { return _num_reached; }
 
+	template <typename FeatureValuationT>
+	void init( const FeatureValuationT& phi ) {
+		_int_reached = ValuationSet();
+		_num_reached = 0;
+		update(phi);
+		_num_reached = 0;
+	}
+
+	template <typename FeatureValuationT>
+	void update(const FeatureValuationT& phi) {
+		for (unsigned k = 0; k < phi.size(); k++ ) {
+			auto hint = _int_reached.insert(ValuationT(k, phi[k]));
+			if (hint.second) { ++_num_reached; }
+		}
+	}
+
 	void init(const State& state) {
-		_reached = std::vector<bool>(_helper.size(), false);
+		_bool_reached = std::vector<bool>(_helper.size(), false);
+        _int_reached = ValuationSet();
 		_num_reached = 0;
 		update(state, nullptr);
- 		assert(_num_reached == std::count(_reached.begin(), _reached.end(), true));
+ 		assert(_num_reached == std::count(_bool_reached.begin(), _bool_reached.end(), true));
  		_num_reached = 0;
 	}
 
@@ -83,11 +114,11 @@ public:
 		const AtomIndex& atomidx = _helper._atomidx;
 
 		os << "{";
-		for (unsigned i = 0; i < _reached.size(); ++i) {
+		for (unsigned i = 0; i < _bool_reached.size(); ++i) {
 			const Atom& atom = atomidx.to_atom(i);
 			if (!_helper._relevant[i]) continue;
 
-			std::string mark = (_reached[i]) ? "*" : "";
+			std::string mark = (_bool_reached[i]) ? "*" : "";
 			os << atom << mark << ", ";
 		}
 		os << "}";
@@ -104,9 +135,11 @@ protected:
 	//! The total number of reached / unreached atoms
 	unsigned _num_reached;
 
-	//! _reached[i] iff atom with index 'i' has been reached at some point
+	//! _bool_reached[i] iff atom with index 'i' has been reached at some point
 	//! since the count of reached subgoals was last increased.
-	std::vector<bool> _reached;
+	std::vector<bool> _bool_reached;
+
+    ValuationSet _int_reached;
 
 // 	bool _updated;
 };

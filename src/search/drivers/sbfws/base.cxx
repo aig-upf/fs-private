@@ -3,6 +3,7 @@
 #include <search/drivers/sbfws/base.hxx>
 #include <search/novelty/fs_novelty.hxx>
 #include <utils/config.hxx>
+#include <problem_info.hxx>
 
 namespace fs0 { namespace bfws {
 

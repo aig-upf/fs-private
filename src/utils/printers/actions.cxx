@@ -23,6 +23,13 @@ std::ostream& action_signature::print(std::ostream& os) const {
 
 std::ostream& action_data::print(std::ostream& os) const {
 	os << action_data_name(_action) << std::endl;
+	os << "\t" << "Type: ";
+	if (_action.getType() == ActionData::Type::Control )
+		os << "control" << std::endl;
+	else if (_action.getType() == ActionData::Type::Exogenous )
+		os << "exogenous" << std::endl;
+	else if (_action.getType() == ActionData::Type::Natural )
+        	os << "natural" << std::endl;
 	os << "\t" << "Precondition: " << *_action.getPrecondition() << std::endl;
 	os << "\t" << "Effects:" << std::endl;
 	for (auto elem:_action.getEffects()) os << "\t\t" << *elem << std::endl;

@@ -6,6 +6,7 @@
 #include <search/drivers/setups.hxx>
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
+#include <heuristics/l0.hxx>
 
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
@@ -161,6 +162,10 @@ public:
 	using SimulationT = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
 	using SimConfigT = typename SimulationT::Config;
 	using IWNodePT = typename SimulationT::NodePT;
+
+	// Novelty evaluator pointer type
+	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
+
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 
 
@@ -185,6 +190,9 @@ protected:
 	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
 	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
+	//! L0Heuristic: counts number of trivial numeric landmarks
+	L0Heuristic _l0_heuristic;
+
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;
 	const SimConfigT _simconfig;
@@ -204,6 +212,7 @@ public:
 		_wg_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_wgr_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_unsat_goal_atoms_heuristic(_problem),
+		_l0_heuristic(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
 		_simconfig(config.complete_simulation,
 				   config.mark_negative_propositions,
@@ -246,6 +255,8 @@ public:
 	template <typename NodeT>
 	unsigned get_hash_r(NodeT& node) {
 		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) return 0;
+		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::L0 )
+			return compute_R_via_L0(node);
 		return compute_R(node).num_reached();
 	}
 	
@@ -356,8 +367,12 @@ public:
 			
 			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
-			node._relevant_atoms->init(node.state);
-			
+
+			//! MRJ: over states
+			// node._relevant_atoms->init(node.state);
+			//! Over feature sets
+			node._relevant_atoms->init(_featureset.evaluate(node.state));
+
 			if (!node.has_parent()) { // Log some info, but only for the seed state
 				LPT_DEBUG("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
 			}
@@ -369,14 +384,27 @@ public:
 			node._relevant_atoms = new RelevantAtomSet(compute_R(*node.parent)); // This might trigger a recursive computation
 			
 			if (node.decreases_unachieved_subgoals()) {
- 				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
+				//! MRJ:
+				//! Over states
+				//node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
+				//! MRJ:  Over feature sets
+				node._relevant_atoms->init(_featureset.evaluate(node.state));
 			} else {
-				node._relevant_atoms->update(node.state, nullptr);
+				//! MRJ: Over states
+				//! node._relevant_atoms->update(node.state, nullptr);
+				//! Old, deprecated use
 				// node._relevant_atoms->update(node.state, &(node.parent->state));
+				//! MRJ: Over feature sets
+				node._relevant_atoms->update(_featureset.evaluate(node.state));
 			}
 	}
 	
 		return *node._relevant_atoms;
+	}
+
+	template <typename NodeT>
+	unsigned compute_R_via_L0(NodeT& node) {
+		return _l0_heuristic.evaluate(node.state);
 	}
 
 	template <typename NodeT>
@@ -432,6 +460,8 @@ protected:
 
 	//! The solution node, if any. This will be set during the search process
 	NodePT _solution;
+	//! Best node found
+	NodePT _best_found;
 
 	//! A list with all nodes that have novelty w_{#g}=1
 	UnachievedOpenList _q1;
@@ -482,6 +512,7 @@ public:
              
 		_model(model),
 		_solution(nullptr),
+        	_best_found(nullptr),
 		_featureset(std::move(featureset)),
 		_heuristic(conf, config, model, _featureset, stats),
 		_stats(stats),
@@ -549,6 +580,8 @@ public:
 		for (bool remaining_nodes = true; !_solution && remaining_nodes;) {
 			remaining_nodes = process_one_node();
 		}
+		if ( _solution == nullptr )
+			return extract_plan(_best_found, plan);
 
 		return extract_plan(_solution, plan);
 	}
@@ -650,6 +683,7 @@ protected:
 		
 		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
 			_min_subgoals_to_reach = node->unachieved_subgoals;
+			_best_found = node;
 			LPT_INFO("cout", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
 		}
 

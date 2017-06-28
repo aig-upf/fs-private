@@ -147,20 +147,24 @@ class Constant(Term):
                         typename=index.object_types[self.symbol])
 
     # Guillem:
+    # MRJ: Constants aren't typed explicitly - their type is that of the generic types
+    # TODO Discuss this with Guillem, I don't see how we can tell apart '3' as being
+    # a specific subclass of int. For the enumerated types, the names of their values
+    # need to be unique.
     def dump(self, index, binding_unit):
         if is_int(self.symbol):  # We have an integer constant
             return dict(type='constant',
                         symbol=self.symbol,
                         value=int(self.symbol),
                         type_id="int_t",
-                        fstype="")  # TODO We should specify here of which bounded FS-type the constant is
+                        fstype="int")
 
         elif is_float(self.symbol):  # We have a float constant
             return dict(type='constant',
                         symbol=self.symbol,
                         value=float(self.symbol),
                         type_id="float_t",
-                        fstype="")  # TODO We should specify here of which bounded FS-type the constant is
+                        fstype="number")  
 
         else:  # We have a logical constant
             return dict(type='constant',

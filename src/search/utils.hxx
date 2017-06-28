@@ -106,10 +106,14 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 			throw std::runtime_error("The plan output by the planner is not correct!");
 		}
 		LPT_INFO("cout", "Search Result: Found plan of length " << plan.size());
-		
-		char *resolved_path = realpath(plan_filename.c_str(), nullptr);
+
+		char resolved_path[PATH_MAX];
+		char* tmp = realpath(plan_filename.c_str(), resolved_path);
+		if (tmp == nullptr) {
+			std::string error_message( strerror( errno ));
+			throw std::runtime_error("Could not resolve the real path for the plan filename: \n" + error_message );
+		}
 		LPT_INFO("cout", "Plan was saved in file \"" << resolved_path << "\"");
-		delete resolved_path;
 		result = ExitCode::PLAN_FOUND;
 	} else if (oom) {
 		LPT_INFO("cout", "Search Result: Out of memory. Peak memory: " << get_peak_memory_in_kb());

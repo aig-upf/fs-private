@@ -39,6 +39,15 @@ template <typename StateModelT>
 ExitCode
 SBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	const StateAtomIndexer& indexer = model.getTask().getStateAtomIndexer();
+
+	if (config.getOption<bool>("bfws.force_generic_evaluator", false)) {
+		FeatureSelector<StateT> selector(ProblemInfo::getInstance());
+
+		LPT_INFO("cout", "FEATURE EVALUATION: Forced to use GenericFeatureSetEvaluator");
+		using FeatureEvaluatorT = lapkt::novelty::GenericFeatureSetEvaluator<StateT>;
+		return do_search1<IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, selector.select(), config, out_dir, start_time);
+	}
+
 	if (config.getOption<bool>("bfws.extra_features", false)) {
 		FeatureSelector<StateT> selector(ProblemInfo::getInstance());
 		
