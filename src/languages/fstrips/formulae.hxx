@@ -349,6 +349,8 @@ public:
 	const Term* lhs() const { return _subterms[0]; }
 	const Term* rhs() const { return _subterms[1]; }
 
+    virtual std::vector< RelationalFormula* > relax( const fs::Constant& slack ) const { return {}; }
+
 protected:
 	inline bool _satisfied(const std::vector<object_id>& values) const override { return _satisfied(values[0], values[1]); }
 	virtual bool _satisfied(const object_id& o1, const object_id& o2) const = 0;
@@ -396,6 +398,8 @@ public:
 	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 <= o2; }
 
 	Symbol symbol() const { return Symbol::LEQ; }
+
+    virtual std::vector< RelationalFormula* > relax( const Constant& slack ) const override;
 };
 
 class GTAtomicFormula : public RelationalFormula {
@@ -418,6 +422,8 @@ public:
 	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 >= o2; }
 
 	Symbol symbol() const { return Symbol::GEQ; }
+
+    virtual std::vector< RelationalFormula* > relax( const Constant& slack ) const override;
 };
 
 //! Check that all the given formulas are atomic
