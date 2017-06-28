@@ -4,6 +4,7 @@
 #include <lapkt/novelty/features.hxx>
 #include <fs_types.hxx>
 #include <state.hxx>
+#include <memory>
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class AtomicFormula; class Formula; }}}
 namespace fs = fs0::language::fstrips;
@@ -77,6 +78,29 @@ public:
 
 protected:
 	const fs::Formula* _formula;
+};
+
+// MRJ: Why this convoluted design?
+// -> We don't want to change the LAPKT class NoveltyFeature<T>
+// -> We want to make easy to re-integrate this code into the FS "main" development
+//    branch.
+//
+// Notes:
+// -> The 2nd and 3rd template parameters are dependant, we could do away with FeatureDefinition
+//    if FeatureT provided a trait "DefinitionT" for instance. We haven't proceeded in this fashion
+//    to make the future merge easier.
+//
+template <typename FeatureDefinition, typename FeatureT, typename Manager >
+class ManagedFeature : public FeatureT {
+public:
+    typedef std::shared_ptr<Manager>    ManagerPtr;
+
+    ManagedFeature(const FeatureDefinition* def, ManagerPtr mgr )
+        : FeatureT( def ), _manager(mgr) {}
+
+protected:
+
+    ManagerPtr  _manager;
 };
 
 /*

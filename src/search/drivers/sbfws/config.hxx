@@ -22,8 +22,8 @@ struct SBFWSConfig {
 	
 	enum class NoveltyEvaluatorType {Adaptive, Generic};
 	NoveltyEvaluatorType evaluator_t;
-	
-	enum class RelevantSetType {None, Sim};
+
+	enum class RelevantSetType {None, Sim, L0};
 	RelevantSetType relevant_set_type;
 	
 	//! When to recompute R: only in seed node, or each time number of unachieved goals #g decreases
