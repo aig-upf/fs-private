@@ -16,18 +16,18 @@ namespace fs0 {
 
 
 
-bool Checker::check_correctness(const Problem& problem, const std::vector<GroundAction>& plan, const State& s0) {
+bool Checker::check_correctness(const Problem& problem, const std::vector<const GroundAction*>& plan, const State& s0) {
 	const Config& config = Config::instance();
 	bool print_plan_trace = config.getOption<bool>("print_plan_trace", false);
-	
+
 	NaiveApplicabilityManager manager(problem.getStateConstraints());
 	// First we make sure that the whole plan is applicable
 	State state(s0);
     if (print_plan_trace) LPT_INFO("plan_trace", "s=" <<  state);
-	for (const GroundAction& action:plan) {
-		if (!manager.isApplicable(state, action)) return false;
+	for (const GroundAction* action:plan) {
+		if (!manager.isApplicable(state, *action)) return false;
         if (print_plan_trace) LPT_INFO("plan_trace", "a=" <<  action);
-		state.accumulate(NaiveApplicabilityManager::computeEffects(state, action)); // Accumulate the newly-produced atoms
+		state.accumulate(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms
         if (print_plan_trace) LPT_INFO("plan_trace", "s=" <<  state);
 	}
 
@@ -36,30 +36,29 @@ bool Checker::check_correctness(const Problem& problem, const std::vector<Ground
 }
 
 
-std::vector<GroundAction> Checker::transform(const Problem& problem, const std::vector<LiftedActionID>& plan) {
-	std::vector<GroundAction> transformed;
+std::vector<const GroundAction*> Checker::transform(const Problem& problem, const std::vector<LiftedActionID>& plan) {
+	std::vector<const GroundAction*> transformed;
 
 	// First we make sure that the whole plan is applicable
 	for (const LiftedActionID& action_id:plan) {
-		GroundAction* action = action_id.generate();
-		transformed.push_back(*action);
-		delete action;
+		const GroundAction* action = action_id.generate();
+		transformed.push_back(action);
 	}
 	return transformed;
 }
 
-std::vector<GroundAction> Checker::transform(const Problem& problem, const ActionPlan& plan) {
-	std::vector<GroundAction> transformed;
+std::vector<const GroundAction*> Checker::transform(const Problem& problem, const ActionPlan& plan) {
+	std::vector<const GroundAction*> transformed;
 	const auto& actions = problem.getGroundActions();
 
 	for (unsigned idx:plan) {
-		transformed.push_back(*actions[idx]);
+		transformed.push_back(actions[idx]);
 	}
 	return transformed;
 }
 
 
-void Checker::print_plan_execution(const Problem& problem, const std::vector<GroundAction>& plan, const State& s0) {
+void Checker::print_plan_execution(const Problem& problem, const std::vector<const GroundAction*>& plan, const State& s0) {
 	NaiveApplicabilityManager manager(problem.getStateConstraints());
 
 	unsigned i = 0;
@@ -68,15 +67,15 @@ void Checker::print_plan_execution(const Problem& problem, const std::vector<Gro
 	std::cout << std::setw(3) << i;
 	std::cout << ". " << state << std::endl;
 	for (; i < plan.size(); ++i) {
-		const GroundAction& action = plan[i];
+		const GroundAction* action = plan[i];
 
 		std::cout << std::setw(3) << i;
-		std::cout << ". " << action << std::endl << std::endl;
+		std::cout << ". " << *action << std::endl << std::endl;
 
-		if (!manager.isApplicable(state, action)) {
+		if (!manager.isApplicable(state, *action)) {
 			std::cout << "ERROR! Action is NOT applicable on the previous state" << std::endl;
 		}
-		state.accumulate(NaiveApplicabilityManager::computeEffects(state, action)); // Accumulate the newly-produced atoms
+		state.accumulate(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms
 
 		std::cout << std::setw(3) << i + 1;
 		std::cout << ". " << state << std::endl;
