@@ -22,12 +22,11 @@ class AllNodesVisitor
     , public Loki::Visitor<Tautology, void, true>
     , public Loki::Visitor<Contradiction, void, true>
     , public Loki::Visitor<AtomicFormula, void, true>
+    , public Loki::Visitor<AxiomaticFormula, void, true>
     , public Loki::Visitor<Conjunction, void, true>
     , public Loki::Visitor<Disjunction, void, true>
     , public Loki::Visitor<ExistentiallyQuantifiedFormula, void, true>
 	, public Loki::Visitor<UniversallyQuantifiedFormula, void, true>
-    , public Loki::Visitor<AxiomaticFormula, void, true>
-
 
     , public Loki::Visitor<StateVariable, void, true>
     , public Loki::Visitor<BoundVariable, void, true>
@@ -45,14 +44,13 @@ public:
 	void Visit(const Tautology& lhs);
 	void Visit(const Contradiction& lhs);
 	void Visit(const AtomicFormula& lhs);
+	void Visit(const AxiomaticFormula& lhs);
 	void Visit(const OpenFormula& lhs);
 	void Visit(const Conjunction& lhs);
 	void Visit(const Disjunction& lhs);
 	void Visit(const QuantifiedFormula& lhs);
 	void Visit(const ExistentiallyQuantifiedFormula& lhs);
 	void Visit(const UniversallyQuantifiedFormula& lhs);
-    void Visit(const AxiomaticFormula& lhs);
-
 
 	void Visit(const StateVariable& lhs);
 	void Visit(const BoundVariable& lhs);
@@ -80,6 +78,12 @@ std::vector<const Formula*> all_formulae(const Formula& element);
 //! A small helper - returns a vector with all the atomic formulae involved in the current formula
 ////////////////////////////////////////////////////////////
 std::vector<const AtomicFormula*> all_atoms(const Formula& element);
+
+////////////////////////////////////////////////////////////
+//! A small helper - returns a vector with all the relational formulae involved in the current formula
+////////////////////////////////////////////////////////////
+std::vector<const RelationalFormula*> all_relations(const Formula& element);
+
 
 ////////////////////////////////////////////////////////////
 //! Returns a list (possibly with repetitions) of all (sub-)terms that descend from the given formula or term.
