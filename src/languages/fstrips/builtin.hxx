@@ -46,6 +46,7 @@ public:
 	object_id interpret(const PartialAssignment& assignment, const Binding& binding) const override;
 	object_id interpret(const State& state, const Binding& binding) const override;
 
+	using Term::interpret;
 };
 
 //! A statically-headed term that adds up the values of the two subterms
