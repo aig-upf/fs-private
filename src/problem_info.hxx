@@ -116,17 +116,17 @@ public:
 
 
 	const TypeIdx getVariableType(VariableIdx index) const { return variableTypes.at(index); }
-	
+
 	type_id sv_type(VariableIdx var) const { return _sv_types.at(var); }
 
 	bool isIntegerNumber(VariableIdx x) const;
 
 	bool isRationalNumber(VariableIdx x) const;
-	
+
 	unsigned getNumVariables() const;
-	
+
 	std::string object_name(const object_id& object) const;
-	
+
 	//! Return the ID of the function with given name
 	inline SymbolIdx getSymbolId(const std::string& name) const { return symbolIds.at(name); }
 	const std::string& getSymbolName(unsigned symbol_id) const { return symbolNames.at(symbol_id); }
@@ -167,14 +167,14 @@ public:
 	inline const std::vector<object_id>& getVariableObjects(const VariableIdx variable) const {
 		return getTypeObjects(getVariableType(variable));
 	}
-	
+
 	bool canExtensionalizeVarDomains() const { return _can_extensionalize_var_domains; }
 
-	
+
 	//! Returns all the objects of the given type _or of a descendant type_
 	const std::vector<object_id>& getTypeObjects(TypeIdx type) const;
 	const std::vector<object_id>& getTypeObjects(const std::string& type_name) const { return getTypeObjects(getTypeId(type_name)); }
-	
+
 	TypeIdx getTypeId(const std::string& type_name) const;
 
 	const std::string& getTypename(TypeIdx type) const;
@@ -207,6 +207,8 @@ public:
 	type_id get_type_id(const std::string& fstype) const;
 	type_id get_type_id(TypeIdx fstype) const;
 
+	//!
+	std::vector<type_id> get_type_ids( const Signature& sign ) const;
 
 	const std::string& getDataDir() const { return _data_dir; }
 
@@ -223,10 +225,10 @@ protected:
 
 	//! The filesystem directory where the problem serialized data is found
 	const std::string _data_dir;
-	
+
 	//! This flag is true whenever every variable domain can be extensionalized
 	//! (i.e. valuations can be indexed statically and efficiently)
-	bool _can_extensionalize_var_domains;	
+	bool _can_extensionalize_var_domains;
 };
 
 } // namespaces

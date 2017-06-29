@@ -55,7 +55,7 @@ unsigned ProblemInfo::getNumVariables() const { return variableNames.size(); }
 void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 	assert(variableNames.empty());
 	const fstrips::LanguageInfo lang = fstrips::LanguageInfo::instance();
-	
+
 
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		const auto& var_data = data[i];
@@ -66,24 +66,24 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		const std::string name(var_data["name"].GetString());
 		variableNames.push_back(name);
 		variableIds.insert(std::make_pair(name, id));
-		
+
 		type_id t = get_type_id(type);
 		_sv_types.push_back(t);
-		
+
 		try {
 			variableTypes.push_back(lang.get_fstype_id(type));
 		} catch( std::out_of_range& ex ) {
 			throw std::runtime_error("Unknown FS-type " + type);
 		}
-		
+
 		if (t == type_id::int_t) {
-			_can_extensionalize_var_domains = false;			
-		}		
-		
+			_can_extensionalize_var_domains = false;
+		}
+
 
 		// Load the info necessary to resolve state variables dynamically
 		unsigned symbol_id = var_data["symbol_id"].GetInt();
-		
+
 		std::vector<object_id> point;
 		assert(var_data["point"].Size() == var_data["signature"].Size());
 		for (unsigned j = 0; j < var_data["point"].Size(); ++j) {
@@ -169,6 +169,15 @@ get_type_id(const std::string& fstype) const {
 type_id ProblemInfo::
 get_type_id(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().typeinfo(fstype).get_type_id(); }
 
+std::vector<type_id>
+ProblemInfo::get_type_ids( const Signature& sign ) const {
+
+	std::vector<type_id> sym_signature_types;
+	for ( TypeIdx t : sign ) {
+		sym_signature_types.push_back(get_type_id(t));
+	}
+	return sym_signature_types;
+}
 
 const std::vector<object_id>& ProblemInfo::
 getTypeObjects(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().type_objects(fstype); }
@@ -192,14 +201,14 @@ checkValueIsValid(VariableIdx variable, const object_id& object) const {
 	if (!tinfo.bounded()) return true;
 	auto bounds = tinfo.bounds<int>();
 	int value = fs0::value<int>(object);
-	
+
 	if (isRationalNumber(variable)) {
 		std::stringstream buffer;
 		buffer << "Error: ProblemInfo::checkValueIsValid(): FLOAT variables not supported!";
 		LPT_DEBUG("main",buffer.str());
 		throw std::runtime_error(buffer.str());
-	}	
-	
+	}
+
 	return value >= bounds.first && value <= bounds.second;
 }
 
