@@ -9,7 +9,7 @@ namespace fs0 {
 
 FSFeatureValueT
 StateVariableFeature::evaluate( const State& s ) const {
-	return fs0::value<FSFeatureValueT>(s.getValue(_variable));
+	return fs0::raw_value<FSFeatureValueT>(s.getValue(_variable));
 }
 
 std::ostream& StateVariableFeature::print(std::ostream& os) const {
