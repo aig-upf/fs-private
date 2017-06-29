@@ -9,7 +9,7 @@
 #include <state.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <utils/binding.hxx>
-
+#include <fstrips/language_info.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -40,6 +40,38 @@ bool AtomicFormula::interpret(const PartialAssignment& assignment, Binding& bind
 bool AtomicFormula::interpret(const State& state, Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
 	return _satisfied(_interpreted_subterms);
+}
+
+bool
+RelationalFormula::_satisfied(const object_id& lhs, const object_id& rhs) const {
+
+	if ( o_type(lhs) != o_type(rhs) ) {
+		auto it = symbol_to_string.find(symbol());
+		assert( it != symbol_to_string.end() );
+		std::string sym_string = it->second;
+		throw std::runtime_error( 	"Type mismatch in comparison '"
+									+ sym_string
+									+ "': lhs is '"
+									+ to_string(o_type(lhs)) + "'"
+	 								+ " and rhs is '"
+									+ to_string(o_type(rhs)) + "'" );
+	}
+
+	if (o_type(lhs) != type_id::int_t && o_type(lhs) != type_id::float_t ) {
+		auto it = symbol_to_string.find(symbol());
+		assert( it != symbol_to_string.end() );
+		std::string sym_string = it->second;
+		throw std::runtime_error( 	"Relational operator: '"
+									+ sym_string
+									+ "' is not defined for type '"
+									+ to_string(o_type(lhs)) + "'" );
+	}
+
+	if (o_type(lhs) == type_id::int_t )
+		return _int_handler( fs0::value<int>(lhs), fs0::value<int>(rhs) );
+
+	assert( o_type(lhs) == type_id::float_t );
+	return _float_handler( fs0::value<float>(lhs), fs0::value<float>(rhs) );
 }
 
 std::ostream& RelationalFormula::print(std::ostream& os, const fs0::ProblemInfo& info) const {
@@ -109,7 +141,7 @@ OpenFormula::OpenFormula(const OpenFormula& other) :
 	_subformulae(Utils::clone(other._subformulae))
 {}
 
-	
+
 std::ostream& OpenFormula::
 print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << name() << " ( ";
@@ -252,15 +284,75 @@ std::vector<const AtomicFormula*> check_all_atomic_formulas(const std::vector<co
 	return downcasted;
 }
 
+EQAtomicFormula::EQAtomicFormula(const std::vector<const Term*>& subterms)
+	: RelationalFormula(subterms) {
+
+	_int_handler = [](int lhs, int rhs) { return lhs == rhs; };
+	_float_handler = [](float lhs, float rhs) { return std::fabs(lhs - rhs) <= FP_TOLERANCE; };
+}
+
+NEQAtomicFormula::NEQAtomicFormula(const std::vector<const Term*>& subterms)
+	: RelationalFormula(subterms) {
+
+	_int_handler = [](int lhs, int rhs) { return lhs != rhs; };
+	_float_handler = [](float lhs, float rhs) { return std::fabs(lhs - rhs) > FP_TOLERANCE; };
+}
+
+LTAtomicFormula::LTAtomicFormula(const std::vector<const Term*>& subterms)
+	: RelationalFormula(subterms) {
+
+	_int_handler = [](int lhs, int rhs) { return lhs < rhs; };
+	_float_handler = [](float lhs, float rhs) { return lhs < rhs; };
+}
+
+LEQAtomicFormula::LEQAtomicFormula(const std::vector<const Term*>& subterms)
+	: RelationalFormula(subterms) {
+
+	_int_handler = [](int lhs, int rhs) { return lhs <= rhs; };
+	_float_handler = [](float lhs, float rhs) { return lhs <= rhs; };
+}
+
+
 std::vector< RelationalFormula* >
 LEQAtomicFormula::relax( const Constant& slack ) const {
-    std::vector< const Term* > st = { getSubterms()[0]->clone(), new AdditionTerm( {getSubterms()[1]->clone(), slack.clone()} )  };
+	auto slacked_term = new AdditionTerm( {getSubterms()[1]->clone(), slack.clone()} );
+	std::vector< const Term* > st;
+	try {
+		object_id value = slacked_term->interpret(PartialAssignment());
+		auto slack_constant = new Constant(value,  fs0::fstrips::LanguageInfo::instance().get_fstype_id("number"));
+		st = { getSubterms()[0]->clone(), slack_constant };
+	} catch(...) {
+		st = { getSubterms()[0]->clone(), slacked_term };
+	}
     return { new LEQAtomicFormula(st)};
 }
 
+GTAtomicFormula::GTAtomicFormula(const std::vector<const Term*>& subterms)
+	: RelationalFormula(subterms) {
+
+	_int_handler = [](int lhs, int rhs) { return lhs > rhs; };
+	_float_handler = [](float lhs, float rhs) { return lhs > rhs; };
+}
+
+GEQAtomicFormula::GEQAtomicFormula(const std::vector<const Term*>& subterms)
+	: RelationalFormula(subterms) {
+
+	_int_handler = [](int lhs, int rhs) { return lhs >= rhs; };
+	_float_handler = [](float lhs, float rhs) { return lhs >= rhs; };
+}
+
+
 std::vector< RelationalFormula* >
 GEQAtomicFormula::relax( const Constant& slack ) const {
-    std::vector< const Term* > st = { getSubterms()[0]->clone(), new SubtractionTerm( {getSubterms()[1]->clone(), slack.clone()} ) };
+	auto slacked_term = new SubtractionTerm( {getSubterms()[1]->clone(), slack.clone()} );
+	std::vector< const Term* > st;
+	try {
+		object_id value = slacked_term->interpret({});
+		auto slack_constant = new Constant(value, fs0::fstrips::LanguageInfo::instance().get_fstype_id("number"));
+		st = { getSubterms()[0]->clone(), slack_constant };
+	} catch(...) {
+		st = { getSubterms()[0]->clone(), slacked_term };
+	}
     return { new GEQAtomicFormula(st)};
 }
 

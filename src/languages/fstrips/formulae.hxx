@@ -29,7 +29,7 @@ class Formula :	public LogicalElement {
 public:
 	Formula() = default;
 	virtual ~Formula() = default;
-	
+
 	Formula* clone() const override = 0;
 
 	//! Return the boolean interpretation of the current formula under the given assignment and binding.
@@ -39,7 +39,7 @@ public:
 	virtual bool interpret(const State& state) const;
 
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override = 0;
-	
+
 	//! By default, formulae are not tautology nor contradiction
 	virtual bool is_tautology() const { return false; }
 	virtual bool is_contradiction() const { return false; }
@@ -49,7 +49,7 @@ public:
 class AtomicFormula : public Formula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
+
 	AtomicFormula(const std::vector<const Term*>& subterms) : _subterms(subterms), _interpreted_subterms(subterms.size(), object_id::INVALID) {}
 
 	virtual ~AtomicFormula();
@@ -78,9 +78,9 @@ protected:
 class ExternallyDefinedFormula : public AtomicFormula {
 public:
 	ExternallyDefinedFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
-	
+
 	virtual std::string name() const = 0;
-	
+
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
@@ -90,20 +90,20 @@ class AxiomaticFormula : public AtomicFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	AxiomaticFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
-	
+
 	//! To be subclassed
 	virtual std::string name() const = 0;
-	
+
 	virtual AxiomaticFormula* clone(const std::vector<const Term*>& subterms) const override = 0;
-	
+
 	bool interpret(const PartialAssignment& state, Binding& binding) const override;
 	bool interpret(const State& state, Binding& binding) const override;
-	
+
 	//! To be subclassed
 	virtual bool compute(const State& state, std::vector<object_id>& arguments) const = 0;
 	bool _satisfied(const std::vector<object_id>& values) const override { throw std::runtime_error("This shouldn't be called"); };
 
-	
+
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
@@ -111,7 +111,7 @@ public:
 class AxiomaticAtom : public Formula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	
+
 	AxiomaticAtom(const Axiom* axiom, const std::vector<const Term*>& subterms) : _axiom(axiom), _subterms(subterms) {}
 	virtual ~AxiomaticAtom();
 	AxiomaticAtom(const AxiomaticAtom& other);
@@ -123,10 +123,10 @@ public:
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
 	const std::vector<const Term*>& getSubterms() const { return _subterms; }
-	
+
 protected:
 	const Axiom* _axiom;
-	
+
 	//! The formula subterms
 	std::vector<const Term*> _subterms;
 };
@@ -211,7 +211,7 @@ public:
 	AtomConjunction(AtomConjunction&&) = default;
 	AtomConjunction& operator=(AtomConjunction&&) = default;
 	AtomConjunction* clone() const override {return new AtomConjunction(*this); }
-	
+
 	using Conjunction::interpret;
 	bool interpret(const State& state, Binding& binding) const override { return interpret(state); }
 	bool interpret(const State& state) const override;
@@ -246,7 +246,7 @@ public:
 	Negation(const Formula* subformula) : OpenFormula( {subformula} ) {}
 	~Negation() = default;
 	Negation(const Negation& other) = default;
-	
+
 	Negation* clone() const override { return new Negation(*this); }
 
 	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
@@ -265,12 +265,12 @@ public:
 	QuantifiedFormula(const QuantifiedFormula& other);
 
 	const Formula* getSubformula() const { return _subformula; }
-	
+
 	const std::vector<const BoundVariable*>& getVariables() const { return _variables; }
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
-	
+
 	virtual std::string name() const = 0;
 
 protected:
@@ -293,7 +293,7 @@ public:
 
 	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
 	bool interpret(const State& state, Binding& binding) const override;
-	
+
 	std::string name() const override { return "exists"; }
 
 protected:
@@ -314,16 +314,14 @@ public:
 
 	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
 	bool interpret(const State& state, Binding& binding) const override;
-	
+
 	std::string name() const override { return "forall"; }
 
 protected:
 	//! A naive recursive implementation of the interpretation routine
 	template <typename T>
-	bool interpret_rec(const T& assignment, Binding& binding, unsigned i) const;	
+	bool interpret_rec(const T& assignment, Binding& binding, unsigned i) const;
 };
-
-
 
 //! A formula of the form t_1 <op> t_2, where t_i are terms and <op> is a basic relational
 //! operator such as =, !=, >, etc.
@@ -331,10 +329,12 @@ class RelationalFormula : public AtomicFormula {
 public:
 	enum class Symbol {EQ, NEQ, LT, LEQ, GT, GEQ};
 
+	constexpr static float FP_TOLERANCE = 1e-4;
+
 	RelationalFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {
 		assert(subterms.size() == 2);
 	}
-	
+
 	virtual RelationalFormula* clone(const std::vector<const Term*>& subterms) const override = 0;
 
 	virtual Symbol symbol() const = 0;
@@ -352,50 +352,47 @@ public:
     virtual std::vector< RelationalFormula* > relax( const fs::Constant& slack ) const { return {}; }
 
 protected:
+
+	std::function<bool(int,int)>		_int_handler;
+	std::function<bool(float,float)>	_float_handler;
+
+protected:
 	inline bool _satisfied(const std::vector<object_id>& values) const override { return _satisfied(values[0], values[1]); }
-	virtual bool _satisfied(const object_id& o1, const object_id& o2) const = 0;
+	virtual bool _satisfied(const object_id& o1, const object_id& o2) const;
 };
 
 class EQAtomicFormula : public RelationalFormula {
 public:
-	EQAtomicFormula(const std::vector<const Term*>& subterms) : RelationalFormula(subterms) {}
+	EQAtomicFormula(const std::vector<const Term*>& subterms);
 
 	EQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new EQAtomicFormula(subterms); }
-
-	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 == o2; }
 
 	virtual Symbol symbol() const { return Symbol::EQ; }
 };
 
 class NEQAtomicFormula : public RelationalFormula {
 public:
-	NEQAtomicFormula(const std::vector<const Term*>& subterms) : RelationalFormula(subterms) {}
+	NEQAtomicFormula(const std::vector<const Term*>& subterms);
 
 	NEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new NEQAtomicFormula(subterms); }
-
-	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 != o2; }
 
 	Symbol symbol() const { return Symbol::NEQ; }
 };
 
 class LTAtomicFormula : public RelationalFormula {
 public:
-	LTAtomicFormula(const std::vector<const Term*>& subterms) : RelationalFormula(subterms) {}
+	LTAtomicFormula(const std::vector<const Term*>& subterms);
 
 	LTAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new LTAtomicFormula(subterms); }
-
-	bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 < o2; }
 
 	Symbol symbol() const { return Symbol::LT; }
 };
 
 class LEQAtomicFormula : public RelationalFormula {
 public:
-	LEQAtomicFormula(const std::vector<const Term*>& subterms) : RelationalFormula(subterms) {}
+	LEQAtomicFormula(const std::vector<const Term*>& subterms);
 
 	LEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new LEQAtomicFormula(subterms); }
-
-	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 <= o2; }
 
 	Symbol symbol() const { return Symbol::LEQ; }
 
@@ -404,22 +401,18 @@ public:
 
 class GTAtomicFormula : public RelationalFormula {
 public:
-	GTAtomicFormula(const std::vector<const Term*>& subterms) : RelationalFormula(subterms) {}
+	GTAtomicFormula(const std::vector<const Term*>& subterms);
 
 	GTAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new GTAtomicFormula(subterms); }
-
-	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 > o2; }
 
 	Symbol symbol() const { return Symbol::GT; }
 };
 
 class GEQAtomicFormula : public RelationalFormula {
 public:
-	GEQAtomicFormula(const std::vector<const Term*>& subterms) : RelationalFormula(subterms) {}
+	GEQAtomicFormula(const std::vector<const Term*>& subterms);
 
 	GEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new GEQAtomicFormula(subterms); }
-
-	inline bool _satisfied(const object_id& o1, const object_id& o2) const { return o1 >= o2; }
 
 	Symbol symbol() const { return Symbol::GEQ; }
 

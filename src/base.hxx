@@ -155,6 +155,9 @@ public:
 inline type_id
 o_type(const object_id& o) { return o.type(); }
 
+template< typename T>
+object_id::value_t raw_value( const object_id& o) { return (T)o.value(); }
+
 template <typename T>
 T value(const object_id& o, const ObjectTable& itp);
 template <typename T>

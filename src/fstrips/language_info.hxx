@@ -39,7 +39,7 @@ protected:
 	TypeIdx _id;
 
 	//!
-	const std::string& _name;
+	const std::string _name;
 
 	//!
 	type_id _type_id;

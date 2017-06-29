@@ -108,18 +108,8 @@ ActionGrounder::fully_lifted(const std::vector<const ActionData*>& action_data, 
 // TODO - Might want to move this somewhere else and make it public
 std::vector<object_id>
 deserialize_typed_objects(const ProblemInfo& info, const std::string& line, const Signature& signature) {
-	std::vector<object_id> result;
-	std::vector<int> values = Serializer::deserialize_line<int>(line, ",");
-	if (signature.size() != values.size()) {
-		throw std::runtime_error("Wrong number of action parameters");
-	}
-
-	for (unsigned i = 0; i < signature.size(); ++i) {
-		type_id t = info.get_type_id(signature[i]);
-		result.push_back(make_object(t, values[i]));
-	}
-
-	return result;
+	std::vector<type_id> sym_signature_types = info.get_type_ids(signature);
+	return Serializer::deserialize_line( line, sym_signature_types, ",");
 }
 
 //! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector

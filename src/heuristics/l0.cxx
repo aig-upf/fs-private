@@ -45,18 +45,19 @@ L0Heuristic::L0Heuristic(const Problem& problem)
         while (!boundary.empty()) {
             const fs::RelationalFormula* poly = boundary.front();
             boundary.pop_front();
-            LPT_DEBUG("heuristic", "Added new hyperplane: " << *poly );
-            _goal_oriented_hyperplanes.push_back(poly);
-            //MRJ: Magic constant!
             if ( poly->interpret(state) ) {
                 continue;
             }
+            //MRJ: Magic constant!
+            LPT_DEBUG("heuristic", "Added new hyperplane: " << *poly );
+            _goal_oriented_hyperplanes.push_back(poly);
             std::vector<fs::RelationalFormula*> Rpoly = poly->relax(fs::Constant(make_object(0.1f), number_type_id));
             for ( auto f : Rpoly )
                 boundary.push_back(f);
         }
 
 	}
+    LPT_INFO("heuristic", "# Goal oriented hyperplanes: " << _goal_oriented_hyperplanes.size() );
 
 }
 
