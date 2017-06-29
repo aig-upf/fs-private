@@ -9,7 +9,7 @@
 #include <state.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <utils/binding.hxx>
-
+#include <fstrips/language_info.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -109,7 +109,7 @@ OpenFormula::OpenFormula(const OpenFormula& other) :
 	_subformulae(Utils::clone(other._subformulae))
 {}
 
-	
+
 std::ostream& OpenFormula::
 print(std::ostream& os, const fs0::ProblemInfo& info) const {
 	os << name() << " ( ";
@@ -254,13 +254,29 @@ std::vector<const AtomicFormula*> check_all_atomic_formulas(const std::vector<co
 
 std::vector< RelationalFormula* >
 LEQAtomicFormula::relax( const Constant& slack ) const {
-    std::vector< const Term* > st = { getSubterms()[0]->clone(), new AdditionTerm( {getSubterms()[1]->clone(), slack.clone()} )  };
+	auto slacked_term = new AdditionTerm( {getSubterms()[1]->clone(), slack.clone()} );
+	std::vector< const Term* > st;
+	try {
+		object_id value = slacked_term->interpret(PartialAssignment());
+		auto slack_constant = new Constant(value,  fs0::fstrips::LanguageInfo::instance().get_fstype_id("number"));
+		st = { getSubterms()[0]->clone(), slack_constant };
+	} catch(...) {
+		st = { getSubterms()[0]->clone(), slacked_term };
+	}
     return { new LEQAtomicFormula(st)};
 }
 
 std::vector< RelationalFormula* >
 GEQAtomicFormula::relax( const Constant& slack ) const {
-    std::vector< const Term* > st = { getSubterms()[0]->clone(), new SubtractionTerm( {getSubterms()[1]->clone(), slack.clone()} ) };
+	auto slacked_term = new SubtractionTerm( {getSubterms()[1]->clone(), slack.clone()} );
+	std::vector< const Term* > st;
+	try {
+		object_id value = slacked_term->interpret({});
+		auto slack_constant = new Constant(value, fs0::fstrips::LanguageInfo::instance().get_fstype_id("number"));
+		st = { getSubterms()[0]->clone(), slack_constant };
+	} catch(...) {
+		st = { getSubterms()[0]->clone(), slacked_term };
+	}
     return { new GEQAtomicFormula(st)};
 }
 
