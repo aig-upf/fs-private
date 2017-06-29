@@ -290,6 +290,9 @@ protected:
 	//Domain dependent
 	std::vector<VariableIdx> _all_objects_gtype;
 	std::vector<VariableIdx> _all_objects_conf;
+	
+	//Contains the first node that includes a goal of the form not p, where p is a relevant no good atom.
+	std::vector<NodePT> _subgoals_path;
 
 	
 
@@ -505,10 +508,14 @@ public:
 		  AtomIdx holding_o = _obj_to_holding_tuple_idx.at(obj); // the tuple "holding(o)"
 
 		  NodePT& node = _tuple_to_node.at(holding_o);
-		  if(node != nullptr)
-		    flag_relevant_no_good_atoms(node, _relevant_no_good_atoms);
+		  if(node != nullptr) {//We have a goal node fot atom holding(o)
+		    flag_relevant_no_good_atoms(node, _relevant_no_good_atoms);//Node contains the plan from s0 to holding(o)
+		     _subgoals_path.push_back(node);
+		  }
+		  else
+		    std::cout << "There is no a plan for " << atom << std::endl; //throw std::runtime_error("Simulation max_width too high");
 		  
-		  processed[i] = true;  
+		  processed[i] = true; //we mark this object as processed
 					  
 	    }
 	  } while(_relevant_no_good_atoms.size() > curr_size);
@@ -533,7 +540,7 @@ public:
 		while (node->has_parent()) {
 			const StateT& state = node->state;
 			const GroundAction* action = Problem::getInstance().getGroundActions()[node->action];
-
+			
 			if (action->getName() == "transition_arm") {
 				ObjectIdx o_confb = state.getValue(v_confb);//Base conf
 				ObjectIdx o_traj_arm = state.getValue(v_traja);//trajectory
@@ -543,77 +550,29 @@ public:
 				VariableIdx idx_gtype_h = info.getVariableId("gtype("+obj_h_name+")");
 				auto gtype_o_held = state.getValue(idx_gtype_h);
 				
-				for(ObjectIdx obj: info.getTypeObjects("object_id")) {
-				  VariableIdx idx_gtype_obj = _all_objects_gtype[obj];
-				  auto gtype_obj = state.getValue(idx_gtype_obj);
-				   //if(gtype_obj == undef_gtype)
-				     // continue;
+				//for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+				for(ObjectIdx gtype_obj: info.getTypeObjects("geometry_type")) {
+				  //VariableIdx idx_gtype_obj = _all_objects_gtype[obj];
+				  //auto gtype_obj = state.getValue(idx_gtype_obj);
 				   auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);//std::vector<ObjectIdx>
-				   VariableIdx confo = _all_objects_conf[obj];
-				   ObjectIdx obj_conf = state.getValue(confo);
-				   for(auto& off: v_off) {//iterate through all offending configurations for this gtype
-				     if(obj_conf == off) {//If the conf(obj) is in an offending configuration
-				       for(auto& bad_conf: v_off)
-					 offending.insert(Atom(confo, bad_conf)); //We insert all the atoms of the form conf(obj) = bad_conf
-				       continue;
-				     }
-				   }
-				}
-			}
-		    node = node->parent;
-		}
-	}
-	
-	
-
-
-/*	
-	void flag_relevant_no_good_atoms(NodePT node, NoGoodAtomsSet& offending) {
-		const ProblemInfo& info = ProblemInfo::getInstance();
-		const ExternalI& external = info.get_external();
-		const auto& ground_actions = this->_model.getTask().getGroundActions();
-		assert(ground_actions.size());
-
-		VariableIdx v_confb = info.getVariableId("confb(rob)");//confb(rob) variable
-		VariableIdx v_traja = info.getVariableId("traj(rob)");//traj(rob) variable
-		VariableIdx v_holding = info.getVariableId("holding()");//holding variable
-		ObjectIdx undef_gtype = info.getObjectId("g0");//go object idx
-		
-		while (node->has_parent()) {
-			const StateT& state = node->state;
-			const GroundAction* action = Problem::getInstance().getGroundActions()[node->action];
-
-			if (action->getName() == "transition_arm") {
-				ObjectIdx o_confb = state.getValue(v_confb);//Base conf
-				ObjectIdx o_traj_arm = state.getValue(v_traja);//trajectory
-				ObjectIdx o_held = state.getValue(v_holding);//Object being held
-				//Holding object
-				std::string obj_h_name = info.deduceObjectName(o_held, "nullable_object_id");
-				VariableIdx idx_gtype_h = info.getVariableId("gtype("+obj_h_name+")");
-				auto gtype_o_held = state.getValue(idx_gtype_h);
-				
-				for(ObjectIdx obj: info.getTypeObjects("object_id")) {
-				   std::string obj_name = info.deduceObjectName(obj, "object_id");
-				   VariableIdx idx_gtype_obj = info.getVariableId("gtype("+obj_name+")");
-				   auto gtype_obj = state.getValue(idx_gtype_obj);
-				   if(gtype_obj == undef_gtype)
-				      continue;
-				   //TODO: Improve this. There is no need to iterate through all offending configurations
-				   auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);//std::vector<ObjectIdx>
-				    VariableIdx confo = info.getVariableId("confo("+obj_name+")");
-				   for(auto& off: v_off) {
+				   for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+				     VariableIdx confo = _all_objects_conf[obj];
 				     ObjectIdx obj_conf = state.getValue(confo);
-				     if(obj_conf == off)
-				       for(auto& bad: v_off)
-					  offending.insert(Atom(confo, bad));     
+				     for(auto& off: v_off) {//iterate through all offending configurations for this gtype
+				       if(obj_conf == off) {//If the conf(obj) is in an offending configuration
+				         //for(auto& bad_conf: v_off)
+					   offending.insert(Atom(confo, off)); //We insert all the atoms of the form conf(obj) = bad_conf
+				      }
+				    }
 				   }
 				}
+				
 			}
 		    node = node->parent;
 		}
 	}
 	
-	*/
+	
 	
 	void report_simulation_stats(float simt0) {
 		_stats.simulation();
@@ -665,15 +624,64 @@ public:
 		float simt0 = aptk::time_used();
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
-		compute_no_good_atoms();
-
-		
-		
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
+		compute_no_good_atoms();
+		std::vector<bool> R_G = extract_R_G_relaxed(true);
+		extend_R_G(R_G);
+		return R_G;
+	
 		//return extract_R_G(true);
-		return extract_R_G_relaxed(true);
+		//return extract_R_G_relaxed(true);
 	  
 	}
+	
+	
+	void extend_R_G(std::vector<bool>& R_G) {
+	  
+	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	  const ProblemInfo& info = ProblemInfo::getInstance();
+
+		std::vector<bool> subgoals_R_G = mark_all_atoms_in_path_to_subgoal(_subgoals_path);
+		unsigned subgoals_R_G_size = std::count(subgoals_R_G.begin(), subgoals_R_G.end(), true);
+
+		
+		/*if (_verbose) {
+			LPT_INFO("cout", "Simulation - Extended |R_G[" << _config._max_width << "]| = " << subgoals_R_G_size << " (computed from " << _subgoals_path.size() << " subgoal-reaching nodes)");
+			if (subgoals_R_G_size) {
+				LPT_INFO("cout", "Simulation - R_G:");
+				std::cout << "\t\t";
+				for (unsigned i = 0; i < subgoals_R_G.size(); ++i) {
+					if (subgoals_R_G[i]) std::cout << index.to_atom(i) << ", ";
+				}
+				std::cout << std::endl;
+			}
+		}*/
+		
+		
+		for(unsigned i = 0; i < subgoals_R_G.size(); ++i)
+		  if(subgoals_R_G[i] == true)
+		    R_G[i] = true;
+
+		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+		
+		/*if (_verbose) {
+			LPT_INFO("cout", "Simulation - Total |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << _subgoals_path.size() + _optimal_paths.size() << " subgoal-reaching nodes)");
+			if (R_G_size) {
+				LPT_INFO("cout", "Simulation - R_G:");
+				std::cout << "\t\t";
+				for (unsigned i = 0; i < R_G.size(); ++i) {
+					if (R_G[i]) std::cout << index.to_atom(i) << ", ";
+				}
+				std::cout << std::endl;
+			}
+		}*/
+		
+		
+		//return R_G;
+	  
+	}
+	
+	
 	
 	
 	std::vector<bool> compute_plain_R1(const StateT& seed) {
@@ -790,7 +798,7 @@ public:
 	
 	
 	std::vector<bool> extract_R_G_relaxed(bool r_all_fallback) {
-	  		const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	  	const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		const ProblemInfo& info = ProblemInfo::getInstance();
 
 		if (r_all_fallback) {
@@ -811,23 +819,20 @@ public:
 		
 		
 		std::vector<NodePT> seed_nodes = extract_seed_nodes();
-		std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
-// 		std::vector<bool> R_G(index.size(), false);
-// 		mark_atoms_in_path_to_subgoal(seed_nodes, R_G);
-		//std::cout << "Size RG: " << R_G.size() << std::endl;
+ 		std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
 
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
-		if (_verbose) {
+		/*if (_verbose) {
 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			if (R_G_size) {
 				LPT_INFO("cout", "Simulation - R_G:");
-				/*std::cout << "\t\t";
+				std::cout << "\t\t";
 				for (unsigned i = 0; i < R_G.size(); ++i) {
 					if (R_G[i]) std::cout << index.to_atom(i) << ", ";
 				}
-				std::cout << std::endl;*/
+				std::cout << std::endl;
 			}
-		}
+		}*/
 		_stats.relevant_atoms(R_G_size);
 		_stats.r_type(2);
 		

@@ -287,12 +287,12 @@ public:
 		//std::cout << "#r=" << get_hash_r(node) << " ";// " for node: " << node << std::endl;
 		//std::cout << node << std::endl;
 		unsigned hash = get_hash_r(node);
-		unsigned c_counter = get_c_counter(node);
+		//unsigned c_counter = get_c_counter(node);
 		//std::cout << "-----------------------------------" << std::endl;
 		//std::cout << "c= " << c_counter << std::endl;
 		//std::cout << node << std::endl;
 		//std::cout << "-----------------------------------" << std::endl;
-		unsigned new_r = hash + c_counter;// - _c_init;
+		unsigned new_r = hash;// + c_counter;// - _c_init;
 		//unsigned new_r = hash + c_counter;
 		//std::cout << "r' = " << new_r << " ";
 		//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
@@ -378,7 +378,7 @@ public:
 	const unsigned compute_C(NodeT& node) {
 	  unsigned c = 0;
 	  for(auto& it: _relevant_no_good_atoms)
-	    if(node.state.contains(it))
+	    if(!node.state.contains(it))
 	      c++;
 	    return c;
 	      //node._relevant_no_good_counter++;
@@ -422,7 +422,7 @@ public:
 	}
 	
 	
-	//Remove undesired atoms (confb(rob) = cb, confa(rob)=ca, traj(rob)=t)
+	//Remove undesired atoms (confb(rob) = cb, confa(rob)=ca, traj(rob)=t), confgo(obj) = cgo, gtype(obj) = g 
 	void remove_relevant_atoms(std::vector<bool>& relevant) {
 	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
 	  const ProblemInfo& info = ProblemInfo::getInstance();
@@ -445,6 +445,27 @@ public:
 	  for(ObjectIdx t: info.getTypeObjects("trajectory")) {
 	    AtomIdx idx_t = index.to_index(traj_var, t);
 	    relevant[idx_t] = false;
+	  }
+	  
+	  for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+	    
+	    std::string obj_name = info.deduceObjectName(obj, "object_id");
+	    VariableIdx gtype_var = info.getVariableId("gtype("+obj_name+")");
+	    
+	    for(ObjectIdx geom: info.getTypeObjects("geometry_type")) {
+	      AtomIdx idxg = index.to_index(gtype_var, geom);
+	      Atom g_atom1 = index.to_atom(idxg);
+	      relevant[idxg] = false;
+	    }
+	    
+	    VariableIdx confgo_var = info.getVariableId("confgo("+obj_name+")");
+	    
+	    for(ObjectIdx rel_pose: info.getTypeObjects("conf_in_gripper")) {
+	      AtomIdx idxcgo = index.to_index(confgo_var, rel_pose);
+	      Atom g_atom2 = index.to_atom(idxcgo);
+	      relevant[idxcgo] = false;
+	    }
+	    
 	  }
 
 	  

@@ -53,7 +53,7 @@ FeatureSelector<StateT>::has_extra_features() const {
 template <typename StateT>
 void
 FeatureSelector<StateT>::add_state_variables(const ProblemInfo& info, std::vector<FeatureT*>& features) {
-	VariableIdx traj = info.getVariableId("traj(rob)");
+	VariableIdx traj = info.getVariableId("traj(rob)");//Not include traj(rob) state variable as a feature
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 	      if(var != traj)
 		features.push_back(new StateVariableFeature(var));
