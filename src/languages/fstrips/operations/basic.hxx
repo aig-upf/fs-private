@@ -39,6 +39,18 @@ class AllNodesVisitor
     , public Loki::Visitor<AdditionTerm, void, true>
 	, public Loki::Visitor<SubtractionTerm, void, true>
 	, public Loki::Visitor<MultiplicationTerm, void, true>
+    , public Loki::Visitor<DivisionTerm, void, true>
+    , public Loki::Visitor<PowerTerm, void, true>
+    , public Loki::Visitor<SqrtTerm, void, true>
+    , public Loki::Visitor<SineTerm, void, true>
+    , public Loki::Visitor<CosineTerm, void, true>
+    , public Loki::Visitor<TangentTerm, void, true>
+    , public Loki::Visitor<ArcSineTerm, void, true>
+    , public Loki::Visitor<ArcCosineTerm, void, true>
+    , public Loki::Visitor<ArcTangentTerm, void, true>
+    , public Loki::Visitor<ExpTerm, void, true>
+    , public Loki::Visitor<MinTerm, void, true>
+    , public Loki::Visitor<MaxTerm, void, true>
 {
 public:
 	void Visit(const Tautology& lhs);
@@ -63,7 +75,19 @@ public:
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
-
+    void Visit(const DivisionTerm& lhs);
+	void Visit(const PowerTerm& lhs);
+	void Visit(const SqrtTerm& lhs);
+	void Visit(const SineTerm& lhs);
+	void Visit(const CosineTerm& lhs);
+	void Visit(const TangentTerm& lhs);
+	void Visit(const ArcSineTerm& lhs);
+	void Visit(const ArcCosineTerm& lhs);
+	void Visit(const ArcTangentTerm& lhs);
+	void Visit(const ExpTerm& lhs);
+	void Visit(const MinTerm& lhs);
+	void Visit(const MaxTerm& lhs);
+    
 	std::vector<const LogicalElement*> _result;
 };
 

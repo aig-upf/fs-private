@@ -2,7 +2,7 @@
 
 #### Step 1
 
-Add symbol of function to the rule *unaryBuiltIn* in `python/parser/f_pddl_plus/FunctionalStrips.g4`
+Add symbol of function to the rule *unaryBuiltIn*, *binaryOp* or *multiOp* as appropiate, in `python/parser/f_pddl_plus/FunctionalStrips.g4`
 
 #### Step 2
 
@@ -24,17 +24,14 @@ TIP: Program very defensively and manage floating point exceptions and the like,
 
  1. Implement sub-class of `ArithmeticTerm`. Existing sub-classes reside in the files `src/languages/fstrips/builtin.hxx`
  and `src/languages/fstrips/builtin.cxx`.
- 2. Implement function `isXXXXTerm()` where XXXX is name of the term. See existing functions at the end of `builtin.hxx`.
- 3. Add the symbol to the set of builtin terms to the set `ArithmeticTermFactory::_builtin_terms` in `src/languages/fstrips/builtin.cxx`.
- 4. **If unary**, add the symbol to the set of builtin terms to the set `ArithmeticTermFactory::_unary_terms` in `src/languages/fstrips/builtin.cxx`.
- 3. Register new term in the factory method `ArithmeticTermFactory::create` in `src/languages/fstrips/builtin.cxx`.
+ 2. Add forward declaration of the class implemented above in `src/languages/fstrips/language_fwd.hxx`
+ 3. Implement function `isXXXXTerm()` where XXXX is name of the term. See existing functions at the end of `builtin.hxx`.
+ 4. Add the symbol to the set of builtin terms to the set `ArithmeticTermFactory::_builtin_terms` in `src/languages/fstrips/builtin.cxx`.
+ 5. **If unary**, add the symbol to the set of builtin terms to the set `ArithmeticTermFactory::_unary_terms` in `src/languages/fstrips/builtin.cxx`.
+ 6. Register new term in the factory method `ArithmeticTermFactory::create` in `src/languages/fstrips/builtin.cxx`.
+ 7. Add entries to the Loki visitors in `src/languages/fstrips/operations`
 
-#### Step 5 (soon to be deprecated)
-
-Add check to method `LinearTransform::checkForHigherOrderTerms` in `src/languages/fstrips/transformations.cxx` to avoid
-the linearization algorithms to mess up any nested terms.
-
-#### Step 6 (Optional)
+#### Step 5 (Optional)
 
 Expose the term to the Gecode interface by implementing a sub-class of `ComponentTranslator`. Existing
 sub-classes reside in the files `src/constraint/gecodes/translators/component_translator.hxx` and

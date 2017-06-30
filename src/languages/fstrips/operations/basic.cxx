@@ -101,6 +101,19 @@ void AllNodesVisitor::Visit(const AxiomaticTermWrapper& lhs) { Visit(static_cast
 void AllNodesVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const DivisionTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const PowerTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const SqrtTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const SineTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const CosineTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const TangentTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const ArcSineTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const ArcCosineTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const ArcTangentTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const ExpTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const MinTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const MaxTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+
 
 void AllNodesVisitor::Visit(const NestedTerm& lhs) {
 	_result.push_back(&lhs);

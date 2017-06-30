@@ -74,6 +74,54 @@ template <typename AssignmentT>
 void VariableInterpretationVisitor<AssignmentT>::
 Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const DivisionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const PowerTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const SqrtTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const SineTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const CosineTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const TangentTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const ArcSineTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const ArcCosineTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const ArcTangentTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const ExpTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const MinTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
+Visit(const MaxTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
 
 
 } } } // namespaces

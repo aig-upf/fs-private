@@ -187,7 +187,18 @@ void TermBindingVisitor::Visit(const StaticHeadedNestedTerm& lhs) { Visit(static
 void TermBindingVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
 void TermBindingVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
 void TermBindingVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
-
+void TermBindingVisitor::Visit(const DivisionTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const PowerTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const SqrtTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const SineTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const CosineTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const TangentTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const ArcSineTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const ArcCosineTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const ArcTangentTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const ExpTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const MinTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const MaxTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
 
 
 void TermBindingVisitor::
@@ -302,7 +313,7 @@ Visit(const FluentHeadedNestedTerm& lhs) {
 
 	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
-	
+
     LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
 	if (constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
 		VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
