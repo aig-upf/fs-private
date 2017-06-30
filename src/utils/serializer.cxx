@@ -156,10 +156,12 @@ deserialize_line(const std::string& line, const std::vector<type_id>& sym_signat
 			result.push_back( make_object(type_id::int_t, boost::lexical_cast<int>(strings[i])));
 		}
 		else if ( sym_signature_types[i] == type_id::float_t ) {
-			result.push_back( make_object(type_id::int_t, boost::lexical_cast<float>(strings[i])));
+			// MRJ: we need to call the specialization, since that is the one that does the type
+			// punning and stores correctly the floating point value
+			result.push_back( make_object( boost::lexical_cast<float>(strings[i])));
 		}
 		else if ( sym_signature_types[i] == type_id::object_t ) {
-			result.push_back( make_object(type_id::int_t, boost::lexical_cast<int>(strings[i])));
+			result.push_back( make_object(type_id::object_t, boost::lexical_cast<int>(strings[i])));
 		}
 		else {
 			throw std::runtime_error("Could not interpret types of constants in line \n" + line );
