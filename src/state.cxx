@@ -107,6 +107,10 @@ State::State(const State& state, const std::vector<Atom>& atoms) :
 
 void State::set(const Atom& atom) {
 // 	_bool_values.at(atom.getVariable()) = value;
+#ifdef DEBUG
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	assert( info.sv_type(atom.getVariable()) == o_type(atom.getValue()) );
+#endif
 	_indexer.set(*this, atom);
 }
 
@@ -133,7 +137,7 @@ std::ostream& State::print(std::ostream& os) const {
 	os << "(" << _hash << ")[";
     for (unsigned x = 0; x < info.getNumVariables(); ++x) {
         object_id o = getValue(x);
-		
+
         if (o_type(o) == type_id::bool_t) {
 			if (value<bool>(o)) {
 				os << info.getVariableName(x); // print positive atoms only

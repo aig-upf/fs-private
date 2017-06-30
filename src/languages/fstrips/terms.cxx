@@ -44,7 +44,7 @@ AxiomaticTermWrapper::AxiomaticTermWrapper(const AxiomaticTermWrapper& other) :
 
 object_id AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, const Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
-	
+
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
 	_axiom->getBindingUnit().update_binding(axiom_binding, _interpreted_subterms);
@@ -54,7 +54,7 @@ object_id AxiomaticTermWrapper::interpret(const PartialAssignment& assignment, c
 
 object_id AxiomaticTermWrapper::interpret(const State& state, const Binding& binding) const {
 	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
-	
+
 	// The binding to interpret the inner condition of the axiom is independent, i.e. axioms need to be sentences
 	Binding axiom_binding;
 	bool res = _axiom->getDefinition()->interpret(state, axiom_binding);
@@ -99,6 +99,10 @@ object_id FluentHeadedNestedTerm::interpret(const State& state, const Binding& b
 
 
 object_id StateVariable::interpret(const State& state, const Binding& binding) const {
+	#ifdef DEBUG
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	assert( info.sv_type(_variable_id) == o_type(state.getValue(_variable_id)) );
+	#endif
 	return state.getValue(_variable_id);
 }
 
@@ -113,7 +117,7 @@ object_id BoundVariable::interpret(const State& state, const Binding& binding) c
 	return binding.value(_id);
 }
 
-	
+
 //! A quick helper to print functions
 template <typename T>
 std::ostream& printFunction(std::ostream& os, const fs0::ProblemInfo& info, unsigned symbol_id, const std::vector<T*>& subterms) {

@@ -18,6 +18,7 @@
 #include <utils/static.hxx>
 #include <state.hxx>
 #include <problem_info.hxx>
+#include <fstrips/language_info.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/operations.hxx>
@@ -190,10 +191,19 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data,
 		const rapidjson::Value& node = data["atoms"][i];
 		VariableIdx var = node[0].GetInt();
 		object_id value;
-		if (info.isRationalNumber(var))
+		if (info.sv_type(var) == type_id::float_t )
+			// MRJ: We're using the specialization so the floating point number
+			// is stored correctly via type punning
 		    value =  make_object((float)node[1].GetDouble());
-		else
-		    value =  make_object(node[1].GetInt());
+		else if ( info.sv_type(var) == type_id::int_t )
+		    value =  make_object(type_id::int_t, node[1].GetInt());
+		else if ( info.sv_type(var) == type_id::object_t )
+			value =  make_object(type_id::object_t, node[1].GetInt());
+		else {
+			throw std::runtime_error(	"Loader::loadState() : Cannot load state variable '" + info.getVariableName(var)
+										+ "' of type '" + fstrips::LanguageInfo::instance().get_typename(var) + "'");
+		}
+
 		facts.push_back(Atom(var,value));
 	}
 	return State::create(indexer, numAtoms, facts);
