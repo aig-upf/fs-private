@@ -7,7 +7,6 @@
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
 
-
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
@@ -22,8 +21,10 @@ using Novelty = lapkt::novelty::Novelty;
 template <typename NodePT>
 struct unachieved_subgoals_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
-		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
-		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+// 	  	if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
+// 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
+ 		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+ 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		if (n1->w_g == Novelty::One && n2->w_g != Novelty::One) return false;
@@ -38,8 +39,10 @@ struct novelty_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
 		if (n1->w_g_num > n2->w_g_num) return true;
 		if (n1->w_g_num < n2->w_g_num) return false;
-		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
-		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+// 		if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
+// 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
+ 		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+ 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		return n1->_gen_order > n2->_gen_order;
@@ -68,6 +71,9 @@ public:
 
 	//! The number of unachieved goals (#g)
 	uint32_t unachieved_subgoals;
+	
+	//! A copy of the original number of unachieved goals (#g)
+	uint32_t original_unachieved_subgoals;
 
 	//! Whether the node has been processed
 	bool _processed;
@@ -296,7 +302,14 @@ public:
 		//unsigned new_r = hash + c_counter;
 		//std::cout << "r' = " << new_r << " ";
 		//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
-		return compute_node_complex_type(node.unachieved_subgoals, new_r);
+		unsigned c_counter = compute_g_c(node);
+		//unsigned updated_g = node.unachieved_subgoals + c_counter;
+		node.unachieved_subgoals = node.original_unachieved_subgoals + c_counter;
+		//std::cout << node.original_unachieved_subgoals << " + " << c_counter << " = " << node.unachieved_subgoals << std::endl;
+		//if(c_counter > 3)
+		//  std::cout << c_counter << " ";
+		//return compute_node_complex_type(updated_g, new_r);
+ 		return compute_node_complex_type(node.unachieved_subgoals, new_r);
 	}
 	
 	template <typename NodeT>
@@ -323,7 +336,7 @@ public:
 		unsigned type = compute_node_complex_type(node);
 		unsigned ptype = node.has_parent() ? compute_node_complex_type(*(node.parent)) : 0;
 		unsigned nov = evaluate_novelty(node, _wgr_novelty_evaluators, 2, type, ptype);
-		
+
 		assert(node.w_gr != Novelty::Unknown);
 		if (node.w_gr != Novelty::One) {
 			node.w_gr = (nov == 2) ? Novelty::Two : Novelty::GTTwo;
@@ -373,6 +386,41 @@ public:
 	}
 	
 	
+	//! Compute the number of variables in no good which are no good or being held
+	template<typename NodeT>
+	const unsigned compute_g_c(NodeT& node) {
+	  unsigned c = 0;
+	  const ProblemInfo& info = ProblemInfo::getInstance();
+	  ObjectIdx c_held = info.getObjectId("c_held");
+	  std::vector<bool> counted(info.getNumVariables(), false);
+	  
+	  //std::cout << node.state << std::endl;
+	  //std::cout << std::endl;
+
+	  for(auto& it: _relevant_no_good_atoms) {
+	   // std::cout << "Atom: " << it << " ";
+	    if(node.state.contains(it)) 
+	      c++;
+/*	    
+	    else {
+	      VariableIdx conf_var = it.getVariable();
+	      //if(counted[conf_var])
+	      //continue;
+	      ObjectIdx obj_conf = node.state.getValue(conf_var);
+	      if(obj_conf == c_held) {
+		c++;;
+		//counted[conf_var] = true;
+	      }
+	    }
+	    */
+	  }
+	   //std::cout << std::endl;
+	  
+	  return c;
+	  
+	}
+	
+	
 	//! Compute the counter #c(s)
 	template<typename NodeT>
 	const unsigned compute_C(NodeT& node) {
@@ -381,8 +429,6 @@ public:
 	    if(!node.state.contains(it))
 	      c++;
 	    return c;
-	      //node._relevant_no_good_counter++;
-	    //return node._relevant_no_good_counter;
 	}
 	
 	const unsigned compute_C_init() {
@@ -454,9 +500,9 @@ public:
 	    relevant[idx_t] = false;
 	  }
 	  
-	  for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+	  for(ObjectIdx obj: info.getTypeObjects("nullable_object_id")) {
 	    
-	    std::string obj_name = info.deduceObjectName(obj, "object_id");
+	    std::string obj_name = info.deduceObjectName(obj, "nullable_object_id");
 	    VariableIdx gtype_var = info.getVariableId("gtype("+obj_name+")");
 	    
 	    for(ObjectIdx geom: info.getTypeObjects("geometry_type")) {
@@ -474,9 +520,18 @@ public:
 	    }
 	    
 	  }
-
+	}
+	
+	
+	void print_R(std::vector<bool>& relevant) {
 	  
-	  
+	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
+	  unsigned R_G_size = std::count(relevant.begin(), relevant.end(), true);
+	  std::cout << "R: " << std::endl;
+	  for (unsigned i = 0; i < relevant.size(); ++i) 
+	    if (relevant[i]) 
+	      std::cout << index.to_atom(i) << ", ";
+	  std::cout << std::endl;
 	}
 	
 	
@@ -509,11 +564,14 @@ public:
 			//SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
 			std::vector<bool> relevant = simulator.compute_R(node.state);
 			
+			//Clean R
 			std::cout << "Relevant before clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			clean_relevant_atoms(relevant);
 			std::cout << "Relevant after clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			remove_relevant_atoms(relevant);
 			std::cout << "Relevant after remove: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
+			
+			print_R(relevant);
 
 			unsigned R_size = std::count(relevant.begin(), relevant.end(), true);
 			_stats.set_relevant_atoms(R_size);
@@ -527,8 +585,8 @@ public:
 			  std::cout << it << " ";
 			std::cout << std::endl;
 			
-			_c_init = compute_C_init();
-			std::cout << "#c(s_0)= " << _c_init << std::endl;
+			//_c_init = compute_C_init();
+			//std::cout << "#c(s_0)= " << _c_init << std::endl;
 			
 			
 			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
@@ -830,6 +888,7 @@ protected:
 			return true;
 		}
 		node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
+		node->original_unachieved_subgoals = _heuristic.compute_unachieved(node->state);
 		
 		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
 			_min_subgoals_to_reach = node->unachieved_subgoals;

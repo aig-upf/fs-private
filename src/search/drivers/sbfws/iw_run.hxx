@@ -573,7 +573,7 @@ public:
 				   //std::cout << obj << ": " << obj_conf << std::endl;
 				   if(std::find(v_off.begin(), v_off.end(), obj_conf) != v_off.end() )
 				     for(auto& bad_conf: v_off)
-				     offending.insert(Atom(confo, bad_conf));
+				       offending.insert(Atom(confo, bad_conf));
 				}
 				//}
 
