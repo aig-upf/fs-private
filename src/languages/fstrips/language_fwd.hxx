@@ -48,7 +48,19 @@ class ArithmeticTerm;
 class AdditionTerm;
 class SubtractionTerm;
 class MultiplicationTerm;
-	
+class DivisionTerm;
+class PowerTerm;
+class SqrtTerm;
+class SineTerm;
+class CosineTerm;
+class TangentTerm;
+class ArcSineTerm;
+class ArcCosineTerm;
+class ArcTangentTerm;
+class ExpTerm;
+class MinTerm;
+class MaxTerm;
+
 } } } // namespaces
 
 namespace fs = fs0::language::fstrips;
