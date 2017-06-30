@@ -1,6 +1,6 @@
 from . import pddl_types
 
-built_in_functional_symbols = ['+', '-', '*', '/', '^', 'sin', 'cos', 'sqrt', 'tan', 'asin', 'acos', 'atan']
+built_in_functional_symbols = ['+', '-', '*', '/', '^', 'sin', 'cos', 'sqrt', 'tan', 'asin', 'acos', 'atan', 'min', 'max', 'exp']
 
 class Function(object):
     def __init__(self, name, arguments):

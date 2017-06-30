@@ -13,7 +13,7 @@ def is_relational_operator(symbol):
 
 
 def is_arithmetic_function(symbol):
-    return symbol in {"*", "+", "-", "/", "^", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan"}
+    return symbol in {"*", "+", "-", "/", "^", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "min", "max", "exp"}
 
 
 def is_builtin_operator(symbol):
@@ -164,7 +164,7 @@ class Constant(Term):
                         symbol=self.symbol,
                         value=float(self.symbol),
                         type_id="float_t",
-                        fstype="number")  
+                        fstype="number")
 
         else:  # We have a logical constant
             return dict(type='constant',

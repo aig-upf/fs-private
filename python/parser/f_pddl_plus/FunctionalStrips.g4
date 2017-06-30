@@ -382,9 +382,9 @@ condEffect
 	;
 
 // TODO: should these be uppercase & lexer section?
-binaryOp : '*' | '+' | '-' | '/' | '^';
+binaryOp : '*' | '+' | '-' | '/' | '^' | 'max' | 'min' ;
 
-unaryBuiltIn : '-' | 'sin' | 'cos' | 'sqrt' | 'tan' | 'acos' | 'asin' | 'atan';
+unaryBuiltIn : '-' | 'sin' | 'cos' | 'sqrt' | 'tan' | 'acos' | 'asin' | 'atan' | 'exp';
 
 multiOp	: '*' | '+' ;
 

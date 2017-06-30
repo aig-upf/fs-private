@@ -2,11 +2,11 @@
 
 #### Step 1
 
-Add symbol of function to the rule *unaryBuiltIn* in `preprocessor/antlr4_parsers/FunctionalStrips.g4`
+Add symbol of function to the rule *unaryBuiltIn* in `python/parser/f_pddl_plus/FunctionalStrips.g4`
 
 #### Step 2
 
-Regenerate parser with the script `build_parser.py` in `preprocessor/antlr4_parsers` with the following command:
+Regenerate parser with the script `build_parser.py` in `python/parser/f_pddl_plus` with the following command:
 ```
 $ python3 build_parser.py --grammar FunctionalStrips.g4 --deploy fstrips
 ```
@@ -16,8 +16,8 @@ $ python3 build_parser.py --grammar FunctionalStrips.g4 --deploy fstrips
 Register the new built-in for the parser backend. You need to add the function symbol with exactly the
 same syntax as you did in Step 1 to the following scripts:
 
- 1. to the list `built_in_functional_symbols` in the script `preprocessor/anltr4_parsers/fstrips/functions.py`,
- 2. to the list `BASE_SYMBOLS` in `preprocessor/compilation/parser.py`.
+ 1. to the list `built_in_functional_symbols` in the script `python/parser/pddl/functions.py`,
+ 2. to the set returned by the function `is_arithmetic_function` in `python/parser/fstrips.py`.
 
 #### Step 4
 TIP: Program very defensively and manage floating point exceptions and the like, speed is secondary.
