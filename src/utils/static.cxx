@@ -1,9 +1,14 @@
 
 #include <utils/static.hxx>
 #include <problem_info.hxx>
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 {
 
+std::ostream& operator<<( std::ostream& os, const StaticExtension& ex )
+{
+	return ex.print(os, ProblemInfo::getInstance() );
+}
 
 std::unique_ptr<StaticExtension>
 StaticExtension::load_static_extension(const std::string& name, const ProblemInfo& info) {
@@ -41,7 +46,138 @@ StaticExtension::load_static_extension(const std::string& name, const ProblemInf
 
 	} else WORK_IN_PROGRESS("Such high symbol arities have not yet been implemented");
 
+	LPT_DEBUG("loader", "Loaded extension for symbol '" << name << "'");
+	LPT_DEBUG("loader", "\t data: ");
+	extension->print( lapkt::tools::Logger::instance().log("DEBUG", "loader"), info ) << std::endl;
+
 	return std::unique_ptr<StaticExtension>(extension);
+}
+
+std::ostream&
+ZeroaryFunction::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	os << info.object_name(_data);
+	os << "]";
+
+	return os;
+}
+
+std::ostream&
+UnaryFunction::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	for ( auto entry : _data ) {
+		os << "( " << info.object_name(entry.first) << ", " << info.object_name(entry.second) << " ), ";
+	}
+	os << "]";
+
+	return os;
+}
+
+std::ostream&
+UnaryPredicate::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	for ( auto entry : _data ) {
+		os << "( " << info.object_name(entry) << " ), ";
+	}
+	os << "]";
+	return os;
+}
+
+std::ostream&
+BinaryFunction::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	for ( auto entry : _data ) {
+		os << "( ";
+		os << info.object_name(entry.first.first) << ", ";
+		os << info.object_name(entry.first.second) << ", ";
+		os << info.object_name(entry.second) << " ), ";
+	}
+	os << "]";
+	return os;
+}
+
+std::ostream&
+BinaryPredicate::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	for ( auto entry : _data ) {
+		os << "( ";
+		os << info.object_name(entry.first) << ", ";
+		os << info.object_name(entry.second);
+
+		os << " ), ";
+	}
+	os << "]";
+	return os;
+}
+
+std::ostream&
+Arity3Function::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	for ( auto entry : _data ) {
+		os << "( ";
+		object_id x, y, z;
+		std::tie(x,y,z) = entry.first;
+		os << info.object_name(x) << ", ";
+		os << info.object_name(y) << ", ";
+		os << info.object_name(z) << ", ";
+
+		os << info.object_name(entry.second) << " ), ";
+	}
+	os << "]";
+	return os;
+}
+
+std::ostream&
+Arity3Predicate::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	for ( auto entry : _data ) {
+		os << "( ";
+		object_id x, y, z;
+		std::tie(x,y,z) = entry;
+		os << info.object_name(x) << ", ";
+		os << info.object_name(y) << ", ";
+		os << info.object_name(z);
+
+		os << " ), ";
+	}
+	os << "]";
+	return os;
+}
+
+std::ostream&
+Arity4Function::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	for ( auto entry : _data ) {
+		os << "( ";
+		object_id x, y, z, w;
+		std::tie(x,y,z,w) = entry.first;
+		os << info.object_name(x) << ", ";
+		os << info.object_name(y) << ", ";
+		os << info.object_name(z) << ", ";
+		os << info.object_name(w) << ", ";
+
+		os << info.object_name(entry.second) << " ), ";
+	}
+	os << "]";
+	return os;
+}
+
+std::ostream&
+Arity4Predicate::print( std::ostream& os, const ProblemInfo& info ) const {
+	os << "[";
+	for ( auto entry : _data ) {
+		os << "( ";
+		object_id x, y, z, w;
+		std::tie(x,y,z,w) = entry;
+		os << info.object_name(x) << ", ";
+		os << info.object_name(y) << ", ";
+		os << info.object_name(z) << ", ";
+		os << info.object_name(w);
+
+		os << " ), ";
+	}
+	os << "]";
+	return os;
 }
 
 } // namespaces
