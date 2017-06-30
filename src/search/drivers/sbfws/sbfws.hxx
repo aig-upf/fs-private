@@ -402,6 +402,7 @@ public:
 	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
 	  const ProblemInfo& info = ProblemInfo::getInstance();
 	  State init = _model.init();
+	  
 	  for(ObjectIdx obj: info.getTypeObjects("object_id")) {
 	    
 	    std::string obj_name = info.deduceObjectName(obj, "object_id");
@@ -416,6 +417,12 @@ public:
 	    AtomIdx idx2 = index.to_index(confgo_var, rel_pose);
 	    Atom g_atom2 = index.to_atom(idx2);
 	    relevant[idx2] = false;
+	    
+	    VariableIdx confo_var = info.getVariableId("confo("+obj_name+")");
+	    ObjectIdx obj_conf = init.getValue(confo_var);
+	    AtomIdx idx3 = index.to_index(confo_var, obj_conf);
+	    Atom g_atom3 = index.to_atom(idx3);
+	    relevant[idx3] = false;
 	    
 	  }
 	  

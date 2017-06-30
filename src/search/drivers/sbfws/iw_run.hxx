@@ -535,13 +535,14 @@ public:
 		VariableIdx v_confb = info.getVariableId("confb(rob)");//confb(rob) variable
 		VariableIdx v_traja = info.getVariableId("traj(rob)");//traj(rob) variable
 		VariableIdx v_holding = info.getVariableId("holding()");//holding variable
-		ObjectIdx undef_gtype = info.getObjectId("g0");//go object idx
 		
 		while (node->has_parent()) {
+		  
 			const StateT& state = node->state;
 			const GroundAction* action = Problem::getInstance().getGroundActions()[node->action];
 			
 			if (action->getName() == "transition_arm") {
+			  
 				ObjectIdx o_confb = state.getValue(v_confb);//Base conf
 				ObjectIdx o_traj_arm = state.getValue(v_traja);//trajectory
 				ObjectIdx o_held = state.getValue(v_holding);//Object being held
@@ -551,23 +552,33 @@ public:
 				auto gtype_o_held = state.getValue(idx_gtype_h);
 				
 				//for(ObjectIdx obj: info.getTypeObjects("object_id")) {
-				for(ObjectIdx gtype_obj: info.getTypeObjects("geometry_type")) {
+				//for(ObjectIdx gtype_obj: info.getTypeObjects("geometry_type")) {
 				  //VariableIdx idx_gtype_obj = _all_objects_gtype[obj];
 				  //auto gtype_obj = state.getValue(idx_gtype_obj);
-				   auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);//std::vector<ObjectIdx>
-				   for(ObjectIdx obj: info.getTypeObjects("object_id")) {
-				     VariableIdx confo = _all_objects_conf[obj];
-				     ObjectIdx obj_conf = state.getValue(confo);
-				     for(auto& off: v_off) {//iterate through all offending configurations for this gtype
-				       if(obj_conf == off) {//If the conf(obj) is in an offending configuration
-				         //for(auto& bad_conf: v_off)
-					   offending.insert(Atom(confo, off)); //We insert all the atoms of the form conf(obj) = bad_conf
-				      }
-				    }
-				   }
-				}
+			
+				ObjectIdx gtype_obj = info.getObjectId("g1");
 				
+				//std::cout << "< " << info.deduceObjectName(o_confb,"conf_base") << ", " << info.deduceObjectName(o_traj_arm,"trajectory") << 
+				//", " << info.deduceObjectName(o_held, "object_id") << ", " << info.deduceObjectName(gtype_o_held, "geometry_type") << ", " << info.deduceObjectName(gtype_obj, "geometry_type") << " >" << std::endl;
+				auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);//std::vector<ObjectIdx>
+				
+				/*for(auto& it: v_off)
+				  std::cout << it << " ";
+				std::cout << std::endl;*/
+				
+				for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+				  
+				   VariableIdx confo = _all_objects_conf[obj];
+				   ObjectIdx obj_conf = state.getValue(confo);
+				   //std::cout << obj << ": " << obj_conf << std::endl;
+				   if(std::find(v_off.begin(), v_off.end(), obj_conf) != v_off.end() )
+				     for(auto& bad_conf: v_off)
+				     offending.insert(Atom(confo, bad_conf));
+				}
+				//}
+
 			}
+			
 		    node = node->parent;
 		}
 	}
