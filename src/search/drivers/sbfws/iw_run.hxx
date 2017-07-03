@@ -21,9 +21,6 @@
 #include <search/utils.hxx>
 
 
-
-
-//using NoGoodAtomsSet = std::unordered_set<fs0::ObjectIdx>;
 using NoGoodAtomsSet = std::unordered_set<fs0::Atom>;
 
 
@@ -521,6 +518,9 @@ public:
 	  } while(_relevant_no_good_atoms.size() > curr_size);
 	  
 	  std::cout << "Relevant no good atoms after holding(o) subgoals: " << _relevant_no_good_atoms.size() << std::endl;
+	  
+	  const ExternalI& external = info.get_external();
+	  external.load_C(_relevant_no_good_atoms);
 
 	}
 	
@@ -569,7 +569,7 @@ public:
 				for(ObjectIdx obj: info.getTypeObjects("object_id")) {
 				  
 				   VariableIdx confo = _all_objects_conf[obj];
-				   ObjectIdx obj_conf = state.getValue(confo);
+				   ObjectIdx obj_conf = _init.getValue(confo);
 				   //std::cout << obj << ": " << obj_conf << std::endl;
 				   if(std::find(v_off.begin(), v_off.end(), obj_conf) != v_off.end() )
 				     for(auto& bad_conf: v_off)

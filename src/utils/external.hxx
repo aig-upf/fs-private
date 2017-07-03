@@ -2,12 +2,20 @@
 #pragma once
 
 #include <fs_types.hxx>
+#include <unordered_set>
+#include <atom.hxx>
+
+using NoGoodAtomsSet = std::unordered_set<fs0::Atom>;
+
 
 
 namespace fs0 { namespace asp { class LPHandler; }}
 
-namespace fs0 {
 
+namespace fs0 {
+  
+
+  
 //! An interface for _external_ singleton objects, to be subclassed if needed by particular 
 //! domain-specific External classes.
 class ExternalI  {
@@ -25,6 +33,9 @@ public:
 	virtual std::vector<ObjectIdx> get_offending_configurations(ObjectIdx confb, ObjectIdx arm_traj, ObjectIdx held_o, ObjectIdx gtype_holding, ObjectIdx gtype_obj) const {
 		throw std::runtime_error("Must be subclassed");
 	}
+	
+	
+	virtual void load_C(NoGoodAtomsSet relevant_no_good_atoms) const {throw std::runtime_error("Must be subclassed");}
 	
 };
 

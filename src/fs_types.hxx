@@ -73,6 +73,7 @@ namespace fs0 {
 
 	//! A function in the logical sense.
 	using Function = std::function<ObjectIdx(const ValueTuple&)>;
+
 	
 	
 	/**

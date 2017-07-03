@@ -21,10 +21,10 @@ using Novelty = lapkt::novelty::Novelty;
 template <typename NodePT>
 struct unachieved_subgoals_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
-// 	  	if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
-// 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
- 		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+	   	if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
  		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+		if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
+ 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		if (n1->w_g == Novelty::One && n2->w_g != Novelty::One) return false;
@@ -39,10 +39,10 @@ struct novelty_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
 		if (n1->w_g_num > n2->w_g_num) return true;
 		if (n1->w_g_num < n2->w_g_num) return false;
-// 		if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
-// 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
- 		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
- 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+		//if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+ 		//if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+		if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
+ 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		return n1->_gen_order > n2->_gen_order;
@@ -576,7 +576,7 @@ public:
 			unsigned R_size = std::count(relevant.begin(), relevant.end(), true);
 			_stats.set_relevant_atoms(R_size);
 
-			_relevant_no_good_atoms = simulator.get_relevant_no_good_atoms();			
+			_relevant_no_good_atoms = simulator.get_relevant_no_good_atoms();
 			_stats.set_c_set(_relevant_no_good_atoms.size());
 			
 			std::cout << "Set of relevant no good atoms from SBFWS: " << std::endl;
