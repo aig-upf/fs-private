@@ -21,14 +21,23 @@ using Novelty = lapkt::novelty::Novelty;
 template <typename NodePT>
 struct unachieved_subgoals_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
-	   	if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
- 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
-		//if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
- 		//if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
+	  
+	  
+		/*std::cout << n1->unachieved_subgoals << "/" <<  n2->unachieved_subgoals << std::endl;
+		std::cout << "---" << std::endl;
+		std::cout << n1->original_unachieved_subgoals << "/" << n2->original_unachieved_subgoals << std::endl;*/
+
+	  	//#g' = #g + 2* #c + 1 if held
+	   	//if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+ 		//if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+ 		
+ 		//#g
+		if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
+ 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		if (n1->w_g == Novelty::One && n2->w_g != Novelty::One) return false;
-// 		if (n1->w_gr == Novelty::One && n2->w_gr != Novelty::One) return false;
+ 		//if (n1->w_gr == Novelty::One && n2->w_gr != Novelty::One) return false;
 		return n1->_gen_order > n2->_gen_order;
 	}
 };
@@ -37,6 +46,11 @@ struct unachieved_subgoals_comparer {
 template <typename NodePT>
 struct novelty_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
+	  
+	  
+		std::cout << "entra" << std::endl;
+	  
+	  
 		if (n1->w_g_num > n2->w_g_num) return true;
 		if (n1->w_g_num < n2->w_g_num) return false;
 		//if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
@@ -155,6 +169,7 @@ public:
 	        os << ", #c=" << _relevant_no_good_counter;
 		os << ", #g'=" << unachieved_subgoals;
 		os << ", #r'=" << new_r;
+		os << ", parent=" << parent;
 		//os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		//os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
 // 		if (action != ActionT::invalid_action_id) os << ", a = " << *problem.getGroundActions()[action];
@@ -292,7 +307,7 @@ public:
 // 		LPT_INFO("types", "Type=" << compute_node_complex_type(node.unachieved_subgoals, get_hash_r(node)) << " for node: " << std::endl << node)
 // 		LPT_INFO("hash_r", "#r=" << get_hash_r(node) << " for node: " << std::endl << node)
 		//std::cout << "#r=" << get_hash_r(node) << " ";// " for node: " << node << std::endl;
-		//std::cout << node << std::endl;
+		//std::cout << node << std::endl; 
 		unsigned hash = get_hash_r(node);
 		//unsigned c_counter = get_c_counter(node);
 		//std::cout << "-----------------------------------" << std::endl;
@@ -306,6 +321,14 @@ public:
 		unsigned c_counter = compute_g_c(node);
 		
 		node.unachieved_subgoals = node.original_unachieved_subgoals + c_counter;
+		//std::cout << node.unachieved_subgoals << " = " << node.original_unachieved_subgoals << " + " << c_counter << std::endl;
+		
+		/*if(node.unachieved_subgoals == 1) {
+		  std::cout << node << std::endl;
+		  std::cout << node.state << std::endl;
+		}*/
+		
+		 // std::cout << node << std::endl;
 		
 		
  		return compute_node_complex_type(node.unachieved_subgoals, new_r);
@@ -388,6 +411,8 @@ public:
 	//! Compute the number of variables in no good which are no good or being held
 	template<typename NodeT>
 	const unsigned compute_g_c(NodeT& node) {
+	  
+	 	  
 	  unsigned c = 0;
 	  bool held = false;
 	  const ProblemInfo& info = ProblemInfo::getInstance();
@@ -409,7 +434,7 @@ public:
 	  unsigned counter = 2*c;
 	  if(held)
 	    counter++;
-	  
+	  	  
 	  return counter;
 	  
 	}
@@ -561,7 +586,7 @@ public:
 			std::cout << "Relevant before clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			clean_relevant_atoms(relevant);
 			std::cout << "Relevant after clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
-			remove_relevant_atoms(relevant);
+			//remove_relevant_atoms(relevant);
 			std::cout << "Relevant after remove: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			
 			print_R(relevant);
@@ -880,11 +905,19 @@ protected:
 			_solution = node;
 			return true;
 		}
-		node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
+		//Change by original unachieved subgoals which is the original #g
+		//node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
 		node->original_unachieved_subgoals = _heuristic.compute_unachieved(node->state);
 		
-		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
-			_min_subgoals_to_reach = node->unachieved_subgoals;
+		
+		//Compute #g' = #g + 2 * obstructing_objects + 1 (if held)
+		//std::cout << "Create node" << std::endl;
+		//std::cout << _heuristic.compute_g_c(*node) << std::endl;
+		//node->unachieved_subgoals = node->original_unachieved_subgoals + _heuristic.compute_g_c(*node);
+		
+		
+		if (node->original_unachieved_subgoals < _min_subgoals_to_reach) {
+			_min_subgoals_to_reach = node->original_unachieved_subgoals;
 			LPT_INFO("cout", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
 		}
 
