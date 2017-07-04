@@ -23,8 +23,8 @@ struct unachieved_subgoals_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
 	   	if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
  		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
-		if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
- 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
+		//if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
+ 		//if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		if (n1->w_g == Novelty::One && n2->w_g != Novelty::One) return false;
@@ -151,8 +151,9 @@ public:
 		else new_r = std::to_string(_relevant_no_good_counter);
 		
 		os << "#" << _gen_order << " (" << this << "), ";// << state;
-		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
+		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << original_unachieved_subgoals << ", #r=" << reached;
 	        os << ", #c=" << _relevant_no_good_counter;
+		os << ", #g'=" << unachieved_subgoals;
 		os << ", #r'=" << new_r;
 		//os << ", parent = " << (parent ? "#" + std::to_string(parent->_gen_order) : "None");
 		//os << ", decr(#g)= " << this->decreases_unachieved_subgoals();
@@ -303,12 +304,10 @@ public:
 		//std::cout << "r' = " << new_r << " ";
 		//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
 		unsigned c_counter = compute_g_c(node);
-		//unsigned updated_g = node.unachieved_subgoals + c_counter;
+		
 		node.unachieved_subgoals = node.original_unachieved_subgoals + c_counter;
-		//std::cout << node.original_unachieved_subgoals << " + " << c_counter << " = " << node.unachieved_subgoals << std::endl;
-		//if(c_counter > 3)
-		//  std::cout << c_counter << " ";
-		//return compute_node_complex_type(updated_g, new_r);
+		
+		
  		return compute_node_complex_type(node.unachieved_subgoals, new_r);
 	}
 	
@@ -390,33 +389,28 @@ public:
 	template<typename NodeT>
 	const unsigned compute_g_c(NodeT& node) {
 	  unsigned c = 0;
+	  bool held = false;
 	  const ProblemInfo& info = ProblemInfo::getInstance();
 	  ObjectIdx c_held = info.getObjectId("c_held");
 	  std::vector<bool> counted(info.getNumVariables(), false);
 	  
-	  //std::cout << node.state << std::endl;
-	  //std::cout << std::endl;
 
 	  for(auto& it: _relevant_no_good_atoms) {
-	   // std::cout << "Atom: " << it << " ";
 	    if(node.state.contains(it)) 
 	      c++;
-/*	    
-	    else {
-	      VariableIdx conf_var = it.getVariable();
-	      //if(counted[conf_var])
-	      //continue;
-	      ObjectIdx obj_conf = node.state.getValue(conf_var);
-	      if(obj_conf == c_held) {
-		c++;;
-		//counted[conf_var] = true;
-	      }
-	    }
-	    */
+	    
+	    VariableIdx conf_var = it.getVariable();
+	    ObjectIdx confo = node.state.getValue(conf_var);
+	    if(confo == c_held)
+	      held = true;
+	    
 	  }
-	   //std::cout << std::endl;
 	  
-	  return c;
+	  unsigned counter = 2*c;
+	  if(held)
+	    counter++;
+	  
+	  return counter;
 	  
 	}
 	
@@ -437,8 +431,7 @@ public:
 	    if(!_init.contains(it))
 	      c++;
 	    return c;
-	      //node._relevant_no_good_counter++;
-	    //return node._relevant_no_good_counter;
+
 	}
 	
 
@@ -845,9 +838,9 @@ protected:
 			if (!node->_processed) {
 				if (nov == 2) { // i.e. the node has exactly w_{#, #r} = 2
 					_stats.wgr2_node();
-					process_node(node);
+					//process_node(node);
 				} else {
-					handle_unprocessed_node(node, true);
+					//handle_unprocessed_node(node, true);
 				}
 			}
 
@@ -863,7 +856,7 @@ protected:
 			NodePT node = _qrest.next();
 			if (!node->_processed) {
 				_stats.wgr_gt2_node();
-				process_node(node);
+				//process_node(node);
 			}
 			return true;
 		}

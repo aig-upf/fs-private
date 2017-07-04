@@ -4,6 +4,8 @@
 #include <fs_types.hxx>
 #include <unordered_set>
 #include <atom.hxx>
+#include <state.hxx>
+
 
 using NoGoodAtomsSet = std::unordered_set<fs0::Atom>;
 
@@ -36,6 +38,8 @@ public:
 	
 	
 	virtual void load_C(NoGoodAtomsSet relevant_no_good_atoms) const {throw std::runtime_error("Must be subclassed");}
+	
+	virtual bool graspable(const State& state, ObjectIdx confb, ObjectIdx confa, ObjectIdx obj) const  {throw std::runtime_error("Must be subclassed");}
 	
 };
 

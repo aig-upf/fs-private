@@ -535,6 +535,8 @@ public:
 		VariableIdx v_confb = info.getVariableId("confb(rob)");//confb(rob) variable
 		VariableIdx v_traja = info.getVariableId("traj(rob)");//traj(rob) variable
 		VariableIdx v_holding = info.getVariableId("holding()");//holding variable
+		VariableIdx v_confa = info.getVariableId("confa(rob)");//holding variable
+
 		
 		while (node->has_parent()) {
 		  
@@ -543,34 +545,32 @@ public:
 			
 			if (action->getName() == "transition_arm") {
 			  
+			  
 				ObjectIdx o_confb = state.getValue(v_confb);//Base conf
+				ObjectIdx o_confa = state.getValue(v_confa);//Object being held
 				ObjectIdx o_traj_arm = state.getValue(v_traja);//trajectory
 				ObjectIdx o_held = state.getValue(v_holding);//Object being held
+				
+				
 				//Holding object
 				std::string obj_h_name = info.deduceObjectName(o_held, "nullable_object_id");
 				VariableIdx idx_gtype_h = info.getVariableId("gtype("+obj_h_name+")");
 				auto gtype_o_held = state.getValue(idx_gtype_h);
 				
-				//for(ObjectIdx obj: info.getTypeObjects("object_id")) {
-				//for(ObjectIdx gtype_obj: info.getTypeObjects("geometry_type")) {
-				  //VariableIdx idx_gtype_obj = _all_objects_gtype[obj];
-				  //auto gtype_obj = state.getValue(idx_gtype_obj);
-			
 				ObjectIdx gtype_obj = info.getObjectId("g1");
 				
 				//std::cout << "< " << info.deduceObjectName(o_confb,"conf_base") << ", " << info.deduceObjectName(o_traj_arm,"trajectory") << 
 				//", " << info.deduceObjectName(o_held, "object_id") << ", " << info.deduceObjectName(gtype_o_held, "geometry_type") << ", " << info.deduceObjectName(gtype_obj, "geometry_type") << " >" << std::endl;
 				auto v_off = external.get_offending_configurations(o_confb, o_traj_arm, o_held, gtype_o_held, gtype_obj);//std::vector<ObjectIdx>
 				
-				/*for(auto& it: v_off)
-				  std::cout << it << " ";
-				std::cout << std::endl;*/
-				
 				for(ObjectIdx obj: info.getTypeObjects("object_id")) {
+				  
+				  bool is_graspable = external.graspable(state, o_confb, o_confa, obj);
+				  if(is_graspable)
+				    continue;
 				  
 				   VariableIdx confo = _all_objects_conf[obj];
 				   ObjectIdx obj_conf = _init.getValue(confo);
-				   //std::cout << obj << ": " << obj_conf << std::endl;
 				   if(std::find(v_off.begin(), v_off.end(), obj_conf) != v_off.end() )
 				     for(auto& bad_conf: v_off)
 				       offending.insert(Atom(confo, bad_conf));
@@ -700,6 +700,8 @@ public:
 		_config._complete = false;
 		
 		float simt0 = aptk::time_used();
+		  std::cout << "Running IW(1)" << std::endl;
+
   		run(seed, _config._max_width);
 		compute_no_good_atoms();
 		report_simulation_stats(simt0);
