@@ -35,6 +35,10 @@ class invalid_range : public std::runtime_error {
 public: invalid_range(const type_range& range) : std::runtime_error(printer() << "Invalid range: [" << range.first << ", " << range.second << "]") {}
 };
 
+class non_range_type : public std::runtime_error {
+public: non_range_type(const type_range& range) : std::runtime_error(printer() << "The provided range corresponds to a type_id where ranges are not possible: " << range.first << ", " << range.second << "]") {}
+};
+
 class out_of_range_object : public std::runtime_error {
 public: out_of_range_object(const object_id& object, const std::string& fstype) : std::runtime_error(printer() << "Object with FS type " << fstype << " out of its declared range: " << object) {}
 };
@@ -185,10 +189,14 @@ private:
 		type_id t = o_type(max);
 		if (o_type(max) != o_type(min)) throw range_type_mismatch(o_type(min), o_type(max));
 
-		if (t == type_id::int_t && value<int>(min) >= value<int>(max)) {
-			throw invalid_range(range);
+		if (t == type_id::int_t) {
+			if (value<int>(min) > value<int>(max)) throw invalid_range(range);
+		} else if (t == type_id::float_t) {
+			if (value<float>(min) > value<float>(max)) throw invalid_range(range);
+		} else {
+			throw non_range_type(range);
 		}
-		// TODO - else if type is float ...
+		
 
 		return t;
 	}
