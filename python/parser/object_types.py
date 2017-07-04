@@ -53,7 +53,9 @@ def process_type_hierarchy(fd_types):
     """
     # The base 'object' and type are always there.
     # Warning: the position in the list of types is important.
-    types = {'object': None, 'int': None, 'number' : None}
+    root_types = ['object', 'int', 'number']
+
+    types = {t: None for t in root_types}
     used_types = set()
     predeclared = set(types.keys())
     correctly_declared = set(types.keys())
@@ -77,15 +79,15 @@ def process_type_hierarchy(fd_types):
     for typename, parent in types.items():
         parent_to_children[parent].append(typename)
 
-    supertypes = {'object': []}
+    supertypes = {t: [] for t in root_types}
     seen = set()
-    pending = deque(['object', 'int', 'number'])
+    pending = deque(root_types)
     while pending:
         current = pending.popleft()  # Invariant: supertypes[current] includes all of current's parent types
-        seen |= { current }
+        seen |= {current}
         for t in parent_to_children[current]:
             supertypes[t] = [current] + supertypes[current]
-            if t not in seen :
+            if t not in seen:
                 pending.append(t)
 
     return types, supertypes

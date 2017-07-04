@@ -11,8 +11,8 @@ from .static import DataElement
 from .templates import tplManager
 from .pddl.pddl_types import TypedObject
 
-class ProblemRepresentation(object):
 
+class ProblemRepresentation(object):
     def __init__(self, index, translation_dir, debug):
         self.index = index
         self.translation_dir = translation_dir
@@ -26,7 +26,7 @@ class ProblemRepresentation(object):
                 'action_schemata': [action.dump() for action in self.index.action_schemas],
                 'process_schemata': [process.dump() for process in self.index.process_schemas],
                 'event_schemata': [event.dump() for event in self.index.event_schemas],
-                'metric' : self.index.metric.dump(),
+                'metric': self.index.metric.dump(),
                 'state_constraints': [constraint.dump() for constraint in self.index.state_constraints],
                 'goal': self.index.goal.dump(),
                 'axioms': [axiom.dump() for axiom in self.index.axioms],
@@ -94,9 +94,9 @@ class ProblemRepresentation(object):
             if obj in ('true', 'false'):  # DON'T DUMP BOOLEAN OBJECTS
                 return None
             return dict(id=i, name=obj, type=types[obj])
+
         all_objs = [dump_o(i, obj) for i, obj in enumerate(self.index.objects.dump())]
         return [x for x in all_objs if x is not None]
-
 
     def dump_symbol_data(self):
         res = []
@@ -119,43 +119,43 @@ class ProblemRepresentation(object):
     def dump_type_data(self):
         """ Dumps a map of types to corresponding objects"""
 
-        def resolve_type_id( type ) :
-            if type == 'int' : return 'int_t'
-            if type == 'number' : return 'float_t'
-            if type == 'object' : return 'object_t'
-            if 'int' in self.index.supertypes[type] : return 'int_t'
-            if 'number' in self.index.supertypes[type] : return 'float_t'
-            if 'object' in self.index.supertypes[type] : return 'object_t'
+        def resolve_type_id(type):
+            if type == 'int': return 'int_t'
+            if type == 'number': return 'float_t'
+            if type == 'object': return 'object_t'
+            if 'int' in self.index.supertypes[type]: return 'int_t'
+            if 'number' in self.index.supertypes[type]: return 'float_t'
+            if 'object' in self.index.supertypes[type]: return 'object_t'
             assert False
 
-        def resolve_domain_type( type_id, objects ) :
-            if len(objects) == 0 : return 'unbounded'
-            if isinstance(objects[0],int) : return 'interval'
+        def resolve_domain_type(type_id, objects):
+            if len(objects) == 0: return 'unbounded'
+            if isinstance(objects[0], int): return 'interval'
             return 'set'
 
         data = []
         _sorted = sorted(self.index.types.items(), key=operator.itemgetter(1))  # all types, sorted by type ID
         for t, i in _sorted:
             objects = self.index.type_map[t]
-            type_def_components  = [ ("id", i), ("fstype", t) ]
+            type_def_components = [("id", i), ("fstype", t)]
 
             type_id = resolve_type_id(t)
-            type_def_components += [ ("type_id", type_id )]
+            type_def_components += [("type_id", type_id)]
 
             dom_type = resolve_domain_type(type_id, objects)
-            type_def_components += [ ("domain_type", dom_type ) ]
+            type_def_components += [("domain_type", dom_type)]
 
-            if dom_type == 'interval' :
-                type_def_components += [ ("interval", [object[0], objects[-1]]), ("set", []) ]
-            elif dom_type == 'set' :
+            if dom_type == 'interval':
+                type_def_components += [("interval", [objects[0], objects[-1]]), ("set", [])]
+            elif dom_type == 'set':
                 object_idxs = [str(self.index.objects.get_index(o)) for o in objects]
-                type_def_components += [ ("interval", []), ("set", object_idxs) ]
-            elif dom_type == 'unbounded' :
-                type_def_components += [ ("interval", []), ("set", []) ]
-            else :
+                type_def_components += [("interval", []), ("set", object_idxs)]
+            elif dom_type == 'unbounded':
+                type_def_components += [("interval", []), ("set", [])]
+            else:
                 assert False
 
-            data.append( dict(type_def_components))
+            data.append(dict(type_def_components))
 
         return data
 
@@ -187,14 +187,14 @@ class ProblemRepresentation(object):
 
     def get_value_idx(self, value):
         """ Returns the appropriate integer index for the given value."""
-	# Variables of integer and float type are represented by the integer itself.
+        # Variables of integer and float type are represented by the integer itself.
         if isinstance(value, int) or isinstance(value, float):
             return value
 
-        elif isinstance(value, bool) :
+        elif isinstance(value, bool):
             return util.bool_string(value)
 
-        elif isinstance(value, TypedObject) :
+        elif isinstance(value, TypedObject):
             return self.index.objects.get_index(value.name)
         else:
             return self.index.objects.get_index(value)
@@ -238,10 +238,10 @@ class ProblemRepresentation(object):
         lines = list()
         for t in data['types']:
             lines.append('{}'.format(t))
-            #objects = t[2]
-            #if objects == 'int':
+            # objects = t[2]
+            # if objects == 'int':
             #    objects = "int[{}..{}]".format(t[3][0], t[3][1])
-            #lines.append("{}: {}. Objects: {}".format(t[0], t[1], objects))
+            # lines.append("{}: {}. Objects: {}".format(t[0], t[1], objects))
         self.dump_data("types", lines, ext='txt', subdir='debug')
 
         # Variables
