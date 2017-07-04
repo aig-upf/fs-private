@@ -122,7 +122,7 @@ public:
 	type_id get_type_id(const std::string& fstype) const;
 	type_id get_type_id(TypeIdx fstype) const;
 
-
+	void check_valid_object(const object_id& object, TypeIdx type) const;
 
 	const std::string get_typename(const type_id& type) const;
 	const std::string& get_typename(const TypeIdx& fstype) const;

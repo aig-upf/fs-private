@@ -119,10 +119,6 @@ public:
 
 	type_id sv_type(VariableIdx var) const { return _sv_types.at(var); }
 
-	bool isIntegerNumber(VariableIdx x) const;
-
-	bool isRationalNumber(VariableIdx x) const;
-
 	unsigned getNumVariables() const;
 
 	std::string object_name(const object_id& object) const;
@@ -189,10 +185,9 @@ public:
 
 	unsigned num_objects() const;
 
-	//! Both methods check that the value of a given variable is within the bounds of the variable,
+	//! Check that the value of a given variable is within the bounds of the variable,
 	//! in case it is a variable of a bounded type.
-	bool checkValueIsValid(const Atom& atom) const;
-	bool checkValueIsValid(VariableIdx variable, const object_id& value) const;
+	void checkValueIsValid(VariableIdx variable, const object_id& value) const;
 
 	bool isBoundedType(TypeIdx type) const;
 

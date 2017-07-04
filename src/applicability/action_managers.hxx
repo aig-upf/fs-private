@@ -35,9 +35,6 @@ public:
 
     bool checkStateConstraints(const State& s) const;
 
-	//! Checks that all of the given new atoms do not violate domain bounds
-	static bool checkAtomsWithinBounds(const std::vector<Atom>& atoms);
-
 protected:
 	//! The state constraints
 	const std::vector<const fs::Formula*>& _state_constraints;

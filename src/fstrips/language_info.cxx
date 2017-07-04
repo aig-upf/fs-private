@@ -5,31 +5,40 @@
 
 #include <fstrips/language_info.hxx>
 #include <utils/loader.hxx>
+#include <utils/printers/helper.hxx>
 
 
 namespace fs0 { namespace fstrips {
 
-// TODO - Exceptions could be improved to receive objects and compose the error message themselves.
 class unregistered_symbol : public std::runtime_error {
 public: unregistered_symbol(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-class unregistered_type : public std::runtime_error {
-public: unregistered_type(const std::string& msg) : std::runtime_error(msg) {}
+class unregistered_fstype : public std::runtime_error {
+public: unregistered_fstype(TypeIdx fstype) : std::runtime_error("FS type with id \"" + std::to_string(fstype) + "\" has not been registered") {}
+};
+
+class unregistered_type_id : public std::runtime_error {
+public: unregistered_type_id(const type_id& t) : std::runtime_error(printer() << "Unregistered type_id: \"" << t << "\"") {}
 };
 
 class unregistered_object : public std::runtime_error {
-public: unregistered_object(const std::string& msg) : std::runtime_error(msg) {}
+public: unregistered_object(const object_id& object) : std::runtime_error(printer() << "Unregistered object: " << object) {}
 };
 
 class range_type_mismatch : public std::runtime_error {
 public: range_type_mismatch(const type_id& t1, const type_id& t2) :
-	std::runtime_error("Mismatched object types in range: \"" + to_string(t1) + "\" vs. \"" + to_string(t2) + "\"") {}
+	std::runtime_error(printer() << "Mismatched object types in range: \"" << t1 << "\" vs. \"" << t2 << "\"") {}
 };
 
 class invalid_range : public std::runtime_error {
-public: invalid_range(const std::string& msg) : std::runtime_error(msg) {}
+public: invalid_range(const type_range& range) : std::runtime_error(printer() << "Invalid range: [" << range.first << ", " << range.second << "]") {}
 };
+
+class out_of_range_object : public std::runtime_error {
+public: out_of_range_object(const object_id& object, const std::string& fstype) : std::runtime_error(printer() << "Object with FS type " << fstype << " out of its declared range: " << object) {}
+};
+
 
 // TODO - REMOVE THIS
 std::unique_ptr<LanguageInfo> LanguageInfo::_instance = nullptr;
@@ -97,7 +106,7 @@ private:
 
 	void _check_valid_fstype(const TypeIdx& fstype) const {
 		if (fstype >= _fstype_info.size()) {
-			throw unregistered_type("FS-Type with id \"" + std::to_string(fstype) + "\" has not been registered");
+			throw unregistered_fstype(fstype);
 		}
 	}
 
@@ -120,13 +129,13 @@ private:
 		else if (t == type_id::int_t) return std::to_string(fs0::value<int>(object));
 		else if (t == type_id::float_t) return std::to_string(fs0::value<float>(object));
 		else if (t == type_id::object_t) return get_custom_object_name(object);
-		throw unregistered_type("Unknown type_id \"" + to_string(t) + "\"");
+		throw unregistered_type_id(t);
 	}
 
 	const std::string& get_custom_object_name(const object_id& object) const {
 		assert(o_type(object) == type_id::object_t);
 		const auto& it = _object_names.find(object);
-		if (it == _object_names.end()) throw unregistered_object("Unregistered object");
+		if (it == _object_names.end()) throw unregistered_object(object);
 		return it->second;
 	}
 
@@ -177,7 +186,7 @@ private:
 		if (o_type(max) != o_type(min)) throw range_type_mismatch(o_type(min), o_type(max));
 
 		if (t == type_id::int_t && value<int>(min) >= value<int>(max)) {
-			throw invalid_range("Invalid range: [" + std::to_string(value<int>(min)) + " - " + std::to_string(value<int>(max)) + "}");
+			throw invalid_range(range);
 		}
 		// TODO - else if type is float ...
 
@@ -237,6 +246,25 @@ private:
 		_check_valid_fstype(fstype);
 		return _fstype_objects.at(fstype);
 	}
+	
+	//! Check that the given object is a valid object of the given FS type, raise exception if not.
+	void check_valid_object(const object_id& object, TypeIdx type) const {
+		// Currently we simply check that the given value is within bounds
+		const FSTypeInfo& tinfo = typeinfo(type);
+		if (!tinfo.bounded()) return;
+		
+		auto bounds = tinfo.bounds<int>();
+		int value = fs0::value<int>(object);
+
+		type_id t = get_type_id(type);
+		if (t == type_id::float_t) {
+			throw std::runtime_error("Error: LanguageInfo::check_valid_object(): FLOAT variables not supported!");
+		}
+
+		if (value < bounds.first || value > bounds.second) {
+			throw out_of_range_object(object, get_typename(type));
+		}
+	}	
 
 
 	//! Map between predicate and function symbols names and IDs.
@@ -337,5 +365,9 @@ symbolinfo(const symbol_id& fstype) const { return impl().symbolinfo(fstype); }
 
 const std::vector<object_id>& LanguageInfo::
 type_objects(TypeIdx fstype) const { return impl().type_objects(fstype); }
+
+void LanguageInfo::
+check_valid_object(const object_id& object, TypeIdx type) const { return impl().check_valid_object(object, type); }
+
 
 } } // namespaces

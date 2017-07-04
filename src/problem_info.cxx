@@ -189,27 +189,10 @@ const std::string& ProblemInfo::
 getTypename(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().typeinfo(fstype).name(); }
 
 
-bool ProblemInfo::
-checkValueIsValid(const Atom& atom) const {
-	return checkValueIsValid(atom.getVariable(), atom.getValue());
-}
-
-bool ProblemInfo::
+void ProblemInfo::
 checkValueIsValid(VariableIdx variable, const object_id& object) const {
 	TypeIdx type = getVariableType(variable);
-	const fstrips::FSTypeInfo tinfo = fstrips::LanguageInfo::instance().typeinfo(type);
-	if (!tinfo.bounded()) return true;
-	auto bounds = tinfo.bounds<int>();
-	int value = fs0::value<int>(object);
-
-	if (isRationalNumber(variable)) {
-		std::stringstream buffer;
-		buffer << "Error: ProblemInfo::checkValueIsValid(): FLOAT variables not supported!";
-		LPT_DEBUG("main",buffer.str());
-		throw std::runtime_error(buffer.str());
-	}
-
-	return value >= bounds.first && value <= bounds.second;
+	fstrips::LanguageInfo::instance().check_valid_object(object, type);
 }
 
 const std::pair<int,int> ProblemInfo::getTypeBounds(TypeIdx type) const {
@@ -222,17 +205,6 @@ num_objects() const { return fstrips::LanguageInfo::instance().num_objects(); }
 std::string ProblemInfo::
 object_name(const object_id& object) const { return fstrips::LanguageInfo::instance().get_object_name(object); }
 
-bool ProblemInfo::
-isIntegerNumber(VariableIdx x) const {
-	type_id t = fstrips::LanguageInfo::instance().get_type_id(getVariableType(x));
-	return t == type_id::int_t || t == type_id::object_t;
-}
-
-bool ProblemInfo::
-isRationalNumber(VariableIdx x) const {
-	type_id t = fstrips::LanguageInfo::instance().get_type_id(getVariableType(x));
-	return t == type_id::float_t;
-}
 
 
 } // namespaces

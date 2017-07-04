@@ -45,8 +45,7 @@ type_id from_string(const std::string& t) {
 	};
 
 	auto it = mapping.find( t );
-	if (it == mapping.end() )
-		throw std::runtime_error( "Error resolving underlying data type for identifier '" + t + "'" );
+	if (it == mapping.end()) throw std::runtime_error( "Error resolving underlying data type for identifier '" + t + "'" );
 	return it->second;
 }
 
@@ -146,7 +145,13 @@ object_id make_object(const double& value) {
 
 std::ostream& object_id::print(std::ostream& os) const {
 	if (_type == type_id::invalid_t) return os << "INV!";
-	return os << _value << _type;
+	
+	// For some types, we will want to properly unpack the value to print it
+	if (_type == type_id::int_t) os << fs0::value<int>(*this);
+	else if (_type == type_id::float_t) os << fs0::value<float>(*this);
+	else os << _value;
+	
+	return os << _type;
 }
 
 } // namespaces

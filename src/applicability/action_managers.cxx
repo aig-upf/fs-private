@@ -27,10 +27,8 @@ bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAct
     if (!action.isControl()) return false;
 	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
 
-	auto atoms = computeEffects(state, action);
-	if (!checkAtomsWithinBounds(atoms)) return false;
-
     if (!_state_constraints.empty()) { // If we have no constraints, we can spare the cost of creating the new state.
+		auto atoms = computeEffects(state, action);
         State next(state, atoms);
         for ( auto c : _state_constraints )
             if ( !checkFormulaHolds( c, next ) ) return false;
@@ -55,12 +53,16 @@ NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction
 
 void
 NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction& action, std::vector<Atom>& atoms) {
+	const ProblemInfo& info = ProblemInfo::getInstance();
 	const auto& effects = action.getEffects();
 	atoms.clear();
 	atoms.reserve(effects.size());
 	for (const fs::ActionEffect* effect:effects) {
 		if (effect->applicable(state)) {
-			atoms.push_back(effect->apply(state));
+			Atom atom = effect->apply(state);
+			// A safety check - perhaps introduces some overhead
+			info.checkValueIsValid(atom.getVariable(), atom.getValue());
+			atoms.push_back(std::move(atom));
 		}
 	}
 }
@@ -74,16 +76,6 @@ bool NaiveApplicabilityManager::checkStateConstraints(const State& state) const 
         if (!NaiveApplicabilityManager::checkFormulaHolds(c, state)) return false;
     return true;
 }
-
-
-bool NaiveApplicabilityManager::checkAtomsWithinBounds(const std::vector<Atom>& atoms) {
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	for (const auto& atom:atoms) {
-		if (!info.checkValueIsValid(atom)) return false;
-	}
-	return true;
-}
-
 
 
 SmartActionManager::SmartActionManager( const std::vector<const GroundAction*>& actions,
@@ -375,10 +367,8 @@ NaiveActionManager::applicable(const State& state, const GroundAction& action) c
     if (!action.isControl()) return false;
 	if (!NaiveApplicabilityManager::checkFormulaHolds(action.getPrecondition(), state)) return false;
 
-	NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);
-	if (!NaiveApplicabilityManager::checkAtomsWithinBounds(_effects_cache)) return false; // TODO - THIS SHOULD BE OPTIMIZED
-
 	if (!_state_constraints.empty()) { // If we have no constraints, we can spare the cost of further checks
+		NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);
 		State next(state, _effects_cache);
 		return check_constraints(action.getId(), next);
 	}
