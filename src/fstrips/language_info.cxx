@@ -261,17 +261,20 @@ private:
 		const FSTypeInfo& tinfo = typeinfo(type);
 		if (!tinfo.bounded()) return;
 		
-		auto bounds = tinfo.bounds<int>();
-		int value = fs0::value<int>(object);
-
 		type_id t = get_type_id(type);
-		if (t == type_id::float_t) {
-			throw std::runtime_error("Error: LanguageInfo::check_valid_object(): FLOAT variables not supported!");
+
+		if (t == type_id::int_t) {
+			auto bounds = tinfo.bounds<int>();
+			int value = fs0::value<int>(object);
+			if (value < bounds.first || value > bounds.second) throw out_of_range_object(object, get_typename(type));
+			
+		} else if (t == type_id::float_t) {
+			auto bounds = tinfo.bounds<float>();
+			float value = fs0::value<float>(object);
+			if (value < bounds.first || value > bounds.second) throw out_of_range_object(object, get_typename(type));
 		}
 
-		if (value < bounds.first || value > bounds.second) {
-			throw out_of_range_object(object, get_typename(type));
-		}
+		
 	}	
 
 
