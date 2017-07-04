@@ -13,8 +13,8 @@ enum class symbol_t {Predicate, Function};
 
 class FSTypeInfo {
 public:
-	FSTypeInfo(TypeIdx id, const std::string& name_, type_id underlying_type)
-		: _id(id), _name(name_), _type_id(underlying_type)
+	FSTypeInfo(TypeIdx id, const std::string& name_, type_id underlying_type, const type_range& bounds)
+		: _id(id), _name(name_), _type_id(underlying_type), _bounds(bounds)
 	{}
 
 	//!

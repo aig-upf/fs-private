@@ -139,18 +139,16 @@ private:
 	}
 
 	TypeIdx add_fstype(const std::string& name, type_id underlying_type) {
-		TypeIdx id = _add_fstype(name, underlying_type);
-		_type_ranges.push_back(INVALID_TYPE_RANGE); // i.e. the type has no actual associated range
-		return id;
+		return _add_fstype(name, underlying_type, INVALID_TYPE_RANGE);
 	}
 
 	TypeIdx add_fstype(const std::string& name, type_id underlying_type, const type_range& range) {
 		type_id t = check_valid_range(range);
 		if (underlying_type != t) throw range_type_mismatch(underlying_type, t);
 
-		TypeIdx id = _add_fstype(name, underlying_type);
-		_type_ranges.push_back(range);
+		TypeIdx id = _add_fstype(name, underlying_type, range);
 
+		// For bounded types, we automatically register all objects that fall in the range
 		if (t != type_id::object_t) {
 			fill_object_range(id, range);
 		}
@@ -159,18 +157,14 @@ private:
 	}
 
 	//! Private method - Add a fs-type with given underlying type_id
-	TypeIdx _add_fstype(const std::string& name, type_id underlying_type) {
+	TypeIdx _add_fstype(const std::string& name, type_id underlying_type, const type_range& range) {
 		assert(_fstype_info.size() == _name_to_type.size());
 		assert(_fstype_info.size() == _fstype_objects.size());
-		assert(_fstype_info.size() == _type_ranges.size());
 
 		TypeIdx id = _fstype_info.size();
 		_name_to_type.insert(std::make_pair(name, id));
 		_fstype_objects.push_back(std::vector<object_id>()); // Push back an empty vector
-
-
-
-		_fstype_info.push_back(FSTypeInfo(id, name, underlying_type));
+		_fstype_info.push_back(FSTypeInfo(id, name, underlying_type, range));
 
 		return id;
 	}
@@ -244,10 +238,6 @@ private:
 		return _fstype_objects.at(fstype);
 	}
 
-
-
-	//! The bounds of bounded types, e.g. bounded integer types
-	std::vector<type_range> _type_ranges;
 
 	//! Map between predicate and function symbols names and IDs.
 	std::unordered_map<std::string, SymbolIdx> symbolIds;
