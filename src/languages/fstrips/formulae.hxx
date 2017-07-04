@@ -365,58 +365,58 @@ class EQAtomicFormula : public RelationalFormula {
 public:
 	EQAtomicFormula(const std::vector<const Term*>& subterms);
 
-	EQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new EQAtomicFormula(subterms); }
+	EQAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new EQAtomicFormula(subterms); }
 
-	virtual Symbol symbol() const { return Symbol::EQ; }
+	Symbol symbol() const override { return Symbol::EQ; }
 };
 
 class NEQAtomicFormula : public RelationalFormula {
 public:
 	NEQAtomicFormula(const std::vector<const Term*>& subterms);
 
-	NEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new NEQAtomicFormula(subterms); }
+	NEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new NEQAtomicFormula(subterms); }
 
-	Symbol symbol() const { return Symbol::NEQ; }
+	Symbol symbol() const override { return Symbol::NEQ; }
 };
 
 class LTAtomicFormula : public RelationalFormula {
 public:
 	LTAtomicFormula(const std::vector<const Term*>& subterms);
 
-	LTAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new LTAtomicFormula(subterms); }
+	LTAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new LTAtomicFormula(subterms); }
 
-	Symbol symbol() const { return Symbol::LT; }
+	Symbol symbol() const override { return Symbol::LT; }
 };
 
 class LEQAtomicFormula : public RelationalFormula {
 public:
 	LEQAtomicFormula(const std::vector<const Term*>& subterms);
 
-	LEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new LEQAtomicFormula(subterms); }
+	LEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new LEQAtomicFormula(subterms); }
 
-	Symbol symbol() const { return Symbol::LEQ; }
+	Symbol symbol() const override { return Symbol::LEQ; }
 
-    virtual std::vector< RelationalFormula* > relax( const Constant& slack ) const override;
+    std::vector< RelationalFormula* > relax( const Constant& slack ) const override;
 };
 
 class GTAtomicFormula : public RelationalFormula {
 public:
 	GTAtomicFormula(const std::vector<const Term*>& subterms);
 
-	GTAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new GTAtomicFormula(subterms); }
+	GTAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new GTAtomicFormula(subterms); }
 
-	Symbol symbol() const { return Symbol::GT; }
+	Symbol symbol() const override { return Symbol::GT; }
 };
 
 class GEQAtomicFormula : public RelationalFormula {
 public:
 	GEQAtomicFormula(const std::vector<const Term*>& subterms);
 
-	GEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const { return new GEQAtomicFormula(subterms); }
+	GEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new GEQAtomicFormula(subterms); }
 
-	Symbol symbol() const { return Symbol::GEQ; }
+	Symbol symbol() const override { return Symbol::GEQ; }
 
-    virtual std::vector< RelationalFormula* > relax( const Constant& slack ) const override;
+    std::vector< RelationalFormula* > relax( const Constant& slack ) const override;
 };
 
 //! Check that all the given formulas are atomic
