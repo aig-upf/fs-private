@@ -449,6 +449,8 @@ public:
 		for (NodePT node:seed_nodes) {
 			// We ignore s0
 			while (node->has_parent()) {
+			  
+			 // std::cout << node->state << std::endl;
 				
 				// If the node has already been processed, no need to do it again, nor to process the parents,
 				// which will necessarily also have been processed.
@@ -505,7 +507,7 @@ public:
 		  AtomIdx holding_o = _obj_to_holding_tuple_idx.at(obj); // the tuple "holding(o)"
 
 		  NodePT& node = _tuple_to_node.at(holding_o);
-		  if(node != nullptr) {//We have a goal node fot atom holding(o)
+		  if(node != nullptr) {//We have a goal node for atom holding(o)
 		    flag_relevant_no_good_atoms(node, _relevant_no_good_atoms);//Node contains the plan from s0 to holding(o)
 		     _subgoals_path.push_back(node);
 		  }
@@ -652,6 +654,8 @@ public:
 	  const AtomIndex& index = Problem::getInstance().get_tuple_index();
 	  const ProblemInfo& info = ProblemInfo::getInstance();
 
+	  
+		std::cout << "Size: " << _subgoals_path.size() << std::endl;
 		std::vector<bool> subgoals_R_G = mark_all_atoms_in_path_to_subgoal(_subgoals_path);
 		unsigned subgoals_R_G_size = std::count(subgoals_R_G.begin(), subgoals_R_G.end(), true);
 
@@ -705,14 +709,21 @@ public:
   		run(seed, _config._max_width);
 		compute_no_good_atoms();
 		report_simulation_stats(simt0);
+		std::vector<bool> R_G;
+		
+		
 		
 		if (_config._goal_directed && _unreached.size() == 0) {
 			LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
-			return extract_R_G_1();
+			R_G = extract_R_G_1();
 		}
 		
 		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
-		return extract_R_1();
+		else R_G = extract_R_1();
+		
+		extend_R_G(R_G);
+		
+		return R_G;
 	}
 	
 	std::vector<bool> extract_R_1() {

@@ -23,17 +23,20 @@ struct unachieved_subgoals_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
 	  
 	  
-		/*std::cout << n1->unachieved_subgoals << "/" <<  n2->unachieved_subgoals << std::endl;
-		std::cout << "---" << std::endl;
-		std::cout << n1->original_unachieved_subgoals << "/" << n2->original_unachieved_subgoals << std::endl;*/
+	 // std::cout << *n1 << std::endl;
+	 // std::cout <<  *n2 << std::endl;
+		/*std::cout << "---" << std::endl;
+		std::cout << n1->unachieved_subgoals << "/" <<  n2->unachieved_subgoals << std::endl;
+		std::cout << n1->original_unachieved_subgoals << "/" << n2->original_unachieved_subgoals << std::endl;
+		std::cout << "---" << std::endl;*/
 
 	  	//#g' = #g + 2* #c + 1 if held
-	   	//if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
- 		//if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+	   	if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+ 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
  		
  		//#g
-		if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
- 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
+		//if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
+ 		//if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		if (n1->w_g == Novelty::One && n2->w_g != Novelty::One) return false;
@@ -47,16 +50,16 @@ template <typename NodePT>
 struct novelty_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
 	  
-	  
-		std::cout << "entra" << std::endl;
-	  
+	  	  
+
 	  
 		if (n1->w_g_num > n2->w_g_num) return true;
 		if (n1->w_g_num < n2->w_g_num) return false;
-		//if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
- 		//if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
-		if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
- 		if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
+		
+		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
+ 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
+		//if (n1->original_unachieved_subgoals > n2->original_unachieved_subgoals) return true;
+ 		//if (n1->original_unachieved_subgoals < n2->original_unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
 		if (n1->g < n2->g) return false;
 		return n1->_gen_order > n2->_gen_order;
@@ -179,7 +182,7 @@ public:
 	}
 
 	bool decreases_unachieved_subgoals() const {
-		return (!has_parent() || unachieved_subgoals < parent->unachieved_subgoals);
+		return (!has_parent() || original_unachieved_subgoals < parent->original_unachieved_subgoals);
 	}
 };
 
@@ -318,9 +321,9 @@ public:
 		//unsigned new_r = hash + c_counter;
 		//std::cout << "r' = " << new_r << " ";
 		//std::cout << "wgr2: R(s)  (#=" << node._relevant_atoms->getHelper()._num_relevant << ") ";
-		unsigned c_counter = compute_g_c(node);
+		//unsigned c_counter = compute_g_c(node);
 		
-		node.unachieved_subgoals = node.original_unachieved_subgoals + c_counter;
+		//node.unachieved_subgoals = node.original_unachieved_subgoals + c_counter;
 		//std::cout << node.unachieved_subgoals << " = " << node.original_unachieved_subgoals << " + " << c_counter << std::endl;
 		
 		/*if(node.unachieved_subgoals == 1) {
@@ -434,6 +437,8 @@ public:
 	  unsigned counter = 2*c;
 	  if(held)
 	    counter++;
+	  
+	 //std::cout << "Counter: " <<  counter << std::endl;;
 	  	  
 	  return counter;
 	  
@@ -586,7 +591,7 @@ public:
 			std::cout << "Relevant before clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			clean_relevant_atoms(relevant);
 			std::cout << "Relevant after clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
-			//remove_relevant_atoms(relevant);
+			remove_relevant_atoms(relevant);
 			std::cout << "Relevant after remove: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
 			
 			print_R(relevant);
@@ -772,7 +777,7 @@ public:
 		}
 		
 		const unsigned num_subgoals = model.num_subgoals();
-		unsigned expected_R_size = 10; // TODO ???? What value expected for |R|??
+		unsigned expected_R_size = 10; // TODO ???? What value expected for |R|?? and for |C|?
 		const unsigned num_atoms = atomidx.size();
 		
 		float size_novelty2_table = ((float) num_atoms*(num_atoms-1)+num_atoms) / (1024*1024*8.);
@@ -793,13 +798,14 @@ public:
 
 	bool search(const StateT& s, PlanT& plan) {
 		NodePT root = std::make_shared<NodeT>(s, ++_generated);
+		_heuristic.compute_R(*root);
+
 		create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 		
 		
 		// Force one simulation from the root node and abort the search
-//  		_heuristic.compute_R(*root);
-// 		return false;
+ 		//return false;
 		
 		
 		// The main search loop
@@ -813,11 +819,46 @@ public:
 	}
 
 protected:
+  
+  
+  
+      bool check_node(NodeT& node, Atom atom, unsigned g_prime) {
+	
+	std::cout << "Checking node" << std::endl;
+	if(node.state.contains(atom) && g_prime == 1) {
+	  std::cout << node << std::endl;
+	  std::cout << node.state << std::endl;
+
+	  if(node.has_parent()) {
+	    print_parent(*(node.parent));
+	  }
+
+	  
+	  return true;
+	}
+	  return false;
+	
+	
+      }
+      
+      void print_parent(NodeT& node) {
+	
+	  std::cout << node << std::endl;
+	  std::cout << node.state << std::endl;	
+	  
+	  if(node.has_parent())
+	    print_parent(*(node.parent));
+	
+	
+      }
 
 
 	//! Process one node from some of the queues, according to their priorities
 	//! Returns true if some action has been performed, false if all queues were empty
 	bool process_one_node() {
+	  
+	  	  const ProblemInfo& info = ProblemInfo::getInstance();
+
 		///// Q1 QUEUE /////
 		// First process nodes with w_{#g}=1
 		if (!_q1.empty()) {
@@ -837,12 +878,25 @@ protected:
 			// has already been processed, for the sake of complying with the proper definition of novelty.
 			unsigned nov = _heuristic.evaluate_wgr1(*node);
 			
+			//Check first node with #g'= 1 and #r
+			unsigned g_prime = node->unachieved_subgoals;
+			VariableIdx confa_var = info.getVariableId("confa(rob)");
+			ObjectIdx ca0 = info.getObjectId("ca0");
+			Atom atom(confa_var, ca0);
+			//check_node(*node, atom, g_prime);
+			  //exit(1);
+			
+
+			
+			
+			
+			
 			if (!node->_processed) {
 				if (nov == 1) {
 					_stats.wgr1_node();
 					process_node(node);	 
 				} else {
-					handle_unprocessed_node(node, (_novelty_levels == 2));
+					//handle_unprocessed_node(node, (_novelty_levels == 2));
 				}
 			} 		
 
@@ -863,9 +917,9 @@ protected:
 			if (!node->_processed) {
 				if (nov == 2) { // i.e. the node has exactly w_{#, #r} = 2
 					_stats.wgr2_node();
-					//process_node(node);
+					process_node(node);
 				} else {
-					//handle_unprocessed_node(node, true);
+					handle_unprocessed_node(node, true);
 				}
 			}
 
@@ -881,7 +935,7 @@ protected:
 			NodePT node = _qrest.next();
 			if (!node->_processed) {
 				_stats.wgr_gt2_node();
-				//process_node(node);
+				process_node(node);
 			}
 			return true;
 		}
@@ -914,6 +968,10 @@ protected:
 		//std::cout << "Create node" << std::endl;
 		//std::cout << _heuristic.compute_g_c(*node) << std::endl;
 		//node->unachieved_subgoals = node->original_unachieved_subgoals + _heuristic.compute_g_c(*node);
+		
+		
+		node->unachieved_subgoals = node->original_unachieved_subgoals + _heuristic.compute_g_c(*node);
+		//std::cout  << node->unachieved_subgoals << " = " << node->original_unachieved_subgoals << " + " << _heuristic.compute_g_c(*node) << std::endl;
 		
 		
 		if (node->original_unachieved_subgoals < _min_subgoals_to_reach) {
