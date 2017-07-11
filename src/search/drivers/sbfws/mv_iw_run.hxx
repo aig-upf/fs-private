@@ -343,8 +343,8 @@ public:
 				const StateT& state = node->state;
                 const FeatureSetT& phi = _evaluator.feature_set();
                 typename SimEvaluatorT::ValuationT phi_S = phi.evaluate(state);
-                for ( auto v : phi_S )
-                    tuples.insert(v);
+                for ( unsigned k = 0; k < phi_S.size(); k++ )
+                    tuples.insert(Width1Tuple(k,phi_S[k]));
 
 				node = node->parent;
 			}
@@ -423,7 +423,7 @@ public:
 		std::vector<Width1Tuple> R = _evaluator.reached_tuples();
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 		if (_verbose) {
-			unsigned c = std::count(R.begin(), R.end(), true);
+			unsigned c = R.size();
 			LPT_INFO("cout", "Simulation - |R[1]| = " << c);
 			_stats.relevant_atoms(c);
 		}
@@ -441,7 +441,7 @@ public:
 		if (_unreached.size() == 0) {
 			std::vector<NodePT> seed_nodes = extract_seed_nodes();
 			std::unordered_set<Width1Tuple,Width1TupleHasher> R_G = mark_all_tuples_in_path_to_subgoal(seed_nodes);
-			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+			unsigned R_G_size = R_G.size();
 			LPT_INFO("cout", "Simulation - IW(1) run reached all goals");
 			LPT_INFO("cout", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			_stats.relevant_atoms(R_G_size);
@@ -470,7 +470,7 @@ public:
 		if (_unreached.size() == 0) {
 			std::vector<NodePT> seed_nodes = extract_seed_nodes();
 			std::unordered_set<Width1Tuple,Width1TupleHasher> R_G = mark_all_tuples_in_path_to_subgoal(seed_nodes);
-			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+			unsigned R_G_size = R_G.size();
 			LPT_INFO("cout", "Simulation - IW(2) run reached all goals");
 			LPT_INFO("cout", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			_stats.relevant_atoms(R_G_size);
@@ -533,7 +533,7 @@ public:
 		std::unordered_set<Width1Tuple,Width1TupleHasher> R_G;
 		mark_tuples_in_path_to_subgoal(seed_nodes, R_G);
 
-		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+		unsigned R_G_size = R_G.size();
 		if (_verbose) {
 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 
@@ -556,9 +556,9 @@ public:
 
 	std::vector<Width1Tuple> extract_R_G_1() {
 		std::vector<NodePT> seed_nodes = extract_seed_nodes();
-		std::vector<Width1Tuple> R_G = mark_all_tuples_in_path_to_subgoal(seed_nodes);
+		std::unordered_set<Width1Tuple,Width1TupleHasher> R_G = mark_all_tuples_in_path_to_subgoal(seed_nodes);
 
-		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
+		unsigned R_G_size = R_G.size();
 		if (_verbose) {
 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 		}
