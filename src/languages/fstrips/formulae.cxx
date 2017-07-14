@@ -58,8 +58,9 @@ RelationalFormula::_satisfied(const object_id& lhs, const object_id& rhs) const 
 	}
 
 	if (o_type(lhs) != type_id::int_t && o_type(lhs) != type_id::float_t ) {
-		if (o_type(lhs) == type_id::object_t) {
-			// MRJ: Handle equality and inequality for object_t
+		if (o_type(lhs) == type_id::object_t || o_type(lhs) == type_id::bool_t) {
+			// MRJ: Handle equality and inequality for object_t and
+			// bool_t
 			if ( symbol() == AFSymbol::EQ ) return lhs == rhs;
 			if ( symbol() == AFSymbol::NEQ ) return lhs != rhs;
 		}
