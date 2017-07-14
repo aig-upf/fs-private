@@ -145,6 +145,9 @@ public:
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const RelevantAtomSet& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const {
+		if (_helper._relevant.size() == 0 )
+			return os << "{ }";
+
 		const AtomIndex& atomidx = _helper._atomidx;
 
 		os << "{";
