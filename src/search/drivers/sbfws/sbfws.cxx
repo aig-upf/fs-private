@@ -48,9 +48,6 @@ SBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& conf
 		using FeatureEvaluatorT = lapkt::novelty::GenericFeatureSetEvaluator<StateT>;
 		return do_search1<IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, selector.select(), config, out_dir, start_time);
 	}
-
-	if (config.getOption<bool>(""))
-
 	if (config.getOption<bool>("bfws.extra_features", false)) {
 		FeatureSelector<StateT> selector(ProblemInfo::getInstance());
 
