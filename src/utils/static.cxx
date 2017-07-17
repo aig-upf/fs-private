@@ -25,7 +25,17 @@ StaticExtension::load_static_extension(const std::string& name, const ProblemInf
 	StaticExtension* extension = nullptr;
 
 	if (arity == 0) {
-		extension = new ZeroaryFunction(Serializer::deserialize0AryElement(filename, sym_signature_types));
+		if ( type == SymbolData::Type::PREDICATE ) {
+			std::ifstream is(filename);
+			if (is.fail()) // MRJ: File does not exist
+				extension = new ZeroaryFunction( make_object(false) );
+			else
+				extension = new ZeroaryFunction( make_object(true) );
+		}
+		else {
+			extension = new ZeroaryFunction(Serializer::deserialize0AryElement(filename, sym_signature_types));
+		}
+
 
 	} else if (arity == 1) {
 		if (type == SymbolData::Type::PREDICATE) extension = new UnaryPredicate(Serializer::deserializeUnarySet(filename, sym_signature_types));
