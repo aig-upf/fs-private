@@ -103,7 +103,11 @@ static ExitCode do_search(SearchAlgorithmT& engine, const StateModelT& model, co
 	if (solved) {
 		if (!valid) {
 			Checker::print_plan_execution(problem, plan, problem.getInitialState());
+			#ifdef DEBUG
+			LPT_INFO("cout", "WARNING: The plan output by the planner is not correct!");
+			#else
 			throw std::runtime_error("The plan output by the planner is not correct!");
+			#endif
 		}
 		LPT_INFO("cout", "Search Result: Found plan of length " << plan.size());
 
