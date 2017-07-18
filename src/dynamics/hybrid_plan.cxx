@@ -5,6 +5,9 @@
 #include <applicability/formula_interpreter.hxx>
 #include <applicability/action_managers.hxx>
 #include <lapkt/tools/logging.hxx>
+#include <actions/checker.hxx>
+
+// For writing the traces
 #include <cstdio>
 #include <lib/rapidjson/rapidjson.h>
 #include <lib/rapidjson/filewritestream.h>
@@ -23,6 +26,18 @@ namespace fs0 { namespace dynamics {
     }
 
     void
+    HybridPlan::interpret_plan( const ActionPlan& plan) {
+
+        return interpret_plan(Checker::transform(Problem::getInstance(), plan));
+    }
+
+    void
+    HybridPlan::interpret_plan(const std::vector<LiftedActionID>& plan) {
+        return interpret_plan(Checker::transform(Problem::getInstance(), plan));
+    }
+
+
+    void
     HybridPlan::interpret_plan( const std::vector<const GroundAction*>& plan ) {
         // Flush plan and trajectory
         _the_plan.clear();
@@ -36,7 +51,7 @@ namespace fs0 { namespace dynamics {
     	NaiveApplicabilityManager manager(problem.getStateConstraints());
     	// First we make sure that the whole plan is applicable
     	State state(problem.getInitialState());
-        VariableIdx time_var_idx = info.getVariableId("clock_time");
+        VariableIdx time_var_idx = info.getVariableId("clock_time()");
         unsigned control_count = 0, exo_count = 0;
 
     	for (const GroundAction* action : plan) {
@@ -97,7 +112,7 @@ namespace fs0 { namespace dynamics {
         const Problem& problem = Problem::getInstance();
         const GroundAction* wait_action = problem.get_wait_action();
         const ProblemInfo& info = ProblemInfo::getInstance();
-        VariableIdx time_var_idx = info.getVariableId("clock_time");
+        VariableIdx time_var_idx = info.getVariableId("clock_time()");
 
         LPT_INFO( "simulation", "Starting plan Simulation");
         LPT_INFO( "simulation", "Duration: " << get_duration() << " time units");
@@ -130,7 +145,7 @@ namespace fs0 { namespace dynamics {
                 cfg.setDiscretizationStep(old_step);
 
                 s = tmp;
-                _trajectory.push_back( s );
+                _trajectory.push_back( tmp );
                 H -=h;
                 time_left -= h;
             }
@@ -147,12 +162,14 @@ namespace fs0 { namespace dynamics {
 
             if ( a == nullptr ) {
                 LPT_INFO("simulation", "Simulation finished, states in trajectory: " << _trajectory.size());
+                LPT_INFO( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
                 restore_simulation_settings();
                 return;
             }
             auto next = std::make_shared<State>(*s);
-            next->accumulate(NaiveApplicabilityManager::computeEffects(*s, *wait_action));
+            next->accumulate(NaiveApplicabilityManager::computeEffects(*s, *a));
             s = next;
+            LPT_INFO("simulation", "Action applied: " << *s );
             float t2;
             if ( i < _the_plan.size() - 1 ) {
                 // Numeric integration of dynamics
@@ -172,16 +189,17 @@ namespace fs0 { namespace dynamics {
 
                 auto tmp = std::make_shared<State>(*s);
                 tmp->accumulate(NaiveApplicabilityManager::computeEffects(*s, *wait_action));
-
+                LPT_INFO("simulation", *s);
                 cfg.setDiscretizationStep(old_step);
 
                 s = tmp;
-                _trajectory.push_back( s );
+                _trajectory.push_back( tmp );
                 H -=h;
                 time_left -= h;
             }
     	}
-        LPT_INFO( "simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
+        LPT_INFO("simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
+        LPT_INFO( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
         restore_simulation_settings();
     }
 
@@ -252,10 +270,12 @@ namespace fs0 { namespace dynamics {
                         Value name;
                         name.SetString( StringRef( info.getVariableName(x).c_str() ));
                         Value value;
-                        value.SetString(StringRef(info.object_name(s->getValue(x)).c_str()));
+                        std::string _literal = info.object_name(s->getValue(x));
+                        value.SetString( _literal.c_str(), _literal.size(), allocator ) ;
                         state.AddMember( name, value.Move(), allocator );
                     }
                 }
+                trajectory.PushBack(state.Move(), allocator);
             }
         }
         trace.AddMember("trajectory", trajectory, allocator);

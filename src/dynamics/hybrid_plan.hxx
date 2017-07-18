@@ -7,7 +7,11 @@
 #include <actions/actions.hxx>
 #include <utils/config.hxx>
 
-namespace fs0 { namespace dynamics {
+namespace fs0 {
+
+    class LiftedActionID;
+
+namespace dynamics {
 
     /**
         This class encapsulates a hybrid plan, decoupling its
@@ -31,6 +35,10 @@ namespace fs0 { namespace dynamics {
         ~HybridPlan();
 
         void interpret_plan( const std::vector<const GroundAction*>& plan  );
+
+        void interpret_plan(const ActionPlan& plan);
+
+        void interpret_plan(const std::vector<LiftedActionID>& plan);
 
         float get_duration() const { return std::get<0>(_the_plan.back());}
 
