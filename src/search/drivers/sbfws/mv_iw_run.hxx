@@ -396,9 +396,12 @@ public:
 		float simt0 = aptk::time_used();
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
-
-		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
-		return extract_R_G(true);
+		if (_config._goal_directed && _unreached.size() == 0) {
+			LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
+			return extract_R_G(false);
+		}
+		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
+		return extract_R_1();
 	}
 
 
@@ -426,6 +429,19 @@ public:
 			unsigned c = R.size();
 			LPT_INFO("cout", "Simulation - |R[1]| = " << c);
 			_stats.relevant_atoms(c);
+			for ( unsigned k = 0; k < R.size(); k++ ) {
+				auto f = R[k];
+				VariableIdx x;
+				int v;
+				std::tie(x,v) = f;
+				const ProblemInfo& info = ProblemInfo::getInstance();
+				std::cout << "[\"" << info.getVariableName(x) << "\"";
+				std::cout << ", " << info.object_name(make_object(info.sv_type(x), v)) << "]";
+				if ( k < R.size() -1 )
+					std::cout << ",";
+				std::cout << std::endl;
+			}
+
 		}
 		return R;
 	}
@@ -467,18 +483,18 @@ public:
 		report_simulation_stats(simt0);
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 
-		if (_unreached.size() == 0) {
-			std::vector<NodePT> seed_nodes = extract_seed_nodes();
-			std::unordered_set<Width1Tuple,Width1TupleHasher> R_G = mark_all_tuples_in_path_to_subgoal(seed_nodes);
-			unsigned R_G_size = R_G.size();
+		if (_unreached.size() != 0 )
+			LPT_INFO("cout", "Simulation - IW(2) run did not reach all goals");
+		if (_unreached.empty())
 			LPT_INFO("cout", "Simulation - IW(2) run reached all goals");
-			LPT_INFO("cout", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
-			_stats.relevant_atoms(R_G_size);
-			return std::vector<Width1Tuple>(R_G.begin(),R_G.end());
-		}
 
-		LPT_INFO("cout", "Simulation - IW(2) run did not reach all goals, falling back to R=R_all");
-		return compute_R_all();
+		std::vector<NodePT> seed_nodes = extract_seed_nodes();
+		std::unordered_set<Width1Tuple,Width1TupleHasher> R_G = mark_all_tuples_in_path_to_subgoal(seed_nodes);
+		unsigned R_G_size = R_G.size();
+
+		LPT_INFO("cout", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+		_stats.relevant_atoms(R_G_size);
+		return std::vector<Width1Tuple>(R_G.begin(),R_G.end());
 	}
 
 
@@ -506,7 +522,7 @@ public:
 		report_simulation_stats(simt0);
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 
-		return extract_R_G(true);
+		return extract_R_G(false);
 	}
 
 	//! Extracts the goal-oriented set of relevant atoms after a simulation run
