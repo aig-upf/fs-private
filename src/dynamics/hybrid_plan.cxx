@@ -211,9 +211,18 @@ namespace fs0 { namespace dynamics {
     void
     HybridPlan::save_simulation_trace( std::string filename ) {
         /* code */
+        const ProblemInfo& info = ProblemInfo::getInstance();
         Document trace;
         Document::AllocatorType& allocator = trace.GetAllocator();
         trace.SetObject();
+        Value domainName;
+        domainName.SetString(StringRef(info.getDomainName().c_str()));
+        trace.AddMember("domain", domainName.Move(), allocator );
+        Value instanceName;
+        instanceName.SetString(StringRef(info.getInstanceName().c_str()));
+        trace.AddMember("instance", instanceName.Move(), allocator );
+
+
         Value duration( get_duration() );
         trace.AddMember("duration", duration, allocator );
 
@@ -259,7 +268,7 @@ namespace fs0 { namespace dynamics {
         }
         trace.AddMember("exo_events", exo_events, allocator);
 
-        const ProblemInfo& info = ProblemInfo::getInstance();
+
 
         Value trajectory(kArrayType);
         {
