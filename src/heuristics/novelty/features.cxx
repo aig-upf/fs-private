@@ -72,6 +72,22 @@ std::ostream& ConditionSetFeature::print(std::ostream& os) const {
 	return os << "UNIMPLEMENTED";
 }
 
+SquaredErrorFeature::SquaredErrorFeature()
+	: ConditionSetFeature() {
+	_codomain = type_id::float_t;
+}
+
+void
+SquaredErrorFeature::addCondition(const fs::Formula* condition) {
+	ConditionSetFeature::addCondition(condition);
+	_error.addCondition(condition);
+}
+
+FSFeatureValueT
+SquaredErrorFeature::evaluate( const State& s ) const {
+	return fs0::raw_value<FSFeatureValueT>( make_object(_error.measure(s)) );
+}
+
 ArbitraryTermFeature::~ArbitraryTermFeature() {
 	delete _term;
 }

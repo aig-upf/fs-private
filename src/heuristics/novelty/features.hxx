@@ -2,6 +2,7 @@
 #pragma once
 
 #include <lapkt/novelty/features.hxx>
+#include <heuristics/error_signal.hxx>
 #include <fs_types.hxx>
 #include <state.hxx>
 #include <memory>
@@ -45,22 +46,33 @@ protected:
 class ConditionSetFeature : public Feature {
 public:
 	ConditionSetFeature();
-	~ConditionSetFeature();
+	virtual ~ConditionSetFeature();
 
 	// we can use the default copy constructor, as formula pointers are NOT owned by this class
 	ConditionSetFeature(const ConditionSetFeature&) = default;
 
 	virtual lapkt::novelty::NoveltyFeature<State>* clone() const override { return new ConditionSetFeature(*this); }
 
-	void addCondition(const fs::Formula* condition);
+	virtual void addCondition(const fs::Formula* condition);
 
-	FSFeatureValueT evaluate(const State& s) const override;
+	virtual FSFeatureValueT evaluate(const State& s) const override;
 
 	std::ostream& print(std::ostream& os) const override;
 protected:
 	// formula pointers are NOT owned by this class
 	std::vector<const fs::Formula*> _conditions;
 
+};
+
+class SquaredErrorFeature : public ConditionSetFeature {
+public:
+	SquaredErrorFeature();
+
+	void 								addCondition(const fs::Formula* condition) override;
+	FSFeatureValueT 					evaluate(const State& s) const override;
+	const hybrid::SquaredErrorSignal&	error_signal() const { return _error; }
+protected:
+	hybrid::SquaredErrorSignal	_error;
 };
 
 //! A feature representing the value of any arbitrary language term, e.g. X+Y, or @proc(Y,Z)

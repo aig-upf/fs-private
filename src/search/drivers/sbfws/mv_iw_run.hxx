@@ -18,6 +18,7 @@
 #include <lapkt/novelty/features.hxx>
 #include <lapkt/tools/resources_control.hxx>
 #include <lapkt/tools/logging.hxx>
+#include <heuristics/novelty/features.hxx>
 
 namespace fs0 { namespace bfws {
 
@@ -429,14 +430,39 @@ public:
 			unsigned c = R.size();
 			LPT_INFO("cout", "Simulation - |R[1]| = " << c);
 			_stats.relevant_atoms(c);
+			// MRJ: Temporary measure to be able to take a good peek into what is being
+			// collected by the R-set
 			for ( unsigned k = 0; k < R.size(); k++ ) {
 				auto f = R[k];
-				VariableIdx x;
+				unsigned j;
 				int v;
-				std::tie(x,v) = f;
+				std::tie(j,v) = f;
 				const ProblemInfo& info = ProblemInfo::getInstance();
-				std::cout << "[\"" << info.getVariableName(x) << "\"";
-				std::cout << ", " << info.object_name(make_object(info.sv_type(x), v)) << "]";
+				auto phi = dynamic_cast<const Feature*>(_evaluator.feature_set().at(j));
+
+				// MRJ: State variable features always come first
+
+				auto scope = phi->scope();
+				if (scope.empty()) continue; // Scope not available for this feature
+				std::cout << "[";
+				if ( scope.size() == 1 ) {
+					std::cout << "\"";
+					std::cout << info.getVariableName(scope[0]);
+					std::cout << "\"";
+				} else {
+					std::cout << "[";
+					for ( unsigned l = 0; l < scope.size(); l++ ) {
+						std::cout << "\"";
+						std::cout << info.getVariableName(scope[l]);
+						std::cout << "\"";
+
+						if ( l < scope.size() - 1)
+							std::cout << ",";
+					}
+					std::cout << "]";
+				}
+
+				std::cout << ", " << info.object_name(make_object(phi->codomain(), v)) << "]";
 				if ( k < R.size() -1 )
 					std::cout << ",";
 				std::cout << std::endl;
