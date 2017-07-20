@@ -1,4 +1,4 @@
-# This SConstruct file is automatically moved to the directory where the generated 
+# This SConstruct file is automatically moved to the directory where the generated
 # instance-specific problem data resides during the process of generating the executable solver.
 
 import os
@@ -54,7 +54,7 @@ else:
 include_paths = ['.', env['fs'] + '/src', lapkt2_header_dir]
 isystem_paths = [HOME + '/local/include']
 lib_paths = [env['fs'] + '/lib', lapkt2_lib_dir, HOME + '/local/lib']
-    
+
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
 env.Append(CCFLAGS = ['-isystem' + os.path.abspath(p) for p in isystem_paths])
 
@@ -83,7 +83,15 @@ gecode_libs = [
 	'gecodekernel',
 	'gecodesupport'
 ]
-env.Append( LIBS = gecode_libs + ['pthread'])
+
+# Add Soplex libraries
+soplex_libs = [
+	'soplex',
+	'gmp',
+	'z'
+]
+
+env.Append( LIBS = gecode_libs + soplex_libs+ ['pthread'])
 
 env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
 
