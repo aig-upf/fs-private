@@ -69,13 +69,13 @@ SimpleStateModel::goal(const StateT& state) const {
 }
 
 bool
-SimpleStateModel::is_applicable(const StateT& state, const ActionId& action) const {
-	return is_applicable(state, *(_task.getGroundActions()[action]));
+SimpleStateModel::is_applicable(const StateT& state, const ActionId& action, bool enforce_state_constraints) const {
+	return is_applicable(state, *(_task.getGroundActions()[action]), enforce_state_constraints);
 }
 
 bool
-SimpleStateModel::is_applicable(const StateT& state, const ActionType& action) const {
-	return _manager->applicable(state, action);
+SimpleStateModel::is_applicable(const StateT& state, const ActionType& action, bool enforce_state_constraints) const {
+	return _manager->applicable(state, action, enforce_state_constraints);
 }
 
 SimpleStateModel::StateT
@@ -88,7 +88,7 @@ SimpleStateModel::next(const StateT& state, const GroundAction& a) const {
 	a.apply(state,_effects_cache);
 	StateT succ(state, _effects_cache); // Copy everything into the new state and apply the changeset
 	LPT_EDEBUG("generated", "New state generated: " << succ);
-	return succ;	
+	return succ;
 }
 
 bool
@@ -102,8 +102,8 @@ SimpleStateModel::goal(const StateT& s, unsigned i) const {
 
 
 GroundApplicableSet
-SimpleStateModel::applicable_actions(const StateT& state) const {
-	return _manager->applicable(state);
+SimpleStateModel::applicable_actions(const StateT& state, bool enforce_state_constraints) const {
+	return _manager->applicable(state, enforce_state_constraints);
 }
 
 ActionManagerI*
@@ -116,7 +116,7 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 	StrategyT strategy = config.getSuccessorGeneratorType();
 
 	LPT_INFO( "cout", "Ground actions: " << actions.size());
-	
+
 	if (strategy == StrategyT::adaptive) {
 		// Choose match-tree if number of actions is large enough, otherwise naive.
 		unsigned cutoff = config.getOption<unsigned>("mt_cutoff", 20000);
@@ -129,7 +129,7 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 			LPT_INFO("cout", "Chose Naive as Successor Generator (" << actions.size() << " <= " << cutoff << ")");
 		}
 	}
-	
+
 	if (strategy == StrategyT::naive) {
 		LPT_INFO( "cout", "Successor Generator: Naive");
 		return new NaiveActionManager(actions, constraints);
@@ -146,7 +146,7 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 		const StateAtomIndexer& indexer = problem.getStateAtomIndexer();
 		if (!indexer.is_fully_binary()) {
 			throw std::runtime_error("Successor Generation Strategy: Match Tree: Variable domains not binary.");
-		}		
+		}
 		LPT_INFO( "cout", "Successor Generator: Match Tree");
 		LPT_INFO("cout", "Mem. usage before match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 

@@ -685,7 +685,7 @@ public:
 				// Expand the node
 				update_novelty_counters_on_expansion(current->_w);
 
-				for (const auto& a : _model.applicable_actions(current->state)) {
+				for (const auto& a : _model.applicable_actions(current->state, false)) {
 					StateT s_a = _model.next( current->state, a );
 					NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 

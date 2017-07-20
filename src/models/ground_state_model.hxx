@@ -33,10 +33,13 @@ public:
 	bool goal(const State& state) const;
 
 	//! Returns applicable action set object
-	GroundApplicableSet applicable_actions(const State& state) const;
+	GroundApplicableSet applicable_actions(const State& state, bool enforce_state_constraints) const;
+	GroundApplicableSet applicable_actions(const State& state) const {
+		return applicable_actions(state,true);
+	}
 
-	bool is_applicable(const State& state, const ActionType& action) const;
-	bool is_applicable(const State& state, const ActionId& action) const;
+	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;
+	bool is_applicable(const State& state, const ActionId& action, bool enforce_state_constraints) const;
 
 	//! Returns the state resulting from applying the given action action on the given state
 	State next(const State& state, const GroundAction::IdType& id) const;
@@ -45,7 +48,7 @@ public:
 	const Problem& getTask() const { return _task; }
 
 	unsigned get_action_idx(const ActionId& action) const { return static_cast<unsigned>(action); }
-	
+
 	static ActionManagerI* build_action_manager(const Problem& problem);
 
 protected:

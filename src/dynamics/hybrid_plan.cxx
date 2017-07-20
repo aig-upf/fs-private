@@ -55,7 +55,7 @@ namespace fs0 { namespace dynamics {
         unsigned control_count = 0, exo_count = 0;
 
     	for (const GroundAction* action : plan) {
-    		if (!manager.isApplicable(state, *action))
+    		if (!manager.isApplicable(state, *action, true))
                 throw std::runtime_error( "HybridPlan::interpret_plan(): Plan is not valid (ground action not applicable!)");
             // Record time and action if it is not the wait action
             if ( action != problem.get_wait_action() ) {

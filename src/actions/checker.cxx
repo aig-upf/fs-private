@@ -25,7 +25,7 @@ bool Checker::check_correctness(const Problem& problem, const std::vector<const 
 	State state(s0);
     if (print_plan_trace) LPT_INFO("plan_trace", "s=" <<  state);
 	for (const GroundAction* action:plan) {
-		if (!manager.isApplicable(state, *action)) return false;
+		if (!manager.isApplicable(state, *action, true)) return false;
         if (print_plan_trace) LPT_INFO("plan_trace", "a=" <<  action);
 		state.accumulate(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms
         if (print_plan_trace) LPT_INFO("plan_trace", "s=" <<  state);
@@ -72,7 +72,7 @@ void Checker::print_plan_execution(const Problem& problem, const std::vector<con
 		std::cout << std::setw(3) << i;
 		std::cout << ". " << *action << std::endl << std::endl;
 
-		if (!manager.isApplicable(state, *action)) {
+		if (!manager.isApplicable(state, *action, true)) {
 			std::cout << "ERROR! Action is NOT applicable on the previous state" << std::endl;
 		}
 		state.accumulate(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms

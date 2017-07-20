@@ -15,7 +15,7 @@
 std::vector<const fs::Formula*>
 obtain_goal_atoms(const fs::Formula* goal) {
 	std::vector<const fs::Formula*> goal_atoms;
-	
+
 	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
 	if (!conjunction) {
 		goal_atoms.push_back(goal);
@@ -24,7 +24,7 @@ obtain_goal_atoms(const fs::Formula* goal) {
 		for (const fs::Formula* atom:conjunction->getSubformulae()) {
 			goal_atoms.push_back(atom);
 		}
-	
+
 	}
 
 	return goal_atoms;
@@ -44,16 +44,16 @@ bool LiftedStateModel::goal(const State& state) const {
 	return _task.getGoalSatManager().satisfied(state);
 }
 
-bool LiftedStateModel::is_applicable(const State& state, const ActionType& action) const {
+bool LiftedStateModel::is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const {
 	auto ground_action = action.generate();
-	bool res = is_applicable(state, *ground_action);
+	bool res = is_applicable(state, *ground_action, enforce_state_constraints);
 	delete ground_action;
 	return res;
 }
 
-bool LiftedStateModel::is_applicable(const State& state, const GroundAction& action) const {
+bool LiftedStateModel::is_applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const {
 	NaiveApplicabilityManager manager(_task.getStateConstraints());
-	return manager.isApplicable(state, action);
+	return manager.isApplicable(state, action, enforce_state_constraints);
 }
 
 State LiftedStateModel::next(const State& state, const LiftedActionID& action) const {
@@ -63,16 +63,17 @@ State LiftedStateModel::next(const State& state, const LiftedActionID& action) c
 	return s1;
 }
 
-State LiftedStateModel::next(const State& state, const GroundAction& action) const { 
+State LiftedStateModel::next(const State& state, const GroundAction& action) const {
 	NaiveApplicabilityManager manager(_task.getStateConstraints());
-	assert(manager.isApplicable(state, action));
 	action.apply( state, _effects_cache );
-	return State(state, _effects_cache); // Copy everything into the new state and apply the changeset	
+	return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
 }
 
 
-gecode::LiftedActionIterator LiftedStateModel::applicable_actions(const State& state) const {
-	return gecode::LiftedActionIterator(state, _handlers, _task.getStateConstraints());
+gecode::LiftedActionIterator LiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
+	if ( enforce_state_constraints )
+		return gecode::LiftedActionIterator(state, _handlers, _task.getStateConstraints());
+	return gecode::LiftedActionIterator(state, _handlers, {});
 }
 
 
@@ -98,4 +99,3 @@ LiftedStateModel::LiftedStateModel(const Problem& problem, const std::vector<con
 {}
 
 } // namespaces
-

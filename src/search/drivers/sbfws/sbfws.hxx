@@ -731,7 +731,7 @@ protected:
 		_stats.expansion();
 		if (node->decreases_unachieved_subgoals()) _stats.expansion_g_decrease();
 
-		for (const auto& action:_model.applicable_actions(node->state)) {
+		for (const auto& action:_model.applicable_actions(node->state, true)) {
 			// std::cout << *(Problem::getInstance().getGroundActions()[action]) << std::endl;
 			StateT s_a = _model.next(node->state, action);
 			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, ++_generated);

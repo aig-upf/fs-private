@@ -46,10 +46,13 @@ public:
 	bool goal(const StateT& state) const;
 
 	//! Returns applicable action set object
-	GroundApplicableSet applicable_actions(const StateT& state) const;
+	GroundApplicableSet applicable_actions(const StateT& state, bool enforce_state_constraints) const;
+	GroundApplicableSet applicable_actions(const StateT& state) const {
+		return applicable_actions(state, true);
+	}
 
-	bool is_applicable(const StateT& state, const ActionType& action) const;
-	bool is_applicable(const StateT& state, const ActionId& action) const;
+	bool is_applicable(const StateT& state, const ActionType& action, bool enforce_state_constraints) const;
+	bool is_applicable(const StateT& state, const ActionId& action, bool enforce_state_constraints) const;
 
 	//! Returns the state resulting from applying the given action action on the given state
 	StateT next(const StateT& state, const GroundAction::IdType& id) const;
