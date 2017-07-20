@@ -198,6 +198,9 @@ public:
 		//!
 		unsigned _gr_actions_cutoff;
 
+		//! Enforce state constraints
+		bool _enforce_state_constraints;
+
 		Config(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config) :
 			_complete(complete),
 			_max_width(max_width),
@@ -206,7 +209,8 @@ public:
 			_force_adaptive_run(global_config.getOption<bool>("sim.hybrid", false)),
 			_force_R_all(global_config.getOption<bool>("sim.r_all", false)),
 			_r_g_prime(global_config.getOption<bool>("sim.r_g_prime", false)),
-			_gr_actions_cutoff(global_config.getOption<unsigned>("sim.act_cutoff", std::numeric_limits<unsigned>::max()))
+			_gr_actions_cutoff(global_config.getOption<unsigned>("sim.act_cutoff", std::numeric_limits<unsigned>::max())),
+			_enforce_state_constraints(global_config.getOption<bool>("sim.enforce_state_constraints", false))
 		{}
 	};
 
@@ -659,8 +663,27 @@ public:
 // 		return {};
 // 	}
 
+	class DeactivateZCC {
+		bool _current_setting;
+	public:
+		DeactivateZCC() {
+			_current_setting = fs0::Config::instance().getZeroCrossingControl();
+			fs0::Config::instance().setZeroCrossingControl(false);
+		}
+
+		~DeactivateZCC() {
+			fs0::Config::instance().setZeroCrossingControl(_current_setting);
+		}
+	};
+
 	bool run(const StateT& seed, unsigned max_width) {
 		if (_verbose) LPT_INFO("cout", "Simulation - Starting IW Simulation");
+
+		std::shared_ptr<DeactivateZCC> zcc_setting = nullptr;
+		if (!_config._enforce_state_constraints ) {
+			LPT_INFO("cout", ":Simulation - Deactivating zero crossing control");
+			zcc_setting = std::make_shared<DeactivateZCC>();
+		}
 
 		NodePT root = std::make_shared<NodeT>(seed, _generated++);
 		mark_seed_subgoals(root);
@@ -685,7 +708,7 @@ public:
 				// Expand the node
 				update_novelty_counters_on_expansion(current->_w);
 
-				for (const auto& a : _model.applicable_actions(current->state, false)) {
+				for (const auto& a : _model.applicable_actions(current->state, _config._enforce_state_constraints)) {
 					StateT s_a = _model.next( current->state, a );
 					NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
