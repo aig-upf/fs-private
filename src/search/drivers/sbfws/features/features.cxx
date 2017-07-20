@@ -4,6 +4,7 @@
 #include <search/drivers/sbfws/features/features.hxx>
 #include <problem_info.hxx>
 #include <heuristics/novelty/features.hxx>
+#include <heuristics/novelty/squared_error.hxx>
 #include <utils/loader.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/binding_iterator.hxx>
@@ -16,6 +17,7 @@
 #include <heuristics/l0.hxx>
 
 #include <lapkt/tools/logging.hxx>
+
 
 namespace fs = fs0::language::fstrips;
 

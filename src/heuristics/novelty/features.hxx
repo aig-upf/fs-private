@@ -2,7 +2,6 @@
 #pragma once
 
 #include <lapkt/novelty/features.hxx>
-#include <heuristics/error_signal.hxx>
 #include <fs_types.hxx>
 #include <state.hxx>
 #include <memory>
@@ -64,16 +63,6 @@ protected:
 
 };
 
-class SquaredErrorFeature : public ConditionSetFeature {
-public:
-	SquaredErrorFeature();
-
-	void 								addCondition(const fs::Formula* condition) override;
-	FSFeatureValueT 					evaluate(const State& s) const override;
-	const hybrid::SquaredErrorSignal&	error_signal() const { return _error; }
-protected:
-	hybrid::SquaredErrorSignal	_error;
-};
 
 //! A feature representing the value of any arbitrary language term, e.g. X+Y, or @proc(Y,Z)
 class ArbitraryTermFeature : public Feature {
