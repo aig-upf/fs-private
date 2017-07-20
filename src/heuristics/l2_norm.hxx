@@ -22,6 +22,8 @@ namespace hybrid {
 
         float measure( const State& s ) const;
 
+        static float measure( const std::vector<VariableIdx>& S, const State& a, const State& b );
+
         void add_condition( const fs::Formula* f );
 
     private:

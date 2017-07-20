@@ -10,6 +10,22 @@ namespace fs0 { namespace hybrid {
     }
 
     float
+    L2Norm::measure( const std::vector<VariableIdx>& S, const State& a, const State& b ) {
+        float accum = 0.0f;
+        for ( VariableIdx x : S ) {
+            if ( o_type(a.getValue(x)) == type_id::int_t) {
+                float delta = (float)fs0::value<int>(a.getValue(x)) - fs0::value<int>(b.getValue(x));
+                accum += delta * delta;
+            }
+            else if ( o_type(a.getValue(x)) == type_id::float_t) {
+                float delta = fs0::value<float>(a.getValue(x)) - fs0::value<float>(b.getValue(x));
+                accum += delta * delta;
+            }
+        }
+        return std::sqrt(accum);
+    }
+
+    float
     L2Norm::measure( const State& s ) const {
         if ( _poly.solution().empty()) {
             _poly.setup();
