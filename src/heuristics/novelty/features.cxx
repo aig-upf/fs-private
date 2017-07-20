@@ -28,7 +28,14 @@ StateVariableFeature::StateVariableFeature( VariableIdx x )
 
 FSFeatureValueT
 StateVariableFeature::evaluate( const State& s ) const {
-	return fs0::raw_value<FSFeatureValueT>(s.getValue(_variable));
+	object_id v = s.getValue(_variable);
+	// MRJ: Added saturation rule for floating point numbers,
+	// so they all become 0 if they're very small
+	if (o_type(v) == type_id::float_t )  {
+		if ( std::fabs(fs0::value<float>(v)) < 1e-6 )
+			v = make_object<float>(0.0f);
+	}
+	return fs0::raw_value<FSFeatureValueT>(v);
 }
 
 std::ostream& StateVariableFeature::print(std::ostream& os) const {
