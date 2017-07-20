@@ -5,6 +5,7 @@
 #include <problem_info.hxx>
 #include <heuristics/novelty/features.hxx>
 #include <heuristics/novelty/squared_error.hxx>
+#include <heuristics/novelty/triangle_inequality.hxx>
 #include <utils/loader.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/binding_iterator.hxx>
@@ -15,6 +16,7 @@
 #include <problem.hxx>
 #include <actions/actions.hxx>
 #include <heuristics/l0.hxx>
+#include <heuristics/l2_norm.hxx>
 
 #include <lapkt/tools/logging.hxx>
 
@@ -165,21 +167,39 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 	}
 
 	if (Config::instance().getOption<bool>("features.joint_goal_error", false)) {
+		hybrid::L2Norm norm;
 		SquaredErrorFeature* feature = new SquaredErrorFeature;
 		for ( auto formula : fs::all_formulae( *Problem::getInstance().getGoalConditions())) {
 			feature->addCondition(formula);
+			norm.add_condition(formula);
 		}
 		LPT_INFO("features", "Added 'joint_goal_error': phi(s0) = " << feature->error_signal().measure(Problem::getInstance().getInitialState()));
+		LPT_INFO("features", "L^2 norm(s0,sG) =  " << norm.measure(Problem::getInstance().getInitialState()));
 		features.push_back( feature );
 	}
 
 	if (Config::instance().getOption<bool>("features.independent_goal_error", false)) {
+		hybrid::L2Norm norm;
 		for ( auto formula : fs::all_relations( *Problem::getInstance().getGoalConditions())) {
 			SquaredErrorFeature* feature = new SquaredErrorFeature;
 			feature->addCondition(formula);
+			norm.add_condition( formula );
 			features.push_back( feature );
 			LPT_INFO("features", "Added 'independent_goal_error': formula: " << *formula << " phi(s0) = " << feature->error_signal().measure(Problem::getInstance().getInitialState()));
 		}
+		LPT_INFO("features", "L^2 norm(s0,sG) =  " << norm.measure(Problem::getInstance().getInitialState()));
+	}
+
+	if ( Config::instance().getOption<bool>("features.triangle_inequality_goal", false)) {
+		hybrid::L2Norm norm;
+		TriangleInequality* feature = new TriangleInequality;
+		for ( auto formula : fs::all_relations( *Problem::getInstance().getGoalConditions())) {
+			feature->addCondition(formula);
+			norm.add_condition(formula);
+		}
+		LPT_INFO("features", "Added 'triangle_inequality_goal': phi(s0) = " << feature->norm().measure(Problem::getInstance().getInitialState()));
+		LPT_INFO("features", "L^2 norm(s0,sG) =  " << norm.measure(Problem::getInstance().getInitialState()));
+		features.push_back( feature );
 	}
 
 	try {
