@@ -20,6 +20,12 @@
 #include <lapkt/tools/logging.hxx>
 #include <heuristics/novelty/features.hxx>
 
+// For writing the R sets
+#include <cstdio>
+#include <lib/rapidjson/rapidjson.h>
+#include <lib/rapidjson/filewritestream.h>
+#include <lib/rapidjson/writer.h>
+
 namespace fs0 { namespace bfws {
 
 using FSFeatureValueT = lapkt::novelty::FeatureValueT;
@@ -205,7 +211,7 @@ public:
 			_complete(complete),
 			_max_width(max_width),
 			_global_config(global_config),
-			_goal_directed(global_config.getOption<bool>("goal_directed", false)),
+			_goal_directed(global_config.getOption<bool>("sim.goal_directed", false)),
 			_force_adaptive_run(global_config.getOption<bool>("sim.hybrid", false)),
 			_force_R_all(global_config.getOption<bool>("sim.r_all", false)),
 			_r_g_prime(global_config.getOption<bool>("sim.r_g_prime", false)),
@@ -427,6 +433,80 @@ public:
 		return extract_R_1();
 	}
 
+	template <typename Container>
+	void dump_R_set( const Container& R, std::string filename ) {
+		using namespace rapidjson;
+
+		const ProblemInfo& info = ProblemInfo::getInstance();
+        Document R_set;
+        Document::AllocatorType& allocator = R_set.GetAllocator();
+        R_set.SetObject();
+        Value domainName;
+        domainName.SetString(StringRef(info.getDomainName().c_str()));
+        R_set.AddMember("domain", domainName.Move(), allocator );
+        Value instanceName;
+        instanceName.SetString(StringRef(info.getInstanceName().c_str()));
+        R_set.AddMember("instance", instanceName.Move(), allocator );
+
+		Value elements(kArrayType);
+        {
+			for ( Width1Tuple f : R) {
+				unsigned j;
+				int v;
+				std::tie(j,v) = f;
+
+				auto phi = dynamic_cast<const Feature*>(_evaluator.feature_set().at(j));
+
+				// MRJ: State variable features always come first
+
+				auto scope = phi->scope();
+				if (scope.empty()) continue; // Scope not available for this feature
+
+				Value entry(kArrayType); {
+
+					if ( scope.size() == 1 ) {
+						Value name;
+                        name.SetString( StringRef( info.getVariableName(scope[0]).c_str() ));
+						entry.PushBack(name.Move(),allocator);
+					} else {
+						Value tuple(kArrayType);{
+							for ( unsigned l = 0; l < scope.size(); l++ ) {
+								Value name;
+		                        name.SetString( StringRef( info.getVariableName(scope[l]).c_str() ));
+								tuple.PushBack(name.Move(),allocator);
+							}
+						}
+						entry.PushBack(tuple.Move(),allocator);
+					}
+					Value value;
+					object_id o = make_object(phi->codomain(), v);
+					if ( o_type(o) == type_id::bool_t )
+						value = Value( fs0::value<bool>(o) );
+					else if ( o_type(o) == type_id::int_t )
+						value = Value( fs0::value<int>(o) );
+					else if ( o_type(o) == type_id::float_t )
+						value = Value( fs0::value<float>(o) );
+					else {
+						std::string _literal = info.object_name(o);
+						value.SetString( _literal.c_str(), _literal.size(), allocator ) ;
+					}
+
+
+					entry.PushBack(value.Move(),allocator);
+				}
+				elements.PushBack(entry.Move(), allocator);
+			}
+        }
+        R_set.AddMember("elements", elements, allocator);
+
+		FILE* fp = fopen(filename.c_str(), "wb"); // non-Windows use "w"
+        char writeBuffer[65536];
+        FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+        Writer<FileWriteStream> writer(os);
+        R_set.Accept(writer);
+        fclose(fp);
+	}
+
 	std::vector<Width1Tuple> extract_R_1() {
 		std::vector<Width1Tuple> R = _evaluator.reached_tuples();
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
@@ -434,43 +514,7 @@ public:
 			unsigned c = R.size();
 			LPT_INFO("cout", "Simulation - |R[1]| = " << c);
 			_stats.relevant_atoms(c);
-			// MRJ: Temporary measure to be able to take a good peek into what is being
-			// collected by the R-set
-			for ( unsigned k = 0; k < R.size(); k++ ) {
-				auto f = R[k];
-				unsigned j;
-				int v;
-				std::tie(j,v) = f;
-				const ProblemInfo& info = ProblemInfo::getInstance();
-				auto phi = dynamic_cast<const Feature*>(_evaluator.feature_set().at(j));
-
-				// MRJ: State variable features always come first
-
-				auto scope = phi->scope();
-				if (scope.empty()) continue; // Scope not available for this feature
-				std::cout << "[";
-				if ( scope.size() == 1 ) {
-					std::cout << "\"";
-					std::cout << info.getVariableName(scope[0]);
-					std::cout << "\"";
-				} else {
-					std::cout << "[";
-					for ( unsigned l = 0; l < scope.size(); l++ ) {
-						std::cout << "\"";
-						std::cout << info.getVariableName(scope[l]);
-						std::cout << "\"";
-
-						if ( l < scope.size() - 1)
-							std::cout << ",";
-					}
-					std::cout << "]";
-				}
-
-				std::cout << ", " << info.object_name(make_object(phi->codomain(), v)) << "]";
-				if ( k < R.size() -1 )
-					std::cout << ",";
-				std::cout << std::endl;
-			}
+			dump_R_set( R, "R1.set.json");
 
 		}
 		return R;
@@ -491,6 +535,7 @@ public:
 			LPT_INFO("cout", "Simulation - IW(1) run reached all goals");
 			LPT_INFO("cout", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			_stats.relevant_atoms(R_G_size);
+			dump_R_set( R_G, "RGprime1.set.json");
 			return std::vector<Width1Tuple>(R_G.begin(),R_G.end());
 
 		}
@@ -524,6 +569,7 @@ public:
 
 		LPT_INFO("cout", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 		_stats.relevant_atoms(R_G_size);
+		dump_R_set( R_G, "RGprime2.set.json");
 		return std::vector<Width1Tuple>(R_G.begin(),R_G.end());
 	}
 
@@ -586,7 +632,9 @@ public:
 		}
 		_stats.relevant_atoms(R_G_size);
 		_stats.r_type(2);
-
+		std::stringstream ss;
+		ss << "RG" << _config._max_width << ".set.json";
+		dump_R_set( R_G, ss.str());
 		return std::vector<Width1Tuple>(R_G.begin(),R_G.end());
 	}
 
@@ -610,7 +658,7 @@ public:
 		}
 		_stats.relevant_atoms(R_G_size);
 		_stats.r_type(2);
-
+		dump_R_set( R_G, "RG1.set.json");
 		return std::vector<Width1Tuple>(R_G.begin(), R_G.end());
 	}
 

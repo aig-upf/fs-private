@@ -279,8 +279,17 @@ namespace fs0 { namespace dynamics {
                         Value name;
                         name.SetString( StringRef( info.getVariableName(x).c_str() ));
                         Value value;
-                        std::string _literal = info.object_name(s->getValue(x));
-                        value.SetString( _literal.c_str(), _literal.size(), allocator ) ;
+                        object_id o = s->getValue(x);
+                        if ( o_type(o) == type_id::bool_t )
+                            value = Value( fs0::value<bool>(o) );
+                        else if ( o_type(o) == type_id::int_t )
+                            value = Value( fs0::value<int>(o) );
+                        else if ( o_type(o) == type_id::float_t )
+                            value = Value( fs0::value<float>(o) );
+                        else {
+                            std::string _literal = info.object_name(o);
+                            value.SetString( _literal.c_str(), _literal.size(), allocator ) ;
+                        }
                         state.AddMember( name, value.Move(), allocator );
                     }
                 }
