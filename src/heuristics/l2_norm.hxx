@@ -21,6 +21,7 @@ namespace hybrid {
         ~L2Norm() = default;
 
         float measure( const State& s ) const;
+        float measure( const std::vector<VariableIdx>& S, const State& a ) const;
 
         static float measure( const std::vector<VariableIdx>& S, const State& a, const State& b );
 
