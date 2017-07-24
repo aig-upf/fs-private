@@ -9,7 +9,8 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 	simulation_width(config.getOption<int>("width.simulation", 1)),
 	mark_negative_propositions(config.getOption<bool>("simulation.neg_prop", false)),
 	complete_simulation(config.getOption<bool>("simulation.complete", true)),
-	using_feature_set(config.getOption<bool>("bfws.using_feature_set", false))
+	using_feature_set(config.getOption<bool>("bfws.using_feature_set", false)),
+	using_coupled_features(config.getOption<bool>("bfws.using_coupled_features", false))
 {
 	std::string rs = config.getOption<std::string>("bfws.rs");
 	if  (rs == "sim") relevant_set_type = RelevantSetType::Sim;

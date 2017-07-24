@@ -19,11 +19,13 @@
 #include <lapkt/tools/resources_control.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <heuristics/novelty/features.hxx>
+#include <heuristics/novelty/goal_ball_filter.hxx>
 
 // For writing the R sets
 #include <cstdio>
 #include <lib/rapidjson/rapidjson.h>
 #include <lib/rapidjson/filewritestream.h>
+#include <lib/rapidjson/filereadstream.h>
 #include <lib/rapidjson/writer.h>
 
 namespace fs0 { namespace bfws {
@@ -31,6 +33,8 @@ namespace fs0 { namespace bfws {
 using FSFeatureValueT = lapkt::novelty::FeatureValueT;
 typedef lapkt::novelty::Width1Tuple<FSFeatureValueT> Width1Tuple;
 typedef lapkt::novelty::Width1TupleHasher<FSFeatureValueT> Width1TupleHasher;
+typedef lapkt::novelty::Width2Tuple<FSFeatureValueT> Width2Tuple;
+typedef lapkt::novelty::Width2TupleHasher<FSFeatureValueT> Width2TupleHasher;
 
 template <typename StateT, typename ActionType>
 class MultiValuedIWRunNode {
@@ -207,6 +211,12 @@ public:
 		//! Enforce state constraints
 		bool _enforce_state_constraints;
 
+		//! Load R set from file
+		std::string _R_file;
+
+		//! Goal Ball filtering
+		bool _filter_R_set;
+
 		Config(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config) :
 			_complete(complete),
 			_max_width(max_width),
@@ -216,7 +226,9 @@ public:
 			_force_R_all(global_config.getOption<bool>("sim.r_all", false)),
 			_r_g_prime(global_config.getOption<bool>("sim.r_g_prime", false)),
 			_gr_actions_cutoff(global_config.getOption<unsigned>("sim.act_cutoff", std::numeric_limits<unsigned>::max())),
-			_enforce_state_constraints(global_config.getOption<bool>("sim.enforce_state_constraints", false))
+			_enforce_state_constraints(global_config.getOption<bool>("sim.enforce_state_constraints", false)),
+			_R_file(global_config.getOption<std::string>("sim.from_file", "")),
+			_filter_R_set(global_config.getOption<bool>("sim.filter", false))
 		{}
 	};
 
@@ -379,6 +391,14 @@ public:
 
 	std::vector<Width1Tuple> compute_R(const StateT& seed) {
 
+		if ( !_config._R_file.empty() ) {
+			LPT_INFO("cout", "Simulation - R set has been loaded from a given file: " << _config._R_file );
+			std::vector<Width1Tuple> R;
+			load_R_set( _config._R_file, R);
+			LPT_INFO("cout", "\t Loaded " << R.size() << " entries from file...");
+			return R;
+		}
+
 		if (_config._force_R_all) {
 			if (_verbose) LPT_INFO("cout", "Simulation - R=R[All] is the user-preferred option");
 			return compute_R_all();
@@ -431,6 +451,100 @@ public:
 
 		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
 		return extract_R_1();
+	}
+
+	// MRJ: This is not very useful at the moment, since we do really need to map the
+	// floating point numbers exactly back from the file... which
+	// means than otherwise than the number 0.0 (or numbers very close to
+	// it) we can't find a match on loaded R set.
+	template <typename Container>
+	void load_R_set( std::string filename, Container& R ) {
+		using namespace rapidjson;
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		FILE* fp = fopen(filename.c_str(), "rb"); // non-Windows use "r"
+		char readBuffer[65536];
+		FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+
+        Document R_set;
+		R_set.ParseStream(is);
+		fclose(fp);
+
+		const Value& tuples = R_set["elements"];
+		assert(tuples.IsArray());
+		for (SizeType i = 0; i < tuples.Size(); i++) {// Uses SizeType instead of size_t
+			std::string variable = tuples[i][0].GetString();
+			VariableIdx x = info.getVariableId(variable);
+			int feature_index = -1;
+			const Feature* phi = nullptr;
+			for ( unsigned j = 0; j < _evaluator.feature_set().size(); j++ ) {
+				phi = dynamic_cast<const Feature*>(_evaluator.feature_set().at(j));
+				auto scope = phi->scope();
+				if (scope.size() != 1 ) continue;
+				if ( x == scope[0]) {
+					feature_index = j;
+					break;
+				}
+			}
+			if ( phi == nullptr ) continue;
+			std::cout << (float)tuples[i][1].GetDouble();
+			object_id v = make_object<float>((float)tuples[i][1].GetDouble() );
+			std::cout << " " << fs0::raw_value<FSFeatureValueT>(v) << std::endl;
+			Width1Tuple t_i( feature_index, fs0::raw_value<FSFeatureValueT>( v ) );
+			R.push_back(t_i);
+		}
+	}
+
+	void filter_R_set( const std::vector<Width1Tuple>& R, std::vector<Width1Tuple>& filtered_R ) {
+		GoalBallFilter filter;
+
+		for ( Width1Tuple f : R) {
+			unsigned j;
+			int v;
+			std::tie(j,v) = f;
+
+			auto phi = dynamic_cast<const StateVariableFeature*>(_evaluator.feature_set().at(j));
+			if ( phi == nullptr ) {// not a state variable feature
+				filtered_R.push_back(f);
+				continue;
+			}
+			object_id o = make_object(phi->codomain(), v);
+			if ( o_type(o) != type_id::int_t && o_type(o) != type_id::float_t ) { // not a feature we know how to filter
+				filtered_R.push_back(f);
+				continue;
+			}
+			auto scope = phi->scope();
+
+			filter.add_sample( j, scope[0], o );
+		}
+		filter.filter_samples();
+		filter.get_filtered_set<std::vector<Width1Tuple>, FSFeatureValueT >(filtered_R);
+	}
+
+	std::vector<Width2Tuple>
+	compute_coupled_features(const std::vector<Width1Tuple>& R) {
+		GoalBallFilter filter;
+
+		for ( Width1Tuple f : R) {
+			unsigned j;
+			int v;
+			std::tie(j,v) = f;
+
+			auto phi = dynamic_cast<const StateVariableFeature*>(_evaluator.feature_set().at(j));
+			if ( phi == nullptr ) {// not a state variable feature
+				continue;
+			}
+			object_id o = make_object(phi->codomain(), v);
+			if ( o_type(o) != type_id::int_t && o_type(o) != type_id::float_t ) { // not a feature we know how to filter
+				continue;
+			}
+			auto scope = phi->scope();
+
+			filter.add_sample( j, scope[0], o );
+		}
+		filter.filter_samples();
+		std::vector<Width2Tuple> coupled;
+		filter.get_output<std::vector<Width2Tuple>, FSFeatureValueT >(coupled);
+		return coupled;
 	}
 
 	template <typename Container>

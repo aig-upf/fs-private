@@ -90,6 +90,7 @@ public:
 	virtual void foo() {}
 
 	bool uses_extra_features() const { return false; }
+	unsigned size() const { return 0; }
 };
 
 

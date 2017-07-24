@@ -19,10 +19,13 @@ namespace fs0 { namespace bfws {
 class AtomsetHelper {
 public:
 	typedef std::pair< FeatureIdx, int >    ValuationT;
+	typedef std::tuple< FeatureIdx, int, FeatureIdx, int >    CoupledValuationT;
+
 
 	//! '_relevant[i]' iff the atom with index 'i' is relevant
 	const std::vector<bool> _relevant;
 	const std::unordered_set<ValuationT,boost::hash<ValuationT>> _relevant_feature_values;
+	const std::unordered_set<CoupledValuationT,boost::hash<CoupledValuationT>> _relevant_coupled_feature_values;
 
 
 	//! The number of relevant atoms, i.e. of 'true' values in _relevant
@@ -35,8 +38,19 @@ public:
 		_relevant(relevant), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx)
 	{}
 
+	AtomsetHelper(const AtomIndex& atomidx, const std::vector<bool>& relevant, const std::vector<bool>& dummy ) :
+		_relevant(relevant), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx)
+	{}
+
+
 	AtomsetHelper(const AtomIndex& atomidx, const std::vector<ValuationT>& relevant) :
 		_relevant_feature_values(relevant.begin(), relevant.end()), _num_relevant(_relevant_feature_values.size()), _atomidx(atomidx)
+	{}
+
+	AtomsetHelper(const AtomIndex& atomidx, const std::vector<ValuationT>& relevant, const std::vector<CoupledValuationT>& coupled ) :
+		_relevant_feature_values(relevant.begin(), relevant.end()),
+		_relevant_coupled_feature_values(coupled.begin(), coupled.end()),
+		_num_relevant(_relevant_feature_values.size() + coupled.size()), _atomidx(atomidx)
 	{}
 
 	unsigned size() const { return _atomidx.size(); }
@@ -48,6 +62,9 @@ class RelevantAtomSet {
 public:
     typedef std::pair< FeatureIdx, int >    ValuationT;
     typedef std::unordered_set< ValuationT, boost::hash<ValuationT> >        ValuationSet;
+	typedef std::tuple< FeatureIdx, int, FeatureIdx, int >    CoupledValuationT;
+    typedef std::unordered_set< CoupledValuationT, boost::hash<CoupledValuationT> >        CoupledValuationSet;
+
 
 	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
 	RelevantAtomSet(const AtomsetHelper& helper) :
@@ -109,6 +126,15 @@ public:
 			auto hint = _int_reached.insert(v);
 			if (hint.second) { ++_num_reached; }
 		}
+
+		for ( auto t : _helper._relevant_coupled_feature_values ) {
+			FeatureIdx k0, k1;
+			int v0, v1;
+			std::tie( k0, v0, k1, v1) = t;
+			if ( phi[k0] != v0 || phi[k1] != v1) continue;
+			auto hint = _pair_reached.insert( t );
+			if ( hint.second ) { ++_num_reached; }
+		}
 	}
 
 	template <typename FeatureValuationT>
@@ -125,6 +151,16 @@ public:
 				continue;
 			auto hint = _int_reached.insert(phi[k]);
 			if (hint.second) { ++_num_reached; }
+		}
+		for ( auto t : _helper._relevant_coupled_feature_values ) {
+			FeatureIdx k0, k1;
+			int v0, v1;
+			std::tie( k0, v0, k1, v1) = t;
+			if ( std::find( phi.begin(), phi.end(), std::make_pair(k0,v0)) == phi.end()
+		 		|| std::find( phi.begin(), phi.end(), std::make_pair(k1,v1)) == phi.end())
+				continue;
+			auto hint = _pair_reached.insert( t );
+			if ( hint.second ) { ++_num_reached; }
 		}
 	}
 
@@ -176,7 +212,8 @@ protected:
 	//! since the count of reached subgoals was last increased.
 	std::vector<bool> _bool_reached;
 
-    ValuationSet _int_reached;
+    ValuationSet 			_int_reached;
+	CoupledValuationSet		_pair_reached;
 
 // 	bool _updated;
 };

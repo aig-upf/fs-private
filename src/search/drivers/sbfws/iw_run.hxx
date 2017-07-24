@@ -436,6 +436,10 @@ public:
 		}
 	}
 
+	std::vector<bool> compute_coupled_features( const std::vector<bool>& ) {
+		return std::vector<bool>();
+	}
+
 	std::vector<bool> compute_plain_RG2(const StateT& seed) {
 		assert(_config._max_width == 2);
 
