@@ -6,9 +6,10 @@
 
 namespace fs0 {
 
-UnsatisfiedGoalAtomsHeuristic::UnsatisfiedGoalAtomsHeuristic(const Problem& problem) : _goal_conjunction(extract_goal_conjunction(problem)) {}
+UnsatisfiedGoalAtomsHeuristic::UnsatisfiedGoalAtomsHeuristic(const Problem& problem)
+	: _goal_conjunction(extract_goal_conjunction(problem)) {}
 	
-float UnsatisfiedGoalAtomsHeuristic::evaluate(const State& state) const { 
+float UnsatisfiedGoalAtomsHeuristic::evaluate(const State& state) const {
 	unsigned unsatisfied = 0;
 	for (const fs::Formula* condition:get_goal_conjuncts()) {
 		if (!condition->interpret(state)) ++unsatisfied;

@@ -7,6 +7,7 @@
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
 #include <heuristics/l0.hxx>
+#include <heuristics/l2_norm.hxx>
 
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
@@ -36,8 +37,8 @@ struct unachieved_subgoals_comparer {
 template <typename NodePT>
 struct novelty_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
-		if (n1->w_g_num > n2->w_g_num) return true;
-		if (n1->w_g_num < n2->w_g_num) return false;
+		if (n1->w_g_r > n2->w_g_r) return true;
+		if (n1->w_g_r < n2->w_g_r) return false;
 		if (n1->unachieved_subgoals > n2->unachieved_subgoals) return true;
 		if (n1->unachieved_subgoals < n2->unachieved_subgoals) return false;
 		if (n1->g > n2->g) return true;
@@ -91,6 +92,9 @@ public:
 	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
 	RelevantAtomSet* _relevant_atoms;
 
+	//! #r
+	unsigned		_hash_r;
+
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those
 	//! atoms in s with novelty 1.
 // 	std::vector<unsigned> _nov1atom_idxs;
@@ -107,7 +111,8 @@ public:
 		w_g(Novelty::Unknown),
 		w_gr(Novelty::Unknown),
 		_helper(nullptr),
-		_relevant_atoms(nullptr)
+		_relevant_atoms(nullptr),
+		_hash_r(0)
 // 		_nov1atom_idxs()
 	{
 		assert(_gen_order > 0); // Very silly way to detect overflow, in case we ever generate > 4 billion nodes :-)
@@ -135,6 +140,8 @@ public:
 		std::string reached = "?";
 		if (_relevant_atoms) {
 			reached = std::to_string(_relevant_atoms->num_reached()) + " / " + std::to_string(_relevant_atoms->getHelper()._num_relevant);
+		} else {
+			reached = std::to_string(_hash_r);
 		}
 		os << "#" << _gen_order << " (" << this << "), " << state;
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
@@ -196,7 +203,8 @@ protected:
 	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
 	//! L0Heuristic: counts number of trivial numeric landmarks
-	L0Heuristic _l0_heuristic;
+	L0Heuristic 	_l0_heuristic;
+	hybrid::L2Norm	_l2_norm;
 
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;
@@ -218,6 +226,7 @@ public:
 		_wgr_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_unsat_goal_atoms_heuristic(_problem),
 		_l0_heuristic(_problem),
+		_l2_norm(_problem),
 		_mark_negative_propositions(config.mark_negative_propositions),
 		_simconfig(config.complete_simulation,
 				   config.mark_negative_propositions,
@@ -414,7 +423,9 @@ public:
 
 	template <typename NodeT>
 	unsigned compute_R_via_L0(NodeT& node) {
-		return _l0_heuristic.evaluate(node.state);
+		unsigned v =  _l0_heuristic.evaluate(node.state);
+		node._hash_r = v;
+		return v;
 	}
 
 	template <typename NodeT>

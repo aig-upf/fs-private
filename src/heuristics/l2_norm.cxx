@@ -1,13 +1,58 @@
 #include <heuristics/l2_norm.hxx>
+#include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations/basic.hxx>
+
+#include <lapkt/tools/logging.hxx>
+
 #include <cmath>
 #include <algorithm>
 
+
+namespace fs = fs0::language::fstrips;
+
+
 namespace fs0 { namespace hybrid {
 
+    L2Norm::L2Norm( const Problem& p ) {
+        for ( auto formula : fs::all_relations( *p.getGoalConditions() ) ) {
+            add_condition(formula);
+        }
+        calibrate(p.getInitialState());
+    }
 
     void
     L2Norm::add_condition( const fs::Formula* g) {
         _poly.add_constraint( g );
+    }
+
+    void
+    L2Norm::calibrate( const State& s ) {
+        _cmin = measure(s);
+        unsigned num_levels = 10;
+        float delta_c = _cmin / (float) num_levels;
+        float c_k = _cmin;
+        while (c_k > delta_c) {
+            _bands.push_back(c_k);
+            c_k -= delta_c;
+        }
+    }
+
+    unsigned
+    L2Norm::ball_geodesic_index( const State& s ) const {
+        float c_s = measure(s);
+        LPT_DEBUG("heuristic", "Geodesic index:");
+        LPT_DEBUG("heuristic", "state: " << s);
+        LPT_DEBUG("heuristic", "h(s) = " << c_s );
+
+        unsigned index = 0;
+        unsigned k;
+        for (  k = 0; k < _bands.size(); k++ )
+            if ( c_s > _bands[k] ) {
+                index = _bands.size() - k;
+                break;
+            }
+        LPT_DEBUG("heuristic", "bin index: " << k << " h: " << _bands[k] << " index: " << index);
+        return index;
     }
 
     float

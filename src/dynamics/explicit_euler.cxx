@@ -12,8 +12,7 @@ namespace fs0 { namespace dynamics { namespace integrators {
     ExplicitEuler::operator()( const State& s, const std::vector<DifferentialEquation>& f_expr,  State& next, double H, double factor ) const {
 
         const double base_duration = (H / factor);
-        std::vector<Atom>   f_un; // f(u_n)
-
+        std::vector<Atom>   f_un( f_expr.size(), Atom( INVALID_VARIABLE, object_id::INVALID ) );
         while ( H > 0.0 ) {
             double h = std::min( base_duration, H  );
 

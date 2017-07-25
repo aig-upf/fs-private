@@ -22,11 +22,7 @@
 #include <heuristics/novelty/goal_ball_filter.hxx>
 
 // For writing the R sets
-#include <cstdio>
-#include <lib/rapidjson/rapidjson.h>
-#include <lib/rapidjson/filewritestream.h>
-#include <lib/rapidjson/filereadstream.h>
-#include <lib/rapidjson/writer.h>
+#include <utils/archive/json.hxx>
 
 namespace fs0 { namespace bfws {
 
@@ -217,6 +213,9 @@ public:
 		//! Goal Ball filtering
 		bool _filter_R_set;
 
+		//! Log search
+		bool _log_search;
+
 		Config(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config) :
 			_complete(complete),
 			_max_width(max_width),
@@ -228,7 +227,8 @@ public:
 			_gr_actions_cutoff(global_config.getOption<unsigned>("sim.act_cutoff", std::numeric_limits<unsigned>::max())),
 			_enforce_state_constraints(global_config.getOption<bool>("sim.enforce_state_constraints", false)),
 			_R_file(global_config.getOption<std::string>("sim.from_file", "")),
-			_filter_R_set(global_config.getOption<bool>("sim.filter", false))
+			_filter_R_set(global_config.getOption<bool>("sim.filter", false)),
+			_log_search(global_config.getOption<bool>("sim.log", false))
 		{}
 	};
 
@@ -264,6 +264,9 @@ protected:
 
 	//! Whether to print some useful extra information or not
 	bool _verbose;
+
+	// MRJ: IW(1) debugging
+	std::vector<NodePT>	_visited;
 
 public:
 
@@ -392,9 +395,9 @@ public:
 	std::vector<Width1Tuple> compute_R(const StateT& seed) {
 
 		if ( !_config._R_file.empty() ) {
-			LPT_INFO("cout", "Simulation - R set has been loaded from a given file: " << _config._R_file );
 			std::vector<Width1Tuple> R;
 			load_R_set( _config._R_file, R);
+			LPT_INFO("cout", "Simulation - R set has been loaded from a given file: " << _config._R_file );
 			LPT_INFO("cout", "\t Loaded " << R.size() << " entries from file...");
 			return R;
 		}
@@ -422,7 +425,36 @@ public:
 
 	std::vector<Width1Tuple> compute_plain_RG2(const StateT& seed) {
 		assert(_config._max_width == 2);
+		/*
+		LPT_INFO( "cout", "s0: " << seed );
+		std::unordered_set<Width1Tuple,Width1TupleHasher> the_R;
+		float simt0 = aptk::time_used();
+		for (const auto& a : _model.applicable_actions(seed, _config._enforce_state_constraints)) {
+			LPT_INFO("cout", "action: " << _model.getTask().getGroundActions()[_model.get_action_idx(a)]->getName());
+			StateT s_a = _model.next( seed, a );
+			LPT_INFO("cout", "s_a: " << s_a );
+			run(s_a, _config._max_width);
+			report_simulation_stats(simt0);
 
+			if (_config._goal_directed && _unreached.size() == 0) {
+				LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
+				auto R_a =  extract_R_G(false);
+				for ( auto t : R_a )
+					the_R.insert(t);
+			}
+
+			// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
+			auto R_a = extract_R_1();
+			for ( auto t : R_a )
+				the_R.insert(t);
+
+			_evaluator.reset();
+		}
+
+		std::vector<Width1Tuple> R1(the_R.begin(),the_R.end());
+		LPT_INFO( "cout", "Simulation - Combined |R| = " << R1.size() );
+		return R1;
+		*/
 		_config._complete = false;
 		float simt0 = aptk::time_used();
   		run(seed, _config._max_width);
@@ -433,14 +465,45 @@ public:
 		}
 		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
 		return extract_R_1();
+
 	}
 
 
 	std::vector<Width1Tuple> compute_plain_R1(const StateT& seed) {
 		assert(_config._max_width == 1);
 		_config._complete = false;
-
 		float simt0 = aptk::time_used();
+		/*
+		LPT_INFO( "cout", "s0: " << seed );
+		std::unordered_set<Width1Tuple,Width1TupleHasher> the_R;
+
+		for (const auto& a : _model.applicable_actions(seed, _config._enforce_state_constraints)) {
+			LPT_INFO("cout", "action: " << _model.getTask().getGroundActions()[_model.get_action_idx(a)]->getName());
+			StateT s_a = _model.next( seed, a );
+			LPT_INFO("cout", "s_a: " << s_a );
+			run(s_a, _config._max_width);
+			report_simulation_stats(simt0);
+
+			if (_config._goal_directed && _unreached.size() == 0) {
+				LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
+				auto R_a =  extract_R_G_1();
+				for ( auto t : R_a )
+					the_R.insert(t);
+			}
+
+			// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
+			auto R_a = extract_R_1();
+			for ( auto t : R_a )
+				the_R.insert(t);
+
+			_evaluator.reset();
+		}
+
+		std::vector<Width1Tuple> R1(the_R.begin(),the_R.end());
+		LPT_INFO( "cout", "Simulation - Combined |R| = " << R1.size() );
+		return R1;
+		*/
+
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
 
@@ -451,6 +514,7 @@ public:
 
 		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
 		return extract_R_1();
+
 	}
 
 	// MRJ: This is not very useful at the moment, since we do really need to map the
@@ -460,11 +524,13 @@ public:
 	template <typename Container>
 	void load_R_set( std::string filename, Container& R ) {
 		using namespace rapidjson;
-		const ProblemInfo& info = ProblemInfo::getInstance();
+		//const ProblemInfo& info = ProblemInfo::getInstance();
 		FILE* fp = fopen(filename.c_str(), "rb"); // non-Windows use "r"
 		char readBuffer[65536];
 		FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-
+		if (fp == nullptr ) {
+			throw std::runtime_error("MultiValuedIWRun::load_R_set: Failed to open file '" + filename + "'");
+		}
         Document R_set;
 		R_set.ParseStream(is);
 		fclose(fp);
@@ -472,24 +538,10 @@ public:
 		const Value& tuples = R_set["elements"];
 		assert(tuples.IsArray());
 		for (SizeType i = 0; i < tuples.Size(); i++) {// Uses SizeType instead of size_t
-			std::string variable = tuples[i][0].GetString();
-			VariableIdx x = info.getVariableId(variable);
-			int feature_index = -1;
-			const Feature* phi = nullptr;
-			for ( unsigned j = 0; j < _evaluator.feature_set().size(); j++ ) {
-				phi = dynamic_cast<const Feature*>(_evaluator.feature_set().at(j));
-				auto scope = phi->scope();
-				if (scope.size() != 1 ) continue;
-				if ( x == scope[0]) {
-					feature_index = j;
-					break;
-				}
-			}
-			if ( phi == nullptr ) continue;
-			std::cout << (float)tuples[i][1].GetDouble();
-			object_id v = make_object<float>((float)tuples[i][1].GetDouble() );
-			std::cout << " " << fs0::raw_value<FSFeatureValueT>(v) << std::endl;
-			Width1Tuple t_i( feature_index, fs0::raw_value<FSFeatureValueT>( v ) );
+			// MRJ: input file format consists of feature index and feature (raw) value
+			unsigned feature_index = tuples[i][0].GetInt();
+			FSFeatureValueT feature_value = tuples[i][1].GetInt();
+			Width1Tuple t_i( feature_index, feature_value );
 			R.push_back(t_i);
 		}
 	}
@@ -592,6 +644,8 @@ public:
 						}
 						entry.PushBack(tuple.Move(),allocator);
 					}
+					Value feature_id(j);
+					entry.PushBack(feature_id.Move(),allocator);
 					Value value;
 					object_id o = make_object(phi->codomain(), v);
 					if ( o_type(o) == type_id::bool_t )
@@ -604,9 +658,10 @@ public:
 						std::string _literal = info.object_name(o);
 						value.SetString( _literal.c_str(), _literal.size(), allocator ) ;
 					}
-
-
 					entry.PushBack(value.Move(),allocator);
+					Value raw_value(v);
+					entry.PushBack(raw_value.Move(),allocator);
+
 				}
 				elements.PushBack(entry.Move(), allocator);
 			}
@@ -878,6 +933,9 @@ public:
 					update_novelty_counters_on_generation(novelty);
 
 					// LPT_INFO("cout", "Simulation - Node generated: " << *successor);
+					if (_config._log_search )
+						_visited.push_back(successor);
+
 
 					if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
 						report("All subgoals reached");
@@ -920,6 +978,66 @@ public:
 		LPT_INFO("cout", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
 		LPT_INFO("cout", "Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
 		LPT_INFO("cout", "Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
+		if (! _config._log_search ) return;
+
+		using namespace rapidjson;
+
+		// Dump optimal_paths and visited into JSON document
+		const ProblemInfo& info = ProblemInfo::getInstance();
+		Document trace;
+		Document::AllocatorType& allocator = trace.GetAllocator();
+		trace.SetObject();
+		Value domainName;
+		domainName.SetString(StringRef(info.getDomainName().c_str()));
+		trace.AddMember("domain", domainName.Move(), allocator );
+		Value instanceName;
+		instanceName.SetString(StringRef(info.getInstanceName().c_str()));
+		trace.AddMember("instance", instanceName.Move(), allocator );
+		Value visits(kArrayType);
+        {
+            for ( auto n : _visited ) {
+				auto s = n->state;
+                Value state(kObjectType);
+				JSONArchive::store(state, allocator, s);
+                {
+					Value v(n->_gen_order);
+					state.AddMember( "gen_order", v, allocator);
+                }
+                visits.PushBack(state.Move(), allocator);
+            }
+        }
+        trace.AddMember("visited", visits, allocator);
+		Value opt_paths(kArrayType);
+		{
+			for ( auto path_to_sub_goal : _optimal_paths ) {
+				if ( path_to_sub_goal == nullptr ) continue;
+				Value path(kArrayType);
+				{
+					NodePT node = path_to_sub_goal;
+
+					while (node->has_parent()) {
+						Value state(kObjectType);
+						JSONArchive::store(state, allocator, node->state);
+						path.PushBack( state.Move(),allocator);
+						node = node->parent;
+					}
+
+					Value s0(kObjectType);
+					JSONArchive::store( s0, allocator, node->state );
+					path.PushBack( s0.Move(), allocator );
+				}
+				opt_paths.PushBack(path.Move(),allocator);
+			}
+
+		}
+		trace.AddMember("optimal_paths", opt_paths, allocator );
+
+		FILE* fp = fopen( "mv_iw_run.json", "wb"); // non-Windows use "w"
+		char writeBuffer[65536];
+		FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+		Writer<FileWriteStream> writer(os);
+		trace.Accept(writer);
+		fclose(fp);
 	}
 
 protected:
