@@ -143,7 +143,10 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	//! Set the global singleton Problem instance
 	bool has_negated_preconditions = _check_negated_preconditions(action_data);
 	LPT_INFO("cout", "Quick Negated-Precondition Test: Does the problem have negated preconditions? " << has_negated_preconditions);
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, has_negated_preconditions));
+	LPT_INFO("cout", "Atom Index: Indexing negative literals? " << has_negated_preconditions);
+	// We will index the negative literals if either the problem has neg. precs, or the user explicitly wants _not_ to ignore them on novelty computations.
+	bool index_negative_literals = has_negated_preconditions || !(config.getOption<bool>("ignore_neg_literals", true));
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 
 	problem->consolidateAxioms();
