@@ -271,6 +271,8 @@ public:
 		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) return 0;
 		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::L0 )
 			return compute_R_via_L0(node);
+		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::G0 )
+			return compute_R_via_G0(node);
 		return compute_R(node).num_reached();
 	}
 
@@ -424,6 +426,13 @@ public:
 	template <typename NodeT>
 	unsigned compute_R_via_L0(NodeT& node) {
 		unsigned v =  _l0_heuristic.evaluate(node.state);
+		node._hash_r = v;
+		return v;
+	}
+
+	template <typename NodeT>
+	unsigned compute_R_via_G0(NodeT& node) {
+		unsigned v =  _l2_norm.ball_geodesic_index(node.state);
 		node._hash_r = v;
 		return v;
 	}
