@@ -45,7 +45,7 @@ public:
 	CSPTranslator& operator=(const CSPTranslator&) = delete;
 	CSPTranslator& operator=(CSPTranslator&&) = delete;
 
-	unsigned add_intvar(Gecode::IntVar csp_variable, VariableIdx planning_variable = INVALID_VARIABLE);
+	unsigned add_intvar(Gecode::IntVar csp_variable, type_id var_t, VariableIdx planning_variable = INVALID_VARIABLE);
 	unsigned add_boolvar(Gecode::BoolVar csp_variable);
 
 	//! This updates the actual variables of the given CSP with all the CSP variables that have been registered in the translator so far
@@ -66,7 +66,7 @@ public:
 	unsigned registerIntVariable(int min, int max);
 	
 	bool registerNestedTerm(const fs::NestedTerm* nested);
-	bool registerNestedTerm(const fs::NestedTerm* nested, TypeIdx domain_type);
+	bool registerNestedTerm(const fs::NestedTerm* nested, TypeIdx domain_type, const type_id& codomain_tid);
 	bool registerNestedTerm(const fs::NestedTerm* nested, int min, int max);
 	
 	//! Returns the index of the CSP variable corresponding to the given term under the given role.
@@ -137,6 +137,10 @@ protected:
 	
 	//! An index - _intvars_idx[x] is the VariableIdx of the CSP variable with index 'x'
 	std::vector<VariableIdx> _intvars_idx;
+	
+	//! A mapping from CSP intvar to the underlying type_id (e.g. might be object_t, or int_t.
+	//! This is necessary to resolve variables to object_ids with the appropriate types
+	std::vector<type_id> _intvars_types;
 	
 	//! A map mapping terms that have already been processed (under a certain role, e.g. input/output) to the ID of their corresponding CSP variable
 	std::unordered_map<const fs::Term*, unsigned> _registered;

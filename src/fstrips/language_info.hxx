@@ -148,7 +148,7 @@ public:
 	const FSTypeInfo& typeinfo(const TypeIdx& fstype) const;
 
 	//! Return the symbol info associated to the given symbol
-	const SymbolInfo& symbolinfo(const symbol_id& fstype) const;
+	const SymbolInfo& symbolinfo(const symbol_id& sid) const;
 
 	//! Return all objects of a given FS-type, _including_ those which are
 	//! objects of a descending type in the type hierarchy

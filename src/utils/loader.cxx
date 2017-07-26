@@ -47,8 +47,9 @@ _check_negated_preconditions(std::vector<const ActionData*>& schemas) {
 			if (!eq) continue;
 			const fs::Constant* cnst = dynamic_cast<const fs::Constant*>(eq->rhs());
 			if (!cnst) continue;
-			auto val = fs0::value<int>(cnst->getValue());
-			if (val==0) return true;
+			if (o_type(cnst->getValue()) == type_id::bool_t && !(fs0::value<bool>(cnst->getValue()))) {
+				return true;
+			}
 		}
 	}
 
@@ -191,17 +192,24 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data,
 		const rapidjson::Value& node = data["atoms"][i];
 		VariableIdx var = node[0].GetInt();
 		object_id value;
-		if (info.sv_type(var) == type_id::float_t )
+		type_id var_type = info.sv_type(var);
+		
+		if (var_type == type_id::bool_t) {
+			value =  make_object((bool)node[1].GetInt());
+		} else if (var_type == type_id::float_t) {
 			// MRJ: We're using the specialization so the floating point number
 			// is stored correctly via type punning
 		    value =  make_object((float)node[1].GetDouble());
-		else if ( info.sv_type(var) == type_id::int_t )
+		}
+		else if (var_type == type_id::int_t) {
 		    value =  make_object(type_id::int_t, node[1].GetInt());
-		else if ( info.sv_type(var) == type_id::object_t )
+		}
+		else if (var_type == type_id::object_t) {
 			value =  make_object(type_id::object_t, node[1].GetInt());
+		}
 		else {
-			throw std::runtime_error(	"Loader::loadState() : Cannot load state variable '" + info.getVariableName(var)
-										+ "' of type '" + fstrips::LanguageInfo::instance().get_typename(var) + "'");
+			throw std::runtime_error("Loader::loadState() : Cannot load state variable '" + info.getVariableName(var)
+									 + "' of type '" + fstrips::LanguageInfo::instance().get_typename(var) + "'");
 		}
 
 		facts.push_back(Atom(var,value));
