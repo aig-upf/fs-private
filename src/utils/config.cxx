@@ -80,8 +80,26 @@ void Config::load(const std::string& filename) {
                                                                 {"implicit_euler", IntegratorT::ImplicitEuler},
                                                                 {"runge_kutta_2", IntegratorT::RungeKutta2},
                                                                 {"runge_kutta_4", IntegratorT::RungeKutta4}});
+		std::string selected;
+		switch ( _successor_prediction ) {
+		case IntegratorT::ExplicitEuler :
+			selected = "Explicit Euler";
+			break;
+		case IntegratorT::ImplicitEuler :
+			selected = "Implicit Euler";
+			break;
+		case IntegratorT::RungeKutta2 :
+			selected = "Runge-Kutta 2,2";
+			break;
+		case IntegratorT::RungeKutta4 :
+			selected = "Runge-Kutta 4,5";
+			break;
+		};
+
+		LPT_INFO("main", "[Config::load] Option 'integration_factor' takes default value: " << selected);
     } catch ( boost::property_tree::ptree_bad_path& e ) {
         // Use default value in the constructor
+		LPT_INFO("main", "[Config::load] Option 'integration_factor' takes default value: " << "explicit_euler" );
     }
 
     try {

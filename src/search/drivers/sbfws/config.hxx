@@ -19,13 +19,15 @@ struct SBFWSConfig {
 	const unsigned simulation_width;
 	const bool mark_negative_propositions;
 	const bool complete_simulation;
-	
+	const bool using_feature_set;
+	const bool using_coupled_features;
+
 	enum class NoveltyEvaluatorType {Adaptive, Generic};
 	NoveltyEvaluatorType evaluator_t;
 
-	enum class RelevantSetType {None, Sim, L0};
+	enum class RelevantSetType {None, Sim, L0, G0};
 	RelevantSetType relevant_set_type;
-	
+
 	//! When to recompute R: only in seed node, or each time number of unachieved goals #g decreases
 	enum class RComputation {Seed, GDecr};
 	RComputation r_computation;

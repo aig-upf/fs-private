@@ -62,9 +62,11 @@ if env['edebug']:
 # Base include directories
 include_paths = ['src', os.path.join(env['lapkt'], 'include')]
 isystem_paths = []
-	
+
 # Gecode tweaks
 isystem_paths += ['/usr/local/include'] # MRJ: This probably should be acquired from an environment variable
+# Eigen
+isystem_paths += ['/usr/include/eigen3']
 isystem_paths += [os.environ['HOME'] + '/local/include']
 
 sources = locate_source_files('src', '*.cxx')

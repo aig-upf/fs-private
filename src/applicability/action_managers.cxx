@@ -23,11 +23,11 @@ NaiveApplicabilityManager::NaiveApplicabilityManager(const std::vector<const fs:
 	: _state_constraints(state_constraints) {}
 
 //! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
-bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAction& action) const {
+bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const {
     if (!action.isControl()) return false;
 	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
 
-    if (!_state_constraints.empty()) { // If we have no constraints, we can spare the cost of creating the new state.
+    if (enforce_state_constraints && !_state_constraints.empty()) { // If we have no constraints, we can spare the cost of creating the new state.
 		auto atoms = computeEffects(state, action);
         State next(state, atoms);
         for ( auto c : _state_constraints )
@@ -363,11 +363,11 @@ NaiveActionManager::NaiveActionManager(const std::vector<const GroundAction*>& a
 {}
 
 bool
-NaiveActionManager::applicable(const State& state, const GroundAction& action) const {
+NaiveActionManager::applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const {
     if (!action.isControl()) return false;
 	if (!NaiveApplicabilityManager::checkFormulaHolds(action.getPrecondition(), state)) return false;
 
-	if (!_state_constraints.empty()) { // If we have no constraints, we can spare the cost of further checks
+	if (enforce_state_constraints && !_state_constraints.empty()) { // If we have no constraints, we can spare the cost of further checks
 		NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);
 		State next(state, _effects_cache);
 		return check_constraints(action.getId(), next);
@@ -376,8 +376,8 @@ NaiveActionManager::applicable(const State& state, const GroundAction& action) c
 }
 
 GroundApplicableSet
-NaiveActionManager::applicable(const State& state) const {
-	return GroundApplicableSet(*this, state, compute_whitelist(state));
+NaiveActionManager::applicable(const State& state, bool enforce_state_constraints) const {
+	return GroundApplicableSet(*this, state, compute_whitelist(state),enforce_state_constraints);
 }
 
 

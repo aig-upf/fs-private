@@ -26,12 +26,12 @@ bool GroundStateModel::goal(const State& state) const {
 	return _task.getGoalSatManager().satisfied(state);
 }
 
-bool GroundStateModel::is_applicable(const State& state, const ActionId& action) const {
-	return is_applicable(state, *(_task.getGroundActions()[action]));
+bool GroundStateModel::is_applicable(const State& state, const ActionId& action, bool enforce_state_constraints) const {
+	return is_applicable(state, *(_task.getGroundActions()[action]), enforce_state_constraints);
 }
 
-bool GroundStateModel::is_applicable(const State& state, const ActionType& action) const {
-	return _manager->applicable(state, action);
+bool GroundStateModel::is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const {
+	return _manager->applicable(state, action, enforce_state_constraints);
 }
 
 State GroundStateModel::next(const State& state, const GroundAction::IdType& actionIdx) const {
@@ -43,8 +43,8 @@ State GroundStateModel::next(const State& state, const GroundAction& a) const {
 	return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
 }
 
-GroundApplicableSet GroundStateModel::applicable_actions(const State& state) const {
-	return _manager->applicable(state);
+GroundApplicableSet GroundStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
+	return _manager->applicable(state, enforce_state_constraints);
 }
 
 ActionManagerI*

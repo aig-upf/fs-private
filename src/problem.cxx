@@ -34,7 +34,8 @@ Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
 	_partials(),
 	_state_constraints(state_constraints),
 	_goal_formula(goal),
-    	_metric(metric),
+    _metric(metric),
+    _wait_action(nullptr),
 	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
 	_is_predicative(check_is_predicative())
 {

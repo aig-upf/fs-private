@@ -29,6 +29,7 @@ public:
 	ZeroaryFunction(const object_id& data) : _data(data) {}
 
 	object_id value() const { return _data; }
+	void set_value( object_id v ) { _data = v; }
 
 	Function get_function() const override {
 		auto& data = _data;

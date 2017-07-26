@@ -55,7 +55,7 @@ namespace fs0 { namespace dynamics {
             if ( do_zcc && !manager.checkStateConstraints(s_k_plus_1) ) {
                 // At least one state constraint was violated!
                 LPT_DEBUG("dynamics", "WaitAction::apply: State constraints violated at lattice point: " << k );
-                atoms.clear();
+                //atoms.clear();
                 return; // we're done here
             }
             double t_k_plus_1 = fs0::value<float>(s_k_plus_1.getValue(_clock_var));

@@ -146,6 +146,7 @@ public:
     double getDiscretizationStep( ) const { return _discretization_step; }
 
     bool getZeroCrossingControl() const { return _zero_crossing_control; }
+	void setZeroCrossingControl( bool do_zcc ) { _zero_crossing_control = do_zcc; } 
 
     double getHorizonTime() const { return _horizon_time; }
     bool hasHorizon() const { return _horizon_time >= 1e-7; }

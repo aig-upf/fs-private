@@ -22,7 +22,7 @@ public:
 	NaiveApplicabilityManager(const std::vector<const fs::Formula*>& state_constraints);
 
 	//! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
-	bool isApplicable(const State& state, const GroundAction& action) const;
+	bool isApplicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const;
     //! A process (natural action) is active if its preconditions hold, note that state constraints
     //! need to be validated over the interval [t, t+dt]
     bool isActive( const State& state, const GroundAction& process ) const;
@@ -93,10 +93,10 @@ public:
 	~NaiveActionManager() = default;
 
 	//! Return the set of all actions applicable in a given state
-	ApplicableSet applicable(const State& state) const override;
+	ApplicableSet applicable(const State& state, bool enforce_state_constraints) const override;
 
 	//! Return whether the given action is applicable in the given state
-	bool applicable(const State& state, const GroundAction& action) const override;
+	bool applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const override;
 
 	const std::vector<const GroundAction*>& getAllActions() const override { return _actions; }
 
@@ -166,8 +166,8 @@ class GroundApplicableSet {
 protected:
 	friend class NaiveActionManager;
 
-	GroundApplicableSet(const ActionManagerI& manager, const State& state, const std::vector<ActionIdx>& action_whitelist):
-		_manager(manager), _state(state), _whitelist(action_whitelist)
+	GroundApplicableSet(const ActionManagerI& manager, const State& state, const std::vector<ActionIdx>& action_whitelist, bool enforce_state_constraints):
+		_manager(manager), _state(state), _whitelist(action_whitelist), _enforce_state_constraints(enforce_state_constraints)
 	{}
 
 	class Iterator {
@@ -179,6 +179,8 @@ protected:
 		const std::vector<ActionIdx>& _whitelist;
 
 		unsigned _index;
+
+		bool _enforce_state_constraints;
 
 		void advance() {
 
@@ -193,7 +195,7 @@ protected:
 			for (unsigned sz = _whitelist.size();_index < sz; ++_index) {
 					unsigned action_idx = _whitelist[_index];
 
-					if (_manager.applicable(_state, *actions[action_idx])) { // The action is applicable, break the for loop.
+					if (_manager.applicable(_state, *actions[action_idx], _enforce_state_constraints)) { // The action is applicable, break the for loop.
 					// std::cout << "Found applicable action: " << *_actions[action_idx] << std::endl;
 					return;
 				}
@@ -202,11 +204,12 @@ protected:
 		}
 
 	public:
-		Iterator(const State& state, const ActionManagerI& manager, const std::vector<ActionIdx>& action_whitelist, unsigned index) :
+		Iterator(const State& state, const ActionManagerI& manager, const std::vector<ActionIdx>& action_whitelist, unsigned index, bool enforce_state_constraints) :
 			_manager(manager),
 			_state(state),
 			_whitelist(action_whitelist),
-			_index(index)
+			_index(index),
+			_enforce_state_constraints(enforce_state_constraints)
 		{
 		 	// std::cout << "Whitelist size: " << _whitelist.size() << " vs. num actions: " << _manager.getAllActions().size() << std::endl;
 			advance();
@@ -227,8 +230,8 @@ protected:
 	};
 
 public:
-	Iterator begin() const { return Iterator(_state, _manager, _whitelist, 0); }
-	Iterator end() const { return Iterator(_state, _manager, _whitelist, _whitelist.size()); }
+	Iterator begin() const { return Iterator(_state, _manager, _whitelist, 0, _enforce_state_constraints); }
+	Iterator end() const { return Iterator(_state, _manager, _whitelist, _whitelist.size(), _enforce_state_constraints); }
 
 protected:
 	const ActionManagerI& _manager;
@@ -236,6 +239,8 @@ protected:
 	const State& _state;
 
 	const std::vector<ActionIdx> _whitelist;
+
+	bool _enforce_state_constraints;
 };
 
 

@@ -4,6 +4,7 @@
 #include "base.hxx"
 #include "features/features.hxx"
 #include <search/drivers/sbfws/sbfws.hxx>
+#include <search/drivers/sbfws/mv_iw_run.hxx>
 #include <search/utils.hxx>
 #include <models/simple_state_model.hxx>
 
@@ -13,10 +14,12 @@ namespace fs0 { namespace bfws {
 
 
 //! Factory method
-template <typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEvaluatorT>
-std::unique_ptr<SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>>
+template <	typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEvaluatorT,
+			template <class N, class S, class NE, class FS> class SimulatorT,
+			template <class S, class A> class SimNodeT>
+std::unique_ptr<SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, SimulatorT, SimNodeT>>
 create(const Config& config, FeatureEvaluatorT&& featureset, SBFWSConfig& conf, const StateModelT& model, BFWSStats& stats) {
-	using EngineT = SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>;
+	using EngineT = SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, SimulatorT, SimNodeT>;
 	return std::unique_ptr<EngineT>(new EngineT(model, std::move(featureset), stats, config, conf));
 }
 
@@ -45,7 +48,6 @@ SBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& conf
 		using FeatureEvaluatorT = lapkt::novelty::GenericFeatureSetEvaluator<StateT>;
 		return do_search1<IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, selector.select(), config, out_dir, start_time);
 	}
-
 	if (config.getOption<bool>("bfws.extra_features", false)) {
 		FeatureSelector<StateT> selector(ProblemInfo::getInstance());
 
@@ -83,7 +85,13 @@ ExitCode
 SBFWSDriver<StateModelT>::do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time) {
 	SBFWSConfig bfws_config(config);
 
-	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>(config, std::move(featureset), bfws_config, model, _stats);
+	if ( bfws_config.using_feature_set) {
+		auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, MultiValuedIWRun, MultiValuedIWRunNode >(config, std::move(featureset), bfws_config, model, _stats);
+
+		return drivers::Utils::do_search(*engine, model, out_dir, start_time, _stats);
+	}
+
+	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, IWRun, IWRunNode>(config, std::move(featureset), bfws_config, model, _stats);
 
 	return drivers::Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }

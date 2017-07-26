@@ -10,15 +10,15 @@
 
 namespace fs0 { namespace drivers {
 
-LiftedStateModel 
+LiftedStateModel
 GroundingSetup::fully_lifted_model(Problem& problem) {
 	Validation::check_no_conditional_effects(problem);
-	
+
 	// We don't ground any action
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
 	if ( problem.requires_handling_continuous_change() ) {
-		problem.addGroundAction(dynamics::WaitAction::create(problem));
+		problem.add_wait_action( dynamics::WaitAction::create(problem) );
 	}
 	return LiftedStateModel::build(problem);
 }
@@ -28,7 +28,7 @@ GroundingSetup::fully_ground_model(Problem& problem) {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
 	if ( problem.requires_handling_continuous_change() ) {
-		problem.addGroundAction(dynamics::WaitAction::create(problem));
+		problem.add_wait_action( dynamics::WaitAction::create(problem) );
 	}
 	return GroundStateModel(problem);
 }
@@ -38,8 +38,7 @@ GroundingSetup::fully_ground_simple_model(Problem& problem) {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
 	if ( problem.requires_handling_continuous_change() ) {
-		problem.addGroundAction(dynamics::WaitAction::create(problem));
-		std::cout << problem.getGroundActions().back()->getName() << std::endl;
+		problem.add_wait_action( dynamics::WaitAction::create(problem) );
 	}
 	return SimpleStateModel::build(problem);
 }
@@ -50,7 +49,7 @@ GroundingSetup::ground_search_lifted_heuristic(Problem& problem) {
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
 	if ( problem.requires_handling_continuous_change() ) {
-		problem.addGroundAction(dynamics::WaitAction::create(problem));
+		problem.add_wait_action( dynamics::WaitAction::create(problem) );
 	}
 	return GroundStateModel(problem);
 }

@@ -47,8 +47,14 @@ _check_negated_preconditions(std::vector<const ActionData*>& schemas) {
 			if (!eq) continue;
 			const fs::Constant* cnst = dynamic_cast<const fs::Constant*>(eq->rhs());
 			if (!cnst) continue;
-			auto val = fs0::value<int>(cnst->getValue());
-			if (val==0) return true;
+			try {
+				auto val = fs0::value<int>(cnst->getValue());
+				if (val==0) return true;
+			} catch( const type_mismatch_error& err ) {
+				// MRJ: try as bool
+				auto val = fs0::value<bool>(cnst->getValue());
+				if (!val) return true;
+			}
 		}
 	}
 
