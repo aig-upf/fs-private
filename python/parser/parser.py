@@ -32,16 +32,16 @@ class Parser(object):
             result = fs.OpenExpression('or', self.process_children(exp.parts, binding_unit))
         elif isinstance(exp, pddl.conditions.Truth):
             result = fs.Tautology()
-        elif isinstance(exp, pddl.pddl_types.TypedObject ) :
+        elif isinstance(exp, pddl.pddl_types.TypedObject):
             result = fs.LogicalVariable(exp.name) if exp.name[0] == '?' else fs.Constant(exp.name)
         elif isinstance(exp, str):
             result = fs.LogicalVariable(exp) if exp[0] == '?' else fs.Constant(exp)
         elif isinstance(exp, int):
             result = fs.Constant(exp)
-        elif isinstance(exp, pddl.f_expression.NumericConstant) :
+        elif isinstance(exp, pddl.f_expression.NumericConstant):
             result = fs.Constant(exp.value)
         else:
-            raise exceptions.ParseException("Unknown expression type for expression '{}' of type '{}'".format(exp,type(exp)))
+            raise exceptions.ParseException("Unknown expression type for exp. '{}' of type '{}'".format(exp, type(exp)))
 
         return fs.to_prenex_normal_form(result)
 

@@ -151,23 +151,25 @@ class FSNamedFormula(FSBaseComponent):
 
 class FSActionSchema(FSBaseComponent):
     """ A FSTRIPS action schema """
-    def __init__(self, index, action, type = "control"):
+    def __init__(self, index, action, type_="control"):
         super().__init__(index)
         self.action = action
-        self.type = type
+        self.type = type_
 
         # Order matters: the binding unit needs to be created when the effects are processed
         self.binding_unit = fs.BindingUnit.from_parameters(action.parameters)
-        try :
+
+        try:
             self.precondition = self.process_conditions(self.action.precondition)
-        except exceptions.UndeclaredSymbol as e :
-            raise SystemExit('Found undeclared symbol in precondition of schema "{}", exception message follows: \n {}\n{}'.format(action.name,e,))
+        except exceptions.UndeclaredSymbol as e:
+            raise SystemExit('Undeclared symbol in precondition of schema "{}", exception message: \n {}'
+                             .format(action.name, e))
 
-        try :
+        try:
             self.effects = self.process_effects()
-        except exceptions.UndeclaredSymbol as e :
-            raise SystemExit('Found undeclared symbol in effects of schema "{}", exception message follows: \n {}'.format(action.name,e))
-
+        except exceptions.UndeclaredSymbol as e:
+            raise SystemExit('Undeclared symbol in precondition of schema "{}", exception message: \n {}'
+                             .format(action.name, e))
 
     def dump(self):
         return dict(name=self.action.name,
@@ -203,10 +205,10 @@ class FSActionSchema(FSBaseComponent):
             lhs = FunctionalTerm(expression.predicate, expression.args)
 
             if expression.negated:
-                rhs = "0"
+                rhs = "false"
                 type_ = 'del'
             else:
-                rhs = "1"
+                rhs = "true"
                 type_ = 'add'
 
         lhs, rhs, condition = (self.parser.process_expression(elem, binding_unit) for elem in (lhs, rhs, condition))

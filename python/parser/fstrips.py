@@ -62,14 +62,14 @@ class Variable(object):
     def __init__(self, symbol, args):
         self.symbol = symbol
         self.args = []
-        for a in args :
-            if is_int(a) :
+        for a in args:
+            if is_int(a):
                 self.args.append(a)
-            elif is_float(a) :
+            elif is_float(a):
                 self.args.append(a)
-            elif isinstance(a,TypedObject) :
+            elif isinstance(a, TypedObject):
                 self.args.append(a.name)
-            else :
+            else:
                 self.args.append(a)
         self.args = tuple(self.args)
 
@@ -137,15 +137,6 @@ class LogicalVariable(Term):
 
 class Constant(Term):
 
-    def dump(self, index, binding_unit):
-        if is_int(self.symbol):  # We have an integer constant
-            return dict(type='int_constant', value=int(self.symbol), typename="int")
-        elif is_float(self.symbol) : # We have rational constant
-            return dict(type='number_constant', value=float(self.symbol), typename="number")
-        else:  # We have a logical constant
-            return dict(type='constant', value=index.objects.get_index(self.symbol),
-                        typename=index.object_types[self.symbol])
-
     # Guillem:
     # MRJ: Constants aren't typed explicitly - their type is that of the generic types
     # TODO Discuss this with Guillem, I don't see how we can tell apart '3' as being
@@ -165,6 +156,13 @@ class Constant(Term):
                         value=float(self.symbol),
                         type_id="float_t",
                         fstype="number")
+
+        elif self.symbol in ("true", "false"):  # We have a bool constant
+            return dict(type='constant',
+                        symbol=self.symbol,
+                        value= 1 if self.symbol == "true" else 0,
+                        type_id="bool_t",
+                        fstype="bool")
 
         else:  # We have a logical constant
             return dict(type='constant',

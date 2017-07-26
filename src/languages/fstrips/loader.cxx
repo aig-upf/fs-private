@@ -95,18 +95,25 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const ProblemInfo& i
 
 	if (term_type == "constant") {
 		std::string type_id_str = tree["type_id"].GetString();
-		if (type_id_str == "int_t") {
+		
+		if (type_id_str == "bool_t") {
+			TypeIdx fstype = info.getTypeId("bool");
+			return new Constant(make_object(type_id::bool_t, (bool) tree["value"].GetInt()), fstype);
+			
+		} else if (type_id_str == "int_t") {
 			TypeIdx fstype = info.getTypeId(tree["fstype"].GetString());
 			return new Constant(make_object(tree["value"].GetInt()), fstype);
+			
 		} else if (type_id_str == "float_t" ) {
 			TypeIdx fstype = info.getTypeId(tree["fstype"].GetString());
-			return new Constant(make_object((float)tree["value"].GetDouble()), fstype);			 
+			return new Constant(make_object((float)tree["value"].GetDouble()), fstype);	
+			
 		} else if (type_id_str == "object_t") {
 			TypeIdx fstype = info.getTypeId(tree["fstype"].GetString());
 			object_id o = make_object(type_id::object_t, tree["value"].GetInt());
 			return new Constant(o, fstype);
-		}
-		else throw std::runtime_error("Unknown type id: " + type_id_str);
+			
+		} else throw std::runtime_error("Unknown type id: " + type_id_str);
 
 	} else if (term_type == "variable") {
 		return new BoundVariable(tree["position"].GetInt(), tree["symbol"].GetString(), info.getTypeId(tree["fstype"].GetString()));
