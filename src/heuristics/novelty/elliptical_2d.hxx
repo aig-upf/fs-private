@@ -8,7 +8,7 @@ namespace fs0 {
     public:
 
         EllipticalMapping2D() = delete;
-        EllipticalMapping2D( const std::vector<VariableIdx>& S, std::shared_ptr<State> x0, std::shared_ptr<State> xG );
+        EllipticalMapping2D( const std::vector<VariableIdx>& S, std::shared_ptr<State> x0, std::shared_ptr<State> xG, const std::vector<float>& bands );
 
         virtual ~EllipticalMapping2D();
         virtual lapkt::novelty::NoveltyFeature<State>* clone() const override { return new EllipticalMapping2D(*this); }
@@ -19,9 +19,11 @@ namespace fs0 {
         virtual std::ostream& print(std::ostream& os) const;
 
         static void make_goal_relative_features( std::vector< lapkt::novelty::NoveltyFeature<State>* >& features );
+        static void print_to_JSON( std::string filename, const std::vector< lapkt::novelty::NoveltyFeature<State>* >& features );
 
     protected:
         std::shared_ptr<State>      _start;
         std::shared_ptr<State>      _goal;
+        std::vector<float>          _bands;
     };
 }

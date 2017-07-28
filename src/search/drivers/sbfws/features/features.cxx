@@ -205,6 +205,7 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 
 	if ( Config::instance().getOption<bool>("features.elliptical_2d", false)) {
 		EllipticalMapping2D::make_goal_relative_features( features );
+        EllipticalMapping2D::print_to_JSON( "elliptical_2d.features.json", features );
 	}
 
 	try {

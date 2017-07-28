@@ -8,7 +8,6 @@
 #include <heuristics/unsat_goal_atoms.hxx>
 #include <heuristics/l0.hxx>
 #include <heuristics/l2_norm.hxx>
-
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
@@ -432,7 +431,7 @@ public:
 
 	template <typename NodeT>
 	unsigned compute_R_via_G0(NodeT& node) {
-		unsigned v =  _l2_norm.ball_geodesic_index(node.state);
+		unsigned v = _l2_norm.ball_geodesic_index(node.state);
 		node._hash_r = v;
 		return v;
 	}
