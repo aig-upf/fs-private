@@ -52,9 +52,15 @@ namespace fs0 {
         std::vector< const fs::RelationalFormula* > relevant_formulae;
 
         for ( auto formula : fs::all_relations( *problem.getGoalConditions()))
-            if ( supported.find( formula->symbol()) != supported.end() )
+            if ( supported.find( formula->symbol()) != supported.end() ) {
                 relevant_formulae.push_back(formula);
-        /*
+                std::set<VariableIdx> condS;
+                fs::ScopeUtils::computeFullScope(formula, condS);
+                for ( auto x : condS ) {
+                    goal_relevant_vars.insert(x);
+                }
+            }
+
         for ( auto formula : problem.getStateConstraints()  ) {
             for ( auto f : fs::all_relations(*formula) ) {
                 if ( f == nullptr ) continue;
@@ -62,17 +68,13 @@ namespace fs0 {
                     relevant_formulae.push_back(f);
             }
         }
-        */
+
         LPT_INFO( "features", "Goal relevant formulae: " << relevant_formulae.size() );
 
         for ( auto formula : relevant_formulae ) {
             LPT_INFO("features", "\t" << *formula );
             poly.add_constraint(formula);
-            std::set<VariableIdx> condS;
-            fs::ScopeUtils::computeFullScope(formula, condS);
-            for ( auto x : condS ) {
-                goal_relevant_vars.insert(x);
-            }
+
 		}
 
         poly.setup();
