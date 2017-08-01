@@ -26,6 +26,9 @@ std::vector<const Term*> all_terms(const LogicalElement& element) {
 	return Utils::filter_by_type<const Term*>(all_nodes(element));
 }
 
+std::vector<const StateVariable*> all_state_variables(const LogicalElement& element) {
+	return Utils::filter_by_type<const StateVariable*>(all_nodes(element));
+}
 
 std::vector<const LogicalElement*> all_nodes(const LogicalElement& element) {
 	AllNodesVisitor visitor;
