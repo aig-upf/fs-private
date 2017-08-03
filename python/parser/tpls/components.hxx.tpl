@@ -1,12 +1,13 @@
 
 #pragma once
 
-#include <fs_types.hxx>
-#include <utils/loader.hxx>
+#include <cstring>
 #include <lib/rapidjson/document.h>
-#include "external.hxx"
-
+#include <utils/loader.hxx>
 #include <utils/component_factory.hxx>
+#include <fstrips/loader.hxx>
+
+#include "external.hxx"
 
 namespace fs0 { class Problem; }
 
@@ -16,11 +17,15 @@ $method_factories
 
 /* Generate the whole planning problem */
 inline Problem* generate(const rapidjson::Document& data, const std::string& data_dir) {
-	ComponentFactory factory;
+	fs0::BaseComponentFactory factory;
+
+	fs0::fstrips::LanguageJsonLoader::loadLanguageInfo(data);
 	ProblemInfo& info = Loader::loadProblemInfo(data, data_dir, factory);
+	
 	std::unique_ptr<External> external = std::unique_ptr<External>(new External(info, data_dir));
 	external->registerComponents();
 	info.set_external(std::move(external));
-	auto problem = Loader::loadProblem(data);
-	return problem;
+
+
+	return fs0::Loader::loadProblem(data);	
 }
