@@ -67,6 +67,7 @@ class TermBindingVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
+    , public Loki::Visitor<AxiomaticTerm, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
 	, public Loki::Visitor<SubtractionTerm, void, true>
 	, public Loki::Visitor<MultiplicationTerm, void, true>

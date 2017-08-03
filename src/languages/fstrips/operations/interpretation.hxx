@@ -44,6 +44,7 @@ class VariableInterpretationVisitor
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
+    , public Loki::Visitor<AxiomaticTerm, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
 	, public Loki::Visitor<SubtractionTerm, void, true>
 	, public Loki::Visitor<MultiplicationTerm, void, true>
@@ -72,6 +73,7 @@ public:
 	void Visit(const AxiomaticTermWrapper& lhs) { throw std::runtime_error("Axioms cannot resolve to an state variable"); }
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
+	void Visit(const AxiomaticTerm& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
