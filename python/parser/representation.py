@@ -5,6 +5,7 @@ import json
 import operator
 
 from python import utils
+from python.parser.parser import Parser
 from . import fstrips
 from . import util
 from .static import DataElement
@@ -100,6 +101,7 @@ class ProblemRepresentation(object):
 
     def dump_symbol_data(self):
         res = []
+        p = Parser(self.index)
         for name, symbol in self.index.symbols.items():
             i = self.index.symbol_index[name]
 
@@ -108,12 +110,11 @@ class ProblemRepresentation(object):
             # Collect the list of variables that arise from this particular symbol
             f_variables = [(i, str(v)) for i, v in enumerate(self.index.state_variables) if v.symbol == name]
 
-            static = name in self.index.static_symbols
             unbounded = util.has_unbounded_arity(name)
 
             # Store the symbol info as a tuple:
             # <ID, name, type, <function_domain>, function_codomain, state_variables, static?, unbounded_arity?>
-            res.append([i, name, type_, symbol.arguments, symbol.codomain, f_variables, static, unbounded])
+            res.append([i, name, type_, symbol.arguments, symbol.codomain, f_variables, p.is_static(name), unbounded])
         return res
 
     def dump_type_data(self):
