@@ -54,3 +54,5 @@ __pycache__/
 # Build temporary files
 _build/*
 build/*
+experiments/*
+workspace/*
