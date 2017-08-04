@@ -57,3 +57,4 @@ build/*
 experiments/*
 workspace/*
 generated/*
+preprocessor/generated/*
