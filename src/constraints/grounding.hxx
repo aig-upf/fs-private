@@ -21,7 +21,7 @@ public:
 
 class AxiomGrounder {
 public:
-	static const unsigned long MAX_GROUND_ACTIONS = 100000000;
+	static const unsigned long MAX_GROUND_AXIOMS = 100000000;
 
 	static std::vector<const fs::Axiom*> fully_ground(const std::vector<const fs::Axiom*>& axioms, const ProblemInfo& info);
 

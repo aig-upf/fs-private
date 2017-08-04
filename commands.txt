@@ -58,6 +58,6 @@ BrFS:
 
 --driver bfs
 
-R[2] over elliptical features, numeric state variables projected away: 
+R[2] over elliptical features, numeric state variables projected away:
 
 ./run.py --hybrid --instance ~/Sandboxes/mpc-planning-experiments/benchmarks/agile-robot-world-hybrid/instance_018.pddl --driver sbfws --options bfws.rs=sim,bfws.force_generic_evaluator=true,dt=0.5,integrator="runge_kutta_2",project_away_time=true,project_away_numeric=true,bfws.using_feature_set=true,features.elliptical_2d=true,sim.log=true,width.simulation=2

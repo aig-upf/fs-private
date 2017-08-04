@@ -22,6 +22,7 @@
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/operations.hxx>
+#include <constraints/grounding.hxx>
 #include <validator.hxx>
 
 
@@ -115,31 +116,39 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 
 	std::vector<const fs::Formula*> conjuncts;
 	if (!data.HasMember("state_constraints")) {
-	       throw std::runtime_error("Could not find state constraints in data/problem.json!");
+		throw std::runtime_error("Could not find state constraints in data/problem.json!");
 	}
 	for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
 	   auto sc = loadGroundedFormula(data["state_constraints"][i], info);
-	if (sc == nullptr ) continue;
-	const fs::Conjunction* conj = dynamic_cast<const fs::Conjunction*>(sc);
-	if ( conj == nullptr ) {
-	   conjuncts.push_back(sc);
-	   continue;
-	}
-	for ( auto c : conj->getSubformulae() )
-	    conjuncts.push_back(c->clone());
-	delete conj;
+		if (sc == nullptr ) continue;
+		const fs::Conjunction* conj = dynamic_cast<const fs::Conjunction*>(sc);
+		if ( conj == nullptr ) {
+	   		conjuncts.push_back(sc);
+	   		continue;
+		}
+		for ( auto c : conj->getSubformulae() )
+		    conjuncts.push_back(c->clone());
+			delete conj;
 	}
 
 	std::vector<const fs::Axiom*> sc_set;
 
 	if ( !conjuncts.empty())
-	sc_set.push_back( new fs::Axiom("variable_bounds", {}, {}, fs::BindingUnit({},{}), new fs::Conjunction(conjuncts)));
+		sc_set.push_back( new fs::Axiom("variable_bounds", {}, {}, fs::BindingUnit({},{}), new fs::Conjunction(conjuncts)));
 
+	std::vector< const fs::Axiom* > named_sc_schemata;
 	for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
-	auto named_sc = loadNamedStateConstraint(data["state_constraints"][i], info);
-	if ( named_sc == nullptr ) continue;
-	   sc_set.push_back( named_sc );
+		auto named_sc = loadNamedStateConstraint(data["state_constraints"][i], info);
+		if ( named_sc == nullptr ) continue;
+	   	named_sc_schemata.push_back( named_sc );
 	}
+	//MRJ: We ground the state constraints here and now
+	std::vector< const fs::Axiom* > named_sc_grounded = AxiomGrounder::fully_ground( named_sc_schemata, info );
+	for ( auto sc : named_sc_schemata )
+		delete sc;
+	for ( auto sc : named_sc_grounded )
+		sc_set.push_back(sc);
+
 	auto sc_idx = _index_axioms(sc_set);
 
 	LPT_INFO("main", "Loading Problem Metric...");
