@@ -56,3 +56,4 @@ _build/*
 build/*
 experiments/*
 workspace/*
+generated/*
