@@ -305,7 +305,7 @@ Loader::loadMetric( const rapidjson::Value& data, const ProblemInfo& info ) {
 	}
 
 	LPT_INFO( "components", "Metric optimization mode is " << data["optimization"].GetString() );
-	auto expr = fs::Loader::parseTerm( data["objective_function"]["expression"], info );
+	auto expr = fs::Loader::parseTerm( data["expression"], info );
     auto processed = fs::bind(*expr, Binding::EMPTY_BINDING, info);
 
 	LPT_INFO( "components", "Metric loaded: " << processed );

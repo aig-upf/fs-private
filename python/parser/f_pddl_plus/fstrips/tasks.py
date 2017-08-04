@@ -206,7 +206,7 @@ def check_is_grounded_functional_term( term ) :
         #print(argument)
         if isinstance( argument, f_expression.FunctionalTerm ) :
             check_is_grounded_functional_term( argument )
-        elif isinstance( argument, fs_types.TypedObject ) :
+        elif isinstance( argument, pddl_types.TypedObject ) :
             if argument.name[0] == "?" : # it is a variable
                 raise SystemExit("Term {} is not grounded".format(term))
         elif isinstance( argument, str ) :
