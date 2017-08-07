@@ -109,7 +109,7 @@ class Task(object):
         axioms = []
         gconstraints = []
 
-        if len(loader.processes) > 0 :
+        if len(loader.processes) > 0 or len(loader.events) > 0 :
             print( "Domain specifies continuous change...")
             print( "Setting up 'clock_time' state variable" )
 
@@ -141,7 +141,11 @@ class Task(object):
                     axioms, loader.constraints, loader.constraint_schemata,
                     gconstraints, loader.type_bounds, loader.metric)
 
-    def dump(self):
+    def dump(self, redirect=True):
+        import sys
+        if redirect :
+            current_stdout = sys.stdout
+            sys.stdout = open( 'problem.txt', 'w')
         print("Problem %s: %s [%s]" % (
             self.domain_name, self.task_name, self.requirements))
         print("Types:")
@@ -187,6 +191,8 @@ class Task(object):
             print( "{}".format(b))
         print("Metric:")
         print( "{}".format(self.metric) )
+        if redirect :
+            sys.stdout = current_stdout
 
 class Requirements(object):
     def __init__(self, requirements):
