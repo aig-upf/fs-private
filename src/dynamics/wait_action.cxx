@@ -77,6 +77,32 @@ namespace fs0 { namespace dynamics {
             k++;
         }
 
+        // Events
+        // ======
+        //
+        // One-off policy:
+        LPT_DEBUG("dynamics", "WaitAction::apply(): one-off event activation");
+        for ( auto a : _exogenous ) {
+            State s_j(s, atoms);
+            if ( !manager.isApplicable( s_j, *a, do_zcc ) ) continue;
+            LPT_DEBUG("dynamics", "\t Event " << *a << " fired!");
+            std::vector<Atom> eff_j = manager.computeEffects(s_j, *a);
+            for ( Atom a_l : eff_j )
+                atoms[ a_l.getVariable() ] = a_l;
+        }
+
+
+        #ifdef DEBUG
+        // Compute and report change set
+        LPT_DEBUG("dynamics", "Changed atoms: s -> s'");
+        for ( Atom a : atoms ) {
+            if ( a.getValue() == s.getValue(a.getVariable())) continue;
+            object_id old_value = s.getValue(a.getVariable());
+            object_id new_value = a.getValue();
+            LPT_DEBUG( "dynamics", "\t" << info.getVariableName(a.getVariable()) << ": " << old_value << " -> " << new_value );
+        }
+        #endif
+
     }
 
     const WaitAction*
@@ -93,8 +119,16 @@ namespace fs0 { namespace dynamics {
             ground_id = problem.getGroundActions().back()->getId() + 1;
         }
 
-        const WaitAction* wait = new WaitAction( ground_id, *adata );
+
+        WaitAction* wait = new WaitAction( ground_id, *adata );
         LPT_INFO("grounding", "Created wait action: " << *wait);
+        for ( auto a : problem.getGroundActions() ) {
+            if ( !a->isExogenous() )
+                continue;
+            wait->_exogenous.push_back( a );
+        }
+        LPT_INFO("grounding", "\t Events registered: " << wait->_exogenous.size() );
+
         return wait;
     }
 

@@ -19,7 +19,7 @@ namespace fs0 {
 
         protected:
 
-            VariableIdx     _clock_var;
-
+            VariableIdx                             _clock_var;
+            std::vector< const GroundAction* >      _exogenous;
         };
 }} // namespaces
