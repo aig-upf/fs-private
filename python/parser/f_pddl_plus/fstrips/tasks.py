@@ -109,7 +109,7 @@ class Task(object):
         axioms = []
         gconstraints = []
 
-        if len(loader.processes) > 0 or len(loader.events) > 0 :
+        if len(loader.processes) > 0 :
             print( "Domain specifies continuous change...")
             print( "Setting up 'clock_time' state variable" )
 
