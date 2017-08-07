@@ -205,6 +205,8 @@ num_objects() const { return fstrips::LanguageInfo::instance().num_objects(); }
 std::string ProblemInfo::
 object_name(const object_id& object) const { return fstrips::LanguageInfo::instance().get_object_name(object); }
 
+const object_id ProblemInfo::get_object_id(const std::string& name) const {return fstrips::LanguageInfo::instance().get_object_id(name);}
+
 
 
 } // namespaces

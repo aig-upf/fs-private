@@ -129,6 +129,8 @@ protected:
 //! 
 class AxiomaticTerm : public StaticHeadedNestedTerm {
 public:
+	LOKI_DEFINE_CONST_VISITABLE();
+	
 	AxiomaticTerm(unsigned symbol_id, const std::vector<const Term*>& subterms)
 		 : StaticHeadedNestedTerm(symbol_id, subterms) {}
 

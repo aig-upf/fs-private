@@ -128,6 +128,8 @@ public:
 	const std::string& get_typename(const TypeIdx& fstype) const;
 
 	const std::string get_object_name(const object_id& object) const;
+	
+	const object_id get_object_id(const std::string& name) const;
 
 	//! Return the number of registered objects
 	unsigned num_objects() const;

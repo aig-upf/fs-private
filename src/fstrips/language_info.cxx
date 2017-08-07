@@ -242,6 +242,12 @@ private:
 
 		return oid;
 	}
+	
+	
+	const object_id get_object_id(const std::string& name) const {return _object_ids.at(name);}
+	
+	
+	
 
 	unsigned num_objects() const { return _object_names.size(); }
 
@@ -348,6 +354,8 @@ get_typename(const TypeIdx& fstype) const { return impl().get_typename(fstype); 
 
 const std::string LanguageInfo::
 get_object_name(const object_id& object) const { return impl().get_object_name(object); }
+
+const object_id LanguageInfo::get_object_id(const std::string& name) const { return impl().get_object_id(name);}
 
 symbol_id LanguageInfo::
 add_symbol(const std::string& name, const symbol_t& type, const Signature& signature, bool static_) { return impl().add_symbol(name, type, signature, static_); }

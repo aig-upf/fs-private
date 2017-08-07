@@ -36,6 +36,7 @@ class AllNodesVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
+    , public Loki::Visitor<AxiomaticTerm, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
 	, public Loki::Visitor<SubtractionTerm, void, true>
 	, public Loki::Visitor<MultiplicationTerm, void, true>
@@ -72,6 +73,7 @@ public:
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
 	void Visit(const AxiomaticTermWrapper& lhs);
+	void Visit(const AxiomaticTerm& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
@@ -143,6 +145,7 @@ class NestednessVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
+    , public Loki::Visitor<AxiomaticTerm, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
 	, public Loki::Visitor<SubtractionTerm, void, true>
 	, public Loki::Visitor<MultiplicationTerm, void, true>
@@ -164,6 +167,7 @@ public:
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
 	void Visit(const AxiomaticTermWrapper& lhs);
+	void Visit(const AxiomaticTerm& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
@@ -188,6 +192,7 @@ class FlatVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
+    , public Loki::Visitor<AxiomaticTerm, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
     , public Loki::Visitor<SubtractionTerm, void, true>
     , public Loki::Visitor<MultiplicationTerm, void, true>
@@ -200,6 +205,7 @@ public:
 	void Visit(const FluentHeadedNestedTerm& lhs) { _result = false; }
 	void Visit(const UserDefinedStaticTerm& lhs);
 	void Visit(const AxiomaticTermWrapper& lhs);
+	void Visit(const AxiomaticTerm& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
@@ -223,6 +229,7 @@ class TypeVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
+    , public Loki::Visitor<AxiomaticTerm, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
     , public Loki::Visitor<SubtractionTerm, void, true>
     , public Loki::Visitor<MultiplicationTerm, void, true>
@@ -235,6 +242,7 @@ public:
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
 	void Visit(const AxiomaticTermWrapper& lhs);
+	void Visit(const AxiomaticTerm& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
@@ -261,6 +269,7 @@ class BoundVisitor
     , public Loki::Visitor<FluentHeadedNestedTerm, void, true>
     , public Loki::Visitor<UserDefinedStaticTerm, void, true>
     , public Loki::Visitor<AxiomaticTermWrapper, void, true>
+    , public Loki::Visitor<AxiomaticTerm, void, true>
     , public Loki::Visitor<AdditionTerm, void, true>
     , public Loki::Visitor<SubtractionTerm, void, true>
     , public Loki::Visitor<MultiplicationTerm, void, true>
@@ -273,6 +282,7 @@ public:
 	void Visit(const FluentHeadedNestedTerm& lhs);
 	void Visit(const UserDefinedStaticTerm& lhs);
 	void Visit(const AxiomaticTermWrapper& lhs);
+	void Visit(const AxiomaticTerm& lhs);
 	void Visit(const AdditionTerm& lhs);
 	void Visit(const SubtractionTerm& lhs);
 	void Visit(const MultiplicationTerm& lhs);
