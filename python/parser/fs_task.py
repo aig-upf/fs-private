@@ -276,7 +276,6 @@ class FSTaskIndex(object):
         fd_initial_static_atoms = [elem for elem in fd_initial_atoms if not self.is_fluent(elem[0])]
 
         self.initial_fluent_atoms = _process_fluent_atoms(fd_initial_fluent_atoms)
-        print(fd_initial_static_atoms)
         self.initial_static_data = self._process_static_atoms(fd_initial_static_atoms)
 
     def process_adl_initial_state(self, adl_task):
@@ -296,10 +295,6 @@ class FSTaskIndex(object):
     def _process_static_atoms(self, fd_initial_static_atoms):
         initial_static_data = {}
         for name, args, value in fd_initial_static_atoms:
-            if value is None :
-                # MRJ: This must be a predicate, so if it is in the initial state
-                # it is true
-                value = True
             # In case the extension for this particular symbol has not yet been initialized
             if name not in initial_static_data:
                 initial_static_data[name] = static.instantiate_extension(self.symbols[name])
