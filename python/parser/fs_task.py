@@ -276,6 +276,7 @@ class FSTaskIndex(object):
         fd_initial_static_atoms = [elem for elem in fd_initial_atoms if not self.is_fluent(elem[0])]
 
         self.initial_fluent_atoms = _process_fluent_atoms(fd_initial_fluent_atoms)
+        print(fd_initial_static_atoms)
         self.initial_static_data = self._process_static_atoms(fd_initial_static_atoms)
 
     def process_adl_initial_state(self, adl_task):
