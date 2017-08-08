@@ -19,6 +19,10 @@ namespace fs0 {
 
         protected:
 
+            void process_events( const State& s, std::vector<Atom>& atoms, bool do_zcc ) const;
+
+        protected:
+
             VariableIdx                             _clock_var;
             std::vector< const GroundAction* >      _exogenous;
         };

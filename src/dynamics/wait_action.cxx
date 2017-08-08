@@ -80,17 +80,9 @@ namespace fs0 { namespace dynamics {
         // Events
         // ======
         //
-        // One-off policy:
-        LPT_DEBUG("dynamics", "WaitAction::apply(): one-off event activation");
-        for ( auto a : _exogenous ) {
-            State s_j(s, atoms);
-            if ( !manager.isApplicable( s_j, *a, do_zcc ) ) continue;
-            LPT_DEBUG("dynamics", "\t Event " << *a << " fired!");
-            std::vector<Atom> eff_j = manager.computeEffects(s_j, *a);
-            for ( Atom a_l : eff_j )
-                atoms[ a_l.getVariable() ] = a_l;
-        }
-
+        // One-off, simultaneous, no superposition policy:
+        if ( !_exogenous.empty() )
+            process_events( s, atoms, do_zcc );
 
         #ifdef DEBUG
         // Compute and report change set
@@ -103,6 +95,51 @@ namespace fs0 { namespace dynamics {
         }
         #endif
 
+    }
+
+    void
+    WaitAction::process_events( const State& s, std::vector<Atom>& atoms, bool do_zcc ) const {
+
+        const ProblemInfo& info = ProblemInfo::getInstance();
+        NaiveApplicabilityManager       manager(Problem::getInstance().getStateConstraints());
+
+        LPT_DEBUG("dynamics", "WaitAction::apply(): one-off event activation");
+        unsigned events_fired = 0;
+        State s_j(s, atoms);
+        std::vector<Atom> A_j( atoms.begin(), atoms.end());
+        std::map<VariableIdx, const GroundAction* > seen;
+        LPT_DEBUG("dynamics", "\t One-off event activation support: " << s_j);
+        for ( auto a : _exogenous ) {
+            if (!manager.checkFormulaHolds(a->getPrecondition(), s_j)) continue;
+            LPT_DEBUG("dynamics", "\t Event " << *a << " fired!");
+            events_fired++;
+            std::vector<Atom> eff_j = manager.computeEffects(s_j, *a);
+            for ( Atom a_l : eff_j ) {
+                A_j[ a_l.getVariable() ] = a_l;
+                auto it = seen.find(a_l.getVariable());
+                if ( it != seen.end() ) {
+                    std::stringstream buffer;
+                    buffer << "Inconsistent semantics, revise model: " << std::endl;
+                    buffer << "WaitAction::apply(): Events " << a->getName() << " and " << it->second->getName() << std::endl;
+                    buffer << "firing simultaneously, affecting concurrently variable " << info.getVariableName(a_l.getVariable()) << std::endl;
+                    LPT_INFO("dynamics", buffer.str());
+                    throw std::runtime_error( buffer.str() );
+                }
+                seen.insert( std::make_pair(a_l.getVariable(), a));
+            }
+            // MRJ: decide what to do when we have state constraints
+            if ( do_zcc ) {
+                State s_check( s, A_j );
+                if ( !manager.checkStateConstraints(s_check))  {
+                    LPT_DEBUG("dynamics", "\t Application of event " << *a << " resulted in state violating state constraints!");
+                    break;
+                }
+
+            }
+
+        }
+        LPT_DEBUG("dynamics", "# Events fired: " << events_fired );
+        atoms.assign( A_j.begin(), A_j.end() );
     }
 
     const WaitAction*
