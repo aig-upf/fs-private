@@ -356,9 +356,17 @@ protected:
 	std::function<bool(int,int)>		_int_handler;
 	std::function<bool(float,float)>	_float_handler;
 
-protected:
 	inline bool _satisfied(const std::vector<object_id>& values) const override { return _satisfied(values[0], values[1]); }
 	virtual bool _satisfied(const object_id& o1, const object_id& o2) const;
+	
+	//! Make sure both LHS and RHS types are equal and return the actual type
+	type_id _check_types_are_equal(const object_id& lhs, const object_id& rhs) const;
+	
+	//! Throw unsupported type exception
+	void _throw_unsupported_type(const type_id& t) const;
+	
+	//! Equality operator for bools and objects. UGLY. Unless overriden, return false.
+	virtual bool _eq_op(const object_id& o1, const object_id& o2) const;
 };
 
 class EQAtomicFormula : public RelationalFormula {
@@ -368,6 +376,9 @@ public:
 	EQAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new EQAtomicFormula(subterms); }
 
 	Symbol symbol() const override { return Symbol::EQ; }
+	
+protected:
+	bool _eq_op(const object_id& o1, const object_id& o2) const override { return o1 == o2; }
 };
 
 class NEQAtomicFormula : public RelationalFormula {
@@ -377,6 +388,9 @@ public:
 	NEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new NEQAtomicFormula(subterms); }
 
 	Symbol symbol() const override { return Symbol::NEQ; }
+	
+protected:
+	bool _eq_op(const object_id& o1, const object_id& o2) const override { return o1 != o2; }	
 };
 
 class LTAtomicFormula : public RelationalFormula {

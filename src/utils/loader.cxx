@@ -48,13 +48,8 @@ _check_negated_preconditions(std::vector<const ActionData*>& schemas) {
 			if (!eq) continue;
 			const fs::Constant* cnst = dynamic_cast<const fs::Constant*>(eq->rhs());
 			if (!cnst) continue;
-			try {
-				auto val = fs0::value<int>(cnst->getValue());
-				if (val==0) return true;
-			} catch( const type_mismatch_error& err ) {
-				// MRJ: try as bool
-				auto val = fs0::value<bool>(cnst->getValue());
-				if (!val) return true;
+			if (o_type(cnst->getValue()) == type_id::bool_t && !(fs0::value<bool>(cnst->getValue()))) {
+				return true;
 			}
 		}
 	}
@@ -116,7 +111,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 
 	std::vector<const fs::Formula*> conjuncts;
 	if (!data.HasMember("state_constraints")) {
-		throw std::runtime_error("Could not find state constraints in data/problem.json!");
+	       throw std::runtime_error("Could not find state constraints in data/problem.json!");
 	}
 	for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
 	   auto sc = loadGroundedFormula(data["state_constraints"][i], info);
@@ -157,7 +152,10 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	//! Set the global singleton Problem instance
 	bool has_negated_preconditions = _check_negated_preconditions(action_data);
 	LPT_INFO("cout", "Quick Negated-Precondition Test: Does the problem have negated preconditions? " << has_negated_preconditions);
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, has_negated_preconditions));
+	LPT_INFO("cout", "Atom Index: Indexing negative literals? " << has_negated_preconditions);
+	// We will index the negative literals if either the problem has neg. precs, or the user explicitly wants _not_ to ignore them on novelty computations.
+	bool index_negative_literals = has_negated_preconditions || !(config.getOption<bool>("ignore_neg_literals", true));
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 
 	problem->consolidateAxioms();
@@ -206,17 +204,24 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data,
 		const rapidjson::Value& node = data["atoms"][i];
 		VariableIdx var = node[0].GetInt();
 		object_id value;
-		if (info.sv_type(var) == type_id::float_t )
+		type_id var_type = info.sv_type(var);
+		
+		if (var_type == type_id::bool_t) {
+			value =  make_object((bool)node[1].GetInt());
+		} else if (var_type == type_id::float_t) {
 			// MRJ: We're using the specialization so the floating point number
 			// is stored correctly via type punning
 		    value =  make_object((float)node[1].GetDouble());
-		else if ( info.sv_type(var) == type_id::int_t )
+		}
+		else if (var_type == type_id::int_t) {
 		    value =  make_object(type_id::int_t, node[1].GetInt());
-		else if ( info.sv_type(var) == type_id::object_t )
+		}
+		else if (var_type == type_id::object_t) {
 			value =  make_object(type_id::object_t, node[1].GetInt());
+		}
 		else {
-			throw std::runtime_error(	"Loader::loadState() : Cannot load state variable '" + info.getVariableName(var)
-										+ "' of type '" + fstrips::LanguageInfo::instance().get_typename(var) + "'");
+			throw std::runtime_error("Loader::loadState() : Cannot load state variable '" + info.getVariableName(var)
+									 + "' of type '" + fstrips::LanguageInfo::instance().get_typename(var) + "'");
 		}
 
 		facts.push_back(Atom(var,value));

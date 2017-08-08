@@ -1,6 +1,7 @@
 
 #include <algorithm>
 
+#include <fstrips/language_info.hxx>
 #include <languages/fstrips/operations/binding.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/terms.hxx>
@@ -177,6 +178,8 @@ Visit(const BoundVariable& lhs) {
 		_result =  lhs.clone();
 	} else {
 		object_id value = _binding.value(lhs.getVariableId());
+		// The type_id of the object given by the binding must coincide with that expected by the FOL variable
+		assert(fs0::fstrips::LanguageInfo::instance().typeinfo(lhs.getType()).get_type_id() == o_type(value));
 		_result = Constant::create(value, lhs.getType(), _info);
 	}
 }

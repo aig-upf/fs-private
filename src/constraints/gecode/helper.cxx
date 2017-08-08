@@ -65,7 +65,14 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm* term) 
 	for (term_list_iterator it(term->getSubterms()); !it.ended(); ++it) {
 		try {
 			object_id out = functor(it.arguments());
-			tuples.add(it.getIntArgsElement(fs0::value<int>(out))); // Add the term value as the last element
+			type_id t = o_type(out);
+			if (t == type_id::bool_t) {
+				tuples.add(it.getIntArgsElement(fs0::value<bool>(out))); // Add the term value as the last element
+			} else if (t == type_id::int_t || t == type_id::object_t) {
+				tuples.add(it.getIntArgsElement(fs0::value<int>(out))); // Add the term value as the last element
+			} else {
+				throw std::runtime_error("Extensionalization of constraints not yet ready for objects of this type");
+			}
 		}
 		catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 		catch(const UndefinedValueAccess& e) {}
