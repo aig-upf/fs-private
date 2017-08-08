@@ -8,7 +8,6 @@
 #include <heuristics/unsat_goal_atoms.hxx>
 #include <heuristics/l0.hxx>
 #include <heuristics/l2_norm.hxx>
-
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
@@ -203,8 +202,8 @@ protected:
 	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
 
 	//! L0Heuristic: counts number of trivial numeric landmarks
-	L0Heuristic 	_l0_heuristic;
-	hybrid::L2Norm	_l2_norm;
+	std::shared_ptr<L0Heuristic> 	_l0_heuristic;
+	std::shared_ptr<hybrid::L2Norm>	_l2_norm;
 
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;
@@ -225,8 +224,8 @@ public:
 		_wg_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_wgr_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_unsat_goal_atoms_heuristic(_problem),
-		_l0_heuristic(_problem),
-		_l2_norm(_problem),
+		_l0_heuristic(nullptr),
+		_l2_norm(nullptr),
 		_mark_negative_propositions(config.mark_negative_propositions),
 		_simconfig(config.complete_simulation,
 				   config.mark_negative_propositions,
@@ -235,6 +234,10 @@ public:
 		_stats(stats),
 		_sbfwsconfig(config)
 	{
+		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::L0 )
+			_l0_heuristic = std::make_shared<L0Heuristic>(_problem);
+		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::G0 )
+			_l2_norm = std::make_shared<hybrid::L2Norm>(_problem);
 	}
 
 	~SBFWSHeuristic() {
@@ -425,14 +428,14 @@ public:
 
 	template <typename NodeT>
 	unsigned compute_R_via_L0(NodeT& node) {
-		unsigned v =  _l0_heuristic.evaluate(node.state);
+		unsigned v =  _l0_heuristic->evaluate(node.state);
 		node._hash_r = v;
 		return v;
 	}
 
 	template <typename NodeT>
 	unsigned compute_R_via_G0(NodeT& node) {
-		unsigned v =  _l2_norm.ball_geodesic_index(node.state);
+		unsigned v = _l2_norm->ball_geodesic_index(node.state);
 		node._hash_r = v;
 		return v;
 	}

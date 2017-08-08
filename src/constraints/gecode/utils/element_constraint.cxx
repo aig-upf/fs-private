@@ -50,7 +50,7 @@ void NestedFluentElementTranslator::register_variables(CSPTranslator& translator
 	}
 	
 	// Create a CSP variable that will be the element constraint index.
-	_fluent_data.setIndex(translator.add_intvar(Helper::createTemporaryIntVariable(csp, 0, table_index-1)));
+	_fluent_data.setIndex(translator.add_intvar(Helper::createTemporaryIntVariable(csp, 0, table_index-1), type_id::int_t));
 
 	// Finally register the "standard" temporary variable for the term root.
 	translator.registerNestedTerm(_term);

@@ -144,7 +144,11 @@ std::ostream& State::print(std::ostream& os) const {
 				if (x < info.getNumVariables() - 1) os << ", ";
 			}
         } else {
-			os << info.getVariableName(x) << "=" << info.object_name(o);
+			os << info.getVariableName(x) << "=";
+			if (o_type(o) == type_id::invalid_t)
+			 	os << "<invalid>";
+			else
+				os << info.object_name(o);
 			if (x < info.getNumVariables() - 1) os << ", ";
 		}
     }

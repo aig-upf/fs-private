@@ -110,11 +110,12 @@ class ProblemRepresentation(object):
             # Collect the list of variables that arise from this particular symbol
             f_variables = [(i, str(v)) for i, v in enumerate(self.index.state_variables) if v.symbol == name]
 
+            static = name in self.index.static_symbols
             unbounded = util.has_unbounded_arity(name)
 
             # Store the symbol info as a tuple:
             # <ID, name, type, <function_domain>, function_codomain, state_variables, static?, unbounded_arity?>
-            res.append([i, name, type_, symbol.arguments, symbol.codomain, f_variables, p.is_static(name), unbounded])
+            res.append([i, name, type_, symbol.arguments, symbol.codomain, f_variables, static, unbounded])
         return res
 
     def dump_type_data(self):

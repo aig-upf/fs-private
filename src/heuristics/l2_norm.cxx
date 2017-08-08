@@ -40,20 +40,25 @@ namespace fs0 { namespace hybrid {
     unsigned
     L2Norm::ball_geodesic_index( const State& s ) const {
         float c_s = measure(s);
-        LPT_DEBUG("heuristic", "Geodesic index:");
-        LPT_DEBUG("heuristic", "state: " << s);
-        LPT_DEBUG("heuristic", "h(s) = " << c_s );
 
-        unsigned index = 0;
         unsigned k;
         for (  k = 0; k < _bands.size(); k++ )
             if ( c_s > _bands[k] ) {
-                index = _bands.size() - k;
-                break;
+                return _bands.size() - k;
             }
-        LPT_DEBUG("heuristic", "bin index: " << k << " h: " << _bands[k] << " index: " << index);
-        return index;
+        return 0;
     }
+
+    unsigned
+    L2Norm::geodesic_index( const std::vector<VariableIdx>& S, const State& a, const State& b, const std::vector<float>& breakpoints ) {
+        float c_a_b = measure( S, a, b);
+        for ( unsigned k = 0; k < breakpoints.size(); k++ )
+            if ( c_a_b > breakpoints[k] ) {
+                return breakpoints.size() - k;
+            }
+        return 0;
+    }
+
 
     float
     L2Norm::measure( const std::vector<VariableIdx>& S, const State& a, const State& b ) {

@@ -6,6 +6,7 @@
 #include <heuristics/novelty/features.hxx>
 #include <heuristics/novelty/squared_error.hxx>
 #include <heuristics/novelty/triangle_inequality.hxx>
+#include <heuristics/novelty/elliptical_2d.hxx>
 #include <utils/loader.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/binding_iterator.hxx>
@@ -200,6 +201,11 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 		LPT_INFO("features", "Added 'triangle_inequality_goal': phi(s0) = " << feature->norm().measure(Problem::getInstance().getInitialState()));
 		LPT_INFO("features", "L^2 norm(s0,sG) =  " << norm.measure(Problem::getInstance().getInitialState()));
 		features.push_back( feature );
+	}
+
+	if ( Config::instance().getOption<bool>("features.elliptical_2d", false)) {
+		EllipticalMapping2D::make_goal_relative_features( features );
+        EllipticalMapping2D::print_to_JSON( "elliptical_2d.features.json", features );
 	}
 
 	try {

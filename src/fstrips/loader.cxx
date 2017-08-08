@@ -168,6 +168,8 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 	// Symbol data is stored as: # <symbol_id, symbol_name, symbol_type, <function_domain>, function_codomain, state_variables, static?>
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		unsigned expected_id = data[i][0].GetInt();
+		_unused(expected_id);
+		
 		std::string name(data[i][1].GetString());
 
 		// Parse the symbol type: function or predicate
@@ -195,6 +197,7 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 		*/
 
 		symbol_id id = lang.add_symbol(name, type, signature, static_);
+		_unused(id);
 		assert(expected_id == id); // Check values are decoded in the proper order
 	}
 }
@@ -208,10 +211,13 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 void _loadObjectIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		unsigned expected_id = static_cast<unsigned>(data[i]["id"].GetInt());
+		_unused(expected_id);
+		
 		const std::string& name = data[i]["name"].GetString();
 		const std::string& fstype = data[i]["type"].GetString();
 
 		object_id id = lang.add_object(name, lang.get_fstype_id(fstype));
+		_unused(id);
 		assert((int)expected_id == (int)id); // Check values are decoded in the proper order
 	}
 }
@@ -224,22 +230,27 @@ void _loadTypeIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 
 
 		TypeIdx expected_id = node["id"].GetInt();
+		_unused(expected_id);
 		std::string fstype = node["fstype"].GetString();
 		std::string domain_type = node["domain_type"].GetString();
 		std::string type_id_str = node["type_id"].GetString();
 
+		TypeIdx tid;
+		_unused(tid);
+		
 		if (domain_type == "unbounded") {
-			TypeIdx tid = lang.add_fstype( fstype, from_string(type_id_str));
+			tid = lang.add_fstype( fstype, from_string(type_id_str));
 			assert( tid == expected_id );
-
+			
 		} else if (domain_type == "interval") {
 			int lower = node["interval"][0].GetInt();
 			int upper = node["interval"][1].GetInt();
 
-			TypeIdx tid = lang.add_fstype(fstype, from_string(type_id_str), make_range(lower, upper));
+			tid = lang.add_fstype(fstype, from_string(type_id_str), make_range(lower, upper));
 			assert(tid == expected_id);
+			
 		} else if (domain_type == "set") {
-			TypeIdx tid = lang.add_fstype(fstype, from_string(type_id_str));
+			tid = lang.add_fstype(fstype, from_string(type_id_str));
 			assert(tid == expected_id);
 
 			for (unsigned j = 0; j < node["set"].Size(); ++j) {

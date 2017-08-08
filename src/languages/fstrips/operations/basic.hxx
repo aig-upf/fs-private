@@ -89,7 +89,7 @@ public:
 	void Visit(const ExpTerm& lhs);
 	void Visit(const MinTerm& lhs);
 	void Visit(const MaxTerm& lhs);
-    
+
 	std::vector<const LogicalElement*> _result;
 };
 
@@ -116,6 +116,10 @@ std::vector<const RelationalFormula*> all_relations(const Formula& element);
 ////////////////////////////////////////////////////////////
 std::vector<const Term*> all_terms(const LogicalElement& element);
 
+////////////////////////////////////////////////////////////
+//! Returns a list (possibly with repetitions) of all state variables that descend from the given formula or term.
+////////////////////////////////////////////////////////////
+std::vector<const StateVariable* > all_state_variables( const LogicalElement& element );
 
 
 ////////////////////////////////////////////////////////////

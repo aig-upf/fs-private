@@ -31,6 +31,10 @@ namespace hybrid {
         float measure( const State& s ) const;
         float measure( const std::vector<VariableIdx>& S, const State& a ) const;
 
+        static
+        unsigned geodesic_index( const std::vector<VariableIdx>& S, const State& a, const State& b, const std::vector<float>& breakpoints );
+
+
         static float measure( const std::vector<VariableIdx>& S, const State& a, const State& b );
 
         void add_condition( const fs::Formula* f );
