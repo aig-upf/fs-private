@@ -128,7 +128,7 @@ public:
 	const std::string& get_typename(const TypeIdx& fstype) const;
 
 	const std::string get_object_name(const object_id& object) const;
-	
+
 	const object_id get_object_id(const std::string& name) const;
 
 	//! Return the number of registered objects
@@ -173,6 +173,10 @@ public:
 		assert(!_instance);
 		_instance = std::unique_ptr<LanguageInfo>(info);
 		return *_instance;
+	}
+
+	static std::unique_ptr<LanguageInfo>&& claimOwnership() {
+		return std::move(_instance);
 	}
 
 	//! Singleton object accessor

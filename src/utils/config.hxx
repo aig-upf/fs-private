@@ -45,7 +45,9 @@ public:
 
 	//! Retrieve the singleton instance, which has been previously initialized
 	static Config& instance();
-
+	static void setAsGlobal( std::unique_ptr<Config>&& ptr );
+	static std::unique_ptr<Config>&& claimOwnership();
+	
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Config& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
@@ -146,7 +148,7 @@ public:
     double getDiscretizationStep( ) const { return _discretization_step; }
 
     bool getZeroCrossingControl() const { return _zero_crossing_control; }
-	void setZeroCrossingControl( bool do_zcc ) { _zero_crossing_control = do_zcc; } 
+	void setZeroCrossingControl( bool do_zcc ) { _zero_crossing_control = do_zcc; }
 
     double getHorizonTime() const { return _horizon_time; }
     bool hasHorizon() const { return _horizon_time >= 1e-7; }
