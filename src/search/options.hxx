@@ -10,6 +10,7 @@ namespace fs0 { namespace drivers {
 
 class EngineOptions {
 public:
+	EngineOptions() = default;
 	EngineOptions(int argc, char** argv);
 
 	unsigned getTimeout() const { return _timeout; }
@@ -27,6 +28,7 @@ public:
 	void setDriver( std::string s ) { _driver = s; }
 
 	const std::unordered_map<std::string, std::string>& getUserOptions() const { return _user_options; }
+	std::string getUserOption(std::string option) const { return _user_options.at(option); }
 	void setUserOption( std::string option, std::string value ) { _user_options[option] = value; }
 
 protected:
