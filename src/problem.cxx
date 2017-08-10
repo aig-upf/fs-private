@@ -55,6 +55,11 @@ Problem::~Problem() {
     	delete _metric;
 }
 
+void
+Problem::setInitialState( const State& s ) {
+    _init = std::make_unique<State>(s);
+}
+
 std::unordered_map<std::string, const fs::Axiom*>
 _clone_axioms(const std::unordered_map<std::string, const fs::Axiom*>& axioms) {
 	std::unordered_map<std::string, const fs::Axiom*> cloned;

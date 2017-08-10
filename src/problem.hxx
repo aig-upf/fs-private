@@ -36,6 +36,7 @@ public:
 	Problem& operator=(Problem&& rhs) = delete;
 
 	//! Get the initial state of the problem
+	void setInitialState( const State& s );
 	const State& getInitialState() const { return *_init; }
 
 	const StateAtomIndexer& getStateAtomIndexer() const { return *_state_indexer; }
@@ -74,7 +75,7 @@ public:
 		assert(!_instance);
 		_instance = std::move(problem);
 	}
-	
+
 	static std::unique_ptr<Problem>&& claimOwnership() {
 		return std::move(_instance);
 	}
@@ -112,7 +113,7 @@ protected:
 	AtomIndex _tuple_index;
 
 	//! The initial state of the problem
-	const std::unique_ptr<State> _init;
+	std::unique_ptr<State> _init;
 
 	const std::unique_ptr<StateAtomIndexer> _state_indexer;
 
