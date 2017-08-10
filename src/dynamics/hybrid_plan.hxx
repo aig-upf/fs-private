@@ -63,6 +63,14 @@ namespace dynamics {
 
         const std::vector< std::shared_ptr<State> >& trajectory() const { return _trajectory; }
 
+        std::vector<Event>  get_control_events() const {
+            std::vector<Event> control_events;
+            for ( auto evt : _the_plan )
+                if ( std::get<1>(evt)->isControl() )
+                    control_events.push_back(evt);
+            return control_events;
+        }
+
     protected:
 
         void save_simulation_settings(float time_step, unsigned npoints, Config::IntegratorT solver);
