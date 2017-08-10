@@ -15,17 +15,20 @@
 namespace fs0 { namespace drivers {
 
 
-template <typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEvaluatorT>
+template <typename StateModelT, typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 std::unique_ptr<FS0IWAlgorithm<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>>
 create(const Config& config, FeatureEvaluatorT&& featureset, const StateModelT& model, SearchStats& stats) {
+	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
+
 	using EngineT = FS0IWAlgorithm<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>;
 	using EnginePT = std::unique_ptr<EngineT>;
-	
+
 	unsigned max_novelty = config.getOption<int>("width.max");
-	assert(0); // TO REIMPLEMENT
+//	assert(0); // TO REIMPLEMENT
 // 	auto evaluator = fs0::bfws::create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), fs0::bfws::SBFWSConfig::NoveltyEvaluatorType::Adaptive, max_novelty);
-	auto evaluator = nullptr;
-	return EnginePT(new EngineT(model, 1, max_novelty, std::move(featureset), evaluator, stats));
+//	auto evaluator = nullptr;
+	bfws::NoveltyFactory<FeatureValueT> factory(model.getTask(), bfws::SBFWSConfig::NoveltyEvaluatorType::Generic, true, max_novelty);
+	return EnginePT(new EngineT(model, 1, max_novelty, std::move(featureset), factory.create_evaluator(max_novelty), stats));
 }
 
 
@@ -34,7 +37,7 @@ create(const Config& config, FeatureEvaluatorT&& featureset, const StateModelT& 
 template <typename StateModelT, typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 ExitCode
 do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time, SearchStats& stats) {
-	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>(config, std::move(featureset), model, stats);
+	auto engine = create<StateModelT, NoveltyEvaluatorT, FeatureEvaluatorT>(config, std::move(featureset), model, stats);
 	return drivers::Utils::do_search(*engine, model, out_dir, start_time, stats);
 }
 
@@ -47,25 +50,25 @@ do_search(const StateModelT& model, const Config& config, const std::string& out
 	const StateAtomIndexer& indexer = model.getTask().getStateAtomIndexer();
 	if (config.getOption<bool>("bfws.extra_features", false)) {
 		fs0::bfws::FeatureSelector<State> selector(ProblemInfo::getInstance());
-		
+
 		if (selector.has_extra_features()) {
 			LPT_INFO("cout", "FEATURE EVALUATION: Extra Features were found!  Using a GenericFeatureSetEvaluator");
 			using FeatureEvaluatorT = lapkt::novelty::GenericFeatureSetEvaluator<State>;
 			return do_search1<StateModelT, bfws::IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, selector.select(), config, out_dir, start_time, stats);
 		}
 	}
-	
+
 	if (indexer.is_fully_binary()) { // The state is fully binary
 		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<bool>");
 		using FeatureEvaluatorT = lapkt::novelty::StraightFeatureSetEvaluator<bool>;
 		return do_search1<StateModelT, bfws::BoolNoveltyEvaluatorI, FeatureEvaluatorT>(model, FeatureEvaluatorT(), config, out_dir, start_time, stats);
-		
+
 	}
 // 	else if (indexer.is_fully_multivalued()) { // The state is fully multivalued
 // 		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<object_id>");
 // 		using FeatureEvaluatorT = lapkt::novelty::StraightFeatureSetEvaluator<object_id>;
 // 		return do_search1<StateModelT, bfws::IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, FeatureEvaluatorT(), config, out_dir, start_time, stats);
-// 		
+//
 // 	}
 	else { // We have a hybrid state and cannot thus apply optimizations
 		LPT_INFO("cout", "FEATURE EVALUATION: Using a generic IntegerFeatureEvaluator");
@@ -90,7 +93,7 @@ create(const Config& config, const StateModelT& model) {
 */
 
 template <>
-ExitCode 
+ExitCode
 IteratedWidthDriver<GroundStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	auto model = GroundingSetup::fully_ground_model(problem);
 	return do_search(model, config, out_dir, start_time, _stats);
@@ -99,7 +102,7 @@ IteratedWidthDriver<GroundStateModel>::search(Problem& problem, const Config& co
 }
 
 template <>
-ExitCode 
+ExitCode
 IteratedWidthDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
 	auto model = GroundingSetup::fully_lifted_model(problem);
 	return do_search(model, config, out_dir, start_time, _stats);
