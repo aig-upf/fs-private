@@ -102,7 +102,7 @@ namespace fs0 { namespace dynamics {
     }
 
     void
-    HybridPlan::simulate( float time_step, unsigned npoints, Config::IntegratorT solver ) {
+    HybridPlan::simulate( float time_step, float duration, unsigned npoints, Config::IntegratorT solver ) {
         save_simulation_settings( time_step, npoints, solver );
 
         Config& cfg = Config::instance();
@@ -125,7 +125,7 @@ namespace fs0 { namespace dynamics {
         float t;
         const GroundAction* a;
         std::tie( t, a ) =_the_plan[0];
-        float time_left = get_duration();
+        float time_left = ( duration < 0.0 ? get_duration() : duration);
         if ( t > 0.0 ) { // There's some waiting before the first action in the plan
             float H = std::min( (float)time_left, t);
 
@@ -194,6 +194,12 @@ namespace fs0 { namespace dynamics {
                 H -=h;
                 time_left -= h;
             }
+
+            if ( time_left <= cfg.getDiscretizationStep() ) {
+                LPT_INFO("simulation", "Simulation finished");
+                restore_simulation_settings();
+                return;
+            }
     	}
         LPT_INFO("simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
         LPT_INFO( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
@@ -201,7 +207,7 @@ namespace fs0 { namespace dynamics {
     }
 
     void
-    HybridPlan::validate( float time_step, unsigned npoints, Config::IntegratorT solver ) {
+    HybridPlan::validate( float time_step, float duration, unsigned npoints, Config::IntegratorT solver ) {
         throw std::runtime_error("HybridPlan::validate() : Not Implemented Yet!");
     }
 
