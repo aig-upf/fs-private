@@ -175,6 +175,12 @@ public:
 		return *_instance;
 	}
 
+	static LanguageInfo& setInstance(std::unique_ptr<LanguageInfo>&& problem) {
+		assert(!_instance);
+		_instance = std::move(problem);
+		return *_instance;
+	}
+
 	static std::unique_ptr<LanguageInfo>&& claimOwnership() {
 		return std::move(_instance);
 	}
