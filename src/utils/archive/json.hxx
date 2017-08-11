@@ -17,7 +17,8 @@ namespace fs0 {
     public:
         static void
         store( rapidjson::Value& parent, rapidjson::Document::AllocatorType& allocator, const State& s );
-
+        static void
+        write_to_file( std::string filename, const rapidjson::Document& doc );
 
     protected:
     };

@@ -28,4 +28,14 @@ namespace fs0 {
         }
     }
 
+    void
+    JSONArchive::write_to_file( std::string filename, const rapidjson::Document& doc ) {
+        FILE* fp = fopen(filename.c_str(), "wb"); // non-Windows use "w"
+        char writeBuffer[65536];
+        FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+        Writer<FileWriteStream> writer(os);
+        doc.Accept(writer);
+        fclose(fp);
+    }
+
 }

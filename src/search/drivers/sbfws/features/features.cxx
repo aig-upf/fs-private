@@ -44,6 +44,21 @@ FeatureSelector<StateT>::select() {
 }
 
 template <typename StateT>
+void
+FeatureSelector<StateT>::select(FeatureSelector<StateT>::EvaluatorT& evaluator) {
+
+	std::vector<FeatureT*> features;
+	add_state_variables(_info, features);
+
+	add_extra_features(_info, features);
+
+	// Dump all features into an evaluator and return it
+	for (auto f:features) {
+		evaluator.add(f);
+	}
+}
+
+template <typename StateT>
 bool
 FeatureSelector<StateT>::has_extra_features() const {
 
