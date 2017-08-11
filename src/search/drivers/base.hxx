@@ -1,7 +1,7 @@
 #pragma once
 
 #include <models/simple_state_model.hxx>
-
+#include <utils/archive/json.hxx>
 #include <utils/system.hxx>
 #include <string>
 
@@ -48,8 +48,9 @@ public:
 	float 			eval_speed = 0.0;
 	unsigned 		peak_memory = 0;
 	ExitCode		result = ExitCode::UNSOLVABLE;
-	virtual void archive_results_JSON(std::string filename);
 
+	virtual void archive_results_JSON(std::string filename);
+	virtual void archive_scalar_stats( rapidjson::Document& doc );
 
 protected:
 

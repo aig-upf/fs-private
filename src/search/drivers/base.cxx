@@ -1,5 +1,4 @@
 #include <search/drivers/base.hxx>
-#include <utils/archive/json.hxx>
 #include <utils/printers/printers.hxx>
 #include <utils/printers/helper.hxx>
 #include <utils/printers/actions.hxx>
@@ -41,20 +40,8 @@ EmbeddedDriver::archive_results_JSON(std::string filename) {
     instanceName.SetString(StringRef(info.getInstanceName().c_str()));
     report.AddMember("instance", instanceName.Move(), allocator );
 
-    //! Result
-    Value result_string;
-    result_string.SetString(StringRef(exit_code_string( result )));
-    report.AddMember( "result", result_string.Move(), allocator );
-
     //! Scalar values
-    report.AddMember( "solved", Value(solved), allocator);
-    report.AddMember( "oom", Value(oom), allocator);
-    report.AddMember( "search_time", Value(search_time), allocator);
-    report.AddMember( "total_planning_time", Value(total_planning_time), allocator);
-    report.AddMember( "valid", Value(valid), allocator);
-    report.AddMember( "gen_speed", Value(gen_speed), allocator);
-    report.AddMember( "eval_speed", Value(eval_speed), allocator);
-    report.AddMember( "peak_memory", Value(peak_memory), allocator);
+    archive_scalar_stats(report);
 
     //! the plan
     Value the_plan(kArrayType);
@@ -62,14 +49,31 @@ EmbeddedDriver::archive_results_JSON(std::string filename) {
         const auto& actions = Problem::getInstance().getGroundActions();
     	for (const auto& action_id:plan) {
             Value name;
-            std::string buffer( printer() << print::action_header(*actions.at(action_id)));
-            name.SetString(StringRef(buffer.c_str()));
-            report.AddMember("instance", name.Move(), allocator );
+            name.SetString(StringRef(actions.at(action_id)->getName().c_str()));
+            the_plan.PushBack( name.Move(), allocator );
     	}
     }
     report.AddMember("plan", the_plan, allocator);
 
     JSONArchive::write_to_file( filename, report );
+}
+
+void
+EmbeddedDriver::archive_scalar_stats( rapidjson::Document& doc ) {
+    using namespace rapidjson;
+    Document::AllocatorType& allocator = doc.GetAllocator();
+    //! Result
+    Value result_string;
+    result_string.SetString(StringRef(exit_code_string( result )));
+    doc.AddMember( "result", result_string.Move(), allocator );
+    doc.AddMember( "solved", Value(solved).Move(), allocator);
+    doc.AddMember( "oom", Value(oom).Move(), allocator);
+    doc.AddMember( "search_time", Value(search_time).Move(), allocator);
+    doc.AddMember( "total_planning_time", Value(total_planning_time).Move(), allocator);
+    doc.AddMember( "valid", Value(valid).Move(), allocator);
+    doc.AddMember( "gen_speed", Value(gen_speed).Move(), allocator);
+    doc.AddMember( "eval_speed", Value(eval_speed).Move(), allocator);
+    doc.AddMember( "peak_memory", Value(peak_memory).Move(), allocator);
 }
 
 }}
