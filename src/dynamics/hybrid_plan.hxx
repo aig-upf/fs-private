@@ -66,7 +66,7 @@ namespace dynamics {
         std::vector<Event>  get_control_events() const {
             std::vector<Event> control_events;
             for ( auto evt : _the_plan )
-                if ( std::get<1>(evt)->isControl() )
+                if ( std::get<1>(evt) != nullptr && std::get<1>(evt)->isControl() )
                     control_events.push_back(evt);
             return control_events;
         }
