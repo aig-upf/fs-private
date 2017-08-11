@@ -128,6 +128,8 @@ public:
 	const std::string& get_typename(const TypeIdx& fstype) const;
 
 	const std::string get_object_name(const object_id& object) const;
+	
+	const object_id get_object_id(const std::string& name) const;
 
 	//! Return the number of registered objects
 	unsigned num_objects() const;
@@ -148,7 +150,7 @@ public:
 	const FSTypeInfo& typeinfo(const TypeIdx& fstype) const;
 
 	//! Return the symbol info associated to the given symbol
-	const SymbolInfo& symbolinfo(const symbol_id& fstype) const;
+	const SymbolInfo& symbolinfo(const symbol_id& sid) const;
 
 	//! Return all objects of a given FS-type, _including_ those which are
 	//! objects of a descending type in the type hierarchy

@@ -113,6 +113,8 @@ public:
 
 	const std::string& getVariableName(VariableIdx index) const;
 	inline VariableIdx getVariableId(const std::string& name) const { return variableIds.at(name); }
+	
+	const object_id get_object_id(const std::string& name) const;
 
 
 	const TypeIdx getVariableType(VariableIdx index) const { return variableTypes.at(index); }
@@ -184,6 +186,7 @@ public:
 	const std::pair<unsigned, std::vector<object_id>>& getVariableData(VariableIdx variable) const { return variableIdToData.at(variable); }
 
 	unsigned num_objects() const;
+	
 
 	//! Check that the value of a given variable is within the bounds of the variable,
 	//! in case it is a variable of a bounded type.

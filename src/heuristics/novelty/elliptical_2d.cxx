@@ -40,15 +40,41 @@ namespace fs0 {
     void
     EllipticalMapping2D::make_goal_relative_features( std::vector< lapkt::novelty::NoveltyFeature<State>* >& features ) {
         spx::LinearProgram   poly;
+
+        if ( !Config::instance().getOption<bool>("project_away_numeric",false) )
+            throw std::runtime_error("Incompatible options: elliptical features require numeric variables to be projected away!");
+
+        LPT_INFO("features", "Constructing LP to compute x*");
         const Problem& problem = Problem::getInstance();
         std::set<VariableIdx> goal_relevant_vars;
-        for ( auto formula : fs::all_relations( *problem.getGoalConditions())) {
-            poly.add_constraint(formula);
-            std::set<VariableIdx> condS;
-            fs::ScopeUtils::computeFullScope(formula, condS);
-            for ( auto x : condS ) {
-                goal_relevant_vars.insert(x);
+
+        std::set< fs::RelationalFormula::Symbol > supported = {fs::RelationalFormula::Symbol::GEQ, fs::RelationalFormula::Symbol::LEQ, fs::RelationalFormula::Symbol::LT,  fs::RelationalFormula::Symbol::GT };
+        std::vector< const fs::RelationalFormula* > relevant_formulae;
+
+        for ( auto formula : fs::all_relations( *problem.getGoalConditions()))
+            if ( supported.find( formula->symbol()) != supported.end() ) {
+                relevant_formulae.push_back(formula);
+                std::set<VariableIdx> condS;
+                fs::ScopeUtils::computeFullScope(formula, condS);
+                for ( auto x : condS ) {
+                    goal_relevant_vars.insert(x);
+                }
             }
+
+        for ( auto formula : problem.getStateConstraints()  ) {
+            for ( auto f : fs::all_relations(*formula) ) {
+                if ( f == nullptr ) continue;
+                if ( supported.find( f->symbol()) != supported.end() )
+                    relevant_formulae.push_back(f);
+            }
+        }
+
+        LPT_INFO( "features", "Goal relevant formulae: " << relevant_formulae.size() );
+
+        for ( auto formula : relevant_formulae ) {
+            LPT_INFO("features", "\t" << *formula );
+            poly.add_constraint(formula);
+
 		}
 
         poly.setup();
@@ -62,6 +88,7 @@ namespace fs0 {
         const ProblemInfo& info = ProblemInfo::getInstance();
 
 
+        std::set<VariableIdx> covered;
         std::vector<VariableIdx> tmp( goal_relevant_vars.begin(), goal_relevant_vars.end());
         for ( unsigned i = 0; i < tmp.size(); i++ ) {
             for ( unsigned j  = i+1; j < tmp.size(); j ++ ) {
@@ -76,14 +103,30 @@ namespace fs0 {
                 LPT_INFO( "features", "\t\t levels = " << num_levels );
                 float delta_c = c / (float) num_levels;
                 float c_k = c;
+                // MRJ: make sure that there's always at least one band defined
                 while (c_k > delta_c) {
                     bands.push_back(c_k);
                     c_k -= delta_c;
                 }
-
+                if ( bands.size() == 0 )
+                    bands.push_back(c_k);
+                covered.insert(x0);
+                covered.insert(x1);
                 features.push_back( new EllipticalMapping2D( input, s0, sG, bands ));
             }
         }
+
+
+        VariableIdx clock = info.getVariableId("clock_time()");
+        LPT_INFO("features", "Creating State Variable Features for: ")
+        for ( VariableIdx var = 0; var < info.getNumVariables(); ++var )
+            if ( info.sv_type(var) ==  type_id::float_t )
+                if ( covered.find(var) == covered.end() ) {
+                    if ( Config::instance().getOption<bool>("project_away_time",false)
+                            && var == clock ) continue;
+                    LPT_INFO("features", "\t " << info.getVariableName(var));
+                    features.push_back( new StateVariableFeature(var) ) ;
+                }
     }
 
     void
@@ -119,10 +162,10 @@ namespace fs0 {
                     Value breakpoints(kArrayType); {
                         for ( unsigned l = 0; l < f_k->_bands.size(); l++ ) {
 							Value b(f_k->_bands[l]);
-							tuple.PushBack(b.Move(),allocator);
+							breakpoints.PushBack(b.Move(),allocator);
 						}
                     }
-                    entry.PushBack(breakpoints.Move(),allocator);
+                    entry.AddMember("breakpoints", breakpoints.Move(),allocator);
 				}
 				feature_set.PushBack(entry.Move(), allocator);
 			}

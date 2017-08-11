@@ -5,6 +5,7 @@ import json
 import operator
 
 from python import utils
+from python.parser.parser import Parser
 from . import fstrips
 from . import util
 from .static import DataElement
@@ -100,6 +101,7 @@ class ProblemRepresentation(object):
 
     def dump_symbol_data(self):
         res = []
+        p = Parser(self.index)
         for name, symbol in self.index.symbols.items():
             i = self.index.symbol_index[name]
 

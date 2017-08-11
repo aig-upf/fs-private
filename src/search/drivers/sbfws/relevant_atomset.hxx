@@ -35,19 +35,20 @@ public:
 	const AtomIndex& _atomidx;
 
 	AtomsetHelper(const AtomIndex& atomidx, const std::vector<bool>& relevant) :
-		_relevant(relevant), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx)
+		_relevant(relevant), _relevant_feature_values(), _relevant_coupled_feature_values(), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx)
 	{}
 
 	AtomsetHelper(const AtomIndex& atomidx, const std::vector<bool>& relevant, const std::vector<bool>& dummy ) :
-		_relevant(relevant), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx)
+		_relevant(relevant), _relevant_feature_values(), _relevant_coupled_feature_values(), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx)
 	{}
 
 
 	AtomsetHelper(const AtomIndex& atomidx, const std::vector<ValuationT>& relevant) :
-		_relevant_feature_values(relevant.begin(), relevant.end()), _num_relevant(_relevant_feature_values.size()), _atomidx(atomidx)
+		_relevant(), _relevant_feature_values(relevant.begin(), relevant.end()), _relevant_coupled_feature_values(), _num_relevant(_relevant_feature_values.size()), _atomidx(atomidx)
 	{}
 
 	AtomsetHelper(const AtomIndex& atomidx, const std::vector<ValuationT>& relevant, const std::vector<CoupledValuationT>& coupled ) :
+		_relevant(),
 		_relevant_feature_values(relevant.begin(), relevant.end()),
 		_relevant_coupled_feature_values(coupled.begin(), coupled.end()),
 		_num_relevant(_relevant_feature_values.size() + coupled.size()), _atomidx(atomidx)

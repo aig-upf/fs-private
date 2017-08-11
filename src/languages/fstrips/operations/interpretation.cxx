@@ -62,6 +62,11 @@ Visit(const UserDefinedStaticTerm& lhs) { Visit(static_cast<const StaticHeadedNe
 
 template <typename AssignmentT>
 void VariableInterpretationVisitor<AssignmentT>::
+Visit(const AxiomaticTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
 Visit(const AdditionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 
 

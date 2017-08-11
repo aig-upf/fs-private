@@ -160,15 +160,15 @@ void Problem::consolidateAxioms() {
 	_goal_sat_manager = std::unique_ptr<FormulaInterpreter>(FormulaInterpreter::create(_goal_formula, get_tuple_index()));
 
 	for ( auto& c : _state_constraints ) {
-	const fs::Axiom* tmp = c.second;
-	    const fs::Formula* _new_definition = fs::process_axioms(*(tmp->getDefinition()), info);
-	c.second= new fs::Axiom( tmp->getName(), tmp->getSignature(), tmp->getParameterNames(), tmp->getBindingUnit(), _new_definition );
-	delete tmp;
+        const fs::Axiom* tmp = c.second;
+        const fs::Formula* _new_definition = fs::process_axioms(*(tmp->getDefinition()), info);
+        c.second= new fs::Axiom( tmp->getName(), tmp->getSignature(), tmp->getParameterNames(), tmp->getBindingUnit(), _new_definition );
+        delete tmp;
 	}
 	//! Store pointers to the state constraint definitions for ease of use
 	_state_constraints_formulae.clear();
 	for ( auto c : _state_constraints ) {
-	_state_constraints_formulae.push_back( c.second->getDefinition() );
+	       _state_constraints_formulae.push_back( c.second->getDefinition() );
 	}
 
 

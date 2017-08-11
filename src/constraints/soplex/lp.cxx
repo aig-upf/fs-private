@@ -2,6 +2,7 @@
 #include <languages/fstrips/scopes.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <lapkt/tools/logging.hxx>
+#include <languages/fstrips/operations/basic.hxx>
 #include <problem_info.hxx>
 
 namespace fs0  { namespace spx {
@@ -38,7 +39,9 @@ namespace fs0  { namespace spx {
             && f->symbol() != fs::RelationalFormula::Symbol::LEQ
             && f->symbol() != fs::RelationalFormula::Symbol::LT
             && f->symbol() != fs::RelationalFormula::Symbol::GT) {
-            throw std::runtime_error("spx::LinearProgram::add_constraint() : At the moment only '>=', '>', '<' and '<=' constraints are supported.");
+            LPT_INFO("cout","spx::LinearProgram::add_constraint() : At the moment only '>=', '>', '<' and '<=' constraints are supported.");
+            LPT_INFO("cout", "constraint: " << *f );
+            return;
         }
 
         auto lhs = dynamic_cast<const fs::StateVariable* >(f->lhs());
@@ -46,8 +49,11 @@ namespace fs0  { namespace spx {
 
         if ( lhs == nullptr )
             throw std::runtime_error( "spx::LinearProgramm::add_constraint() : At the moment the left hand side of a constraint needs to be a state variable");
-        if ( rhs == nullptr )
-            throw std::runtime_error( "spx::LinearProgramm::add_constraint() : At the moment the right hand side of a constraint needs to be a constant");
+        if ( rhs == nullptr ) {
+            auto state_vars = fs::all_state_variables(*f->rhs());
+            if ( !state_vars.empty() )
+                throw std::runtime_error( "spx::LinearProgramm::add_constraint() : At the moment the right hand side of a constraint needs to be a constant");
+        }
 
         _constraints.push_back( f );
     }
@@ -72,9 +78,17 @@ namespace fs0  { namespace spx {
         // and now it is time for the constraints
         for ( auto f : _constraints ) {
             auto lhs = dynamic_cast<const fs::StateVariable* >(f->lhs());
-            auto rhs = dynamic_cast<const fs::Constant* >(f->rhs());
             int x = _fs_var_to_lp[lhs->getValue()];
-            object_id o_b = rhs->getValue();
+
+            auto rhs = dynamic_cast<const fs::Constant* >(f->rhs());
+            object_id o_b;
+            if (rhs == nullptr ) {
+                // MRJ: rhs guaranteed to not contain any state variable
+                PartialAssignment empty_assignment = {};
+                o_b = f->rhs()->interpret(empty_assignment);
+            } else {
+                o_b = rhs->getValue();
+            }
             float b;
             if ( o_type(o_b) == type_id::int_t)
                 b = (float)fs0::value<int>(o_b);

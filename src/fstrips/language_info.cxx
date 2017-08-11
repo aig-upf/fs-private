@@ -55,7 +55,7 @@ private:
 	Implementation() {
 
 		// The first object Ids are reserved for Booleans
-		TypeIdx bool_t = add_fstype("bool", type_id::object_t);
+		TypeIdx bool_t = add_fstype("bool", type_id::bool_t);
 		object_id o_false = add_object("*false*", bool_t);
 		object_id o_true = add_object("*true*", bool_t);
 
@@ -231,9 +231,8 @@ private:
 		unsigned id = _object_names.size();
 		type_id t = get_type_id(fstype);
 
-		if (t != type_id::object_t) throw std::runtime_error("Cannot add non-object types");
-
-		object_id oid = make_object(type_id::object_t, id);
+		if (t != type_id::object_t && t != type_id::bool_t) throw std::runtime_error("Cannot add non-object types");
+		object_id oid = make_object(t, id);
 
 		_object_ids.insert(std::make_pair(name, oid));
 		_object_names.insert(std::make_pair(oid, name));
@@ -242,11 +241,17 @@ private:
 
 		return oid;
 	}
+	
+	
+	const object_id get_object_id(const std::string& name) const {return _object_ids.at(name);}
+	
+	
+	
 
 	unsigned num_objects() const { return _object_names.size(); }
 
 	void bind_object_to_type(TypeIdx fstype, object_id object) {
-		assert(o_type(object) == type_id::object_t);
+		assert(o_type(object) == type_id::object_t || o_type(object) == type_id::bool_t);
 		_fstype_objects.at(fstype).push_back(object);
 	}
 
@@ -349,6 +354,8 @@ get_typename(const TypeIdx& fstype) const { return impl().get_typename(fstype); 
 const std::string LanguageInfo::
 get_object_name(const object_id& object) const { return impl().get_object_name(object); }
 
+const object_id LanguageInfo::get_object_id(const std::string& name) const { return impl().get_object_id(name);}
+
 symbol_id LanguageInfo::
 add_symbol(const std::string& name, const symbol_t& type, const Signature& signature, bool static_) { return impl().add_symbol(name, type, signature, static_); }
 
@@ -372,7 +379,7 @@ const FSTypeInfo& LanguageInfo::
 typeinfo(const TypeIdx& fstype) const { return impl().typeinfo(fstype); }
 
 const SymbolInfo& LanguageInfo::
-symbolinfo(const symbol_id& fstype) const { return impl().symbolinfo(fstype); }
+symbolinfo(const symbol_id& sid) const { return impl().symbolinfo(sid); }
 
 const std::vector<object_id>& LanguageInfo::
 type_objects(TypeIdx fstype) const { return impl().type_objects(fstype); }

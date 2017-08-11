@@ -26,6 +26,9 @@ std::vector<const Term*> all_terms(const LogicalElement& element) {
 	return Utils::filter_by_type<const Term*>(all_nodes(element));
 }
 
+std::vector<const StateVariable*> all_state_variables(const LogicalElement& element) {
+	return Utils::filter_by_type<const StateVariable*>(all_nodes(element));
+}
 
 std::vector<const LogicalElement*> all_nodes(const LogicalElement& element) {
 	AllNodesVisitor visitor;
@@ -98,6 +101,7 @@ void AllNodesVisitor::Visit(const StaticHeadedNestedTerm& lhs) { Visit(static_ca
 void AllNodesVisitor::Visit(const FluentHeadedNestedTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const UserDefinedStaticTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const AxiomaticTermWrapper& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const AxiomaticTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
@@ -181,6 +185,7 @@ Visit(const FluentHeadedNestedTerm& lhs) {
 
 void NestednessVisitor::Visit(const UserDefinedStaticTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void NestednessVisitor::Visit(const AxiomaticTermWrapper& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+void NestednessVisitor::Visit(const AxiomaticTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void NestednessVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void NestednessVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void NestednessVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
@@ -195,6 +200,7 @@ unsigned flat(const Term& element) {
 
 void FlatVisitor::Visit(const UserDefinedStaticTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void FlatVisitor::Visit(const AxiomaticTermWrapper& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+void FlatVisitor::Visit(const AxiomaticTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void FlatVisitor::Visit(const AdditionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void FlatVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 void FlatVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
@@ -229,6 +235,10 @@ void TypeVisitor::
 Visit(const AxiomaticTermWrapper& lhs) {
 	_result = ProblemInfo::getInstance().getSymbolData(lhs.getSymbolId()).getCodomainType();
 }
+
+void TypeVisitor::Visit(const AxiomaticTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+
 
 void TypeVisitor::
 Visit(const BoundVariable& lhs) {
@@ -265,6 +275,7 @@ void BoundVisitor::Visit(const StaticHeadedNestedTerm& lhs) { _result = type_bas
 void BoundVisitor::Visit(const FluentHeadedNestedTerm& lhs) { _result = type_based_bounds(lhs); }
 void BoundVisitor::Visit(const UserDefinedStaticTerm& lhs) { _result = type_based_bounds(lhs); }
 void BoundVisitor::Visit(const AxiomaticTermWrapper& lhs) { _result = type_based_bounds(lhs); }
+void BoundVisitor::Visit(const AxiomaticTerm& lhs) { _result = type_based_bounds(lhs); }
 
 void BoundVisitor::
 Visit(const Constant& lhs) {

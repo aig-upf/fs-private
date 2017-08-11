@@ -157,7 +157,7 @@ template <typename R, typename Visited>
 struct ThrowCatchAll
 {
     static R OnUnknownVisitor(Visited&, BaseVisitor&)
-    { throw std::runtime_error("Unknown visited type"); }
+    { throw std::runtime_error("Loki Visitor: Unknown visited type"); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

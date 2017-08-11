@@ -50,3 +50,11 @@ __pycache__/
 
 # Binaries
 *.bin
+
+# Build temporary files
+_build/*
+build/*
+experiments/*
+workspace/*
+generated/*
+preprocessor/generated/*
