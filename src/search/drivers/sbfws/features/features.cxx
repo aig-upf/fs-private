@@ -81,13 +81,13 @@ void
 FeatureSelector<StateT>::add_state_variables(const ProblemInfo& info, std::vector<FeatureT*>& features) {
 
     std::set<VariableIdx> projected_away;
-    if ( Config::instance().getOption<bool>("project_away_time",false) ) {
+    if ( Config::instance().getOption<bool>("features.project_away_time",false) ) {
         VariableIdx clock = info.getVariableId("clock_time()");
         projected_away.insert( clock );
         LPT_INFO("main", "Projecting away variable: " << info.getVariableName(clock)  );
     }
 
-    if ( Config::instance().getOption<bool>("project_away_numeric",false) ) {
+    if ( Config::instance().getOption<bool>("features.project_away_numeric",false) ) {
         for ( VariableIdx var = 0; var < info.getNumVariables(); ++var ) {
             if ( info.sv_type(var) ==  type_id::float_t ) {
                 projected_away.insert(var);
