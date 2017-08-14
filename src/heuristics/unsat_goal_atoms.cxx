@@ -1,14 +1,15 @@
 
 
 #include <problem.hxx>
-#include <heuristics/unsat_goal_atoms.hxx>
 #include <languages/fstrips/formulae.hxx>
+
+#include <heuristics/unsat_goal_atoms.hxx>
 
 namespace fs0 {
 
 UnsatisfiedGoalAtomsHeuristic::UnsatisfiedGoalAtomsHeuristic(const Problem& problem)
 	: _goal_conjunction(extract_goal_conjunction(problem)) {}
-	
+
 float UnsatisfiedGoalAtomsHeuristic::evaluate(const State& state) const {
 	unsigned unsatisfied = 0;
 	for (const fs::Formula* condition:get_goal_conjuncts()) {

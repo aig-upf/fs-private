@@ -1,6 +1,9 @@
 #include <heuristics/error_signal.hxx>
 #include <cmath>
 #include <lapkt/tools/logging.hxx>
+#include <languages/fstrips/operations/basic.hxx>
+
+namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
@@ -8,6 +11,15 @@ namespace hybrid {
 
     SquaredErrorSignal::~SquaredErrorSignal() {
 
+    }
+
+    std::shared_ptr<Reward>
+    SquaredErrorSignal::create_from_goals( const Problem& p  ) {
+        std::shared_ptr<SquaredErrorSignal> signal = std::make_shared<SquaredErrorSignal>();
+        for ( auto formula : fs::all_formulae( *p.getGoalConditions())) {
+            signal->addCondition(formula);
+        }
+        return signal;
     }
 
     void
@@ -24,6 +36,11 @@ namespace hybrid {
         }
 
         _arithmetic_goal_condition.push_back(formula);
+    }
+
+    float
+    SquaredErrorSignal::evaluate( const State& s) const {
+        return measure(s);
     }
 
     float

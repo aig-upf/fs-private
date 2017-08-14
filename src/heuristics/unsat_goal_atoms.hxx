@@ -2,6 +2,8 @@
 #pragma once
 
 #include <languages/fstrips/language_fwd.hxx>
+#include <vector>
+#include <memory>
 
 namespace fs0 {
 
