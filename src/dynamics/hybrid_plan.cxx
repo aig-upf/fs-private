@@ -112,12 +112,13 @@ namespace fs0 { namespace dynamics {
         VariableIdx time_var_idx = info.getVariableId("clock_time()");
 
         LPT_INFO( "simulation", "Starting plan Simulation");
-        LPT_INFO( "simulation", "Duration: " << get_duration() << " time units");
+        _trajectory.clear();
 
         NaiveApplicabilityManager manager(problem.getStateConstraints());
         auto s = std::make_shared<State>( problem.getInitialState() );
         _trajectory.push_back( s );
         if ( _the_plan.empty() ) {
+            LPT_INFO( "simulation", "Plan is empty!")
             restore_simulation_settings();
             return;
         }
@@ -126,6 +127,8 @@ namespace fs0 { namespace dynamics {
         const GroundAction* a;
         std::tie( t, a ) =_the_plan[0];
         float time_left = ( duration < 0.0 ? get_duration() : duration);
+        LPT_INFO( "simulation", "Duration: " << time_left << " time units");
+
         if ( t > 0.0 ) { // There's some waiting before the first action in the plan
             float H = std::min( (float)time_left, t);
 
@@ -147,8 +150,8 @@ namespace fs0 { namespace dynamics {
                 time_left -= h;
             }
         }
-        if ( time_left <= cfg.getDiscretizationStep() ) {
-            LPT_INFO("simulation", "Simulation finished");
+        if ( time_left < cfg.getDiscretizationStep() ) {
+            LPT_INFO("simulation", "Simulation finished, time left (" << time_left << ") less than discretisation step (" <<  cfg.getDiscretizationStep() << ")");
             restore_simulation_settings();
             return;
         }
@@ -195,8 +198,8 @@ namespace fs0 { namespace dynamics {
                 time_left -= h;
             }
 
-            if ( time_left <= cfg.getDiscretizationStep() ) {
-                LPT_INFO("simulation", "Simulation finished");
+            if ( time_left < cfg.getDiscretizationStep() ) {
+                LPT_INFO("simulation", "Simulation finished, time left (" << time_left << ") less than discretisation step (" <<  cfg.getDiscretizationStep() << ")");
                 restore_simulation_settings();
                 return;
             }
