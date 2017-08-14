@@ -59,6 +59,9 @@ public:
 	//! Get the problem's goal formula
 	const fs::Formula* getGoalConditions() const { return _goal_formula; }
 
+	//! Get the problem's metric
+	const fs::Metric* get_metric() const { return _metric; }
+
 	//! Get the state constraint formula of the problem
 	const std::vector<const fs::Formula*>& getStateConstraints() const { return _state_constraints_formulae; }
 
