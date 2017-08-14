@@ -134,7 +134,7 @@ namespace fs0 { namespace dynamics {
 
             LPT_INFO( "simulation", "Idle time: " << H << " time units" );
             while ( H > 0.0 ) {
-                float h = std::min((float)cfg.getDiscretizationStep(), H );
+                float h = std::min((float)time_step, H );
                 LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
                 float old_step = cfg.getDiscretizationStep();
                 cfg.setDiscretizationStep(h);
@@ -182,7 +182,7 @@ namespace fs0 { namespace dynamics {
 
             LPT_INFO( "simulation", "Idle time: " << H << " time units" );
             while ( H > 0.0 ) {
-                float h = std::min((float)cfg.getDiscretizationStep(), H );
+                float h = std::min(time_step, H );
                 LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
                 float old_step = cfg.getDiscretizationStep();
                 cfg.setDiscretizationStep(h);
