@@ -183,14 +183,11 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 	}
 
 	if (Config::instance().getOption<bool>("features.joint_goal_error", false)) {
-		hybrid::L2Norm norm;
 		SquaredErrorFeature* feature = new SquaredErrorFeature;
 		for ( auto formula : fs::all_formulae( *Problem::getInstance().getGoalConditions())) {
 			feature->addCondition(formula);
-			norm.add_condition(formula);
 		}
 		LPT_INFO("features", "Added 'joint_goal_error': phi(s0) = " << feature->error_signal().measure(Problem::getInstance().getInitialState()));
-		LPT_INFO("features", "L^2 norm(s0,sG) =  " << norm.measure(Problem::getInstance().getInitialState()));
 		features.push_back( feature );
 	}
 
