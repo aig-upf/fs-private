@@ -12,7 +12,7 @@ namespace  fs0 { namespace hybrid {
 
     float
     GoalCountSignal::evaluate( const State& s ) const {
-        return _h.evaluate(s);
+        return -_h.evaluate(s);
     }
 
     std::shared_ptr<Reward>

@@ -40,7 +40,7 @@ namespace hybrid {
 
     float
     SquaredErrorSignal::evaluate( const State& s) const {
-        return measure(s);
+        return -measure(s);
     }
 
     float
