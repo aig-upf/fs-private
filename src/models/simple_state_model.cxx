@@ -115,7 +115,7 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 	const auto& tuple_idx =  problem.get_tuple_index();
 	StrategyT strategy = config.getSuccessorGeneratorType();
 
-	LPT_INFO( "cout", "Ground actions: " << actions.size());
+	LPT_INFO( "main", "Ground actions: " << actions.size());
 
 	if (strategy == StrategyT::adaptive) {
 		// Choose match-tree if number of actions is large enough, otherwise naive.
@@ -131,12 +131,12 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 	}
 
 	if (strategy == StrategyT::naive) {
-		LPT_INFO( "cout", "Successor Generator: Naive");
+		LPT_INFO( "main", "Successor Generator: Naive");
 		return new NaiveActionManager(actions, constraints);
 	}
 
 	if (strategy == StrategyT::functional_aware) {
-		LPT_INFO( "cout", "Successor Generator: Functional Aware");
+		LPT_INFO( "main", "Successor Generator: Functional Aware");
 		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build();
 		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
@@ -147,7 +147,7 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 		if (!indexer.is_fully_binary()) {
 			throw std::runtime_error("Successor Generation Strategy: Match Tree: Variable domains not binary.");
 		}
-		LPT_INFO( "cout", "Successor Generator: Match Tree");
+		LPT_INFO( "main", "Successor Generator: Match Tree");
 		LPT_INFO("main", "Mem. usage before match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 
