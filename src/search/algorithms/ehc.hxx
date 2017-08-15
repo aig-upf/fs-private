@@ -217,7 +217,7 @@ public:
 		assert(solution.size()==0);
 
 		auto node = BreadthFirstAlgorithm::make_node(state, _heuristic);
-		LPT_INFO("cout", "Starting EHC search on node " << *node);
+		LPT_INFO("search", "Starting EHC search on node " << *node);
 
 		while(node->h > 0) {
 
@@ -226,11 +226,11 @@ public:
 			lapkt::events::subscribe(bfs, _handlers);
 
 			if (! (node = bfs.bounded_search(node, node->h))) { // EHC fails
-				LPT_INFO("cout", "EHC's breadth-first search unable to find a state with lower h(s)");
+				LPT_INFO("search", "EHC's breadth-first search unable to find a state with lower h(s)");
 				return false;
 			}
 
-			LPT_INFO("cout", "EHC switch - new search node " << *node);
+			LPT_INFO("search", "EHC switch - new search node " << *node);
 
 			if (node->h == 0) bfs.retrieve_solution(node, solution);
 		}

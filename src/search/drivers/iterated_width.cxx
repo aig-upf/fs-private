@@ -52,26 +52,26 @@ do_search(const StateModelT& model, const Config& config, const std::string& out
 		fs0::bfws::FeatureSelector<State> selector(ProblemInfo::getInstance());
 
 		if (selector.has_extra_features()) {
-			LPT_INFO("cout", "FEATURE EVALUATION: Extra Features were found!  Using a GenericFeatureSetEvaluator");
+			LPT_INFO("search", "FEATURE EVALUATION: Extra Features were found!  Using a GenericFeatureSetEvaluator");
 			using FeatureEvaluatorT = lapkt::novelty::GenericFeatureSetEvaluator<State>;
 			return do_search1<StateModelT, bfws::IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, selector.select(), config, out_dir, start_time, stats);
 		}
 	}
 
 	if (indexer.is_fully_binary()) { // The state is fully binary
-		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<bool>");
+		LPT_INFO("search", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<bool>");
 		using FeatureEvaluatorT = lapkt::novelty::StraightFeatureSetEvaluator<bool>;
 		return do_search1<StateModelT, bfws::BoolNoveltyEvaluatorI, FeatureEvaluatorT>(model, FeatureEvaluatorT(), config, out_dir, start_time, stats);
 
 	}
 // 	else if (indexer.is_fully_multivalued()) { // The state is fully multivalued
-// 		LPT_INFO("cout", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<object_id>");
+// 		LPT_INFO("search", "FEATURE EVALUATION: Using the specialized StraightFeatureSetEvaluator<object_id>");
 // 		using FeatureEvaluatorT = lapkt::novelty::StraightFeatureSetEvaluator<object_id>;
 // 		return do_search1<StateModelT, bfws::IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, FeatureEvaluatorT(), config, out_dir, start_time, stats);
 //
 // 	}
 	else { // We have a hybrid state and cannot thus apply optimizations
-		LPT_INFO("cout", "FEATURE EVALUATION: Using a generic IntegerFeatureEvaluator");
+		LPT_INFO("search", "FEATURE EVALUATION: Using a generic IntegerFeatureEvaluator");
 		using FeatureEvaluatorT = bfws::IntegerFeatureEvaluator;
 		return do_search1<StateModelT, bfws::IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, FeatureEvaluatorT(), config, out_dir, start_time, stats);
 	}

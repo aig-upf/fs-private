@@ -67,9 +67,11 @@ namespace fs0 { namespace dynamics {
     	}
         // MRJ: add dummy action at the very end of the plan
         _the_plan.push_back( std::make_tuple( fs0::value<float>(state.getValue(time_var_idx)), nullptr) );
+        LPT_INFO("main", "HybridPlan::interpret_plan() : Events in hybrid plan: " << _the_plan.size() << " # control: " << control_count << " # exogenous: " << exo_count  );
+        LPT_INFO("main", "HybridPlan::interpret_plan() : Duration: " << get_duration() << " time units");
 
-        LPT_INFO("cout", "HybridPlan::interpret_plan() : Events in hybrid plan: " << _the_plan.size() << " # control: " << control_count << " # exogenous: " << exo_count  );
-        LPT_INFO("cout", "HybridPlan::interpret_plan() : Duration: " << get_duration() << " time units");
+        LPT_DEBUG("cout", "HybridPlan::interpret_plan() : Events in hybrid plan: " << _the_plan.size() << " # control: " << control_count << " # exogenous: " << exo_count  );
+        LPT_DEBUG("cout", "HybridPlan::interpret_plan() : Duration: " << get_duration() << " time units");
 
         if ( !problem.getGoalSatManager().satisfied(state) )
             LPT_DEBUG("cout", "HybridPlan::interpret_plan(): WARNING: plan doesn't achieve the goal!");
@@ -162,7 +164,7 @@ namespace fs0 { namespace dynamics {
 
             if ( a == nullptr ) {
                 LPT_INFO("simulation", "Simulation finished, states in trajectory: " << _trajectory.size());
-                LPT_INFO( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
+                LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
                 restore_simulation_settings();
                 return;
             }
@@ -205,7 +207,7 @@ namespace fs0 { namespace dynamics {
             }
     	}
         LPT_INFO("simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
-        LPT_INFO( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
+        LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
         restore_simulation_settings();
     }
 

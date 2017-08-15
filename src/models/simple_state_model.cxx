@@ -122,11 +122,11 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 		unsigned cutoff = config.getOption<unsigned>("mt_cutoff", 20000);
 		if (actions.size() > cutoff) {
 			strategy = StrategyT::match_tree;
-			LPT_INFO("cout", "Chose Match-Tree as Successor Generator (" << actions.size() << " > " << cutoff << ")");
+			LPT_INFO("main", "Chose Match-Tree as Successor Generator (" << actions.size() << " > " << cutoff << ")");
 
 		} else {
 			strategy = StrategyT::naive;
-			LPT_INFO("cout", "Chose Naive as Successor Generator (" << actions.size() << " <= " << cutoff << ")");
+			LPT_INFO("main", "Chose Naive as Successor Generator (" << actions.size() << " <= " << cutoff << ")");
 		}
 	}
 
@@ -148,12 +148,12 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 			throw std::runtime_error("Successor Generation Strategy: Match Tree: Variable domains not binary.");
 		}
 		LPT_INFO( "cout", "Successor Generator: Match Tree");
-		LPT_INFO("cout", "Mem. usage before match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("main", "Mem. usage before match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 
 		auto mng = new MatchTreeActionManager(actions, constraints, tuple_idx);
-		LPT_INFO("cout", "Match-tree built with " << mng->count() << " nodes.");
-		LPT_INFO("cout", "Mem. usage after match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		LPT_INFO("main", "Match-tree built with " << mng->count() << " nodes.");
+		LPT_INFO("main", "Mem. usage after match-tree construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		return mng;
 	}
 

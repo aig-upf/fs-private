@@ -576,7 +576,7 @@ public:
 				throw std::runtime_error("Unsupported novelty levels: " + std::to_string(user_option));
 			}
 
-			LPT_INFO("cout", "(User-specified) Novelty levels of the search:  " << user_option);
+			LPT_INFO("search", "(User-specified) Novelty levels of the search:  " << user_option);
 			return user_option;
 		}
 
@@ -589,9 +589,9 @@ public:
 
 		unsigned levels = (size_novelty2_tables > 2048) ? 2 : 3;
 
-		LPT_INFO("cout", "Size of a single specialized novelty-2 table estimated at (MB): " << size_novelty2_table);
-		LPT_INFO("cout", "Expected overall size of all novelty-two tables (MB): " << size_novelty2_tables);
-		LPT_INFO("cout", "Novelty levels of the search:  " << levels);
+		LPT_INFO("search", "Size of a single specialized novelty-2 table estimated at (MB): " << size_novelty2_table);
+		LPT_INFO("search", "Expected overall size of all novelty-two tables (MB): " << size_novelty2_tables);
+		LPT_INFO("search", "Novelty levels of the search:  " << levels);
 
 		return levels;
 	}
@@ -712,7 +712,7 @@ protected:
 	//! Returns true iff the newly-created node is a solution
 	bool create_node(const NodePT& node) {
 		if (is_goal(node)) {
-			LPT_INFO("cout", "Goal node was found");
+			LPT_INFO("search", "Goal node was found");
 			_solution = node;
 			return true;
 		}
@@ -721,7 +721,7 @@ protected:
 		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
 			_min_subgoals_to_reach = node->unachieved_subgoals;
 			_best_found = node;
-			LPT_INFO("cout", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
+			LPT_INFO("search", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
 		}
 
 		// Now insert the node into the appropriate queues
