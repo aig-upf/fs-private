@@ -52,8 +52,19 @@ namespace fs0 { namespace dynamics {
         unsigned control_count = 0, exo_count = 0;
 
     	for (const GroundAction* action : plan) {
-    		if (!manager.isApplicable(state, *action, true))
-                throw std::runtime_error( "HybridPlan::interpret_plan(): Plan is not valid (ground action not applicable!)");
+    		if (!manager.isApplicable(state, *action, true)) {
+                std::stringstream buffer;
+                buffer << "HybridPlan::interpret_plan(): Plan is not valid (ground action " << action->getName() << " not applicable!)" << std::endl;
+                buffer << "Current state: " << state << std::endl;
+                buffer << "Initial state: " << problem.getInitialState() << std::endl;
+                buffer << "Plan:" << std::endl;
+                for ( auto a : plan )
+                    buffer << "\t" << *a << std::endl;
+
+                LPT_INFO("main", buffer.str());
+                throw std::runtime_error(buffer.str() );
+            }
+
             // Record time and action if it is not the wait action
             if ( action != problem.get_wait_action() ) {
                 if (action->isControl())
