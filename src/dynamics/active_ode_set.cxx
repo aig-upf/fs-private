@@ -11,6 +11,10 @@
 #include <languages/fstrips/operations.hxx>
 
 #include <lapkt/tools/logging.hxx>
+#include <tuple>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/topological_sort.hpp>
 
 namespace fs0 { namespace dynamics {
 
@@ -34,8 +38,11 @@ namespace fs0 { namespace dynamics {
     State
     ActiveODESet::predictNextState( const State& s, const integrators::Integrator& I, double delta_time, double factor ) const {
         setup(s);
+        auto computation_graph = extractComputationGraph();
         State next(s);
-        I( s, _rates_of_change, next, delta_time, factor);
+        for ( const auto& layer : computation_graph )
+            I( s, layer, next, delta_time, factor);
+        //I( s, _rates_of_change, next, delta_time, factor);
         next.updateHash();
         return next;
     }
@@ -62,11 +69,11 @@ namespace fs0 { namespace dynamics {
                 auto it = std::find_if( _rates_of_change.begin(), _rates_of_change.end(), eq );
                 if ( it == _rates_of_change.end() ) {
 
-                    DifferentialEquation equation(affected);
+                    DifferentialEquation equation(affected, proc);
                     const fs::Term* expression = rhs->getSubterms()[1];
                     equation._terms.push_back( expression );
                     for ( auto x : fs::all_state_variables(*expression) )
-                        equation._context.insert(x);
+                        equation._context.insert(x->getValue());
 
                     if ( dynamic_cast<const fs::AdditionTerm*>(rhs))
                         equation._signs.push_back( 1.0 );
@@ -86,9 +93,67 @@ namespace fs0 { namespace dynamics {
         _ready = true;
     }
 
-    void
-    ActiveODESet::extractComputationGraph( std::vector< std::vector< DifferentialEquation > >& topo_sorted_dependency_graph ) {
+    std::vector< std::vector<DifferentialEquation> >
+    ActiveODESet::extractComputationGraph( ) const {
+        typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS > Graph;
+        typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
 
+        Graph G(_rates_of_change.size());
+        //std::vector<std::pair<unsigned, unsigned>> edges;
+        for ( unsigned i = 0; i < _rates_of_change.size(); i++ ) {
+            const DifferentialEquation& f_i = _rates_of_change[i];
+            for ( unsigned j = i + 1; j < _rates_of_change.size(); j++ ){
+                const DifferentialEquation& f_j = _rates_of_change[j];
+                // MRJ: both processes inside the same "box",
+                // interdepencies are to be ignored
+                if ( f_i._proc == f_j._proc ) continue;
+                if (f_j._context.find(f_i._affected) != f_j._context.end() ) {
+                    LPT_DEBUG("dynamics", f_i << " -> " << f_j);
+                    boost::add_edge(i,j, G);
+                }
+                    //edges.push_back( std::make_pair(i,j));
+                if (f_i._context.find(f_j._affected) != f_i._context.end() ) {
+                    LPT_DEBUG("dynamics", f_j << " -> " << f_i);
+                    boost::add_edge(j,i, G);
+                }
+
+                    //edges.push_back( std::make_pair(j,i));
+            }
+        }
+
+
+        typedef std::vector< Vertex > container;
+        container  c;
+        topological_sort(G, std::back_inserter(c));
+        std::vector< std::vector<DifferentialEquation> > topo_sorted_dependency_graph;
+        LPT_DEBUG("dynamics", "Active ODE set computation graph:");
+        unsigned current_layer = 0;
+        topo_sorted_dependency_graph.push_back( std::vector<DifferentialEquation>() );
+        for ( container::reverse_iterator ii=c.rbegin(); ii!=c.rend(); ++ii) {
+            DifferentialEquation f_k =  _rates_of_change[*ii];
+            LPT_DEBUG( "dynamics", f_k);
+            if ( topo_sorted_dependency_graph[current_layer].size() > 0 ) {
+                // if dependent, push into next layer
+                bool dependant = false;
+                for ( const auto& ode : topo_sorted_dependency_graph[current_layer])
+                    if (f_k._context.find(ode._affected) != f_k._context.end()) {
+                        dependant = true;
+                        break;
+                    }
+                if (dependant) {
+                    topo_sorted_dependency_graph.push_back( std::vector<DifferentialEquation>() );
+                    current_layer++;
+                    topo_sorted_dependency_graph[current_layer].push_back(f_k);
+                    LPT_DEBUG("dynamics", "\t Layer: " << current_layer );
+                    continue;
+                }
+            }
+
+            topo_sorted_dependency_graph[current_layer].push_back(_rates_of_change[*ii]);
+            LPT_DEBUG("dynamics", "\t Layer: " << current_layer );
+        }
+
+        return topo_sorted_dependency_graph;
     }
 
     std::ostream&

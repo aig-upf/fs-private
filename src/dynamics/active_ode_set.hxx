@@ -32,8 +32,8 @@ namespace fs0 {
         State
         predictNextState( const State& s, const integrators::Integrator& I, double delta_time, double factor ) const;
 
-        void
-        extractComputationGraph( std::vector< std::vector< DifferentialEquation > >& topo_sorted_dependency_graph );
+        std::vector< std::vector<DifferentialEquation> >
+        extractComputationGraph(  ) const;
 
         ~ActiveODESet() = default;
 
