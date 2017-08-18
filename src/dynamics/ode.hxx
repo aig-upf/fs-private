@@ -18,6 +18,7 @@ namespace fs0 { namespace dynamics {
 
         DifferentialEquation( const DifferentialEquation& other ) {
             _affected = other._affected;
+            _context = other._context;
             _terms = other._terms;
             _signs = other._signs;
         }
@@ -26,6 +27,7 @@ namespace fs0 { namespace dynamics {
 
         DifferentialEquation( DifferentialEquation&& other ) {
             _affected = other._affected;
+            _context = other._context;
             _terms = std::move(other._terms);
             _signs = std::move(other._signs);
         }
@@ -34,6 +36,7 @@ namespace fs0 { namespace dynamics {
         operator=(  DifferentialEquation&& other ) {
             if ( this == &other ) return *this;
             _affected = other._affected;
+            _context = other._context;
             _terms = std::move(other._terms);
             _signs = std::move(other._signs);
             return *this;
@@ -43,9 +46,10 @@ namespace fs0 { namespace dynamics {
         friend std::ostream& operator<<(std::ostream &os, const DifferentialEquation&  entity) { return entity.print(os); }
         std::ostream& print(std::ostream& os) const;
 
-        VariableIdx                         _affected;
-        std::vector<double>                 _signs;
-        std::vector< const fs::Term* >  _terms;
+        VariableIdx                             _affected;
+        std::vector<double>                     _signs;
+        std::vector< const fs::Term* >          _terms;
+        std::set< const fs::StateVariable* >    _context;
     };
 
 

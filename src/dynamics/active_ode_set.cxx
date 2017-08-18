@@ -63,7 +63,11 @@ namespace fs0 { namespace dynamics {
                 if ( it == _rates_of_change.end() ) {
 
                     DifferentialEquation equation(affected);
-                    equation._terms.push_back( rhs->getSubterms()[1] );
+                    const fs::Term* expression = rhs->getSubterms()[1];
+                    equation._terms.push_back( expression );
+                    for ( auto x : fs::all_state_variables(*expression) )
+                        equation._context.insert(x);
+
                     if ( dynamic_cast<const fs::AdditionTerm*>(rhs))
                         equation._signs.push_back( 1.0 );
                     else
@@ -80,6 +84,11 @@ namespace fs0 { namespace dynamics {
             }
         }
         _ready = true;
+    }
+
+    void
+    ActiveODESet::extractComputationGraph( std::vector< std::vector< DifferentialEquation > >& topo_sorted_dependency_graph ) {
+
     }
 
     std::ostream&

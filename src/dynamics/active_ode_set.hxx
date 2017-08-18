@@ -32,6 +32,9 @@ namespace fs0 {
         State
         predictNextState( const State& s, const integrators::Integrator& I, double delta_time, double factor ) const;
 
+        void
+        extractComputationGraph( std::vector< std::vector< DifferentialEquation > >& topo_sorted_dependency_graph );
+
         ~ActiveODESet() = default;
 
         //! Prints a representation of the object to the given stream.
