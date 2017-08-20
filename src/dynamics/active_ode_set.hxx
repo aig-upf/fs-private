@@ -46,6 +46,7 @@ namespace fs0 {
         const State&                                    _state;
         std::size_t                                     _hash;
         mutable bool                                    _ready;
+        bool                                            _decompose_ode;
 
         std::vector< GroundAction::IdType >             _signature;
         mutable std::vector< DifferentialEquation >     _rates_of_change;

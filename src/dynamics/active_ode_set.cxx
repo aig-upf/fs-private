@@ -21,7 +21,7 @@ namespace fs0 { namespace dynamics {
     namespace fs = fs0::language::fstrips;
 
     ActiveODESet::ActiveODESet( const State& s )
-        : _state( s ),  _hash(0), _ready(false)
+        : _state( s ),  _hash(0), _ready(false), _decompose_ode( Config::instance().getOption<bool>("dynamics.decompose_ode", false) )
     {
         const Problem& problem = Problem::getInstance();
         NaiveApplicabilityManager manager(problem.getStateConstraints());
@@ -40,7 +40,7 @@ namespace fs0 { namespace dynamics {
         setup(s);
 
         State next(s);
-        if ( Config::instance().getOption<bool>("dynamics.decompose_ode", false)) {
+        if ( _decompose_ode ) {
             auto computation_graph = extractComputationGraph();
             for ( const auto& layer : computation_graph )
                 I( s, layer, next, delta_time, factor);
