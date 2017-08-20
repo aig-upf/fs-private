@@ -38,11 +38,14 @@ namespace fs0 { namespace dynamics {
     State
     ActiveODESet::predictNextState( const State& s, const integrators::Integrator& I, double delta_time, double factor ) const {
         setup(s);
-        auto computation_graph = extractComputationGraph();
+
         State next(s);
-        for ( const auto& layer : computation_graph )
-            I( s, layer, next, delta_time, factor);
-        //I( s, _rates_of_change, next, delta_time, factor);
+        if ( Config::instance().getOption<bool>("dynamics.decompose_ode", false)) {
+            auto computation_graph = extractComputationGraph();
+            for ( const auto& layer : computation_graph )
+                I( s, layer, next, delta_time, factor);
+        } else
+            I( s, _rates_of_change, next, delta_time, factor);
         next.updateHash();
         return next;
     }
