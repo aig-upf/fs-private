@@ -1,6 +1,7 @@
 
 #include "config.hxx"
 #include <utils/config.hxx>
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 { namespace bfws {
 
@@ -18,7 +19,7 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 	else if (rs == "g0" ) relevant_set_type = RelevantSetType::G0;
 	else if  (rs == "none") relevant_set_type = RelevantSetType::None;
 	else throw std::runtime_error("Unknown option value \"bfws.rs\"=" + rs);
-
+	LPT_INFO("search", "R set definition: " << rs );
 
 	if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
 		evaluator_t = NoveltyEvaluatorType::Adaptive;
