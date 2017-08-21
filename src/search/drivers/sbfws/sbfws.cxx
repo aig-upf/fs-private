@@ -41,7 +41,7 @@ ExitCode
 SBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time) {
 	const StateAtomIndexer& indexer = model.getTask().getStateAtomIndexer();
 
-	if (config.getOption<bool>("bfws.force_generic_evaluator", false)) {
+	if (config.getOption<bool>("width.force_generic_evaluator", false)) {
 		FeatureSelector<StateT> selector(ProblemInfo::getInstance());
 
 		LPT_INFO("search", "FEATURE EVALUATION: Forced to use GenericFeatureSetEvaluator");
