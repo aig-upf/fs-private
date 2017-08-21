@@ -10,9 +10,11 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 	simulation_width(config.getOption<int>("width.simulation", 1)),
 	mark_negative_propositions(config.getOption<bool>("simulation.neg_prop", false)),
 	complete_simulation(config.getOption<bool>("simulation.complete", true)),
-	using_feature_set(config.getOption<bool>("bfws.using_feature_set", false)),
-	using_coupled_features(config.getOption<bool>("bfws.using_coupled_features", false))
+	using_feature_set(config.getOption<bool>("bfws.using_feature_set", false))
 {
+	LPT_INFO("search", "width.search=" << search_width );
+	LPT_INFO("search", "width.simulation=" << simulation_width );
+	LPT_INFO("search", "bfws.using_feature_set=" << using_feature_set);
 	std::string rs = config.getOption<std::string>("bfws.rs");
 	if  (rs == "sim") relevant_set_type = RelevantSetType::Sim;
 	else if  (rs == "l0" ) relevant_set_type = RelevantSetType::L0;
@@ -23,14 +25,23 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 
 	if (config.getOption<std::string>("evaluator_t", "") == "adaptive") {
 		evaluator_t = NoveltyEvaluatorType::Adaptive;
+		LPT_INFO("search", "Using ADAPTIVE novelty evaluator" );
 	} else {
 		evaluator_t = NoveltyEvaluatorType::Generic;
+		LPT_INFO("search", "Using GENERIC novelty evaluator" );
 	}
 
 	std::string rcomp = config.getOption<std::string>("bfws.rcomp", "seed");
-	if  (rcomp == "seed") r_computation = RComputation::Seed;
-	else if  (rcomp == "decrease") r_computation = RComputation::GDecr;
+	if  (rcomp == "seed") {
+		r_computation = RComputation::Seed;
+		LPT_INFO("search", "R Computed at the initial state only");
+	}
+	else if  (rcomp == "decrease") {
+		r_computation = RComputation::GDecr;
+		LPT_INFO("search", "R Computed when #g(s) decreases");
+	}
 	else throw std::runtime_error("Unknown option value \"bfws.rcomp\"=" + rcomp);
+
 }
 
 
