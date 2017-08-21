@@ -383,13 +383,7 @@ public:
 
 			SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
 
-
-			if ( _sbfwsconfig.using_coupled_features ) {
-				auto R = simulator.compute_R(node.state);
-				node._helper = new AtomsetHelper(_problem.get_tuple_index(), R, simulator.compute_coupled_features(R));
-			} else {
-				node._helper = new AtomsetHelper(_problem.get_tuple_index(), simulator.compute_R(node.state));
-			}
+			node._helper = new AtomsetHelper(_problem.get_tuple_index(), simulator.compute_R(node.state));
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
 
 			//! MRJ: over states
