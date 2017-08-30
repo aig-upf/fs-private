@@ -1,7 +1,9 @@
 # This SConstruct file is automatically moved to the directory where the generated
 # instance-specific problem data resides during the process of generating the executable solver.
 
-import os
+import os, sys
+sys.path.append('../..')
+from util.build import which
 
 HOME = os.path.expanduser("~")
 
@@ -9,23 +11,15 @@ HOME = os.path.expanduser("~")
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Whether this is a debug build', 'no'))
 vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
+vars.Add(BoolVariable('use_ompl', 'Include OMPL driver support in library', 'yes'))
+vars.Add(BoolVariable('use_gecode', 'Include Gecode solver dependencies', 'yes'))
+vars.Add(BoolVariable('use_soplex', 'Include Soplex LP solver adapter and dependencies', 'yes'))
+vars.Add(EnumVariable('default_compiler', 'Preferred compiler', 'clang++', allowed_values=('g++', 'clang++')))
+
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT', ''), PathVariable.PathIsDir))
 vars.Add(PathVariable('fs', 'Path where the FS library is installed', os.getenv('FS_PATH', ''), PathVariable.PathIsDir))
-
-def which(program):
-	""" Helper function emulating unix 'which' command """
-	for path in os.environ["PATH"].split(os.pathsep):
-		path = path.strip('"')
-		exe_file = os.path.join(path, program)
-		if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
-			return exe_file
-	return None
-
-# Read the preferred compiler from the environment - if none specified, choose CLANG if possible
-default_compiler = 'clang++' if which("clang++") else 'g++'
-gcc = os.environ.get('CXX', default_compiler)
-
-env = Environment(variables=vars, ENV=os.environ, CXX=gcc)
+env = Environment(variables=vars, ENV=os.environ)
+env['CXX'] = os.environ.get('CXX', env['default_compiler'])
 
 lapkt2_header_dir = os.path.join(env['lapkt'], 'include')
 lapkt2_lib_dir = os.path.join(env['lapkt'], 'lib')
@@ -73,26 +67,15 @@ env.Append(LIBS=[
 
 # Other dependencies:
 env.Append(LIBS=['boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
-
-
-# Add necessary Gecode libraries
-gecode_libs = [
-	#'gecodeflatzinc', 'gecodedriver', 'gecodeminimodel', 'gecodeset', 'gecodefloat',
-	'gecodesearch',
-	'gecodeint',
-	'gecodekernel',
-	'gecodesupport'
-]
-
-# Add Soplex libraries
-soplex_libs = [
-	'soplex',
-	'gmp',
-	'z'
-]
-
-env.Append( LIBS = gecode_libs + soplex_libs+ ['pthread'])
-
-env.Append(LIBPATH=[ os.path.abspath(p) for p in lib_paths ])
+env.Append( LIBPATH = [ os.path.abspath(p) for p in lib_paths ] )
+# Process modules and external dependencies
+sources = None # set to none to indicate we don't need the sources now
+Export('env', 'sources')
+if env['use_ompl'] :
+	SConscript( os.path.join(env['fs'], 'modules/ompl') )
+if env['use_gecode'] :
+	SConscript( os.path.join(env['fs'], 'modules/gecode') )
+if env['use_soplex'] :
+	SConscript( os.path.join(env['fs'], 'modules/soplex') )
 
 env.Program(exe_name, src_objs )
