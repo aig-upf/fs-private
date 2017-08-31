@@ -11,43 +11,34 @@ HOME = os.path.expanduser("~")
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Whether this is a debug build', 'no'))
 vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
-vars.Add(BoolVariable('use_ompl', 'Include OMPL driver support in library', 'yes'))
-vars.Add(BoolVariable('use_gecode', 'Include Gecode solver dependencies', 'yes'))
-vars.Add(BoolVariable('use_soplex', 'Include Soplex LP solver adapter and dependencies', 'yes'))
 vars.Add(EnumVariable('default_compiler', 'Preferred compiler', 'clang++', allowed_values=('g++', 'clang++')))
-
-vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT', ''), PathVariable.PathIsDir))
 vars.Add(PathVariable('fs', 'Path where the FS library is installed', os.getenv('FS_PATH', ''), PathVariable.PathIsDir))
 env = Environment(variables=vars, ENV=os.environ)
 env['CXX'] = os.environ.get('CXX', env['default_compiler'])
 
-lapkt2_header_dir = os.path.join(env['lapkt'], 'include')
-lapkt2_lib_dir = os.path.join(env['lapkt'], 'lib')
-
-env.Append( CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ] )  # Flags common to all options
 env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
 
 if env['edebug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DEDEBUG' ] )
 	fs_libname = 'fs-edebug'
-	lapkt_lib_sufix = '-edebug'
 	exe_name = 'solver.edebug.bin'
 elif env['debug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
 	fs_libname = 'fs-debug'
-	lapkt_lib_sufix = '-debug'
 	exe_name = 'solver.debug.bin'
 else:
 	env.Append( CCFLAGS = ['-g', '-O3', '-DNDEBUG' ] )
 	fs_libname = 'fs'
-	lapkt_lib_sufix = ''
 	exe_name = 'solver.bin'
+
+env.ParseConfig( 'PKG_CONFIG_PATH="{}" pkg-config --cflags --libs {}'.format(env['fs'], fs_libname))
+
 
 # Header and library directories.
 # We include pre-specified '~/local/include' and '~/local/lib' directories in case local versions of some libraries (e.g. Boost) are needed
-include_paths = ['.', env['fs'] + '/src', lapkt2_header_dir]
+include_paths = ['.']
 isystem_paths = [HOME + '/local/include']
-lib_paths = [env['fs'] + '/lib', lapkt2_lib_dir, HOME + '/local/lib']
+lib_paths = [HOME + '/local/lib']
 
 env.Append(CPPPATH = [ os.path.abspath(p) for p in include_paths ])
 env.Append(CCFLAGS = ['-isystem' + os.path.abspath(p) for p in isystem_paths])
@@ -55,27 +46,5 @@ env.Append(CCFLAGS = ['-isystem' + os.path.abspath(p) for p in isystem_paths])
 src_objs = [ env.Object(s) for s in Glob('./*.cxx') ] # This will include both the main.cxx and the generated code for the particular instance
 
 # Note: order matters. If A depends on B, A should go _before_ B.
-
-# FS main library:
-env.Append(LIBS=[fs_libname])
-
-# LAPKT lib dependencies:
-env.Append(LIBS=[
-	'liblapkt-novelty' + lapkt_lib_sufix + '.so',
-	'liblapkt' + lapkt_lib_sufix + '.so',
-])
-
-# Other dependencies:
-env.Append(LIBS=['boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm'])
-env.Append( LIBPATH = [ os.path.abspath(p) for p in lib_paths ] )
-# Process modules and external dependencies
-sources = None # set to none to indicate we don't need the sources now
-Export('env', 'sources')
-if env['use_ompl'] :
-	SConscript( os.path.join(env['fs'], 'modules/ompl') )
-if env['use_gecode'] :
-	SConscript( os.path.join(env['fs'], 'modules/gecode') )
-if env['use_soplex'] :
-	SConscript( os.path.join(env['fs'], 'modules/soplex') )
 
 env.Program(exe_name, src_objs )

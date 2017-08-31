@@ -1,0 +1,23 @@
+import os
+Import('env')
+
+lapkt2_header_dir = os.path.join(env['lapkt'], 'include')
+
+include_paths = [ lapkt2_header_dir ]
+
+
+if env['edebug']:
+	lapkt_lib_sufix = '-edebug'
+elif env['debug']:
+	lapkt_lib_sufix = '-debug'
+else:
+	lapkt_lib_sufix = ''
+
+lapkt2_libs = [
+	'liblapkt-novelty' + lapkt_lib_sufix,
+	'liblapkt' + lapkt_lib_sufix,
+]
+
+env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
+env.Append( LIBS = lapkt2_libs)
+env.Append( LIBPATH = [ os.path.abspath(os.path.join(env['lapkt'], 'lib'))] )
