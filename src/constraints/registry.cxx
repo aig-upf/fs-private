@@ -3,6 +3,7 @@
 #include <problem.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <languages/fstrips/scopes.hxx>
+#include <languages/fstrips/effects.hxx>
 // #include <constraints/direct/alldiff_constraint.hxx>
 // #include <constraints/direct/sum_constraint.hxx>
 #include <utils/printers/printers.hxx>
@@ -36,7 +37,7 @@ void LogicalComponentRegistry::registerLogicalElementCreators() {
 
 
 
-/*	
+/*
 void LogicalComponentRegistry::registerDirectTranslators() {
 	add(typeid(fs::Constant),           new ConstantRhsTranslator());
 	add(typeid(fs::StateVariable),      new StateVariableRhsTranslator());
@@ -105,6 +106,11 @@ void LogicalComponentRegistry::addTermCreator(const std::string& symbol, const T
 	if (!res.second) throw new std::runtime_error("Duplicate registration of term creator for symbol " + symbol);
 }
 
+void LogicalComponentRegistry::addEffectCreator(const std::string& symbol, const EffectCreator& creator) {
+	auto res = _effect_creators.insert(std::make_pair(symbol, creator));
+	if (!res.second) throw new std::runtime_error("Duplicate registration of effect creator for symbol " + symbol);
+}
+
 /*
 void LogicalComponentRegistry::add(const std::type_info& type, const DirectFormulaTranslator& translator) {
 	auto res = _direct_formula_translators.insert(std::make_pair(std::type_index(type), translator));
@@ -138,6 +144,12 @@ const fs::Term* LogicalComponentRegistry::instantiate_term(const std::string& sy
 	auto it = _term_creators.find(symbol);
 	if (it == _term_creators.end()) throw std::runtime_error("An externally defined symbol '" + symbol + "' is being used without having registered a suitable term/formula creator for it");
 	return it->second(subterms);
+}
+
+fs::ProceduralEffect* LogicalComponentRegistry::instantiate_effect(const std::string& symbol) const {
+	auto it = _effect_creators.find(symbol);
+	if (it == _effect_creators.end()) throw std::runtime_error("An externally defined effect with symbol '" + symbol + "' is being used without having registered a suitable effect creator for it");
+	return it->second();
 }
 
 /*

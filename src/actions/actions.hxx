@@ -6,7 +6,7 @@
 #include <applicability/action_managers.hxx>
 #include <languages/fstrips/axioms.hxx>
 
-namespace fs0 { namespace language { namespace fstrips {  class Term; class Formula; class ActionEffect; } }}
+namespace fs0 { namespace language { namespace fstrips {  class Term; class Formula; class ActionEffect; class ProceduralEffect; } }}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -95,6 +95,7 @@ public:
 	//! Some method redirections
 	unsigned getOriginId() const { return _data.getId(); }
 	const std::string& getName() const { return _data.getName(); }
+    bool hasProceduralEffects() const { return _data.getName()[0] == '@'; }
 	const Signature& getSignature() const { return _data.getSignature(); }
 	const std::vector<std::string>& getParameterNames() const { return _data.getParameterNames(); }
 	const fs::BindingUnit& getBindingUnit() const { return _data.getBindingUnit(); }
@@ -161,12 +162,17 @@ public:
 };
 
 class ProceduralAction : public GroundAction {
+protected:
+
+    fs::ProceduralEffect*     _proc_effect;
 
 public:
-
+    ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
     ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding);
 
-    ~ProceduralAction() = default;
+    virtual void apply( const State& s, std::vector<Atom>& atoms ) const override;
+
+    virtual ~ProceduralAction();
 };
 
 } // namespaces
