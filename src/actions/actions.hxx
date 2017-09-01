@@ -51,6 +51,7 @@ public:
 	ActionData(const ActionData&);
 
 	unsigned getId() const { return _id; }
+    bool hasProceduralEffects() const { return _name[0] == '@'; }
 	const std::string& getName() const { return _name; }
 	const Signature& getSignature() const { return _signature; }
 	const std::vector<std::string>& getParameterNames() const { return _parameter_names; }
@@ -95,7 +96,7 @@ public:
 	//! Some method redirections
 	unsigned getOriginId() const { return _data.getId(); }
 	const std::string& getName() const { return _data.getName(); }
-    bool hasProceduralEffects() const { return _data.getName()[0] == '@'; }
+    bool hasProceduralEffects() const { return _data.hasProceduralEffects(); }
 	const Signature& getSignature() const { return _data.getSignature(); }
 	const std::vector<std::string>& getParameterNames() const { return _data.getParameterNames(); }
 	const fs::BindingUnit& getBindingUnit() const { return _data.getBindingUnit(); }

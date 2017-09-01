@@ -68,11 +68,14 @@ _full_binding(unsigned id, const ActionData& action_data, const Binding& binding
 	std::vector<const fs::ActionEffect*> effects;
 	if (bind_effects) {
 		effects = _bind_effects(action_data, binding, info);
-		if (effects.empty()) {
+		if (effects.empty() && !action_data.hasProceduralEffects()) {
 			delete precondition;
 			return nullptr;
 		}
 	}
+
+	if (action_data.hasProceduralEffects())
+		return new ProceduralAction(id, action_data, binding, precondition, effects);
 
 	return new GroundAction(id, action_data, binding, precondition, effects);
 }
@@ -423,7 +426,7 @@ ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo&
 
 	if (process_effects) {
 		effects = _bind_effects(action, Binding::EMPTY_BINDING, info);
-		if (effects.empty()) {
+		if (effects.empty() && !action.hasProceduralEffects()) {
 			delete precondition;
 			LPT_INFO("grounding", "WARNING: Action schema has (statically) no applicable action effects: " << action.getName());
 			LPT_DEBUG("cout", "WARNING: Action schema has (statically) no applicable action effects: " << action.getName());
