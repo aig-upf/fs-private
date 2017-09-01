@@ -97,8 +97,10 @@ const ActionIdx GroundAction::invalid_action_id = std::numeric_limits<unsigned i
 ProceduralAction::ProceduralAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects)
 	: GroundAction(id, action_data, binding, precondition, effects), _proc_effect(nullptr)
 {
-	if (hasProceduralEffects())
+	if (hasProceduralEffects()) {
 		_proc_effect = LogicalComponentRegistry::instance().instantiate_effect( getName() );
+		_proc_effect->bind(binding);
+	}
 }
 
 ProceduralAction::ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding)
