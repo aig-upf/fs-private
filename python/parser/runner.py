@@ -225,7 +225,8 @@ def run(args):
     use_vanilla = not representation.requires_compilation()
 
     move_files(args.instance, args.domain, out_dir, use_vanilla)
-    compile_translation(out_dir, use_vanilla, args)
+    if not args.parse_only :
+        compile_translation(out_dir, use_vanilla, args)
     run_solver(out_dir, args)
     return 0
 

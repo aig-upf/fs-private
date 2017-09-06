@@ -15,10 +15,7 @@
 
 namespace fs0 {
 
-LogicalComponentRegistry& LogicalComponentRegistry::instance() {
-	static LogicalComponentRegistry theInstance;
-	return theInstance;
-}
+std::unique_ptr<LogicalComponentRegistry> LogicalComponentRegistry::_instance = nullptr;
 
 void LogicalComponentRegistry::registerLogicalElementCreators() {
 	// Standard relational formulae

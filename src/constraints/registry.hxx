@@ -28,6 +28,23 @@ namespace fs0 {
 //! into operational constraints.
 class LogicalComponentRegistry {
 public:
+	//! Set the global singleton problem instance
+	static LogicalComponentRegistry& set_instance(std::unique_ptr<LogicalComponentRegistry>&& registry) {
+		assert(!_instance);
+		_instance = std::move(registry);
+		return *_instance;
+	}
+
+	static std::unique_ptr<LogicalComponentRegistry>&& claim_ownership() {
+		return std::move(_instance);
+	}
+
+	//! Global singleton object accessor
+	static LogicalComponentRegistry& instance() {
+		assert(_instance);
+		return *_instance;
+	}
+	LogicalComponentRegistry();
 	~LogicalComponentRegistry();
 
 	//!
@@ -42,7 +59,7 @@ public:
 	//!
 // 	typedef std::function<DirectConstraint*(const fs::AtomicFormula&)> DirectFormulaTranslator;
 
-	static LogicalComponentRegistry& instance();
+	//static LogicalComponentRegistry& instance();
 
 	//! Add a formula creator for formulae with the given symbol to the registry
 	void addFormulaCreator(const std::string& symbol, const FormulaCreator& creator);
@@ -82,7 +99,7 @@ public:
 	friend class print::logical_registry; // Grant access to the corresponding printer class
 
 protected:
-	LogicalComponentRegistry();
+	static std::unique_ptr<LogicalComponentRegistry> _instance;
 
 	void registerLogicalElementCreators();
 // 	void registerDirectTranslators();
