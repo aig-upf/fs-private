@@ -68,7 +68,7 @@ public:
 	static std::unique_ptr<ProblemInfo>&& claimOwnership() {
 		return std::move(_instance);
 	}
-	
+
 	//! Global singleton object accessor
 	static const ProblemInfo& getInstance() {
 		assert(_instance);
@@ -152,6 +152,9 @@ public:
 	const ExternalI& get_external() const {
 		assert(_external);
 		return *_external;
+	}
+	ExternalI* release_external() {
+		return _external.release();
 	}
 
 	//! A convenient helper
