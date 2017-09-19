@@ -162,8 +162,28 @@ namespace fs0 { namespace dynamics {
                 H -=h;
                 time_left -= h;
             }
+        } else {
+
         }
+
         if ( time_left < cfg.getDiscretizationStep() ) {
+            for (unsigned i = 0; i < _the_plan.size(); i++) {
+                std::tie( t, a ) =_the_plan[i];
+                LPT_INFO( "simulation", "State: " << *s );
+
+                if ( a == nullptr ) {
+                    LPT_INFO("simulation", "Simulation finished, states in trajectory: " << _trajectory.size());
+                    LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
+                    restore_simulation_settings();
+                    return;
+                }
+                auto next = std::make_shared<State>(*s);
+                next->accumulate(NaiveApplicabilityManager::computeEffects(*s, *a));
+                _trajectory.push_back( next );
+                s = next;
+                LPT_INFO("simulation", "Action applied: " << *s );
+            }
+            LPT_INFO("simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
             LPT_INFO("simulation", "Simulation finished, time left (" << time_left << ") less than discretisation step (" <<  cfg.getDiscretizationStep() << ")");
             restore_simulation_settings();
             return;

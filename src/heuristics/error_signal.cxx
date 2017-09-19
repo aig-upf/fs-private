@@ -72,6 +72,7 @@ namespace hybrid {
         }
 
         return error;
+        //return (2.0 * std::atan(std::log10(error+1e-2)) / M_PI);
     }
 
 }
