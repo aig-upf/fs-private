@@ -131,7 +131,25 @@ namespace fs0 { namespace dynamics {
         auto s = std::make_shared<State>( problem.getInitialState() );
         _trajectory.push_back( s );
         if ( _the_plan.empty() ) {
-            LPT_INFO( "simulation", "Plan is empty!")
+            LPT_INFO( "simulation", "Plan is empty!");
+            // Just simulate for the duration
+            float H = duration;
+            while ( H > 0.0 ) {
+                float h = std::min((float)time_step, H );
+                LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
+                float old_step = cfg.getDiscretizationStep();
+                cfg.setDiscretizationStep(h);
+
+                auto tmp = std::make_shared<State>(*s);
+                tmp->accumulate(NaiveApplicabilityManager::computeEffects(*s, *wait_action));
+
+                cfg.setDiscretizationStep(old_step);
+
+                s = tmp;
+                _trajectory.push_back( tmp );
+                H -=h;
+            }
+
             restore_simulation_settings();
             return;
         }
