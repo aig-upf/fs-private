@@ -36,6 +36,7 @@ public:
 	Problem& operator=(Problem&& rhs) = delete;
 
 	//! Get the initial state of the problem
+	void setInitialState( const State& s );
 	const State& getInitialState() const { return *_init; }
 
 	const StateAtomIndexer& getStateAtomIndexer() const { return *_state_indexer; }
@@ -58,6 +59,9 @@ public:
 	//! Get the problem's goal formula
 	const fs::Formula* getGoalConditions() const { return _goal_formula; }
 
+	//! Get the problem's metric
+	const fs::Metric* get_metric() const { return _metric; }
+
 	//! Get the state constraint formula of the problem
 	const std::vector<const fs::Formula*>& getStateConstraints() const { return _state_constraints_formulae; }
 
@@ -73,6 +77,10 @@ public:
 	static void setInstance(std::unique_ptr<Problem>&& problem) {
 		assert(!_instance);
 		_instance = std::move(problem);
+	}
+
+	static std::unique_ptr<Problem>&& claimOwnership() {
+		return std::move(_instance);
 	}
 
 	//! Global singleton object accessor
@@ -108,7 +116,7 @@ protected:
 	AtomIndex _tuple_index;
 
 	//! The initial state of the problem
-	const std::unique_ptr<State> _init;
+	std::unique_ptr<State> _init;
 
 	const std::unique_ptr<StateAtomIndexer> _state_indexer;
 

@@ -41,7 +41,7 @@ namespace fs0 {
     EllipticalMapping2D::make_goal_relative_features( std::vector< lapkt::novelty::NoveltyFeature<State>* >& features ) {
         spx::LinearProgram   poly;
 
-        if ( !Config::instance().getOption<bool>("project_away_numeric",false) )
+        if ( !Config::instance().getOption<bool>("features.project_away_numeric",false) )
             throw std::runtime_error("Incompatible options: elliptical features require numeric variables to be projected away!");
 
         LPT_INFO("features", "Constructing LP to compute x*");

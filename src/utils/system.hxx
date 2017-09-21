@@ -20,8 +20,8 @@ namespace fs0 { namespace utils {
 
 size_t getCurrentRSS( );
 size_t getPeakRSS( );
-	
-	
+
+
 } } // namespaces
 
 
@@ -41,6 +41,8 @@ enum ExitCode {
     OUT_OF_MEMORY = 6
 };
 
+const char* exit_code_string( ExitCode c );
+
 int get_peak_memory_in_kb();
 const char *get_exit_code_message_reentrant(int exitcode);
 bool is_exit_code_error_reentrant(int exitcode);
@@ -53,4 +55,3 @@ size_t get_current_memory_in_kb();
 void limit_core_dump_size();
 
 } // namespaces
-

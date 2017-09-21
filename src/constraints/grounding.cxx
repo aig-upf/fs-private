@@ -58,7 +58,7 @@ namespace fs0 {
 
             // In case the action schema is directly not-lifted, we simply bind it with an empty binding and continue.
             if (signature.empty()) {
-                LPT_INFO("cout", "Grounding schema '" << data->getName() << "' with no binding");
+                LPT_DEBUG("cout", "Grounding schema '" << data->getName() << "' with no binding");
                 LPT_INFO("grounding", "Grounding the following schema with no binding:" << *data << "\n");
                 id = _ground(id, data, Binding::EMPTY_BINDING, info, grounded);
                 ++total_num_bindings;
@@ -67,18 +67,18 @@ namespace fs0 {
 
             utils::binding_iterator binding_generator(signature, info);
             if (binding_generator.ended()) {
-                LPT_INFO("cout", "Grounding of schema '" << data->getName() << "' yields no ground element, likely due to a parameter with empty type");
+                LPT_DEBUG("cout", "Grounding of schema '" << data->getName() << "' yields no ground element, likely due to a parameter with empty type");
                 continue;
             }
 
             unsigned long num_bindings = binding_generator.num_bindings();
 
-            LPT_INFO("cout", "Grounding schema '" << print::axiom_header(*data) << "' with " << num_bindings << " possible bindings" << std::flush);
+            LPT_DEBUG("cout", "Grounding schema '" << print::axiom_header(*data) << "' with " << num_bindings << " possible bindings" << std::flush);
             LPT_INFO("grounding", "Grounding the following schema with " << num_bindings << " possible bindings:" << print::axiom_header(*data));
 
             if (num_bindings == 0 || num_bindings > AxiomGrounder::MAX_GROUND_AXIOMS) { // num_bindings == 0 would indicate there's been an overflow
                 //throw TooManyfs::AxiomsError(num_bindings);
-                LPT_INFO("cout", "WARNING - The number of ground elements is too high: " << num_bindings);
+                LPT_DEBUG("cout", "WARNING - The number of ground elements is too high: " << num_bindings);
             }
 
     // 		float onepercent = ((float)num_bindings / 100);
@@ -99,11 +99,11 @@ namespace fs0 {
                 ++total_num_bindings;
             }
     // 		std::cout << std::endl;
-            LPT_INFO("cout", "Schema \"" << print::axiom_header(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded elements");
+            LPT_DEBUG("cout", "Schema \"" << print::axiom_header(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded elements");
         }
 
         LPT_INFO("grounding", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
-        LPT_INFO("cout", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
+        LPT_DEBUG("cout", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
         return grounded;
 
     }

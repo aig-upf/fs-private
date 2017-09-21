@@ -62,7 +62,7 @@ const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo
 		delete condition;
 		return nullptr;
 	}
-	
+
 	const Term* bound_lhs = nullptr;
 	try {
 		// TODO - This is a big ___TEMPORARY___ HACK :-). Which btw might be leaking memory. See issue #18
@@ -71,10 +71,10 @@ const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo
 		return nullptr;
 	}
 	auto bound_rhs = fs::bind(*_rhs, binding, info);
-	// As of now, the rationale is: if the effect LHS provokes an exception, it must involve 
+	// As of now, the rationale is: if the effect LHS provokes an exception, it must involve
 	// a static state variable, and thus we can ignore it and prune it. It is clearly a flawed
 	// reasoning if the expression is complex and involves nested terms, etc., but works for now.
-	return new ActionEffect(bound_lhs, bound_rhs, condition);		
+	return new ActionEffect(bound_lhs, bound_rhs, condition);
 }
 
 // TODO - Refactor this into a hierarchy of effects, a delete effect should be an object of a particular type, or at least effect should have a method is_delete()
@@ -95,6 +95,20 @@ bool ActionEffect::is_add() const {
 	return is_predicative() && !is_del();
 }
 
+ProceduralEffect::ProceduralEffect() {
 
+}
+
+ProceduralEffect::~ProceduralEffect() {
+}
+
+ProceduralEffect::ProceduralEffect(const ProceduralEffect& other)
+{}
+
+std::ostream& ProceduralEffect::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
+
+std::ostream& ProceduralEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << "unnamed_procedural_effect";
+}
 
 } } } // namespaces

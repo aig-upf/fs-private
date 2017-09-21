@@ -20,8 +20,7 @@ struct SBFWSConfig {
 	const bool mark_negative_propositions;
 	const bool complete_simulation;
 	const bool using_feature_set;
-	const bool using_coupled_features;
-
+	
 	enum class NoveltyEvaluatorType {Adaptive, Generic};
 	NoveltyEvaluatorType evaluator_t;
 

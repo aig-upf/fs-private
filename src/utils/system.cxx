@@ -43,6 +43,26 @@
 
 namespace fs0 {
 
+const char* exit_code_string( ExitCode c ) {
+    switch (c) {
+        case PLAN_FOUND:
+            return "PLAN_FOUND";
+        case CRITICAL_ERROR:
+            return "CRITICAL_ERROR";
+        case INPUT_ERROR:
+            return "INPUT_ERROR";
+        case UNSUPPORTED:
+            return "UNSUPPORTED";
+        case UNSOLVABLE:
+            return "UNSOLVABLE";
+        case UNSOLVED_INCOMPLETE:
+            return "UNSOLVED_INCOMPLETE";
+        case OUT_OF_MEMORY:
+            return "OUT_OF_MEMORY";
+    };
+
+    return "UNKNOWN";
+}
 
 void write_reentrant(int filedescr, const char *message, int len) {
     while (len > 0) {
@@ -239,7 +259,7 @@ void init_fs_system() {
 #if !defined(DEBUG)
 	limit_core_dump_size();
 #endif
-	
+
 	register_event_handlers();
 }
 

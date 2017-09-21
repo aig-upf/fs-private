@@ -3,6 +3,7 @@
 #include <languages/fstrips/terms.hxx>
 #include <languages/fstrips/builtin.hxx>
 #include <fs_types.hxx>
+#include <actions/actions.hxx>
 #include <iosfwd>
 
 namespace fs0 { namespace dynamics {
@@ -11,13 +12,15 @@ namespace fs0 { namespace dynamics {
 
     class DifferentialEquation {
     public:
-        DifferentialEquation( VariableIdx x ) : _affected(x) {
+        DifferentialEquation( VariableIdx x, const GroundAction* proc ) : _affected(x), _proc(proc) {
 
         }
 
 
         DifferentialEquation( const DifferentialEquation& other ) {
             _affected = other._affected;
+            _proc = other._proc;
+            _context = other._context;
             _terms = other._terms;
             _signs = other._signs;
         }
@@ -26,6 +29,8 @@ namespace fs0 { namespace dynamics {
 
         DifferentialEquation( DifferentialEquation&& other ) {
             _affected = other._affected;
+            _proc = other._proc;
+            _context = other._context;
             _terms = std::move(other._terms);
             _signs = std::move(other._signs);
         }
@@ -34,6 +39,8 @@ namespace fs0 { namespace dynamics {
         operator=(  DifferentialEquation&& other ) {
             if ( this == &other ) return *this;
             _affected = other._affected;
+            _proc = other._proc;
+            _context = other._context;
             _terms = std::move(other._terms);
             _signs = std::move(other._signs);
             return *this;
@@ -43,9 +50,11 @@ namespace fs0 { namespace dynamics {
         friend std::ostream& operator<<(std::ostream &os, const DifferentialEquation&  entity) { return entity.print(os); }
         std::ostream& print(std::ostream& os) const;
 
-        VariableIdx                         _affected;
-        std::vector<double>                 _signs;
-        std::vector< const fs::Term* >  _terms;
+        VariableIdx                             _affected;
+        const GroundAction*                     _proc;
+        std::vector<double>                     _signs;
+        std::vector< const fs::Term* >          _terms;
+        std::set< VariableIdx >                  _context;
     };
 
 

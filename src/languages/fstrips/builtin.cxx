@@ -45,7 +45,7 @@ ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const
 	else if (symbol == "asin") return new ArcSineTerm( subterms );
 	else if (symbol == "acos") return new ArcCosineTerm( subterms );
 	else if (symbol == "atan") return new ArcTangentTerm( subterms );
-    else if (symbol == "exp") return new ArcTangentTerm( subterms );
+    else if (symbol == "exp") return new ExpTerm( subterms );
 	return nullptr;
 }
 

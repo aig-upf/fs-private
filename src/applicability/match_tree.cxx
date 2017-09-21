@@ -130,11 +130,11 @@ namespace fs0 {
 		// 		auto printer = [](const unsigned& action, std::ostream& os) {
 		// 			os << *(Problem::getInstance().getGroundActions()[action]) << "(" << action << ")";
 		// 		};
-		// 		LPT_INFO("cout", "Creating a switch node on pivot: " << context._tuple_index.to_atom(_pivot) << " with a set of " << actions.size() << " actions");
-		// 		LPT_INFO("cout", "Actions which are done: " << print::container(_immediate_items, printer));
-		// 		LPT_INFO("cout", "Actions which are relevant(" << actions_split_by_pivot_value[0].size() << "): " << print::container(actions_split_by_pivot_value[0], printer));
-		// 		LPT_INFO("cout", "(Index of) Actions which are irrelevant: " << print::container(dont_care_actions));
-		// 		LPT_INFO("cout", "(Number of) Actions which are irrelevant: " << dont_care_actions.size());
+		// 		LPT_DEBUG("cout", "Creating a switch node on pivot: " << context._tuple_index.to_atom(_pivot) << " with a set of " << actions.size() << " actions");
+		// 		LPT_DEBUG("cout", "Actions which are done: " << print::container(_immediate_items, printer));
+		// 		LPT_DEBUG("cout", "Actions which are relevant(" << actions_split_by_pivot_value[0].size() << "): " << print::container(actions_split_by_pivot_value[0], printer));
+		// 		LPT_DEBUG("cout", "(Index of) Actions which are irrelevant: " << print::container(dont_care_actions));
+		// 		LPT_DEBUG("cout", "(Number of) Actions which are irrelevant: " << dont_care_actions.size());
 		// 		if (_immediate_items.size() > 0) throw std::runtime_error("YES");
 
 
@@ -230,12 +230,12 @@ namespace fs0 {
 
 		check_match_tree_can_be_used(info);
 
-		LPT_INFO("cout", "Mem. usage before applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		LPT_DEBUG("cout", "Mem. usage before applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
 		analyzer.build(false);
 
-		LPT_INFO("cout", "Mem. usage after applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		LPT_DEBUG("cout", "Mem. usage after applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 
 		// MRJ: This ugly looking Microsoft API like class comes in handy to avoid having to
@@ -251,18 +251,18 @@ namespace fs0 {
 
 		NodeCreationContext helper(_tuple_idx, sorted_vars, analyzer.getRevApplicable(), seen);
 
-// 		LPT_INFO("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+// 		LPT_DEBUG("cout", "(K1) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 		_tree = new SwitchNode(all_actions, helper);
-// 		LPT_INFO("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-		LPT_INFO("cout", "Match Tree created");
+// 		LPT_DEBUG("cout", "(K2) Mem. usage: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+		LPT_DEBUG("cout", "Match Tree created");
 
 
 		unsigned sw = 0, leaf = 0, empty = 0;
 		_tree->count_nodes(sw, leaf, empty);
-		LPT_INFO("cout", "TOTAL NODE COUNT: " <<_tree->count_nodes());
-		LPT_INFO("cout", "\tSWITCH: " << sw);
-		LPT_INFO("cout", "\tLEAF: " << leaf);
-		LPT_INFO("cout", "\tEMPTY: " << empty);
+		LPT_DEBUG("cout", "TOTAL NODE COUNT: " <<_tree->count_nodes());
+		LPT_DEBUG("cout", "\tSWITCH: " << sw);
+		LPT_DEBUG("cout", "\tLEAF: " << leaf);
+		LPT_DEBUG("cout", "\tEMPTY: " << empty);
     }
 
 

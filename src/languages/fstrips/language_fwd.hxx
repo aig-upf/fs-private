@@ -61,6 +61,10 @@ class ExpTerm;
 class MinTerm;
 class MaxTerm;
 
+// Other
+
+class Metric;
+
 } } } // namespaces
 
 namespace fs = fs0::language::fstrips;

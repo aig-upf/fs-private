@@ -30,7 +30,8 @@ _bind_effects(const ActionData& action_data, const Binding& binding, const Probl
 	}
 
 	if (effects.empty()) {
-		LPT_INFO("cout", "WARNING - " <<  action_data << " with binding " << binding << " has no applicable effects");
+		LPT_INFO("grounding", "WARNING - " <<  action_data << " with binding " << binding << " has no applicable effects");
+		LPT_DEBUG("cout", "WARNING - " <<  action_data << " with binding " << binding << " has no applicable effects");
 	}
 	return effects;
 }
@@ -67,11 +68,14 @@ _full_binding(unsigned id, const ActionData& action_data, const Binding& binding
 	std::vector<const fs::ActionEffect*> effects;
 	if (bind_effects) {
 		effects = _bind_effects(action_data, binding, info);
-		if (effects.empty()) {
+		if (effects.empty() && !action_data.hasProceduralEffects()) {
 			delete precondition;
 			return nullptr;
 		}
 	}
+
+	if (action_data.hasProceduralEffects())
+		return new ProceduralAction(id, action_data, binding, precondition, effects);
 
 	return new GroundAction(id, action_data, binding, precondition, effects);
 }
@@ -125,7 +129,8 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 		return grounded;
 	}
 
-	LPT_INFO("cout", "Loading the list of reachable ground actions from \"" << filename << "\"");
+	LPT_INFO("grounding", "Loading the list of reachable ground actions from \"" << filename << "\"");
+	LPT_DEBUG("cout", "Loading the list of reachable ground actions from \"" << filename << "\"");
 
 	unsigned current_schema_groundings = 0;
 	unsigned id = 0;
@@ -142,7 +147,8 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 			}
 
 			if (schema_id > 0) {
-				LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+				LPT_INFO("grounding", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+				LPT_DEBUG("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
 			}
 
 			current = action_data[schema_id];
@@ -152,7 +158,8 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 
 		std::vector<object_id> deserialized = deserialize_typed_objects(info, line, current->getSignature());
 		if (deserialized.empty()) {
-			LPT_INFO("cout", "Grounding action schema '" << current->getName() << "' with no binding");
+			LPT_INFO("grounding", "Grounding action schema '" << current->getName() << "' with no binding");
+			LPT_DEBUG("cout", "Grounding action schema '" << current->getName() << "' with no binding");
 			id = _ground(id, current, Binding::EMPTY_BINDING, info, grounded, true);
 		} else {
 			Binding binding(std::move(deserialized));
@@ -160,9 +167,10 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 		}
 		++current_schema_groundings;
 	}
-
-	LPT_INFO("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
-	LPT_INFO("cout", "Grounding process stats:\t" << grounded.size() << " grounded actions");
+	LPT_INFO("grounding", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+	LPT_INFO("grounding", "Grounding process stats:\t" << grounded.size() << " grounded actions");
+	LPT_DEBUG("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+	LPT_DEBUG("cout", "Grounding process stats:\t" << grounded.size() << " grounded actions");
 	return grounded;
 }
 
@@ -179,7 +187,7 @@ _ground_all_elements(const std::vector<const ActionData*>& action_data, const Pr
 
 		// In case the action schema is directly not-lifted, we simply bind it with an empty binding and continue.
 		if (signature.empty()) {
-			LPT_INFO("cout", "Grounding schema '" << data->getName() << "' with no binding");
+			LPT_DEBUG("cout", "Grounding schema '" << data->getName() << "' with no binding");
 			LPT_INFO("grounding", "Grounding the following schema with no binding:" << *data << "\n");
 			id = _ground(id, data, Binding::EMPTY_BINDING, info, grounded, bind_effects);
 			++total_num_bindings;
@@ -188,18 +196,20 @@ _ground_all_elements(const std::vector<const ActionData*>& action_data, const Pr
 
 		utils::binding_iterator binding_generator(signature, info);
 		if (binding_generator.ended()) {
-			LPT_INFO("cout", "Grounding of schema '" << data->getName() << "' yields no ground element, likely due to a parameter with empty type");
+			LPT_DEBUG("cout", "Grounding of schema '" << data->getName() << "' yields no ground element, likely due to a parameter with empty type");
+			LPT_INFO("grounding", "Grounding of schema '" << data->getName() << "' yields no ground element, likely due to a parameter with empty type");
 			continue;
 		}
 
 		unsigned long num_bindings = binding_generator.num_bindings();
 
-		LPT_INFO("cout", "Grounding schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings" << std::flush);
+		LPT_DEBUG("cout", "Grounding schema '" << print::action_data_name(*data) << "' with " << num_bindings << " possible bindings" << std::flush);
 		LPT_INFO("grounding", "Grounding the following schema with " << num_bindings << " possible bindings:" << print::action_data_name(*data));
 
 		if (num_bindings == 0 || num_bindings > ActionGrounder::MAX_GROUND_ACTIONS) { // num_bindings == 0 would indicate there's been an overflow
 			//throw TooManyGroundActionsError(num_bindings);
-			LPT_INFO("cout", "WARNING - The number of ground elements is too high: " << num_bindings);
+			LPT_INFO("grounding", "WARNING - The number of ground elements is too high: " << num_bindings);
+			LPT_DEBUG("cout", "WARNING - The number of ground elements is too high: " << num_bindings);
 		}
 
 // 		float onepercent = ((float)num_bindings / 100);
@@ -220,11 +230,12 @@ _ground_all_elements(const std::vector<const ActionData*>& action_data, const Pr
 			++total_num_bindings;
 		}
 // 		std::cout << std::endl;
-		LPT_INFO("cout", "Schema \"" << print::action_data_name(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded elements");
+		LPT_INFO("grounding", "Schema \"" << print::action_data_name(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded elements");
+		LPT_DEBUG("cout", "Schema \"" << print::action_data_name(*data) << "\" results in " << grounded.size() - grounded_0 << " grounded elements");
 	}
 
 	LPT_INFO("grounding", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
-	LPT_INFO("cout", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
+	LPT_DEBUG("cout", "Grounding stats:\n\t* " << grounded.size() << " grounded elements\n\t* " << total_num_bindings - grounded.size() << " pruned elements");
 	LPT_DEBUG("grounding", "All ground actions " << std::endl << print::actions(grounded));
 	return grounded;
 }
@@ -415,9 +426,10 @@ ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo&
 
 	if (process_effects) {
 		effects = _bind_effects(action, Binding::EMPTY_BINDING, info);
-		if (effects.empty()) {
+		if (effects.empty() && !action.hasProceduralEffects()) {
 			delete precondition;
-			LPT_INFO("cout", "WARNING: Action schema has (statically) no applicable action effects: " << action.getName());
+			LPT_INFO("grounding", "WARNING: Action schema has (statically) no applicable action effects: " << action.getName());
+			LPT_DEBUG("cout", "WARNING: Action schema has (statically) no applicable action effects: " << action.getName());
 			return nullptr;
 		}
 	}

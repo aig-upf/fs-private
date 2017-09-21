@@ -16,7 +16,6 @@ namespace fs0 { namespace dynamics {
 
     WaitAction::WaitAction(unsigned id, const ActionData& action_data)
         : ProceduralAction(id, action_data, Binding::EMPTY_BINDING) {
-        std::cout << getName() << std::endl;
         _clock_var = ProblemInfo::getInstance().getVariableId("clock_time()");
     }
 

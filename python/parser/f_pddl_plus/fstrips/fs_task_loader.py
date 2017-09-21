@@ -558,19 +558,26 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
 
     def visitConjunctiveEffectFormula( self, ctx ) :
         effects = []
-        try :
-            for sub_ctx in ctx.processEffect() :
-                effects.append( self.visit( sub_ctx ) )
-        except AttributeError :
-            for sub_ctx in ctx.cEffect() :
+        for sub_ctx in ctx.cEffect() :
                 effects.append( self.visit( sub_ctx ) )
         return ConjunctiveEffect( effects )
+        #try :
+        #    for sub_ctx in ctx.processEffect() :
+        #        effects.append( self.visit( sub_ctx ) )
+        #except AttributeError :
+        #    for sub_ctx in ctx.cEffect() :
+        #        effects.append( self.visit( sub_ctx ) )
+        #return ConjunctiveEffect( effects )
 
     def visitProcessSingleEffect( self, ctx ) :
         return ConjunctiveEffect([ self.visit( ctx.processEffect() ) ])
 
     def visitProcessConjunctiveEffectFormula( self, ctx ) :
-        return self.visitConjunctiveEffectFormula( ctx )
+        effects = []
+        for sub_ctx in ctx.processEffect() :
+            effects.append( self.visit( sub_ctx ) )
+        return ConjunctiveEffect( effects )
+        #return self.visitConjunctiveEffectFormula( ctx )
 
     def visitUniversallyQuantifiedEffect( self, ctx ) :
         scope = self.visit( ctx.typedVariableList() )
@@ -589,8 +596,8 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
 
     def visitConjConditionalEffectFormula( self, ctx ) :
         effects = []
-        for sub_ctx in ctx.cEffect() :
-            effects.append( sub_ctx )
+        for sub_ctx in ctx.pEffect() :
+            effects.append( self.visit(sub_ctx) )
         return ConjunctiveEffect( effects )
 
     def visitSingleConditionalEffect( self, ctx ) :

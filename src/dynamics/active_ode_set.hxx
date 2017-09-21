@@ -32,6 +32,9 @@ namespace fs0 {
         State
         predictNextState( const State& s, const integrators::Integrator& I, double delta_time, double factor ) const;
 
+        std::vector< std::vector<DifferentialEquation> >
+        extractComputationGraph(  ) const;
+
         ~ActiveODESet() = default;
 
         //! Prints a representation of the object to the given stream.
@@ -43,6 +46,7 @@ namespace fs0 {
         const State&                                    _state;
         std::size_t                                     _hash;
         mutable bool                                    _ready;
+        bool                                            _decompose_ode;
 
         std::vector< GroundAction::IdType >             _signature;
         mutable std::vector< DifferentialEquation >     _rates_of_change;

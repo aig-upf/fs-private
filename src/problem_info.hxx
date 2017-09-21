@@ -65,6 +65,10 @@ public:
 		return *_instance;
 	}
 
+	static std::unique_ptr<ProblemInfo>&& claimOwnership() {
+		return std::move(_instance);
+	}
+
 	//! Global singleton object accessor
 	static const ProblemInfo& getInstance() {
 		assert(_instance);
@@ -113,7 +117,7 @@ public:
 
 	const std::string& getVariableName(VariableIdx index) const;
 	inline VariableIdx getVariableId(const std::string& name) const { return variableIds.at(name); }
-	
+
 	const object_id get_object_id(const std::string& name) const;
 
 
@@ -148,6 +152,9 @@ public:
 	const ExternalI& get_external() const {
 		assert(_external);
 		return *_external;
+	}
+	ExternalI* release_external() {
+		return _external.release();
 	}
 
 	//! A convenient helper
@@ -186,7 +193,7 @@ public:
 	const std::pair<unsigned, std::vector<object_id>>& getVariableData(VariableIdx variable) const { return variableIdToData.at(variable); }
 
 	unsigned num_objects() const;
-	
+
 
 	//! Check that the value of a given variable is within the bounds of the variable,
 	//! in case it is a variable of a bounded type.

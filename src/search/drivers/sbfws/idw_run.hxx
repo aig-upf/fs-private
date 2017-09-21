@@ -329,13 +329,13 @@ public:
 			// If we want the goal-aware R_G, we compute it, and use it _unless_ it is too small, in which case we fall back to the goal-unaware R.
 			unsigned R_G_size;
 			std::vector<bool> R_G = extract_R_G(R_G_size);
-// 			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " seed nodes)");
+// 			LPT_INFO("search", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " seed nodes)");
 
 			unsigned subgoals = _model.num_subgoals();
 			if (R_G_size > 0 && R_G_size > std::min(int(subgoals*0.5), 4)) {
 				return R_G;
 			} else {
-				LPT_INFO("cout", "R_G too small, falling back to goal-unaware R");
+				LPT_INFO("search", "R_G too small, falling back to goal-unaware R");
 			}
 		}
 
@@ -343,7 +343,7 @@ public:
 		// Compute the goal-unaware version of R containing all atoms seen during the IW run
 		std::vector<bool> R = _evaluator.reached_atoms();
 		if (_verbose) {
-			LPT_INFO("cout", "Simulation - |R[" << _config._max_width << "]| = " << std::count(R.begin(), R.end(), true));
+			LPT_INFO("search", "Simulation - |R[" << _config._max_width << "]| = " << std::count(R.begin(), R.end(), true));
 		}
 		return R;
 	}
@@ -367,8 +367,8 @@ public:
 		}
 
 		if (_verbose && !_unreached.empty()) {
-			LPT_INFO("cout", "WARNING: Some subgoals not reached during the simulation.");
-// 			for (unsigned x:_unreached) LPT_INFO("cout", "\t Unreached subgoal idx: " << x);
+			LPT_INFO("search", "WARNING: Some subgoals not reached during the simulation.");
+// 			for (unsigned x:_unreached) LPT_INFO("search", "\t Unreached subgoal idx: " << x);
 		}
 
 		std::vector<bool> R_G(index.size(), false);
@@ -376,7 +376,7 @@ public:
 
 		R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
-			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " seed nodes)");
+			LPT_INFO("search", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " seed nodes)");
 		}
 
 		return R_G;
@@ -402,26 +402,26 @@ public:
 
 
 		/*
-		LPT_INFO("cout", "Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
-		LPT_INFO("cout", "Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
-		LPT_INFO("cout", "Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
-		LPT_INFO("cout", "Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
-		LPT_INFO("cout", "Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
-		LPT_INFO("cout", "Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
-		LPT_INFO("cout", "Simulation - Total number of generated nodes (incl. pruned): " << _generated);
-		LPT_INFO("cout", "Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
+		LPT_INFO("search", "Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
+		LPT_INFO("search", "Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
+		LPT_INFO("search", "Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
+		LPT_INFO("search", "Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
+		LPT_INFO("search", "Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
+		LPT_INFO("search", "Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
+		LPT_INFO("search", "Simulation - Total number of generated nodes (incl. pruned): " << _generated);
+		LPT_INFO("search", "Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
 		*/
 
 // 		auto relevant_w2_nodes = compute_relevant_w2_nodes();
-// 		LPT_INFO("cout", "Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
+// 		LPT_INFO("search", "Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
 
 // 		auto su = compute_union(relevant_w2_nodes); // Order matters!
 // 		auto hs = compute_hitting_set(relevant_w2_nodes);
 
-// 		LPT_INFO("cout", "Simulation - union-based R (|R|=" << su.size() << ")");
+// 		LPT_INFO("search", "Simulation - union-based R (|R|=" << su.size() << ")");
 // 		_print_atomset(su);
 
-// 		LPT_INFO("cout", "Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
+// 		LPT_INFO("search", "Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
 // 		_print_atomset(hs);
 
 		//std::vector<AtomIdx> relevant(hs.begin(), hs.end());
@@ -432,7 +432,7 @@ public:
 // 	}
 
 	bool run(const StateT& seed) {
-		if (_verbose) LPT_INFO("cout", "Starting IW Simulation");
+		if (_verbose) LPT_INFO("search", "Starting IW Simulation");
 
 		NodePT n = std::make_shared<NodeT>(seed, _generated++);
 		mark_seed_subgoals(n);
@@ -461,7 +461,7 @@ public:
 // 					_w1_nodes.push_back(successor);
 // 				}
 
-//   				LPT_INFO("cout", "Simulation - Node generated: " << *successor);
+//   				LPT_INFO("search", "Simulation - Node generated: " << *successor);
 
 				if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
 					report("All subgoals reached");
@@ -487,13 +487,13 @@ public:
 
 	void report(const std::string& result) const {
 		if (!_verbose) return;
-		LPT_INFO("cout", "Simulation - Result: " << result);
-		LPT_INFO("cout", "Simulation - Num reached subgoals: " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals());
-		LPT_INFO("cout", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
-		LPT_INFO("cout", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
-		LPT_INFO("cout", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
-		LPT_INFO("cout", "Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
-		LPT_INFO("cout", "Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
+		LPT_INFO("search", "Simulation - Result: " << result);
+		LPT_INFO("search", "Simulation - Num reached subgoals: " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals());
+		LPT_INFO("search", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
+		LPT_INFO("search", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
+		LPT_INFO("search", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
+		LPT_INFO("search", "Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
+		LPT_INFO("search", "Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
 	}
 
 protected:

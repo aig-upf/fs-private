@@ -47,19 +47,29 @@ namespace dynamics {
             the plan and the domain, numerically solving the sets of ODE's
             that hold at every time step.
         */
-        void simulate( float time_step, unsigned npoints = 1, Config::IntegratorT solver = Config::IntegratorT::ImplicitEuler );
+        void simulate( float time_step, float duration = -1.0, unsigned npoints = 1, Config::IntegratorT solver = Config::IntegratorT::ImplicitEuler );
 
         /**
             Like simulation but checking and offering a detailed report
             of violated constraints, preconditions, etc. on logs/validation.log
         */
-        void validate( float time_step, unsigned npoints = 1, Config::IntegratorT solver = Config::IntegratorT::ImplicitEuler );
+        void validate( float time_step, float duration = -1.0, unsigned npoints = 1, Config::IntegratorT solver = Config::IntegratorT::ImplicitEuler );
 
         /**
             Saves simulation trace to a file in JSON format for visualization or
             further analysis.
         */
         void save_simulation_trace(std::string filename);
+
+        const std::vector< std::shared_ptr<State> >& trajectory() const { return _trajectory; }
+
+        std::vector<Event>  get_control_events() const {
+            std::vector<Event> control_events;
+            for ( auto evt : _the_plan )
+                if ( std::get<1>(evt) != nullptr && std::get<1>(evt)->isControl() )
+                    control_events.push_back(evt);
+            return control_events;
+        }
 
     protected:
 

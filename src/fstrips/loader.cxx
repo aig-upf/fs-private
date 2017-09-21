@@ -151,7 +151,7 @@ Loader::parseActionSchema(const rapidjson::Value& node, unsigned id, const Langu
 
 	ActionSchema* schema = new ActionSchema(id, name, signature, parameters, precondition, effects);
 	if (has_empty_parameter(*schema)) {
-		LPT_INFO("cout", "Schema \"" << schema->getName() << "\" discarded because of empty parameter type.");
+		LPT_DEBUG("cout", "Schema \"" << schema->getName() << "\" discarded because of empty parameter type.");
 		delete schema;
 		return nullptr;
 	}
@@ -169,7 +169,7 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		unsigned expected_id = data[i][0].GetInt();
 		_unused(expected_id);
-		
+
 		std::string name(data[i][1].GetString());
 
 		// Parse the symbol type: function or predicate
@@ -212,7 +212,7 @@ void _loadObjectIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 	for (unsigned i = 0; i < data.Size(); ++i) {
 		unsigned expected_id = static_cast<unsigned>(data[i]["id"].GetInt());
 		_unused(expected_id);
-		
+
 		const std::string& name = data[i]["name"].GetString();
 		const std::string& fstype = data[i]["type"].GetString();
 
@@ -237,18 +237,18 @@ void _loadTypeIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 
 		TypeIdx tid;
 		_unused(tid);
-		
+
 		if (domain_type == "unbounded") {
 			tid = lang.add_fstype( fstype, from_string(type_id_str));
 			assert( tid == expected_id );
-			
+
 		} else if (domain_type == "interval") {
 			int lower = node["interval"][0].GetInt();
 			int upper = node["interval"][1].GetInt();
 
 			tid = lang.add_fstype(fstype, from_string(type_id_str), make_range(lower, upper));
 			assert(tid == expected_id);
-			
+
 		} else if (domain_type == "set") {
 			tid = lang.add_fstype(fstype, from_string(type_id_str));
 			assert(tid == expected_id);
@@ -265,13 +265,13 @@ void LanguageJsonLoader::
 loadLanguageInfo(const rapidjson::Document& data) {
 	LanguageInfo* lang = new LanguageInfo();
 
-	LPT_INFO("cout", "Loading FS types from JSON file");
+	LPT_DEBUG("cout", "Loading FS types from JSON file");
 	_loadTypeIndex(data["types"], *lang); // Order matters
 
-	LPT_INFO("cout", "Loading language objects from JSON file");
+	LPT_DEBUG("cout", "Loading language objects from JSON file");
 	_loadObjectIndex(data["objects"], *lang);
 
-	LPT_INFO("cout", "Loading language symbols from JSON file");
+	LPT_DEBUG("cout", "Loading language symbols from JSON file");
 	_loadSymbolIndex(data["symbols"], *lang);
 
 	LanguageInfo::instance(lang);

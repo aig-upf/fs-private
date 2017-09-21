@@ -397,18 +397,18 @@ public:
 		if ( !_config._R_file.empty() ) {
 			std::vector<Width1Tuple> R;
 			load_R_set( _config._R_file, R);
-			LPT_INFO("cout", "Simulation - R set has been loaded from a given file: " << _config._R_file );
-			LPT_INFO("cout", "\t Loaded " << R.size() << " entries from file...");
+			LPT_INFO("search", "Simulation - R set has been loaded from a given file: " << _config._R_file );
+			LPT_INFO("search", "\t Loaded " << R.size() << " entries from file...");
 			return R;
 		}
 
 		if (_config._force_R_all) {
-			if (_verbose) LPT_INFO("cout", "Simulation - R=R[All] is the user-preferred option");
+			if (_verbose) LPT_INFO("search", "Simulation - R=R[All] is the user-preferred option");
 			return compute_R_all();
 		}
 
 		if (_config._r_g_prime) {
-			if (_verbose) LPT_INFO("cout", "Simulation - R=R'_G is the user-preferred option");
+			if (_verbose) LPT_INFO("search", "Simulation - R=R'_G is the user-preferred option");
 			return compute_R_g_prime(seed);
 		}
 
@@ -430,14 +430,14 @@ public:
 		std::unordered_set<Width1Tuple,Width1TupleHasher> the_R;
 		float simt0 = aptk::time_used();
 		for (const auto& a : _model.applicable_actions(seed, _config._enforce_state_constraints)) {
-			LPT_INFO("cout", "action: " << _model.getTask().getGroundActions()[_model.get_action_idx(a)]->getName());
+			LPT_INFO("search", "action: " << _model.getTask().getGroundActions()[_model.get_action_idx(a)]->getName());
 			StateT s_a = _model.next( seed, a );
-			LPT_INFO("cout", "s_a: " << s_a );
+			LPT_INFO("search", "s_a: " << s_a );
 			run(s_a, _config._max_width);
 			report_simulation_stats(simt0);
 
 			if (_config._goal_directed && _unreached.size() == 0) {
-				LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
+				LPT_INFO("search", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
 				auto R_a =  extract_R_G(false);
 				for ( auto t : R_a )
 					the_R.insert(t);
@@ -460,7 +460,7 @@ public:
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
 		if (_config._goal_directed && _unreached.size() == 0) {
-			LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
+			LPT_INFO("search", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 			return extract_R_G(false);
 		}
 		// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
@@ -478,14 +478,14 @@ public:
 		std::unordered_set<Width1Tuple,Width1TupleHasher> the_R;
 
 		for (const auto& a : _model.applicable_actions(seed, _config._enforce_state_constraints)) {
-			LPT_INFO("cout", "action: " << _model.getTask().getGroundActions()[_model.get_action_idx(a)]->getName());
+			LPT_INFO("search", "action: " << _model.getTask().getGroundActions()[_model.get_action_idx(a)]->getName());
 			StateT s_a = _model.next( seed, a );
-			LPT_INFO("cout", "s_a: " << s_a );
+			LPT_INFO("search", "s_a: " << s_a );
 			run(s_a, _config._max_width);
 			report_simulation_stats(simt0);
 
 			if (_config._goal_directed && _unreached.size() == 0) {
-				LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
+				LPT_INFO("search", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
 				auto R_a =  extract_R_G_1();
 				for ( auto t : R_a )
 					the_R.insert(t);
@@ -508,7 +508,7 @@ public:
 		report_simulation_stats(simt0);
 
 		if (_config._goal_directed && _unreached.size() == 0) {
-			LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
+			LPT_INFO("search", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
 			return extract_R_G_1();
 		}
 
@@ -678,10 +678,10 @@ public:
 
 	std::vector<Width1Tuple> extract_R_1() {
 		std::vector<Width1Tuple> R = _evaluator.reached_tuples();
-		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
+		LPT_INFO("search", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 		if (_verbose) {
 			unsigned c = R.size();
-			LPT_INFO("cout", "Simulation - |R[1]| = " << c);
+			LPT_INFO("search", "Simulation - |R[1]| = " << c);
 			_stats.relevant_atoms(c);
 			dump_R_set( R, "R1.set.json");
 
@@ -701,24 +701,24 @@ public:
 			std::vector<NodePT> seed_nodes = extract_seed_nodes();
 			std::unordered_set<Width1Tuple,Width1TupleHasher> R_G = mark_all_tuples_in_path_to_subgoal(seed_nodes);
 			unsigned R_G_size = R_G.size();
-			LPT_INFO("cout", "Simulation - IW(1) run reached all goals");
-			LPT_INFO("cout", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			LPT_INFO("search", "Simulation - IW(1) run reached all goals");
+			LPT_INFO("search", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			_stats.relevant_atoms(R_G_size);
 			dump_R_set( R_G, "RGprime1.set.json");
 			return std::vector<Width1Tuple>(R_G.begin(),R_G.end());
 
 		}
 
-		LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
+		LPT_INFO("search", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
 
 
 		if (_config._gr_actions_cutoff < std::numeric_limits<unsigned>::max()) {
 			unsigned num_actions = Problem::getInstance().getGroundActions().size();
 			if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(º2)
-				LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
+				LPT_INFO("search", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
 				return compute_R_all();
 			} else {
-				LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " <= " << _config._gr_actions_cutoff << ") considered low enough to run IW(2).");
+				LPT_INFO("search", "Simulation - Number of actions (" << num_actions << " <= " << _config._gr_actions_cutoff << ") considered low enough to run IW(2).");
 			}
 		}
 
@@ -728,15 +728,15 @@ public:
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 
 		if (_unreached.size() != 0 )
-			LPT_INFO("cout", "Simulation - IW(2) run did not reach all goals");
+			LPT_INFO("search", "Simulation - IW(2) run did not reach all goals");
 		if (_unreached.empty())
-			LPT_INFO("cout", "Simulation - IW(2) run reached all goals");
+			LPT_INFO("search", "Simulation - IW(2) run reached all goals");
 
 		std::vector<NodePT> seed_nodes = extract_seed_nodes();
 		std::unordered_set<Width1Tuple,Width1TupleHasher> R_G = mark_all_tuples_in_path_to_subgoal(seed_nodes);
 		unsigned R_G_size = R_G.size();
 
-		LPT_INFO("cout", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+		LPT_INFO("search", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 		_stats.relevant_atoms(R_G_size);
 		dump_R_set( R_G, "RGprime2.set.json");
 		return std::vector<Width1Tuple>(R_G.begin(),R_G.end());
@@ -754,11 +754,11 @@ public:
 
 		if (_unreached.size() == 0) {
 			// If a single IW[1] run reaches all subgoals, we return R=emptyset
-			LPT_INFO("cout", "Simulation - IW(1) run reached all goals, thus R={}");
+			LPT_INFO("search", "Simulation - IW(1) run reached all goals, thus R={}");
 			_stats.r_type(0);
 			return std::vector<Width1Tuple>();
 		} else {
-			LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
+			LPT_INFO("search", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
 		}
 
 		// Otherwise, run IW(2)
@@ -777,15 +777,15 @@ public:
 			unsigned num_subgoals = _model.num_subgoals();
 			unsigned initially_reached = std::count(_in_seed.begin(), _in_seed.end(), true);
 			unsigned reached_by_simulation = num_subgoals - _unreached.size() - initially_reached;
-			if (_verbose) LPT_INFO("cout", "Simulation - " << reached_by_simulation << " subgoals were newly reached by the simulation.");
+			if (_verbose) LPT_INFO("search", "Simulation - " << reached_by_simulation << " subgoals were newly reached by the simulation.");
 			bool decide_r_all = (reached_by_simulation < (0.5*num_subgoals));
 			decide_r_all = _unreached.size() != 0; // XXX Use R_All is any non-reached
 			if (decide_r_all) {
-				if (_verbose) LPT_INFO("cout", "Simulation - Falling back to R=R[All]");
+				if (_verbose) LPT_INFO("search", "Simulation - Falling back to R=R[All]");
 				_stats.r_type(1);
 				return compute_R_all();
 			} else {
-				if (_verbose) LPT_INFO("cout", "Simulation - Computing R_G");
+				if (_verbose) LPT_INFO("search", "Simulation - Computing R_G");
 			}
 		}
 
@@ -796,7 +796,7 @@ public:
 
 		unsigned R_G_size = R_G.size();
 		if (_verbose) {
-			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			LPT_INFO("search", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 
 		}
 		_stats.relevant_atoms(R_G_size);
@@ -823,7 +823,7 @@ public:
 
 		unsigned R_G_size = R_G.size();
 		if (_verbose) {
-			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			LPT_INFO("search", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 		}
 		_stats.relevant_atoms(R_G_size);
 		_stats.r_type(2);
@@ -851,26 +851,26 @@ public:
 
 
 		/*
-		LPT_INFO("cout", "Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
-		LPT_INFO("cout", "Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
-		LPT_INFO("cout", "Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
-		LPT_INFO("cout", "Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
-		LPT_INFO("cout", "Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
-		LPT_INFO("cout", "Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
-		LPT_INFO("cout", "Simulation - Total number of generated nodes (incl. pruned): " << _generated);
-		LPT_INFO("cout", "Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
+		LPT_INFO("search", "Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
+		LPT_INFO("search", "Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
+		LPT_INFO("search", "Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
+		LPT_INFO("search", "Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
+		LPT_INFO("search", "Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
+		LPT_INFO("search", "Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
+		LPT_INFO("search", "Simulation - Total number of generated nodes (incl. pruned): " << _generated);
+		LPT_INFO("search", "Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
 		*/
 
 // 		auto relevant_w2_nodes = compute_relevant_w2_nodes();
-// 		LPT_INFO("cout", "Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
+// 		LPT_INFO("search", "Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
 
 // 		auto su = compute_union(relevant_w2_nodes); // Order matters!
 // 		auto hs = compute_hitting_set(relevant_w2_nodes);
 
-// 		LPT_INFO("cout", "Simulation - union-based R (|R|=" << su.size() << ")");
+// 		LPT_INFO("search", "Simulation - union-based R (|R|=" << su.size() << ")");
 // 		_print_atomset(su);
 
-// 		LPT_INFO("cout", "Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
+// 		LPT_INFO("search", "Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
 // 		_print_atomset(hs);
 
 		//std::vector<AtomIdx> relevant(hs.begin(), hs.end());
@@ -894,11 +894,11 @@ public:
 	};
 
 	bool run(const StateT& seed, unsigned max_width) {
-		if (_verbose) LPT_INFO("cout", "Simulation - Starting IW Simulation");
+		if (_verbose) LPT_INFO("search", "Simulation - Starting IW Simulation");
 
 		std::shared_ptr<DeactivateZCC> zcc_setting = nullptr;
 		if (!_config._enforce_state_constraints ) {
-			LPT_INFO("cout", ":Simulation - Deactivating zero crossing control");
+			LPT_INFO("search", ":Simulation - Deactivating zero crossing control");
 			zcc_setting = std::make_shared<DeactivateZCC>();
 		}
 
@@ -932,7 +932,7 @@ public:
 					unsigned char novelty = _evaluator.evaluate(*successor);
 					update_novelty_counters_on_generation(novelty);
 
-					// LPT_INFO("cout", "Simulation - Node generated: " << *successor);
+					// LPT_INFO("search", "Simulation - Node generated: " << *successor);
 					if (_config._log_search )
 						_visited.push_back(successor);
 
@@ -971,13 +971,13 @@ public:
 
 	void report(const std::string& result) const {
 		if (!_verbose) return;
-		LPT_INFO("cout", "Simulation - Result: " << result);
-		LPT_INFO("cout", "Simulation - Num reached subgoals: " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals());
-		LPT_INFO("cout", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
-		LPT_INFO("cout", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
-		LPT_INFO("cout", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
-		LPT_INFO("cout", "Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
-		LPT_INFO("cout", "Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
+		LPT_INFO("search", "Simulation - Result: " << result);
+		LPT_INFO("search", "Simulation - Num reached subgoals: " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals());
+		LPT_INFO("search", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
+		LPT_INFO("search", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
+		LPT_INFO("search", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
+		LPT_INFO("search", "Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
+		LPT_INFO("search", "Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
 		if (! _config._log_search ) return;
 
 		using namespace rapidjson;

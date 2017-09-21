@@ -233,9 +233,9 @@ def serializedATN():
         buf.write("\u0192\7\3\2\2\u0192\u0193\7\27\2\2\u0193\u0194\5<\37")
         buf.write("\2\u0194\u0195\7\24\2\2\u0195\u0196\7\3\2\2\u0196\u0197")
         buf.write("\5,\27\2\u0197\u0198\7\5\2\2\u0198\u0199\5> \2\u0199\u019a")
-        buf.write("\7\5\2\2\u019a\67\3\2\2\2\u019b\u019c\7]\2\2\u019c9\3")
-        buf.write("\2\2\2\u019d\u019e\7]\2\2\u019e;\3\2\2\2\u019f\u01a0\7")
-        buf.write("]\2\2\u01a0=\3\2\2\2\u01a1\u01a2\7_\2\2\u01a2\u01a3\5")
+        buf.write("\7\5\2\2\u019a\67\3\2\2\2\u019b\u019c\t\2\2\2\u019c9\3")
+        buf.write("\2\2\2\u019d\u019e\7]\2\2\u019e;\3\2\2\2\u019f\u01a0\t")
+        buf.write("\2\2\2\u01a0=\3\2\2\2\u01a1\u01a2\7_\2\2\u01a2\u01a3\5")
         buf.write("@!\2\u01a3\u01a4\7`\2\2\u01a4\u01a5\5r:\2\u01a5?\3\2\2")
         buf.write("\2\u01a6\u01a7\7\3\2\2\u01a7\u01aa\7\5\2\2\u01a8\u01aa")
         buf.write("\5B\"\2\u01a9\u01a6\3\2\2\2\u01a9\u01a8\3\2\2\2\u01aa")
@@ -2912,6 +2912,9 @@ class FunctionalStripsParser ( Parser ):
         def NAME(self):
             return self.getToken(FunctionalStripsParser.NAME, 0)
 
+        def EXTNAME(self):
+            return self.getToken(FunctionalStripsParser.EXTNAME, 0)
+
         def getRuleIndex(self):
             return FunctionalStripsParser.RULE_actionSymbol
 
@@ -2936,10 +2939,15 @@ class FunctionalStripsParser ( Parser ):
 
         localctx = FunctionalStripsParser.ActionSymbolContext(self, self._ctx, self.state)
         self.enterRule(localctx, 54, self.RULE_actionSymbol)
+        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 409
-            self.match(FunctionalStripsParser.NAME)
+            _la = self._input.LA(1)
+            if not(_la==FunctionalStripsParser.NAME or _la==FunctionalStripsParser.EXTNAME):
+                self._errHandler.recoverInline(self)
+            else:
+                self.consume()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -3002,6 +3010,9 @@ class FunctionalStripsParser ( Parser ):
         def NAME(self):
             return self.getToken(FunctionalStripsParser.NAME, 0)
 
+        def EXTNAME(self):
+            return self.getToken(FunctionalStripsParser.EXTNAME, 0)
+
         def getRuleIndex(self):
             return FunctionalStripsParser.RULE_eventSymbol
 
@@ -3026,10 +3037,15 @@ class FunctionalStripsParser ( Parser ):
 
         localctx = FunctionalStripsParser.EventSymbolContext(self, self._ctx, self.state)
         self.enterRule(localctx, 58, self.RULE_eventSymbol)
+        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 413
-            self.match(FunctionalStripsParser.NAME)
+            _la = self._input.LA(1)
+            if not(_la==FunctionalStripsParser.NAME or _la==FunctionalStripsParser.EXTNAME):
+                self._errHandler.recoverInline(self)
+            else:
+                self.consume()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)

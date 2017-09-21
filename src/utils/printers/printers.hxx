@@ -14,18 +14,18 @@ class Problem;
 class SupportedAction;
 
 //! Print a plan
-class PlanPrinter {
+	class PlanPrinter {
 protected:
 	const ActionPlan& _plan;
 public:
 	PlanPrinter(const ActionPlan& plan) : _plan(plan) {}
-	
+
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const PlanPrinter& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
-	
+
 	static void printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out);
-	
+
 	//! static helpers
 	static void print(const std::vector<GroundAction::IdType>& plan, std::ostream& out);
 	static void print(const std::vector<LiftedActionID>& plan, std::ostream& out);
@@ -45,7 +45,7 @@ class plan {
 
 	public:
 		plan(const plan_t& plan_) : _plan(plan_) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const plan& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
@@ -55,14 +55,14 @@ protected:
 	const std::set<SupportedAction>& _plan;
 public:
 	supported_plan(const std::set<SupportedAction>& plan) : _plan(plan) {}
-	
+
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const supported_plan& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const {
 		printSupportedPlan(_plan, os);
 		return os;
 	}
-	
+
 	static void printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out);
 };
 
@@ -72,7 +72,7 @@ class support {
 
 	public:
 		support(const Support& sup) : _support(sup) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const support& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
