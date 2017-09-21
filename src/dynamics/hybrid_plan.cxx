@@ -251,6 +251,7 @@ namespace fs0 { namespace dynamics {
 
             if ( time_left < cfg.getDiscretizationStep() ) {
                 LPT_INFO("simulation", "Simulation finished, time left (" << time_left << ") less than discretisation step (" <<  cfg.getDiscretizationStep() << ")");
+                LPT_INFO("simulation", "States in trajectory: " << _trajectory.size() );
                 restore_simulation_settings();
                 return;
             }
