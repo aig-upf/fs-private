@@ -108,7 +108,7 @@ ProceduralEffect::ProceduralEffect(const ProceduralEffect& other)
 std::ostream& ProceduralEffect::print(std::ostream& os) const { return print(os, ProblemInfo::getInstance()); }
 
 std::ostream& ProceduralEffect::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << "unnamed_procedural_effect";
+	return os << "unnamed_procedural_effect";
 }
 
 } } } // namespaces
