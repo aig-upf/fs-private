@@ -200,6 +200,7 @@ void TermBindingVisitor::Visit(const ArcSineTerm& lhs) { Visit(static_cast<const
 void TermBindingVisitor::Visit(const ArcCosineTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
 void TermBindingVisitor::Visit(const ArcTangentTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
 void TermBindingVisitor::Visit(const ExpTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
+void TermBindingVisitor::Visit(const AbsTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
 void TermBindingVisitor::Visit(const MinTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
 void TermBindingVisitor::Visit(const MaxTerm& lhs) { Visit(static_cast<const ArithmeticTerm&>(lhs)); }
 

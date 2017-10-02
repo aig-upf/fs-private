@@ -115,6 +115,7 @@ void AllNodesVisitor::Visit(const ArcSineTerm& lhs) { Visit(static_cast<const Ne
 void AllNodesVisitor::Visit(const ArcCosineTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const ArcTangentTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const ExpTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
+void AllNodesVisitor::Visit(const AbsTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const MinTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 void AllNodesVisitor::Visit(const MaxTerm& lhs) { Visit(static_cast<const NestedTerm&>(lhs)); }
 

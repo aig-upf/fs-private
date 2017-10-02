@@ -121,6 +121,10 @@ Visit(const ExpTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs
 
 template <typename AssignmentT>
 void VariableInterpretationVisitor<AssignmentT>::
+Visit(const AbsTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
+
+template <typename AssignmentT>
+void VariableInterpretationVisitor<AssignmentT>::
 Visit(const MinTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 
 template <typename AssignmentT>
