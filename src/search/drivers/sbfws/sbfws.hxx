@@ -239,6 +239,8 @@ protected:
 	State _init;
 	
 	unsigned _c_init;
+	
+	std::unordered_map<ObjectIdx, ObjectIdx> _all_objects_goal;
 		
 	
 public:
@@ -408,6 +410,24 @@ public:
 		}
 
 		return evaluator->evaluate(_featureset.evaluate(node.state), k);
+	}
+	
+	
+	
+	void compute_goal_conf() {
+	  const ProblemInfo& info = ProblemInfo::getInstance();
+	  std::vector<ObjectIdx> goals(info.getNumObjects(), std::numeric_limits<int>::max());
+	  const UnaryFunction& target_f = info.get_extension<UnaryFunction>("goal_conf");
+	  for (ObjectIdx obj_id:info.getTypeObjects("object_id")) {
+		ObjectIdx goal_conf;
+		  try { 
+		  	goal_conf = target_f.value(obj_id);
+		  } catch (const std::out_of_range& e) {
+		  	continue;
+		  }
+		_all_objects_goal.insert(std::make_pair(obj_id, target_f.value(obj_id)));
+	}
+	  
 	}
 	
 	
@@ -896,7 +916,7 @@ protected:
 					_stats.wgr1_node();
 					process_node(node);	 
 				} else {
-					//handle_unprocessed_node(node, (_novelty_levels == 2));
+					handle_unprocessed_node(node, (_novelty_levels == 2));
 				}
 			} 		
 
