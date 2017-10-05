@@ -299,7 +299,9 @@ public:
 	template <typename NodeT>
 	unsigned get_hash_r(NodeT& node) {
 		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) return 0;
-		return compute_R(node).num_reached();
+		auto R = compute_R(node);
+		std::cout << "#r: " << R.num_reached() << "; #f: " << R.num_reachedF() << std::endl;
+		return R.num_reached() + R.num_reachedF();
 	}
 	
 	template <typename NodeT>
@@ -605,7 +607,9 @@ public:
 			std::cout << "Running IW preprocessing with state constraints relaxation" << std::endl;
 			SimulationT simulator(model, _featureset, evaluator, _simconfig, _stats, verbose);
 			//SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
-			std::vector<bool> relevant = simulator.compute_R(node.state);
+			
+			RelevantFeatureSet F;
+			std::vector<bool> relevant = simulator.compute_R(node.state, F);
 			
 			//Clean R
 			std::cout << "Relevant before clean: " << std::count(relevant.begin(), relevant.end(), true) << std::endl;
@@ -632,9 +636,9 @@ public:
 			//std::cout << "#c(s_0)= " << _c_init << std::endl;
 			
 			
-			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant);
+			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant, F);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
-			node._relevant_atoms->init(node.state);
+			node._relevant_atoms->init(node.state, _featureset.evaluate(node.state));
 			
 			if (!node.has_parent()) { // Log some info, but only for the seed state
 				LPT_DEBUG("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
@@ -649,9 +653,9 @@ public:
 			node._relevant_atoms = new RelevantAtomSet(compute_R(*node.parent)); // This might trigger a recursive computation
 
 			if (node.decreases_unachieved_subgoals()) {
- 				node._relevant_atoms->init(node.state); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
+ 				node._relevant_atoms->init(node.state, _featureset.evaluate(node.state)); // THIS IS ABSOLUTELY KEY E.G. IN BARMAN
 			} else {
-				node._relevant_atoms->update(node.state, nullptr);
+				node._relevant_atoms->update(node.state, nullptr, _featureset.evaluate(node.state));
 				// node._relevant_atoms->update(node.state, &(node.parent->state));
 			}
 	}

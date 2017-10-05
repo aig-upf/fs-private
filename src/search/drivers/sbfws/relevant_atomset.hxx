@@ -6,6 +6,8 @@
 #include <utils/atom_index.hxx>
 #include <state.hxx>
 
+using RelevantFeatureSet = std::unordered_set<std::pair<unsigned, int>,  boost::hash<std::pair<unsigned, int>> >;
+
 
 namespace fs0 { namespace bfws {
 
@@ -20,9 +22,11 @@ public:
 
 	//! A reference to the global atom index
 	const AtomIndex& _atomidx;
+	
+	RelevantFeatureSet _F;
 
-	AtomsetHelper(const AtomIndex& atomidx, const std::vector<bool>& relevant) :
-		_relevant(relevant), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx)
+	AtomsetHelper(const AtomIndex& atomidx, const std::vector<bool>& relevant, const RelevantFeatureSet& F) :
+		_relevant(relevant), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx), _F(F)
 	{}
 
 	unsigned size() const { return _atomidx.size(); }
@@ -35,7 +39,7 @@ public:
 
 	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
 	RelevantAtomSet(const AtomsetHelper& helper) :
-		_helper(helper), _num_reached(0), _reached(helper.size(), false) //, _updated(false)
+		_helper(helper), _num_reached(0), _num_reachedF(0), _reached(helper.size(), false), _reachedF() //, _updated(false)
 	{}
 
 	~RelevantAtomSet() = default;
@@ -46,7 +50,8 @@ public:
 
 
 	//! Update those atoms that have been reached in the given state
-	void update(const State& state, const State* parent) {
+	template <typename FeatureValueT>
+	void update(const State& state, const State* parent, const std::vector<FeatureValueT>& feature_valuation) {
 // 		assert(!_updated); // Don't want to update a node twice!
 // 		_updated = true;
 		unsigned n = state.numAtoms();
@@ -65,16 +70,34 @@ public:
 				ref = true;
 			}
 		}
+
+		for (unsigned feat_idx = 0; feat_idx < feature_valuation.size(); ++feat_idx) {
+			
+			auto value = std::make_pair(feat_idx, feature_valuation[feat_idx]);
+			
+			auto it = _helper._F.find(value);
+			if (it == _helper._F.end()) continue; // we're not concerned about this atom
+			
+			auto res = _reachedF.insert(value);
+			if (res.second) { // The feature value in F has been reached for the first time
+				++_num_reachedF;
+			}
+		}
 	}
 
 	unsigned num_reached() const { return _num_reached; }
+	unsigned num_reachedF() const { return _num_reachedF; }
 
-	void init(const State& state) {
+	template <typename FeatureValueT>
+	void init(const State& state, const std::vector<FeatureValueT>& feature_valuation) {
 		_reached = std::vector<bool>(_helper.size(), false);
+		_reachedF.clear();
 		_num_reached = 0;
-		update(state, nullptr);
+		_num_reachedF = 0;
+		update(state, nullptr, feature_valuation);
  		assert(_num_reached == std::count(_reached.begin(), _reached.end(), true));
  		_num_reached = 0;
+		_num_reachedF = 0;
 	}
 
 	//! Prints a representation of the state to the given stream.
@@ -103,10 +126,14 @@ protected:
 
 	//! The total number of reached / unreached atoms
 	unsigned _num_reached;
+	
+	unsigned _num_reachedF;
 
 	//! _reached[i] iff atom with index 'i' has been reached at some point
 	//! since the count of reached subgoals was last increased.
 	std::vector<bool> _reached;
+	
+	RelevantFeatureSet _reachedF;
 
 // 	bool _updated;
 };

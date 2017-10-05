@@ -22,6 +22,9 @@
 
 
 using NoGoodAtomsSet = std::unordered_set<fs0::Atom>;
+using RelevantFeatureSet = std::unordered_set<std::pair<unsigned, int>,  boost::hash<std::pair<unsigned, int>> >;
+
+
 
 
 namespace fs0 { namespace bfws {
@@ -291,6 +294,7 @@ protected:
 	//Contains the first node that includes a goal of the form not p, where p is a relevant no good atom.
 	std::vector<NodePT> _subgoals_path;
 
+	const FeatureSetT& _featureset;
 	
 
 public:
@@ -316,7 +320,8 @@ public:
 		_obj_to_holding_tuple_idx(ProblemInfo::getInstance().getNumObjects(), -1),
 		_init(model.init()),
 		_all_objects_gtype(ProblemInfo::getInstance().getNumObjects(), -1),
-		_all_objects_conf(ProblemInfo::getInstance().getNumObjects(), -1)
+		_all_objects_conf(ProblemInfo::getInstance().getNumObjects(), -1),
+		_featureset(featureset)
 
 		
 	{
@@ -471,6 +476,30 @@ public:
 		return atoms;
 	}
 	
+	RelevantFeatureSet mark_all_features_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes)  {
+		RelevantFeatureSet features;
+		
+		std::unordered_set<NodePT> all_visited;
+				
+		for (NodePT node:seed_nodes) {
+			// We ignore s0
+			while (node->has_parent()) {
+				// If the node has already been processed, no need to do it again, nor to process the parents,
+				// which will necessarily also have been processed.
+				auto res = all_visited.insert(node);
+				if (!res.second) break;
+				
+				const StateT& state = node->state;
+				const auto feature_valuation = _featureset.evaluate(node->state);
+				
+				for (unsigned feat_idx = 0; feat_idx < feature_valuation.size(); ++feat_idx) {
+					features.insert(std::make_pair(feat_idx, feature_valuation[feat_idx]));
+				}
+				node = node->parent;
+			}
+		}
+		return features;
+	}	
 
 	//There is a set of no good atoms per each plan pi (per each goal atom)
 	void compute_no_good_atoms() {
@@ -607,7 +636,7 @@ public:
 		return all;
 	}
 	
-	std::vector<bool> compute_R(const StateT& seed) {
+	std::vector<bool> compute_R(const StateT& seed, RelevantFeatureSet& F_G) {
 		if (_config._force_R_all) {
 			if (_verbose) LPT_INFO("cout", "Simulation - R=R[All] is the user-preferred option");	
 			return compute_R_all();
@@ -624,13 +653,13 @@ public:
 		} else if (_config._max_width == 1){
 			return compute_plain_R1(seed);
 		} else if (_config._max_width == 2){
-			return compute_plain_RG2(seed);
+			return compute_plain_RG2(seed, F_G);
 		} else {
 			throw std::runtime_error("Simulation max_width too high");
 		}
 	}
 	
-	std::vector<bool> compute_plain_RG2(const StateT& seed) {
+	std::vector<bool> compute_plain_RG2(const StateT& seed, RelevantFeatureSet& F_G) {
 		assert(_config._max_width == 2);
 		
 		_config._complete = false;
@@ -639,7 +668,7 @@ public:
 		report_simulation_stats(simt0);
 		LPT_INFO("cout", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 		compute_no_good_atoms();
-		std::vector<bool> R_G = extract_R_G_relaxed(true);
+		std::vector<bool> R_G = extract_R_G_relaxed(true, F_G);
 		extend_R_G(R_G);
 		return R_G;
 	
@@ -821,7 +850,7 @@ public:
 	}	
 	
 	
-	std::vector<bool> extract_R_G_relaxed(bool r_all_fallback) {
+	std::vector<bool> extract_R_G_relaxed(bool r_all_fallback, RelevantFeatureSet& F_G) {
 	  	const AtomIndex& index = Problem::getInstance().get_tuple_index();
 		const ProblemInfo& info = ProblemInfo::getInstance();
 
@@ -844,6 +873,7 @@ public:
 		
 		std::vector<NodePT> seed_nodes = extract_seed_nodes();
  		std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
+		F_G = mark_all_features_in_path_to_subgoal(seed_nodes);
 
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		/*if (_verbose) {
