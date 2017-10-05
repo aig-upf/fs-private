@@ -211,7 +211,8 @@ namespace fs0 { namespace dynamics {
             std::tie( t, a ) =_the_plan[i];
             LPT_INFO( "simulation", "State: " << *s );
 
-            if ( a == nullptr ) {
+            if ( a == nullptr  ) {
+                if (  time_left > cfg.getDiscretizationStep()) break;
                 LPT_INFO("simulation", "Simulation finished, states in trajectory: " << _trajectory.size());
                 LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
                 restore_simulation_settings();
@@ -256,6 +257,30 @@ namespace fs0 { namespace dynamics {
                 return;
             }
     	}
+        LPT_INFO("simulation", "time left is: " << time_left << " units");
+        if ( time_left > cfg.getDiscretizationStep() ) {
+            LPT_INFO("simulation", "Simulation asked to run after plan end time");
+            float H = time_left;
+
+            LPT_INFO( "simulation", "Idle time: " << H << " time units" );
+            while ( H > 0.0 ) {
+                float h = std::min(time_step, H );
+                LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
+                float old_step = cfg.getDiscretizationStep();
+                cfg.setDiscretizationStep(h);
+
+                auto tmp = std::make_shared<State>(*s);
+                tmp->accumulate(NaiveApplicabilityManager::computeEffects(*s, *wait_action));
+                LPT_INFO("simulation", *s);
+                cfg.setDiscretizationStep(old_step);
+
+                s = tmp;
+                _trajectory.push_back( tmp );
+                H -=h;
+                time_left -= h;
+            }
+        }
+
         LPT_INFO("simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
         LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
         restore_simulation_settings();
