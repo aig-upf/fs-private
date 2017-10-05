@@ -78,7 +78,7 @@ namespace fs0 { namespace dynamics {
             double t_k_plus_1 = fs0::value<float>(s_k_plus_1.getValue(_clock_var));
             if (  Config::instance().hasHorizon() && (t_k_plus_1 > Config::instance().getHorizonTime() )) {
                 atoms.clear();
-                LPT_DEBUG("dynamics", "Time out!");
+                LPT_DEBUG("dynamics", "Time out! t=" << t_k_plus_1 << " H=" << Config::instance().getHorizonTime() );
                 return; // we're done as well, time is implicitly bounded
             }
             if ( t_k_plus_1 < -1e-2) {
