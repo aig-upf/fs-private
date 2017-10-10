@@ -39,8 +39,11 @@ namespace fs0  { namespace spx {
             && f->symbol() != fs::RelationalFormula::Symbol::LEQ
             && f->symbol() != fs::RelationalFormula::Symbol::LT
             && f->symbol() != fs::RelationalFormula::Symbol::GT) {
-            LPT_INFO("cout","spx::LinearProgram::add_constraint() : At the moment only '>=', '>', '<' and '<=' constraints are supported.");
-            LPT_INFO("cout", "constraint: " << *f );
+            std::stringstream buffer;
+            buffer << "spx::LinearProgram::add_constraint() : At the moment only '>=', '>', '<' and '<=' constraints are supported." << std::endl;
+            buffer << "constraint: " << *f;
+            LPT_DEBUG("cout", buffer.str());
+            throw std::runtime_error(buffer.str());
             return;
         }
 

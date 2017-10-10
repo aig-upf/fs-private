@@ -1,7 +1,7 @@
 
 #include <memory>
-#include <utils/printers/printers.hxx>
-#include "helper.hxx"
+#include <utils/printers/helper.hxx>
+#include <utils/printers/actions.hxx>
 #include <problem.hxx>
 #include <heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 

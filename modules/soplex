@@ -1,0 +1,16 @@
+import os
+Import('env', 'sources')
+
+env.Append(CCFLAGS=['-DFS_USES_SOPLEX'])
+
+# Add Soplex libraries
+soplex_libs = [
+	'soplex',
+	'gmp',
+	'z'
+]
+
+soplex_lib_path = [ '/usr/local/lib' ]
+
+env.Append( LIBS = soplex_libs + ['pthread'])
+env.Append( LIBPATH = [ os.path.abspath(p) for p in soplex_lib_path ] )

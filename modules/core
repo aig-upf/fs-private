@@ -1,0 +1,30 @@
+import os
+import util.build
+Import('env', 'sources')
+
+# Note paths are relative to SConscript file directory
+if sources is not None :
+    sources += util.build.locate_source_files('../src', '*.cxx')
+
+fs_include_paths = [os.path.join(env['fs'], 'src') ]
+
+env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ])  # Flags common to all options
+
+if env['edebug']:
+	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DEDEBUG' ] )
+	fs_libname = 'fs-edebug'
+elif env['debug']:
+	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
+	fs_libname = 'fs-debug'
+else:
+	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
+	fs_libname = 'fs'
+
+fs_libs = ['boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm']
+fs_lib_paths = [ os.path.join(env['fs'], 'lib')]
+
+env.Append( CPPPATH = [ os.path.abspath(p) for p in fs_include_paths ] )
+env.Append( LIBS = fs_libs )
+env.Append( LIBPATH = [ os.path.abspath(p) for p in fs_lib_paths ] )
+
+Return('fs_libname')

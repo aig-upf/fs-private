@@ -85,7 +85,7 @@ class TermAxiomVisitor
 	, public Loki::Visitor<ExpTerm, void, true>
 	, public Loki::Visitor<MinTerm, void, true>
 	, public Loki::Visitor<MaxTerm, void, true>
-
+    , public Loki::Visitor<AbsTerm, void, true>
 
 {
 private:
@@ -120,6 +120,7 @@ public:
 	void Visit(const ExpTerm& lhs);
 	void Visit(const MinTerm& lhs);
 	void Visit(const MaxTerm& lhs);
+    void Visit(const AbsTerm& lhs);
 
 
 	const Term* _result;

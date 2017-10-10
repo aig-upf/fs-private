@@ -97,11 +97,11 @@ SmartActionManager::SmartActionManager( const std::vector<const GroundAction*>& 
 	for (unsigned j = 0; j < _app_index.size(); ++j) {
 		const Atom& atom = _tuple_idx.to_atom(j);
 		const std::vector<ActionIdx>& tup_actions = _app_index[j];
-		LPT_INFO("cout", "Actions potentially applicable for tuple " << atom << ":" << tup_actions.size());
-		LPT_INFO("cout", fs0::print::container(tup_actions));
+		LPT_DEBUG("cout", "Actions potentially applicable for tuple " << atom << ":" << tup_actions.size());
+		LPT_DEBUG("cout", fs0::print::container(tup_actions));
 	}
 	*/
-	LPT_INFO("cout", "A total of " << _total_applicable_actions << " actions were determined to be applicable to at least one atom");
+	LPT_INFO("main", "A total of " << _total_applicable_actions << " actions were determined to be applicable to at least one atom");
 }
 
 
@@ -153,7 +153,7 @@ object_id _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
 
 void
 BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
-	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [0]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+	LPT_DEBUG("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [0]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
@@ -163,24 +163,24 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 	_rev_applicable.resize(_actions.size());
 	_variable_relevance = std::vector<unsigned>(info.getNumVariables(), 0);
 
-	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - TupleIdx size: " << _tuple_idx.size());
-	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - Actions size: " << _actions.size());
-	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - size of set of atomidx: " << sizeof(std::unordered_set<AtomIdx>));
-	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [1]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+	LPT_DEBUG("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - TupleIdx size: " << _tuple_idx.size());
+	LPT_DEBUG("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - Actions size: " << _actions.size());
+	LPT_DEBUG("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() - size of set of atomidx: " << sizeof(std::unordered_set<AtomIdx>));
+	LPT_DEBUG("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [1]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
 	for (unsigned i = 0; i < _actions.size(); ++i) {
 
 		/* DEBUGGING
 
 		if (i%100==0) {
-			LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [it. " << i << "]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+			LPT_DEBUG("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [it. " << i << "]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 			unsigned cnt = 0;
 			for (auto& app_set:_applicable) cnt += app_set.size();
-			LPT_INFO("cout", "Aggregated '_applicable' size [it. " << i << "]: " << cnt);
+			LPT_DEBUG("cout", "Aggregated '_applicable' size [it. " << i << "]: " << cnt);
 
 			cnt = 0;
 			for (auto& app_set:_rev_applicable) cnt += app_set.size();
-			LPT_INFO("cout", "Aggregated '_rev_applicable' size [it. " << i << "]: " << cnt);
+			LPT_DEBUG("cout", "Aggregated '_rev_applicable' size [it. " << i << "]: " << cnt);
 		}
 		*/
 		const GroundAction& action = *_actions[i];
@@ -223,7 +223,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			const std::vector<object_id>& values = info.getVariableObjects(relevant);
 
 			if (!referenced.insert(relevant).second) {
-				LPT_INFO("cout", "Conjunct \"" << *conjunct << "\" contains a duplicate reference to state variable \"" << info.getVariableName(relevant) << "\"");
+				LPT_DEBUG("cout", "Conjunct \"" << *conjunct << "\" contains a duplicate reference to state variable \"" << info.getVariableName(relevant) << "\"");
 				throw std::runtime_error("BasicApplicabilityAnalyzer requires that no two preconditions make reference to the same state variable");
 			}
 
@@ -271,7 +271,7 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 	}
 
 	_total_actions =  _actions.size();
-	LPT_INFO("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [END]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+	LPT_DEBUG("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [END]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 }
 
 

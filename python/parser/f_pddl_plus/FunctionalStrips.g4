@@ -202,11 +202,11 @@ eventDef
            actionDefBody ')'
     ;
 
-actionSymbol : NAME ;
+actionSymbol : NAME | EXTNAME ;
 
 constraintSymbol : NAME ;
 
-eventSymbol : NAME;
+eventSymbol : NAME | EXTNAME;
 
 // Should allow preGD instead of goalDesc for preconditions -
 // but I can't get the LL(*) parsing to work
@@ -384,7 +384,7 @@ condEffect
 // TODO: should these be uppercase & lexer section?
 binaryOp : '*' | '+' | '-' | '/' | '^' | 'max' | 'min' ;
 
-unaryBuiltIn : '-' | 'sin' | 'cos' | 'sqrt' | 'tan' | 'acos' | 'asin' | 'atan' | 'exp';
+unaryBuiltIn : '-' | 'sin' | 'cos' | 'sqrt' | 'tan' | 'acos' | 'asin' | 'atan' | 'exp' | 'abs';
 
 multiOp	: '*' | '+' ;
 

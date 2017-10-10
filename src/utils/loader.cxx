@@ -151,8 +151,8 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 
 	//! Set the global singleton Problem instance
 	bool has_negated_preconditions = _check_negated_preconditions(action_data);
-	LPT_INFO("cout", "Quick Negated-Precondition Test: Does the problem have negated preconditions? " << has_negated_preconditions);
-	LPT_INFO("cout", "Atom Index: Indexing negative literals? " << has_negated_preconditions);
+	LPT_INFO("main", "Quick Negated-Precondition Test: Does the problem have negated preconditions? " << has_negated_preconditions);
+	LPT_INFO("main", "Atom Index: Indexing negative literals? " << has_negated_preconditions);
 	// We will index the negative literals if either the problem has neg. precs, or the user explicitly wants _not_ to ignore them on novelty computations.
 	bool index_negative_literals = has_negated_preconditions || !(config.getOption<bool>("ignore_neg_literals", true));
 	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals));
@@ -205,7 +205,7 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data,
 		VariableIdx var = node[0].GetInt();
 		object_id value;
 		type_id var_type = info.sv_type(var);
-		
+
 		if (var_type == type_id::bool_t) {
 			value =  make_object((bool)node[1].GetInt());
 		} else if (var_type == type_id::float_t) {
@@ -283,7 +283,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 
 	ActionData adata(id, name, signature, parameters, unit, precondition, effects, action_type);
 	if (adata.has_empty_parameter()) {
-		LPT_INFO("cout", "Schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
+		LPT_INFO("main", "Schema \"" << adata.getName() << "\" discarded because of empty parameter type.");
 		return nullptr;
 	}
 	LPT_DEBUG("loader", "Loaded action data: " << adata );

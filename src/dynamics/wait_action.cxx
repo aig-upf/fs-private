@@ -16,7 +16,6 @@ namespace fs0 { namespace dynamics {
 
     WaitAction::WaitAction(unsigned id, const ActionData& action_data)
         : ProceduralAction(id, action_data, Binding::EMPTY_BINDING) {
-        std::cout << getName() << std::endl;
         _clock_var = ProblemInfo::getInstance().getVariableId("clock_time()");
     }
 
@@ -48,6 +47,24 @@ namespace fs0 { namespace dynamics {
         for ( unsigned x = 0; x < info.getNumVariables(); x++ )
             atoms.push_back( Atom(x,s.getValue(x)));
         LPT_DEBUG("dynamics", "Input State: " << s);
+
+        // Events
+        // ======
+        //
+        // One-off, simultaneous, no superposition policy:
+        if ( !_exogenous.empty() )
+            process_events( s, atoms, do_zcc );
+        #ifdef DEBUG
+        // Compute and report change set
+        LPT_DEBUG("dynamics", "Events Firing: Changed atoms: ");
+        for ( Atom a : atoms ) {
+            if ( a.getValue() == s.getValue(a.getVariable())) continue;
+            object_id old_value = s.getValue(a.getVariable());
+            object_id new_value = a.getValue();
+            LPT_DEBUG( "dynamics", "\t" << info.getVariableName(a.getVariable()) << ": " << old_value << " -> " << new_value );
+        }
+        #endif
+
         while ( t < dt ) {
             State s_k( s, atoms );
             State s_k_plus_1 = odes.predictNextState( s_k, *integrator, h, 1.0 );
@@ -61,7 +78,7 @@ namespace fs0 { namespace dynamics {
             double t_k_plus_1 = fs0::value<float>(s_k_plus_1.getValue(_clock_var));
             if (  Config::instance().hasHorizon() && (t_k_plus_1 > Config::instance().getHorizonTime() )) {
                 atoms.clear();
-                LPT_DEBUG("dynamics", "Time out!");
+                LPT_DEBUG("dynamics", "Time out! t=" << t_k_plus_1 << " H=" << Config::instance().getHorizonTime() );
                 return; // we're done as well, time is implicitly bounded
             }
             if ( t_k_plus_1 < -1e-2) {
@@ -81,8 +98,8 @@ namespace fs0 { namespace dynamics {
         // ======
         //
         // One-off, simultaneous, no superposition policy:
-        if ( !_exogenous.empty() )
-            process_events( s, atoms, do_zcc );
+        //if ( !_exogenous.empty() )
+        //    process_events( s, atoms, do_zcc );
 
         #ifdef DEBUG
         // Compute and report change set

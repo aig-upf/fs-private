@@ -21,6 +21,15 @@ Config& Config::instance() {
 	return *_instance;
 }
 
+void Config::setAsGlobal( std::unique_ptr<Config>&& ptr ) {
+	_instance = std::move(ptr);
+}
+
+std::unique_ptr<Config>&& Config::claimOwnership() {
+	return std::move(_instance);
+}
+
+
 template <typename OptionType>
 OptionType parseOption(const pt::ptree& tree, const std::unordered_map<std::string, std::string>& user_options, const std::string& key, std::map<std::string, OptionType> allowed) {
 	std::string parsed;

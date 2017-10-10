@@ -44,6 +44,21 @@ FeatureSelector<StateT>::select() {
 }
 
 template <typename StateT>
+void
+FeatureSelector<StateT>::select(FeatureSelector<StateT>::EvaluatorT& evaluator) {
+
+	std::vector<FeatureT*> features;
+	add_state_variables(_info, features);
+
+	add_extra_features(_info, features);
+
+	// Dump all features into an evaluator and return it
+	for (auto f:features) {
+		evaluator.add(f);
+	}
+}
+
+template <typename StateT>
 bool
 FeatureSelector<StateT>::has_extra_features() const {
 
@@ -66,13 +81,13 @@ void
 FeatureSelector<StateT>::add_state_variables(const ProblemInfo& info, std::vector<FeatureT*>& features) {
 
     std::set<VariableIdx> projected_away;
-    if ( Config::instance().getOption<bool>("project_away_time",false) ) {
+    if ( Config::instance().getOption<bool>("features.project_away_time",false) ) {
         VariableIdx clock = info.getVariableId("clock_time()");
         projected_away.insert( clock );
         LPT_INFO("main", "Projecting away variable: " << info.getVariableName(clock)  );
     }
 
-    if ( Config::instance().getOption<bool>("project_away_numeric",false) ) {
+    if ( Config::instance().getOption<bool>("features.project_away_numeric",false) ) {
         for ( VariableIdx var = 0; var < info.getNumVariables(); ++var ) {
             if ( info.sv_type(var) ==  type_id::float_t ) {
                 projected_away.insert(var);
@@ -168,14 +183,11 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 	}
 
 	if (Config::instance().getOption<bool>("features.joint_goal_error", false)) {
-		hybrid::L2Norm norm;
 		SquaredErrorFeature* feature = new SquaredErrorFeature;
 		for ( auto formula : fs::all_formulae( *Problem::getInstance().getGoalConditions())) {
 			feature->addCondition(formula);
-			norm.add_condition(formula);
 		}
 		LPT_INFO("features", "Added 'joint_goal_error': phi(s0) = " << feature->error_signal().measure(Problem::getInstance().getInitialState()));
-		LPT_INFO("features", "L^2 norm(s0,sG) =  " << norm.measure(Problem::getInstance().getInitialState()));
 		features.push_back( feature );
 	}
 

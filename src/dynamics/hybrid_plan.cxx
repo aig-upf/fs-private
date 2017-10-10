@@ -52,8 +52,19 @@ namespace fs0 { namespace dynamics {
         unsigned control_count = 0, exo_count = 0;
 
     	for (const GroundAction* action : plan) {
-    		if (!manager.isApplicable(state, *action, true))
-                throw std::runtime_error( "HybridPlan::interpret_plan(): Plan is not valid (ground action not applicable!)");
+    		if (!manager.isApplicable(state, *action, true)) {
+                std::stringstream buffer;
+                buffer << "HybridPlan::interpret_plan(): Plan is not valid (ground action " << action->getName() << " not applicable!)" << std::endl;
+                buffer << "Current state: " << state << std::endl;
+                buffer << "Initial state: " << problem.getInitialState() << std::endl;
+                buffer << "Plan:" << std::endl;
+                for ( auto a : plan )
+                    buffer << "\t" << *a << std::endl;
+
+                LPT_INFO("main", buffer.str());
+                throw std::runtime_error(buffer.str() );
+            }
+
             // Record time and action if it is not the wait action
             if ( action != problem.get_wait_action() ) {
                 if (action->isControl())
@@ -67,9 +78,11 @@ namespace fs0 { namespace dynamics {
     	}
         // MRJ: add dummy action at the very end of the plan
         _the_plan.push_back( std::make_tuple( fs0::value<float>(state.getValue(time_var_idx)), nullptr) );
+        LPT_INFO("main", "HybridPlan::interpret_plan() : Events in hybrid plan: " << _the_plan.size() << " # control: " << control_count << " # exogenous: " << exo_count  );
+        LPT_INFO("main", "HybridPlan::interpret_plan() : Duration: " << get_duration() << " time units");
 
-        LPT_INFO("cout", "HybridPlan::interpret_plan() : Events in hybrid plan: " << _the_plan.size() << " # control: " << control_count << " # exogenous: " << exo_count  );
-        LPT_INFO("cout", "HybridPlan::interpret_plan() : Duration: " << get_duration() << " time units");
+        LPT_DEBUG("cout", "HybridPlan::interpret_plan() : Events in hybrid plan: " << _the_plan.size() << " # control: " << control_count << " # exogenous: " << exo_count  );
+        LPT_DEBUG("cout", "HybridPlan::interpret_plan() : Duration: " << get_duration() << " time units");
 
         if ( !problem.getGoalSatManager().satisfied(state) )
             LPT_DEBUG("cout", "HybridPlan::interpret_plan(): WARNING: plan doesn't achieve the goal!");
@@ -102,7 +115,7 @@ namespace fs0 { namespace dynamics {
     }
 
     void
-    HybridPlan::simulate( float time_step, unsigned npoints, Config::IntegratorT solver ) {
+    HybridPlan::simulate( float time_step, float duration, unsigned npoints, Config::IntegratorT solver ) {
         save_simulation_settings( time_step, npoints, solver );
 
         Config& cfg = Config::instance();
@@ -112,12 +125,31 @@ namespace fs0 { namespace dynamics {
         VariableIdx time_var_idx = info.getVariableId("clock_time()");
 
         LPT_INFO( "simulation", "Starting plan Simulation");
-        LPT_INFO( "simulation", "Duration: " << get_duration() << " time units");
+        _trajectory.clear();
 
         NaiveApplicabilityManager manager(problem.getStateConstraints());
         auto s = std::make_shared<State>( problem.getInitialState() );
         _trajectory.push_back( s );
         if ( _the_plan.empty() ) {
+            LPT_INFO( "simulation", "Plan is empty!");
+            // Just simulate for the duration
+            float H = duration;
+            while ( H > 0.0 ) {
+                float h = std::min((float)time_step, H );
+                LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
+                float old_step = cfg.getDiscretizationStep();
+                cfg.setDiscretizationStep(h);
+
+                auto tmp = std::make_shared<State>(*s);
+                tmp->accumulate(NaiveApplicabilityManager::computeEffects(*s, *wait_action));
+
+                cfg.setDiscretizationStep(old_step);
+
+                s = tmp;
+                _trajectory.push_back( tmp );
+                H -=h;
+            }
+
             restore_simulation_settings();
             return;
         }
@@ -125,13 +157,15 @@ namespace fs0 { namespace dynamics {
         float t;
         const GroundAction* a;
         std::tie( t, a ) =_the_plan[0];
-        float time_left = get_duration();
+        float time_left = ( duration < 0.0 ? get_duration() : duration);
+        LPT_INFO( "simulation", "Duration: " << time_left << " time units");
+
         if ( t > 0.0 ) { // There's some waiting before the first action in the plan
             float H = std::min( (float)time_left, t);
 
             LPT_INFO( "simulation", "Idle time: " << H << " time units" );
             while ( H > 0.0 ) {
-                float h = std::min((float)cfg.getDiscretizationStep(), H );
+                float h = std::min((float)time_step, H );
                 LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
                 float old_step = cfg.getDiscretizationStep();
                 cfg.setDiscretizationStep(h);
@@ -146,9 +180,29 @@ namespace fs0 { namespace dynamics {
                 H -=h;
                 time_left -= h;
             }
+        } else {
+
         }
-        if ( time_left <= cfg.getDiscretizationStep() ) {
-            LPT_INFO("simulation", "Simulation finished");
+
+        if ( time_left < cfg.getDiscretizationStep() ) {
+            for (unsigned i = 0; i < _the_plan.size(); i++) {
+                std::tie( t, a ) =_the_plan[i];
+                LPT_INFO( "simulation", "State: " << *s );
+
+                if ( a == nullptr ) {
+                    LPT_INFO("simulation", "Simulation finished, states in trajectory: " << _trajectory.size());
+                    LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
+                    restore_simulation_settings();
+                    return;
+                }
+                auto next = std::make_shared<State>(*s);
+                next->accumulate(NaiveApplicabilityManager::computeEffects(*s, *a));
+                _trajectory.push_back( next );
+                s = next;
+                LPT_INFO("simulation", "Action applied: " << *s );
+            }
+            LPT_INFO("simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
+            LPT_INFO("simulation", "Simulation finished, time left (" << time_left << ") less than discretisation step (" <<  cfg.getDiscretizationStep() << ")");
             restore_simulation_settings();
             return;
         }
@@ -157,9 +211,10 @@ namespace fs0 { namespace dynamics {
             std::tie( t, a ) =_the_plan[i];
             LPT_INFO( "simulation", "State: " << *s );
 
-            if ( a == nullptr ) {
+            if ( a == nullptr  ) {
+                if (  time_left > cfg.getDiscretizationStep()) break;
                 LPT_INFO("simulation", "Simulation finished, states in trajectory: " << _trajectory.size());
-                LPT_INFO( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
+                LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
                 restore_simulation_settings();
                 return;
             }
@@ -179,7 +234,7 @@ namespace fs0 { namespace dynamics {
 
             LPT_INFO( "simulation", "Idle time: " << H << " time units" );
             while ( H > 0.0 ) {
-                float h = std::min((float)cfg.getDiscretizationStep(), H );
+                float h = std::min(time_step, H );
                 LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
                 float old_step = cfg.getDiscretizationStep();
                 cfg.setDiscretizationStep(h);
@@ -194,14 +249,45 @@ namespace fs0 { namespace dynamics {
                 H -=h;
                 time_left -= h;
             }
+
+            if ( time_left < cfg.getDiscretizationStep() ) {
+                LPT_INFO("simulation", "Simulation finished, time left (" << time_left << ") less than discretisation step (" <<  cfg.getDiscretizationStep() << ")");
+                LPT_INFO("simulation", "States in trajectory: " << _trajectory.size() );
+                restore_simulation_settings();
+                return;
+            }
     	}
+        LPT_INFO("simulation", "time left is: " << time_left << " units");
+        if ( time_left > cfg.getDiscretizationStep() ) {
+            LPT_INFO("simulation", "Simulation asked to run after plan end time");
+            float H = time_left;
+
+            LPT_INFO( "simulation", "Idle time: " << H << " time units" );
+            while ( H > 0.0 ) {
+                float h = std::min(time_step, H );
+                LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
+                float old_step = cfg.getDiscretizationStep();
+                cfg.setDiscretizationStep(h);
+
+                auto tmp = std::make_shared<State>(*s);
+                tmp->accumulate(NaiveApplicabilityManager::computeEffects(*s, *wait_action));
+                LPT_INFO("simulation", *s);
+                cfg.setDiscretizationStep(old_step);
+
+                s = tmp;
+                _trajectory.push_back( tmp );
+                H -=h;
+                time_left -= h;
+            }
+        }
+
         LPT_INFO("simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
-        LPT_INFO( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
+        LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
         restore_simulation_settings();
     }
 
     void
-    HybridPlan::validate( float time_step, unsigned npoints, Config::IntegratorT solver ) {
+    HybridPlan::validate( float time_step, float duration, unsigned npoints, Config::IntegratorT solver ) {
         throw std::runtime_error("HybridPlan::validate() : Not Implemented Yet!");
     }
 

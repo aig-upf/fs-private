@@ -45,6 +45,8 @@ public:
 
 	//! Retrieve the singleton instance, which has been previously initialized
 	static Config& instance();
+	static void setAsGlobal( std::unique_ptr<Config>&& ptr );
+	static std::unique_ptr<Config>&& claimOwnership();
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Config& o) { return o.print(os); }
@@ -88,9 +90,10 @@ protected:
     double _horizon_time;
 
 	//! Private constructor
-	Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
 
 public:
+	Config(const std::string& root, const std::unordered_map<std::string, std::string>& user_options, const std::string& filename);
+
 	Config(const Config& other) = delete;
 	~Config() = default;
 
@@ -146,8 +149,9 @@ public:
     double getDiscretizationStep( ) const { return _discretization_step; }
 
     bool getZeroCrossingControl() const { return _zero_crossing_control; }
-	void setZeroCrossingControl( bool do_zcc ) { _zero_crossing_control = do_zcc; } 
+	void setZeroCrossingControl( bool do_zcc ) { _zero_crossing_control = do_zcc; }
 
+	void setHorizonTime( double H ) { _horizon_time = H;	}
     double getHorizonTime() const { return _horizon_time; }
     bool hasHorizon() const { return _horizon_time >= 1e-7; }
 
