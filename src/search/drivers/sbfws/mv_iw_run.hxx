@@ -425,36 +425,7 @@ public:
 
 	std::vector<Width1Tuple> compute_plain_RG2(const StateT& seed) {
 		assert(_config._max_width == 2);
-		/*
-		LPT_INFO( "cout", "s0: " << seed );
-		std::unordered_set<Width1Tuple,Width1TupleHasher> the_R;
-		float simt0 = aptk::time_used();
-		for (const auto& a : _model.applicable_actions(seed, _config._enforce_state_constraints)) {
-			LPT_INFO("search", "action: " << _model.getTask().getGroundActions()[_model.get_action_idx(a)]->getName());
-			StateT s_a = _model.next( seed, a );
-			LPT_INFO("search", "s_a: " << s_a );
-			run(s_a, _config._max_width);
-			report_simulation_stats(simt0);
 
-			if (_config._goal_directed && _unreached.size() == 0) {
-				LPT_INFO("search", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
-				auto R_a =  extract_R_G(false);
-				for ( auto t : R_a )
-					the_R.insert(t);
-			}
-
-			// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
-			auto R_a = extract_R_1();
-			for ( auto t : R_a )
-				the_R.insert(t);
-
-			_evaluator.reset();
-		}
-
-		std::vector<Width1Tuple> R1(the_R.begin(),the_R.end());
-		LPT_INFO( "cout", "Simulation - Combined |R| = " << R1.size() );
-		return R1;
-		*/
 		_config._complete = false;
 		float simt0 = aptk::time_used();
   		run(seed, _config._max_width);
@@ -473,36 +444,6 @@ public:
 		assert(_config._max_width == 1);
 		_config._complete = false;
 		float simt0 = aptk::time_used();
-		/*
-		LPT_INFO( "cout", "s0: " << seed );
-		std::unordered_set<Width1Tuple,Width1TupleHasher> the_R;
-
-		for (const auto& a : _model.applicable_actions(seed, _config._enforce_state_constraints)) {
-			LPT_INFO("search", "action: " << _model.getTask().getGroundActions()[_model.get_action_idx(a)]->getName());
-			StateT s_a = _model.next( seed, a );
-			LPT_INFO("search", "s_a: " << s_a );
-			run(s_a, _config._max_width);
-			report_simulation_stats(simt0);
-
-			if (_config._goal_directed && _unreached.size() == 0) {
-				LPT_INFO("search", "Simulation - IW(" << _config._max_width << ") reached all subgoals, computing R_G[" << _config._max_width << "]");
-				auto R_a =  extract_R_G_1();
-				for ( auto t : R_a )
-					the_R.insert(t);
-			}
-
-			// Else, compute the goal-unaware version of R containing all atoms seen during the IW run
-			auto R_a = extract_R_1();
-			for ( auto t : R_a )
-				the_R.insert(t);
-
-			_evaluator.reset();
-		}
-
-		std::vector<Width1Tuple> R1(the_R.begin(),the_R.end());
-		LPT_INFO( "cout", "Simulation - Combined |R| = " << R1.size() );
-		return R1;
-		*/
 
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
