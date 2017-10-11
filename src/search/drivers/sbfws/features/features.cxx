@@ -10,8 +10,10 @@
 #include <utils/config.hxx>
 #include <constraints/registry.hxx>
 #include <languages/fstrips/language.hxx>
+#include <languages/fstrips/operations/basic.hxx>
 #include <problem.hxx>
 #include <actions/actions.hxx>
+#include <search/drivers/sbfws/relevant_atomset.hxx>
 
 namespace fs = fs0::language::fstrips;
 
@@ -19,12 +21,12 @@ namespace fs0 { namespace bfws {
 
 template <typename StateT>
 typename FeatureSelector<StateT>::EvaluatorT
-FeatureSelector<StateT>::select() {
+FeatureSelector<StateT>::select(FeatureIndex* featidx) {
 	
 	std::vector<FeatureT*> features;
 	add_state_variables(_info, features);
 	
-	add_extra_features(_info, features);
+	add_extra_features(_info, features, featidx);
 	
 	// Dump all features into an evaluator and return it
 	EvaluatorT evaluator;
@@ -60,7 +62,7 @@ FeatureSelector<StateT>::add_state_variables(const ProblemInfo& info, std::vecto
 	}
 }
 
-lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemInfo& info,  const std::string& feat_name, const std::vector<ObjectIdx>& parameters) {
+lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemInfo& info,  const std::string& feat_name, const std::vector<ObjectIdx>& parameters, unsigned idx, FeatureIndex* featidx) {
 	unsigned symbol_id = info.getSymbolId(feat_name);
 	
 	std::vector<const fs::Term*> subterms;
@@ -70,10 +72,23 @@ lapkt::novelty::NoveltyFeature<State>* generate_arbitrary_feature(const ProblemI
 	
 	if (info.isPredicate(symbol_id)) {
 		auto formula =  LogicalComponentRegistry::instance().instantiate_formula(feat_name, subterms);
+		
+		// A formula will be either true or false
+		if (featidx) {
+			featidx->add(idx, 0);
+			featidx->add(idx, 1);
+		}
+		
 		return new ArbitraryFormulaFeature(formula);
 		
 	} else {
 		auto term =  LogicalComponentRegistry::instance().instantiate_term(feat_name, subterms);
+		
+		for (ObjectIdx o:info.getTypeObjects(fs::type(*term))) {
+			if (featidx) {
+				featidx->add(idx, o);
+			}
+		}
 		return new ArbitraryTermFeature(term);
 	}
 }
@@ -93,7 +108,7 @@ void process_precondition_count(const ProblemInfo& info, std::vector<lapkt::nove
 	LPT_INFO("cout", "Added " << actions.size() << " precondition-count features");
 }
 
-void process_feature(const ProblemInfo& info, const std::string& feat_name, std::vector<lapkt::novelty::NoveltyFeature<State>*>& features) {
+void process_feature(const ProblemInfo& info, const std::string& feat_name, std::vector<lapkt::novelty::NoveltyFeature<State>*>& features, FeatureIndex* featidx) {
 	//! Some specially-named features receive a distinct treatment
 // 	if (feat_name == "precondition_count") return process_precondition_count(info, features);
 	
@@ -107,14 +122,14 @@ void process_feature(const ProblemInfo& info, const std::string& feat_name, std:
 	
 	// Arity-0 feature, dealt with separately:
 	if (signature.empty()) { 
-		auto feature = generate_arbitrary_feature(info, feat_name, Binding::EMPTY_BINDING.get_full_binding());
+		auto feature = generate_arbitrary_feature(info, feat_name, Binding::EMPTY_BINDING.get_full_binding(), features.size(), featidx);
 		LPT_DEBUG("cout", "Generated feature: " << *feature);
 		features.push_back(feature);
 		return;
 	}
 	
 	for (utils::binding_iterator binding_generator(signature, info); !binding_generator.ended(); ++binding_generator) {
-		auto feature = generate_arbitrary_feature(info, feat_name, (*binding_generator).get_full_binding());
+		auto feature = generate_arbitrary_feature(info, feat_name, (*binding_generator).get_full_binding(), features.size(), featidx);
 		LPT_DEBUG("cout", "Generated feature: " << *feature);
 		features.push_back(feature);
 	}	
@@ -123,18 +138,18 @@ void process_feature(const ProblemInfo& info, const std::string& feat_name, std:
 
 template <typename StateT>
 void
-FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector<FeatureT*>& features) {
+FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector<FeatureT*>& features, FeatureIndex* featidx) {
 	
-	if (Config::instance().getOption<bool>("use_precondition_counts", false)) {
-		process_precondition_count(info, features);
-	}
+// 	if (Config::instance().getOption<bool>("use_precondition_counts", false)) {
+// 		process_precondition_count(info, features);
+// 	}
 	
 	try {
 		auto data = Loader::loadJSONObject(info.getDataDir() + "/extra.json");
 		const auto& features_node = data["features"];
 		for (unsigned i = 0; i < features_node.Size(); ++i) {
 			const auto& feature_node = features_node[i];
-			process_feature(info, feature_node["name"].GetString(), features);
+			process_feature(info, feature_node["name"].GetString(), features, featidx);
 		}
 		
 	} catch(const std::exception& e) {

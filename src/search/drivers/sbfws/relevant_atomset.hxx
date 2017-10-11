@@ -6,10 +6,39 @@
 #include <utils/atom_index.hxx>
 #include <state.hxx>
 
-using RelevantFeatureSet = std::unordered_set<std::pair<unsigned, int>,  boost::hash<std::pair<unsigned, int>> >;
+// using RelevantFeatureSet = std::unordered_set<std::pair<unsigned, int>,  boost::hash<std::pair<unsigned, int>> >;
+using RelevantFeatureSet = std::vector<bool>;
 
 
 namespace fs0 { namespace bfws {
+	
+class FeatureIndex {
+public:	
+	
+	FeatureIndex() {}
+	
+	unsigned to_feature_index(unsigned feature_index, int feature_value) const {
+		auto it = _feature_index.find(std::make_pair(feature_index, feature_value));
+		if (it == _feature_index.end()) throw std::runtime_error("Unknown feature value pair");
+		return it->second;
+	}
+	
+	unsigned num_feature_indexes() const { return _feature_index.size(); }
+	
+	unsigned add(unsigned idx, int val) {
+		auto pair = std::make_pair(idx, val);
+		auto it = _feature_index.find(pair);
+		if (it != _feature_index.end()) throw std::runtime_error("Duplicated feature index");
+		
+		unsigned n = _feature_index.size();
+		_feature_index.insert(std::make_pair(pair, n));
+		return  n;
+	}
+	
+protected:
+	using FeatureValuePair = std::pair<unsigned, int>;
+	std::unordered_map<FeatureValuePair, unsigned, boost::hash<FeatureValuePair>> _feature_index;
+};	
 
  //! A helper object to reduce the memory footprint of RelevantAtomSets
 class AtomsetHelper {
@@ -23,10 +52,12 @@ public:
 	//! A reference to the global atom index
 	const AtomIndex& _atomidx;
 	
-	RelevantFeatureSet _F;
+	const FeatureIndex& _featidx;
+	
+	RelevantFeatureSet _relevant_features;
 
-	AtomsetHelper(const AtomIndex& atomidx, const std::vector<bool>& relevant, const RelevantFeatureSet& F) :
-		_relevant(relevant), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx), _F(F)
+	AtomsetHelper(const AtomIndex& atomidx, const std::vector<bool>& relevant, const FeatureIndex& featidx, const RelevantFeatureSet& F) :
+		_relevant(relevant), _num_relevant(std::count(relevant.begin(), relevant.end(), true)), _atomidx(atomidx), _featidx(featidx), _relevant_features(F)
 	{}
 
 	unsigned size() const { return _atomidx.size(); }
@@ -39,7 +70,7 @@ public:
 
 	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
 	RelevantAtomSet(const AtomsetHelper& helper) :
-		_helper(helper), _num_reached(0), _num_reachedF(0), _reached(helper.size(), false), _reachedF() //, _updated(false)
+		_helper(helper), _num_reached(0), _num_reachedF(0), _reached(helper.size(), false), _reachedF(helper._featidx.num_feature_indexes(), false) //, _updated(false)
 	{}
 
 	~RelevantAtomSet() = default;
@@ -71,17 +102,17 @@ public:
 			}
 		}
 
-		for (unsigned feat_idx = 0; feat_idx < feature_valuation.size(); ++feat_idx) {
-			
-			auto value = std::make_pair(feat_idx, feature_valuation[feat_idx]);
-			
-			auto it = _helper._F.find(value);
-			if (it == _helper._F.end()) continue; // we're not concerned about this atom
-			
-			auto res = _reachedF.insert(value);
-			if (res.second) { // The feature value in F has been reached for the first time
+		unsigned feat_idx = state.numAtoms(); // start the iteration ignoring the first n features, which are simple state variables
+		for (; feat_idx < feature_valuation.size(); ++feat_idx) {
+				
+			unsigned feature_index = _helper._featidx.to_feature_index(feat_idx, feature_valuation[feat_idx]);
+			if (!_helper._relevant_features[feature_index]) continue; // we're not concerned about this atom
+
+			std::vector<bool>::reference ref = _reachedF[feature_index];
+			if (!ref) {
 				++_num_reachedF;
-			}
+				ref = true;
+			}			
 		}
 	}
 
@@ -91,7 +122,7 @@ public:
 	template <typename FeatureValueT>
 	void init(const State& state, const std::vector<FeatureValueT>& feature_valuation) {
 		_reached = std::vector<bool>(_helper.size(), false);
-		_reachedF.clear();
+		_reachedF = std::vector<bool>(_helper._featidx.num_feature_indexes(), false);
 		_num_reached = 0;
 		_num_reachedF = 0;
 		update(state, nullptr, feature_valuation);

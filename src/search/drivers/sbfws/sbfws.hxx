@@ -17,6 +17,7 @@ namespace fs0 { namespace bfws {
 
 using Novelty = lapkt::novelty::Novelty;
 
+
 //! Prioritize nodes with lower number of _un_achieved subgoals. Break ties with g.
 template <typename NodePT>
 struct unachieved_subgoals_comparer {
@@ -241,10 +242,11 @@ protected:
 	unsigned _c_init;
 	
 	std::unordered_map<ObjectIdx, ObjectIdx> _all_objects_goal;
-		
+	
+	FeatureIndex _feat_index;
 	
 public:
-	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, BFWSStats& stats) :
+	SBFWSHeuristic(const SBFWSConfig& config, const Config& c, const StateModelT& model, const FeatureSetT& features, const FeatureIndex& featidx, BFWSStats& stats) :
 		_model(model),
 		_problem(model.getTask()),
 		_featureset(features),
@@ -261,7 +263,8 @@ public:
 		_stats(stats),
 		_sbfwsconfig(config),
 		_init(model.init()),
-		_c_init(0)
+		_c_init(0),
+		_feat_index(featidx)
 	{
 	}
 
@@ -605,7 +608,7 @@ public:
 			relaxed.set_state_constraints(new fs::Tautology);
  			StateModelT model = _model.build(relaxed);
 			std::cout << "Running IW preprocessing with state constraints relaxation" << std::endl;
-			SimulationT simulator(model, _featureset, evaluator, _simconfig, _stats, verbose);
+			SimulationT simulator(model, _featureset, evaluator, _simconfig, _stats, verbose, _feat_index);
 			//SimulationT simulator(_model, _featureset, evaluator, _simconfig, _stats, verbose);
 			
 			RelevantFeatureSet F;
@@ -636,7 +639,7 @@ public:
 			//std::cout << "#c(s_0)= " << _c_init << std::endl;
 			
 			
-			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant, F);
+			node._helper = new AtomsetHelper(_problem.get_tuple_index(), relevant, _feat_index, F);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
 			node._relevant_atoms->init(node.state, _featureset.evaluate(node.state));
 			
@@ -764,6 +767,7 @@ public:
 	//!
 	SBFWS(const StateModelT& model,
           FeatureSetT&& featureset,
+          const FeatureIndex& featidx, 
           BFWSStats& stats,
           const Config& config,
           SBFWSConfig& conf) :
@@ -771,7 +775,7 @@ public:
 		_model(model),
 		_solution(nullptr),
 		_featureset(std::move(featureset)),
-		_heuristic(conf, config, model, _featureset, stats),
+		_heuristic(conf, config, model, _featureset, featidx, stats),
 		_stats(stats),
 		_pruning(config.getOption<bool>("bfws.prune", false)),
 		_generated(1),
@@ -1109,7 +1113,7 @@ protected:
 	
 	template <typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 	ExitCode
-	do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time);
+	do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const FeatureIndex& featidx, const Config& config, const std::string& out_dir, float start_time);
 };
 
 

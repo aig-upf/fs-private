@@ -22,7 +22,8 @@
 
 
 using NoGoodAtomsSet = std::unordered_set<fs0::Atom>;
-using RelevantFeatureSet = std::unordered_set<std::pair<unsigned, int>,  boost::hash<std::pair<unsigned, int>> >;
+// using RelevantFeatureSet = std::unordered_set<std::pair<unsigned, int>,  boost::hash<std::pair<unsigned, int>> >;
+using RelevantFeatureSet = std::vector<bool>;
 
 
 
@@ -296,11 +297,13 @@ protected:
 
 	const FeatureSetT& _featureset;
 	
+	const FeatureIndex& _featidx;
+	
 
 public:
 
 	//! Constructor
-	IWRun(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const IWRun::Config& config, BFWSStats& stats, bool verbose) :
+	IWRun(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const IWRun::Config& config, BFWSStats& stats, bool verbose, const FeatureIndex& featidx) :
 		_model(model),
 		_config(config),
 		_optimal_paths(model.num_subgoals()),
@@ -321,9 +324,8 @@ public:
 		_init(model.init()),
 		_all_objects_gtype(ProblemInfo::getInstance().getNumObjects(), -1),
 		_all_objects_conf(ProblemInfo::getInstance().getNumObjects(), -1),
-		_featureset(featureset)
-
-		
+		_featureset(featureset),
+		_featidx(featidx)
 	{
 	  Problem p(model.getTask());
 	  std::cout << "Is tautology: " << p.getStateConstraints()->is_tautology() << std::endl;
@@ -477,7 +479,7 @@ public:
 	}
 	
 	RelevantFeatureSet mark_all_features_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes)  {
-		RelevantFeatureSet features;
+		RelevantFeatureSet features(_featidx.num_feature_indexes(), false);
 		
 		std::unordered_set<NodePT> all_visited;
 				
@@ -492,8 +494,10 @@ public:
 				const StateT& state = node->state;
 				const auto feature_valuation = _featureset.evaluate(node->state);
 				
-				for (unsigned feat_idx = 0; feat_idx < feature_valuation.size(); ++feat_idx) {
-					features.insert(std::make_pair(feat_idx, feature_valuation[feat_idx]));
+				
+				unsigned feat_idx = state.numAtoms(); // start the iteration ignoring the first n features, which are simple state variables
+				for (; feat_idx < feature_valuation.size(); ++feat_idx) {
+					features[_featidx.to_feature_index(feat_idx, feature_valuation[feat_idx])] = true;
 				}
 				node = node->parent;
 			}

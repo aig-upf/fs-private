@@ -64,7 +64,6 @@ public:
 	AtomIdx to_index(VariableIdx variable, ObjectIdx value) const;
 	
 	bool is_indexed(VariableIdx variable, ObjectIdx value) const;
-
 	
 	//! Returns the actual value tuple that corresponds to the given tuple index, without the logical symbol 
 	const ValueTuple& to_tuple(AtomIdx tuple) const { return _tuple_index.at(tuple); }
