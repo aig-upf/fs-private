@@ -6,6 +6,7 @@
 #include <applicability/action_managers.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <actions/checker.hxx>
+#include <languages/fstrips/language.hxx>
 
 // For writing the traces
 #include <utils/archive/json.hxx>
@@ -55,6 +56,25 @@ namespace fs0 { namespace dynamics {
     		if (!manager.isApplicable(state, *action, true)) {
                 std::stringstream buffer;
                 buffer << "HybridPlan::interpret_plan(): Plan is not valid (ground action " << action->getName() << " not applicable!)" << std::endl;
+                bool explained = false;
+                if (!manager.checkFormulaHolds(action->getPrecondition(), state)) {
+                    explained = true;
+                    buffer << "Action precondition does not hold!" << std::endl;
+                }
+
+                if (!explained) {
+
+                    auto atoms = manager.computeEffects(state, *action);
+                    State next(state, atoms);
+                    for ( auto c : problem.getStateConstraints() ) {
+                        if ( !manager.checkFormulaHolds( c, next ) ) {
+                            explained = true;
+                            buffer << "State constraint '" << *c << "' does not hold after action execution" << std::endl;
+                            break;
+                        }
+                    }
+                }
+
                 buffer << "Current state: " << state << std::endl;
                 buffer << "Initial state: " << problem.getInitialState() << std::endl;
                 buffer << "Plan:" << std::endl;
