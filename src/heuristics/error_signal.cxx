@@ -49,7 +49,7 @@ namespace hybrid {
 
         auto norm = [](float v) { return 2.0f * (std::atan( v )/M_PI);};
 
-        LPT_INFO("error_signal", "State: " << s);
+        LPT_EDEBUG("error_signal", "State: " << s);
         double error = 0.0;
         // Atomic Conditions get handled as black boxes
         for ( auto g : _non_arithmetic_goal_condition ) {
