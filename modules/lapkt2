@@ -16,7 +16,8 @@ else:
 lapkt2_libs = [
 	'liblapkt-novelty' + lapkt_lib_sufix,
 	'liblapkt' + lapkt_lib_sufix,
-	'boost_timer'
+	'boost_timer',
+	'boost_filesystem'
 ]
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
