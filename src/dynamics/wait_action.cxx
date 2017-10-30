@@ -8,11 +8,18 @@
 #include <lapkt/tools/logging.hxx>
 #include <languages/fstrips/formulae.hxx>
 #include <languages/fstrips/operations.hxx>
+#include <tuple>
+#include <set>
+
+#include <boost/graph/topological_sort.hpp>
+
 
 namespace fs = fs0::language::fstrips;
 
-
 namespace fs0 { namespace dynamics {
+
+    typedef std::set<VariableIdx> VariableSet;
+
 
     WaitAction::WaitAction(unsigned id, const ActionData& action_data)
         : ProceduralAction(id, action_data, Binding::EMPTY_BINDING) {
@@ -115,46 +122,122 @@ namespace fs0 { namespace dynamics {
     }
 
     void
-    WaitAction::process_events( const State& s, std::vector<Atom>& atoms, bool do_zcc ) const {
+    WaitAction::compute_reactions_causal_graph(const State& s) const {
+        _reaction_stages.clear();
 
+        std::vector<VariableSet> evt_precs(_exogenous.size());
+        std::vector<VariableSet> evt_effs(_exogenous.size());
+        Graph G(_exogenous.size());
+        //std::vector<std::pair<unsigned, unsigned>> edges;
+        for ( unsigned i = 0; i < _exogenous.size(); i++ ) {
+            const GroundAction& e_i = *_exogenous[i];
+            for ( auto eff : e_i.getEffects() )
+                evt_effs[i].insert( fs::interpret_variable(*(eff->lhs()), s) );
+            for ( unsigned j = 0; j < _exogenous.size(); j++ ){
+                if (i == j ) continue;
+                const GroundAction& e_j = *_exogenous[j];
+                // MRJ: there's an edge (i,j) if the lhs of the effects of
+                // event e_i appear on the precondition and rhs of the
+                // effects in e_j.
+                for ( auto x : fs::all_state_variables(*e_j.getPrecondition()))
+                    evt_precs[j].insert(x->getValue());
+                for (auto eff: e_j.getEffects() )
+                    for ( auto x : fs::all_state_variables(*eff->rhs()) )
+                        evt_precs[j].insert(x->getValue());
+
+                for ( auto y : evt_effs[i] )
+                    if (evt_precs[j].find(y) != evt_precs[j].end()) {
+                        LPT_DEBUG("dynamics", e_i << " -> " << e_j);
+                        boost::add_edge(i,j, G);
+                        break;
+                    }
+            }
+        }
+
+
+        typedef std::vector< Vertex > container;
+        container  c;
+        topological_sort(G, std::back_inserter(c));
+        _reaction_stages.clear();
+        LPT_DEBUG("dynamics", "Reactions causal graph:");
+        unsigned current_layer = 0;
+        _reaction_stages.push_back( std::vector<std::pair<Vertex, const GroundAction*>>() );
+        for ( container::reverse_iterator ii=c.rbegin(); ii!=c.rend(); ++ii) {
+            const GroundAction& e_k = * _exogenous[*ii];
+            LPT_DEBUG( "dynamics", e_k);
+            if ( _reaction_stages[current_layer].size() > 0 ) {
+                // if dependent, push into next layer
+                bool dependant = false;
+                for ( const auto& entry : _reaction_stages[current_layer]) {
+                    for ( auto y : evt_effs[*ii] )
+                        if (evt_precs[entry.first].find(y) != evt_precs[entry.first].end() ) {
+                            dependant = true;
+                            break;
+                        }
+                    if (dependant) break;
+                }
+                if (dependant) {
+                    _reaction_stages.push_back( std::vector< std::pair<Vertex, const GroundAction*> >() );
+                    current_layer++;
+                    _reaction_stages[current_layer].push_back(std::make_pair(*ii,_exogenous[*ii]));
+                    LPT_DEBUG("dynamics", "\t Layer: " << current_layer );
+                    continue;
+                }
+            }
+
+            _reaction_stages[current_layer].push_back(std::make_pair(*ii,_exogenous[*ii]));
+            LPT_DEBUG("dynamics", "\t Layer: " << current_layer );
+        }
+    }
+
+    void
+    WaitAction::process_events( const State& s, std::vector<Atom>& atoms, bool do_zcc ) const {
         const ProblemInfo& info = ProblemInfo::getInstance();
         NaiveApplicabilityManager       manager(Problem::getInstance().getStateConstraints());
 
-        LPT_DEBUG("dynamics", "WaitAction::apply(): one-off event activation");
+        LPT_DEBUG("dynamics", "WaitAction::apply(): one-off cascading event activation");
+        compute_reactions_causal_graph(s);
         unsigned events_fired = 0;
         State s_j(s, atoms);
         std::vector<Atom> A_j( atoms.begin(), atoms.end());
         std::map<VariableIdx, const GroundAction* > seen;
         LPT_DEBUG("dynamics", "\t One-off event activation support: " << s_j);
-        for ( auto a : _exogenous ) {
-            if (!manager.checkFormulaHolds(a->getPrecondition(), s_j)) continue;
-            LPT_DEBUG("dynamics", "\t Event " << *a << " fired!");
-            events_fired++;
-            std::vector<Atom> eff_j = manager.computeEffects(s_j, *a);
-            for ( Atom a_l : eff_j ) {
-                A_j[ a_l.getVariable() ] = a_l;
-                auto it = seen.find(a_l.getVariable());
-                if ( it != seen.end() ) {
-                    std::stringstream buffer;
-                    buffer << "Inconsistent semantics, revise model: " << std::endl;
-                    buffer << "WaitAction::apply(): Events " << a->getName() << " and " << it->second->getName() << std::endl;
-                    buffer << "firing simultaneously, affecting concurrently variable " << info.getVariableName(a_l.getVariable()) << std::endl;
-                    LPT_INFO("dynamics", buffer.str());
-                    throw std::runtime_error( buffer.str() );
-                }
-                seen.insert( std::make_pair(a_l.getVariable(), a));
-            }
-            // MRJ: decide what to do when we have state constraints
-            if ( do_zcc ) {
-                State s_check( s, A_j );
-                if ( !manager.checkStateConstraints(s_check))  {
-                    LPT_DEBUG("dynamics", "\t Application of event " << *a << " resulted in state violating state constraints!");
-                    break;
-                }
 
+        for ( unsigned k = 0; k < _reaction_stages.size(); k++ ) {
+            bool zc = false;
+            for ( auto entry : _reaction_stages[k] ) {
+                const GroundAction* a = entry.second;
+                if (!manager.checkFormulaHolds(a->getPrecondition(), s_j)) continue;
+                LPT_DEBUG("dynamics", "\t Event " << *a << " fired!");
+                events_fired++;
+                std::vector<Atom> eff_j = manager.computeEffects(s_j, *a);
+                for ( Atom a_l : eff_j ) {
+                    A_j[ a_l.getVariable() ] = a_l;
+                    auto it = seen.find(a_l.getVariable());
+                    if ( it != seen.end() ) {
+                        std::stringstream buffer;
+                        buffer << "Inconsistent semantics, revise model: " << std::endl;
+                        buffer << "WaitAction::apply(): Events " << a->getName() << " and " << it->second->getName() << std::endl;
+                        buffer << "firing simultaneously, affecting concurrently variable " << info.getVariableName(a_l.getVariable()) << std::endl;
+                        LPT_INFO("dynamics", buffer.str());
+                        throw std::runtime_error( buffer.str() );
+                    }
+                    seen.insert( std::make_pair(a_l.getVariable(), a));
+                }
+                // MRJ: decide what to do when we have state constraints
+                if ( do_zcc ) {
+                    State s_check( s, A_j );
+                    if ( !manager.checkStateConstraints(s_check))  {
+                        LPT_DEBUG("dynamics", "\t Application of event " << *a << " resulted in state violating state constraints!");
+                        zc = true;
+                        break;
+                    }
+                }
             }
-
+            if (zc) break;
         }
+
+
         LPT_DEBUG("dynamics", "# Events fired: " << events_fired );
         atoms.assign( A_j.begin(), A_j.end() );
     }
