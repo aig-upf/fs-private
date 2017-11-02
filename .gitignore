@@ -51,6 +51,12 @@ __pycache__/
 # Binaries
 *.bin
 
+# Codeblocks
+*.cbp
+
+# CMake & make files
+Makefile
+
 # Build temporary files
 _build/*
 build/*
