@@ -1,4 +1,5 @@
-#include <constraints/soplex/lp.hxx>
+
+#include <modules/hybrid/lp.hxx>
 #include <languages/fstrips/scopes.hxx>
 #include <languages/fstrips/terms.hxx>
 #include <lapkt/tools/logging.hxx>

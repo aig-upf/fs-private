@@ -52,7 +52,7 @@ if env['use_gecode'] :
 	SConscript('modules/gecode')
 if env['use_soplex'] :
 	Export('env', 'sources')
-	SConscript('modules/soplex')
+	SConscript('modules/soplex/SConscript')
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )

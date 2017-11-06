@@ -1,4 +1,5 @@
-#include <heuristics/novelty/goal_ball_filter.hxx>
+
+#include <modules/hybrid/heuristics/goal_ball_filter.hxx>
 
 #include <problem.hxx>
 #include <state.hxx>

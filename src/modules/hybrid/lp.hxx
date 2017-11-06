@@ -1,3 +1,4 @@
+
 #pragma once
 
 
@@ -9,14 +10,7 @@
 #include <set>
 #include <boost/container/flat_map.hpp>
 
-// Looks like "DEBUG" is something inside soplex..
-#ifdef DEBUG
-#undef DEBUG
-#include <soplex.h>
-#define DEBUG
-#else
-#include <soplex.h>
-#endif
+#include <modules/hybrid/fs_soplex.hxx>
 
 namespace fs0 { namespace spx {
 

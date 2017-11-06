@@ -1,7 +1,7 @@
 #pragma once
 
 #include <heuristics/novelty/features.hxx>
-#include <heuristics/l2_norm.hxx>
+#include <modules/hybrid/heuristics/l2_norm.hxx>
 #include <memory>
 
 namespace fs0 {

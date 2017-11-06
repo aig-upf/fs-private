@@ -4,11 +4,11 @@
 #include <languages/fstrips/scopes.hxx>
 #include <languages/fstrips/operations/basic.hxx>
 
-#include <constraints/soplex/lp.hxx>
+#include <modules/hybrid/lp.hxx>
 
 #include <problem_info.hxx>
 #include <problem.hxx>
-#include <heuristics/l2_norm.hxx>
+#include <modules/hybrid/heuristics/l2_norm.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <utils/archive/json.hxx>
 #include <memory>

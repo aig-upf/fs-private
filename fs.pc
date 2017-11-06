@@ -1,0 +1,11 @@
+
+prefix=/home/gfrances/projects/code/gfrances-fs-private
+exec_prefix=/home/gfrances/projects/code/fs
+includedir=/home/gfrances/projects/code/fs/include
+libdir=${exec_prefix}/lib
+
+Name: fs
+Description: The FS library
+Version: 1.0.0
+Cflags: -Wall -pedantic -std=c++14 -O3 -DNDEBUG -DFS_USES_GECODE -isystem/usr/local/include -isystem/home/gfrances/local/include -I/home/gfrances/projects/code/gfrances-fs-private/src -I/home/gfrances/projects/code/lapkt-installation/include -I/usr/local/include -I/home/gfrances/projects/code -I/home/gfrances/projects/code/gfrances-fs-private/src -I/home/gfrances/projects/code/gfrances-fs-private/include -I${includedir}
+Libs:  -L/home/gfrances/projects/code/gfrances-fs-private/lib -L/home/gfrances/projects/code/lapkt-installation/lib -L/usr/local/lib -L${libdir} -lboost_program_options -lboost_serialization -lboost_system -lboost_timer -lboost_chrono -lrt -lboost_filesystem -lm -lliblapkt-novelty -lliblapkt -lboost_timer -lgecodedriver -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport -lpthread -lfs
