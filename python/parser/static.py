@@ -63,6 +63,8 @@ class Arity0Element(DataElement):
         self.elems = {}
 
     def add(self, elem, value):
+        if len(elem) > 0 :
+            raise RuntimeError("Error: Arity 0 element '{}' has {} arguments: {}".format(self.name, len(elem), elem ))
         assert len(elem) == 0
         self.elems[elem] = value
 
