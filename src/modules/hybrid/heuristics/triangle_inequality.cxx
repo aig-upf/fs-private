@@ -1,4 +1,5 @@
-#include <heuristics/novelty/triangle_inequality.hxx>
+
+#include <modules/hybrid/heuristics/triangle_inequality.hxx>
 #include <problem.hxx>
 
 namespace fs0 {

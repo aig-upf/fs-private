@@ -18,9 +18,9 @@ template <	typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEva
 			template <class N, class S, class NE, class FS> class SimulatorT,
 			template <class S, class A> class SimNodeT>
 std::unique_ptr<SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, SimulatorT, SimNodeT>>
-create(const Config& config, FeatureEvaluatorT&& featureset, SBFWSConfig& conf, const StateModelT& model, BFWSStats& stats) {
+create(FeatureEvaluatorT&& featureset, SBFWSConfig& config, const StateModelT& model, BFWSStats& stats) {
 	using EngineT = SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, SimulatorT, SimNodeT>;
-	return std::unique_ptr<EngineT>(new EngineT(model, std::move(featureset), stats, config, conf));
+	return std::unique_ptr<EngineT>(new EngineT(model, std::move(featureset), stats, config));
 }
 
 template <>
@@ -86,13 +86,11 @@ SBFWSDriver<StateModelT>::do_search1(const StateModelT& model, FeatureEvaluatorT
 	SBFWSConfig bfws_config(config);
 
 	if ( bfws_config.using_feature_set) {
-		auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, MultiValuedIWRun, MultiValuedIWRunNode >(config, std::move(featureset), bfws_config, model, _stats);
-
+		auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, MultiValuedIWRun, MultiValuedIWRunNode>(std::move(featureset), bfws_config, model, _stats);
 		return drivers::Utils::do_search(*engine, model, out_dir, start_time, _stats);
 	}
 
-	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, IWRun, IWRunNode>(config, std::move(featureset), bfws_config, model, _stats);
-
+	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, IWRun, IWRunNode>(std::move(featureset), bfws_config, model, _stats);
 	return drivers::Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 

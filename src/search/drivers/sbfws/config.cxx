@@ -10,7 +10,8 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
 	simulation_width(config.getOption<int>("width.simulation", 1)),
 	mark_negative_propositions(config.getOption<bool>("simulation.neg_prop", false)),
 	complete_simulation(config.getOption<bool>("simulation.complete", true)),
-	using_feature_set(config.getOption<bool>("bfws.using_feature_set", false))
+	using_feature_set(config.getOption<bool>("bfws.using_feature_set", false)),
+	_global_config(config)
 {
 	LPT_INFO("search", "width.search=" << search_width );
 	LPT_INFO("search", "width.simulation=" << simulation_width );

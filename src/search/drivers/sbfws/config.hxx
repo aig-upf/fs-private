@@ -30,6 +30,8 @@ struct SBFWSConfig {
 	//! When to recompute R: only in seed node, or each time number of unachieved goals #g decreases
 	enum class RComputation {Seed, GDecr};
 	RComputation r_computation;
+	
+	const Config& _global_config;
 };
 
 } } // namespaces

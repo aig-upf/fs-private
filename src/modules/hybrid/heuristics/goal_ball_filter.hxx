@@ -2,7 +2,7 @@
 
 #include <fs_types.hxx>
 
-#include <heuristics/l2_norm.hxx>
+#include <modules/hybrid/heuristics/l2_norm.hxx>
 
 #include <map>
 #include <set>

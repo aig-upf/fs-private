@@ -1,4 +1,5 @@
-#include <heuristics/l2_norm.hxx>
+
+#include <modules/hybrid/heuristics/l2_norm.hxx>
 #include <languages/fstrips/language.hxx>
 #include <languages/fstrips/operations/basic.hxx>
 

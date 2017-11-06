@@ -4,7 +4,7 @@
 #include <utils/config.hxx>
 #include <languages/fstrips/language.hxx>
 #include <state.hxx>
-#include <constraints/soplex/lp.hxx>
+#include <modules/hybrid/lp.hxx>
 #include <vector>
 
 namespace fs0 {

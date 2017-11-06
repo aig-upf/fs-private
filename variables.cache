@@ -1,0 +1,3 @@
+use_ompl = False
+use_soplex = False
+default_compiler = 'g++'

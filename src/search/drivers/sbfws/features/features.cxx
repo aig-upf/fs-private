@@ -5,8 +5,6 @@
 #include <problem_info.hxx>
 #include <heuristics/novelty/features.hxx>
 #include <heuristics/novelty/squared_error.hxx>
-#include <heuristics/novelty/triangle_inequality.hxx>
-#include <heuristics/novelty/elliptical_2d.hxx>
 #include <utils/loader.hxx>
 #include <utils/printers/binding.hxx>
 #include <utils/binding_iterator.hxx>
@@ -17,7 +15,8 @@
 #include <problem.hxx>
 #include <actions/actions.hxx>
 #include <heuristics/l0.hxx>
-#include <heuristics/l2_norm.hxx>
+
+#include <modules/hybrid/novelty_features.hxx>
 
 #include <lapkt/tools/logging.hxx>
 
@@ -191,34 +190,8 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 		features.push_back( feature );
 	}
 
-	if (Config::instance().getOption<bool>("features.independent_goal_error", false)) {
-		hybrid::L2Norm norm;
-		for ( auto formula : fs::all_relations( *Problem::getInstance().getGoalConditions())) {
-			SquaredErrorFeature* feature = new SquaredErrorFeature;
-			feature->addCondition(formula);
-			norm.add_condition( formula );
-			features.push_back( feature );
-			LPT_INFO("features", "Added 'independent_goal_error': formula: " << *formula << " phi(s0) = " << feature->error_signal().measure(Problem::getInstance().getInitialState()));
-		}
-		LPT_INFO("features", "L^2 norm(s0,sG) =  " << norm.measure(Problem::getInstance().getInitialState()));
-	}
-
-	if ( Config::instance().getOption<bool>("features.triangle_inequality_goal", false)) {
-		hybrid::L2Norm norm;
-		TriangleInequality* feature = new TriangleInequality;
-		for ( auto formula : fs::all_relations( *Problem::getInstance().getGoalConditions())) {
-			feature->addCondition(formula);
-			norm.add_condition(formula);
-		}
-		LPT_INFO("features", "Added 'triangle_inequality_goal': phi(s0) = " << feature->norm().measure(Problem::getInstance().getInitialState()));
-		LPT_INFO("features", "L^2 norm(s0,sG) =  " << norm.measure(Problem::getInstance().getInitialState()));
-		features.push_back( feature );
-	}
-
-	if ( Config::instance().getOption<bool>("features.elliptical_2d", false)) {
-		EllipticalMapping2D::make_goal_relative_features( features );
-        EllipticalMapping2D::print_to_JSON( "elliptical_2d.features.json", features );
-	}
+	
+	fs0::HybridNoveltyFeaturesWrapper::register_features(features);
 
 	try {
 		auto data = Loader::loadJSONObject(info.getDataDir() + "/extra.json");
