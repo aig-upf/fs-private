@@ -6,7 +6,7 @@ Import('env', 'sources')
 if sources is not None :
     sources += util.build.locate_source_files('../src', '*.cxx')
 
-fs_include_paths = [os.path.join(env['fs'], 'src') ]
+fs_include_paths = [os.path.join(env['fs'], 'src'), os.path.join(env['fs'], 'src/lib') ]
 
 env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ])  # Flags common to all options
 
