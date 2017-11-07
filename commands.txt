@@ -71,3 +71,5 @@ G0 Parameters:
 R[1] Parameters:
 
 --driver sbfws --options bfws.rs=sim,width.force_generic_evaluator=true,dt=10.0,integrator=explicit_euler,features.project_away_time=true,features.project_away_numeric=false,evaluator_t=generic,bfws.using_feature_set=true,horizon=100
+
+./run.py --hybrid -i ~/Sandboxes/mpc-planning-experiments/benchmarks/automated_guided_vehicle/test.pddl --driver sbfws --options bfws.rs=sim,width.force_generic_evaluator=true,dt=1.0,integrator=explicit_euler,features.project_away_time=true,features.project_away_numeric=false,evaluator_t=generic,bfws.using_feature_set=true,horizon=100 --debug
