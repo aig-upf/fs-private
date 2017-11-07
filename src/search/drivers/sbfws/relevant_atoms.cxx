@@ -71,7 +71,7 @@ SimulationBasedRelevantAtomsCounter<ModelT, NodeT, SimulationT, NoveltyEvaluator
 
 
 
-#ifdef FS_USE_SOPLEX
+#ifdef FS_HYBRID
 
 template <typename NodeT>
 L2NormRelevantAtomsCounter<NodeT>::L2NormRelevantAtomsCounter(const Problem& problem) :

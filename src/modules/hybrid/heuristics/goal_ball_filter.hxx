@@ -3,7 +3,7 @@
 #include <fs_types.hxx>
 #include "../base.hxx"
 
-#ifdef FS_USE_SOPLEX
+#ifdef FS_HYBRID
 #include <modules/hybrid/heuristics/l2_norm.hxx>
 #endif
 

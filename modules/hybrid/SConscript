@@ -2,7 +2,7 @@
 import os
 Import('env', 'sources')
 
-env.Append(CCFLAGS=['-DFS_USE_SOPLEX'])
+env.Append(CCFLAGS=['-DFS_HYBRID'])
 
 env.Append(LIBS = ['soplex', 'gmp',	'z', 'pthread'])
 

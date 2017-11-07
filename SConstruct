@@ -1,5 +1,4 @@
 
-import fnmatch
 import os
 from util.build import *
 
@@ -7,12 +6,16 @@ from util.build import *
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
 vars.Add(BoolVariable('debug', 'Debug build', 'no'))
 vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
-vars.Add(BoolVariable('use_ompl', 'Include OMPL driver support in library', 'yes'))
-vars.Add(BoolVariable('use_gecode', 'Include Gecode solver dependencies', 'yes'))
-vars.Add(BoolVariable('use_soplex', 'Include Soplex LP solver adapter and dependencies', 'yes'))
+
+# Planner modules:
+vars.Add(BoolVariable('ompl_support', 'Include OMPL driver support in library', 'yes'))
+vars.Add(BoolVariable('gecode_support', 'Include Gecode solver dependencies', 'yes'))
+vars.Add(BoolVariable('hybrid_support', 'Include Soplex LP solver adapter and dependencies', 'yes'))
+
 vars.Add(EnumVariable('default_compiler', 'Preferred compiler', 'clang++', allowed_values=('g++', 'clang++')))
 vars.Add(PathVariable('fs', 'Path to FS sources', os.getcwd(), PathVariable.PathIsDir))
 vars.Add(PathVariable('prefix', 'Path where the FS library is to be installed', os.getenv('FS_PATH',''), PathVariable.PathIsDir))
+
 # The LAPKT path can be optionally specified, otherwise we fetch it from the corresponding environment variable.
 vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.getenv('LAPKT', ''), PathVariable.PathIsDir))
 
@@ -33,37 +36,48 @@ vars.Save('variables.cache', env)
 # Base include directories
 include_paths = ['src', 'include']
 isystem_paths = []
-# Gecode tweaks
-isystem_paths += ['/usr/local/include'] # MRJ: This probably should be acquired from an environment variable
-# include local by default
-isystem_paths += [os.environ['HOME'] + '/local/include']
+
+# Possible modules
+# Compilation flag, module name, use-by-default?
+modules = [
+    ("core",           "core"),
+    ("lapkt2",         "lapkt2"),
+    ("gecode_support", "gecode"),
+    ("hybrid_support", "hybrid"),
+    ("ompl_support",   "ompl")
+]
+
+
+# include local by default # MRJ: This probably should be acquired from an environment variable
+isystem_paths += ['/usr/local/include', os.environ['HOME'] + '/local/include']
+
 
 # Process modules and external dependencies
 sources = []
-lib_name = SConscript('modules/core', exports="env sources")   #, variant_dir=build_dirname, src_dir='.', duplicate = 0)
+# SConscript('modules/core/SConscript', exports="env sources")   #, variant_dir=build_dirname, src_dir='.', duplicate = 0)
 
-SConscript('modules/lapkt2', exports="env sources")
-if env['use_ompl'] :
-	SConscript('modules/ompl', exports="env sources")
-if env['use_gecode'] :
-	SConscript('modules/gecode', exports="env sources")
-if env['use_soplex'] :
-	SConscript('modules/soplex/SConscript', exports="env sources")
+for flag, modname in modules:
+    if flag not in env or env[flag]:  # Import module if not explicitly disallowed
+        print("Importing module: \"{}\"".format(modname))
+        SConscript('modules/{}/SConscript'.format(modname), exports="env sources")
+    else:
+        print("Skipping module \"{}\"".format(modname))
+
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
 
 # Determine all the build files
 build_files = [os.path.join(build_dirname, src) for src in sources]
-shared_lib = env.SharedLibrary('lib/' + lib_name, build_files)
-#static_lib = env.Library('lib/' + lib_name, build_files)
+shared_lib = env.SharedLibrary('lib/' + env['fs_libname'], build_files)
+#static_lib = env.Library('lib/' + env['fs_libname'], build_files)
 
 if env['debug'] :
-	save_pkg_config_descriptor(env, lib_name, 'fs-debug.pc' )
+	save_pkg_config_descriptor(env, env['fs_libname'], 'fs-debug.pc' )
 elif env['edebug'] :
-	save_pkg_config_descriptor(env, lib_name, 'fs-edebug.pc' )
+	save_pkg_config_descriptor(env, env['fs_libname'], 'fs-edebug.pc' )
 else :
-	save_pkg_config_descriptor(env, lib_name, 'fs.pc' )
+	save_pkg_config_descriptor(env, env['fs_libname'], 'fs.pc' )
 
 Default([shared_lib])
 #Default([static_lib, shared_lib])

@@ -3,9 +3,9 @@ import os
 debug = False
 edebug = False
 
-use_ompl = True
-use_gecode = True
-use_soplex = True
+ompl_support = True
+gecode_support = True
+hybrid_support = True
 
 lapkt = os.getenv('LAPKT', '')
 

@@ -3,7 +3,7 @@
 
 #include <utils/config.hxx>
 
-#ifdef FS_USE_SOPLEX
+#ifdef FS_HYBRID
 	#include <modules/hybrid/heuristics/l2_norm.hxx>
 	#include <modules/hybrid/heuristics/elliptical_2d.hxx>
 #endif
@@ -16,7 +16,7 @@ public:
 	template <typename FeatureT>
 	static void register_features(std::vector<FeatureT*>& features) {
 		if (Config::instance().getOption<bool>("features.elliptical_2d", false)) {
-#ifdef FS_USE_SOPLEX
+#ifdef FS_HYBRID
 			EllipticalMapping2D::make_goal_relative_features(features);
 			EllipticalMapping2D::print_to_JSON("elliptical_2d.features.json", features);			
 #else
@@ -26,7 +26,7 @@ public:
 		
 		
 		if (Config::instance().getOption<bool>("features.independent_goal_error", false)) {
-#ifdef FS_USE_SOPLEX			
+#ifdef FS_HYBRID
 			hybrid::L2Norm norm;
 			for ( auto formula : fs::all_relations( *Problem::getInstance().getGoalConditions())) {
 				SquaredErrorFeature* feature = new SquaredErrorFeature;
@@ -43,7 +43,7 @@ public:
 		}
 
 		if ( Config::instance().getOption<bool>("features.triangle_inequality_goal", false)) {
-#ifdef FS_USE_SOPLEX			
+#ifdef FS_HYBRID
 			hybrid::L2Norm norm;
 			TriangleInequality* feature = new TriangleInequality;
 			for ( auto formula : fs::all_relations( *Problem::getInstance().getGoalConditions())) {

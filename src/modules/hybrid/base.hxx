@@ -12,7 +12,7 @@
 
 
 //!
-#ifdef FS_USE_SOPLEX
+#ifdef FS_HYBRID
 
     #define FS_LP_METHOD(X) X;
     #define FS_LP_ATTRIB(X) X;
