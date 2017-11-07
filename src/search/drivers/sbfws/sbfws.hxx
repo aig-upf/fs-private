@@ -7,7 +7,7 @@
 #include <search/drivers/sbfws/base.hxx>
 #include <heuristics/unsat_goal_atoms.hxx>
 #include <heuristics/l0.hxx>
-#include <modules/hybrid/heuristics/l2_norm.hxx>
+//#include <modules/hybrid/heuristics/l2_norm.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
@@ -189,7 +189,6 @@ protected:
 	const FeatureSetT& _featureset;
 
 	const NoveltyFactory<FeatureValueT> _search_novelty_factory;
-	const NoveltyFactory<FeatureValueT> _sim_novelty_factory;
 
 	//! The novelty evaluators for the different #g values.
 	//! The i-th position of the vector will actually contain the evaluator for novelty i+1
@@ -218,16 +217,15 @@ public:
 		_problem(model.getTask()),
 		_featureset(features),
 		_search_novelty_factory(_problem, config.evaluator_t, _featureset.uses_extra_features(), config.search_width),
-		_sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
 		_wg_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_wgr_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
 		_unsat_goal_atoms_heuristic(_problem),
-		_r_counter(RelevantAtomsCounterFactory::build<NodeT, SimulationT>(config)),
 		_mark_negative_propositions(config.mark_negative_propositions),
-		_stats(stats),
-		_sbfwsconfig(config)
-	{
-	}
+        _stats(stats),
+        _sbfwsconfig(config),
+        _r_counter(RelevantAtomsCounterFactory::build<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model, config))
+    {
+    }
 
 	~SBFWSHeuristic() {
 		for (auto& elem:_wg_novelty_evaluators) for (auto& p:elem) delete p.second;
@@ -257,7 +255,7 @@ public:
 	}
 
 	unsigned get_hash_r(NodeT& node) {
-		return _r_counter->count(node);
+		return _r_counter->count(node, _stats);
 	}
 
 	unsigned compute_node_complex_type(NodeT& node) {

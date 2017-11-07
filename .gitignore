@@ -64,3 +64,6 @@ experiments/*
 workspace/*
 generated/*
 preprocessor/generated/*
+
+#
+*.pc

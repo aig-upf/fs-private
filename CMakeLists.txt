@@ -177,6 +177,8 @@ set(SOURCE_FILES
         src/search/drivers/sbfws/iw_run.cxx
         src/search/drivers/sbfws/iw_run.hxx
         src/search/drivers/sbfws/relevant_atomset.hxx
+        src/search/drivers/sbfws/relevant_atoms.hxx
+        src/search/drivers/sbfws/relevant_atoms.cxx
         src/search/drivers/sbfws/sbfws.cxx
         src/search/drivers/sbfws/sbfws.hxx
         src/search/drivers/sbfws/stats.cxx
@@ -279,8 +281,8 @@ add_library(fs SHARED ${SOURCE_FILES})
 
 set(FS_SRC ./src)
 
-MESSAGE(WARNING  "Your LAPKT directory is $ENV{LAPKT}/include." )
-MESSAGE(WARNING "Your Unix home directory is $ENV{HOME}." )
+#MESSAGE(WARNING  "Your LAPKT directory is $ENV{LAPKT}/include." )
+#MESSAGE(WARNING "Your Unix home directory is $ENV{HOME}." )
 
 include_directories($ENV{LAPKT}/include)
 

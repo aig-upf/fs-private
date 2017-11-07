@@ -3,8 +3,7 @@ import util.build
 Import('env', 'sources')
 
 # Note paths are relative to SConscript file directory
-if sources is not None :
-    sources += util.build.locate_source_files('../src', '*.cxx')
+sources += [s for s in util.build.locate_source_files('../src', '*.cxx') if "src/modules" not in s]
 
 fs_include_paths = [os.path.join(env['fs'], 'src') ]
 

@@ -19,7 +19,7 @@
 #include <lapkt/tools/resources_control.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <heuristics/novelty/features.hxx>
-#include <heuristics/novelty/goal_ball_filter.hxx>
+#include <modules/hybrid/heuristics/goal_ball_filter.hxx>
 
 // For writing the R sets
 #include <utils/archive/json.hxx>

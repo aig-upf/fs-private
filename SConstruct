@@ -40,19 +40,15 @@ isystem_paths += [os.environ['HOME'] + '/local/include']
 
 # Process modules and external dependencies
 sources = []
-Export('env', 'sources')
-lib_name = SConscript('modules/core')#, variant_dir=build_dirname, src_dir='.', duplicate = 0)
-Export('env', 'sources')
-SConscript('modules/lapkt2')
+lib_name = SConscript('modules/core', exports="env sources")   #, variant_dir=build_dirname, src_dir='.', duplicate = 0)
+
+SConscript('modules/lapkt2', exports="env sources")
 if env['use_ompl'] :
-	Export('env', 'sources')
-	SConscript('modules/ompl')
+	SConscript('modules/ompl', exports="env sources")
 if env['use_gecode'] :
-	Export('env', 'sources')
-	SConscript('modules/gecode')
+	SConscript('modules/gecode', exports="env sources")
 if env['use_soplex'] :
-	Export('env', 'sources')
-	SConscript('modules/soplex/SConscript')
+	SConscript('modules/soplex/SConscript', exports="env sources")
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )

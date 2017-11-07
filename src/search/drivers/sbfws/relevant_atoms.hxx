@@ -1,6 +1,7 @@
 
 #pragma once
 #include "iw_run.hxx"
+#include <modules/hybrid/base.hxx>
 
 
 namespace fs0 { class Problem; class L0Heuristic; }
@@ -32,12 +33,13 @@ public:
 template <typename NodeT>
 class L2NormRelevantAtomsCounter : public RelevantAtomsCounterI<NodeT> {
 public:
-	L2NormRelevantAtomsCounter(const Problem& problem);
+    FS_LP_METHOD(L2NormRelevantAtomsCounter(const Problem& problem))
 	~L2NormRelevantAtomsCounter();
-	unsigned count(NodeT& node, BFWSStats& stats) const override;
+
+	FS_LP_METHOD(unsigned count(NodeT& node, BFWSStats& stats) const override)
 	
 protected:
-	hybrid::L2Norm*	_l2_norm;
+	FS_LP_ATTRIB(hybrid::L2Norm* _l2_norm)
 };
 
 
@@ -55,12 +57,12 @@ protected:
 
 
 //!
-template <typename NodeT, typename SimulationT, typename NoveltyEvaluatorT>
+template <typename ModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
 class SimulationBasedRelevantAtomsCounter : public RelevantAtomsCounterI<NodeT> {
 public:
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 	
-	SimulationBasedRelevantAtomsCounter(const SBFWSConfig& config, const Problem& problem);
+	SimulationBasedRelevantAtomsCounter(const ModelT& model, const SBFWSConfig& config, const FeatureSetT& features);
 	~SimulationBasedRelevantAtomsCounter();
 
 	
@@ -136,8 +138,10 @@ public:
 	}
 	
 protected:
+    const ModelT& _model;
+
 	const Problem& _problem;
-	
+
 	const SBFWSConfig& _config;
 	
 	const IWRunConfig _simconfig;
@@ -154,8 +158,8 @@ protected:
 //! 
 class RelevantAtomsCounterFactory {
 public:
-	template <typename NodeT, typename SimulationT>
-	static RelevantAtomsCounterI<NodeT>* build(const SBFWSConfig& config, const Problem& problem);
+    template <typename StateModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
+    static RelevantAtomsCounterI<NodeT>* build(const StateModelT& model, const SBFWSConfig& config);
 };
 
 
