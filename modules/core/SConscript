@@ -5,8 +5,7 @@ Import('env', 'sources')
 
 # Paths are relative to SConscript file directory
 # Temporary HACK: Ignore files under src/modules directory
-sources += [s for s in util.build.locate_source_files('../src', '*.cxx') if "src/modules" not in s]
-
+sources += [s for s in util.build.locate_source_files('../../src', '*.cxx') if "src/modules" not in s]
 fs_include_paths = [os.path.join(env['fs'], 'src') ]
 
 env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ])  # Flags common to all options

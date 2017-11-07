@@ -51,11 +51,11 @@ modules = [
 # include local by default # MRJ: This probably should be acquired from an environment variable
 isystem_paths += ['/usr/local/include', os.environ['HOME'] + '/local/include']
 
+# SConscript('modules/core/SConscript', exports="env sources")   #, variant_dir=build_dirname, src_dir='.', duplicate = 0)
+
 
 # Process modules and external dependencies
 sources = []
-# SConscript('modules/core/SConscript', exports="env sources")   #, variant_dir=build_dirname, src_dir='.', duplicate = 0)
-
 for flag, modname in modules:
     if flag not in env or env[flag]:  # Import module if not explicitly disallowed
         print("Importing module: \"{}\"".format(modname))
