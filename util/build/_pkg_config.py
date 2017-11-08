@@ -19,8 +19,7 @@ def save_pkg_config_descriptor( env, fs_libname, filename ) :
 
     with open( filename, 'w' ) as outstream :
         mapping = {}
-        # MRJ: @TODO figure out if there's a way to retrieve the "translated" Flags
-        # out of the Scons environment
+        # MRJ: @TODO figure out if there's a way to retrieve the "translated" Flags out of the Scons environment
         mapping['prefix'] = env['prefix']
         mapping['exec_prefix'] = '${exec_prefix}'
         mapping['includedir'] = '${includedir}'

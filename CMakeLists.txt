@@ -173,9 +173,12 @@ set(SOURCE_FILES
         src/search/drivers/sbfws/base.hxx
         src/search/drivers/sbfws/config.cxx
         src/search/drivers/sbfws/config.hxx
-        src/search/drivers/sbfws/idw_run.hxx
+        src/search/drivers/sbfws/iw_run_config.hxx
+        src/search/drivers/sbfws/iw_run_config.cxx
         src/search/drivers/sbfws/iw_run.cxx
         src/search/drivers/sbfws/iw_run.hxx
+        src/search/drivers/sbfws/mv_iw_run.cxx
+        src/search/drivers/sbfws/mv_iw_run.hxx
         src/search/drivers/sbfws/relevant_atomset.hxx
         src/search/drivers/sbfws/relevant_atoms.hxx
         src/search/drivers/sbfws/relevant_atoms.cxx

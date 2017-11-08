@@ -223,7 +223,7 @@ public:
 		_mark_negative_propositions(config.mark_negative_propositions),
         _stats(stats),
         _sbfwsconfig(config),
-        _r_counter(RelevantAtomsCounterFactory::build<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model, config))
+        _r_counter(RelevantAtomsCounterFactory::build<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model, config, features))
     {
     }
 

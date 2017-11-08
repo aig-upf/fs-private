@@ -9,6 +9,7 @@
 
 #include <problem.hxx>
 #include "base.hxx"
+#include "iw_run_config.hxx"
 #include "stats.hxx"
 #include <search/drivers/sbfws/relevant_atomset.hxx>
 #include <utils/printers/vector.hxx>
@@ -157,44 +158,6 @@ public:
 
 };
 
-
-struct IWRunConfig {
-	//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
-	bool _complete;
-
-	//! Whether to take into account negative propositions or not
-	bool _mark_negative;
-
-	//! The maximum levels of novelty to be considered
-	unsigned _max_width;
-
-	//! Whether to extract goal-informed relevant sets R
-	bool _goal_directed;
-
-	//!
-	bool _force_adaptive_run;
-
-	//!
-	bool _force_R_all;
-
-	//!
-	bool _r_g_prime;
-
-	//!
-	unsigned _gr_actions_cutoff;
-
-	IWRunConfig(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config) :
-		_complete(complete),
-		_mark_negative(mark_negative),
-		_max_width(max_width),
-		_goal_directed(global_config.getOption<bool>("goal_directed", false)),
-		_force_adaptive_run(global_config.getOption<bool>("sim.hybrid", false)),
-		_force_R_all(global_config.getOption<bool>("sim.r_all", false)),
-		_r_g_prime(global_config.getOption<bool>("sim.r_g_prime", false)),
-		_gr_actions_cutoff(global_config.getOption<unsigned>("sim.act_cutoff", std::numeric_limits<unsigned>::max()))
-	{}
-};
-	
 //! A single IW run (with parametrized max. width) that runs until (independent)
 //! satisfaction of each of the provided goal atoms, and computes the set
 //! of atoms R that is relevant for the achievement of at least one atom.

@@ -8,6 +8,7 @@
 
 #include <problem.hxx>
 #include "base.hxx"
+#include "iw_run_config.hxx"
 #include "stats.hxx"
 #include <search/drivers/sbfws/relevant_atomset.hxx>
 #include <utils/printers/vector.hxx>
@@ -179,65 +180,13 @@ public:
 
 	using OpenListT = lapkt::SimpleQueue<NodeT>;
 
-	struct Config {
-		//! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
-		bool _complete;
-
-		//! The maximum levels of novelty to be considered
-		unsigned _max_width;
-
-		//!
-		const fs0::Config& _global_config;
-
-		//! Whether to extract goal-informed relevant sets R
-		bool _goal_directed;
-
-		//!
-		bool _force_adaptive_run;
-
-		//!
-		bool _force_R_all;
-
-		//!
-		bool _r_g_prime;
-
-		//!
-		unsigned _gr_actions_cutoff;
-
-		//! Enforce state constraints
-		bool _enforce_state_constraints;
-
-		//! Load R set from file
-		std::string _R_file;
-
-		//! Goal Ball filtering
-		bool _filter_R_set;
-
-		//! Log search
-		bool _log_search;
-
-		Config(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config) :
-			_complete(complete),
-			_max_width(max_width),
-			_global_config(global_config),
-			_goal_directed(global_config.getOption<bool>("sim.goal_directed", false)),
-			_force_adaptive_run(global_config.getOption<bool>("sim.hybrid", false)),
-			_force_R_all(global_config.getOption<bool>("sim.r_all", false)),
-			_r_g_prime(global_config.getOption<bool>("sim.r_g_prime", false)),
-			_gr_actions_cutoff(global_config.getOption<unsigned>("sim.act_cutoff", std::numeric_limits<unsigned>::max())),
-			_enforce_state_constraints(global_config.getOption<bool>("sim.enforce_state_constraints", false)),
-			_R_file(global_config.getOption<std::string>("sim.from_file", "")),
-			_filter_R_set(global_config.getOption<bool>("sim.filter", false)),
-			_log_search(global_config.getOption<bool>("sim.log", false))
-		{}
-	};
 
 protected:
 	//! The search model
 	const StateModel& _model;
 
 	//! The simulation configuration
-	Config _config;
+	IWRunConfig _config;
 
 	//!
 	std::vector<NodePT> _optimal_paths;
@@ -271,7 +220,7 @@ protected:
 public:
 
 	//! Constructor
-	MultiValuedIWRun(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const MultiValuedIWRun::Config& config, BFWSStats& stats, bool verbose) :
+	MultiValuedIWRun(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const IWRunConfig& config, BFWSStats& stats, bool verbose) :
 		_model(model),
 		_config(config),
 		_optimal_paths(model.num_subgoals()),

@@ -25,7 +25,7 @@ public:
 template <typename NodeT>
 class NullRelevantAtomsCounter : public RelevantAtomsCounterI<NodeT> {
 public:
-	unsigned count(NodeT& node, BFWSStats& stats) const override { return 0; } 
+	unsigned count(NodeT& node, BFWSStats& stats) const override { return 0; }
 };
 
 
@@ -62,8 +62,15 @@ class SimulationBasedRelevantAtomsCounter : public RelevantAtomsCounterI<NodeT> 
 public:
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 	
-	SimulationBasedRelevantAtomsCounter(const ModelT& model, const SBFWSConfig& config, const FeatureSetT& features);
-	~SimulationBasedRelevantAtomsCounter();
+	SimulationBasedRelevantAtomsCounter(const ModelT& model, const SBFWSConfig& config, const FeatureSetT& features)  :
+			_model(model),
+			_problem(model.getTask()),
+			_config(config),
+			_simconfig(config.complete_simulation, config.mark_negative_propositions, config.simulation_width, config._global_config),
+			_sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
+			_featureset(features)
+	{}
+	~SimulationBasedRelevantAtomsCounter() {};
 
 	
 	unsigned count(NodeT& node, BFWSStats& stats) const override { 
@@ -76,7 +83,7 @@ public:
 	//! the counter #r(node) can be obtained. This implements a lazy version which
 	//! can recursively compute the parent RelevantAtomSet.
 	//! Additionally, this caches the set within the node for future reference.
-	const RelevantAtomSet& compute_R(NodeT& node, BFWSStats& stats) {
+	const RelevantAtomSet& compute_R(NodeT& node, BFWSStats& stats) const {
 
 		// If the R(s) has been previously computed and is cached, we return it straight away
 		if (node._relevant_atoms != nullptr) return *node._relevant_atoms;
@@ -111,7 +118,7 @@ public:
 
 		else {
 			// Copy the set R from the parent and update the set of relevant nodes with those that have been reached.
-			node._relevant_atoms = new RelevantAtomSet(compute_R(*node.parent)); // This might trigger a recursive computation
+			node._relevant_atoms = new RelevantAtomSet(compute_R(*node.parent, stats)); // This might trigger a recursive computation
 
 			if (node.decreases_unachieved_subgoals()) {
 				//! MRJ:
@@ -159,7 +166,24 @@ protected:
 class RelevantAtomsCounterFactory {
 public:
     template <typename StateModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
-    static RelevantAtomsCounterI<NodeT>* build(const StateModelT& model, const SBFWSConfig& config);
+    static RelevantAtomsCounterI<NodeT>* build(const StateModelT& model, const SBFWSConfig& config, const FeatureSetT& features)
+	{
+
+		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
+			return new NullRelevantAtomsCounter<NodeT>();
+		}
+
+		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::L0) {
+			return new L0RelevantAtomsCounter<NodeT>(model.getTask());
+		}
+
+		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::G0) {
+			return new L2NormRelevantAtomsCounter<NodeT>(model.getTask());
+		}
+
+
+		return new SimulationBasedRelevantAtomsCounter<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model, config, features);
+	}
 };
 
 

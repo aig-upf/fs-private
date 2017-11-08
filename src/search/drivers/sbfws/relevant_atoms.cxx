@@ -1,31 +1,28 @@
 
 #include "relevant_atoms.hxx"
-#include "config.hxx"
-
-#include <heuristics/l0.hxx>
-#include <modules/hybrid/hybrid.hxx>
+#include "sbfws.hxx"
 
 
 namespace fs0 { namespace bfws {
 
-template <typename StateModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
-RelevantAtomsCounterI<NodeT>* RelevantAtomsCounterFactory::build(const StateModelT& model, const SBFWSConfig& config) {
-	
-	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
-		return new NullRelevantAtomsCounter<NodeT>(model.getTask());
-	}
-	
-	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::L0) {
-		return new L0RelevantAtomsCounter<NodeT>(model.getTask());
-	}
-	
-	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::G0) {
-		return new L2NormRelevantAtomsCounter<NodeT>(model.getTask());
-	}
-	
-	
-	return new SimulationBasedRelevantAtomsCounter<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model);
-}
+//template <typename StateModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
+//RelevantAtomsCounterI<NodeT>* RelevantAtomsCounterFactory::build(const StateModelT& model, const SBFWSConfig& config) {
+//
+//	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
+//		return new NullRelevantAtomsCounter<NodeT>(model.getTask());
+//	}
+//
+//	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::L0) {
+//		return new L0RelevantAtomsCounter<NodeT>(model.getTask());
+//	}
+//
+//	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::G0) {
+//		return new L2NormRelevantAtomsCounter<NodeT>(model.getTask());
+//	}
+//
+//
+//	return new SimulationBasedRelevantAtomsCounter<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model);
+//}
 
 
 /****** L0-BASED #R COUNTER *****/
@@ -50,23 +47,23 @@ L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 
 
 
-/****** IW-SIMULATION-BASED #R COUNTER *****/
-template <typename ModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
-SimulationBasedRelevantAtomsCounter<ModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>::
-SimulationBasedRelevantAtomsCounter(const ModelT& model, const SBFWSConfig& config, const FeatureSetT& features) :
-    _model(model),
-	_problem(model.getTask()),
-	_config(config),
-	_simconfig(config.complete_simulation, config.mark_negative_propositions, config.simulation_width, config._global_config),
-    _sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
-    _featureset(features)
-{
-}
-
-template <typename ModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
-SimulationBasedRelevantAtomsCounter<ModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>::
-~SimulationBasedRelevantAtomsCounter() {}
-
+///****** IW-SIMULATION-BASED #R COUNTER *****/
+//template <typename ModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
+//SimulationBasedRelevantAtomsCounter<ModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>::
+//SimulationBasedRelevantAtomsCounter(const ModelT& model, const SBFWSConfig& config, const FeatureSetT& features) :
+//    _model(model),
+//	_problem(model.getTask()),
+//	_config(config),
+//	_simconfig(config.complete_simulation, config.mark_negative_propositions, config.simulation_width, config._global_config),
+//    _sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
+//    _featureset(features)
+//{
+//}
+//
+//template <typename ModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
+//SimulationBasedRelevantAtomsCounter<ModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>::
+//~SimulationBasedRelevantAtomsCounter() {}
+//
 
 
 
@@ -106,5 +103,11 @@ template <typename NodeT>
 
 #endif
 
+
+// explicit template instantiation
+template class L0RelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::GroundAction>>;
+template class L0RelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::LiftedActionID>>;
+template class L2NormRelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::GroundAction>>;
+template class L2NormRelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::LiftedActionID>>;
 
 } } // namespaces

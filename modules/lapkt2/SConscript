@@ -1,9 +1,7 @@
 import os
 Import('env')
 
-lapkt2_header_dir = os.path.join(env['lapkt'], 'include')
-
-include_paths = [ lapkt2_header_dir ]
+include_paths = [os.path.join(env['lapkt'], 'include')]
 
 
 if env['edebug']:

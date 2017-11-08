@@ -34,7 +34,7 @@ Help(vars.GenerateHelpText(env))
 vars.Save('variables.cache', env)
 
 # Base include directories
-include_paths = ['src', 'include']
+include_paths = ['src']
 isystem_paths = []
 
 # Possible modules
@@ -67,17 +67,14 @@ for flag, modname in modules:
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
 
+
 # Determine all the build files
 build_files = [os.path.join(build_dirname, src) for src in sources]
 shared_lib = env.SharedLibrary('lib/' + env['fs_libname'], build_files)
 #static_lib = env.Library('lib/' + env['fs_libname'], build_files)
 
-if env['debug'] :
-	save_pkg_config_descriptor(env, env['fs_libname'], 'fs-debug.pc' )
-elif env['edebug'] :
-	save_pkg_config_descriptor(env, env['fs_libname'], 'fs-edebug.pc' )
-else :
-	save_pkg_config_descriptor(env, env['fs_libname'], 'fs.pc' )
+# Save a description of the compilation and linking options to be used when linking the final solver
+save_pkg_config_descriptor(env, env['fs_libname'], '{}.pc'.format(env['fs_libname']))
 
 Default([shared_lib])
 #Default([static_lib, shared_lib])
