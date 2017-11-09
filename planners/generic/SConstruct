@@ -3,8 +3,6 @@
 
 import os, sys
 sys.path.append('../..')
-print(sys.path)
-from util.build import which
 
 HOME = os.path.expanduser("~")
 

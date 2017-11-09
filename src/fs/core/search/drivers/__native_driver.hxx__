@@ -1,0 +1,47 @@
+
+#pragma once
+
+#include <fs/core/search/drivers/registry.hxx>
+#include <fs/core/search/nodes/heuristic_search_node.hxx>
+#include <lapkt/tools/events.hxx>
+#include <lapkt/algorithms/best_first_search.hxx>
+#include <fs/core/utils/config.hxx>
+#include <fs/core/heuristics/relaxed_plan/direct_crpg.hxx>
+#include <fs/core/models/ground_state_model.hxx>
+
+namespace fs0 { class GroundStateModel; class Problem; class SearchStats; }
+
+namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs = fs0::language::fstrips;
+
+namespace fs0 { namespace drivers {
+
+//! An engine creator for the Greedy Best-First Search drivers coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
+template <typename StateModelT>
+class NativeDriver : public Driver {
+public:
+	using ActionT = typename StateModelT::ActionType;
+	using NodeT = HeuristicSearchNode<State, ActionT>;
+	using HeuristicT = DirectCRPG;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, StateModelT>;
+	using EnginePT = std::unique_ptr<EngineT>;
+	
+	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+
+	EnginePT create(const Config& config, const StateModelT& problem, SearchStats& stats);
+	
+	StateModelT setup(Problem& problem) const;
+	
+	static bool check_supported(const Problem& problem);
+protected:
+	
+	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
+	
+	std::unique_ptr<HeuristicT> _heuristic;
+};
+
+// explicit instantiations
+template class NativeDriver<GroundStateModel>;
+// template class NativeDriver<LiftedStateModel>;
+
+} } // namespaces

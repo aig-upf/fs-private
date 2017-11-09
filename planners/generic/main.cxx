@@ -1,7 +1,7 @@
 
-#include <search/options.hxx>
-#include <search/runner.hxx>
-#include <utils/system.hxx>
+#include <fs/core/search/options.hxx>
+#include <fs/core/search/runner.hxx>
+#include <fs/core/utils/system.hxx>
 
 // This include will dinamically point to the adequate per-instance automatically generated file
 #include <components.hxx>  

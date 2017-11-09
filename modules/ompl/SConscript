@@ -1,6 +1,0 @@
-import os
-Import('env')
-
-env.Append(CCFLAGS=['-DFS_USES_OMPL'])
-# MRJ: Requires OMPL
-env.ParseConfig( 'pkg-config --cflags --libs ompl')

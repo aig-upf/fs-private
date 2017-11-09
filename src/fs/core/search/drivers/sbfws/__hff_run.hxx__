@@ -1,0 +1,78 @@
+
+#pragma once
+
+#include <iomanip>
+#include <vector>
+
+#include <interfaces/agnostic/types.hxx>
+#include <interfaces/ff-wrapped/ff_to_aptk.hxx>
+#include <interfaces/agnostic/strips_prob.hxx>
+#include <interfaces/agnostic/fwd_search_prob.hxx>
+#include <interfaces/agnostic/h_1.hxx>
+#include <interfaces/agnostic/action.hxx>
+#include <interfaces/agnostic/cond_eff.hxx>
+
+#include "rp_heuristic_bfws.hxx"
+#include <fs/core/state.hxx>
+
+#include <fs/core/languages/fstrips/formulae.hxx>
+#include <fs/core/languages/fstrips/effects.hxx>
+
+
+#include <lapkt/tools/logging.hxx>
+#include <fs/core/search/drivers/sbfws/relevant_atomset.hxx>
+#include <fs/core/atom.hxx>
+#include <map>
+
+namespace fs = fs0::language::fstrips;
+namespace fs0 { namespace bfws {
+
+using aptk::STRIPS_Problem;
+using aptk::agnostic::Fwd_Search_Problem;
+using aptk::agnostic::H1_Heuristic;
+using aptk::agnostic::H_Add_Evaluation_Function;
+using aptk::agnostic::Relaxed_Plan_Heuristic;
+
+
+
+class HFFRun {
+public:
+	typedef typename Fwd_Search_Problem::State_Type State;
+	using H_Add_Fwd = H1_Heuristic<Fwd_Search_Problem, H_Add_Evaluation_Function>;
+	using H_Add_Rp_Fwd = Relaxed_Plan_Heuristic< Fwd_Search_Problem, H_Add_Fwd>;
+
+	//! Factory method
+	static HFFRun* create(const Problem& fs_problem, bool one_HA_per_fluent);
+
+	void compile_to_STRIPS();
+
+	HFFRun(const Problem& problem, bool one_HA_per_fluent);
+
+	inline const STRIPS_Problem& task() const { return _search_problem->task(); }
+
+	aptk::State _convert_state(const fs0::State& state);
+
+	//! Compute the set or relevant atoms R_{FF}(s)
+// 	RelevantAtomSet compute_r_ff(const fs0::State& s, const AtomIndex& atomidx);
+
+// 	void compute_r_ff(const aptk::State& s, aptk::Fluent_Vec& rp_vec, aptk::Fluent_Set& rp_set);
+
+protected:
+
+	void compile_to_STRIPS( const fs::Formula* fs_pre, aptk::Fluent_Vec& pre );
+	void compile_to_STRIPS( const fs::ActionEffect* eff, aptk::Fluent_Vec& add, aptk::Fluent_Vec& del, aptk::Conditional_Effect_Vec& ceff );
+
+protected:
+
+	const 	Problem&					_fs_problem;
+	std::shared_ptr<STRIPS_Problem>		_strips_task;
+	std::shared_ptr<Fwd_Search_Problem> _search_problem;
+	std::shared_ptr<H_Add_Rp_Fwd> 		_hff_heuristic;
+
+	bool _one_HA_per_fluent;
+
+	std::map< Atom, unsigned>			_atom_to_fluent;
+	std::map< unsigned, Atom >			_fluent_to_atom;
+};
+
+} } // namespaces

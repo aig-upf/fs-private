@@ -1,6 +1,6 @@
 
 import os
-from util.build import *
+from build.scons.util import *
 
 # read variables from the cache, a user's custom.py file or command line arguments
 vars = Variables(['variables.cache', 'custom.py'], ARGUMENTS)
@@ -22,19 +22,25 @@ vars.Add(PathVariable('lapkt', 'Path where the LAPKT library is installed', os.g
 env = Environment(variables=vars, ENV=os.environ)
 env['CXX'] = os.environ.get('CXX', env['default_compiler'])
 
+
+# Set up some directories
+env['fs_src'] = os.path.join(env['fs'], 'src')
+
+
+build_dirname = '.build'
 if env['edebug']:
-	build_dirname = '.build/edebug'
+	build_dirname = os.path.join(build_dirname, 'edebug')
 elif env['debug']:
-	build_dirname = '.build/debug'
+	build_dirname = os.path.join(build_dirname, 'debug')
 else:
-	build_dirname = '.build/prod'
+	build_dirname = os.path.join(build_dirname, 'prod')
 env.VariantDir(build_dirname, '.')
 
 Help(vars.GenerateHelpText(env))
 vars.Save('variables.cache', env)
 
 # Base include directories
-include_paths = ['src', 'src/lib']
+include_paths = ['src', 'vendor']
 isystem_paths = []
 
 # Possible modules
@@ -47,11 +53,8 @@ modules = [
     ("ompl_support",   "ompl")
 ]
 
-
 # include local by default # MRJ: This probably should be acquired from an environment variable
 isystem_paths += ['/usr/local/include', os.environ['HOME'] + '/local/include']
-
-# SConscript('modules/core/SConscript', exports="env sources")   #, variant_dir=build_dirname, src_dir='.', duplicate = 0)
 
 
 # Process modules and external dependencies
@@ -59,7 +62,7 @@ sources = []
 for flag, modname in modules:
     if flag not in env or env[flag]:  # Import module if not explicitly disallowed
         print("Importing module: \"{}\"".format(modname))
-        SConscript('modules/{}/SConscript'.format(modname), exports="env sources")
+        SConscript('build/scons/{}.sconscript'.format(modname), exports="env sources")
     else:
         print("Skipping module \"{}\"".format(modname))
 

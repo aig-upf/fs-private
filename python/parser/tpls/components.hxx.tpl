@@ -2,11 +2,11 @@
 #pragma once
 
 #include <cstring>
-#include <lib/rapidjson/document.h>
-#include <utils/loader.hxx>
-#include <utils/component_factory.hxx>
-#include <fstrips/loader.hxx>
-#include <constraints/registry.hxx>
+#include <rapidjson/document.h>
+#include <fs/core/utils/loader.hxx>
+#include <fs/core/utils/component_factory.hxx>
+#include <fs/core/fstrips/loader.hxx>
+#include <fs/core/constraints/registry.hxx>
 
 #include "external.hxx"
 
