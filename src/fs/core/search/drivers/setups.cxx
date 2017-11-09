@@ -6,7 +6,7 @@
 #include <fs/core/search/drivers/validation.hxx>
 #include <fs/core/constraints//gecode/handlers/lifted_action_csp.hxx>
 #include <fs/core/models/ground_state_model.hxx>
-#include <dynamics/wait_action.hxx>
+//#include <dynamics/wait_action.hxx>
 
 namespace fs0 { namespace drivers {
 
@@ -18,7 +18,8 @@ GroundingSetup::fully_lifted_model(Problem& problem) {
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
 	if ( problem.requires_handling_continuous_change() ) {
-		problem.add_wait_action( dynamics::WaitAction::create(problem) );
+		// TODO UNCOMMENT FOR BETA7
+//		problem.add_wait_action( dynamics::WaitAction::create(problem) );
 	}
 	return LiftedStateModel::build(problem);
 }
@@ -28,7 +29,8 @@ GroundingSetup::fully_ground_model(Problem& problem) {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
 	if ( problem.requires_handling_continuous_change() ) {
-		problem.add_wait_action( dynamics::WaitAction::create(problem) );
+		// TODO UNCOMMENT FOR BETA7
+//		problem.add_wait_action( dynamics::WaitAction::create(problem) );
 	}
 	return GroundStateModel(problem);
 }
@@ -38,7 +40,8 @@ GroundingSetup::fully_ground_simple_model(Problem& problem) {
 	problem.setGroundActions(ActionGrounder::fully_ground(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
 	if ( problem.requires_handling_continuous_change() ) {
-		problem.add_wait_action( dynamics::WaitAction::create(problem) );
+		// TODO UNCOMMENT FOR BETA7
+//		problem.add_wait_action( dynamics::WaitAction::create(problem) );
 	}
 	return SimpleStateModel::build(problem);
 }
@@ -49,7 +52,8 @@ GroundingSetup::ground_search_lifted_heuristic(Problem& problem) {
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
 	if ( problem.requires_handling_continuous_change() ) {
-		problem.add_wait_action( dynamics::WaitAction::create(problem) );
+		// TODO UNCOMMENT FOR BETA7
+//		problem.add_wait_action( dynamics::WaitAction::create(problem) );
 	}
 	return GroundStateModel(problem);
 }
