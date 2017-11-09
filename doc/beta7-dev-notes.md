@@ -10,8 +10,10 @@
 
 * The _rapidjson_ library is no longer under the `src` directory, but rather
   on a first-level `vendor` directory (`lib` was already taken!).
-  We will eventually install it through a git submodule. The `vendor` directory
-  is meant to be part of the include paths of the build system, so that we only need to e.g.
+  Additionally, the code is no longer versioned on our repo, but instead we fetch it using submodules.
+  This means that you need to `git submodule update` whenever a change in the rapidjson library
+  is factored into the main FS project - which shouldn't happen too often.
+  The `vendor` directory is meant to be part of the include paths of the build system, so that we only need to e.g.
   `#include <rapidjson/xxx.hxx>`. That's good if we want to eventually transition to a system-wide installation, etc.
 
 * The SConscript's files, scons utils, etc., _except for the main `SConstruct` file_ are now under top-level directory `build`.
