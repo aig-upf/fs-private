@@ -138,7 +138,7 @@ class FSNamedFormula(FSBaseComponent):
         return dict(name=self.name,
             signature=[self.index.types[p.type] for p in self.parameters],
             parameters=[p.name for p in self.parameters],
-            conditions=self.formula.dump(self.index.objects, self.binding_unit),
+            conditions=self.formula.dump(self.index, self.binding_unit),
             unit=self.binding_unit.dump())
 
     def __str__(self):

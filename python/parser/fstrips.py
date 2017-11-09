@@ -13,7 +13,7 @@ def is_relational_operator(symbol):
 
 
 def is_arithmetic_function(symbol):
-    return symbol in {"*", "+", "-", "/", "^", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "min", "max", "exp"}
+    return symbol in {"*", "+", "-", "/", "^", "sqrt", "sin", "cos", "tan", "asin", "acos", "atan", "min", "max", "exp", "abs"}
 
 
 def is_builtin_operator(symbol):

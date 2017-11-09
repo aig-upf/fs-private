@@ -89,7 +89,7 @@ ArbitraryTermFeature::ArbitraryTermFeature(const ArbitraryTermFeature& other)
 
 FSFeatureValueT
 ArbitraryTermFeature::evaluate(const State& s) const {
-	return  fs0::value<FSFeatureValueT>(_term->interpret(s));
+	return  fs0::raw_value<FSFeatureValueT>(_term->interpret(s));
 }
 
 std::ostream& ArbitraryTermFeature::print(std::ostream& os) const {

@@ -34,6 +34,7 @@ public:
 
 	//! Applies the effect to the given state and returns the resulting value
 	object_id apply(const State& state) const;
+	float evaluate(State& state) const { return fs0::value<float>(apply(state));}
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Metric& o) { return o.print(os); }

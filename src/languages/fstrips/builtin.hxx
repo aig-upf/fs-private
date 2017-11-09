@@ -215,6 +215,18 @@ public:
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 };
 
+class AbsTerm : public UnaryArithmeticTerm {
+public:
+	typedef const AbsTerm* cptr;
+    LOKI_DEFINE_CONST_VISITABLE();
+
+	AbsTerm(const std::vector<const Term*>& subterms);
+	AbsTerm* clone() const override { return new AbsTerm(*this); }
+
+	//! Prints a representation of the object to the given stream.
+	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
+};
+
 class MinTerm : public BinaryArithmeticTerm {
 public:
 	typedef const MinTerm* cptr;

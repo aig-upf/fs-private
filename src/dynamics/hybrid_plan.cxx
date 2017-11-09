@@ -6,6 +6,7 @@
 #include <applicability/action_managers.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <actions/checker.hxx>
+#include <languages/fstrips/language.hxx>
 
 // For writing the traces
 #include <utils/archive/json.hxx>
@@ -55,6 +56,25 @@ namespace fs0 { namespace dynamics {
     		if (!manager.isApplicable(state, *action, true)) {
                 std::stringstream buffer;
                 buffer << "HybridPlan::interpret_plan(): Plan is not valid (ground action " << action->getName() << " not applicable!)" << std::endl;
+                bool explained = false;
+                if (!manager.checkFormulaHolds(action->getPrecondition(), state)) {
+                    explained = true;
+                    buffer << "Action precondition does not hold!" << std::endl;
+                }
+
+                if (!explained) {
+
+                    auto atoms = manager.computeEffects(state, *action);
+                    State next(state, atoms);
+                    for ( auto c : problem.getStateConstraints() ) {
+                        if ( !manager.checkFormulaHolds( c, next ) ) {
+                            explained = true;
+                            buffer << "State constraint '" << *c << "' does not hold after action execution" << std::endl;
+                            break;
+                        }
+                    }
+                }
+
                 buffer << "Current state: " << state << std::endl;
                 buffer << "Initial state: " << problem.getInitialState() << std::endl;
                 buffer << "Plan:" << std::endl;
@@ -211,7 +231,8 @@ namespace fs0 { namespace dynamics {
             std::tie( t, a ) =_the_plan[i];
             LPT_INFO( "simulation", "State: " << *s );
 
-            if ( a == nullptr ) {
+            if ( a == nullptr  ) {
+                if (  time_left > cfg.getDiscretizationStep()) break;
                 LPT_INFO("simulation", "Simulation finished, states in trajectory: " << _trajectory.size());
                 LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
                 restore_simulation_settings();
@@ -256,6 +277,30 @@ namespace fs0 { namespace dynamics {
                 return;
             }
     	}
+        LPT_INFO("simulation", "time left is: " << time_left << " units");
+        if ( time_left > cfg.getDiscretizationStep() ) {
+            LPT_INFO("simulation", "Simulation asked to run after plan end time");
+            float H = time_left;
+
+            LPT_INFO( "simulation", "Idle time: " << H << " time units" );
+            while ( H > 0.0 ) {
+                float h = std::min(time_step, H );
+                LPT_INFO( "simulation", "Integration step duration: " << h << " time units" );
+                float old_step = cfg.getDiscretizationStep();
+                cfg.setDiscretizationStep(h);
+
+                auto tmp = std::make_shared<State>(*s);
+                tmp->accumulate(NaiveApplicabilityManager::computeEffects(*s, *wait_action));
+                LPT_INFO("simulation", *s);
+                cfg.setDiscretizationStep(old_step);
+
+                s = tmp;
+                _trajectory.push_back( tmp );
+                H -=h;
+                time_left -= h;
+            }
+        }
+
         LPT_INFO("simulation", "Simulation Finished, states in trajectory: " << _trajectory.size() );
         LPT_DEBUG( "cout", "HybridPlan::simulate() : Simulation Finished, states in trajectory: " << _trajectory.size() );
         restore_simulation_settings();

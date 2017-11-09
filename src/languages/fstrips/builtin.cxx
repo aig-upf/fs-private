@@ -12,11 +12,11 @@ namespace fs0 { namespace language { namespace fstrips {
 
 
 std::set<std::string> ArithmeticTermFactory::_builtin_terms = {
-	"+", "-", "*", "/", "^", "sin", "cos", "sqrt", "tan", "asin", "acos", "atan", "min", "max", "exp"
+	"+", "-", "*", "/", "^", "sin", "cos", "sqrt", "tan", "asin", "acos", "atan", "min", "max", "exp", "abs"
 };
 
 std::set<std::string> ArithmeticTermFactory::_unary_terms = {
-	"sin", "cos", "sqrt", "tan", "asin", "acos", "atan", "exp"
+	"sin", "cos", "sqrt", "tan", "asin", "acos", "atan", "exp", "abs"
 };
 
 
@@ -46,6 +46,7 @@ ArithmeticTermFactory::create(const std::string& symbol, const std::vector<const
 	else if (symbol == "acos") return new ArcCosineTerm( subterms );
 	else if (symbol == "atan") return new ArcTangentTerm( subterms );
     else if (symbol == "exp") return new ExpTerm( subterms );
+    else if (symbol == "abs") return new AbsTerm( subterms );
 	return nullptr;
 }
 
@@ -379,6 +380,36 @@ std::ostream& ExpTerm::print(std::ostream& os, const fs0::ProblemInfo& info) con
 	os << "exp(" << *_subterms[0] << ")";
 	return os;
 }
+
+// Abs Term Implementation
+AbsTerm::AbsTerm(const std::vector<const Term*>& subterms)
+	: UnaryArithmeticTerm(subterms) {
+	if ( subterms.size() > 1 ) {
+		// abs(x) a unary arithmetic term
+		throw std::runtime_error("abs(x) is a unary function");
+	}
+    auto impl = [](float v) -> float {
+        // Check for singularity
+    	std::feclearexcept(FE_ALL_EXCEPT);
+    	float res = (float)std::fabs(v);
+    	if(std::fetestexcept(FE_OVERFLOW)) {
+    		throw std::runtime_error("FE_OVERFLOW thrown while evaluating abs(x)!");
+    	}
+    	if ( std::isnan(res)) {
+    		throw std::runtime_error("Evaluating abs(x) aresulted in a NaN result");
+    	}
+		return res;
+    };
+
+    _int_handler = [impl](int v) { return make_object(std::abs(v)); };
+    _float_handler = [impl](float v) { return make_object(impl(v)); };
+}
+
+std::ostream& AbsTerm::print(std::ostream& os, const fs0::ProblemInfo& info) const {
+	os << "abs(" << *_subterms[0] << ")";
+	return os;
+}
+
 
 // Min Term Implementation
 MinTerm::MinTerm(const std::vector<const Term*>& subterms)

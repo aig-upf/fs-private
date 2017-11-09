@@ -60,6 +60,7 @@ class ArcTangentTerm;
 class ExpTerm;
 class MinTerm;
 class MaxTerm;
+class AbsTerm;
 
 // Other
 
