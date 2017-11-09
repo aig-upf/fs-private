@@ -44,6 +44,7 @@ def parse_arguments(args):
     parser.add_argument('-o', '--output', default=None, help="(Optional) Path to the working directory. If provided,"
                                                              "overrides the \"-t\" option.")
     parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
+    parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
 
     args = parser.parse_args(args)
 
@@ -209,7 +210,7 @@ def run(args):
         if args.hybrid :
             from . import f_pddl_plus
             hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
-            fs_task = create_fs_plus_task( hybrid_task, domain_name, instance_name)
+            fs_task = create_fs_plus_task( hybrid_task, domain_name, instance_name, args.disable_static_analysis)
         else :
             fd_task = parse_pddl_task(args.domain, args.instance)
             fs_task = create_fs_task(fd_task, domain_name, instance_name)
