@@ -6,9 +6,6 @@
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
 #include <fs/core/search/drivers/sbfws/mv_iw_run.hxx>
 #include <fs/core/search/utils.hxx>
-#include <fs/core/models/simple_state_model.hxx>
-
-#include <fs/core/heuristics/novelty/features.hxx>
 
 namespace fs0 { namespace bfws {
 

@@ -9,7 +9,6 @@
 #include <fs/core/utils//utils.hxx>
 #include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
-#include <fs/core/languages/fstrips/axioms.hxx>
 #include <fs/core/languages/fstrips/operations/axioms.hxx>
 #include <fs/core/languages/fstrips/metrics.hxx>
 

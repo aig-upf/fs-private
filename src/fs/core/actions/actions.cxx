@@ -9,7 +9,6 @@
 #include <fs/core/utils//utils.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/atom.hxx>
 
 #include <fs/core/constraints//registry.hxx>
 

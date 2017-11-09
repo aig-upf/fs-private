@@ -2,11 +2,8 @@
 
 #include <lapkt/novelty/features.hxx>
 #include <fs/core/search/drivers/iterated_width.hxx>
-#include <fs/core/search/algorithms/iterated_width.hxx>
 #include <fs/core/search/novelty/fs_novelty.hxx>
 #include <fs/core/search/utils.hxx>
-#include <fs/core/problem_info.hxx>
-#include <fs/core/search/drivers/setups.hxx>
 
 #include <fs/core/search/drivers/sbfws/base.hxx>
 #include <fs/core/search/drivers/sbfws/features/features.hxx>

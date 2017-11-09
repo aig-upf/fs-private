@@ -6,7 +6,6 @@
 #include <fs/core/languages/fstrips/terms.hxx>
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
-#include <fs/core/problem_info.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/utils//utils.hxx>
 

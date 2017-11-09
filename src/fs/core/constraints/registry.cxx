@@ -3,11 +3,9 @@
 #include <fs/core/problem.hxx>
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
-#include <fs/core/languages/fstrips/effects.hxx>
 // #include <fs/core/constraints//direct/alldiff_constraint.hxx>
 // #include <fs/core/constraints//direct/sum_constraint.hxx>
 #include <fs/core/utils//printers/printers.hxx>
-#include <fs/core/utils//printers/helper.hxx>
 // #include <fs/core/constraints//direct/constraint.hxx>
 // #include <fs/core/constraints//direct/translators/effects.hxx>
 #include <fs/core/constraints/gecode/translators/component_translator.hxx>

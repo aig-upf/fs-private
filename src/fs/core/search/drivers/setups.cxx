@@ -4,8 +4,6 @@
 #include <fs/core/actions/grounding.hxx>
 #include <fs/core/search/drivers/setups.hxx>
 #include <fs/core/search/drivers/validation.hxx>
-#include <fs/core/constraints//gecode/handlers/lifted_action_csp.hxx>
-#include <fs/core/models/ground_state_model.hxx>
 //#include <dynamics/wait_action.hxx>
 
 namespace fs0 { namespace drivers {

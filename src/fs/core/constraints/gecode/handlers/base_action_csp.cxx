@@ -14,7 +14,6 @@
 #include <fs/core/languages/fstrips/scopes.hxx>
 #include <fs/core/utils//config.hxx>
 #include <fs/core/utils//utils.hxx>
-#include <fs/core/problem_info.hxx>
 #include <fs/core/utils//atom_index.hxx>
 
 

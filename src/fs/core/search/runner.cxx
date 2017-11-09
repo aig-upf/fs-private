@@ -9,7 +9,6 @@
 #include <fs/core/search/runner.hxx>
 #include <fs/core/search/drivers/registry.hxx>
 #include <fs/core/utils/config.hxx>
-#include <fs/core/utils/system.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>

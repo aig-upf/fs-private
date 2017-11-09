@@ -2,15 +2,8 @@
 #include <fs/core/search/drivers/fully_lifted_driver.hxx>
 #include <fs/core/search/drivers/setups.hxx>
 #include <fs/core/search/utils.hxx>
-#include <fs/core/problem.hxx>
-#include <fs/core/heuristics/relaxed_plan/gecode_crpg.hxx>
-#include <fs/core/constraints//gecode/handlers/lifted_action_csp.hxx>
-#include <fs/core/constraints//gecode/handlers/formula_csp.hxx>
 
-#include <fs/core/state.hxx>
-#include <fs/core/actions/lifted_action_iterator.hxx>
 #include <fs/core/actions/grounding.hxx>
-#include <fs/core/problem_info.hxx>
 #include <fs/core/utils/support.hxx>
 
 using namespace fs0::gecode;

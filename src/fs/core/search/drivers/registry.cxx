@@ -11,8 +11,6 @@
 #include <fs/core/search/drivers/smart_lifted_driver.hxx>
 #include <fs/core/search/drivers/fully_lifted_driver.hxx>
 #include <fs/core/actions/grounding.hxx>
-#include <fs/core/problem_info.hxx>
-#include <fs/core/models/simple_state_model.hxx>
 
 
 // using namespace fs0::gecode;

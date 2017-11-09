@@ -15,7 +15,6 @@
 #include <fs/core/languages/fstrips/scopes.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 #include <fs/core/utils//utils.hxx>
-#include <fs/core/utils//printers/vector.hxx>
 
 namespace fs0 {
 

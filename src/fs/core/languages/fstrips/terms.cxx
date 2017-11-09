@@ -7,7 +7,6 @@
 #include <fs/core/state.hxx>
 #include <fs/core/utils//utils.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//binding.hxx>
 
 #include <fs/core/languages/fstrips/operations/interpretation.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>

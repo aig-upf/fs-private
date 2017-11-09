@@ -5,7 +5,6 @@
 #include <fs/core/problem.hxx>
 #include <fs/core/utils//utils.hxx>
 #include <fs/core/state.hxx>
-#include <cmath>
 #include <cfenv>
 
 namespace fs0 { namespace language { namespace fstrips {

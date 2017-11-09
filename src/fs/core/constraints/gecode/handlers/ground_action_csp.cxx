@@ -3,9 +3,7 @@
 #include <fs/core/languages/fstrips/effects.hxx>
 #include <fs/core/constraints/gecode/handlers/ground_action_csp.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/actions/actions.hxx>
 #include <fs/core/actions/action_id.hxx>
-#include <gecode/search.hh>
 
 
 namespace fs0 { namespace gecode {

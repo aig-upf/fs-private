@@ -7,9 +7,7 @@
 #include <fs/core/languages/fstrips/terms.hxx>
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <fs/core/constraints//registry.hxx>
-#include <fs/core/utils//binding.hxx>
 #include <fs/core/utils//utils.hxx>
-#include <fs/core/problem_info.hxx>
 #include <lapkt/tools/logging.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {

@@ -2,7 +2,6 @@
 #include <limits>
 #include <ios>
 #include <iomanip>
-#include <sstream>
 
 #include <fs/core/search/drivers/sbfws/stats.hxx>
 

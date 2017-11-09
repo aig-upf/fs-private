@@ -1,7 +1,6 @@
 
 #include <fs/core/problem.hxx>
 #include <fs/core/search/drivers/sbfws/base.hxx>
-#include <fs/core/search/novelty/fs_novelty.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/problem_info.hxx>
 

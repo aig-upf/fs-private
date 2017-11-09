@@ -8,17 +8,12 @@
 #include <fs/core/utils/loader.hxx>
 #include <fs/core/utils/printers/binding.hxx>
 #include <fs/core/utils/binding_iterator.hxx>
-#include <fs/core/utils/config.hxx>
 #include <fs/core/constraints//registry.hxx>
-#include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations/basic.hxx>
-#include <fs/core/problem.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/heuristics/l0.hxx>
 
 #include <fs/hybrid/novelty_features.hxx>
-
-#include <lapkt/tools/logging.hxx>
 
 
 namespace fs = fs0::language::fstrips;

@@ -3,11 +3,9 @@
 #include <fs/core/constraints/gecode/handlers/ground_effect_csp.hxx>
 #include <fs/core/constraints/gecode/helper.hxx>
 #include <fs/core/constraints/gecode/supports.hxx>
-#include <fs/core/actions/actions.hxx>
 #include <fs/core/utils//printers/actions.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/actions/action_id.hxx>
-#include <fs/core/problem_info.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/state.hxx>
 #include <gecode/driver.hh>

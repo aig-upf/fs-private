@@ -4,9 +4,7 @@
 #include <fs/core/languages/fstrips/operations/interpretation.hxx>
 #include <fs/core/languages/fstrips/terms.hxx>
 #include <fs/core/languages/fstrips/builtin.hxx>
-#include <fs/core/utils//binding.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/problem_info.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 

@@ -1,16 +1,11 @@
 
 #include <fs/core/search/drivers/smart_effect_driver.hxx>
 
-#include <fs/core/problem.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/state.hxx>
-#include <lapkt/algorithms/best_first_search.hxx>
 #include <fs/core/search/utils.hxx>
-#include <fs/core/constraints//gecode/handlers/lifted_effect_csp.hxx>
 
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/utils/support.hxx>
-#include <fs/core/search/drivers/setups.hxx>
 
 
 using namespace fs0::gecode;

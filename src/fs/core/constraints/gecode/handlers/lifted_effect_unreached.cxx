@@ -1,6 +1,5 @@
 	
 #include <fs/core/languages/fstrips/language.hxx>
-#include <fs/core/problem_info.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/actions/grounding.hxx>
 #include <fs/core/constraints/gecode/handlers/lifted_effect_unreached.hxx>
@@ -10,7 +9,6 @@
 #include <fs/core/utils//printers/actions.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
-#include <gecode/search.hh>
 
 namespace fs0 { namespace gecode {
 

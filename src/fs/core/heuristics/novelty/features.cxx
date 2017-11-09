@@ -1,10 +1,8 @@
 
 #include <fs/core/problem_info.hxx>
 #include <fs/core/heuristics/novelty/features.hxx>
-#include <fs/core/state.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
-#include <algorithm>
 
 namespace fs0 {
 
