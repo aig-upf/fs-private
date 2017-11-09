@@ -10,6 +10,7 @@
 #include <lapkt/tools/logging.hxx>
 #include <utils/binding.hxx>
 #include <fstrips/language_info.hxx>
+#include <sstream>
 
 namespace fs0 { namespace language { namespace fstrips {
 
@@ -49,10 +50,12 @@ _check_types_are_equal(const object_id& lhs, const object_id& rhs) const {
 		auto it = symbol_to_string.find(symbol());
 		assert(it != symbol_to_string.end());
 		std::string sym_string = it->second;
-		throw std::runtime_error("Type mismatch in comparison '"
-								+ sym_string
-								+ "': lhs is '" + to_string(o_type(lhs)) + "'"
-	 							+ " and rhs is '" + to_string(o_type(rhs)) + "'" );
+		std::stringstream buffer;
+		buffer << "Type mismatch in comparison '";
+		buffer << *this;
+		buffer << "' lhs '" << lhs << "' type is '" << to_string(o_type(lhs)) << "',";
+		buffer << " rhs '" << rhs << "' type is '" << to_string(o_type(rhs)) << "'.";
+		throw std::runtime_error( buffer.str() );
 	}
 	return t;
 }
@@ -69,7 +72,7 @@ _throw_unsupported_type(const type_id& t) const {
 	auto it = symbol_to_string.find(symbol());
 	assert( it != symbol_to_string.end() );
 	std::string sym_string = it->second;
-	throw std::runtime_error("Relational operator \"" + sym_string + "\" is not defined for type '" + to_string(t) + "'" );	
+	throw std::runtime_error("Relational operator \"" + sym_string + "\" is not defined for type '" + to_string(t) + "'" );
 }
 
 
@@ -79,16 +82,16 @@ RelationalFormula::_satisfied(const object_id& lhs, const object_id& rhs) const 
 
 	if (t == type_id::int_t) {
 		return _int_handler(fs0::value<int>(lhs), fs0::value<int>(rhs));
-		
+
 	} else if (t == type_id::float_t) {
 		return _float_handler(fs0::value<float>(lhs), fs0::value<float>(rhs));
 
-	} else if (t == type_id::object_t || t == type_id::bool_t) { 
+	} else if (t == type_id::object_t || t == type_id::bool_t) {
 		// Predicates "=" and "!=" are defined also for bools and objects
 		return _eq_op(lhs, rhs);
-		
+
 	}
-	
+
 	_throw_unsupported_type(t);
 	return false; // To avoid compiler warnings
 }

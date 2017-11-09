@@ -61,3 +61,15 @@ BrFS:
 R[2] over elliptical features, numeric state variables projected away:
 
 ./run.py --hybrid --instance ~/Sandboxes/mpc-planning-experiments/benchmarks/agile-robot-world-hybrid/instance_018.pddl --driver sbfws --options bfws.rs=sim,bfws.force_generic_evaluator=true,dt=0.5,integrator="runge_kutta_2",project_away_time=true,project_away_numeric=true,bfws.using_feature_set=true,features.elliptical_2d=true,sim.log=true,width.simulation=2
+
+Elliptical Parameters:
+--driver sbfws --options bfws.rs=sim,width.force_generic_evaluator=true,dt=0.5,integrator=runge_kutta_2,features.project_away_time=true,features.project_away_numeric=true,evaluator_t=generic,bfws.using_feature_set=true,reward.goal_error=true,features.elliptical_2d=true,sim.log=true,width.search=2,width.simulation=2
+
+G0 Parameters:
+--options bfws.rs=g0,width.force_generic_evaluator=true,dt=1.0,integrator=explicit_euler,features.project_away_time=true,features.project_away_numeric=false,evaluator_t=generic,bfws.using_feature_set=true,horizon=100
+
+R[1] Parameters:
+
+--driver sbfws --options bfws.rs=sim,width.force_generic_evaluator=true,dt=10.0,integrator=explicit_euler,features.project_away_time=true,features.project_away_numeric=false,evaluator_t=generic,bfws.using_feature_set=true,horizon=100
+
+./run.py --hybrid -i ~/Sandboxes/mpc-planning-experiments/benchmarks/automated_guided_vehicle/test.pddl --driver sbfws --options bfws.rs=sim,width.force_generic_evaluator=true,dt=1.0,integrator=explicit_euler,features.project_away_time=true,features.project_away_numeric=false,evaluator_t=generic,bfws.using_feature_set=true,horizon=100 --debug

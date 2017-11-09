@@ -34,7 +34,7 @@ Help(vars.GenerateHelpText(env))
 vars.Save('variables.cache', env)
 
 # Base include directories
-include_paths = ['src']
+include_paths = ['src', 'src/lib']
 isystem_paths = []
 
 # Possible modules

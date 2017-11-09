@@ -109,6 +109,7 @@ void TermAxiomVisitor::Visit(const ArcSineTerm& lhs) { _result = lhs.clone(); }
 void TermAxiomVisitor::Visit(const ArcCosineTerm& lhs) { _result = lhs.clone(); }
 void TermAxiomVisitor::Visit(const ArcTangentTerm& lhs) { _result = lhs.clone(); }
 void TermAxiomVisitor::Visit(const ExpTerm& lhs) { _result = lhs.clone(); }
+void TermAxiomVisitor::Visit(const AbsTerm& lhs) { _result = lhs.clone(); }
 void TermAxiomVisitor::Visit(const MinTerm& lhs) { _result = lhs.clone(); }
 void TermAxiomVisitor::Visit(const MaxTerm& lhs) { _result = lhs.clone(); }
 void TermAxiomVisitor::Visit(const StaticHeadedNestedTerm& lhs) { _result = lhs.clone(); }

@@ -59,7 +59,7 @@ def create_fs_task(fd_task, domain_name, instance_name):
     return task
 
 
-def create_fs_plus_task(fsp_task, domain_name, instance_name):
+def create_fs_plus_task(fsp_task, domain_name, instance_name, disable_static_analysis):
     """ Create a problem domain and instance and perform the appropiate validty checks """
     types, type_map, supertypes = process_problem_types(fsp_task.types, fsp_task.objects, fsp_task.bounds)
     task = FSTaskIndex(domain_name, instance_name)
@@ -73,7 +73,7 @@ def create_fs_plus_task(fsp_task, domain_name, instance_name):
     print("Creating FS+ task: Processing symbols...")
     task.process_symbols(actions=fsp_task.actions, events=fsp_task.events,
                          processes=fsp_task.processes, constraints=fsp_task.constraint_schemata,
-                         predicates=fsp_task.predicates, functions=fsp_task.functions)
+                         predicates=fsp_task.predicates, functions=fsp_task.functions, no_static_symbols=disable_static_analysis)
     print("Creating FS+ task: Processing state variables...")
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     print("Creating FS+ task: Processing initial state...")
@@ -197,11 +197,17 @@ class FSTaskIndex(object):
         constraints = kwargs.get('constraints', [])
         predicates = kwargs.get('predicates', [])
         functions = kwargs.get('functions', [])
+        no_static_symbols = kwargs.get('no_static_symbols', False)
 
         self.symbols, self.symbol_types, self.action_cost_symbols = self._index_symbols(predicates, functions)
         self.symbol_index = {name: i for i, name in enumerate(self.symbols.keys())}
 
         self.all_symbols = list(self.symbol_types.keys())
+
+        if no_static_symbols :
+            self.fluent_symbols = self.all_symbols
+            self.static_symbols = set("=") # only equality
+            return
 
         # All symbols appearing on some action, process or event effect are fluent
         self.fluent_symbols = set(pddl_helper.get_effect_symbol(eff) for action in actions for eff in action.effects)

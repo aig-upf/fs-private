@@ -52,6 +52,7 @@ class AllNodesVisitor
     , public Loki::Visitor<ExpTerm, void, true>
     , public Loki::Visitor<MinTerm, void, true>
     , public Loki::Visitor<MaxTerm, void, true>
+    , public Loki::Visitor<AbsTerm, void, true>
 {
 public:
 	void Visit(const Tautology& lhs);
@@ -89,6 +90,7 @@ public:
 	void Visit(const ExpTerm& lhs);
 	void Visit(const MinTerm& lhs);
 	void Visit(const MaxTerm& lhs);
+    void Visit(const AbsTerm& lhs);
 
 	std::vector<const LogicalElement*> _result;
 };

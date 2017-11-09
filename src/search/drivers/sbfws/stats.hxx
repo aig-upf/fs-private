@@ -11,6 +11,8 @@ class BFWSStats {
 public:
 	BFWSStats();
 
+	void reset_generations() { _generated=0; }
+
 	void expansion() { ++_expanded; }
 	void generation() { ++_generated; }
 	void evaluation() { ++_evaluated; }
