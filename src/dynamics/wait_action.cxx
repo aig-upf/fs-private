@@ -124,23 +124,26 @@ namespace fs0 { namespace dynamics {
     void
     WaitAction::compute_reactions_causal_graph(const State& s) const {
         _reaction_stages.clear();
-
+        NaiveApplicabilityManager       manager(Problem::getInstance().getStateConstraints());
         std::vector<VariableSet> evt_precs(_exogenous.size());
         std::vector<VariableSet> evt_effs(_exogenous.size());
         Graph G(_exogenous.size());
         //std::vector<std::pair<unsigned, unsigned>> edges;
         for ( unsigned i = 0; i < _exogenous.size(); i++ ) {
             const GroundAction& e_i = *_exogenous[i];
+            if (!manager.checkFormulaHolds(e_i.getPrecondition(), s)) continue;
             for ( auto eff : e_i.getEffects() )
                 evt_effs[i].insert( fs::interpret_variable(*(eff->lhs()), s) );
             for ( unsigned j = 0; j < _exogenous.size(); j++ ){
                 if (i == j ) continue;
+
                 const GroundAction& e_j = *_exogenous[j];
+                if (!manager.checkFormulaHolds(e_j.getPrecondition(), s)) continue;
                 // MRJ: there's an edge (i,j) if the lhs of the effects of
                 // event e_i appear on the precondition and rhs of the
                 // effects in e_j.
-                for ( auto x : fs::all_state_variables(*e_j.getPrecondition()))
-                    evt_precs[j].insert(x->getValue());
+                //for ( auto x : fs::all_state_variables(*e_j.getPrecondition()))
+                //    evt_precs[j].insert(x->getValue());
                 for (auto eff: e_j.getEffects() )
                     for ( auto x : fs::all_state_variables(*eff->rhs()) )
                         evt_precs[j].insert(x->getValue());
@@ -164,7 +167,7 @@ namespace fs0 { namespace dynamics {
         _reaction_stages.push_back( std::vector<std::pair<Vertex, const GroundAction*>>() );
         for ( container::reverse_iterator ii=c.rbegin(); ii!=c.rend(); ++ii) {
             const GroundAction& e_k = * _exogenous[*ii];
-            LPT_DEBUG( "dynamics", e_k);
+            if (!manager.checkFormulaHolds(e_k.getPrecondition(), s)) continue;
             if ( _reaction_stages[current_layer].size() > 0 ) {
                 // if dependent, push into next layer
                 bool dependant = false;
@@ -180,12 +183,14 @@ namespace fs0 { namespace dynamics {
                     _reaction_stages.push_back( std::vector< std::pair<Vertex, const GroundAction*> >() );
                     current_layer++;
                     _reaction_stages[current_layer].push_back(std::make_pair(*ii,_exogenous[*ii]));
+                    LPT_DEBUG( "dynamics", e_k);
                     LPT_DEBUG("dynamics", "\t Layer: " << current_layer );
                     continue;
                 }
             }
 
             _reaction_stages[current_layer].push_back(std::make_pair(*ii,_exogenous[*ii]));
+            LPT_DEBUG( "dynamics", e_k);
             LPT_DEBUG("dynamics", "\t Layer: " << current_layer );
         }
     }
