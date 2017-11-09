@@ -1,3 +1,0 @@
-ompl_support = False
-hybrid_support = False
-default_compiler = 'g++'
