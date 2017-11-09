@@ -25,15 +25,15 @@ env['CXX'] = os.environ.get('CXX', env['default_compiler'])
 
 # Set up some directories
 env['fs_src'] = os.path.join(env['fs'], 'src')
+env['build_basename'] = '.build'
 
-
-build_dirname = '.build'
 if env['edebug']:
-	build_dirname = os.path.join(build_dirname, 'edebug')
+    build_suffix = 'edebug'
 elif env['debug']:
-	build_dirname = os.path.join(build_dirname, 'debug')
+    build_suffix = 'debug'
 else:
-	build_dirname = os.path.join(build_dirname, 'prod')
+    build_suffix = 'prod'
+build_dirname = os.path.join(env['build_basename'], build_suffix)
 env.VariantDir(build_dirname, '.')
 
 Help(vars.GenerateHelpText(env))
@@ -73,8 +73,7 @@ env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ]
 
 # Determine all the build files
 build_files = [os.path.join(build_dirname, src) for src in sources]
-shared_lib = env.SharedLibrary('lib/' + env['fs_libname'], build_files)
-#static_lib = env.Library('lib/' + env['fs_libname'], build_files)
+shared_lib = env.SharedLibrary(os.path.join(env['build_basename'], env['fs_libname']), build_files)
 
 # Save a description of the compilation and linking options to be used when linking the final solver
 save_pkg_config_descriptor(env, env['fs_libname'], '{}.pc'.format(env['fs_libname']))

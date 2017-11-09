@@ -31,8 +31,7 @@ else:
 	exe_name = 'solver.bin'
 
 env.ParseConfig( 'PKG_CONFIG_PATH="{}" pkg-config --cflags --libs {}'.format(env['fs'], fs_libname))
-
-print('PKG_CONFIG_PATH="{}" pkg-config --cflags --libs {}'.format(env['fs'], fs_libname))
+#print('PKG_CONFIG_PATH="{}" pkg-config --cflags --libs {}'.format(env['fs'], fs_libname))
 
 
 # Header and library directories.
