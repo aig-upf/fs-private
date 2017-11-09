@@ -3,7 +3,7 @@
 
 #include <fs/core/fs_types.hxx>
 #include <fs/core/utils//binding.hxx>
-#include <fs/core/applicability//action_managers.hxx>
+#include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {  class Term; class Formula; class ActionEffect; class ProceduralEffect; } }}

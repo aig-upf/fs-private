@@ -6,8 +6,8 @@
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/actions/action_id.hxx>
 #include <fs/core/problem.hxx>
-#include <fs/core/applicability//formula_interpreter.hxx>
-#include <fs/core/applicability//action_managers.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
+#include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/utils//config.hxx>
 #include <lapkt/tools/logging.hxx>

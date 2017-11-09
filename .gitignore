@@ -67,3 +67,4 @@ preprocessor/generated/*
 
 #
 *.pc
+variables.cache

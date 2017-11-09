@@ -4,7 +4,7 @@
 #include <fs/core/languages/fstrips/scopes.hxx>
 
 //! MRJ: required to get _extract_constant_val() helper function
-#include <fs/core/applicability//action_managers.hxx>
+#include <fs/core/applicability/action_managers.hxx>
 
 #include <fs/core/problem.hxx>
 #include <fs/core/actions/actions.hxx>

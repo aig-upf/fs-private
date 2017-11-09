@@ -4,7 +4,7 @@
 #include <fs/core/actions/action_id.hxx>
 #include <fs/core/constraints//gecode/handlers/lifted_action_csp.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
-#include <fs/core/applicability//action_managers.hxx>
+#include <fs/core/applicability/action_managers.hxx>
 
 namespace fs0 { namespace gecode {
 

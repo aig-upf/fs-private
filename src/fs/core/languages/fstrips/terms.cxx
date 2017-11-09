@@ -10,7 +10,7 @@
 #include <fs/core/utils//binding.hxx>
 
 #include <fs/core/languages/fstrips/operations/interpretation.hxx>
-#include "axioms.hxx"
+#include <fs/core/languages/fstrips/axioms.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 

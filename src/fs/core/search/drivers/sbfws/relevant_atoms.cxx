@@ -1,6 +1,7 @@
 
-#include "relevant_atoms.hxx"
-#include "sbfws.hxx"
+
+#include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
+#include <fs/core/search/drivers/sbfws/sbfws.hxx>
 
 
 namespace fs0 { namespace bfws {

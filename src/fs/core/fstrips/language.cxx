@@ -1,6 +1,6 @@
 
 
-#include "language.hxx"
+#include <fs/core/fstrips/language.hxx>
 
 #include <fs/core/fstrips/language_info.hxx>
 #include <fs/core/utils//utils.hxx>

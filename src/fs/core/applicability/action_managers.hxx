@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include <fs/core/fs_types.hxx>
-#include "base.hxx"
+#include <fs/core/applicability/base.hxx>
 
 namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class AtomicFormula; } }}
 namespace fs = fs0::language::fstrips;

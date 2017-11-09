@@ -4,7 +4,8 @@
 #include <fs/core/fs_types.hxx>
 #include <fs/core/constraints//direct/direct_rpg_builder.hxx>
 #include <fs/core/constraints//direct/action_manager.hxx>
-#include "relaxed_plan_extractor.hxx"
+
+#include <fs/core/heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 
 namespace fs0 {
 

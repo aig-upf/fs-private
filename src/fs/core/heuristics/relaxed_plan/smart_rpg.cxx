@@ -9,7 +9,7 @@
 #include <fs/core/heuristics/relaxed_plan/smart_rpg.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/heuristics/relaxed_plan/relaxed_plan.hxx>
-#include <fs/core/applicability//formula_interpreter.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/constraints//gecode/handlers/lifted_effect_csp.hxx>
 #include <fs/core/constraints//gecode/lifted_plan_extractor.hxx>
 #include <lapkt/tools/logging.hxx>

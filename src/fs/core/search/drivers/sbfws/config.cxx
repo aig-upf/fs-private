@@ -1,5 +1,5 @@
 
-#include "config.hxx"
+#include <fs/core/search/drivers/sbfws/config.hxx>
 #include <fs/core/utils/config.hxx>
 #include <lapkt/tools/logging.hxx>
 

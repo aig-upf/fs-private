@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <sstream>
 
-#include "stats.hxx"
+#include <fs/core/search/drivers/sbfws/stats.hxx>
 
 namespace fs0 { namespace bfws {
 

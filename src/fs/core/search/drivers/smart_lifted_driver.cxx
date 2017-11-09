@@ -1,6 +1,6 @@
 
 #include <fs/core/search/drivers/smart_lifted_driver.hxx>
-#include "setups.hxx"
+#include <fs/core/search/drivers/setups.hxx>
 #include <fs/core/search/utils.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/heuristics/relaxed_plan/smart_rpg.hxx>

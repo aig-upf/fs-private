@@ -1,7 +1,7 @@
 #pragma once
 
 #include <fs/core/fs_types.hxx>
-#include "fs/hybrid/base.hxx"
+#include <fs/hybrid/base.hxx>
 
 #ifdef FS_HYBRID
 #include <fs/hybrid/heuristics/l2_norm.hxx>

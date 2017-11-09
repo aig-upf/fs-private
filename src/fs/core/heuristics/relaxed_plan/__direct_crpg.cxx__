@@ -6,7 +6,7 @@
 #include <fs/core/constraints//direct/action_manager.hxx>
 #include <fs/core/heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 #include <fs/core/relaxed_state.hxx>
-#include <fs/core/applicability//formula_interpreter.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
 
 
 namespace fs0 {

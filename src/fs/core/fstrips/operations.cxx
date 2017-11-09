@@ -1,7 +1,6 @@
 
-#include "operations.hxx"
+#include <fs/core/fstrips/operations.hxx>
 #include <fs/core/problem_info.hxx>
-
 
 
 namespace fs0 { namespace fstrips {

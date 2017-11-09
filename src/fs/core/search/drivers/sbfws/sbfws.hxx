@@ -11,8 +11,8 @@
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
-#include "stats.hxx"
-#include "relevant_atoms.hxx"
+#include <fs/core/search/drivers/sbfws/stats.hxx>
+#include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
 
 
 namespace fs0 { namespace bfws {

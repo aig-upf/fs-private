@@ -2,8 +2,8 @@
 #include <fs/core/models/lifted_state_model.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/applicability//formula_interpreter.hxx>
-#include <fs/core/applicability//action_managers.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
+#include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/actions/lifted_action_iterator.hxx>
 #include <fs/core/actions/actions.hxx>
 

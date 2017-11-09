@@ -7,9 +7,9 @@
 
 
 #include <fs/core/problem.hxx>
-#include "base.hxx"
-#include "iw_run_config.hxx"
-#include "stats.hxx"
+#include <fs/core/search/drivers/sbfws/base.hxx>
+#include <fs/core/search/drivers/sbfws/iw_run_config.hxx>
+#include <fs/core/search/drivers/sbfws/stats.hxx>
 #include <fs/core/search/drivers/sbfws/relevant_atomset.hxx>
 #include <fs/core/utils/printers/vector.hxx>
 #include <fs/core/utils/printers/actions.hxx>

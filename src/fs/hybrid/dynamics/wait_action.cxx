@@ -4,7 +4,7 @@
 #include <fs/hybrid/dynamics/registry.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/applicability//action_managers.hxx>
+#include <fs/core/applicability/action_managers.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>

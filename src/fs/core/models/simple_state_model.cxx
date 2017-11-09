@@ -1,12 +1,12 @@
 
-#include "simple_state_model.hxx"
+#include <fs/core/models/simple_state_model.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/applicability//action_managers.hxx>
-#include <fs/core/applicability//formula_interpreter.hxx>
+#include <fs/core/applicability/action_managers.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/utils/system.hxx>
-#include <fs/core/applicability//match_tree.hxx>
+#include <fs/core/applicability/match_tree.hxx>
 #include <lapkt/tools/logging.hxx>
 
 #include <fs/core/languages/fstrips/language.hxx>

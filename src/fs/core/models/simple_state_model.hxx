@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs/core/actions/actions.hxx>
-#include <fs/core/applicability//base.hxx>
+#include <fs/core/applicability/base.hxx>
 #include <fs/core/atom.hxx>
 
 // namespace lapkt { class MultivaluedState; }

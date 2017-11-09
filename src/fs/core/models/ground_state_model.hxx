@@ -3,7 +3,7 @@
 
 #include <lapkt/search/interfaces/det_state_model.hxx>
 #include <fs/core/actions/actions.hxx>
-#include <fs/core/applicability//base.hxx>
+#include <fs/core/applicability/base.hxx>
 
 namespace fs0 {
 

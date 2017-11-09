@@ -1,6 +1,6 @@
 
 
-#include "fs_novelty.hxx"
+#include <fs/core/search/novelty/fs_novelty.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/utils/atom_index.hxx>
 

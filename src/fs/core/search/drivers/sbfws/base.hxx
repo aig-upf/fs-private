@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "config.hxx"
+#include <fs/core/search/drivers/sbfws/config.hxx>
 #include <fs/core/search/novelty/fs_novelty.hxx>
 
 namespace fs0 { class Problem; }

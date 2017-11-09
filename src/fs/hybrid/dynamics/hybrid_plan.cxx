@@ -2,8 +2,8 @@
 #include <fs/core/problem.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/actions/action_id.hxx>
-#include <fs/core/applicability//formula_interpreter.hxx>
-#include <fs/core/applicability//action_managers.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
+#include <fs/core/applicability/action_managers.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/actions/checker.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
