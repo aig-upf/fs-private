@@ -8,7 +8,7 @@ import glob
 import shutil
 import subprocess
 
-from python import utils, FS_PATH, FS_WORKSPACE
+from python import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .pddl import tasks, pddl_file
 from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
 from .representation import ProblemRepresentation
@@ -167,9 +167,14 @@ def run_solver(translation_dir, args):
     print("{0:<30}{1}\n".format("Command line arguments:", ' '.join(command[1:])))
     sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
 
+    env = dict(os.environ)
+
+    # We prioritize the FS library that resides within this project
+    env['LD_LIBRARY_PATH'] = ':'.join([FS_BUILD, env['LD_LIBRARY_PATH']])
+
     command_str = ' '.join(command)
     # We run the command spawning a new shell so that we can get typical shell kill signals such as OOM, etc.
-    output = subprocess.call(command_str, cwd=translation_dir, shell=True)
+    output = subprocess.call(command_str, cwd=translation_dir, shell=True, env=env)
     if output != 0:
         print("Error running solver. Output code: {}".format(output))
         sys.exit(output)
@@ -233,4 +238,5 @@ def run(args):
 
 
 def main(args):
+    print(FS_BUILD)
     return run(parse_arguments(args))
