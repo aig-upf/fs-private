@@ -34,15 +34,18 @@ on the [Rapidjson](https://github.com/Tencent/rapidjson) library, which will get
 as Git submodules.
 
 ```
-git clone https://github.com/aig-upf/fs.git
-cd fs
+git clone https://github.com/aig-upf/fs.git fs-planner
+cd fs-planner
+git checkout v2
 git submodule update --init
 ```
 
 ## 4. Build the planner
 Once all this is set up, you can invoke the `build.py` build script, which is a thin wrapper
-around the `SCons` build system. Invoke the script with the `-h` flag to obtain a list of possible
-releases you can build. If you want to build the _production_ release of the planner, for instance, 
+around the `SCons` build system. Invoke `./build.py -h` to obtain a list of possible
+releases you can build: most likely, you will want to build the _production_ release, 
+which is optimized for performance, or (let's hope not!!) the _debug_ release, which is geared towards
+ease of debugging. If you want to build the _production_ release, for instance, 
 you just need to issue the following command:
 
 ```shell
