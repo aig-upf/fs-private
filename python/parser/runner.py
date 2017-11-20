@@ -238,5 +238,4 @@ def run(args):
 
 
 def main(args):
-    print(FS_BUILD)
     return run(parse_arguments(args))
