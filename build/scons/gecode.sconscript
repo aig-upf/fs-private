@@ -10,9 +10,9 @@ Import('env')
 # MRJ: I am not sure we will need ALL of the libs
 gecode_libs = [
 	#'gecodeflatzinc',
-	'gecodedriver',
+	#'gecodedriver',
 	'gecodesearch',
-	'gecodeminimodel',
+	#'gecodeminimodel',
 	'gecodeset',
 	'gecodefloat',
 	'gecodeint',

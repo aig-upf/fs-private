@@ -36,7 +36,7 @@ as Git submodules.
 ```
 git clone https://github.com/aig-upf/fs.git fs-planner
 cd fs-planner
-git checkout v2
+git checkout v2  # i.e. the version 2 branch
 git submodule update --init
 ```
 
