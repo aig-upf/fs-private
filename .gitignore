@@ -58,8 +58,6 @@ __pycache__/
 Makefile
 
 # Build temporary files
-_build/*
-build/*
 experiments/*
 workspace/*
 generated/*

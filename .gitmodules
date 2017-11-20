@@ -1,3 +1,9 @@
 [submodule "submodules/rapidjson"]
 	path = submodules/rapidjson
 	url = git@github.com:Tencent/rapidjson.git
+[submodule "submodules/lapkt-base"]
+	path = submodules/lapkt-base
+	url = git@github.com:aig-upf/lapkt-base.git
+[submodule "submodules/lapkt-novelty"]
+	path = submodules/lapkt-novelty
+	url = git@github.com:aig-upf/lapkt-novelty.git

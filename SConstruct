@@ -25,7 +25,9 @@ env['CXX'] = os.environ.get('CXX', env['default_compiler'])
 
 # Set up some directories
 env['fs_src'] = os.path.join(env['fs'], 'src')
+env['fs_vendor'] = os.path.join(env['fs'], 'vendor')
 env['build_basename'] = '.build'
+
 
 if env['edebug']:
     build_suffix = 'edebug'

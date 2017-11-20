@@ -1,0 +1,24 @@
+
+import os
+import util
+
+Import('env', 'sources')
+
+
+lapkt_base_dir = os.path.join(env['fs_vendor'], 'lapkt-base')
+lapkt_novelty_dir = os.path.join(env['fs_vendor'], 'lapkt-novelty')
+lapkt_base_src = os.path.join(lapkt_base_dir, 'src')
+lapkt_novelty_src = os.path.join(lapkt_novelty_dir, 'src')
+
+include_paths = [lapkt_base_src, lapkt_novelty_src]
+
+sources += util.locate_source_files(lapkt_base_src, '*.cxx', fromdir='vendor')
+sources += util.locate_source_files(lapkt_novelty_src, '*.cxx', fromdir='vendor')
+
+lapkt2_libs = [
+	'boost_timer',
+	'boost_filesystem'
+]
+
+env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
+#env.Append( LIBS = lapkt2_libs)

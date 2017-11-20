@@ -10,13 +10,13 @@ import sys
 import multiprocessing
 
 
-def parse_arguments(args):
+def create_parser():
     parser = argparse.ArgumentParser(description='FS Planner Build Script')
     parser.add_argument('-a', '--all', action='store_true', help="Build all releases.")
     parser.add_argument('-p', '--prod', action='store_true', help="Build the production release.")
     parser.add_argument('-d', '--debug', action='store_true', help="Build the debug release.")
     parser.add_argument('-e', '--edebug', action='store_true', help="Build the extreme-debug release.")
-    return parser.parse_args(args)
+    return parser
 
 
 def single_build(directory, command):
@@ -51,8 +51,16 @@ def get_command(cpus, debug):
     return 'scons -j {} {}'.format(cpus, debug)
 
 
-def main(args):
+def main(parser, args):
+    args = parser.parse_args(args)
     flags = dict(prod="", debug="debug=1", edebug="edebug=1")
+
+    # Check that at least some build target was specified
+    all_attrs = ["all"] + list(flags.keys())
+    if not any(getattr(args, attr) for attr in all_attrs):
+        parser.print_help()
+        sys.exit(1)
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     cpus = min(5, multiprocessing.cpu_count())
     print("Starting build on directory '{}' with {} CPUs.".format(current_dir, cpus))
@@ -67,4 +75,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    main(parse_arguments(sys.argv[1:]))
+    main(create_parser(), sys.argv[1:])
