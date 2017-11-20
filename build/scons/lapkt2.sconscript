@@ -21,4 +21,3 @@ lapkt2_libs = [
 ]
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
-#env.Append( LIBS = lapkt2_libs)
