@@ -1,5 +1,7 @@
 
 import os
+import util
+
 Import('env', 'sources')
 
 module_src = os.path.join(env['fs_src'], 'fs', 'hybrid')
