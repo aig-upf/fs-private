@@ -1,4 +1,4 @@
-#include <fs/core/heuristics/novelty/elliptical_2d.hxx>
+#include <fs/hybrid/heuristics/elliptical_2d.hxx>
 
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
@@ -10,7 +10,7 @@
 #include <fs/core/problem.hxx>
 #include <fs/hybrid/heuristics/l2_norm.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//archive/json.hxx>
+#include <fs/core/utils/archive/json.hxx>
 #include <memory>
 
 namespace fs0 {
