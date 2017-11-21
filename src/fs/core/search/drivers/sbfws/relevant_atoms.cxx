@@ -71,15 +71,17 @@ L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 
 #ifdef FS_HYBRID
 
+#include <fs/hybrid/heuristics/l2_norm.hxx>
+
 template <typename NodeT>
 L2NormRelevantAtomsCounter<NodeT>::L2NormRelevantAtomsCounter(const Problem& problem) :
-	_l0_heuristic(L0Heuristic(problem))
+    _l2_norm(hybrid::L2Norm(problem))
 {
 }
 
 template <typename NodeT>
 L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {
-	delete _l0_heuristic;
+	delete _l2_norm;
 }
 
 template <typename NodeT>
