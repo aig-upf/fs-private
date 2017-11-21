@@ -2,7 +2,9 @@
 
 #include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
-
+#ifdef FS_HYBRID
+    #include <fs/hybrid/heuristics/l2_norm.hxx>
+#endif //FS_HYBRID
 
 namespace fs0 { namespace bfws {
 
@@ -70,8 +72,6 @@ L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 
 
 #ifdef FS_HYBRID
-
-#include <fs/hybrid/heuristics/l2_norm.hxx>
 
 template <typename NodeT>
 L2NormRelevantAtomsCounter<NodeT>::L2NormRelevantAtomsCounter(const Problem& problem) :
