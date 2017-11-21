@@ -4,9 +4,9 @@
 #include <fs/core/languages/fstrips/axioms.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/languages/fstrips/terms.hxx>
-#include <fs/core/utils//printers/language.hxx>
-#include <fs/core/utils//binding.hxx>
-#include <fs/core/utils//utils.hxx>
+#include <fs/core/utils/printers/language.hxx>
+#include <fs/core/utils/binding.hxx>
+#include <fs/core/utils/utils.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips {

@@ -5,8 +5,8 @@
 #include <unordered_map>
 
 #include <rapidjson/document.h>
-#include <fs/core/utils//static.hxx>
-#include <fs/core/utils//external.hxx>
+#include <fs/core/utils/static.hxx>
+#include <fs/core/utils/external.hxx>
 
 namespace fs0 { namespace fstrips { class LanguageInfo; }}
 

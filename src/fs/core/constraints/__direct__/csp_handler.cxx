@@ -1,7 +1,7 @@
 
 
-#include <fs/core/constraints//direct/csp_handler.hxx>
-#include <fs/core/constraints//direct/constraint.hxx>
+#include <fs/core/constraints/direct/csp_handler.hxx>
+#include <fs/core/constraints/direct/constraint.hxx>
 
 namespace fs0 {
 

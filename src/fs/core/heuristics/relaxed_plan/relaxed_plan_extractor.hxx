@@ -9,11 +9,11 @@
 #include <fs/core/state.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_data.hxx>
-#include <fs/core/utils//utils.hxx>
-#include <fs/core/utils//printers/printers.hxx>
-#include <fs/core/utils//printers/actions.hxx>
+#include <fs/core/utils/utils.hxx>
+#include <fs/core/utils/printers/printers.hxx>
+#include <fs/core/utils/printers/actions.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 #include <fs/core/actions/action_id.hxx>
 
 namespace fs0 {

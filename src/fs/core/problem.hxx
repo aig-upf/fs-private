@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs/core/fs_types.hxx>
-#include <fs/core/utils//atom_index.hxx>
+#include <fs/core/utils/atom_index.hxx>
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; class Metric;}}}
 namespace fs = fs0::language::fstrips;

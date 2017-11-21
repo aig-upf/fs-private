@@ -7,7 +7,7 @@
 #include <sstream>
 
 #include <fs/core/fs_types.hxx>
-#include <fs/core/utils//printers/helper.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 
 namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; class Term; class ProceduralEffect; }}}
 namespace fs = fs0::language::fstrips;

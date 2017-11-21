@@ -6,10 +6,10 @@
 #include <fs/core/constraints/gecode/helper.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//atom_index.hxx>
-#include <fs/core/utils//utils.hxx>
-#include <fs/core/utils//printers/gecode.hxx>
-#include <fs/core/utils//printers/printers.hxx>
+#include <fs/core/utils/atom_index.hxx>
+#include <fs/core/utils/utils.hxx>
+#include <fs/core/utils/printers/gecode.hxx>
+#include <fs/core/utils/printers/printers.hxx>
 #include <fs/core/constraints/gecode/utils/novelty_constraints.hxx>
 #include <fs/core/constraints/gecode/supports.hxx>
 #include <fs/core/state.hxx>

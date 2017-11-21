@@ -1,8 +1,8 @@
 
 #include <algorithm>
 #include <fs/core/problem.hxx>
-#include <fs/core/constraints//direct/sum_constraint.hxx>
-#include <fs/core/utils//printers/helper.hxx>
+#include <fs/core/constraints/direct/sum_constraint.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 
 namespace fs0 {
 

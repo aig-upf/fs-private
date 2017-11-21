@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs/core/fs_types.hxx>
-#include <fs/core/utils//binding.hxx>
+#include <fs/core/utils/binding.hxx>
 #include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
 

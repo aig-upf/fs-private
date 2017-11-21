@@ -5,8 +5,8 @@
 #include <fs/core/languages/fstrips/operations.hxx>
 
 #include <fs/core/actions/actions.hxx>
-#include <fs/core/constraints//gecode/utils/nested_fluent_iterator.hxx>
-#include <fs/core/utils//utils.hxx>
+#include <fs/core/constraints/gecode/utils/nested_fluent_iterator.hxx>
+#include <fs/core/utils/utils.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 

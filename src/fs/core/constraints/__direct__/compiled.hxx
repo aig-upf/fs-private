@@ -6,8 +6,8 @@
 #include <functional>
 #include <boost/container/flat_map.hpp>
 
-#include <fs/core/constraints//direct/constraint.hxx>
-#include <fs/core/constraints//direct/effect.hxx>
+#include <fs/core/constraints/direct/constraint.hxx>
+#include <fs/core/constraints/direct/effect.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips { class Term; } } }

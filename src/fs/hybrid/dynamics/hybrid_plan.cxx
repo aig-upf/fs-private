@@ -9,7 +9,7 @@
 #include <fs/core/languages/fstrips/language.hxx>
 
 // For writing the traces
-#include <fs/core/utils//archive/json.hxx>
+#include <fs/core/utils/archive/json.hxx>
 
 using namespace rapidjson;
 

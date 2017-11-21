@@ -1,8 +1,8 @@
 
 #include <unordered_set>
 
-#include <fs/core/utils//support.hxx>
-#include <fs/core/utils//utils.hxx>
+#include <fs/core/utils/support.hxx>
+#include <fs/core/utils/utils.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/languages/fstrips/language.hxx>

@@ -1,8 +1,8 @@
 
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
-#include <fs/core/constraints//direct/translators/effects.hxx>
-#include <fs/core/constraints//direct/builtin.hxx>
+#include <fs/core/constraints/direct/translators/effects.hxx>
+#include <fs/core/constraints/direct/builtin.hxx>
 
 namespace fs0 { 
 	

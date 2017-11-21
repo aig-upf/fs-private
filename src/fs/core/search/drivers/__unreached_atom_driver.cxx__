@@ -7,7 +7,7 @@
 #include <fs/core/heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <fs/core/utils/support.hxx>
 #include <fs/core/search/drivers/setups.hxx>
-#include <fs/core/constraints//gecode/handlers/lifted_effect_unreached.hxx>
+#include <fs/core/constraints/gecode/handlers/lifted_effect_unreached.hxx>
 
 
 using namespace fs0::gecode;

@@ -2,10 +2,10 @@
 #pragma once
 
 #include <fs/core/fs_types.hxx>
-#include <fs/core/constraints//gecode/extensions.hxx>
-#include <fs/core/constraints//gecode/handlers/formula_csp.hxx>
-#include <fs/core/constraints//gecode/handlers/lifted_effect_csp.hxx>
-#include <fs/core/utils//atom_index.hxx>
+#include <fs/core/constraints/gecode/extensions.hxx>
+#include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
+#include <fs/core/constraints/gecode/handlers/lifted_effect_csp.hxx>
+#include <fs/core/utils/atom_index.hxx>
 #include <unordered_set>
 
 namespace fs0 { class Problem; class State; class RPGData; }

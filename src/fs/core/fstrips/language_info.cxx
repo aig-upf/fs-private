@@ -4,8 +4,8 @@
 #include <lapkt/tools/logging.hxx>
 
 #include <fs/core/fstrips/language_info.hxx>
-#include <fs/core/utils//loader.hxx>
-#include <fs/core/utils//printers/helper.hxx>
+#include <fs/core/utils/loader.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 
 
 namespace fs0 { namespace fstrips {

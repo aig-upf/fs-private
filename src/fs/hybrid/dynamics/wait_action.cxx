@@ -1,5 +1,5 @@
 #include <fs/hybrid/dynamics/wait_action.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 #include <fs/hybrid/dynamics/active_ode_set.hxx>
 #include <fs/hybrid/dynamics/registry.hxx>
 #include <fs/core/problem.hxx>

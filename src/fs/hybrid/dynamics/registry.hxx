@@ -1,7 +1,7 @@
 #pragma once
 
 #include <fs/hybrid/dynamics/integrator.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 
 namespace fs0 { namespace dynamics { namespace integrators {
 

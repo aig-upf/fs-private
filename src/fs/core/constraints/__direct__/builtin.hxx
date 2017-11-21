@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <fs/core/constraints//direct/constraint.hxx>
-#include <fs/core/constraints//direct/effect.hxx>
+#include <fs/core/constraints/direct/constraint.hxx>
+#include <fs/core/constraints/direct/effect.hxx>
 
 
 namespace fs0 {

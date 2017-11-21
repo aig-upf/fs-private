@@ -1,5 +1,5 @@
 
-#include <fs/core/constraints//direct/builtin.hxx>
+#include <fs/core/constraints/direct/builtin.hxx>
 #include <fs/core/problem_info.hxx>
 
 namespace fs0 {

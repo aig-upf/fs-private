@@ -1,6 +1,6 @@
 
 #include <fs/core/problem_info.hxx>
-#include <fs/core/utils//atom_index.hxx>
+#include <fs/core/utils/atom_index.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 #include <fs/core/constraints/gecode/handlers/base_csp.hxx>
@@ -10,7 +10,7 @@
 #include <fs/core/constraints/registry.hxx>
 #include <gecode/driver.hh>
 #include <fs/core/constraints/gecode/translators/component_translator.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 
 
 namespace fs0 { namespace gecode {

@@ -2,7 +2,7 @@
 
 #include <fs/core/problem_info.hxx>
 #include <fs/core/constraints/gecode/utils/term_list_iterator.hxx>
-#include <fs/core/utils//cartesian_iterator.hxx>
+#include <fs/core/utils/cartesian_iterator.hxx>
 #include <fs/core/languages/fstrips/terms.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 

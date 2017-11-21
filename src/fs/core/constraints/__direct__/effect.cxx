@@ -1,6 +1,6 @@
 
-#include <fs/core/constraints//direct/effect.hxx>
-#include <fs/core/utils//projections.hxx>
+#include <fs/core/constraints/direct/effect.hxx>
+#include <fs/core/utils/projections.hxx>
 #include <fs/core/state.hxx>
 
 namespace fs0 {

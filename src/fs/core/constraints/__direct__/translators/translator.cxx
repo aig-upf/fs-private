@@ -1,16 +1,16 @@
 
-#include <fs/core/constraints//direct/translators/translator.hxx>
+#include <fs/core/constraints/direct/translators/translator.hxx>
 #include <fs/core/languages/fstrips/terms.hxx>
 #include <fs/core/languages/fstrips/effects.hxx>
-#include <fs/core/constraints//direct/builtin.hxx>
-#include <fs/core/constraints//direct/compiled.hxx>
+#include <fs/core/constraints/direct/builtin.hxx>
+#include <fs/core/constraints/direct/compiled.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/constraints/registry.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//projections.hxx>
+#include <fs/core/utils/projections.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
-#include <fs/core/constraints//direct/translators/effects.hxx>
+#include <fs/core/constraints/direct/translators/effects.hxx>
 
 
 namespace fs0 {

@@ -1,7 +1,7 @@
 
 #include <fs/core/utils/printers/registry.hxx>
 #include <fs/core/utils/printers/printers.hxx>
-#include <fs/core/constraints//registry.hxx>
+#include <fs/core/constraints/registry.hxx>
 
 
 namespace fs0 { namespace print {

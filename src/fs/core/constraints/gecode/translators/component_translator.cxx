@@ -8,7 +8,7 @@
 #include <fs/core/constraints/gecode/handlers/base_csp.hxx>
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//printers/gecode.hxx>
+#include <fs/core/utils/printers/gecode.hxx>
 
 namespace fs0 { namespace gecode {
 

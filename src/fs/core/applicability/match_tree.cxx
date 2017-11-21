@@ -5,13 +5,13 @@
 #include <algorithm>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/utils//atom_index.hxx>
+#include <fs/core/utils/atom_index.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
-#include <fs/core/utils//system.hxx>
-#include <fs/core/utils//printers/vector.hxx>
+#include <fs/core/utils/system.hxx>
+#include <fs/core/utils/printers/vector.hxx>
 #include <fs/core/problem.hxx>
 
 namespace fs0 {

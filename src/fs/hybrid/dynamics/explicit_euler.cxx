@@ -1,5 +1,5 @@
 #include <fs/hybrid/dynamics/explicit_euler.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 
 namespace fs0 { namespace dynamics { namespace integrators {
 

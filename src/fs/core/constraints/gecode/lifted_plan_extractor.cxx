@@ -6,8 +6,8 @@
 #include <fs/core/state.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
-#include <fs/core/utils//printers/printers.hxx>
-#include <fs/core/utils//printers/actions.hxx>
+#include <fs/core/utils/printers/printers.hxx>
+#include <fs/core/utils/printers/actions.hxx>
 #include <lapkt/tools/logging.hxx>
 
 namespace fs0 { namespace gecode {

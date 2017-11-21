@@ -8,7 +8,7 @@
 #include <fs/core/utils/loader.hxx>
 #include <fs/core/utils/printers/binding.hxx>
 #include <fs/core/utils/binding_iterator.hxx>
-#include <fs/core/constraints//registry.hxx>
+#include <fs/core/constraints/registry.hxx>
 #include <fs/core/languages/fstrips/operations/basic.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/heuristics/l0.hxx>

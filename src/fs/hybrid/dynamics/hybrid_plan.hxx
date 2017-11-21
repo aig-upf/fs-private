@@ -5,7 +5,7 @@
 #include <tuple>
 #include <fs/core/state.hxx>
 #include <fs/core/actions/actions.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 
 namespace fs0 {
 

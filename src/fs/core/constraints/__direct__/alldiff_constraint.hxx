@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 #include <set>
-#include <fs/core/constraints//direct/constraint.hxx>
+#include <fs/core/constraints/direct/constraint.hxx>
 
 namespace fs0 {
 

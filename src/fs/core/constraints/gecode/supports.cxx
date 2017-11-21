@@ -2,7 +2,7 @@
 #include <fs/core/constraints/gecode/supports.hxx>
 #include <fs/core/constraints/gecode/csp_translator.hxx>
 #include <fs/core/constraints/gecode/gecode_csp.hxx>
-#include <fs/core/utils//atom_index.hxx>
+#include <fs/core/utils/atom_index.hxx>
 #include <fs/core/problem.hxx>
 
 namespace fs0 { namespace gecode {

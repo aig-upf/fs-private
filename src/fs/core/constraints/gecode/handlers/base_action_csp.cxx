@@ -8,13 +8,13 @@
 #include <fs/core/constraints/gecode/supports.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <gecode/driver.hh>
-#include <fs/core/utils//printers/gecode.hxx>
+#include <fs/core/utils/printers/gecode.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_data.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
-#include <fs/core/utils//config.hxx>
-#include <fs/core/utils//utils.hxx>
-#include <fs/core/utils//atom_index.hxx>
+#include <fs/core/utils/config.hxx>
+#include <fs/core/utils/utils.hxx>
+#include <fs/core/utils/atom_index.hxx>
 
 
 namespace fs0 { namespace gecode {

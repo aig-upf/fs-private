@@ -3,8 +3,8 @@
 #include <fs/core/fstrips/language.hxx>
 
 #include <fs/core/fstrips/language_info.hxx>
-#include <fs/core/utils//utils.hxx>
-#include <fs/core/utils//printers/actions.hxx>
+#include <fs/core/utils/utils.hxx>
+#include <fs/core/utils/printers/actions.hxx>
 
 
 namespace fs0 { namespace fstrips {

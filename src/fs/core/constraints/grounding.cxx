@@ -6,12 +6,12 @@
 #include <fs/core/problem_info.hxx>
 #include <fs/core/constraints/grounding.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
-#include <fs/core/utils//printers/binding.hxx>
-#include <fs/core/utils//printers/language.hxx>
-#include <fs/core/utils//config.hxx>
-#include <fs/core/utils//binding_iterator.hxx>
-#include <fs/core/utils//utils.hxx>
-#include <fs/core/utils//loader.hxx>
+#include <fs/core/utils/printers/binding.hxx>
+#include <fs/core/utils/printers/language.hxx>
+#include <fs/core/utils/config.hxx>
+#include <fs/core/utils/binding_iterator.hxx>
+#include <fs/core/utils/utils.hxx>
+#include <fs/core/utils/loader.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 

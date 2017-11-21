@@ -4,17 +4,17 @@
 
 #include <lapkt/tools/logging.hxx>
 
-#include <fs/core/utils//system.hxx>
+#include <fs/core/utils/system.hxx>
 
 #include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/utils//atom_index.hxx>
+#include <fs/core/utils/atom_index.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
-#include <fs/core/utils//utils.hxx>
+#include <fs/core/utils/utils.hxx>
 
 namespace fs0 {
 

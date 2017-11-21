@@ -1,5 +1,5 @@
 
-#include <fs/core/utils//binding.hxx>
+#include <fs/core/utils/binding.hxx>
 #include <iostream>
 
 namespace fs0 {

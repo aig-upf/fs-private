@@ -6,9 +6,9 @@
 #include <fs/core/problem.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/utils//binding_iterator.hxx>
-#include <fs/core/utils//printers/vector.hxx>
-#include <fs/core/utils//printers/helper.hxx>
+#include <fs/core/utils/binding_iterator.hxx>
+#include <fs/core/utils/printers/vector.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 
 
 namespace fs0 {

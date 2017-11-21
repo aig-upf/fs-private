@@ -4,7 +4,7 @@
 #include <vector>
 #include <utility>
 
-#include <fs/core/utils//visitor.hxx>
+#include <fs/core/utils/visitor.hxx>
 #include <fs/core/languages/fstrips/language_fwd.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {

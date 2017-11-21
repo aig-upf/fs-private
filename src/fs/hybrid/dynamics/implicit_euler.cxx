@@ -1,6 +1,6 @@
 #include <fs/hybrid/dynamics/implicit_euler.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 
 namespace fs0 { namespace dynamics { namespace integrators {
 

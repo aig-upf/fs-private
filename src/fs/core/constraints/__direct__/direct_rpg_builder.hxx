@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs/core/fs_types.hxx>
-#include <fs/core/constraints//direct/csp_handler.hxx>
+#include <fs/core/constraints/direct/csp_handler.hxx>
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
 namespace fs = fs0::language::fstrips;

@@ -7,7 +7,7 @@
 #include <fs/core/constraints/gecode/csp_translator.hxx>
 #include <fs/core/constraints/gecode/extensions.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//printers/gecode.hxx>
+#include <fs/core/utils/printers/gecode.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 
 namespace fs0 { namespace gecode {

@@ -7,7 +7,7 @@
 #include <fs/core/problem_info.hxx>
 #include <fs/core/languages/fstrips/terms.hxx>
 #include <fs/core/constraints/gecode/utils/element_constraint.hxx>
-#include <fs/core/utils//printers/gecode.hxx>
+#include <fs/core/utils/printers/gecode.hxx>
 #include <fs/core/constraints/gecode/helper.hxx>
 #include <fs/core/constraints/gecode/handlers/base_csp.hxx>
 #include <fs/core/constraints/gecode/utils/nested_fluent_iterator.hxx>

@@ -1,6 +1,6 @@
 
 #include <fs/core/utils/printers/gecode.hxx>
-#include <fs/core/constraints//gecode/csp_translator.hxx>
+#include <fs/core/constraints/gecode/csp_translator.hxx>
 
 namespace fs0 { namespace print {
 

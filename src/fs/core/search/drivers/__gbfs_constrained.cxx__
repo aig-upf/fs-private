@@ -1,6 +1,6 @@
 
 #include <fs/core/search/drivers/gbfs_constrained.hxx>
-#include <fs/core/constraints//direct/action_manager.hxx>
+#include <fs/core/constraints/direct/action_manager.hxx>
 #include <fs/core/search/drivers/validation.hxx>
 #include <fs/core/search/drivers/setups.hxx>
 #include <lapkt/algorithms/best_first_search.hxx>
@@ -9,7 +9,7 @@
 #include <fs/core/heuristics/relaxed_plan/gecode_crpg.hxx>
 #include <fs/core/heuristics/relaxed_plan/unreached_atom_rpg.hxx>
 #include <fs/core/heuristics/relaxed_plan/direct_crpg.hxx>
-#include <fs/core/constraints//gecode/handlers/ground_action_csp.hxx>
+#include <fs/core/constraints/gecode/handlers/ground_action_csp.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/utils/support.hxx>
 #include <fs/core/search/stats.hxx>

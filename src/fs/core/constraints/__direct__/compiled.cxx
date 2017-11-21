@@ -1,10 +1,10 @@
 
 #include <fs/core/problem_info.hxx>
-#include <fs/core/constraints//direct/compiled.hxx>
-#include <fs/core/utils//projections.hxx>
-#include <fs/core/utils//utils.hxx>
-#include <fs/core/utils//printers/vector.hxx>
-#include <fs/core/utils//printers/helper.hxx>
+#include <fs/core/constraints/direct/compiled.hxx>
+#include <fs/core/utils/projections.hxx>
+#include <fs/core/utils/utils.hxx>
+#include <fs/core/utils/printers/vector.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 

@@ -5,10 +5,10 @@
 #include <fs/core/fstrips/loader.hxx>
 #include <fs/core/fstrips/language_info.hxx>
 #include <fs/core/fstrips/operations.hxx>
-#include <fs/core/utils//loader.hxx>
+#include <fs/core/utils/loader.hxx>
 
 #include <fs/core/languages/fstrips/builtin.hxx>
-#include <fs/core/constraints//registry.hxx>
+#include <fs/core/constraints/registry.hxx>
 
 
 namespace fs0 { namespace fstrips {

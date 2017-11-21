@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs/core/problem.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/heuristics/reward.hxx>

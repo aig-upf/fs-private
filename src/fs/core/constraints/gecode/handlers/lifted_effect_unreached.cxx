@@ -6,7 +6,7 @@
 #include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
 #include <fs/core/constraints/gecode/utils/novelty_constraints.hxx>
 #include <fs/core/constraints/gecode/supports.hxx>
-#include <fs/core/utils//printers/actions.hxx>
+#include <fs/core/utils/printers/actions.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 

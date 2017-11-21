@@ -1,9 +1,9 @@
 
 #include <numeric>
 
-#include <fs/core/constraints//direct/alldiff_constraint.hxx>
-#include <fs/core/utils//printers/helper.hxx>
-#include <fs/core/utils//printers/vector.hxx>
+#include <fs/core/constraints/direct/alldiff_constraint.hxx>
+#include <fs/core/utils/printers/helper.hxx>
+#include <fs/core/utils/printers/vector.hxx>
 
 namespace fs0 {
 

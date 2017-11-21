@@ -1,9 +1,9 @@
 
-#include <fs/core/constraints//direct/bound_constraint.hxx>
-#include <fs/core/constraints//direct/compiled.hxx>
+#include <fs/core/constraints/direct/bound_constraint.hxx>
+#include <fs/core/constraints/direct/compiled.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/utils//printers/vector.hxx>
-#include <fs/core/utils//printers/helper.hxx>
+#include <fs/core/utils/printers/vector.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 #include <fs/core/actions/actions.hxx>
 
 namespace fs0 {

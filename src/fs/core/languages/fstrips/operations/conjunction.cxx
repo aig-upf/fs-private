@@ -1,6 +1,6 @@
 
 #include <fs/core/languages/fstrips/operations/conjunction.hxx>
-#include <fs/core/utils//utils.hxx>
+#include <fs/core/utils/utils.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 

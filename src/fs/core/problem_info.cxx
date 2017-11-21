@@ -4,7 +4,7 @@
 
 #include <fs/core/problem_info.hxx>
 #include <boost/algorithm/string.hpp>
-#include <fs/core/utils//lexical_cast.hxx>
+#include <fs/core/utils/lexical_cast.hxx>
 #include <fs/core/atom.hxx>
 #include <lapkt/tools/logging.hxx>
 

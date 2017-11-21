@@ -1,9 +1,9 @@
 
-#include <fs/core/constraints//direct/constraint.hxx>
+#include <fs/core/constraints/direct/constraint.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/utils//projections.hxx>
+#include <fs/core/utils/projections.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/constraints//direct/compiled.hxx>
+#include <fs/core/constraints/direct/compiled.hxx>
 
 namespace fs0 {
 

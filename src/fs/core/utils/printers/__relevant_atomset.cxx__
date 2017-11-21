@@ -1,5 +1,5 @@
 
-#include <fs/core/utils//printers/relevant_atomset.hxx>
+#include <fs/core/utils/printers/relevant_atomset.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/search/drivers/sbfws/iw_run.hxx>
 

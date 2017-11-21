@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs/core/constraints/filtering.hxx>
-#include <fs/core/constraints//direct/component.hxx>
+#include <fs/core/constraints/direct/component.hxx>
 
 namespace fs0 {
 

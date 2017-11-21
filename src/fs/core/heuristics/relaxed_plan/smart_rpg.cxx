@@ -10,9 +10,9 @@
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/heuristics/relaxed_plan/relaxed_plan.hxx>
 #include <fs/core/applicability/formula_interpreter.hxx>
-#include <fs/core/constraints//gecode/lifted_plan_extractor.hxx>
+#include <fs/core/constraints/gecode/lifted_plan_extractor.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 #include <fs/core/problem.hxx>
 
 namespace fs0 { namespace gecode {

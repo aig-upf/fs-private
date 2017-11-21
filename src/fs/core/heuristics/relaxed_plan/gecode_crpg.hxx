@@ -2,7 +2,7 @@
 #pragma once
 
 #include <fs/core/fs_types.hxx>
-#include <fs/core/constraints//gecode/extensions.hxx>
+#include <fs/core/constraints/gecode/extensions.hxx>
 
 namespace fs0 { class Problem; class State; class RPGData; }
 

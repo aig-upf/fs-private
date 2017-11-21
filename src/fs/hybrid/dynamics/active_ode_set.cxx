@@ -7,7 +7,7 @@
 #include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <fs/hybrid/dynamics/integrator.hxx>
-#include <fs/core/utils//config.hxx>
+#include <fs/core/utils/config.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 
 #include <lapkt/tools/logging.hxx>

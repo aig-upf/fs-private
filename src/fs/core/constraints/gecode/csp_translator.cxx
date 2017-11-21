@@ -7,7 +7,7 @@
 #include <fs/core/state.hxx>
 #include <fs/core/constraints/gecode/gecode_csp.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
-#include <fs/core/utils//printers/helper.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 #include <fs/core/fstrips/language_info.hxx>
 
 namespace fs0 { namespace gecode {

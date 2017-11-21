@@ -11,7 +11,7 @@
 #include <fs/hybrid/heuristics/l2_norm.hxx>
 #include <lapkt/tools/logging.hxx>
 
-#include <fs/core/utils//archive/json.hxx>
+#include <fs/core/utils/archive/json.hxx>
 
 namespace fs0 { namespace hybrid {
 

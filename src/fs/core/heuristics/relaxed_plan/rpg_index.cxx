@@ -1,12 +1,12 @@
 
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//atom_index.hxx>
+#include <fs/core/utils/atom_index.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/actions/action_id.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/constraints//gecode/extensions.hxx>
+#include <fs/core/constraints/gecode/extensions.hxx>
 
 namespace fs0 { namespace gecode {
 

@@ -7,7 +7,7 @@
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
 #include <fs/core/problem.hxx>
-#include <fs/core/utils//utils.hxx>
+#include <fs/core/utils/utils.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
 

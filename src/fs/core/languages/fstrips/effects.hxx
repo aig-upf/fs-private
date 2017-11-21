@@ -3,7 +3,7 @@
 
 #include <fs/core/fs_types.hxx>
 #include <fs/core/atom.hxx>
-#include <fs/core/utils//binding.hxx>
+#include <fs/core/utils/binding.hxx>
 
 namespace fs0 {
 class ProblemInfo;

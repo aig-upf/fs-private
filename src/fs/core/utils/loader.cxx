@@ -9,8 +9,8 @@
 #include <fs/core/languages/fstrips/loader.hxx>
 #include <fs/core/languages/fstrips/metrics.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/constraints//gecode/helper.hxx>
-#include <fs/core/constraints//registry.hxx>
+#include <fs/core/constraints/gecode/helper.hxx>
+#include <fs/core/constraints/registry.hxx>
 #include <fs/core/utils/utils.hxx>
 #include <fs/core/utils/printers/registry.hxx>
 #include <fs/core/utils/config.hxx>
@@ -18,7 +18,7 @@
 #include <fs/core/fstrips/language_info.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
-#include <fs/core/constraints//grounding.hxx>
+#include <fs/core/constraints/grounding.hxx>
 #include <fs/core/validator.hxx>
 
 

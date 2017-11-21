@@ -2,7 +2,7 @@
 #include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
-#include <fs/core/utils//utils.hxx>
+#include <fs/core/utils/utils.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
 

@@ -7,7 +7,7 @@
 #include <fs/core/actions/actions.hxx>
 
 #include <fs/core/languages/fstrips/language.hxx>
-#include <fs/core/constraints//gecode/handlers/lifted_action_csp.hxx>
+#include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
 
 
 //! A helper to derive the distinct goal atoms

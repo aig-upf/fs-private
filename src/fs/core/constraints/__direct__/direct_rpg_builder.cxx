@@ -1,13 +1,13 @@
 
 
 #include <fs/core/languages/fstrips/operations.hxx>
-#include <fs/core/constraints//direct/direct_rpg_builder.hxx>
-#include <fs/core/utils//utils.hxx>
-#include <fs/core/utils//projections.hxx>
+#include <fs/core/constraints/direct/direct_rpg_builder.hxx>
+#include <fs/core/utils/utils.hxx>
+#include <fs/core/utils/projections.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/constraints//direct/constraint.hxx>
-#include <fs/core/constraints//direct/compiled.hxx>
-#include <fs/core/constraints//direct/translators/translator.hxx>
+#include <fs/core/constraints/direct/constraint.hxx>
+#include <fs/core/constraints/direct/compiled.hxx>
+#include <fs/core/constraints/direct/translators/translator.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/relaxed_state.hxx>

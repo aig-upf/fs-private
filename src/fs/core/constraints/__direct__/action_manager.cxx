@@ -1,10 +1,10 @@
 
-#include <fs/core/constraints//direct/action_manager.hxx>
+#include <fs/core/constraints/direct/action_manager.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_data.hxx>
-#include <fs/core/constraints//direct/translators/translator.hxx>
-#include <fs/core/constraints//direct/bound_constraint.hxx>
-#include <fs/core/constraints//direct/compiled.hxx>
-#include <fs/core/utils//projections.hxx>
+#include <fs/core/constraints/direct/translators/translator.hxx>
+#include <fs/core/constraints/direct/bound_constraint.hxx>
+#include <fs/core/constraints/direct/compiled.hxx>
+#include <fs/core/utils/projections.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
 #include <fs/core/languages/fstrips/language.hxx>

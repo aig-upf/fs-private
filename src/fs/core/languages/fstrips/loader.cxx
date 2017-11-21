@@ -3,7 +3,7 @@
 #include <fs/core/problem_info.hxx>
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
-#include <fs/core/constraints//registry.hxx>
+#include <fs/core/constraints/registry.hxx>
 #include <fs/core/problem.hxx>
 
 
