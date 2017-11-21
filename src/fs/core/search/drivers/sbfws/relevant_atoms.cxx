@@ -45,8 +45,6 @@ unsigned L0RelevantAtomsCounter<NodeT>::count(NodeT& node, BFWSStats& stats) con
 }
 
 /****** L2-BASED #R COUNTER *****/
-template <typename NodeT>
-L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 
 
 
@@ -75,18 +73,7 @@ L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 
 template <typename NodeT>
 L2NormRelevantAtomsCounter<NodeT>::L2NormRelevantAtomsCounter(const Problem& problem) :
-    _l2_norm(hybrid::L2Norm(problem))
-{
-}
-
-template <typename NodeT>
-L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {
-	delete _l2_norm;
-}
-
-template <typename NodeT>
-L2NormRelevantAtomsCounter<NodeT>::L2NormRelevantAtomsCounter(const Problem& problem) :
-	_l2_norm(hybrid::L2Norm(problem))
+	_l2_norm(new hybrid::L2Norm(problem))
 {
 }
 
@@ -102,8 +89,9 @@ template <typename NodeT>
 	return v;
 }
 
-
-
+#else
+template <typename NodeT>
+L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 #endif
 
 
