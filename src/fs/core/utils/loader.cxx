@@ -310,8 +310,22 @@ Loader::loadMetric( const rapidjson::Value& data, const ProblemInfo& info ) {
     auto processed = fs::bind(*expr, Binding::EMPTY_BINDING, info);
 
 	LPT_INFO( "main", "Metric loaded: " << processed );
-    delete expr;
-	return new fs::Metric(optMode, processed );
+	const fs::Term* stage_cost = nullptr;
+	const fs::Term* terminal_cost = nullptr;
+	if (data.HasMember("stage_cost")) {
+		auto expr = fs::Loader::parseTerm( data["stage_cost"], info );
+		stage_cost = fs::bind(*expr, Binding::EMPTY_BINDING, info);
+		LPT_INFO( "main", "Metric: stage cost loaded: " << *stage_cost );
+		delete expr;
+	}
+	if (data.HasMember("terminal_cost")) {
+		auto expr = fs::Loader::parseTerm( data["terminal_cost"], info );
+		terminal_cost = fs::bind(*expr, Binding::EMPTY_BINDING, info);
+		LPT_INFO( "main", "Metric: terminal cost loaded: " << *terminal_cost );
+		delete expr;
+	}
+
+	return new fs::Metric(optMode, terminal_cost, stage_cost );
 }
 
 

@@ -1210,12 +1210,21 @@ class FunctionalStripsListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by FunctionalStripsParser#FunctionalExpr.
-    def enterFunctionalExpr(self, ctx):
+    # Enter a parse tree produced by FunctionalStripsParser#FunctionalExprMetric.
+    def enterFunctionalExprMetric(self, ctx):
         pass
 
-    # Exit a parse tree produced by FunctionalStripsParser#FunctionalExpr.
-    def exitFunctionalExpr(self, ctx):
+    # Exit a parse tree produced by FunctionalStripsParser#FunctionalExprMetric.
+    def exitFunctionalExprMetric(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by FunctionalStripsParser#CompositeMetric.
+    def enterCompositeMetric(self, ctx):
+        pass
+
+    # Exit a parse tree produced by FunctionalStripsParser#CompositeMetric.
+    def exitCompositeMetric(self, ctx):
         pass
 
 
@@ -1234,6 +1243,24 @@ class FunctionalStripsListener(ParseTreeListener):
 
     # Exit a parse tree produced by FunctionalStripsParser#IsViolatedMetric.
     def exitIsViolatedMetric(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by FunctionalStripsParser#terminalCost.
+    def enterTerminalCost(self, ctx):
+        pass
+
+    # Exit a parse tree produced by FunctionalStripsParser#terminalCost.
+    def exitTerminalCost(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by FunctionalStripsParser#stageCost.
+    def enterStageCost(self, ctx):
+        pass
+
+    # Exit a parse tree produced by FunctionalStripsParser#stageCost.
+    def exitStageCost(self, ctx):
         pass
 
 

@@ -111,17 +111,33 @@ class FSMetric(FSBaseComponent) :
     """ A state--dependant metric (i.e. a expression to optimise defined over state variables)"""
     def __init__(self, index, opt_mode, expr ) :
         super().__init__(index)
-        if opt_mode is None or expr is None :
+        if opt_mode is None or expr is (None,None) :
             self.opt_mode = self.expr = None
             return
-        self.expression = self.parser.process_expression(expr, self.binding_unit)
+        self.expr = expr
+
+        if self.expr[0] is not None :
+            self.terminal_cost = self.parser.process_expression(expr[0], self.binding_unit)
+        if self.expr[1] is not None :
+            self.stage_cost = self.parser.process_expression(expr[1], self.binding_unit)
         self.opt_mode = opt_mode
 
     def dump(self) :
         if self.opt_mode is None :
             return dict()
-        return dict(optimization = self.opt_mode,
-                    expression=self.expression.dump(self.index,self.binding_unit))
+        if self.expr[0] is not None and self.expr[1] is not None :
+            return dict(optimization = self.opt_mode,
+                        terminal_cost=self.terminal_cost.dump(self.index,self.binding_unit),
+                        stage_cost=self.stage_cost.dump(self.index,self.binding_unit))
+        elif self.expr[0] is None and self.expr[1] is not None :
+            return dict(optimization = self.opt_mode,
+                        stage_cost=self.stage_cost.dump(self.index,self.binding_unit))
+        elif self.expr[0] is not None and self.expr[1] is None :
+            return dict(optimization = self.opt_mode,
+                        terminal_cost=self.terminal_cost.dump(self.index,self.binding_unit))
+        elif self.expr[0] is  None and self.expr[1] is None :
+            return dict()
+        assert False
 
 class FSNamedFormula(FSBaseComponent):
     """ A FSTRIPS axiom, which is a formula with a name and possibly some lifted parameters """

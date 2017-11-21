@@ -127,7 +127,10 @@ class Task(object):
 
         print( "Checking metric expression is a grounded functional term...")
         if loader.metric is not None :
-            check_is_grounded_functional_term(loader.metric.expr)
+            if loader.metric.terminal_cost is not None :
+                check_is_grounded_functional_term(loader.metric.terminal_cost)
+            if loader.metric.stage_cost is not None :
+                check_is_grounded_functional_term(loader.metric.stage_cost)
 
         print( "Checking the goal is a ground formula")
         if loader.goal is not None :
