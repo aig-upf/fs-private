@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-#include <fs/core/languages/fstrips/base.hxx>
 #include <fs/core/languages/fstrips/language_fwd.hxx>
+#include <fs/core/languages/fstrips/base.hxx>
 #include <fs/core/fs_types.hxx>
 
 
@@ -48,7 +48,7 @@ public:
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
 class AtomicFormula : public Formula {
 public:
-	LOKI_DEFINE_CONST_VISITABLE();
+	LOKI_DEFINE_CONST_VISITABLE()
 
 	AtomicFormula(const std::vector<const Term*>& subterms) : _subterms(subterms), _interpreted_subterms(subterms.size(), object_id::INVALID) {}
 
@@ -358,13 +358,13 @@ protected:
 
 	inline bool _satisfied(const std::vector<object_id>& values) const override { return _satisfied(values[0], values[1]); }
 	virtual bool _satisfied(const object_id& o1, const object_id& o2) const;
-	
+
 	//! Make sure both LHS and RHS types are equal and return the actual type
 	type_id _check_types_are_equal(const object_id& lhs, const object_id& rhs) const;
-	
+
 	//! Throw unsupported type exception
 	void _throw_unsupported_type(const type_id& t) const;
-	
+
 	//! Equality operator for bools and objects. UGLY. Unless overriden, return false.
 	virtual bool _eq_op(const object_id& o1, const object_id& o2) const;
 };
@@ -376,7 +376,7 @@ public:
 	EQAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new EQAtomicFormula(subterms); }
 
 	Symbol symbol() const override { return Symbol::EQ; }
-	
+
 protected:
 	bool _eq_op(const object_id& o1, const object_id& o2) const override { return o1 == o2; }
 };
@@ -388,9 +388,9 @@ public:
 	NEQAtomicFormula* clone(const std::vector<const Term*>& subterms) const override { return new NEQAtomicFormula(subterms); }
 
 	Symbol symbol() const override { return Symbol::NEQ; }
-	
+
 protected:
-	bool _eq_op(const object_id& o1, const object_id& o2) const override { return o1 != o2; }	
+	bool _eq_op(const object_id& o1, const object_id& o2) const override { return o1 != o2; }
 };
 
 class LTAtomicFormula : public RelationalFormula {

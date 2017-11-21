@@ -2,7 +2,9 @@
 
 #include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
-
+#ifdef FS_HYBRID
+    #include <fs/hybrid/heuristics/l2_norm.hxx>
+#endif //FS_HYBRID
 
 namespace fs0 { namespace bfws {
 
@@ -43,8 +45,6 @@ unsigned L0RelevantAtomsCounter<NodeT>::count(NodeT& node, BFWSStats& stats) con
 }
 
 /****** L2-BASED #R COUNTER *****/
-template <typename NodeT>
-L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 
 
 
@@ -73,18 +73,7 @@ L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 
 template <typename NodeT>
 L2NormRelevantAtomsCounter<NodeT>::L2NormRelevantAtomsCounter(const Problem& problem) :
-	_l0_heuristic(L0Heuristic(problem))
-{
-}
-
-template <typename NodeT>
-L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {
-	delete _l0_heuristic;
-}
-
-template <typename NodeT>
-L2NormRelevantAtomsCounter<NodeT>::L2NormRelevantAtomsCounter(const Problem& problem) :
-	_l2_norm(hybrid::L2Norm(problem))
+	_l2_norm(new hybrid::L2Norm(problem))
 {
 }
 
@@ -100,8 +89,9 @@ template <typename NodeT>
 	return v;
 }
 
-
-
+#else
+template <typename NodeT>
+L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 #endif
 
 

@@ -530,10 +530,20 @@ metricSpec
 optimization : 'minimize' | 'maximize' ;
 
 metricFExp
-	: functionTerm                                 #FunctionalExpr
+	: functionTerm                                 #FunctionalExprMetric
+    | terminalCost stageCost                       #CompositeMetric
+    | stageCost terminalCost                       #CompositeMetric
     | '(total-time)'                               #TotalTimeMetric
 	| '(' 'is-violated' NAME ')'                   #IsViolatedMetric
 	;
+
+terminalCost
+    : '(' ':terminal' functionTerm ')'
+    ;
+
+stageCost
+    : '(' ':stage' functionTerm ')' 
+    ;
 
 /************* CONSTRAINTS ****************************/
 

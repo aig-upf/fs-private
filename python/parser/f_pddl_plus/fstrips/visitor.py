@@ -675,8 +675,13 @@ class FunctionalStripsVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by FunctionalStripsParser#FunctionalExpr.
-    def visitFunctionalExpr(self, ctx):
+    # Visit a parse tree produced by FunctionalStripsParser#FunctionalExprMetric.
+    def visitFunctionalExprMetric(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by FunctionalStripsParser#CompositeMetric.
+    def visitCompositeMetric(self, ctx):
         return self.visitChildren(ctx)
 
 
@@ -687,6 +692,16 @@ class FunctionalStripsVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by FunctionalStripsParser#IsViolatedMetric.
     def visitIsViolatedMetric(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by FunctionalStripsParser#terminalCost.
+    def visitTerminalCost(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by FunctionalStripsParser#stageCost.
+    def visitStageCost(self, ctx):
         return self.visitChildren(ctx)
 
 

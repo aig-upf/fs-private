@@ -9,9 +9,15 @@ namespace fs0{ namespace hybrid {
 
     float
     StateMetricSignal::evaluate( const State& s ) const {
-        object_id v = _the_metric->apply(s);
-        float unwrapped_v = fs0::value<float>(v);
-        return _the_metric->optimization() == MetricType::MINIMIZE ? -unwrapped_v  : unwrapped_v ;
+        float v = _the_metric->stage_cost(s);
+        return _the_metric->optimization() == MetricType::MINIMIZE ? -v  : v ;
+    }
+
+    float
+    StateMetricSignal::terminal( const State& s ) const {
+        if ( _the_metric->terminal_expr() == nullptr ) return 0.0f;
+        float v = _the_metric->terminal_cost(s);
+        return _the_metric->optimization() == MetricType::MINIMIZE ? -v  : v ;
     }
 
     std::shared_ptr<Reward>

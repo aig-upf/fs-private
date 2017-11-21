@@ -1,4 +1,4 @@
-#include <fs/core/heuristics/novelty/elliptical_2d.hxx>
+#include <fs/hybrid/heuristics/elliptical_2d.hxx>
 
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
@@ -10,7 +10,7 @@
 #include <fs/core/problem.hxx>
 #include <fs/hybrid/heuristics/l2_norm.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/utils//archive/json.hxx>
+#include <fs/core/utils/archive/json.hxx>
 #include <memory>
 
 namespace fs0 {
@@ -51,7 +51,9 @@ namespace fs0 {
         std::set< fs::RelationalFormula::Symbol > supported = {fs::RelationalFormula::Symbol::GEQ, fs::RelationalFormula::Symbol::LEQ, fs::RelationalFormula::Symbol::LT,  fs::RelationalFormula::Symbol::GT };
         std::vector< const fs::RelationalFormula* > relevant_formulae;
 
-        for ( auto formula : fs::all_relations( *problem.getGoalConditions()))
+        LPT_INFO("features", "\t Processing Goal Conditions");
+        for ( auto formula : fs::all_relations( *problem.getGoalConditions())) {
+            LPT_INFO("features", "\t\t" << *formula);
             if ( supported.find( formula->symbol()) != supported.end() ) {
                 relevant_formulae.push_back(formula);
                 std::set<VariableIdx> condS;
@@ -60,7 +62,9 @@ namespace fs0 {
                     goal_relevant_vars.insert(x);
                 }
             }
+        }
 
+        LPT_INFO("features", "\t Processing State Constraints");
         for ( auto formula : problem.getStateConstraints()  ) {
             for ( auto f : fs::all_relations(*formula) ) {
                 if ( f == nullptr ) continue;
@@ -122,7 +126,7 @@ namespace fs0 {
         for ( VariableIdx var = 0; var < info.getNumVariables(); ++var )
             if ( info.sv_type(var) ==  type_id::float_t )
                 if ( covered.find(var) == covered.end() ) {
-                    if ( Config::instance().getOption<bool>("project_away_time",false)
+                    if ( Config::instance().getOption<bool>("features.project_away_time",false)
                             && var == clock ) continue;
                     LPT_INFO("features", "\t " << info.getVariableName(var));
                     features.push_back( new StateVariableFeature(var) ) ;

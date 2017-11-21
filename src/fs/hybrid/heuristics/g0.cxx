@@ -1,4 +1,4 @@
-#include <fs/core/heuristics/g0.hxx>
+#include <fs/hybrid/heuristics/g0.hxx>
 
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>

@@ -16,6 +16,7 @@ namespace fs0 { namespace hybrid {
         virtual ~StateMetricSignal() = default;
 
         virtual float evaluate( const State& s ) const override;
+        virtual float terminal( const State& s ) const override;
 
         static
         std::shared_ptr<Reward>

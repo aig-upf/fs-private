@@ -796,6 +796,15 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         self.metric.expr = self.visit( ctx.metricFExp() )
 
     def visitFunctionalExprMetric( self, ctx ) :
+        return (None, self.visit( ctx.functionTerm() ))
+
+    def visitCompositeMetric(self, ctx) :
+        return (self.visit(ctx.terminalCost()), self.visit(ctx.stageCost()))
+
+    def visitTerminalCost( self, ctx ) :
+        return self.visit( ctx.functionTerm() )
+
+    def visitStageCost( self, ctx ) :
         return self.visit( ctx.functionTerm() )
 
     def visitTotalTimeMetric( self, ctx ) :
