@@ -106,14 +106,7 @@ void Helper::postBranchingStrategy(GecodeCSP& csp) {
 	// For the integer variables, we post an unitialized value selector that will act as a default INT_VAL_MIN selector
 	// until it is instructed (depending on the planner configuration) in order to favor lower-h_max atoms.
 	Gecode::branch(csp, csp._intvars, Gecode::INT_VAR_SIZE_MIN(), Gecode::INT_VAL(&Helper::value_selector));
-	#if GECODE_VERSION_NUMBER >= 500000
-		// MRJ: support for Gecode 5.0.0. BOOL_VAR_NONE and BOOL_VAL_MIN have been deprecated.
-		// Gecode devs note that this branching strategy is equivalent to
-		// to the Boolean specific settings.
-		Gecode::branch(csp, csp._boolvars, Gecode::INT_VAR_SIZE_MIN(), Gecode::INT_VAL_MIN());
-	#else
-		Gecode::branch(csp, csp._boolvars, Gecode::BOOL_VAR_NONE(), Gecode::BOOL_VAL_MIN());
-	#endif
+	Gecode::branch(csp, csp._boolvars, Gecode::BOOL_VAR_NONE(), Gecode::BOOL_VAL_MIN());
 }
 
 int Helper::selectValueIfExists(Gecode::IntVarValues& value_set, int value) {
