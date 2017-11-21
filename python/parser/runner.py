@@ -137,7 +137,7 @@ def compile_translation(translation_dir, use_vanilla, args):
         shutil.copy(os.path.join(planner_dir, 'custom.py'), os.path.join(translation_dir, 'custom.py'))
         if os.path.exists(os.path.join(translation_dir, 'util')) :
             shutil.rmtree( os.path.join(translation_dir, 'util') )
-        shutil.copytree( 'util', os.path.join(translation_dir, 'util'))
+            shutil.copytree( 'util', os.path.join(translation_dir, 'util'))
         command = "python2 /usr/bin/scons {}".format(debug_flag)
 
         print("{0:<30}{1}\n".format("Compilation command:", command))
