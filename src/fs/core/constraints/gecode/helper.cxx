@@ -8,6 +8,7 @@
 #include <fs/core/constraints/gecode/gecode_csp.hxx>
 #include <fs/core/constraints/gecode/utils/term_list_iterator.hxx>
 
+#include <gecode/int.hh>
 
 namespace fs0 { namespace gecode {
 
@@ -93,7 +94,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::AtomicFormula* formula) {
 		}
 		catch(const std::out_of_range& e) {}  // If the functor produces an exception, we simply consider it non-applicable and go on.
 		catch(const UndefinedValueAccess& e) {}
-		
+
 	}
 
 	tuples.finalize();
@@ -105,7 +106,14 @@ void Helper::postBranchingStrategy(GecodeCSP& csp) {
 	// For the integer variables, we post an unitialized value selector that will act as a default INT_VAL_MIN selector
 	// until it is instructed (depending on the planner configuration) in order to favor lower-h_max atoms.
 	Gecode::branch(csp, csp._intvars, Gecode::INT_VAR_SIZE_MIN(), Gecode::INT_VAL(&Helper::value_selector));
-	Gecode::branch(csp, csp._boolvars, Gecode::BOOL_VAR_NONE(), Gecode::BOOL_VAL_MIN());
+	#if GECODE_VERSION_NUMBER >= 500000
+		// MRJ: support for Gecode 5.0.0. BOOL_VAR_NONE and BOOL_VAL_MIN have been deprecated.
+		// Gecode devs note that this branching strategy is equivalent to
+		// to the Boolean specific settings.
+		Gecode::branch(csp, csp._boolvars, Gecode::INT_VAR_SIZE_MIN(), Gecode::INT_VAL_MIN());
+	#else
+		Gecode::branch(csp, csp._boolvars, Gecode::BOOL_VAR_NONE(), Gecode::BOOL_VAL_MIN());
+	#endif
 }
 
 int Helper::selectValueIfExists(Gecode::IntVarValues& value_set, int value) {
