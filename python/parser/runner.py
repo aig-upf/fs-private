@@ -3,6 +3,7 @@
 """
 import sys
 import os
+import stat
 import argparse
 import glob
 import shutil
@@ -69,16 +70,16 @@ def extract_names(domain_filename, instance_filename):
     return domain, instance
 
 
-def move_files(instance, domain, target_dir, use_vanilla):
+def move_files(args, target_dir, use_vanilla):
     """ Moves the domain and instance description files plus additional data files to the translation directory """
-    base_dir = os.path.dirname(instance)
+    base_dir = os.path.dirname(args.instance)
     definition_dir = target_dir + '/definition'
     data_dir = target_dir + '/data'
 
     # Copy the domain and instance file to the subfolder "definition" on the destination dir
     utils.mkdirp(definition_dir)
-    shutil.copy(instance, definition_dir)
-    shutil.copy(domain, definition_dir)
+    shutil.copy(args.instance, definition_dir)
+    shutil.copy(args.domain, definition_dir)
 
     is_external_defined = os.path.isfile(base_dir + '/external.hxx')
 
@@ -97,6 +98,9 @@ def move_files(instance, domain, target_dir, use_vanilla):
             default = tplManager.get('external_default.hxx').substitute()  # No substitutions for the default template
             utils.save_file(target_dir + '/external.hxx', default)
 
+    if args.debug:
+        generate_debug_script(target_dir)
+
     # Copy, if they exist, all data files
     origin_data_dir = base_dir + '/data'
     if os.path.isdir(origin_data_dir):
@@ -108,6 +112,16 @@ def move_files(instance, domain, target_dir, use_vanilla):
                 if os.path.exists(dst):
                     shutil.rmtree(dst)
                 shutil.copytree(filename, dst)
+
+
+def generate_debug_script(target_dir):
+    # A small hack - If generating a debug build, create a small debug script helper
+    debug_script = "LD_LIBRARY_PATH={}:$LD_LIBRARY_PATH cgdb solver.debug.bin".format(FS_BUILD)
+    debug_filename = os.path.join(target_dir, 'debug.sh')
+    with open(debug_filename, 'w') as f:
+        print(debug_script, file=f)
+    st = os.stat(debug_filename)
+    os.chmod(debug_filename, st.st_mode | stat.S_IEXEC)
 
 
 def compile_translation(translation_dir, use_vanilla, args):
@@ -230,8 +244,8 @@ def run(args):
     representation.generate()
     use_vanilla = not representation.requires_compilation()
 
-    move_files(args.instance, args.domain, out_dir, use_vanilla)
-    if not args.parse_only :
+    move_files(args, out_dir, use_vanilla)
+    if not args.parse_only:
         compile_translation(out_dir, use_vanilla, args)
     run_solver(out_dir, args)
     return 0
