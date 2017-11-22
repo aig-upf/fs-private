@@ -1,4 +1,4 @@
-
+#include <functional>
 #include <iostream>
 #include <sstream>
 
