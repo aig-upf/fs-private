@@ -3,6 +3,7 @@
 #include <fs/core/heuristics/novelty/features.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
+#include <cmath>
 
 namespace fs0 {
 
