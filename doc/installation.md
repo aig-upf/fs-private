@@ -13,7 +13,7 @@ To begin with, you will need a few basic build packages:
 
 ```
 sudo apt-get install --no-install-recommends \
-	build-essential g++ python3 git scons libboost-all-dev
+	build-essential g++ python3 git scons libboost-all-dev pkg-config
 ```
 
 
