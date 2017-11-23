@@ -35,6 +35,10 @@ def single_build(directory, command):
     output = subprocess.call(command.split(), cwd=directory)
     if output:
         sys.exit(output)
+    command_2 = "{} fs={} install".format(command, directory)
+    output = subprocess.call(command_2.split(), cwd=directory)
+    if output:
+        sys.exit(output)
 
     # Build the vanilla generic FS planner
     planner_dir = os.path.join(directory, 'planners', 'generic')
@@ -51,7 +55,7 @@ def single_build(directory, command):
 
 
 def get_command(cpus, debug):
-    return 'scons -j {} {}'.format(cpus, debug)
+    return 'scons -j {} {}'.format(cpus, debug,debug)
 
 
 def main(parser, args):
