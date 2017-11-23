@@ -10,6 +10,12 @@
 
 ### Continuous Transitions
 
+Options that affect hybrid planning with continuous time dynamics:
+
+ - ```dt```: the discretization step
+ - ```integrator```: which is the numerical method used to calculate the evolution of dynamics over the discretisation step
+ - ```
+
 ```
 ./run.py --hybrid --instance ~/Sandboxes/mpc-planning-experiments/benchmarks/walkbot/instance_001.pddl --domain ~/Sandboxes/mpc-planning-experiments/benchmarks/walkbot/domain.pddl --driver sbfws --options dt=0.5,integrator=runge_kutta_2,bfws.rs=sim,width.force_generic_evaluator=true,bfws.using_feature_set=true,features.project_away_numeric=true,features.project_away_time=true,features.elliptical_2d=true,width.simulation=2,sim.log=true
 ```

@@ -306,10 +306,6 @@ Loader::loadMetric( const rapidjson::Value& data, const ProblemInfo& info ) {
 	}
 
 	LPT_INFO( "main", "Metric optimization mode is " << data["optimization"].GetString() );
-	auto expr = fs::Loader::parseTerm( data["expression"], info );
-    auto processed = fs::bind(*expr, Binding::EMPTY_BINDING, info);
-
-	LPT_INFO( "main", "Metric loaded: " << processed );
 	const fs::Term* stage_cost = nullptr;
 	const fs::Term* terminal_cost = nullptr;
 	if (data.HasMember("stage_cost")) {
