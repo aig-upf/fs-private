@@ -309,12 +309,14 @@ Loader::loadMetric( const rapidjson::Value& data, const ProblemInfo& info ) {
 	const fs::Term* stage_cost = nullptr;
 	const fs::Term* terminal_cost = nullptr;
 	if (data.HasMember("stage_cost")) {
+		LPT_INFO("main", "Loading stage cost...");
 		auto expr = fs::Loader::parseTerm( data["stage_cost"], info );
 		stage_cost = fs::bind(*expr, Binding::EMPTY_BINDING, info);
 		LPT_INFO( "main", "Metric: stage cost loaded: " << *stage_cost );
 		delete expr;
 	}
 	if (data.HasMember("terminal_cost")) {
+		LPT_INFO("main", "Loading terminal cost...");
 		auto expr = fs::Loader::parseTerm( data["terminal_cost"], info );
 		terminal_cost = fs::bind(*expr, Binding::EMPTY_BINDING, info);
 		LPT_INFO( "main", "Metric: terminal cost loaded: " << *terminal_cost );
