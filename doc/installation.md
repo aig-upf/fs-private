@@ -13,7 +13,7 @@ To begin with, you will need a few basic build packages:
 
 ```
 sudo apt-get install --no-install-recommends \
-	build-essential g++ python3 git scons libboost-all-dev pkg-config
+     build-essential g++ python3 git scons libboost-all-dev pkg-config
 ```
 
 
@@ -24,7 +24,14 @@ The source code is ensured to work with `Gecode 5.1.0`; older versions might wor
 them. Some Linux distributions provide precompiled binaries, but some of them package older Gecode versions only.
 Installing Gecode [from source](http://www.gecode.org/download/gecode-5.1.0.tar.gz) is however not too difficult;
 detailed instructions can be found on the excellent [documentation of the toolkit](http://www.gecode.org/doc-latest/MPG.pdf).
- 
+Once you have installed Gecode either from source or with precompiled packages, you need to make sure that the Gecode
+libraries are placed somewhere in the `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables, e.g. by placing something
+like the following in your `.bashrc` script:
+
+```
+	export LIBRARY_PATH=$LIBRARY_PATH:${HOME}/local/lib
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/local/lib
+```
 
 ## 3. Download the planner and related dependencies
 
