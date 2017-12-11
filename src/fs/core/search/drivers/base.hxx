@@ -12,13 +12,15 @@ namespace fs0 {
 
 namespace fs0 { namespace drivers {
 
+class EngineOptions;
+
 //! A brief interface for any engine creator
 class Driver {
 public:
 	virtual ~Driver() = default;
 
 	//! Perform the search
-	virtual ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) = 0;
+	virtual ExitCode search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) = 0;
 };
 
 class EmbeddedDriver {

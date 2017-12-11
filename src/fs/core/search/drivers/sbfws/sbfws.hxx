@@ -705,18 +705,18 @@ public:
 	using StateT = typename StateModelT::StateT;
 
 	//! The necessary search method
-	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+	ExitCode search(Problem& problem, const Config& config, const drivers::EngineOptions& options, float start_time) override;
 
 protected:
 	//! The stats of the search
 	BFWSStats _stats;
 
 	//! Helper methods to set up the correct template parameters
-	ExitCode do_search(const StateModelT& model, const Config& config, const std::string& out_dir, float start_time);
+	ExitCode do_search(const StateModelT& model, const Config& config, const drivers::EngineOptions& options, float start_time);
 
 	template <typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
 	ExitCode
-	do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const std::string& out_dir, float start_time);
+	do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const drivers::EngineOptions& options, float start_time);
 };
 
 

@@ -13,7 +13,7 @@ namespace fs0 { namespace drivers {
 template <typename StateModelT>
 class IteratedWidthDriver : public Driver {
 public:
-	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+	ExitCode search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) override;
 	
 protected:
 	SearchStats _stats;

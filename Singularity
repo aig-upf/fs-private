@@ -68,12 +68,12 @@ From: ubuntu:xenial
 
     DOMAINFILE=$1
     PROBLEMFILE=$2
-    PLANFILE=$3
+    PLANFILE=`pwd`/$3
 
-    /fs-planner/fs/run.py \
+    /planning/fs-planner/run.py \
                --instance ${PROBLEMFILE} \
                --domain ${DOMAINFILE} \
-               --plan-file ${PLANFILE} \  ## TODO IMPLEMENT PLAN OUTPUT
+               --planfile ${PLANFILE} \
                --driver sbfws --options "successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim"
 
 ## Update the following fields with meta data about your submission.
