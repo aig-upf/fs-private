@@ -1,5 +1,5 @@
 
-FS planner - Installation
+FS planner - Manual Installation
 =================================
 
 The following installation steps should build the planner from source. They assume a working
