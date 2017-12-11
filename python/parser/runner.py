@@ -44,6 +44,7 @@ def parse_arguments(args):
 
     parser.add_argument('-o', '--output', default=None, help="(Optional) Path to the working directory. If provided,"
                                                              "overrides the \"-t\" option.")
+    parser.add_argument('-w', '--workspace', default=None, help="(Optional) Path to the workspace directory.")
     parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
     parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
 
@@ -205,7 +206,8 @@ def create_output_dir(args, domain_name, instance_name):
         if args.tag is None:
             import time
             args.tag = time.strftime("%y%m%d")
-        translation_dir = os.path.abspath(os.path.join(*[FS_WORKSPACE, args.tag, domain_name, instance_name]))
+        workspace = FS_WORKSPACE if args.workspace is None else args.workspace
+        translation_dir = os.path.abspath(os.path.join(*[workspace, args.tag, domain_name, instance_name]))
     utils.mkdirp(translation_dir)
     return translation_dir
 
