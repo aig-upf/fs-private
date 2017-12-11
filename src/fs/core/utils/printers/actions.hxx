@@ -54,8 +54,21 @@ class action_header {
 
 	public:
 		action_header(const ActionBase& action) : _action(action) {}
-		
+
 		friend std::ostream& operator<<(std::ostream &os, const action_header& o) { return o.print(os); }
+		std::ostream& print(std::ostream& os) const;
+};
+
+
+//! Print the header of a possibly partially grounded action (e.g. "move(b, ?to)")
+class strips_action_header {
+	protected:
+		const ActionBase& _action;
+
+	public:
+		strips_action_header(const ActionBase& action) : _action(action) {}
+
+		friend std::ostream& operator<<(std::ostream &os, const strips_action_header& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
 };
 

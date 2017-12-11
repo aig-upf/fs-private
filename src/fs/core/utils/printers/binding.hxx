@@ -35,6 +35,19 @@ class partial_binding {
 		std::ostream& print(std::ostream& os) const;
 };
 
+class strips_partial_binding {
+protected:
+	const std::vector<std::string>& _parameter_names;
+	const Binding& _binding;
+	const Signature& _signature;
+
+public:
+	strips_partial_binding(const std::vector<std::string>& parameter_names, const Binding& binding, const Signature& signature);
+
+	friend std::ostream& operator<<(std::ostream &os, const strips_partial_binding& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
+};
+
 class signature {
 	protected:
 		const std::vector<std::string>& _parameter_names;

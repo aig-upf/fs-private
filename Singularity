@@ -63,22 +63,25 @@ From: ubuntu:xenial
     LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
     
 %runscript
-    ## The runscript is called whenever the container is used to solve
-    ## an instance.
+    ## Set the appropriate library path for Gecode to be found
+    LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
 
-    DOMAINFILE=$1
-    PROBLEMFILE=$2
+    DOMAINFILE=`pwd`/$1
+    PROBLEMFILE=`pwd`/$2
     PLANFILE=`pwd`/$3
+    WORKSPACE=~/workspace
+    
+    mkdir -p ${WORKSPACE}
 
-    /planning/fs-planner/run.py \
-               --instance ${PROBLEMFILE} \
-               --domain ${DOMAINFILE} \
+    /planning/fs-planner/run.py -i ${PROBLEMFILE} --domain ${DOMAINFILE} \
                --planfile ${PLANFILE} \
-               --driver sbfws --options "successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim"
+               --driver sbfws --options "successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim" \
+               --workspace ${WORKSPACE}
 
+
+%labels
 ## Update the following fields with meta data about your submission.
 ## Please use the same field names and use only one line for each value.
-%labels
 Name        FS Planner
 Description TODO
 Authors     Guillem Francès <guillem.frances@unibas.ch>

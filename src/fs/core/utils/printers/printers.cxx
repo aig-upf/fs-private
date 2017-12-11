@@ -12,7 +12,7 @@ void PlanPrinter::print(const std::vector<GroundAction::IdType>& plan, std::ostr
 	const auto& actions = Problem::getInstance().getGroundActions();
 	for (auto action_id:plan) {
 		const GroundAction& action = *actions.at(action_id);
-		out << print::action_header(action) << " " << std::endl;
+		out << print::strips_action_header(action) << std::endl;
 	}
 }
 

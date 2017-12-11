@@ -52,6 +52,23 @@ std::ostream& partial_binding::print(std::ostream& os) const {
 }
 
 
+strips_partial_binding::strips_partial_binding(const std::vector<std::string>& parameter_names, const Binding& binding, const Signature& signature) : _parameter_names(parameter_names), _binding(binding), _signature(signature) {
+	assert(parameter_names.size() == binding.size());
+}
+
+std::ostream& strips_partial_binding::print(std::ostream& os) const {
+	const ProblemInfo& info = ProblemInfo::getInstance();
+	for (unsigned i = 0; i < _parameter_names.size(); ++i) {
+		if (_binding.binds(i)) {
+			os << info.object_name(_binding.value(i));
+		} else {
+			os << _parameter_names[i];
+		}
+		if (i < _parameter_names.size() - 1) os << " ";
+	}
+	return os;
+}
+
 
 
 } } // namespaces
