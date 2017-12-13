@@ -7,7 +7,14 @@ Import('env', 'sources')
 module_src = os.path.join(env['fs_src'], 'fs', 'core')
 sources += util.locate_source_files(module_src, '*.cxx')
 
+rapidjson_base_dir = os.path.join(env['fs_vendor'], 'rapidjson')
+rapidjson_inc_dir = os.path.join(rapidjson_base_dir, 'include')
+include_paths = [rapidjson_inc_dir]
+
+
 env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ])  # Flags common to all options
+env.Append(CPPPATH = [os.path.abspath(p) for p in include_paths])
+
 
 if env['edebug']:
 	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DEDEBUG' ] )
