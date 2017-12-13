@@ -57,6 +57,7 @@ From: ubuntu:xenial
 	mkdir -p ~/.ssh && ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     ## Compile the planner
     cd /planning/fs-planner
+    mv https_gitmodules .gitmodules && git submodule sync
     git submodule update --init
 	python ./build.py -p
 	
