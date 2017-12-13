@@ -25,7 +25,7 @@ bool Checker::check_correctness(const Problem& problem, const std::vector<const 
     if (print_plan_trace) LPT_INFO("plan_trace", "s=" <<  state);
 	for (const GroundAction* action:plan) {
 		if (!manager.isApplicable(state, *action, true)) return false;
-        if (print_plan_trace) LPT_INFO("plan_trace", "a=" <<  action);
+        if (print_plan_trace) LPT_INFO("plan_trace", "a=" <<  *action);
 		state.accumulate(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms
         if (print_plan_trace) LPT_INFO("plan_trace", "s=" <<  state);
 	}
