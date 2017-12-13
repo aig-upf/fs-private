@@ -54,7 +54,7 @@ From: ubuntu:xenial
 
 	##### PLANNER INSTALLATION #####
 	## Add github to the list of known hosts for the submodule init to work
-	ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+	mkdir -p ~/.ssh && ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     ## Compile the planner
     cd /planning/fs-planner
     git submodule update --init
