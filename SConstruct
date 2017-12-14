@@ -14,7 +14,7 @@ vars.Add(BoolVariable('hybrid_support', 'Include Soplex LP solver adapter and de
 
 vars.Add(EnumVariable('default_compiler', 'Preferred compiler', 'clang++', allowed_values=('g++', 'clang++')))
 vars.Add(PathVariable('fs', 'Path to FS sources', os.getcwd(), PathVariable.PathIsDir))
-vars.Add(PathVariable('prefix', 'Path where the FS library is to be installed', os.getenv('FS_PATH',''), PathVariable.PathIsDir))
+vars.Add(PathVariable('prefix', 'Path where the FS library is to be installed', '.', PathVariable.PathIsDir))
 
 env = Environment(variables=vars, ENV=os.environ)
 env['CXX'] = os.environ.get('CXX', env['default_compiler'])
@@ -39,7 +39,7 @@ Help(vars.GenerateHelpText(env))
 vars.Save('variables.cache', env)
 
 # Base include directories
-include_paths = ['src', 'vendor']
+include_paths = ['src']
 isystem_paths = []
 
 # Possible modules

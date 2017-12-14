@@ -1,0 +1,9 @@
+[submodule "submodules/rapidjson"]
+	path = submodules/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
+[submodule "submodules/lapkt-base"]
+	path = submodules/lapkt-base
+	url = https://github.com/aig-upf/lapkt-base.git
+[submodule "submodules/lapkt-novelty"]
+	path = submodules/lapkt-novelty
+	url = https://github.com/aig-upf/lapkt-novelty.git

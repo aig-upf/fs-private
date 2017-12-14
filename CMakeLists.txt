@@ -129,34 +129,6 @@ set(SOURCE_FILES
         src/fs/core/languages/fstrips/terms.cxx
         src/fs/core/languages/fstrips/terms.hxx
         src/fs/core/search/nodes/blind_node.hxx
-        vendor/rapidjson/error/en.h
-        vendor/rapidjson/error/error.h
-        vendor/rapidjson/internal/biginteger.h
-        vendor/rapidjson/internal/diyfp.h
-        vendor/rapidjson/internal/dtoa.h
-        vendor/rapidjson/internal/ieee754.h
-        vendor/rapidjson/internal/itoa.h
-        vendor/rapidjson/internal/meta.h
-        vendor/rapidjson/internal/pow10.h
-        vendor/rapidjson/internal/stack.h
-        vendor/rapidjson/internal/strfunc.h
-        vendor/rapidjson/internal/strtod.h
-        vendor/rapidjson/msinttypes/inttypes.h
-        vendor/rapidjson/msinttypes/stdint.h
-        vendor/rapidjson/allocators.h
-        vendor/rapidjson/document.h
-        vendor/rapidjson/encodedstream.h
-        vendor/rapidjson/encodings.h
-        vendor/rapidjson/filereadstream.h
-        vendor/rapidjson/filewritestream.h
-        vendor/rapidjson/memorybuffer.h
-        vendor/rapidjson/memorystream.h
-        vendor/rapidjson/pointer.h
-        vendor/rapidjson/prettywriter.h
-        vendor/rapidjson/rapidjson.h
-        vendor/rapidjson/reader.h
-        vendor/rapidjson/stringbuffer.h
-        vendor/rapidjson/writer.h
         src/fs/core/models/ground_state_model.cxx
         src/fs/core/models/ground_state_model.hxx
         src/fs/core/models/lifted_state_model.cxx
@@ -166,9 +138,9 @@ set(SOURCE_FILES
         src/fs/core/search/algorithms/ehc.hxx
         src/fs/core/search/algorithms/ehc_gbfs.hxx
         src/fs/core/search/algorithms/iterated_width.hxx
+        src/fs/core/search/drivers/base.hxx
         src/fs/core/search/drivers/sbfws/features/features.cxx
         src/fs/core/search/drivers/sbfws/features/features.hxx
-        src/fs/core/search/drivers/sbfws/__extra.hxx
         src/fs/core/search/drivers/sbfws/base.cxx
         src/fs/core/search/drivers/sbfws/base.hxx
         src/fs/core/search/drivers/sbfws/config.cxx

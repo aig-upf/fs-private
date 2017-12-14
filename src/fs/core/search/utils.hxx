@@ -12,6 +12,7 @@
 #include <fs/core/problem.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/search/stats.hxx>
+#include <fs/core/search/options.hxx>
 #include <fs/core/actions/checker.hxx>
 #include <fs/core/utils/printers/printers.hxx>
 #include <fs/core/utils/system.hxx>
@@ -50,11 +51,17 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 		SearchExecution(const StateModelT& model) : _problem(model.getTask()) {}
 
 		template <typename SearchAlgorithmT, typename StatsT>
-		ExitCode do_search(SearchAlgorithmT& engine, const std::string& out_dir, float start_time, const StatsT& stats) {
+		ExitCode do_search(SearchAlgorithmT& engine, const fs0::drivers::EngineOptions& options, float start_time, const StatsT& stats) {
+            const std::string& out_dir = options.getOutputDir();
 			LPT_INFO("cout", "Starting search. Results written to " << out_dir);
-			std::string plan_filename = out_dir + "/first.plan";
+			std::string plan_filename = options.getPlanfile();
+			if (plan_filename == "") {
+                plan_filename = out_dir + "/first.plan";
+			} else {
+                LPT_INFO("cout", "Plan will be output to " << plan_filename);
+            }
 			std::ofstream plan_out(plan_filename);
-			std::ofstream json_out( out_dir + "/results.json" );
+			std::ofstream json_out(out_dir + "/results.json");
 
 			PlanT plan;
 			float t0 = aptk::time_used();

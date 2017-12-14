@@ -68,7 +68,7 @@ ActionBase::ActionBase(const ActionBase& o) :
 {}
 
 std::ostream& ActionBase::print(std::ostream& os) const {
-	os << print::action_header(*this);
+	os << print::strips_action_header(*this);
 	return os;
 }
 

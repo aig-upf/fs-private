@@ -26,7 +26,8 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 		("driver,d", po::value<std::string>()->required(),                        "The desired driver.")
 		("defaults", po::value<std::string>()->default_value("./defaults.json"),  "The planner configuration file.")
 		("options", po::value<std::string>()->default_value(""),                  "Additional configuration options.")
-		("out", po::value<std::string>()->default_value("."),                     "The directory where the results data is to be output.");
+		("out", po::value<std::string>()->default_value("."),                     "The directory where the results data is to be output.")
+	    ("planfile", po::value<std::string>()->default_value(""),                 "File where the solution plan will be copied.");
 
 	po::variables_map vm;
 	
@@ -48,6 +49,7 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 	_data_dir = vm["data"].as<std::string>();
 	_defaults = vm["defaults"].as<std::string>();
 	_output_dir = vm["out"].as<std::string>();
+	_planfile = vm["planfile"].as<std::string>();
 	_driver = vm["driver"].as<std::string>();
 	
 	// Populate the map of additional options

@@ -38,7 +38,7 @@ int Runner::run() {
 	LPT_INFO("cout", "Deriving control to search engine...");
 
 	auto driver = EngineRegistry::instance().get(_options.getDriver());
-	ExitCode code = driver->search(*problem, config, _options.getOutputDir(), _start_time);
+	ExitCode code = driver->search(*problem, config, _options, _start_time);
 	report_stats(*problem, _options.getOutputDir()); // Report stats here again so that the number of ground actions, etc. is correctly reported.
 	return code;
 }

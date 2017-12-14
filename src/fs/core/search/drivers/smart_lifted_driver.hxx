@@ -25,7 +25,7 @@ protected:
 public:
 	EnginePT create(const Config& config, LiftedStateModel& model, SearchStats& stats);
 	
-	ExitCode search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) override;
+	ExitCode search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) override;
 
 protected:
 	std::unique_ptr<fs0::gecode::SmartRPG> _heuristic;

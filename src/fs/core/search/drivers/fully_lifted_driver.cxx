@@ -41,11 +41,11 @@ FullyLiftedDriver::setup(Problem& problem) const {
 }
 
 ExitCode 
-FullyLiftedDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+FullyLiftedDriver::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
 	LiftedStateModel model = setup(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
-	return Utils::SearchExecution<LiftedStateModel>(model).do_search(*engine, out_dir, start_time, stats);
+	return Utils::SearchExecution<LiftedStateModel>(model).do_search(*engine, options, start_time, stats);
 }
 
 } } // namespaces

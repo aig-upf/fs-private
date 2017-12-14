@@ -41,6 +41,11 @@ std::ostream& action_header::print(std::ostream& os) const {
 	return os;
 }
 
+std::ostream& strips_action_header::print(std::ostream& os) const {
+	os << "(" << _action.getName() << " " << print::strips_partial_binding(_action.getParameterNames(), _action.getBinding(), _action.getSignature()) << ")";
+	return os;
+}
+
 std::ostream& full_action::print(std::ostream& os) const {
 	os << action_header(_action) << std::endl;
 	os << "\t" << "Precondition:" << *_action.getPrecondition() << std::endl;

@@ -44,6 +44,8 @@ def parse_arguments(args):
 
     parser.add_argument('-o', '--output', default=None, help="(Optional) Path to the working directory. If provided,"
                                                              "overrides the \"-t\" option.")
+    parser.add_argument('-w', '--workspace', default=None, help="(Optional) Path to the workspace directory.")
+    parser.add_argument('--planfile', default=None, help="(Optional) Path to the file where the solution plan will be left.")
     parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
     parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
 
@@ -177,6 +179,9 @@ def run_solver(translation_dir, args):
     if args.options:
         command += ["--options", args.options]
 
+    if args.planfile:
+        command += ["--planfile", args.planfile]
+
     print("{0:<30}{1}".format("Running solver:", solver))
     print("{0:<30}{1}\n".format("Command line arguments:", ' '.join(command[1:])))
     sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
@@ -205,7 +210,8 @@ def create_output_dir(args, domain_name, instance_name):
         if args.tag is None:
             import time
             args.tag = time.strftime("%y%m%d")
-        translation_dir = os.path.abspath(os.path.join(*[FS_WORKSPACE, args.tag, domain_name, instance_name]))
+        workspace = FS_WORKSPACE if args.workspace is None else args.workspace
+        translation_dir = os.path.abspath(os.path.join(*[workspace, args.tag, domain_name, instance_name]))
     utils.mkdirp(translation_dir)
     return translation_dir
 
@@ -226,11 +232,11 @@ def run(args):
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
-        if args.hybrid :
+        if args.hybrid:
             from . import f_pddl_plus
             hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
-            fs_task = create_fs_plus_task( hybrid_task, domain_name, instance_name, args.disable_static_analysis)
-        else :
+            fs_task = create_fs_plus_task(hybrid_task, domain_name, instance_name, args.disable_static_analysis)
+        else:
             fd_task = parse_pddl_task(args.domain, args.instance)
             fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:

@@ -85,11 +85,11 @@ SmartEffectDriver::setup(Problem& problem) {
 
 
 ExitCode
-SmartEffectDriver::search(Problem& problem, const Config& config, const std::string& out_dir, float start_time) {
+SmartEffectDriver::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
 	GroundStateModel model = setup(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
-	return Utils::SearchExecution<GroundStateModel>(model).do_search(*engine, out_dir, start_time, stats);
+	return Utils::SearchExecution<GroundStateModel>(model).do_search(*engine, options, start_time, stats);
 
 }
 
