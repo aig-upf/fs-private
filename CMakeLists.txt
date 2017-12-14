@@ -261,7 +261,9 @@ set(FS_VENDOR ${FS_ROOT}/vendor)
 #MESSAGE(WARNING "Your Unix home directory is: $ENV{HOME}" )
 
 
-include_directories($ENV{LAPKT}/include)
 include_directories($ENV{HOME}/local/include)  # Gecode, etc.
 include_directories(${FS_SRC})
-include_directories(${FS_VENDOR})
+
+include_directories(${FS_VENDOR}/rapidjson/include)
+include_directories(${FS_VENDOR}/lapkt-base/src)
+include_directories(${FS_VENDOR}/lapkt-novelty/src)
