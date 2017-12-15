@@ -24,6 +24,27 @@ The source code is ensured to work with `Gecode 5.1.0`; older versions might wor
 them. Some Linux distributions provide precompiled binaries, but some of them package older Gecode versions only.
 Installing Gecode [from source](http://www.gecode.org/download/gecode-5.1.0.tar.gz) is however not too difficult;
 detailed instructions can be found on the excellent [documentation of the toolkit](http://www.gecode.org/doc-latest/MPG.pdf).
+The following command will for instance perform an installation of the Gecode modules that are necessary for the planner
+on `~/local`, for which no root permissions are necessary:
+
+```
+curl -SL http://www.gecode.org/download/gecode-5.1.0.tar.gz | tar xz \
+        && cd gecode-5.1.0 \
+        && ./configure --prefix=$HOME/local \
+        --disable-minimodel \
+        --disable-examples \
+    	--disable-flatzinc \
+    	--disable-gist \
+    	--disable-driver \
+    	--disable-qt \
+    	--disable-mpfr \
+    	--disable-doc-tagfile \
+    	--disable-doc-dot \
+    	--disable-thread \
+    	&& make -j8 && make install
+```
+
+
 Once you have installed Gecode either from source or with precompiled packages, you need to make sure that the Gecode
 libraries are placed somewhere in the `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables, e.g. by placing something
 like the following in your `.bashrc` script:
