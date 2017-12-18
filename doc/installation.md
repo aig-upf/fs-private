@@ -62,9 +62,8 @@ on the [Rapidjson](https://github.com/Tencent/rapidjson) library, which will get
 as Git submodules.
 
 ```
-git clone https://github.com/aig-upf/fs.git fs-planner
+git clone --branch=v2 https://github.com/aig-upf/fs.git fs-planner
 cd fs-planner
-git checkout v2  # i.e. the version 2 branch
 git submodule update --init
 ```
 
