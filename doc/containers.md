@@ -36,6 +36,17 @@ From within the container, we can now issue the standard planner commands:
 
 The standard planner output files can then be found under the `$HOME/tmp/workspace` directory in the host machine.
 
+A different possibility is to run the container directly to solve a certain planning problem. This can be achieved
+e.g. by issuing:
+```
+singularity run -C -H /path/to/homedir fs-planner.img domain.pddl problem.pddl solution.plan
+```
+
+where `/path/to/homedir` is the _absolute_ path to a directory in the host machine
+which will be mounted as the home directory within the container, and
+which contains the `domain.pddl` and `problem.pddl` files.
+The solution plan will then be left in that same directory once the planner has finished executing.
+
 
 ## Docker
 _*These instructions might be outdated and need to be revised*_

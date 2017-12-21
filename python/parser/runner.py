@@ -101,7 +101,7 @@ def move_files(args, target_dir, use_vanilla):
             utils.save_file(target_dir + '/external.hxx', default)
 
     if args.debug:
-        generate_debug_script(target_dir)
+        generate_debug_scripts(target_dir)
 
     # Copy, if they exist, all data files
     origin_data_dir = base_dir + '/data'
@@ -116,14 +116,21 @@ def move_files(args, target_dir, use_vanilla):
                 shutil.copytree(filename, dst)
 
 
-def generate_debug_script(target_dir):
-    # A small hack - If generating a debug build, create a small debug script helper
-    debug_script = "LD_LIBRARY_PATH={}:$LD_LIBRARY_PATH cgdb solver.debug.bin".format(FS_BUILD)
-    debug_filename = os.path.join(target_dir, 'debug.sh')
-    with open(debug_filename, 'w') as f:
-        print(debug_script, file=f)
-    st = os.stat(debug_filename)
-    os.chmod(debug_filename, st.st_mode | stat.S_IEXEC)
+def generate_debug_scripts(target_dir):
+    # If generating a debug build, create some debug script helpers
+    shebang = "#!/usr/bin/env bash"
+    ld_string = "LD_LIBRARY_PATH={}:$LD_LIBRARY_PATH".format(FS_BUILD)
+    debug_script = "{}\n\n{} cgdb ./solver.debug.bin".format(shebang, ld_string)
+    memcheck_script = "{}\n\n{} valgrind --leak-check=full --show-leak-kinds=all --log-file=\"valgrind-output.$(date '+%H%M%S').txt\" --track-origins=yes ./solver.debug.bin \"$@\"".format(shebang, ld_string)
+
+    make_script(os.path.join(target_dir, 'debug.sh'), debug_script)
+    make_script(os.path.join(target_dir, 'memcheck.sh'), memcheck_script)
+
+def make_script(filename, code):
+    with open(filename, 'w') as f:
+        print(code, file=f)
+    st = os.stat(filename)
+    os.chmod(filename, st.st_mode | stat.S_IEXEC)
 
 
 def compile_translation(translation_dir, use_vanilla, args):

@@ -22,7 +22,7 @@ def fix_seed_and_possibly_rerun():
     # Otherwise we print a warning and re-run the process with a fixed hash seed envvar.
     print('\n' + "*" * 80)
     print("WARNING! Fixing PYTHONHASHSEED to 1 to obtain more reliable results")
-    print("*" * 80 + '\n')
+    print("*" * 80 + '\n', flush=True)
     # We simply set the environment variable and re-call ourselves.
     import subprocess
     env = dict(os.environ)
