@@ -112,7 +112,7 @@ public:
 			node._relevant_atoms->init(_featureset.evaluate(node.state));
 
 			if (!node.has_parent()) { // Log some info, but only for the seed state
-				LPT_DEBUG("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
+				LPT_INFO("cout", "R(s_0)  (#=" << node._relevant_atoms->getHelper()._num_relevant << "): " << std::endl << *(node._relevant_atoms));
 			}
 		}
 

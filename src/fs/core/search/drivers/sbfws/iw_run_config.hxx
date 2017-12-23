@@ -32,6 +32,8 @@ struct IWRunConfig {
     //!
     bool _r_g_prime;
 
+    bool _iterate_iw1;
+
     //!
     unsigned _gr_actions_cutoff;
 
