@@ -51,6 +51,8 @@ public:
 
 	static ActionManagerI* build_action_manager(const Problem& problem);
 
+	const std::vector<Atom>& get_last_effects() const { return _effects_cache; }
+
 protected:
 	// The underlying planning problem.
 	const Problem& _task;

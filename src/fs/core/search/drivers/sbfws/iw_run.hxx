@@ -129,6 +129,8 @@ protected:
 	//! A single novelty evaluator will be in charge of evaluating all nodes
 	std::unique_ptr<NoveltyEvaluatorT> _evaluator;
 
+	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
+
 public:
 	SimulationEvaluator(const FeatureSetT& features, NoveltyEvaluatorT* evaluator) :
 		_features(features),
@@ -138,10 +140,15 @@ public:
 	~SimulationEvaluator() = default;
 
 	//! Returns false iff we want to prune this node during the search
-	unsigned evaluate(NodeT& node) {
+	unsigned evaluate(NodeT& node, const std::vector<Atom>& applied_effects) {
 		if (node.parent) {
+
+            // Compute which are the variable indexes whose value might have changed with respect to the parent
+            // TODO we might even check the parent valuation to discard more indexes
 			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
-			node._w = _evaluator->evaluate(_features.evaluate(node.state), _features.evaluate(node.parent->state));
+            std::vector<std::pair<unsigned, FeatureValueT>> atoms;
+            for (const auto& atom:applied_effects) atoms.emplace_back(std::make_pair(atom.getVariable(), (FeatureValueT) atom.getValue()));
+            node._w = _evaluator->evaluate_from_atoms(atoms, 1);
 		} else {
 			node._w = _evaluator->evaluate(_features.evaluate(node.state));
 		}
@@ -659,7 +666,7 @@ public:
         mark_seed_subgoals(seed);
         NodePT root = std::make_shared<NodeT>(seed, _generated++);
 
-		auto nov =_evaluator.evaluate(*root);
+		auto nov =_evaluator.evaluate(*root, {});
 		assert(nov==1);
 		update_novelty_counters_on_generation(nov);
 
@@ -683,7 +690,7 @@ public:
 					StateT s_a = _model.next( current->state, a );
 					NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
-					unsigned char novelty = _evaluator.evaluate(*successor);
+					unsigned char novelty = _evaluator.evaluate(*successor, _model.get_last_effects());
 					update_novelty_counters_on_generation(novelty);
 
 					// LPT_INFO("search", "Simulation - Node generated: " << *successor);
@@ -720,7 +727,7 @@ public:
 		if (_verbose) LPT_INFO("search", "Simulation - Starting IW(1) Simulation");
 
         NodePT root = std::make_shared<NodeT>(seed, _generated++);
-		auto nov =_evaluator.evaluate(*root);
+		auto nov =_evaluator.evaluate(*root, {});
 		assert(nov==1);
 		update_novelty_counters_on_generation(nov);
 
@@ -745,7 +752,7 @@ public:
                 if (allowed.check(successor)) {
                     // The node novelty of the node will not be evaluated
                 } else {
-                    novelty = _evaluator.evaluate(*successor);
+                    novelty = _evaluator.evaluate(*successor, _model.get_last_effects());
                     update_novelty_counters_on_generation(novelty);
                 }
 
