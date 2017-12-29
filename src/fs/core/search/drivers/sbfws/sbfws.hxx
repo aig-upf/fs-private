@@ -493,6 +493,7 @@ public:
 
 
 		// Force one simulation from the root node and abort the search
+//        _heuristic.get_hash_r(*root);
 //  		_heuristic.compute_R(*root);
 // 		return false;
 
@@ -503,8 +504,8 @@ public:
 		for (bool remaining_nodes = true; !_solution && remaining_nodes;) {
 			remaining_nodes = process_one_node();
 		}
-		if ( _solution == nullptr )
-			return extract_plan(_best_found, plan);
+//		if ( _solution == nullptr )
+//			return extract_plan(_best_found, plan);
 
 		return extract_plan(_solution, plan);
 	}
