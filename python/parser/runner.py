@@ -201,9 +201,28 @@ def run_solver(translation_dir, args):
     command_str = ' '.join(command)
     # We run the command spawning a new shell so that we can get typical shell kill signals such as OOM, etc.
     output = subprocess.call(command_str, cwd=translation_dir, shell=True, env=env)
-    if output != 0:
-        print("Error running solver. Output code: {}".format(output))
-        sys.exit(output)
+
+    explain_output(output)
+
+
+def explain_output(output):
+    if output == 0:
+        return
+
+    if output == 1:
+        print("Critical error while running the planner.")
+    elif output == 2:
+        print("Input error while running the planner.")
+    elif output == 3:
+        print("Unsupported feature requested on the planner.")
+    elif output == 4:
+        print("No plan was found")
+    elif output == 5:
+        print("Search ended without finding a solution")
+    elif output == 6:
+        print("The planner ran out of memory.")
+
+    sys.exit(output)
 
 
 def solver_name(args):
