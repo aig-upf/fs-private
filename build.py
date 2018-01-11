@@ -55,7 +55,7 @@ def single_build(directory, command):
 
 
 def get_command(cpus, debug):
-    return 'scons -j {} {}'.format(cpus, debug,debug)
+    return 'scons -j {} {}'.format(cpus, debug)
 
 
 def main(parser, args):
