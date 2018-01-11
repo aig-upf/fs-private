@@ -9,6 +9,7 @@ namespace fs0{ namespace hybrid {
 
     float
     StateMetricSignal::evaluate( const State& s ) const {
+        if ( _the_metric->stage_expr() == nullptr ) return 0.0f;
         float v = _the_metric->stage_cost(s);
         return _the_metric->optimization() == MetricType::MINIMIZE ? -v  : v ;
     }
