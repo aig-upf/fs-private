@@ -5,7 +5,7 @@ edebug = False
 
 gecode_support = True
 ompl_support = False
-hybrid_support = True
+hybrid_support = False
 
 lapkt = os.getenv('LAPKT', '')
 
