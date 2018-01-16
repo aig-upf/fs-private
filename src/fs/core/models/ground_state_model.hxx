@@ -38,8 +38,8 @@ public:
 		return applicable_actions(state,true);
 	}
 
-	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;
-	bool is_applicable(const State& state, const ActionId& action, bool enforce_state_constraints) const;
+//	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;
+//	bool is_applicable(const State& state, const ActionId& action, bool enforce_state_constraints) const;
 
 	//! Returns the state resulting from applying the given action action on the given state
 	State next(const State& state, const GroundAction::IdType& id) const;
@@ -50,6 +50,10 @@ public:
 	unsigned get_action_idx(const ActionId& action) const { return static_cast<unsigned>(action); }
 
 	static ActionManagerI* build_action_manager(const Problem& problem);
+
+	const std::vector<Atom>& get_last_changeset() const {
+		return _effects_cache;
+	}
 
 protected:
 	// The underlying planning problem.

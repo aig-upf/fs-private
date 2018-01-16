@@ -26,7 +26,8 @@ public:
                 const fs::Formula* goal,
                 const std::unordered_map<std::string, const fs::Axiom*>& state_constraints,
                 const fs::Metric* metric,
-                AtomIndex&& tuple_index);
+                AtomIndex&& tuple_index,
+                const AllTransitionGraphsT& transitions);
 	~Problem();
 
 	Problem(const Problem& other);
@@ -111,6 +112,8 @@ public:
 
 	void consolidateAxioms();
 
+	const AllTransitionGraphsT& get_transition_graphs() const { return _transition_graphs; }
+
 protected:
 	//! An index of tuples and atoms
 	AtomIndex _tuple_index;
@@ -151,6 +154,8 @@ protected:
 	static std::unique_ptr<Problem> _instance;
 
 	static bool check_is_predicative();
+
+	AllTransitionGraphsT _transition_graphs;
 };
 
 } // namespaces

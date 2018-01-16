@@ -23,7 +23,9 @@ Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
                     const fs::Formula* goal,
                     const std::unordered_map<std::string, const fs::Axiom*>& state_constraints,
                     const fs::Metric* metric,
-                    AtomIndex&& tuple_index) :
+                    AtomIndex&& tuple_index,
+                    const AllTransitionGraphsT& transitions
+) :
 	_tuple_index(std::move(tuple_index)),
 	_init(init),
 	_state_indexer(state_indexer),
@@ -36,7 +38,8 @@ Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
     _metric(metric),
     _wait_action(nullptr),
 	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
-	_is_predicative(check_is_predicative())
+	_is_predicative(check_is_predicative()),
+    _transition_graphs(transitions)
 {
     //! Store pointers to the state constraint definitions for ease of use
     for ( auto c : _state_constraints ) {
@@ -62,7 +65,7 @@ Problem::setInitialState( const State& s ) {
 std::unordered_map<std::string, const fs::Axiom*>
 _clone_axioms(const std::unordered_map<std::string, const fs::Axiom*>& axioms) {
 	std::unordered_map<std::string, const fs::Axiom*> cloned;
-	for (const auto it:axioms) {
+	for (const auto& it:axioms) {
 		cloned.insert(std::make_pair(it.first, new fs::Axiom(*it.second)));
 	}
 	return cloned;

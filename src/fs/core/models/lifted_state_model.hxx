@@ -68,6 +68,10 @@ public:
 	//! Returns true iff the given state satisfies the i-th subgoal
 	bool goal(const StateT& s, unsigned i) const;
 
+	const std::vector<Atom>& get_last_changeset() const {
+		return _effects_cache;
+	}
+
 protected:
 	// The underlying planning problem.
 	const Problem& _task;

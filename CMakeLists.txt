@@ -34,6 +34,7 @@ set(SOURCE_FILES
         src/fs/core/constraints/gecode/handlers/base_csp.hxx
         src/fs/core/constraints/gecode/handlers/formula_csp.cxx
         src/fs/core/constraints/gecode/handlers/formula_csp.hxx
+        src/fs/core/constraints/gecode/handlers/monotonicity_csp
         src/fs/core/constraints/gecode/handlers/ground_action_csp.cxx
         src/fs/core/constraints/gecode/handlers/ground_action_csp.hxx
         src/fs/core/constraints/gecode/handlers/ground_effect_csp.cxx
@@ -245,6 +246,7 @@ set(SOURCE_FILES
         src/fs/core/relaxed_state.hxx
         src/fs/core/state.cxx
         src/fs/core/state.hxx
+        src/fs/core/monotonicity
         src/fs/core/validator.cxx
         src/fs/core/validator.hxx)
 

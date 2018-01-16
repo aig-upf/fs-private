@@ -13,6 +13,7 @@
 
 #include <fs/core/search/drivers/sbfws/stats.hxx>
 #include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
+#include <fs/core/constraints/gecode/handlers/monotonicity_csp.hxx>
 
 
 namespace fs0 { namespace bfws {
@@ -98,6 +99,8 @@ public:
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those
 	//! atoms in s with novelty 1.
 // 	std::vector<unsigned> _nov1atom_idxs;
+
+	std::unique_ptr<gecode::GecodeCSP> _monotonic_csp;
 
 	//! Constructor with full copying of the state (expensive)
 	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
@@ -425,6 +428,18 @@ protected:
 	//! How many novelty levels we want to use in the search.
 	unsigned _novelty_levels;
 
+	std::unique_ptr<gecode::MonotonicityCSP> _monotonicity_csp_manager;
+
+
+    static gecode::MonotonicityCSP*
+    build_monotonicity_csp(const StateModelT& model) {
+        const Problem& problem = model.getTask();
+        return new gecode::MonotonicityCSP(problem.getGoalConditions(),
+                                           problem.get_tuple_index(),
+                                           problem.get_transition_graphs(),
+                                           true);
+    }
+
 public:
 
 	//!
@@ -435,14 +450,15 @@ public:
 
 		_model(model),
 		_solution(nullptr),
-        	_best_found(nullptr),
+        _best_found(nullptr),
 		_featureset(std::move(featureset)),
 		_heuristic(config, model, _featureset, stats),
 		_stats(stats),
 		_pruning(config._global_config.getOption<bool>("bfws.prune", false)),
 		_generated(1),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
-		_novelty_levels(setup_novelty_levels(model, config._global_config))
+		_novelty_levels(setup_novelty_levels(model, config._global_config)),
+        _monotonicity_csp_manager(build_monotonicity_csp(_model))
 	{
 	}
 
@@ -648,8 +664,29 @@ protected:
 			StateT s_a = _model.next(node->state, action);
 			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, ++_generated);
 
-			if (_closed.check(successor)) continue; // The node has already been closed
-			if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it
+            if (_closed.check(successor)) continue; // The node has already been closed
+            if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it
+
+            // If the node we're expanding has a monotonicity CSP, we update it
+            // and "propagate" it to the children nodes
+            if (node->_monotonic_csp) {
+                const auto& changes = _model.get_last_changeset();
+
+                gecode::GecodeCSP* csp = _monotonicity_csp_manager->check_consistency(
+                        *(node->_monotonic_csp),
+                        successor->state,
+                        changes
+                );
+
+                if (!csp) {
+                    LPT_DEBUG("cout", "Children node pruned because of inconsistent monotonicity CSP: " << std::endl << successor);
+                    _stats.monot_pruned();
+                    continue;
+                }
+
+                // If not pruned, we store the CSP in the children node
+                successor->_monotonic_csp = std::unique_ptr<gecode::GecodeCSP>(csp);
+            }
 
 			if (create_node(successor)) {
 				break;

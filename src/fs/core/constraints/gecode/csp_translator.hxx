@@ -88,6 +88,7 @@ public:
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(GecodeCSP& csp, const RPGIndex& graph) const;
 	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<Gecode::IntSet>& domains) const;
+	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<const Gecode::IntSet*>& domains) const;
 	void updateStateVariableDomains(GecodeCSP& csp, const State& state) const;
 
 	const unsigned resolveInputVariableIndex(VariableIdx variable) const {

@@ -54,11 +54,18 @@ protected:
 	static const fs::Formula*  loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
     static const fs::Axiom*    loadNamedStateConstraint(const rapidjson::Value& data, const ProblemInfo& info);
 
+	//
+	static AllTransitionGraphsT loadTransitions(const rapidjson::Value& data, const ProblemInfo& info);
+
+
     //! Load the metric
     static const fs::Metric* loadMetric( const rapidjson::Value& data, const ProblemInfo& info );
 
 	template<typename T>
 	static std::vector<std::vector<T>> parseDoubleNumberList(const rapidjson::Value& data);
+
+    static object_id parse_object(const ProblemInfo &info, VariableIdx var,
+                                  const rapidjson::Value& value_node);
 };
 
 template<typename T>

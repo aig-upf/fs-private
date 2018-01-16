@@ -5,9 +5,11 @@
 #include <memory>
 #include <limits>
 
+#include <boost/functional/hash.hpp>
+
 #include <vector>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <boost/container/flat_set.hpp>
 
 #include <exception>
@@ -90,6 +92,11 @@ namespace fs0 {
 	
 	using FeatureIdx = unsigned;
 	const FeatureIdx INVALID_FEATURE = std::numeric_limits<unsigned>::max();
+
+	using TransitionT = std::pair<object_id, object_id>;
+	using TransitionGraphT = std::unordered_set<TransitionT,
+			boost::hash<TransitionT>>;
+	using AllTransitionGraphsT = std::vector<TransitionGraphT>;
 	
 	
 	/**

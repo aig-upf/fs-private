@@ -102,6 +102,13 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	}
 	auto goal = loadGroundedFormula(data["goal"], info);
 
+	LPT_INFO("main", "Loading value transitions...");
+	if (!data.HasMember("transitions")) {
+		throw std::runtime_error("Could not find transitions in data/problem.json!");
+	}
+	auto transitions = loadTransitions(data["transitions"], info);
+
+
 	LPT_INFO("main", "Loading state constraints...");
 
 
@@ -151,7 +158,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	LPT_INFO("main", "Atom Index: Indexing negative literals? " << has_negated_preconditions);
 	// We will index the negative literals if either the problem has neg. precs, or the user explicitly wants _not_ to ignore them on novelty computations.
 	bool index_negative_literals = has_negated_preconditions || !(config.getOption<bool>("ignore_neg_literals", true));
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals));
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals), transitions);
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 
 	problem->consolidateAxioms();
@@ -170,7 +177,7 @@ void
 Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 
 	// First load the extensions of the static symbols
-	for (auto name:info.getSymbolNames()) {
+	for (const auto& name:info.getSymbolNames()) {
 		unsigned id = info.getSymbolId(name);
 		if (info.getSymbolData(id).isStatic()) {
 			info.set_extension(id, StaticExtension::load_static_extension(name, info));
@@ -198,35 +205,43 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data,
 	std::vector<Atom> facts;
 	for (unsigned i = 0; i < data["atoms"].Size(); ++i) {
 		const rapidjson::Value& node = data["atoms"][i];
+
 		VariableIdx var = node[0].GetInt();
-		object_id value;
-		type_id var_type = info.sv_type(var);
+        object_id value = parse_object(info, var, node[1]);
 
-		if (var_type == type_id::bool_t) {
-			value =  make_object((bool)node[1].GetInt());
-		} else if (var_type == type_id::float_t) {
-			// MRJ: We're using the specialization so the floating point number
-			// is stored correctly via type punning
-		    value =  make_object((float)node[1].GetDouble());
-		}
-		else if (var_type == type_id::int_t) {
-		    value =  make_object(type_id::int_t, node[1].GetInt());
-		}
-		else if (var_type == type_id::object_t) {
-			value =  make_object(type_id::object_t, node[1].GetInt());
-		}
-		else {
-			throw std::runtime_error("Loader::loadState() : Cannot load state variable '" + info.getVariableName(var)
-									 + "' of type '" + fstrips::LanguageInfo::instance().get_typename(var) + "'");
-		}
-
-		facts.push_back(Atom(var,value));
+        facts.push_back(Atom(var, value));
 	}
 	return State::create(indexer, numAtoms, facts);
 }
 
+object_id Loader::parse_object(const ProblemInfo &info, VariableIdx var,
+                                   const rapidjson::Value& value_node) {
+    type_id var_type = info.sv_type(var);
 
-std::vector<const ActionData*>
+    if (var_type == type_id::bool_t) {
+		return  make_object((bool) value_node.GetInt());
+	}
+
+	if (var_type == type_id::float_t) {
+		// MRJ: We're using the specialization so the floating point number
+		// is stored correctly via type punning
+		return make_object((float) value_node.GetDouble());
+	}
+
+	if (var_type == type_id::int_t) {
+		return make_object(type_id::int_t, value_node.GetInt());
+	}
+
+	if (var_type == type_id::object_t) {
+		return make_object(type_id::object_t, value_node.GetInt());
+	}
+
+	throw std::runtime_error("Loader::loadState() : Cannot load state variable '" + info.getVariableName(var)
+							 + "' of type '" + fstrips::LanguageInfo::instance().get_typename(var) + "'");
+}
+
+
+    std::vector<const ActionData*>
 Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info, bool load_effects) {
 	std::vector<const ActionData*> schemata;
 	for (unsigned i = 0; i < data.Size(); ++i) {
@@ -254,7 +269,7 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 	const std::vector<std::string> parameters = parseStringList(node["parameters"]);
 	const fs::BindingUnit unit(parameters, fs::Loader::parseVariables(node["unit"], info));
 
-    //! MRJ: this method is being re-used to load axioms and state constraints, so the "type"
+    //! MRJ: this method is being re-used to load axioms and actions, so the "type"
     //! member is actually optional
     ActionData::Type action_type = ActionData::Type::Control;
     if ( node.HasMember("type") ) {
@@ -337,6 +352,30 @@ Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& inf
     auto processed = fs::bind(*unprocessed, Binding::EMPTY_BINDING, info);
     delete unprocessed;
     return processed;
+}
+
+AllTransitionGraphsT
+Loader::loadTransitions(const rapidjson::Value& data, const ProblemInfo& info) {
+	if (data.Size() == 0) return {};
+
+	AllTransitionGraphsT all(info.getNumVariables());
+
+    for (unsigned i = 0; i < data.Size(); ++i) {
+        const rapidjson::Value& var_transitions = data[i];
+
+        VariableIdx var = var_transitions[0].GetUint();
+        assert(var < all.size());
+
+        for (unsigned j = 0; j < var_transitions[1].Size(); ++j) {
+            const rapidjson::Value& transition = var_transitions[1][j];
+
+            object_id value1 = parse_object(info, var, transition[0]);
+            object_id value2 = parse_object(info, var, transition[1]);
+
+            all[var].insert(std::make_pair(value1, value2));
+        }
+    }
+    return all;
 }
 
 const fs::Axiom*

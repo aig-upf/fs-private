@@ -29,6 +29,7 @@ public:
 	void sim_add_generated_nodes(unsigned number) { _sim_generated_nodes += number; }
 	void sim_add_time(float time) { _sim_time += time; }
 
+	void monot_pruned() { ++_monot_pruned; }
 
 	void sim_table_created(unsigned k) {
 		if (k >= _sim_wtables.size()) _sim_wtables.resize(k+1);
@@ -105,6 +106,8 @@ protected:
 	unsigned long _num_wgr_gt2_nodes; // The number of nodes with w_{#g,#r} > 2 (and w_{#g} > 1) that have been processed.
 	unsigned long _num_expanded_g_decrease; // The number of nodes with a decrease in #g that are expanded
 	unsigned long _num_generated_g_decrease; // The number of nodes with a decrease in #g that are expanded
+
+	unsigned long _monot_pruned;
 
 	unsigned _reused_simulation_nodes;
 

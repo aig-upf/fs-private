@@ -22,13 +22,13 @@ bool GroundStateModel::goal(const State& state) const {
 	return _task.getGoalSatManager().satisfied(state);
 }
 
-bool GroundStateModel::is_applicable(const State& state, const ActionId& action, bool enforce_state_constraints) const {
-	return is_applicable(state, *(_task.getGroundActions()[action]), enforce_state_constraints);
-}
-
-bool GroundStateModel::is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const {
-	return _manager->applicable(state, action, enforce_state_constraints);
-}
+//bool GroundStateModel::is_applicable(const State& state, const ActionId& action, bool enforce_state_constraints) const {
+//	return is_applicable(state, *(_task.getGroundActions()[action]), enforce_state_constraints);
+//}
+//
+//bool GroundStateModel::is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const {
+//	return _manager->applicable(state, action, enforce_state_constraints);
+//}
 
 State GroundStateModel::next(const State& state, const GroundAction::IdType& actionIdx) const {
 	return next(state, *(_task.getGroundActions()[actionIdx]));

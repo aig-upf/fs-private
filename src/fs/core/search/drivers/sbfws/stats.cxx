@@ -68,6 +68,8 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
 		std::make_tuple("sim_relevant_atoms_0", "|R|_0", _if_computed(_initial_relevant_atoms)),
 		std::make_tuple("sim_relevant_atoms_max", "|R|_max", std::to_string(_max_relevant_atoms)),
 		std::make_tuple("sim_relevant_atoms_avg", "|R|_avg", _avg(_sum_relevant_atoms, _simulations)),
+
+		std::make_tuple("_nodes_pruned_monotonicity", "Nodes pruned by monotonicity constraints", std::to_string(_monot_pruned))
 	};
 	
 	for (unsigned k = 1; k < _sim_wtables.size(); ++k) {

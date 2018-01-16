@@ -32,7 +32,7 @@ public:
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
 	GecodeCSP* instantiate(const RPGIndex& graph) const;
-	GecodeCSP* instantiate(const State& state) const;
+	virtual GecodeCSP* instantiate(const State& state) const;
 	GecodeCSP* instantiate_wo_novelty(const RPGIndex& graph) const;
 	
 	void update_csp(std::unique_ptr<GecodeCSP>&& csp);
