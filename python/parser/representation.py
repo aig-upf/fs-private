@@ -3,7 +3,9 @@
 """
 import json
 import operator
+from collections import defaultdict
 
+from . import fstrips as fs
 from python import utils
 from python.parser.parser import Parser
 from . import fstrips
@@ -33,6 +35,7 @@ class ProblemRepresentation(object):
                 'axioms': [axiom.dump() for axiom in self.index.axioms],
                 'init': self.dump_init_data(),
                 'symbols': self.dump_symbol_data(),
+                'transitions': self.dump_transition_data(),
 
                 'problem': {'domain': self.index.domain_name, 'instance': self.index.instance_name}
                 }
@@ -74,16 +77,17 @@ class ProblemRepresentation(object):
         sorted_atoms = sorted(indexed_atoms)
         return dict(variables=len(self.index.state_variables), atoms=sorted_atoms)
 
+    def object_id(self, value):
+        return int(value) if utils.is_int(value) else self.index.objects.get_index(value)
+
     def dump_variable_data(self):
         all_variables = []
         for i, var in enumerate(self.index.state_variables):
-            signature = [self.index.object_types[arg] for arg in var.args]
-            point = [arg if utils.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
+            point = [self.object_id(arg) for arg in var.args]
 
             all_variables.append(dict(id=i, name=str(var),
                                       fstype=self.index.symbol_types[var.symbol],
                                       symbol_id=self.index.symbol_index[var.symbol],
-                                      signature=signature,
                                       point=point))
 
         return all_variables
@@ -117,6 +121,27 @@ class ProblemRepresentation(object):
             # <ID, name, type, <function_domain>, function_codomain, state_variables, static?, unbounded_arity?>
             res.append([i, name, type_, symbol.arguments, symbol.codomain, f_variables, static, unbounded])
         return res
+
+    def dump_transition_data(self):
+        index = defaultdict(list)
+
+        for transition in self.index.transitions:
+            assert len(transition.variable) > 1
+            variable = fs.Variable(transition.variable[0], transition.variable[1:])
+            try:
+                var_id = self.index.state_variables.get_index(variable)
+            except KeyError:
+                raise RuntimeError("Transition declared on non-existing state variable \"{}\"".format(variable))
+
+            index[var_id].append([self.object_id(transition.v1), self.object_id(transition.v2)])
+
+        res = []
+        for var, transitions in index.items():
+            res.append([var, transitions])
+        return res
+
+
+
 
     def dump_type_data(self):
         """ Dumps a map of types to corresponding objects"""
@@ -276,6 +301,12 @@ class ProblemRepresentation(object):
         for elem in data['init']['atoms']:
             lines.append('Variable {} has value "{}"'.format(elem[0], elem[1]))
         self.dump_data("init", lines, ext='txt', subdir='debug')
+
+        # Transitions
+        lines = list()
+        for var_transitions in data['transitions']:
+            lines.append('{}: "{}"'.format(var_transitions[0], var_transitions[1]))
+        self.dump_data("transitions", lines, ext='txt', subdir='debug')
 
     def print_groundings_if_available(self, schemas, all_groundings, object_idx):
         groundings_filename = "groundings"

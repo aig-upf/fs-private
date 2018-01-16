@@ -10,14 +10,14 @@ from . import pddl_types
 from . import functions
 from . import f_expression
 from .bounds import parse_bounds
-from .constraints import Constraint
+from .transitions import parse_transitions
 from .limits import Limits
 import itertools
 
 
 class Task(object):
     def __init__(self, domain_name, task_name, requirements,
-                 types, objects, predicates, functions, init, goal, actions, axioms, limits, constraints, bounds, use_metric):
+                 types, objects, predicates, functions, init, goal, actions, axioms, limits, constraints, bounds, transitions, use_metric):
         self.domain_name = domain_name
         self.task_name = task_name
         self.requirements = requirements
@@ -33,6 +33,7 @@ class Task(object):
         self.limits = limits
         self.constraints = constraints
         self.bounds = bounds
+        self.transitions = transitions
         self.use_min_cost_metric = use_metric
 
     def add_axiom(self, parameters, condition):
@@ -47,7 +48,7 @@ class Task(object):
     def parse(domain_pddl, task_pddl):
         domain_name, domain_requirements, types, constants, predicates, functions, actions, axioms \
                      = parse_domain(domain_pddl)
-        task_name, task_domain_name, task_requirements, limits, objects, init, goal, constraints, bounds,\
+        task_name, task_domain_name, task_requirements, limits, objects, init, goal, constraints, bounds, transitions, \
         use_metric = parse_task(task_pddl)
 
         assert domain_name == task_domain_name
@@ -62,8 +63,8 @@ class Task(object):
         # We temporarily comment out this. Probably should only be added when the :equality requirement is there.
         #init += [conditions.Atom("=", (obj.name, obj.name)) for obj in objects]
 
-        return Task(domain_name, task_name, requirements, types, objects,
-                    predicates, functions, init, goal, actions, axioms, limits, constraints, bounds, use_metric)
+        return Task(domain_name, task_name, requirements, types, objects, predicates, functions,
+                    init, goal, actions, axioms, limits, constraints, bounds, transitions, use_metric)
 
     def dump(self):
         print("Problem %s: %s [%s]" % (
@@ -269,6 +270,16 @@ def parse_task(task_pddl):
             yield parse_bounds(bounds_opt[1:])
         else:
             iterator = itertools.chain([bounds_opt], iterator)  # Put the element again into the iterator
+            yield []
+    except StopIteration:
+        yield []
+
+    try:
+        transitions_opt = next(iterator)
+        if transitions_opt[0] == ":transitions":
+            yield parse_transitions(transitions_opt[1:])
+        else:
+            iterator = itertools.chain([transitions_opt], iterator)  # Put the element again into the iterator
             yield []
     except StopIteration:
         yield []

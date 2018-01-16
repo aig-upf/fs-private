@@ -84,11 +84,13 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		// Load the info necessary to resolve state variables dynamically
 		unsigned symbol_id = var_data["symbol_id"].GetInt();
 
+        const Signature& signature = getSymbolData(symbol_id).getSignature();
+        // TODO The call above should soon be replaced by:
+//		const Signature& signature = lang.symbolinfo(symbol_id).signature();
 		std::vector<object_id> point;
-		assert(var_data["point"].Size() == var_data["signature"].Size());
+		assert(var_data["point"].Size() == signature.size());
 		for (unsigned j = 0; j < var_data["point"].Size(); ++j) {
-			std::string point_type = var_data["signature"][j].GetString();
-			point.push_back(make_object(get_type_id(point_type), var_data["point"][j].GetInt()));
+			point.push_back(make_object(get_type_id(signature[j]), var_data["point"][j].GetInt()));
 		}
 
 		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, point),  id));
