@@ -14,8 +14,6 @@ namespace Gecode { class IntSet; }
 namespace fs0 {
 
 class TransitionGraph {
-public:
-
 
 protected:
     //! _transitions[X] contains a set with all transition allowed
@@ -41,8 +39,7 @@ public:
     const std::vector<const Gecode::IntSet*>
     compute_domains(const std::vector<Atom>& changeset) const;
 
-
-
+    bool is_active() const;
 
     bool transition_is_valid(VariableIdx variable, const object_id& val0, const object_id& val1) const;
 

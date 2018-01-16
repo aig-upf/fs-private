@@ -20,6 +20,14 @@ MonotonicityCSP::MonotonicityCSP(const fs::Formula* formula, const AtomIndex& tu
        _monotonicity(transitions)
 {}
 
+GecodeCSP* MonotonicityCSP::build_root_csp() const {
+    assert(_monotonicity.is_active());
+
+    // TODO This is somewhat inefficient, as we're doing an unnecessary clone,
+    // but should happen only once in the root node
+    return check_consistency(static_cast<GecodeCSP*>(_base_csp->clone()));
+}
+
 GecodeCSP* MonotonicityCSP::
 instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const {
     if (_failed) return nullptr;
@@ -52,14 +60,18 @@ check(const GecodeCSP& parent_csp, const State* parent, const State& child, cons
     }
 
     // Then check that the monotonicity CSP is consistent
-    return check_consistency(parent_csp, child, changeset);
+    return check_consistency_from_changeset(parent_csp, child, changeset);
 
 }
 
 GecodeCSP* MonotonicityCSP::
-check_consistency(const GecodeCSP& parent_csp, const State& child, const std::vector<Atom>& changeset) const {
+check_consistency_from_changeset(const GecodeCSP& parent_csp, const State& child, const std::vector<Atom>& changeset) const {
     GecodeCSP* csp = instantiate_from_changeset(parent_csp, child, changeset);
+    return check_consistency(csp);
+}
 
+GecodeCSP* MonotonicityCSP::
+check_consistency(GecodeCSP* csp) const {
     if (!csp || !csp->checkConsistency()) { // This colaterally enforces propagation of constraints
         delete csp;
         return nullptr;
@@ -81,4 +93,4 @@ MonotonicityCSP::solve_csp(GecodeCSP* csp) {
     return solution;
 }
 
-} } // namespaces
+    } } // namespaces

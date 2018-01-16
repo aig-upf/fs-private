@@ -98,4 +98,8 @@ TransitionGraph::build_single(const TransitionGraphT& transitions) {
     return result;
 }
 
+bool TransitionGraph::is_active() const {
+    return !_transitions.empty();
+}
+
 } // namespaces
