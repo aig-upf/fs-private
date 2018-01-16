@@ -58,17 +58,20 @@ def save_file(name, content):
 
 
 def is_int(s):
-    if isinstance(s, float) : return False
+    if isinstance(s, float):
+        return False
     try:
         int(s)
         return True
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
         return False
 
+
 def is_float(s):
-    if isinstance(s, int) : return False
+    if isinstance(s, int):
+        return False
     try:
         float(s)
         return True
-    except (ValueError, TypeError) as e:
+    except (ValueError, TypeError):
         return False

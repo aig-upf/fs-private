@@ -16,7 +16,7 @@ def create_all_possible_state_variables(symbols, static_symbols, type_map):
         name = symbol.name
         if is_external(name) or name in static_symbols:  # The symbol won't yield any state variable
             continue
-        try :
+        try:
             instantiations = [type_map[t] for t in symbol.arguments]
         except TypeError as e:
             print(type_map)
