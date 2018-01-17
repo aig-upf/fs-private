@@ -3,6 +3,7 @@
 #include <fs/core/constraints/gecode/extensions.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/state.hxx>
+#include <utility>
 
 namespace fs0 { namespace gecode {
 
@@ -30,11 +31,12 @@ Gecode::TupleSet Extension::generate() const {
 }
 
 
-ExtensionHandler::ExtensionHandler(const AtomIndex& tuple_index, std::vector<bool> managed) :
+ExtensionHandler::ExtensionHandler(const AtomIndex &tuple_index,
+								   std::vector<unsigned> managed) :
 	_info(ProblemInfo::getInstance()),
 	_tuple_index(tuple_index),
 	_extensions(std::vector<Extension>(_info.getNumLogicalSymbols(), Extension(_tuple_index))), // Reset the whole vector
-	_managed(managed)
+	_managed(std::move(managed))
 {}
 
 void ExtensionHandler::reset() {
@@ -43,37 +45,34 @@ void ExtensionHandler::reset() {
 }
 
 void ExtensionHandler::advance() {
-// 	_modified.clear(); // Initially all symbols are untouched
 }
 
 AtomIdx ExtensionHandler::process_atom(VariableIdx variable, const object_id& value) {
-	const auto& tuple_data = _info.getVariableData(variable); // TODO - MOVE FROM PROBLEM INFO INTO SOME PERFORMANT INDEX
+	const auto& tuple_data = _info.getVariableData(variable);
+	bool is_predicate = _info.isPredicativeVariable(variable);
 	unsigned symbol = tuple_data.first;
-	bool managed = _managed.at(symbol);
-	bool is_predicate = _info.isPredicativeVariable(variable); // TODO - MOVE FROM PROBLEM INFO INTO SOME PERFORMANT INDEX
-	Extension& extension = _extensions.at(symbol);
-// 	_modified.insert(symbol);  // Mark the extension as modified
-	
+
+
+	// "False" (i.e. negated) atoms do not result in any additional tuple being added to the extension of the symbol
+	if (is_predicate && int(value) == 0) return INVALID_TUPLE;
+
+	AtomIdx index;
+
 	if (is_predicate && int(value) == 1) {
-		AtomIdx index = _tuple_index.to_index(tuple_data);
-		if (managed) {
-			extension.add_tuple(index);
-		}
-		return index;
-	}
-	
-	if (!is_predicate) {
+		index = _tuple_index.to_index(tuple_data);
+
+	} else {
 		ValueTuple tuple = tuple_data.second; // (implicitly copies)
 		tuple.push_back(value);
-		AtomIdx index = _tuple_index.to_index(symbol, tuple);
-		if (managed) {
-			extension.add_tuple(index);
-		}
-		return index;
+		index = _tuple_index.to_index(symbol, tuple);
 	}
-	
-	return INVALID_TUPLE;
+
+	if (_managed.at(symbol)) {
+		_extensions.at(symbol).add_tuple(index);
+	}
+	return index;
 }
+
 
 void ExtensionHandler::process_tuple(AtomIdx tuple) {
 	unsigned symbol = _tuple_index.symbol(tuple);
@@ -95,7 +94,7 @@ std::vector<Gecode::TupleSet> ExtensionHandler::generate_extensions() const {
 		if (_managed.at(symbol)) {
 			result.push_back(generator.generate());
 		} else {
-			result.push_back(Gecode::TupleSet());
+			result.emplace_back();
 		}
 	}
 	return result;
@@ -106,4 +105,46 @@ Gecode::TupleSet ExtensionHandler::generate_extension(unsigned symbol) const {
 	return generator.generate();
 }
 
-} } // namespaces
+
+
+StateBasedExtensionHandler::StateBasedExtensionHandler(const AtomIndex& tuple_index) :
+		StateBasedExtensionHandler(tuple_index, std::vector<unsigned>(ProblemInfo::getInstance().getNumLogicalSymbols(), 1))
+{}
+
+StateBasedExtensionHandler::StateBasedExtensionHandler(const AtomIndex& tuple_index, std::vector<unsigned> managed) :
+		_info(ProblemInfo::getInstance()),
+		_tuple_index(tuple_index),
+		_tuplesets(_info.getNumLogicalSymbols()),
+		_managed(std::move(managed))
+{}
+
+
+
+void StateBasedExtensionHandler::process(const State& state) {
+
+//    Gecode::TupleSet test;
+//    std::cout << "[0] We have " << test.tuples() << " tuples" << std::endl;
+
+//    std::cout << "We have " << _tuplesets[0].tuples() << " tuples" << std::endl;
+	for (unsigned variable = 0, n = state.numAtoms(); variable < n; ++variable) {
+		unsigned symbol = _tuple_index.var_to_symbol(variable);
+		assert(symbol < ProblemInfo::getInstance().getNumLogicalSymbols());
+		if (!_managed[symbol]) continue;
+
+		// "False" (i.e. negated) atoms do not result in any additional tuple being added to the extension of the symbol
+		const auto val = state.getValue(variable);
+		if (_info.isPredicativeVariable(variable) && int(val) == 0) continue;
+
+		const ValueTuple& values = _tuple_index.to_tuple(variable, val);
+		_tuplesets[symbol].add(fs0::values<int>(values, ObjectTable::EMPTY_TABLE));
+	}
+
+	for (auto& ts:_tuplesets) ts.finalize();
+}
+
+const Gecode::TupleSet& StateBasedExtensionHandler::retrieve(unsigned symbol) const {
+	return _tuplesets[symbol];
+}
+
+
+	} } // namespaces

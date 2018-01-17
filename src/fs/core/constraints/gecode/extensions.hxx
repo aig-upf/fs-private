@@ -4,7 +4,7 @@
 #include <fs/core/utils/atom_index.hxx>
 #include <gecode/int.hh>
 
-namespace fs0 { class ProblemInfo; }
+namespace fs0 { class ProblemInfo; class State; }
 
 namespace fs0 { namespace gecode {
 
@@ -33,14 +33,12 @@ protected:
 	
 	//! _extensions[i] contains the extension of logical symbol 'i'
 	std::vector<Extension> _extensions;
-	
+
 	//! _managed[i] tells us whether we need to manage the extension of logical symbol 'i' or not.
-	std::vector<bool> _managed;
-	
-	//! _modified[i] is true iff the denotation of logical symbol 'i' changed on the last layer
-// 	std::set<unsigned> _modified;
+	std::vector<unsigned> _managed;
+
 public:
-	ExtensionHandler(const AtomIndex& tuple_index, std::vector<bool> managed);
+	ExtensionHandler(const AtomIndex& tuple_index, std::vector<unsigned> managed);
 	
 	//! Default copy constructors and assignment operators
 	ExtensionHandler(const ExtensionHandler& other) = default;
@@ -67,4 +65,37 @@ public:
 	Gecode::TupleSet generate_extension(unsigned symbol_id) const;
 };
 
+
+
+
+class StateBasedExtensionHandler {
+protected:
+	const ProblemInfo& _info;
+
+	const AtomIndex& _tuple_index;
+
+	//!
+	std::vector<Gecode::TupleSet> _tuplesets;
+
+	//! _managed[i] tells us whether we need to manage the extension of logical symbol 'i' or not.
+	std::vector<unsigned> _managed;
+
+public:
+	//! A handler managing all symbols
+	StateBasedExtensionHandler(const AtomIndex& tuple_index);
+
+	//! A handler managing only the selected symbols
+	StateBasedExtensionHandler(const AtomIndex& tuple_index, std::vector<unsigned> managed);
+
+	//! Default copy constructors and assignment operators
+	StateBasedExtensionHandler(const StateBasedExtensionHandler&) = default;
+	StateBasedExtensionHandler(StateBasedExtensionHandler&&) = default;
+	StateBasedExtensionHandler& operator=(const StateBasedExtensionHandler&) = default;
+	StateBasedExtensionHandler& operator=(StateBasedExtensionHandler&&) = default;
+
+	//!
+	void process(const State& state);
+
+	const Gecode::TupleSet& retrieve(unsigned symbol_id) const;
+};
 } } // namespaces

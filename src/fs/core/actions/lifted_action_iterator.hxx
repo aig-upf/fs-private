@@ -4,10 +4,11 @@
 #include <memory>
 
 #include <gecode/driver.hh>
+#include <fs/core/constraints/gecode/extensions.hxx>
 
 namespace fs0 {
-class State;
-class LiftedActionID;
+	class State;
+	class LiftedActionID;
 }
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
@@ -15,71 +16,75 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
-class GecodeCSP;
-class LiftedActionCSP;
+		class GecodeCSP;
+		class LiftedActionCSP;
 
 //! An iterator that models action schema applicability as an action CSP.
 //! The iterator receives an (ordered) set of lifted-action CSP handlers, and upon iteration
 //! returns, chainedly, each of the lifted-action IDs that are applicable.
-class LiftedActionIterator {
-protected:
-	const std::vector<std::shared_ptr<LiftedActionCSP>>& _handlers;
+		class LiftedActionIterator {
+		protected:
+			const std::vector<std::shared_ptr<LiftedActionCSP>>& _handlers;
 
-	const State& _state;
+			const State& _state;
 
-	const std::vector<const fs::Formula*>& _state_constraints;
+			const std::vector<const fs::Formula*>& _state_constraints;
 
-public:
-	LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints);
+			StateBasedExtensionHandler _extension_handler;
 
-	class Iterator {
-		friend class LiftedActionIterator;
+		public:
+			LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_index);
 
-	public:
-		using engine_t = Gecode::DFS<GecodeCSP>;
+			class Iterator {
+				friend class LiftedActionIterator;
 
-		~Iterator();
+			public:
+				using engine_t = Gecode::DFS<GecodeCSP>;
 
-	protected:
-		Iterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, unsigned currentIdx);
+				~Iterator();
 
-		const std::vector<std::shared_ptr<LiftedActionCSP>>& _handlers;
+			protected:
+				Iterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const StateBasedExtensionHandler& extension_handler, unsigned currentIdx);
 
-		const State& _state;
+				const std::vector<std::shared_ptr<LiftedActionCSP>>& _handlers;
 
-		unsigned _current_handler_idx;
+				const State& _state;
 
-		engine_t* _engine;
+				unsigned _current_handler_idx;
 
-		GecodeCSP* _csp;
+				engine_t* _engine;
 
-		LiftedActionID* _action;
+				GecodeCSP* _csp;
 
-		//! The state constraints
-		const std::vector<const fs::Formula*>& _state_constraints;
+				LiftedActionID* _action;
 
-		void advance();
+				//! The state constraints
+				const std::vector<const fs::Formula*>& _state_constraints;
 
-		//! Returns true iff a new solution has actually been found
-		bool next_solution();
+				const StateBasedExtensionHandler& _extension_handler;
 
-	public:
-		const Iterator& operator++() {
-			advance();
-			return *this;
-		}
-		const Iterator operator++(int) {Iterator tmp(*this); operator++(); return tmp;}
+				void advance();
 
-		const LiftedActionID& operator*() const { return *_action; }
+				//! Returns true iff a new solution has actually been found
+				bool next_solution();
 
-		//! This is not really true... but will work for the purpose of comparing with the end iterator.
-		bool operator==(const Iterator &other) const { return _current_handler_idx == other._current_handler_idx; }
-		bool operator!=(const Iterator &other) const { return !(this->operator==(other)); }
-	};
+			public:
+				const Iterator& operator++() {
+					advance();
+					return *this;
+				}
+				const Iterator operator++(int) {Iterator tmp(*this); operator++(); return tmp;}
 
-	Iterator begin() const { return Iterator(_state, _handlers, _state_constraints, 0); }
-	Iterator end() const { return Iterator(_state,_handlers, _state_constraints, _handlers.size()); }
-};
+				const LiftedActionID& operator*() const { return *_action; }
+
+				//! This is not really true... but will work for the purpose of comparing with the end iterator.
+				bool operator==(const Iterator &other) const { return _current_handler_idx == other._current_handler_idx; }
+				bool operator!=(const Iterator &other) const { return !(this->operator==(other)); }
+			};
+
+			Iterator begin() const { return Iterator(_state, _handlers, _state_constraints, _extension_handler, 0); }
+			Iterator end() const { return Iterator(_state,_handlers, _state_constraints, _extension_handler, _handlers.size()); }
+		};
 
 
-} } // namespaces
+	} } // namespaces

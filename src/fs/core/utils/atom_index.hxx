@@ -28,6 +28,9 @@ protected:
 	
 	//! A map from tuple index to its corresponding symbol
 	std::vector<unsigned> _symbol_index;
+
+	//! A map from variable index to its corresponding symbol
+	std::vector<unsigned> _variable_to_symbol;
 	
 	//! A map from actual tuples to their index
 	std::vector<std::unordered_map<ValueTuple, AtomIdx, boost::hash<ValueTuple>>> _tuple_index_inv;
@@ -68,9 +71,13 @@ public:
 	
 	//! Returns the actual value tuple that corresponds to the given tuple index, without the logical symbol 
 	const ValueTuple& to_tuple(AtomIdx tuple) const { return _tuple_index.at(tuple); }
+	const ValueTuple& to_tuple(VariableIdx variable, const object_id& value) const;
+
 	
 	//! Returns the logical symbol that corresponds to the given tuple index
 	unsigned symbol(AtomIdx tuple) const { return _symbol_index.at(tuple); }
+	unsigned var_to_symbol(VariableIdx variable) const { return _variable_to_symbol.at(variable); }
+
 	
 	const std::vector<AtomIdx>& all_variable_atoms(VariableIdx variable) const { return _variable_to_atom_index[variable]; }
 	

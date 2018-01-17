@@ -81,11 +81,11 @@ std::ostream& ExtensionalConstraint::print(std::ostream& os) const {
 }
 
 Gecode::TupleSet ExtensionalConstraint::compute_extension(unsigned symbol_id, const State& state) const {
-	std::vector<bool> managed(ProblemInfo::getInstance().getNumLogicalSymbols(), false);
-	managed.at(symbol_id) = true;
+	std::vector<unsigned> managed(ProblemInfo::getInstance().getNumLogicalSymbols(), 0);
+	managed.at(symbol_id) = (unsigned) true;
 	ExtensionHandler extension_handler(_tuple_index, managed);
 
-	for (unsigned variable = 0; variable < state.numAtoms(); ++variable) {
+	for (unsigned variable = 0, n = state.numAtoms(); variable < n; ++variable) {
 		object_id value = state.getValue(variable);
 		extension_handler.process_atom(variable, value);
 	}

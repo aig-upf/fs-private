@@ -19,6 +19,8 @@ namespace fs0 { class RPGData; class Binding; }
 
 namespace fs0 { namespace gecode {
 
+class StateBasedExtensionHandler;
+
 //! The base interface class for all gecode CSP handlers
 class BaseCSP {
 public:
@@ -32,7 +34,7 @@ public:
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
 	GecodeCSP* instantiate(const RPGIndex& graph) const;
-	virtual GecodeCSP* instantiate(const State& state) const;
+	GecodeCSP* instantiate(const State& state, const StateBasedExtensionHandler& handler) const;
 	GecodeCSP* instantiate_wo_novelty(const RPGIndex& graph) const;
 	
 	void update_csp(std::unique_ptr<GecodeCSP>&& csp);

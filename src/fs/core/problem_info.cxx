@@ -39,7 +39,7 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& dat
 
 	// Load the cached map of predicative variables for more performant access
 	for (unsigned variable = 0; variable < getNumVariables(); ++variable) {
-		_predicative_variables.push_back(isPredicate(getVariableData(variable).first));
+		_predicative_variables.push_back((unsigned) isPredicate(getVariableData(variable).first));
 	}
 
 	_extensions.resize(getNumLogicalSymbols());

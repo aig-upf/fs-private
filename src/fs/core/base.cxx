@@ -98,7 +98,8 @@ float value(const object_id& o) {
 template <typename T>
 std::vector<T> values(const std::vector<object_id>& os, const ObjectTable& itp) {
 	std::vector<T> result;
-	for (const auto& o:os) result.push_back(value<T>(o, itp));
+	result.reserve(os.size());
+	for (const auto& o:os) result.emplace_back(value<T>(o, itp));
 	return result;
 }
 

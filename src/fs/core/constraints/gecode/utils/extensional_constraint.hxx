@@ -33,14 +33,15 @@ public:
 	//! Constraint-posting routines
 	bool update(GecodeCSP& csp, const CSPTranslator& translator, const State& state) const;
 	bool update(GecodeCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const;
-	
+	bool update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
+
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ExtensionalConstraint&  o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
 	
 protected:
 	//!
-	bool update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
+
 	
 	//! This is a hacky, temporary way of knowing if the current extensional constraint models a predicate or not, in which
 	//! case we assume it models a nested fluent.

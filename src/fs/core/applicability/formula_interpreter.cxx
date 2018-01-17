@@ -5,6 +5,7 @@
 #include <fs/core/utils/utils.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
+#include <fs/core/constraints/gecode/extensions.hxx>
 
 namespace fs0 {
 
@@ -57,7 +58,9 @@ CSPFormulaInterpreter::CSPFormulaInterpreter(const CSPFormulaInterpreter& other)
 {}
 
 bool CSPFormulaInterpreter::satisfied(const State& state) const {
-	gecode::GecodeCSP* csp = _formula_csp->instantiate(state);
+	fs0::gecode::StateBasedExtensionHandler handler(_tuple_index); // TODO Manage only relevant symbols, not all
+	handler.process(state);
+	gecode::GecodeCSP* csp = _formula_csp->instantiate(state, handler);
 	if (!csp) return false;
 	csp->checkConsistency();
 	bool sol = _formula_csp->is_satisfiable(csp);

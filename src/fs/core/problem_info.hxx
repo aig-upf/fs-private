@@ -137,7 +137,7 @@ public:
 	bool isPredicate(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::PREDICATE; }
 	bool isFunction(unsigned symbol_id) const { return getSymbolData(symbol_id).getType() == SymbolData::Type::FUNCTION; }
 
-	bool isPredicativeVariable(VariableIdx variable) const { return _predicative_variables.at(variable); }
+	bool isPredicativeVariable(VariableIdx variable) const { return (bool) _predicative_variables.at(variable); }
 
 	void setFunction(unsigned functionId, const Function& function) {
 		_functionData.at(functionId).setFunction(function);
@@ -226,7 +226,9 @@ protected:
 
 	void loadProblemMetadata(const rapidjson::Value& data);
 
-	std::vector<bool> _predicative_variables;
+	//! _predicative_variables[i] is a bool (unsigned for performance reasons)
+	//! telling whether variable with index 'i' is Boolean or not.
+	std::vector<unsigned> _predicative_variables;
 
 	//! The filesystem directory where the problem serialized data is found
 	const std::string _data_dir;

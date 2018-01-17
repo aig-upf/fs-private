@@ -16,6 +16,7 @@ bool AtomIndex::is_indexed(VariableIdx variable, const object_id& value) const {
 AtomIndex::AtomIndex(const ProblemInfo& info, bool index_negated_literals) :
 	_info(info),
 	_indexes_negated_literals(index_negated_literals),
+	_variable_to_symbol(info.getNumVariables(), std::numeric_limits<unsigned>::max()),
 	_tuple_index_inv(info.getNumLogicalSymbols()),
 	_atom_index_inv(info.getNumVariables()),
 	_variable_to_atom_index(info.getNumVariables())
@@ -65,8 +66,14 @@ void AtomIndex::add(const ProblemInfo& info, unsigned symbol, const ValueTuple& 
 	assert(_atom_index.size() == idx);
 	_atom_index.push_back(atom);
 
-	_atom_index_inv.at(atom.getVariable()).insert(std::make_pair(atom.getValue(), idx));
-	_variable_to_atom_index.at(atom.getVariable()).push_back(idx);
+	VariableIdx variable = atom.getVariable();
+	_atom_index_inv.at(variable).insert(std::make_pair(atom.getValue(), idx));
+	_variable_to_atom_index.at(variable).push_back(idx);
+
+	// This will overwrite the same value for all possible atoms that derive from the same variable,
+	// but that shouldn't be a problem
+	assert(_variable_to_symbol.at(variable)==std::numeric_limits<unsigned>::max() || _variable_to_symbol.at(variable)==symbol);
+	_variable_to_symbol.at(variable) = symbol;
 }
 
 AtomIdx AtomIndex::to_index(unsigned symbol, const ValueTuple& tuple) const {
@@ -87,6 +94,10 @@ AtomIdx AtomIndex::to_index(VariableIdx variable, const object_id& value) const 
 	return it->second;
 }
 
+const ValueTuple& AtomIndex::to_tuple(VariableIdx variable, const object_id& value) const {
+	return to_tuple(to_index(variable, value)); // TODO This could be optimized to a single lookup if need be
+}
+
 // TODO - We should be applying some reachability analysis here to prune out tuples that will never be reachable at all.
 std::vector<std::vector<std::pair<ValueTuple, object_id>>> AtomIndex::compute_all_reachable_tuples(const ProblemInfo& info) {
 	std::vector<std::vector<std::pair<ValueTuple, object_id>>> tuples_by_symbol(info.getNumLogicalSymbols());
@@ -96,7 +107,7 @@ std::vector<std::vector<std::pair<ValueTuple, object_id>>> AtomIndex::compute_al
 		auto& symbol_tuples = tuples_by_symbol.at(data.first); // The tupleset corresponding to the symbol index
 		LPT_DEBUG("atom_index", "# Objects in Domain of Variable (#'" << var << "') '" << info.getVariableName(var)<< "' = " << info.getVariableObjects(var).size())
 		for (const object_id& value:info.getVariableObjects(var)) {
-			symbol_tuples.push_back(std::make_pair(data.second, value));
+			symbol_tuples.emplace_back(data.second, value);
 		}
 	}
 	return tuples_by_symbol;

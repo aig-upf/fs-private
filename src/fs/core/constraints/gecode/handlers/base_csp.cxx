@@ -1,4 +1,5 @@
 
+#include <fs/core/state.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/utils/atom_index.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
@@ -11,6 +12,7 @@
 #include <gecode/driver.hh>
 #include <fs/core/constraints/gecode/translators/component_translator.hxx>
 #include <fs/core/utils/config.hxx>
+#include <fs/core/constraints/gecode/extensions.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -62,9 +64,10 @@ BaseCSP::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTransla
 template <typename T>
 GecodeCSP*
 _instantiate(const GecodeCSP& csp,
-						   const CSPTranslator& translator,
-						   const std::vector<ExtensionalConstraint>& extensional_constraints,
-						   const T& layer) {
+			 const AtomIndex& tuple_index,
+			 const CSPTranslator& translator,
+			 const std::vector<ExtensionalConstraint>& extensional_constraints,
+			 const T& layer) {
 	GecodeCSP* clone = static_cast<GecodeCSP*>(csp.clone());
 	translator.updateStateVariableDomains(*clone, layer);
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {
@@ -76,17 +79,39 @@ _instantiate(const GecodeCSP& csp,
 	return clone;
 }
 
+
+GecodeCSP*
+_instantiate(const GecodeCSP& csp,
+			 const AtomIndex& tuple_index,
+			 const CSPTranslator& translator,
+			 const std::vector<ExtensionalConstraint>& extensional_constraints,
+			 const State& state,
+			 const StateBasedExtensionHandler& handler) {
+	GecodeCSP* clone = static_cast<GecodeCSP*>(csp.clone());
+	translator.updateStateVariableDomains(*clone, state);
+
+	for (const ExtensionalConstraint& constraint:extensional_constraints) {
+		if (!constraint.update(*clone, translator, handler.retrieve(constraint.get_term()->getSymbolId()))) {
+			delete clone;
+			return nullptr;
+		}
+	}
+
+	return clone;
+}
+
+
 GecodeCSP*
 BaseCSP::instantiate_wo_novelty(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	GecodeCSP* csp = _instantiate(*_base_csp, _translator, _extensional_constraints, graph);
+	GecodeCSP* csp = _instantiate(*_base_csp, _tuple_index, _translator, _extensional_constraints, graph);
 	return csp;
 }
 
 GecodeCSP*
 BaseCSP::instantiate(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	GecodeCSP* csp = _instantiate(*_base_csp, _translator, _extensional_constraints, graph);
+	GecodeCSP* csp = _instantiate(*_base_csp, _tuple_index, _translator, _extensional_constraints, graph);
 	if (!csp) return csp; // The CSP was detected unsatisfiable even before propagating anything
 	
 	// Post the novelty constraint
@@ -96,11 +121,10 @@ BaseCSP::instantiate(const RPGIndex& graph) const {
 }
 
 GecodeCSP*
-BaseCSP::instantiate(const State& state) const {
+BaseCSP::instantiate(const State& state, const StateBasedExtensionHandler& handler) const {
 	if (_failed) return nullptr;
-	return _instantiate(*_base_csp, _translator, _extensional_constraints, state);
+	return _instantiate(*_base_csp, _tuple_index, _translator, _extensional_constraints, state, handler);
 }
-
 
 void
 BaseCSP::register_csp_variables() {

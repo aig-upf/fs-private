@@ -11,6 +11,7 @@
 #include <fs/core/state.hxx>
 
 #include <lapkt/tools/logging.hxx>
+#include <fs/core/constraints/gecode/extensions.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -39,18 +40,28 @@ GecodeCSP* MonotonicityCSP::
 instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const {
     if (_failed) return nullptr;
 
+    fs0::gecode::StateBasedExtensionHandler handler(_tuple_index); // TODO Manage only relevant symbols, not all
+    handler.process(state);
+
     auto clone = static_cast<GecodeCSP*>(parent_csp.clone());
 
     const auto allowed_domains = _monotonicity.compute_domains(changeset);
     _translator.updateStateVariableDomains(*clone, allowed_domains);
 
+    auto st = clone->status();
+    std::cout << "Status before posting extensional constraints: " << st << std::endl;
+
     // TODO Is this really necessary?? Might it be Harmful??
     for (const ExtensionalConstraint& constraint:_extensional_constraints) {
-        if (!constraint.update(*clone, _translator, state)) {
+        std::cout << "Ext. constraint: " << constraint << std::endl;
+        if (!constraint.update(*clone, _translator, handler.retrieve(constraint.get_term()->getSymbolId()))) {
             delete clone;
             return nullptr;
         }
     }
+
+    st = clone->status();
+    std::cout << "Status after posting extensional constraints: " << st << std::endl;
 
     return clone;
 }
@@ -91,16 +102,16 @@ check_consistency(GecodeCSP* csp) const {
         return nullptr;
     }
 
-//    std::cout << "\n(Locally consistent) monotonicity CSP: " << std::endl;
-//    _translator.print(std::cout, *csp);
+    std::cout << "\n(Locally consistent) monotonicity CSP: " << std::endl;
+    _translator.print(std::cout, *csp);
 
     if (!_approximate) {  // Solve the CSP completely
         GecodeCSP* solution = solve_csp(csp);
         if (!solution) return nullptr;
         // TODO Do something with the solution? Cache it?
 
-//        std::cout << "\nComplete solution to monotonicity CSP: " << std::endl;
-//        _translator.print(std::cout, *solution);
+        std::cout << "\nComplete solution to monotonicity CSP: " << std::endl;
+        _translator.print(std::cout, *solution);
     }
 
     return csp;
