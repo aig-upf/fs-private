@@ -28,7 +28,7 @@ SmartLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchS
 	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
-	_heuristic = std::unique_ptr<HeuristicT>(new HeuristicT(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler));
+	_heuristic = std::make_unique<HeuristicT>(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 
 	
 	// If necessary, we constrain the state variables domains and even action/effect CSPs that will be used henceforth

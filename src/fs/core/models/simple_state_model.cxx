@@ -9,6 +9,7 @@
 #include <lapkt/tools/logging.hxx>
 
 #include <fs/core/languages/fstrips/language.hxx>
+#include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
 
 namespace fs0 {
 
@@ -26,18 +27,52 @@ obtain_goal_atoms(const fs::Formula* goal) {
 */
 
 
+//!
+class ComplexExistentialFormula : public fs::Formula {
+public:
+	LOKI_DEFINE_CONST_VISITABLE()
+
+	explicit ComplexExistentialFormula(const fs::Formula* formula, const AtomIndex& tuple_index) :
+		_interpreter(formula->clone(), tuple_index)
+	{}
+
+	~ComplexExistentialFormula() override = default;
+
+	ComplexExistentialFormula* clone() const override { throw UnimplementedFeatureException(""); }
+
+	bool interpret(const PartialAssignment& assignment, Binding& binding) const override { throw UnimplementedFeatureException(""); }
+	bool interpret(const State& state, Binding& binding) const override {
+		return _interpreter.satisfied(state);
+	}
+	using Formula::interpret;
+
+	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override {
+		return os << "ComplexExistentialFormula";
+	}
+
+protected:
+	CSPFormulaInterpreter _interpreter;
+};
+
 //! A helper to derive the distinct goal atoms
 std::vector<const fs::Formula*>
-obtain_goal_atoms(const fs::Formula* goal) {
-	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
-	if (!conjunction) {
-		throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
+obtain_goal_atoms(const Problem& problem, const fs::Formula* goal) {
+	const auto* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
+	const auto* ex_q = dynamic_cast<const fs::ExistentiallyQuantifiedFormula*>(goal);
+	if (!conjunction && !ex_q) {
+		throw std::runtime_error("This search mode can only be applied to problems featuring goal conjunctions of existentially-quantified formulas");
 	}
 
 	std::vector<const fs::Formula*> goal_atoms;
 
-	for (const fs::Formula* atom:conjunction->getSubformulae()) {
-		goal_atoms.push_back(atom);
+	if (ex_q) {
+		// TODO This might be a memory leak
+		goal_atoms.push_back(new ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
+	} else {
+		assert(conjunction);
+		for (const fs::Formula* atom:conjunction->getSubformulae()) {
+			goal_atoms.push_back(atom);
+		}
 	}
 
 	return goal_atoms;
@@ -46,7 +81,7 @@ obtain_goal_atoms(const fs::Formula* goal) {
 
 SimpleStateModel
 SimpleStateModel::build(const Problem& problem) {
-	return SimpleStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
+	return SimpleStateModel(problem, obtain_goal_atoms(problem, problem.getGoalConditions()));
 }
 
 SimpleStateModel::SimpleStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals) :

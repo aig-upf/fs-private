@@ -15,7 +15,7 @@ std::vector<const fs::Formula*>
 obtain_goal_atoms(const fs::Formula* goal) {
 	std::vector<const fs::Formula*> goal_atoms;
 
-	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
+	const auto * conjunction = dynamic_cast<const fs::Conjunction*>(goal);
 	if (!conjunction) {
 		goal_atoms.push_back(goal);
 	} else {
