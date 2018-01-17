@@ -40,9 +40,9 @@ bool
 _check_negated_preconditions(std::vector<const ActionData*>& schemas) {
 	for (const ActionData* schema:schemas) {
 		for (const fs::AtomicFormula* atom:fs::all_atoms(*schema->getPrecondition())) {
-			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(atom);
+			const auto * eq = dynamic_cast<const fs::EQAtomicFormula*>(atom);
 			if (!eq) continue;
-			const fs::Constant* cnst = dynamic_cast<const fs::Constant*>(eq->rhs());
+			const auto * cnst = dynamic_cast<const fs::Constant*>(eq->rhs());
 			if (!cnst) continue;
 			if (o_type(cnst->getValue()) == type_id::bool_t && !(fs0::value<bool>(cnst->getValue()))) {
 				return true;
@@ -117,14 +117,14 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	       throw std::runtime_error("Could not find state constraints in data/problem.json!");
 	}
 	for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
-	   auto sc = loadGroundedFormula(data["state_constraints"][i], info);
-		if (sc == nullptr ) continue;
-		const fs::Conjunction* conj = dynamic_cast<const fs::Conjunction*>(sc);
-		if ( conj == nullptr ) {
+		auto sc = loadGroundedFormula(data["state_constraints"][i], info);
+		if (sc == nullptr) continue;
+		const auto* conj = dynamic_cast<const fs::Conjunction*>(sc);
+		if (conj == nullptr) {
 	   		conjuncts.push_back(sc);
 	   		continue;
 		}
-		for ( auto c : conj->getSubformulae() )
+		for (auto c : conj->getSubformulae())
 		    conjuncts.push_back(c->clone());
 			delete conj;
 	}
@@ -193,7 +193,7 @@ Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 ProblemInfo&
 Loader::loadProblemInfo(const rapidjson::Document& data, const std::string& data_dir, const BaseComponentFactory& factory) {
 	// Load and set the ProblemInfo data structure
-	auto info = std::unique_ptr<ProblemInfo>(new ProblemInfo(data, data_dir));
+	auto info = std::make_unique<ProblemInfo>(data, data_dir);
 	loadFunctions(factory, *info);
 	return ProblemInfo::setInstance(std::move(info));
 }
@@ -209,7 +209,7 @@ Loader::loadState(const StateAtomIndexer& indexer, const rapidjson::Value& data,
 		VariableIdx var = node[0].GetInt();
         object_id value = parse_object(info, var, node[1]);
 
-        facts.push_back(Atom(var, value));
+        facts.emplace_back(var, value);
 	}
 	return State::create(indexer, numAtoms, facts);
 }
@@ -407,7 +407,7 @@ std::vector<std::string>
 Loader::parseStringList(const rapidjson::Value& data) {
 	std::vector<std::string> output;
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		output.push_back(data[i].GetString());
+		output.emplace_back(data[i].GetString());
 	}
 	return output;
 }

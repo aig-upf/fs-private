@@ -26,7 +26,7 @@ std::vector<bool> compute_managed_symbols(const std::vector<const ActionBase*>& 
 			const fs::Term* lhs = effect->lhs();
 
 			// Predicate symbols appearing in LHS state variables need to be tracked
-			if (const fs::StateVariable* statevar = dynamic_cast<const fs::StateVariable*>(lhs)) {
+			if (const auto * statevar = dynamic_cast<const fs::StateVariable*>(lhs)) {
 				unsigned symbol = statevar->getSymbolId();
 				if (info.isPredicate(symbol)) { // We have a fluent predicate symbol
 					managed.at(symbol) = true;

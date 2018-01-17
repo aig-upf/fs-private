@@ -49,17 +49,12 @@ Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
 
 Problem::~Problem() {
 	for (const auto pointer:_action_data) delete pointer;
-	for (const auto it:_axioms) delete it.second;
-    	for (const auto it:_state_constraints) delete it.second;
+	for (const auto& it:_axioms) delete it.second;
+	for (const auto& it:_state_constraints) delete it.second;
 	for (const auto pointer:_ground) delete pointer;
 	for (const auto pointer:_partials) delete pointer;
 	delete _goal_formula;
-    	delete _metric;
-}
-
-void
-Problem::setInitialState( const State& s ) {
-    _init = std::make_unique<State>(s);
+	delete _metric;
 }
 
 std::unordered_map<std::string, const fs::Axiom*>
@@ -79,9 +74,9 @@ Problem::Problem(const Problem& other) :
 	_axioms(other._axioms),
 	_ground(Utils::copy(other._ground)),
 	_partials(Utils::copy(other._partials)),
-    	_state_constraints(other._state_constraints),
+    _state_constraints(other._state_constraints),
 	_goal_formula(other._goal_formula->clone()),
-    	_metric(new fs::Metric(*other._metric)),
+    _metric(new fs::Metric(*other._metric)),
 	_goal_sat_manager(other._goal_sat_manager->clone()),
 	_is_predicative(other._is_predicative)
 {
@@ -90,15 +85,7 @@ Problem::Problem(const Problem& other) :
         _state_constraints_formulae.push_back( c.second->getDefinition() );
     }
 }
-
-void Problem::set_state_constraints(const fs::Formula* state_constraint_formula) {
-    throw std::runtime_error("Runtime Error: Method Problem::set_state_constraints() is deprectated!");
-}
-
-void Problem::set_goal(const fs::Formula* goal) {
-	delete _goal_formula;
-	_goal_formula = goal;
-}
+const fs::Formula* Problem::getGoalConditions() const { return _goal_formula; }
 
 std::ostream& Problem::print(std::ostream& os) const {
 	const fs0::ProblemInfo& info = ProblemInfo::getInstance();

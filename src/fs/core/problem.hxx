@@ -37,7 +37,6 @@ public:
 	Problem& operator=(Problem&& rhs) = delete;
 
 	//! Get the initial state of the problem
-	void setInitialState( const State& s );
 	const State& getInitialState() const { return *_init; }
 
 	const StateAtomIndexer& getStateAtomIndexer() const { return *_state_indexer; }
@@ -58,7 +57,7 @@ public:
 	void setPartiallyGroundedActions(std::vector<const PartiallyGroundedAction*>&& actions) { _partials = std::move(actions); }
 
 	//! Get the problem's goal formula
-	const fs::Formula* getGoalConditions() const { return _goal_formula; }
+	const fs::Formula* getGoalConditions() const;
 
 	//! Get the problem's metric
 	const fs::Metric* get_metric() const { return _metric; }
@@ -102,9 +101,6 @@ public:
 	bool is_predicative() const { return _is_predicative; }
 
     bool requires_handling_continuous_change() const;
-
-	void set_state_constraints(const fs::Formula* state_constraint_formula);
-	void set_goal(const fs::Formula* goal);
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
