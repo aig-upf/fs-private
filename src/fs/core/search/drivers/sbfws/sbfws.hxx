@@ -166,7 +166,7 @@ template <typename StateModelT,
           typename NoveltyEvaluatorT,
 		  typename NodeT,
           template <class N, class S, class NE, class FS> class SimulatorT,
-          template <class S, class A> class SimNodeT 
+          template <class S, class A> class SimNodeT
 >
 class SBFWSHeuristic {
 public:
@@ -174,7 +174,7 @@ public:
 	using ActionT = typename StateModelT::ActionType;
 	using IWNodeT =  SimNodeT<State, ActionT>;
 	using SimulationT =  SimulatorT<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
-	
+
 
 	// Novelty evaluator pointer type
 	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
@@ -207,7 +207,7 @@ protected:
 	BFWSStats& _stats;
 
 	SBFWSConfig _sbfwsconfig;
-	
+
 	std::unique_ptr<RelevantAtomsCounterI<NodeT>> _r_counter;
 
 
@@ -350,7 +350,7 @@ protected:
 //! effectively lazy novelty evaluation.
 template <typename StateModelT,
           typename FeatureSetT,
-          typename NoveltyEvaluatorT,          
+          typename NoveltyEvaluatorT,
           template <class N, class S, class NE, class FS> class SimulatorT,
           template <class S, class A> class SimNodeT>
 class SBFWS {
@@ -384,8 +384,6 @@ protected:
 
 	//! The solution node, if any. This will be set during the search process
 	NodePT _solution;
-	//! Best node found
-	NodePT _best_found;
 
 	//! A list with all nodes that have novelty w_{#g}=1
 	UnachievedOpenList _q1;
@@ -435,7 +433,6 @@ public:
 
 		_model(model),
 		_solution(nullptr),
-        	_best_found(nullptr),
 		_featureset(std::move(featureset)),
 		_heuristic(config, model, _featureset, stats),
 		_stats(stats),
@@ -504,8 +501,6 @@ public:
 		for (bool remaining_nodes = true; !_solution && remaining_nodes;) {
 			remaining_nodes = process_one_node();
 		}
-//		if ( _solution == nullptr )
-//			return extract_plan(_best_found, plan);
 
 		return extract_plan(_solution, plan);
 	}
@@ -607,7 +602,6 @@ protected:
 
 		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
 			_min_subgoals_to_reach = node->unachieved_subgoals;
-			_best_found = node;
 			LPT_INFO("search", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
 		}
 
