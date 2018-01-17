@@ -37,6 +37,12 @@ TransitionGraph::compute_domains(const std::vector<Atom>& changeset) const {
 
 bool TransitionGraph::transition_is_valid(VariableIdx variable, const object_id& val0, const object_id& val1) const {
     const auto& var_transitions = _transitions.at(variable);
+    // If no transitions are declared on the state variable, we assume that
+    // all transitions are possible
+    // TODO This is not too elegant, might be better to signal in some other way
+    // which variables are not affected by monotonicity constraints
+    // But for the moment being, it is efficient and works
+    if (var_transitions.empty()) return true;
     return var_transitions.find(std::make_pair(val0, val1)) != var_transitions.end();
 }
 
@@ -91,8 +97,17 @@ TransitionGraph::build_single(const TransitionGraphT& transitions) {
     std::unordered_map<object_id, Gecode::IntSet> result;
     for (const auto& elem:reachable) {
         std::vector<object_id> oids(elem.second.cbegin(), elem.second.cend());
-        const std::vector<int> values = fs0::values<int>(oids, ObjectTable::EMPTY_TABLE);
+
+        std::vector<int> values = fs0::values<int>(oids, ObjectTable::EMPTY_TABLE);
+        // The origin value is also "reachable" by definition, i.e. we want to allow it
+        // in the extensional constraints
+        values.push_back(fs0::value<int>(elem.first));
         result[elem.first] = Gecode::IntSet(values.data(), values.size());
+
+        // DEBUG
+        std::cout << "Reachable from " << elem.first << ":\t";
+        for (int v:values) std::cout << v << ", ";
+        std::cout << std::endl;
     }
 
     return result;

@@ -432,7 +432,7 @@ protected:
 
 
     static gecode::MonotonicityCSP*
-    build_monotonicity_csp(const StateModelT& model) {
+    build_monotonicity_csp(const StateModelT& model, bool complete) {
         const Problem& problem = model.getTask();
         const auto& transitions = problem.get_transition_graphs();
         if (transitions.empty()) return nullptr;
@@ -440,7 +440,7 @@ protected:
         return new gecode::MonotonicityCSP(problem.getGoalConditions(),
                                            problem.get_tuple_index(),
                                            transitions,
-                                           true);
+                                           complete);
     }
 
 public:
@@ -461,7 +461,7 @@ public:
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
 		_novelty_levels(setup_novelty_levels(model, config._global_config)),
-        _monotonicity_csp_manager(build_monotonicity_csp(_model))
+        _monotonicity_csp_manager(build_monotonicity_csp(_model, config._global_config.getOption<bool>("mnt.complete", false)))
 	{
 	}
 
@@ -509,10 +509,10 @@ public:
 		NodePT root = std::make_shared<NodeT>(s, ++_generated);
 
         if (_monotonicity_csp_manager) {
-            auto csp = _monotonicity_csp_manager->build_root_csp();
+            auto csp = _monotonicity_csp_manager->build_root_csp(s);
 
             if (!csp) {
-                LPT_INFO("cout", "Warning! The root node was detected as inconsistent "
+                LPT_INFO("cout", "The root node was detected as inconsistent "
                         "because of the monotonicity CSP!");
                 _stats.monot_pruned();
                 return false;
@@ -520,7 +520,6 @@ public:
 
             root->_monotonic_csp = std::unique_ptr<gecode::GecodeCSP>(csp);
         }
-
 
         create_node(root);
 		assert(_q1.size()==1); // The root node must necessarily have novelty 1
@@ -690,16 +689,15 @@ protected:
             if (node->_monotonic_csp) {
                 const auto& changes = _model.get_last_changeset();
 
-                const State* parent_state = node->parent ? &(node->parent->state) : nullptr;
                 gecode::GecodeCSP* csp = _monotonicity_csp_manager->check(
                         *(node->_monotonic_csp),
-                        parent_state,
+                        node->state,
                         successor->state,
                         changes
                 );
 
                 if (!csp) {
-                    LPT_DEBUG("cout", "Children node pruned because of inconsistent monotonicity CSP: " << std::endl << *successor);
+                    LPT_DEBUG("cout", "\tChildren node pruned because of inconsistent monotonicity CSP: " << std::endl << *successor);
                     _stats.monot_pruned();
                     continue;
                 }

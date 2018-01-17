@@ -23,7 +23,7 @@ public:
 
 	GecodeCSP* instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const;
 
-    GecodeCSP* check(const GecodeCSP& parent_csp, const State* parent, const State& child, const std::vector<Atom>& changeset) const;
+    GecodeCSP* check(const GecodeCSP& parent_csp, const State& parent, const State& child, const std::vector<Atom>& changeset) const;
 
     GecodeCSP* check_consistency(GecodeCSP *csp) const;
 
@@ -31,10 +31,13 @@ public:
 
     static GecodeCSP* solve_csp(GecodeCSP* csp);
 
-    GecodeCSP* build_root_csp() const;
+    GecodeCSP* build_root_csp(const State& root) const;
 
 protected:
 	const TransitionGraph _monotonicity;
+
+    bool check_transitions(const State& parent, const State& child,
+                           const std::vector<Atom>& changeset) const;
 };
 
 } } // namespaces
