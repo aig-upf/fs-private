@@ -93,6 +93,15 @@ SBFWSDriver<StateModelT>::do_search1(const StateModelT& model, FeatureEvaluatorT
 
 }
 
+gecode::MonotonicityCSP*
+build_monotonicity_csp(const Problem& problem, bool complete) {
+	const auto& transitions = problem.get_transition_graphs();
+	if (transitions.empty()) return nullptr;
 
+	return new gecode::MonotonicityCSP(problem.getGoalConditions()->clone(),
+									   problem.get_tuple_index(),
+									   transitions,
+									   complete);
+}
 
 } } // namespaces

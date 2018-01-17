@@ -349,6 +349,9 @@ protected:
 };
 
 
+gecode::MonotonicityCSP*
+build_monotonicity_csp(const Problem& problem, bool complete);
+
 //! A specialized BFWS search schema with multiple queues to implement
 //! effectively lazy novelty evaluation.
 template <typename StateModelT,
@@ -430,19 +433,6 @@ protected:
 
 	std::unique_ptr<gecode::MonotonicityCSP> _monotonicity_csp_manager;
 
-
-    static gecode::MonotonicityCSP*
-    build_monotonicity_csp(const StateModelT& model, bool complete) {
-        const Problem& problem = model.getTask();
-        const auto& transitions = problem.get_transition_graphs();
-        if (transitions.empty()) return nullptr;
-
-        return new gecode::MonotonicityCSP(problem.getGoalConditions(),
-                                           problem.get_tuple_index(),
-                                           transitions,
-                                           complete);
-    }
-
 public:
 
 	//!
@@ -461,7 +451,7 @@ public:
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
 		_novelty_levels(setup_novelty_levels(model, config._global_config)),
-        _monotonicity_csp_manager(build_monotonicity_csp(_model, config._global_config.getOption<bool>("mnt.complete", false)))
+        _monotonicity_csp_manager(build_monotonicity_csp(_model.getTask(), config._global_config.getOption<bool>("mnt.complete", false)))
 	{
 	}
 
