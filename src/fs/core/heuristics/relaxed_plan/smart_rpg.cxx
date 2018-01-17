@@ -24,13 +24,18 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 	_managers(std::move(managers)),
 	_extension_handler(extension_handler)
 {
-    const fs::Formula* conj = state_constraints.empty() ? goal_formula->clone() : fs::conjunction( *goal_formula, *(state_constraints[0]) );
-    for ( unsigned i = 1; i < state_constraints.size(); i++ ) {
-        auto tmp = conj;
-        conj = fs::conjunction( *conj, *(state_constraints[i]));
-        delete tmp;
-    }
-    _goal_handler = std::unique_ptr<FormulaCSP>(new FormulaCSP(conj, _tuple_index, false));
+    // GFM: State constraints temporarily deactivated, at least until I understand
+    // what's going on with them
+
+//    const fs::Formula* conj = state_constraints.empty() ? goal_formula->clone() : fs::conjunction( *goal_formula, *(state_constraints[0]) );
+//    for ( unsigned i = 1; i < state_constraints.size(); i++ ) {
+//        auto tmp = conj;
+//        conj = fs::conjunction( *conj, *(state_constraints[i]));
+//        delete tmp;
+//    }
+//    _goal_handler = std::make_unique<FormulaCSP>(conj, _tuple_index, false);
+    _goal_handler = std::make_unique<FormulaCSP>(goal_formula->clone(), _tuple_index, false);
+
 
 	LPT_INFO("heuristic", "SmartRPG heuristic initialized");
 	if (_managers.empty()) {
