@@ -48,12 +48,12 @@ EngineRegistry::EngineRegistry() {
 }
 
 EngineRegistry::~EngineRegistry() {
-	for (const auto elem:_creators) delete elem.second;
+	for (const auto& elem:_creators) delete elem.second;
 }
 
 void EngineRegistry::add(const std::string& engine_name, Driver* creator) {
 auto res = _creators.insert(std::make_pair(engine_name, creator));
-	if (!res.second) throw new std::runtime_error("Duplicate registration of engine creator for symbol " + engine_name);
+	if (!res.second) throw std::runtime_error("Duplicate registration of engine creator for symbol " + engine_name);
 }
 
 

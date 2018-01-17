@@ -88,8 +88,9 @@ ExitCode
 SmartEffectDriver::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
 	GroundStateModel model = setup(problem);
 	SearchStats stats;
+	bool actionless = model.getTask().getPartiallyGroundedActions().empty();
 	auto engine = create(config, model, stats);
-	return Utils::SearchExecution<GroundStateModel>(model).do_search(*engine, options, start_time, stats);
+	return Utils::SearchExecution<GroundStateModel>(model).do_search(*engine, options, start_time, stats, actionless);
 
 }
 

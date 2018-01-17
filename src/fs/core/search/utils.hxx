@@ -43,15 +43,19 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 	template <typename StateModelT>
 	class SearchExecution {
 	protected:
+		const StateModelT& _model;
 		const Problem& _problem;
 	public:
 		//! The type of any plan
 		using PlanT = std::vector<typename StateModelT::ActionType::IdType>;
 
-		SearchExecution(const StateModelT& model) : _problem(model.getTask()) {}
+		SearchExecution(const StateModelT& model) :
+				_model(model),
+				_problem(model.getTask())
+		{}
 
 		template <typename SearchAlgorithmT, typename StatsT>
-		ExitCode do_search(SearchAlgorithmT& engine, const fs0::drivers::EngineOptions& options, float start_time, const StatsT& stats) {
+		ExitCode do_search(SearchAlgorithmT& engine, const fs0::drivers::EngineOptions& options, float start_time, const StatsT& stats, bool actionless = false) {
             const std::string& out_dir = options.getOutputDir();
 			LPT_INFO("cout", "Starting search. Results written to " << out_dir);
 			std::string plan_filename = options.getPlanfile();
@@ -64,24 +68,34 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			std::ofstream json_out(out_dir + "/results.json");
 
 			PlanT plan;
-			float t0 = aptk::time_used();
-
+			double t0 = aptk::time_used();
 			bool solved = false, oom = false;
-			try {
-				solved = engine.solve_model( plan );
-			}
-			catch (const std::bad_alloc& ex)
-			{
-				LPT_INFO("cout", "FAILED TO ALLOCATE MEMORY");
-				oom = true;
+
+			if (actionless) {
+
+				if (_model.goal(_problem.getInitialState())) {
+					LPT_INFO("cout", "The problem has no actions, and the initial state is a goal state");
+					solved = true;
+				} else {
+					LPT_INFO("cout", "The problem has no actions, and the initial state is not a goal state");
+					solved = false;
+				}
+			} else {
+				try {
+					solved = engine.solve_model(plan);
+				}
+				catch (const std::bad_alloc &ex) {
+					LPT_INFO("cout", "FAILED TO ALLOCATE MEMORY");
+					oom = true;
+				}
 			}
 
-			float search_time = aptk::time_used() - t0;
-			float total_planning_time = aptk::time_used() - start_time;
+			double search_time = aptk::time_used() - t0;
+			double total_planning_time = aptk::time_used() - start_time;
 
 			bool valid = false;
 
-			if ( solved ) {
+			if (solved) {
 				PlanPrinter::print(plan, plan_out);
 				valid = Checker::check_correctness(_problem, plan, _problem.getInitialState());
 			}

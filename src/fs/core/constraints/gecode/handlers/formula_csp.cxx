@@ -31,7 +31,7 @@ FormulaCSP::FormulaCSP(const fs::Formula* formula, const AtomIndex& tuple_index,
 	
 	Helper::postBranchingStrategy(*_base_csp);
 	
-	// std::cout << "Goal CSP:" << std::endl << _translator << std::endl;
+	 std::cout << "Goal CSP:" << std::endl << _translator << std::endl;
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
 	Gecode::SpaceStatus st = _base_csp->status();

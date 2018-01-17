@@ -109,7 +109,7 @@ BaseCSP::register_csp_variables() {
 	
 	//! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
-		if (const fs::FluentHeadedNestedTerm* fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
+		if (const auto * fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
 			unsigned symbol_id = fluent->getSymbolId();
 			bool is_predicate = info.isPredicate(symbol_id);
 			
@@ -123,7 +123,7 @@ BaseCSP::register_csp_variables() {
 			
 			else {
 				
-				_extensional_constraints.push_back(ExtensionalConstraint(fluent, _tuple_index, is_predicate));
+				_extensional_constraints.emplace_back(fluent, _tuple_index, is_predicate);
 				if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
 					_translator.registerNestedTerm(fluent);
 					LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an extensional constraint");
@@ -235,7 +235,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 							inserted_terms.insert(candidate);
 							
 							// We'll have one extensional constraint per predicate appearing on the condition / formula.
-							_extensional_constraints.push_back(ExtensionalConstraint(origin, _tuple_index, true));
+							_extensional_constraints.emplace_back(origin, _tuple_index, true);
 							
 							// Insert subterms properly - TODO - Perhaps StateVariable::all_terms should already return these terms?
 							for (auto term:origin->getSubterms()) {
