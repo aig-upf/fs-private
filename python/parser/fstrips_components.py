@@ -176,8 +176,8 @@ class FSActionSchema(FSBaseComponent):
         self.binding_unit = fs.BindingUnit.from_parameters(action.parameters)
         try :
             self.precondition = self.process_conditions(self.action.precondition)
-        except exceptions.UndeclaredSymbol as e :
-            raise SystemExit('Undeclared symbol in precondition of schema "{}", exception message: \n {}\n{}'.format(action.name,e,))
+        except exceptions.UndeclaredSymbol as e:
+            raise SystemExit('Undeclared symbol in precondition of schema "{}", exception message:\n{}'.format(action.name,e,))
 
         try :
             self.effects = self.process_effects()
