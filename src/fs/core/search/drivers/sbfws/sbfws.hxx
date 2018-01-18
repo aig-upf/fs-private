@@ -679,6 +679,7 @@ protected:
             if (node->_monotonic_csp) {
                 const auto& changes = _model.get_last_changeset();
 
+                // std::cout << "Generating node: " << *successor << std::endl;
                 gecode::GecodeCSP* csp = _monotonicity_csp_manager->check(
                         *(node->_monotonic_csp),
                         node->state,
@@ -687,7 +688,7 @@ protected:
                 );
 
                 if (!csp) {
-                    LPT_DEBUG("cout", "\tChildren node pruned because of inconsistent monotonicity CSP: " << std::endl << *successor);
+                    LPT_DEBUG("cout", "\tChildren node pruned because of inconsistent monotonicity CSP: " << std::endl << "\t" << *successor);
                     _stats.monot_pruned();
                     continue;
                 }

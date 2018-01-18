@@ -20,13 +20,16 @@ public:
 
 	enum class Type {PREDICATE, FUNCTION};
 
-	SymbolData(Type type, const Signature& signature, TypeIdx codomain, bool stat, bool unbounded):
-		_type(type), _signature(signature), _codomain(codomain), _static(stat), _unbounded_arity(unbounded) {}
+	SymbolData(Type type, const Signature& signature, TypeIdx codomain,
+			   const std::vector<VariableIdx>& variables,
+			   bool stat, bool unbounded):
+		_type(type), _signature(signature), _codomain(codomain), _variables(variables), _static(stat), _unbounded_arity(unbounded) {}
 
 	Type getType() const { return _type; }
 	const Signature& getSignature() const { return _signature; }
 	const TypeIdx& getCodomainType() const { return _codomain; }
 	unsigned getArity() const { return _signature.size(); }
+	const std::vector<VariableIdx>& getVariables() const { return _variables; }
 
 	bool isStatic() const { return _static; }
 
@@ -46,6 +49,7 @@ protected:
 	Type _type;
 	Signature _signature;
 	TypeIdx _codomain;
+	const std::vector<VariableIdx> _variables;
 	bool _static;
     bool _unbounded_arity;
 
