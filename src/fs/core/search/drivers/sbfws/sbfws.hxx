@@ -350,7 +350,7 @@ protected:
 
 
 gecode::MonotonicityCSP*
-build_monotonicity_csp(const Problem& problem, bool complete);
+build_monotonicity_csp(const Problem& problem, const Config& config);
 
 //! A specialized BFWS search schema with multiple queues to implement
 //! effectively lazy novelty evaluation.
@@ -451,7 +451,7 @@ public:
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
 		_novelty_levels(setup_novelty_levels(model, config._global_config)),
-        _monotonicity_csp_manager(build_monotonicity_csp(_model.getTask(), config._global_config.getOption<bool>("mnt.complete", false)))
+        _monotonicity_csp_manager(build_monotonicity_csp(_model.getTask(), config._global_config))
 	{
 	}
 
