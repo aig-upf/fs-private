@@ -137,7 +137,7 @@ BaseCSP::register_csp_variables() {
 			unsigned symbol_id = fluent->getSymbolId();
 			bool is_predicate = info.isPredicate(symbol_id);
 			
-			if (config.getOption("element_constraint") && _counter.symbol_requires_element_constraint(symbol_id) && !is_predicate) {
+			if (config.getOption("element_constraint", true) && _counter.symbol_requires_element_constraint(symbol_id) && !is_predicate) {
 				LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an element constraint");
 				NestedFluentElementTranslator tr(fluent);
 				tr.register_variables(_translator);
