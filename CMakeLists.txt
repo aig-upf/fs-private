@@ -237,7 +237,7 @@ set(SOURCE_FILES
         src/fs/core/atom.hxx
         src/fs/core/base.cxx
         src/fs/core/base.hxx
-        src/fs/core/fs_types.hxx
+        src/fs/core/fs_types
         src/fs/core/problem.cxx
         src/fs/core/problem.hxx
         src/fs/core/problem_info.cxx

@@ -118,4 +118,9 @@ namespace fs0 {
 		UndefinedValueAccess() : UndefinedValueAccess("") {}
 	};
 
+	class UnindexedAtom : public std::runtime_error {
+	public:
+		UnindexedAtom(VariableIdx variable, const object_id& value);
+	};
+
 } // namespaces

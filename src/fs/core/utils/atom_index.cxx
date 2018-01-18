@@ -90,7 +90,7 @@ AtomIdx AtomIndex::to_index(const Atom& atom) const {
 AtomIdx AtomIndex::to_index(VariableIdx variable, const object_id& value) const {
 	const auto& map = _atom_index_inv.at(variable);
 	auto it = map.find(value);
-	assert(it != map.end());
+	if (it == map.end()) throw UnindexedAtom(variable, value);
 	return it->second;
 }
 
