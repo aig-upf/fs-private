@@ -24,7 +24,7 @@ public:
 
 private:
 
-    UnsatisfiedGoalAtomsHeuristic   _h;
+    UnsatisfiedGoalAtomsCounter   _h;
 
 };
 

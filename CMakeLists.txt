@@ -120,6 +120,7 @@ set(SOURCE_FILES
         src/fs/core/languages/fstrips/factory.hxx
         src/fs/core/languages/fstrips/formulae.cxx
         src/fs/core/languages/fstrips/formulae.hxx
+        src/fs/core/languages/fstrips/complex_existential_formula.hxx
         src/fs/core/languages/fstrips/language.hxx
         src/fs/core/languages/fstrips/language_fwd.hxx
         src/fs/core/languages/fstrips/loader.cxx

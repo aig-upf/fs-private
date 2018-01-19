@@ -4,35 +4,43 @@
 #include <fs/core/languages/fstrips/formulae.hxx>
 
 #include <fs/core/heuristics/unsat_goal_atoms.hxx>
+#include <fs/core/languages/fstrips/complex_existential_formula.hxx>
 
 namespace fs0 {
 
-UnsatisfiedGoalAtomsHeuristic::UnsatisfiedGoalAtomsHeuristic(const Problem& problem)
-	: _goal_conjunction(extract_goal_conjunction(problem)) {}
+UnsatisfiedGoalAtomsCounter::UnsatisfiedGoalAtomsCounter(const Problem& problem) :
+	_formula_atoms(extract_goal_conjunction(problem))
+{}
 
-float UnsatisfiedGoalAtomsHeuristic::evaluate(const State& state) const {
+float UnsatisfiedGoalAtomsCounter::evaluate(const State& state) const {
 	unsigned unsatisfied = 0;
-	for (const fs::Formula* condition:get_goal_conjuncts()) {
+	for (const auto& condition:_formula_atoms) {
 		if (!condition->interpret(state)) ++unsatisfied;
 	}
 	return unsatisfied;
 }
 
-const std::vector<const fs::Formula*>&
-UnsatisfiedGoalAtomsHeuristic::get_goal_conjuncts() const {
-	return _goal_conjunction->getSubformulae();
-}
 
+std::vector<const fs::Formula*>
+UnsatisfiedGoalAtomsCounter::extract_goal_conjunction(const Problem& problem) {
+	std::vector<const fs::Formula*> atoms;
 
+	auto goal = problem.getGoalConditions();
+	const auto* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
+	const auto* ex_q = dynamic_cast<const fs::ExistentiallyQuantifiedFormula*>(goal);
 
-const fs::Conjunction*
-UnsatisfiedGoalAtomsHeuristic::extract_goal_conjunction(const Problem& problem) {
-	auto clone = problem.getGoalConditions()->clone();
-	auto goal_conjunction = dynamic_cast<const fs::Conjunction*>(clone);
-	if (!goal_conjunction) { // If the goal is now inside a conjunction, we wrap it up inside a new one.
-		goal_conjunction = new fs::Conjunction({clone});
+	if (conjunction) { // Wrap out the conjuncts
+		for (const auto& a:conjunction->getSubformulae()) {
+			atoms.push_back(a->clone());
+		}
+	} else if (ex_q) { // If we have an existentially-quantified formula, we'll use
+                       // Gecode to evaluate it
+		atoms.push_back(new fs::ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
+	} else {
+		atoms.push_back(goal->clone());
 	}
-	return goal_conjunction;
+
+	return atoms;
 }
 
 } // namespaces

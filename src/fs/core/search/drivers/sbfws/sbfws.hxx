@@ -201,8 +201,8 @@ protected:
 	//! The i-th position of the vector will actually contain the evaluator for novelty i+1
 	std::vector<NoveltyEvaluatorMapT> _wgr_novelty_evaluators;
 
-	//! An UnsatisfiedGoalAtomsHeuristic to count the number of unsatisfied goals
-	UnsatisfiedGoalAtomsHeuristic _unsat_goal_atoms_heuristic;
+	//! A counter to count the number of unsatisfied goals
+	UnsatisfiedGoalAtomsCounter _unsat_goal_atoms_heuristic;
 
 	NoveltyIndexerT _indexer;
 	bool _mark_negative_propositions;

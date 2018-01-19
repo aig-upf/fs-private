@@ -2,7 +2,6 @@
 #include <fs/core/models/simple_state_model.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/utils/system.hxx>
 #include <fs/core/applicability/match_tree.hxx>
@@ -10,6 +9,7 @@
 
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
+#include <fs/core/languages/fstrips/complex_existential_formula.hxx>
 
 namespace fs0 {
 
@@ -27,33 +27,6 @@ obtain_goal_atoms(const fs::Formula* goal) {
 */
 
 
-//!
-class ComplexExistentialFormula : public fs::Formula {
-public:
-	LOKI_DEFINE_CONST_VISITABLE()
-
-	explicit ComplexExistentialFormula(const fs::Formula* formula, const AtomIndex& tuple_index) :
-		_interpreter(formula->clone(), tuple_index)
-	{}
-
-	~ComplexExistentialFormula() override = default;
-
-	ComplexExistentialFormula* clone() const override { throw UnimplementedFeatureException(""); }
-
-	bool interpret(const PartialAssignment& assignment, Binding& binding) const override { throw UnimplementedFeatureException(""); }
-	bool interpret(const State& state, Binding& binding) const override {
-		return _interpreter.satisfied(state);
-	}
-	using Formula::interpret;
-
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override {
-		return os << "ComplexExistentialFormula";
-	}
-
-protected:
-	CSPFormulaInterpreter _interpreter;
-};
-
 //! A helper to derive the distinct goal atoms
 std::vector<const fs::Formula*>
 obtain_goal_atoms(const Problem& problem, const fs::Formula* goal) {
@@ -67,7 +40,7 @@ obtain_goal_atoms(const Problem& problem, const fs::Formula* goal) {
 
 	if (ex_q) {
 		// TODO This might be a memory leak
-		goal_atoms.push_back(new ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
+		goal_atoms.push_back(new fs::ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
 	} else {
 		assert(conjunction);
 		for (const fs::Formula* atom:conjunction->getSubformulae()) {
