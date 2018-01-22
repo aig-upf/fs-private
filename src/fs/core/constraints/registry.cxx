@@ -93,17 +93,17 @@ LogicalComponentRegistry::~LogicalComponentRegistry() {
 
 void LogicalComponentRegistry::addFormulaCreator(const std::string& symbol, const FormulaCreator& creator) {
 	auto res = _formula_creators.insert(std::make_pair(symbol, creator));
-	if (!res.second) throw new std::runtime_error("Duplicate registration of formula creator for symbol " + symbol);
+	if (!res.second) throw std::runtime_error("Duplicate registration of formula creator for symbol " + symbol);
 }
 
 void LogicalComponentRegistry::addTermCreator(const std::string& symbol, const TermCreator& creator) {
 	auto res = _term_creators.insert(std::make_pair(symbol, creator));
-	if (!res.second) throw new std::runtime_error("Duplicate registration of term creator for symbol " + symbol);
+	if (!res.second) throw std::runtime_error("Duplicate registration of term creator for symbol " + symbol);
 }
 
 void LogicalComponentRegistry::addEffectCreator(const std::string& symbol, const EffectCreator& creator) {
 	auto res = _effect_creators.insert(std::make_pair(symbol, creator));
-	if (!res.second) throw new std::runtime_error("Duplicate registration of effect creator for symbol " + symbol);
+	if (!res.second) throw std::runtime_error("Duplicate registration of effect creator for symbol " + symbol);
 }
 
 /*
@@ -121,12 +121,12 @@ void LogicalComponentRegistry::add(const std::type_info& type, const EffectTrans
 
 void LogicalComponentRegistry::add(const std::type_info& type, const gecode::TermTranslator* translator) {
 	auto res = _gecode_term_translators.insert(std::make_pair(std::type_index(type), translator));
-	if (!res.second) throw new std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
+	if (!res.second) throw std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
 }
 
 void LogicalComponentRegistry::add(const std::type_info& type, const gecode::FormulaTranslator* translator) {
 	auto res = _gecode_formula_translators.insert(std::make_pair(std::type_index(type), translator));
-	if (!res.second) throw new std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
+	if (!res.second) throw std::runtime_error("Duplicate registration of gecode translator for class " + print::type_info_name(type));
 }
 
 const fs::AtomicFormula* LogicalComponentRegistry::instantiate_formula(const std::string& symbol, const std::vector<const fs::Term*>& subterms) const {
