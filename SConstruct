@@ -68,7 +68,6 @@ for flag, modname in modules:
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
-env.Append( LIBPATH = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
 
 
 # Determine all the build files
