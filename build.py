@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 """
     A helper build script - Builds the production library and vanilla solver
