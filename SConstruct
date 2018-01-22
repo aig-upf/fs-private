@@ -53,7 +53,7 @@ modules = [
 ]
 
 # include local by default # MRJ: This probably should be acquired from an environment variable
-isystem_paths += ['/usr/local/include', os.environ['HOME'] + '/local/include']
+isystem_paths += ['/usr/local/include', os.path.expanduser('~/local/include')]
 
 
 # Process modules and external dependencies
@@ -68,6 +68,7 @@ for flag, modname in modules:
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
+env.Append( LIBPATH = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
 
 
 # Determine all the build files
