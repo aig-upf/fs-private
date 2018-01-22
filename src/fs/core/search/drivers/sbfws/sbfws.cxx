@@ -82,7 +82,8 @@ ExitCode
 SBFWSDriver<StateModelT>::do_search1(const StateModelT& model, FeatureEvaluatorT&& featureset, const Config& config, const drivers::EngineOptions& options, float start_time) {
 	SBFWSConfig bfws_config(config);
 
-    bool actionless = model.getTask().getPartiallyGroundedActions().empty();
+    bool actionless = model.getTask().getPartiallyGroundedActions().empty() &&
+            model.getTask().getGroundActions().empty();
 
     if ( bfws_config.using_feature_set) {
 		auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, MultiValuedIWRun, MultiValuedIWRunNode>(std::move(featureset), bfws_config, model, _stats);
