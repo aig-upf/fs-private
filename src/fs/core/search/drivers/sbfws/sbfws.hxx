@@ -677,14 +677,13 @@ protected:
             // If the node we're expanding has a monotonicity CSP, we update it
             // and "propagate" it to the children nodes
             if (node->_monotonic_csp) {
-                const auto& changes = _model.get_last_changeset();
 
                 // std::cout << "Generating node: " << *successor << std::endl;
                 gecode::GecodeCSP* csp = _monotonicity_csp_manager->check(
                         *(node->_monotonic_csp),
                         node->state,
                         successor->state,
-                        changes
+                        _model.get_last_changeset()
                 );
 
                 if (!csp) {
@@ -695,12 +694,17 @@ protected:
 
                 // If not pruned, we store the CSP in the children node
                 successor->_monotonic_csp = std::unique_ptr<gecode::GecodeCSP>(csp);
+//                std::cout << "Generated node #" << _generated <<"; of which " << ++_num_csps << " have a Gecode CSP object attached" << std::endl;
             }
 
 			if (create_node(successor)) {
 				break;
 			}
+
+//            std::cout << "Generated node: " << *successor << std::endl;
 		}
+
+        node->_monotonic_csp.reset(); // Free the memory of the CSP
 	}
 
 	bool is_open(const NodePT& node) const {

@@ -137,9 +137,9 @@ TransitionGraph::preprocess_extension(const std::unordered_map<object_id, std::u
         result[origin] = Gecode::IntSet(values.data(), values.size());
 
         // DEBUG
-        std::cout << "Reachable from " << origin << ":\t";
-        for (int v:values) std::cout << v << ", ";
-        std::cout << std::endl;
+//        std::cout << "Reachable from " << origin << ":\t";
+//        for (int v:values) std::cout << v << ", ";
+//        std::cout << std::endl;
     }
 
     return result;

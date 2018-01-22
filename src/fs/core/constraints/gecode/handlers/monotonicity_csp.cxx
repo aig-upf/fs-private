@@ -43,6 +43,10 @@ instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, cons
     // First update the domains of those CSP variables that correspond to state variables
     // which have their domain restricted by monotonicity constraints
     auto clone = static_cast<GecodeCSP*>(parent_csp.clone());
+
+    static unsigned _cnt = 0;
+//    std::cout << "Cloned Gecode CSP #" << ++_cnt  << std::endl;
+
     _translator.updateStateVariableDomains(*clone, _monotonicity.compute_domains(changeset));
 
     // And then update the extensions of extensional constraints that might result from e.g.
@@ -90,11 +94,13 @@ instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, cons
 
 //    auto st = clone->status();
 //    std::cout << "Status before posting extensional constraints: " << st << std::endl;
+//    std::cout << "Num extensional constraints: " << _extensional_constraints.size() << std::endl;
+
 
     for (const ExtensionalConstraint& constraint:_extensional_constraints) {
         unsigned symbol = constraint.get_term()->getSymbolId();
         if (relevant_symbols_changed.find(symbol) != relevant_symbols_changed.end()) {
-            std::cout << "Ext. constraint: " << constraint << std::endl;
+//            std::cout << "Ext. constraint: " << constraint << std::endl;
             if (!constraint.update(*clone, _translator, tuplesets.at(symbol))) {
                 delete clone;
                 return nullptr;
