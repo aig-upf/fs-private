@@ -63,7 +63,7 @@ void BaseActionCSP::process(RPGIndex& graph) const {
 	
 	GecodeCSP* csp = instantiate(graph);
 
-	if (!csp || !csp->checkConsistency()) { // This colaterally enforces propagation of constraints
+	if (!csp || !csp->propagate()) { // This colaterally enforces propagation of constraints
 		LPT_EDEBUG("heuristic", "The action CSP is locally inconsistent "); // << print::csp(handler->getTranslator(), *csp));
 	} else {
 		if (_approximate) {  // Check only local consistency

@@ -61,7 +61,7 @@ GroundActionCSP::post(VariableIdx variable, const object_id& value) const {
 	
 	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, fs0::value<int>(value));
 
-	if (!clone->checkConsistency()) { // This colaterally enforces propagation of constraints
+	if (!clone->propagate()) { // This colaterally enforces propagation of constraints
 		delete clone;
 		return nullptr;
 	}

@@ -3,14 +3,15 @@
 
 #include <memory>
 #include <gecode/int.hh>
-#include <fs/core/constraints/gecode/utils/value_selection.hxx>
 
 
 namespace fs0 { namespace gecode {
 
+class MinHMaxValueSelector;
+
 /**
- * A GecodeCSP is a Gecode CSP with a single set of integer variables.
- * Should be enough for most of our needs.
+ * A Gecode CSP with sets of integer and binary variables, and the possibility of using
+ * a custom value selection strategy.
  */
 class GecodeCSP : public Gecode::Space {
 public:
@@ -19,7 +20,8 @@ public:
 	GecodeCSP(GecodeCSP&&) = default;
 	GecodeCSP& operator=(const GecodeCSP&) = delete;
 	GecodeCSP& operator=(GecodeCSP&&) = default;
-	~GecodeCSP();
+	~GecodeCSP(); // We define the destructor in the cxx file so that there's no need to include
+	              // the header for MinHMaxValueSelector here
 	
 	//! Cloning constructor, required by Gecode
 	GecodeCSP(bool share, GecodeCSP& other);
@@ -28,7 +30,9 @@ public:
 	//! get an idea of what is being "actually" copied
 	virtual Gecode::Space* copy(bool share);
 
-	bool checkConsistency();
+	//! Enforce constraint propagation on the CSP; return false if the resulting CSP is
+	//! "failed", i.e. not consistent, and return true otherwise
+	bool propagate();
 
 	//! Prints a representation of a CSP. Mostly for debugging purposes
 	friend std::ostream& operator<<(std::ostream &os, const GecodeCSP&  csp) { return csp.print(os); }
@@ -37,8 +41,7 @@ public:
 	void init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector);
 
 	int select_value(Gecode::IntVar& x, int csp_var_idx) const;
-	
-	
+
 	//! CSP variables that correspond to the planning problem state variables that are relevant to the goal formula + state constraints
 	Gecode::IntVarArray _intvars;
 	Gecode::BoolVarArray _boolvars;

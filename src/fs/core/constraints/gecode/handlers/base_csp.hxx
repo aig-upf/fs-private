@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <fs/core/languages/fstrips/terms.hxx>
+
 #include <unordered_set>
 #include <unordered_map>
 

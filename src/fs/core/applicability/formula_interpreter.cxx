@@ -62,7 +62,7 @@ bool CSPFormulaInterpreter::satisfied(const State& state) const {
 	handler.process(state);
 	gecode::GecodeCSP* csp = _formula_csp->instantiate(state, handler);
 	if (!csp) return false;
-	csp->checkConsistency();
+    csp->propagate();
 	bool sol = _formula_csp->is_satisfiable(csp);
 	delete csp;
 	return sol;

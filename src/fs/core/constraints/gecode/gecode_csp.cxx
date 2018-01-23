@@ -1,12 +1,13 @@
 
 #include <fs/core/constraints/gecode/gecode_csp.hxx>
+#include <fs/core/constraints/gecode/utils/value_selection.hxx>
 
 
 namespace fs0 { namespace gecode {
 
 GecodeCSP::GecodeCSP() : _value_selector(nullptr) {}
 
-GecodeCSP::~GecodeCSP() {}
+GecodeCSP::~GecodeCSP() = default;
 
 //! Cloning constructor, required by Gecode
 GecodeCSP::GecodeCSP( bool share, GecodeCSP& other ) :
@@ -19,10 +20,10 @@ GecodeCSP::GecodeCSP( bool share, GecodeCSP& other ) :
 
 //! Shallow copy operator, see notes on search in Gecode to
 //! get an idea of what is being "actually" copied
-Gecode::Space* GecodeCSP::copy( bool share ) { return new GecodeCSP( share, *this ); }
+Gecode::Space* GecodeCSP::copy(bool share) { return new GecodeCSP(share, *this); }
 
 
-bool GecodeCSP::checkConsistency() {
+bool GecodeCSP::propagate() {
 	return status() != Gecode::SpaceStatus::SS_FAILED;
 }
 
@@ -34,7 +35,7 @@ std::ostream& GecodeCSP::print(std::ostream& os) const {
 }
 
 void GecodeCSP::init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector) {
-	_value_selector = value_selector;
+	_value_selector = std::move(value_selector);
 }
 
 int GecodeCSP::select_value(Gecode::IntVar& x, int csp_var_idx) const {
@@ -42,7 +43,7 @@ int GecodeCSP::select_value(Gecode::IntVar& x, int csp_var_idx) const {
 	if (_value_selector == nullptr) return x.min();
 	
 	// Otherwise we forward the call to the appropriate value selector
-	return _value_selector->select(x, csp_var_idx);
+	return _value_selector->select(x, static_cast<unsigned int>(csp_var_idx));
 }
 
 } } // namespaces

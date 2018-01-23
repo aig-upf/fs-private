@@ -177,7 +177,7 @@ LiftedEffectCSP::check_valid_effect(const fs::ActionEffect* effect) {
 void
 LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
 	if (GecodeCSP* csp = instantiate(rpg)) {
-		if (!csp->checkConsistency()) {
+		if (!csp->propagate()) {
 			LPT_EDEBUG("heuristic", "The effect CSP cannot produce any new tuple");
 		}
 		else {

@@ -15,6 +15,7 @@
 #include <fs/core/state.hxx>
 
 #include <gecode/driver.hh>
+#include <fs/core/constraints/gecode/utils/value_selection.hxx>
 
 namespace fs0 { namespace gecode {
 	

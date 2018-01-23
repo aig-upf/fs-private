@@ -60,7 +60,7 @@ GecodeCSP* GroundEffectCSP::preinstantiate(const RPGIndex& rpg) const {
 	GecodeCSP* csp = instantiate(rpg);
 	if (!csp) return nullptr;
 	
-	if (!csp->checkConsistency()) { // This colaterally enforces propagation of constraints
+	if (!csp->propagate()) { // This colaterally enforces propagation of constraints
 		delete csp;
 		return nullptr;
 	}
@@ -76,7 +76,7 @@ bool GroundEffectCSP::find_atom_support(AtomIdx tuple, const Atom& atom, const S
 	
 	post(*csp, atom);
 
-	if (!csp->checkConsistency()) { // This colaterally enforces propagation of constraints
+	if (!csp->propagate()) { // This colaterally enforces propagation of constraints
 		LPT_EDEBUG("heuristic", "Action CSP inconsistent => atom " << atom << " cannot be derived through it");
 		return false;
 	} 

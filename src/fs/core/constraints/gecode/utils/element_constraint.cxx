@@ -90,4 +90,14 @@ void NestedFluentElementTranslator::register_constraints(CSPTranslator& translat
 	LPT_EDEBUG("translation", "Fluent-headed term \"" << *_term << "\" produces element constraint: " << print::element(table, zero_based_index, element_result));
 }
 
+const Gecode::IntVar& NestedFluentData::getIndex(const GecodeCSP& csp) const {
+	return csp._intvars[_index_position];
+}
+
+
+VariableIdx NestedFluentData::resolveStateVariable(const GecodeCSP& csp) const {
+	unsigned idx = getIndex(csp).val();
+	return _table_variables[idx];
+}
+
 } } // namespaces

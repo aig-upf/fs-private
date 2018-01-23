@@ -44,7 +44,7 @@ instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, cons
     // which have their domain restricted by monotonicity constraints
     auto clone = static_cast<GecodeCSP*>(parent_csp.clone());
 
-    static unsigned _cnt = 0;
+//    static unsigned _cnt = 0;
 //    std::cout << "Cloned Gecode CSP #" << ++_cnt  << std::endl;
 
     _translator.updateStateVariableDomains(*clone, _monotonicity.compute_domains(changeset));
@@ -145,7 +145,7 @@ check_consistency_from_changeset(const GecodeCSP& parent_csp, const State& child
 GecodeCSP* MonotonicityCSP::
 check_consistency(GecodeCSP* csp) const {
 
-    if (!csp || !csp->checkConsistency()) { // This colaterally enforces propagation of constraints
+    if (!csp || !csp->propagate()) { // This colaterally enforces propagation of constraints
         delete csp;
         return nullptr;
     }

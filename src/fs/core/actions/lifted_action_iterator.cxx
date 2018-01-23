@@ -70,7 +70,7 @@ namespace fs0 { namespace gecode {
 
 					// std::cout << std::endl << "After instantiation: "; handler.print(std::cout, *_csp); std::cout << std::endl;
 
-					if (!_csp || !_csp->checkConsistency()) { // The CSP is not even locally consistent, thus let's move to the next handler
+					if (!_csp || !_csp->propagate()) { // The CSP is not even locally consistent, thus let's move to the next handler
 						delete _csp; _csp = nullptr;
 						continue;
 					}
