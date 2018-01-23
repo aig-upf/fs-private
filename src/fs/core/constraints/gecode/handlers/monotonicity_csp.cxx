@@ -155,8 +155,14 @@ check_consistency(GecodeCSP* csp) const {
 
     if (!_approximate) {  // Solve the CSP completely
         GecodeCSP* solution = solve_csp(csp);
-        if (!solution) return nullptr;
+        if (!solution) {
+            delete csp;
+            return nullptr;
+        }
         // TODO Do something with the solution? Cache it?
+
+        // ATM we just ignore it (but act differently based on whether there was a solution or not!)
+        delete solution;
 
 //        std::cout << "\nComplete solution to monotonicity CSP: " << std::endl;
 //        _translator.print(std::cout, *solution);
