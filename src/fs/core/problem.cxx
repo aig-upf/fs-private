@@ -150,7 +150,6 @@ void Problem::consolidateAxioms() {
 	auto tmp = _goal_formula;
 	_goal_formula = fs::process_axioms(*_goal_formula, info);
 	delete tmp;
-	_goal_sat_manager.release();
 	_goal_sat_manager = std::unique_ptr<FormulaInterpreter>(FormulaInterpreter::create(_goal_formula, get_tuple_index()));
 
 	for ( auto& c : _state_constraints ) {
