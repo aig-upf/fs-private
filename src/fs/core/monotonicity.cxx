@@ -13,7 +13,8 @@ TransitionGraph::TransitionGraph(const AtomIndex &tuple_index,
         _transitions(transitions),
         _reachable(),
         _allowed_domains(),
-        _partial_extensions()
+        _partial_extensions(),
+        _monotonic_variables()
 {
     preprocess_extensions(transitions);
     precompute_full_extensions();
@@ -66,6 +67,31 @@ TransitionGraph::compute_domains(const std::vector<Atom>& changeset) const {
     return result;
 }
 
+std::vector<TransitionGraph::BitmapT>
+TransitionGraph::retrieve_domains(const std::vector<Atom>& changeset) const {
+    std::vector<TransitionGraph::BitmapT> result;
+    result.reserve(changeset.size());
+
+    for (const auto& atom:changeset) {
+        const VariableIdx& var = atom.getVariable();
+        if (!is_monotonic(var)) {
+            result.emplace_back();
+            continue;
+        }
+
+        const auto& all_domains = _reachable_bitsets[var];
+        const auto& it = all_domains.find(atom.getValue());
+        if (it == all_domains.end()) {
+            throw std::runtime_error("Monotonicity domain mapping is wrong - "
+                                     "it should have a set of allowed transitions for any possible value in the domain of any monotonic variable");
+        }
+
+        result.push_back(it->second); // copy the domain into the result
+    }
+
+    return result;
+}
+
 
 bool TransitionGraph::transition_is_valid(VariableIdx variable, const object_id& val0, const object_id& val1) const {
     const auto& var_transitions = _transitions.at(variable);
@@ -80,17 +106,16 @@ bool TransitionGraph::transition_is_valid(VariableIdx variable, const object_id&
 
 
 std::unordered_map<object_id, std::unordered_set<object_id>>
-TransitionGraph::compute_reachable_sets(const TransitionGraphT &transitions) {
+TransitionGraph::compute_reachable_sets(const TransitionGraphT& transitions) {
     std::unordered_map<object_id, std::unordered_set<object_id>> reach;
 
     // Start by collecting all initial transitions
     for (const auto& transition:transitions) {
-        // If no set was constructed for transition.first, this will empty-construct a new one:
+        // If no set was constructed for transition.first, this will empty-construct a new one
         reach[transition.first].insert(transition.second);
     }
 
-
-    // And then build the transitive closure until a fixpoint is reached
+    // Build the transitive closure until a fixpoint is reached
     for(bool fixpoint = false; !fixpoint; ) {
         fixpoint = true;
 
@@ -113,6 +138,12 @@ TransitionGraph::compute_reachable_sets(const TransitionGraphT &transitions) {
             }
         }
     }
+
+    // Any value is reachable from itself, by definition
+    for (auto& r:reach) {
+        r.second.insert(r.first);
+    }
+
     return reach;
 }
 
@@ -131,10 +162,41 @@ TransitionGraph::preprocess_extension(const std::unordered_map<object_id, std::u
         std::vector<object_id> oids(elem.second.cbegin(), elem.second.cend());
 
         std::vector<int> values = fs0::values<int>(oids, ObjectTable::EMPTY_TABLE);
-        // The origin value is also "reachable" by definition, i.e. we want to allow it
-        // in the extensional constraints
-        values.push_back(fs0::value<int>(origin));
         result[origin] = Gecode::IntSet(values.data(), values.size());
+
+        // DEBUG
+//        std::cout << "Reachable from " << origin << ":\t";
+//        for (int v:values) std::cout << v << ", ";
+//        std::cout << std::endl;
+    }
+
+    return result;
+}
+
+std::unordered_map<object_id, TransitionGraph::BitmapT>
+TransitionGraph::generate_bitset(
+        int max_value,
+        const std::unordered_map<object_id, std::unordered_set<object_id>>& rechable) {
+
+    // Now transform into the desired IntSet-based representation:
+    std::unordered_map<object_id, BitmapT> result;
+
+    // Iterate through pairs <x, R>, where R is the set of object IDs that
+    // are reachable from object ID 'x'
+    for (const auto& elem:rechable) {
+        const auto& origin = elem.first;
+
+        BitmapT bm(max_value+1, 0);
+        for (const auto& oid:elem.second) {
+            int value = fs0::value<int>(oid);
+            if (value < 0) {
+                throw UnimplementedFeatureException("Negative int variables not supported for monotonic constraints");
+            }
+            assert(value <= max_value);
+            bm[value] = true;
+        }
+
+        result.insert(std::make_pair(origin, bm));
 
         // DEBUG
 //        std::cout << "Reachable from " << origin << ":\t";
@@ -162,11 +224,6 @@ TransitionGraph::precompute_partial_extensions(VariableIdx var, const std::unord
             const ValueTuple& values = _tuple_index.to_tuple(var, reachable_val);
             extensions_for_var_from_origin.emplace_back(Gecode::IntArgs(fs0::values<int>(values, ObjectTable::EMPTY_TABLE)));
         }
-
-        // The origin value is also "reachable" by definition, i.e. we want to allow it
-        // in the extensional constraints
-        const ValueTuple& values = _tuple_index.to_tuple(var, origin);
-        extensions_for_var_from_origin.emplace_back(Gecode::IntArgs(fs0::values<int>(values, ObjectTable::EMPTY_TABLE)));
 
 //        // DEBUG
 //        std::cout << "Reachable from " << origin << ":\t";
@@ -209,14 +266,70 @@ TransitionGraph::compute_partial_extension(VariableIdx var,
     return it->second;
 }
 
-void TransitionGraph::preprocess_extensions(const AllTransitionGraphsT &transitions) {
+void TransitionGraph::preprocess_extensions(const AllTransitionGraphsT& transitions) {
+    const auto& info = ProblemInfo::getInstance();
 
-    for (const auto& transition:transitions) {
-        auto var = static_cast<VariableIdx>(_reachable.size());
+    for (unsigned var = 0; var < transitions.size(); ++var) {
+        const auto& transition = transitions[var];
+
+        const auto& int_values = fs0::values<int>(info.getVariableObjects(var), ObjectTable::EMPTY_TABLE);
+        int max = *std::max_element(std::begin(int_values), std::end(int_values));
+
+        // If the variable has some transition defined, we consider it monotonic
+        if (!transition.empty()) _monotonic_variables.insert(var);
+
         _reachable.push_back(compute_reachable_sets(transition));
         _allowed_domains.push_back(preprocess_extension(_reachable[var]));
+        _reachable_bitsets.push_back(generate_bitset(max, _reachable[var]));
         _partial_extensions.push_back(precompute_partial_extensions(var, _reachable[var]));
     }
+}
+
+std::vector<int> as_vector(const TransitionGraph::BitmapT& bs) {
+    std::vector<int> res;
+    for (size_t index = bs.find_first(); index != TransitionGraph::BitmapT::npos; index = bs.find_next(index)) {
+        res.push_back(static_cast<int>(index));
+    }
+    return res;
+}
+
+
+std::vector<Gecode::IntSet> DomainTracker::to_intsets() const {
+    assert(!is_null());
+
+    std::vector<Gecode::IntSet> res;
+    res.reserve(_domains.size());
+
+    for (const auto& dom:_domains) {
+        std::vector<int> values = as_vector(dom);
+        res.emplace_back(values.data(), values.size());
+    }
+
+    return res;
+}
+
+std::ostream& print::bitset::print(std::ostream& os) const {
+    const auto& info = ProblemInfo::getInstance();
+    os << "\t" << info.getVariableName(_var) << ": {";
+
+    for (size_t index = _bitset.find_first(); index != TransitionGraph::BitmapT::npos;) {
+        const auto oid = fs0::make_object(info.sv_type(_var), static_cast<int>(index));
+        os << info.object_name(oid);
+
+        index = _bitset.find_next(index);
+        if (index != TransitionGraph::BitmapT::npos) os << ", ";
+    }
+    os << "}" << std::endl;
+    return os;
+}
+
+std::ostream& print::domain_tracker::print(std::ostream& os) const {
+    const auto& domains = _domains.domains();
+    os << "DomainTracker:" << std::endl;
+    for (unsigned var = 0; var < domains.size(); ++var) {
+        os << print::bitset(var, domains[var]);
+    }
+    return os << std::endl;
 }
 
 } // namespaces

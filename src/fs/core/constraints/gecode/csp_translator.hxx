@@ -87,7 +87,7 @@ public:
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
 	void updateStateVariableDomains(GecodeCSP& csp, const RPGIndex& graph) const;
-	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<Gecode::IntSet>& domains) const;
+	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<Gecode::IntSet>& domains, bool empty_means_no_constraint = false) const;
 	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<const Gecode::IntSet*>& domains) const;
 	void updateStateVariableDomains(GecodeCSP& csp, const State& state) const;
 
@@ -127,6 +127,10 @@ public:
 	void set_existential_data(std::vector<std::vector<std::unordered_map<int, AtomIdx>>>&& existential_data) { _existential_data = existential_data; };
 	
 	std::vector<std::unordered_map<int, AtomIdx>> getExistentialData(unsigned csp_var_idx) const { return _existential_data.at(csp_var_idx); };
+
+	bool is_indexed(VariableIdx variable) const {
+		return _input_state_variables.find(variable) != _input_state_variables.end();
+	}
 	
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.

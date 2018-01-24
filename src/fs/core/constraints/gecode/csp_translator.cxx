@@ -193,11 +193,15 @@ void CSPTranslator::updateStateVariableDomains(GecodeCSP& csp, const RPGIndex& g
 	updateStateVariableDomains(csp, graph.get_domains());
 }
 
-void CSPTranslator::updateStateVariableDomains(GecodeCSP& csp, const std::vector<Gecode::IntSet>& domains) const {
+void CSPTranslator::
+updateStateVariableDomains(GecodeCSP& csp, const std::vector<Gecode::IntSet>& domains, bool empty_means_no_constraint) const {
 	// Iterate over all the input state variables and constrain them according to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
 		const Gecode::IntVar& csp_variable = csp._intvars[it.second];
+		const Gecode::IntSet& iset = domains.at(variable);
+
+		if (empty_means_no_constraint && iset.size() == 0) continue;
 		Helper::constrainCSPVariable(csp, csp_variable, domains.at(variable));
 	}
 }

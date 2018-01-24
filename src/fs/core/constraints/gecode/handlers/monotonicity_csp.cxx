@@ -15,7 +15,20 @@
 
 
 namespace fs0 { namespace gecode {
-	
+
+// Helper - generate a changeset reflecting all atoms in a state
+std::vector<Atom>
+_as_atoms(const State& state) {
+    std::vector<Atom> changeset;
+    unsigned n = state.numAtoms();
+    changeset.reserve(state.numAtoms());
+    for (unsigned var = 0; var < n; ++var) {
+        changeset.emplace_back(var, state.getValue(var));
+    }
+    return changeset;
+}
+
+
 MonotonicityCSP::MonotonicityCSP(const fs::Formula* formula, const AtomIndex& tuple_index, const AllTransitionGraphsT& transitions, bool complete)
 	:  FormulaCSP(formula, tuple_index, !complete),
        _monotonicity(tuple_index, transitions)
@@ -24,16 +37,8 @@ MonotonicityCSP::MonotonicityCSP(const fs::Formula* formula, const AtomIndex& tu
 GecodeCSP* MonotonicityCSP::build_root_csp(const State& root) const {
     assert(_monotonicity.is_active());
 
-    // For the root node, we build an "artificial" changeset consisting of all
-    // atoms in the state.
-    std::vector<Atom> changeset;
-    unsigned n = root.numAtoms();
-    changeset.reserve(root.numAtoms());
-    for (unsigned var = 0; var < n; ++var) {
-        changeset.emplace_back(var, root.getValue(var));
-    }
-
-    return check_consistency_from_changeset(*_base_csp, root, changeset);
+    // For the root node, we consider the changeset with all atoms of the state
+    return check_consistency_from_changeset(*_base_csp, root, _as_atoms(root));
 }
 
 GecodeCSP* MonotonicityCSP::
@@ -73,7 +78,7 @@ instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, cons
     // relevant_symbols_changed contains all those symbol IDs whose denotation has been affected
     // in the last transition
     std::unordered_map<unsigned, Gecode::TupleSet> tuplesets;
-    for (unsigned symbol:relevant_symbols) {
+    for (unsigned symbol:relevant_symbols_changed) {
         auto& tupleset = tuplesets[symbol];
 
 
@@ -114,8 +119,78 @@ instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, cons
     return clone;
 }
 
+
+GecodeCSP* MonotonicityCSP::
+instantiate_from_changeset_NEW(const DomainTracker& base_domains, const State& state) const {
+
+    // First update the domains of those CSP variables that correspond to state variables
+    // which have their domain restricted by monotonicity constraints
+    auto clone = static_cast<GecodeCSP*>(_base_csp->clone());
+
+    _translator.updateStateVariableDomains(*clone, base_domains.to_intsets(), true);
+
+//    std::cout << "Num extensional constraints: " << _extensional_constraints.size() << std::endl;
+
+
+    // And then update the extensions of extensional constraints that might result from e.g.
+    // nested fluents, etc., building the new extensions from the actual domains allowed to
+    // each state variable of the problem.
+    const ProblemInfo& info = ProblemInfo::getInstance();
+
+    // TODO Move this iteration to preprocessing
+    std::unordered_set<unsigned> relevant_symbols;
+    for (const ExtensionalConstraint& constraint:_extensional_constraints) {
+//        std::cout << "Ext. constraint: " << constraint << std::endl;
+        relevant_symbols.insert(constraint.get_term()->getSymbolId());
+    }
+
+//    assert(_extensional_constraints.empty()); // TODO Reimplement the code below
+//    return clone;
+
+    std::unordered_map<unsigned, Gecode::TupleSet> tuplesets;
+    for (unsigned symbol:relevant_symbols) {
+        auto& tupleset = tuplesets[symbol];
+
+
+        for (VariableIdx var:info.getSymbolData(symbol).getVariables()) {
+            const auto& value = state.getValue(var);
+
+            // partial_extension is the subset of the extension of 'symbol' induced by 'var'
+            const auto& partial_extension = _monotonicity.compute_partial_extension(var, value);
+            for (const auto& tuple:partial_extension) {
+                tupleset.add(tuple);
+            }
+        }
+
+        tupleset.finalize();
+    }
+
+
+//    auto st = clone->status();
+//    std::cout << "Status before posting extensional constraints: " << st << std::endl;
+
+
+    for (const ExtensionalConstraint& constraint:_extensional_constraints) {
+        unsigned symbol = constraint.get_term()->getSymbolId();
+        if (relevant_symbols.find(symbol) != relevant_symbols.end()) {
+//            std::cout << "Ext. constraint: " << constraint << std::endl;
+            if (!constraint.update(*clone, _translator, tuplesets.at(symbol))) {
+                delete clone;
+                return nullptr;
+            }
+        }
+    }
+
+//    st = clone->status();
+//    std::cout << "Status after posting extensional constraints: " << st << std::endl;
+
+    return clone;
+}
+
+
+
 bool MonotonicityCSP::
-check_transitions(const State& parent, const State& child, const std::vector<Atom>& changeset) const {
+check_transitions(const State& parent, const std::vector<Atom>& changeset) const {
     for (const auto &atom:changeset) {
         const auto& var = atom.getVariable();
         if (!_monotonicity.transition_is_valid(var, parent.getValue(var), atom.getValue())) {
@@ -129,12 +204,130 @@ check_transitions(const State& parent, const State& child, const std::vector<Ato
 GecodeCSP* MonotonicityCSP::
 check(const GecodeCSP& parent_csp, const State& parent, const State& child, const std::vector<Atom>& changeset) const {
     // We first check that all transitions are valid
-    if (!check_transitions(parent, child, changeset)) return nullptr;
+    if (!check_transitions(parent, changeset)) return nullptr;
 
     // Then check that the monotonicity CSP is consistent
     return check_consistency_from_changeset(parent_csp, child, changeset);
 
 }
+
+DomainTracker MonotonicityCSP::
+compute_base_domains(const DomainTracker& parent_domains,
+                     const std::vector<Atom>& changeset) const {
+
+    // Start with a fresh copy of the parent domains. We assume that there is no empty domain there.
+    std::vector<TransitionGraph::BitmapT> resulting_domains(parent_domains.domains());
+
+    // Compute reachable domains given by current state, only for those variables which have
+    // changed their value wrt the parent state. If any of those variables is not monotonic,
+    // a nullptr will be returned
+    auto modified_variable_domains = _monotonicity.retrieve_domains(changeset);
+
+//    std::cout << "Base: " << print::domain_tracker(DomainTracker(std::vector<TransitionGraph::BitmapT>(resulting_domains))) << std::endl;
+//    std::cout << "Changeset: " << std::endl;
+
+    // Compute the intersection (in place)
+    assert(modified_variable_domains.size() == changeset.size());
+    for (unsigned i = 0, s = changeset.size(); i < s; ++i) {
+        VariableIdx var = changeset[i].getVariable();
+        if (!_monotonicity.is_monotonic(var)) continue;
+
+//        std::cout << print::bitset(var, modified_variable_domains[i]) << std::endl;
+        assert(resulting_domains[var].size() == modified_variable_domains[i].size());
+        resulting_domains[var] &= modified_variable_domains[i];
+        if (resulting_domains[var].none()) return {};
+    }
+
+    return DomainTracker(std::move(resulting_domains));
+}
+
+DomainTracker MonotonicityCSP::
+compute_root_domains(const State& root) const {
+
+    // Compute reachable domains for all variables in the state (i.e., that are monotonic)
+    // If any of those variables is not monotonic, an empty domain will be returned in their slot.
+    auto domains = _monotonicity.retrieve_domains(_as_atoms(root));
+    assert(domains.size() == root.numAtoms());
+
+    return DomainTracker(std::move(domains));
+}
+
+DomainTracker MonotonicityCSP::
+create_root(const State& root) const {
+    DomainTracker tracker = compute_root_domains(root);
+    return post_monotonicity_csp_from_domains(root, tracker);
+}
+
+DomainTracker MonotonicityCSP::
+generate_node(const State& parent, const DomainTracker& parent_domains,
+              const State& child, const std::vector<Atom>& changeset) const {
+    assert(!parent_domains.is_null());
+
+    // Check that all transitions are valid
+    if (!check_transitions(parent, changeset)) return {};
+
+    // Compute the domains that will form the basis for the CSP
+    auto base_domains = compute_base_domains(parent_domains, changeset);
+
+    return post_monotonicity_csp_from_domains(child, base_domains);
+}
+
+DomainTracker MonotonicityCSP::
+post_monotonicity_csp_from_domains(const State& state, const DomainTracker& domains) const {
+    // Check that there's no domain among the base, unpruned domains has already become empty
+    // If that's the case, we can prune the node without even generating the CSP
+    if (domains.is_null()) return {};
+
+    // Otherwise, we generate the CSP and propagate constraints until reaching local consistency
+    auto csp = instantiate_from_changeset_NEW(domains, state);
+    csp = check_consistency(csp);
+    if (!csp) return {};
+
+    // If the CSP is consistent, we inspect the domains it assigns to variables, and delete it
+    auto res = prune_domains(*csp, domains);
+    delete csp;
+    return res;
+}
+
+
+
+
+
+DomainTracker MonotonicityCSP::prune_domains(const GecodeCSP& csp, const DomainTracker& tracker) const {
+
+    std::vector<TransitionGraph::BitmapT> pruned(tracker.size());
+    const auto& original_domains = tracker.domains();
+
+    for (VariableIdx var:_monotonicity.monotonic_variables()) {
+
+        // For each monotonic variable, we collect the values that are locally consistent.
+        // This might not be too efficient, but Gecode doesn't seem to provide a better way
+        // to inspect which values are consistent.
+        auto& domain = pruned[var];
+        if (_translator.is_indexed(var)) {
+
+            // Start with an all-0 bitset of appropriate size
+            domain = TransitionGraph::BitmapT(original_domains[var].size(), 0);
+
+            // And then flip to 1 those values in the domain which remain in the csp-pruned domains
+            const auto& intvar = _translator.resolveInputStateVariable(csp, var);
+            for (Gecode::IntVarValues i(intvar); i(); ++i) {
+                int value = i.val();
+                if (value < 0) throw UnimplementedFeatureException("Not yet ready for non-natural integer values");
+
+                domain[static_cast<unsigned>(value)] = true;
+            }
+        }
+        else {
+            // The variable is not indexed by the translator because it is involved in the goal
+            // only as a nested fluent. ATM we simply copy the domain from the parent
+            //assert(0); // This shouldn't be happening?
+            domain = original_domains[var];
+        }
+    }
+    return DomainTracker(std::move(pruned));
+}
+
 
 GecodeCSP* MonotonicityCSP::
 check_consistency_from_changeset(const GecodeCSP& parent_csp, const State& child, const std::vector<Atom>& changeset) const {
@@ -145,7 +338,9 @@ check_consistency_from_changeset(const GecodeCSP& parent_csp, const State& child
 GecodeCSP* MonotonicityCSP::
 check_consistency(GecodeCSP* csp) const {
 
-    if (!csp || !csp->propagate()) { // This colaterally enforces propagation of constraints
+    if (!csp) return nullptr;
+
+    if (!csp->propagate()) {
         delete csp;
         return nullptr;
     }
@@ -177,4 +372,5 @@ MonotonicityCSP::solve_csp(GecodeCSP* csp) {
     return engine.next();
 }
 
-    } } // namespaces
+
+} } // namespaces

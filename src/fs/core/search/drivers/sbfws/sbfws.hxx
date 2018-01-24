@@ -102,6 +102,9 @@ public:
 
 	std::unique_ptr<gecode::GecodeCSP> _monotonic_csp;
 
+    //! The sets D^G_X of goal-reachable domains for every state variable X
+    DomainTracker _domains;
+
 	//! Constructor with full copying of the state (expensive)
 	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
 
@@ -499,16 +502,12 @@ public:
 		NodePT root = std::make_shared<NodeT>(s, ++_generated);
 
         if (_monotonicity_csp_manager) {
-            auto csp = _monotonicity_csp_manager->build_root_csp(s);
-
-            if (!csp) {
-                LPT_INFO("cout", "The root node was detected as inconsistent "
-                        "because of the monotonicity CSP!");
+            root->_domains = _monotonicity_csp_manager->create_root(s);
+            if (root->_domains.is_null()) {
+                LPT_INFO("cout", "Root node detected as inconsistent for monotonicity reasons");
                 _stats.monot_pruned();
                 return false;
             }
-
-            root->_monotonic_csp = std::unique_ptr<gecode::GecodeCSP>(csp);
         }
 
         create_node(root);
@@ -674,27 +673,25 @@ protected:
             if (_closed.check(successor)) continue; // The node has already been closed
             if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it
 
+            // std::cout << "Generating node: " << *successor << std::endl;
             // If the node we're expanding has a monotonicity CSP, we update it
             // and "propagate" it to the children nodes
-            if (node->_monotonic_csp) {
+            if (_monotonicity_csp_manager) {
+                assert(!node->_domains.is_null());
 
-                // std::cout << "Generating node: " << *successor << std::endl;
-                gecode::GecodeCSP* csp = _monotonicity_csp_manager->check(
-                        *(node->_monotonic_csp),
+                successor->_domains = _monotonicity_csp_manager->generate_node(
                         node->state,
+                        node->_domains,
                         successor->state,
                         _model.get_last_changeset()
                 );
 
-                if (!csp) {
+                if (successor->_domains.is_null()) {
                     LPT_DEBUG("cout", "\tChildren node pruned because of inconsistent monotonicity CSP: " << std::endl << "\t" << *successor);
+                    _closed.put(successor);
                     _stats.monot_pruned();
                     continue;
                 }
-
-                // If not pruned, we store the CSP in the children node
-                successor->_monotonic_csp = std::unique_ptr<gecode::GecodeCSP>(csp);
-//                std::cout << "Generated node #" << _generated <<"; of which " << ++_num_csps << " have a Gecode CSP object attached" << std::endl;
             }
 
 			if (create_node(successor)) {
@@ -704,7 +701,8 @@ protected:
 //            std::cout << "Generated node: " << *successor << std::endl;
 		}
 
-        node->_monotonic_csp.reset(); // Free the memory of the CSP
+        // Once the node is completely expanded, we can release the memory used by the domains
+        node->_domains.release();
 	}
 
 	bool is_open(const NodePT& node) const {
