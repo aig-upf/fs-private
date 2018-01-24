@@ -13,6 +13,7 @@ class Problem;
 class UnsatisfiedGoalAtomsCounter {
 public:
 	UnsatisfiedGoalAtomsCounter(const Problem& problem);
+	~UnsatisfiedGoalAtomsCounter();
 
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	float evaluate(const State& state) const;

@@ -43,4 +43,8 @@ UnsatisfiedGoalAtomsCounter::extract_goal_conjunction(const Problem& problem) {
 	return atoms;
 }
 
+UnsatisfiedGoalAtomsCounter::~UnsatisfiedGoalAtomsCounter() {
+	for (auto a:_formula_atoms) delete a;
+}
+
 } // namespaces
