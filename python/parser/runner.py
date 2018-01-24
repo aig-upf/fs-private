@@ -121,7 +121,8 @@ def generate_debug_scripts(target_dir):
     shebang = "#!/usr/bin/env bash"
     ld_string = "LD_LIBRARY_PATH={}:$LD_LIBRARY_PATH".format(FS_BUILD)
     debug_script = "{}\n\n{} cgdb ./solver.debug.bin".format(shebang, ld_string)
-    memcheck_script = "{}\n\n{} valgrind --leak-check=full --show-leak-kinds=all --log-file=\"valgrind-output.$(date '+%H%M%S').txt\" --track-origins=yes ./solver.debug.bin \"$@\"".format(shebang, ld_string)
+    memcheck_script = "{}\n\n{} valgrind --leak-check=full --show-leak-kinds=all --num-callers=50 " \
+                      "--log-file=\"valgrind-output.$(date '+%H%M%S').txt\" --track-origins=yes ./solver.debug.bin \"$@\"".format(shebang, ld_string)
 
     make_script(os.path.join(target_dir, 'debug.sh'), debug_script)
     make_script(os.path.join(target_dir, 'memcheck.sh'), memcheck_script)
