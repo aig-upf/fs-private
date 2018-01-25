@@ -14,7 +14,7 @@ cartesian_iterator::cartesian_iterator(std::vector<const std::vector<object_id>*
 	_iterators.reserve(_values.size());
 	_element.reserve(_values.size());
 	for (const auto& domain:_values) {
-		if (domain->size() == 0) {
+		if (domain->empty()) {
 			_ended = true;
 			break;
 		}
