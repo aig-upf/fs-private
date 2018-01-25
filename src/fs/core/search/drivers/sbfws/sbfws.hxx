@@ -100,8 +100,6 @@ public:
 	//! atoms in s with novelty 1.
 // 	std::vector<unsigned> _nov1atom_idxs;
 
-	std::unique_ptr<gecode::GecodeCSP> _monotonic_csp;
-
     //! The sets D^G_X of goal-reachable domains for every state variable X
     DomainTracker _domains;
 
