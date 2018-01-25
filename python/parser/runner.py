@@ -9,7 +9,7 @@ import glob
 import shutil
 import subprocess
 
-from python import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
+from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .pddl import tasks, pddl_file
 from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
 from .representation import ProblemRepresentation
@@ -100,9 +100,6 @@ def move_files(args, target_dir, use_vanilla):
             default = tplManager.get('external_default.hxx').substitute()  # No substitutions for the default template
             utils.save_file(target_dir + '/external.hxx', default)
 
-    if args.debug:
-        generate_debug_scripts(target_dir)
-
     # Copy, if they exist, all data files
     origin_data_dir = base_dir + '/data'
     if os.path.isdir(origin_data_dir):
@@ -116,16 +113,21 @@ def move_files(args, target_dir, use_vanilla):
                 shutil.copytree(filename, dst)
 
 
-def generate_debug_scripts(target_dir):
+def generate_debug_scripts(target_dir, planner_arguments):
     # If generating a debug build, create some debug script helpers
     shebang = "#!/usr/bin/env bash"
     ld_string = "LD_LIBRARY_PATH={}:$LD_LIBRARY_PATH".format(FS_BUILD)
-    debug_script = "{}\n\n{} cgdb ./solver.debug.bin".format(shebang, ld_string)
-    memcheck_script = "{}\n\n{} valgrind --leak-check=full --show-leak-kinds=all --num-callers=50 " \
-                      "--log-file=\"valgrind-output.$(date '+%H%M%S').txt\" --track-origins=yes ./solver.debug.bin \"$@\"".format(shebang, ld_string)
+    args = ' '.join(planner_arguments)
+    debug_script = "{}\n\n{} cgdb -ex=run --args ./solver.debug.bin {}".format(shebang, ld_string, args)
+    memleaks = "{}\n\n{} valgrind --leak-check=full --show-leak-kinds=all --num-callers=50 --track-origins=yes " \
+               "--log-file=\"valgrind-output.$(date '+%H%M%S').txt\" ./solver.debug.bin {}"\
+        .format(shebang, ld_string, args)
+
+    memprofile = "{}\n\n{} valgrind --tool=massif ./solver.debug.bin {}".format(shebang, ld_string, args)
 
     make_script(os.path.join(target_dir, 'debug.sh'), debug_script)
-    make_script(os.path.join(target_dir, 'memcheck.sh'), memcheck_script)
+    make_script(os.path.join(target_dir, 'memleaks.sh'), memleaks)
+    make_script(os.path.join(target_dir, 'memprofile.sh'), memprofile)
 
 def make_script(filename, code):
     with open(filename, 'w') as f:
@@ -159,9 +161,9 @@ def compile_translation(translation_dir, use_vanilla, args):
         shutil.copy(os.path.join(planner_dir, 'main.cxx'), translation_dir)
         shutil.copy(os.path.join(planner_dir, 'SConstruct'), os.path.join(translation_dir, 'SConstruct'))
         shutil.copy(os.path.join(planner_dir, 'custom.py'), os.path.join(translation_dir, 'custom.py'))
-        if os.path.exists(os.path.join(translation_dir, 'util')) :
-            shutil.rmtree( os.path.join(translation_dir, 'util') )
-            shutil.copytree( 'util', os.path.join(translation_dir, 'util'))
+        if os.path.exists(os.path.join(translation_dir, 'util')):
+            shutil.rmtree(os.path.join(translation_dir, 'util'))
+            shutil.copytree('util', os.path.join(translation_dir, 'util'))
         command = "python2 /usr/bin/scons {}".format(debug_flag)
 
         print("{0:<30}{1}\n".format("Compilation command:", command))
@@ -171,10 +173,8 @@ def compile_translation(translation_dir, use_vanilla, args):
             raise RuntimeError('Error compiling problem at {0}'.format(translation_dir))
 
 
-def run_solver(translation_dir, args):
+def run_solver(translation_dir, args, dry_run):
     """ Runs the solver binary resulting from the compilation """
-    if args.parse_only:  # Simply return without running anything
-        return
 
     solver = solver_name(args)
     solver = os.path.join(translation_dir, solver)
@@ -190,8 +190,12 @@ def run_solver(translation_dir, args):
     if args.planfile:
         command += ["--planfile", args.planfile]
 
+    arguments = command[1:]
+    if dry_run:  # Simply return without running anything
+        return arguments
+
     print("{0:<30}{1}".format("Running solver:", solver))
-    print("{0:<30}{1}\n".format("Command line arguments:", ' '.join(command[1:])))
+    print("{0:<30}{1}\n".format("Command line arguments:", ' '.join(arguments)))
     sys.stdout.flush()  # Flush the output to avoid it mixing with the subprocess call.
 
     env = dict(os.environ)
@@ -280,7 +284,13 @@ def run(args):
     move_files(args, out_dir, use_vanilla)
     if not args.parse_only:
         compile_translation(out_dir, use_vanilla, args)
-    run_solver(out_dir, args)
+
+    if args.debug:  # If debugging, we perform a dry-run to get the call arguments and generate debugging scripts
+        planner_arguments = run_solver(out_dir, args, True)
+        generate_debug_scripts(out_dir, planner_arguments)
+
+    run_solver(out_dir, args, args.parse_only)
+
     return 0
 
 
