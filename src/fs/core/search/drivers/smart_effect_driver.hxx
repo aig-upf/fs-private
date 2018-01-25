@@ -9,6 +9,8 @@
 #include <fs/core/search/events.hxx>
 #include <fs/core/heuristics/relaxed_plan/smart_rpg.hxx>
 #include <lapkt/algorithms/best_first_search.hxx>
+#include <fs/core/search/nodes/monotonic_node.hxx>
+#include <fs/core/search/algorithms/monotonic_search.hxx>
 
 namespace fs0 { class GroundStateModel; class SearchStats; }
 
@@ -21,8 +23,8 @@ namespace fs0 { namespace drivers {
 //! The choice of the heuristic is done through template instantiation
 class SmartEffectDriver : public Driver {
 public:
-	using NodeT = HeuristicSearchNode<State, GroundAction>;
-	using GBFST = lapkt::StlBestFirstSearch<NodeT, GroundStateModel>;
+	using NodeT = MonotonicNode<State, GroundAction>;
+	using GBFST = lapkt::MonotonicSearch<NodeT, GroundStateModel>;
 	using EngineT = EHCThenGBFSSearch<GBFST, gecode::SmartRPG>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	

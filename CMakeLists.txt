@@ -137,6 +137,7 @@ set(SOURCE_FILES
         src/fs/core/models/lifted_state_model.hxx
         src/fs/core/models/simple_state_model.cxx
         src/fs/core/models/simple_state_model.hxx
+        src/fs/core/search/algorithms/monotonic_gbfs
         src/fs/core/search/algorithms/ehc.hxx
         src/fs/core/search/algorithms/ehc_gbfs.hxx
         src/fs/core/search/algorithms/iterated_width.hxx
@@ -178,6 +179,7 @@ set(SOURCE_FILES
         src/fs/core/search/drivers/validation.hxx
         src/fs/core/search/nodes/bfws_node.hxx
         src/fs/core/search/nodes/heuristic_search_node.hxx
+        src/fs/core/search/nodes/monotonic_node
         src/fs/core/search/novelty/fs_novelty.cxx
         src/fs/core/search/novelty/fs_novelty.hxx
         src/fs/core/search/events.hxx

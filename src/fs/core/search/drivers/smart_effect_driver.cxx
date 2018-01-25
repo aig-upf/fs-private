@@ -6,7 +6,7 @@
 
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/utils/support.hxx>
-#include <fs/core/constraints/gecode/handlers/ground_effect_csp.hxx>
+//#include <fs/core/constraints/gecode/handlers/ground_effect_csp.hxx>
 
 
 using namespace fs0::gecode;
@@ -75,7 +75,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 		EventUtils::setup_HA_observer<NodeT>(_handlers);
 	}
 
-	auto engine = new GBFST(model);
+	auto engine = new GBFST(model, gecode::build_monotonicity_csp(problem, config));
 	lapkt::events::subscribe(*engine, _handlers);
 
 	return EnginePT(new EngineT(problem, engine, ehc));
