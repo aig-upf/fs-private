@@ -45,7 +45,7 @@ LiftedEffectCSP::create_smart(const std::vector<const PartiallyGroundedAction*>&
 				
 				for (const fs::ActionEffect* flat_effect:ActionGrounder::compile_nested_fluents_away(effect, info)) {
 					
-					auto handler = std::unique_ptr<LiftedEffectCSP>(new LiftedEffectCSP(*action, flat_effect, tuple_index, approximate));
+					auto handler = std::make_unique<LiftedEffectCSP>(*action, flat_effect, tuple_index, approximate);
 					if (handler->init(novelty)) {
 						LPT_DEBUG("smart-grounding", "\tSmart grounding of effect \"" << *schema->getEffects().at(eff_idx) << "\" results in (possibly partially) grounded action " << *action);
 						handlers.push_back(std::move(handler));

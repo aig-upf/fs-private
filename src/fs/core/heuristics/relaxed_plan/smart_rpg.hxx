@@ -7,6 +7,7 @@
 #include <fs/core/constraints/gecode/handlers/lifted_effect_csp.hxx>
 #include <fs/core/utils/atom_index.hxx>
 #include <unordered_set>
+#include <fs/core/constraints/gecode/handlers/ground_effect_csp.hxx>
 
 namespace fs0 { class Problem; class State; class RPGData; }
 

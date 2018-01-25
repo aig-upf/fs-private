@@ -6,6 +6,7 @@
 
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/utils/support.hxx>
+#include <fs/core/constraints/gecode/handlers/ground_effect_csp.hxx>
 
 
 using namespace fs0::gecode;
@@ -20,6 +21,8 @@ SmartEffectDriver::configure_heuristic(const Problem& problem, const Config& con
 	const auto& tuple_index = problem.get_tuple_index();
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 	auto managers = LiftedEffectCSP::create_smart(actions, tuple_index, approximate, novelty);
+//	const auto& actions = problem.getGroundActions();
+//	auto managers = GroundEffectCSP::create(actions, tuple_index, approximate, novelty);
 
     if ( config.getOption<bool>("use_state_constraints_in_heuristic_goal_evaluation") ) {
 	    const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
