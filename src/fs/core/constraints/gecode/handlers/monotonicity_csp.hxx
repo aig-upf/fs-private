@@ -4,7 +4,7 @@
 #include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
 #include <fs/core/monotonicity.hxx>
 
-namespace fs0 { class AtomIndex; }
+namespace fs0 { class AtomIndex; class Problem; class Config; }
 namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
 namespace fs = fs0::language::fstrips;
 
@@ -63,5 +63,8 @@ protected:
     DomainTracker post_monotonicity_csp_from_domains(const State& state,
                                                      const DomainTracker& domains) const;
 };
+
+gecode::MonotonicityCSP*
+build_monotonicity_csp(const Problem& problem, const Config& config);
 
 } } // namespaces

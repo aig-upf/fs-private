@@ -9,9 +9,12 @@
 #include <fs/core/constraints/gecode/utils/novelty_constraints.hxx>
 #include <fs/core/constraints/gecode/supports.hxx>
 #include <fs/core/state.hxx>
+#include <fs/core/problem.hxx>
+#include <fs/core/utils/config.hxx>
 
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/constraints/gecode/extensions.hxx>
+
 
 
 namespace fs0 { namespace gecode {
@@ -372,5 +375,17 @@ MonotonicityCSP::solve_csp(GecodeCSP* csp) {
     return engine.next();
 }
 
+
+
+MonotonicityCSP*
+build_monotonicity_csp(const Problem& problem, const Config& config) {
+    const auto& transitions = problem.get_transition_graphs();
+    if (transitions.empty() || config.getOption<bool>("ignore_transitions", false)) return nullptr;
+
+    return new gecode::MonotonicityCSP(problem.getGoalConditions()->clone(),
+                                       problem.get_tuple_index(),
+                                       transitions,
+                                       config.getOption<bool>("mnt.complete", false));
+}
 
 } } // namespaces
