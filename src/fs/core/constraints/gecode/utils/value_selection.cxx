@@ -5,6 +5,7 @@
 #include <fs/core/heuristics/relaxed_plan/rpg_data.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/utils/atom_index.hxx>
+#include <fs/core/problem_info.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -31,6 +32,7 @@ int TupleMinHMaxValueSelector::select(const Gecode::IntVar& x, unsigned csp_var_
 }
 
 int TupleMinHMaxValueSelector::select_state_variable_value(VariableIdx variable, const Gecode::IntVar& x) const {
+	const auto& info = ProblemInfo::getInstance();
 	int best_value = std::numeric_limits<int>::max();
 	unsigned smallest_layer = std::numeric_limits<unsigned>::max();
 	
@@ -39,7 +41,7 @@ int TupleMinHMaxValueSelector::select_state_variable_value(VariableIdx variable,
 	
 	for (; values(); ++values) {
 		int value = values.val();
-		const auto& support = _bookkeeping->getTupleSupport(_tuple_index->to_index(variable, make_object<int>(value)));
+		const auto& support = _bookkeeping->getTupleSupport(_tuple_index->to_index(variable, make_object(info.sv_type(variable), value)));
 		unsigned layer = std::get<0>(support); // The RPG layer on which this value was first achieved for this variable
 
 		if (layer == 0) return value; // If we found a seed-state value, no need to search anymore

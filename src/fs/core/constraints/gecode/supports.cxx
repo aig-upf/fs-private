@@ -4,11 +4,13 @@
 #include <fs/core/constraints/gecode/gecode_csp.hxx>
 #include <fs/core/utils/atom_index.hxx>
 #include <fs/core/problem.hxx>
+#include <fs/core/problem_info.hxx>
 
 namespace fs0 { namespace gecode {
 
 std::vector<AtomIdx>
 Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<AtomIdx>& necessary_tuples) {
+	const auto& info = ProblemInfo::getInstance();
 	const auto& tuple_index = Problem::getInstance().get_tuple_index();
 	std::vector<AtomIdx> support;
 	
@@ -16,7 +18,8 @@ Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& transl
 	// First process the direct state variables
 	for (const auto& element:translator.getAllInputVariables()) {
 		VariableIdx variable = element.first;
-		object_id value = make_object(translator.resolveVariableFromIndex(element.second, *solution).val());
+		auto int_val = translator.resolveVariableFromIndex(element.second, *solution).val();
+		object_id value = make_object(info.sv_type(variable), int_val);
 		
 		support.push_back(tuple_index.to_index(variable, value));
 	}
