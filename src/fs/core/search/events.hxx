@@ -39,9 +39,11 @@ protected:
 	void open(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		if (_verbose) {
 			auto& node = static_cast<const OpenEvent&>(event).node;
-			_unused(node);
-			LPT_DEBUG("cout", node);
-			LPT_DEBUG("search", std::setw(7) << "OPEN: " << node);
+            if (!node.has_parent()) {
+                _unused(node);
+                LPT_INFO("cout", node);
+                LPT_EDEBUG("search", std::setw(7) << "OPEN: " << node);
+            }
 		}
 	}
 
@@ -54,7 +56,7 @@ protected:
 	void creation(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.generation();
 		if (_verbose) {
-			LPT_DEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
+            LPT_EDEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
 		}
 
 // 		if (_stats.generated() % 10 == 0) {
@@ -66,7 +68,7 @@ protected:
 	void expansion(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		_stats.expansion();
 		if (_verbose) {
-			LPT_DEBUG("search", std::setw(7) << "EXPAND: " << dynamic_cast<const ExpansionEvent&>(event).node);
+			LPT_EDEBUG("search", std::setw(7) << "EXPAND: " << dynamic_cast<const ExpansionEvent&>(event).node);
 		}
 // 		if (_stats.expanded() % 10 == 0) {
 // 			LPT_INFO("search", "Number of expanded nodes: " << _stats.expanded());

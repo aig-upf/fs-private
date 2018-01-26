@@ -7,6 +7,7 @@
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/atom.hxx>
 #include <fs/core/constraints/gecode/handlers/monotonicity_csp.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 
 //namespace fs0 { class Atom; }
 
@@ -32,12 +33,12 @@ public:
 	MonotonicNode& operator=(MonotonicNode&&) = delete;
 	
 	
-	MonotonicNode(const StateT& state_, unsigned long gen_order = 0)
-		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(std::numeric_limits<long>::max())
+	MonotonicNode(const StateT& state_, uint32_t gen_order)
+		: state(state_), action(ActionT::invalid_action_id), parent(nullptr), g(0), h(std::numeric_limits<long>::max()), _gen_order(gen_order)
 	{}
 	
-	MonotonicNode(StateT&& state_, ActionIdT action_, ptr_t parent_, unsigned long gen_order = 0) :
-		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(std::numeric_limits<long>::max())
+	MonotonicNode(StateT&& state_, ActionIdT action_, ptr_t parent_, uint32_t gen_order) :
+		state(std::move(state_)), action(action_), parent(parent_), g(parent_->g + 1), h(std::numeric_limits<long>::max()), _gen_order(gen_order)
 	{}
 
 	bool has_parent() const { return parent != nullptr; }
@@ -45,9 +46,12 @@ public:
 	//! Print the node into the given stream
 	friend std::ostream& operator<<(std::ostream &os, const MonotonicNode<StateT, ActionT>& object) { return object.print(os); }
 	std::ostream& print(std::ostream& os) const {
+        const auto& problem = Problem::getInstance();
 		std::string h_ = (h == std::numeric_limits<long>::max()) ? "-" : std::to_string(h);
 		std::string gh_ = (h == std::numeric_limits<long>::max()) ? "-" : std::to_string(g+h);
-		os << "{@ = " << this << ", #" << _gen_order << ", s = " << state << ", g = " << g << ", h = " << h_ <<  ", g+h = " << gh_ << ", parent = " << parent << ", action: " << action << "}";
+        std::string porder = (parent != nullptr) ? std::to_string(parent->_gen_order) : "-";
+        const auto& act = (action == ActionT::invalid_action_id) ? "-" : fs0::print::to_string(*problem.getGroundActions().at(action));
+        os << "{#" << _gen_order << ", @"<< this << ", s = " << state << ", g = " << g << ", h = " << h_ <<  ", g+h = " << gh_ << ", parent = " << porder << ", action: " << act << "}";
 		return os;
 	}
 	

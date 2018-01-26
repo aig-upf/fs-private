@@ -45,7 +45,7 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
 		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable
 	} else {
-        LPT_DEBUG("heuristic", "Updating extension for " << *_term );
+		LPT_EDEBUG("heuristic", "Updating extension for " << *_term );
 		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
 	}
 }
@@ -70,8 +70,8 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 	Gecode::extensional(csp, variables, extension);
 // 	Gecode::extensional(csp, variables, extension, Gecode::EPK_SPEED);
 
-	LPT_DEBUG("heuristic", "Posted extensional constraint for term " << *_term << ":\n" << print::extensional(variables, extension));
-	LPT_DEBUG("heuristic", "Resulting CSP is: " << csp);
+	LPT_EDEBUG("heuristic", "Posted extensional constraint for term " << *_term << ":\n" << print::extensional(variables, extension));
+	LPT_EDEBUG("heuristic", "Resulting CSP is: " << csp);
 	return true;
 }
 

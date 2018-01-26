@@ -6,6 +6,7 @@
 
 #include <lapkt/tools/events.hxx>
 #include <fs/core/constraints/gecode/handlers/monotonicity_csp.hxx>
+#include <fs/core/utils/printers/printers.hxx>
 
 namespace lapkt {
 
@@ -85,21 +86,21 @@ public:
 				if (_closed.check(successor)) continue; // The node has already been closed
 				if (_open.updatable(successor)) continue; // The node is currently on the open list, we update some of its attributes but there's no need to reinsert it.
 				
-				this->notify(NodeCreationEvent(*successor));
-
                 if (_monotonicity_csp_manager) {
                     assert(!current->_domains.is_null());
 
+                    const auto changeset = _model.get_last_changeset();
                     successor->_domains = _monotonicity_csp_manager->generate_node(
                             current->state,
                             current->_domains,
                             successor->state,
-                            _model.get_last_changeset()
+                            changeset
                     );
 
                     if (successor->_domains.is_null()) {
-                        LPT_INFO("cout", "\tChildren node pruned because of inconsistent monotonicity CSP: "
-                                          << std::endl << "\t" << *successor);
+                        LPT_DEBUG("cout", "\tChildren node pruned because of inconsistent monotonicity CSP. Changes wrt parent were:");
+                        LPT_DEBUG("cout", "\t" << fs0::print::changeset(changeset));
+                        LPT_DEBUG("cout", "\tFull state was: " << std::endl << "\t" << *successor);
                         _closed.put(successor);
                         continue;
                     } else {
@@ -107,7 +108,7 @@ public:
                     }
                 }
 
-
+                this->notify(NodeCreationEvent(*successor));
 
 				_open.insert(successor);
 			}
@@ -148,7 +149,7 @@ protected:
 	ClosedList _closed;
 	
 	//! The number of generated nodes so far
-	unsigned long _generated;
+    uint32_t _generated;
 
 	//* Some methods mainly for debugging purposes
 	bool check_open_list_integrity() const {

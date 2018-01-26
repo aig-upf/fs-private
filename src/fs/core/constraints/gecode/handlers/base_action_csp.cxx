@@ -190,7 +190,7 @@ void BaseActionCSP::registerEffectConstraints(const fs::ActionEffect* effect) {
 }
 
 void BaseActionCSP::compute_support(GecodeCSP* csp, RPGIndex& graph) const {
-	LPT_DEBUG("heuristic", "Computing full support for action " << get_action());
+	LPT_EDEBUG("heuristic", "Computing full support for action " << get_action());
 	Gecode::DFS<GecodeCSP> engine(csp);
 	unsigned num_solutions = 0;
 	while (GecodeCSP* solution = engine.next()) {
@@ -200,7 +200,7 @@ void BaseActionCSP::compute_support(GecodeCSP* csp, RPGIndex& graph) const {
 		delete solution;
 	}
 
-	LPT_DEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
+	LPT_EDEBUG("heuristic", "Solving the Action CSP completely produced " << num_solutions << " solutions");
 }
 
 

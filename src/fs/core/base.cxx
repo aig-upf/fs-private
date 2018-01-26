@@ -78,7 +78,7 @@ bool value(const object_id& o) {
 template <>
 int32_t value(const object_id& o) {
 	const auto& t = o.type();
-	if (t != type_id::int_t && t != type_id::object_t) {
+	if (t != type_id::int_t && t != type_id::object_t && t != type_id::bool_t) {
 		throw type_mismatch_error();
 	}
 	return (int32_t) o.value();
