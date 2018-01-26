@@ -272,11 +272,14 @@ void TransitionGraph::preprocess_extensions(const AllTransitionGraphsT& transiti
     for (unsigned var = 0; var < transitions.size(); ++var) {
         const auto& transition = transitions[var];
 
-        const auto& int_values = fs0::values<int>(info.getVariableObjects(var), ObjectTable::EMPTY_TABLE);
-        int max = *std::max_element(std::begin(int_values), std::end(int_values));
+        int max = 0;
 
         // If the variable has some transition defined, we consider it monotonic
-        if (!transition.empty()) _monotonic_variables.insert(var);
+        if (!transition.empty()) {
+            _monotonic_variables.insert(var);
+            const auto& int_values = fs0::values<int>(info.getVariableObjects(var), ObjectTable::EMPTY_TABLE);
+            max = *std::max_element(std::begin(int_values), std::end(int_values));
+        }
 
         _reachable.push_back(compute_reachable_sets(transition));
         _allowed_domains.push_back(preprocess_extension(_reachable[var]));
