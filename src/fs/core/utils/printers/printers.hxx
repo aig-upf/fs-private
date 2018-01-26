@@ -14,7 +14,7 @@ class Problem;
 class SupportedAction;
 
 //! Print a plan
-	class PlanPrinter {
+class PlanPrinter {
 protected:
 	const ActionPlan& _plan;
 public:
@@ -75,6 +75,17 @@ class support {
 
 		friend std::ostream& operator<<(std::ostream &os, const support& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
+};
+
+class changeset {
+protected:
+	const std::vector<Atom>& _changeset;
+
+public:
+	changeset(const std::vector<Atom>& c) : _changeset(c) {}
+
+	friend std::ostream& operator<<(std::ostream &os, const changeset& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
 };
 
 

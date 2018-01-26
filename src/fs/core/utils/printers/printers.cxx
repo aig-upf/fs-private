@@ -87,4 +87,16 @@ support::print(std::ostream& os) const {
 	return os;
 }
 
+
+std::ostream&
+changeset::print(std::ostream& os) const {
+	os << "<";
+	for (unsigned i = 0, s = static_cast<unsigned>(_changeset.size()); i < s; ) {
+		os << _changeset[i];
+		if (++i < s) os << ", ";
+	}
+	os << ">";
+	return os;
+}
+
 }} // namespaces
