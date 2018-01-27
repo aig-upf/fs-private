@@ -1,7 +1,7 @@
 
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
-#include <fs/core/constraints/gecode/translators/component_translator.hxx>
+#include <fs/core/constraints/gecode/language_translators.hxx>
 #include <fs/core/constraints/gecode/gecode_csp.hxx>
 #include <fs/core/constraints/gecode/csp_translator.hxx>
 #include <fs/core/constraints/gecode/helper.hxx>

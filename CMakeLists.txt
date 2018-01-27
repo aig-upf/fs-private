@@ -45,8 +45,8 @@ set(SOURCE_FILES
         src/fs/core/constraints/gecode/handlers/lifted_effect_csp.hxx
         src/fs/core/constraints/gecode/handlers/lifted_effect_unreached.cxx
         src/fs/core/constraints/gecode/handlers/lifted_effect_unreached.hxx
-        src/fs/core/constraints/gecode/translators/component_translator.cxx
-        src/fs/core/constraints/gecode/translators/component_translator.hxx
+        src/fs/core/constraints/gecode/language_translators.cxx
+        src/fs/core/constraints/gecode/language_translators.hxx
         src/fs/core/constraints/gecode/utils/element_constraint.cxx
         src/fs/core/constraints/gecode/utils/element_constraint.hxx
         src/fs/core/constraints/gecode/utils/extensional_constraint.cxx
@@ -137,7 +137,7 @@ set(SOURCE_FILES
         src/fs/core/models/lifted_state_model.hxx
         src/fs/core/models/simple_state_model.cxx
         src/fs/core/models/simple_state_model.hxx
-        src/fs/core/search/algorithms/monotonic_gbfs
+        src/fs/core/search/algorithms/monotonic_search
         src/fs/core/search/algorithms/ehc.hxx
         src/fs/core/search/algorithms/ehc_gbfs.hxx
         src/fs/core/search/algorithms/iterated_width.hxx

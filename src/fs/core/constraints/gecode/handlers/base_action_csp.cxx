@@ -26,7 +26,7 @@ BaseActionCSP::BaseActionCSP(const AtomIndex& tuple_index, bool approximate, boo
 }
 
 BaseActionCSP::~BaseActionCSP() {
-	if (_novelty) delete _novelty;
+	delete _novelty;
 }
 
 
@@ -97,7 +97,7 @@ void BaseActionCSP::index() {
 	index_formula_elements(conditions, terms);
 	
 	// Index the variables IDs that are relevant for the preconditions
-	assert(_action_support.size() == 0);
+	assert(_action_support.empty());
 	for (auto term:_all_terms) {
 		if (auto casted = dynamic_cast<const fs::StateVariable*>(term)) {
 			_action_support.insert(casted->getValue());
@@ -106,8 +106,8 @@ void BaseActionCSP::index() {
 	
 	// Index effect elements
 	for (const fs::ActionEffect* effect:get_effects()) {
-		const auto terms = fs::all_terms(*effect->rhs());
-		_all_terms.insert(terms.cbegin(), terms.cend());
+		const auto all_terms = fs::all_terms(*effect->rhs());
+		_all_terms.insert(all_terms.cbegin(), all_terms.cend());
 		
 		// As for the LHS of the effect, ATM we only register the LHS subterms (if any)
 		if (auto lhs = dynamic_cast<const fs::FluentHeadedNestedTerm*>(effect->lhs())) {

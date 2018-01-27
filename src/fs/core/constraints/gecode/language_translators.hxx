@@ -1,12 +1,10 @@
 
 #pragma once
 
-#include <map>
-
+#include <fs/core/languages/fstrips/language_fwd.hxx>
 #include <gecode/int.hh>
 
-namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class AtomicFormula; class RelationalFormula; }}}
-namespace fs = fs0::language::fstrips;
+#include <map>
 
 namespace fs0 { namespace gecode {
 
@@ -105,9 +103,14 @@ public:
 
 class ConjunctionTranslator : public FormulaTranslator {
 public:
-	// ATM the translator for conjunctions does not need to do anything, since all atomic formulas are extracted anyway and their variables
-	// and constraints translated.
-	// If we ever want to implement arbitrary boolean formulas, this will need to change.
+	// The conjunction translator invokes recursively the translators of each of the conjuncts
+
+	//! Most atomic formulae simply need all their subterms to have their variables registered
+//	void registerVariables(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
+
+	//! For constraint registration, each particular subclass translator will probably want to add to the common functionality here,
+	//! which simply performs the recursive registration of each subterm's own constraints
+//	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
 };
 
 class RelationalFormulaTranslator : public FormulaTranslator {
@@ -122,38 +125,38 @@ protected:
 	static Gecode::IntRelType invert_operator(Gecode::IntRelType op);
 
 public:
-	RelationalFormulaTranslator() {}
+	RelationalFormulaTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
 };
 
 class AlldiffGecodeTranslator : public FormulaTranslator {
 public:
-	AlldiffGecodeTranslator() {}
+	AlldiffGecodeTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
 };
 
 class SumGecodeTranslator : public FormulaTranslator {
 public:
-	SumGecodeTranslator() {}
+	SumGecodeTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
 };
 
 class NValuesGecodeTranslator : public FormulaTranslator {
 public:
-	NValuesGecodeTranslator() {}
+	NValuesGecodeTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
 };
 
 //! A Gecode translator that converts whatever arbitrary formula into an equivalent extensional constraint.
 class ExtensionalTranslator : public FormulaTranslator {
 public:
-	ExtensionalTranslator() {}
+	ExtensionalTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const;
+	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
 };
 
 } } // namespaces

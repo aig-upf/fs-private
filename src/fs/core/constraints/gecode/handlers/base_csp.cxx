@@ -10,7 +10,7 @@
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/constraints/registry.hxx>
 #include <gecode/driver.hh>
-#include <fs/core/constraints/gecode/translators/component_translator.hxx>
+#include <fs/core/constraints/gecode/language_translators.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/constraints/gecode/extensions.hxx>
 
@@ -68,7 +68,7 @@ _instantiate(const GecodeCSP& csp,
 			 const CSPTranslator& translator,
 			 const std::vector<ExtensionalConstraint>& extensional_constraints,
 			 const T& layer) {
-	GecodeCSP* clone = static_cast<GecodeCSP*>(csp.clone());
+    auto* clone = static_cast<GecodeCSP*>(csp.clone());
 	translator.updateStateVariableDomains(*clone, layer);
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {
 		if (!constraint.update(*clone, translator, layer)) {
@@ -87,7 +87,7 @@ _instantiate(const GecodeCSP& csp,
 			 const std::vector<ExtensionalConstraint>& extensional_constraints,
 			 const State& state,
 			 const StateBasedExtensionHandler& handler) {
-	GecodeCSP* clone = static_cast<GecodeCSP*>(csp.clone());
+    auto* clone = static_cast<GecodeCSP*>(csp.clone());
 	translator.updateStateVariableDomains(*clone, state);
 
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {

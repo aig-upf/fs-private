@@ -8,7 +8,7 @@
 #include <fs/core/utils/printers/printers.hxx>
 // #include <fs/core/constraints/direct/constraint.hxx>
 // #include <fs/core/constraints/direct/translators/effects.hxx>
-#include <fs/core/constraints/gecode/translators/component_translator.hxx>
+#include <fs/core/constraints/gecode/language_translators.hxx>
 #include <lapkt/tools/logging.hxx>
 
 namespace fs0 {
