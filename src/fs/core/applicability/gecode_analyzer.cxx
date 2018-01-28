@@ -54,8 +54,7 @@ GecodeApplicabilityAnalyzer::build(bool build_applicable_index) {
 		// (kind of a local consistency test _as if_ the whole precondition was a sole constraint)
 		// If that is the case, we consider the action potentially applicable when X=x
 		for (VariableIdx relevant:all_relevant) {
-			for (const object_id&
- value:info.getVariableObjects(relevant)) {
+			for (const object_id& value:info.getVariableObjects(relevant)) {
 
 				GecodeCSP* restricted = manager.post(relevant, value);
 				if (manager.check_one_solution_exists(restricted)) {

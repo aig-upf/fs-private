@@ -74,6 +74,7 @@ set(SOURCE_FILES
         src/fs/core/constraints/filtering.hxx
         src/fs/core/constraints/registry.cxx
         src/fs/core/constraints/registry.hxx
+        src/fs/core/constraints/native/action_handler
         src/fs/core/fstrips/language.cxx
         src/fs/core/fstrips/language.hxx
         src/fs/core/fstrips/language_info.cxx
