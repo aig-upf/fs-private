@@ -203,7 +203,7 @@ BaseCSP::register_csp_constraints() {
 	
 	//! Register any possible CSP variable that arises from the logical formulas
 	for (auto condition:_all_formulas) {
-		std::cout << "Registering variables for formula: " << *condition << std::endl;
+//		std::cout << "Registering variables for formula: " << *condition << std::endl;
 		registerFormulaConstraints(condition, _translator);
 // 		LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *condition << "): " << _translator); // Uncomment for extreme debugging		
 	}
