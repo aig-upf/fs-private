@@ -183,7 +183,7 @@ public:
 ////////////////////////////////////////////////////////////
 //! Returns true if the element is flat, i.e. is a state variable or a constant
 ////////////////////////////////////////////////////////////
-unsigned flat(const Term& element);
+bool flat(const Term& element);
 
 class FlatVisitor
     : public Loki::BaseVisitor

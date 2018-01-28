@@ -32,6 +32,18 @@ Gecode::IntRelType RelationalFormulaTranslator::invert_operator(Gecode::IntRelTy
 }
 
 
+//void ConjunctionTranslator::registerVariables(const fs::Formula* formula,
+//											  CSPTranslator& translator) const {
+//	assert(0);
+//
+//}
+//
+//void ConjunctionTranslator::registerConstraints(const fs::Formula* formula,
+//												CSPTranslator& translator) const {
+//	assert(0);
+//
+//}
+
 void ConstantTermTranslator::registerVariables(const fs::Term* term, CSPTranslator& translator) const {
 	auto constant = dynamic_cast<const fs::Constant*>(term);
 	assert(constant);
@@ -61,7 +73,7 @@ void ArithmeticTermTranslator::registerConstraints(const fs::Term* term, CSPTran
 	auto arithmetic_term = dynamic_cast<const fs::ArithmeticTerm*>(term);
 	assert(arithmetic_term);
 
-	LPT_DEBUG("translation", "Registering constraints for arithmetic term " << *term);
+	LPT_EDEBUG("translation", "Registering constraints for arithmetic term " << *term);
 
 	// Now we assert that the root temporary variable equals the sum of the subterms
 	GecodeCSP& csp = translator.getBaseCSP();
@@ -100,24 +112,24 @@ Gecode::IntArgs MultiplicationTermTranslator::getLinearCoefficients() const {
 
 
 void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTranslator& translator) const {
-	auto stat = dynamic_cast<const fs::StaticHeadedNestedTerm*>(term);
-	assert(stat);
+	auto static_term = dynamic_cast<const fs::StaticHeadedNestedTerm*>(term);
+	assert(static_term);
 
-	LPT_DEBUG("translation", "Registering constraints for static nested term " << *stat);
+//	LPT_DEBUG("translation", "Registering constraints for static nested term " << *static_term);
 
 	GecodeCSP& csp = translator.getBaseCSP();
 
-	// Assume we have a static term s(t_1, ..., t_n), where t_i are the subterms.
-	// We have registered a temporary variable Z for the whole term, plus temporaries Z_i accounting for each subterm t_i
+	// Assume we have a term s(t_1, ..., t_n), where s is a static function symbol.
+	// We have registered a CSP variable Z for the whole term, plus CSP variables Z_i accounting for each subterm t_i
 	// Now we need to post an extensional constraint on all temporary variables <Z_1, Z_2, ..., Z_n, Z> such that
 	// the tuples <z_1, ..., z_n, z> satisfying the constraints are exactly those such that z = s(z_1, ..., z_n)
 
 	// First compile the variables in the right order (order matters, must be the same than in the tupleset):
-	Gecode::IntVarArgs variables = translator.resolveVariables(stat->getSubterms(), csp);
-	variables << translator.resolveVariable(stat, csp);
+	Gecode::IntVarArgs variables = translator.resolveVariables(static_term->getSubterms(), csp);
+	variables << translator.resolveVariable(static_term, csp);
 
 	// Now compile the tupleset
-	Gecode::TupleSet extension = Helper::extensionalize(stat);
+	Gecode::TupleSet extension = Helper::extensionalize(static_term);
 
 	// And finally post the constraint
 	Gecode::extensional(csp, variables, extension);
@@ -125,7 +137,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 }
 
 
-void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
+void RelationalFormulaTranslator::registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const {
 	auto condition = dynamic_cast<const fs::RelationalFormula*>(formula);
 	assert(condition);
 
@@ -133,10 +145,19 @@ void RelationalFormulaTranslator::registerConstraints(const fs::AtomicFormula* f
 	GecodeCSP& csp = translator.getBaseCSP();
 	const Gecode::IntVar& lhs_gec_var = translator.resolveVariable(condition->lhs(), csp);
 	const Gecode::IntVar& rhs_gec_var = translator.resolveVariable(condition->rhs(), csp);
-	Gecode::rel(csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
+
+	if (translator.is_reified(condition)) {
+		const auto& reification_var = translator.resolveReifiedAtomVariable(condition, csp);
+		Gecode::rel(csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var, reification_var);
+//		LPT_DEBUG("cout", "Registered REIFIED atom: " << *condition);
+
+    } else {
+//		LPT_DEBUG("cout", "Registered NONREIFIED atom: " << *condition);
+		Gecode::rel(csp, lhs_gec_var, gecode_symbol(condition), rhs_gec_var);
+	};
 }
 
-void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
+void AlldiffGecodeTranslator::registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const {
 	auto alldiff = dynamic_cast<const fs::AlldiffFormula*>(formula);
 	assert(alldiff);
 
@@ -146,7 +167,7 @@ void AlldiffGecodeTranslator::registerConstraints(const fs::AtomicFormula* formu
 	Gecode::distinct(csp, variables);
 }
 
-void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
+void SumGecodeTranslator::registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const {
 	auto sum = dynamic_cast<const fs::SumFormula*>(formula);
 	assert(sum);
 
@@ -163,7 +184,7 @@ void SumGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, 
 }
 
 
-void NValuesGecodeTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
+void NValuesGecodeTranslator::registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const {
 	auto nvalues = dynamic_cast<const fs::NValuesFormula*>(formula);
 	assert(nvalues);
 
@@ -179,15 +200,40 @@ void NValuesGecodeTranslator::registerConstraints(const fs::AtomicFormula* formu
 }
 
 
-void ExtensionalTranslator::registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {
+//void ExtensionalTranslator::registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const {
+//
+//	GecodeCSP& csp = translator.getBaseCSP();
+//	// We post an extensional constraint on the CSP variables modeling the value of each of the subterms formula
+//	Gecode::IntVarArgs variables = translator.resolveVariables(formula->getSubterms(), csp);
+//	Gecode::TupleSet extension = Helper::extensionalize(formula);
+//	Gecode::extensional(csp, variables, extension);
+//
+//	LPT_DEBUG("translation", "Registered a Gecode extensional constraint of arity " << extension.arity() << " and size " << extension.tuples() << " for formula \"" << *formula << ":\n" << print::extensional(variables, extension));
+//}
+
+void DisjunctionTranslator::registerConstraints(const fs::Formula* formula,
+												CSPTranslator& translator) const {
+	auto disjunction = dynamic_cast<const fs::Disjunction*>(formula);
+	assert(disjunction);
 
 	GecodeCSP& csp = translator.getBaseCSP();
-	// We post an extensional constraint on the CSP variables modeling the value of each of the subterms formula
-	Gecode::IntVarArgs variables = translator.resolveVariables(formula->getSubterms(), csp);
-	Gecode::TupleSet extension = Helper::extensionalize(formula);
-	Gecode::extensional(csp, variables, extension);
 
-	LPT_DEBUG("translation", "Registered a Gecode extensional constraint of arity " << extension.arity() << " and size " << extension.tuples() << " for formula \"" << *formula << ":\n" << print::extensional(variables, extension));
+	// We collect all disjuncts in the disjunction
+	Gecode::BoolVarArgs reification_vars;
+	for (const auto* disjunct:disjunction->getSubformulae()) {
+		auto atom = dynamic_cast<const fs::AtomicFormula*>(disjunct);
+		if (!atom) throw std::runtime_error("Gecode translation requires CNF formulas");
+
+		assert(translator.is_reified(atom));
+		reification_vars << translator.resolveReifiedAtomVariable(atom, csp);
+	}
+
+	// And post a disjunction constraint on them. This is correct, since we support only CNFs,
+	// which guarantees that the disjunction can be treated as a CSP constraint that must hold
+	// in any solution of the CSP
+	Gecode::rel(csp, Gecode::BOT_OR, reification_vars, 1);
+
+//	LPT_DEBUG("cout", "Registered disjunction constraint for formula: " << *formula);
 }
 
 } } // namespaces

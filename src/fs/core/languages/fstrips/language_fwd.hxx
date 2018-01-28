@@ -65,6 +65,7 @@ class AbsTerm;
 // Other
 
 class Metric;
+class ProceduralEffect;
 
 } } } // namespaces
 

@@ -70,12 +70,16 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			PlanT plan;
 			double t0 = aptk::time_used();
 			bool solved = false, oom = false;
+            bool valid_plan = false;
 
 			if (actionless) {
 
 				if (_model.goal(_problem.getInitialState())) {
 					LPT_INFO("cout", "The problem has no actions, and the initial state is a goal state");
 					solved = true;
+					// Validating CSP solutions might be too hard, and we would in fact be doing
+					// exactly the same twice. We should sought better ways of doing this
+                    valid_plan = true;
 				} else {
 					LPT_INFO("cout", "The problem has no actions, and the initial state is not a goal state");
 					solved = false;
@@ -93,11 +97,13 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			double search_time = aptk::time_used() - t0;
 			double total_planning_time = aptk::time_used() - start_time;
 
-			bool valid = false;
+
 
 			if (solved) {
 				PlanPrinter::print(plan, plan_out);
-				valid = Checker::check_correctness(_problem, plan, _problem.getInitialState());
+				if (!valid_plan) {
+                    valid_plan = Checker::check_correctness(_problem, plan, _problem.getInitialState());
+				}
 			}
 			plan_out.close();
 
@@ -114,7 +120,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			json_out << "\t\"gen_per_second\": " << gen_speed << "," << std::endl;
 			json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
 			json_out << "\t\"solved\": " << ( solved ? "true" : "false" ) << "," << std::endl;
-			json_out << "\t\"valid\": " << ( valid ? "true" : "false" ) << "," << std::endl;
+			json_out << "\t\"valid\": " << ( valid_plan ? "true" : "false" ) << "," << std::endl;
 			json_out << "\t\"out_of_memory\": " << ( oom ? "true" : "false" ) << "," << std::endl;
 			json_out << "\t\"plan_length\": " << plan.size() << "," << std::endl;
 			json_out << "\t\"plan\": ";
@@ -132,7 +138,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 			ExitCode result;
 			if (solved) {
-				if (!valid) {
+				if (!valid_plan) {
 					Checker::print_plan_execution(_problem, plan, _problem.getInitialState());
 #ifdef DEBUG
 					LPT_INFO("cout", "WARNING: The plan output by the planner is not correct!");

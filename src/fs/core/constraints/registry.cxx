@@ -62,6 +62,7 @@ void LogicalComponentRegistry::registerGecodeTranslators() {
 
 	add(typeid(fs::ExistentiallyQuantifiedFormula), new gecode::ExistentiallyQuantifiedFormulaTranslator());
 	add(typeid(fs::Conjunction), new gecode::ConjunctionTranslator());
+	add(typeid(fs::Disjunction), new gecode::DisjunctionTranslator());
 	add(typeid(fs::RelationalFormula), new gecode::RelationalFormulaTranslator());
 	add(typeid(fs::EQAtomicFormula), new gecode::RelationalFormulaTranslator());
 	add(typeid(fs::NEQAtomicFormula), new gecode::RelationalFormulaTranslator());
@@ -169,7 +170,7 @@ const gecode::TermTranslator* LogicalComponentRegistry::getGecodeTranslator(cons
 	return it->second;
 }
 
-const gecode::FormulaTranslator* LogicalComponentRegistry::getGecodeTranslator(const fs::AtomicFormula& formula) const {
+const gecode::FormulaTranslator* LogicalComponentRegistry::getGecodeTranslator(const fs::Formula& formula) const {
 	auto it = _gecode_formula_translators.find(std::type_index(typeid(formula)));
 	if (it == _gecode_formula_translators.end()) {
 		throw UnregisteredGecodeTranslator(formula);

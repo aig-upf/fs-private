@@ -88,17 +88,23 @@ public:
 	virtual ~FormulaTranslator() {}
 
 	//! Most atomic formulae simply need all their subterms to have their variables registered
-	virtual void registerVariables(const fs::AtomicFormula* formula, CSPTranslator& translator) const {}
+	virtual void registerVariables(const fs::Formula* formula, CSPTranslator& translator) const {}
 
 	//! For constraint registration, each particular subclass translator will probably want to add to the common functionality here,
 	//! which simply performs the recursive registration of each subterm's own constraints
-	virtual void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const {}
+	virtual void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const {}
 };
 
 class ExistentiallyQuantifiedFormulaTranslator : public FormulaTranslator {
 public:
 	// The translator for existentially quantified formulas doesn't need to do anything,
 	// since the CSP variables will get registered by the BoundVariable translator
+	//! Most atomic formulae simply need all their subterms to have their variables registered
+//	void registerVariables(const fs::Formula* formula, CSPTranslator& translator) const override;
+
+	//! For constraint registration, each particular subclass translator will probably want to add to the common functionality here,
+	//! which simply performs the recursive registration of each subterm's own constraints
+//	void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const override;
 };
 
 class ConjunctionTranslator : public FormulaTranslator {
@@ -106,11 +112,23 @@ public:
 	// The conjunction translator invokes recursively the translators of each of the conjuncts
 
 	//! Most atomic formulae simply need all their subterms to have their variables registered
-//	void registerVariables(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
+//	void registerVariables(const fs::Formula* formula, CSPTranslator& translator) const override;
 
 	//! For constraint registration, each particular subclass translator will probably want to add to the common functionality here,
 	//! which simply performs the recursive registration of each subterm's own constraints
-//	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
+//	void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const override;
+};
+
+class DisjunctionTranslator : public FormulaTranslator {
+public:
+    // The conjunction translator invokes recursively the translators of each of the conjuncts
+
+    //! Most atomic formulae simply need all their subterms to have their variables registered
+//	void registerVariables(const fs::Formula* formula, CSPTranslator& translator) const override;
+
+    //! For constraint registration, each particular subclass translator will probably want to add to the common functionality here,
+    //! which simply performs the recursive registration of each subterm's own constraints
+	void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const override;
 };
 
 class RelationalFormulaTranslator : public FormulaTranslator {
@@ -127,36 +145,36 @@ protected:
 public:
 	RelationalFormulaTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
+	void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const override;
 };
 
 class AlldiffGecodeTranslator : public FormulaTranslator {
 public:
 	AlldiffGecodeTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
+	void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const override;
 };
 
 class SumGecodeTranslator : public FormulaTranslator {
 public:
 	SumGecodeTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
+	void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const override;
 };
 
 class NValuesGecodeTranslator : public FormulaTranslator {
 public:
 	NValuesGecodeTranslator() = default;
 
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
+	void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const override;
 };
 
 //! A Gecode translator that converts whatever arbitrary formula into an equivalent extensional constraint.
-class ExtensionalTranslator : public FormulaTranslator {
-public:
-	ExtensionalTranslator() = default;
-
-	void registerConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) const override;
-};
+//class ExtensionalTranslator : public FormulaTranslator {
+//public:
+//	ExtensionalTranslator() = default;
+//
+//	void registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const override;
+//};
 
 } } // namespaces

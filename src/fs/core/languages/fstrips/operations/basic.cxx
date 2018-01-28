@@ -191,7 +191,7 @@ void NestednessVisitor::Visit(const SubtractionTerm& lhs) { Visit(static_cast<co
 void NestednessVisitor::Visit(const MultiplicationTerm& lhs) { Visit(static_cast<const StaticHeadedNestedTerm&>(lhs)); }
 
 
-unsigned flat(const Term& element) {
+bool flat(const Term& element) {
 	FlatVisitor visitor;
 	element.Accept(visitor);
 	return visitor._result;

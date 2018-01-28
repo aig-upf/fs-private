@@ -317,6 +317,6 @@ namespace std {
     };
 	
     template<> struct equal_to<const fs::Term*> {
-        std::size_t operator()(const fs::Term* t1, const fs::Term* t2) const { return equal_to<fs::Term>()(*t1, *t2); }
+        bool operator()(const fs::Term* t1, const fs::Term* t2) const { return equal_to<fs::Term>()(*t1, *t2); }
     };
 }

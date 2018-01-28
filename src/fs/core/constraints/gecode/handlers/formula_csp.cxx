@@ -82,11 +82,8 @@ void FormulaCSP::index_scopes() {
 
 // In the case of a single formula, we just retrieve and index all terms and atoms
 void FormulaCSP::index() {
-	const auto conditions = fs::all_atoms(*_formula);
-	const auto terms = fs::all_terms(*_formula);
-	
 	// Index formula elements
-	index_formula_elements(conditions, terms);
+	index_csp_elements({_formula});
 }
 
 void FormulaCSP::init_value_selector(const RPGIndex* graph) {

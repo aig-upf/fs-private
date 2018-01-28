@@ -1,25 +1,21 @@
 
 #pragma once
 
+#include <fs/core/fs_types.hxx>
+#include <fs/core/utils/printers/helper.hxx>
+#include <fs/core/languages/fstrips/language_fwd.hxx>
+
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
 #include <sstream>
 
-#include <fs/core/fs_types.hxx>
-#include <fs/core/utils/printers/helper.hxx>
-
-namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; class Term; class ProceduralEffect; }}}
-namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace print { class logical_registry; } }
 
 namespace fs0 { namespace gecode { class TermTranslator; class FormulaTranslator; } }
 
 namespace fs0 {
-
-// class DirectConstraint;
-// class EffectTranslator;
 
 //! The LogicalComponentRegistry is a singleton object that provides access to a number of classes and methods
 //! that know how to translate from and into FSTRIPS logical elements (terms, formulae).
@@ -56,11 +52,6 @@ public:
 	//!
 	typedef std::function<fs::ProceduralEffect*()> EffectCreator;
 
-	//!
-// 	typedef std::function<DirectConstraint*(const fs::AtomicFormula&)> DirectFormulaTranslator;
-
-	//static LogicalComponentRegistry& instance();
-
 	//! Add a formula creator for formulae with the given symbol to the registry
 	void addFormulaCreator(const std::string& symbol, const FormulaCreator& creator);
 
@@ -69,12 +60,6 @@ public:
 
 	//! Add an effect creator associated with the given symbol to the registry
 	void addEffectCreator( const std::string& symbo, const EffectCreator& creator );
-
-	//! Add a Direct Formula translator of the given type to the registry
-// 	void add(const std::type_info& type, const DirectFormulaTranslator& translator);
-
-	//! Add a Direct effect translator for effects with RHS of the given type
-// 	void add(const std::type_info& type, const EffectTranslator* translator);
 
 	//! Add a Gecode Term translator for the given type to the registry
 	void add(const std::type_info& type, const gecode::TermTranslator* translator);
@@ -88,13 +73,9 @@ public:
 
 	fs::ProceduralEffect* instantiate_effect( const std::string& symbol ) const;
 
-// 	DirectConstraint* instantiate_direct_constraint(const fs::AtomicFormula& formula) const;
-
-// 	const EffectTranslator* getDirectEffectTranslator(const fs::Term& term) const;
-
 	const gecode::TermTranslator* getGecodeTranslator(const fs::Term& term) const;
 
-	const gecode::FormulaTranslator* getGecodeTranslator(const fs::AtomicFormula& formula) const;
+	const gecode::FormulaTranslator* getGecodeTranslator(const fs::Formula& formula) const;
 
 	friend class print::logical_registry; // Grant access to the corresponding printer class
 
@@ -102,7 +83,6 @@ protected:
 	static std::unique_ptr<LogicalComponentRegistry> _instance;
 
 	void registerLogicalElementCreators();
-// 	void registerDirectTranslators();
 	void registerGecodeTranslators();
 
 	std::map<std::string, FormulaCreator> _formula_creators;
@@ -110,10 +90,6 @@ protected:
 	std::map<std::string, TermCreator> _term_creators;
 
 	std::map<std::string, EffectCreator> _effect_creators;
-
-// 	typedef std::unordered_map<std::type_index, DirectFormulaTranslator> DirectTranslatorsTable;
-// 	DirectTranslatorsTable _direct_formula_translators;
-// 	std::unordered_map<std::type_index, const EffectTranslator*> _direct_effect_translators;
 
 	std::unordered_map<std::type_index, const gecode::TermTranslator*> _gecode_term_translators;
 	std::unordered_map<std::type_index, const gecode::FormulaTranslator*> _gecode_formula_translators;

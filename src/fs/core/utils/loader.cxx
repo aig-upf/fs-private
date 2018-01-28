@@ -161,7 +161,8 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals), transitions);
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 
-	problem->consolidateAxioms();
+	// ATM support for axioms is very buggy and we should better not rely on it
+	// problem->consolidateAxioms();
 
 	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 

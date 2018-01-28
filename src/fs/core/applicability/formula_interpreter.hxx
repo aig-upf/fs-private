@@ -1,17 +1,16 @@
 
 #pragma once
 
-#include <memory>
+#include <fs/core/languages/fstrips/language_fwd.hxx>
 
-namespace fs0 { class AtomIndex; }
-namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
-namespace fs = fs0::language::fstrips;
+#include <memory>
 
 namespace fs0 { namespace gecode { class FormulaCSP; }}
 
 namespace fs0 {
 
 class State;
+class AtomIndex;
 
 //! A base interface for a formula satisfiability manager
 class FormulaInterpreter {

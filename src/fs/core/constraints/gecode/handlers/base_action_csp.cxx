@@ -81,20 +81,17 @@ void BaseActionCSP::process(RPGIndex& graph) const {
 //! In the case of grounded actions and action schemata, we need to retrieve both the atoms and terms
 //! appearing in the precondition, _and_ the terms appearing in the effects, except the root LHS atom.
 void BaseActionCSP::index() {
-	std::vector<const fs::AtomicFormula*> conditions = fs::all_atoms(*get_precondition());
-	std::vector<const fs::Term*> terms = fs::all_terms(*get_precondition());
-	
+	std::vector<const fs::Formula*> conditions{get_precondition()};
+
 	// If using the effect conditions, we'll want to index their components too
 	if (_use_effect_conditions) {
 		for (const fs::ActionEffect* effect:get_effects()) {
-			auto condition = effect->condition();
-			conditions = Utils::merge(conditions, fs::all_atoms(*condition));
-			terms = Utils::merge(terms, fs::all_terms(*condition));
+			conditions.push_back(effect->condition());
 		}
 	}
 	
 	// Index formula elements
-	index_formula_elements(conditions, terms);
+	index_csp_elements(conditions);
 	
 	// Index the variables IDs that are relevant for the preconditions
 	assert(_action_support.empty());

@@ -1,6 +1,6 @@
 
-#include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 #include <fs/core/utils/utils.hxx>
 #include <lapkt/tools/logging.hxx>
@@ -60,12 +60,31 @@ CSPFormulaInterpreter::CSPFormulaInterpreter(const CSPFormulaInterpreter& other)
 bool CSPFormulaInterpreter::satisfied(const State& state) const {
 	fs0::gecode::StateBasedExtensionHandler handler(_tuple_index); // TODO Manage only relevant symbols, not all
 	handler.process(state);
+
 	gecode::GecodeCSP* csp = _formula_csp->instantiate(state, handler);
 	if (!csp) return false;
-    csp->propagate();
-	bool sol = _formula_csp->is_satisfiable(csp);
+
+	if (!csp->propagate()) return false;
+
+
+    gecode::GecodeCSP* solution = _formula_csp->compute_single_solution(csp);
+	if (!solution) return false;
+
+	LPT_INFO("formula-solution", "Formula CSP is satisfiable; a possible solution is:");
+	const auto& info = ProblemInfo::getInstance();
+	const auto& translator = _formula_csp->getTranslator();
+	const auto tmp = Utils::filter_by_type<const fs::BoundVariable*>(fs::all_terms(*_formula));
+	std::unordered_set<const fs::Term*> vars(tmp.begin(), tmp.end());
+	for (const auto* var:vars) {
+        const auto v = static_cast<const fs::BoundVariable*>(var);
+		int val = translator.resolveVariable(var, *solution).val();
+		auto o = fs0::make_object(info.get_type_id(v->getType()), val);
+		LPT_INFO("formula-solution", "\t" << *var << ": " << info.object_name(o));
+	}
+
 	delete csp;
-	return sol;
+	delete solution;
+	return true;
 }
 
 } // namespaces

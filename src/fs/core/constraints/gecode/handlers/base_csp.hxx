@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <fs/core/languages/fstrips/language_fwd.hxx>
 #include <fs/core/languages/fstrips/terms.hxx>
 
 #include <unordered_set>
@@ -13,9 +14,6 @@
 #include <fs/core/constraints/gecode/utils/element_constraint.hxx>
 #include <fs/core/constraints/gecode/csp_translator.hxx>
 
-
-namespace fs0 { namespace language { namespace fstrips { class Term; class AtomicFormula; class FluentHeadedNestedTerm; }}}
-namespace fs = fs0::language::fstrips;
 
 namespace fs0 { class RPGData; class Binding; }
 
@@ -45,8 +43,8 @@ public:
 
 	static void registerTermVariables(const fs::Term* term, CSPTranslator& translator);
 	static void registerTermConstraints(const fs::Term* term, CSPTranslator& translator);
-	static void registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator);
-	static void registerFormulaConstraints(const fs::AtomicFormula* condition, CSPTranslator& translator);
+	static void registerFormulaVariables(const fs::Formula* condition, CSPTranslator& translator);
+	static void registerFormulaConstraints(const fs::Formula* condition, CSPTranslator& translator);
 	
 	bool failed() const { return _failed; }
 
@@ -72,7 +70,7 @@ protected:
 	std::unordered_set<const fs::Term*> _all_terms;
 	
 	// All (distinct) FSTRIPS atomic formulas that participate in the CSP
-	std::unordered_set<const fs::AtomicFormula*> _all_formulas;
+	std::unordered_set<const fs::Formula*> _all_formulas;
 	
 	//! The Ids of the state variables that are relevant to some formula via a (predicative) atom.
 	std::vector<AtomIdx> _necessary_tuples;
@@ -90,6 +88,12 @@ protected:
 	std::vector<NestedFluentElementTranslator> _nested_fluent_translators;
 	
 	VariableCounter _counter;
+
+    //!
+    std::vector<const fs::Disjunction*> _disjunctions;
+
+    //! The atoms whose constraints should be reified
+    std::unordered_set<const fs::AtomicFormula*> _reified_atoms;
 	
 	//! Index all terms and formulas appearing in the formula / actions which will be relevant to the CSP
 	virtual void index() = 0;
@@ -102,7 +106,7 @@ protected:
 	void createCSPVariables(bool use_novelty_constraint);
 	
 	//! Common indexing routine - places all conditions and terms appearing in formulas into their right place
-	void index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms);
+	void index_csp_elements(const std::vector<const fs::Formula*>& conditions);
 	
 	//! By default, we create no novelty constraint
 	virtual void create_novelty_constraint() {}

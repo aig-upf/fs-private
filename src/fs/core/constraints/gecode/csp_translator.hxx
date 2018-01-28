@@ -1,17 +1,15 @@
 
 #pragma once
 
-#include <unordered_map>
-#include <unordered_set>
-
 #include <fs/core/fs_types.hxx>
+#include <fs/core/languages/fstrips/language_fwd.hxx>
 
 #include <gecode/int.hh>
 
-namespace fs0 { class State; }
+#include <unordered_map>
+#include <unordered_set>
 
-namespace fs0 { namespace language { namespace fstrips { class Constant; class NestedTerm; class BoundVariable; class Term; } }}
-namespace fs = fs0::language::fstrips;
+namespace fs0 { class State; }
 
 namespace fs0 { namespace gecode {
 
@@ -54,8 +52,7 @@ public:
 	bool isRegistered(const fs::Term* variable) const;
 
 	//! Register the given term (under the give role/type) by creating a corresponding CSP variable.
-	//! Returns true iff the (variable, type) tuple was actually registered for the first time (i.e. had not been registered yet)
-	bool registerConstant(const fs::Constant* constant);
+	void registerConstant(const fs::Constant* constant);
 	
 	void registerExistentialVariable(const fs::BoundVariable* variable);
 	
@@ -71,14 +68,17 @@ public:
 	
 	//! Returns the index of the CSP variable corresponding to the given term under the given role.
 	unsigned resolveVariableIndex(const fs::Term* term) const;
+    unsigned int resolveReifiedAtomVariableIndex(const language::fstrips::AtomicFormula* atom) const;
 	
 	//! Returns the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
 	const Gecode::IntVar& resolveVariable(const fs::Term* term, const GecodeCSP& csp) const;
-	
+    const Gecode::BoolVar& resolveReifiedAtomVariable(const fs::AtomicFormula* atom, const GecodeCSP& csp) const;
+
 	//! Returns the value of the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
 	object_id resolveValue(const fs::Term* term, const GecodeCSP& csp) const;
 	
 	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
+    const Gecode::BoolVar& resolveBoolVariableFromIndex(unsigned int variable_index, const GecodeCSP& csp) const;
 	object_id resolveValueFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
 
 	//! Helper to resolve several variables at the same time
@@ -105,7 +105,8 @@ public:
 		return make_object(resolveInputStateVariable(csp, variable).val());
 	}
 
-	//! Creates a new boolean CSP variable and returns its index
+	//! Creates a new boolean CSP variable and returns its ID, i.e. its
+	//! index in the vector of bool CSP vars
 	unsigned create_bool_variable();
 
 	const std::unordered_map<VariableIdx, unsigned>& getAllInputVariables() const { return _input_state_variables; }
@@ -131,7 +132,13 @@ public:
 	bool is_indexed(VariableIdx variable) const {
 		return _input_state_variables.find(variable) != _input_state_variables.end();
 	}
-	
+
+	void registerReifiedAtom(const fs::AtomicFormula* atom);
+
+    bool is_reified(const fs::AtomicFormula* atom) const {
+        return _reified_atoms.find(atom) != _reified_atoms.end();
+    }
+
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.
 	GecodeCSP& _base_csp;
@@ -157,6 +164,8 @@ protected:
 // 	std::unordered_map<VariableIdx, unsigned> _output_state_variables;
 	
 	std::vector<std::vector<std::unordered_map<int, AtomIdx>>> _existential_data;
+
+	std::unordered_map<const fs::AtomicFormula*, unsigned> _reified_atoms;
 };
 
 

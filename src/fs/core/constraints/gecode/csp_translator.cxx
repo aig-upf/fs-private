@@ -40,9 +40,9 @@ unsigned CSPTranslator::create_bool_variable() {
 	return add_boolvar(Helper::createBoolVariable(_base_csp));
 }
 
-bool CSPTranslator::registerConstant(const fs::Constant* constant) {
+void CSPTranslator::registerConstant(const fs::Constant* constant) {
 	auto it = _registered.find(constant);
-	if (it!= _registered.end()) return false; // The element was already registered
+	if (it!= _registered.end()) return; // The element was already registered
 
 	object_id o = constant->getValue();
 	type_id t = o_type(o);
@@ -59,7 +59,6 @@ bool CSPTranslator::registerConstant(const fs::Constant* constant) {
 	}
 
 	_registered.insert(it, std::make_pair(constant, id));
-	return true;
 }
 
 void CSPTranslator::registerExistentialVariable(const fs::BoundVariable* variable) {
@@ -143,6 +142,10 @@ object_id CSPTranslator::resolveValue(const fs::Term* term, const GecodeCSP& csp
 
 const Gecode::IntVar& CSPTranslator::resolveVariableFromIndex(unsigned variable_index, const GecodeCSP& csp) const {
 	return csp._intvars[variable_index];
+}
+
+const Gecode::BoolVar& CSPTranslator::resolveBoolVariableFromIndex(unsigned variable_index, const GecodeCSP& csp) const {
+    return csp._boolvars[variable_index];
 }
 
 object_id CSPTranslator::resolveValueFromIndex(unsigned variable_index, const GecodeCSP& csp) const {
@@ -266,7 +269,27 @@ CSPTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
 	return tuple_indexes;
 }
 
+void CSPTranslator::registerReifiedAtom(const fs::AtomicFormula* atom) {
+	auto it = _reified_atoms.find(atom);
+	if (it!= _reified_atoms.end()) return; // The element was already registered
 
+	unsigned id = create_bool_variable();
+	_reified_atoms.insert(it, std::make_pair(atom, id));
+}
+
+unsigned CSPTranslator::resolveReifiedAtomVariableIndex(const fs::AtomicFormula* atom) const {
+    auto it = _reified_atoms.find(atom);
+    if(it == _reified_atoms.end()) {
+        throw UnregisteredStateVariableError(fs0::printer() << "Trying to resolve reified variable "
+                "for unregistered atom \"" << *atom << "\"");
+    }
+    return it->second;
+}
+
+const Gecode::BoolVar&
+CSPTranslator::resolveReifiedAtomVariable(const fs::AtomicFormula* atom, const GecodeCSP& csp) const {
+    return resolveBoolVariableFromIndex(resolveReifiedAtomVariableIndex(atom), csp);
+}
 
 
 } } // namespaces

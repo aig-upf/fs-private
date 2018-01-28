@@ -13,6 +13,7 @@
 #include <fs/core/constraints/gecode/language_translators.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/constraints/gecode/extensions.hxx>
+#include <fs/core/utils/utils.hxx>
 
 
 namespace fs0 { namespace gecode {
@@ -39,7 +40,7 @@ BaseCSP::registerTermVariables(const fs::Term* term, CSPTranslator& translator) 
 }
 
 void
-BaseCSP::registerFormulaVariables(const fs::AtomicFormula* condition, CSPTranslator& translator) {
+BaseCSP::registerFormulaVariables(const fs::Formula* condition, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*condition);
 	assert(component_translator);
 	component_translator->registerVariables(condition, translator);
@@ -54,7 +55,7 @@ BaseCSP::registerTermConstraints(const fs::Term* term, CSPTranslator& translator
 
 
 void
-BaseCSP::registerFormulaConstraints(const fs::AtomicFormula* formula, CSPTranslator& translator) {
+BaseCSP::registerFormulaConstraints(const fs::Formula* formula, CSPTranslator& translator) {
 	auto component_translator = LogicalComponentRegistry::instance().getGecodeTranslator(*formula);
 	assert(component_translator);
 	component_translator->registerConstraints(formula, translator);
@@ -130,8 +131,12 @@ void
 BaseCSP::register_csp_variables() {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	const Config& config = Config::instance();
-	
-	//! Register all CSP variables that arise from the logical terms
+
+    // Register reification variables necessary e.g. for disjunctions
+    for (const auto* a:_reified_atoms) _translator.registerReifiedAtom(a);
+
+
+	// Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
 		if (const auto * fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
 			unsigned symbol_id = fluent->getSymbolId();
@@ -166,15 +171,24 @@ BaseCSP::register_csp_variables() {
 		}
 	}
 	
-	//! Register any possible CSP variable that arises from the logical formulas
-	for (auto condition:_all_formulas) registerFormulaVariables(condition, _translator);
+	// Register any possible CSP variable that arises from the logical formulas
+	for (auto condition:_all_formulas) {
+		registerFormulaVariables(condition, _translator);
+	}
 }
 
 void
 BaseCSP::register_csp_constraints() {
 // 	unsigned i = 0; _unused(i);
-	
-	//! Register all CSP variables that arise from the logical terms
+
+    // Register the constraints corresponding to the formula disjuncts
+//    std::cout << "Registering DISJUNCTS" << std::endl;
+    for (const auto* disjunct:_disjunctions) {
+//        std::cout << "Registering disjunct: " << *disjunct << std::endl;
+        registerFormulaConstraints(disjunct, _translator);
+    }
+
+    //! Register all CSP variables that arise from the logical terms
 	for (const auto term:_all_terms) {
 		
 		// These types of term do not require a custom translator
@@ -189,6 +203,7 @@ BaseCSP::register_csp_constraints() {
 	
 	//! Register any possible CSP variable that arises from the logical formulas
 	for (auto condition:_all_formulas) {
+		std::cout << "Registering variables for formula: " << *condition << std::endl;
 		registerFormulaConstraints(condition, _translator);
 // 		LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *condition << "): " << _translator); // Uncomment for extreme debugging		
 	}
@@ -219,30 +234,62 @@ BaseCSP::createCSPVariables(bool use_novelty_constraint) {
 }
 
 void
-BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& conditions, const std::vector<const fs::Term*>& terms) {
+BaseCSP::index_csp_elements(const std::vector<const fs::Formula*>& conditions) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	std::unordered_set<const fs::Term*> inserted_terms;
-	std::unordered_set<const fs::AtomicFormula*> inserted_conditions;
+	std::unordered_set<const fs::Formula*> inserted_conditions;
 	std::unordered_set<AtomIdx> true_tuples;
-	
-	
-	for (auto condition:conditions) {
+
+
+    // Collect all atoms and terms in the different formulas
+    std::vector<const fs::Term*> terms;
+    std::vector<const fs::AtomicFormula*> all_atoms;
+    for (const auto* c:conditions) {
+        terms = Utils::merge(terms, fs::all_terms(*c));
+        all_atoms = Utils::merge(all_atoms, fs::all_atoms(*c));
+    }
+
+
+    // Collect all disjunctions
+    for (const auto* c:conditions) {
+        _disjunctions = Utils::merge(_disjunctions,
+                                    Utils::filter_by_type<const fs::Disjunction*>(fs::all_nodes(*c)));
+    }
+
+	// All atoms that are children of some disjunction will have to be posted as reified constraints.
+    for (const auto* c:_disjunctions) {
+        auto tmp = fs::all_atoms(*c);
+        _reified_atoms.insert(tmp.cbegin(), tmp.cend());
+    }
+
+
+
+    // TODO - REFACTOR THIS MESS
+    // All this hacky preprocessing aims mainly at undoing another hacky preprocessing done at
+    // the Python parsing level, where atoms such as "clear(b)" are transformed into "clear(b)=1",
+    // where clear(b) is understood as a (binary) term. This is there for historical reasons,
+    // and needs to be corrected in the Python code before cleaning up the mess here.
+    //
+    // Note that the mess here also does a few other things, but these should be delegated into
+    // the individual language translator components, and the whole translation process be performed
+    // recursively. This would allow us to deal with disjunctions, etc., more elegantly.
+    //
+    // Note also that this mess is entangled with the one in BaseCSP::register_csp_variables
+    for (auto condition:all_atoms) {
 		if (auto relational = dynamic_cast<const fs::RelationalFormula*>(condition)) {
 			
 			if (relational->symbol() == fs::RelationalFormula::Symbol::EQ) {
 				
 				const fs::Term* candidate = relational->lhs(); // TODO - CHECK SYMMETRICALLY FOR RHS()!!
 				
-// 				auto nested = dynamic_cast<const fs::NestedTerm*>(candidate);
 				auto statevar = dynamic_cast<const fs::StateVariable*>(candidate);
 				auto nested_fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(candidate);
 
 				
 				if (statevar || nested_fluent) {
 					const fs::FluentHeadedNestedTerm* origin = statevar ? statevar->getOrigin() : nested_fluent;
-					unsigned symbol_id = origin->getSymbolId();
-					
-					if (info.isPredicate(symbol_id)) {
+
+					if (info.isPredicate(origin->getSymbolId())) {
 						// e.g. we had a condition clear(b) = 1, which we'll want to transform into an extensional constraint on the
 						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
 						
@@ -252,7 +299,7 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 						}
 						
 						// Mark the condition as inserted, so we do not need to insert it again!
-						inserted_conditions.insert(condition);
+						inserted_conditions.insert(relational);
 						
 						if (statevar) {
 							// For _predicate_ state variables, we don't need an actual CSP variable modeling it, so we spare it.
@@ -275,20 +322,23 @@ BaseCSP::index_formula_elements(const std::vector<const fs::AtomicFormula*>& con
 			}
 		}
 	}
-	
+
 	for (auto term:terms) {
 		if (auto sv = dynamic_cast<const fs::StateVariable*>(term)) _counter.count_flat(sv->getOrigin()->getSymbolId());
 		else if (auto fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) _counter.count_nested(fluent->getSymbolId());
 	}
-	
-	// Insert into all_formulas and all_terms all those elements in 'conditions' or 'terms' which have not been 
+
+    std::copy_if(terms.begin(), terms.end(), std::inserter(_all_terms, _all_terms.begin()),
+                 [&inserted_terms] (const fs::Term* term) { return inserted_terms.find(term) == inserted_terms.end(); });
+
+	// Insert into all_formulas and all_terms all those elements in 'conditions' or 'terms' which have not been
 	// deemed to deserve a particular treatment such as the one given to e.g. a condition "clear(b) = 1"
-	std::copy_if(conditions.begin(), conditions.end(), std::inserter(_all_formulas, _all_formulas.begin()),
-				 [&inserted_conditions] (const fs::AtomicFormula* atom) { return inserted_conditions.find(atom) == inserted_conditions.end(); });
-	
-	std::copy_if(terms.begin(), terms.end(), std::inserter(_all_terms, _all_terms.begin()),
-				 [&inserted_terms] (const fs::Term* term) { return inserted_terms.find(term) == inserted_terms.end(); });
-	
+	std::copy_if(all_atoms.begin(), all_atoms.end(), std::inserter(_all_formulas, _all_formulas.begin()),
+				 [&inserted_conditions] (const fs::Formula* atom) { return inserted_conditions.find(atom) == inserted_conditions.end(); });
+
+//	std::cout << "All formulas: " << std::endl;
+//	for (const auto f:_all_formulas) std::cout << *f << std::endl;
+
 	assert(_necessary_tuples.empty());
 	_necessary_tuples.insert(_necessary_tuples.end(), true_tuples.begin(), true_tuples.end());
 }
