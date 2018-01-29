@@ -14,10 +14,12 @@
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/problem.hxx>
+#include <fs/core/constraints/native/action_handler.hxx>
 
 namespace fs0 { namespace gecode {
 
-SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const std::vector<const fs::Formula*>& state_constraints, std::vector<EffectHandlerPtr>&& managers, ExtensionHandler extension_handler) :
+template <typename HandlerT>
+SmartRPG<HandlerT>::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const std::vector<const fs::Formula*>& state_constraints, std::vector<HandlerPT>&& managers, ExtensionHandler extension_handler) :
 	_problem(problem),
 	_info(ProblemInfo::getInstance()),
 	_tuple_index(problem.get_tuple_index()),
@@ -45,7 +47,8 @@ SmartRPG::SmartRPG(const Problem& problem, const fs::Formula* goal_formula, cons
 
 
 //! The actual evaluation of the heuristic value for any given non-relaxed state s.
-long SmartRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
+template <typename HandlerT>
+long SmartRPG<HandlerT>::evaluate(const State& seed, std::vector<Atom>& relevant) {
 
 	if (_problem.getGoalSatManager().satisfied(seed)) return 0; // The seed state is a goal
 
@@ -60,20 +63,14 @@ long SmartRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
 	while (true) {
 
 		// Build a new layer of the RPG.
-		for (const EffectHandlerPtr& manager:_managers) {
+		for (const HandlerPT& manager:_managers) {
 			// TODO - RETHINK
 // 			if (i == 0 && Config::instance().useMinHMaxActionValueSelector()) { // We initialize the value selector only once
 // 				manager->init_value_selector(&bookkeeping);
 // 			}
 // 			unsigned affected_symbol = manager->get_lhs_symbol();
 
-			// If the effect has a fixed achievable tuple (e.g. because it is of the form X := c), and this tuple has already
-			// been reached in the RPG, we can safely skip it.
-			AtomIdx achievable = manager->get_achievable_tuple();
-			if (achievable != INVALID_TUPLE && graph.reached(achievable)) continue;
-
-			// Otherwise, we process the effect to derive the new tuples that it can produce on the current RPG layer
-			manager->seek_novel_tuples(graph);
+			manager->process(graph);
 		}
 
 
@@ -92,12 +89,14 @@ long SmartRPG::evaluate(const State& seed, std::vector<Atom>& relevant) {
 	}
 }
 
-long SmartRPG::computeHeuristic(const RPGIndex& graph, std::vector<Atom>& relevant) {
+template <typename HandlerT>
+long SmartRPG<HandlerT>::computeHeuristic(const RPGIndex& graph, std::vector<Atom>& relevant) {
 	return support::compute_rpg_cost(_tuple_index, graph, *_goal_handler, relevant);
 }
 
 //! Computes the full RPG until a fixpoint is reached, disregarding goal.
-RPGIndex SmartRPG::compute_full_graph(const State& seed) {
+template <typename HandlerT>
+RPGIndex SmartRPG<HandlerT>::compute_full_graph(const State& seed) {
 	LPT_EDEBUG("heuristic", std::endl << "Computing Full RPG from seed state: " << std::endl << seed);
 
 	RPGIndex graph(seed, _tuple_index, _extension_handler);
@@ -105,12 +104,8 @@ RPGIndex SmartRPG::compute_full_graph(const State& seed) {
 	// See method 'evaluate' for comments on the logic of this loop
 	while (true) {
 		LPT_EDEBUG("heuristic", "Opening layer of the full RPG");
-		for (const EffectHandlerPtr& manager:_managers) {
-			AtomIdx achievable = manager->get_achievable_tuple();
-			if (achievable != INVALID_TUPLE && graph.reached(achievable)) continue;
-
-			// Otherwise, we process the effect to derive the new tuples that it can produce on the current RPG layer
-			manager->seek_novel_tuples(graph);
+		for (const HandlerPT& manager:_managers) {
+			manager->process(graph);
 		}
 
 		if (!graph.hasNovelTuples()) break;
@@ -122,5 +117,9 @@ RPGIndex SmartRPG::compute_full_graph(const State& seed) {
 	LPT_EDEBUG("heuristic", "Full RPG is: " << graph);
 	return graph;
 }
+
+// explicit template instantiations
+template class SmartRPG<gecode::LiftedEffectCSP>;
+template class SmartRPG<gecode::NativeActionHandler>;
 
 } } // namespaces

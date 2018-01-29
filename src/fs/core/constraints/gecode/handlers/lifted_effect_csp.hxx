@@ -45,6 +45,8 @@ public:
 	
 	const fs::Formula* get_precondition() const override;
 
+	void process(RPGIndex& graph);
+
 protected:
 	//! In an effect f(t) := w, '_lhs_symbol' is the index of symbol 'f'
 	unsigned _lhs_symbol;

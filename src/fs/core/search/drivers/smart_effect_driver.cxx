@@ -13,7 +13,7 @@ using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-gecode::SmartRPG*
+SmartEffectDriver::HeuristicT*
 SmartEffectDriver::configure_heuristic(const Problem& problem, const Config& config) {
 	bool novelty = config.useNoveltyConstraint() && !problem.is_predicative();
 	bool approximate = config.useApproximateActionResolution();
@@ -27,14 +27,14 @@ SmartEffectDriver::configure_heuristic(const Problem& problem, const Config& con
     if ( config.getOption<bool>("use_state_constraints_in_heuristic_goal_evaluation") ) {
 	    const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	    ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
-	    auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+	    auto heuristic = new HeuristicT(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
 
 	    return heuristic;
     }
 
     const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), {});
     ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
-    auto heuristic = new SmartRPG(problem, problem.getGoalConditions(), {}, std::move(managers), extension_handler);
+    auto heuristic = new HeuristicT(problem, problem.getGoalConditions(), {}, std::move(managers), extension_handler);
 
 
     return heuristic;
@@ -49,7 +49,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
 
-	_heuristic = std::unique_ptr<SmartRPG>(configure_heuristic(problem, config));
+	_heuristic = std::unique_ptr<HeuristicT>(configure_heuristic(problem, config));
 
 	// If necessary, we constrain the state variables domains and even action/effect CSPs that will be used henceforth
 	// by performing a reachability analysis.
@@ -59,18 +59,18 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 		LiftedEffectCSP::prune_unreachable(_heuristic->get_managers(), graph);
 	}
 
-	EHCSearch<SmartRPG>* ehc = nullptr;
+	EHCSearch<HeuristicT>* ehc = nullptr;
 	if (config.getOption("ehc")) {
 		// TODO Apply reachability analysis for the EHC heuristic as well
 		auto ehc_managers = LiftedEffectCSP::create_smart(actions,  problem.get_tuple_index(), approximate, novelty);
 		const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 		ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
-		SmartRPG ehc_heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(ehc_managers), extension_handler);
-		ehc = new EHCSearch<SmartRPG>(model, std::move(ehc_heuristic), config.getOption("helpful_actions"), stats);
+		HeuristicT ehc_heuristic(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(ehc_managers), extension_handler);
+		ehc = new EHCSearch<HeuristicT>(model, std::move(ehc_heuristic), config.getOption("helpful_actions"), stats);
 	}
 
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
-	EventUtils::setup_evaluation_observer<NodeT, SmartRPG>(config, *_heuristic, stats, _handlers);
+	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);
 	if (config.requiresHelpfulnessAssessment()) {
 		EventUtils::setup_HA_observer<NodeT>(_handlers);
 	}

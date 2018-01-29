@@ -11,6 +11,7 @@
 #include <fs/core/search/drivers/smart_lifted_driver.hxx>
 #include <fs/core/search/drivers/fully_lifted_driver.hxx>
 #include <fs/core/actions/grounding.hxx>
+#include "native_action_driver.hxx"
 
 
 // using namespace fs0::gecode;
@@ -32,7 +33,10 @@ EngineRegistry::EngineRegistry() {
 // 	add("lnative",  new NativeDriver<LiftedStateModel>()); // The native driver is not ready for this
 	
 // 	add("lunreached",  new UnreachedAtomDriver<LiftedStateModel>());
-	add("lifted",  new FullyLiftedDriver());
+
+	// 	add("native",  new NativeDriver<GroundStateModel>());
+
+	add("native",  new NativeActionDriver());
 	
 	add("iw",  new IteratedWidthDriver<GroundStateModel>());
 	add("liw",  new IteratedWidthDriver<LiftedStateModel>());

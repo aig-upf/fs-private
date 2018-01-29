@@ -8,6 +8,7 @@
 #include <fs/core/utils/atom_index.hxx>
 #include <unordered_set>
 #include <fs/core/constraints/gecode/handlers/ground_effect_csp.hxx>
+#include <fs/core/constraints/native/action_handler.hxx>
 
 namespace fs0 { class Problem; class State; class RPGData; }
 
@@ -18,20 +19,20 @@ namespace fs0 { namespace gecode {
 
 class RPGIndex;
 
-template <typename HandlerT>
-class SmartRPG {
+class NativeRPG {
 protected:
+    using HandlerT = gecode::NativeActionHandler;
 	using HandlerPT = std::unique_ptr<HandlerT>;
 
 public:
-	SmartRPG(const Problem& problem, const fs::Formula* goal_formula, const std::vector<const fs::Formula*>& state_constraints, std::vector<HandlerPT>&& managers, ExtensionHandler extension_handler);
-	~SmartRPG() = default;
+	NativeRPG(const Problem& problem, const fs::Formula* goal_formula, const std::vector<const fs::Formula*>& state_constraints, std::vector<HandlerPT>&& managers, ExtensionHandler extension_handler);
+	~NativeRPG() = default;
 
 	// Disallow copies of the object, as they will be expensive, but allow moves.
-	SmartRPG(const SmartRPG&) = delete;
-	SmartRPG(SmartRPG&&) = default;
-	SmartRPG& operator=(const SmartRPG& other) = delete;
-	SmartRPG& operator=(SmartRPG&& other) = default;
+	NativeRPG(const NativeRPG&) = delete;
+	NativeRPG(NativeRPG&&) = default;
+	NativeRPG& operator=(const NativeRPG& other) = delete;
+	NativeRPG& operator=(NativeRPG&& other) = default;
 
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	long evaluate(const State& seed, std::vector<Atom>& relevant);
@@ -45,10 +46,6 @@ public:
 	//! To be subclassed in other RPG-based heuristics such as h_max
 	virtual long computeHeuristic(const RPGIndex& graph, std::vector<Atom>& relevant);
 
-	RPGIndex compute_full_graph(const State& seed);
-
-	std::vector<HandlerPT>&  get_managers() { return _managers; }
-	void set_managers(std::vector<HandlerPT>&& managers) { _managers = std::move(managers); }
 
 protected:
 	//! The actual planning problem
@@ -63,7 +60,7 @@ protected:
 	//!
 	ExtensionHandler _extension_handler;
 
-	std::unique_ptr<FormulaCSP> _goal_handler;
+    SimpleFormulaChecker _goal_checker;
 };
 
 } } // namespaces

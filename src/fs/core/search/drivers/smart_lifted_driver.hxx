@@ -18,7 +18,7 @@ namespace fs0 { namespace drivers {
 class SmartLiftedDriver : public Driver {
 protected:
 	using NodeT = HeuristicSearchNode<State, LiftedActionID>;
-	using HeuristicT = fs0::gecode::SmartRPG;
+	using HeuristicT = fs0::gecode::SmartRPG<gecode::LiftedEffectCSP>;
 	using EngineT = lapkt::StlBestFirstSearch<NodeT, LiftedStateModel>;
 	using EnginePT = std::unique_ptr<EngineT>;
 
@@ -28,7 +28,7 @@ public:
 	ExitCode search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) override;
 
 protected:
-	std::unique_ptr<fs0::gecode::SmartRPG> _heuristic;
+	std::unique_ptr<HeuristicT> _heuristic;
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
 };
 

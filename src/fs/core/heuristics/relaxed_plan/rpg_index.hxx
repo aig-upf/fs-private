@@ -110,6 +110,8 @@ public:
 	
 // 	const std::set<unsigned>& get_modified_symbols() const;
 
+	const std::vector<object_id>& getRawDomain(VariableIdx var) const { return _domains_raw.at(var); }
+
 
 protected:
 	//! Creates an atom support data structure with the given data and taking into account the current RPG layer

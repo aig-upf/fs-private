@@ -236,4 +236,15 @@ LiftedEffectCSP::get_precondition() const {
 	return _action.getPrecondition();
 }
 
+void
+LiftedEffectCSP::process(RPGIndex& graph) {
+    // If the effect has a fixed achievable tuple (e.g. because it is of the form X := c), and this tuple has already
+    // been reached in the RPG, we can safely skip it.
+    AtomIdx achievable = get_achievable_tuple();
+    if (achievable != INVALID_TUPLE && graph.reached(achievable)) return;
+
+    // Otherwise, we process the effect to derive the new tuples that it can produce on the current RPG layer
+    seek_novel_tuples(graph);
+}
+
 } } // namespaces

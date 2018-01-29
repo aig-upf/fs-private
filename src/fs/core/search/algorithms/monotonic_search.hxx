@@ -36,7 +36,7 @@ public:
 	//! (3) the closed list object to be used in the search
 
 	MonotonicSearch(const StateModel& model, fs0::gecode::MonotonicityCSP* monot_manager) :
-		_model(model), _open(), _closed(), _generated(0), _monotonicity_csp_manager(monot_manager)
+		_model(model), _open(), _closed(), _generated(0), _monotonicity_csp_manager(monot_manager), _num_pruned(0)
 	{}
 
 	virtual ~MonotonicSearch() {}
@@ -102,9 +102,10 @@ public:
                         LPT_DEBUG("cout", "\t" << fs0::print::changeset(changeset));
                         LPT_DEBUG("cout", "\tFull state was: " << std::endl << "\t" << *successor);
                         _closed.put(successor);
+                        ++_num_pruned;
                         continue;
                     } else {
-//                        LPT_DEBUG("cout", "Children node is monotonic-consistent:" << std::endl << "\t" << *successor);
+                        LPT_DEBUG("cout", "Children node is monotonic-consistent:" << std::endl << "\t" << *successor);
                     }
                 }
 
@@ -126,7 +127,11 @@ public:
 	}
 	
 	//! Convenience method
-	bool solve_model(PlanT& solution) { return search( _model.init(), solution ); }
+	bool solve_model(PlanT& solution) {
+        auto res = search( _model.init(), solution );
+        LPT_INFO("cout", "Nodes pruned by monotonicity constraints: " << _num_pruned);
+        return res;
+    }
 	
 protected:
 	
@@ -150,6 +155,10 @@ protected:
 	
 	//! The number of generated nodes so far
     uint32_t _generated;
+
+    std::unique_ptr<fs0::gecode::MonotonicityCSP> _monotonicity_csp_manager;
+
+    unsigned long _num_pruned;
 
 	//* Some methods mainly for debugging purposes
 	bool check_open_list_integrity() const {
@@ -175,9 +184,6 @@ protected:
 		}
 		return true;
 	}
-
-protected:
-    std::unique_ptr<fs0::gecode::MonotonicityCSP> _monotonicity_csp_manager;
 };
 
 }

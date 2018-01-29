@@ -72,14 +72,14 @@ Visit(const Conjunction& lhs) {
 			return;
 		}
 		conjuncts.push_back(processed);
-		const EQAtomicFormula* cc = dynamic_cast<const EQAtomicFormula*>(processed);
+		const auto* cc = dynamic_cast<const EQAtomicFormula*>(processed);
 		if( cc == nullptr ) continue;
-		const StateVariable* lhs_ = dynamic_cast<const StateVariable*>(cc->lhs());
+		const auto* lhs_ = dynamic_cast<const StateVariable*>(cc->lhs());
 		if( lhs_ == nullptr ) continue;
-		const Constant* rhs = dynamic_cast< const Constant*>(cc->rhs());
+		const auto* rhs = dynamic_cast< const Constant*>(cc->rhs());
 		if( rhs == nullptr ) continue;
 // 		std::cout << "Atom detected: " << lhs_->getValue() << "=" << rhs->getValue() << std::endl;
-		atoms.push_back(std::make_pair(lhs_->getValue(), rhs->getValue()));
+		atoms.emplace_back(lhs_->getValue(), rhs->getValue());
 	}
 
 	if (conjuncts.empty()) {
@@ -270,21 +270,21 @@ Visit(const UserDefinedStaticTerm& lhs) {
 	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 
-	_result =  new UserDefinedStaticTerm(symbol_id, processed);
+//	_result =  new UserDefinedStaticTerm(symbol_id, processed);
 
-//     const auto& function = _info.getSymbolData(symbol_id);
-	/*
+     const auto& function = _info.getSymbolData(symbol_id);
+
 	if (constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
 		for (const auto ptr:processed) delete ptr;
 
 		auto value = function.getFunction()(constant_values);
-		_result = new Constant(value);
+		_result = new Constant(value, function.getCodomainType());
 
 	} else {
 		// Otherwise we simply return a user-defined static term with the processed/bound subterms
 		_result =  new UserDefinedStaticTerm(symbol_id, processed);
 	}
-	*/
+
 }
 
 void TermBindingVisitor::

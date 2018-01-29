@@ -96,6 +96,7 @@ set(SOURCE_FILES
         src/fs/core/heuristics/relaxed_plan/rpg_index.hxx
         src/fs/core/heuristics/relaxed_plan/smart_rpg.cxx
         src/fs/core/heuristics/relaxed_plan/smart_rpg.hxx
+        src/fs/core/heuristics/relaxed_plan/native_rpg
         src/fs/core/heuristics/null_heuristic.hxx
         src/fs/core/heuristics/unsat_goal_atoms.cxx
         src/fs/core/heuristics/unsat_goal_atoms.hxx
@@ -176,6 +177,7 @@ set(SOURCE_FILES
         src/fs/core/search/drivers/smart_effect_driver.hxx
         src/fs/core/search/drivers/smart_lifted_driver.cxx
         src/fs/core/search/drivers/smart_lifted_driver.hxx
+        src/fs/core/search/drivers/native_action_driver
         src/fs/core/search/drivers/validation.cxx
         src/fs/core/search/drivers/validation.hxx
         src/fs/core/search/nodes/bfws_node.hxx
