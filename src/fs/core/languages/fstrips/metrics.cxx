@@ -12,6 +12,10 @@ namespace fs0 { namespace language { namespace fstrips {
         _stage_expr( other._stage_expr ? other._stage_expr->clone() : nullptr ),
         _valid(other._valid) {}
 
+    Metric::~Metric() {
+        delete _terminal_expr;
+        delete _stage_expr;
+    }
     bool Metric::isWellFormed() const {
         return true;
     }

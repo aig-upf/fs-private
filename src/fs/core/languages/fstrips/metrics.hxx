@@ -23,10 +23,7 @@ public:
 
     Metric( const Metric& other );
 
-	virtual ~Metric() {
-		delete _terminal_expr;
-		delete _stage_expr;
-	}
+	virtual ~Metric();
 
 	//! Checks that the metric expression is a well formed formula
 	bool isWellFormed() const;
