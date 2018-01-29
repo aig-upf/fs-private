@@ -51,7 +51,7 @@ class Task(object):
         task_name, task_domain_name, task_requirements, limits, objects, init, goal, constraints, bounds, transitions, \
         use_metric = parse_task(task_pddl)
 
-        assert domain_name == task_domain_name
+        #assert domain_name == task_domain_name
         requirements = Requirements(sorted(set(
                     domain_requirements.requirements +
                     task_requirements.requirements)))
