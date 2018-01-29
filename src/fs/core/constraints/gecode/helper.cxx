@@ -9,6 +9,9 @@
 #include <fs/core/constraints/gecode/utils/term_list_iterator.hxx>
 
 #include <gecode/int.hh>
+#include <fs/core/utils/binding_iterator.hxx>
+#include <fs/core/utils/printers/vector.hxx>
+#include <fs/core/utils/printers/helper.hxx>
 
 namespace fs0 { namespace gecode {
 
@@ -83,6 +86,58 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm* term) 
 	return tuples;
 }
 
+
+const Gecode::TupleSet& Helper::compute_symbol_extension(unsigned symbol) {
+    const ProblemInfo& info = ProblemInfo::getInstance();
+    const auto& data = info.getSymbolData(symbol);
+    assert(data.isStatic());
+
+    if (_cached_static_extensions[symbol]) {
+        return _static_extensions[symbol];
+    }
+
+//    const auto& functor = data.getFunction();
+
+    Gecode::TupleSet tuples;
+
+    for (utils::binding_iterator it(data.getSignature(), info); !it.ended(); ++it) {
+        auto binding = *it;
+        const ValueTuple& point = binding.get_full_binding();
+
+        try {
+            object_id out = data.getFunction()(point);
+
+            type_id t = o_type(out);
+            int val = 0;
+            if (t == type_id::bool_t) {
+                val = static_cast<int>(fs0::value<bool>(out));
+            } else if (t == type_id::int_t || t == type_id::object_t) {
+                val = fs0::value<int>(out);
+            } else {
+                throw std::runtime_error("Extensionalization of constraints not yet ready for objects of this type");
+            }
+
+            std::vector<int> values = fs0::values<int>(point, ObjectTable::EMPTY_TABLE);
+            values.push_back(val);
+            tuples.add(Gecode::IntArgs(values));
+
+        } catch (const std::out_of_range& e) {
+            std::cerr << "The denotation of (static) symbol \"" << info.getSymbolName(symbol) << "\" is undefined at point " << fs0::print::container(print::Helper::name_objects(point)) << std::endl;
+            throw std::runtime_error("");
+        } catch (const UndefinedValueAccess& e) {
+            std::cerr << "The denotation of (static) symbol \"" << info.getSymbolName(symbol) << "\" is undefined at point " << print::container(print::Helper::name_objects(point)) << std::endl;
+            throw std::runtime_error("");
+        }
+    }
+
+    tuples.finalize();
+
+    _cached_static_extensions[symbol] = true;
+    _static_extensions[symbol] = tuples;
+
+    return _static_extensions[symbol];
+}
+
 Gecode::TupleSet Helper::extensionalize(const fs::AtomicFormula* formula) {
 	Gecode::TupleSet tuples;
 
@@ -124,6 +179,12 @@ int Helper::value_selector(const Gecode::Space& home, Gecode::IntVar x, int csp_
 	// "A branch value function takes a constant reference to a space, a variable, and the variable’s
 	// position and returns a value, where the type of the value depends on the variable type."
 	return static_cast<const GecodeCSP&>(home).select_value(x, csp_var_idx);
+}
+
+Helper::Helper() :
+	_cached_static_extensions(ProblemInfo::getInstance().getNumLogicalSymbols(), false),
+	_static_extensions(ProblemInfo::getInstance().getNumLogicalSymbols())
+{
 }
 
 } } // namespaces

@@ -2,11 +2,9 @@
 
 #pragma once
 
+#include <fs/core/languages/fstrips/language_fwd.hxx>
 #include <fs/core/fs_types.hxx>
 #include <gecode/int.hh>
-
-namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; class StaticHeadedNestedTerm; } } }
-namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace gecode {
 
@@ -15,6 +13,15 @@ class GecodeCSP; class CSPTranslator;
 //! Some helper methods related to the construction of Gecode CSPs.
 class Helper {
 public:
+	static Helper& instance() {
+		static Helper instance;
+		return instance;
+	}
+
+	Helper();
+	Helper(const Helper&)         = delete;
+	void operator=(const Helper&) = delete;
+
 	//! Creates a CSP variable constraining its domain according to the given type
 	static Gecode::IntVar createVariable(Gecode::Space& csp, TypeIdx typeId);
 	
@@ -49,6 +56,12 @@ public:
 	
 	//! A helper method to install our desired value-selection brancher
 	static int value_selector(const Gecode::Space& home, Gecode::IntVar x, int csp_var_idx);
+
+    //!
+    const Gecode::TupleSet& compute_symbol_extension(unsigned symbol);
+protected:
+	std::vector<bool> _cached_static_extensions;
+	std::vector<Gecode::TupleSet> _static_extensions;
 };
 
 } } // namespaces

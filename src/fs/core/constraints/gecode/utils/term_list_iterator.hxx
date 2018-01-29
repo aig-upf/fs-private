@@ -2,10 +2,9 @@
 
 #pragma once
 
+#include <fs/core/languages/fstrips/language_fwd.hxx>
 #include <gecode/int.hh>
 
-namespace fs0 { namespace language { namespace fstrips { class Term; }}}
-namespace fs = fs0::language::fstrips;
 
 namespace fs0 { namespace utils { class cartesian_iterator; }}
 

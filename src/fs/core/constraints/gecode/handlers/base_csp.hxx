@@ -3,6 +3,7 @@
 
 #include <fs/core/languages/fstrips/language_fwd.hxx>
 #include <fs/core/languages/fstrips/terms.hxx>
+#include <fs/core/languages/fstrips/formulae.hxx>
 
 #include <unordered_set>
 #include <unordered_map>

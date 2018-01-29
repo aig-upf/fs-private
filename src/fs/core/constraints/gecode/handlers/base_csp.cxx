@@ -332,12 +332,20 @@ BaseCSP::index_csp_elements(const std::vector<const fs::Formula*>& conditions) {
                  [&inserted_terms] (const fs::Term* term) { return inserted_terms.find(term) == inserted_terms.end(); });
 
 	// Insert into all_formulas and all_terms all those elements in 'conditions' or 'terms' which have not been
-	// deemed to deserve a particular treatment such as the one given to e.g. a condition "clear(b) = 1"
-	std::copy_if(all_atoms.begin(), all_atoms.end(), std::inserter(_all_formulas, _all_formulas.begin()),
-				 [&inserted_conditions] (const fs::Formula* atom) { return inserted_conditions.find(atom) == inserted_conditions.end(); });
+	// deemed to deserve a particular treatment such as the one given to e.g. a condition "clear(b) = 1",
+	// or those which need reification
+    for (const auto& atom:all_atoms) {
+        if (inserted_conditions.find(atom) != inserted_conditions.end()) continue;
+//        if (_reified_atoms.find(atom) != _reified_atoms.end()) continue;
+        _all_formulas.insert(atom);
+
+    }
 
 //	std::cout << "All formulas: " << std::endl;
-//	for (const auto f:_all_formulas) std::cout << *f << std::endl;
+//	for (const auto* f:_all_formulas) std::cout << *f << std::endl;
+//    std::cout << "reified atoms: " << std::endl;
+//    for (const auto* f:_reified_atoms) std::cout << *f << std::endl;
+
 
 	assert(_necessary_tuples.empty());
 	_necessary_tuples.insert(_necessary_tuples.end(), true_tuples.begin(), true_tuples.end());
