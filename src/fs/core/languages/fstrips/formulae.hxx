@@ -43,6 +43,9 @@ public:
 	//! By default, formulae are not tautology nor contradiction
 	virtual bool is_tautology() const { return false; }
 	virtual bool is_contradiction() const { return false; }
+
+	bool operator==(const LogicalElement& other) const override { throw std::runtime_error("UNIMPLEMENTED"); }
+	std::size_t hash_code() const override { throw std::runtime_error("UNIMPLEMENTED"); }
 };
 
 //! An atomic formula, implicitly understood to be static (fluent atoms are considered terms with Boolean codomain)
@@ -67,6 +70,8 @@ public:
 	//! A helper to recursively evaluate the formula - must be subclassed
 	virtual bool _satisfied(const std::vector<object_id>& values) const = 0;
 
+	bool operator==(const LogicalElement& other) const override;
+	std::size_t hash_code() const override;
 protected:
 	//! The formula subterms
 	std::vector<const Term*> _subterms;
@@ -176,6 +181,9 @@ public:
 
 	virtual std::string name() const = 0;
 
+	bool operator==(const LogicalElement& other) const override;
+	std::size_t hash_code() const override;
+
 protected:
 	//! The formula subterms
 	std::vector<const Formula*> _subformulae;
@@ -272,6 +280,9 @@ public:
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
 	virtual std::string name() const = 0;
+
+	bool operator==(const LogicalElement& other) const override;
+	std::size_t hash_code() const override;
 
 protected:
 	//! The binding IDs of the existentially quantified variables
@@ -437,3 +448,30 @@ public:
 std::vector<const AtomicFormula*>  check_all_atomic_formulas(const std::vector<const Formula*> formulas);
 
 } } } // namespaces
+
+// std specializations for terms and term pointers that will allow us to use them in hash-table-like structures
+// NOTE that these specializations are necessary for any use of term pointers in std::map/std::unordered_maps,
+// even if compilation will succeed without them as well.
+namespace fs = fs0::language::fstrips;
+namespace std {
+
+template<> struct hash<fs::Formula> {
+	std::size_t operator()(const fs::Formula& o) const { return o.hash_code(); }
+};
+
+template<> struct hash<const fs::Formula*> {
+	std::size_t operator()(const fs::Formula* o) const { return hash<fs::Formula>()(*o); }
+};
+
+template<> struct hash<const fs::AtomicFormula*> {
+	std::size_t operator()(const fs::AtomicFormula* o) const { return hash<fs::Formula>()(*o); }
+};
+
+template<> struct equal_to<const fs::Formula*> {
+	bool operator()(const fs::Formula* t1, const fs::Formula* t2) const { return equal_to<fs::Formula>()(*t1, *t2); }
+};
+
+template<> struct equal_to<const fs::AtomicFormula*> {
+	bool operator()(const fs::AtomicFormula* t1, const fs::AtomicFormula* t2) const { return equal_to<fs::AtomicFormula>()(*t1, *t2); }
+};
+}

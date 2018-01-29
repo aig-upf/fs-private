@@ -25,10 +25,6 @@ public:
 	object_id interpret(const State& state) const;
 
 	std::ostream& print(std::ostream& os, const ProblemInfo& info) const override;
-
-	virtual bool operator==(const Term& other) const = 0;
-	inline bool operator!=(const Term& rhs) const { return !this->operator==(rhs); }
-	virtual std::size_t hash_code() const = 0;
 };
 
 //! A nested logical term in FSTRIPS, i.e. a term of the form f(t_1, ..., t_n)
@@ -65,7 +61,7 @@ public:
 
 	const std::vector<const Term*>& getSubterms() const { return _subterms; }
 
-	bool operator==(const Term& other) const override;
+	bool operator==(const LogicalElement& other) const override;
 	std::size_t hash_code() const override;
 
 
@@ -208,7 +204,7 @@ public:
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	bool operator==(const Term& other) const override;
+	bool operator==(const LogicalElement& other) const override;
 	std::size_t hash_code() const override;
 
 protected:
@@ -256,7 +252,7 @@ public:
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	bool operator==(const Term& other) const override;
+	bool operator==(const LogicalElement& other) const override;
 	std::size_t hash_code() const override;
 
 protected:
@@ -290,7 +286,7 @@ public:
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
 
-	bool operator==(const Term& other) const override;
+	bool operator==(const LogicalElement& other) const override;
 	std::size_t hash_code() const override;
 
 protected:
@@ -308,15 +304,16 @@ protected:
 // even if compilation will succeed without them as well.
 namespace fs = fs0::language::fstrips;
 namespace std {
-    template<> struct hash<fs::Term> {
-        std::size_t operator()(const fs::Term& term) const { return term.hash_code(); }
-    };
 
-    template<> struct hash<const fs::Term*> {
-        std::size_t operator()(const fs::Term* term) const { return hash<fs::Term>()(*term); }
-    };
-	
-    template<> struct equal_to<const fs::Term*> {
-        bool operator()(const fs::Term* t1, const fs::Term* t2) const { return equal_to<fs::Term>()(*t1, *t2); }
-    };
+template<> struct hash<fs::Term> {
+	std::size_t operator()(const fs::Term& term) const { return term.hash_code(); }
+};
+
+template<> struct hash<const fs::Term*> {
+	std::size_t operator()(const fs::Term* term) const { return hash<fs::Term>()(*term); }
+};
+
+template<> struct equal_to<const fs::Term*> {
+	bool operator()(const fs::Term* t1, const fs::Term* t2) const { return equal_to<fs::Term>()(*t1, *t2); }
+};
 }

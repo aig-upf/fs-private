@@ -152,7 +152,7 @@ std::ostream& Constant::print(std::ostream& os, const fs0::ProblemInfo& info) co
 	return os;
 }
 
-bool NestedTerm::operator==(const Term& other) const {
+bool NestedTerm::operator==(const LogicalElement& other) const {
 	auto derived = dynamic_cast<const NestedTerm*>(&other);
 	if (!derived
 		|| _symbol_id != derived->_symbol_id
@@ -168,17 +168,17 @@ bool NestedTerm::operator==(const Term& other) const {
 	return true;
 }
 
-bool BoundVariable::operator==(const Term& other) const {
+bool BoundVariable::operator==(const LogicalElement& other) const {
 	auto derived = dynamic_cast<const BoundVariable*>(&other);
 	return derived && _id == derived->_id;
 }
 
-bool StateVariable::operator==(const Term& other) const {
+bool StateVariable::operator==(const LogicalElement& other) const {
 	auto derived = dynamic_cast<const StateVariable*>(&other);
 	return derived && _variable_id == derived->_variable_id;
 }
 
-bool Constant::operator==(const Term& other) const {
+bool Constant::operator==(const LogicalElement& other) const {
 	auto derived = dynamic_cast<const Constant*>(&other);
 	return derived && _value == derived->_value;
 }

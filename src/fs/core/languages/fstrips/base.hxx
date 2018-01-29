@@ -25,6 +25,10 @@ public:
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const LogicalElement& o);
 	virtual std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const = 0;
+
+	virtual bool operator==(const LogicalElement& other) const = 0;
+	inline bool operator!=(const LogicalElement& rhs) const { return !this->operator==(rhs); }
+	virtual std::size_t hash_code() const = 0;
 };
 
 } } } // namespaces

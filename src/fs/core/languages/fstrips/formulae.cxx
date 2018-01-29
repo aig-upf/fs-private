@@ -377,4 +377,84 @@ GEQAtomicFormula::relax( const Constant& slack ) const {
     return { new GEQAtomicFormula(st)};
 }
 
+bool OpenFormula::operator==(const LogicalElement& other) const {
+	auto derived = dynamic_cast<const Conjunction*>(&other);
+	if (!derived
+		|| typeid(*this) != typeid(*derived)
+		|| _subformulae.size() != derived->_subformulae.size()) {
+		return false;
+	}
+
+	for (unsigned i = 0; i < _subformulae.size(); ++i) {
+		if ((*_subformulae[i]) != (*derived->_subformulae[i]))
+			return false;
+	}
+
+	return true;
+}
+
+
+std::size_t OpenFormula::hash_code() const {
+	std::size_t hash = 0;
+	boost::hash_combine(hash, typeid(*this).hash_code());
+	for (const auto f:_subformulae) {
+		boost::hash_combine(hash, f->hash_code());
+	}
+	return hash;
+}
+
+bool QuantifiedFormula::operator==(const LogicalElement& other) const {
+	auto derived = dynamic_cast<const QuantifiedFormula*>(&other);
+	if (!derived
+		|| typeid(*this) != typeid(*derived)
+		|| *_subformula != *derived->_subformula
+		|| _variables.size() != derived->_variables.size()) {
+		return false;
+	}
+
+	for (unsigned i = 0; i < _variables.size(); ++i) {
+		if ((*_variables[i]) != (*derived->_variables[i]))
+			return false;
+	}
+
+	return true;
+}
+
+
+std::size_t QuantifiedFormula::hash_code() const {
+	std::size_t hash = 0;
+	boost::hash_combine(hash, typeid(*this).hash_code());
+	boost::hash_combine(hash, _subformula->hash_code());
+	for (const auto f:_variables) {
+		boost::hash_combine(hash, f->hash_code());
+	}
+	return hash;
+}
+
+bool AtomicFormula::operator==(const LogicalElement& other) const {
+	auto derived = dynamic_cast<const AtomicFormula*>(&other);
+	if (!derived
+		|| typeid(*this) != typeid(*derived)
+		|| _subterms.size() != derived->_subterms.size()) {
+		return false;
+	}
+
+	for (unsigned i = 0; i < _subterms.size(); ++i) {
+		if ((*_subterms[i]) != (*derived->_subterms[i]))
+			return false;
+	}
+
+	return true;
+}
+
+
+std::size_t AtomicFormula::hash_code() const {
+	std::size_t hash = 0;
+	boost::hash_combine(hash, typeid(*this).hash_code());
+	for (const auto f:_subterms) {
+		boost::hash_combine(hash, f->hash_code());
+	}
+	return hash;
+}
+
 } } } // namespaces
