@@ -12,12 +12,12 @@
 
 namespace fs0 { namespace gecode {
 	
-std::vector<std::unique_ptr<NativeActionHandler>> NativeActionHandler::create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index) {
+std::vector<std::unique_ptr<NativeActionHandler>> NativeActionHandler::create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool ignore_incompatible_elements) {
 	std::vector<std::unique_ptr<NativeActionHandler>> managers;
 	
 	for (unsigned idx = 0; idx < actions.size(); ++idx) {
 		// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
-		auto manager = new NativeActionHandler(*actions[idx], tuple_index);
+		auto manager = new NativeActionHandler(*actions[idx], tuple_index, ignore_incompatible_elements);
         managers.emplace_back(manager);
 //		if (manager->init(novelty)) {
 //			LPT_DEBUG("main", "Generated CSP for action " << *actions[idx] << std::endl <<  *manager << std::endl);
@@ -30,8 +30,11 @@ std::vector<std::unique_ptr<NativeActionHandler>> NativeActionHandler::create(co
 }
 
 // If no set of effects is provided, we'll take all of them into account
-NativeActionHandler::NativeActionHandler(const GroundAction& action, const AtomIndex& tuple_index)
-	: _tuple_index(tuple_index), _action(action), _precondition_checker(action.getPrecondition(), tuple_index)
+NativeActionHandler::NativeActionHandler(const GroundAction& action, const AtomIndex& tuple_index, bool ignore_incompatible_elements)
+	: _tuple_index(tuple_index),
+      _action(action),
+      _precondition_checker(action.getPrecondition(), tuple_index, ignore_incompatible_elements),
+      _ignore_incompatible_elements(ignore_incompatible_elements)
 {
     const ProblemInfo& info = ProblemInfo::getInstance();
 
@@ -44,11 +47,25 @@ NativeActionHandler::NativeActionHandler(const GroundAction& action, const AtomI
 
     for (const auto* eff:_add_effects) {
         auto lhs_statevar = dynamic_cast<const fs::StateVariable*>(eff->lhs());
-        if (!lhs_statevar) throw std::runtime_error(printer() << "Native ActionHandler only available for preconditions with state-variable (fluent-less) heads: " << *eff);
+        if (!lhs_statevar) {
+            if (_ignore_incompatible_elements) {
+                LPT_INFO("cout", "Native ActionHandler only available for preconditions with state-variable (fluent-less) heads: " << *eff);
+                continue;
+            } else {
+                throw std::runtime_error(printer() << "Native ActionHandler only available for preconditions with state-variable (fluent-less) heads: " << *eff);
+            }
+        }
 
         auto constant_rhs = dynamic_cast<const fs::Constant*>(eff->rhs());
         auto sv_rhs = dynamic_cast<const fs::StateVariable*>(eff->rhs());
-        if (!constant_rhs && !sv_rhs) throw std::runtime_error(printer() << "Native ActionHandler accepts only effects with constant or state-variable RHS" << *eff);
+        if (!constant_rhs && !sv_rhs) {
+            if (_ignore_incompatible_elements) {
+                LPT_INFO("cout", "Native ActionHandler accepts only effects with constant or state-variable RHS" << *eff);
+                continue;
+            } else {
+                throw std::runtime_error(printer() << "Native ActionHandler accepts only effects with constant or state-variable RHS" << *eff);
+            }
+        }
 
 
         ValueTuple lhs_values;
@@ -148,8 +165,9 @@ NativeActionHandler::process(RPGIndex& graph) {
 }
 
 SimpleFormulaChecker::SimpleFormulaChecker(const fs::Formula* formula,
-                                           const AtomIndex& tuple_index)
-        : _tuple_index(tuple_index)
+                                           const AtomIndex& tuple_index,
+                                           bool ignore_incompatible_elements)
+        : _tuple_index(tuple_index), _ignore_incompatible_elements(ignore_incompatible_elements)
 {
     const auto* trueval = dynamic_cast<const fs::Tautology*>(formula);
     if (trueval) return; // The check will evaluate always to true
@@ -160,7 +178,15 @@ SimpleFormulaChecker::SimpleFormulaChecker(const fs::Formula* formula,
     for (const auto* conjunct:prec->getSubformulae()) {
         const auto* eq_atom = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
         const auto* neq_atom = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
-        if (!eq_atom && !neq_atom) throw std::runtime_error(printer() << "Native NativeActionHandler only available for preconditions with simple equality atoms: " << *conjunct);
+        if (!eq_atom && !neq_atom) {
+            if (_ignore_incompatible_elements) {
+                LPT_INFO("cout", "Native NativeActionHandler only available for preconditions with simple equality atoms: " << *conjunct);
+                continue;
+            } else {
+                throw std::runtime_error(printer() << "Native NativeActionHandler only available for preconditions with simple equality atoms: " << *conjunct);
+            }
+        }
+
 
         const auto* atom = eq_atom ? static_cast<const fs::AtomicFormula*>(eq_atom) :
                            static_cast<const fs::AtomicFormula*>(neq_atom);
@@ -168,10 +194,17 @@ SimpleFormulaChecker::SimpleFormulaChecker(const fs::Formula* formula,
         // TODO - CHECK SYMMETRICALLY FOR RHS()!!
         assert(atom->getSubterms().size()==2);
         auto statevar = dynamic_cast<const fs::StateVariable*>(atom->getSubterms()[0]);
-        if (!statevar) throw std::runtime_error(printer() << "Native ActionHandler only available for preconditions with simple equality atoms: " << *atom);
-
         auto value = dynamic_cast<const fs::Constant*>(atom->getSubterms()[1]);
-        if (!value) throw std::runtime_error(printer() << "Native ActionHandler only available for preconditions with simple equality atoms: " << *atom);
+
+        if (!statevar || !value) {
+            if (_ignore_incompatible_elements) {
+                LPT_INFO("cout", "Native ActionHandler only available for preconditions with simple equality atoms: " << *atom);
+                continue;
+            } else {
+                throw std::runtime_error(printer() << "Native ActionHandler only available for preconditions with simple equality atoms: " << *atom);
+            }
+        }
+
 
         if (eq_atom) {
             _equality_atoms.emplace_back(statevar->getValue(), value->getValue());

@@ -19,7 +19,7 @@ class SimpleFormulaChecker {
 public:
     using SupportT = std::vector<AtomIdx>;
 
-    SimpleFormulaChecker(const fs::Formula* formula, const AtomIndex& tuple_index);
+    SimpleFormulaChecker(const fs::Formula* formula, const AtomIndex& tuple_index, bool ignore_incompatible_elements);
 
     bool check_reachable(const RPGIndex& graph, SupportT& support) const;
 
@@ -30,16 +30,17 @@ protected:
     std::vector<std::pair<VariableIdx, object_id>> _equality_atoms;
     std::vector<std::pair<VariableIdx, object_id>> _inequality_atoms;
 
+    bool _ignore_incompatible_elements;
 };
 
 //!
 class NativeActionHandler {
 public:
 	//! Factory method
-	static std::vector<std::unique_ptr<NativeActionHandler>> create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index);
+	static std::vector<std::unique_ptr<NativeActionHandler>> create(const std::vector<const GroundAction*>& actions, const AtomIndex& tuple_index, bool ignore_incompatible_elements);
 
 	//! Constructors / Destructor
-	NativeActionHandler(const GroundAction& action, const AtomIndex& tuple_index);
+	NativeActionHandler(const GroundAction& action, const AtomIndex& tuple_index, bool ignore_incompatible_elements);
 	~NativeActionHandler() = default;
 	NativeActionHandler(const NativeActionHandler&) = delete;
 	NativeActionHandler(NativeActionHandler&&) = delete;
@@ -69,6 +70,7 @@ protected:
     std::vector<AtomIdx> _directly_achievable_tuples;
     std::vector<std::pair<VariableIdx, VariableIdx>> _lhs_rhs_statevars;
 
+    bool _ignore_incompatible_elements;
 
     //! Log some handler-related into
 	virtual void log() const;

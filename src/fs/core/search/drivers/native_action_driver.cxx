@@ -19,7 +19,7 @@ NativeActionDriver::configure_heuristic(const Problem& problem, const Config& co
 
 	const auto& tuple_index = problem.get_tuple_index();
     const auto& actions = problem.getGroundActions();
-	auto managers = NativeActionHandler::create(actions, tuple_index);
+	auto managers = NativeActionHandler::create(actions, tuple_index, true);
 
 
     const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), {});

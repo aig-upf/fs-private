@@ -47,7 +47,7 @@ public:
 	MonotonicSearch& operator=(const MonotonicSearch& rhs) = delete;
 	MonotonicSearch& operator=(MonotonicSearch&& rhs) = default;
 
-	virtual bool search(const StateT& s, PlanT& solution) {
+	virtual bool _search(const StateT& s, PlanT& solution) {
 		NodePT n = std::make_shared<NodeT>(s, _generated++);
 		this->notify(NodeCreationEvent(*n));
 
@@ -125,12 +125,17 @@ public:
 		}
 		std::reverse( solution.begin(), solution.end() );
 	}
-	
-	//! Convenience method
-	bool solve_model(PlanT& solution) {
-        auto res = search( _model.init(), solution );
+
+    //! A simple wrapper
+    bool search(const StateT& s, PlanT& solution) {
+        auto res = _search(s, solution);
         LPT_INFO("cout", "Nodes pruned by monotonicity constraints: " << _num_pruned);
         return res;
+    }
+
+	//! Convenience method
+	bool solve_model(PlanT& solution) {
+        return search( _model.init(), solution );
     }
 	
 protected:

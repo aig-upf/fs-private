@@ -23,7 +23,7 @@ NativeRPG::NativeRPG(const Problem& problem, const fs::Formula* goal_formula, co
 	_tuple_index(problem.get_tuple_index()),
 	_managers(std::move(managers)),
 	_extension_handler(std::move(extension_handler)),
-    _goal_checker(goal_formula, _tuple_index)
+    _goal_checker(goal_formula, _tuple_index, true)
 {
 	LPT_INFO("heuristic", "NativeRPG heuristic initialized");
 	if (_managers.empty()) {
