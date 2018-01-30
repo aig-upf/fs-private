@@ -115,23 +115,25 @@ protected:
     //! _reachable[x] contains a bitmap with the set of reachable values for state variable x
     //! in a certain state of the search. If variable x is not a monotonic variable, then
     //! _reachable[x] will be empty
-    std::vector<TransitionGraph::BitmapT> _domains;
+    std::unique_ptr<std::vector<TransitionGraph::BitmapT>> _domains;
 public:
-    const std::vector<TransitionGraph::BitmapT>& domains() const { return _domains; }
+    const std::vector<TransitionGraph::BitmapT>& domains() const { return *_domains; }
 
     DomainTracker() :
-            _domains()
+            _domains(new std::vector<TransitionGraph::BitmapT>)
     {}
 
     DomainTracker(std::vector<TransitionGraph::BitmapT>&& domains) :
-            _domains(std::move(domains))
+            _domains(new std::vector<TransitionGraph::BitmapT>(std::move(domains)))
     {}
 
-    std::size_t size() const { return _domains.size(); }
-    bool is_null() const { return _domains.empty(); }
+    std::size_t size() const { assert(_domains); return _domains->size(); }
+    bool is_null() const { assert(_domains); return _domains->empty(); }
 
     void release() {
-        std::vector<TransitionGraph::BitmapT>().swap(_domains);
+//        _domains.clear();
+//        std::vector<TransitionGraph::BitmapT>().swap(_domains);
+        _domains.reset();
     }
 
     std::vector<Gecode::IntSet> to_intsets() const;

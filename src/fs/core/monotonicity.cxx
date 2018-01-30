@@ -301,9 +301,9 @@ std::vector<Gecode::IntSet> DomainTracker::to_intsets() const {
     assert(!is_null());
 
     std::vector<Gecode::IntSet> res;
-    res.reserve(_domains.size());
+    res.reserve(_domains->size());
 
-    for (const auto& dom:_domains) {
+    for (const auto& dom:*_domains) {
         std::vector<int> values = as_vector(dom);
         res.emplace_back(values.data(), values.size());
     }

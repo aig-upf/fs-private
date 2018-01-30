@@ -184,7 +184,8 @@ LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
 			Gecode::DFS<GecodeCSP> engine(csp);
 			unsigned num_solutions = 0;
 			while (GecodeCSP* solution = engine.next()) {
-		// 		LPT_EDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
+//		 		LPT_DEBUG("cout", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": "); // << print::csp(_translator, *solution))
+//				_translator.print(std::cout, *csp);
 				process_effect_solution(solution, rpg);
 				++num_solutions;
 				delete solution;

@@ -51,7 +51,7 @@ public:
 		std::string gh_ = (h == std::numeric_limits<long>::max()) ? "-" : std::to_string(g+h);
         std::string porder = (parent != nullptr) ? std::to_string(parent->_gen_order) : "-";
         const auto& act = (action == ActionT::invalid_action_id) ? "-" : fs0::print::to_string(*problem.getGroundActions().at(action));
-        os << "{#" << _gen_order << ", @"<< this << ", s = " << state << ", g = " << g << ", h = " << h_ <<  ", g+h = " << gh_ << ", parent = " << porder << ", action: " << act << "}";
+        os << "{#" << _gen_order << ", @"<< this << ", s = " << state << ", #g = " << unachieved_subgoals << ", g = " << g << ", h = " << h_ <<  ", g+h = " << gh_ << ", parent = " << porder << ", action: " << act << "}";
 		return os;
 	}
 	
@@ -87,7 +87,19 @@ public:
 	}
 
 	//! This effectively implements Greedy Best First search
-	bool operator>( const MonotonicNode<StateT, ActionT>& other ) const { return h > other.h; }
+	bool operator>( const MonotonicNode<StateT, ActionT>& other ) const {
+		return h > other.h;
+
+//        if (h > other.h) return true;
+//        if (h < other.h) return false;
+//
+//        if (unachieved_subgoals > other.unachieved_subgoals) return true;
+//        if (unachieved_subgoals < other.unachieved_subgoals) return false;
+
+//		if (g > other.g) return true;
+//		if (g < other.g) return false;
+//		return (g > other.g);
+	}
 
 	bool dead_end() const {
         return h == -1;
@@ -100,6 +112,8 @@ public:
 	ptr_t parent;
 	
 	unsigned g;
+
+	unsigned unachieved_subgoals;
 	
 	long h;
 	

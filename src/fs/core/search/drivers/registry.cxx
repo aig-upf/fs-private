@@ -7,6 +7,7 @@
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
 // #include <fs/core/search/drivers/unreached_atom_driver.hxx>
 // #include <fs/core/search/drivers/native_driver.hxx>
+#include <fs/core/heuristics/unsat_goal_atoms.hxx>
 #include <fs/core/search/drivers/smart_effect_driver.hxx>
 #include <fs/core/search/drivers/smart_lifted_driver.hxx>
 #include <fs/core/search/drivers/fully_lifted_driver.hxx>
@@ -36,7 +37,8 @@ EngineRegistry::EngineRegistry() {
 
 	// 	add("native",  new NativeDriver<GroundStateModel>());
 
-	add("native",  new NativeActionDriver());
+	add("native",  new NativeActionDriver<>());
+	add("native_gc",  new NativeActionDriver<UnsatisfiedGoalAtomsCounter>());
 	
 	add("iw",  new IteratedWidthDriver<GroundStateModel>());
 	add("liw",  new IteratedWidthDriver<LiftedStateModel>());

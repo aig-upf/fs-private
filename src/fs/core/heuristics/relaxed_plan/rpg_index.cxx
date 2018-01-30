@@ -114,6 +114,7 @@ unsigned RPGIndex::compute_hmax_sum(const std::vector<Atom>& atoms) const {
 std::ostream& RPGIndex::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	os << "RPG Tuples: " << std::endl;
+	unsigned cnt = 0;
 	for (unsigned i = 0; i < _reached.size(); ++i) {
 		TupleSupport* support = _reached[i];
 		if (support != nullptr) {
@@ -123,9 +124,10 @@ std::ostream& RPGIndex::print(std::ostream& os) const {
 			os << "\t- layer #" << std::get<0>(*support) << " - support: ";
 			printAtoms(std::get<2>(*support), os);
 			os << std::endl;
+			++cnt;
 		}
 	}
-	os << std::endl;
+	os << std::endl << "[Total reached tuples: " << cnt << "]";
 	
 	os << "RPG State Variable Domains: " << std::endl;
 	for (unsigned variable = 0; variable < _domains.size(); ++variable) {

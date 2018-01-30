@@ -683,7 +683,11 @@ protected:
 
                 if (successor->_domains.is_null()) {
                     LPT_DEBUG("cout", "\tChildren node pruned because of inconsistent monotonicity CSP: " << std::endl << "\t" << *successor);
-                    _closed.put(successor);
+//                    std::cout << "Releasing domains: " << get_current_memory_in_kb();
+                    successor->_domains.release();
+//                    _closed.put(successor);
+//                    std::cout << "  vs. " << get_current_memory_in_kb() << std::endl;
+
                     _stats.monot_pruned();
                     continue;
                 }

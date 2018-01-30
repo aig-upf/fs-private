@@ -13,6 +13,7 @@
 #include <fs/core/search/algorithms/monotonic_search.hxx>
 #include <fs/core/constraints/native/action_handler.hxx>
 #include <fs/core/heuristics/relaxed_plan/native_rpg.hxx>
+#include <fs/core/heuristics/unsat_goal_atoms.hxx>
 
 namespace fs0 { class GroundStateModel; class SearchStats; }
 
@@ -23,10 +24,12 @@ namespace fs0 { namespace drivers {
 
 //! An engine creator for the Greedy Best-First Search drivers coupled with our constrained RPG-based heuristics (constrained h_FF, constrained h_max)
 //! The choice of the heuristic is done through template instantiation
+template <typename HeuristicT = gecode::NativeRPG>
 class NativeActionDriver : public Driver {
 public:
 	using NodeT = MonotonicNode<State, GroundAction>;
-    using HeuristicT = gecode::NativeRPG;
+//    using HeuristicT = gecode::NativeRPG;
+//	using HeuristicT = UnsatisfiedGoalAtomsCounter;
 	using EngineT = lapkt::MonotonicSearch<NodeT, GroundStateModel>;
 	using EnginePT = std::unique_ptr<EngineT>;
 

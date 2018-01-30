@@ -9,13 +9,13 @@
 #include <fs/core/constraints/native/action_handler.hxx>
 
 
-
 using namespace fs0::gecode;
 
 namespace fs0 { namespace drivers {
 
-NativeActionDriver::HeuristicT*
-NativeActionDriver::configure_heuristic(const Problem& problem, const Config& config) {
+template <>
+gecode::NativeRPG*
+NativeActionDriver<gecode::NativeRPG>::configure_heuristic(const Problem& problem, const Config& config) {
 
 	const auto& tuple_index = problem.get_tuple_index();
     const auto& actions = problem.getGroundActions();
@@ -24,14 +24,22 @@ NativeActionDriver::configure_heuristic(const Problem& problem, const Config& co
 
     const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), {});
     ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
-    auto heuristic = new HeuristicT(problem, problem.getGoalConditions(), {}, std::move(managers), extension_handler);
 
-
+    auto heuristic = new gecode::NativeRPG(problem, problem.getGoalConditions(), {}, std::move(managers), extension_handler);
+//    auto heuristic = new HeuristicT(problem);
     return heuristic;
 }
 
-NativeActionDriver::EnginePT
-NativeActionDriver::create(const Config& config, const GroundStateModel& model, SearchStats& stats) {
+template <>
+UnsatisfiedGoalAtomsCounter*
+NativeActionDriver<UnsatisfiedGoalAtomsCounter>::configure_heuristic(const Problem& problem, const Config& config) {
+    return new UnsatisfiedGoalAtomsCounter(problem);
+}
+
+
+template <typename HeuristicT>
+typename NativeActionDriver<HeuristicT>::EnginePT
+NativeActionDriver<HeuristicT>::create(const Config& config, const GroundStateModel& model, SearchStats& stats) {
 	LPT_INFO("main", "Using the native action driver");
 	const Problem& problem = model.getTask();
 
@@ -45,15 +53,15 @@ NativeActionDriver::create(const Config& config, const GroundStateModel& model, 
 
 	return EnginePT(engine);
 }
-
+template <typename HeuristicT>
 GroundStateModel
-NativeActionDriver::setup(Problem& problem) {
+NativeActionDriver<HeuristicT>::setup(Problem& problem) {
 	return GroundingSetup::fully_ground_model(problem);
 }
 
-
+template <typename HeuristicT>
 ExitCode
-NativeActionDriver::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
+NativeActionDriver<HeuristicT>::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
 	GroundStateModel model = setup(problem);
 	SearchStats stats;
 	bool actionless = model.getTask().getGroundActions().empty();
@@ -61,5 +69,9 @@ NativeActionDriver::search(Problem& problem, const Config& config, const EngineO
 	return Utils::SearchExecution<GroundStateModel>(model).do_search(*engine, options, start_time, stats, actionless);
 
 }
+
+
+template class NativeActionDriver<gecode::NativeRPG>;
+template class NativeActionDriver<UnsatisfiedGoalAtomsCounter>;
 
 } } // namespaces

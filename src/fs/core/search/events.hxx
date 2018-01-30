@@ -39,8 +39,9 @@ protected:
 	void open(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		if (_verbose) {
 			auto& node = static_cast<const OpenEvent&>(event).node;
+
             if (!node.has_parent()) {
-				LPT_INFO("cout", node);
+                LPT_INFO("cout", node);
 				_unused(node);
 
                 LPT_EDEBUG("search", std::setw(7) << "OPEN: " << node);

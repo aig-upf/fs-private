@@ -7,20 +7,21 @@
 #include <lapkt/tools/events.hxx>
 #include <fs/core/constraints/gecode/handlers/monotonicity_csp.hxx>
 #include <fs/core/utils/printers/printers.hxx>
+#include <fs/core/heuristics/unsat_goal_atoms.hxx>
 
 namespace lapkt {
 
 //! A generic search schema
 template <typename NodeT,
 		typename StateModel,
+        typename NodeCompareT = node_comparer<std::shared_ptr<NodeT>>,
     	typename ActionIdT = typename StateModel::ActionType::IdType,
 		typename _StateT = typename StateModel::StateT>
 class MonotonicSearch : public events::Subject {
 public:
 	using PlanT =  std::vector<ActionIdT>;
-	using NodePT = std::shared_ptr<NodeT>;
+    using NodePT = std::shared_ptr<NodeT>;
 	using StateT = _StateT;
-    using NodeCompareT = node_comparer<NodePT>;
 	using OpenList = UpdatableOpenList<NodeT, NodePT, NodeCompareT>;
 	using ClosedList = aptk::StlUnorderedMapClosedList<NodeT>;
 	
@@ -36,7 +37,7 @@ public:
 	//! (3) the closed list object to be used in the search
 
 	MonotonicSearch(const StateModel& model, fs0::gecode::MonotonicityCSP* monot_manager) :
-		_model(model), _open(), _closed(), _generated(0), _monotonicity_csp_manager(monot_manager), _num_pruned(0)
+		_model(model), _goalcounter(model.getTask()), _open(), _closed(), _generated(0), _monotonicity_csp_manager(monot_manager), _num_pruned(0), _num_deadends(0)
 	{}
 
 	virtual ~MonotonicSearch() {}
@@ -105,11 +106,15 @@ public:
                         ++_num_pruned;
                         continue;
                     } else {
-                        LPT_DEBUG("cout", "Children node is monotonic-consistent:" << std::endl << "\t" << *successor);
+//                        LPT_DEBUG("cout", "Children node is monotonic-consistent:" << std::endl << "\t" << *successor);
                     }
                 }
 
                 this->notify(NodeCreationEvent(*successor));
+
+                if (successor->dead_end()) ++_num_deadends;
+
+				successor->unachieved_subgoals = _goalcounter.evaluate(successor->state);
 
 				_open.insert(successor);
 			}
@@ -130,6 +135,7 @@ public:
     bool search(const StateT& s, PlanT& solution) {
         auto res = _search(s, solution);
         LPT_INFO("cout", "Nodes pruned by monotonicity constraints: " << _num_pruned);
+        LPT_INFO("cout", "Number of deadends: " << _num_deadends);
         return res;
     }
 
@@ -151,6 +157,8 @@ protected:
 	
 	//! The search model
 	const StateModel& _model;
+
+	fs0::UnsatisfiedGoalAtomsCounter _goalcounter;
 	
 	//! The open list
 	OpenList _open;
@@ -164,6 +172,7 @@ protected:
     std::unique_ptr<fs0::gecode::MonotonicityCSP> _monotonicity_csp_manager;
 
     unsigned long _num_pruned;
+    unsigned long _num_deadends;
 
 	//* Some methods mainly for debugging purposes
 	bool check_open_list_integrity() const {
