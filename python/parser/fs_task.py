@@ -4,7 +4,7 @@
 from collections import OrderedDict
 import itertools
 
-import python.utils
+from .. import utils
 from . import pddl
 
 from . import adl
@@ -132,6 +132,7 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
 def _process_fluent_atoms(fd_initial_fluent_atoms):
     initial_fluent_atoms = []
     for name, args, value in fd_initial_fluent_atoms:
+        args = [int(a) if utils.is_int(a) else a for a in args]
         if value is None:  # A predicate
             # TODO - We should also initialize the non-specified points to 0? (done by the compiler anyway)
             initial_fluent_atoms.append(fs.Atom(fs.Variable(name, args), 1))  # '1' because it is non-negated
@@ -315,7 +316,7 @@ class FSTaskIndex(object):
             if isinstance(atom, pddl.Assign):
                 name = atom.fluent.symbol
                 if _check_symbol_in_initial_state(name, self.symbols):
-                    args = tuple(int(a) if python.utils.is_int(a) else a for a in atom.fluent.args)
+                    args = tuple(int(a) if utils.is_int(a) else a for a in atom.fluent.args)
                     value = self.parse_value(atom.expression)
                     names.append((name, args, value))
 

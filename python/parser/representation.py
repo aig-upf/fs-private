@@ -127,7 +127,7 @@ class ProblemRepresentation(object):
 
         for transition in self.index.transitions:
             assert len(transition.variable) > 1
-            variable = fs.Variable(transition.variable[0], transition.variable[1:])
+            variable = fs.Variable(transition.variable[0], [int(a) if utils.is_int(a) else a for a in transition.variable[1:]])
             try:
                 var_id = self.index.state_variables.get_index(variable)
             except KeyError:
