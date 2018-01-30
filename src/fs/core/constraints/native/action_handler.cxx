@@ -49,7 +49,7 @@ NativeActionHandler::NativeActionHandler(const GroundAction& action, const AtomI
         auto lhs_statevar = dynamic_cast<const fs::StateVariable*>(eff->lhs());
         if (!lhs_statevar) {
             if (_ignore_incompatible_elements) {
-                LPT_INFO("cout", "Native ActionHandler only available for preconditions with state-variable (fluent-less) heads: " << *eff);
+                LPT_DEBUG("cout", "Native ActionHandler only available for preconditions with state-variable (fluent-less) heads: " << *eff);
                 continue;
             } else {
                 throw std::runtime_error(printer() << "Native ActionHandler only available for preconditions with state-variable (fluent-less) heads: " << *eff);
@@ -60,7 +60,7 @@ NativeActionHandler::NativeActionHandler(const GroundAction& action, const AtomI
         auto sv_rhs = dynamic_cast<const fs::StateVariable*>(eff->rhs());
         if (!constant_rhs && !sv_rhs) {
             if (_ignore_incompatible_elements) {
-                LPT_INFO("cout", "Native ActionHandler accepts only effects with constant or state-variable RHS" << *eff);
+                LPT_DEBUG("cout", "Native ActionHandler accepts only effects with constant or state-variable RHS" << *eff);
                 continue;
             } else {
                 throw std::runtime_error(printer() << "Native ActionHandler accepts only effects with constant or state-variable RHS" << *eff);
@@ -180,7 +180,7 @@ SimpleFormulaChecker::SimpleFormulaChecker(const fs::Formula* formula,
         const auto* neq_atom = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
         if (!eq_atom && !neq_atom) {
             if (_ignore_incompatible_elements) {
-                LPT_INFO("cout", "Native NativeActionHandler only available for preconditions with simple equality atoms: " << *conjunct);
+                LPT_DEBUG("cout", "Native NativeActionHandler only available for preconditions with simple equality atoms: " << *conjunct);
                 continue;
             } else {
                 throw std::runtime_error(printer() << "Native NativeActionHandler only available for preconditions with simple equality atoms: " << *conjunct);
@@ -198,7 +198,7 @@ SimpleFormulaChecker::SimpleFormulaChecker(const fs::Formula* formula,
 
         if (!statevar || !value) {
             if (_ignore_incompatible_elements) {
-                LPT_INFO("cout", "Native ActionHandler only available for preconditions with simple equality atoms: " << *atom);
+                LPT_DEBUG("cout", "Native ActionHandler only available for preconditions with simple equality atoms: " << *atom);
                 continue;
             } else {
                 throw std::runtime_error(printer() << "Native ActionHandler only available for preconditions with simple equality atoms: " << *atom);
