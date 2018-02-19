@@ -46,5 +46,5 @@ The following command also exposes options available to set what features are
 to be used to determine the width of states:
 
 ```
-./run.py --hybrid --instance examples/hybrid/walkbot/continuous/instance_001.pddl --domain examples/hybrid/continuous/walkbot/domain.pddl --driver sbfws --options dt=0.5,integrator=runge_kutta_2,bfws.rs=sim,width.force_generic_evaluator=true,bfws.using_feature_set=true,features.project_away_numeric=true,features.project_away_time=true,features.elliptical_2d=true,width.simulation=2,sim.log=true
+./run.py --hybrid --instance examples/hybrid/continuous/walkbot/instance_001.pddl --domain examples/hybrid/continuous/walkbot/domain.pddl --driver sbfws --options dt=0.5,integrator=runge_kutta_2,bfws.rs=sim,width.force_generic_evaluator=true,bfws.using_feature_set=true,features.project_away_numeric=true,features.project_away_time=true,features.elliptical_2d=true,width.simulation=2,sim.log=true
 ```
