@@ -7,7 +7,6 @@
 #include <fs/core/search/drivers/sbfws/base.hxx>
 #include <fs/core/heuristics/unsat_goal_atoms.hxx>
 #include <fs/core/heuristics/l0.hxx>
-//#include <fs/hybrid/heuristics/l2_norm.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
@@ -21,6 +20,7 @@ namespace fs0 { namespace bfws {
 using Novelty = lapkt::novelty::Novelty;
 
 //! Prioritize nodes with lower number of _un_achieved subgoals. Break ties with g.
+//! This comparer is meant to be used in queues where all nodes have the same novelty.
 template <typename NodePT>
 struct unachieved_subgoals_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
@@ -34,7 +34,8 @@ struct unachieved_subgoals_comparer {
 	}
 };
 
-// ! Comparer taking into account #g and novelty
+//! Prioritize nodes with lower w_{#g, r}, then lower number of unachieved goals #g; break ties
+//! with cost of path so far (g) and, eventually, with generation order.
 template <typename NodePT>
 struct novelty_comparer {
 	bool operator()(const NodePT& n1, const NodePT& n2) const {
@@ -84,6 +85,9 @@ public:
 	//! The novelty w_{#g,#r} of the state
 	Novelty w_gr;
 
+	//! The numeric value of the novelty w_{#g,#r}
+	unsigned short w_g_r;
+
 	//! A reference atomset helper wrt which the sets R of descendent nodes with same #g are computed
 	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
 	AtomsetHelper* _helper;
@@ -92,9 +96,6 @@ public:
 	//! made true along the path (#r)
 	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
 	RelevantAtomSet* _relevant_atoms;
-
-	//! #r
-	unsigned		_hash_r;
 
 	//! The indexes of the variables whose atoms form the set 1(s), which contains all atoms in 1(parent(s)) not deleted by the action that led to s, plus those
 	//! atoms in s with novelty 1.
@@ -115,8 +116,7 @@ public:
 		w_g(Novelty::Unknown),
 		w_gr(Novelty::Unknown),
 		_helper(nullptr),
-		_relevant_atoms(nullptr),
-		_hash_r(0)
+		_relevant_atoms(nullptr)
 // 		_nov1atom_idxs()
 	{
 		assert(_gen_order > 0); // Very silly way to detect overflow, in case we ever generate > 4 billion nodes :-)
@@ -143,9 +143,9 @@ public:
 // 		const Problem& problem = Problem::getInstance();
 		std::string reached = "?";
 		if (_relevant_atoms) {
-			reached = std::to_string(_relevant_atoms->num_reached()) + " / " + std::to_string(_relevant_atoms->getHelper()._num_relevant);
+			reached = std::to_string(_relevant_atoms->num_reached()) + "/" + std::to_string(_relevant_atoms->getHelper()._num_relevant);
 		} else {
-			reached = std::to_string(_hash_r);
+			reached = std::to_string(0);
 		}
 		os << "#" << _gen_order << " (" << this << "), " << state;
 		os << ", g = " << g << ", w_g" << w_g <<  ", w_gr" << w_gr << ", #g=" << unachieved_subgoals << ", #r=" << reached;
@@ -327,7 +327,7 @@ public:
 		return it->second;
 	}
 
-	unsigned evaluate_novelty(const NodeT& node, std::vector<NoveltyEvaluatorMapT>& evaluator_map,  unsigned k, unsigned type, unsigned parent_type) {
+	unsigned evaluate_novelty(const NodeT& node, std::vector<NoveltyEvaluatorMapT>& evaluator_map, unsigned k, unsigned type, unsigned parent_type) {
 		NoveltyEvaluatorT* evaluator = fetch_evaluator(evaluator_map[k], k, type);
 
 		if (node.has_parent() && type == parent_type) {
@@ -372,7 +372,7 @@ public:
 
 protected:
 
-// An open list sorted by #g
+	//! An open list sorted by #g
 	using UnachievedSubgoalsComparerT = unachieved_subgoals_comparer<NodePT>;
 	using UnachievedOpenList = lapkt::UpdatableOpenList<NodeT, NodePT, UnachievedSubgoalsComparerT>;
 
@@ -390,6 +390,8 @@ protected:
 	NodePT _solution;
 	//! Best node found
 	NodePT _best_found;
+
+	StandardOpenList _open;
 
 	//! A list with all nodes that have novelty w_{#g}=1
 	UnachievedOpenList _q1;
@@ -506,7 +508,8 @@ public:
         }
 
         create_node(root);
-		assert(_q1.size()==1); // The root node must necessarily have novelty 1
+        assert(_open.top()->w_g_r == 1); // The root node must necessarily have novelty 1
+//		assert(_q1.size()==1); // The root node must necessarily have novelty 1
 
 
 		// Force one simulation from the root node and abort the search
@@ -518,11 +521,14 @@ public:
 		// The main search loop
 		_solution = nullptr; // Make sure we start assuming no solution found
 
-		for (bool remaining_nodes = true; !_solution && remaining_nodes;) {
-			remaining_nodes = process_one_node();
+//		for (bool remaining_nodes = true; !_solution && remaining_nodes;) {
+//			remaining_nodes = process_one_node();
+//		}
+
+		while (!_open.empty() && !_solution) {
+			auto node = _open.next();
+			process_node(node);
 		}
-//		if ( _solution == nullptr )
-//			return extract_plan(_best_found, plan);
 
 		return extract_plan(_solution, plan);
 	}
@@ -620,25 +626,46 @@ protected:
 			_solution = node;
 			return true;
 		}
+
+		// Compute #g upfront
 		node->unachieved_subgoals = _heuristic.compute_unachieved(node->state);
 
+		// Print some stats if a new low in number of unreached subgoals has been reached
 		if (node->unachieved_subgoals < _min_subgoals_to_reach) {
 			_min_subgoals_to_reach = node->unachieved_subgoals;
 			_best_found = node;
 			LPT_INFO("search", "Min. # unreached subgoals: " << _min_subgoals_to_reach << "/" << _model.num_subgoals());
 		}
 
+		node->w_g_r = 999;
+		unsigned nov = _heuristic.evaluate_wgr1(*node);
+		if (nov == 1) {
+			node->w_g_r = 1;
+
+		} else if (_novelty_levels == 3) {
+			if (_heuristic.evaluate_wgr2(*node) == 2) {
+				node->w_g_r = 2;
+			}
+		}
+
+        if (node->w_g_r == 1) _stats.wgr1_node();
+        else if (node->w_g_r == 2) _stats.wgr2_node();
+        else _stats.wgr_gt2_node();
+
+
+        _open.insert(node);
+
 		// Now insert the node into the appropriate queues
-		_heuristic.evaluate_wg1(*node);
-		if (node->w_g == Novelty::One) {
-			_q1.insert(node);
-		}
-
-		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
-
-		if (_novelty_levels == 3) {
-			_qwgr2.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=2 tables
-		}
+//		_heuristic.evaluate_wg1(*node);
+//		if (node->w_g == Novelty::One) {
+//			_q1.insert(node);
+//		}
+//
+//		_qwgr1.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=1 tables
+//
+//		if (_novelty_levels == 3) {
+//			_qwgr2.insert(node); // The node is surely pending evaluation in the w_{#g,#r}=2 tables
+//		}
 
 		_stats.generation();
 		if (node->decreases_unachieved_subgoals()) _stats.generation_g_decrease();
@@ -646,7 +673,7 @@ protected:
 		return false;
 	}
 
-	//! Process the node. Return true iff at least one node was created during the processing.
+	//! Process the node.
 	void process_node(const NodePT& node) {
 		//assert(!node->_processed); // Don't process a node twice!
 		node->_processed = true; // Mark the node as processed
@@ -705,6 +732,7 @@ protected:
 	}
 
 	bool is_open(const NodePT& node) const {
+		return _open.contains(node);
 		return _q1.contains(node) ||
 		       _qwgr1.contains(node) ||
 		       _qwgr2.contains(node) ||
