@@ -125,6 +125,7 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     task.process_state_constraints([])  # No state constr. possible in ADL, but this needs to be invoked nevertheless
     task.process_axioms([])
     task.process_metric(None)
+    task.process_transitions([])  # We simply initalize the transitions attribut with an empty set of transitions
 
     return task
 

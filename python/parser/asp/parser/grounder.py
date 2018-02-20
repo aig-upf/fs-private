@@ -393,10 +393,10 @@ class Grounder(object):
 
             (Problem, str, str) -> None
         """
-        print(grounder_path)
         if not os.path.isfile(grounder_path):
             raise RuntimeError("In order to use the ASP-based grounder, you need to set the environment variable "
                                "'GRINGO_PATH' to the path where the 'gringo' binary is located")
+        print("Using ASP grounder found at '{}'".format(grounder_path))
         self.rename_asp_components()
         self.write_asp()
         reachable_goal = False
@@ -461,8 +461,9 @@ class Grounder(object):
             raise ParsingException("Error: could not open the grounding file: " + \
                                    self.grounding_file_name, grounding_error_code)
         except OSError as e:
+            import sys
             sys.stdout.flush()
-            print((e.message))
+            print(e)
             raise ParsingException("Error: There was a problem running the grounder: " + \
                                    grounder_path, grounding_error_code)
 
