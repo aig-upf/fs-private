@@ -7,6 +7,7 @@
 
 
 #include <fs/core/problem.hxx>
+#include <fs/core/problem_info.hxx>
 #include <fs/core/search/drivers/sbfws/base.hxx>
 #include <fs/core/search/drivers/sbfws/iw_run_config.hxx>
 #include <fs/core/search/drivers/sbfws/stats.hxx>

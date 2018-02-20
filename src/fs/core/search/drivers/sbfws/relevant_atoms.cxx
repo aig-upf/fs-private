@@ -8,26 +8,6 @@
 
 namespace fs0 { namespace bfws {
 
-//template <typename StateModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
-//RelevantAtomsCounterI<NodeT>* RelevantAtomsCounterFactory::build(const StateModelT& model, const SBFWSConfig& config) {
-//
-//	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
-//		return new NullRelevantAtomsCounter<NodeT>(model.getTask());
-//	}
-//
-//	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::L0) {
-//		return new L0RelevantAtomsCounter<NodeT>(model.getTask());
-//	}
-//
-//	if (config.relevant_set_type == SBFWSConfig::RelevantSetType::G0) {
-//		return new L2NormRelevantAtomsCounter<NodeT>(model.getTask());
-//	}
-//
-//
-//	return new SimulationBasedRelevantAtomsCounter<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model);
-//}
-
-
 /****** L0-BASED #R COUNTER *****/
 template <typename NodeT>
 L0RelevantAtomsCounter<NodeT>::L0RelevantAtomsCounter(const Problem &problem)
@@ -39,35 +19,8 @@ L0RelevantAtomsCounter<NodeT>::~L0RelevantAtomsCounter() { delete _l0_heuristic;
 
 template <typename NodeT>
 unsigned L0RelevantAtomsCounter<NodeT>::count(NodeT& node, BFWSStats& stats) const {
-	auto v =  (unsigned) _l0_heuristic->evaluate(node.state);
-	node._hash_r = v;
-	return v;
+	return (unsigned) _l0_heuristic->evaluate(node.state);
 }
-
-/****** L2-BASED #R COUNTER *****/
-
-
-
-///****** IW-SIMULATION-BASED #R COUNTER *****/
-//template <typename ModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
-//SimulationBasedRelevantAtomsCounter<ModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>::
-//SimulationBasedRelevantAtomsCounter(const ModelT& model, const SBFWSConfig& config, const FeatureSetT& features) :
-//    _model(model),
-//	_problem(model.getTask()),
-//	_config(config),
-//	_simconfig(config.complete_simulation, config.mark_negative_propositions, config.simulation_width, config._global_config),
-//    _sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
-//    _featureset(features)
-//{
-//}
-//
-//template <typename ModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
-//SimulationBasedRelevantAtomsCounter<ModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>::
-//~SimulationBasedRelevantAtomsCounter() {}
-//
-
-
-
 
 #ifdef FS_HYBRID
 
@@ -85,7 +38,6 @@ L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {
 template <typename NodeT>
     unsigned L2NormRelevantAtomsCounter<NodeT>::count(NodeT& node, BFWSStats& stats) const {
 	unsigned v = _l2_norm->ball_geodesic_index(node.state);
-	node._hash_r = v;
 	return v;
 }
 
