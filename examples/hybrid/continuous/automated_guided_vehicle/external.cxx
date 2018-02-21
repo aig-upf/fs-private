@@ -20,7 +20,11 @@ External::External( const ProblemInfo& info, const std::string& data_dir )
 {
     //! map layout file
     unsigned track_layout_sym_id = info.getSymbolId( "track_layout" );
-    _track_layout = info.resolveStateVariable( track_layout_sym_id, {});
+    try {
+        _track_layout = info.resolveStateVariable( track_layout_sym_id, {});
+    } catch( const std::out_of_range& e ) {
+        throw std::runtime_error("[AGV::External]: could not resolve term 'track_layout', have you disabled static term/predicate optimisations?");
+    }
     unsigned x_sym_id = info.getSymbolId("x");
     unsigned y_sym_id = info.getSymbolId("y");
     for (object_id o : _vehicle ) {
