@@ -93,8 +93,9 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 			point.push_back(make_object(get_type_id(signature[j]), var_data["point"][j].GetInt()));
 		}
 
+		// LPT_INFO("vardata", "Symbol: " << symbol_id << ". Point: " << print::container(point) << ", Var. ID: " << id);
 		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, point),  id));
-		variableIdToData.push_back(std::make_pair(symbol_id, point));
+		variableIdToData.emplace_back(symbol_id, point);
 	}
 }
 

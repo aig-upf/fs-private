@@ -139,9 +139,6 @@ public:
 
 		unsigned count() { return _tree->count(); }
 
-		static void check_match_tree_can_be_used(const ProblemInfo& info);
-
-
     protected:
 		//! The tuple index of the problem
 		const AtomIndex& _tuple_idx;

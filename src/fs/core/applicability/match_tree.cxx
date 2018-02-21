@@ -147,8 +147,8 @@ namespace fs0 {
 			std::vector<ActionIdx> empty;
 			actions_split_by_pivot_value.insert(actions_split_by_pivot_value.begin(), empty);
 		}
-		for (unsigned i = 0; i < actions_split_by_pivot_value.size(); i++) {
-			_children.push_back(create_tree(std::move(actions_split_by_pivot_value[i]), context));
+		for (auto& i : actions_split_by_pivot_value) {
+			_children.push_back(create_tree(std::move(i), context));
 		}
 
 		_default_child = create_tree(std::move(dont_care_actions), context); // Create the default generator
@@ -188,16 +188,18 @@ namespace fs0 {
     }
 
     void LeafNode::print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const {
-    	for (unsigned i = 0; i < _applicable_items.size(); ++i)
-    		stream << indent << *manager._actions[_applicable_items[i]] << std::endl;
+    	for (ActionIdx item : _applicable_items) {
+            stream << indent << *manager._actions[item] << std::endl;
+        }
     }
 
     void SwitchNode::print( std::stringstream& stream, std::string indent, const MatchTreeActionManager& manager ) const {
         Atom a = manager._tuple_idx.to_atom( _pivot );
         stream << indent << "switch on " << a << std::endl;
         stream << indent << "immediately:" << std::endl;
-        for (unsigned i = 0; i < _immediate_items.size(); ++i)
-            stream << indent << *manager._actions[_immediate_items[i]] << std::endl;
+        for (ActionIdx item : _immediate_items) {
+            stream << indent << *manager._actions[item] << std::endl;
+        }
         stream << indent << "always:" << std::endl;
         _default_child->print(stream, indent + "  ", manager);
 
@@ -207,18 +209,6 @@ namespace fs0 {
         }
     }
 
-    void
-    MatchTreeActionManager::check_match_tree_can_be_used(const ProblemInfo& info) {
-		for (unsigned var = 0; var < info.getNumVariables(); ++var) {
-			TypeIdx type = info.getVariableType(var);
-			if (info.get_type_id(type) != type_id::object_t) {
-				LPT_INFO("cout", "ERROR - Match Tree cannot be used with FSTRIPS encodings that contain bound integers. Try the \"naive\" successor generation instead");
-				throw std::runtime_error("ERROR - Match Tree cannot be used with FSTRIPS encodings that contain bound integers. Try the \"naive\" successor generation instead");
-			}
-		}
-	}
-
-
     MatchTreeActionManager::MatchTreeActionManager( const std::vector<const GroundAction*>& actions,
                                                     const std::vector<const fs::Formula*>& state_constraints,
                                                     const AtomIndex& tuple_idx)
@@ -227,8 +217,6 @@ namespace fs0 {
         _tree(nullptr)
     {
 		const ProblemInfo& info = ProblemInfo::getInstance();
-
-		check_match_tree_can_be_used(info);
 
 		LPT_DEBUG("cout", "Mem. usage before applicabilty-analyzer construction: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
 
@@ -274,7 +262,7 @@ namespace fs0 {
 		// appears on some (distinct) action precondition
 		 std::vector<std::pair<unsigned, VariableIdx>> count;
 		for (unsigned var = 0; var < info.getNumVariables(); ++var) {
-			count.push_back(std::make_pair(variable_relevance[var], var));
+			count.emplace_back(variable_relevance[var], var);
 		}
 
 		// This will sort by count, breaking ties lexicographically by variable index.
