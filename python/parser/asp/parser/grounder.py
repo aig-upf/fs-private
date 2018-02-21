@@ -423,8 +423,14 @@ class Grounder(object):
                             cond_args = tokens[2].split(",")
                         else:
                             cond_args = []
-                        cond_args = [self.asp_objects[arg].name for arg in cond_args]
-                        self.problem.code_conds[cond_name].groundings.append(tuple(cond_args))
+                        condition = self.problem.code_conds[cond_name]
+
+                        grounding = tuple(self.asp_objects[arg].name for arg in cond_args)
+                        condition.groundings.append(grounding)
+
+                        if hasattr(condition, "variables"):
+                            binding = dict(zip(condition.relevant_vars, grounding))
+                            condition.bindings.append(tuple(binding.get(var, var) for var in condition.variables))
 
                     elif tokens[0] == "reachable_a":
                         pred_name = tokens[1]
@@ -433,9 +439,11 @@ class Grounder(object):
                         else:
                             pred_args = []
 
-                        pred_args = [self.asp_objects[arg].name for arg in pred_args]
-                        # if ("clean" in pred_name): print(pred_name)
-                        self.asp_actions[pred_name].groundings.append(tuple(pred_args))
+                        action = self.asp_actions[pred_name]
+                        grounding = tuple(self.asp_objects[arg].name for arg in pred_args)
+                        binding = dict(zip(action.param_names, grounding))
+                        action.groundings.append(grounding)
+                        action.bindings.append(tuple(binding.get(var) for var in action.param_names))
 
                     elif tokens[0] == "reachable_f":
                         pred_name = tokens[1]
