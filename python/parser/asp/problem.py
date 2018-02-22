@@ -13,6 +13,7 @@
 
 import itertools
 
+from ..asp import strips_problem
 from ..exceptions import UnimplementedFeature
 from ..asp.utilities import ProblemException, default_type_name, cond_prefix,\
     inequality_prefix, grounding_error_code, lower_var_alphabet, NOT_CONDITION,\
@@ -74,6 +75,8 @@ class Type(object):
             (Type) -> str
         """
         return self.name
+
+    __repr__ = __str__
 
     def add_object(self, obj):
         """ Add the object to the type and to all of its ancestors.
@@ -143,9 +146,9 @@ class Predicate(object):
         """ Return a short string representation of the predicate
             (Predicate) -> str
         """
-        return "( " + self.name + " " + " ".join([x + " - " + str(y)\
-            for x, y in zip(self.variables, self.types)]) + " )"
+        return "( " + self.name + " " + " ".join(x + " - " + str(y) for x, y in zip(self.variables, self.types)) + " )"
 
+    __repr__ = __str__
 
 class Condition(object):
     """ A formula used as a precondition or head of an axiom or conditional effect. """
@@ -155,6 +158,7 @@ class Condition(object):
             (Condition) -> None
         """
         self.groundings = []
+        self.bindings = []
         self.desc = None
 
     def substitute_derived_predicates(self, derived_predicates, seen_preds):
@@ -298,12 +302,9 @@ class PredicateCondition(Condition):
         """ Remove entries from candidates which are deleted somewhere in this effect.
             (PredicateCondition, set([(Predicate, [str])], set([(Predicate, [str])) -> None
         """
-        if self.sign:
-            for grounding in self.groundings:
-                neg_candidates.discard((self.pred, grounding))
-        else:
-            for grounding in self.groundings:
-                candidates.discard((self.pred, grounding))
+        cand_list = candidates if not self.sign else neg_candidates
+        for binding in self.bindings:
+            cand_list.discard((self.pred, binding))
 
     def link_groundings(self, static_preds, neg_static_preds):
         """ Link the groundings in this condition to the groundings in its
@@ -1484,6 +1485,7 @@ class Action(object):
         self.is_noop = False
 
         self.groundings = []
+        self.bindings = []  # Same as groundings, but maps variable name to actual value
         self.ground_preconditions = {}
         self.ground_effects = {}
 
