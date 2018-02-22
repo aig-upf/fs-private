@@ -292,6 +292,22 @@ class Parser(object):
             self.problem.predicates[name] = Predicate(name, variables, types)
 
 
+    def add_default_function_types(self, functions):
+        """ Take the list of functions as declared in the PDDL and make sure that when no type is specified,
+            the default type "- number" is used.
+        """
+        corrected = []
+        last_was_function = False
+        for elem in functions:
+            if last_was_function and elem != "-":
+                corrected += ['-', 'number']
+
+            last_was_function = isinstance(elem, list)
+            corrected.append(elem)
+
+        if last_was_function:
+            corrected += ['-', 'number']
+        return corrected
 
     def parse_functions(self, functions):
         """ Parse a the list of functions and store in the function dict.
@@ -299,7 +315,7 @@ class Parser(object):
             (Parser, [str]) -> None
         """
 
-        tokens = iter(functions)
+        tokens = iter(self.add_default_function_types(functions))
         for function in tokens:
             try:
                 token = next(tokens)
