@@ -198,13 +198,10 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 
 
 		std::set<VariableIdx> referenced; // The state variables already made reference to by some precondition
-		for (const fs::AtomicFormula* sub:preconditions) {
-			const fs::AtomicFormula* conjunct = dynamic_cast<const fs::AtomicFormula*>(sub);
-			if (!conjunct) throw std::runtime_error("Only conjunctions of atoms supported for this type of applicability analyzer");
-
-			const fs::RelationalFormula* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
-			const fs::EQAtomicFormula* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
-			const fs::NEQAtomicFormula* neq = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
+		for (const fs::AtomicFormula* conjunct:preconditions) {
+			const auto* rel = dynamic_cast<const fs::RelationalFormula*>(conjunct);
+			const auto* eq = dynamic_cast<const fs::EQAtomicFormula*>(conjunct);
+			const auto* neq = dynamic_cast<const fs::NEQAtomicFormula*>(conjunct);
 			unsigned nestedness = fs::nestedness(*conjunct);
 			std::vector<VariableIdx> all_relevant = fs::ScopeUtils::computeDirectScope(conjunct);
 
@@ -212,19 +209,17 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 			// furthermore assuming that there are no two preconditions making reference to the same state variable
 			if (nestedness > 0 || all_relevant.size() != 1 || !(eq || neq)) continue;
 
-			const fs::StateVariable* sv = dynamic_cast<const fs::StateVariable*>(rel->lhs());
+			const auto* sv = dynamic_cast<const fs::StateVariable*>(rel->lhs());
 			if (!sv) continue;
 
 // 			std::cout << "Processing action #" << i << ": " << action << std::endl;
 // 			std::cout << "Processing conjunct: " << *conjunct << std::endl;
 
 			VariableIdx relevant = all_relevant[0];
-			const std::vector<object_id>& values = info.getVariableObjects(relevant);
-
-			if (!referenced.insert(relevant).second) {
-				LPT_DEBUG("cout", "Conjunct \"" << *conjunct << "\" contains a duplicate reference to state variable \"" << info.getVariableName(relevant) << "\"");
-				throw std::runtime_error("BasicApplicabilityAnalyzer requires that no two preconditions make reference to the same state variable");
-			}
+//			if (!referenced.insert(relevant).second) {
+//				LPT_DEBUG("cout", "Conjunct \"" << *conjunct << "\" contains a duplicate reference to state variable \"" << info.getVariableName(relevant) << "\"");
+//				throw std::runtime_error("BasicApplicabilityAnalyzer requires that no two preconditions make reference to the same state variable");
+//			}
 
 			_variable_relevance[relevant]++;
 
@@ -242,8 +237,9 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 
 			} else { // Prec is of the form X!=x
 				assert(neq);
-// 				std::cout << "Precondition: " << *eq << std::endl;
+// 				std::cout << "Precondition: " << *neq << std::endl;
 				object_id value = _extract_constant_val(neq->lhs(), neq->rhs());
+				const std::vector<object_id>& values = info.getVariableObjects(relevant);
 				for (object_id v2:values) {
 					if (v2 != value) {
 						AtomIdx tup = _tuple_idx.to_index(relevant, v2);
