@@ -24,9 +24,9 @@ release, you can add the `--debug` flag.
 
 
 ## Problems with externally-defined symbols
- 
+
 If externally-defined symbols are used, the parsing process involves the automatic generation of
-some of C++ code that is then compiled and linked against the main planner library to produce an 
+some of C++ code that is then compiled and linked against the main planner library to produce an
 actual _domain-dependent_ binary planner which incorporates the provided external definitions.
 
 ## Search Modes
@@ -81,4 +81,20 @@ first factors being equal.
 
 * `bfs`: A blind, standard breadth-first search.
 
+## Notes on debugging
 
+In order to debug the planner with ```gdb``` or its "graphical" counterpart, ```cgdb```,
+it is necessary to make sure that the run-time linker can find the appropiate version
+of the ```fs``` library binaries. One can do so on a per command basis
+
+
+```
+LD_LIBRARY_PATH=:$LD_LIBRARY_PATH:$$FS_PATH/.build cgdb <solver path>
+```
+
+where ```solver path``` is the path the runner script reports on the following way
+
+```
+Running solver:               <solver path>
+Command line arguments:       <command line arguments>
+```
