@@ -100,7 +100,6 @@ def create_fs_plus_task(fsp_task, domain_name, instance_name, disable_static_ana
 def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     # MRJ: steps from fs_task.create_fs_task are copied here to act as both a reminder and a TODO list
 
-    # types, type_map = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
     sorted_objs = [adl_task.objects[name] for name in adl_task.sorted_object_names]
     types, type_map, supertypes = process_problem_types(adl_task.types.values(), sorted_objs, [])
     task = FSTaskIndex(domain_name, instance_name)
@@ -113,9 +112,14 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
 
     task.process_adl_symbols(adl_task.actions.values(), adl_predicates, adl_functions)
 
-    state_var_list = create_all_possible_state_variables_from_groundings(adl_predicates, adl_functions,
+    simple_varlist = create_all_possible_state_variables(task.symbols, task.static_symbols, type_map)
+    reach_pruned_varlist = create_all_possible_state_variables_from_groundings(adl_predicates, adl_functions,
                                                                          task.objects, task.static_symbols)
-    task.process_state_variables(state_var_list)
+
+    undetected = [v for v in simple_varlist.objects if v not in set(reach_pruned_varlist.objects)]
+    print("{} static atoms are going as state variables for ignoring reachability analysis".format(len(undetected)))
+    # task.process_state_variables(reach_pruned_varlist)
+    task.process_state_variables(simple_varlist)
 
     task.process_adl_initial_state(adl_task)
     task.process_processes([])
