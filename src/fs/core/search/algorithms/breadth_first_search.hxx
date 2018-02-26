@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <lapkt/algorithms/generic_search.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
+#include <fs/core/problem_info.hxx>
 
 
 namespace lapkt { namespace blai {
@@ -74,7 +75,42 @@ public:
     StlBreadthFirstSearch& operator=(StlBreadthFirstSearch&&) = default;
 
 
-    //! We redefine where the whole search schema following Russell&Norvig.
+    void log_generated_node(NodeT& n) {
+        const auto& info = fs0::ProblemInfo::getInstance();
+
+        unsigned parent = 0;
+        if (n.parent) parent = n.parent->_gen_order;
+        std::cout << "{id: " << n._gen_order << ", parent: " << parent << ", atoms: [";
+
+        // THIS IS COPY-PASTED FROM THE STATE PRINTER
+        const fs0::State& s = n.state;
+        bool first_printed = false;
+        for (unsigned x = 0; x < info.getNumVariables(); ++x) {
+            fs0::object_id o = s.getValue(x);
+            std::string atom;
+
+            if (fs0::o_type(o) == fs0::type_id::bool_t) {
+                if (fs0::value<bool>(o)) {
+                    atom = info.getVariableName(x); // print positive atoms only
+                }
+            } else {
+                atom = info.getVariableName(x) + "=";
+                if (fs0::o_type(o) == fs0::type_id::invalid_t) atom += "<invalid>";
+                else atom += info.object_name(o);
+            }
+
+            if (atom != "") {
+                if (first_printed) std::cout << ", ";
+                std::cout << "\"" << atom << "\"";
+                first_printed = true;
+            }
+//            if (x < info.getNumVariables() - 1) std::cout << ", ";
+        }
+        std::cout << "]" << "}" << std::endl;
+
+    }
+
+//! We redefine where the whole search schema following Russell&Norvig.
     //! The only modification is that the check for whether a state is a goal
     //! or not is done right after the creation of the state, instead of upon expansion.
     //! On a problem that has a solution at depth 'd', this avoids the worst-case expansion
@@ -109,6 +145,7 @@ public:
 //                    continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
 
                 this->notify(NodeCreationEvent(*successor));
+                log_generated_node(*successor);
 
 //                if (this->check_goal(successor, solution)) return true;
 
