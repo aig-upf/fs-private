@@ -215,11 +215,12 @@ class Parser(object):
                         self.problem.types[type_name] = Type(type_name, self.problem.types[token])
                     current_types = []
                 except StopIteration:
-                    raise ParsingException("Error: badly formed types.",
-                        parsing_error_code)
+                    raise ParsingException("Error: badly formed types.", parsing_error_code)
             else:
                 current_types.append(token)
         for type_name in current_types:
+            if type_name == 'object':
+                continue  # i.e. ignore the declaration of type "object", as it is always assumed to be there.
             if type_name in self.problem.types:
                 raise ParsingException("Error: type " + type_name +\
                     " has multiple parents.", parsing_error_code)
