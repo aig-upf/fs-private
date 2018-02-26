@@ -120,6 +120,9 @@ public:
         this->notify(NodeCreationEvent(*n));
 
         unsigned expanded = 0;
+        std::cout  << std::endl  << std::endl << "==GENERATED NODES==" << std::endl;
+        log_generated_node(*n);
+
 //        if (this->check_goal(n, solution)) return true;
 
         this->_open.insert(n);
@@ -134,6 +137,7 @@ public:
 
             this->notify(NodeExpansionEvent(*current));
             ++expanded;
+
 
             for (const auto& a : this->_model.applicable_actions(current->state)) {
                 StateT s_a = this->_model.next(current->state, a);
