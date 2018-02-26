@@ -99,9 +99,9 @@ public:
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current,
                                                            this->_generated++);
 
-                if (this->_closed.check(successor)) continue; // The node has already been closed
-                if (this->_open.contains(successor))
-                    continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
+//                if (this->_closed.check(successor)) continue; // The node has already been closed
+//                if (this->_open.contains(successor))
+//                    continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
 
                 this->notify(NodeCreationEvent(*successor));
 
