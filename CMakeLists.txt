@@ -143,6 +143,7 @@ set(SOURCE_FILES
         src/fs/core/search/algorithms/ehc.hxx
         src/fs/core/search/algorithms/ehc_gbfs.hxx
         src/fs/core/search/algorithms/iterated_width.hxx
+        src/fs/core/search/algorithms/breadth_first_search.hxx
         src/fs/core/search/drivers/base.hxx
         src/fs/core/search/drivers/sbfws/features/features.cxx
         src/fs/core/search/drivers/sbfws/features/features.hxx
