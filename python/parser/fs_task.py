@@ -112,14 +112,14 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
 
     task.process_adl_symbols(adl_task.actions.values(), adl_predicates, adl_functions)
 
-    simple_varlist = create_all_possible_state_variables(task.symbols, task.static_symbols, type_map)
     reach_pruned_varlist = create_all_possible_state_variables_from_groundings(adl_predicates, adl_functions,
                                                                          task.objects, task.static_symbols)
 
-    undetected = [v for v in simple_varlist.objects if v not in set(reach_pruned_varlist.objects)]
-    print("{} static atoms are going as state variables for ignoring reachability analysis".format(len(undetected)))
-    # task.process_state_variables(reach_pruned_varlist)
-    task.process_state_variables(simple_varlist)
+    # simple_varlist = create_all_possible_state_variables(task.symbols, task.static_symbols, type_map)
+    # undetected = [v for v in simple_varlist.objects if v not in set(reach_pruned_varlist.objects)]
+    # print("{} static atoms are going as state variables for ignoring reachability analysis".format(len(undetected)))
+    # task.process_state_variables(simple_varlist)
+    task.process_state_variables(reach_pruned_varlist)
 
     task.process_adl_initial_state(adl_task)
     task.process_processes([])
