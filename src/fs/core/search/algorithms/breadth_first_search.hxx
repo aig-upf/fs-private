@@ -53,11 +53,14 @@ public:
     //! (1) the state model to be used in the search
     //! (2) the particular open and closed list objects
     StlBreadthFirstSearch(const StateModel& model, OpenListT&& open) :
-            BaseClass(model, std::move(open), ClosedListT()) {}
+            BaseClass(model, std::move(open), ClosedListT()),
+            _max_expansions(100)
+    {}
 
     //! For convenience, a constructor where the open list is default-constructed
     StlBreadthFirstSearch(const StateModel& model) :
-            StlBreadthFirstSearch(model, OpenListT()) {}
+            StlBreadthFirstSearch(model, OpenListT())
+    {}
 
     virtual ~StlBreadthFirstSearch() = default;
 
@@ -80,11 +83,12 @@ public:
         NodePT n = std::make_shared<NodeT>(s, this->_generated++);
         this->notify(NodeCreationEvent(*n));
 
-        if (this->check_goal(n, solution)) return true;
+        unsigned expanded = 0;
+//        if (this->check_goal(n, solution)) return true;
 
         this->_open.insert(n);
 
-        while (!this->_open.empty()) {
+        while (!this->_open.empty() && expanded < _max_expansions) {
             NodePT current = this->_open.next();
             this->notify(NodeOpenEvent(*current));
 
@@ -93,6 +97,7 @@ public:
             this->_closed.put(current);
 
             this->notify(NodeExpansionEvent(*current));
+            ++expanded;
 
             for (const auto& a : this->_model.applicable_actions(current->state)) {
                 StateT s_a = this->_model.next(current->state, a);
@@ -112,6 +117,9 @@ public:
         }
         return false;
     }
+
+protected:
+    unsigned _max_expansions;
 };
 
 }}
