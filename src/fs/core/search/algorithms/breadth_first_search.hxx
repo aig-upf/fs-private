@@ -110,7 +110,7 @@ public:
 
                 this->notify(NodeCreationEvent(*successor));
 
-                if (this->check_goal(successor, solution)) return true;
+//                if (this->check_goal(successor, solution)) return true;
 
                 this->_open.insert(successor);
             }
