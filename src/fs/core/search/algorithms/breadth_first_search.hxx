@@ -52,14 +52,14 @@ public:
     //! The constructor requires the user of the algorithm to inject both
     //! (1) the state model to be used in the search
     //! (2) the particular open and closed list objects
-    StlBreadthFirstSearch(const StateModel& model, OpenListT&& open) :
+    StlBreadthFirstSearch(const StateModel& model, OpenListT&& open, unsigned max_expansions) :
             BaseClass(model, std::move(open), ClosedListT()),
-            _max_expansions(100)
+            _max_expansions(max_expansions)
     {}
 
     //! For convenience, a constructor where the open list is default-constructed
-    StlBreadthFirstSearch(const StateModel& model) :
-            StlBreadthFirstSearch(model, OpenListT())
+    StlBreadthFirstSearch(const StateModel& model, unsigned max_expansions) :
+            StlBreadthFirstSearch(model, OpenListT(), max_expansions)
     {}
 
     virtual ~StlBreadthFirstSearch() = default;

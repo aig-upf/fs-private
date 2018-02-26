@@ -34,7 +34,7 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 	auto model = setup(problem);
 	
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
-	auto engine = EnginePT(new EngineT(model));
+	auto engine = EnginePT(new EngineT(model, config.getOption<unsigned>("max_expansions", 100)));
 	lapkt::events::subscribe(*engine, _handlers);
 	
 	return Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats);
