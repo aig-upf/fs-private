@@ -675,8 +675,7 @@ class Parser(object):
             scope = list(variables)
             effect = self.parse_condition(effect, scope, 'eff', True)
             if not isinstance(effect, AndCondition):
-                raise ParsingException("Expected conjunctive effect",
-                    parsing_error_code)
+                effect = AndCondition([effect])
         except ParsingException as e:
             raise ParsingException("Error parsing effects of action: " + name +\
                 "\n" + e.message, parsing_error_code)
