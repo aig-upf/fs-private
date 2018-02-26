@@ -40,13 +40,14 @@ def filter_out_action_cost_functions(adl_functions):
     return filtered
 
 
-def create_fs_task(fd_task, domain_name, instance_name):
+def create_fs_task(fd_task, domain_name, instance_name, disable_static_analysis):
     """ Create a problem domain and instance and perform the appropriate validity checks """
     types, type_map, supertypes = process_problem_types(fd_task.types, fd_task.objects, fd_task.bounds)
     task = FSTaskIndex(domain_name, instance_name)
     task.process_objects(fd_task.objects)
     task.process_types(types, type_map, supertypes)
-    task.process_symbols(actions=fd_task.actions, predicates=fd_task.predicates, functions=fd_task.functions)
+    task.process_symbols(actions=fd_task.actions, predicates=fd_task.predicates, functions=fd_task.functions,
+                         no_static_symbols=disable_static_analysis)
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
     task.process_actions(fd_task.actions)

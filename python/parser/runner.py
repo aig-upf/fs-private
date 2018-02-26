@@ -269,7 +269,7 @@ def run(args):
             fs_task = create_fs_plus_task(hybrid_task, domain_name, instance_name, args.disable_static_analysis)
         else:
             fd_task = parse_pddl_task(args.domain, args.instance)
-            fs_task = create_fs_task(fd_task, domain_name, instance_name)
+            fs_task = create_fs_task(fd_task, domain_name, instance_name, args.disable_static_analysis)
     else:
         from .asp import processor
         adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir)
