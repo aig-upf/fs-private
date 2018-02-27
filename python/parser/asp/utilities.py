@@ -20,7 +20,6 @@ extracting_error_code    = -6
 grounder_path = os.path.join(os.environ.get('GRINGO_PATH', ''), "gringo")
 tmp_path = os.path.join(os.path.dirname(__file__), "tmp_files")
 
-grounder_run_success_code = 0
 _var_alphabet = "ABCDEFGHIJKLMNOPQRSTUFWXYZ"
 # i.e. var_alphabet = ["A", "B", ..., "Z", "AA", "AB", ..., "ZZ"]
 var_alphabet = list(_var_alphabet) + [''.join(tup) for tup in itertools.product(_var_alphabet, _var_alphabet)]

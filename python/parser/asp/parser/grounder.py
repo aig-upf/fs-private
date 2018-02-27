@@ -6,7 +6,7 @@
     atoms. It is very efficient.
 """
 
-from ..utilities import grounding_error_code, grounder_run_success_code, \
+from ..utilities import grounding_error_code, \
     asp_convert, grounder_path, var_alphabet, neg_prec_prefix, equality_prefix, \
     inequality_prefix, default_type_name
 from .parser import ParsingException
@@ -401,9 +401,11 @@ class Grounder(object):
         self.write_asp()
         reachable_goal = False
         try:
-            solver_res = subprocess.call(grounder_path + " " + self.pre_file_name + " > " + \
-                                         self.grounding_file_name, shell=True)
-            if solver_res != grounder_run_success_code:
+            # We redirect the error output of Gringo to a separate file
+            command = "{} {}".format(grounder_path, self.pre_file_name)
+            redirections = " > {output} 2> {output}.err".format(output=self.grounding_file_name)
+            solver_res = subprocess.call("{} {}".format(command, redirections), shell=True)
+            if solver_res != 0:
                 raise ParsingException("Error: There was a problem running the grounder: " + \
                                        grounder_path, grounding_error_code)
 
