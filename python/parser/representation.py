@@ -77,8 +77,12 @@ class ProblemRepresentation(object):
     def dump_variable_data(self):
         all_variables = []
         for i, var in enumerate(self.index.state_variables):
-            signature = [self.index.object_types[arg] for arg in var.args]
-            point = [arg if utils.is_int(arg) else self.index.objects.get_index(arg) for arg in var.args]
+
+            signature = []
+            point = []
+            for arg in var.args:
+                signature.append("int" if utils.is_int(arg) else self.index.object_types[arg])
+                point.append(arg if utils.is_int(arg) else self.index.objects.get_index(arg))
 
             all_variables.append(dict(id=i, name=str(var),
                                       fstype=self.index.symbol_types[var.symbol],
