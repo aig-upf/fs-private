@@ -12,6 +12,7 @@
 """
 
 import itertools
+import copy
 
 from ..exceptions import UnimplementedFeature
 from ..asp.utilities import ProblemException, default_type_name, cond_prefix,\
@@ -314,6 +315,8 @@ class PredicateCondition(Condition):
                 set([(Predicate, (str, ...))])) -> Condition
         """
         new_groundings = []
+        print("Predicate variables: {} relevant: {}".format(self.variables,self.relevant_vars))
+        print("Groundings: {}".format(self.groundings))
         for grounding in self.groundings:
             t_grounding = list(self.variables)
             for vid, var in enumerate(self.relevant_vars):
@@ -417,7 +420,7 @@ class AndCondition(Condition):
         """ Return a short string representation of the condition
             (AndCondition) -> str
         """
-        return "(and ...)"
+        return "(and {})".format(' '.join([str(cond) for cond in self.conditions]))
 
     def substitute_vars(self, substitutions):
         """ Replace the variables in this condition as specified in substitutions.
@@ -513,11 +516,8 @@ class AndCondition(Condition):
                 set([(Predicate, (str, ...))])) -> Condition
         """
         new_conditions = []
-        #print("Processing And condition...")
         for condition in self.conditions:
-            #print(condition)
             condition = condition.link_groundings(static_preds, neg_static_preds)
-            #print(condition)
             if isinstance(condition, AndCondition):
                 self.conditions += condition.conditions
             elif condition is not None:
@@ -772,7 +772,7 @@ class ForAllCondition(Condition):
         out_str = "(forall " + self.var
         if self.v_type:
             out_str += " - " + str(self.v_type)
-        return out_str + " ... )"
+        return out_str + ' ' + str(self.condition) + " )"
 
     def substitute_vars(self, substitutions):
         """ Replace the variables in this condition as specified in substitutions.
@@ -842,12 +842,12 @@ class ForAllCondition(Condition):
         else:
             print("Warning: problem contains a useless forall quantifier")
         self.var_types = {}
+
         for rv in self.relevant_vars:
             assert rv in var_types
             self.var_types[rv] = var_types[rv]
         self.var_indices = dict([(v, i) for i, v in enumerate(self.relevant_vars)])
         self.var_indices[self.var] = len(self.relevant_vars)
-        return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
         """ Assign a code to this condition.
@@ -875,11 +875,9 @@ class ForAllCondition(Condition):
             (ForAllCondition, set([(Predicate, (str, ...))],
                 set([(Predicate, (str, ...))])) -> Condition
         """
-        #print("Processing ForAll condition...")
-        #print("Grounding: {}".format(self.condition))
         self.condition = self.condition.link_groundings(static_preds, neg_static_preds)
-        #print("After Grounding: {}".format(self.condition))
-
+        print("After Grounding ForAll condition: {}".format(self.condition))
+        assert False
         if self.condition is None:
             return None
 
@@ -1333,7 +1331,7 @@ class ConditionalEffect(Condition):
         """Return a short string representation of the effect
             (ConditionalEffect) -> str
         """
-        return "(when ...)"
+        return "(when {} {})".format(self.condition,self.effect)
 
     def substitute_derived_predicates(self, derived_predicates, seen_preds):
         """ Replace the derived predicates in the conditional effect with the
@@ -1405,10 +1403,10 @@ class ConditionalEffect(Condition):
             (ConditionalEffect, set([(Predicate, (str, ...))],
                 set([(Predicate, (str, ...))])) -> Condition
         """
-        #print("Processing Conditional Effect...")
-        #print("Grounding: {}".format(self.effect))
+        print("Processing Conditional Effect...")
+        print("Grounding: {}".format(self.effect))
         self.effect = self.effect.link_groundings(static_preds, neg_static_preds)
-        #print("After grounding: {}".format(self.effect))
+        print("After grounding: {}".format(self.effect))
         if self.effect is None:
             return None
 
