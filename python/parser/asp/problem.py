@@ -315,7 +315,7 @@ class PredicateCondition(Condition):
                 set([(Predicate, (str, ...))])) -> Condition
         """
         new_groundings = []
-        print("Predicate variables: {} relevant: {}".format(self.variables,self.relevant_vars))
+        #print("Predicate variables: {} relevant: {}".format(self.variables,self.relevant_vars))
         #print("Groundings: {}".format(self.groundings))
         for grounding in self.groundings:
             t_grounding = list(self.variables)
@@ -848,6 +848,7 @@ class ForAllCondition(Condition):
             self.var_types[rv] = var_types[rv]
         self.var_indices = dict([(v, i) for i, v in enumerate(self.relevant_vars)])
         self.var_indices[self.var] = len(self.relevant_vars)
+        return self.relevant_vars
 
     def assign_cond_code(self, cond_index, code_conds):
         """ Assign a code to this condition.
@@ -877,7 +878,7 @@ class ForAllCondition(Condition):
         """
         self.condition = self.condition.link_groundings(static_preds, neg_static_preds)
         #print("After Grounding ForAll condition: {}".format(self.condition))
-        assert False
+        #assert False
         if self.condition is None:
             return None
 
