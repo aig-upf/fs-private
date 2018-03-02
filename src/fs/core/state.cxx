@@ -30,6 +30,7 @@ StateAtomIndexer::create(const ProblemInfo& info)
 StateAtomIndexer::StateAtomIndexer(IndexT&& index, unsigned n_bool, unsigned n_int) :
 	_index(std::move(index)), _n_bool(n_bool), _n_int(n_int)
 {
+	if (_n_int) throw std::runtime_error("Non-boolean variables not accepted");
 }
 
 StateAtomIndexer::IndexT
@@ -50,6 +51,7 @@ StateAtomIndexer::compute_index(const ProblemInfo& info) {
 
 object_id
 StateAtomIndexer::get(const State& state, VariableIdx variable) const {
+	/*
 	std::size_t n_vars = _index.size();
 	assert(variable < n_vars);
 
@@ -62,6 +64,8 @@ StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 	const IndexElemT& ind = _index[variable];
 	if (ind.first) return make_object(state._bool_values[ind.second]);
 	else return state._int_values[ind.second];
+	*/
+	return object_id::INVALID;
 }
 
 void
@@ -69,6 +73,7 @@ StateAtomIndexer::set(State& state, const Atom& atom) const { set(state, atom.ge
 
 void
 StateAtomIndexer::set(State& state, VariableIdx variable, const object_id& value) const {
+	/*
 	std::size_t n_vars = _index.size();
 	assert(variable < n_vars);
 
@@ -81,6 +86,7 @@ StateAtomIndexer::set(State& state, VariableIdx variable, const object_id& value
 		if (ind.first) state._bool_values[ind.second] = bool(value);
 		else state._int_values[ind.second] = value;
 	}
+	*/
 }
 
 State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std::vector<Atom>& atoms) {
@@ -89,9 +95,7 @@ State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std
 }
 
 State::State(const StateAtomIndexer& index, const std::vector<Atom>& atoms) :
-	_indexer(index),
-	_bool_values(index.num_bool(), 0),
-	_int_values(index.num_int(), object_id::INVALID)
+	_bool_values(index.num_bool(), false)
 {
 	// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
 	for (const Atom& atom:atoms) { // Insert all the elements of the vector
@@ -106,12 +110,8 @@ State::State(const State& state, const std::vector<Atom>& atoms) :
 }
 
 void State::set(const Atom& atom) {
-// 	_bool_values.at(atom.getVariable()) = value;
-#ifdef DEBUG
-	const ProblemInfo& info = ProblemInfo::getInstance();
-	assert( info.sv_type(atom.getVariable()) == o_type(atom.getValue()) );
-#endif
-	_indexer.set(*this, atom);
+	assert( ProblemInfo::getInstance().sv_type(atom.getVariable()) == o_type(atom.getValue()) );
+	_bool_values.at(atom.getVariable()) = bool(atom.getValue());
 }
 
 bool State::contains(const Atom& atom) const {
@@ -120,7 +120,7 @@ bool State::contains(const Atom& atom) const {
 
 object_id
 State::getValue(const VariableIdx& variable) const {
-	return _indexer.get(*this, variable);
+	return make_object(_bool_values.at(variable));
 }
 
 //! Applies the given changeset into the current state.
@@ -164,7 +164,6 @@ std::size_t State::computeHash() const {
 // 	return boost::hash_value(_bool_values);
 	std::size_t seed = 0;
 	boost::hash_combine(seed, std::hash<BitsetT>{}(_bool_values));
-	boost::hash_combine(seed, boost::hash_value( _int_values));
 	return seed;
 
 }
@@ -173,15 +172,13 @@ std::size_t State::computeHash() const {
 template <>
 const std::vector<bool>&
 State::dump() const {
-	assert(_indexer.is_fully_binary());
 	return _bool_values;
 }
 
 template <>
 const std::vector<object_id>&
 State::dump() const {
-	assert(_indexer.is_fully_multivalued());
-	return _int_values;
+	throw std::runtime_error("Multivalued variables not accepted");
 }
 
 

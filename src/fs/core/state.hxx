@@ -54,17 +54,13 @@ protected:
 };
 
 class State {
-	friend class StateAtomIndexer;
 public:
 	// using BitsetT = boost::dynamic_bitset<>;
 	using BitsetT = std::vector<bool>;
 
 protected:
-	const StateAtomIndexer& _indexer;
-
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
 	BitsetT _bool_values;
-	std::vector<object_id> _int_values;
 
 	std::size_t _hash;
 
@@ -92,7 +88,7 @@ public:
 	State& operator=(State&&) = default;
 
 	// Check the hash first for performance.
-	bool operator==(const State &rhs) const { return _hash == rhs._hash && _bool_values == rhs._bool_values && _int_values == rhs._int_values; }
+	bool operator==(const State &rhs) const { return _hash == rhs._hash && _bool_values == rhs._bool_values; }
 	bool operator!=(const State &rhs) const { return !(this->operator==(rhs));}
 
 
@@ -100,7 +96,7 @@ public:
 
 	object_id getValue(const VariableIdx& variable) const;
 
-	unsigned numAtoms() const { return _bool_values.size() + _int_values.size(); }
+	unsigned numAtoms() const { return _bool_values.size(); }
 
 	//! "Applies" the given atoms into the current state.
 	void accumulate(const std::vector<Atom>& atoms);
@@ -110,10 +106,10 @@ public:
 
 	//! Fast method to update values in state, it DOES NOT update the
 	//! hash, so use at your own peril!
-	template <typename T>
-	void __set( const VariableIdx& var, const T& v ) {
-		set( Atom( var, make_object(v)) );
-	}
+//	template <typename T>
+//	void __set( const VariableIdx& var, const T& v ) {
+//		set( Atom( var, make_object(v)) );
+//	}
 
 	void updateHash() { _hash = computeHash(); }
 
