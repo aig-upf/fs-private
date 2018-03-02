@@ -69,8 +69,7 @@ T value(const object_id& o, const ObjectTable& itp) {
 
 template <>
 bool value(const object_id& o) {
-	// will always be bool_t
-//	if (o.type() != type_id::bool_t) throw type_mismatch_error();
+	if (o.type() != type_id::bool_t) throw type_mismatch_error();
 	assert(o.value() == 0 || o.value() == 1);
 	return (bool) o.value();
 }
@@ -79,10 +78,9 @@ bool value(const object_id& o) {
 template <>
 int32_t value(const object_id& o) {
 	const auto& t = o.type();
-	// will always be bool_t
-//	if (t != type_id::int_t && t != type_id::object_t && t != type_id::bool_t) {
-//		throw type_mismatch_error();
-//	}
+	if (t != type_id::int_t && t != type_id::object_t && t != type_id::bool_t) {
+		throw type_mismatch_error();
+	}
 	return (int32_t) o.value();
 }
 
@@ -146,14 +144,14 @@ object_id make_object(const double& value) {
 }
 
 std::ostream& object_id::print(std::ostream& os) const {
-//	if (_type == type_id::invalid_t) return os << "INV!";
+	if (_type == type_id::invalid_t) return os << "INV!";
 	
 	// For some types, we will want to properly unpack the value to print it
-//	if (_type == type_id::int_t) os << fs0::value<int>(*this);
-//	else if (_type == type_id::float_t) os << fs0::value<float>(*this);
-//	else os << _value;
+	if (_type == type_id::int_t) os << fs0::value<int>(*this);
+	else if (_type == type_id::float_t) os << fs0::value<float>(*this);
+	else os << _value;
 	
-	return os << _value;
+	return os << _type;
 }
 
 } // namespaces

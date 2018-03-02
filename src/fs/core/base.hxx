@@ -28,28 +28,52 @@ std::string to_string(const type_id& t);
 type_id from_string(const std::string& t);
 std::ostream& operator<<(std::ostream &os, const type_id& t);
 
+/**
+ * First 8 bits for type, rest for value.
+ */
+/*
+class object_id {
+public:
+    using data_t = uint64_t;
+
+    template <typename T>
+    object_id(type_id t, T value)
+        : _data(to_data(t, value))
+    {}
+
+
+    template <typename T>
+    static data_t to_data(type_id t, T value) {
+        static_assert(sizeof(T) <= 7, "Unsupported object_id value type");
+        return ((data_t) t << 56) | value;
+    }
+
+private:
+    data_t _data;
+};
+
+type_id type(const object_id& o) {
+	return (type_id) ((o & 0xFFFF000000000000) >> 48);
+}
+*/
+
 class object_id {
 public:
 	const static object_id INVALID;
+	// Not sure we need these two at the moment:
+// 	const static object_id FALSE; // For the sake of performance?
+// 	const static object_id TRUE;
 
     using value_t = uint32_t;
 
-	explicit object_id() : _value(0) {}
+	explicit object_id() : _type(type_id::invalid_t), _value(0) {}
 
 private:
 
-    // Template specialization for booleans works OK; for other types (below), will throw
-    explicit object_id(type_id t, bool value)
-            : _value(value_t(value))
-    { }
-
     template <typename T>
     explicit object_id(type_id t, T value)
-        : _value(value)
-    {
-        static_assert(sizeof(T) <= sizeof(value_t), "Unsupported object_id value type");
-        throw std::runtime_error("IPC18 build accepting binary variables only");
-    }
+        : _type(t), _value(value)
+    { static_assert(sizeof(T) <= sizeof(value_t), "Unsupported object_id value type"); }
 
     template <typename T> friend object_id make_object(type_id t, T value);
 	template <typename T> friend object_id make_object(const T& value);
@@ -69,13 +93,13 @@ public:
 
     // TODO - MAKE THESE TWO PRIVATE SO THAT THEY CAN ONLY BE ACCESSED
 	//        THROUGH THE APPROPRIATE friend METHODS value() and o_type()
-	inline type_id type() const { return type_id::bool_t; }
+	inline type_id type() const { return _type; }
 	inline value_t value() const { return _value; }
 
 	// Required by Boost.serialization
 	template <typename Archive>
 	void serialize(Archive& ar, const unsigned int version) {
-//		ar & _type;
+		ar & _type;
 		ar & _value;
 	}
 
@@ -84,10 +108,10 @@ public:
 	std::ostream& print(std::ostream& os) const;
 
 private:
-//    type_id _type;
+    type_id _type;
 	value_t _value;
 };
-static_assert(sizeof(object_id) <= 8, "object_id should have overall size at most 64 bits");
+static_assert(sizeof(object_id) == 8, "object_id should have overall size equal to 64 bits");
 
 //! Compute a hash of the object ID
 //! The method name is important, as it is the one used by boost:hash.
