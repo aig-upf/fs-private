@@ -316,7 +316,7 @@ class PredicateCondition(Condition):
         """
         new_groundings = []
         print("Predicate variables: {} relevant: {}".format(self.variables,self.relevant_vars))
-        print("Groundings: {}".format(self.groundings))
+        #print("Groundings: {}".format(self.groundings))
         for grounding in self.groundings:
             t_grounding = list(self.variables)
             for vid, var in enumerate(self.relevant_vars):
@@ -876,7 +876,7 @@ class ForAllCondition(Condition):
                 set([(Predicate, (str, ...))])) -> Condition
         """
         self.condition = self.condition.link_groundings(static_preds, neg_static_preds)
-        print("After Grounding ForAll condition: {}".format(self.condition))
+        #print("After Grounding ForAll condition: {}".format(self.condition))
         assert False
         if self.condition is None:
             return None
@@ -1403,10 +1403,10 @@ class ConditionalEffect(Condition):
             (ConditionalEffect, set([(Predicate, (str, ...))],
                 set([(Predicate, (str, ...))])) -> Condition
         """
-        print("Processing Conditional Effect...")
-        print("Grounding: {}".format(self.effect))
+        #print("Processing Conditional Effect...")
+        #print("Grounding: {}".format(self.effect))
         self.effect = self.effect.link_groundings(static_preds, neg_static_preds)
-        print("After grounding: {}".format(self.effect))
+        #print("After grounding: {}".format(self.effect))
         if self.effect is None:
             return None
 
