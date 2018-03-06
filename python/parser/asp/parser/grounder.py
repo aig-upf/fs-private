@@ -415,7 +415,11 @@ class Grounder(object):
                 for line in grounding_file:
                     if 'reachable' not in line: continue
                     line = line.strip()
-                    line = line.split(' ')[2]
+                    try:
+                        line = line.split(' ')[2]
+                    except IndexError :
+                        # MRJ: Why do I need to this with that problem? Weird!
+                        line = line.split(' ')[1]
                     line = line.rstrip(")")
 
                     tokens = line.split("(")
