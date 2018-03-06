@@ -364,7 +364,7 @@ class Grounder(object):
                        "), " + var_alphabet[0] + " = " + var_alphabet[1] + ".")
 
         # Inequalities
-        for (v1, v2) in problem.inequalities:
+        for (v1, v2) in set(problem.inequalities):
             writer.writeln(inequality_prefix + "(" + problem.objects[v1].asp_name + \
                            ", " + problem.objects[v2].asp_name + ").")
 

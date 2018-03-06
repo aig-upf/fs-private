@@ -1711,7 +1711,6 @@ class Problem(object):
         self.goal = None
 
         self.inequalities = []
-        self.inequality_set = None
         self.neg_initial_state = []
         self.neg_initial_state_set = None
 
@@ -1774,7 +1773,6 @@ class Problem(object):
                        if (pred, tvars) not in self.initial_state_set:
                            self.neg_initial_state.append((pred, tvars))
 
-        self.inequality_set = set(self.inequalities)
         self.neg_initial_state_set = set(self.neg_initial_state)
 
 
