@@ -24,6 +24,7 @@ def _process_adl_predicate_condition(condition):
 
 
 def _process_adl_conjunction(formula):
+    if formula is None : return pddl.Truth()
     parts = []
     for p in ensure_conjunction(formula).conditions:
         parts.append(_process_adl_predicate_condition(p))
@@ -102,4 +103,3 @@ def convert_predicates_to_fd(symbols):
         arguments = [pddl.TypedObject(arg.name, arg.type.name) for arg in symbol.arguments]
         converted.append(pddl.Predicate(symbol.name, arguments))
     return converted
-

@@ -516,9 +516,8 @@ class AndCondition(Condition):
         new_conditions = []
         #print("Processing And condition...")
         for condition in self.conditions:
-            #print(condition)
+            #print(condition, type(condition))
             condition = condition.link_groundings(static_preds, neg_static_preds)
-            #print(condition)
             if isinstance(condition, AndCondition):
                 self.conditions += condition.conditions
             elif condition is not None:
@@ -1610,7 +1609,10 @@ class Action(object):
 
         if self.precondition:
             self.precondition = self.precondition.link_groundings(static_preds, neg_static_preds)
-            pre_groundings = set(self.precondition.groundings)
+            if self.precondition is None:
+                pre_groundings = []
+            else :
+                pre_groundings = set(self.precondition.groundings)
 
         new_groundings = []
         for grounding in self.groundings:
@@ -1653,8 +1655,10 @@ class Action(object):
             properly encoded for invariants preprocessing and in SAT.
             (Action, set([Condition])) -> None
         """
-        self.precondition.get_encode_conds(encode_conds, False)
-        self.effect.get_encode_conds(encode_conds, False)
+        if self.precondition:
+            self.precondition.get_encode_conds(encode_conds, False)
+        if self.effect:
+            self.effect.get_encode_conds(encode_conds, False)
 
     def make_strips_conditions(self):
         """ Make pre and post-conditions for each grounding which link directly
