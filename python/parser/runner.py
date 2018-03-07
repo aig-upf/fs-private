@@ -296,6 +296,13 @@ def run(args):
         adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir, not args.debug)
         fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
 
+        # TODO This is part of the same quickfix=hack in create_fs_task_from_adl - read the big TODO there!.
+        # TODO Clearly it's not too good to be parsing TWICE the problem, once with the ASP parser and the other
+        # TODO with the FD parser. This should go away ASAP.
+        fs_task_parsed_by_fd = create_fs_task(parse_pddl_task(args.domain, args.instance), domain_name, instance_name)
+        fs_task.initial_fluent_atoms = fs_task_parsed_by_fd.initial_fluent_atoms
+
+
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance
     representation = ProblemRepresentation(fs_task, out_dir, args.edebug or args.debug)
