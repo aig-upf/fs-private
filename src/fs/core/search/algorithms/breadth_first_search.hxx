@@ -80,7 +80,7 @@ public:
 
         unsigned parent = 0;
         if (n.parent) parent = n.parent->_gen_order;
-        std::cout << "{id: " << n._gen_order << ", parent: " << parent << ", atoms: [";
+        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"atoms\": [";
 
         // THIS IS COPY-PASTED FROM THE STATE PRINTER
         const fs0::State& s = n.state;
