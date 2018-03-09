@@ -88,7 +88,11 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		assert(var_data["point"].Size() == var_data["signature"].Size());
 		for (unsigned j = 0; j < var_data["point"].Size(); ++j) {
 			std::string point_type = var_data["signature"][j].GetString();
-			point.push_back(make_object(get_type_id(point_type), var_data["point"][j].GetInt()));
+			if (point_type == "int") {
+				point.push_back(make_object(type_id::int_t, var_data["point"][j].GetInt()));
+			} else {
+				point.push_back(make_object(get_type_id(point_type), var_data["point"][j].GetInt()));
+			}
 		}
 
 		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, point),  id));
