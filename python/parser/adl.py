@@ -60,10 +60,8 @@ def convert_adl_effect(effect):
         parameter = pddl.TypedObject(effect.var, effect.v_type.name)
         nested = convert_adl_effect(effect.condition)
         for neff in nested:
-            if isinstance(neff.condition, pddl.Conjunction):  # Otherwise we need to rethink this a bit
-                effs.append(pddl.Effect([parameter], neff.condition, neff.literal))
-            elif isinstance(neff.condition, pddl.Atom):
-                effs.append(pddl.Effect([parameter], pddl.Truth(), neff.condition))
+            if isinstance(neff.condition, pddl.Conjunction):
+                effs.append(pddl.Effect([parameter] + neff.parameters, neff.condition, neff.literal))
 
     else:
         raise UnimplementedFeature('TODO - Effect type not yet supported')
