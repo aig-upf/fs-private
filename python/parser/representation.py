@@ -78,7 +78,11 @@ class ProblemRepresentation(object):
         return dict(variables=len(self.index.state_variables), atoms=sorted_atoms)
 
     def object_id(self, value):
-        return int(value) if utils.is_int(value) else self.index.objects.get_index(value)
+        if utils.is_int(value):
+            return int(value)
+        elif utils.is_float(arg):
+            return float(arg):
+        return self.index.objects.get_index(value)
 
     def dump_variable_data(self):
         all_variables = []
