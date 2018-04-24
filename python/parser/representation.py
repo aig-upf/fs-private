@@ -80,8 +80,8 @@ class ProblemRepresentation(object):
     def object_id(self, value):
         if utils.is_int(value):
             return int(value)
-        elif utils.is_float(arg):
-            return float(arg):
+        elif utils.is_float(value):
+            return float(value)
         return self.index.objects.get_index(value)
 
     def dump_variable_data(self):
