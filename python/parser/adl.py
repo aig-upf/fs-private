@@ -60,8 +60,12 @@ def convert_adl_effect(effect):
         parameter = pddl.TypedObject(effect.var, effect.v_type.name)
         nested = convert_adl_effect(effect.condition)
         for neff in nested:
-            assert isinstance(neff.condition, pddl.Conjunction) and len(neff.condition.parts) == 1  # Otherwise we need to rethink this a bit
-            effs.append(pddl.Effect([parameter], neff.condition.parts[0], neff.literal))
+            if isinstance(neff.condition, pddl.Conjunction):  # Otherwise we need to rethink this a bit
+                for part in neff.condition.parts :
+                    effs.append(pddl.Effect([parameter], part, neff.literal))
+            elif isinstance(neff.condition, pddl.Atom):
+                effs.append(pddl.Effect([parameter], pddl.Truth(), neff.condition))
+
     else:
         raise UnimplementedFeature('TODO - Effect type not yet supported')
     return effs
@@ -102,4 +106,3 @@ def convert_predicates_to_fd(symbols):
         arguments = [pddl.TypedObject(arg.name, arg.type.name) for arg in symbol.arguments]
         converted.append(pddl.Predicate(symbol.name, arguments))
     return converted
-

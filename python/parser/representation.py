@@ -81,7 +81,12 @@ class ProblemRepresentation(object):
             signature = []
             point = []
             for arg in var.args:
-                signature.append("int" if utils.is_int(arg) else self.index.object_types[arg])
+                if utils.is_int(arg) :
+                    signature.append('int')
+                elif utils.is_float(arg):
+                    signature.append('float')
+                else :
+                    signature.append(self.index.object_types[arg])
                 point.append(arg if utils.is_int(arg) else self.index.objects.get_index(arg))
 
             all_variables.append(dict(id=i, name=str(var),
