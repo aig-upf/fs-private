@@ -61,10 +61,9 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			std::string plan_filename = options.getPlanfile();
 			if (plan_filename == "") {
                 plan_filename = out_dir + "/first.plan";
-			} else {
-                LPT_INFO("cout", "Plan will be output to " << plan_filename);
-            }
-			std::ofstream plan_out(plan_filename);
+			}
+			LPT_INFO("cout", "Plan will be output to " << plan_filename);
+
 			std::ofstream json_out(out_dir + "/results.json");
 
 			PlanT plan;
@@ -100,12 +99,13 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 
 			if (solved) {
+				std::ofstream plan_out(plan_filename);
 				PlanPrinter::print(plan, plan_out);
 				if (!valid_plan) {
                     valid_plan = Checker::check_correctness(_problem, plan, _problem.getInitialState());
 				}
+				plan_out.close();
 			}
-			plan_out.close();
 
 			std::string gen_speed = (search_time > 0) ? std::to_string((float) stats.generated() / search_time) : "0";
 			std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.evaluated() / search_time) : "0";
