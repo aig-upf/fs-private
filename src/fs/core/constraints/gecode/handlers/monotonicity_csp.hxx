@@ -21,12 +21,7 @@ public:
 	MonotonicityCSP& operator=(const MonotonicityCSP&) = delete;
 	MonotonicityCSP& operator=(MonotonicityCSP&&) = delete;
 
-	GecodeCSP* instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const;
-
-
     GecodeCSP* check_consistency(GecodeCSP *csp) const;
-
-    GecodeCSP* check_consistency_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const;
 
     static GecodeCSP* solve_csp(GecodeCSP* csp);
 
@@ -47,7 +42,7 @@ protected:
     DomainTracker
     compute_base_domains(const DomainTracker& parent_domains, const std::vector<Atom>& changeset) const;
 
-    GecodeCSP* instantiate_from_changeset_NEW(const DomainTracker& base_domains, const State& state) const;
+    GecodeCSP* instantiate_from_changeset(const DomainTracker& base_domains, const State& state) const;
 
     DomainTracker prune_domains(const GecodeCSP& csp, const DomainTracker& tracker) const;
 
