@@ -211,13 +211,6 @@ public:
 	}
 
 	unsigned evaluate_wgr1(NodeT& node) {
-
-		// A temporary hack: if we want no R computation at all, then return INF novelty w_{#g,#r} so that nodes on QWRG1 are ignored.
-		// This poses a small overhead, but it is only temporary.
-		if (_sbfwsconfig.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
-			return std::numeric_limits<unsigned>::max();
-		}
-
 		unsigned type = compute_node_complex_type(node);
 		unsigned ptype = node.has_parent() ? compute_node_complex_type(*(node.parent)) : 0;
 		return evaluate_novelty(node, _wgr_novelty_evaluators, 1, type, ptype);
@@ -446,7 +439,7 @@ public:
 protected:
 
 
-	//! When opening a node, we compute #g and evaluates whether the given node has <#g>-novelty 1 or not;
+	//! When opening a node, we compute #g and evaluate whether the given node has <#g>-novelty 1 or not;
 	//! if that is the case, we insert it into a special queue.
 	//! Returns true iff the newly-created node is a solution
 	bool create_node(const NodePT& node) {
