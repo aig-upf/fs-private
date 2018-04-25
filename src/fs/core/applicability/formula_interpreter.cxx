@@ -64,7 +64,10 @@ bool CSPFormulaInterpreter::satisfied(const State& state) const {
 	gecode::GecodeCSP* csp = _formula_csp->instantiate(state, handler);
 	if (!csp) return false;
 
-	if (!csp->propagate()) return false;
+	if (!csp->propagate()) {
+		delete csp;
+		return false;
+	}
 
 
     gecode::GecodeCSP* solution = _formula_csp->compute_single_solution(csp);
