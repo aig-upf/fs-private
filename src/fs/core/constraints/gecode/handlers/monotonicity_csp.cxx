@@ -37,13 +37,6 @@ MonotonicityCSP::MonotonicityCSP(const fs::Formula* formula, const AtomIndex& tu
        _monotonicity(tuple_index, transitions)
 {}
 
-GecodeCSP* MonotonicityCSP::build_root_csp(const State& root) const {
-    assert(_monotonicity.is_active());
-
-    // For the root node, we consider the changeset with all atoms of the state
-    return check_consistency_from_changeset(*_base_csp, root, _as_atoms(root));
-}
-
 GecodeCSP* MonotonicityCSP::
 instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const {
     if (_failed) return nullptr;
@@ -204,15 +197,6 @@ check_transitions(const State& parent, const std::vector<Atom>& changeset) const
     return true;
 }
 
-GecodeCSP* MonotonicityCSP::
-check(const GecodeCSP& parent_csp, const State& parent, const State& child, const std::vector<Atom>& changeset) const {
-    // We first check that all transitions are valid
-    if (!check_transitions(parent, changeset)) return nullptr;
-
-    // Then check that the monotonicity CSP is consistent
-    return check_consistency_from_changeset(parent_csp, child, changeset);
-
-}
 
 DomainTracker MonotonicityCSP::
 compute_base_domains(const DomainTracker& parent_domains,
@@ -359,11 +343,11 @@ check_consistency(GecodeCSP* csp) const {
         }
         // TODO Do something with the solution? Cache it?
 
-        // ATM we just ignore it (but act differently based on whether there was a solution or not!)
-        delete solution;
-
 //        std::cout << "\nComplete solution to monotonicity CSP: " << std::endl;
 //        _translator.print(std::cout, *solution);
+
+        // ATM we just ignore it (but act differently based on whether there was a solution or not!)
+        delete solution;
     }
 
     return csp;

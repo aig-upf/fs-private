@@ -408,6 +408,8 @@ public:
                 LPT_INFO("cout", "Root node detected as inconsistent for monotonicity reasons");
                 _stats.monot_pruned();
                 return false;
+            } else {
+                LPT_INFO("cout", "Root node is monotonicity-consistent!");
             }
         }
 

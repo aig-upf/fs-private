@@ -23,16 +23,12 @@ public:
 
 	GecodeCSP* instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const;
 
-    GecodeCSP* check(const GecodeCSP& parent_csp, const State& parent, const State& child, const std::vector<Atom>& changeset) const;
-
 
     GecodeCSP* check_consistency(GecodeCSP *csp) const;
 
     GecodeCSP* check_consistency_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const;
 
     static GecodeCSP* solve_csp(GecodeCSP* csp);
-
-    GecodeCSP* build_root_csp(const State& root) const;
 
     DomainTracker create_root(const State& root) const;
 
