@@ -8,8 +8,9 @@ import time
 from .parser import ParsingException, Parser, Grounder
 from .utilities import ProblemException
 
-def parse_and_ground( domain_file, problem_file, workspace_dir, remove_tmp = False ) :
-    #Parse the input PDDL
+
+def parse_and_ground(domain_file, problem_file, workspace_dir, remove_lp_files):
+    # Parse the input PDDL
     try:
         t0 = time.time()
         parser = Parser(domain_file, problem_file)
@@ -30,7 +31,7 @@ def parse_and_ground( domain_file, problem_file, workspace_dir, remove_tmp = Fal
         pre_file_name = os.path.join(workspace_dir, "preprocessing", "asp_model.lp")
         ground_file_name = os.path.join(workspace_dir, "preprocessing", "asp_model.sol")
 
-        grounder = Grounder(problem, pre_file_name, ground_file_name)
+        grounder = Grounder(problem, pre_file_name, ground_file_name, remove_lp_files)
         grounder.ground()
 
         end_grounding_time = time.time()
@@ -51,18 +52,10 @@ def parse_and_ground( domain_file, problem_file, workspace_dir, remove_tmp = Fal
         end_linking_time = time.time()
         print("Simplify time:", (end_linking_time - end_grounding_time))
 
-
     except (ParsingException, ProblemException) as e:
         print(e)
         sys.exit(1)
-    finally:
-        if remove_tmp:
-            try:
-                os.system("rm " + pre_file_name)
-            except: pass
-            try:
-                os.system("rm " + ground_file_name)
-            except: pass
+
     return problem
 
 if __name__ == '__main__' :
