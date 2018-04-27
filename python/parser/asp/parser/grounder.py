@@ -131,6 +131,7 @@ class Grounder(object):
                 else:
                     out_file.write("reachable(" + cond.cond_code + ")")
 
+                # TODO Should this be var_types[v].asp_name instead of just 'name'?
                 extra_bindings = [condition.var_types[v].name + "(" + var_alphabet[vid] + ")" \
                                   for vid, v in enumerate(condition.relevant_vars) if v not in cond.relevant_vars]
                 if extra_bindings:
@@ -243,7 +244,7 @@ class Grounder(object):
                              ", ".join(var_alphabet[:len(condition.relevant_vars)]) + "))"
             else:
                 forall_str = "reachable(" + condition.cond_code + ")"
-            forall_str += ", " + condition.v_type.name + "(" + \
+            forall_str += ", " + condition.v_type.asp_name + "(" + \
                           var_alphabet[len(condition.relevant_vars)] + ")"
             if condition.condition.relevant_vars:
                 v_str = "reachable(" + condition.condition.cond_code + "(" + \
