@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: ubuntu:xenial
+From: ubuntu:bionic
 
 %setup
     ## The setup script is called bootstrap an empty container.
