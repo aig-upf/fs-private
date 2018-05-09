@@ -163,7 +163,7 @@ compute_root_domains(const State& root) const {
 DomainTracker MonotonicityCSP::
 create_root(const State& root) const {
     DomainTracker tracker = compute_root_domains(root);
-    return post_monotonicity_csp_from_domains(root, tracker);
+    return post_monotonicity_csp_from_domains(root, tracker, true);
 }
 
 DomainTracker MonotonicityCSP::
@@ -177,18 +177,18 @@ generate_node(const State& parent, const DomainTracker& parent_domains,
     // Compute the domains that will form the basis for the CSP
     auto base_domains = compute_base_domains(parent_domains, changeset);
 
-    return post_monotonicity_csp_from_domains(child, base_domains);
+    return post_monotonicity_csp_from_domains(child, base_domains, false);
 }
 
 DomainTracker MonotonicityCSP::
-post_monotonicity_csp_from_domains(const State& state, const DomainTracker& domains) const {
+post_monotonicity_csp_from_domains(const State& state, const DomainTracker& domains, bool stick_to_solution) const {
     // Check that there's no domain among the base, unpruned domains has already become empty
     // If that's the case, we can prune the node without even generating the CSP
     if (domains.is_null()) return {};
 
     // Otherwise, we generate the CSP and propagate constraints until reaching local consistency
     auto csp = instantiate_from_changeset(domains, state);
-    csp = check_consistency(csp);
+    csp = check_consistency(csp, stick_to_solution);
     if (!csp) return {};
 
     // If the CSP is consistent, we inspect the domains it assigns to variables, and delete it
@@ -238,7 +238,7 @@ DomainTracker MonotonicityCSP::prune_domains(const GecodeCSP& csp, const DomainT
 
 
 GecodeCSP* MonotonicityCSP::
-check_consistency(GecodeCSP* csp) const {
+check_consistency(GecodeCSP* csp, bool stick_to_solution) const {
 
     if (!csp) return nullptr;
 
@@ -250,7 +250,7 @@ check_consistency(GecodeCSP* csp) const {
 //    std::cout << "\n(Locally consistent) monotonicity CSP: " << std::endl;
 //    _translator.print(std::cout, *csp);
 
-    if (!_approximate) {  // Solve the CSP completely
+    if (!_approximate || stick_to_solution) {  // Solve the CSP completely
         GecodeCSP* solution = solve_csp(csp);
         if (!solution) {
             delete csp;
@@ -258,8 +258,13 @@ check_consistency(GecodeCSP* csp) const {
         }
         // TODO Do something with the solution? Cache it?
 
-//        std::cout << "\nComplete solution to monotonicity CSP: " << std::endl;
-//        _translator.print(std::cout, *solution);
+        std::cout << "\nComplete solution to monotonicity CSP: " << std::endl;
+        _translator.print(std::cout, *solution);
+
+        if (stick_to_solution) {
+            delete csp;
+            return solution;
+        }
 
         // ATM we just ignore it (but act differently based on whether there was a solution or not!)
         delete solution;

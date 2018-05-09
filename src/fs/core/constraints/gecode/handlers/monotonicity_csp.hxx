@@ -21,7 +21,7 @@ public:
 	MonotonicityCSP& operator=(const MonotonicityCSP&) = delete;
 	MonotonicityCSP& operator=(MonotonicityCSP&&) = delete;
 
-    GecodeCSP* check_consistency(GecodeCSP *csp) const;
+    GecodeCSP* check_consistency(GecodeCSP *csp, bool stick_to_solution) const;
 
     static GecodeCSP* solve_csp(GecodeCSP* csp);
 
@@ -52,7 +52,8 @@ protected:
 
 
     DomainTracker post_monotonicity_csp_from_domains(const State& state,
-                                                     const DomainTracker& domains) const;
+                                                     const DomainTracker& domains,
+                                                     bool stick_to_solution) const;
 };
 
 gecode::MonotonicityCSP*

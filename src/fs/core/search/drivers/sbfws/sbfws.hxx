@@ -521,6 +521,7 @@ protected:
                     LPT_DEBUG("cout", "\tChildren node pruned because of inconsistent monotonicity CSP: " << std::endl << "\t" << *successor);
                     successor->_domains.release();
                     _stats.monot_pruned();
+//                    _closed.put(successor);
                     continue;
                 }
             }
