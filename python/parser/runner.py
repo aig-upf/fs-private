@@ -201,7 +201,7 @@ def run_solver(translation_dir, args, dry_run):
     env = dict(os.environ)
 
     # We prioritize the FS library that resides within this project
-    env['LD_LIBRARY_PATH'] = ':'.join([FS_BUILD, env['LD_LIBRARY_PATH']])
+    env['LD_LIBRARY_PATH'] = ':'.join([FS_BUILD, env.get('LD_LIBRARY_PATH', '')])
 
     command_str = ' '.join(command)
     # We run the command spawning a new shell so that we can get typical shell kill signals such as OOM, etc.

@@ -75,12 +75,14 @@ public:
     StlBreadthFirstSearch& operator=(StlBreadthFirstSearch&&) = default;
 
 
-    void log_generated_node(NodeT& n) {
+    void log_generated_node(NodeT& n, bool goal, int forced_parent = -1) {
         const auto& info = fs0::ProblemInfo::getInstance();
 
         unsigned parent = 0;
         if (n.parent) parent = n.parent->_gen_order;
-        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"atoms\": [";
+        if (forced_parent != -1) parent = static_cast<unsigned>(forced_parent);
+        std::string goal_value = goal ? "true" : "false";
+        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"goal\": " << goal_value << ", \"atoms\": [";
 
         // THIS IS COPY-PASTED FROM THE STATE PRINTER
         const fs0::State& s = n.state;
@@ -121,7 +123,7 @@ public:
 
         unsigned expanded = 0;
         std::cout  << std::endl  << std::endl << "==GENERATED NODES==" << std::endl;
-        log_generated_node(*n);
+        log_generated_node(*n, this->check_goal(n, solution));
 
 //        if (this->check_goal(n, solution)) return true;
 
@@ -141,15 +143,26 @@ public:
 
             for (const auto& a : this->_model.applicable_actions(current->state)) {
                 StateT s_a = this->_model.next(current->state, a);
-                NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current,
-                                                           this->_generated++);
+                NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, this->_generated++);
+
+                bool is_goal = this->check_goal(successor, solution);
 
 //                if (this->_closed.check(successor)) continue; // The node has already been closed
-//                if (this->_open.contains(successor))
-//                    continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
+                auto repeated = this->_closed.seek(successor);
+                if (repeated != nullptr) { // The node has already been closed
+                    log_generated_node(*repeated, is_goal, successor->parent->_gen_order); // we log the previously-generated node with the new parent
+                    continue;
+                }
 
+//                if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
+                repeated = this->_open.seek(successor);
+                if (repeated != nullptr) { //   The node is already in the open list
+                    log_generated_node(*repeated, is_goal, successor->parent->_gen_order); // we log the previously-generated node with the new parent
+                    continue;
+                }
+
+                log_generated_node(*successor, is_goal);
                 this->notify(NodeCreationEvent(*successor));
-                log_generated_node(*successor);
 
 //                if (this->check_goal(successor, solution)) return true;
 
