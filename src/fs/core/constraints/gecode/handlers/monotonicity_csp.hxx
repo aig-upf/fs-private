@@ -21,18 +21,9 @@ public:
 	MonotonicityCSP& operator=(const MonotonicityCSP&) = delete;
 	MonotonicityCSP& operator=(MonotonicityCSP&&) = delete;
 
-	GecodeCSP* instantiate_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const;
-
-    GecodeCSP* check(const GecodeCSP& parent_csp, const State& parent, const State& child, const std::vector<Atom>& changeset) const;
-
-
-    GecodeCSP* check_consistency(GecodeCSP *csp) const;
-
-    GecodeCSP* check_consistency_from_changeset(const GecodeCSP& parent_csp, const State& state, const std::vector<Atom>& changeset) const;
+    GecodeCSP* check_consistency(GecodeCSP *csp, bool stick_to_solution) const;
 
     static GecodeCSP* solve_csp(GecodeCSP* csp);
-
-    GecodeCSP* build_root_csp(const State& root) const;
 
     DomainTracker create_root(const State& root) const;
 
@@ -51,7 +42,7 @@ protected:
     DomainTracker
     compute_base_domains(const DomainTracker& parent_domains, const std::vector<Atom>& changeset) const;
 
-    GecodeCSP* instantiate_from_changeset_NEW(const DomainTracker& base_domains, const State& state) const;
+    GecodeCSP* instantiate_from_changeset(const DomainTracker& base_domains, const State& state) const;
 
     DomainTracker prune_domains(const GecodeCSP& csp, const DomainTracker& tracker) const;
 
@@ -61,7 +52,8 @@ protected:
 
 
     DomainTracker post_monotonicity_csp_from_domains(const State& state,
-                                                     const DomainTracker& domains) const;
+                                                     const DomainTracker& domains,
+                                                     bool stick_to_solution) const;
 };
 
 gecode::MonotonicityCSP*

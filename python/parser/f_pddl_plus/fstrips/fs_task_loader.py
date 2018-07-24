@@ -88,17 +88,17 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         set_supertypes( self.types )
 
     def visitDomainName( self, ctx ) :
-        self.domain_name = ctx.NAME().getText().lower()
+        self.domain_name = ctx.NAME().getText()
 
     def visitProblemDecl( self, ctx ) :
-        self.task_name = ctx.NAME().getText().lower()
+        self.task_name = ctx.NAME().getText()
 
     def visitProblemDomain( self, ctx ) :
-        self.task_domain_name = ctx.NAME().getText().lower()
+        self.task_domain_name = ctx.NAME().getText()
 
     def visitRequireDef( self, ctx ) :
         for req_ctx in ctx.REQUIRE_KEY() :
-            self.requirements.append( req_ctx.getText().lower() )
+            self.requirements.append( req_ctx.getText() )
 
     def visitTypesDef(self, ctx):
         #print("Type Definitions")
@@ -114,7 +114,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
 
 
     def visitNameList( self, ctx ) :
-        names = [ name.getText().lower() for name in ctx.NAME() ]
+        names = [ name.getText() for name in ctx.NAME() ]
         return names
 
     def visitSimpleNameList( self, ctx ) :
@@ -122,8 +122,8 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return [ (name, 'object') for name in names ]
 
     def visitNameListWithType( self, ctx ) :
-        names = [ ctx.NAME().getText().lower() ] + self.visit( ctx.nameList() )
-        names = [ (name, ctx.theType.getText().lower()) for name in names ]
+        names = [ ctx.NAME().getText() ] + self.visit( ctx.nameList() )
+        names = [ (name, ctx.theType.getText()) for name in names ]
         return names
 
     def visitComplexNameList(self, ctx) :
@@ -153,16 +153,16 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         #    print(p)
 
     def visitAtomicFormulaSkeleton( self, ctx ) :
-        pred_name = ctx.predicate().getText().lower()
+        pred_name = ctx.predicate().getText()
         arguments = self.visit( ctx.typedVariableList() )
         return Predicate( pred_name, arguments )
 
     def visitSimpleVariableList( self, ctx ) :
-        var_names = [ TypedObject( name.getText().lower(), 'object' ) for name in ctx.VARIABLE() ]
+        var_names = [ TypedObject( name.getText(), 'object' ) for name in ctx.VARIABLE() ]
         return var_names
 
     def visitComplexVariableList( self, ctx ) :
-        untyped_var_names = [ TypedObject( name.getText().lower(), 'object' ) for name in ctx.VARIABLE() ]
+        untyped_var_names = [ TypedObject( name.getText(), 'object' ) for name in ctx.VARIABLE() ]
         typed_var_names = []
         for sub_ctx in ctx.variableListWithType() :
             typed_var_names += self.visit( sub_ctx )
@@ -171,7 +171,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
     def visitVariableListWithType( self, ctx ) :
         typed_variable_list = [ ]
         for var_name in ctx.VARIABLE() :
-            var_ref = TypedObject( var_name.getText().lower(), ctx.primType().getText().lower() )
+            var_ref = TypedObject( var_name.getText(), ctx.primType().getText() )
             typed_variable_list.append(var_ref)
         return typed_variable_list
 
@@ -193,7 +193,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         #    print(f)
 
     def visitFunctionDeclGroup( self, ctx ) :
-        return_type = ctx.primType().getText().lower()
+        return_type = ctx.primType().getText()
         functions = []
         for sub_ctx in ctx.atomicFunctionSkeleton() :
             f_name, f_args = self.visit( sub_ctx )
@@ -201,7 +201,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return functions
 
     def visitAtomicFunctionSkeleton( self, ctx ) :
-        func_name = ctx.functionSymbol().getText().lower()
+        func_name = ctx.functionSymbol().getText()
         func_args = self.visit( ctx.typedVariableList() )
         return func_name, func_args
 
@@ -215,7 +215,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
 
     def visitTypeBoundsDefinition( self, ctx ) :
 
-        b = DomainBound( ctx.NAME().getText().lower(), '{0}[{1}..{2}]'.format( ctx.numericBuiltinType().getText().lower(), ctx.NUMBER(0), ctx.NUMBER(1)  ) )
+        b = DomainBound( ctx.NAME().getText(), '{0}[{1}..{2}]'.format( ctx.numericBuiltinType().getText(), ctx.NUMBER(0), ctx.NUMBER(1)  ) )
         return b
 
     def visitConstantsDef( self, ctx ) :
@@ -244,7 +244,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         #    print(o)
 
     def visitActionDef( self, ctx ) :
-        name = ctx.actionSymbol().getText().lower()
+        name = ctx.actionSymbol().getText()
         params = self.visit( ctx.typedVariableList() )
         self.current_params = params
         try :
@@ -262,7 +262,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         #effect.dump()
 
     def visitEventDef( self, ctx ) :
-        name = ctx.eventSymbol().getText().lower()
+        name = ctx.eventSymbol().getText()
         params = self.visit( ctx.typedVariableList() )
         self.current_params = params
         try :
@@ -280,7 +280,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         #effect.dump()
 
     def visitConstraintDef( self, ctx ) :
-        name = ctx.constraintSymbol().getText().lower()
+        name = ctx.constraintSymbol().getText()
         params = self.visit( ctx.typedVariableList() )
         self.current_params = params
         self.negated = False
@@ -310,7 +310,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return prec, norm_eff_list
 
     def visitProcessDef( self, ctx ) :
-        name = ctx.actionSymbol().getText().lower()
+        name = ctx.actionSymbol().getText()
         params = self.visit( ctx.typedVariableList() )
         self.current_params = params
         try :
@@ -350,7 +350,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return self.visit( ctx.goalDesc() )
 
     def visitAtomicTermFormula( self, ctx ) :
-        atom_name = ctx.predicate().getText().lower()
+        atom_name = ctx.predicate().getText()
         arity = 0
         term_type = None
         if atom_name in self.predicates_table :
@@ -375,7 +375,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return Atom( atom_name, term_list )
 
     def visitTermObject( self, ctx ) :
-        object_name = ctx.NAME().getText().lower()
+        object_name = ctx.NAME().getText()
         if object_name not in self.objects_table :
             sourceInterval = ctx.getSourceInterval()
             firstToken = self.tokenStream.get(sourceInterval[0])
@@ -384,14 +384,14 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return self.objects_table[object_name]
 
     def visitTermNumber( self, ctx ) :
-        object_name = ctx.NUMBER().getText().lower()
+        object_name = ctx.NUMBER().getText()
         try :
             return NumericConstant( int(object_name ) )
         except ValueError :
             return NumericConstant( float(object_name) )
 
     def visitTermVariable( self, ctx ) :
-        variable_name = ctx.VARIABLE().getText().lower()
+        variable_name = ctx.VARIABLE().getText()
         if self.current_params is None : return variable_name
         for var_obj in self.current_params :
             if var_obj.name == variable_name :
@@ -399,7 +399,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         raise UnresolvedVariableError( variable_name )
 
     def visitGenericFunctionTerm( self, ctx ) :
-        func_name = ctx.functionSymbol().getText().lower()
+        func_name = ctx.functionSymbol().getText()
         if func_name not in self.functions_table :
             sourceInterval = ctx.getSourceInterval()
             firstToken = self.tokenStream.get(sourceInterval[0])
@@ -414,7 +414,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return FunctionalTerm( func_name, term_list )
 
     def visitBinaryArithmeticFunctionTerm( self, ctx ) :
-        func_name = ctx.binaryOp().getText().lower()
+        func_name = ctx.binaryOp().getText()
         if func_name not in built_in_functional_symbols :
             raise SystemExit( "Function {0} first seen used as a term in an atomic formula".format(func_name) )
         term_list = []
@@ -423,7 +423,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return FunctionalTerm( func_name, term_list )
 
     def visitUnaryArithmeticFunctionTerm( self, ctx ) :
-        func_name = ctx.unaryBuiltIn().getText().lower()
+        func_name = ctx.unaryBuiltIn().getText()
         if func_name not in built_in_functional_symbols :
             raise SystemExit( "Function {0} first seen used as a term in an atomic formula".format(func_name) )
         if func_name == '-' :
@@ -507,7 +507,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return Atom( '=', [lhs, rhs])
 
     def visitFComp( self, ctx ) :
-        op = ctx.binaryComp().getText().lower()
+        op = ctx.binaryComp().getText()
         neg_op = { '<' : '>=', '>' : '<=', '<=' : '>', '>=' : '<' }
         lhs = self.visit( ctx.fExp(0) )
         rhs = self.visit( ctx.fExp(1) )
@@ -519,12 +519,12 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
 
     def visitNumericConstantExpr( self, ctx ) :
         try :
-            return NumericConstant( int(ctx.NUMBER().getText().lower()) )
+            return NumericConstant( int(ctx.NUMBER().getText()) )
         except ValueError :
-            return NumericConstant( float(ctx.NUMBER().getText().lower()) )
+            return NumericConstant( float(ctx.NUMBER().getText()) )
 
     def visitBinaryOperationExpr( self, ctx ) :
-        op = ctx.binaryOp().getText().lower()
+        op = ctx.binaryOp().getText()
         lhs = self.visit( ctx.fExp(0))
         rhs = self.visit( ctx.fExp(1))
         return FunctionalTerm( op, [lhs, rhs] )
@@ -539,7 +539,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return self.visit( ctx.functionTerm() )
 
     def visitVariableExpr( self, ctx ) :
-        variable_name = ctx.VARIABLE().getText().lower()
+        variable_name = ctx.VARIABLE().getText()
         if self.current_params is None : return variable_name
         for var_obj in self.current_params :
             if var_obj.name == variable_name :
@@ -604,7 +604,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return self.visit( ctx.pEffect() )
 
     def visitAssignEffect( self, ctx ) :
-        operation = ctx.assignOp().getText().lower()
+        operation = ctx.assignOp().getText()
         lhs = self.visit( ctx.functionTerm() )
         rhs = self.visit( ctx.fExp() )
         if operation == 'assign' :
@@ -615,7 +615,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return AssignmentEffect( lhs, new_rhs ) # This effectively normalizes effects
 
     def visitProcessAssignEffect( self, ctx ) :
-        operation = ctx.processEffectOp().getText().lower()
+        operation = ctx.processEffectOp().getText()
         lhs = self.visit( ctx.functionTerm() )
         rhs = self.visit( ctx.processEffectExp() )
         if operation in ['assign', 'scale-up', 'scale-down' ] :
@@ -638,12 +638,12 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
 
     def visitProcessConstEff( self, ctx ) :
         try :
-            return NumericConstant( int(ctx.NUMBER().getText().lower()) )
+            return NumericConstant( int(ctx.NUMBER().getText()) )
         except ValueError :
-            return NumericConstant( float(ctx.NUMBER().getText().lower()) )
+            return NumericConstant( float(ctx.NUMBER().getText()) )
 
     def visitProcessVarEff( self, ctx ) :
-        variable_name = ctx.VARIABLE().getText().lower()
+        variable_name = ctx.VARIABLE().getText()
         if self.current_params is None : return variable_name
         for var_obj in self.current_params :
             if var_obj.name == variable_name :
@@ -701,7 +701,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return self.visit( ctx.nameLiteral() )
 
     def visitGroundAtomicFormula( self, ctx ) :
-        atom_name = ctx.predicate().getText().lower()
+        atom_name = ctx.predicate().getText()
         arity = 0
         term_type = None
         if atom_name in self.predicates_table :
@@ -728,7 +728,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return NegatedAtom( atom_name, term_list )
 
     def visitGroundFunctionTerm( self, ctx ) :
-        func_name = ctx.functionSymbol().getText().lower()
+        func_name = ctx.functionSymbol().getText()
         if func_name not in self.functions_table :
             raise SystemExit( "Function {0} first seen used as a term in Initial State".format(func_name) )
         term_list = []
@@ -737,13 +737,13 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         return FunctionalTerm( func_name, term_list )
 
     def visitGroundTermObject( self, ctx ) :
-        object_name = ctx.NAME().getText().lower()
+        object_name = ctx.NAME().getText()
         if object_name not in self.objects_table :
             raise SystemExit( "Undeclared object {0} used as a term in atomic formula".format(object_name) )
         return self.objects_table[object_name]
 
     def visitGroundTermNumber( self, ctx ) :
-        object_name = ctx.NUMBER().getText().lower()
+        object_name = ctx.NUMBER().getText()
         try :
             return NumericConstant( int(object_name) )
         except ValueError :
@@ -753,14 +753,14 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
     def visitInitAssignmentNumeric( self, ctx ) :
         lhs = self.visit( ctx.groundFunctionTerm() )
         try :
-            rhs = NumericConstant( int(ctx.NUMBER().getText().lower()) )
+            rhs = NumericConstant( int(ctx.NUMBER().getText()) )
         except ValueError :
-            rhs = NumericConstant( float(ctx.NUMBER().getText().lower()) )
+            rhs = NumericConstant( float(ctx.NUMBER().getText()) )
         return Assign( lhs, rhs )
 
     def visitInitAssignmentObject( self, ctx ) :
         lhs = self.visit( ctx.groundFunctionTerm() )
-        obj_name = ctx.NAME().getText().lower()
+        obj_name = ctx.NAME().getText()
         if not obj_name in self.objects_table :
             raise SystemExit( "Object {0} first seen assigning a value to {1} in the initial state".format( obj_name, str(lhs)) )
         rhs = self.objects_table[ obj_name ]
@@ -770,7 +770,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         arg_list = []
         for fn_ctx in ctx.groundFunctionTerm() :
             arg_list.append( self.visit(fn_ctx) )
-        return  [ Atom( ctx.EXTNAME().getText().lower(), arg_list ) ]
+        return  [ Atom( ctx.EXTNAME().getText(), arg_list ) ]
 
     def visitAlternativeAlwaysConstraint( self, ctx ) :
         return [ self.visit( ctx.goalDesc() ) ]
@@ -791,7 +791,7 @@ class FunctionalStripsLoader( FunctionalStripsVisitor ) :
         self.constraints = Conjunction( self.visit( ctx.prefConGD() ) )
 
     def visitProblemMetric( self, ctx ) :
-        optimization = ctx.optimization().getText().lower()
+        optimization = ctx.optimization().getText()
         self.metric = Metric(optimization)
         self.metric.expr = self.visit( ctx.metricFExp() )
 

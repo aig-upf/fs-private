@@ -102,7 +102,7 @@ class Requirements(object):
               ":strips", ":adl", ":typing", ":negation", ":equality",
               ":negative-preconditions", ":disjunctive-preconditions",
               ":existential-preconditions", ":universal-preconditions",
-              ":quantified-preconditions", ":conditional-effects", ":object-fluents",
+              ":quantified-preconditions", ":conditional-effects", ":object-fluents", ":numeric-fluents",
               ":derived-predicates", ":action-costs"), req
     def __str__(self):
         return ", ".join(self.requirements)

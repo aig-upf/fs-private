@@ -215,11 +215,12 @@ class Parser(object):
                         self.problem.types[type_name] = Type(type_name, self.problem.types[token])
                     current_types = []
                 except StopIteration:
-                    raise ParsingException("Error: badly formed types.",
-                        parsing_error_code)
+                    raise ParsingException("Error: badly formed types.", parsing_error_code)
             else:
                 current_types.append(token)
         for type_name in current_types:
+            if type_name == 'object':
+                continue  # i.e. ignore the declaration of type "object", as it is always assumed to be there.
             if type_name in self.problem.types:
                 raise ParsingException("Error: type " + type_name +\
                     " has multiple parents.", parsing_error_code)
@@ -415,15 +416,15 @@ class Parser(object):
         elif cond_type == FORALL_CONDITION:
             conditions = definition[1:]
             if len(conditions) != 2:
-                raise ParsingException("Badly formed forall condition",
+                raise ParsingException("Badly formed forall condition - missing scope or condition, correct syntax is: (forall <scope> <condition>)",
                     parsing_error_code)
             quant_var = conditions[0]
             if len(quant_var) == 3:
                 if quant_var[1] != '-':
-                    raise ParsingException("Badly formed forall condition var",
+                    raise ParsingException("Badly formed forall condition var - no type was specified for quantified variables!",
                         parsing_error_code)
                 if quant_var[2] not in self.problem.types:
-                    raise ParsingException("Unknown type: " + quant_var[2],
+                    raise ParsingException("Badly formed forall condition - unknown type {} specified for quantified vars ".format(quant_var[2]),
                         parsing_error_code)
                 scope = list(scope)
                 scope.append(quant_var[0])
@@ -434,8 +435,36 @@ class Parser(object):
                 scope.append(quant_var[0])
                 return ForAllCondition(quant_var[0], None,
                     self.parse_condition(conditions[1], scope, context, check_consts))
-            raise ParsingException("Badly formed forall condition var",
-                    parsing_error_code)
+            else :
+                varnames = []
+                var_types = {}
+                typenames = []
+                for tok in quant_var:
+                    if tok == "-": continue
+                    elif tok[0] == "?": varnames.append(tok)
+                    else :
+                        for v in varnames :
+                            var_types[v] = tok
+                        varnames = []
+                        typenames.append(tok)
+                if len(var_types.keys()) == 0 :
+                    raise ParsingException("Badly formed forall condition var: No variables were quantified!",
+                        parsing_error_code)
+                for typename in typenames :
+                    if typename not in self.problem.types:
+                        raise ParsingException("Badly formed forall condition - unknown type {} specified for quantified vars ".format(quant_var[2]),
+                            parsing_error_code)
+                scope = list(scope)
+                varnames = list(var_types.keys())
+                scope += varnames
+                #print(var_types)
+                condition = ForAllCondition(varnames[-1], self.problem.types[var_types[varnames[-1]]],
+                    self.parse_condition(conditions[1],scope,context,check_consts))
+                for k in range(-2,-len(varnames)-1,-1):
+                    condition = ForAllCondition(varnames[k], self.problem.types[var_types[varnames[k]]],
+                        condition)
+                #print(str(condition))
+                return condition
 
         elif cond_type == EXISTS_CONDITION:
             if context != "pre":
@@ -675,8 +704,7 @@ class Parser(object):
             scope = list(variables)
             effect = self.parse_condition(effect, scope, 'eff', True)
             if not isinstance(effect, AndCondition):
-                raise ParsingException("Expected conjunctive effect",
-                    parsing_error_code)
+                effect = AndCondition([effect])
         except ParsingException as e:
             raise ParsingException("Error parsing effects of action: " + name +\
                 "\n" + e.message, parsing_error_code)

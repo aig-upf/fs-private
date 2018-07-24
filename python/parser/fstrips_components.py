@@ -70,13 +70,14 @@ def ground_possibly_quantified_effect(effect, type_map):
         return [effect]
 
     processed = []
-    assert len(effect.parameters) == 1, "Only one quantified variable supported ATM"
     parameter = effect.parameters[0]
+    remaining = effect.parameters[1:]
 
+    # We ground effects with multiple variables recursively.
     for value in type_map[parameter.type]:
         grounding = Grounding(parameter.name, value)
-        processed.append(
-            pddl.Effect([], ground_atom(effect.condition, grounding), ground_atom(effect.literal, grounding)))
+        grounded_effect = pddl.Effect(remaining, ground_atom(effect.condition, grounding), ground_atom(effect.literal, grounding))
+        processed += ground_possibly_quantified_effect(grounded_effect, type_map)
 
     return processed
 

@@ -12,6 +12,7 @@
 """
 
 import itertools
+import copy
 
 from ..asp import strips_problem
 from ..exceptions import UnimplementedFeature
@@ -180,7 +181,7 @@ class Condition(object):
         """
         return self
 
-    def collect_neg_precs(self, neg_precs, param_types, collect = True):
+    def collect_neg_precs(self, neg_precs, param_types, objects, collect = True):
         """ Recurse through the condition tree looking for negative preconditions
             (Condition, { str : Predicate }, { str : Type }, bool) -> None
         """
@@ -264,7 +265,7 @@ class PredicateCondition(Condition):
             self.sign = False
         return self
 
-    def collect_neg_precs(self, neg_precs, param_types, collect = True):
+    def collect_neg_precs(self, neg_precs, param_types, objects, collect = True):
         """ Recurse through the condition tree looking for negative preconditions
             (Condition, { str : Predicate }, { str : Type } ) -> None
         """
@@ -315,6 +316,8 @@ class PredicateCondition(Condition):
                 set([(Predicate, (str, ...))])) -> Condition
         """
         new_groundings = []
+        #print("Predicate variables: {} relevant: {}".format(self.variables,self.relevant_vars))
+        #print("Groundings: {}".format(self.groundings))
         for grounding in self.groundings:
             t_grounding = list(self.variables)
             for vid, var in enumerate(self.relevant_vars):
@@ -418,7 +421,7 @@ class AndCondition(Condition):
         """ Return a short string representation of the condition
             (AndCondition) -> str
         """
-        return "(and ...)"
+        return "(and {})".format(' '.join([str(cond) for cond in self.conditions]))
 
     def substitute_vars(self, substitutions):
         """ Replace the variables in this condition as specified in substitutions.
@@ -467,12 +470,12 @@ class AndCondition(Condition):
                 return True
         return False
 
-    def collect_neg_precs(self, neg_precs, param_types, collect = True):
+    def collect_neg_precs(self, neg_precs, param_types, objects, collect = True):
         """ Recurse through the condition tree looking for negative preconditions
             (AndCondition, { str : Predicate }, { str : Type }, bool) -> None
         """
         for cond in self.conditions:
-            cond.collect_neg_precs(neg_precs, param_types, collect)
+            cond.collect_neg_precs(neg_precs, param_types, objects, collect)
 
     def compute_relevant_vars(self, var_types):
         """ Compute, store, and return the relevant variables to this condition.
@@ -514,11 +517,8 @@ class AndCondition(Condition):
                 set([(Predicate, (str, ...))])) -> Condition
         """
         new_conditions = []
-        #print("Processing And condition...")
         for condition in self.conditions:
-            #print(condition)
             condition = condition.link_groundings(static_preds, neg_static_preds)
-            #print(condition)
             if isinstance(condition, AndCondition):
                 self.conditions += condition.conditions
             elif condition is not None:
@@ -648,12 +648,12 @@ class OrCondition(Condition):
                 return True
         return False
 
-    def collect_neg_precs(self, neg_precs, param_types, collect = True):
+    def collect_neg_precs(self, neg_precs, param_types, objects, collect = True):
         """ Recurse through the condition tree looking for negative preconditions
             (OrCondition, { str : Predicate }, { str : Type }, bool) -> None
         """
         for cond in self.conditions:
-            cond.collect_neg_precs(neg_precs, param_types, collect)
+            cond.collect_neg_precs(neg_precs, param_types, objects, collect)
 
     def compute_relevant_vars(self, var_types):
         """ Compute, store, and return the relevant variables to this condition
@@ -773,7 +773,7 @@ class ForAllCondition(Condition):
         out_str = "(forall " + self.var
         if self.v_type:
             out_str += " - " + str(self.v_type)
-        return out_str + " ... )"
+        return out_str + ' ' + str(self.condition) + " )"
 
     def substitute_vars(self, substitutions):
         """ Replace the variables in this condition as specified in substitutions.
@@ -822,13 +822,13 @@ class ForAllCondition(Condition):
         """
         return True
 
-    def collect_neg_precs(self, neg_precs, param_types, collect = True):
+    def collect_neg_precs(self, neg_precs, param_types, objects, collect = True):
         """ Recurse through the condition tree looking for negative preconditions
             (ForAllCondition, { str : Predicate }, { str : Type }, bool) -> None
         """
         param_types = dict(param_types)
         param_types[self.var] = self.v_type
-        self.condition.collect_neg_precs(neg_precs, param_types, collect)
+        self.condition.collect_neg_precs(neg_precs, param_types, objects, collect)
 
     def compute_relevant_vars(self, var_types):
         """ Compute, store, and return the relevant variables to this condition.
@@ -843,6 +843,7 @@ class ForAllCondition(Condition):
         else:
             print("Warning: problem contains a useless forall quantifier")
         self.var_types = {}
+
         for rv in self.relevant_vars:
             assert rv in var_types
             self.var_types[rv] = var_types[rv]
@@ -876,11 +877,9 @@ class ForAllCondition(Condition):
             (ForAllCondition, set([(Predicate, (str, ...))],
                 set([(Predicate, (str, ...))])) -> Condition
         """
-        #print("Processing ForAll condition...")
-        #print("Grounding: {}".format(self.condition))
         self.condition = self.condition.link_groundings(static_preds, neg_static_preds)
-        #print("After Grounding: {}".format(self.condition))
-
+        #print("After Grounding ForAll condition: {}".format(self.condition))
+        #assert False
         if self.condition is None:
             return None
 
@@ -1017,13 +1016,13 @@ class ExistsCondition(Condition):
         """
         return True
 
-    def collect_neg_precs(self, neg_precs, param_types, collect = True):
+    def collect_neg_precs(self, neg_precs, param_types, objects, collect = True):
         """ Recurse through the condition tree looking for negative preconditions
             (ExistsCondition, { str : Predicate }, { str : Type }, bool) -> None
         """
         param_types = dict(param_types)
         param_types[self.var] = self.v_type
-        self.condition.collect_neg_precs(neg_precs, param_types, collect)
+        self.condition.collect_neg_precs(neg_precs, param_types, objects, collect)
 
     def compute_relevant_vars(self, var_types):
         """ Compute, store, and return the relevant variables to this condition.
@@ -1257,16 +1256,24 @@ class EqualsCondition(Condition):
             self.sign = False
         return self
 
-    def collect_neg_precs(self, neg_precs, param_types, collect = True):
+    def collect_neg_precs(self, neg_precs, param_types, objects, collect = True):
         """ Recurse through the condition tree looking for negative preconditions
             (EqualsCondition, { str : Predicate }, { str : Type }, bool) -> None
         """
         if not self.sign and collect:
             if inequality_prefix not in neg_precs:
                 neg_precs[inequality_prefix] = []
+
+            to_append = []
             for v in self.variables:
-                assert v in param_types
-            neg_precs[inequality_prefix].append([param_types[v] for v in self.variables])
+                if v in param_types:
+                    to_append.append(param_types[v])
+                elif v in objects:
+                    to_append.append(objects[v].otype)
+                else:
+                    raise RuntimeError("Unexpected term '{}'".format(v))
+
+            neg_precs[inequality_prefix].append(to_append)
 
     def compute_relevant_vars(self, var_types):
         """ Compute, store, and return the relevant variables to this condition.
@@ -1334,7 +1341,7 @@ class ConditionalEffect(Condition):
         """Return a short string representation of the effect
             (ConditionalEffect) -> str
         """
-        return "(when ...)"
+        return "(when {} {})".format(self.condition,self.effect)
 
     def substitute_derived_predicates(self, derived_predicates, seen_preds):
         """ Replace the derived predicates in the conditional effect with the
@@ -1361,11 +1368,11 @@ class ConditionalEffect(Condition):
         self.condition.flatten()
         self.effect.flatten()
 
-    def collect_neg_precs(self, neg_precs, param_types, collect = True):
+    def collect_neg_precs(self, neg_precs, param_types, objects, collect = True):
         """ Recurse through the condition tree looking for negative preconditions
             (ConditionalEffect, { str : Predicate }, { str : Type } ) -> None
         """
-        self.condition.collect_neg_precs(neg_precs, param_types, True)
+        self.condition.collect_neg_precs(neg_precs, param_types, objects, True)
 
     def compute_relevant_vars(self, var_types):
         """ Compute, store, and return the relevant variables to this effect.
@@ -1565,13 +1572,13 @@ class Action(object):
             self.precondition.flatten()
         self.effect.flatten()
 
-    def collect_neg_precs(self, neg_precs, param_types):
+    def collect_neg_precs(self, neg_precs, param_types, objects):
         """ Recurse through the condition tree looking for negative preconditions
             (Action, { str : Predicate }, { str : Type } ) -> None
         """
         if self.precondition:
-            self.precondition.collect_neg_precs(neg_precs, param_types, True)
-        self.effect.collect_neg_precs(neg_precs, param_types, False)
+            self.precondition.collect_neg_precs(neg_precs, param_types, objects, True)
+        self.effect.collect_neg_precs(neg_precs, param_types, objects, False)
 
     def compute_relevant_vars(self):
         """ Compute, store, and return the relevant variables to this dp.
@@ -1739,7 +1746,7 @@ class Problem(object):
                 action.substitute_derived_predicates(self.derived_predicates)
             action.nnf()
             action.flatten()
-            action.collect_neg_precs(neg_precs, action.param_types)
+            action.collect_neg_precs(neg_precs, action.param_types, self.objects)
             action.compute_relevant_vars()
 
         if self.derived_predicates:
@@ -1749,7 +1756,7 @@ class Problem(object):
 
         self.goal = self.goal.nnf()
         self.goal.flatten()
-        self.goal.collect_neg_precs(neg_precs, {})
+        self.goal.collect_neg_precs(neg_precs, {}, self.objects)
         self.goal.compute_relevant_vars({})
 
         #Make lists of the negative fluents and inequalities

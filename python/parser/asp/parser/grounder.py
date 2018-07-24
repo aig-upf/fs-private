@@ -6,7 +6,7 @@
     atoms. It is very efficient.
 """
 
-from ..utilities import grounding_error_code, grounder_run_success_code, \
+from ..utilities import grounding_error_code, \
     asp_convert, grounder_path, var_alphabet, neg_prec_prefix, equality_prefix, \
     inequality_prefix, default_type_name
 from .parser import ParsingException
@@ -16,18 +16,20 @@ from ..problem import Object, Type, Function, Predicate, \
     IncreaseCondition, EqualsCondition, ConditionalEffect
 
 import os, subprocess, itertools
-
+import contextlib
 
 class Grounder(object):
     """ Used to ground PDDL domains and problems. """
 
-    def __init__(self, problem, pre_file_name, grounding_file_name):
+    def __init__(self, problem, pre_file_name, lp_solution_file, remove_lp_files):
         """ Create the grounding system.
             (Grounder, Problem) -> None
         """
         self.problem = problem
         self.pre_file_name = pre_file_name
-        self.grounding_file_name = grounding_file_name
+        self.remove_lp_files = remove_lp_files
+        self.lp_solution_file = lp_solution_file
+        self.lp_error_file = "{}.err".format(lp_solution_file)
 
         # The following are simply maps from the modified names of the problem
         # components back to the components themselves
@@ -131,6 +133,7 @@ class Grounder(object):
                 else:
                     out_file.write("reachable(" + cond.cond_code + ")")
 
+                # TODO Should this be var_types[v].asp_name instead of just 'name'?
                 extra_bindings = [condition.var_types[v].name + "(" + var_alphabet[vid] + ")" \
                                   for vid, v in enumerate(condition.relevant_vars) if v not in cond.relevant_vars]
                 if extra_bindings:
@@ -243,7 +246,7 @@ class Grounder(object):
                              ", ".join(var_alphabet[:len(condition.relevant_vars)]) + "))"
             else:
                 forall_str = "reachable(" + condition.cond_code + ")"
-            forall_str += ", " + condition.v_type.name + "(" + \
+            forall_str += ", " + condition.v_type.asp_name + "(" + \
                           var_alphabet[len(condition.relevant_vars)] + ")"
             if condition.condition.relevant_vars:
                 v_str = "reachable(" + condition.condition.cond_code + "(" + \
@@ -401,14 +404,16 @@ class Grounder(object):
         self.write_asp()
         reachable_goal = False
         try:
-            solver_res = subprocess.call(grounder_path + " " + self.pre_file_name + " > " + \
-                                         self.grounding_file_name, shell=True)
-            if solver_res != grounder_run_success_code:
-                raise ParsingException("Error: There was a problem running the grounder: " + \
-                                       grounder_path, grounding_error_code)
+            # We redirect the error output of Gringo to a separate file
+            command = "{} {}".format(grounder_path, self.pre_file_name)
+            redirections = " > {} 2> {}".format(self.lp_solution_file, self.lp_error_file)
+            solver_res = subprocess.call("{} {}".format(command, redirections), shell=True)
+            if solver_res != 0:
+                raise ParsingException('Error running the ASP grounder. Please check log file "{}"'.
+                                       format(self.lp_error_file), grounding_error_code)
 
-            with open(self.grounding_file_name) as grounding_file:
-                print("Processing result of grounding: {}".format(self.grounding_file_name))
+            with open(self.lp_solution_file) as grounding_file:
+                print("Processing result of grounding: {}".format(self.lp_solution_file))
 
                 for line in grounding_file:
                     if 'reachable' not in line: continue
@@ -467,7 +472,7 @@ class Grounder(object):
         except IOError as e:
             print(e)
             raise ParsingException("Error: could not open the grounding file: " + \
-                                   self.grounding_file_name, grounding_error_code)
+                                   self.lp_solution_file, grounding_error_code)
         except OSError as e:
             import sys
             sys.stdout.flush()
@@ -478,3 +483,10 @@ class Grounder(object):
         if not reachable_goal:
             raise ParsingException("Error: the goal is not relaxed reachable.",
                                    grounding_error_code)
+
+        if self.remove_lp_files:
+            with contextlib.suppress(FileNotFoundError):
+                os.remove(self.lp_solution_file)
+                os.remove(self.pre_file_name)
+                os.remove(self.lp_error_file)
+
