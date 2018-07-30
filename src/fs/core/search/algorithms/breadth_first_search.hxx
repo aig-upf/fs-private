@@ -151,6 +151,7 @@ public:
                 auto repeated = this->_closed.seek(successor);
                 if (repeated != nullptr) { // The node has already been closed
                     log_generated_node(*repeated, is_goal, successor->parent->_gen_order); // we log the previously-generated node with the new parent
+                    this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
 
@@ -158,6 +159,7 @@ public:
                 repeated = this->_open.seek(successor);
                 if (repeated != nullptr) { //   The node is already in the open list
                     log_generated_node(*repeated, is_goal, successor->parent->_gen_order); // we log the previously-generated node with the new parent
+                    this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
 
