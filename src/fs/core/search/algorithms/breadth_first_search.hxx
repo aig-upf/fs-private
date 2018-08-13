@@ -82,7 +82,7 @@ public:
         if (n.parent) parent = n.parent->_gen_order;
         if (forced_parent != -1) parent = static_cast<unsigned>(forced_parent);
         std::string goal_value = goal ? "true" : "false";
-        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"goal\": " << goal_value << ", \"atoms\": [";
+        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"goal\": " << goal_value << ", \"atoms\": [";
 
         // THIS IS COPY-PASTED FROM THE STATE PRINTER
         const fs0::State& s = n.state;
