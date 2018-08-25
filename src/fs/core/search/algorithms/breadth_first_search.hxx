@@ -53,14 +53,15 @@ public:
     //! The constructor requires the user of the algorithm to inject both
     //! (1) the state model to be used in the search
     //! (2) the particular open and closed list objects
-    StlBreadthFirstSearch(const StateModel& model, OpenListT&& open, unsigned max_expansions) :
+    StlBreadthFirstSearch(const StateModel& model, OpenListT&& open, unsigned max_expansions, bool stop_on_goal) :
             BaseClass(model, std::move(open), ClosedListT()),
-            _max_expansions(max_expansions)
+            _max_expansions(max_expansions),
+            _stop_on_goal(stop_on_goal)
     {}
 
     //! For convenience, a constructor where the open list is default-constructed
-    StlBreadthFirstSearch(const StateModel& model, unsigned max_expansions) :
-            StlBreadthFirstSearch(model, OpenListT(), max_expansions)
+    StlBreadthFirstSearch(const StateModel& model, unsigned max_expansions, bool stop_on_goal) :
+            StlBreadthFirstSearch(model, OpenListT(), max_expansions, stop_on_goal)
     {}
 
     virtual ~StlBreadthFirstSearch() = default;
@@ -166,9 +167,13 @@ public:
                 log_generated_node(*successor, is_goal);
                 this->notify(NodeCreationEvent(*successor));
 
-//                if (this->check_goal(successor, solution)) return true;
+                if (_stop_on_goal && this->check_goal(successor, solution)) return false;  // Goal checking is not working, but we don't care about that
 
-                this->_open.insert(successor);
+                bool inserted = this->_open.insert(successor);
+                if (!inserted) { // If we didn't insert the node because of novelty considerations, we push it into the
+                                 // closed list so that it'll be detected as duplicate
+                    this->_closed.put(successor);
+                }
             }
         }
         return false;
@@ -176,6 +181,7 @@ public:
 
 protected:
     unsigned _max_expansions;
+    bool _stop_on_goal;
 };
 
 }}

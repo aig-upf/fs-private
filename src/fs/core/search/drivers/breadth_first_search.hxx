@@ -8,6 +8,7 @@
 
 #include <fs/core/search/drivers/registry.hxx>
 #include <fs/core/search/stats.hxx>
+#include <fs/core/search/drivers/sbfws/base.hxx>
 
 
 namespace fs0 { class Config; }
@@ -27,7 +28,10 @@ public:
 
 protected:
 	std::vector<std::unique_ptr<lapkt::events::EventHandler>> _handlers;
-	
+
+	using FeatureEvaluatorT = bfws::IntegerFeatureEvaluator;
+	FeatureEvaluatorT _feature_evaluator;
+
 	SearchStats _stats;
 };
 

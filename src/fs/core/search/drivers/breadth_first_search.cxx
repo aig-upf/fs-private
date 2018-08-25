@@ -6,6 +6,8 @@
 #include <fs/core/search/events.hxx>
 #include <fs/core/search/utils.hxx>
 #include <fs/core/search/drivers/setups.hxx>
+#include <fs/core/search/drivers/sbfws/base.hxx>
+#include <lapkt/novelty/novelty_based_acceptor.hxx>
 
 
 namespace fs0 { namespace drivers {
@@ -29,12 +31,28 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 	using ActionT = typename StateModelT::ActionType;
 	using NodeT = lapkt::BlindSearchNode<State, ActionT>;
 	using EngineT = lapkt::blai::StlBreadthFirstSearch<NodeT, StateModelT>;
-	using EnginePT = std::unique_ptr<EngineT>;
+	using OpenListT = lapkt::SearchableQueue<NodeT>;
 
 	auto model = setup(problem);
-	
+	int maxw = config.getOption<int>("width.max", -1);
+	bool stop_on_goal = maxw > 0;
+
+	OpenListT queue = OpenListT();
+	if (maxw > 0) {
+	    using NoveltyEvaluatorT = bfws::IntNoveltyEvaluatorI;
+        using GenericEvaluator = lapkt::novelty::GenericNoveltyEvaluator<int>;
+
+        auto novelty_evaluator = new GenericEvaluator(static_cast<unsigned>(maxw));
+
+        using NoveltyAcceptor = lapkt::novelty::NoveltyBasedAcceptor<NodeT, FeatureEvaluatorT, NoveltyEvaluatorT>;
+		NoveltyAcceptor* evaluator = new NoveltyAcceptor(_feature_evaluator, novelty_evaluator);
+		queue = OpenListT(evaluator);
+	}
+
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
-	auto engine = EnginePT(new EngineT(model, config.getOption<unsigned>("max_expansions", 100)));
+	auto engine = std::unique_ptr<EngineT>(new EngineT(model, std::move(queue),
+									   config.getOption<unsigned>("max_expansions", 100), stop_on_goal
+									   ));
 	lapkt::events::subscribe(*engine, _handlers);
 	
 	return Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats);
