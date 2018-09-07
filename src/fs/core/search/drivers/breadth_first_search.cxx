@@ -35,7 +35,7 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 
 	auto model = setup(problem);
 	int maxw = config.getOption<int>("width.max", -1);
-	bool stop_on_goal = maxw > 0;
+	bool stop_on_goal = false;
 
 	OpenListT queue = OpenListT();
 	if (maxw > 0) {
