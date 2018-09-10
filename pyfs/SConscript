@@ -1,0 +1,22 @@
+import os
+
+Import('env')
+Import('static_lib')
+
+env = env.Clone()
+env.ParseConfig('pkg-config --cflags --libs python3')
+
+
+env.Append(CCFLAGS = '-fPIC')
+#env.Append( LIBPATH = [ '/usr/lib/python3.5/config' ] )
+env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME']=1
+
+env.Append(CPPPATH='.')
+#env.Append(LIBS=['-lboost_python35', '-ldl'])
+env.Append(LIBS=['-lboost_python35'])
+
+sources = Glob('*.cxx') + static_lib
+
+# The name "_pyfs" down here *needs* to match the given to the BOOST_PYTHON_MODULE macro.
+pyfs = env.SharedLibrary(target='_pyfs', source=sources, SHLIBPREFIX='')
+Depends(pyfs, static_lib)
