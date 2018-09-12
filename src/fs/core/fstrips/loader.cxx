@@ -49,7 +49,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const Language
 			subformulae.push_back(parseFormula(children[i], lang));
 		}
 
-		return new OpenFormula(to_connective(formula_type), subformulae);
+		return new CompositeFormula(to_connective(formula_type), subformulae);
 
 
 	} else if (formula_type == "exists" || formula_type == "forall") {
@@ -91,7 +91,7 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const LanguageInfo& 
 		std::string symbol = tree["symbol"].GetString();
 		unsigned symbol_id = lang.get_symbol_id(symbol);
 		std::vector<const Term*> children = _parseTermList(tree["children"], lang);
-		return new FunctionalTerm(symbol_id, children);
+		return new CompositeTerm(symbol_id, children);
 	}
 
 	throw std::runtime_error("Unknown term type " + term_type);
@@ -106,7 +106,7 @@ const ActionEffect* Loader::parseEffect(const rapidjson::Value& tree, const Lang
 	const Formula* condition = parseFormula(tree["condition"], lang);
 
 	if (effect_type == "functional") {
-		const FunctionalTerm* lhs = dynamic_cast<const FunctionalTerm*>(parseTerm(tree["lhs"], lang));
+		const CompositeTerm* lhs = dynamic_cast<const CompositeTerm*>(parseTerm(tree["lhs"], lang));
 		if (!lhs) {
 			throw std::runtime_error("Invalid LHS of a functional effect");
 		}

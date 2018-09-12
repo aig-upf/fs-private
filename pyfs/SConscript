@@ -1,4 +1,6 @@
 import os
+from string import Template
+
 
 Import('env')
 Import('static_lib')
@@ -8,15 +10,32 @@ env.ParseConfig('pkg-config --cflags --libs python3')
 
 
 env.Append(CCFLAGS = '-fPIC')
-#env.Append( LIBPATH = [ '/usr/lib/python3.5/config' ] )
 env['STATIC_AND_SHARED_OBJECTS_ARE_THE_SAME']=1
 
 env.Append(CPPPATH='.')
-#env.Append(LIBS=['-lboost_python35', '-ldl'])
-env.Append(LIBS=['-lboost_python35'])
+env.Append(LIBS=['-lboost_python35']) # env.Append(LIBS=['-lboost_python35', '-ldl'])
 
-sources = Glob('*.cxx') + static_lib
+module_name = "_pyfs_d" if env['debug'] else "_pyfs"
+module_filename = "module_d.cxx" if env['debug'] else "module.cxx"
+
+#env.VariantDir("test", 'src')
+
+
+#build_files = [os.path.join(build_dirname, src) for src in sources]
+#shared_lib = env.SharedLibrary(os.path.join(env['build_basename'], env['fs_libname']), build_files)
+
+tpl = Template(open("./module.in", "r").read())
+f = open(module_filename, "w")
+
+f.write(tpl.substitute(module_name=module_name))
+f.close()
+
+
+# We'll embed the fs library as a static library into the (python module) dynamic library
+sources = Glob('src/*.cxx') + static_lib
 
 # The name "_pyfs" down here *needs* to match the given to the BOOST_PYTHON_MODULE macro.
-pyfs = env.SharedLibrary(target='_pyfs', source=sources, SHLIBPREFIX='')
+pyfs = env.SharedLibrary(target=module_name, source=sources, SHLIBPREFIX='')
+
+# We need to explicitly declare the dependency with the static library, otherwise Scons doesn't find out
 Depends(pyfs, static_lib)
