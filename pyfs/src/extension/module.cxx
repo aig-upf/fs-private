@@ -15,6 +15,8 @@ namespace fs = fs0::fstrips;
 // The name used in BOOST_PYTHON_MODULE must match the name of the .so library you generate and import into python.
 BOOST_PYTHON_MODULE( _pyfs )
 {
+    /// First-Order Logic Language ///
+
     bp::enum_<fs0::type_id>("type_id")
         .value("invalid_t", fs0::type_id::invalid_t)
         .value("object_t", fs0::type_id::object_t)
@@ -23,7 +25,6 @@ BOOST_PYTHON_MODULE( _pyfs )
         .value("float_t", fs0::type_id::float_t)
     ;
 
-    // bp::class_<fs0::object_id>("object_id", bp::init<fs0::type_id, >())
     bp::class_<fs0::object_id>("object_id", bp::no_init)
         .add_property("type", &fs0::object_id::type)
         .add_property("value", &fs0::object_id::value)
@@ -100,4 +101,37 @@ BOOST_PYTHON_MODULE( _pyfs )
         .add_property("variables", bp::make_function(&fs::QuantifiedFormula::getVariables, bp::return_value_policy<bp::reference_existing_object>()))
         .def(bp::self_ns::str(bp::self))
     ;
+
+    /// FSTRIPS Actions ///
+
+    bp::enum_<fs::AtomicEffect::Type>("AtomicEffectType")
+        .value("Add", fs::AtomicEffect::Type::ADD)
+        .value("Del", fs::AtomicEffect::Type::DEL)
+    ;
+
+    bp::class_<fs::ActionEffect, boost::noncopyable>("ActionEffect", bp::no_init)
+        .def(bp::self_ns::str(bp::self))
+    ;
+
+    bp::class_<fs::FunctionalEffect, bp::bases<fs::ActionEffect>>("FunctionalEffect", bp::init<const fs::CompositeTerm*, const fs::Term*, const fs::Formula*>())
+        .add_property("lhs", bp::make_function(&fs::FunctionalEffect::lhs, bp::return_value_policy<bp::reference_existing_object>()))
+        .add_property("rhs", bp::make_function(&fs::FunctionalEffect::rhs, bp::return_value_policy<bp::reference_existing_object>()))
+        //.def(bp::self_ns::str(bp::self))
+    ;
+
+    bp::class_<fs::AtomicEffect, bp::bases<fs::ActionEffect>>("AtomicEffect", bp::init<const fs::AtomicFormula*, const fs::AtomicEffect::Type, const fs::Formula*>())
+        .add_property("atom", bp::make_function(&fs::AtomicEffect::getAtom, bp::return_value_policy<bp::reference_existing_object>()))
+        .add_property("type", &fs::AtomicEffect::getType)
+        //.def(bp::self_ns::str(bp::self))
+    ;
+
+    bp::class_<fs::ActionSchema>("ActionSchema", bp::init<unsigned, const std::string&, const fs0::Signature&, const std::vector<std::string>&, const fs::Formula*, const std::vector<const fs::ActionEffect*>&>())
+        .add_property("name", bp::make_function(&fs::ActionSchema::getName, bp::return_value_policy<bp::reference_existing_object>()))
+        .add_property("signature", bp::make_function(&fs::ActionSchema::getSignature, bp::return_value_policy<bp::reference_existing_object>()))
+        .add_property("parameters", bp::make_function(&fs::ActionSchema::getParameterNames, bp::return_value_policy<bp::reference_existing_object>()))
+        .add_property("precondition", bp::make_function(&fs::ActionSchema::getPrecondition, bp::return_value_policy<bp::reference_existing_object>()))
+        .add_property("effects", bp::make_function(&fs::ActionSchema::getEffects, bp::return_value_policy<bp::reference_existing_object>()))
+        .def(bp::self_ns::str(bp::self))
+    ;
+
 }

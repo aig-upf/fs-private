@@ -15,7 +15,7 @@ fs_builddir = path.abspath(path.join(here, '..', '.build'))
 # Avoid meaningless gcc warning - see https://stackoverflow.com/a/49041815
 class BuildExt(build_ext):
     def build_extensions(self):
-        self.compiler.compiler_so.remove('-Wstrict-prototypes')
+        self.compiler.compiler_so = [x for x in self.compiler.compiler_so if x != '-Wstrict-prototypes']
         super(BuildExt, self).build_extensions()
 
 
@@ -28,6 +28,7 @@ def main():
 
     install_requires = [
         'setuptools',
+        'tarski'
     ]
 
     # print(glob.glob(path.join(fsdir, 'fs', '**/*.cxx')))
