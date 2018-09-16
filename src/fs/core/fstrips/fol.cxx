@@ -39,10 +39,10 @@ const Quantifier to_quantifier(const std::string& quantifier) {
 std::ostream& operator<<(std::ostream &os, const LogicalElement& o) { return o.print(os, LanguageInfo::instance()); }
 
 template <typename T>
-std::ostream& _print_nested(std::ostream& os, const std::string& name, const std::vector<const T*>& subelements) {
+std::ostream& _print_nested(std::ostream& os, const LanguageInfo& info, const std::string& name, const std::vector<const T*>& subelements) {
 	os << name << "(";
 	for (unsigned i = 0; i < subelements.size(); ++i) {
-		os << *subelements[i];
+		subelements[i]->print(os, info);
 		if (i < subelements.size() - 1) os << ", ";
 	}
 	os << ")";
@@ -51,7 +51,7 @@ std::ostream& _print_nested(std::ostream& os, const std::string& name, const std
 
 template <typename T>
 std::ostream& _print_nested(std::ostream& os, const LanguageInfo& info, unsigned symbol_id, const std::vector<const T*>& subelements) {
-	return _print_nested(os, info.get_symbol_name(symbol_id), subelements);
+	return _print_nested(os, info, info.get_symbol_name(symbol_id), subelements);
 }
 
 std::ostream& LogicalVariable::print(std::ostream& os, const LanguageInfo& info) const {
@@ -73,7 +73,7 @@ std::ostream& AtomicFormula::print(std::ostream& os, const LanguageInfo& info) c
 }
 
 std::ostream& CompositeFormula::print(std::ostream& os, const LanguageInfo& info) const {
-	return _print_nested(os, to_string(_connective), _children);
+	return _print_nested(os, info, to_string(_connective), _children);
 }
 
 
