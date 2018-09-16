@@ -1,6 +1,6 @@
 import argparse
 
-from . import util
+from . import util, translations
 from tarski.io import FstripsReader
 
 
@@ -47,7 +47,8 @@ def parse_arguments(args):
 def run(instance, domain=None):
     domain = domain or util.find_domain_filename(instance)
     reader = FstripsReader(raise_on_error=True, theories=[])
-    problem = reader.read_problem(domain, instance)
+    tarski_problem = reader.read_problem(domain, instance)
+    fs_problem = translations.tarski.translate_problem(tarski_problem)
 
     assert False
 

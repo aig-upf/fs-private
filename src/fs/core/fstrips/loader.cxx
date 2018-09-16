@@ -196,7 +196,7 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static, has_unbounded_arity));
 		*/
 
-		symbol_id id = lang.add_symbol(name, type, signature, static_);
+		symbol_id id = lang.add_symbol(name, type, signature);
 		_unused(id);
 		assert(expected_id == id); // Check values are decoded in the proper order
 	}

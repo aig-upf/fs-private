@@ -1,3 +1,4 @@
+# coding=utf-8
 import glob
 
 from setuptools import setup, find_packages
@@ -5,6 +6,7 @@ from setuptools.command.build_ext import build_ext
 from distutils.core import setup, Extension
 from codecs import open
 from os import path
+import sys
 
 here = path.abspath(path.dirname(__file__))
 fsdir = path.abspath(path.join(here, '..', 'src'))
@@ -25,20 +27,25 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 
 def main():
+    debug_mode = '--debug' in sys.argv  # Haven't found yet a more robust alternative to this
 
     install_requires = [
         'setuptools',
         'tarski'
     ]
 
-    # print(glob.glob(path.join(fsdir, 'fs', '**/*.cxx')))
+    fs_libname = 'fs-debug' if debug_mode else 'fs'
 
     module = Extension(
-        'pyfs._pyfs',
+        'pyfs.extension._pyfs',
 
         language="c++",
 
-        sources=['src/extension/module.cxx'],  # + glob.glob(path.join(fsdir, '**/*.cxx'), recursive=True),
+        sources=[
+            'src/extension/module.cxx',
+            'src/extension/fstrips.cxx',
+            'src/extension/language_info.cxx',
+         ],
 
         include_dirs=[
             fsdir,
@@ -58,20 +65,9 @@ def main():
         libraries=['boost_python35',
                    'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono',
                    'boost_filesystem', 'rt', 'm',
-                   'fs',
+                   fs_libname
                    ]
     )
-
-
-
-    # g++ -o .build/prod/src/fs/core/search/drivers/setups.os -c -Wall -pedantic -std=c++14 -O3 -DNDEBUG -fPIC
-    # -isystem/usr/local/include -isystem/home/frances/local/include
-    # -Ivendor/rapidjson/include -Ivendor/lapkt-base/src -Ivendor/lapkt-novelty/src -Isrc
-
-    # gcc -o pyfs/_pyfs.so -shared .build/libfs-static.a -L.build -L/usr/local/lib -lboost_program_options
-    # -lboost_serialization -lboost_system -lboost_timer -lboost_chrono -lrt -lboost_filesystem -lm
-    # -lgecodesearch -lgecodeset -lgecodefloat -lgecodeint -lgecodekernel -lgecodesupport -lpthread
-    # -lpython3.5m -lboost_python35
 
     setup(
         name='pyfs',
