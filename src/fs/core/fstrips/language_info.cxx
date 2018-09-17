@@ -143,11 +143,11 @@ private:
 		return it->second;
 	}
 
-	symbol_id add_symbol(const std::string& name, const symbol_t& type, const Signature& signature, bool static_) {
+	symbol_id add_symbol(const std::string& name, const symbol_t& type, const Signature& signature) {
 		assert(_symbol_info.size() == symbolIds.size());
 		unsigned id = symbolIds.size();
 		symbolIds.insert(std::make_pair(name, id));
-		_symbol_info.push_back(SymbolInfo(id, type, name, signature, static_));
+		_symbol_info.push_back(SymbolInfo(id, type, name, signature));
 		return id;
 	}
 
@@ -357,7 +357,7 @@ get_object_name(const object_id& object) const { return impl().get_object_name(o
 const object_id LanguageInfo::get_object_id(const std::string& name) const { return impl().get_object_id(name);}
 
 symbol_id LanguageInfo::
-add_symbol(const std::string& name, const symbol_t& type, const Signature& signature, bool static_) { return impl().add_symbol(name, type, signature, static_); }
+add_symbol(const std::string& name, const symbol_t& type, const Signature& signature) { return impl().add_symbol(name, type, signature); }
 
 object_id LanguageInfo::
 add_object(const std::string& name, TypeIdx fstype) { return impl().add_object(name, fstype); }

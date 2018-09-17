@@ -5,17 +5,11 @@
 
 namespace fs0 { namespace lang { namespace fstrips {
 
-//! The ID of a type (aka sort)
-using TypeId = unsigned;
-
 //! The ID of a predicate or function symbol
 using SymbolId = unsigned;
 
 //!
 using DomainPoint = std::vector<object_id>;
-
-//!
-using Signature = std::vector<TypeId>;
 
 //! A signature with variable names
 class NamedSignature {
@@ -79,19 +73,19 @@ class Factory {
 public:
 	
 	//!
-	TypeId create_type(const std::string& name);
+	TypeIdx create_type(const std::string& name);
 	
 	//!
-	TypeId create_numeric_type(const std::string& name, int min, int max);
+	TypeIdx create_numeric_type(const std::string& name, int min, int max);
 	
 	//!
-	TypeId create_numeric_type(const std::string& name, float min, float max);
+	TypeIdx create_numeric_type(const std::string& name, float min, float max);
 	
 	//! Create a logical symbol (either function or predicate) with given name and signature.
 	SymbolId create_symbol(const std::string& name, const NamedSignature& signature, SymbolType type);
 	
 	//! Create a logical variable with given name.
-	unsigned create_variable(const std::string& name, const TypeId& type);
+	unsigned create_variable(const std::string& name, const TypeIdx& type);
 	
 	
 protected:

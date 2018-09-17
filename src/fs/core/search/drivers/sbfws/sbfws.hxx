@@ -432,7 +432,8 @@ public:
 
 		while (!_open.empty() && !_solution) {
 			auto node = _open.next();
-			process_node(node);
+            _closed.put(node);
+            expand_node(node);
 		}
 
 		return extract_plan(_solution, plan);
@@ -484,11 +485,6 @@ protected:
 		return false;
 	}
 
-	//! Process the node.
-	void process_node(const NodePT& node) {
-		_closed.put(node);
-		expand_node(node);
-	}
 
 	// Return true iff at least one node was created
 	void expand_node(const NodePT& node) {
