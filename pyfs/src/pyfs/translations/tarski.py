@@ -27,8 +27,11 @@ def create_language_info(language):
     # Declare language sorts
     for sort in language.sorts:
         if isinstance(sort, tsk.Interval):
+            # TODO TODO TODO
             # assert 0, "To implement"
+            print("\n\nWARNING: WE'RE IGNORING INTERVAL TYPES AT THE MOMENT. FIX THIS.\n\n")
             pass
+
         elif isinstance(sort, tsk.Sort):
             tid = info.add_fstype(sort.name, cext.type_id.object_t)
             type_idxs[sort] = tid
@@ -59,15 +62,17 @@ def create_language_info(language):
     return LanguageInfoWrapper(info, type_idxs, obj_idxs, symbol_idxs)
 
 
-
 def translate_problem(problem):
     assert isinstance(problem, tarski.fstrips.Problem)
     info_wrapper = create_language_info(problem.language)
     translator = FormulaTranslator(info_wrapper)
     goal = translator.translate_formula(problem.goal)
-    print("Let's do it")
-    s = goal.print(info_wrapper.linfo)
-    print("Translated goal formula: {}".format(s))
+
+    print("Translated goal formula: {}".format(goal.print(info_wrapper.linfo)))
+
+    # TODO Translate remaining parts
+    assert 0, "Finish this"
+
     return None, None, None, None, goal
 
 

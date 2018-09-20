@@ -77,25 +77,42 @@ std::ostream& CompositeFormula::print(std::ostream& os, const LanguageInfo& info
 }
 
 
-CompositeTerm::CompositeTerm(const CompositeTerm& other) :
-	_symbol_id(other._symbol_id),
-	_children(Utils::clone(other._children))
-{}
+AtomicFormula::~AtomicFormula() {
+	for (const auto ptr:_children) delete ptr;
+}
 
 AtomicFormula::AtomicFormula(const AtomicFormula& other) :
 	_symbol_id(other._symbol_id),
-	_children(Utils::clone(other._children))
+	_children(Utils::clone(other._children))  // TODO Not clear that we want this behavior
 {}
+
+CompositeFormula::~CompositeFormula() {
+	for (const auto ptr:_children) delete ptr;
+}
 
 CompositeFormula::CompositeFormula(const CompositeFormula& other) :
 	_connective(other._connective),
 	_children(Utils::clone(other._children))
 {}
 
+QuantifiedFormula::~QuantifiedFormula() {
+	delete _subformula;
+	for (auto ptr:_variables) delete ptr;
+}
+
 QuantifiedFormula::QuantifiedFormula(const QuantifiedFormula& other) :
 	_quantifier(other._quantifier),
 	_variables(Utils::clone(other._variables)),
 	_subformula(other._subformula->clone())
+{}
+
+CompositeTerm::~CompositeTerm() {
+	for (auto ptr:_children) delete ptr;
+}
+
+CompositeTerm::CompositeTerm(const CompositeTerm& other) :
+		_symbol_id(other._symbol_id),
+		_children(Utils::clone(other._children)) // TODO Not clear that we want this behavior
 {}
 
 //! Prints a representation of the object to the given stream.
