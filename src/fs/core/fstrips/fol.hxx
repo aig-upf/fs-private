@@ -111,7 +111,7 @@ protected:
 class CompositeTerm : public Term {
 public:
     CompositeTerm(unsigned symbol_id, const std::vector<const Term*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
-	~CompositeTerm() = default;
+	~CompositeTerm();
     CompositeTerm(const CompositeTerm&);
 
     CompositeTerm* clone() const override { return new CompositeTerm(*this); }
@@ -162,7 +162,7 @@ class AtomicFormula : public Formula {
 public:
 
 	AtomicFormula(unsigned symbol_id, const std::vector<const Term*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
-	~AtomicFormula() = default;
+	~AtomicFormula();
 	AtomicFormula(const AtomicFormula&);
 
 	AtomicFormula* clone() const override { return new AtomicFormula(*this); }
@@ -188,7 +188,7 @@ protected:
 class CompositeFormula : public Formula {
 public:
 	CompositeFormula(Connective connective, const std::vector<const Formula*>& subformulae) : _connective(connective), _children(subformulae) {}
-	~CompositeFormula() { for (const auto ptr:_children) delete ptr; }
+	~CompositeFormula();
 	CompositeFormula(const CompositeFormula&);
 	
 	CompositeFormula* clone() const override { return new CompositeFormula(*this); }
@@ -213,10 +213,7 @@ class QuantifiedFormula : public Formula {
 public:
 	QuantifiedFormula(Quantifier quantifier, const std::vector<const LogicalVariable*>& variables, const Formula* subformula) : _quantifier(quantifier), _variables(variables), _subformula(subformula) {}
 
-	virtual ~QuantifiedFormula() {
-		delete _subformula;
-		for (auto ptr:_variables) delete ptr;
-	}
+	~QuantifiedFormula();
 
 	QuantifiedFormula(const QuantifiedFormula& other);
 	QuantifiedFormula* clone() const override { return new QuantifiedFormula(*this); }

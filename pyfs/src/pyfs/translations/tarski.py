@@ -27,27 +27,39 @@ def create_language_info(language):
     # Declare language sorts
     for sort in language.sorts:
         if isinstance(sort, tsk.Interval):
+            # TODO TODO TODO
             # assert 0, "To implement"
+            print("\n\nWARNING: WE'RE IGNORING INTERVAL TYPES AT THE MOMENT. FIX THIS.\n\n")
             pass
+
         elif isinstance(sort, tsk.Sort):
             tid = info.add_fstype(sort.name, cext.type_id.object_t)
             type_idxs[sort] = tid
         else:
             raise RuntimeError("Unknown sort type: {}".format(sort))
 
+    # TEST
+    print("FSTYPE: ", info.get_fstype_id("object"))
+    print("get_typename(0): ", info.get_typename(0))
+    print("get_typename(1): ", info.get_typename(1))
+
     # Declare language objects
     for o in language.constants():
         oid = info.add_object(o.symbol, type_idxs[o.sort])
         obj_idxs[o] = oid
 
+        # TEST
+        print("get_object_name({}): {}".format(oid, info.get_object_name(oid)))
+
+
     # Declare language symbols
     for p in util.get_symbols(language, include_builtin=False):
         signature = [type_idxs[t] for t in p.sort]
         sid = cext.add_symbol_to_language_info(p.symbol, get_fs_symbol_t(p), signature, info)
+        print("Symbol {} registered with ID {} ({})".format(p, sid, info.get_symbol_name(sid)))
         symbol_idxs[p] = sid
 
     return LanguageInfoWrapper(info, type_idxs, obj_idxs, symbol_idxs)
-
 
 
 def translate_problem(problem):
@@ -55,30 +67,13 @@ def translate_problem(problem):
     info_wrapper = create_language_info(problem.language)
     translator = FormulaTranslator(info_wrapper)
     goal = translator.translate_formula(problem.goal)
-    print("Let's do it")
-    s = goal.print(info_wrapper.linfo)
-    print("Translated goal formula: {}".format(s))
+
+    print("Translated goal formula: {}".format(goal.print(info_wrapper.linfo)))
+
+    # TODO Translate remaining parts
+    assert 0, "Finish this"
+
     return None, None, None, None, goal
-
-
-def get_symbol_id(symbol):
-    # TODO DERIVE NUMERIC ID FROM SYMBOL NAME
-    return 9999
-
-
-def get_variable_id(symbol):
-    # TODO
-    return 9999
-
-
-def get_type_id(sort):
-    # TODO
-    return 9999
-
-
-def get_object_id(symbol):
-    # TODO
-    return cext.make_object(True)
 
 
 class FormulaTranslator(object):
@@ -88,6 +83,19 @@ class FormulaTranslator(object):
     def to_string(self, element):
         assert isinstance(element, cext.LogicalElement)
         return element.print(self.language_info_wrapper.linfo)
+
+    def get_symbol_id(self, symbol):
+        return self.language_info_wrapper.symbol_idxs[symbol]
+
+    def get_type_id(self, sort):
+        return self.language_info_wrapper.type_idxs[sort]
+
+    def get_variable_id(self, varname):
+        raise RuntimeError("UNIMPLEMENTED")
+
+    def get_object_id(self, obj):
+        return self.language_info_wrapper.obj_idxs[obj]
+        # return cext.make_object(True)
 
     def translate_formula(self, formula):
         assert isinstance(formula, tsk.Formula)
@@ -99,9 +107,9 @@ class FormulaTranslator(object):
             return cext.Contradiction()
 
         elif isinstance(formula, tsk.Atom):
-            symbol = get_symbol_id(formula.predicate.symbol)
+            symbol_id = self.get_symbol_id(formula.predicate)
             subterms = self.translate_term_list(formula.subterms)
-            return cext.create_atomic_formula(symbol, subterms)
+            return cext.create_atomic_formula(symbol_id, subterms)
             # return cext.AtomicFormula(symbol, subterms)
 
         elif isinstance(formula, tsk.CompoundFormula):
@@ -124,17 +132,17 @@ class FormulaTranslator(object):
     def translate_term(self, term):
         assert isinstance(term, tsk.Term)
         if isinstance(term, tsk.Variable):
-            varid = get_variable_id(term.symbol)
-            typeid = get_type_id(term.sort)
+            varid = self.get_variable_id(term.symbol)
+            typeid = self.get_type_id(term.sort)
             return cext.LogicalVariable(varid, term.symbol, typeid)
 
         elif isinstance(term, tsk.CompoundTerm):
-            symbol_id = get_symbol_id(term.symbol.symbol)
+            symbol_id = self.get_symbol_id(term.symbol)
             return cext.CompositeTerm(symbol_id, self.translate_term_list(term.subterms))
 
         elif isinstance(term, tsk.Constant):
-            oid = get_object_id(term.symbol)
-            typeid = get_type_id(term.sort)
+            oid = self.get_object_id(term)
+            typeid = self.get_type_id(term.sort)
             return cext.Constant(oid, typeid)
 
         raise RuntimeError("Unexpected Tarski element type: {}".format(term))

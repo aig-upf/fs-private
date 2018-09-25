@@ -75,7 +75,6 @@ static_libname = env['fs_libname'] + "-static"
 build_files = [os.path.join(build_dirname, src) for src in sources]
 shared_lib = env.SharedLibrary(os.path.join(env['build_basename'], env['fs_libname']), build_files)
 static_lib = env.StaticLibrary(os.path.join(env['build_basename'], static_libname), build_files)
-SConscript('pyfs/SConscript', exports='env static_lib include_paths')
 deployed_lib = env.Install(os.path.join('lib',env['fs_libname']), shared_lib)
 env.Alias('install', [deployed_lib])
 # Save a description of the compilation and linking options to be used when linking the final solver

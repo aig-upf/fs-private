@@ -43,10 +43,19 @@ void define_language_info() {
 //    fs0::TypeIdx (*add_fstype2)(const int32_t&)  = &fs0::add_fstype;
 
 
+    const std::string& (fs::LanguageInfo::*get_typename1)(const fs0::TypeIdx&) const  = &fs::LanguageInfo::get_typename;
+
 
     bp::class_<fs::LanguageInfo>("LanguageInfo", bp::init<>())
             .def("get_symbol_id", &fs::LanguageInfo::get_symbol_id)
-            .def("get_symbol_name", &fs::LanguageInfo::get_symbol_name, bp::return_value_policy<bp::reference_existing_object>())
+            .def("get_symbol_name", &fs::LanguageInfo::get_symbol_name, bp::return_value_policy<bp::copy_const_reference>())
+
+            .def("get_fstype_id", &fs::LanguageInfo::get_fstype_id)
+            .def("get_typename", get_typename1, bp::return_value_policy<bp::copy_const_reference>())
+
+            .def("get_object_name", &fs::LanguageInfo::get_object_name)
+
+
             // ...
 
             .def("add_symbol", &fs::LanguageInfo::add_symbol)

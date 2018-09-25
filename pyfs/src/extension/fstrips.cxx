@@ -18,19 +18,29 @@ namespace bp = boost::python;
 namespace fs = fs0::fstrips;
 
 fs::AtomicFormula* create_atomic_formula(unsigned symbol_id, bp::list& subterms) {
-    return new fs::AtomicFormula(symbol_id, to_std_vector<const fs::Term*>(subterms));
+    // We could simply convert the list into a vector, but that would result in dangling refs,
+    // as both Python and the C++ planner API would assume ownership of the pointers.
+    // return new fs::AtomicFormula(symbol_id, to_std_vector<const fs::Term*>(subterms));
+
+    // Indeed, we need to clone the subterms, as the C++ API demands transfer of ownership.
+    return new fs::AtomicFormula(symbol_id, clone_list<const fs::Term>(subterms));
+
+    // We could alternatively transfer the pointer ownership (not too much tested yet), but this
+    // would leave the Python list in an inconsistent state (e.g. could be that other Python variables
+    // are making reference to the same object, etc.
+    // return new fs::AtomicFormula(symbol_id, convert_to_vector_and_transfer_ownership<const fs::Term>(subterms));
 }
 
 fs::CompositeTerm* create_composite_term(unsigned symbol_id, bp::list& subterms) {
-    return new fs::CompositeTerm(symbol_id, to_std_vector<const fs::Term*>(subterms));
+    return new fs::CompositeTerm(symbol_id, clone_list<const fs::Term>(subterms));
 }
 
 fs::CompositeFormula* create_composite_formula(fs::Connective connective, bp::list& subformulas) {
-    return new fs::CompositeFormula(connective, to_std_vector<const fs::Formula*>(subformulas));
+    return new fs::CompositeFormula(connective, clone_list<const fs::Formula>(subformulas));
 }
 
 fs::QuantifiedFormula* create_quantified_formula(fs::Quantifier quantifier, bp::list& variables, const fs::Formula* subformula) {
-    return new fs::QuantifiedFormula(quantifier, to_std_vector<const fs::LogicalVariable*>(variables), subformula);
+    return new fs::QuantifiedFormula(quantifier, clone_list<const fs::LogicalVariable>(variables), subformula);
 }
 
 
@@ -48,12 +58,6 @@ std::string print_wrapper(const fs::AtomicFormula& o) {
 }
 
 std::string print_logical_element(const fs::LogicalElement& o, const fs::LanguageInfo& info) {
-    std::cout << "print_logical_element: " << std::endl;
-//    throw std::runtime_error("print_logical_element");
-//    signal(getpid(), SIGUSR1);
-//    kill(getpid(), SIGUSR1);
-
-
     std::ostringstream oss;
     o.print(oss, info);
     return oss.str();

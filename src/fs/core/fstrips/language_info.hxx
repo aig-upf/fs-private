@@ -75,10 +75,10 @@ protected:
 	symbol_t _symbol_type;
 
 	//!
-	const std::string& _name;
+	const std::string _name;
 
 	//!
-	const Signature& _signature;
+	const Signature _signature;
 };
 
 

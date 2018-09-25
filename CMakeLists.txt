@@ -132,6 +132,12 @@ set(SOURCE_FILES
         src/fs/core/languages/fstrips/scopes.hxx
         src/fs/core/languages/fstrips/terms.cxx
         src/fs/core/languages/fstrips/terms.hxx
+
+        src/fs/core/fstrips/fol
+        src/fs/core/fstrips/language
+        src/fs/core/fstrips/language_info
+        src/fs/core/fstrips/operations
+
         src/fs/core/search/nodes/blind_node.hxx
         src/fs/core/models/ground_state_model.cxx
         src/fs/core/models/ground_state_model.hxx
