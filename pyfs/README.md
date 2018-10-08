@@ -38,3 +38,12 @@ on [Stackoverflow](https://stackoverflow.com/questions/28830653/build-boost-with
 the Python's CPU architecture and UCS-2 or UCS-4 unicode configurations.
 
 and this [gist](https://gist.github.com/melvincabatuan/a5a4a10b15ef31a5a481).
+
+**NOTE**: I had to let know ```b2``` that I wanted a build with ```C++11``` features
+enabled. I used this command
+
+```
+echo "using gcc : 5.4 : /the/path/to/g++-5.4 : <cxxflags>-std=c++11 ;" > ./tools/build/src/user-config.jam
+```
+
+as per [this advice on Stackoverflow](https://stackoverflow.com/a/43716427/338107).
