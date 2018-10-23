@@ -58,3 +58,25 @@ echo "using gcc : 5.4 : /the/path/to/g++-5.4 : <cxxflags>-std=c++14 ;" > ./tools
 ```
 
 See [here](https://github.com/boostorg/system/issues/24) for more details on the issue (which is acknowledged by boost as bug).
+
+### Building and Deployment pyfs
+
+To compile (debug mode for the moment)
+
+```
+.../pyfs$ CC="ccache gcc" python setup.py build --debug   
+```
+
+we recommend to use ```ccache``` to avoid unnecessary re-compilation.
+
+Once built, the module can be installed with ```pip``` in dev install mode
+
+```
+.../pyfs$ pip install -e .
+```
+
+To test that the previous two steps worked out as expected, you may run this example
+
+```
+.../pyfs/examples$ python blocks.py
+```
