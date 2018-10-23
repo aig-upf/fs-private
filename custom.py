@@ -10,3 +10,5 @@ hybrid_support = True
 lapkt = os.getenv('LAPKT', '')
 
 default_compiler = 'g++'
+
+prefix = os.path.join(os.getenv('HOME'), 'local/lib')
