@@ -17,13 +17,13 @@ env.Append(CPPPATH = [os.path.abspath(p) for p in include_paths])
 
 
 if env['edebug']:
-	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DEDEBUG' ] )
+	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DEDEBUG',  '-DBOOST_SYSTEM_NO_DEPRECATED' ] )
 	env['fs_libname'] ='fs-edebug'
 elif env['debug']:
-	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
+	env.Append( CCFLAGS = ['-g', '-DDEBUG',  '-DBOOST_SYSTEM_NO_DEPRECATED' ] )
 	env['fs_libname'] ='fs-debug'
 else:
-	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
+	env.Append( CCFLAGS = ['-O3', '-DNDEBUG',  '-DBOOST_SYSTEM_NO_DEPRECATED' ] )
 	env['fs_libname'] ='fs'
 
 fs_libs = ['boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm']

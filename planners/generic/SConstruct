@@ -18,15 +18,15 @@ env['CXX'] = os.environ.get('CXX', env['default_compiler'])
 env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
 
 if env['edebug']:
-	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DEDEBUG' ] )
+	env.Append( CCFLAGS = ['-g', '-DDEBUG', '-DEDEBUG',  '-DBOOST_SYSTEM_NO_DEPRECATED' ] )
 	fs_libname = 'fs-edebug'
 	exe_name = 'solver.edebug.bin'
 elif env['debug']:
-	env.Append( CCFLAGS = ['-g', '-DDEBUG' ] )
+	env.Append( CCFLAGS = ['-g', '-DDEBUG',  '-DBOOST_SYSTEM_NO_DEPRECATED' ] )
 	fs_libname = 'fs-debug'
 	exe_name = 'solver.debug.bin'
 else:
-	env.Append( CCFLAGS = ['-g', '-O3', '-DNDEBUG' ] )
+	env.Append( CCFLAGS = ['-g', '-O3', '-DNDEBUG',  '-DBOOST_SYSTEM_NO_DEPRECATED' ] )
 	fs_libname = 'fs'
 	exe_name = 'solver.bin'
 
