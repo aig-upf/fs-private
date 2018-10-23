@@ -27,6 +27,14 @@ def create_language_info(language):
     # Declare language sorts
     for sort in language.sorts:
         if isinstance(sort, tsk.Interval):
+            if sort.name == 'Real':
+                tid = info.add_fstype(sort.name, cext.type_id.float_t)
+                type_idxs[sort] = tid
+                continue
+            elif sort.name == 'Integer' or sort.name == 'Natural':
+                tid = info.add_fstype(sort.name, cext.type_id.int_t)
+                type_idxs[sort] = tid
+                continue
             # TODO TODO TODO
             # assert 0, "To implement"
             print("\n\nWARNING: WE'RE IGNORING INTERVAL TYPES AT THE MOMENT. FIX THIS.\n\n")
@@ -75,8 +83,7 @@ def translate_problem(problem):
 
     return None, None, None, None, goal
 
-
-class FormulaTranslator(object):
+class Translator(object):
     def __init__(self, language_info_wrapper):
         self.language_info_wrapper = language_info_wrapper
 
@@ -96,6 +103,39 @@ class FormulaTranslator(object):
     def get_object_id(self, obj):
         return self.language_info_wrapper.obj_idxs[obj]
         # return cext.make_object(True)
+
+    def translate_term(self, term):
+        assert isinstance(term, tsk.Term)
+        if isinstance(term, tsk.Variable):
+            varid = self.get_variable_id(term.symbol)
+            typeid = self.get_type_id(term.sort)
+            return cext.LogicalVariable(varid, term.symbol, typeid)
+
+        elif isinstance(term, tsk.CompoundTerm):
+            symbol_id = self.get_symbol_id(term.symbol)
+            return cext.create_composite_term(symbol_id, self.translate_term_list(term.subterms))
+
+        elif isinstance(term, tsk.Constant):
+            oid = self.get_object_id(term)
+            typeid = self.get_type_id(term.sort)
+            return cext.Constant(oid, typeid)
+
+        raise RuntimeError("Unexpected Tarski element type: {}".format(term))
+
+    def translate_term_list(self, terms):
+        return [self.translate_term(t) for t in terms]
+
+class ExpressionTranslator(Translator):
+
+    def __init__(self, info):
+        super().__init__(info)
+
+    def translate(self, expr):
+        return self.translate_term(expr)
+
+class FormulaTranslator(Translator):
+    def __init__(self, language_info_wrapper):
+        super().__init__(language_info_wrapper)
 
     def translate_formula(self, formula):
         assert isinstance(formula, tsk.Formula)
@@ -129,26 +169,6 @@ class FormulaTranslator(object):
 
         raise RuntimeError("Unexpected Tarski element type: {}".format(formula))
 
-    def translate_term(self, term):
-        assert isinstance(term, tsk.Term)
-        if isinstance(term, tsk.Variable):
-            varid = self.get_variable_id(term.symbol)
-            typeid = self.get_type_id(term.sort)
-            return cext.LogicalVariable(varid, term.symbol, typeid)
-
-        elif isinstance(term, tsk.CompoundTerm):
-            symbol_id = self.get_symbol_id(term.symbol)
-            return cext.CompositeTerm(symbol_id, self.translate_term_list(term.subterms))
-
-        elif isinstance(term, tsk.Constant):
-            oid = self.get_object_id(term)
-            typeid = self.get_type_id(term.sort)
-            return cext.Constant(oid, typeid)
-
-        raise RuntimeError("Unexpected Tarski element type: {}".format(term))
-
-    def translate_term_list(self, terms):
-        return [self.translate_term(t) for t in terms]
 
     def translate_connective(self, connective):
         return {
