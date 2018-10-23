@@ -47,3 +47,14 @@ echo "using gcc : 5.4 : /the/path/to/g++-5.4 : <cxxflags>-std=c++11 ;" > ./tools
 ```
 
 as per [this advice on Stackoverflow](https://stackoverflow.com/a/43716427/338107).
+
+**NOTE #2**: if the client code is being compiled with c++-14 support (as is the case) for
+```FS``` then it is safest to compiled the boost libraries also with c++-14 enabled. For that, instead
+of the command above use instead
+
+
+```
+echo "using gcc : 5.4 : /the/path/to/g++-5.4 : <cxxflags>-std=c++14 ;" > ./tools/build/src/user-config.jam
+```
+
+See [here](https://github.com/boostorg/system/issues/24) for more details on the issue (which is acknowledged by boost as bug).
