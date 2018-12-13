@@ -68,7 +68,7 @@ public:
 			_problem(model.getTask()),
 			_config(config),
 			_simconfig(config.complete_simulation, config.mark_negative_propositions, config.simulation_width, config._global_config),
-			_sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
+			_sim_novelty_factory(_problem, features.uses_extra_features(), config.simulation_width),
 			_featureset(features)
 	{}
 	~SimulationBasedRelevantAtomsCounter() {};

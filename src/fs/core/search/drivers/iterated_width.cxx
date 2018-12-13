@@ -24,7 +24,7 @@ create(const Config& config, FeatureEvaluatorT&& featureset, const StateModelT& 
 //	assert(0); // TO REIMPLEMENT
 // 	auto evaluator = fs0::bfws::create_novelty_evaluator<NoveltyEvaluatorT>(model.getTask(), fs0::bfws::SBFWSConfig::NoveltyEvaluatorType::Adaptive, max_novelty);
 //	auto evaluator = nullptr;
-	bfws::NoveltyFactory<FeatureValueT> factory(model.getTask(), bfws::SBFWSConfig::NoveltyEvaluatorType::Generic, true, max_novelty);
+	bfws::NoveltyFactory<FeatureValueT> factory(model.getTask(), true, max_novelty);
 	return EnginePT(new EngineT(model, 1, max_novelty, std::move(featureset), factory.create_evaluator(max_novelty), stats));
 }
 

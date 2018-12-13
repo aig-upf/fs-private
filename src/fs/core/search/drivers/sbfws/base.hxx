@@ -36,8 +36,6 @@ protected:
 
 	bool _ignore_neg_literals;
 
-	SBFWSConfig::NoveltyEvaluatorType _desired_evaluator_t;
-
 	enum class ChosenEvaluatorT {W1Atom, W2Atom, Generic};
 
 	//! _chosen_evaluator_t[i] contains the choice of evaluator type for width-i evaluators.
@@ -53,7 +51,7 @@ protected:
 public:
 	using NoveltyEvaluatorT = lapkt::novelty::NoveltyEvaluatorI<FeatureValueT>;
 
-	NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired_evaluator_t, bool use_extra_features, unsigned max_expected_width);
+	NoveltyFactory(const Problem& problem, bool use_extra_features, unsigned max_expected_width);
 
 	NoveltyEvaluatorT* create_evaluator(unsigned width) const;
 

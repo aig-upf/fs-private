@@ -3,6 +3,7 @@
 #include <fs/core/search/drivers/registry.hxx>
 // #include <fs/core/search/drivers/gbfs_constrained.hxx>
 #include <fs/core/search/drivers/iterated_width.hxx>
+#include <fs/core/search/drivers/thts.hxx>
 #include <fs/core/search/drivers/breadth_first_search.hxx>
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
 // #include <fs/core/search/drivers/unreached_atom_driver.hxx>
@@ -39,7 +40,9 @@ EngineRegistry::EngineRegistry() {
 
 	add("native",  new NativeActionDriver<>());
 	add("native_gc",  new NativeActionDriver<UnsatisfiedGoalAtomsCounter>());
-	
+
+	add("thts",  new THTSDriver<GroundStateModel>());
+
 	add("iw",  new IteratedWidthDriver<GroundStateModel>());
 	add("liw",  new IteratedWidthDriver<LiftedStateModel>());
 	

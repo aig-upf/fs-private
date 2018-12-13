@@ -131,8 +131,9 @@ bool Problem::check_is_predicative() {
 //! to replace them by axioms.
 //! This needs to be called before grounding actions.
 void Problem::consolidateAxioms() {
-    if ( !_ground.empty() )
-        throw std::runtime_error("Problem::consolidateAxioms(): method called after grounding actions!");
+    if (!_ground.empty()) {
+    	throw std::runtime_error("Problem::consolidateAxioms(): method called after grounding actions!");
+    }
 	const ProblemInfo& info = ProblemInfo::getInstance();
 
 	// NOTE Order is FUNDAMENTAL: we need to process the axioms first of all.

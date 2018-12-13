@@ -4,7 +4,7 @@ project(fs_private)
 project(fslib VERSION 0.1)
 
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -143,6 +143,7 @@ set(SOURCE_FILES
         src/fs/core/search/algorithms/ehc.hxx
         src/fs/core/search/algorithms/ehc_gbfs.hxx
         src/fs/core/search/algorithms/iterated_width.hxx
+        src/fs/core/search/algorithms/tree_search
         src/fs/core/search/drivers/base.hxx
         src/fs/core/search/drivers/sbfws/features/features.cxx
         src/fs/core/search/drivers/sbfws/features/features.hxx
@@ -169,6 +170,7 @@ set(SOURCE_FILES
         src/fs/core/search/drivers/fully_lifted_driver.hxx
         src/fs/core/search/drivers/iterated_width.cxx
         src/fs/core/search/drivers/iterated_width.hxx
+        src/fs/core/search/drivers/thts
         src/fs/core/search/drivers/registry.cxx
         src/fs/core/search/drivers/registry.hxx
         src/fs/core/search/drivers/setups.cxx
@@ -272,6 +274,11 @@ set(FS_VENDOR ${FS_ROOT}/vendor)
 include_directories($ENV{HOME}/local/include)  # Gecode, etc.
 include_directories(${FS_SRC})
 
-include_directories(${FS_VENDOR}/rapidjson/include)
-include_directories(${FS_VENDOR}/lapkt-base/src)
-include_directories(${FS_VENDOR}/lapkt-novelty/src)
+include_directories(SYSTEM ${FS_VENDOR}/rapidjson/include)
+include_directories(SYSTEM ${FS_VENDOR}/lapkt-base/src)
+include_directories(SYSTEM ${FS_VENDOR}/lapkt-novelty/src)
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+    message(STATUS "dir='${dir}'")
+endforeach()

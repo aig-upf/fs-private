@@ -8,8 +8,8 @@ namespace fs0 { namespace bfws {
 
 template <typename FeatureValueT>
 NoveltyFactory<FeatureValueT>::
-NoveltyFactory(const Problem& problem, SBFWSConfig::NoveltyEvaluatorType desired_evaluator_t, bool use_extra_features, unsigned max_expected_width) :
-	_problem(problem), _indexer(_problem.get_tuple_index()), _desired_evaluator_t(desired_evaluator_t)
+NoveltyFactory(const Problem& problem, bool use_extra_features, unsigned max_expected_width) :
+	_problem(problem), _indexer(_problem.get_tuple_index())
 {
 	const Config& config = Config::instance(); // TODO - Remove the singleton use and inject the config here by other means
 	_ignore_neg_literals = config.getOption<bool>("ignore_neg_literals", true);
@@ -83,7 +83,7 @@ NoveltyFactory<FeatureValueT>::create_compound_evaluator(unsigned max_width) con
 
 	// This is a very basic strategy, but others more sophisticated can be easily devised.
 	// If the decision algorithm considers that width-2 computations can be performed
-	// with the optimized evaluator, then we choose the compoung evaluator; otherwise
+	// with the optimized evaluator, then we choose the compound evaluator; otherwise
 	// simply choose the generic
 
 	if (max_width == 1) {
