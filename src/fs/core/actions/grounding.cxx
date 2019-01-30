@@ -73,9 +73,6 @@ _full_binding(unsigned id, const ActionData& action_data, const Binding& binding
 		}
 	}
 
-	if (action_data.hasProceduralEffects())
-		return new ProceduralAction(id, action_data, binding, precondition, effects);
-
 	return new GroundAction(id, action_data, binding, precondition, effects);
 }
 

@@ -5,7 +5,6 @@
 #include <fs/core/languages/fstrips/operations.hxx>
 
 #include <fs/core/actions/actions.hxx>
-#include <fs/core/constraints/gecode/utils/nested_fluent_iterator.hxx>
 #include <fs/core/utils/utils.hxx>
 
 namespace fs0 { namespace language { namespace fstrips {
@@ -95,10 +94,7 @@ void _computeRelevantElements(const std::vector<const Term*>& all_terms, std::se
 			if (info.isPredicate(symbol)) {
 				symbols.insert(symbol);
 			} else {
-				for (gecode::nested_fluent_iterator it(fluent); !it.ended(); ++it) {
-					VariableIdx variable = it.getDerivedStateVariable();
-					variables.insert(variable);
-				}
+				throw std::runtime_error("Gecode no longer available");
 			}
 		}
 	}

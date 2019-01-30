@@ -9,10 +9,8 @@
 #include <fs/core/languages/fstrips/loader.hxx>
 #include <fs/core/languages/fstrips/metrics.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/constraints/gecode/helper.hxx>
 #include <fs/core/constraints/registry.hxx>
 #include <fs/core/utils/utils.hxx>
-#include <fs/core/utils/printers/registry.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/fstrips/language_info.hxx>
@@ -163,8 +161,6 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 
 	// ATM support for axioms is very buggy and we should better not rely on it
 	// problem->consolidateAxioms();
-
-	LPT_INFO("components", "Bootstrapping problem with following external component repository\n" << print::logical_registry(LogicalComponentRegistry::instance()));
 
 	if (config.validate()) {
 		LPT_INFO("main", "Validating problem...");

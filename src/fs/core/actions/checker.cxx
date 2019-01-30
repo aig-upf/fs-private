@@ -35,17 +35,6 @@ bool Checker::check_correctness(const Problem& problem, const std::vector<const 
 }
 
 
-std::vector<const GroundAction*> Checker::transform(const Problem& problem, const std::vector<LiftedActionID>& plan) {
-	std::vector<const GroundAction*> transformed;
-
-	// First we make sure that the whole plan is applicable
-	for (const LiftedActionID& action_id:plan) {
-		const GroundAction* action = action_id.generate();
-		transformed.push_back(action);
-	}
-	return transformed;
-}
-
 std::vector<const GroundAction*> Checker::transform(const Problem& problem, const ActionPlan& plan) {
 	std::vector<const GroundAction*> transformed;
 	const auto& actions = problem.getGroundActions();

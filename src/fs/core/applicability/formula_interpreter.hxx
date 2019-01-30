@@ -5,8 +5,6 @@
 
 #include <memory>
 
-namespace fs0 { namespace gecode { class FormulaCSP; }}
-
 namespace fs0 {
 
 class State;
@@ -47,25 +45,6 @@ public:
 	bool satisfied(const State& state) const;
 };
 
-
-//! A satisfiability manager that models formula satisfaction as a CSP in order to determine whether a given formula is satisfiable or not.
-class CSPFormulaInterpreter : public FormulaInterpreter {
-public:
-	CSPFormulaInterpreter(const fs::Formula* formula, const AtomIndex& tuple_index);
-	~CSPFormulaInterpreter();
-	CSPFormulaInterpreter(const CSPFormulaInterpreter&);
-	
-	CSPFormulaInterpreter* clone() const { return new CSPFormulaInterpreter(*this); }
-
-	//! Returns true if the formula represented by the current object is satisfied in the given state
-	bool satisfied(const State& state) const;
-
-protected:
-	//! The formula handler that will check for CSP applicability
-	const gecode::FormulaCSP* _formula_csp;
-	
-	const AtomIndex& _tuple_index;
-};
 
 } // namespaces
 

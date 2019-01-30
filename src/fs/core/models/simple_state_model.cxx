@@ -8,23 +8,11 @@
 #include <lapkt/tools/logging.hxx>
 
 #include <fs/core/languages/fstrips/language.hxx>
-#include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
-#include <fs/core/languages/fstrips/complex_existential_formula.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
 
 namespace fs0 {
 
 
-//! A helper to derive the distinct goal atoms
-/*
-const std::vector<const fs::AtomicFormula*>&
-obtain_goal_atoms(const fs::Formula* goal) {
-	const fs::Conjunction* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
-	if (!conjunction) {
-		throw std::runtime_error("This search mode can only be applied to problems featuring simple goal conjunctions");
-	}
-	return conjunction->getSubformulae();
-}
-*/
 
 
 //! A helper to derive the distinct goal atoms
@@ -39,8 +27,7 @@ obtain_goal_atoms(const Problem& problem, const fs::Formula* goal) {
 	std::vector<const fs::Formula*> goal_atoms;
 
 	if (ex_q) {
-		// TODO This might be a memory leak
-		goal_atoms.push_back(new fs::ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
+        throw std::runtime_error("Gecode no longer available");
 	} else {
 		assert(conjunction);
 		for (const fs::Formula* atom:conjunction->getSubformulae()) {

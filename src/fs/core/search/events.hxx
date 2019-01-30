@@ -8,7 +8,6 @@
 #include <fs/core/utils/config.hxx>
 
 #include <lapkt/tools/events.hxx>
-#include <fs/core/heuristics/relaxed_plan/smart_rpg.hxx>
 
 
 namespace fs0 { namespace language { namespace fstrips { class Formula; } }}

@@ -3,7 +3,8 @@
 #include <fs/core/utils/printers/helper.hxx>
 #include <fs/core/utils/printers/actions.hxx>
 #include <fs/core/problem.hxx>
-#include <fs/core/heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
+#include <fs/core/actions/actions.hxx>
+#include <fs/core/utils/printers/printers.hxx>
 
 namespace fs0 {
 
@@ -16,20 +17,6 @@ void PlanPrinter::print(const std::vector<GroundAction::IdType>& plan, std::ostr
 	}
 }
 
-void PlanPrinter::print(const std::vector<LiftedActionID>& plan, std::ostream& out) {
-	// This ideally should be conflated with print::plan, but currently we have different plan types :-(
-	for (const auto& element:plan) {
-		out << element << " " << std::endl;
-	}
-}
-
-void PlanPrinter::print_json(const std::vector<LiftedActionID>& plan, std::ostream& out) {
-	std::vector<std::string> names;
-	for (const auto& elem:plan) {
-		names.push_back(printer() << elem);
-	}
-	print_json(names, out);
-}
 
 void PlanPrinter::print_json(const std::vector<GroundAction::IdType>& plan, std::ostream& out) {
 	std::vector<std::string> names;
@@ -58,45 +45,3 @@ std::ostream& PlanPrinter::print(std::ostream& os) const {
 
 } // namespaces
 
-
-
-namespace fs0 { namespace print {
-
-std::ostream&
-plan::print(std::ostream& os) const {
-	for (const ActionID* action:_plan) {
-		os << *action << " ";
-	}
-	return os;
-}
-
-void
-supported_plan::printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out) {
-	for (const auto& element:plan) {
-		out << element << " " << std::endl;
-	}
-}
-
-std::ostream&
-support::print(std::ostream& os) const {
-	const AtomIndex& index = Problem::getInstance().get_tuple_index();
-	for (AtomIdx tuple:_support) {
-		const Atom& atom = index.to_atom(tuple);
-		os << atom << ", ";
-	}
-	return os;
-}
-
-
-std::ostream&
-changeset::print(std::ostream& os) const {
-	os << "<";
-	for (unsigned i = 0, s = static_cast<unsigned>(_changeset.size()); i < s; ) {
-		os << _changeset[i];
-		if (++i < s) os << ", ";
-	}
-	os << ">";
-	return os;
-}
-
-}} // namespaces

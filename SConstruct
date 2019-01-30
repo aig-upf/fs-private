@@ -9,7 +9,6 @@ vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
 
 # Planner modules:
 vars.Add(BoolVariable('ompl_support', 'Include OMPL driver support in library', 'yes'))
-vars.Add(BoolVariable('gecode_support', 'Include Gecode solver dependencies', 'yes'))
 vars.Add(BoolVariable('hybrid_support', 'Include Soplex LP solver adapter and dependencies', 'yes'))
 
 vars.Add(EnumVariable('default_compiler', 'Preferred compiler', 'clang++', allowed_values=('g++', 'clang++')))
@@ -47,7 +46,6 @@ isystem_paths = []
 modules = [
     ("core",           "core"),
     ("lapkt2",         "lapkt2"),
-    ("gecode_support", "gecode"),
     ("hybrid_support", "hybrid"),
     ("ompl_support",   "ompl")
 ]

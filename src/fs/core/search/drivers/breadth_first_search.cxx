@@ -6,7 +6,6 @@
 #include <fs/core/search/events.hxx>
 #include <fs/core/search/utils.hxx>
 #include <fs/core/search/drivers/setups.hxx>
-#include <fs/core/search/drivers/sbfws/base.hxx>
 #include <lapkt/novelty/novelty_based_acceptor.hxx>
 
 
@@ -18,11 +17,6 @@ BreadthFirstSearchDriver<GroundStateModel>::setup(Problem& problem) const {
 	return GroundingSetup::fully_ground_model(problem);
 }
 
-template <>
-LiftedStateModel
-BreadthFirstSearchDriver<LiftedStateModel>::setup(Problem& problem) const {
-	return GroundingSetup::fully_lifted_model(problem);
-}
 
 template <typename StateModelT>
 ExitCode
@@ -34,21 +28,10 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 	using OpenListT = lapkt::SearchableQueue<NodeT>;
 
 	auto model = setup(problem);
-	int maxw = config.getOption<int>("width.max", -1);
+//	int maxw = config.getOption<int>("width.max", -1);
 	bool stop_on_goal = false;
 
 	OpenListT queue = OpenListT();
-	if (maxw > 0) {
-	    using NoveltyEvaluatorT = bfws::IntNoveltyEvaluatorI;
-        using GenericEvaluator = lapkt::novelty::GenericNoveltyEvaluator<int>;
-
-        auto novelty_evaluator = new GenericEvaluator(static_cast<unsigned>(maxw));
-
-        using NoveltyAcceptor = lapkt::novelty::NoveltyBasedAcceptor<NodeT, FeatureEvaluatorT, NoveltyEvaluatorT>;
-		NoveltyAcceptor* evaluator = new NoveltyAcceptor(_feature_evaluator, novelty_evaluator);
-		queue = OpenListT(evaluator);
-	}
-
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
 	auto engine = std::unique_ptr<EngineT>(new EngineT(model, std::move(queue),
 									   config.getOption<unsigned>("max_expansions", 100), stop_on_goal
@@ -60,6 +43,5 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 
 // explicit instantiations
 template class BreadthFirstSearchDriver<GroundStateModel>;
-template class BreadthFirstSearchDriver<LiftedStateModel>;
 
 } } // namespaces

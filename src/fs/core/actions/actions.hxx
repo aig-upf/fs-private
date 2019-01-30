@@ -162,18 +162,4 @@ public:
 
 };
 
-class ProceduralAction : public GroundAction {
-protected:
-
-    fs::ProceduralEffect*     _proc_effect;
-
-public:
-    ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
-    ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding);
-
-    virtual void apply( const State& s, std::vector<Atom>& atoms ) const override;
-
-    virtual ~ProceduralAction();
-};
-
 } // namespaces

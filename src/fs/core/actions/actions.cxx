@@ -93,34 +93,4 @@ GroundAction::apply( const State& s, std::vector<Atom>& atoms ) const {
 
 const ActionIdx GroundAction::invalid_action_id = std::numeric_limits<unsigned int>::max();
 
-ProceduralAction::ProceduralAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects)
-	: GroundAction(id, action_data, binding, precondition, effects), _proc_effect(nullptr)
-{
-	if (!hasProceduralEffects())
-		throw std::runtime_error("ProceduralAction::ProceduralAction() : procedural action was created but it has no procedural effects attached");
-	_proc_effect = LogicalComponentRegistry::instance().instantiate_effect( getName() );
-	_proc_effect->bind(binding);
-}
-
-ProceduralAction::ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding)
-    : GroundAction( id, action_data, binding, new fs::Tautology, {} ), _proc_effect(nullptr)
-{
-}
-
-ProceduralAction::~ProceduralAction() {
-	if ( _proc_effect != nullptr )
-		delete _proc_effect;
-}
-
-void
-ProceduralAction::apply( const State& s, std::vector<Atom>& atoms ) const {
-	// 1. Apply declarative effects if any
-	NaiveApplicabilityManager::computeEffects(s, *this, atoms);
-	// 2. Apply the effects of the procedural effect
-	if (_proc_effect == nullptr)
-		throw std::runtime_error( "ProceduralAction::apply() : no externally defined effect procedural action was set!");
-	if (_proc_effect->applicable(s))
-		_proc_effect->apply(s, atoms);
-}
-
 } // namespaces

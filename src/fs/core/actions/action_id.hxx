@@ -4,8 +4,6 @@
 #include <fs/core/fs_types.hxx>
 #include <fs/core/utils/binding.hxx>
 
-namespace fs0 { namespace gecode { class LiftedActionIterator; }}
-
 namespace fs0 {
 
 class PartiallyGroundedAction;
@@ -32,53 +30,6 @@ public:
 	virtual std::ostream& print(std::ostream& os) const = 0;
 };
 
-//! An action is fully identified by the ID of the action schema and the values of its parameters,
-//! i.e. its binding
-class LiftedActionID : public ActionID  {
-protected:
-	//! The id of the grounded action or action schema
-	const PartiallyGroundedAction* _action;
-	
-	//! The indexes of the action binding.
-	Binding _binding; // TODO This should be const, but then we cannot have assignment operator
-	
-	//! The hash code of the object
-	mutable std::size_t _hash;
-	
-	//! Whether the object has already been hashed or not (necessary to implement lazy hashing)
-	mutable bool _hashed;
-	
-public:
-	//! Type aliases required for the lifted state model
-	typedef LiftedActionID IdType;
-	typedef gecode::LiftedActionIterator ApplicableSet;
-	
-	static const LiftedActionID invalid_action_id;
-	
-	//! Constructors
-	LiftedActionID(const PartiallyGroundedAction* action, Binding&& binding);
-	
-	//! Default copy constructors and assignment operators
-	LiftedActionID(const LiftedActionID& other) = default;
-	LiftedActionID(LiftedActionID&& other) = default;
-	LiftedActionID& operator=(const LiftedActionID& other) = default;
-	LiftedActionID& operator=(LiftedActionID&& other) = default;
-	
-	bool operator==(const ActionID& rhs) const;
-	
-	//! Hash-related operations
-	std::size_t generate_hash() const;
-	std::size_t hash() const;
-	
-	//! Generates the ground action actually represented by this lifted ID
-	GroundAction* generate() const;
-	
-	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os) const;
-
-protected:
-	Binding get_full_binding() const;
-};
 
 //! A plain action ID is just the unsigned integer that identifies the action within the whole vector of grounded actions
 class PlainActionID : public ActionID {
