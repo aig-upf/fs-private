@@ -26,9 +26,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 #include <fs/core/problem_info.hxx>
-
+#include <fs/core/problem.hxx>
+#include <fs/core/actions/action_id.hxx>
 
 namespace lapkt { namespace blai {
+
+
+std::string print_action_schema_name(const fs0::Problem& problem, const fs0::LiftedActionID& action_id) {
+    throw std::runtime_error("Not implemented");
+    return "not-implemented";
+}
+
+
+std::string print_action_schema_name(const fs0::Problem& problem, unsigned action_id) {
+    if (action_id > problem.getGroundActions().size()) {
+        return "no-action";
+    }
+    return problem.getGroundActions().at(action_id)->getName();
+}
 
 //! Partial specialization of the GenericSearch algorithm:
 //! A breadth-first search is a generic search with a FIFO open list and
@@ -83,7 +98,8 @@ public:
         if (n.parent) parent = n.parent->_gen_order;
         if (forced_parent != -1) parent = static_cast<unsigned>(forced_parent);
         std::string goal_value = goal ? "true" : "false";
-        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"goal\": " << goal_value << ", \"atoms\": [";
+        std::string schema = print_action_schema_name(fs0::Problem::getInstance(), n.action);
+        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"schema\": " << schema << ", \"goal\": " << goal_value << ", \"atoms\": [";
 
         // THIS IS COPY-PASTED FROM THE STATE PRINTER
         const fs0::State& s = n.state;
@@ -113,7 +129,7 @@ public:
 
     }
 
-//! We redefine where the whole search schema following Russell&Norvig.
+    //! We redefine where the whole search schema following Russell&Norvig.
     //! The only modification is that the check for whether a state is a goal
     //! or not is done right after the creation of the state, instead of upon expansion.
     //! On a problem that has a solution at depth 'd', this avoids the worst-case expansion
