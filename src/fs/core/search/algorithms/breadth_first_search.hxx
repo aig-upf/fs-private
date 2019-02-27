@@ -91,13 +91,11 @@ public:
 
     StlBreadthFirstSearch& operator=(StlBreadthFirstSearch&&) = default;
 
-
-    void log_generated_node(NodeT& n, bool goal, int forced_parent = -1) {
+    void log_generated_node(NodeT& n, bool goal) {
         const auto& info = fs0::ProblemInfo::getInstance();
 
         unsigned parent = 0;
         if (n.parent) parent = n.parent->_gen_order;
-        if (forced_parent != -1) parent = static_cast<unsigned>(forced_parent);
         std::string goal_value = goal ? "true" : "false";
         std::string schema = print_action_schema_name(fs0::Problem::getInstance(), n.action);
         std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"schema\": \"" << schema << "\", \"goal\": " << goal_value << ", \"atoms\": [";
@@ -168,7 +166,9 @@ public:
 //                if (this->_closed.check(successor)) continue; // The node has already been closed
                 auto repeated = this->_closed.seek(successor);
                 if (repeated != nullptr) { // The node has already been closed
-                    log_generated_node(*repeated, is_goal, successor->parent->_gen_order); // we log the previously-generated node with the new parent
+                    // Create a fake node with all the elements we want to appear in the log
+                    NodePT fake = std::make_shared<NodeT>(StateT(successor->state), a, current, repeated->_gen_order);
+                    log_generated_node(*fake, is_goal); // we log the previously-generated node with the new parent
                     this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
@@ -176,7 +176,9 @@ public:
 //                if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
                 repeated = this->_open.seek(successor);
                 if (repeated != nullptr) { //   The node is already in the open list
-                    log_generated_node(*repeated, is_goal, successor->parent->_gen_order); // we log the previously-generated node with the new parent
+                    // Create a fake node with all the elements we want to appear in the log
+                    NodePT fake = std::make_shared<NodeT>(StateT(successor->state), a, current, repeated->_gen_order);
+                    log_generated_node(*repeated, is_goal); // we log the previously-generated node with the new parent
                     this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
