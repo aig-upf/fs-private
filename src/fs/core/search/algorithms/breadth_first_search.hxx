@@ -32,7 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace lapkt { namespace blai {
 
 
-std::string print_action_schema_name(const fs0::Problem& problem, const fs0::LiftedActionID& action_id) {
+template <typename ActionIDT>
+std::string print_action_schema_name(const fs0::Problem& problem, const ActionIDT& action_id) {
     throw std::runtime_error("Not implemented");
     return "not-implemented";
 }
