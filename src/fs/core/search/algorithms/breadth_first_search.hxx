@@ -100,7 +100,7 @@ public:
         if (forced_parent != -1) parent = static_cast<unsigned>(forced_parent);
         std::string goal_value = goal ? "true" : "false";
         std::string schema = print_action_schema_name(fs0::Problem::getInstance(), n.action);
-        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"schema\": " << schema << ", \"goal\": " << goal_value << ", \"atoms\": [";
+        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"schema\": \"" << schema << "\", \"goal\": " << goal_value << ", \"atoms\": [";
 
         // THIS IS COPY-PASTED FROM THE STATE PRINTER
         const fs0::State& s = n.state;
