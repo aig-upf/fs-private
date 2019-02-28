@@ -161,6 +161,10 @@ public:
                 StateT s_a = this->_model.next(current->state, a);
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, this->_generated++);
 
+                if (current->_gen_order == 125) {
+                    std::cout << "Found 125! Child ID: "  << successor->_gen_order  << std::endl;
+                }
+
                 bool is_goal = this->check_goal(successor, solution);
 
 //                if (this->_closed.check(successor)) continue; // The node has already been closed
@@ -178,7 +182,7 @@ public:
                 if (repeated != nullptr) { //   The node is already in the open list
                     // Create a fake node with all the elements we want to appear in the log
                     NodePT fake = std::make_shared<NodeT>(StateT(successor->state), a, current, repeated->_gen_order);
-                    log_generated_node(*repeated, is_goal); // we log the previously-generated node with the new parent
+                    log_generated_node(*fake, is_goal); // we log the previously-generated node with the new parent
                     this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
