@@ -24,10 +24,8 @@ set(SOURCE_FILES
         src/fs/core/applicability/formula_interpreter.hxx
         src/fs/core/applicability/match_tree.cxx
         src/fs/core/applicability/match_tree.hxx
-        src/fs/core/constraints/filtering.hxx
         src/fs/core/constraints/registry.cxx
         src/fs/core/constraints/registry.hxx
-        src/fs/core/constraints/native/action_handler
         src/fs/core/fstrips/language.cxx
         src/fs/core/fstrips/language.hxx
         src/fs/core/fstrips/language_info.cxx
@@ -75,54 +73,19 @@ set(SOURCE_FILES
         src/fs/core/search/nodes/blind_node.hxx
         src/fs/core/models/ground_state_model.cxx
         src/fs/core/models/ground_state_model.hxx
-        src/fs/core/models/lifted_state_model.cxx
-        src/fs/core/models/lifted_state_model.hxx
         src/fs/core/models/simple_state_model.cxx
         src/fs/core/models/simple_state_model.hxx
-        src/fs/core/search/algorithms/monotonic_search
-        src/fs/core/search/algorithms/ehc.hxx
-        src/fs/core/search/algorithms/ehc_gbfs.hxx
-        src/fs/core/search/algorithms/iterated_width.hxx
         src/fs/core/search/algorithms/breadth_first_search.hxx
         src/fs/core/search/drivers/base.hxx
-        src/fs/core/search/drivers/sbfws/features/features.cxx
-        src/fs/core/search/drivers/sbfws/features/features.hxx
-        src/fs/core/search/drivers/sbfws/base.cxx
-        src/fs/core/search/drivers/sbfws/base.hxx
-        src/fs/core/search/drivers/sbfws/config.cxx
-        src/fs/core/search/drivers/sbfws/config.hxx
-        src/fs/core/search/drivers/sbfws/iw_run_config.hxx
-        src/fs/core/search/drivers/sbfws/iw_run_config.cxx
-        src/fs/core/search/drivers/sbfws/iw_run.cxx
-        src/fs/core/search/drivers/sbfws/iw_run.hxx
-        src/fs/core/search/drivers/sbfws/mv_iw_run.cxx
-        src/fs/core/search/drivers/sbfws/mv_iw_run.hxx
-        src/fs/core/search/drivers/sbfws/relevant_atomset.hxx
-        src/fs/core/search/drivers/sbfws/relevant_atoms.hxx
-        src/fs/core/search/drivers/sbfws/relevant_atoms.cxx
-        src/fs/core/search/drivers/sbfws/sbfws.cxx
-        src/fs/core/search/drivers/sbfws/sbfws.hxx
-        src/fs/core/search/drivers/sbfws/stats.cxx
-        src/fs/core/search/drivers/sbfws/stats.hxx
         src/fs/core/search/drivers/breadth_first_search.cxx
         src/fs/core/search/drivers/breadth_first_search.hxx
-        src/fs/core/search/drivers/fully_lifted_driver.cxx
-        src/fs/core/search/drivers/fully_lifted_driver.hxx
-        src/fs/core/search/drivers/iterated_width.cxx
-        src/fs/core/search/drivers/iterated_width.hxx
         src/fs/core/search/drivers/registry.cxx
         src/fs/core/search/drivers/registry.hxx
         src/fs/core/search/drivers/setups.cxx
         src/fs/core/search/drivers/setups.hxx
-        src/fs/core/search/drivers/smart_effect_driver.cxx
-        src/fs/core/search/drivers/smart_effect_driver.hxx
-        src/fs/core/search/drivers/smart_lifted_driver.cxx
-        src/fs/core/search/drivers/smart_lifted_driver.hxx
-        src/fs/core/search/drivers/native_action_driver
         src/fs/core/search/drivers/validation.cxx
         src/fs/core/search/drivers/validation.hxx
         src/fs/core/search/nodes/heuristic_search_node.hxx
-        src/fs/core/search/nodes/monotonic_node
         src/fs/core/search/novelty/fs_novelty.cxx
         src/fs/core/search/novelty/fs_novelty.hxx
         src/fs/core/search/events.hxx
@@ -142,8 +105,6 @@ set(SOURCE_FILES
         src/fs/core/utils/printers/language.hxx
         src/fs/core/utils/printers/printers.cxx
         src/fs/core/utils/printers/printers.hxx
-        src/fs/core/utils/printers/registry.cxx
-        src/fs/core/utils/printers/registry.hxx
         src/fs/core/utils/printers/vector.hxx
         src/fs/core/utils/atom_index.cxx
         src/fs/core/utils/atom_index.hxx
@@ -163,8 +124,6 @@ set(SOURCE_FILES
         src/fs/core/utils/lexical_cast.hxx
         src/fs/core/utils/loader.cxx
         src/fs/core/utils/loader.hxx
-        src/fs/core/utils/projections.cxx
-        src/fs/core/utils/projections.hxx
         src/fs/core/utils/serialize_tuple.hxx
         src/fs/core/utils/serializer.cxx
         src/fs/core/utils/serializer.hxx
@@ -186,11 +145,8 @@ set(SOURCE_FILES
         src/fs/core/problem.hxx
         src/fs/core/problem_info.cxx
         src/fs/core/problem_info.hxx
-        src/fs/core/relaxed_state.cxx
-        src/fs/core/relaxed_state.hxx
         src/fs/core/state.cxx
         src/fs/core/state.hxx
-        src/fs/core/monotonicity
         src/fs/core/validator.cxx
         src/fs/core/validator.hxx)
 
