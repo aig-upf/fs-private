@@ -30,8 +30,7 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 	auto model = setup(problem);
 //	int maxw = config.getOption<int>("width.max", -1);
 	auto stop_on_goal = config.getOption<bool>("until_first_goal", false);
-	auto max_exp = config.getOption<unsigned>("max_expansions", 100);
-	std::cout << "UNTIL-FIRST-GOAL: " << stop_on_goal << std::endl;
+	auto max_exp = config.getOption<int>("max_expansions", -1);
 
 	OpenListT queue = OpenListT();
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);

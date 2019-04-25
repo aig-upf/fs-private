@@ -69,7 +69,7 @@ public:
     //! The constructor requires the user of the algorithm to inject both
     //! (1) the state model to be used in the search
     //! (2) the particular open and closed list objects
-    StlBreadthFirstSearch(const StateModel& model, OpenListT&& open, unsigned max_expansions, bool stop_on_goal) :
+    StlBreadthFirstSearch(const StateModel& model, OpenListT&& open, int max_expansions, bool stop_on_goal) :
             BaseClass(model, std::move(open), ClosedListT()),
             _max_expansions(max_expansions),
             _stop_on_goal(stop_on_goal)
@@ -137,15 +137,18 @@ public:
         NodePT n = std::make_shared<NodeT>(s, this->_generated++);
         this->notify(NodeCreationEvent(*n));
 
-        unsigned expanded = 0;
+        int expanded = 0;
+        std::cout << "Exploring state space. stop_on_goal=" << _stop_on_goal << ", max_expansions=" << _max_expansions
+                  << std::endl;
         std::cout  << std::endl  << std::endl << "==GENERATED NODES==" << std::endl;
         log_generated_node(*n, this->check_goal(n, solution));
 
-//        if (this->check_goal(n, solution)) return true;
+
+        if (_stop_on_goal && this->check_goal(n, solution)) return true;
 
         this->_open.insert(n);
 
-        while (!this->_open.empty() && expanded < _max_expansions) {
+        while (!this->_open.empty() && (_max_expansions < 0 || expanded < _max_expansions)) {
             NodePT current = this->_open.next();
             this->notify(NodeOpenEvent(*current));
 
@@ -160,10 +163,6 @@ public:
             for (const auto& a : this->_model.applicable_actions(current->state)) {
                 StateT s_a = this->_model.next(current->state, a);
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, this->_generated++);
-
-                if (current->_gen_order == 125) {
-                    std::cout << "Found 125! Child ID: "  << successor->_gen_order  << std::endl;
-                }
 
                 bool is_goal = this->check_goal(successor, solution);
 
@@ -190,7 +189,7 @@ public:
                 log_generated_node(*successor, is_goal);
                 this->notify(NodeCreationEvent(*successor));
 
-                if (_stop_on_goal && this->check_goal(successor, solution)) return false;  // Goal checking is not working, but we don't care about that
+                if (_stop_on_goal && is_goal) return true;
 
                 bool inserted = this->_open.insert(successor);
                 if (!inserted) { // If we didn't insert the node because of novelty considerations, we push it into the
@@ -203,7 +202,7 @@ public:
     }
 
 protected:
-    unsigned _max_expansions;
+    int _max_expansions;
     bool _stop_on_goal;
 };
 
