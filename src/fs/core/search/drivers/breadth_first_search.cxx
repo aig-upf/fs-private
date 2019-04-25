@@ -29,13 +29,13 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 
 	auto model = setup(problem);
 //	int maxw = config.getOption<int>("width.max", -1);
-	bool stop_on_goal = false;
+	auto stop_on_goal = config.getOption<bool>("until_first_goal", false);
+	auto max_exp = config.getOption<unsigned>("max_expansions", 100);
+	std::cout << "UNTIL-FIRST-GOAL: " << stop_on_goal << std::endl;
 
 	OpenListT queue = OpenListT();
 	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
-	auto engine = std::unique_ptr<EngineT>(new EngineT(model, std::move(queue),
-									   config.getOption<unsigned>("max_expansions", 100), stop_on_goal
-									   ));
+	auto engine = std::unique_ptr<EngineT>(new EngineT(model, std::move(queue), max_exp, stop_on_goal));
 	lapkt::events::subscribe(*engine, _handlers);
 	
 	return Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats);
