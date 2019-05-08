@@ -66,6 +66,8 @@ public:
     using NodeExpansionEvent = typename BaseClass::NodeExpansionEvent;
     using NodeCreationEvent = typename BaseClass::NodeCreationEvent;
 
+    using ActionId = typename StateModel::ActionId;
+
     //! The constructor requires the user of the algorithm to inject both
     //! (1) the state model to be used in the search
     //! (2) the particular open and closed list objects
@@ -91,14 +93,15 @@ public:
 
     StlBreadthFirstSearch& operator=(StlBreadthFirstSearch&&) = default;
 
-    void log_generated_node(NodeT& n, bool goal) {
+    void log_generated_node(NodeT& n, bool goal, bool deadend) {
         const auto& info = fs0::ProblemInfo::getInstance();
 
         unsigned parent = 0;
         if (n.parent) parent = n.parent->_gen_order;
         std::string goal_value = goal ? "true" : "false";
+        std::string deadend_value = deadend ? "true" : "false";
         std::string schema = print_action_schema_name(fs0::Problem::getInstance(), n.action);
-        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"schema\": \"" << schema << "\", \"goal\": " << goal_value << ", \"atoms\": [";
+        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"schema\": \"" << schema << "\", \"goal\": " << goal_value << ", \"deadend\": " << deadend_value << ", \"atoms\": [";
 
         // THIS IS COPY-PASTED FROM THE STATE PRINTER
         const fs0::State& s = n.state;
@@ -125,8 +128,13 @@ public:
 //            if (x < info.getNumVariables() - 1) std::cout << ", ";
         }
         std::cout << "]" << "}" << std::endl;
-
     }
+
+    bool is_deadend(const StateT& s) const {
+        auto app = this->_model.applicable_actions(s);
+        return app.begin() == app.end();
+    }
+
 
     //! We redefine where the whole search schema following Russell&Norvig.
     //! The only modification is that the check for whether a state is a goal
@@ -141,7 +149,7 @@ public:
         std::cout << "Exploring state space. stop_on_goal=" << _stop_on_goal << ", max_expansions=" << _max_expansions
                   << std::endl;
         std::cout  << std::endl  << std::endl << "==GENERATED NODES==" << std::endl;
-        log_generated_node(*n, this->check_goal(n, solution));
+        log_generated_node(*n, this->check_goal(n, solution), is_deadend(s));
 
 
         if (_stop_on_goal && this->check_goal(n, solution)) return true;
@@ -159,34 +167,32 @@ public:
             this->notify(NodeExpansionEvent(*current));
             ++expanded;
 
-
             for (const auto& a : this->_model.applicable_actions(current->state)) {
                 StateT s_a = this->_model.next(current->state, a);
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, this->_generated++);
 
                 bool is_goal = this->check_goal(successor, solution);
+                bool deadend = is_deadend(successor->state);
 
-//                if (this->_closed.check(successor)) continue; // The node has already been closed
                 auto repeated = this->_closed.seek(successor);
                 if (repeated != nullptr) { // The node has already been closed
                     // Create a fake node with all the elements we want to appear in the log
                     NodePT fake = std::make_shared<NodeT>(StateT(successor->state), a, current, repeated->_gen_order);
-                    log_generated_node(*fake, is_goal); // we log the previously-generated node with the new parent
+                    log_generated_node(*fake, is_goal, deadend); // we log the previously-generated node with the new parent
                     this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
 
-//                if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
                 repeated = this->_open.seek(successor);
                 if (repeated != nullptr) { //   The node is already in the open list
                     // Create a fake node with all the elements we want to appear in the log
                     NodePT fake = std::make_shared<NodeT>(StateT(successor->state), a, current, repeated->_gen_order);
-                    log_generated_node(*fake, is_goal); // we log the previously-generated node with the new parent
+                    log_generated_node(*fake, is_goal, deadend); // we log the previously-generated node with the new parent
                     this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
 
-                log_generated_node(*successor, is_goal);
+                log_generated_node(*successor, is_goal, deadend);
                 this->notify(NodeCreationEvent(*successor));
 
                 if (_stop_on_goal && is_goal) return true;
