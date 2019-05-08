@@ -71,15 +71,10 @@ public:
     //! The constructor requires the user of the algorithm to inject both
     //! (1) the state model to be used in the search
     //! (2) the particular open and closed list objects
-    StlBreadthFirstSearch(const StateModel& model, OpenListT&& open, int max_expansions, bool stop_on_goal) :
+    StlBreadthFirstSearch(const StateModel& model, OpenListT&& open, long max_expansions, bool stop_on_goal) :
             BaseClass(model, std::move(open), ClosedListT()),
             _max_expansions(max_expansions),
             _stop_on_goal(stop_on_goal)
-    {}
-
-    //! For convenience, a constructor where the open list is default-constructed
-    StlBreadthFirstSearch(const StateModel& model, unsigned max_expansions, bool stop_on_goal) :
-            StlBreadthFirstSearch(model, OpenListT(), max_expansions, stop_on_goal)
     {}
 
     virtual ~StlBreadthFirstSearch() = default;
@@ -208,7 +203,7 @@ public:
     }
 
 protected:
-    int _max_expansions;
+    long _max_expansions;
     bool _stop_on_goal;
 };
 
