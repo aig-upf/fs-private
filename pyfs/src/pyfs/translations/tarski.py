@@ -59,11 +59,10 @@ def create_language_info(language):
         # TEST
         print("get_object_name({}): {}".format(oid, info.get_object_name(oid)))
 
-
     # Declare language symbols
     for p in util.get_symbols(language, include_builtin=False):
         signature = [type_idxs[t] for t in p.sort]
-        sid = cext.add_symbol_to_language_info(p.symbol, get_fs_symbol_t(p), signature, info)
+        sid = cext.add_symbol_to_language_info(p.name, get_fs_symbol_t(p), signature, info)
         print("Symbol {} registered with ID {} ({})".format(p, sid, info.get_symbol_name(sid)))
         symbol_idxs[p] = sid
 
@@ -82,6 +81,7 @@ def translate_problem(problem):
     assert 0, "Finish this"
 
     return None, None, None, None, goal
+
 
 class Translator(object):
     def __init__(self, language_info_wrapper):
@@ -107,12 +107,12 @@ class Translator(object):
     def translate_term(self, term):
         assert isinstance(term, tsk.Term)
         if isinstance(term, tsk.Variable):
-            varid = self.get_variable_id(term.symbol)
+            varid = self.get_variable_id(term.name)
             typeid = self.get_type_id(term.sort)
-            return cext.LogicalVariable(varid, term.symbol, typeid)
+            return cext.LogicalVariable(varid, term.name, typeid)
 
         elif isinstance(term, tsk.CompoundTerm):
-            symbol_id = self.get_symbol_id(term.symbol)
+            symbol_id = self.get_symbol_id(term.name)
             return cext.create_composite_term(symbol_id, self.translate_term_list(term.subterms))
 
         elif isinstance(term, tsk.Constant):
@@ -125,6 +125,7 @@ class Translator(object):
     def translate_term_list(self, terms):
         return [self.translate_term(t) for t in terms]
 
+
 class ExpressionTranslator(Translator):
 
     def __init__(self, info):
@@ -132,6 +133,7 @@ class ExpressionTranslator(Translator):
 
     def translate(self, expr):
         return self.translate_term(expr)
+
 
 class FormulaTranslator(Translator):
     def __init__(self, language_info_wrapper):
@@ -147,7 +149,7 @@ class FormulaTranslator(Translator):
             return cext.Contradiction()
 
         elif isinstance(formula, tsk.Atom):
-            symbol_id = self.get_symbol_id(formula.predicate)
+            symbol_id = self.get_symbol_id(formula.head)
             subterms = self.translate_term_list(formula.subterms)
             return cext.create_atomic_formula(symbol_id, subterms)
             # return cext.AtomicFormula(symbol, subterms)
@@ -169,7 +171,6 @@ class FormulaTranslator(Translator):
 
         raise RuntimeError("Unexpected Tarski element type: {}".format(formula))
 
-
     def translate_connective(self, connective):
         return {
             tsk.Connective.And: cext.Connective.And,
@@ -189,5 +190,5 @@ class FormulaTranslator(Translator):
 
 def get_fs_symbol_t(s):
     """ Return the FS symbol_t type corresponding to the given predicate function """
-    assert isinstance(s, (tsk.Predicate, tsk.Function))
-    return cext.symbol_t.Function if isinstance(s, tsk.Function) else cext.symbol_t.Predicate
+    assert isinstance(s, (tsk.PredicateSymbol, tsk.FunctionSymbol))
+    return cext.symbol_t.Function if isinstance(s, tsk.FunctionSymbol) else cext.symbol_t.Predicate

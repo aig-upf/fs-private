@@ -31,7 +31,7 @@ def main():
 
     install_requires = [
         'setuptools',
-        'tarski'
+        "tarski @ git+ssh://git@github.com/aig-upf/tarski.git@726b9a0#egg=tarski-dev-0.2.0"
     ]
 
     fs_libname = 'fs-debug' if debug_mode else 'fs'

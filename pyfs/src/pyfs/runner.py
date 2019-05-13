@@ -50,7 +50,7 @@ def run(instance, domain=None):
     tarski_problem = reader.read_problem(domain, instance)
     fs_problem = translations.tarski.translate_problem(tarski_problem)
 
-    assert False
+    assert False   # TODO Continue from here on
 
 
     domain_name, instance_name = extract_names(args.domain, args.instance)

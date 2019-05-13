@@ -48,7 +48,7 @@ modules = [
     ("core",           "core"),
     ("lapkt2",         "lapkt2"),
     ("gecode_support", "gecode"),
-    ("hybrid_support", "hybrid"),
+#    ("hybrid_support", "hybrid"),
     ("ompl_support",   "ompl")
 ]
 
