@@ -5,7 +5,7 @@
 ## Requirements
 
 * Tarski
-*
+* Boost
 
 ## Development notes
 
@@ -59,24 +59,59 @@ echo "using gcc : 5.4 : /the/path/to/g++-5.4 : <cxxflags>-std=c++14 ;" > ./tools
 
 See [here](https://github.com/boostorg/system/issues/24) for more details on the issue (which is acknowledged by boost as bug).
 
-### Building and Deployment pyfs
-
-To compile (debug mode for the moment)
-
+## Building and Deploying pyfs
+Let us walk you through a debug build, for the moment being.
+First, compile the C++ FS planner as usual (check instructions on the parent readme file if don't know how to do this):
 ```
-.../pyfs$ CC="ccache gcc" python setup.py build --debug   
+./build.py -d
 ```
 
-we recommend to use ```ccache``` to avoid unnecessary re-compilation.
-
-Once built, the module can be installed with ```pip``` in dev install mode
-
+Assuming everything went well, you should be able to build an install (in the active virtual environment) by running
+the build bash script:
 ```
+cd pyfs
+.../pyfs$ ./build.sh
+```
+
+which essentially is equivalent to:
+```
+.../pyfs$ python setup.py build --debug
 .../pyfs$ pip install -e .
 ```
 
 To test that the previous two steps worked out as expected, you may run this example
-
 ```
 .../pyfs/examples$ python blocks.py
 ```
+
+
+### Troubleshooting and Debugging
+Debugging Python extensions is not a piece of cake. To help out with that, you can find a basic C++ entry point for
+your Python scripts
+(adapted from the [official Python documentation](https://docs.python.org/3.5/extending/embedding.html)),
+which seems to be easier to use within gbd and similar debuggers than the full Python interpreter.
+
+Assuming you want to debug the `blocks.py` script in `examples`:
+
+
+```
+cd examples
+
+# Compile the runner scripts (might use python3-dbg-config as well, but that seems to clash with numpy if it is 
+# only compiled in production mode)  
+gcc $(python3-config --cflags) runner.cxx $(python3-config --ldflags) -o runner.bin 
+
+# You can run the script like this:
+./runner.bin blocks main
+
+# Or debug it like this:
+cgdb -ex=run --args ./runner.bin blocks main
+ 
+# Or analyze your code with valgrind:
+valgrind --leak-check=full --show-leak-kinds=all --num-callers=50 --track-origins=yes \
+    --log-file="valgrind-output.$(date '+%H%M%S').txt" ./runner.bin blocks main
+  
+```
+
+If you get `module not found` errors or similar, remember to run all of the above within the same virtual environment
+where you have built and installed everything. 
