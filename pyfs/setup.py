@@ -1,6 +1,4 @@
 # coding=utf-8
-import glob
-
 from setuptools import setup, find_packages
 from setuptools.command.build_ext import build_ext
 from distutils.core import setup, Extension
@@ -14,9 +12,9 @@ vendordir = path.abspath(path.join(here, '..', 'vendor'))
 fs_builddir = path.abspath(path.join(here, '..', '.build'))
 
 
-# Avoid meaningless gcc warning - see https://stackoverflow.com/a/49041815
 class BuildExt(build_ext):
     def build_extensions(self):
+        # Avoid meaningless gcc warning - see https://stackoverflow.com/a/49041815
         self.compiler.compiler_so = [x for x in self.compiler.compiler_so if x != '-Wstrict-prototypes']
         super(BuildExt, self).build_extensions()
 
@@ -28,11 +26,6 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 def main():
     debug_mode = '--debug' in sys.argv  # Haven't found yet a more robust alternative to this
-
-    install_requires = [
-        'setuptools',
-        "tarski @ git+ssh://git@github.com/aig-upf/tarski.git@726b9a0#egg=tarski-dev-0.2.0"
-    ]
 
     fs_libname = 'fs-debug' if debug_mode else 'fs'
 
@@ -95,13 +88,6 @@ def main():
 
         # You can just specify package directories manually here if your project is
         # simple. Or you can use find_packages().
-        #
-        # Alternatively, if you just want to distribute a single Python file, use
-        # the `py_modules` argument instead as follows, which will expect a file
-        # called `my_module.py` to exist:
-        #
-        #   py_modules=["my_module"],
-        #
         packages=find_packages('src'),  # include all packages under src
         package_dir={'': 'src'},  # tell distutils packages are under src
 
@@ -112,7 +98,10 @@ def main():
         #
         # For an analysis of "install_requires" vs pip's requirements files see:
         # https://packaging.python.org/en/latest/requirements.html
-        install_requires=install_requires,
+        install_requires=[
+            'setuptools',
+            "tarski @ git+ssh://git@github.com/aig-upf/tarski.git@726b9a0#egg=tarski-dev-0.2.0"
+        ],
 
         # List additional groups of dependencies here (e.g. development
         # dependencies). Users will be able to install these using the "extras"
