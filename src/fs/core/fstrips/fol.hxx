@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs/core/fs_types.hxx> //  TODO[LAMBDA] - REMOVE THIS DEPENDENCY ?
+#include <fs/core/fs_types.hxx> //  TODO - REMOVE THIS DEPENDENCY ?
 
 namespace fs0 { namespace fstrips {
 
@@ -45,7 +45,7 @@ public:
 class Term : public LogicalElement {
 public:
 	Term() = default;
-	virtual ~Term() = default;
+	~Term() override = default;
 
 	Term* clone() const override = 0;
 };
@@ -53,8 +53,7 @@ public:
 class LogicalVariable : public Term {
 public:
 	LogicalVariable(unsigned id, const std::string& name, TypeIdx type) : _id(id), _name(name), _type(type) {}
-
-	~LogicalVariable() = default;
+	~LogicalVariable() override = default;
 	LogicalVariable(const LogicalVariable&) = default;
 
 	LogicalVariable* clone() const override { return new LogicalVariable(*this); }
@@ -86,7 +85,7 @@ protected:
 class Constant : public Term {
 public:
 	Constant(object_id value, TypeIdx type)  : _value(value), _type(type) {}
-	~Constant() = default;
+	~Constant() override = default;
 	Constant(const Constant&) = default;
 
 	Constant* clone() const override { return new Constant(*this); }
@@ -111,7 +110,7 @@ protected:
 class CompositeTerm : public Term {
 public:
     CompositeTerm(unsigned symbol_id, const std::vector<const Term*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
-	~CompositeTerm();
+	~CompositeTerm() override;
     CompositeTerm(const CompositeTerm&);
 
     CompositeTerm* clone() const override { return new CompositeTerm(*this); }
@@ -134,7 +133,7 @@ protected:
 class Formula : public LogicalElement {
 public:
 	Formula() = default;
-	virtual ~Formula() = default;
+	~Formula() override = default;
 
 	Formula* clone() const override = 0;
 };
@@ -162,7 +161,7 @@ class AtomicFormula : public Formula {
 public:
 
 	AtomicFormula(unsigned symbol_id, const std::vector<const Term*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
-	~AtomicFormula();
+	~AtomicFormula() override;
 	AtomicFormula(const AtomicFormula&);
 
 	AtomicFormula* clone() const override { return new AtomicFormula(*this); }
@@ -175,10 +174,10 @@ public:
 
 
 protected:
-	//! The ID of the predicate symbol, e.g. in the state variable clear(A), the id of 'clear'
+	//! The ID of the predicate symbol, e.g. in the atom clear(A), the id of 'clear'
 	unsigned _symbol_id;
 	
-	//! The tuple of fixed, constant symbols of the state variable, e.g. {A, B} in the state variable 'on(A,B)'
+	//! The children terms of the atom, e.g. <A, B> in the atom 'on(A,B)'
 	const std::vector<const Term*> _children;
 };
 
@@ -188,7 +187,7 @@ protected:
 class CompositeFormula : public Formula {
 public:
 	CompositeFormula(Connective connective, const std::vector<const Formula*>& subformulae) : _connective(connective), _children(subformulae) {}
-	~CompositeFormula();
+	~CompositeFormula() override;
 	CompositeFormula(const CompositeFormula&);
 	
 	CompositeFormula* clone() const override { return new CompositeFormula(*this); }
@@ -212,8 +211,7 @@ protected:
 class QuantifiedFormula : public Formula {
 public:
 	QuantifiedFormula(Quantifier quantifier, const std::vector<const LogicalVariable*>& variables, const Formula* subformula) : _quantifier(quantifier), _variables(variables), _subformula(subformula) {}
-
-	~QuantifiedFormula();
+	~QuantifiedFormula() override;
 
 	QuantifiedFormula(const QuantifiedFormula& other);
 	QuantifiedFormula* clone() const override { return new QuantifiedFormula(*this); }

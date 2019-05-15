@@ -14,8 +14,7 @@ class LanguageInfo;
 //! with the particularity that LHS must be either a state variable or a fluent-headed nested term.
 class ActionEffect {
 public:
-	ActionEffect(const Formula* condition) : _condition(condition) {}
-	
+    explicit ActionEffect(const Formula* condition) : _condition(condition) {}
 	virtual ~ActionEffect() { delete _condition; };
 	
 	ActionEffect(const ActionEffect&);
@@ -47,7 +46,7 @@ class FunctionalEffect : public ActionEffect {
 public:
 	FunctionalEffect(const CompositeTerm* lhs, const Term* rhs, const Formula* condition)
 		: ActionEffect(condition), _lhs(lhs), _rhs(rhs) {}
-	virtual ~FunctionalEffect() { delete _lhs; delete _rhs; };
+    ~FunctionalEffect() override { delete _lhs; delete _rhs; };
 	
 	FunctionalEffect(const FunctionalEffect&);
 	FunctionalEffect(FunctionalEffect&&) = default;
@@ -82,7 +81,7 @@ public:
 	
 	AtomicEffect(const AtomicFormula* atom, Type type, const Formula* condition)
 		: ActionEffect(condition), _atom(atom), _type(type) {}
-	virtual ~AtomicEffect() { delete _atom; };
+    ~AtomicEffect() override { delete _atom; };
 	
 	AtomicEffect(const AtomicEffect&);
 	AtomicEffect(AtomicEffect&&) = default;
