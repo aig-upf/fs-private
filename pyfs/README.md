@@ -86,14 +86,19 @@ To test that the previous two steps worked out as expected, you may run this exa
 
 
 ### Troubleshooting and Debugging
-Debugging Python extensions is not a piece of cake. To help out with that, you can find a basic C++ entry point for
-your Python scripts
-(adapted from the [official Python documentation](https://docs.python.org/3.5/extending/embedding.html)),
-which seems to be easier to use within gbd and similar debuggers than the full Python interpreter.
+Debugging Python extensions is not a piece of cake. Let us assume that you want to debug the `blocks.py` script 
+mentioned above, that is producing some error. A somewhat rudimentary mechanism to find out a bit of information
+about SEGFAULTS, etc. is by using the `PYTHONFAULTHANDLER` environment variable:
+```
+PYTHONFAULTHANDLER=1 python blocks.py
+``` 
 
-Assuming you want to debug the `blocks.py` script in `examples`:
+This will print out some stack trace. A better alternative is to debug through gdb or any similar debugger.
+To help out with that, you can find a basic C++ entry point for your Python scripts
+(adapted from the [official Python documentation](https://docs.python.org/3.5/extending/embedding.html)).
+This seems to be easier to use within gbd and similar debuggers than the full Python interpreter.
 
-
+Again assuming you want to debug the `blocks.py` script in `examples`:
 ```
 cd examples
 
