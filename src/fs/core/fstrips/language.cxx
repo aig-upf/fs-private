@@ -29,19 +29,23 @@ AtomicEffect::Type AtomicEffect::to_type(const std::string& type) {
 }
 
 std::ostream& FunctionalEffect::print(std::ostream& os, const LanguageInfo& info) const {
-	if (_condition) {
-		os << *_condition << " --> ";
-	}
-	os << *_lhs << " := " << *_rhs;
+    if (_condition) {
+        _condition->print(os, info);
+        os << " -> ";
+    }
+    _lhs->print(os, info);
+    os << " := ";
+    _rhs->print(os, info);
 	return os;
 }
 
 std::ostream& AtomicEffect::print(std::ostream& os, const LanguageInfo& info) const {
 	if (_condition) {
-		os << *_condition << " --> ";
+	    _condition->print(os, info);
+		os << " -> ";
 	}
 	if (_type == Type::DEL) os << "~";
-	os << *_atom;
+    _atom->print(os, info);
 	return os;
 }
 
