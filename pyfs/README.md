@@ -5,7 +5,7 @@
 ## Requirements
 
 * Tarski
-* Boost
+* Boost >= 1.63
 
 ## Development notes
 
@@ -120,3 +120,8 @@ valgrind --leak-check=full --show-leak-kinds=all --num-callers=50 --track-origin
 
 If you get `module not found` errors or similar, remember to run all of the above within the same virtual environment
 where you have built and installed everything. 
+
+### Other documentation to help with Boost::Python
+* [How can I wrap a function which needs to take ownership of a raw pointer?](https://www.boost.org/doc/libs/1_70_0/libs/python/doc/html/faq/how_can_i_wrap_a_function_which0.html)
+* [Boost.Python: Ownership of pointer variables](https://stackoverflow.com/questions/4112561/boost-python-ownership-of-pointer-variables)
+

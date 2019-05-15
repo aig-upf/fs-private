@@ -36,6 +36,7 @@ def main():
 
         sources=[
             'src/extension/module.cxx',
+            'src/extension/factories.cxx',
             'src/extension/fstrips.cxx',
             'src/extension/language_info.cxx',
          ],

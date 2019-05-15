@@ -126,8 +126,10 @@ public:
 	
 	~ActionSchema();
 	ActionSchema(const ActionSchema&);
-	
-	unsigned getId() const { return _id; }
+
+    ActionSchema* clone() const { return new ActionSchema(*this); }
+
+    unsigned getId() const { return _id; }
 	const std::string& getName() const { return _name; }
 	const Signature& getSignature() const { return _signature; }
 	const std::vector<std::string>& getParameterNames() const { return _parameter_names; }

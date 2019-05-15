@@ -75,14 +75,15 @@ set(SOURCE_FILES
         src/fs/core/constraints/registry.cxx
         src/fs/core/constraints/registry.hxx
         src/fs/core/constraints/native/action_handler
-        src/fs/core/fstrips/language.cxx
-        src/fs/core/fstrips/language.hxx
-        src/fs/core/fstrips/language_info.cxx
-        src/fs/core/fstrips/language_info.hxx
-        src/fs/core/fstrips/loader.cxx
-        src/fs/core/fstrips/loader.hxx
-        src/fs/core/fstrips/operations.cxx
-        src/fs/core/fstrips/operations.hxx
+
+        src/fs/core/fstrips/fol
+        src/fs/core/fstrips/language
+        src/fs/core/fstrips/language_info
+        src/fs/core/fstrips/problem
+        src/fs/core/fstrips/interpretation
+        src/fs/core/fstrips/loader
+        src/fs/core/fstrips/operations
+
         src/fs/core/heuristics/novelty/features.cxx
         src/fs/core/heuristics/novelty/features.hxx
         src/fs/core/heuristics/relaxed_plan/gecode_crpg.cxx
@@ -132,12 +133,6 @@ set(SOURCE_FILES
         src/fs/core/languages/fstrips/scopes.hxx
         src/fs/core/languages/fstrips/terms.cxx
         src/fs/core/languages/fstrips/terms.hxx
-
-        src/fs/core/fstrips/fol
-        src/fs/core/fstrips/language
-        src/fs/core/fstrips/language_info
-        src/fs/core/fstrips/operations
-
         src/fs/core/search/nodes/blind_node.hxx
         src/fs/core/models/ground_state_model.cxx
         src/fs/core/models/ground_state_model.hxx
@@ -267,6 +262,7 @@ set(SOURCE_FILES
         pyfs/src/extension/language_info
         pyfs/src/extension/module
         pyfs/src/extension/utils
+        pyfs/src/extension/factories
         )
 
 #add_executable(fs_private ${SOURCE_FILES})

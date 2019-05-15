@@ -5,6 +5,7 @@ import logging
 
 import tarski
 import tarski.syntax as tsk
+from tarski.fstrips import DelEffect, AddEffect
 from tarski.syntax import util
 
 from .. import extension as cext
@@ -46,11 +47,6 @@ def create_language_info(language):
         else:
             raise RuntimeError("Unknown sort type: {}".format(sort))
 
-    # TEST
-    print("FSTYPE: ", info.get_fstype_id("object"))
-    print("get_typename(0): ", info.get_typename(0))
-    print("get_typename(1): ", info.get_typename(1))
-
     # Declare language objects
     for o in language.constants():
         oid = info.add_object(o.symbol, type_idxs[o.sort])
@@ -60,9 +56,9 @@ def create_language_info(language):
         print("get_object_name({}): {}".format(oid, info.get_object_name(oid)))
 
     # Declare language symbols
-    for p in util.get_symbols(language, include_builtin=False):
+    for p in util.get_symbols(language, include_builtin=True):
         signature = [type_idxs[t] for t in p.sort]
-        sid = cext.add_symbol_to_language_info(p.name, get_fs_symbol_t(p), signature, info)
+        sid = cext.add_symbol_to_language_info(str(p.name), get_fs_symbol_t(p), signature, info)
         print("Symbol {} registered with ID {} ({})".format(p, sid, info.get_symbol_name(sid)))
         symbol_idxs[p] = sid
 
@@ -72,23 +68,27 @@ def create_language_info(language):
 def translate_problem(problem):
     assert isinstance(problem, tarski.fstrips.Problem)
     info_wrapper = create_language_info(problem.language)
-    translator = FormulaTranslator(info_wrapper)
-    goal = translator.translate_formula(problem.goal)
+    translator = FSTRIPSTranslator(info_wrapper)
 
-    print("Translated goal formula: {}".format(goal.print(info_wrapper.linfo)))
+    # Translate goal
+    goal = translator.translate_formula(problem.goal, tsk.VariableBinding.empty())
+    logging.info("Translated goal formula: {}".format(goal.print(info_wrapper.linfo)))
 
-    # TODO Translate remaining parts
-    assert 0, "Finish this"
+    # Translate action schemas
+    actions = [translator.translate_action(id_, a) for id_, (name, a) in enumerate(problem.actions.items())]
 
-    return None, None, None, None, goal
+    # TODO Translate initial state
+    init = cext.Interpretation()
+
+    return cext.create_problem(problem.name, problem.domain_name, actions, init, goal)
 
 
-class Translator(object):
+class FSTRIPSTranslator:
     def __init__(self, language_info_wrapper):
         self.language_info_wrapper = language_info_wrapper
 
     def to_string(self, element):
-        assert isinstance(element, cext.LogicalElement)
+        assert isinstance(element, (cext.LogicalElement, cext.AtomicEffect))
         return element.print(self.language_info_wrapper.linfo)
 
     def get_symbol_id(self, symbol):
@@ -97,23 +97,20 @@ class Translator(object):
     def get_type_id(self, sort):
         return self.language_info_wrapper.type_idxs[sort]
 
-    def get_variable_id(self, varname):
-        raise RuntimeError("UNIMPLEMENTED")
-
     def get_object_id(self, obj):
         return self.language_info_wrapper.obj_idxs[obj]
         # return cext.make_object(True)
 
-    def translate_term(self, term):
+    def translate_term(self, term, binding):
         assert isinstance(term, tsk.Term)
         if isinstance(term, tsk.Variable):
-            varid = self.get_variable_id(term.name)
+            varid = binding.index(term.name)
             typeid = self.get_type_id(term.sort)
             return cext.LogicalVariable(varid, term.name, typeid)
 
         elif isinstance(term, tsk.CompoundTerm):
             symbol_id = self.get_symbol_id(term.name)
-            return cext.create_composite_term(symbol_id, self.translate_term_list(term.subterms))
+            return cext.create_composite_term(symbol_id, self.translate_term_list(term.subterms, binding))
 
         elif isinstance(term, tsk.Constant):
             oid = self.get_object_id(term)
@@ -122,24 +119,10 @@ class Translator(object):
 
         raise RuntimeError("Unexpected Tarski element type: {}".format(term))
 
-    def translate_term_list(self, terms):
-        return [self.translate_term(t) for t in terms]
+    def translate_term_list(self, terms, binding):
+        return [self.translate_term(t, binding) for t in terms]
 
-
-class ExpressionTranslator(Translator):
-
-    def __init__(self, info):
-        super().__init__(info)
-
-    def translate(self, expr):
-        return self.translate_term(expr)
-
-
-class FormulaTranslator(Translator):
-    def __init__(self, language_info_wrapper):
-        super().__init__(language_info_wrapper)
-
-    def translate_formula(self, formula):
+    def translate_formula(self, formula, binding):
         assert isinstance(formula, tsk.Formula)
 
         if isinstance(formula, tsk.Tautology):
@@ -150,17 +133,17 @@ class FormulaTranslator(Translator):
 
         elif isinstance(formula, tsk.Atom):
             symbol_id = self.get_symbol_id(formula.head)
-            subterms = self.translate_term_list(formula.subterms)
+            subterms = self.translate_term_list(formula.subterms, binding)
             return cext.create_atomic_formula(symbol_id, subterms)
             # return cext.AtomicFormula(symbol, subterms)
 
         elif isinstance(formula, tsk.CompoundFormula):
-            print("Translating compound formula {}...".format(formula))
+            # print("Translating compound formula {}...".format(formula))
             connective = self.translate_connective(formula.connective)
-            subformulas = self.translate_formula_list(formula.subformulas)
+            subformulas = self.translate_formula_list(formula.subformulas, binding)
             translated = cext.create_composite_formula(connective, subformulas)
-            print("Finished translating compound formula {}".format(formula))
-            print("Resulting formula: {}".format(self.to_string(translated)))
+            # print("Finished translating compound formula {}".format(formula))
+            print("Result of translation of compound formula '{}': {}".format(formula, self.to_string(translated)))
             return translated
 
         elif isinstance(formula, tsk.QuantifiedFormula):
@@ -184,8 +167,30 @@ class FormulaTranslator(Translator):
             tsk.Quantifier.Forall: cext.Quantifier.Forall,
         }[connective]
 
-    def translate_formula_list(self, formulas):
-        return [self.translate_formula(f) for f in formulas]
+    def translate_formula_list(self, formulas, binding):
+        return [self.translate_formula(f, binding) for f in formulas]
+
+    def translate_action(self, id_, action):
+        # Order matters: the binding unit needs to be created when the effects are processed
+        params = action.parameters.vars()
+        signature = [self.get_type_id(v.sort) for v in params]
+        parameter_names = [v.name for v in params]
+        precondition = self.translate_formula(action.precondition, action.parameters)
+        effects = [self.translate_effect(eff, action.parameters) for eff in action.effects]
+        # print(self.to_string(effects[0]))
+        return cext.create_action_schema(id_, action.name, signature, parameter_names, precondition, effects)
+
+    def translate_effect(self, eff, binding):
+        if isinstance(eff, (AddEffect, DelEffect)):
+            atom = self.translate_formula(eff.atom, binding)
+            condition = self.translate_formula(eff.condition, binding)
+            # print("Effect atom translation '{}': {}".format(eff.atom, self.to_string(atom)))
+            type_ = cext.AtomicEffectType.Del if isinstance(eff, DelEffect) else cext.AtomicEffectType.Add
+            translated = cext.create_atomic_effect(atom, type_, condition)
+            print("Effect translation '{}': {}".format(eff, self.to_string(translated)))
+            return translated
+
+        raise RuntimeError("Unknown effect type")
 
 
 def get_fs_symbol_t(s):

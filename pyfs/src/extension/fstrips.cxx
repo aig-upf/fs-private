@@ -1,7 +1,10 @@
 
-#include "utils.hxx"
+#include "factories.hxx"
+
 #include <fs/core/fstrips/language_info.hxx>
 #include <fs/core/fstrips/language.hxx>
+#include <fs/core/fstrips/interpretation.hxx>
+#include <fs/core/fstrips/problem.hxx>
 #include <fs/core/base.hxx>
 
 
@@ -12,56 +15,31 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <memory>
 #include <signal.h>
 
 namespace bp = boost::python;
 namespace fs = fs0::fstrips;
 
-fs::AtomicFormula* create_atomic_formula(unsigned symbol_id, bp::list& subterms) {
-    // We could simply convert the list into a vector, but that would result in dangling refs,
-    // as both Python and the C++ planner API would assume ownership of the pointers.
-    // return new fs::AtomicFormula(symbol_id, to_std_vector<const fs::Term*>(subterms));
-
-    // Indeed, we need to clone the subterms, as the C++ API demands transfer of ownership.
-    return new fs::AtomicFormula(symbol_id, clone_list<const fs::Term>(subterms));
-
-    // We could alternatively transfer the pointer ownership (not too much tested yet), but this
-    // would leave the Python list in an inconsistent state (e.g. could be that other Python variables
-    // are making reference to the same object, etc.
-    // return new fs::AtomicFormula(symbol_id, convert_to_vector_and_transfer_ownership<const fs::Term>(subterms));
-}
-
-fs::CompositeTerm* create_composite_term(unsigned symbol_id, bp::list& subterms) {
-    return new fs::CompositeTerm(symbol_id, clone_list<const fs::Term>(subterms));
-}
-
-fs::CompositeFormula* create_composite_formula(fs::Connective connective, bp::list& subformulas) {
-    return new fs::CompositeFormula(connective, clone_list<const fs::Formula>(subformulas));
-}
-
-fs::QuantifiedFormula* create_quantified_formula(fs::Quantifier quantifier, bp::list& variables, const fs::Formula* subformula) {
-    return new fs::QuantifiedFormula(quantifier, clone_list<const fs::LogicalVariable>(variables), subformula);
-}
-
-
-
-//template <T>
-std::string print_wrapper(const fs::AtomicFormula& o) {
-    std::cout << "X: " << std::endl;
-    std::cout << o.getSymbolId() << std::endl;
-    //return "eo";
-
-    std::ostringstream oss;
-//    std::cout << "HEY: " << o << std::endl;
-    oss << o;
-    return oss.str();
-}
-
-std::string print_logical_element(const fs::LogicalElement& o, const fs::LanguageInfo& info) {
+template <typename T>
+std::string _print(const T& o, const fs::LanguageInfo& info) {
     std::ostringstream oss;
     o.print(oss, info);
     return oss.str();
 }
+
+std::string print_logical_element(const fs::LogicalElement& o, const fs::LanguageInfo& info) {
+    return _print(o, info);
+}
+
+std::string print_effect(const fs::ActionEffect& o, const fs::LanguageInfo& info) {
+    return _print(o, info);
+}
+
+//std::string print_action(const fs::ActionSchema& o, const fs::LanguageInfo& info) {
+//    return _print(o, info);
+//}
+
 
 void define_fstrips() {
     /// First-Order Logic Language ///
@@ -146,6 +124,12 @@ void define_fstrips() {
     bp::def("create_composite_term", &create_composite_term, bp::return_value_policy<bp::manage_new_object>());
     bp::def("create_quantified_formula", &create_quantified_formula, bp::return_value_policy<bp::manage_new_object>());
 
+    bp::def("create_action_schema", &create_action_schema, bp::return_value_policy<bp::manage_new_object>());
+    bp::def("create_atomic_effect", &create_atomic_effect, bp::return_value_policy<bp::manage_new_object>());
+    bp::def("create_functional_effect", &create_functional_effect, bp::return_value_policy<bp::manage_new_object>());
+
+    bp::def("create_problem", &create_problem);
+
 
     bp::class_<fs::AtomicFormula, bp::bases<fs::Formula>>("AtomicFormula", bp::no_init)
             .add_property("symbol", &fs::CompositeTerm::getSymbolId)
@@ -177,6 +161,7 @@ void define_fstrips() {
             ;
 
     bp::class_<fs::ActionEffect, boost::noncopyable>("ActionEffect", bp::no_init)
+            .def("print", &print_effect)
 //            .def(bp::self_ns::str(bp::self))
             ;
 
@@ -198,6 +183,19 @@ void define_fstrips() {
             .add_property("parameters", bp::make_function(&fs::ActionSchema::getParameterNames, bp::return_value_policy<bp::reference_existing_object>()))
             .add_property("precondition", bp::make_function(&fs::ActionSchema::getPrecondition, bp::return_value_policy<bp::reference_existing_object>()))
             .add_property("effects", bp::make_function(&fs::ActionSchema::getEffects, bp::return_value_policy<bp::reference_existing_object>()))
+//            .def("print", &print_action) // TODO This still ends up invoking the singleton ProblemInfo, so will result in segfaults
 //            .def(bp::self_ns::str(bp::self))
-            ;
+    ;
+
+    bp::class_<fs::Interpretation, std::shared_ptr<fs::Interpretation>>("Interpretation", bp::init<>())
+    ;
+
+    bp::class_<fs::Problem, std::shared_ptr<fs::Problem>>("Problem", bp::init<const std::string&, const std::string&, const std::vector<const fs::ActionSchema*>&, const fs::Interpretation&, const fs::Formula*>())
+            .add_property("name", bp::make_function(&fs::Problem::name, bp::return_value_policy<bp::reference_existing_object>()))
+            .add_property("domain_name", bp::make_function(&fs::Problem::domain_name, bp::return_value_policy<bp::reference_existing_object>()))
+//            .add_property("schemas", bp::make_function(&fs::Problem::schemas, bp::return_value_policy<bp::reference_existing_object>()))
+            .add_property("init", bp::make_function(&fs::Problem::init, bp::return_value_policy<bp::reference_existing_object>()))
+            .add_property("goal", bp::make_function(&fs::Problem::goal, bp::return_value_policy<bp::reference_existing_object>()))
+    ;
+
 }
