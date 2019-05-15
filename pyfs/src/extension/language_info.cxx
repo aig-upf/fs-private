@@ -15,7 +15,7 @@ namespace fs = fs0::fstrips;
 //! Adds a symbol with the given information to the given LanguageInfo object, and returns the symbol ID
 //! `signature` must be a list of registered type_ids
 fs::symbol_id add_symbol_to_language_info(const std::string& name, fs::symbol_t symbol_type, bp::list& signature, fs::LanguageInfo& lang) {
-    std::cout << "Adding symbol " << name << std::endl;
+    // std::cout << "Adding symbol " << name << std::endl;
     const auto signature_vector = to_std_vector<fs0::TypeIdx>(signature);
     return lang.add_symbol(name, symbol_type, signature_vector);
 }

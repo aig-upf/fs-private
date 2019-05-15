@@ -4,8 +4,7 @@ from pyfs import util, runner
 
 
 def main():
-    instance = os.path.expanduser("~/projects/code/downward-benchmarks/blocks/probBLOCKS-4-0.pddl")
-    runner.run(instance=instance)
+    return runner.run(instance=os.path.expanduser("~/projects/code/downward-benchmarks/blocks/probBLOCKS-4-0.pddl"))
 
 
 if __name__ == "__main__":

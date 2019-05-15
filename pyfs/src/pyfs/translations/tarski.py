@@ -52,14 +52,11 @@ def create_language_info(language):
         oid = info.add_object(o.symbol, type_idxs[o.sort])
         obj_idxs[o] = oid
 
-        # TEST
-        print("get_object_name({}): {}".format(oid, info.get_object_name(oid)))
-
     # Declare language symbols
     for p in util.get_symbols(language, include_builtin=True):
         signature = [type_idxs[t] for t in p.sort]
-        sid = cext.add_symbol_to_language_info(str(p.name), get_fs_symbol_t(p), signature, info)
-        print("Symbol {} registered with ID {} ({})".format(p, sid, info.get_symbol_name(sid)))
+        sid = cext.add_symbol_to_language_info(str(p.symbol), get_fs_symbol_t(p), signature, info)
+        # print("Symbol {} registered with ID {} ({})".format(p, sid, info.get_symbol_name(sid)))
         symbol_idxs[p] = sid
 
     return LanguageInfoWrapper(info, type_idxs, obj_idxs, symbol_idxs)
@@ -72,7 +69,7 @@ def translate_problem(problem):
 
     # Translate goal
     goal = translator.translate_formula(problem.goal, tsk.VariableBinding.empty())
-    logging.info("Translated goal formula: {}".format(goal.print(info_wrapper.linfo)))
+    # logging.info("Translated goal formula: {}".format(goal.print(info_wrapper.linfo)))
 
     # Translate action schemas
     actions = [translator.translate_action(id_, a) for id_, (name, a) in enumerate(problem.actions.items())]
@@ -104,9 +101,9 @@ class FSTRIPSTranslator:
     def translate_term(self, term, binding):
         assert isinstance(term, tsk.Term)
         if isinstance(term, tsk.Variable):
-            varid = binding.index(term.name)
+            varid = binding.index(term.symbol)
             typeid = self.get_type_id(term.sort)
-            return cext.LogicalVariable(varid, term.name, typeid)
+            return cext.LogicalVariable(varid, term.symbol, typeid)
 
         elif isinstance(term, tsk.CompoundTerm):
             symbol_id = self.get_symbol_id(term.name)
@@ -132,7 +129,7 @@ class FSTRIPSTranslator:
             return cext.Contradiction()
 
         elif isinstance(formula, tsk.Atom):
-            symbol_id = self.get_symbol_id(formula.head)
+            symbol_id = self.get_symbol_id(formula.predicate)
             subterms = self.translate_term_list(formula.subterms, binding)
             return cext.create_atomic_formula(symbol_id, subterms)
             # return cext.AtomicFormula(symbol, subterms)
@@ -143,7 +140,7 @@ class FSTRIPSTranslator:
             subformulas = self.translate_formula_list(formula.subformulas, binding)
             translated = cext.create_composite_formula(connective, subformulas)
             # print("Finished translating compound formula {}".format(formula))
-            print("Result of translation of compound formula '{}': {}".format(formula, self.to_string(translated)))
+            # print("Result of translation of compound formula '{}': {}".format(formula, self.to_string(translated)))
             return translated
 
         elif isinstance(formula, tsk.QuantifiedFormula):
@@ -174,7 +171,7 @@ class FSTRIPSTranslator:
         # Order matters: the binding unit needs to be created when the effects are processed
         params = action.parameters.vars()
         signature = [self.get_type_id(v.sort) for v in params]
-        parameter_names = [v.name for v in params]
+        parameter_names = [v.symbol for v in params]
         precondition = self.translate_formula(action.precondition, action.parameters)
         effects = [self.translate_effect(eff, action.parameters) for eff in action.effects]
         # print(self.to_string(effects[0]))
@@ -187,7 +184,7 @@ class FSTRIPSTranslator:
             # print("Effect atom translation '{}': {}".format(eff.atom, self.to_string(atom)))
             type_ = cext.AtomicEffectType.Del if isinstance(eff, DelEffect) else cext.AtomicEffectType.Add
             translated = cext.create_atomic_effect(atom, type_, condition)
-            print("Effect translation '{}': {}".format(eff, self.to_string(translated)))
+            # print("Effect translation '{}': {}".format(eff, self.to_string(translated)))
             return translated
 
         raise RuntimeError("Unknown effect type")
@@ -195,5 +192,5 @@ class FSTRIPSTranslator:
 
 def get_fs_symbol_t(s):
     """ Return the FS symbol_t type corresponding to the given predicate function """
-    assert isinstance(s, (tsk.PredicateSymbol, tsk.FunctionSymbol))
-    return cext.symbol_t.Function if isinstance(s, tsk.FunctionSymbol) else cext.symbol_t.Predicate
+    assert isinstance(s, (tsk.Predicate, tsk.Function))
+    return cext.symbol_t.Function if isinstance(s, tsk.Function) else cext.symbol_t.Predicate

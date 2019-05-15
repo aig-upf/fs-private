@@ -1,56 +1,26 @@
-import argparse
+import shutil
 
 from . import util, translations
 from tarski.io import FstripsReader
+from tarski.grounding.lp import ground_actions
 
-
-def parse_arguments(args):
-    parser = argparse.ArgumentParser(description='Bootstrap and run the FS planner on a given instance.'
-                                                 'The process might involve generating, compiling and linking'
-                                                 'some C++ code in order to accommodate externally-defined symbols.'
-                                                 'That code will be left in the "working directory", whose path is '
-                                                 'controlled through the "-t" and "-o" options.')
-    parser.add_argument('-i', '--instance', required=True, help="The path to the problem instance file.")
-    parser.add_argument('--domain', default=None, help="(Optional) The path to the problem domain file. If none is "
-                                                       "provided, the system will try to automatically deduce "
-                                                       "it from the instance filename.")
-
-    parser.add_argument('--debug', action='store_true', help="Compile in debug mode.")
-    parser.add_argument('-p', '--parse-only', action='store_true', help="Parse the problem and compile the generated"
-                                                                        " code, if any, but don't run the solver yet.")
-
-    parser.add_argument("--driver", help='The solver driver (controller) to be used.', default=None)
-    parser.add_argument("--options", help='The solver extra options', default="")
-    parser.add_argument("--asp", action='store_true', help='(Experimental) Use the ASP-based parser+grounder '
-                                                           '(strict ADL, without numerics etc.).')
-
-    parser.add_argument('-t', '--tag', default=None,
-                        help="(Optional) An arbitrary name that will be used to create the working directory where "
-                             "intermediate files will be left, unless overriden by the '-o' option."
-                             "If none of both options is provided, a random tag will be generated.")
-
-    parser.add_argument('-o', '--output', default=None, help="(Optional) Path to the working directory. If provided,"
-                                                             "overrides the \"-t\" option.")
-    parser.add_argument('-w', '--workspace', default=None, help="(Optional) Path to the workspace directory.")
-    parser.add_argument('--planfile', default=None, help="(Optional) Path to the file where the solution plan will be left.")
-    parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
-    parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
-
-    args = parser.parse_args(args)
-
-    if not args.parse_only and args.driver is None:
-        parser.error('The "--driver" option is required to run the solver')
-
-    return args
 
 
 def run(instance, domain=None):
     domain = domain or util.find_domain_filename(instance)
     reader = FstripsReader(raise_on_error=True, theories=[])
     tarski_problem = reader.read_problem(domain, instance)
+
     fs_problem = translations.tarski.translate_problem(tarski_problem)
 
-    assert False   # TODO Continue from here on
+    groundings = ground(tarski_problem)
+
+
+
+
+
+
+    # TODO Continue from here on
 
 
     domain_name, instance_name = extract_names(args.domain, args.instance)
@@ -92,8 +62,9 @@ def run(instance, domain=None):
 
     run_solver(out_dir, args, args.parse_only)
 
-    return 0
 
-
-def enter(args):
-    return run(parse_arguments(args))
+def ground(problem):
+    if shutil.which("gringo") is None:
+        raise RuntimeError('Install the Clingo ASP solver and put the "gringo" binary on your PATH in order to run '
+                           'the requested ASP-based reachability analysis')
+    return ground_actions(problem)
