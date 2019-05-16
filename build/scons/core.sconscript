@@ -12,7 +12,7 @@ rapidjson_inc_dir = os.path.join(rapidjson_base_dir, 'include')
 include_paths = [rapidjson_inc_dir]
 
 
-env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ])  # Flags common to all options
+env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++17' ])  # Flags common to all options
 env.Append(CPPPATH = [os.path.abspath(p) for p in include_paths])
 
 

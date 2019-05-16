@@ -55,7 +55,7 @@ def main():
 
         extra_objects=[],  # Static library could go in here, as per https://stackoverflow.com/a/49139257
 
-        extra_compile_args=['-std=c++14'],
+        extra_compile_args=['-std=c++17'],
 
         libraries=['boost_python35',
                    'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono',
