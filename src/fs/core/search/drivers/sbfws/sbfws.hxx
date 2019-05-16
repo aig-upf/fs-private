@@ -6,13 +6,10 @@
 #include <fs/core/search/drivers/setups.hxx>
 #include <fs/core/search/drivers/sbfws/base.hxx>
 #include <fs/core/heuristics/unsat_goal_atoms.hxx>
-#include <fs/core/heuristics/l0.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
-
 #include <fs/core/search/drivers/sbfws/stats.hxx>
 #include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
-#include <fs/core/constraints/gecode/handlers/monotonicity_csp.hxx>
 
 
 namespace fs0 { namespace bfws {
@@ -72,9 +69,6 @@ public:
 	//! made true along the path (#r)
 	//! Use a raw pointer to optimize performance, as the number of generated nodes will typically be huge
 	RelevantAtomSet* _relevant_atoms;
-
-    //! The sets D^G_X of goal-reachable domains for every state variable X
-    DomainTracker _domains;
 
 	//! Constructor with full copying of the state (expensive)
 	SBFWSNode(const StateT& s, unsigned long gen_order) : SBFWSNode(StateT(s), ActionT::invalid_action_id, nullptr, gen_order) {}
@@ -336,8 +330,6 @@ protected:
 	//! How many novelty levels we want to use in the search.
 	unsigned _novelty_levels;
 
-	std::unique_ptr<gecode::MonotonicityCSP> _monotonicity_csp_manager;
-
 public:
 
 	//!
@@ -354,8 +346,7 @@ public:
 		_pruning(config._global_config.getOption<bool>("bfws.prune", false)),
 		_generated(0),
 		_min_subgoals_to_reach(std::numeric_limits<unsigned>::max()),
-		_novelty_levels(setup_novelty_levels(model, config._global_config)),
-		_monotonicity_csp_manager(gecode::build_monotonicity_csp(_model.getTask(), config._global_config))
+		_novelty_levels(setup_novelty_levels(model, config._global_config))
 	{
 	}
 
@@ -401,17 +392,6 @@ public:
 
 	bool search(const StateT& s, PlanT& plan) {
 		NodePT root = std::make_shared<NodeT>(s, ++_generated);
-
-        if (_monotonicity_csp_manager) {
-            root->_domains = _monotonicity_csp_manager->create_root(s);
-            if (root->_domains.is_null()) {
-                LPT_INFO("cout", "Root node detected as inconsistent for monotonicity reasons");
-                _stats.monot_pruned();
-                return false;
-            } else {
-                LPT_INFO("cout", "Root node is monotonicity-consistent!");
-            }
-        }
 
         create_node(root);
         assert(_open.top()->w_g_r == 1); // The root node must necessarily have novelty 1
@@ -501,26 +481,6 @@ protected:
             if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it
 
             // std::cout << "Generating node: " << *successor << std::endl;
-            // If the node we're expanding has a monotonicity CSP, we update it
-            // and "propagate" it to the children nodes
-            if (_monotonicity_csp_manager) {
-                assert(!node->_domains.is_null());
-
-                successor->_domains = _monotonicity_csp_manager->generate_node(
-                        node->state,
-                        node->_domains,
-                        successor->state,
-                        _model.get_last_changeset()
-                );
-
-                if (successor->_domains.is_null()) {
-                    LPT_DEBUG("cout", "\tChildren node pruned because of inconsistent monotonicity CSP: " << std::endl << "\t" << *successor);
-                    successor->_domains.release();
-                    _stats.monot_pruned();
-//                    _closed.put(successor);
-                    continue;
-                }
-            }
 
 			if (create_node(successor)) {
 				break;
@@ -528,9 +488,6 @@ protected:
 
 //            std::cout << "Generated node: " << *successor << std::endl;
 		}
-
-        // Once the node is completely expanded, we can release the memory used by the domains
-        node->_domains.release();
 	}
 
 	bool is_open(const NodePT& node) const {

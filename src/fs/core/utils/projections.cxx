@@ -4,7 +4,6 @@
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/relaxed_state.hxx>
 #include <iostream>
 
 namespace fs0 {
@@ -19,13 +18,6 @@ std::vector<object_id> Projections::project(const State& s, const VariableIdxVec
 }
 
 
-DomainMap Projections::project(RelaxedState& state, const VariableIdxVector& scope) { //!  TODO - CHECK THIS IS APPLYING RVO??
-	DomainMap projection;
-	for (VariableIdx var:scope) {
-		projection.insert(std::make_pair(var, state.getValues(var)));
-	}
-	return projection;
-}
 
 PartialAssignment Projections::zip(const VariableIdxVector& scope, const std::vector<object_id>& values) {
 	assert(scope.size() == values.size());
@@ -36,24 +28,6 @@ PartialAssignment Projections::zip(const VariableIdxVector& scope, const std::ve
 	return assignment;
 }
 
-
-const DomainVector Projections::projectValues(const RelaxedState& state, const VariableIdxVector& scope) {
-	DomainVector projection;
-	for (VariableIdx var:scope) {
-		projection.push_back(state.getValues(var));
-	}
-	return projection;
-}
-
-
-DomainMap Projections::projectCopy(const RelaxedState& state, const VariableIdxVector& scope) {
-	DomainMap projection;
-	for (VariableIdx var:scope) {
-		projection.insert(std::make_pair(var, std::make_shared<Domain>(*(state.getValues(var))))); // We copy construct the whole domain
-		assert( *(state.getValues(var)) == *(projection.at(var)) );
-	}
-	return projection;
-}	
 
 DomainVector Projections::project(const DomainMap& domains, const VariableIdxVector& scope) {
 	DomainVector projection;

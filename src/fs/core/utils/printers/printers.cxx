@@ -1,9 +1,10 @@
 
 #include <memory>
+
+#include <fs/core/utils/printers/printers.hxx>
 #include <fs/core/utils/printers/helper.hxx>
 #include <fs/core/utils/printers/actions.hxx>
 #include <fs/core/problem.hxx>
-#include <fs/core/heuristics/relaxed_plan/relaxed_plan_extractor.hxx>
 
 namespace fs0 {
 
@@ -68,13 +69,6 @@ plan::print(std::ostream& os) const {
 		os << *action << " ";
 	}
 	return os;
-}
-
-void
-supported_plan::printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out) {
-	for (const auto& element:plan) {
-		out << element << " " << std::endl;
-	}
 }
 
 std::ostream&

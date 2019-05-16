@@ -5,11 +5,10 @@
 #include <fs/core/utils/config.hxx>
 #include <fs/core/utils/system.hxx>
 #include <fs/core/applicability/match_tree.hxx>
-#include <lapkt/tools/logging.hxx>
-
 #include <fs/core/languages/fstrips/language.hxx>
-#include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
-#include <fs/core/languages/fstrips/complex_existential_formula.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
+
+#include <lapkt/tools/logging.hxx>
 
 namespace fs0 {
 
@@ -39,8 +38,7 @@ obtain_goal_atoms(const Problem& problem, const fs::Formula* goal) {
 	std::vector<const fs::Formula*> goal_atoms;
 
 	if (ex_q) {
-		// TODO This might be a memory leak
-		goal_atoms.push_back(new fs::ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
+		throw std::runtime_error("UNIMPLEMENTED");
 	} else {
 		assert(conjunction);
 		for (const fs::Formula* atom:conjunction->getSubformulae()) {

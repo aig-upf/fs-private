@@ -6,7 +6,7 @@
 
 namespace fs0 {
 
-class State; class RelaxedState; class GroundAction;
+class State; class GroundAction;
 
 class Projections {
 public:
@@ -16,21 +16,6 @@ public:
 	//! Zip a scope and a values to an equivalent partial assignment
 	static PartialAssignment zip(const VariableIdxVector& scope, const std::vector<object_id>& values);
 	
-	//! Project values only - no copy, const version
-	static const DomainVector projectValues(const RelaxedState& state, const VariableIdxVector& scope);
-	
-	/**
-	 * Returns the projection of the domains of a relaxed state into a subset of variables.
-	 * It is assumed that scope contains no repeated indexes.
-	 */
-	static DomainMap project(RelaxedState& state, const VariableIdxVector& scope);
-	
-	/**
-	 * Returns the projection of the domains of a relaxed state into a subset of variables, cloning the projected domains.
-	 * It is assumed that scope contains no repeated indexes.
-	 */
-	static DomainMap projectCopy(const RelaxedState& state, const VariableIdxVector& scope);
-
 	/**
 	 * Returns the projection of the domains contained in a domain map into a subset of variables.
 	 * It is assumed that all the variables in scope are contained in the DomainMap `domains`.

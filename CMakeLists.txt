@@ -9,72 +9,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(SOURCE_FILES
-        src/fs/core/actions/action_id.cxx
-        src/fs/core/actions/action_id.hxx
-        src/fs/core/actions/actions.cxx
-        src/fs/core/actions/actions.hxx
-        src/fs/core/actions/checker.cxx
-        src/fs/core/actions/checker.hxx
-        src/fs/core/actions/grounding.cxx
-        src/fs/core/actions/grounding.hxx
-        src/fs/core/actions/lifted_action_iterator.cxx
-        src/fs/core/actions/lifted_action_iterator.hxx
-        src/fs/core/applicability/action_managers.cxx
-        src/fs/core/applicability/action_managers.hxx
+        src/fs/core/actions/action_id
+        src/fs/core/actions/actions
+        src/fs/core/actions/checker
+        src/fs/core/actions/grounding
+        src/fs/core/applicability/action_managers
         src/fs/core/applicability/base.hxx
-        src/fs/core/applicability/formula_interpreter.cxx
-        src/fs/core/applicability/formula_interpreter.hxx
-        src/fs/core/applicability/gecode_analyzer.cxx
-        src/fs/core/applicability/gecode_analyzer.hxx
-        src/fs/core/applicability/match_tree.cxx
-        src/fs/core/applicability/match_tree.hxx
-        src/fs/core/constraints/gecode/handlers/base_action_csp.cxx
-        src/fs/core/constraints/gecode/handlers/base_action_csp.hxx
-        src/fs/core/constraints/gecode/handlers/base_csp.cxx
-        src/fs/core/constraints/gecode/handlers/base_csp.hxx
-        src/fs/core/constraints/gecode/handlers/formula_csp.cxx
-        src/fs/core/constraints/gecode/handlers/formula_csp.hxx
-        src/fs/core/constraints/gecode/handlers/monotonicity_csp
-        src/fs/core/constraints/gecode/handlers/ground_action_csp.cxx
-        src/fs/core/constraints/gecode/handlers/ground_action_csp.hxx
-        src/fs/core/constraints/gecode/handlers/ground_effect_csp.cxx
-        src/fs/core/constraints/gecode/handlers/ground_effect_csp.hxx
-        src/fs/core/constraints/gecode/handlers/lifted_action_csp.cxx
-        src/fs/core/constraints/gecode/handlers/lifted_action_csp.hxx
-        src/fs/core/constraints/gecode/handlers/lifted_effect_csp.cxx
-        src/fs/core/constraints/gecode/handlers/lifted_effect_csp.hxx
-        src/fs/core/constraints/gecode/handlers/lifted_effect_unreached.cxx
-        src/fs/core/constraints/gecode/handlers/lifted_effect_unreached.hxx
-        src/fs/core/constraints/gecode/language_translators.cxx
-        src/fs/core/constraints/gecode/language_translators.hxx
-        src/fs/core/constraints/gecode/utils/element_constraint.cxx
-        src/fs/core/constraints/gecode/utils/element_constraint.hxx
-        src/fs/core/constraints/gecode/utils/extensional_constraint.cxx
-        src/fs/core/constraints/gecode/utils/extensional_constraint.hxx
-        src/fs/core/constraints/gecode/utils/nested_fluent_iterator.cxx
-        src/fs/core/constraints/gecode/utils/nested_fluent_iterator.hxx
-        src/fs/core/constraints/gecode/utils/novelty_constraints.cxx
-        src/fs/core/constraints/gecode/utils/novelty_constraints.hxx
-        src/fs/core/constraints/gecode/utils/term_list_iterator.cxx
-        src/fs/core/constraints/gecode/utils/term_list_iterator.hxx
-        src/fs/core/constraints/gecode/utils/value_selection.cxx
-        src/fs/core/constraints/gecode/utils/value_selection.hxx
-        src/fs/core/constraints/gecode/csp_translator.cxx
-        src/fs/core/constraints/gecode/csp_translator.hxx
-        src/fs/core/constraints/gecode/extensions.cxx
-        src/fs/core/constraints/gecode/extensions.hxx
-        src/fs/core/constraints/gecode/gecode_csp.cxx
-        src/fs/core/constraints/gecode/gecode_csp.hxx
-        src/fs/core/constraints/gecode/helper.cxx
-        src/fs/core/constraints/gecode/helper.hxx
-        src/fs/core/constraints/gecode/lifted_plan_extractor.cxx
-        src/fs/core/constraints/gecode/lifted_plan_extractor.hxx
-        src/fs/core/constraints/gecode/supports.cxx
-        src/fs/core/constraints/gecode/supports.hxx
-        src/fs/core/constraints/filtering.hxx
-        src/fs/core/constraints/registry.cxx
-        src/fs/core/constraints/registry.hxx
-        src/fs/core/constraints/native/action_handler
+        src/fs/core/applicability/formula_interpreter
+        src/fs/core/applicability/match_tree
+        src/fs/core/constraints/registry
+        src/fs/core/constraints/grounding
 
         src/fs/core/lambda/states
         src/fs/core/lambda/search_model
@@ -86,67 +30,32 @@ set(SOURCE_FILES
         src/fs/core/fstrips/loader
         src/fs/core/fstrips/operations
 
-        src/fs/core/heuristics/novelty/features.cxx
-        src/fs/core/heuristics/novelty/features.hxx
-        src/fs/core/heuristics/relaxed_plan/gecode_crpg.cxx
-        src/fs/core/heuristics/relaxed_plan/gecode_crpg.hxx
-        src/fs/core/heuristics/relaxed_plan/relaxed_plan.cxx
-        src/fs/core/heuristics/relaxed_plan/relaxed_plan.hxx
-        src/fs/core/heuristics/relaxed_plan/relaxed_plan_extractor.hxx
-        src/fs/core/heuristics/relaxed_plan/rpg_data.cxx
-        src/fs/core/heuristics/relaxed_plan/rpg_data.hxx
-        src/fs/core/heuristics/relaxed_plan/rpg_index.cxx
-        src/fs/core/heuristics/relaxed_plan/rpg_index.hxx
-        src/fs/core/heuristics/relaxed_plan/smart_rpg.cxx
-        src/fs/core/heuristics/relaxed_plan/smart_rpg.hxx
-        src/fs/core/heuristics/relaxed_plan/native_rpg
-        src/fs/core/heuristics/null_heuristic.hxx
-        src/fs/core/heuristics/unsat_goal_atoms.cxx
-        src/fs/core/heuristics/unsat_goal_atoms.hxx
-        src/fs/core/languages/fstrips/operations/axioms.cxx
-        src/fs/core/languages/fstrips/operations/axioms.hxx
-        src/fs/core/languages/fstrips/operations/basic.cxx
-        src/fs/core/languages/fstrips/operations/basic.hxx
-        src/fs/core/languages/fstrips/operations/binding.cxx
-        src/fs/core/languages/fstrips/operations/binding.hxx
-        src/fs/core/languages/fstrips/operations/conjunction.cxx
-        src/fs/core/languages/fstrips/operations/conjunction.hxx
-        src/fs/core/languages/fstrips/operations/interpretation.cxx
-        src/fs/core/languages/fstrips/operations/interpretation.hxx
-        src/fs/core/languages/fstrips/axioms.cxx
-        src/fs/core/languages/fstrips/axioms.hxx
-        src/fs/core/languages/fstrips/base.cxx
-        src/fs/core/languages/fstrips/base.hxx
-        src/fs/core/languages/fstrips/builtin.cxx
-        src/fs/core/languages/fstrips/builtin.hxx
-        src/fs/core/languages/fstrips/effects.cxx
-        src/fs/core/languages/fstrips/effects.hxx
-        src/fs/core/languages/fstrips/factory.cxx
-        src/fs/core/languages/fstrips/factory.hxx
-        src/fs/core/languages/fstrips/formulae.cxx
-        src/fs/core/languages/fstrips/formulae.hxx
-        src/fs/core/languages/fstrips/complex_existential_formula.hxx
+        src/fs/core/heuristics/novelty/features
+        src/fs/core/heuristics/null_heuristic
+        src/fs/core/heuristics/unsat_goal_atoms
+
+        src/fs/core/languages/fstrips/operations/axioms
+        src/fs/core/languages/fstrips/operations/basic
+        src/fs/core/languages/fstrips/operations/binding
+        src/fs/core/languages/fstrips/operations/conjunction
+        src/fs/core/languages/fstrips/operations/interpretation
+        src/fs/core/languages/fstrips/axioms
+        src/fs/core/languages/fstrips/base
+        src/fs/core/languages/fstrips/builtin
+        src/fs/core/languages/fstrips/effects
+        src/fs/core/languages/fstrips/factory
+        src/fs/core/languages/fstrips/formulae
         src/fs/core/languages/fstrips/language.hxx
         src/fs/core/languages/fstrips/language_fwd.hxx
-        src/fs/core/languages/fstrips/loader.cxx
-        src/fs/core/languages/fstrips/loader.hxx
+        src/fs/core/languages/fstrips/loader
         src/fs/core/languages/fstrips/operations.hxx
-        src/fs/core/languages/fstrips/scopes.cxx
-        src/fs/core/languages/fstrips/scopes.hxx
-        src/fs/core/languages/fstrips/terms.cxx
-        src/fs/core/languages/fstrips/terms.hxx
+        src/fs/core/languages/fstrips/scopes
+        src/fs/core/languages/fstrips/terms
         src/fs/core/search/nodes/blind_node.hxx
-        src/fs/core/models/ground_state_model.cxx
-        src/fs/core/models/ground_state_model.hxx
-        src/fs/core/models/lifted_state_model.cxx
-        src/fs/core/models/lifted_state_model.hxx
-        src/fs/core/models/simple_state_model.cxx
-        src/fs/core/models/simple_state_model.hxx
-        src/fs/core/search/algorithms/monotonic_search
-        src/fs/core/search/algorithms/ehc.hxx
-        src/fs/core/search/algorithms/ehc_gbfs.hxx
+        src/fs/core/models/ground_state_model
+        src/fs/core/models/simple_state_model
         src/fs/core/search/algorithms/iterated_width.hxx
-        src/fs/core/search/drivers/base.hxx
+        src/fs/core/search/drivers/base
         src/fs/core/search/drivers/sbfws/features/features.cxx
         src/fs/core/search/drivers/sbfws/features/features.hxx
         src/fs/core/search/drivers/sbfws/base.cxx
@@ -157,8 +66,6 @@ set(SOURCE_FILES
         src/fs/core/search/drivers/sbfws/iw_run_config.cxx
         src/fs/core/search/drivers/sbfws/iw_run.cxx
         src/fs/core/search/drivers/sbfws/iw_run.hxx
-        src/fs/core/search/drivers/sbfws/mv_iw_run.cxx
-        src/fs/core/search/drivers/sbfws/mv_iw_run.hxx
         src/fs/core/search/drivers/sbfws/relevant_atomset.hxx
         src/fs/core/search/drivers/sbfws/relevant_atoms.hxx
         src/fs/core/search/drivers/sbfws/relevant_atoms.cxx
@@ -168,24 +75,15 @@ set(SOURCE_FILES
         src/fs/core/search/drivers/sbfws/stats.hxx
         src/fs/core/search/drivers/breadth_first_search.cxx
         src/fs/core/search/drivers/breadth_first_search.hxx
-        src/fs/core/search/drivers/fully_lifted_driver.cxx
-        src/fs/core/search/drivers/fully_lifted_driver.hxx
         src/fs/core/search/drivers/iterated_width.cxx
         src/fs/core/search/drivers/iterated_width.hxx
         src/fs/core/search/drivers/registry.cxx
         src/fs/core/search/drivers/registry.hxx
         src/fs/core/search/drivers/setups.cxx
         src/fs/core/search/drivers/setups.hxx
-        src/fs/core/search/drivers/smart_effect_driver.cxx
-        src/fs/core/search/drivers/smart_effect_driver.hxx
-        src/fs/core/search/drivers/smart_lifted_driver.cxx
-        src/fs/core/search/drivers/smart_lifted_driver.hxx
-        src/fs/core/search/drivers/native_action_driver
         src/fs/core/search/drivers/validation.cxx
         src/fs/core/search/drivers/validation.hxx
         src/fs/core/search/nodes/bfws_node.hxx
-        src/fs/core/search/nodes/heuristic_search_node.hxx
-        src/fs/core/search/nodes/monotonic_node
         src/fs/core/search/novelty/fs_novelty.cxx
         src/fs/core/search/novelty/fs_novelty.hxx
         src/fs/core/search/events.hxx
@@ -199,8 +97,6 @@ set(SOURCE_FILES
         src/fs/core/utils/printers/actions.hxx
         src/fs/core/utils/printers/binding.cxx
         src/fs/core/utils/printers/binding.hxx
-        src/fs/core/utils/printers/gecode.cxx
-        src/fs/core/utils/printers/gecode.hxx
         src/fs/core/utils/printers/helper.cxx
         src/fs/core/utils/printers/helper.hxx
         src/fs/core/utils/printers/language.cxx
@@ -251,11 +147,8 @@ set(SOURCE_FILES
         src/fs/core/problem.hxx
         src/fs/core/problem_info.cxx
         src/fs/core/problem_info.hxx
-        src/fs/core/relaxed_state.cxx
-        src/fs/core/relaxed_state.hxx
         src/fs/core/state.cxx
         src/fs/core/state.hxx
-        src/fs/core/monotonicity
         src/fs/core/validator.cxx
         src/fs/core/validator.hxx
 

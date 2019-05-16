@@ -4,7 +4,6 @@
 #include <fs/core/languages/fstrips/formulae.hxx>
 
 #include <fs/core/heuristics/unsat_goal_atoms.hxx>
-#include <fs/core/languages/fstrips/complex_existential_formula.hxx>
 
 namespace fs0 {
 
@@ -33,9 +32,8 @@ UnsatisfiedGoalAtomsCounter::extract_goal_conjunction(const Problem& problem) {
 		for (const auto& a:conjunction->getSubformulae()) {
 			atoms.push_back(a->clone());
 		}
-	} else if (ex_q) { // If we have an existentially-quantified formula, we'll use
-                       // Gecode to evaluate it
-		atoms.push_back(new fs::ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
+	} else if (ex_q) { // If we have an existentially-quantified formula
+		throw std::runtime_error("UNIMPLEMENTED");
 	} else {
 		atoms.push_back(goal->clone());
 	}

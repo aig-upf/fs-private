@@ -2,18 +2,18 @@
 #include <lapkt/tools/logging.hxx>
 
 #include <fs/core/search/drivers/sbfws/features/features.hxx>
+#include <fs/core/problem.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/heuristics/novelty/features.hxx>
-#include <fs/core/heuristics/novelty/squared_error.hxx>
 #include <fs/core/utils/loader.hxx>
 #include <fs/core/utils/printers/binding.hxx>
 #include <fs/core/utils/binding_iterator.hxx>
 #include <fs/core/constraints/registry.hxx>
 #include <fs/core/languages/fstrips/operations/basic.hxx>
 #include <fs/core/actions/actions.hxx>
-#include <fs/core/heuristics/l0.hxx>
-
-#include <fs/hybrid/novelty_features.hxx>
+#include <fs/core/utils/config.hxx>
+#include <fs/core/languages/fstrips/terms.hxx>
+#include <fs/core/languages/fstrips/formulae.hxx>
 
 
 namespace fs = fs0::language::fstrips;
@@ -166,27 +166,6 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 	if (Config::instance().getOption<bool>("use_precondition_counts", false)) {
 		process_precondition_count(info, features);
 	}
-
-	if (Config::instance().getOption<bool>("features.l0_sets", false)) {
-		std::shared_ptr<L0Heuristic> l0_extractor = std::make_shared<L0Heuristic>(Problem::getInstance());
-		for ( auto formula : l0_extractor->relational() ) {
-			ConditionSetFeature* feature = new ConditionSetFeature;
-			feature->addCondition(formula);
-			features.push_back( feature );
-		}
-	}
-
-	if (Config::instance().getOption<bool>("features.joint_goal_error", false)) {
-		SquaredErrorFeature* feature = new SquaredErrorFeature;
-		for ( auto formula : fs::all_formulae( *Problem::getInstance().getGoalConditions())) {
-			feature->addCondition(formula);
-		}
-		LPT_INFO("features", "Added 'joint_goal_error': phi(s0) = " << feature->error_signal().measure(Problem::getInstance().getInitialState()));
-		features.push_back( feature );
-	}
-
-	
-	fs0::HybridNoveltyFeaturesWrapper::register_features(features);
 
 	try {
 		auto data = Loader::loadJSONObject(info.getDataDir() + "/extra.json");

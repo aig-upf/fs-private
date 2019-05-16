@@ -99,14 +99,5 @@ IteratedWidthDriver<GroundStateModel>::search(Problem& problem, const Config& co
 // 	return Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
-template <>
-ExitCode
-IteratedWidthDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
-	auto model = GroundingSetup::fully_lifted_model(problem);
-	return do_search(model, config, options, start_time, _stats);
-// 	auto engine = create(config, model);
-// 	return Utils::do_search(*engine, model, out_dir, start_time, _stats);
-}
-
 
 } } // namespaces

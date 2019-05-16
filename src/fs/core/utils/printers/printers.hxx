@@ -50,21 +50,6 @@ class plan {
 		std::ostream& print(std::ostream& os) const;
 };
 
-class supported_plan {
-protected:
-	const std::set<SupportedAction>& _plan;
-public:
-	supported_plan(const std::set<SupportedAction>& plan) : _plan(plan) {}
-
-	//! Prints a representation of the state to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const supported_plan& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const {
-		printSupportedPlan(_plan, os);
-		return os;
-	}
-
-	static void printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out);
-};
 
 class support {
 	protected:
