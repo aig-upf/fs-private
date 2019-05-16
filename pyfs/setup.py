@@ -35,10 +35,11 @@ def main():
         language="c++",
 
         sources=[
-            'src/extension/module.cxx',
             'src/extension/factories.cxx',
             'src/extension/fstrips.cxx',
             'src/extension/language_info.cxx',
+            'src/extension/module.cxx',
+            'src/extension/search.cxx',
          ],
 
         include_dirs=[

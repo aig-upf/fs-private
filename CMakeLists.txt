@@ -76,6 +76,8 @@ set(SOURCE_FILES
         src/fs/core/constraints/registry.hxx
         src/fs/core/constraints/native/action_handler
 
+        src/fs/core/lambda/states
+        src/fs/core/lambda/search_model
         src/fs/core/fstrips/fol
         src/fs/core/fstrips/language
         src/fs/core/fstrips/language_info
@@ -263,6 +265,7 @@ set(SOURCE_FILES
         pyfs/src/extension/module
         pyfs/src/extension/utils
         pyfs/src/extension/factories
+        pyfs/src/extension/search
         )
 
 #add_executable(fs_private ${SOURCE_FILES})

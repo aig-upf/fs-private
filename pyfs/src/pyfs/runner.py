@@ -5,7 +5,6 @@ from tarski.io import FstripsReader
 from tarski.grounding.lp import ground_actions
 
 
-
 def run(instance, domain=None):
     domain = domain or util.find_domain_filename(instance)
     reader = FstripsReader(raise_on_error=True, theories=[])
@@ -34,13 +33,8 @@ def run(instance, domain=None):
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
-        if args.hybrid:
-            from . import f_pddl_plus
-            hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
-            fs_task = create_fs_plus_task(hybrid_task, domain_name, instance_name, args.disable_static_analysis)
-        else:
-            fd_task = parse_pddl_task(args.domain, args.instance)
-            fs_task = create_fs_task(fd_task, domain_name, instance_name)
+        fd_task = parse_pddl_task(args.domain, args.instance)
+        fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:
         from .asp import processor
         adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir, not args.debug)
