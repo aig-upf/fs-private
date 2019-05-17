@@ -69,10 +69,6 @@ public:
 		return *_instance;
 	}
 
-	static std::unique_ptr<ProblemInfo>&& claimOwnership() {
-		return std::move(_instance);
-	}
-
 	//! Global singleton object accessor
 	static const ProblemInfo& getInstance() {
 		assert(_instance);

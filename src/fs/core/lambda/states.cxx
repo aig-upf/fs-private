@@ -7,7 +7,7 @@
 
 //#include <utility>
 
-namespace lambda { namespace states {
+namespace lambda::search {
 
 
 BinaryState::BinaryState(const bitset_t& data) :
@@ -83,4 +83,4 @@ BinaryState::dump() const {
     return data_;
 }
 
-} } // namespaces
+} // namespaces

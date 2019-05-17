@@ -1,3 +1,7 @@
+#include <utility>
+
+#include <utility>
+
 
 #pragma once
 
@@ -5,16 +9,16 @@
 #include <fs/core/fs_types.hxx> // TODO - REMOVE DEPENDENCY?
 
 
-namespace fs0 { namespace fstrips {
+namespace fs0::fstrips {
 
 using symbol_id = unsigned;
 enum class symbol_t {Predicate, Function};
 
 
-class FSTypeInfo {
+class PrimitiveType {
 public:
-	FSTypeInfo(TypeIdx id, const std::string& name_, type_id underlying_type, const type_range& bounds)
-		: _id(id), _name(name_), _type_id(underlying_type), _bounds(bounds)
+	PrimitiveType(TypeIdx id, std::string name_, type_id underlying_type, type_range bounds)
+		: _id(id), _name(std::move(name_)), _type_id(underlying_type), _bounds(std::move(bounds))
 	{}
 
 	//!
@@ -50,8 +54,8 @@ protected:
 
 class SymbolInfo {
 public:
-	SymbolInfo(symbol_id id, const symbol_t& symbol_type, const std::string& name_, const Signature& signature)
-		: _id(id), _symbol_type(symbol_type), _name(name_), _signature(signature)
+	SymbolInfo(symbol_id id, const symbol_t& symbol_type, std::string name_, Signature signature)
+		: _id(id), _symbol_type(symbol_type), _name(std::move(name_)), _signature(std::move(signature))
 	{}
 
 	//!
@@ -84,7 +88,6 @@ protected:
 
 class LanguageInfo {
 public:
-
 	LanguageInfo();
 	~LanguageInfo();
 	LanguageInfo(const LanguageInfo&);
@@ -93,30 +96,33 @@ public:
 	LanguageInfo& operator=(LanguageInfo&&);
 
 
+    //! Return all symbol names
+    const std::vector<SymbolInfo>& all_symbols() const;
+
+    //! Return the total number of predicate / function symbols
+    std::size_t num_symbols() const;
+
 	//! Return the ID of the predicate / function symbol with the given name
 	SymbolIdx get_symbol_id(const std::string& name) const;
 
 	//! Return the name of the predicate / function symbol with the given id
 	const std::string& get_symbol_name(symbol_id symbol) const;
 
-	//! Return all symbol names
-	const std::vector<SymbolInfo>& all_symbols() const;
 
-	//! Return the total number of predicate / function symbols
-	unsigned num_symbols() const;
-
+    //! Return the total number of primitive types
+    std::size_t num_primitive_types() const;
 
 	//! Return the ID of the fs-type with given name
-	TypeIdx get_fstype_id(const std::string& fstype) const;
+	TypeIdx get_primitive_type_id(const std::string& primitive_type) const;
 
 	//! Return the generic type_id corresponding to the given fs-type
-	type_id get_type_id(const std::string& fstype) const;
-	type_id get_type_id(TypeIdx fstype) const;
+	type_id get_type_id(const std::string& primitive_type) const;
+	type_id get_type_id(TypeIdx primitive_type) const;
 
 	void check_valid_object(const object_id& object, TypeIdx type) const;
 
 	const std::string get_typename(const type_id& type) const;
-	const std::string& get_typename(const TypeIdx& fstype) const;
+	const std::string& get_typename(const TypeIdx& primitive_type) const;
 
 	const std::string get_object_name(const object_id& object) const;
 
@@ -129,23 +135,27 @@ public:
 	symbol_id add_symbol(const std::string& name, const symbol_t& type, const Signature& signature);
 
 
-	object_id add_object(const std::string& name, TypeIdx fstype);
+	object_id add_object(const std::string& name, TypeIdx primitive_type);
 
-	TypeIdx add_fstype(const std::string& name, type_id underlying_type);
-	TypeIdx add_fstype(const std::string& name, type_id underlying_type, const type_range& range);
+	TypeIdx add_primitive_type(const std::string& name, type_id underlying_type);
+	TypeIdx add_primitive_type(const std::string& name, type_id underlying_type, const type_range& range);
 
 	//! TODO - DEPRECATE. Object and Types should be implicitly bound by means of type hierarchy.
-	void bind_object_to_type(TypeIdx fstype, object_id object);
+	void bind_object_to_type(TypeIdx primitive_type, object_id object);
 
 	//! Return the typeinfo associated to the given fs-type
-	const FSTypeInfo& typeinfo(const TypeIdx& fstype) const;
+	const PrimitiveType& typeinfo(const TypeIdx& primitive_type) const;
 
 	//! Return the symbol info associated to the given symbol
 	const SymbolInfo& symbolinfo(const symbol_id& sid) const;
 
 	//! Return all objects of a given FS-type, _including_ those which are
 	//! objects of a descending type in the type hierarchy
-	const std::vector<object_id>& type_objects(TypeIdx fstype) const;
+	const std::vector<object_id>& type_objects(TypeIdx primitive_type) const;
+
+    //! Print a representation of the object to the given stream.
+    friend std::ostream& operator<<(std::ostream &os, const LanguageInfo& o) { return o.print(os); }
+    std::ostream& print(std::ostream& os) const;
 
 	// ************************************************
 	// TODO THIS IS A TEMPORARY WORKAROUND
@@ -166,16 +176,6 @@ public:
 		return *_instance;
 	}
 
-	static LanguageInfo& setInstance(std::unique_ptr<LanguageInfo>&& problem) {
-		assert(!_instance);
-		_instance = std::move(problem);
-		return *_instance;
-	}
-
-	static std::unique_ptr<LanguageInfo>&& claimOwnership() {
-		return std::move(_instance);
-	}
-
 	//! Singleton object accessor
 	static const LanguageInfo& instance() {
 		assert(_instance);
@@ -191,4 +191,4 @@ private:
 };
 
 
-} } // namespaces
+} // namespaces

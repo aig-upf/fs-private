@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
-project(fs_private)
 
-project(fslib VERSION 0.1)
-
+project(lambda VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -19,9 +17,6 @@ set(SOURCE_FILES
         src/fs/core/applicability/match_tree
         src/fs/core/constraints/registry
         src/fs/core/constraints/grounding
-
-        src/fs/core/lambda/states
-        src/fs/core/lambda/search_model
         src/fs/core/fstrips/fol
         src/fs/core/fstrips/language
         src/fs/core/fstrips/language_info
@@ -29,7 +24,6 @@ set(SOURCE_FILES
         src/fs/core/fstrips/interpretation
         src/fs/core/fstrips/loader
         src/fs/core/fstrips/operations
-
         src/fs/core/heuristics/novelty/features
         src/fs/core/heuristics/null_heuristic
         src/fs/core/heuristics/unsat_goal_atoms
@@ -151,6 +145,12 @@ set(SOURCE_FILES
         src/fs/core/state.hxx
         src/fs/core/validator.cxx
         src/fs/core/validator.hxx
+
+
+        src/fs/core/lambda/states
+        src/fs/core/lambda/search/factory
+        src/fs/core/lambda/search/search_model
+        src/fs/core/lambda/search/breadth_first_search
 
 
         pyfs/src/extension/fstrips

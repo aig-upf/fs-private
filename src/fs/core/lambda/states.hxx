@@ -7,7 +7,7 @@
 #include <vector>
 #include <ostream>
 
-namespace lambda { namespace states {
+namespace lambda::search {
 
 class State {
 public:
@@ -73,4 +73,4 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces

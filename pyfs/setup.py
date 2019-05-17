@@ -102,7 +102,7 @@ def main():
         # https://packaging.python.org/en/latest/requirements.html
         install_requires=[
             'setuptools',
-            "tarski @ git+ssh://git@github.com/aig-upf/tarski.git@86c36e6#egg=tarski-dev-0.2.0"
+            "tarski @ git+ssh://git@github.com/aig-upf/tarski.git@bbea0f3#egg=tarski-dev-0.2.0"
         ],
 
         # List additional groups of dependencies here (e.g. development

@@ -126,7 +126,7 @@ protected:
 
 public:
 	//! Prints a representation of the state to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const State&  state) { return state.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const State& state) { return state.print(os); }
 	std::ostream& print(std::ostream& os) const;
 
 	std::size_t hash() const { return _hash; }

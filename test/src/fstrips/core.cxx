@@ -45,7 +45,7 @@ TEST_F(FStripsCore, LanguageInfo) {
 	
 	
 	fstrips::LanguageInfo lang;
-	TypeIdx block_t = lang.add_fstype("block");
+	TypeIdx block_t = lang.add_primitive_type("block");
 	ASSERT_EQ(block_t, 1); // First type added
 	ASSERT_EQ(lang.get_typename(block_t), "block");
 	ASSERT_EQ(lang.get_type_id("block"), type_id::object_t);

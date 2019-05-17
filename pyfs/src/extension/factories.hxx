@@ -6,9 +6,13 @@
 #include <fs/core/fstrips/language.hxx>
 #include <fs/core/fstrips/problem.hxx>
 #include <fs/core/base.hxx>
+#include <fs/core/lambda/search/search_model.hxx>
+#include <fs/core/lambda/search/factory.hxx>
+
 
 namespace bp = boost::python;
 namespace fs = fs0::fstrips;
+namespace ls = lambda::search;
 
 namespace fs0 { namespace fstrips {
     class Problem;
@@ -46,3 +50,9 @@ fs::ActionSchema* create_action_schema(unsigned id, const std::string& name, bp:
 
 std::shared_ptr<fs::Problem> create_problem(const std::string& name, const std::string& domain_name,
                                             bp::list& schemas, const std::shared_ptr<fs::Interpretation> init, const fs::Formula* goal);
+
+
+std::shared_ptr<ls::SearchModel> create_model(std::shared_ptr<fs::Problem> problem, bool use_match_tree);
+
+
+std::shared_ptr<ls::SearchAlgorithm> create_breadth_first_search_engine(std::shared_ptr<ls::SearchModel> model);

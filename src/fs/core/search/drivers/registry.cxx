@@ -8,8 +8,6 @@
 #include <fs/core/actions/grounding.hxx>
 
 
-// using namespace fs0::gecode;
-
 namespace fs0 { namespace drivers {
 
 EngineRegistry& EngineRegistry::instance() {

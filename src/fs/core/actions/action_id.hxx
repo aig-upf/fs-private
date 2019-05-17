@@ -4,8 +4,6 @@
 #include <fs/core/fs_types.hxx>
 #include <fs/core/utils/binding.hxx>
 
-namespace fs0 { namespace gecode { class LiftedActionIterator; }}
-
 namespace fs0 {
 
 class PartiallyGroundedAction;
@@ -51,8 +49,6 @@ protected:
 public:
 	//! Type aliases required for the lifted state model
 	typedef LiftedActionID IdType;
-	typedef gecode::LiftedActionIterator ApplicableSet;
-	
 	static const LiftedActionID invalid_action_id;
 	
 	//! Constructors

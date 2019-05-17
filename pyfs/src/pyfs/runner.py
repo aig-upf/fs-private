@@ -1,26 +1,71 @@
+import itertools
 import shutil
 
-from . import util, translations
+from tarski.util import IndexDictionary
+
+from . import util, translations, engines, search
 from tarski.io import FstripsReader
-from tarski.grounding.lp import ground_actions
+from tarski.grounding import LPGroundingStrategy
+
+
+def lpgrounding(problem):
+    """ Return a Tarski LP-based grounding strategy """
+    if shutil.which("gringo") is None:
+        raise RuntimeError('Install the Clingo ASP solver and put the "gringo" binary on your PATH in order to run '
+                           'the requested ASP-based reachability analysis')
+    return LPGroundingStrategy(problem)
+
+
+def compute_problem_index(problem):
+    """ Compute an index of all relevant elements of the problem """
+    lang = problem.language
+    symbols = IndexDictionary(s for s in itertools.chain(lang.predicates, lang.functions) if not s.builtin)
+    types = IndexDictionary(s for s in lang.sorts if not s.builtin)
+    return dict(
+        symbols=symbols,
+        types=types,
+        schemas=IndexDictionary(problem.actions),
+        objects=IndexDictionary(lang.constants()),
+    )
 
 
 def run(instance, domain=None):
     domain = domain or util.find_domain_filename(instance)
     reader = FstripsReader(raise_on_error=True, theories=[])
+
     tarski_problem = reader.read_problem(domain, instance)
+    index = compute_problem_index(tarski_problem)
 
-    fs_problem = translations.tarski.translate_problem(tarski_problem)
+    problem = translations.tarski.translate_problem(tarski_problem)
 
-    groundings = ground(tarski_problem)
+    grounding = lpgrounding(tarski_problem)
+
+    model = search.create_model(problem, index, grounding=grounding, use_match_tree=True)
+
+    engine = engines.breadth_first_search(model)
+
+    result = engine.run()
+
+    if result.solved:
+        print("Problem solved")
+        print("Plan: {}".format(result.plan))
+
+    # Things we need to expose to the Python interface:
+    # - model creator (atm: ground model)
+    # - search engine creator (atm: breadth-first search)
+    # - search engine objects
+    #
+    #
+    #
+    #
 
 
 
 
 
 
-    # TODO Continue from here on
 
+    # TODO Code below to be removed, just for the work-in-progress reference
 
     domain_name, instance_name = extract_names(args.domain, args.instance)
 
@@ -47,18 +92,9 @@ def run(instance, domain=None):
     use_vanilla = not representation.requires_compilation()
 
     move_files(args, out_dir, use_vanilla)
-    if not args.parse_only:
-        compile_translation(out_dir, use_vanilla, args)
 
     if args.debug:  # If debugging, we perform a dry-run to get the call arguments and generate debugging scripts
         planner_arguments = run_solver(out_dir, args, True)
         generate_debug_scripts(out_dir, planner_arguments)
 
     run_solver(out_dir, args, args.parse_only)
-
-
-def ground(problem):
-    if shutil.which("gringo") is None:
-        raise RuntimeError('Install the Clingo ASP solver and put the "gringo" binary on your PATH in order to run '
-                           'the requested ASP-based reachability analysis')
-    return ground_actions(problem)

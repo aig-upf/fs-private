@@ -11,12 +11,16 @@ from tarski.syntax import util
 from .. import extension as cext
 
 
-class LanguageInfoWrapper:
+class CLanguage:
+    """ A wrapper for the C++ Language object """
     def __init__(self, linfo, type_idxs, obj_idxs, symbol_idxs):
         self.linfo = linfo
         self.type_idxs = type_idxs
         self.obj_idxs = obj_idxs
         self.symbol_idxs = symbol_idxs
+
+    def __str__(self):
+        return str(self.linfo)
 
 
 def create_language_info(language):
@@ -29,11 +33,11 @@ def create_language_info(language):
     for sort in language.sorts:
         if isinstance(sort, tsk.Interval):
             if sort.name == 'Real':
-                tid = info.add_fstype(sort.name, cext.type_id.float_t)
+                tid = info.add_primitive_type(sort.name, cext.type_id.float_t)
                 type_idxs[sort] = tid
                 continue
             elif sort.name == 'Integer' or sort.name == 'Natural':
-                tid = info.add_fstype(sort.name, cext.type_id.int_t)
+                tid = info.add_primitive_type(sort.name, cext.type_id.int_t)
                 type_idxs[sort] = tid
                 continue
             # TODO TODO TODO
@@ -42,7 +46,7 @@ def create_language_info(language):
             pass
 
         elif isinstance(sort, tsk.Sort):
-            tid = info.add_fstype(sort.name, cext.type_id.object_t)
+            tid = info.add_primitive_type(sort.name, cext.type_id.object_t)
             type_idxs[sort] = tid
         else:
             raise RuntimeError("Unknown sort type: {}".format(sort))
@@ -59,13 +63,14 @@ def create_language_info(language):
         # print("Symbol {} registered with ID {} ({})".format(p, sid, info.get_symbol_name(sid)))
         symbol_idxs[p] = sid
 
-    return LanguageInfoWrapper(info, type_idxs, obj_idxs, symbol_idxs)
+    return CLanguage(info, type_idxs, obj_idxs, symbol_idxs)
 
 
 def translate_problem(problem):
     assert isinstance(problem, tarski.fstrips.Problem)
-    info_wrapper = create_language_info(problem.language)
-    translator = FSTRIPSTranslator(info_wrapper)
+    language = create_language_info(problem.language)
+    print("Language: {}".format(language))
+    translator = FSTRIPSTranslator(language)
 
     # Translate goal
     goal = translator.translate_formula(problem.goal, tsk.VariableBinding.empty())

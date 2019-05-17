@@ -46,7 +46,6 @@ public:
 	//! Retrieve the singleton instance, which has been previously initialized
 	static Config& instance();
 	static void setAsGlobal( std::unique_ptr<Config>&& ptr );
-	static std::unique_ptr<Config>&& claimOwnership();
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Config& o) { return o.print(os); }

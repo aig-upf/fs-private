@@ -55,3 +55,11 @@ std::shared_ptr<fs::Problem> create_problem(const std::string& name, const std::
                                             bp::list& schemas, const std::shared_ptr<fs::Interpretation> init, const fs::Formula* goal) {
     return std::make_shared<fs::Problem>(name, domain_name, clone_list<const fs::ActionSchema>(schemas), *init, goal->clone());
 }
+
+std::shared_ptr<ls::SearchModel> create_model(std::shared_ptr<fs::Problem> problem, bool use_match_tree) {
+    return std::make_shared<ls::GroundForwardSearch>(problem);
+}
+
+std::shared_ptr<ls::SearchAlgorithm> create_breadth_first_search_engine(std::shared_ptr<ls::SearchModel> model) {
+    return ls::SearchFactory::breadth_first_search(model);
+}

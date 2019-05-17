@@ -79,10 +79,6 @@ public:
 		_instance = std::move(problem);
 	}
 
-	static std::unique_ptr<Problem>&& claimOwnership() {
-		return std::move(_instance);
-	}
-
 	//! Global singleton object accessor
 	static const Problem& getInstance() {
 		assert(_instance);

@@ -8,22 +8,22 @@
 #include <fs/core/utils/printers/helper.hxx>
 
 
-namespace fs0 { namespace fstrips {
+namespace fs0::fstrips {
 
 class unregistered_symbol : public std::runtime_error {
-public: unregistered_symbol(const std::string& msg) : std::runtime_error(msg) {}
+public: explicit unregistered_symbol(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-class unregistered_fstype : public std::runtime_error {
-public: unregistered_fstype(TypeIdx fstype) : std::runtime_error("FS type with id \"" + std::to_string(fstype) + "\" has not been registered") {}
+class unregistered_primitive_type : public std::runtime_error {
+public: explicit unregistered_primitive_type(TypeIdx primitive_type) : std::runtime_error("FS type with id \"" + std::to_string(primitive_type) + "\" has not been registered") {}
 };
 
 class unregistered_type_id : public std::runtime_error {
-public: unregistered_type_id(const type_id& t) : std::runtime_error(printer() << "Unregistered type_id: \"" << t << "\"") {}
+public: explicit unregistered_type_id(const type_id& t) : std::runtime_error(printer() << "Unregistered type_id: \"" << t << "\"") {}
 };
 
 class unregistered_object : public std::runtime_error {
-public: unregistered_object(const object_id& object) : std::runtime_error(printer() << "Unregistered object: " << object) {}
+public: explicit unregistered_object(const object_id& object) : std::runtime_error(printer() << "Unregistered object: " << object) {}
 };
 
 class range_type_mismatch : public std::runtime_error {
@@ -32,15 +32,15 @@ public: range_type_mismatch(const type_id& t1, const type_id& t2) :
 };
 
 class invalid_range : public std::runtime_error {
-public: invalid_range(const type_range& range) : std::runtime_error(printer() << "Invalid range: [" << range.first << ", " << range.second << "]") {}
+public: explicit invalid_range(const type_range& range) : std::runtime_error(printer() << "Invalid range: [" << range.first << ", " << range.second << "]") {}
 };
 
 class non_range_type : public std::runtime_error {
-public: non_range_type(const type_range& range) : std::runtime_error(printer() << "The provided range corresponds to a type_id where ranges are not possible: " << range.first << ", " << range.second << "]") {}
+public: explicit non_range_type(const type_range& range) : std::runtime_error(printer() << "The provided range corresponds to a type_id where ranges are not possible: " << range.first << ", " << range.second << "]") {}
 };
 
 class out_of_range_object : public std::runtime_error {
-public: out_of_range_object(const object_id& object, const std::string& fstype) : std::runtime_error(printer() << "Object with FS type " << fstype << " out of its declared range: " << object) {}
+public: out_of_range_object(const object_id& object, const std::string& primitive_type) : std::runtime_error(printer() << "Object with FS type " << primitive_type << " out of its declared range: " << object) {}
 };
 
 
@@ -55,7 +55,7 @@ private:
 	Implementation() {
 
 		// The first object Ids are reserved for Booleans
-		TypeIdx bool_t = add_fstype("bool", type_id::bool_t);
+		TypeIdx bool_t = add_primitive_type("bool", type_id::bool_t);
 		object_id o_false = add_object("*false*", bool_t);
 		object_id o_true = add_object("*true*", bool_t);
 
@@ -76,7 +76,7 @@ private:
 	Implementation& operator=(Implementation&&) = default;
 
 
-	inline TypeIdx get_fstype_id(const std::string& type_name) const {
+	inline TypeIdx get_primitive_type_id(const std::string& type_name) const {
 		auto it = _name_to_type.find(type_name);
 		if (it == _name_to_type.end()) {
 			throw std::runtime_error("Unknown object type " + type_name);
@@ -95,9 +95,9 @@ private:
 
 	const std::string& get_symbol_name(symbol_id symbol) const { return symbolinfo(symbol).name(); }
 
-	type_id get_type_id(const std::string& fstype) const {
-		if (fstype == "bool") return type_id::bool_t;
-		return get_type_id(get_fstype_id(fstype));
+	type_id get_type_id(const std::string& primitive_type) const {
+		if (primitive_type == "bool") return type_id::bool_t;
+		return get_type_id(get_primitive_type_id(primitive_type));
 	}
 
 
@@ -105,18 +105,18 @@ private:
 		return to_string(type);
 	}
 
-	type_id get_type_id(TypeIdx fstype) const { return typeinfo(fstype).get_type_id(); }
-	const std::string& get_typename(const TypeIdx& fstype) const { return typeinfo(fstype).name(); }
+	type_id get_type_id(TypeIdx primitive_type) const { return typeinfo(primitive_type).get_type_id(); }
+	const std::string& get_typename(const TypeIdx& primitive_type) const { return typeinfo(primitive_type).name(); }
 
-	void _check_valid_fstype(const TypeIdx& fstype) const {
-		if (fstype >= _fstype_info.size()) {
-			throw unregistered_fstype(fstype);
+	void _check_valid_primitive_type(const TypeIdx& primitive_type) const {
+		if (primitive_type >= prim_types_.size()) {
+			throw unregistered_primitive_type(primitive_type);
 		}
 	}
 
-	const FSTypeInfo& typeinfo(const TypeIdx& fstype) const {
-		_check_valid_fstype(fstype);
-		return _fstype_info.at(fstype);
+	const PrimitiveType& typeinfo(const TypeIdx& primitive_type) const {
+		_check_valid_primitive_type(primitive_type);
+		return prim_types_.at(primitive_type);
 	}
 
 	const SymbolInfo& symbolinfo(const symbol_id& symbol) const {
@@ -147,19 +147,19 @@ private:
 		assert(_symbol_info.size() == symbolIds.size());
 		unsigned id = symbolIds.size();
 		symbolIds.insert(std::make_pair(name, id));
-		_symbol_info.push_back(SymbolInfo(id, type, name, signature));
+		_symbol_info.emplace_back(id, type, name, signature);
 		return id;
 	}
 
-	TypeIdx add_fstype(const std::string& name, type_id underlying_type) {
-		return _add_fstype(name, underlying_type, INVALID_TYPE_RANGE);
+	TypeIdx add_primitive_type(const std::string& name, type_id underlying_type) {
+		return _add_primitive_type(name, underlying_type, INVALID_TYPE_RANGE);
 	}
 
-	TypeIdx add_fstype(const std::string& name, type_id underlying_type, const type_range& range) {
+	TypeIdx add_primitive_type(const std::string& name, type_id underlying_type, const type_range& range) {
 		type_id t = check_valid_range(range);
 		if (underlying_type != t) throw range_type_mismatch(underlying_type, t);
 
-		TypeIdx id = _add_fstype(name, underlying_type, range);
+		TypeIdx id = _add_primitive_type(name, underlying_type, range);
 
 		// For bounded types, we automatically register all objects that fall in the range
 		if (t != type_id::object_t) {
@@ -169,15 +169,15 @@ private:
 		return id;
 	}
 
-	//! Private method - Add a fs-type with given underlying type_id
-	TypeIdx _add_fstype(const std::string& name, type_id underlying_type, const type_range& range) {
-		assert(_fstype_info.size() == _name_to_type.size());
-		assert(_fstype_info.size() == _fstype_objects.size());
+	//! Private method - Add a primitive type with given underlying type_id
+	TypeIdx _add_primitive_type(const std::string& name, type_id underlying_type, const type_range& range) {
+		assert(prim_types_.size() == _name_to_type.size());
+		assert(prim_types_.size() == prim_types_objects_.size());
 
-		TypeIdx id = _fstype_info.size();
+		TypeIdx id = prim_types_.size();
 		_name_to_type.insert(std::make_pair(name, id));
-		_fstype_objects.push_back(std::vector<object_id>()); // Push back an empty vector
-		_fstype_info.push_back(FSTypeInfo(id, name, underlying_type, range));
+		prim_types_objects_.emplace_back(); // Push back an empty vector
+		prim_types_.emplace_back(id, name, underlying_type, range);
 
 		return id;
 	}
@@ -204,7 +204,7 @@ private:
 	void fill_object_range(TypeIdx type, const type_range& range) {
 		if (o_type(range.first) == type_id::int_t) {
 			std::vector<object_id> range_values = generate_object_range<int>(range);
-			std::vector<object_id>& type_objs = _fstype_objects.at(type);
+			std::vector<object_id>& type_objs = prim_types_objects_.at(type);
 			type_objs.insert(type_objs.end(), range_values.begin(), range_values.end() );
 		}
 		// TODO - else if type is float ...
@@ -226,10 +226,10 @@ private:
 		return result;
 	}
 
-	object_id add_object(const std::string& name, TypeIdx fstype) {
+	object_id add_object(const std::string& name, TypeIdx primitive_type) {
 		assert(_object_ids.size() == _object_names.size());
 		unsigned id = _object_names.size();
-		type_id t = get_type_id(fstype);
+		type_id t = get_type_id(primitive_type);
 
 		if (t != type_id::object_t && t != type_id::bool_t) throw std::runtime_error("Cannot add non-object types");
 		object_id oid = make_object(t, id);
@@ -237,7 +237,7 @@ private:
 		_object_ids.insert(std::make_pair(name, oid));
 		_object_names.insert(std::make_pair(oid, name));
 
-// 		_fstype_objects.at(fstype).push_back(oid);
+// 		prim_types_objects_.at(primitive_type).push_back(oid);
 
 		return oid;
 	}
@@ -250,20 +250,20 @@ private:
 
 	unsigned num_objects() const { return _object_names.size(); }
 
-	void bind_object_to_type(TypeIdx fstype, object_id object) {
+	void bind_object_to_type(TypeIdx primitive_type, object_id object) {
 		assert(o_type(object) == type_id::object_t || o_type(object) == type_id::bool_t);
-		_fstype_objects.at(fstype).push_back(object);
+		prim_types_objects_.at(primitive_type).push_back(object);
 	}
 
-	const std::vector<object_id>& type_objects(TypeIdx fstype) const {
-		_check_valid_fstype(fstype);
-		return _fstype_objects.at(fstype);
+	const std::vector<object_id>& type_objects(TypeIdx primitive_type) const {
+		_check_valid_primitive_type(primitive_type);
+		return prim_types_objects_.at(primitive_type);
 	}
 	
 	//! Check that the given object is a valid object of the given FS type, raise exception if not.
 	void check_valid_object(const object_id& object, TypeIdx type) const {
 		// Currently we simply check that the given value is within bounds
-		const FSTypeInfo& tinfo = typeinfo(type);
+		const PrimitiveType& tinfo = typeinfo(type);
 		if (!tinfo.bounded()) return;
 		
 		type_id t = get_type_id(type);
@@ -291,25 +291,25 @@ private:
 
 	//! Map from object index to object name
 	std::unordered_map<object_id, std::string> _object_names;
+
 	//! Map from object name to object index
 	std::unordered_map<std::string, object_id> _object_ids;
 
 	//! Map from fs-type ID to all of the object indexes of that type
-	std::vector<std::vector<object_id>> _fstype_objects;
+	std::vector<std::vector<object_id>> prim_types_objects_;
 
+    //!
+	std::vector<PrimitiveType> prim_types_;
 
-	std::vector<FSTypeInfo> _fstype_info;
-
+    //!
 	std::vector<SymbolInfo> _symbol_info;
 
 };
 
 LanguageInfo::LanguageInfo() : _impl(new Implementation()) {}
-
 LanguageInfo::~LanguageInfo() = default;
 LanguageInfo::LanguageInfo(LanguageInfo&&) = default;
 LanguageInfo& LanguageInfo::operator=(LanguageInfo&&) = default;
-
 LanguageInfo::LanguageInfo(const LanguageInfo& other)
 	: _impl(new Implementation(*other._impl))
 {}
@@ -331,17 +331,21 @@ get_symbol_name(symbol_id symbol) const { return impl().get_symbol_name(symbol);
 const std::vector<SymbolInfo>& LanguageInfo::
 all_symbols() const { return impl()._symbol_info; }
 
-unsigned LanguageInfo::
+std::size_t LanguageInfo::
 num_symbols() const { return impl().symbolIds.size(); }
 
+
+std::size_t LanguageInfo::
+num_primitive_types() const { return impl()._name_to_type.size(); }
+
 TypeIdx LanguageInfo::
-get_fstype_id(const std::string& fstype) const { return impl().get_fstype_id(fstype); }
+get_primitive_type_id(const std::string& primitive_type) const { return impl().get_primitive_type_id(primitive_type); }
 
 type_id LanguageInfo::
-get_type_id(const std::string& fstype) const { return impl().get_type_id(fstype); }
+get_type_id(const std::string& primitive_type) const { return impl().get_type_id(primitive_type); }
 
 type_id LanguageInfo::
-get_type_id(TypeIdx fstype) const { return impl().get_type_id(fstype); }
+get_type_id(TypeIdx primitive_type) const { return impl().get_type_id(primitive_type); }
 
 
 
@@ -349,7 +353,7 @@ const std::string LanguageInfo::
 get_typename(const type_id& type) const { return impl().get_typename(type); }
 
 const std::string& LanguageInfo::
-get_typename(const TypeIdx& fstype) const { return impl().get_typename(fstype); }
+get_typename(const TypeIdx& primitive_type) const { return impl().get_typename(primitive_type); }
 
 const std::string LanguageInfo::
 get_object_name(const object_id& object) const { return impl().get_object_name(object); }
@@ -360,32 +364,61 @@ symbol_id LanguageInfo::
 add_symbol(const std::string& name, const symbol_t& type, const Signature& signature) { return impl().add_symbol(name, type, signature); }
 
 object_id LanguageInfo::
-add_object(const std::string& name, TypeIdx fstype) { return impl().add_object(name, fstype); }
+add_object(const std::string& name, TypeIdx primitive_type) { return impl().add_object(name, primitive_type); }
 
 unsigned LanguageInfo::
 num_objects() const { return impl().num_objects(); }
 
 
 TypeIdx LanguageInfo::
-add_fstype(const std::string& name, type_id underlying_type) { return impl().add_fstype(name, underlying_type); }
+add_primitive_type(const std::string& name, type_id underlying_type) { return impl().add_primitive_type(name, underlying_type); }
 
 TypeIdx LanguageInfo::
-add_fstype(const std::string& name, type_id underlying_type, const type_range& range) { return impl().add_fstype(name, underlying_type, range); }
+add_primitive_type(const std::string& name, type_id underlying_type, const type_range& range) { return impl().add_primitive_type(name, underlying_type, range); }
 
 void LanguageInfo::
-bind_object_to_type(TypeIdx fstype, object_id object) { return impl().bind_object_to_type(fstype, object); }
+bind_object_to_type(TypeIdx primitive_type, object_id object) { return impl().bind_object_to_type(primitive_type, object); }
 
-const FSTypeInfo& LanguageInfo::
-typeinfo(const TypeIdx& fstype) const { return impl().typeinfo(fstype); }
+const PrimitiveType& LanguageInfo::
+typeinfo(const TypeIdx& primitive_type) const { return impl().typeinfo(primitive_type); }
 
 const SymbolInfo& LanguageInfo::
 symbolinfo(const symbol_id& sid) const { return impl().symbolinfo(sid); }
 
 const std::vector<object_id>& LanguageInfo::
-type_objects(TypeIdx fstype) const { return impl().type_objects(fstype); }
+type_objects(TypeIdx primitive_type) const { return impl().type_objects(primitive_type); }
 
 void LanguageInfo::
 check_valid_object(const object_id& object, TypeIdx type) const { return impl().check_valid_object(object, type); }
 
+std::ostream& LanguageInfo::
+print(std::ostream& os) const {
+    os << "Language with following elements:" << std::endl;
+    os << "Primitive types: " << std::endl;
+    for (unsigned i = 0; i < num_primitive_types(); ++i) {
+        const PrimitiveType& tinfo = typeinfo(i);
+//        type_id primitive_type = get_type_id(t);
+        os << "\t" << tinfo.id() << ": " << tinfo.name();
+        if (tinfo.bounded()) {
+//            const auto& bounds = tinfo.bounds();
+            os << " [bounded]";
+        }
+        os << std::endl;
 
-} } // namespaces
+    }
+
+
+    os << "Objects: " << std::endl;
+
+    os << "Symbols: " << std::endl;
+    const auto symbols = all_symbols();
+    for (unsigned i = 0; i < symbols.size(); ++i) {
+        const auto& symbol = symbols[i];
+        os << "\t" << i << ": " << symbol.name() << std::endl;
+    }
+
+    return os;
+}
+
+
+} // namespaces

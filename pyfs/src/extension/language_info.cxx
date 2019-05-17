@@ -38,9 +38,9 @@ void define_language_info() {
 //    bool    (X::*fx1)(int)              = &X::f;
 
 
-    fs0::TypeIdx (fs::LanguageInfo::*add_fstype1)(const std::string&, fs0::type_id)                       = &fs::LanguageInfo::add_fstype;
-    fs0::TypeIdx (fs::LanguageInfo::*add_fstype2)(const std::string&, fs0::type_id, const fs0::type_range&)  = &fs::LanguageInfo::add_fstype;
-//    fs0::TypeIdx (*add_fstype2)(const int32_t&)  = &fs0::add_fstype;
+    fs0::TypeIdx (fs::LanguageInfo::*add_primitive_type1)(const std::string&, fs0::type_id)                       = &fs::LanguageInfo::add_primitive_type;
+    fs0::TypeIdx (fs::LanguageInfo::*add_primitive_type2)(const std::string&, fs0::type_id, const fs0::type_range&)  = &fs::LanguageInfo::add_primitive_type;
+//    fs0::TypeIdx (*add_primitive_type2)(const int32_t&)  = &fs0::add_primitive_type;
 
 
     const std::string& (fs::LanguageInfo::*get_typename1)(const fs0::TypeIdx&) const  = &fs::LanguageInfo::get_typename;
@@ -50,7 +50,7 @@ void define_language_info() {
             .def("get_symbol_id", &fs::LanguageInfo::get_symbol_id)
             .def("get_symbol_name", &fs::LanguageInfo::get_symbol_name, bp::return_value_policy<bp::copy_const_reference>())
 
-            .def("get_fstype_id", &fs::LanguageInfo::get_fstype_id)
+            .def("get_primitive_type_id", &fs::LanguageInfo::get_primitive_type_id)
             .def("get_typename", get_typename1, bp::return_value_policy<bp::copy_const_reference>())
 
             .def("get_object_name", &fs::LanguageInfo::get_object_name)
@@ -60,11 +60,9 @@ void define_language_info() {
 
             .def("add_symbol", &fs::LanguageInfo::add_symbol)
             .def("add_object", &fs::LanguageInfo::add_object)
-            .def("add_fstype", add_fstype1)
-            .def("add_fstype", add_fstype2)
-
-//            .add_property("name", bp::make_function(&fs::ActionSchema::getName, bp::return_value_policy<bp::reference_existing_object>()))
-//            .def(bp::self_ns::str(bp::self))
+            .def("add_primitive_type", add_primitive_type1)
+            .def("add_primitive_type", add_primitive_type2)
+            .def(bp::self_ns::str(bp::self))
     ;
 
 
