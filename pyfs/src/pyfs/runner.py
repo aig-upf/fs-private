@@ -1,32 +1,24 @@
+
 import itertools
-import shutil
 
 from tarski.util import IndexDictionary
 
 from . import util, translations, engines, search
+from .grounding import lpgrounding
 from tarski.io import FstripsReader
-from tarski.grounding import LPGroundingStrategy
 
 
-def lpgrounding(problem):
-    """ Return a Tarski LP-based grounding strategy """
-    if shutil.which("gringo") is None:
-        raise RuntimeError('Install the Clingo ASP solver and put the "gringo" binary on your PATH in order to run '
-                           'the requested ASP-based reachability analysis')
-    return LPGroundingStrategy(problem)
-
-
-def compute_problem_index(problem):
-    """ Compute an index of all relevant elements of the problem """
-    lang = problem.language
-    symbols = IndexDictionary(s for s in itertools.chain(lang.predicates, lang.functions) if not s.builtin)
-    types = IndexDictionary(s for s in lang.sorts if not s.builtin)
-    return dict(
-        symbols=symbols,
-        types=types,
-        schemas=IndexDictionary(problem.actions),
-        objects=IndexDictionary(lang.constants()),
-    )
+# def compute_problem_index(problem):
+#     """ Compute an index of all relevant elements of the problem """
+#     lang = problem.language
+#     symbols = IndexDictionary(s for s in itertools.chain(lang.predicates, lang.functions) if not s.builtin)
+#     types = IndexDictionary(s for s in lang.sorts if not s.builtin)
+#     return dict(
+#         symbols=symbols,
+#         types=types,
+#         schemas=IndexDictionary(problem.actions),
+#         objects=IndexDictionary(lang.constants()),
+#     )
 
 
 def run(instance, domain=None):
@@ -34,11 +26,11 @@ def run(instance, domain=None):
     reader = FstripsReader(raise_on_error=True, theories=[])
 
     tarski_problem = reader.read_problem(domain, instance)
-    index = compute_problem_index(tarski_problem)
+    # index = compute_problem_index(tarski_problem)
 
-    problem = translations.tarski.translate_problem(tarski_problem)
+    problem, language_info = translations.tarski.translate_problem(tarski_problem)
 
-    grounding = lpgrounding(tarski_problem)
+    grounding = lpgrounding(tarski_problem, language_info)
 
     model = search.create_model(problem, index, grounding=grounding, use_match_tree=True)
 

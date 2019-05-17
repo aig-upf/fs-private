@@ -23,8 +23,7 @@ Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
                     const fs::Formula* goal,
                     const std::unordered_map<std::string, const fs::Axiom*>& state_constraints,
                     const fs::Metric* metric,
-                    AtomIndex&& tuple_index,
-                    const AllTransitionGraphsT& transitions
+                    AtomIndex&& tuple_index
 ) :
 	_tuple_index(std::move(tuple_index)),
 	_init(init),
@@ -38,8 +37,7 @@ Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
     _metric(metric),
     _wait_action(nullptr),
 	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
-	_is_predicative(check_is_predicative()),
-    _transition_graphs(transitions)
+	_is_predicative(check_is_predicative())
 {
     //! Store pointers to the state constraint definitions for ease of use
     for ( auto c : _state_constraints ) {
@@ -179,13 +177,6 @@ void Problem::consolidateAxioms() {
 		delete data;
 	}
 	_action_data = processed_actions;
-}
-
-bool
-Problem::requires_handling_continuous_change() const {
-    for ( auto a : _action_data )
-        if ( a->getType() == ActionData::Type::Natural) return true;
-    return false;
 }
 
 

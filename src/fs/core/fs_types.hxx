@@ -93,28 +93,23 @@ namespace fs0 {
 	using FeatureIdx = unsigned;
 	const FeatureIdx INVALID_FEATURE = std::numeric_limits<unsigned>::max();
 
-	using TransitionT = std::pair<object_id, object_id>;
-	using TransitionGraphT = std::unordered_set<TransitionT,
-			boost::hash<TransitionT>>;
-	using AllTransitionGraphsT = std::vector<TransitionGraphT>;
-	
 	
 	/**
 	 * Custom exceptions
 	 */
 	class UnimplementedFeatureException : public std::runtime_error {
 	public:
-		UnimplementedFeatureException(const std::string& msg) : std::runtime_error(msg) {}
+		explicit UnimplementedFeatureException(const std::string& msg) : std::runtime_error(msg) {}
 	};
 	
 	class InvalidConfiguration : public std::runtime_error {
 	public:
-		InvalidConfiguration(const std::string& msg) : std::runtime_error(msg) {}
+		explicit InvalidConfiguration(const std::string& msg) : std::runtime_error(msg) {}
 	};
 	
 	class UndefinedValueAccess : public std::runtime_error {
 	public:
-		UndefinedValueAccess(const std::string& msg) : std::runtime_error(msg) {}
+		explicit UndefinedValueAccess(const std::string& msg) : std::runtime_error(msg) {}
 		UndefinedValueAccess() : UndefinedValueAccess("") {}
 	};
 

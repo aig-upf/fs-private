@@ -1,10 +1,11 @@
 
 #include "factories.hxx"
 
-#include <fs/core/fstrips/language_info.hxx>
 #include <fs/core/fstrips/language.hxx>
-#include <fs/core/fstrips/interpretation.hxx>
+#include <fs/core/fstrips/language_info.hxx>
 #include <fs/core/fstrips/problem.hxx>
+#include <fs/core/fstrips/grounding.hxx>
+#include <fs/core/fstrips/interpretation.hxx>
 #include <fs/core/base.hxx>
 
 
@@ -198,4 +199,7 @@ void define_fstrips() {
             .add_property("goal", bp::make_function(&fs::Problem::goal, bp::return_value_policy<bp::reference_existing_object>()))
     ;
 
+    bp::class_<fs::Grounding, std::shared_ptr<fs::Grounding>>("Grounding", bp::init<std::shared_ptr<fs::LanguageInfo>>())
+        .def("add_state_variable", &fs::Grounding::add_state_variable)
+    ;
 }

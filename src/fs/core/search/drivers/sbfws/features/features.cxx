@@ -141,7 +141,7 @@ void process_feature(const ProblemInfo& info, const std::string& feat_name, std:
 	const SymbolData& sdata = info.getSymbolData(symbol_id);
 	const Signature& signature = sdata.getSignature();
 
-	LPT_DEBUG("cout", "Processing feature: " << feat_name << ", with signature: (" << print::raw_signature(signature) << ")");
+//	LPT_DEBUG("cout", "Processing feature: " << feat_name << ", with signature: (" << print::raw_signature(signature) << ")");
 
 	// Arity-0 feature, dealt with separately:
 	if (signature.empty()) {

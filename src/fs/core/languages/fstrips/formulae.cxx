@@ -340,7 +340,7 @@ LEQAtomicFormula::relax( const Constant& slack ) const {
 	std::vector< const Term* > st;
 	try {
 		object_id value = slacked_term->interpret(PartialAssignment());
-		auto slack_constant = new Constant(value,  fs0::fstrips::LanguageInfo::instance().get_primitive_type_id("number"));
+		auto slack_constant = new Constant(value,  fs0::fstrips::LanguageInfo::instance().get_fs_type_id("number"));
 		st = { getSubterms()[0]->clone(), slack_constant };
 	} catch(...) {
 		st = { getSubterms()[0]->clone(), slacked_term };
@@ -369,7 +369,7 @@ GEQAtomicFormula::relax( const Constant& slack ) const {
 	std::vector< const Term* > st;
 	try {
 		object_id value = slacked_term->interpret({});
-		auto slack_constant = new Constant(value, fs0::fstrips::LanguageInfo::instance().get_primitive_type_id("number"));
+		auto slack_constant = new Constant(value, fs0::fstrips::LanguageInfo::instance().get_fs_type_id("number"));
 		st = { getSubterms()[0]->clone(), slack_constant };
 	} catch(...) {
 		st = { getSubterms()[0]->clone(), slacked_term };

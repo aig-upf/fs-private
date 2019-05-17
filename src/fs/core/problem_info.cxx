@@ -24,7 +24,7 @@ public:
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
-	_data_dir(data_dir), _can_extensionalize_var_domains(true)
+	_data_dir(data_dir)
 {
 	LPT_INFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
@@ -71,15 +71,10 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		_sv_types.push_back(t);
 
 		try {
-			variableTypes.push_back(lang.get_primitive_type_id(type));
+			variableTypes.push_back(lang.get_fs_type_id(type));
 		} catch( std::out_of_range& ex ) {
 			throw std::runtime_error("Unknown FS-type " + type);
 		}
-
-		if (t == type_id::int_t) {
-			_can_extensionalize_var_domains = false;
-		}
-
 
 		// Load the info necessary to resolve state variables dynamically
 		unsigned symbol_id = var_data["symbol_id"].GetInt();
@@ -93,7 +88,6 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 			point.push_back(make_object(get_type_id(signature[j]), var_data["point"][j].GetInt()));
 		}
 
-		// LPT_INFO("vardata", "Symbol: " << symbol_id << ". Point: " << print::container(point) << ", Var. ID: " << id);
 		variableDataToId.insert(std::make_pair(std::make_pair(symbol_id, point),  id));
 		variableIdToData.emplace_back(symbol_id, point);
 	}
@@ -166,7 +160,7 @@ bool ProblemInfo::isBoundedType(TypeIdx type) const {
 type_id ProblemInfo::
 get_type_id(const std::string& fstype) const {
 	const fstrips::LanguageInfo& lang = fstrips::LanguageInfo::instance();
-	return lang.typeinfo(lang.get_primitive_type_id(fstype)).get_type_id();
+	return lang.typeinfo(lang.get_fs_type_id(fstype)).get_type_id();
 }
 
 type_id ProblemInfo::
@@ -186,7 +180,7 @@ const std::vector<object_id>& ProblemInfo::
 getTypeObjects(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().type_objects(fstype); }
 
 TypeIdx ProblemInfo::
-getTypeId(const std::string& type_name) const { return fstrips::LanguageInfo::instance().get_primitive_type_id(type_name); }
+getTypeId(const std::string& type_name) const { return fstrips::LanguageInfo::instance().get_fs_type_id(type_name); }
 
 const std::string& ProblemInfo::
 getTypename(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().typeinfo(fstype).name(); }
@@ -207,9 +201,6 @@ num_objects() const { return fstrips::LanguageInfo::instance().num_objects(); }
 
 std::string ProblemInfo::
 object_name(const object_id& object) const { return fstrips::LanguageInfo::instance().get_object_name(object); }
-
-const object_id ProblemInfo::get_object_id(const std::string& name) const {return fstrips::LanguageInfo::instance().get_object_id(name);}
-
 
 
 } // namespaces

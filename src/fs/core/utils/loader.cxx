@@ -101,13 +101,6 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	}
 	auto goal = loadGroundedFormula(data["goal"], info);
 
-	LPT_INFO("main", "Loading value transitions...");
-	if (!data.HasMember("transitions")) {
-		throw std::runtime_error("Could not find transitions in data/problem.json!");
-	}
-	auto transitions = loadTransitions(data["transitions"], info);
-
-
 	LPT_INFO("main", "Loading state constraints...");
 
 
@@ -157,7 +150,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	LPT_INFO("main", "Atom Index: Indexing negative literals? " << has_negated_preconditions);
 	// We will index the negative literals if either the problem has neg. precs, or the user explicitly wants _not_ to ignore them on novelty computations.
 	bool index_negative_literals = has_negated_preconditions || !(config.getOption<bool>("ignore_neg_literals", true));
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals), transitions);
+	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals));
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 
 	// ATM support for axioms is very buggy and we should better not rely on it
@@ -352,30 +345,6 @@ Loader::loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& inf
     auto processed = fs::bind(*unprocessed, Binding::EMPTY_BINDING, info);
     delete unprocessed;
     return processed;
-}
-
-AllTransitionGraphsT
-Loader::loadTransitions(const rapidjson::Value& data, const ProblemInfo& info) {
-	if (data.Size() == 0) return {};
-
-	AllTransitionGraphsT all(info.getNumVariables());
-
-    for (unsigned i = 0; i < data.Size(); ++i) {
-        const rapidjson::Value& var_transitions = data[i];
-
-        VariableIdx var = var_transitions[0].GetUint();
-        assert(var < all.size());
-
-        for (unsigned j = 0; j < var_transitions[1].Size(); ++j) {
-            const rapidjson::Value& transition = var_transitions[1][j];
-
-            object_id value1 = parse_object(info, var, transition[0]);
-            object_id value2 = parse_object(info, var, transition[1]);
-
-            all[var].insert(std::make_pair(value1, value2));
-        }
-    }
-    return all;
 }
 
 const fs::Axiom*

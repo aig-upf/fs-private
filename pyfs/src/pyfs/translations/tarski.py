@@ -7,6 +7,7 @@ import tarski
 import tarski.syntax as tsk
 from tarski.fstrips import DelEffect, AddEffect
 from tarski.syntax import util
+from tarski.syntax.sorts import ancestors, inclusion_closure
 
 from .. import extension as cext
 
@@ -32,21 +33,14 @@ def create_language_info(language):
     # Declare language sorts
     for sort in language.sorts:
         if isinstance(sort, tsk.Interval):
-            if sort.name == 'Real':
-                tid = info.add_primitive_type(sort.name, cext.type_id.float_t)
-                type_idxs[sort] = tid
-                continue
-            elif sort.name == 'Integer' or sort.name == 'Natural':
-                tid = info.add_primitive_type(sort.name, cext.type_id.int_t)
-                type_idxs[sort] = tid
-                continue
+            if sort.name in ('Real', 'Integer', 'Natural'):
+                continue  # Numeric types are primitive types, not FSTRIPS types
             # TODO TODO TODO
-            # assert 0, "To implement"
             print("\n\nWARNING: WE'RE IGNORING INTERVAL TYPES AT THE MOMENT. FIX THIS.\n\n")
             pass
 
         elif isinstance(sort, tsk.Sort):
-            tid = info.add_primitive_type(sort.name, cext.type_id.object_t)
+            tid = info.add_fs_type(sort.name, cext.type_id.object_t)
             type_idxs[sort] = tid
         else:
             raise RuntimeError("Unknown sort type: {}".format(sort))
@@ -55,6 +49,9 @@ def create_language_info(language):
     for o in language.constants():
         oid = info.add_object(o.symbol, type_idxs[o.sort])
         obj_idxs[o] = oid
+        info.bind_object_to_fs_type(type_idxs[o.sort], oid)
+        for s in ancestors(o.sort):
+            info.bind_object_to_fs_type(type_idxs[s], oid)
 
     # Declare language symbols
     for p in util.get_symbols(language, include_builtin=True):
@@ -68,9 +65,9 @@ def create_language_info(language):
 
 def translate_problem(problem):
     assert isinstance(problem, tarski.fstrips.Problem)
-    language = create_language_info(problem.language)
-    print("Language: {}".format(language))
-    translator = FSTRIPSTranslator(language)
+    language_info = create_language_info(problem.language)
+    logging.info("Generated the following Language Info: {}".format(language_info))
+    translator = FSTRIPSTranslator(language_info)
 
     # Translate goal
     goal = translator.translate_formula(problem.goal, tsk.VariableBinding.empty())
@@ -82,7 +79,7 @@ def translate_problem(problem):
     # TODO Translate initial state
     init = cext.Interpretation()
 
-    return cext.create_problem(problem.name, problem.domain_name, actions, init, goal)
+    return cext.create_problem(problem.name, problem.domain_name, actions, init, goal), language_info
 
 
 class FSTRIPSTranslator:

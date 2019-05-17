@@ -38,32 +38,32 @@ void define_language_info() {
 //    bool    (X::*fx1)(int)              = &X::f;
 
 
-    fs0::TypeIdx (fs::LanguageInfo::*add_primitive_type1)(const std::string&, fs0::type_id)                       = &fs::LanguageInfo::add_primitive_type;
-    fs0::TypeIdx (fs::LanguageInfo::*add_primitive_type2)(const std::string&, fs0::type_id, const fs0::type_range&)  = &fs::LanguageInfo::add_primitive_type;
-//    fs0::TypeIdx (*add_primitive_type2)(const int32_t&)  = &fs0::add_primitive_type;
+    fs0::TypeIdx (fs::LanguageInfo::*add_fs_type1)(const std::string&, fs0::type_id)                       = &fs::LanguageInfo::add_fs_type;
+    fs0::TypeIdx (fs::LanguageInfo::*add_fs_type2)(const std::string&, fs0::type_id, const fs0::type_range&)  = &fs::LanguageInfo::add_fs_type;
+//    fs0::TypeIdx (*add_fs_type2)(const int32_t&)  = &fs0::add_fs_type;
 
 
     const std::string& (fs::LanguageInfo::*get_typename1)(const fs0::TypeIdx&) const  = &fs::LanguageInfo::get_typename;
 
 
-    bp::class_<fs::LanguageInfo>("LanguageInfo", bp::init<>())
+    bp::class_<fs::LanguageInfo, std::shared_ptr<fs::LanguageInfo>>("LanguageInfo", bp::init<>())
+            .def("add_symbol", &fs::LanguageInfo::add_symbol)
             .def("get_symbol_id", &fs::LanguageInfo::get_symbol_id)
             .def("get_symbol_name", &fs::LanguageInfo::get_symbol_name, bp::return_value_policy<bp::copy_const_reference>())
 
-            .def("get_primitive_type_id", &fs::LanguageInfo::get_primitive_type_id)
+
+            .def("get_fs_type_id", &fs::LanguageInfo::get_fs_type_id)
             .def("get_typename", get_typename1, bp::return_value_policy<bp::copy_const_reference>())
+            .def("add_fs_type", add_fs_type1)
+            .def("add_fs_type", add_fs_type2)
 
-            .def("get_object_name", &fs::LanguageInfo::get_object_name)
 
-
-            // ...
-
-            .def("add_symbol", &fs::LanguageInfo::add_symbol)
             .def("add_object", &fs::LanguageInfo::add_object)
-            .def("add_primitive_type", add_primitive_type1)
-            .def("add_primitive_type", add_primitive_type2)
-            .def(bp::self_ns::str(bp::self))
-    ;
+            .def("get_object_name", &fs::LanguageInfo::get_object_name)
+            .def("bind_object_to_fs_type", &fs::LanguageInfo::bind_object_to_fs_type)
 
+            .def(bp::self_ns::str(bp::self))
+            // ...
+    ;
 
 }

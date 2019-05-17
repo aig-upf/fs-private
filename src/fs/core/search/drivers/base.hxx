@@ -1,7 +1,6 @@
 #pragma once
 
 #include <fs/core/models/simple_state_model.hxx>
-#include <fs/core/utils/archive/json.hxx>
 #include <fs/core/utils/system.hxx>
 #include <string>
 
@@ -10,7 +9,7 @@ namespace fs0 {
 	class Problem;
 }
 
-namespace fs0 { namespace drivers {
+namespace fs0::drivers {
 
 class EngineOptions;
 
@@ -23,4 +22,4 @@ public:
 	virtual ExitCode search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) = 0;
 };
 
-}}
+}

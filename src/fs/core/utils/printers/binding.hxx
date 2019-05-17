@@ -7,7 +7,9 @@
 
 namespace fs0 { class Binding; }
 
-namespace fs0 { namespace print {
+namespace fs0::fstrips { class LanguageInfo; }
+
+namespace fs0::print {
 
 class binding {
 	protected:
@@ -66,11 +68,11 @@ class raw_signature {
 	protected:
 		const Signature& _signature;
 	public:
-		raw_signature(const Signature& sign) : _signature(sign) {}
+		explicit raw_signature(const Signature& sign) : _signature(sign) {}
 		
-		friend std::ostream& operator<<(std::ostream &os, const raw_signature& o) { return o.print(os); }
-		std::ostream& print(std::ostream& os) const;
+//		friend std::ostream& operator<<(std::ostream &os, const raw_signature& o);
+		std::ostream& print(std::ostream& os, const fs0::fstrips::LanguageInfo& info) const;
 };
 
 
-} } // namespaces
+} // namespaces

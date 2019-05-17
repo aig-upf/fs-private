@@ -4,7 +4,7 @@
 #include <fs/core/fs_types.hxx>
 #include <fs/core/utils/atom_index.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; class Metric;}}}
+namespace fs0::language::fstrips { class Formula; class Axiom; class Metric;}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -26,8 +26,7 @@ public:
                 const fs::Formula* goal,
                 const std::unordered_map<std::string, const fs::Axiom*>& state_constraints,
                 const fs::Metric* metric,
-                AtomIndex&& tuple_index,
-                const AllTransitionGraphsT& transitions);
+                AtomIndex&& tuple_index);
 	~Problem();
 
 	Problem(const Problem& other);
@@ -96,15 +95,11 @@ public:
 	//! Return true if all the symbols of the problem are predicates
 	bool is_predicative() const { return _is_predicative; }
 
-    bool requires_handling_continuous_change() const;
-
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
 
 	void consolidateAxioms();
-
-	const AllTransitionGraphsT& get_transition_graphs() const { return _transition_graphs; }
 
 protected:
 	//! An index of tuples and atoms
@@ -146,8 +141,6 @@ protected:
 	static std::unique_ptr<Problem> _instance;
 
 	static bool check_is_predicative();
-
-	AllTransitionGraphsT _transition_graphs;
 };
 
 } // namespaces

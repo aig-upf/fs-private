@@ -2,9 +2,10 @@
 #include <fs/core/utils/printers/binding.hxx>
 #include <fs/core/utils/binding.hxx>
 #include <fs/core/problem_info.hxx>
+#include <fs/core/fstrips/language_info.hxx>
 
-namespace fs0 { namespace print {
 
+namespace fs0::print {
 
 std::ostream& binding::print(std::ostream& os) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
@@ -25,10 +26,9 @@ std::ostream& signature::print(std::ostream& os) const {
 	return os;
 }
 
-std::ostream& raw_signature::print(std::ostream& os) const {
-	const ProblemInfo& info = ProblemInfo::getInstance();
+std::ostream& raw_signature::print(std::ostream& os, const fs0::fstrips::LanguageInfo& info) const {
 	for (unsigned i = 0; i < _signature.size(); ++i) {
-		os << info.getTypename(_signature[i]);
+		os << info.typeinfo(_signature[i]).name();
 		if (i < _signature.size() - 1) os << ", ";
 	}
 	return os;
@@ -71,4 +71,4 @@ std::ostream& strips_partial_binding::print(std::ostream& os) const {
 
 
 
-} } // namespaces
+} // namespaces

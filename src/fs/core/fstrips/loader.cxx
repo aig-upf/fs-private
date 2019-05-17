@@ -23,7 +23,7 @@ parseVariables(const rapidjson::Value& tree, const LanguageInfo& lang) {
 		unsigned id = node[0].GetUint();
  		std::string name = node[1].GetString();
 		std::string type_name = node[2].GetString();
-		TypeIdx type = lang.get_primitive_type_id(type_name);
+		TypeIdx type = lang.get_fs_type_id(type_name);
 		list.push_back(new LogicalVariable(id, name, type));
 	}
 	return list;
@@ -80,12 +80,12 @@ const Term* Loader::parseTerm(const rapidjson::Value& tree, const LanguageInfo& 
 	std::string term_type = tree["type"].GetString();
 
 	if (term_type == "constant") {
-		TypeIdx fstype = lang.get_primitive_type_id(tree["fstype"].GetString());
+		TypeIdx fstype = lang.get_fs_type_id(tree["fstype"].GetString());
 		object_id object = make_object(lang.get_type_id(fstype), tree["value"].GetInt());
 		return new Constant(object, fstype);
 
 	} else if (term_type == "variable") {
-		return new LogicalVariable(tree["position"].GetInt(), tree["name"].GetString(), lang.get_primitive_type_id(tree["typename"].GetString()));
+		return new LogicalVariable(tree["position"].GetInt(), tree["name"].GetString(), lang.get_fs_type_id(tree["typename"].GetString()));
 
 	} else if (term_type == "functional") {
 		std::string symbol = tree["symbol"].GetString();
@@ -182,12 +182,12 @@ void _loadSymbolIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 		Signature signature;
 		const auto& domains = data[i][3];
 		for (unsigned j = 0; j < domains.Size(); ++j) {
-			signature.push_back(lang.get_primitive_type_id(domains[j].GetString()));
+			signature.push_back(lang.get_fs_type_id(domains[j].GetString()));
 		}
 
 		if (type == symbol_t::Function) {
 			// Parse the codomain ID
-			signature.push_back(lang.get_primitive_type_id(data[i][4].GetString()));
+			signature.push_back(lang.get_fs_type_id(data[i][4].GetString()));
 		}
 
 //		bool static_ = data[i][6].GetBool();
@@ -216,7 +216,7 @@ void _loadObjectIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 		const std::string& name = data[i]["name"].GetString();
 		const std::string& fstype = data[i]["type"].GetString();
 
-		object_id id = lang.add_object(name, lang.get_primitive_type_id(fstype));
+		object_id id = lang.add_object(name, lang.get_fs_type_id(fstype));
 		_unused(id);
 		assert((int)expected_id == (int)id); // Check values are decoded in the proper order
 	}
@@ -239,23 +239,23 @@ void _loadTypeIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 		_unused(tid);
 
 		if (domain_type == "unbounded") {
-			tid = lang.add_primitive_type( fstype, from_string(type_id_str));
+			tid = lang.add_fs_type( fstype, from_string(type_id_str));
 			assert( tid == expected_id );
 
 		} else if (domain_type == "interval") {
 			int lower = node["interval"][0].GetInt();
 			int upper = node["interval"][1].GetInt();
 
-			tid = lang.add_primitive_type(fstype, from_string(type_id_str), make_range(lower, upper));
+			tid = lang.add_fs_type(fstype, from_string(type_id_str), make_range(lower, upper));
 			assert(tid == expected_id);
 
 		} else if (domain_type == "set") {
-			tid = lang.add_primitive_type(fstype, from_string(type_id_str));
+			tid = lang.add_fs_type(fstype, from_string(type_id_str));
 			assert(tid == expected_id);
 
 			for (unsigned j = 0; j < node["set"].Size(); ++j) {
 				int value = boost::lexical_cast<int>(node["set"][j].GetString());
-				lang.bind_object_to_type(lang.get_primitive_type_id(fstype), make_object(type_id::object_t, value));
+				lang.bind_object_to_fs_type(lang.get_fs_type_id(fstype), make_object(type_id::object_t, value));
 			}
 		}
 	}

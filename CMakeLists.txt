@@ -147,6 +147,8 @@ set(SOURCE_FILES
         src/fs/core/validator.hxx
 
 
+        src/fs/core/fstrips/grounding
+
         src/fs/core/lambda/states
         src/fs/core/lambda/search/factory
         src/fs/core/lambda/search/search_model
