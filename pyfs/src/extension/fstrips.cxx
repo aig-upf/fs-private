@@ -196,9 +196,9 @@ void define_fstrips() {
     ;
 
     bp::class_<fs::Grounding, std::shared_ptr<fs::Grounding>>("Grounding", bp::init<std::shared_ptr<fs::LanguageInfo>>())
-        .def("add_state_variable", &fs::Grounding::add_state_variable)
+        .def("add_state_variable", &add_state_variable)
+        .def(bp::self_ns::str(bp::self))
     ;
 
 
-    bp::def("add_state_variable", &add_state_variable);
 }

@@ -39,4 +39,12 @@ VariableIdx Grounding::add_state_variable(const symbol_id& symbol, const std::ve
     return var_id;
 }
 
+std::ostream& Grounding::print(std::ostream& os) const {
+    os << "Grounding object:\n\tState Variables:" << std::endl;
+    for (unsigned i = 0; i < variableNames.size(); ++i) {
+        os << "\t\t" << i << ": " << variableNames[i] << std::endl;
+    }
+    return os;
+}
+
 } // namespaces

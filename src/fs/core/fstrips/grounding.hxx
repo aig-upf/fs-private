@@ -19,6 +19,10 @@ public:
 
     std::string compute_state_variable_name(const symbol_id& symbol, const std::vector<object_id>& point);
 
+    //! Print a representation of the object to the given stream.
+    friend std::ostream& operator<<(std::ostream &os, const Grounding& o) { return o.print(os); }
+    std::ostream& print(std::ostream& os) const;
+
 protected:
     std::shared_ptr<LanguageInfo> language_;
 

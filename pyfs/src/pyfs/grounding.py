@@ -20,8 +20,8 @@ def lpgrounding(problem, language_info):
     variables = grounding.ground_state_variables()
 
     for i, variable in variables.enumerate():  # note that 'i' will be the "official" index of the variable
-        cext.add_state_variable(cgrounding,
-                                language_info.symbol_idxs[variable.symbol],
-                                [language_info.obj_idxs[o] for o in variable.binding]
-                                )
+        cgrounding.add_state_variable(
+            language_info.symbol_idxs[variable.symbol],
+            [language_info.obj_idxs[o] for o in variable.binding]
+        )
     return cgrounding
