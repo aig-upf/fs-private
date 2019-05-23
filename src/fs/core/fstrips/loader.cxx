@@ -114,7 +114,7 @@ const ActionEffect* Loader::parseEffect(const rapidjson::Value& tree, const Lang
 		return new FunctionalEffect(lhs, parseTerm(tree["rhs"], lang), condition);
 
 	} else if (effect_type == "add" || effect_type == "del") {
-		AtomicEffect::Type type = AtomicEffect::to_type(effect_type);
+		AtomicEffectType type = AtomicEffect::to_type(effect_type);
 		const AtomicFormula* atom = dynamic_cast<const AtomicFormula*>(parseFormula(tree["lhs"], lang));
 		if (!atom) {
 			throw std::runtime_error("Invalid LHS of an atomic effect");

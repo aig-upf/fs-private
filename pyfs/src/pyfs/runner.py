@@ -1,7 +1,7 @@
 
-import itertools
-
-from tarski.util import IndexDictionary
+# import itertools
+#
+# from tarski.util import IndexDictionary
 
 from . import util, translations, engines, search
 from .grounding import lpgrounding
@@ -32,7 +32,7 @@ def run(instance, domain=None):
 
     grounding = lpgrounding(tarski_problem, language_info)
 
-    model = search.create_model(problem, index, grounding=grounding, use_match_tree=True)
+    model = search.create_model(problem, language_info, grounding=grounding, use_match_tree=True)
 
     engine = engines.breadth_first_search(model)
 

@@ -74,12 +74,13 @@ protected:
 	const Term* _rhs;
 };
 
+enum class AtomicEffectType {ADD, DEL};
+
 class AtomicEffect : public ActionEffect {
 public:
-	enum class Type {ADD, DEL};
-	static Type to_type(const std::string& type);
+	static AtomicEffectType to_type(const std::string& type);
 	
-	AtomicEffect(const AtomicFormula* atom, Type type, const Formula* condition)
+	AtomicEffect(const AtomicFormula* atom, AtomicEffectType type, const Formula* condition)
 		: ActionEffect(condition), _atom(atom), _type(type) {}
     ~AtomicEffect() override { delete _atom; };
 	
@@ -93,18 +94,18 @@ public:
 	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 	const AtomicFormula* getAtom() const { return _atom; }
-	const Type getType() const { return _type; }
+	const AtomicEffectType getType() const { return _type; }
 	
 	bool is_predicative() const override { return true; };
-	bool is_add() const override { return _type == Type::ADD; }
-	bool is_del() const override { return _type == Type::DEL; }
+	bool is_add() const override { return _type == AtomicEffectType::ADD; }
+	bool is_del() const override { return _type == AtomicEffectType::DEL; }
 	
 protected:
 	//! An AtomicEffect involves an atomic formula
 	const AtomicFormula* _atom;
 	
 	//! The type (add/del) of atomic effect
-	const Type _type;
+	const AtomicEffectType _type;
 };
 
 

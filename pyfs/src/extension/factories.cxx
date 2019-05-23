@@ -1,11 +1,19 @@
 
+#include <boost/python.hpp>
+
 #include "factories.hxx"
 #include "utils.hxx"
 
+#include <fs/core/fstrips/language.hxx>
 #include <fs/core/fstrips/problem.hxx>
 #include <fs/core/fstrips/interpretation.hxx>
+#include <fs/core/fstrips/grounding.hxx>
+#include <fs/core/lambda/search/search_model.hxx>
+#include <fs/core/lambda/search/factory.hxx>
 
-
+namespace bp = boost::python;
+namespace fs = fs0::fstrips;
+namespace ls = lambda::search;
 
 fs::AtomicFormula* create_atomic_formula(unsigned symbol_id, bp::list& subterms) {
     // We could simply convert the list into a vector, but that would result in dangling refs,
@@ -33,7 +41,7 @@ fs::QuantifiedFormula* create_quantified_formula(fs::Quantifier quantifier, bp::
     return new fs::QuantifiedFormula(quantifier, clone_list<const fs::LogicalVariable>(variables), subformula->clone());
 }
 
-fs::AtomicEffect* create_atomic_effect(const fs::AtomicFormula* atom, fs::AtomicEffect::Type type, const fs::Formula* condition) {
+fs::AtomicEffect* create_atomic_effect(const fs::AtomicFormula* atom, fs::AtomicEffectType type, const fs::Formula* condition) {
     return new fs::AtomicEffect(atom->clone(), type, condition->clone());
 }
 
@@ -52,8 +60,8 @@ fs::ActionSchema* create_action_schema(unsigned id, const std::string& name, bp:
 }
 
 std::shared_ptr<fs::Problem> create_problem(const std::string& name, const std::string& domain_name,
-                                            bp::list& schemas, const std::shared_ptr<fs::Interpretation> init, const fs::Formula* goal) {
-    return std::make_shared<fs::Problem>(name, domain_name, clone_list<const fs::ActionSchema>(schemas), *init, goal->clone());
+                                            bp::list& schemas, const fs::Interpretation& init, const fs::Formula* goal) {
+    return std::make_shared<fs::Problem>(name, domain_name, clone_list<const fs::ActionSchema>(schemas), init, goal->clone());
 }
 
 std::shared_ptr<ls::SearchModel> create_model(std::shared_ptr<fs::Problem> problem, bool use_match_tree) {
@@ -63,3 +71,8 @@ std::shared_ptr<ls::SearchModel> create_model(std::shared_ptr<fs::Problem> probl
 std::shared_ptr<ls::SearchAlgorithm> create_breadth_first_search_engine(std::shared_ptr<ls::SearchModel> model) {
     return ls::SearchFactory::breadth_first_search(model);
 }
+
+void add_state_variable(fs::Grounding& grounding, unsigned symbol, bp::list& point) {
+    grounding.add_state_variable(symbol, to_std_vector<fs0::object_id>(point));
+}
+

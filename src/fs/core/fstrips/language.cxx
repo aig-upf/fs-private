@@ -7,7 +7,7 @@
 #include <fs/core/utils/printers/actions.hxx>
 
 
-namespace fs0 { namespace fstrips {
+namespace fs0::fstrips {
 
 
 ActionEffect::ActionEffect(const ActionEffect& other) :
@@ -22,9 +22,9 @@ AtomicEffect::AtomicEffect(const AtomicEffect& other) :
 	ActionEffect(other), _atom(other._atom->clone()), _type(other._type)
 {}
 
-AtomicEffect::Type AtomicEffect::to_type(const std::string& type) {
-	if (type == "add") return Type::ADD;
-	if (type == "del") return Type::DEL;
+AtomicEffectType AtomicEffect::to_type(const std::string& type) {
+	if (type == "add") return AtomicEffectType::ADD;
+	if (type == "del") return AtomicEffectType::DEL;
 	throw std::runtime_error("Unknown effect type" + type);	
 }
 
@@ -44,7 +44,7 @@ std::ostream& AtomicEffect::print(std::ostream& os, const LanguageInfo& info) co
 	    _condition->print(os, info);
 		os << " -> ";
 	}
-	if (_type == Type::DEL) os << "~";
+	if (_type == AtomicEffectType::DEL) os << "~";
     _atom->print(os, info);
 	return os;
 }
@@ -78,4 +78,4 @@ std::ostream& ActionSchema::print(std::ostream& os) const {
 }
 
 
-} } // namespaces
+} // namespaces

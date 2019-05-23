@@ -1,5 +1,6 @@
 
 #include "factories.hxx"
+#include "utils.hxx"
 
 #include <fs/core/fstrips/language.hxx>
 #include <fs/core/fstrips/language_info.hxx>
@@ -10,7 +11,6 @@
 
 
 #include <boost/python.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 
 #include <iostream>
@@ -36,10 +36,6 @@ std::string print_logical_element(const fs::LogicalElement& o, const fs::Languag
 std::string print_effect(const fs::ActionEffect& o, const fs::LanguageInfo& info) {
     return _print(o, info);
 }
-
-//std::string print_action(const fs::ActionSchema& o, const fs::LanguageInfo& info) {
-//    return _print(o, info);
-//}
 
 
 void define_fstrips() {
@@ -156,9 +152,9 @@ void define_fstrips() {
 
     /// FSTRIPS Actions ///
 
-    bp::enum_<fs::AtomicEffect::Type>("AtomicEffectType")
-            .value("Add", fs::AtomicEffect::Type::ADD)
-            .value("Del", fs::AtomicEffect::Type::DEL)
+    bp::enum_<fs::AtomicEffectType>("AtomicEffectType")
+            .value("Add", fs::AtomicEffectType::ADD)
+            .value("Del", fs::AtomicEffectType::DEL)
             ;
 
     bp::class_<fs::ActionEffect, boost::noncopyable>("ActionEffect", bp::no_init)
@@ -172,7 +168,7 @@ void define_fstrips() {
         //.def(bp::self_ns::str(bp::self))
             ;
 
-    bp::class_<fs::AtomicEffect, bp::bases<fs::ActionEffect>>("AtomicEffect", bp::init<const fs::AtomicFormula*, const fs::AtomicEffect::Type, const fs::Formula*>())
+    bp::class_<fs::AtomicEffect, bp::bases<fs::ActionEffect>>("AtomicEffect", bp::init<const fs::AtomicFormula*, const fs::AtomicEffectType, const fs::Formula*>())
             .add_property("atom", bp::make_function(&fs::AtomicEffect::getAtom, bp::return_value_policy<bp::reference_existing_object>()))
             .add_property("type", &fs::AtomicEffect::getType)
         //.def(bp::self_ns::str(bp::self))
@@ -202,4 +198,7 @@ void define_fstrips() {
     bp::class_<fs::Grounding, std::shared_ptr<fs::Grounding>>("Grounding", bp::init<std::shared_ptr<fs::LanguageInfo>>())
         .def("add_state_variable", &fs::Grounding::add_state_variable)
     ;
+
+
+    bp::def("add_state_variable", &add_state_variable);
 }
