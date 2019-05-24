@@ -1,9 +1,9 @@
 
 #include <lapkt/tools/logging.hxx>
 
-#include <fs/core/fstrips/language.hxx>
-#include <fs/core/fstrips/loader.hxx>
-#include <fs/core/fstrips/language_info.hxx>
+#include <fs/core/fstrips/action_language.hxx>
+#include <fs/core/fstrips/__loader.hxx__>
+#include <fs/core/fstrips/fol.hxx>
 #include <fs/core/fstrips/operations.hxx>
 #include <fs/core/utils/loader.hxx>
 

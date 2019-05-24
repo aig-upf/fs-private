@@ -1,7 +1,7 @@
 
 #include <algorithm>
 
-#include <fs/core/fstrips/language_info.hxx>
+#include <fs/core/fstrips/fol.hxx>
 #include <fs/core/languages/fstrips/operations/binding.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/languages/fstrips/terms.hxx>

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <fs/core/fstrips/language.hxx>
+#include <fs/core/fstrips/action_language.hxx>
 
 namespace fs0 { namespace fstrips {
 

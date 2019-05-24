@@ -1,9 +1,12 @@
 
 #pragma once
 
-#include <fs/core/fstrips/fol.hxx>
+#include <ostream>
 
-namespace fs0 { namespace fstrips {
+#include <fs/core/fstrips/fol_syntax_fwd.hxx>
+#include <fs/core/fs_types.hxx>
+
+namespace fs0::fstrips {
 
 class LanguageInfo;
 
@@ -15,7 +18,7 @@ class LanguageInfo;
 class ActionEffect {
 public:
     explicit ActionEffect(const Formula* condition) : _condition(condition) {}
-	virtual ~ActionEffect() { delete _condition; };
+	virtual ~ActionEffect();
 	
 	ActionEffect(const ActionEffect&);
 	ActionEffect(ActionEffect&&) = default;
@@ -46,7 +49,7 @@ class FunctionalEffect : public ActionEffect {
 public:
 	FunctionalEffect(const CompositeTerm* lhs, const Term* rhs, const Formula* condition)
 		: ActionEffect(condition), _lhs(lhs), _rhs(rhs) {}
-    ~FunctionalEffect() override { delete _lhs; delete _rhs; };
+    ~FunctionalEffect() override;
 	
 	FunctionalEffect(const FunctionalEffect&);
 	FunctionalEffect(FunctionalEffect&&) = default;
@@ -58,8 +61,8 @@ public:
 	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 	//! Accessors for the left-hand side and right-hand side of the effect
-	const Term* lhs() const { return _lhs; }
-	const Term* rhs() const { return _rhs; }
+	const Term* lhs() const;
+	const Term* rhs() const;
 	
 	bool is_predicative() const override { return false; };
 	bool is_add() const override { return false; };
@@ -82,7 +85,7 @@ public:
 	
 	AtomicEffect(const AtomicFormula* atom, AtomicEffectType type, const Formula* condition)
 		: ActionEffect(condition), _atom(atom), _type(type) {}
-    ~AtomicEffect() override { delete _atom; };
+    ~AtomicEffect() override;
 	
 	AtomicEffect(const AtomicEffect&);
 	AtomicEffect(AtomicEffect&&) = default;
@@ -148,5 +151,5 @@ public:
 
 
 
-} } // namespaces
+} // namespaces
 

@@ -14,7 +14,7 @@
 #include <fs/core/utils/printers/registry.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/fstrips/language_info.hxx>
+#include <fs/core/fstrips/fol.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 #include <fs/core/constraints/grounding.hxx>

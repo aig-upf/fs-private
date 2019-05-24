@@ -8,7 +8,7 @@
 #include <fs/core/atom.hxx>
 #include <lapkt/tools/logging.hxx>
 
-#include <fs/core/fstrips/language_info.hxx>
+#include <fs/core/fstrips/fol.hxx>
 
 namespace fs0 {
 

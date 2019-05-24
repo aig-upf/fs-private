@@ -1,19 +1,18 @@
 
 #pragma once
 
-#include <fs/core/fstrips/fol.hxx>
-
 #include <unordered_set>
+#include <vector>
+#include <boost/functional/hash.hpp>
 
-namespace fs0 { namespace fstrips {
+namespace fs0::fstrips {
 
 class RelationalExtension;
 
 //!
 class Interpretation {
 public:
-    Interpretation()
-    {}
+    Interpretation() {}
 
 	~Interpretation() = default;
 	Interpretation(const Interpretation&) = default;
@@ -34,7 +33,7 @@ protected:
 class RelationalExtension {
 public:
 	using tuple_t = std::vector<unsigned>;
-	RelationalExtension() {}
+	RelationalExtension() = default;
 
 protected:
 	//! A set with all tuples that make part of the extension
@@ -42,4 +41,4 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces

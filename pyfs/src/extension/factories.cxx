@@ -4,7 +4,7 @@
 #include "factories.hxx"
 #include "utils.hxx"
 
-#include <fs/core/fstrips/language.hxx>
+#include <fs/core/fstrips/action_language.hxx>
 #include <fs/core/fstrips/problem.hxx>
 #include <fs/core/fstrips/interpretation.hxx>
 #include <fs/core/fstrips/grounding.hxx>

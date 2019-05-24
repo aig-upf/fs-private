@@ -1,8 +1,8 @@
 
 #include "factories.hxx"
 
-#include <fs/core/fstrips/language_info.hxx>
-#include <fs/core/fstrips/language.hxx>
+#include <fs/core/fstrips/fol.hxx>
+#include <fs/core/fstrips/action_language.hxx>
 #include <fs/core/fstrips/interpretation.hxx>
 #include <fs/core/fstrips/problem.hxx>
 #include <fs/core/base.hxx>

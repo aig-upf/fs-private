@@ -2,7 +2,7 @@
 #include <fs/core/utils/printers/binding.hxx>
 #include <fs/core/utils/binding.hxx>
 #include <fs/core/problem_info.hxx>
-#include <fs/core/fstrips/language_info.hxx>
+#include <fs/core/fstrips/fol.hxx>
 
 
 namespace fs0::print {

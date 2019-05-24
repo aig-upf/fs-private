@@ -1,8 +1,9 @@
 
 
-#include <fs/core/fstrips/language.hxx>
+#include <fs/core/fstrips/action_language.hxx>
 
-#include <fs/core/fstrips/language_info.hxx>
+#include <fs/core/fstrips/fol.hxx>
+#include <fs/core/fstrips/fol_syntax.hxx>
 #include <fs/core/utils/utils.hxx>
 #include <fs/core/utils/printers/actions.hxx>
 
@@ -10,13 +11,22 @@
 namespace fs0::fstrips {
 
 
+ActionEffect::~ActionEffect() { delete _condition; }
+
 ActionEffect::ActionEffect(const ActionEffect& other) :
 	_condition(other._condition->clone())
 {}
 
+FunctionalEffect::~FunctionalEffect() { delete _lhs; delete _rhs; }
+
 FunctionalEffect::FunctionalEffect(const FunctionalEffect& other) :
 	ActionEffect(other), _lhs(other._lhs->clone()), _rhs(other._rhs->clone())
 {}
+
+const Term* FunctionalEffect::lhs() const { return _lhs; }
+const Term* FunctionalEffect::rhs() const { return _rhs; }
+
+AtomicEffect::~AtomicEffect() { delete _atom; }
 
 AtomicEffect::AtomicEffect(const AtomicEffect& other) :
 	ActionEffect(other), _atom(other._atom->clone()), _type(other._type)

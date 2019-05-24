@@ -40,19 +40,6 @@ def single_build(directory, command):
     # if output:
     #     sys.exit(output)
 
-    # Build the vanilla generic FS planner
-    planner_dir = os.path.join(directory, 'planners', 'generic')
-    # MRJ: Ensure that the generic planner is always using the correct
-    # version of FS
-    command = "{} fs={}".format(command, os.getcwd())
-    print("\nBuilding FS vanilla planner: \"{}\" @ {}".format(command, planner_dir))
-    sys.stdout.flush()
-    output = subprocess.call(command.split(), cwd=planner_dir)
-    if output:
-        sys.exit(output)
-
-    print('')
-
 
 def get_command(cpus, debug):
     return 'scons -j {} {}'.format(cpus, debug)

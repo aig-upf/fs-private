@@ -1,7 +1,7 @@
 
 #include <fs/core/problem.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
-#include <fs/core/fstrips/language.hxx>
+#include <fs/core/fstrips/action_language.hxx>
 #include <fs/core/utils/printers/actions.hxx>
 #include <fs/core/utils/printers/binding.hxx>
 #include <fs/core/actions/actions.hxx>

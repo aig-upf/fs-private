@@ -1,6 +1,7 @@
 
 
 #include <fs/core/fstrips/grounding.hxx>
+#include <fs/core/fstrips/fol.hxx>
 
 namespace fs0::fstrips {
 

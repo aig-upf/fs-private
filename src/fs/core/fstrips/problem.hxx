@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <fs/core/fstrips/fol.hxx>
-#include <fs/core/fstrips/language.hxx>
+#include <fs/core/fstrips/fol_syntax.hxx>
+#include <fs/core/fstrips/action_language.hxx>
 #include <fs/core/fstrips/interpretation.hxx>
 
 

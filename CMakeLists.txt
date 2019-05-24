@@ -17,12 +17,13 @@ set(SOURCE_FILES
         src/fs/core/applicability/match_tree
         src/fs/core/constraints/registry
         src/fs/core/constraints/grounding
+        src/fs/core/fstrips/action_language
         src/fs/core/fstrips/fol
-        src/fs/core/fstrips/language
-        src/fs/core/fstrips/language_info
+        src/fs/core/fstrips/fol_syntax
+        src/fs/core/fstrips/fol_syntax_fwd
+        src/fs/core/fstrips/fstrips_fwd.hxx
         src/fs/core/fstrips/problem
         src/fs/core/fstrips/interpretation
-        src/fs/core/fstrips/loader
         src/fs/core/fstrips/operations
         src/fs/core/heuristics/novelty/features
         src/fs/core/heuristics/null_heuristic
@@ -37,11 +38,9 @@ set(SOURCE_FILES
         src/fs/core/languages/fstrips/base
         src/fs/core/languages/fstrips/builtin
         src/fs/core/languages/fstrips/effects
-        src/fs/core/languages/fstrips/factory
         src/fs/core/languages/fstrips/formulae
         src/fs/core/languages/fstrips/language.hxx
         src/fs/core/languages/fstrips/language_fwd.hxx
-        src/fs/core/languages/fstrips/loader
         src/fs/core/languages/fstrips/operations.hxx
         src/fs/core/languages/fstrips/scopes
         src/fs/core/languages/fstrips/terms
@@ -118,8 +117,6 @@ set(SOURCE_FILES
         src/fs/core/utils/lexical_cast.hxx
         src/fs/core/utils/loader.cxx
         src/fs/core/utils/loader.hxx
-        src/fs/core/utils/projections.cxx
-        src/fs/core/utils/projections.hxx
         src/fs/core/utils/serialize_tuple.hxx
         src/fs/core/utils/serializer.cxx
         src/fs/core/utils/serializer.hxx

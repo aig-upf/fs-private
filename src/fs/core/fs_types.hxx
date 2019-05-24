@@ -4,15 +4,12 @@
 #include <functional>
 #include <memory>
 #include <limits>
+#include <vector>
+#include <map>
+#include <exception>
 
 #include <boost/functional/hash.hpp>
 
-#include <vector>
-#include <map>
-#include <unordered_set>
-#include <boost/container/flat_set.hpp>
-
-#include <exception>
 #include <fs/core/base.hxx>
 
 //! A handy macro for explicitly declaring a variable is not used and avoiding the corresponding warnings (see e.g. http://stackoverflow.com/q/777261)
@@ -51,9 +48,6 @@ namespace fs0 {
 	//! The ID of a logical symbol
 	using SymbolIdx = unsigned;
 
-	// A unique identifier for any of the problem objects (might be an integer)
-// 	using ObjectIdx = int;
-
 	//! An action signature is a list of (positional) parameters with a given type.
 	using Signature = std::vector<TypeIdx>;
 
@@ -72,16 +66,6 @@ namespace fs0 {
 	
 	using Support = std::vector<AtomIdx>;
 
-	//! A domain is a set of values (of a state variable)
- 	using Domain = boost::container::flat_set<object_id>;
-	using DomainPtr = std::shared_ptr<Domain>;
-
-	//! A vector of domains.
-	using DomainVector = std::vector<DomainPtr>;
-
-	//! A map mapping state variable indexes to their possible domains.
-	using DomainMap = std::map<VariableIdx, DomainPtr>;
-	
 	//! A map mapping a subset of state variables to possible values
 	using PartialAssignment = std::map<VariableIdx, object_id>;
 

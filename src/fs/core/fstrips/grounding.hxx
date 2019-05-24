@@ -1,12 +1,13 @@
-#include <utility>
-
 
 #pragma once
 
-#include <fs/core/fstrips/fol.hxx>
-#include <fs/core/fstrips/language_info.hxx>
-#include <fs/core/fstrips/language.hxx>
-#include <fs/core/fstrips/interpretation.hxx>
+#include <utility>
+#include <memory>
+#include <vector>
+#include <unordered_map>
+
+#include <fs/core/fs_types.hxx>
+#include <fs/core/fstrips/fstrips_fwd.hxx>
 
 
 namespace fs0::fstrips {

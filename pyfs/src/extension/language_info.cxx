@@ -1,6 +1,6 @@
 
 #include "utils.hxx"
-#include <fs/core/fstrips/language_info.hxx>
+#include <fs/core/fstrips/fol.hxx>
 #include <fs/core/base.hxx>
 
 #include <boost/python.hpp>

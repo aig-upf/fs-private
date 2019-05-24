@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <fs/core/fstrips/language_fwd.hxx>
+#include <fs/core/fstrips/fstrips_fwd.hxx>
 
 
 namespace boost::python {
