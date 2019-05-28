@@ -63,8 +63,9 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		assert(var_data["id"].GetInt() >= 0 && static_cast<unsigned>(var_data["id"].GetInt()) == id); // Check values are decoded in the proper order
 
 		const std::string type(var_data["fstype"].GetString());
-		const std::string name(var_data["name"].GetString());
-		variableNames.push_back(name);
+		std::string name(var_data["name"].GetString());
+        boost::erase_all(name, " ");  // remove spaces from variable name
+        variableNames.push_back(name);
 		variableIds.insert(std::make_pair(name, id));
 
 		type_id t = get_type_id(type);

@@ -79,7 +79,7 @@ public:
 
     virtual ~StlBreadthFirstSearch() = default;
 
-    // Disallow copy, but allow move
+    // Disallow copy, but allow move_max_expansions
     StlBreadthFirstSearch(const StlBreadthFirstSearch&) = delete;
 
     StlBreadthFirstSearch(StlBreadthFirstSearch&&) = default;
@@ -90,17 +90,12 @@ public:
 
     void log_generated_node(NodeT& n, bool goal, bool deadend) {
         const auto& info = fs0::ProblemInfo::getInstance();
+//        std::string schema = print_action_schema_name(fs0::Problem::getInstance(), n.action);
 
-        unsigned parent = 0;
-        if (n.parent) parent = n.parent->_gen_order;
-        std::string goal_value = goal ? "true" : "false";
-        std::string deadend_value = deadend ? "true" : "false";
-        std::string schema = print_action_schema_name(fs0::Problem::getInstance(), n.action);
-        std::cout << "{\"id\": " << n._gen_order << ", \"parent\": " << parent << ", \"action\": " << n.action << ", \"schema\": \"" << schema << "\", \"goal\": " << goal_value << ", \"deadend\": " << deadend_value << ", \"atoms\": [";
-
+        std::cout << "(N) " << n._gen_order << " " << goal << " " << deadend << " ";
         // THIS IS COPY-PASTED FROM THE STATE PRINTER
         const fs0::State& s = n.state;
-        bool first_printed = false;
+        bool something_already_printed = false;
         for (unsigned x = 0; x < info.getNumVariables(); ++x) {
             fs0::object_id o = s.getValue(x);
             std::string atom;
@@ -116,13 +111,16 @@ public:
             }
 
             if (atom != "") {
-                if (first_printed) std::cout << ", ";
-                std::cout << "\"" << atom << "\"";
-                first_printed = true;
+                if (something_already_printed) std::cout << " ";
+                std::cout << atom;
+                something_already_printed = true;
             }
-//            if (x < info.getNumVariables() - 1) std::cout << ", ";
         }
-        std::cout << "]" << "}" << std::endl;
+        std::cout << std::endl;
+    }
+
+    void log_edge(unsigned parent_id, unsigned child_id) {
+        std::cout << "(E) " << parent_id << " " << child_id << std::endl;
     }
 
     bool is_deadend(const StateT& s) const {
@@ -138,57 +136,48 @@ public:
     //! of all the $b^d$ nodes of the last (deepest) layer (where b is the branching factor).
     bool search(const StateT& s, PlanT& solution) override {
         NodePT n = std::make_shared<NodeT>(s, this->_generated++);
-        this->notify(NodeCreationEvent(*n));
 
         int expanded = 0;
         std::cout << "Exploring state space. stop_on_goal=" << _stop_on_goal << ", max_expansions=" << _max_expansions
                   << std::endl;
-        std::cout  << std::endl  << std::endl << "==GENERATED NODES==" << std::endl;
-        log_generated_node(*n, this->check_goal(n, solution), is_deadend(s));
-
-
-        if (_stop_on_goal && this->check_goal(n, solution)) return true;
+        std::cout  << std::endl  << std::endl << "== GENERATED NODES ==" << std::endl;
+        bool root_is_goal = this->check_goal(n, solution);
+        log_generated_node(*n, root_is_goal, is_deadend(s));
+        if (_stop_on_goal && root_is_goal) return true;
 
         this->_open.insert(n);
 
         while (!this->_open.empty() && (_max_expansions < 0 || expanded < _max_expansions)) {
             NodePT current = this->_open.next();
-            this->notify(NodeOpenEvent(*current));
 
             // close the node before the actual expansion so that children which are identical
             // to 'current' get properly discarded
             this->_closed.put(current);
-
-            this->notify(NodeExpansionEvent(*current));
             ++expanded;
 
             for (const auto& a : this->_model.applicable_actions(current->state)) {
                 StateT s_a = this->_model.next(current->state, a);
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, this->_generated++);
 
-                bool is_goal = this->check_goal(successor, solution);
-                bool deadend = is_deadend(successor->state);
-
                 auto repeated = this->_closed.seek(successor);
                 if (repeated != nullptr) { // The node has already been closed
-                    // Create a fake node with all the elements we want to appear in the log
-                    NodePT fake = std::make_shared<NodeT>(StateT(successor->state), a, current, repeated->_gen_order);
-                    log_generated_node(*fake, is_goal, deadend); // we log the previously-generated node with the new parent
+                    log_edge(current->_gen_order, repeated->_gen_order);
                     this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
 
                 repeated = this->_open.seek(successor);
                 if (repeated != nullptr) { //   The node is already in the open list
-                    // Create a fake node with all the elements we want to appear in the log
-                    NodePT fake = std::make_shared<NodeT>(StateT(successor->state), a, current, repeated->_gen_order);
-                    log_generated_node(*fake, is_goal, deadend); // we log the previously-generated node with the new parent
+                    log_edge(current->_gen_order, repeated->_gen_order);
                     this->_generated--; // And reset the ID to the previous state
                     continue;
                 }
 
+                // Otherwise, we have a new node:
+                bool is_goal = this->check_goal(successor, solution);
+                bool deadend = is_deadend(successor->state);
                 log_generated_node(*successor, is_goal, deadend);
-                this->notify(NodeCreationEvent(*successor));
+                log_edge(current->_gen_order, successor->_gen_order);
 
                 if (_stop_on_goal && is_goal) return true;
 
@@ -199,6 +188,8 @@ public:
                 }
             }
         }
+
+        std::cout  << std::endl << "== ALL STATE SPACE EXPANDED ==" << std::endl << std::endl;
         return false;
     }
 
