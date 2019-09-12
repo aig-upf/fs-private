@@ -9,10 +9,12 @@ sources += util.locate_source_files(module_src, '*.cxx')
 
 rapidjson_base_dir = os.path.join(env['fs_vendor'], 'rapidjson')
 rapidjson_inc_dir = os.path.join(rapidjson_base_dir, 'include')
-include_paths = [rapidjson_inc_dir]
 
+sdd_base_dir = os.path.join(env['fs_vendor'], 'sdd')
 
-env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14' ])  # Flags common to all options
+include_paths = [rapidjson_inc_dir, sdd_base_dir]
+
+env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14', '-no-pie' ])  # Flags common to all options
 env.Append(CPPPATH = [os.path.abspath(p) for p in include_paths])
 
 
@@ -26,8 +28,8 @@ else:
 	env.Append( CCFLAGS = ['-O3', '-DNDEBUG' ] )
 	env['fs_libname'] ='fs'
 
-fs_libs = ['boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'm']
+fs_libs = ['boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono', 'rt', 'boost_filesystem', 'sdd', 'm']
 env.Append( LIBS = fs_libs )
 
-fs_lib_paths = [ os.path.join(env['fs'], env['build_basename'])]
+fs_lib_paths = [ os.path.join(env['fs'], env['build_basename']), sdd_base_dir]
 env.Append( LIBPATH = [ os.path.abspath(p) for p in fs_lib_paths ] )

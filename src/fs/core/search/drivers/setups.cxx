@@ -64,4 +64,14 @@ GroundingSetup::ground_search_lifted_heuristic(Problem& problem) {
 	return GroundStateModel(problem);
 }
 
+SDDLiftedStateModel
+GroundingSetup::sdd_lifted_model(Problem& problem) {
+    Validation::check_no_conditional_effects(problem);
+
+    // We don't ground any action
+    problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
+
+    return SDDLiftedStateModel::build(problem);
+}
+
 } } // namespaces

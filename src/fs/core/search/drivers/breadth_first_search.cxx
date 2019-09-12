@@ -22,6 +22,12 @@ BreadthFirstSearchDriver<LiftedStateModel>::setup(Problem& problem) const {
 	return GroundingSetup::fully_lifted_model(problem);
 }
 
+template <>
+SDDLiftedStateModel
+BreadthFirstSearchDriver<SDDLiftedStateModel>::setup(Problem& problem) const {
+    return GroundingSetup::sdd_lifted_model(problem);
+}
+
 template <typename StateModelT>
 ExitCode
 BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
@@ -43,5 +49,6 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 // explicit instantiations
 template class BreadthFirstSearchDriver<GroundStateModel>;
 template class BreadthFirstSearchDriver<LiftedStateModel>;
+template class BreadthFirstSearchDriver<SDDLiftedStateModel>;
 
 } } // namespaces

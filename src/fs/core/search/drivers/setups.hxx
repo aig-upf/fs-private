@@ -2,6 +2,7 @@
 #pragma once
 
 #include <fs/core/models/lifted_state_model.hxx>
+#include <fs/core/models/sdd_lifted_state_model.hxx>
 #include <fs/core/models/ground_state_model.hxx>
 #include <fs/core/models/simple_state_model.hxx>
 
@@ -16,6 +17,8 @@ namespace fs0 { namespace drivers {
 class GroundingSetup {
 public:
 	static LiftedStateModel fully_lifted_model(Problem& problem);
+
+    static SDDLiftedStateModel sdd_lifted_model(Problem& problem);
 	
 	//! A simple model with all grounded actions
 	static GroundStateModel fully_ground_model(Problem& problem);

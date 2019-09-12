@@ -15,6 +15,8 @@ from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_tas
 from .representation import ProblemRepresentation
 from .templates import tplManager
 
+from tarski.sdd.sdd import process_problem
+from tarski.io import FstripsReader
 
 def parse_arguments(args):
     parser = argparse.ArgumentParser(description='Bootstrap and run the FS planner on a given instance.'
@@ -48,6 +50,8 @@ def parse_arguments(args):
     parser.add_argument('--planfile', default=None, help="(Optional) Path to the file where the solution plan will be left.")
     parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
     parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
+
+    parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator')
 
     args = parser.parse_args(args)
 
@@ -289,10 +293,20 @@ def run(args):
         planner_arguments = run_solver(out_dir, args, True)
         generate_debug_scripts(out_dir, planner_arguments)
 
+    if args.sdd:
+        problem = parse_problem_with_tarski(args.domain, args.instance)
+        sdddir = os.path.join(out_dir, 'data', 'sdd')
+        utils.mkdirp(sdddir)
+        process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False)
+
+
     run_solver(out_dir, args, args.parse_only)
 
     return 0
 
+def parse_problem_with_tarski(domain_file, inst_file):
+    reader = FstripsReader(raise_on_error=True, theories=None)
+    return reader.read_problem(domain_file, inst_file)
 
 def main(args):
     return run(parse_arguments(args))

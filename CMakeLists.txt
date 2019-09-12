@@ -137,6 +137,8 @@ set(SOURCE_FILES
         src/fs/core/models/ground_state_model.hxx
         src/fs/core/models/lifted_state_model.cxx
         src/fs/core/models/lifted_state_model.hxx
+        src/fs/core/models/sdd_lifted_state_model
+        src/fs/core/models/utils
         src/fs/core/models/simple_state_model.cxx
         src/fs/core/models/simple_state_model.hxx
         src/fs/core/search/algorithms/monotonic_search
@@ -239,6 +241,7 @@ set(SOURCE_FILES
         src/fs/core/utils/tuple_hash.hxx
         src/fs/core/utils/utils.hxx
         src/fs/core/utils/visitor.hxx
+        src/fs/core/utils/sdd
         src/fs/core/atom.cxx
         src/fs/core/atom.hxx
         src/fs/core/base.cxx
@@ -275,3 +278,4 @@ include_directories(${FS_SRC})
 include_directories(${FS_VENDOR}/rapidjson/include)
 include_directories(${FS_VENDOR}/lapkt-base/src)
 include_directories(${FS_VENDOR}/lapkt-novelty/src)
+include_directories(${FS_VENDOR}/sdd)
