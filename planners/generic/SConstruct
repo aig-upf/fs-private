@@ -15,7 +15,7 @@ vars.Add(PathVariable('fs', 'Path where the FS library is installed', os.getenv(
 env = Environment(variables=vars, ENV=os.environ)
 env['CXX'] = os.environ.get('CXX', env['default_compiler'])
 
-env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14', '-no-pie' ])  # Flags common to all options
+env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++14'])  # Flags common to all options
 env.Append( LINKFLAGS = ['-lstdc++' ] )  # Seems to be necessary to avoid compatibility issues at linking time...
 
 if env['edebug']:

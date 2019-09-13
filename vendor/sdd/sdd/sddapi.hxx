@@ -20,6 +20,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /****************************************************************************************
  * typedefs and printf controls
  ****************************************************************************************/
@@ -49,19 +50,16 @@ typedef unsigned short BoolOp; //holds one of two values defined next
  * struct and function definitions
  ****************************************************************************************/
 
-
 typedef struct vtree_t Vtree;
 typedef struct sdd_node_t SddNode;
 typedef struct sdd_manager_t SddManager;
 typedef struct wmc_manager_t WmcManager;
 
-typedef struct vtree_t *SddVtreeSearchFunc(struct vtree_t *, struct sdd_manager_t *);
+typedef struct vtree_t* SddVtreeSearchFunc(struct vtree_t*, struct sdd_manager_t*);
 
 /****************************************************************************************
  * function prototypes
  ****************************************************************************************/
-
-
 
 // SDD MANAGER FUNCTIONS
 SddManager* sdd_manager_new(Vtree* vtree);
@@ -255,4 +253,3 @@ SddWmc wmc_literal_pr(const SddLiteral literal, const WmcManager* wmc_manager);
 /****************************************************************************************
  * end
  ****************************************************************************************/
-
