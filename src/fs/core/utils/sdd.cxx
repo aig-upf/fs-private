@@ -13,7 +13,7 @@ namespace fsys = boost::filesystem;
 void load_sdd_from_disk(const std::string& dir) {
     const std::string suffix(".vtree.sdd");
     fsys::path path(dir);
-    if (!fsys::exists(path)) throw std::runtime_error("Non-existing base SDD directory");
+    if (!fsys::exists(path)) throw std::runtime_error("Non-existing base SDD directory: " + dir);
 
     for (fsys::directory_entry& entry : fsys::directory_iterator(path)) {
         auto vtree_fname = entry.path().filename().string();
@@ -25,12 +25,13 @@ void load_sdd_from_disk(const std::string& dir) {
 
 
             // set up vtree and manager
-            Vtree* vtree = sdd_vtree_read((dir + vtree_fname).c_str());
+            std::cout << "Reading SDD files corresponding to \"" << schema_name << "\"...";
+            Vtree* vtree = sdd_vtree_read((dir + '/' +  vtree_fname).c_str());
             SddManager* manager = sdd_manager_new(vtree);
 
-            printf("reading sdd from file ...\n");
-            SddNode* alpha = sdd_read((dir + mng_fname).c_str(), manager);
-            printf("  sdd size = %zu\n", sdd_size(alpha));
+            SddNode* alpha = sdd_read((dir + '/' + mng_fname).c_str(), manager);
+            std::cout << "Done. SDD Size: " << sdd_size(alpha) << std::endl;
+//                      printf("  sdd size = %zu\n", sdd_size(alpha));
         }
     }
 
