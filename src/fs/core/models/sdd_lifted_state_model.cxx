@@ -7,10 +7,7 @@
 #include <fs/core/actions/actions.hxx>
 
 #include <fs/core/languages/fstrips/language.hxx>
-#include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <utility>
-
-#include <fs/core/utils/sdd.hxx>
 
 #include "utils.hxx"
 
@@ -54,10 +51,8 @@ namespace fs0 {
     }
 
 
-    gecode::LiftedActionIterator SDDLiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
-        if ( enforce_state_constraints )
-            return gecode::LiftedActionIterator(state, _handlers, _task.getStateConstraints(), _task.get_tuple_index());
-        return gecode::LiftedActionIterator(state, _handlers, {}, _task.get_tuple_index());
+    SDDActionIterator SDDLiftedStateModel::applicable_actions(const State& state) const {
+        return {state, sdds_, _task.get_tuple_index()};
     }
 
 
@@ -74,15 +69,15 @@ namespace fs0 {
     SDDLiftedStateModel::build(const Problem& problem) {
         const ProblemInfo& info = ProblemInfo::getInstance();
 
-        load_sdd_from_disk(info.getDataDir() + "/sdd");
+        auto sdds = load_sdds_from_disk(problem.getPartiallyGroundedActions(), info.getDataDir() + "/sdd");
 
-        auto model = SDDLiftedStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
-//        model.set_handlers(gecode::LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
+        auto model = SDDLiftedStateModel(problem, sdds, obtain_goal_atoms(problem.getGoalConditions()));
         return model;
     }
 
-    SDDLiftedStateModel::SDDLiftedStateModel(const Problem& problem, std::vector<const fs::Formula*> subgoals) :
+    SDDLiftedStateModel::SDDLiftedStateModel(const Problem& problem, std::vector<std::shared_ptr<ActionSchemaSDD>> sdds, std::vector<const fs::Formula*> subgoals) :
             _task(problem),
+            sdds_(std::move(sdds)),
             _subgoals(std::move(subgoals))
     {}
 

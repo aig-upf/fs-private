@@ -3,7 +3,9 @@
 
 #include <fs/core/atom.hxx>
 #include <fs/core/actions/action_id.hxx>
-#include <fs/core/actions/lifted_action_iterator.hxx>
+#include <fs/core/actions/sdd_action_iterator.hxx>
+#include <fs/core/utils/sdd.hxx>
+
 
 
 namespace fs0 { namespace gecode { class LiftedActionCSP; }}
@@ -23,7 +25,7 @@ public:
 	using ActionType = LiftedActionID;
 
 protected:
-	SDDLiftedStateModel(const Problem& problem, std::vector<const fs::Formula*>  subgoals);
+	SDDLiftedStateModel(const Problem& problem, std::vector<std::shared_ptr<ActionSchemaSDD>> sdds, std::vector<const fs::Formula*>  subgoals);
 
 public:
 
@@ -44,10 +46,7 @@ public:
 	bool goal(const State& state) const;
 
 	//! Returns applicable action set object
-	gecode::LiftedActionIterator applicable_actions(const State& state, bool enforce_state_constraints) const;
-	gecode::LiftedActionIterator applicable_actions(const State& state) const {
-		return applicable_actions(state, true);
-	}
+	SDDActionIterator applicable_actions(const State& state) const;
 
 	bool is_applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const;
 	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;
@@ -58,7 +57,6 @@ public:
 
 
 	const Problem& getTask() const { return _task; }
-	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>>&& handlers) { _handlers = std::move(handlers); }
 
 	unsigned get_action_idx(const LiftedActionID& action) const { return 0; }
 
@@ -76,7 +74,7 @@ protected:
 	// The underlying planning problem.
 	const Problem& _task;
 
-	std::vector<std::shared_ptr<gecode::LiftedActionCSP>> _handlers;
+    std::vector<std::shared_ptr<ActionSchemaSDD>> sdds_;
 
 	const std::vector<const fs::Formula*> _subgoals;
 

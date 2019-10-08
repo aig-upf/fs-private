@@ -17,8 +17,8 @@ set(SOURCE_FILES
         src/fs/core/actions/checker.hxx
         src/fs/core/actions/grounding.cxx
         src/fs/core/actions/grounding.hxx
-        src/fs/core/actions/lifted_action_iterator.cxx
-        src/fs/core/actions/lifted_action_iterator.hxx
+        src/fs/core/actions/lifted_action_iterator
+        src/fs/core/actions/sdd_action_iterator
         src/fs/core/applicability/action_managers.cxx
         src/fs/core/applicability/action_managers.hxx
         src/fs/core/applicability/base.hxx
@@ -262,7 +262,7 @@ set(SOURCE_FILES
 #add_executable(fs_private ${SOURCE_FILES})
 add_library(fs SHARED ${SOURCE_FILES})
 
-set(FS_ROOT .)
+set(FS_ROOT ${CMAKE_CURRENT_LIST_DIR})
 set(FS_SRC ${FS_ROOT}/src)
 set(FS_VENDOR ${FS_ROOT}/vendor)
 
@@ -270,11 +270,16 @@ set(FS_VENDOR ${FS_ROOT}/vendor)
 #MESSAGE(WARNING "Your FS_SRC home directory is: ${FS_SRC}" )
 #MESSAGE(WARNING  "Your LAPKT directory is: $ENV{LAPKT}/include" )
 #MESSAGE(WARNING "Your Unix home directory is: $ENV{HOME}" )
+#MESSAGE(WARNING "Your directory is: ${FS_ROOT}" )
+#MESSAGE(WARNING "Your directory is: ${FS_VENDOR}" )
+#MESSAGE(WARNING "Your directory is: $ENV{HOME}/local/include" )
 
 
 include_directories($ENV{HOME}/local/include)  # Gecode, etc.
 include_directories(${FS_SRC})
-
 include_directories(${FS_VENDOR}/rapidjson/include)
 include_directories(${FS_VENDOR}/lapkt-base/src)
 include_directories(${FS_VENDOR}/lapkt-novelty/src)
+include_directories(${FS_VENDOR}/sdd)
+
+#set(CMAKE_VERBOSE_MAKEFILE ON)

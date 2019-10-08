@@ -299,14 +299,15 @@ def run(args):
         utils.mkdirp(sdddir)
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False)
 
-
     run_solver(out_dir, args, args.parse_only)
 
     return 0
 
+
 def parse_problem_with_tarski(domain_file, inst_file):
     reader = FstripsReader(raise_on_error=True, theories=None)
     return reader.read_problem(domain_file, inst_file)
+
 
 def main(args):
     return run(parse_arguments(args))
