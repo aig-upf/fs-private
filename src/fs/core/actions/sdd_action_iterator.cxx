@@ -49,7 +49,7 @@ namespace fs0 {
                     continue;
                 }
 
-                model_iterator_ = new SDDModelIterator();
+                model_iterator_ = new SDDModelEnumerator();
             }
 
 

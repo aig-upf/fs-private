@@ -49,7 +49,7 @@ namespace fs0 {
 
             SddNode* current_sdd_;
 
-            SDDModelIterator* model_iterator_;
+            SDDModelEnumerator* model_iterator_;
 
             LiftedActionID* _action;
 

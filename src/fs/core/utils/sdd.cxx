@@ -115,4 +115,124 @@ unsigned ActionSchemaSDD::var_count() const {
     return sdd_manager_var_count(sddmanager_);
 }
 
+std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
+    // This is a direct translation of the `models()` method of the Python PySDD API:
+    // <https://github.com/wannesm/PySDD/blob/5a301a9/pysdd/sdd.pyx#L247>
+
+    if (sdd_node_is_false(node)) throw std::runtime_error("False SDD has no models");
+
+    if (vtree == nullptr) {
+        vtree = sdd_node_is_true(node) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(node);
+    }
+
+    auto vtree_left = sdd_vtree_left(vtree);
+    auto vtree_right = sdd_vtree_right(vtree);
+
+
+    if (sdd_vtree_is_leaf(vtree)) {
+        unsigned var = sdd_vtree_var(vtree);
+        assert (var < nvars_);
+
+        if (sdd_node_is_true(node)) {
+            std::vector<SDDModel> result;
+            result.emplace_back(nvars_);
+            result.back()[var] = SDDModel::value_t::True;
+
+            result.emplace_back(nvars_);
+            result.back()[var] = SDDModel::value_t::False;
+            return result;
+
+        } else if (sdd_node_is_literal(node)) {
+            SDDModel::value_t value = sdd_node_literal(node) < 0 ? SDDModel::value_t::False : SDDModel::value_t::True;
+            std::vector<SDDModel> result;
+            result.emplace_back(nvars_);
+            result.back()[var] = value;
+            return result;
+        }
+
+    } else {
+        if (sdd_node_is_true(node)) {
+            return model_cross_product(node, node, vtree_left, vtree_right);
+
+        } else if (sdd_vtree_of(node) == vtree) {
+            assert(sdd_node_is_decision(node)); // Required by the documentation of `sdd_node_elements`
+
+            // nodes is a C-style array of nodes containing (flat) pairs of (prime, sub), as described in the docs
+            SddNode** nodes = sdd_node_elements(node);
+            std::vector<SDDModel> result;
+            // TODO Might be worth doing two passes to precompute the final size of result
+            // TODO and reserve the appropriate space?
+
+            auto nsize = 2*sdd_node_size(node);
+            for (unsigned i=0; i < nsize; i += 2) {
+                SddNode* prime = nodes[i];
+                SddNode* sub = nodes[i+1];
+
+                if (sdd_node_is_false(sub)) continue;
+
+                model_cross_product(prime, sub, vtree_left, vtree_right, result);
+            }
+
+            return result;
+
+
+        } else {  // fill in gap in vtree
+            auto truenode = sdd_manager_true(sddmanager_);
+
+            if (sdd_vtree_is_sub(vtree, vtree_left)) {
+                return model_cross_product(node, truenode, vtree_left, vtree_right);
+            } else {
+                return model_cross_product(truenode, node, vtree_left, vtree_right);
+            }
+        }
+    }
+
+    throw std::runtime_error("Shouldn't get here :-)");
+}
+
+void SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output) {
+    auto left_models = models(leftnode, leftvt);
+    auto right_models = models(rightnode, rightvt);
+
+    // increase vector capacity by expected number of models of the cross product
+    output.reserve(output.size() + left_models.size() * right_models.size());
+
+    for (const auto& l:left_models) {
+        for (const auto& r:right_models) {
+            output.emplace_back(SDDModel::merge_disjoint_models(l, r));
+        }
+    }
+}
+
+std::vector<SDDModel> SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt) {
+    std::vector<SDDModel> result;
+    model_cross_product(leftnode, rightnode, leftvt, rightvt, result);
+    return result;
+}
+
+SDDModelEnumerator::SDDModelEnumerator(SddManager* manager)
+    : sddmanager_(manager), nvars_(sdd_manager_var_count(manager)) {}
+
+SDDModel SDDModel::merge_disjoint_models(const SDDModel& left, const SDDModel& right) {
+    std::size_t size = left.size();
+    if (size != right.size()) throw std::runtime_error("Unequal-sized SDD models cannot be merged");
+
+    // Copy the left model and update the values from the right, checking for no overlap
+    std::vector<value_t> res;
+    res.reserve(size);
+    for (std::size_t i = 0; i < size; ++i) {
+        const auto& lv = left[i];
+        const auto& rv = right[i];
+
+        if (lv != value_t::Undefined) {
+            if (rv != value_t::Undefined) throw std::runtime_error("Attempted to merge overlapping SDD models");
+            res.emplace_back(lv);
+        } else {
+            res.emplace_back(rv);
+        }
+    }
+
+    return SDDModel(std::move(res));
+}
+
 } // namespace

@@ -46,26 +46,48 @@ protected:
     std::vector<unsigned> bindings_; // TODO Determine best data structure
 };
 
+//! A (possibly partial) SDD model, that is, a mapping between the atoms in the SDD and a truth
+//! value that satisfies the SDD. For efficiency reasons, we allow for undefined values, so that
+//! properly speaking we can have assignments that satisfy some subtree of the original SDD we are interested in
 class SDDModel {
-    enum class value_t {Undefined, False, True};
-
 public:
+    enum class value_t : uint8_t {Undefined, False, True};
+
     explicit SDDModel(unsigned nvars) : values_(nvars, value_t::Undefined) {}
+    explicit SDDModel(std::vector<value_t>&& values) : values_(std::move(values)) {}
+
+    //! Default copy constructors and assignment operators
+    SDDModel(const SDDModel&) = default;
+    SDDModel(SDDModel&&) = default;
+    SDDModel& operator=(const SDDModel&) = default;
+    SDDModel& operator=(SDDModel&&) = default;
+
+    bool operator==(const SDDModel &rhs) const { return values_ == rhs.values_; }
+    bool operator!=(const SDDModel &rhs) const { return !(this->operator==(rhs));}
+
+    inline const value_t& operator[] (std::size_t i) const { assert(i < values_.size()); return values_[i]; }
+    inline value_t& operator[] (std::size_t i) { assert(i < values_.size()); return values_[i]; }
+    inline std::size_t size() const { return values_.size(); }
+
+    static SDDModel merge_disjoint_models(const SDDModel& left, const SDDModel& right);
 
 protected:
     std::vector<value_t> values_;
 };
 
-class SDDModelIterator {
-public:
-    SDDModelIterator() : _index(0) { throw std::runtime_error("TO BE IMPLEMENTED"); }
-    SDDModel* next() { assert(is_valid()); throw std::runtime_error("TO BE IMPLEMENTED"); }
 
-    bool is_valid() const { return true; }
+class SDDModelEnumerator {
+public:
+    explicit SDDModelEnumerator(SddManager* manager);
+
+    std::vector<SDDModel> models(SddNode* node, Vtree* vtree= nullptr);
 
 protected:
-    std::size_t _index;
+    SddManager* sddmanager_;
+    unsigned nvars_;
 
+    std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
+    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output);
 };
 
 //! Loads from disk all SDDs in the given directory (one per action schema)
