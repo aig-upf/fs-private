@@ -23,7 +23,8 @@ namespace fs0 {
             sdds_(sdds),
             current_sdd_idx_(currentIdx),
             current_sdd_(nullptr),
-            _action(nullptr)
+            _action(nullptr),
+            current_resultset_()
     {
         advance();
     }
@@ -34,14 +35,15 @@ namespace fs0 {
 
     void SDDActionIterator::Iterator::advance() {
         for (; current_sdd_idx_ < sdds_.size(); ++current_sdd_idx_) {
-            const std::shared_ptr<ActionSchemaSDD>& schema_sdd = sdds_[current_sdd_idx_];
+            ActionSchemaSDD& schema_sdd = *sdds_[current_sdd_idx_];
 
             if (!current_sdd_) {
-                assert (!model_iterator_);
+                assert (current_resultset_.empty());
 
                 // Create the SDD corresponding to the current action schema index conjoined with the current state.
-                current_sdd_ = schema_sdd->conjoin_with(state_);
-                if (!current_sdd_ || sdd_node_is_false(current_sdd_)) {// no applicable ground action for this schema
+                // TODO Try to implement this in one single pass with the model enumeration
+                current_sdd_ = schema_sdd.conjoin_with(state_);
+                if (!current_sdd_ || sdd_node_is_false(current_sdd_)) { // no applicable ground action for this schema
 
                     // No delete, as SDD library has custom mem management.
                     // Should get deleted when garbage collection or when manager gets deleted
@@ -49,24 +51,27 @@ namespace fs0 {
                     continue;
                 }
 
-                model_iterator_ = new SDDModelEnumerator();
+                SDDModelEnumerator enumerator(schema_sdd.manager());
+                current_resultset_ = enumerator.models(current_sdd_);
+                current_resultset_idx_ = 0;
             }
 
+            if (current_resultset_idx_ < current_resultset_.size()) {
+                const auto& model = current_resultset_[current_resultset_idx_];
 
+                delete _action;
+                _action = generate_lifted_action_id_from_sdd_model(model);
 
-            SDDModel* model = model_iterator_->next();
-            if (!model) {  // We have already explored all solutions to the SDD
-                // TODO Perhaps garbage-collect here
-
-                current_sdd_ = nullptr;
-                delete model_iterator_; model_iterator_ = nullptr;
-                continue;
+                ++current_resultset_idx_;
+                return;
             }
 
-            delete _action;
-            _action = generate_lifted_action_id_from_sdd_model(*model);
-            delete model;
-            break;
+            // At this point we have explored all solutions to the current action-schema SDD
+            // TODO Perhaps garbage-collect here
+
+            current_sdd_ = nullptr;
+            current_resultset_.clear();
+            current_resultset_idx_ = 0;
         }
     }
 

@@ -27,6 +27,8 @@ public:
 
     unsigned schema_id() const { return schema_id_; }
 
+    SddManager* manager() { return sddmanager_; }
+
 protected:
     unsigned schema_id_;
 

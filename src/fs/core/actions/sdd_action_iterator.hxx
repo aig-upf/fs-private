@@ -49,9 +49,10 @@ namespace fs0 {
 
             SddNode* current_sdd_;
 
-            SDDModelEnumerator* model_iterator_;
-
             LiftedActionID* _action;
+
+            std::vector<SDDModel> current_resultset_;
+            unsigned current_resultset_idx_;
 
             //! Advance into the next SDD model
             void advance();
