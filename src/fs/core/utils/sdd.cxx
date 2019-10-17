@@ -9,6 +9,7 @@
 #include <boost/filesystem.hpp>   // includes all needed Boost.Filesystem declarations
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 
 
 #include <iostream>
@@ -17,11 +18,13 @@
 #include <fs/core/state.hxx>
 
 namespace fsys = boost::filesystem;
+using boost::format;
 
 namespace fs0 {
 
 //! Loads from disk all SDDs in the given directory (one per action schema)
-std::vector<std::shared_ptr<ActionSchemaSDD>> load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, const std::string& dir) {
+std::vector<std::shared_ptr<ActionSchemaSDD>>
+load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, const std::string& dir) {
     const ProblemInfo& info = ProblemInfo::getInstance();
     std::vector<std::shared_ptr<ActionSchemaSDD>> sdds;
 
@@ -34,16 +37,18 @@ std::vector<std::shared_ptr<ActionSchemaSDD>> load_sdds_from_disk(const std::vec
 
         // Each action schema has a number of filenames starting with the name of the schema
         const std::string& schema_name = schema->getName();
-        std::string mng_fname = schema_name + ".manager.sdd";
-        std::string vtree_fname = schema_name + ".vtree.sdd";
-        std::string atoms_fname = schema_name + ".atoms.data";
+        std::string mng_fname = str(format("%1%.manager.sdd") % schema_name);
+        std::string vtree_fname = str(format("%1%.vtrees.sdd") % schema_name);
+        std::string atoms_fname = str(format("%1%.atoms.data") % schema_name);
 
         // Load vtree and manager
         std::cout << "Reading SDD files corresponding to \"" << schema_name << "\"...";
-        Vtree* vtree = sdd_vtree_read((dir + '/' +  vtree_fname).c_str());
+        fsys::path vtree_path = dir / fsys::path(vtree_fname);
+        Vtree* vtree = sdd_vtree_read(vtree_path.string().c_str());
         SddManager* manager = sdd_manager_new(vtree);
 
-        SddNode* node = sdd_read((dir + '/' + mng_fname).c_str(), manager);
+        fsys::path manager_path = dir / fsys::path(mng_fname);
+        SddNode* node = sdd_read(manager_path.string().c_str(), manager);
         std::cout << "Done. SDD Size: " << sdd_size(node) << std::endl;
 
         if (sdd_node_is_false(node)) {
@@ -54,8 +59,10 @@ std::vector<std::shared_ptr<ActionSchemaSDD>> load_sdds_from_disk(const std::vec
         // Load bookkeeping info for the schema
         std::vector<std::pair<VariableIdx, unsigned>> relevant;
 
-        std::ifstream is(dir + '/' + atoms_fname);
-        if (is.fail()) throw std::runtime_error("Could not open filename '" + atoms_fname + "'");
+        fsys::path atoms_path = dir / fsys::path(atoms_fname);
+        std::ifstream is(atoms_path.string());
+        if (is.fail())
+            throw std::runtime_error("Could not open filename '" + atoms_fname + "'");
         std::string line;
         while (std::getline(is, line)) {
             // each line is of the form "holding,c:5"
