@@ -31,15 +31,13 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
     fsys::path path(dir);
     if (!fsys::exists(path)) throw std::runtime_error("Non-existing base SDD directory: " + dir);
 
-    unsigned schema_id = -1;
     for (const auto& schema:schemas) {
-        schema_id += 1;
-
         // Each action schema has a number of filenames starting with the name of the schema
         const std::string& schema_name = schema->getName();
         std::string mng_fname = str(format("%1%.manager.sdd") % schema_name);
         std::string vtree_fname = str(format("%1%.vtree.sdd") % schema_name);
         std::string atoms_fname = str(format("%1%.atoms.data") % schema_name);
+        std::string bindings_fname = str(format("%1%.bindings.data") % schema_name);
 
         // Load vtree and manager
         std::cout << "Reading SDD files corresponding to \"" << schema_name << "\"...";
@@ -61,8 +59,9 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
 
         fsys::path atoms_path = dir / fsys::path(atoms_fname);
         std::ifstream is(atoms_path.string());
-        if (is.fail())
+        if (is.fail()) {
             throw std::runtime_error("Could not open filename '" + atoms_fname + "'");
+        }
         std::string line;
         while (std::getline(is, line)) {
             // each line is of the form "holding,c:5"
@@ -83,14 +82,40 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
             relevant.emplace_back(varid, sdd_varid);
         }
 
-        sdds.push_back(std::make_shared<ActionSchemaSDD>(schema_id, relevant, manager, vtree, node));
+        std::vector<std::vector<std::pair<object_id, unsigned>>> bindings;
+        is = std::ifstream((dir / fsys::path(bindings_fname)).string());
+        if (is.fail()) {
+            throw std::runtime_error("Could not open filename '" + bindings_fname + "'");
+        }
+
+        while (std::getline(is, line)) {
+            // i-th line is of the form "b:1,d:2,a:3,c:4" and corresponds to the bindings of parameter i of the schema
+            std::vector<std::string> strings;
+            boost::split(strings, line, boost::is_any_of(","));
+
+            std::vector<std::pair<object_id, unsigned>> param_bindings;
+            for (const auto& str:strings) {
+                std::vector<std::string> substrings;
+                boost::split(substrings, str, boost::is_any_of(":"));
+                assert(substrings.size() == 2);
+                const object_id& oid = info.get_object_id(substrings[0]);
+                param_bindings.emplace_back(oid, boost::lexical_cast<unsigned>(substrings[1]));
+            }
+
+            bindings.push_back(std::move(param_bindings));
+        }
+
+        sdds.push_back(std::make_shared<ActionSchemaSDD>(*schema, relevant, bindings, manager, vtree, node));
     }
 
     return sdds;
 }
 
-ActionSchemaSDD::ActionSchemaSDD(unsigned schema_id, std::vector<std::pair<VariableIdx, unsigned>> relevant, SddManager *manager, Vtree *vtree, SddNode *sddnode)
-        : schema_id_(schema_id), sddmanager_(manager), vtree_(vtree), sddnode_(sddnode), relevant_(std::move(relevant))
+ActionSchemaSDD::ActionSchemaSDD(const PartiallyGroundedAction& schema,
+        std::vector<std::pair<VariableIdx, unsigned>> relevant,
+        std::vector<std::vector<std::pair<object_id, unsigned>>> bindings,
+        SddManager *manager, Vtree *vtree, SddNode *sddnode)
+        : schema_(schema), sddmanager_(manager), vtree_(vtree), sddnode_(sddnode), relevant_(std::move(relevant)), bindings_(std::move(bindings))
 {
 }
 
@@ -122,7 +147,24 @@ unsigned ActionSchemaSDD::var_count() const {
     return sdd_manager_var_count(sddmanager_);
 }
 
-std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
+    std::vector<object_id> ActionSchemaSDD::get_binding_from_model(const SDDModel &model) {
+        std::vector<object_id> values;
+        values.reserve(bindings_.size());
+
+        for (const auto& paramdata:bindings_) {
+            for (const auto& var_obj:paramdata) {
+                unsigned sdd_varid = var_obj.second;
+                if (model[sdd_varid] == SDDModel::value_t::True) {
+                    values.push_back(var_obj.first);
+                    break;
+                }
+            }
+        }
+
+        return values;
+    }
+
+    std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
     // This is a direct translation of the `models()` method of the Python PySDD API:
     // <https://github.com/wannesm/PySDD/blob/5a301a9/pysdd/sdd.pyx#L247>
 
@@ -138,21 +180,21 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
 
     if (sdd_vtree_is_leaf(vtree)) {
         unsigned var = sdd_vtree_var(vtree);
-        assert (var < nvars_);
+        assert (var > 0 && var <= nvars_);  // Variables in the SDD library range from 1 to numvars
 
         if (sdd_node_is_true(node)) {
             std::vector<SDDModel> result;
-            result.emplace_back(nvars_);
+            result.emplace_back(nvars_+1);
             result.back()[var] = SDDModel::value_t::True;
 
-            result.emplace_back(nvars_);
+            result.emplace_back(nvars_+1);
             result.back()[var] = SDDModel::value_t::False;
             return result;
 
         } else if (sdd_node_is_literal(node)) {
             SDDModel::value_t value = sdd_node_literal(node) < 0 ? SDDModel::value_t::False : SDDModel::value_t::True;
             std::vector<SDDModel> result;
-            result.emplace_back(nvars_);
+            result.emplace_back(nvars_+1);
             result.back()[var] = value;
             return result;
         }

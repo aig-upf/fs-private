@@ -17,36 +17,6 @@ namespace fs0 {
 class State;
 class PartiallyGroundedAction;
 
-class ActionSchemaSDD {
-public:
-    ActionSchemaSDD(unsigned schema_id_, std::vector<std::pair<VariableIdx, unsigned>> relevant, SddManager* manager, Vtree* vtree, SddNode* sddnode);
-    ~ActionSchemaSDD();
-
-    SddNode* conjoin_with(const State& state) const;
-    unsigned var_count() const;
-
-    unsigned schema_id() const { return schema_id_; }
-
-    SddManager* manager() { return sddmanager_; }
-
-protected:
-    unsigned schema_id_;
-
-    //! The actual SDD objects
-    SddManager* sddmanager_;
-    Vtree* vtree_;
-    SddNode* sddnode_;
-
-    //! Some bookkeeping data
-
-    //! A list of the relevant atoms along with their SDD id. For instance, a tuple
-    //! <v, id> in vector `relevant_` means that atom v=true is relevant to the SDD
-    //! for this action schema, and its ID within the SDD is `id`. In a STRIPS problem, we might
-    //! typically have a triple like <holding(a), 4>
-    std::vector<std::pair<VariableIdx, unsigned>> relevant_;
-    
-    std::vector<unsigned> bindings_; // TODO Determine best data structure
-};
 
 //! A (possibly partial) SDD model, that is, a mapping between the atoms in the SDD and a truth
 //! value that satisfies the SDD. For efficiency reasons, we allow for undefined values, so that
@@ -75,6 +45,43 @@ public:
 
 protected:
     std::vector<value_t> values_;
+};
+
+class ActionSchemaSDD {
+public:
+    ActionSchemaSDD(const PartiallyGroundedAction& schema,
+            std::vector<std::pair<VariableIdx, unsigned>> relevant,
+            std::vector<std::vector<std::pair<object_id, unsigned>>> bindings,
+            SddManager* manager, Vtree* vtree, SddNode* sddnode);
+    ~ActionSchemaSDD();
+
+    SddNode* conjoin_with(const State& state) const;
+    unsigned var_count() const;
+
+    SddManager* manager() { return sddmanager_; }
+
+    const PartiallyGroundedAction& get_schema() const { return schema_; }
+
+    std::vector<object_id> get_binding_from_model(const SDDModel& model);
+
+protected:
+    const PartiallyGroundedAction& schema_;
+
+    //! The actual SDD objects
+    SddManager* sddmanager_;
+    Vtree* vtree_;
+    SddNode* sddnode_;
+
+    //! Some bookkeeping data
+
+    //! A list of the relevant atoms along with their SDD id. For instance, a tuple
+    //! <v, id> in vector `relevant_` means that atom v=true is relevant to the SDD
+    //! for this action schema, and its ID within the SDD is `id`. In a STRIPS problem, we might
+    //! typically have a triple like <holding(a), 4>
+    std::vector<std::pair<VariableIdx, unsigned>> relevant_;
+
+    //! 'bindings_[i]' contains the object_id corresponding
+    std::vector<std::vector<std::pair<object_id, unsigned>>> bindings_;
 };
 
 

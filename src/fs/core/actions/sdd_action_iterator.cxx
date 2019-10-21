@@ -8,12 +8,6 @@
 
 namespace fs0 {
 
-    LiftedActionID* generate_lifted_action_id_from_sdd_model(const SDDModel& model) {
-        throw std::runtime_error("TO BE IMPLEMENTED");
-        return nullptr;
-//        return new LiftedActionID(&_action, build_binding_from_solution(solution));
-    }
-
     SDDActionIterator::SDDActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, const AtomIndex& tuple_index) :
             state_(state), sdds_(sdds)
     {}
@@ -60,7 +54,10 @@ namespace fs0 {
                 const auto& model = current_resultset_[current_resultset_idx_];
 
                 delete _action;
-                _action = generate_lifted_action_id_from_sdd_model(model);
+                auto grounding = schema_sdd.get_binding_from_model(model);
+
+                _action = new LiftedActionID(&schema_sdd.get_schema(),
+                        Binding(std::move(grounding), std::vector<bool>(grounding.size(), true)));
 
                 ++current_resultset_idx_;
                 return;
