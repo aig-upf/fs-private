@@ -135,7 +135,7 @@ SddNode* ActionSchemaSDD::conjoin_with(const State &state) const {
             atom = -1 * atom;
         }
         literal = sdd_manager_literal(atom, sddmanager_);
-        sdd_conjoin(sddnode_, literal, sddmanager_);
+        current = sdd_conjoin(current, literal, sddmanager_);
     }
 
     // TODO Perhaps garbage-collect here?
