@@ -38,7 +38,7 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
         // Each action schema has a number of filenames starting with the name of the schema
         const std::string& schema_name = schema->getName();
         std::string mng_fname = str(format("%1%.manager.sdd") % schema_name);
-        std::string vtree_fname = str(format("%1%.vtrees.sdd") % schema_name);
+        std::string vtree_fname = str(format("%1%.vtree.sdd") % schema_name);
         std::string atoms_fname = str(format("%1%.atoms.data") % schema_name);
 
         // Load vtree and manager
