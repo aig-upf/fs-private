@@ -136,6 +136,8 @@ SddNode* ActionSchemaSDD::conjoin_with(const State &state) const {
         }
         literal = sdd_manager_literal(atom, sddmanager_);
         current = sdd_conjoin(current, literal, sddmanager_);
+        // TODO Check if it is better to condition, not conjoin?
+//        current = sdd_condition(atom, current, sddmanager_);
     }
 
     // TODO Perhaps garbage-collect here?
@@ -147,24 +149,25 @@ unsigned ActionSchemaSDD::var_count() const {
     return sdd_manager_var_count(sddmanager_);
 }
 
-    std::vector<object_id> ActionSchemaSDD::get_binding_from_model(const SDDModel &model) {
-        std::vector<object_id> values;
-        values.reserve(bindings_.size());
+std::vector<object_id> ActionSchemaSDD::get_binding_from_model(const SDDModel &model) {
+    std::vector<object_id> values;
+    values.reserve(bindings_.size());
 
-        for (const auto& paramdata:bindings_) {
-            for (const auto& var_obj:paramdata) {
-                unsigned sdd_varid = var_obj.second;
-                if (model[sdd_varid] == SDDModel::value_t::True) {
-                    values.push_back(var_obj.first);
-                    break;
-                }
+    for (const auto& paramdata:bindings_) {
+        for (const auto& var_obj:paramdata) {
+            unsigned sdd_varid = var_obj.second;
+            if (model[sdd_varid] == SDDModel::value_t::True) {
+                values.push_back(var_obj.first);
+                break;
             }
         }
-
-        return values;
     }
 
-    std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
+    assert(values.size() == bindings_.size());
+    return values;
+}
+
+std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
     // This is a direct translation of the `models()` method of the Python PySDD API:
     // <https://github.com/wannesm/PySDD/blob/5a301a9/pysdd/sdd.pyx#L247>
 

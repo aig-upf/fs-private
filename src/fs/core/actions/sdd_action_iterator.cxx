@@ -2,6 +2,7 @@
 #include <fs/core/state.hxx>
 #include <fs/core/actions/sdd_action_iterator.hxx>
 #include <fs/core/actions/action_id.hxx>
+#include <fs/core/actions/actions.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/utils/atom_index.hxx>
 #include <sdd/sddapi.hxx>
@@ -45,8 +46,14 @@ namespace fs0 {
                     continue;
                 }
 
+//                auto wmc_manager = wmc_manager_new(current_sdd_, 0, schema_sdd.manager());
+//                double wmc = wmc_propagate(wmc_manager);
+//                std::cout << "Action schema " << schema_sdd.get_schema().getName() << " has " << wmc << " models... " << std::flush;
+
+
                 SDDModelEnumerator enumerator(schema_sdd.manager());
                 current_resultset_ = enumerator.models(current_sdd_);
+//                std::cout << current_resultset_.size() << " models were actually retrieved" << std::endl;
                 current_resultset_idx_ = 0;
             }
 
