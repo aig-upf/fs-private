@@ -8,7 +8,7 @@ The following instructions have been tested on Python 3.{6,7} virtual environmen
 
 1. Clone from <https://github.com/wannesm/PySDD> and run  `pip install -e .` on the root folder.
 (_Ignore the installation instructions that require you to manually build and install the SDD libraries_!)
-1. Run `pip install -r requirements.txt`
+1. Go to the root directori of _this_ project and run `pip install -r requirements.txt`
 
 ### Updating the dependencies
 To update dependencies for already-installed packages, simply run
@@ -29,4 +29,4 @@ in the `LD_LIBRARY_PATH` library, such as `/usr/lib/` or `~/local/lib/`.
 ### Example Usage
 
     # Running FS-SDD
-    ./run.py --debug --sdd -i /home/frances/projects/code/downward-benchmarks/blocks/probBLOCKS-4-0.pddl --driver bfs-sdd
+    ./run.py --debug --sdd -i $DOWNWARD_BENCHMARKS/blocks/probBLOCKS-4-0.pddl --driver bfs-sdd

@@ -28,19 +28,19 @@ env['build_basename'] = '.build'
 
 if env['edebug']:
     build_suffix = 'edebug'
+    exe_name = 'solver.edebug.bin'
 elif env['debug']:
     build_suffix = 'debug'
+    exe_name = 'solver.debug.bin'
 else:
     build_suffix = 'prod'
+    exe_name = 'solver.bin'
+
 build_dirname = os.path.join(env['build_basename'], build_suffix)
 env.VariantDir(build_dirname, '.')
 
 Help(vars.GenerateHelpText(env))
 vars.Save('variables.cache', env)
-
-# Base include directories
-include_paths = ['src']
-isystem_paths = []
 
 # Possible modules
 # Compilation flag, module name, use-by-default?
@@ -53,7 +53,8 @@ modules = [
 ]
 
 # include local by default # MRJ: This probably should be acquired from an environment variable
-isystem_paths += ['/usr/local/include', os.path.expanduser('~/local/include')]
+include_paths = ['src']
+isystem_paths = ['/usr/local/include', os.path.expanduser('~/local/include')]
 
 
 # Process modules and external dependencies
@@ -65,6 +66,9 @@ for flag, modname in modules:
     else:
         print("Skipping module \"{}\"".format(modname))
 
+# Add main() binary
+include_paths += ["./planners/generic/"]
+sources += ["./planners/generic/main.cxx"]
 
 env.Append( CPPPATH = [ os.path.abspath(p) for p in include_paths ] )
 env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ] )
@@ -72,13 +76,8 @@ env.Append( CCFLAGS = [ '-isystem' + os.path.abspath(p) for p in isystem_paths ]
 
 # Determine all the build files
 build_files = [os.path.join(build_dirname, src) for src in sources]
-shared_lib = env.SharedLibrary(os.path.join(env['build_basename'], env['fs_libname']), build_files)
-static_lib = env.Library(os.path.join(env['build_basename'], env['fs_libname']), build_files)
-deployed_lib = env.Install(os.path.join('lib',env['fs_libname']), shared_lib)
-#deployed_lib = env.Install(os.path.join('lib',env['fs_libname']), static_lib)
-env.Alias('install', [deployed_lib])
-# Save a description of the compilation and linking options to be used when linking the final solver
-save_pkg_config_descriptor(env, env['fs_libname'], '{}.pc'.format(env['fs_libname']))
-
-Default([shared_lib])
+#shared_lib = env.SharedLibrary(os.path.join(env['build_basename'], env['fs_libname']), build_files)
+#static_lib = env.Library(os.path.join(env['build_basename'], env['fs_libname']), build_files)
+#Default([shared_lib])
 #Default([static_lib])
+env.Program(exe_name, build_files)

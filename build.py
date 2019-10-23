@@ -5,6 +5,7 @@
 """
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 import multiprocessing
@@ -20,37 +21,19 @@ def create_parser():
 
 
 def single_build(directory, command):
-    # First build the LAPKT production library
-    # lapkt_dir = os.environ['LAPKT2_PATH']
-    # print('\n')
-    # print("Building LAPKT library...")
-    # sys.stdout.flush()
-    # output = subprocess.call(command.split(), cwd=lapkt_dir)
-    # if output:
-    # sys.exit(output)
 
     # Build the FS planner production library
-    print("\nBuilding FS library: \"{}\" @ {}".format(command, directory))
+    print("\nBuilding FS executable: \"{}\" @ {}".format(command, directory))
     sys.stdout.flush()
     output = subprocess.call(command.split(), cwd=directory)
     if output:
         sys.exit(output)
-    # command_2 = "{} fs={} install".format(command, directory)
-    # output = subprocess.call(command_2.split(), cwd=directory)
-    # if output:
-    #     sys.exit(output)
 
-    # Build the vanilla generic FS planner
+    # Move the planner to the "generic" directory, for backwards compatibility
     planner_dir = os.path.join(directory, 'planners', 'generic')
-    # MRJ: Ensure that the generic planner is always using the correct
-    # version of FS
-    command = "{} fs={}".format(command, os.getcwd())
-    print("\nBuilding FS vanilla planner: \"{}\" @ {}".format(command, planner_dir))
-    sys.stdout.flush()
-    output = subprocess.call(command.split(), cwd=planner_dir)
-    if output:
-        sys.exit(output)
-
+    for file in os.listdir(directory):
+        if file.endswith(".bin"):
+            shutil.copy2(os.path.join(directory, file), os.path.join(planner_dir, file))
     print('')
 
 
