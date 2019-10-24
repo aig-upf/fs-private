@@ -26,10 +26,9 @@ class BaseReport(AbsoluteReport):
         'domain', 'problem', 'algorithm', 'unexplained_errors', 'error', 'node']
 
 
-NODE = platform.node()
-REMOTE = NODE.endswith(".scicore.unibas.ch") or NODE.endswith(".cluster.bc2.ch")
+is_remote = platform.node().startswith("node")
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
-ENV = UPFSlurmEnvironment(email="guillem.frances@upf.edu") if REMOTE else LocalEnvironment(processes=4)
+ENV = UPFSlurmEnvironment(email="guillem.frances@upf.edu") if is_remote else LocalEnvironment(processes=4)
 SUITE = [
     'blocks:probBLOCKS-4-0.pddl',
     'blocks:probBLOCKS-4-1.pddl',
