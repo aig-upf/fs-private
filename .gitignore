@@ -58,7 +58,7 @@ __pycache__/
 Makefile
 
 # Build temporary files
-experiments/*
+experiments/data
 workspace/*
 
 # Singularity images
