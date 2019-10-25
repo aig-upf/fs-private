@@ -1,8 +1,5 @@
 #! /usr/bin/env python
 
-"""
-Example experiment for the FF planner
-"""
 
 import os
 import platform
@@ -16,6 +13,9 @@ from lab.experiment import Experiment
 from downward import suites
 from downward.reports.absolute import AbsoluteReport
 
+import common_setup
+from common_setup import IssueExperiment
+
 here = path.abspath(path.dirname(__file__))
 
 
@@ -26,14 +26,28 @@ class BaseReport(AbsoluteReport):
         'domain', 'problem', 'algorithm', 'unexplained_errors', 'error', 'node']
 
 
-is_remote = platform.node().startswith("node")
-BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
-ENV = UPFSlurmEnvironment(email="guillem.frances@upf.edu") if is_remote else LocalEnvironment(processes=4)
 SUITE = [
     'blocks:probBLOCKS-4-0.pddl',
     'blocks:probBLOCKS-4-1.pddl',
     'blocks:probBLOCKS-4-2.pddl',
 ]
+
+is_local = not platform.node().startswith("node")
+BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
+
+ENV = UPFSlurmEnvironment(
+    partition='short',
+    email="guillem.frances@upf.edu",
+    export=["PATH", "DOWNWARD_BENCHMARKS", "FSBENCHMARKS"]
+)
+
+if common_setup.is_test_run():
+    SUITE = IssueExperiment.DEFAULT_TEST_SUITE
+    ENV = LocalEnvironment(processes=2)
+
+exp = Experiment(environment=ENV)
+
+
 ATTRIBUTES = [
     'coverage', 'error', 'evaluations', 'plan', 'total_time', 'memory']
 TIME_LIMIT = 1800
@@ -46,8 +60,6 @@ PLANNER_BINARY = path.abspath(os.path.join(here, '..', 'run.py'))
 PLANNER_INVOCATION = [PLANNER_BINARY, '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
                       '--output', '.']
 
-# Create a new experiment.
-exp = Experiment(environment=ENV)
 
 # Add custom parser
 fsparser_path = os.path.abspath(os.path.join(os.path.dirname(fslab.__file__), 'fsparser.py'))
