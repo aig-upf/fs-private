@@ -38,7 +38,7 @@ BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 ENV = UPFSlurmEnvironment(
     partition='short',
     email="guillem.frances@upf.edu",
-    export=["PATH", "DOWNWARD_BENCHMARKS", "FSBENCHMARKS"]
+    export=["PATH", "DOWNWARD_BENCHMARKS", "FSBENCHMARKS", "LD_LIBRARY_PATH"]
 )
 
 if common_setup.is_test_run():
