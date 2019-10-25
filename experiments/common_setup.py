@@ -138,8 +138,7 @@ def get_repo_base():
 
 
 def is_running_on_cluster():
-    node = platform.node()
-    return node.endswith(".scicore.unibas.ch") or node.endswith(".cluster.bc2.ch")
+    return platform.node().startswith("node")
 
 
 def is_test_run():
