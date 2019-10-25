@@ -27,12 +27,11 @@ class BaseReport(AbsoluteReport):
 
 
 SUITE = [
-    'blocks',
-    'organic-synthesis-opt18-strips',
-    'pipesworld-tankage',
+    'blocks:probBLOCKS-4-0.pddl',
+    'organic-synthesis-opt18-strips:p01.pddl',
+    'pipesworld-tankage:p01-net1-b6-g2-t50.pddl',
     # 'pipesworld-notankage',
 ]
-
 
 
 is_local = not platform.node().startswith("node")
@@ -54,7 +53,7 @@ exp = Experiment(environment=ENV)
 ATTRIBUTES = [
     'coverage', 'error', 'evaluations', 'plan', 'total_time', 'memory']
 TIME_LIMIT = 1800
-MEMORY_LIMIT = 8000
+MEMORY_LIMIT = 64000
 
 PLANNER_BINARY = path.abspath(os.path.join(here, '..', 'run.py'))
 # ./run.py --sdd -i /home/frances/projects/code/downward-benchmarks/blocks/probBLOCKS-4-0.pddl --driver bfs-sdd
