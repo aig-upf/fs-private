@@ -27,10 +27,13 @@ class BaseReport(AbsoluteReport):
 
 
 SUITE = [
-    'blocks:probBLOCKS-4-0.pddl',
-    'blocks:probBLOCKS-4-1.pddl',
-    'blocks:probBLOCKS-4-2.pddl',
+    'blocks',
+    'organic-synthesis-opt18-strips',
+    'pipesworld-tankage',
+    # 'pipesworld-notankage',
 ]
+
+
 
 is_local = not platform.node().startswith("node")
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
