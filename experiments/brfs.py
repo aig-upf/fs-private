@@ -26,11 +26,15 @@ class BaseReport(AbsoluteReport):
         'domain', 'problem', 'algorithm', 'unexplained_errors', 'error', 'node']
 
 
+TIME_LIMIT = 1800
+MEMORY_LIMIT = 64000
+
+
 SUITE = [
-    'blocks:probBLOCKS-4-0.pddl',
-    'organic-synthesis-opt18-strips:p01.pddl',
-    'pipesworld-tankage:p01-net1-b6-g2-t50.pddl',
-    # 'pipesworld-notankage',
+    'blocks',
+    'organic-synthesis-opt18-strips',
+    'pipesworld-tankage',
+    'pipesworld-notankage',
 ]
 
 
@@ -40,7 +44,8 @@ BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 ENV = UPFSlurmEnvironment(
     partition='short',
     email="guillem.frances@upf.edu",
-    export=["PATH", "DOWNWARD_BENCHMARKS", "FSBENCHMARKS", "LD_LIBRARY_PATH"]
+    export=["PATH", "DOWNWARD_BENCHMARKS", "FSBENCHMARKS", "LD_LIBRARY_PATH"],
+    memory_per_cpu='{}M'.format(MEMORY_LIMIT),
 )
 
 if common_setup.is_test_run():
@@ -52,8 +57,6 @@ exp = Experiment(environment=ENV)
 
 ATTRIBUTES = [
     'coverage', 'error', 'evaluations', 'plan', 'total_time', 'memory']
-TIME_LIMIT = 1800
-MEMORY_LIMIT = 64000
 
 PLANNER_BINARY = path.abspath(os.path.join(here, '..', 'run.py'))
 # ./run.py --sdd -i /home/frances/projects/code/downward-benchmarks/blocks/probBLOCKS-4-0.pddl --driver bfs-sdd
