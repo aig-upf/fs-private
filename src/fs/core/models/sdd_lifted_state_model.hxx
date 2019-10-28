@@ -47,6 +47,8 @@ public:
 
 	//! Returns applicable action set object
 	SDDActionIterator applicable_actions(const State& state) const;
+    SDDActionIterator applicable_actions(const State& state, bool enforce_state_constraints) const;
+
 
 	bool is_applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const;
 	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;

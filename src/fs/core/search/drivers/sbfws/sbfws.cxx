@@ -33,6 +33,12 @@ SBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, co
 	return do_search(drivers::GroundingSetup::fully_lifted_model(problem), config, options, start_time);
 }
 
+template <>
+ExitCode
+SBFWSDriver<SDDLiftedStateModel>::search(Problem& problem, const Config& config, const drivers::EngineOptions& options, float start_time) {
+    return do_search(drivers::GroundingSetup::sdd_lifted_model(problem), config, options, start_time);
+}
+
 template <typename StateModelT>
 ExitCode
 SBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& config, const drivers::EngineOptions& options, float start_time) {

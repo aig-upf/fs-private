@@ -55,6 +55,11 @@ namespace fs0 {
         return {state, sdds_, _task.get_tuple_index()};
     }
 
+    SDDActionIterator SDDLiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
+        // We know (see constructor) that there are no state constraints
+        return applicable_actions(state);
+    }
+
 
     bool
     SDDLiftedStateModel::goal(const StateT& s, unsigned i) const {
@@ -79,6 +84,17 @@ namespace fs0 {
             _task(problem),
             sdds_(std::move(sdds)),
             _subgoals(std::move(subgoals))
-    {}
+    {
+        // At the moment we just ignore the state constraints. TODO We should do better error handling,
+        // but all of this state constraint code is bound to be refactored soon.
+//        const auto state_constraints = _task.getStateConstraints();
+//        if (!state_constraints.empty()
+//            || state_constraints.size() != 1
+//            || !state_constraints[0]->is_tautology()
+//        ) {
+//            std::cout << "Couldn't handle state constraint " << *state_constraints[0] << std::endl;
+//            throw std::runtime_error("Cannot enforce state constraints ATM with the SDD action iterator");
+//        }
+    }
 
 } // namespaces

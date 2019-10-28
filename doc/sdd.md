@@ -28,5 +28,15 @@ in the `LD_LIBRARY_PATH` library, such as `/usr/lib/` or `~/local/lib/`.
 
 ### Example Usage
 
-    # Running FS-SDD
+    # Running a breadth-first search with the SDD-based successor generator
     ./run.py --debug --sdd -i $DOWNWARD_BENCHMARKS/blocks/probBLOCKS-4-0.pddl --driver bfs-sdd
+
+    # Running a blind BFWS with the SDD-based successor generator
+    ./run.py --driver=sbfws-sdd --sdd -i $DOWNWARD_BENCHMARKS/blocks/probBLOCKS-4-0.pddl --options="evaluator_t=adaptive,bfws.rs=none"
+    
+    # Simulation with R^*_G with the SDD-based successor generator
+    ./run.py --driver=sbfws-sdd --sdd -i $DOWNWARD_BENCHMARKS/blocks/probBLOCKS-4-0.pddl --options="evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2"
+    
+    # Simulation with R_all with the SDD-based successor generator
+    ./run.py --driver=sbfws-sdd --sdd -i $DOWNWARD_BENCHMARKS/blocks/probBLOCKS-4-0.pddl --options="evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"
+    
