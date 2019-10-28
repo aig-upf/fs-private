@@ -24,8 +24,9 @@ BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 def invocator():
     # We use Lab's data directory as workspace.
-    return [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
-            '--output', '.']
+    return [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'sbfws-sdd',
+            '--output', '.',
+            '--options', '"evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
 
 
 def main():
