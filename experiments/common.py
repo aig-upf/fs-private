@@ -7,6 +7,7 @@ import fslab
 from lab.environments import LocalEnvironment
 from fslab.environments import UPFSlurmEnvironment
 
+from downward import suites
 from downward.reports.absolute import AbsoluteReport
 import common_setup
 
@@ -26,9 +27,9 @@ def generate_environment(email, partition='short', time_limit=1800, memory_limit
         )
 
 
-def generate_benchmark_suite(problems):
+def filter_benchmarks_if_test_run(problems):
     if common_setup.is_test_run():
-        return ['blocks:probBLOCKS-4-0.pddl', 'gripper:prob01.pddl']
+        return suites.build_suite(os.environ["DOWNWARD_BENCHMARKS"], ['blocks:probBLOCKS-4-0.pddl', 'gripper:prob01.pddl'])
     else:
         return problems
 

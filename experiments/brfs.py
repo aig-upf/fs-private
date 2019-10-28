@@ -5,7 +5,8 @@ import os
 
 from lab.experiment import Experiment
 from downward import suites
-from common import generate_environment, get_fsplanner_binary, generate_benchmark_suite, add_all_runs
+from common import generate_environment, get_fsplanner_binary, add_all_runs, \
+    filter_benchmarks_if_test_run
 
 TIME_LIMIT = 1800
 MEMORY_LIMIT = 64000
@@ -36,11 +37,13 @@ def main():
                                        memory_limit=MEMORY_LIMIT, time_limit=TIME_LIMIT)
     exp = Experiment(environment=environment)
 
-    suite = generate_benchmark_suite(SUITE)
+    benchmarks = suites.build_suite(os.environ["DOWNWARD_BENCHMARKS"], SUITE)
+    benchmarks = filter_benchmarks_if_test_run(benchmarks)
+
 
     add_all_runs(
         experiment=exp,
-        suites=suites.build_suite(BENCHMARKS_DIR, suite),
+        suites=benchmarks,
         algorithms=algorithms(),
         time_limit=TIME_LIMIT,
         memory_limit=MEMORY_LIMIT)
