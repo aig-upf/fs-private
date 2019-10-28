@@ -1,16 +1,13 @@
 #! /usr/bin/env python
-
-
 import os
 
 from lab.experiment import Experiment
 from downward import suites
-from common import generate_environment, get_fsplanner_binary, add_standard_experiment_steps, add_experiment_run, \
-    generate_benchmark_suite
+from common import generate_environment, get_fsplanner_binary, generate_benchmark_suite, add_all_runs
+
 
 TIME_LIMIT = 1800
 MEMORY_LIMIT = 64000
-
 
 SUITE = [
     'blocks',
@@ -22,11 +19,14 @@ SUITE = [
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 
-def invocator():
+def algorithms():
     # We use Lab's data directory as workspace.
-    return [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'sbfws-sdd',
-            '--output', '.',
-            '--options', '"evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
+    base = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--output', '.']
+    lifted = base + ['--sdd', '--driver', 'sbfws-sdd', '--options', '"evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
+    grounded = base + ['--driver', 'sbfws',
+                       '--options', '"successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
+
+    return {'bfws-r_all-sdd': lifted, 'bfws-r_all-ground': grounded}
 
 
 def main():
@@ -35,10 +35,12 @@ def main():
 
     suite = generate_benchmark_suite(SUITE)
 
-    for task in suites.build_suite(BENCHMARKS_DIR, suite):
-        add_experiment_run(exp, invocator=invocator, task=task, time_limit=TIME_LIMIT, memory_limit=MEMORY_LIMIT)
-
-    add_standard_experiment_steps(exp)
+    add_all_runs(
+        experiment=exp,
+        suites=suites.build_suite(BENCHMARKS_DIR, suite),
+        algorithms=algorithms(),
+        time_limit=TIME_LIMIT,
+        memory_limit=MEMORY_LIMIT)
 
     # Parse the commandline and run the specified steps.
     exp.run_steps()

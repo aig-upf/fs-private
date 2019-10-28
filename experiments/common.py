@@ -1,6 +1,5 @@
 #! /usr/bin/env python
-
-
+import itertools
 import os
 from os import path
 
@@ -70,7 +69,16 @@ def add_standard_experiment_steps(exp, attributes=DEFAULT_ATTRIBUTES):
         outfile='report.html')
 
 
-def add_experiment_run(exp, invocator, task, time_limit, memory_limit):
+def add_all_runs(experiment, suites, algorithms, time_limit, memory_limit):
+    add_standard_experiment_steps(experiment)
+
+    for task, algo in itertools.product(suites, algorithms.keys()):
+        add_experiment_run(algorithm=algo, exp=experiment,
+                           invocator=lambda: algorithms[algo],
+                           task=task, time_limit=time_limit, memory_limit=memory_limit)
+
+
+def add_experiment_run(algorithm, exp, invocator, task, time_limit, memory_limit):
     run = exp.add_run()
     # Create symbolic links and aliases. This is optional. We could also use absolute paths in add_command().
     run.add_resource('domain', task.domain_file, symlink=True)
@@ -84,7 +92,7 @@ def add_experiment_run(exp, invocator, task, time_limit, memory_limit):
     # AbsoluteReport needs the following properties: 'domain', 'problem', 'algorithm', 'coverage'.
     run.set_property('domain', task.domain)
     run.set_property('problem', task.problem)
-    run.set_property('algorithm', 'brfs-sdd')
+    run.set_property('algorithm', algorithm)
 
     # BaseReport needs the following properties:  'time_limit', 'memory_limit'.
     run.set_property('time_limit', time_limit)
@@ -92,4 +100,4 @@ def add_experiment_run(exp, invocator, task, time_limit, memory_limit):
 
     # Every run has to have a unique id in the form of a list.
     # The algorithm name is only really needed when there are multiple algorithms.
-    run.set_property('id', ['brfs-sdd', task.domain, task.problem])
+    run.set_property('id', [algorithm, task.domain, task.problem])
