@@ -40,7 +40,6 @@ def main():
     benchmarks = suites.build_suite(os.environ["DOWNWARD_BENCHMARKS"], SUITE)
     benchmarks = filter_benchmarks_if_test_run(benchmarks)
 
-
     add_all_runs(
         experiment=exp,
         suites=benchmarks,

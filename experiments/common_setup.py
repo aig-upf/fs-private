@@ -14,7 +14,7 @@ from downward.reports.absolute import AbsoluteReport
 from downward.reports.compare import ComparativeReport
 from downward.reports.scatter import ScatterPlotReport
 
-from relativescatter import RelativeScatterPlotReport
+# from relativescatter import RelativeScatterPlotReport
 
 
 def parse_args():
@@ -366,7 +366,8 @@ class IssueExperiment(FastDownwardExperiment):
 
         """
         if relative:
-            report_class = RelativeScatterPlotReport
+            raise RuntimeError("Check implementation and latest changes to Lab")
+            # report_class = RelativeScatterPlotReport
             scatter_dir = os.path.join(self.eval_dir, "scatter-relative")
             step_name = "make-relative-scatter-plots"
         else:
