@@ -14,7 +14,7 @@ import common_setup
 here = path.abspath(path.dirname(__file__))
 
 
-def generate_environment(email, partition='short', memory_limit=8000):
+def generate_environment(email, partition='short', time_limit=1800, memory_limit=8000):
     if common_setup.is_test_run():
         return LocalEnvironment(processes=2)
     else:
@@ -22,6 +22,7 @@ def generate_environment(email, partition='short', memory_limit=8000):
             partition=partition,
             email=email,
             export=["PATH", "DOWNWARD_BENCHMARKS", "FSBENCHMARKS", "LD_LIBRARY_PATH"],
+            time_limit=round(time_limit/60),
             memory_per_cpu='{}M'.format(memory_limit),
         )
 

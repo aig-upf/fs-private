@@ -29,7 +29,8 @@ def invocator():
 
 
 def main():
-    environment = generate_environment(email="guillem.frances@upf.edu", memory_limit=MEMORY_LIMIT)
+    environment = generate_environment(email="guillem.frances@upf.edu",
+                                       memory_limit=MEMORY_LIMIT, time_limit=TIME_LIMIT)
     exp = Experiment(environment=environment)
 
     suite = generate_benchmark_suite(SUITE)
