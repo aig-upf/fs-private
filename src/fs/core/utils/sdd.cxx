@@ -7,6 +7,9 @@
 #include <fs/core/utils/system.hxx>
 #include <lapkt/tools/logging.hxx>
 
+#include <lapkt/tools/resources_control.hxx>
+
+
 
 #include <sdd/sddapi.hxx>
 
@@ -106,6 +109,26 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
 
             bindings.push_back(std::move(param_bindings));
         }
+
+        auto t0 = aptk::time_used();
+        std::cout << "Minimizing SDD of " << sdd_size(node) << " nodes..." << std::endl;
+        sdd_ref(node, manager);
+
+        // According to the documentation, minimization internally triggers garbage collection
+
+        // This should perform minimization until a certain threshold is reached (not 100% sure)
+//        sdd_manager_minimize(manager);
+
+        // This limits the time spent minimizing
+        sdd_manager_set_vtree_search_time_limit(20, manager);
+        sdd_manager_minimize_limited(manager);
+
+        double total_time = aptk::time_used() - t0;
+        std::cout << "Minimization time (sec): " << total_time << std::endl;
+        std::cout << "Size after minimization: " << sdd_size(node) << std::endl;
+        sdd_deref(node,manager);
+
+
 
         sdds.push_back(std::make_shared<ActionSchemaSDD>(*schema, relevant, bindings, manager, vtree, node));
     }

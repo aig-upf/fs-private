@@ -8,6 +8,7 @@
 #include <fs/core/utils/config.hxx>
 
 #include <lapkt/tools/events.hxx>
+#include <fs/core/utils/system.hxx>
 #include <fs/core/heuristics/relaxed_plan/smart_rpg.hxx>
 
 
@@ -39,12 +40,13 @@ protected:
 	void open(lapkt::events::Subject&, const lapkt::events::Event& event) {
 		if (_verbose) {
 			auto& node = static_cast<const OpenEvent&>(event).node;
+            _unused(node);
+
+            LPT_DEBUG("search", node);
+            LPT_DEBUG("search", "Mem. usage: " << get_current_memory_in_kb() << "kB. (peak: " << get_peak_memory_in_kb() << " kB.)");
 
             if (!node.has_parent()) {
                 LPT_INFO("cout", node);
-				_unused(node);
-
-                LPT_EDEBUG("search", std::setw(7) << "OPEN: " << node);
             }
 		}
 	}
