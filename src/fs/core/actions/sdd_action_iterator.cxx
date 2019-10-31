@@ -41,7 +41,9 @@ namespace fs0 {
                 if (!current_sdd_ || sdd_node_is_false(current_sdd_)) { // no applicable ground action for this schema
 
                     // No delete, as SDD library has custom mem management.
-                    // Should get deleted when garbage collection or when manager gets deleted
+                    // This should collect the garbage from current_sdd_ (i.e. closest thing to deleting the pointer),
+                    // as it will garbage-collect without referencing the current_sdd node
+                    schema_sdd.collect_sdd_garbage();
                     current_sdd_ = nullptr;
                     continue;
                 }
@@ -55,6 +57,9 @@ namespace fs0 {
                 current_resultset_ = enumerator.models(current_sdd_);
 //                std::cout << current_resultset_.size() << " models were actually retrieved" << std::endl;
                 current_resultset_idx_ = 0;
+                // This should collect the garbage from current_sdd_ (i.e. closest thing to deleting the pointer),
+                // as it will garbage-collect without referencing the current_sdd node
+                schema_sdd.collect_sdd_garbage();
             }
 
             if (current_resultset_idx_ < current_resultset_.size()) {
@@ -62,17 +67,16 @@ namespace fs0 {
 
                 delete _action;
                 auto grounding = schema_sdd.get_binding_from_model(model);
+                auto gr_size = grounding.size();
 
                 _action = new LiftedActionID(&schema_sdd.get_schema(),
-                        Binding(std::move(grounding), std::vector<bool>(grounding.size(), true)));
+                        Binding(std::move(grounding), std::vector<bool>(gr_size, true)));
 
                 ++current_resultset_idx_;
                 return;
             }
 
             // At this point we have explored all solutions to the current action-schema SDD
-            // TODO Perhaps garbage-collect here
-
             current_sdd_ = nullptr;
             current_resultset_.clear();
             current_resultset_idx_ = 0;

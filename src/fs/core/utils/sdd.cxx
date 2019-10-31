@@ -3,6 +3,10 @@
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/utils/sdd.hxx>
 #include <fs/core/utils/lexical_cast.hxx>
+#include <fs/core/state.hxx>
+#include <fs/core/utils/system.hxx>
+#include <lapkt/tools/logging.hxx>
+
 
 #include <sdd/sddapi.hxx>
 
@@ -11,11 +15,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
-
 #include <iostream>
 #include <memory>
-
-#include <fs/core/state.hxx>
 
 namespace fsys = boost::filesystem;
 using boost::format;
@@ -40,14 +41,15 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
         std::string bindings_fname = str(format("%1%.bindings.data") % schema_name);
 
         // Load vtree and manager
-        std::cout << "Reading SDD files corresponding to \"" << schema_name << "\"...";
+        LPT_DEBUG("cout", "Loading SDD and bookkeeping info corresponding to action \"" << schema_name << "\"");
+        LPT_DEBUG("cout", "Mem. usage: " << get_current_memory_in_kb() << "kB. (peak: " << get_peak_memory_in_kb() << " kB.)");
         fsys::path vtree_path = dir / fsys::path(vtree_fname);
         Vtree* vtree = sdd_vtree_read(vtree_path.string().c_str());
         SddManager* manager = sdd_manager_new(vtree);
 
         fsys::path manager_path = dir / fsys::path(mng_fname);
         SddNode* node = sdd_read(manager_path.string().c_str(), manager);
-        std::cout << "Done. SDD Size: " << sdd_size(node) << std::endl;
+        LPT_DEBUG("cout", "Done. SDD Size: " << sdd_size(node));
 
         if (sdd_node_is_false(node)) {
             std::cout << "Action " << schema_name << " has no applicable binding and will be ignored." << std::endl;
@@ -108,6 +110,8 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
         sdds.push_back(std::make_shared<ActionSchemaSDD>(*schema, relevant, bindings, manager, vtree, node));
     }
 
+    LPT_DEBUG("cout", "Mem. usage: " << get_current_memory_in_kb() << "kB. (peak: " << get_peak_memory_in_kb() << " kB.)");
+
     return sdds;
 }
 
@@ -140,7 +144,7 @@ SddNode* ActionSchemaSDD::conjoin_with(const State &state) const {
 //        current = sdd_condition(atom, current, sddmanager_);
     }
 
-    // TODO Perhaps garbage-collect here?
+//    collect_sdd_garbage(current);  // The caller garbage-collects after it has finished using `current`.
 
     return current;
 }
@@ -165,6 +169,21 @@ std::vector<object_id> ActionSchemaSDD::get_binding_from_model(const SDDModel &m
 
     assert(values.size() == bindings_.size());
     return values;
+}
+
+
+void ActionSchemaSDD::report_sdd_stats() const {
+    printf("Live / dead sdd nodes: %zu / %zu\n", sdd_manager_live_size(sddmanager_), sdd_manager_dead_size(sddmanager_));
+}
+
+void ActionSchemaSDD::collect_sdd_garbage(SddNode* node) const {
+//    printf("live / dead sdd nodes before garbage collection: %zu / %zu\n", sdd_manager_live_size(sddmanager_), sdd_manager_dead_size(sddmanager_));
+    sdd_ref(sddnode_, sddmanager_);
+    if (node) sdd_ref(node, sddmanager_);
+    sdd_manager_garbage_collect(sddmanager_);
+    sdd_deref(sddnode_, sddmanager_);
+    if (node) sdd_deref(node, sddmanager_);
+//    printf("Live / dead sdd nodes after garbage collection: %zu / %zu\n", sdd_manager_live_size(sddmanager_), sdd_manager_dead_size(sddmanager_));
 }
 
 std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {

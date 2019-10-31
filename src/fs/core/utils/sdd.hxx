@@ -64,6 +64,10 @@ public:
 
     std::vector<object_id> get_binding_from_model(const SDDModel& model);
 
+    void report_sdd_stats() const;
+
+    void collect_sdd_garbage(SddNode* node = nullptr) const;
+
 protected:
     const PartiallyGroundedAction& schema_;
 
