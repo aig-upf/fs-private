@@ -51,7 +51,7 @@ std::vector<const GroundAction*> Checker::transform(const Problem& problem, cons
 	const auto& actions = problem.getGroundActions();
 
 	for (unsigned idx:plan) {
-		transformed.push_back(actions[idx]);
+		transformed.push_back(new GroundAction(*actions[idx]));
 	}
 	return transformed;
 }
@@ -84,6 +84,32 @@ void Checker::print_plan_execution(const Problem& problem, const std::vector<con
 	if (!problem.getGoalSatManager().satisfied(state)) {
 		std::cout << "ERROR! The state that results from aplying the whole plan is NOT a goal state" << std::endl;
 	}
+}
+
+void Checker::print_plan_execution(const Problem& problem, const ActionPlan& plan, const State& s0) {
+    auto transformed = transform(problem, plan);
+    print_plan_execution(problem, transformed, s0);
+    for (auto x:transformed) delete x;
+}
+
+void Checker::print_plan_execution(const Problem& problem, const std::vector<LiftedActionID>& plan, const State& s0) {
+    auto transformed = transform(problem, plan);
+    print_plan_execution(problem, transformed, s0);
+    for (auto x:transformed) delete x;
+}
+
+bool Checker::check_correctness(const Problem& problem, const ActionPlan& plan, const State& s0) {
+    auto transformed = transform(problem, plan);
+    auto res = check_correctness(problem, transformed, s0);
+    for (auto x:transformed) delete x;
+    return res;
+}
+
+bool Checker::check_correctness(const Problem& problem, const std::vector<LiftedActionID>& plan, const State& s0) {
+    auto transformed = transform(problem, plan);
+    auto res = check_correctness(problem, transformed, s0);
+    for (auto x:transformed) delete x;
+    return res;
 }
 
 
