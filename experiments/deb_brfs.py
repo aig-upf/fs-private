@@ -9,19 +9,19 @@ from common import generate_environment, get_fsplanner_binary, add_all_runs, \
     filter_benchmarks_if_test_run
 
 TIME_LIMIT = 3600
-MEMORY_LIMIT = 16000
+MEMORY_LIMIT = 32000
 
 SUITE = [
     'organic-synthesis-opt18-strips:p01.pddl',
-    'organic-synthesis-opt18-strips:p02.pddl',
-    'organic-synthesis-opt18-strips:p03.pddl',
-    'organic-synthesis-opt18-strips:p04.pddl',
-    'blocks:probBLOCKS-8-0.pddl',
-    'blocks:probBLOCKS-9-0.pddl',
-    'blocks:probBLOCKS-10-0.pddl',
+    # 'organic-synthesis-opt18-strips:p02.pddl',
+    # 'organic-synthesis-opt18-strips:p03.pddl',
+    # 'organic-synthesis-opt18-strips:p04.pddl',
+    'blocks:probBLOCKS-4-0.pddl',
+    # 'blocks:probBLOCKS-9-0.pddl',
+    # 'blocks:probBLOCKS-10-0.pddl',
     'pipesworld-tankage:p01-net1-b6-g2-t50.pddl',
-    'pipesworld-tankage:p02-net1-b6-g4-t50.pddl',
-    'pipesworld-tankage:p03-net1-b8-g3-t80.pddl',
+    # 'pipesworld-tankage:p02-net1-b6-g4-t50.pddl',
+    # 'pipesworld-tankage:p03-net1-b8-g3-t80.pddl',
 ]
 
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
