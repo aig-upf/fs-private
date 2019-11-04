@@ -34,9 +34,10 @@ namespace fs0 {
 
             if (!current_sdd_) {
                 assert (current_resultset_.empty());
-
                 // Create the SDD corresponding to the current action schema index conjoined with the current state.
                 // TODO Try to implement this in one single pass with the model enumeration
+                std::cout << "Conjoining SDD " << schema_sdd.get_schema().getName() << " with state..." << std::endl;
+
                 current_sdd_ = schema_sdd.conjoin_with(state_);
                 if (!current_sdd_ || sdd_node_is_false(current_sdd_)) { // no applicable ground action for this schema
 
@@ -45,17 +46,18 @@ namespace fs0 {
                     // as it will garbage-collect without referencing the current_sdd node
                     schema_sdd.collect_sdd_garbage();
                     current_sdd_ = nullptr;
+                    std::cout << "Conjoined SDD has no groundings!" << std::endl;
                     continue;
                 }
 
 //                auto wmc_manager = wmc_manager_new(current_sdd_, 0, schema_sdd.manager());
 //                double wmc = wmc_propagate(wmc_manager);
 //                std::cout << "Action schema " << schema_sdd.get_schema().getName() << " has " << wmc << " models... " << std::flush;
-
+                std::cout << "Conjoined SDD has " <<  sdd_size(current_sdd_) << " nodes" << std::endl;
 
                 SDDModelEnumerator enumerator(schema_sdd.manager());
                 current_resultset_ = enumerator.models(current_sdd_);
-//                std::cout << current_resultset_.size() << " models were actually retrieved" << std::endl;
+                std::cout << current_resultset_.size() << " models were actually retrieved" << std::endl;
                 current_resultset_idx_ = 0;
                 // This should collect the garbage from current_sdd_ (i.e. closest thing to deleting the pointer),
                 // as it will garbage-collect without referencing the current_sdd node
