@@ -310,4 +310,6 @@ def parse_problem_with_tarski(domain_file, inst_file):
 
 
 def main(args):
+    import logging
+    logging.basicConfig(level=logging.INFO)
     return run(parse_arguments(args))
