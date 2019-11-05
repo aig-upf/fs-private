@@ -17,6 +17,7 @@ from .templates import tplManager
 
 from tarski.sdd.sdd import process_problem
 from tarski.io import FstripsReader
+from tarski.utils import resources
 
 def parse_arguments(args):
     parser = argparse.ArgumentParser(description='Bootstrap and run the FS planner on a given instance.'
@@ -294,7 +295,8 @@ def run(args):
         generate_debug_scripts(out_dir, planner_arguments)
 
     if args.sdd:
-        problem = parse_problem_with_tarski(args.domain, args.instance)
+        with resources.timing(f"Parsing problem with Tarski", newline=True):
+            problem = parse_problem_with_tarski(args.domain, args.instance)
         sdddir = os.path.join(out_dir, 'data', 'sdd')
         utils.mkdirp(sdddir)
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False)

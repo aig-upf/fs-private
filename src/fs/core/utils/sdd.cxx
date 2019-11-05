@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <memory>
+#include <fs/core/utils/config.hxx>
 
 namespace fsys = boost::filesystem;
 using boost::format;
@@ -30,6 +31,8 @@ namespace fs0 {
 std::vector<std::shared_ptr<ActionSchemaSDD>>
 load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, const std::string& dir) {
     const ProblemInfo& info = ProblemInfo::getInstance();
+    const Config& config = Config::instance();
+
     std::vector<std::shared_ptr<ActionSchemaSDD>> sdds;
 
     fsys::path path(dir);
@@ -110,32 +113,38 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
             bindings.push_back(std::move(param_bindings));
         }
 
-        auto t0 = aptk::time_used();
-        std::cout << "Minimizing SDD of " << sdd_size(node) << " nodes..." << std::endl;
-        sdd_ref(node, manager);
-
-        // According to the documentation, minimization internally triggers garbage collection
-
-        // This should perform minimization until a certain threshold is reached (not 100% sure)
-//        sdd_manager_minimize(manager);
-
-        // This limits the time spent minimizing
-        sdd_manager_set_vtree_search_time_limit(20, manager);
-        sdd_manager_minimize_limited(manager);
-
-        double total_time = aptk::time_used() - t0;
-        std::cout << "Minimization time (sec): " << total_time << std::endl;
-        std::cout << "Size after minimization: " << sdd_size(node) << std::endl;
-        sdd_deref(node,manager);
-
-
+        ActionSchemaSDD::minimize_sdd(manager, node, config.getOption<unsigned>("sdd.minimization_time", 10));
 
         sdds.push_back(std::make_shared<ActionSchemaSDD>(*schema, relevant, bindings, manager, vtree, node));
     }
 
+
     LPT_DEBUG("cout", "Mem. usage: " << get_current_memory_in_kb() << "kB. (peak: " << get_peak_memory_in_kb() << " kB.)");
 
     return sdds;
+}
+
+std::size_t ActionSchemaSDD::minimize_sdd(SddManager* manager, SddNode* node, unsigned time_limit) {
+    auto t0 = aptk::time_used();
+    std::size_t sz0 = sdd_size(node);
+    LPT_INFO("cout", "Minimizing SDD with " << sz0 << " nodes for up to " << time_limit << " sec.");
+
+    sdd_ref(node, manager);
+
+    sdd_manager_set_vtree_search_time_limit((float) time_limit, manager);
+    sdd_manager_minimize_limited(manager); // Go for it!
+    // This should perform minimization until a certain threshold is reached (not 100% sure)
+    //  sdd_manager_minimize(manager);
+
+    double total_time = aptk::time_used() - t0;
+    std::size_t sz1 = sdd_size(node);
+    LPT_INFO("cout", "Minimization: " << sz0 << " -> " << sz1 << " nodes (" << std::fixed << std::setprecision(2) << (sz0-sz1) * 100 / sz1
+                      << "% reduction). Actual minimization time: " << total_time << " sec.");
+
+    // Minimization internally already triggers garbage collection (documented, and I've also tested it)
+    sdd_deref(node, manager);
+
+    return sz1;
 }
 
 ActionSchemaSDD::ActionSchemaSDD(const PartiallyGroundedAction& schema,
@@ -155,6 +164,9 @@ ActionSchemaSDD::~ActionSchemaSDD() {
 SddNode* ActionSchemaSDD::conjoin_with(const State &state) const {
     SddNode* current = sddnode_;
     SddNode* literal = nullptr;
+    auto t0 = aptk::time_used();
+
+//    LPT_DEBUG("cout", "\tConjoining with " << relevant_.size() << " relevant literals for given state.");
     for (const auto& elem:relevant_) {
         int atom = elem.second;
         if (!state.getValue(elem.first)) {
@@ -167,7 +179,8 @@ SddNode* ActionSchemaSDD::conjoin_with(const State &state) const {
 //        current = sdd_condition(atom, current, sddmanager_);
     }
 
-//    collect_sdd_garbage(current);  // The caller garbage-collects after it has finished using `current`.
+//    LPT_DEBUG("cout", "\tConjoining time (sec):  " << aptk::time_used() - t0);
+//    LPT_DEBUG("cout", "\tMem. usage: " << get_current_memory_in_kb() << "kB. (peak: " << get_peak_memory_in_kb() << " kB.)");
 
     return current;
 }

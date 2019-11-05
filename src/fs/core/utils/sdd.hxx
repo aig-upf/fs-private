@@ -68,6 +68,8 @@ public:
 
     void collect_sdd_garbage(SddNode* node = nullptr) const;
 
+    static size_t minimize_sdd(SddManager* manager, SddNode* node, unsigned int time_limit);
+
 protected:
     const PartiallyGroundedAction& schema_;
 
