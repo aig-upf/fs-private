@@ -1,6 +1,8 @@
 """
     The main module script - generate a FSTRIPS problem from a pair of PDDL instance and domain.
 """
+import errno
+import logging
 import sys
 import os
 import stat
@@ -8,6 +10,8 @@ import argparse
 import glob
 import shutil
 import subprocess
+
+from pathlib import Path
 
 from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .pddl import tasks, pddl_file
@@ -214,6 +218,8 @@ def run_solver(translation_dir, args, dry_run):
 
     explain_output(output)
 
+    return translation_dir
+
 
 def explain_output(output):
     if output == 0:
@@ -301,7 +307,29 @@ def run(args):
         utils.mkdirp(sdddir)
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False)
 
-    run_solver(out_dir, args, args.parse_only)
+    translation_dir = run_solver(out_dir, args, args.parse_only)
+
+    return validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
+
+
+def validate(domain_name, instance_name, planfile):
+    logging.info("Running validate.")
+
+    plan = Path(planfile)
+    if not plan.is_file():
+        logging.info("No plan file could be found.")
+        return -1
+
+    validate_inputs = ["validate", domain_name, instance_name, planfile]
+
+    try:
+        output = subprocess.call(' '.join(validate_inputs), shell=True)
+    except OSError as err:
+        if err.errno == errno.ENOENT:
+            logging.error("Error: 'validate' binary not found. Is it on the PATH?")
+            return -1
+        else:
+            logging.error("Error executing 'validate': {}".format(err))
 
     return 0
 
