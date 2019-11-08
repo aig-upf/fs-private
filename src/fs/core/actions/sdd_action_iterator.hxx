@@ -49,6 +49,8 @@ namespace fs0 {
 
             SddNode* current_sdd_;
 
+            bool current_models_computed_;
+
             LiftedActionID* _action;
 
             std::vector<SDDModel> current_resultset_;

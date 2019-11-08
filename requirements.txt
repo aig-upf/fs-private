@@ -1,3 +1,3 @@
-tarski@git+ssh://git@github.com/aig-upf/tarski.git@2de2ed7
+tarski@git+ssh://git@github.com/aig-upf/tarski.git@235b378
 lab>=4.2
 fslab@git+ssh://git@github.com/aig-upf/fslab.git@5ac93bc

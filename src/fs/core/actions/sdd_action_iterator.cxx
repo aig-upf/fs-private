@@ -20,6 +20,7 @@ namespace fs0 {
             sdds_(sdds),
             current_sdd_idx_(currentIdx),
             current_sdd_(nullptr),
+            current_models_computed_(false),
             _action(nullptr),
             current_resultset_()
     {
@@ -34,12 +35,13 @@ namespace fs0 {
         for (; current_sdd_idx_ < sdds_.size(); ++current_sdd_idx_) {
             ActionSchemaSDD& schema_sdd = *sdds_[current_sdd_idx_];
 
-            if (!current_sdd_) {
+            if (!current_models_computed_) {
                 assert (current_resultset_.empty());
                 // Create the SDD corresponding to the current action schema index conjoined with the current state.
                 // TODO Try to implement this in one single pass with the model enumeration
                 LPT_DEBUG("cout", "Conjoining SDD " << schema_sdd.get_schema().getName() << " with state...");
 
+                /*
                 current_sdd_ = schema_sdd.conjoin_with(state_);
                 if (!current_sdd_ || sdd_node_is_false(current_sdd_)) { // no applicable ground action for this schema
 
@@ -56,9 +58,12 @@ namespace fs0 {
 //                double wmc = wmc_propagate(wmc_manager);
 //                std::cout << "Action schema " << schema_sdd.get_schema().getName() << " has " << wmc << " models... " << std::flush;
                 LPT_DEBUG("cout", "Conjoined SDD has " <<  sdd_size(current_sdd_) << " nodes");
+                */
 
+                SDDModel state_literals = schema_sdd.collect_state_literals(state_);
                 SDDModelEnumerator enumerator(schema_sdd.manager());
-                current_resultset_ = enumerator.models(current_sdd_);
+                current_resultset_ = enumerator.models(schema_sdd.node(), state_literals);
+                current_models_computed_ = true;
                 std::cout << current_resultset_.size() << " models were actually retrieved" << std::endl;
                 current_resultset_idx_ = 0;
                 // This should collect the garbage from current_sdd_ (i.e. closest thing to deleting the pointer),
@@ -82,6 +87,7 @@ namespace fs0 {
 
             // At this point we have explored all solutions to the current action-schema SDD
             current_sdd_ = nullptr;
+            current_models_computed_ = false;
             current_resultset_.clear();
             current_resultset_idx_ = 0;
         }

@@ -58,7 +58,11 @@ public:
     SddNode* conjoin_with(const State& state) const;
     unsigned var_count() const;
 
+    SDDModel collect_state_literals(const State &state) const;
+
     SddManager* manager() { return sddmanager_; }
+
+    SddNode* node() { return sddnode_; }
 
     const PartiallyGroundedAction& get_schema() const { return schema_; }
 
@@ -69,6 +73,7 @@ public:
     void collect_sdd_garbage(SddNode* node = nullptr) const;
 
     static size_t minimize_sdd(SddManager* manager, SddNode* node, unsigned int time_limit);
+
 
 protected:
     const PartiallyGroundedAction& schema_;
@@ -83,7 +88,7 @@ protected:
     //! A list of the relevant atoms along with their SDD id. For instance, a tuple
     //! <v, id> in vector `relevant_` means that atom v=true is relevant to the SDD
     //! for this action schema, and its ID within the SDD is `id`. In a STRIPS problem, we might
-    //! typically have a triple like <holding(a), 4>
+    //! typically have a pair like <holding(a), 4>
     std::vector<std::pair<VariableIdx, unsigned>> relevant_;
 
     //! 'bindings_[i]' contains the object_id corresponding
@@ -95,14 +100,18 @@ class SDDModelEnumerator {
 public:
     explicit SDDModelEnumerator(SddManager* manager);
 
-    std::vector<SDDModel> models(SddNode* node, Vtree* vtree= nullptr);
+    std::vector<SDDModel> models(SddNode* node, const SDDModel& fixed, Vtree* vtree=nullptr);
+
+    unsigned nvars() const { return nvars_; }
 
 protected:
     SddManager* sddmanager_;
     unsigned nvars_;
 
-    std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
-    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output);
+    std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, const SDDModel& fixed);
+    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output, const SDDModel& fixed);
+
+    static bool node_is_false_in_fixed(SddNode* node, const SDDModel& fixed);
 };
 
 //! Loads from disk all SDDs in the given directory (one per action schema)
