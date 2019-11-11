@@ -123,7 +123,10 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
             bindings.push_back(std::move(param_bindings));
         }
 
-        ActionSchemaSDD::minimize_sdd(manager, node, config.getOption<unsigned>("sdd.minimization_time", 10));
+        auto minimization_time = config.getOption<unsigned>("sdd.minimization_time", 10);
+        if (minimization_time > 0) {
+            ActionSchemaSDD::minimize_sdd(manager, node, minimization_time);
+        }
 
         sdds.push_back(std::make_shared<ActionSchemaSDD>(*schema, relevant, bindings, manager, vtree, node));
     }
@@ -287,12 +290,19 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
             return result;
 
         } else if (sdd_node_is_literal(node)) {
-            SDDModel::value_t value = truth_value(node);
-            assert(fixed[var] == SDDModel::value_t::Undefined || fixed[var] == value); // Just in case
-
             std::vector<SDDModel> result;
-            result.emplace_back(nvars_+1);
-            result.back()[var] = value;
+            const auto& fixed_val = fixed[var];
+            if (fixed_val != SDDModel::value_t::Undefined) {
+                result.emplace_back(nvars_+1);
+                result.back()[var] = fixed_val;
+
+            } else {
+                SDDModel::value_t value = truth_value(node);
+                //            assert(fixed[var] == SDDModel::value_t::Undefined || fixed[var] == value); // Just in case
+
+                result.emplace_back(nvars_ + 1);
+                result.back()[var] = value;
+            }
             return result;
         }
 
