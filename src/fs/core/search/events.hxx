@@ -42,8 +42,8 @@ protected:
 			auto& node = static_cast<const OpenEvent&>(event).node;
             _unused(node);
 
-            LPT_DEBUG("search", node);
-            LPT_DEBUG("search", "Mem. usage: " << get_current_memory_in_kb() << "kB. (peak: " << get_peak_memory_in_kb() << " kB.)");
+//            LPT_DEBUG("search", node);
+//            LPT_DEBUG("search", "Mem. usage: " << get_current_memory_in_kb() << "kB. (peak: " << get_peak_memory_in_kb() << " kB.)");
 
             if (!node.has_parent()) {
                 LPT_INFO("cout", node);
