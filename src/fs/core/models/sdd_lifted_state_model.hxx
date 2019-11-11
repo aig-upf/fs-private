@@ -25,7 +25,7 @@ public:
 	using ActionType = LiftedActionID;
 
 protected:
-	SDDLiftedStateModel(const Problem& problem, std::vector<std::shared_ptr<ActionSchemaSDD>> sdds, std::vector<const fs::Formula*>  subgoals);
+	SDDLiftedStateModel(const Problem& problem, std::vector<std::shared_ptr<ActionSchemaSDD>> sdds, std::vector<const fs::Formula*> subgoals, bool custom_me);
 
 public:
 
@@ -82,6 +82,8 @@ protected:
 
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
+
+    bool custom_me_;
 };
 
 } // namespaces
