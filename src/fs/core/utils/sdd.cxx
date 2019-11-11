@@ -126,6 +126,9 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
         auto minimization_time = config.getOption<unsigned>("sdd.minimization_time", 10);
         if (minimization_time > 0) {
             ActionSchemaSDD::minimize_sdd(manager, node, minimization_time);
+            // For debugging purposes:
+            // sdd_save_as_dot(str(format("/home/gfrances/tmp/vtrees/%1%.sdd.dot") % schema_name).c_str(), node);
+            // sdd_vtree_save_as_dot(str(format("/home/gfrances/tmp/vtrees/%1%.vtree.dot") % schema_name).c_str(), sdd_manager_vtree(manager));
         }
 
         sdds.push_back(std::make_shared<ActionSchemaSDD>(*schema, relevant, bindings, manager, vtree, node));
@@ -328,6 +331,13 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
 
                 if (node_is_false_in_fixed(sub, fixed) || node_is_false_in_fixed(prime, fixed)) continue;
 
+                // For debugging purposes:
+//                if (sdd_node_is_literal(prime) && sdd_node_literal(prime) == -7 &&
+//                    sdd_node_is_literal(sub) && sdd_node_literal(sub) == -8) {
+//                    std::cout << "Breakpoint" << std::endl;
+//                }
+
+
                 model_cross_product(prime, sub, vtree_left, vtree_right, result, fixed);
             }
 
@@ -337,7 +347,8 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
         } else {  // fill in gap in vtree
             auto truenode = sdd_manager_true(sddmanager_);
 
-            if (sdd_vtree_is_sub(vtree, vtree_left)) {
+            // if Vtree.is_sub(node.vtree(), vtree.left()): [Python]
+            if (sdd_vtree_is_sub(sdd_vtree_of(node), vtree_left)) {
                 return model_cross_product(node, truenode, vtree_left, vtree_right, fixed);
             } else {
                 return model_cross_product(truenode, node, vtree_left, vtree_right, fixed);

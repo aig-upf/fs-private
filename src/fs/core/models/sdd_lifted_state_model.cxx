@@ -78,6 +78,7 @@ namespace fs0 {
 
         auto sdds = load_sdds_from_disk(problem.getPartiallyGroundedActions(), info.getDataDir() + "/sdd");
         auto use_custom_model_enumeration = config.getOption<bool>("sdd.custom_me", true);
+        std::cout << "Using custom SDD model enumerator? " << use_custom_model_enumeration << std::endl;
 
         auto model = SDDLiftedStateModel(problem, sdds, obtain_goal_atoms(problem.getGoalConditions()), use_custom_model_enumeration);
         return model;
