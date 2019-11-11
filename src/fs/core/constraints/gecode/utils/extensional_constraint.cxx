@@ -68,7 +68,7 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 	// Post the constraint with the given extension
 
 	Gecode::extensional(csp, variables, extension);
-// 	Gecode::extensional(csp, variables, extension, Gecode::EPK_SPEED);
+// 	Gecode::extensional(csp, variables, extension, Gecode::IPL_DOM);
 
 	LPT_EDEBUG("heuristic", "Posted extensional constraint for term " << *_term << ":\n" << print::extensional(variables, extension));
 	LPT_EDEBUG("heuristic", "Resulting CSP is: " << csp);

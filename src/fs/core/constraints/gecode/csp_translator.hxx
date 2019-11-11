@@ -43,8 +43,8 @@ public:
 	CSPTranslator& operator=(const CSPTranslator&) = delete;
 	CSPTranslator& operator=(CSPTranslator&&) = delete;
 
-	unsigned add_intvar(Gecode::IntVar csp_variable, type_id var_t, VariableIdx planning_variable = INVALID_VARIABLE);
-	unsigned add_boolvar(Gecode::BoolVar csp_variable);
+	unsigned add_intvar(const Gecode::IntVar& csp_variable, type_id var_t, VariableIdx planning_variable = INVALID_VARIABLE);
+	unsigned add_boolvar(const Gecode::BoolVar& csp_variable);
 
 	//! This updates the actual variables of the given CSP with all the CSP variables that have been registered in the translator so far
 	void perform_registration();

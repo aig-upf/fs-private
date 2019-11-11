@@ -10,17 +10,15 @@ GecodeCSP::GecodeCSP() : _value_selector(nullptr) {}
 GecodeCSP::~GecodeCSP() = default;
 
 //! Cloning constructor, required by Gecode
-GecodeCSP::GecodeCSP( bool share, GecodeCSP& other ) :
-	Gecode::Space(share, other),
+GecodeCSP::GecodeCSP(GecodeCSP& other) :
+	Gecode::Space(other),
 	_value_selector(other._value_selector)
 {
-	_intvars.update( *this, share, other._intvars );
-	_boolvars.update( *this, share, other._boolvars );
+	_intvars.update(*this, other._intvars);
+	_boolvars.update(*this, other._boolvars);
 }
 
-//! Shallow copy operator, see notes on search in Gecode to
-//! get an idea of what is being "actually" copied
-Gecode::Space* GecodeCSP::copy(bool share) { return new GecodeCSP(share, *this); }
+Gecode::Space* GecodeCSP::copy() { return new GecodeCSP(*this); }
 
 
 bool GecodeCSP::propagate() {

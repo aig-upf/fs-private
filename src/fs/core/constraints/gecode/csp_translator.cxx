@@ -14,13 +14,13 @@ namespace fs0 { namespace gecode {
 
 void CSPTranslator::perform_registration() {
 	Gecode::IntVarArray intarray(_base_csp, _intvars);
-	_base_csp._intvars.update(_base_csp, false, intarray);
+	_base_csp._intvars.update(_base_csp, intarray);
 
 	Gecode::BoolVarArray boolarray(_base_csp, _boolvars);
-	_base_csp._boolvars.update(_base_csp, false, boolarray);
+	_base_csp._boolvars.update(_base_csp, boolarray);
 }
 
-unsigned CSPTranslator::add_intvar(Gecode::IntVar csp_variable, type_id var_t, VariableIdx planning_variable) {
+unsigned CSPTranslator::add_intvar(const Gecode::IntVar& csp_variable, type_id var_t, VariableIdx planning_variable) {
 	assert((unsigned) _intvars.size() == _intvars_idx.size());
 	assert((unsigned) _intvars.size() == _intvars_types.size());
 	unsigned id = _intvars.size();
@@ -30,7 +30,7 @@ unsigned CSPTranslator::add_intvar(Gecode::IntVar csp_variable, type_id var_t, V
 	return id;
 }
 
-unsigned CSPTranslator::add_boolvar(Gecode::BoolVar csp_variable) {
+unsigned CSPTranslator::add_boolvar(const Gecode::BoolVar& csp_variable) {
 	unsigned id = _boolvars.size();
 	_boolvars << csp_variable;
 	return id;

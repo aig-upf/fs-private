@@ -16,19 +16,16 @@ class MinHMaxValueSelector;
 class GecodeCSP : public Gecode::Space {
 public:
 	GecodeCSP();
-	GecodeCSP(GecodeCSP&) = delete;
-	GecodeCSP(GecodeCSP&&) = default;
+	GecodeCSP(GecodeCSP&&) = delete;
 	GecodeCSP& operator=(const GecodeCSP&) = delete;
 	GecodeCSP& operator=(GecodeCSP&&) = default;
-	~GecodeCSP(); // We define the destructor in the cxx file so that there's no need to include
-	              // the header for MinHMaxValueSelector here
+	~GecodeCSP() override;
 	
 	//! Cloning constructor, required by Gecode
-	GecodeCSP(bool share, GecodeCSP& other);
+	GecodeCSP(GecodeCSP& other);
 
-	//! Shallow copy operator, see notes on search in Gecode to
-	//! get an idea of what is being "actually" copied
-	virtual Gecode::Space* copy(bool share);
+	///! Shallow copy operator, mandatory according to the documentation
+	virtual Gecode::Space* copy();
 
 	//! Enforce constraint propagation on the CSP; return false if the resulting CSP is
 	//! "failed", i.e. not consistent, and return true otherwise
