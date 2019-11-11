@@ -58,8 +58,7 @@ CSPFormulaInterpreter::CSPFormulaInterpreter(const CSPFormulaInterpreter& other)
 {}
 
 bool CSPFormulaInterpreter::satisfied(const State& state) const {
-	fs0::gecode::StateBasedExtensionHandler handler(_tuple_index); // TODO Manage only relevant symbols, not all
-	handler.process(state);
+	fs0::gecode::StateBasedExtensionHandler handler(_tuple_index, state); // TODO Manage only relevant symbols, not all
 
 	gecode::GecodeCSP* csp = _formula_csp->instantiate(state, handler);
 	if (!csp) return false;
