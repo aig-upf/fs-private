@@ -313,23 +313,23 @@ def run(args):
 
 
 def validate(domain_name, instance_name, planfile):
-    logging.info("Running validate.")
 
-    plan = Path(planfile)
-    if not plan.is_file():
-        logging.info("No plan file could be found.")
-        return -1
-
-    validate_inputs = ["validate", domain_name, instance_name, planfile]
-
-    try:
-        output = subprocess.call(' '.join(validate_inputs), shell=True)
-    except OSError as err:
-        if err.errno == errno.ENOENT:
-            logging.error("Error: 'validate' binary not found. Is it on the PATH?")
+    with resources.timing(f"Running validate", newline=True):
+        plan = Path(planfile)
+        if not plan.is_file():
+            logging.info("No plan file could be found.")
             return -1
-        else:
-            logging.error("Error executing 'validate': {}".format(err))
+
+        validate_inputs = ["validate", domain_name, instance_name, planfile]
+
+        try:
+            output = subprocess.call(' '.join(validate_inputs), shell=True)
+        except OSError as err:
+            if err.errno == errno.ENOENT:
+                logging.error("Error: 'validate' binary not found. Is it on the PATH?")
+                return -1
+            else:
+                logging.error("Error executing 'validate': {}".format(err))
 
     return 0
 
