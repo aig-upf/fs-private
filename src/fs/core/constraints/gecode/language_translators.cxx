@@ -133,7 +133,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 //    const auto& extension = Helper::instance().compute_symbol_extension(static_term->getSymbolId());
 
 	// And finally post the constraint
-	Gecode::extensional(csp, variables, extension, Gecode::IPL_SPEED);
+	Gecode::extensional(csp, variables, extension, Gecode::IPL_DOM);
 //	LPT_DEBUG("translation", "Posted extensional constraint:" << print::extensional(variables, extension));
 }
 

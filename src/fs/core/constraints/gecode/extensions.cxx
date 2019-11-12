@@ -21,9 +21,10 @@ void Extension::add_tuple(AtomIdx tuple) {
 Gecode::TupleSet Extension::generate() const {
 	Gecode::TupleSet ts;
 	if (is_tautology()) return ts; // We return an empty extension, since the symbol will be dealt with differently
-	
+
 	for (AtomIdx index:_tuples) {
 		const ValueTuple& objects = _tuple_index.to_tuple(index);
+        if (!(bool) ts) ts.init(objects.size());
 		ts.add(values<int>(objects, ObjectTable::EMPTY_TABLE));
 	}
 	ts.finalize();
@@ -82,14 +83,10 @@ void ExtensionHandler::process_tuple(AtomIdx tuple) {
 	}
 }
 
-void ExtensionHandler::process_delta(VariableIdx variable, const std::vector<object_id>& delta) {
-	for (const object_id& value:delta) process_atom(variable, value);
-}
-
 std::vector<Gecode::TupleSet> ExtensionHandler::generate_extensions() const {
 	std::vector<Gecode::TupleSet> result;
 	
-	for (unsigned symbol = 0; symbol < _extensions.size(); ++symbol) {
+	for (std::size_t symbol = 0; symbol < _extensions.size(); ++symbol) {
 		auto& generator = _extensions[symbol];
 		if (_managed.at(symbol)) {
 			result.push_back(generator.generate());
@@ -107,39 +104,46 @@ Gecode::TupleSet ExtensionHandler::generate_extension(unsigned symbol) const {
 
 
 
-StateBasedExtensionHandler::StateBasedExtensionHandler(const AtomIndex& tuple_index) :
-		StateBasedExtensionHandler(tuple_index, std::vector<unsigned>(ProblemInfo::getInstance().getNumLogicalSymbols(), 1))
+StateBasedExtensionHandler::StateBasedExtensionHandler(const AtomIndex& tuple_index, const State& state) :
+		StateBasedExtensionHandler(tuple_index, std::vector<unsigned>(ProblemInfo::getInstance().getNumLogicalSymbols(), 1), state)
 {}
 
-StateBasedExtensionHandler::StateBasedExtensionHandler(const AtomIndex& tuple_index, std::vector<unsigned> managed) :
+StateBasedExtensionHandler::StateBasedExtensionHandler(const AtomIndex& tuple_index, std::vector<unsigned> managed, const State& state) :
 		_info(ProblemInfo::getInstance()),
 		_tuple_index(tuple_index),
-		_tuplesets(_info.getNumLogicalSymbols()),
+		_tuplesets(),
 		_managed(std::move(managed))
-{}
+{
+    auto nsymbols = _info.getNumLogicalSymbols();
 
+    // First initialize the vector of tuplesets with the appropriate arities
+    for (unsigned i = 0; i < nsymbols; ++i) {
+        if (!_managed[i]) {
+            _tuplesets.emplace_back(0); // We won't use these
+            continue;
+        }
+        _tuplesets.emplace_back(_info.getSymbolData(i).getArity());
+    }
 
+    // Then map the state atoms into the tuples corresponding to each symbol
+    for (unsigned variable = 0, n = state.numAtoms(); variable < n; ++variable) {
+        unsigned symbol = _tuple_index.var_to_symbol(variable);
+        assert(symbol < nsymbols);
+        if (!_managed[symbol]) continue;
 
-void StateBasedExtensionHandler::process(const State& state) {
+        // "False" (i.e. negated) atoms do not result in any additional tuple being added to the extension of the symbol
+        const auto val = state.getValue(variable);
+        if (_info.isPredicativeVariable(variable) && int(val) == 0) continue;
 
-//    Gecode::TupleSet test;
-//    std::cout << "[0] We have " << test.tuples() << " tuples" << std::endl;
+        const ValueTuple& values = _tuple_index.to_tuple(variable, val);
 
-//    std::cout << "We have " << _tuplesets[0].tuples() << " tuples" << std::endl;
-	for (unsigned variable = 0, n = state.numAtoms(); variable < n; ++variable) {
-		unsigned symbol = _tuple_index.var_to_symbol(variable);
-		assert(symbol < ProblemInfo::getInstance().getNumLogicalSymbols());
-		if (!_managed[symbol]) continue;
+        auto& tset = _tuplesets[symbol];
+        assert((std::size_t) tset.arity() == values.size());
+        tset.add(fs0::values<int>(values, ObjectTable::EMPTY_TABLE));
+    }
 
-		// "False" (i.e. negated) atoms do not result in any additional tuple being added to the extension of the symbol
-		const auto val = state.getValue(variable);
-		if (_info.isPredicativeVariable(variable) && int(val) == 0) continue;
-
-		const ValueTuple& values = _tuple_index.to_tuple(variable, val);
-		_tuplesets[symbol].add(fs0::values<int>(values, ObjectTable::EMPTY_TABLE));
-	}
-
-	for (auto& ts:_tuplesets) ts.finalize();
+    // And "finalize" the tuplesets, a requirement for Gecode to work correctly on them
+    for (auto& ts:_tuplesets) ts.finalize();
 }
 
 const Gecode::TupleSet& StateBasedExtensionHandler::retrieve(unsigned symbol) const {

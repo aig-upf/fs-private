@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: ubuntu:bionic
+From: ubuntu:disco
 
 %setup
     ## The setup script is called bootstrap an empty container.
@@ -29,6 +29,7 @@ From: ubuntu:bionic
             ca-certificates \
             libboost-program-options-dev libboost-filesystem-dev libboost-system-dev \
             libboost-chrono-dev libboost-timer-dev libboost-serialization-dev \
+            ca-certificates \
             && rm -rf /var/lib/apt/lists/*
 
     ##### CLINGO INSTALLATION #####
@@ -44,20 +45,20 @@ From: ubuntu:bionic
     ## since the official package installs by default all Gecode modules, including visualization tools, etc.
     ## We configure the build with only the strictly required modules
     cd /tmp
-    curl -SL http://www.gecode.org/download/gecode-5.1.0.tar.gz | tar xz \
-        && cd gecode-5.1.0 \
+	curl -SL https://github.com/Gecode/gecode/archive/release-6.2.0.tar.gz | tar xz \
+        && mv gecode-release-6.2.0 gecode \
+        && cd gecode \
         && ./configure \
         --disable-minimodel \
         --disable-examples \
-        --disable-flatzinc \
-        --disable-gist \
-        --disable-driver \
-        --disable-qt \
-        --disable-mpfr \
-        --disable-doc-tagfile \
-        --disable-doc-dot \
-        --disable-thread \
-        && make -j4 && make install
+    	--disable-flatzinc \
+    	--disable-gist \
+    	--disable-driver \
+    	--disable-qt \
+    	--disable-mpfr \
+    	--disable-doc-tagfile \
+    	--disable-doc-dot \
+    	&& make -j4 && make install
 
 
     ##### PLANNER INSTALLATION #####
@@ -84,18 +85,16 @@ From: ubuntu:bionic
     
     mkdir -p ${WORKSPACE}
 
-    /planning/fs-planner/run.py --asp -i ${PROBLEMFILE} --domain ${DOMAINFILE} \
+    /planning/fs-planner/run.py -i ${PROBLEMFILE} --domain ${DOMAINFILE} \
                --planfile ${PLANFILE} \
-               --driver sbfws --options "successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim" \
+               --driver lbfs \
                --workspace ${WORKSPACE}
 
 
 %labels
-## Update the following fields with meta data about your submission.
-## Please use the same field names and use only one line for each value.
-Name        FS Planner
-Description TODO
-Authors     Guillem Francès <guillem.frances@unibas.ch>
+Name        FS Planner - Lifted Breadth First Search
+Description Run a Gecode-based lifted breadth-first search on the given problem
+Authors     Guillem Francès <guillem.frances@upf.edu>
 SupportsDerivedPredicates yes
 SupportsQuantifiedPreconditions no
 SupportsQuantifiedEffects no

@@ -16,7 +16,7 @@ protected:
 	std::vector<AtomIdx> _tuples;
 	
 public:
-	Extension(const AtomIndex& tuple_index);
+	explicit Extension(const AtomIndex& tuple_index);
 	
 	void add_tuple(AtomIdx tuple);
 	
@@ -43,8 +43,8 @@ public:
 	//! Default copy constructors and assignment operators
 	ExtensionHandler(const ExtensionHandler& other) = default;
 	ExtensionHandler(ExtensionHandler&& other) = default;
-	ExtensionHandler& operator=(const ExtensionHandler& other) = default;
-	ExtensionHandler& operator=(ExtensionHandler&& other) = default;
+	ExtensionHandler& operator=(const ExtensionHandler& other) = delete;
+	ExtensionHandler& operator=(ExtensionHandler&& other) = delete;
 	
 	void reset();
 	
@@ -53,9 +53,6 @@ public:
 	
 	void process_tuple(AtomIdx tuple);
 
-	// TODO REMOVE?
-	void process_delta(VariableIdx variable, const std::vector<object_id>& delta);
-	
 	void advance();
 	
 // 	const std::set<unsigned>& get_modified_symbols() const { return _modified; }
@@ -82,19 +79,16 @@ protected:
 
 public:
 	//! A handler managing all symbols
-	StateBasedExtensionHandler(const AtomIndex& tuple_index);
+	StateBasedExtensionHandler(const AtomIndex& tuple_index, const State& state);
 
 	//! A handler managing only the selected symbols
-	StateBasedExtensionHandler(const AtomIndex& tuple_index, std::vector<unsigned> managed);
+	StateBasedExtensionHandler(const AtomIndex& tuple_index, std::vector<unsigned> managed, const State& state);
 
 	//! Default copy constructors and assignment operators
 	StateBasedExtensionHandler(const StateBasedExtensionHandler&) = default;
 	StateBasedExtensionHandler(StateBasedExtensionHandler&&) = default;
-	StateBasedExtensionHandler& operator=(const StateBasedExtensionHandler&) = default;
-	StateBasedExtensionHandler& operator=(StateBasedExtensionHandler&&) = default;
-
-	//!
-	void process(const State& state);
+	StateBasedExtensionHandler& operator=(const StateBasedExtensionHandler&) = delete;
+	StateBasedExtensionHandler& operator=(StateBasedExtensionHandler&&) = delete;
 
 	const Gecode::TupleSet& retrieve(unsigned symbol_id) const;
 };

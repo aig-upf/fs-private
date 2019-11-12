@@ -67,8 +67,10 @@ void NestedFluentElementTranslator::register_constraints(CSPTranslator& translat
 
 	const Gecode::IntVar& zero_based_index = _fluent_data.getIndex(csp);
 	std::vector<VariableIdx>& table_variables = _fluent_data.getTableVariables();
-	
-	Gecode::TupleSet correspondence; // The correspondence between the index variable possible values and their 0-indexed position in the element constraint table
+
+    // The correspondence between the index variable possible values and their 0-indexed position in the element constraint table
+	Gecode::TupleSet correspondence((int)_term->getSubterms().size()+1);
+
 	for (nested_fluent_iterator it(_term); !it.ended(); ++it) {
 		VariableIdx variable = it.getDerivedStateVariable();
 		table << translator.resolveInputStateVariable(csp, variable);

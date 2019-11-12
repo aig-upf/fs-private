@@ -17,7 +17,7 @@ class tupleset {
 	protected:
 		const Gecode::TupleSet& _tupleset;
 	public:
-		tupleset(const Gecode::TupleSet& tset) : _tupleset(tset) {}
+		explicit tupleset(const Gecode::TupleSet& tset) : _tupleset(tset) {}
 		
 		friend std::ostream& operator<<(std::ostream &os, const tupleset& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
@@ -28,7 +28,7 @@ class varset {
 	protected:
 		const Gecode::IntVarArgs& _vars;
 	public:
-		varset(const Gecode::IntVarArgs& vars) : _vars(vars) {}
+		explicit varset(const Gecode::IntVarArgs& vars) : _vars(vars) {}
 		
 		friend std::ostream& operator<<(std::ostream &os, const varset& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
