@@ -63,8 +63,9 @@ Gecode::TupleSet Helper::extensionalize(const fs::StaticHeadedNestedTerm* term) 
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	const auto& f_data = info.getSymbolData(term->getSymbolId());
 	const auto& functor = f_data.getFunction();
+	const auto& subterms = term->getSubterms();
 
-	Gecode::TupleSet tuples;
+	Gecode::TupleSet tuples(subterms.size()+1);
 
 	for (term_list_iterator it(term->getSubterms()); !it.ended(); ++it) {
 		try {

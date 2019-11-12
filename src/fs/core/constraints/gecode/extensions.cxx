@@ -21,9 +21,10 @@ void Extension::add_tuple(AtomIdx tuple) {
 Gecode::TupleSet Extension::generate() const {
 	Gecode::TupleSet ts;
 	if (is_tautology()) return ts; // We return an empty extension, since the symbol will be dealt with differently
-	
+
 	for (AtomIdx index:_tuples) {
 		const ValueTuple& objects = _tuple_index.to_tuple(index);
+        if (!(bool) ts) ts.init(objects.size());
 		ts.add(values<int>(objects, ObjectTable::EMPTY_TABLE));
 	}
 	ts.finalize();
