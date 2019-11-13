@@ -133,7 +133,6 @@ class ZeroarySet(UnarySet):
         self.elems = {}
 
     def add(self, args, value):
-        #assert _ is None
         assert args is ()
         self.elems[args] = value
 
