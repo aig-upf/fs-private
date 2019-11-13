@@ -2,6 +2,7 @@
 #include <fs/core/utils/static.hxx>
 #include <fs/core/problem_info.hxx>
 #include <lapkt/tools/logging.hxx>
+#include <iostream>
 
 namespace fs0 {
 
@@ -27,10 +28,13 @@ StaticExtension::load_static_extension(const std::string& name, const ProblemInf
 	if (arity == 0) {
 		if ( type == SymbolData::Type::PREDICATE ) {
 			std::ifstream is(filename);
-			if (is.fail()) // MRJ: File does not exist
-				extension = new ZeroaryFunction( make_object(false) );
-			else
-				extension = new ZeroaryFunction( make_object(true) );
+			if (is.fail()) { // If file does not exist, we assume the atom is a false nullary atom
+                extension = new ZeroaryFunction(make_object(false));
+                std::cout << name << ": False" << std::endl;
+            } else {
+                extension = new ZeroaryFunction( make_object(true) );
+                std::cout << name << ": True" << std::endl;
+			}
 		}
 		else {
 			extension = new ZeroaryFunction(Serializer::deserialize0AryElement(filename, sym_signature_types));

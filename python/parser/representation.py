@@ -10,7 +10,7 @@ from python import utils
 from python.parser.parser import Parser
 from . import fstrips
 from . import util
-from .static import DataElement
+from .static import DataElement, ZeroarySet
 from .templates import tplManager
 from .pddl.pddl_types import TypedObject
 
@@ -59,7 +59,12 @@ class ProblemRepresentation(object):
     def serialize_static_extensions(self):
         for elem in self.index.initial_static_data.values():
             assert isinstance(elem, DataElement)
-            serialized = elem.serialize_data(self.index.objects.data)
+            if isinstance(elem, ZeroarySet):
+                if not elem.elems:
+                    continue
+                serialized = []
+            else:
+                serialized = elem.serialize_data(self.index.objects.data)
             self.dump_data(elem.name, serialized)
 
     def get_method_factories(self):

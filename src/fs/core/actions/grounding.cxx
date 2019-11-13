@@ -418,8 +418,9 @@ ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo&
 	auto precondition = fs::bind(*action.getPrecondition(), Binding::EMPTY_BINDING, info);
 	if (precondition->is_contradiction()) {
 		delete precondition;
-		throw std::runtime_error("The precondition of the action schema is (statically) unsatisfiable!");
-	}
+        LPT_INFO("cout", "Warning: action schema " << action.getName() << " discarded because precondition is (statically) unsatisfiable");
+        return nullptr;
+    }
 
 	std::vector<const fs::ActionEffect*> effects;
 
@@ -427,9 +428,8 @@ ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo&
 		effects = _bind_effects(action, Binding::EMPTY_BINDING, info);
 		if (effects.empty() && !action.hasProceduralEffects()) {
 			delete precondition;
-			LPT_INFO("grounding", "WARNING: Action schema has (statically) no applicable action effects: " << action.getName());
-			LPT_DEBUG("cout", "WARNING: Action schema has (statically) no applicable action effects: " << action.getName());
-			return nullptr;
+            LPT_INFO("cout", "Warning: action schema " << action.getName() << " discarded because it has no applicable effects");
+            return nullptr;
 		}
 	}
 	return new ActionData(action.getId(), action.getName(), action.getSignature(), action.getParameterNames(), action.getBindingUnit(), precondition, effects, action.getType());
