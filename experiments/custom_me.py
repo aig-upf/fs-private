@@ -15,7 +15,7 @@ SUITE = [
     'organic-synthesis-opt18-strips:p01.pddl',
     'organic-synthesis-opt18-strips:p02.pddl',
     'blocks',
-    'sokoban',
+    'sokoban-opt08-strips',
 
     # 'blocks:probBLOCKS-10-0.pddl',
     # 'pipesworld-tankage',
