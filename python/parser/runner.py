@@ -305,7 +305,7 @@ def run(args):
             problem = parse_problem_with_tarski(args.domain, args.instance)
         sdddir = os.path.join(out_dir, 'data', 'sdd')
         utils.mkdirp(sdddir)
-        process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False, minimize_sdd=False)
+        process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False, sdd_minimization_time=None)
 
     translation_dir = run_solver(out_dir, args, args.parse_only)
 
