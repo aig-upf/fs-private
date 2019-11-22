@@ -46,7 +46,7 @@ class BaseReport(AbsoluteReport):
 
 
 DEFAULT_ATTRIBUTES = [
-    'coverage', 'error', 'evaluations', 'plan', 'total_time', 'memory']
+    'coverage', 'error', 'evaluations', 'plan', 'total_time', 'memory', 'node_generation_rate']
 
 
 def add_standard_experiment_steps(exp, attributes=DEFAULT_ATTRIBUTES):
