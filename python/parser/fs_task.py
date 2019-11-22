@@ -1,6 +1,8 @@
 """
     Several method to create a FSTaskIndex from a task as given by FD's PDDL parser.
 """
+import functools
+import operator
 from collections import OrderedDict
 import itertools
 
@@ -49,7 +51,7 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task.process_symbols(actions=fd_task.actions, predicates=fd_task.predicates, functions=fd_task.functions)
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
-    task.process_actions(fd_task.actions)
+    task.process_actions(fd_task.actions, type_map)
     task.process_processes([])
     task.process_events([])
     task.process_goal(fd_task.goal)
@@ -80,7 +82,7 @@ def create_fs_plus_task(fsp_task, domain_name, instance_name, disable_static_ana
     print("Creating FS+ task: Processing initial state...")
     task.process_initial_state(filter_out_action_cost_atoms(fsp_task.init, task.action_cost_symbols))
     print("Creating FS+ task: Processing actions...")
-    task.process_actions(fsp_task.actions)
+    task.process_actions(fsp_task.actions, type_map)
     print("Creating FS+ task: Processing processes...")
     task.process_processes(fsp_task.processes)
     print("Creating FS+ task: Processing events...")
@@ -356,8 +358,26 @@ class FSTaskIndex(object):
     def process_state_variables(self, state_variables):
         self.state_variables = state_variables
 
-    def process_actions(self, actions):
-        self.action_schemas = [FSActionSchema(self, action, "control") for action in actions]
+    def process_actions(self, actions, type_map):
+        na = len(actions)
+        print('Processing {} action schemas'.format(na))
+        self.action_schemas = []
+        total_groundings = 0
+        for a in actions:
+            ng = self.num_groundings(a, type_map)
+            if ng != 0:
+                self.action_schemas.append(FSActionSchema(self, a, "control"))
+                total_groundings += ng
+        print('{}/{} action schemas pruned for lack of groundings'.format(na - len(self.action_schemas), na))
+        print('There is a total of {0: .2E} potential ground actions'.format(total_groundings))
+
+    def num_groundings(self, action, type_map):
+        param_types = [p.type for p in action.parameters]
+        param_cardinalities = [len(type_map[t]) for t in param_types]
+        num_groundings = functools.reduce(operator.mul, param_cardinalities, 1)
+        arity = len(param_types)
+        print('\tAction schema "{}" has arity {} and {} potential groundings'.format(action.name, arity, num_groundings))
+        return num_groundings
 
     def process_processes(self, processes):
         self.process_schemas = [FSActionSchema(self, proc, "natural") for proc in processes]
