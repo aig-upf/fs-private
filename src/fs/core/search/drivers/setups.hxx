@@ -41,9 +41,9 @@ public:
 	}
 	
 	template <typename NodeT, typename StatsT>
-	static void setup_stats_observer(StatsT& stats, std::vector<HandlerPtr>& handlers) {
+	static void setup_stats_observer(StatsT& stats, std::vector<HandlerPtr>& handlers, bool verbose = false) {
 		using StatsObserverT = StatsObserver<NodeT, StatsT>;
-		handlers.push_back(std::unique_ptr<StatsObserverT>(new StatsObserverT(stats)));
+		handlers.push_back(std::unique_ptr<StatsObserverT>(new StatsObserverT(stats, verbose)));
 	}
 	
 	template <typename NodeT>

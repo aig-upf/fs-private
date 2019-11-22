@@ -55,7 +55,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 		{}
 
 		template <typename SearchAlgorithmT, typename StatsT>
-		ExitCode do_search(SearchAlgorithmT& engine, const fs0::drivers::EngineOptions& options, float start_time, const StatsT& stats, bool actionless = false) {
+		ExitCode do_search(SearchAlgorithmT& engine, const fs0::drivers::EngineOptions& options, float start_time, StatsT& stats, bool actionless = false) {
             const std::string& out_dir = options.getOutputDir();
 			LPT_INFO("cout", "Starting search. Results written to " << out_dir);
 			std::string plan_filename = options.getPlanfile();
@@ -68,6 +68,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 			PlanT plan;
 			double t0 = aptk::time_used();
+            stats.set_initial_search_time(t0);
 			bool solved = false, oom = false;
             bool valid_plan = false;
 
@@ -107,8 +108,8 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 				plan_out.close();
 			}
 
-			std::string gen_speed = (search_time > 0) ? std::to_string((float) stats.generated() / search_time) : "0";
-			std::string eval_speed = (search_time > 0) ? std::to_string((float) stats.evaluated() / search_time) : "0";
+			float genrate = (search_time > 0) ? (float) stats.generated() / search_time : 0.0;
+            float evalrate = (search_time > 0) ? (float) stats.evaluated() / search_time : 0.0;
 
 
 			json_out << "{" << std::endl;
@@ -117,8 +118,8 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			json_out << "\t\"search_time\": " << search_time << "," << std::endl;
 			// json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
 			json_out << "\t\"memory\": " << get_peak_memory_in_kb() << "," << std::endl;
-			json_out << "\t\"gen_per_second\": " << gen_speed << "," << std::endl;
-			json_out << "\t\"eval_per_second\": " << eval_speed << "," << std::endl;
+			json_out << "\t\"gen_per_second\": " << std::fixed << std::setprecision(2) << genrate << "," << std::endl;
+			json_out << "\t\"eval_per_second\": " << std::fixed << std::setprecision(2) << evalrate << "," << std::endl;
 			json_out << "\t\"solved\": " << ( solved ? "true" : "false" ) << "," << std::endl;
 			json_out << "\t\"valid\": " << ( valid_plan ? "true" : "false" ) << "," << std::endl;
 			json_out << "\t\"out_of_memory\": " << ( oom ? "true" : "false" ) << "," << std::endl;
@@ -132,7 +133,8 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			for (const auto& point:stats.dump()) {
 				LPT_INFO("cout", std::get<1>(point) << ": " << std::get<2>(point));
 			}
-			LPT_INFO("cout", "Total Planning Time: " << total_planning_time << " s.");
+            LPT_INFO("cout", "Generation rate (nodes/sec): " << std::fixed << std::setprecision(2) << genrate);
+            LPT_INFO("cout", "Total Planning Time: " << total_planning_time << " s.");
 			LPT_INFO("cout", "Actual Search Time: " << search_time << " s.");
 			LPT_INFO("cout", "Peak mem. usage: " << get_peak_memory_in_kb() << " kB.");
 

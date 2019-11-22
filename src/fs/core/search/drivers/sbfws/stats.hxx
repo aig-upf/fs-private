@@ -81,6 +81,10 @@ public:
 	using DataPointT = std::tuple<std::string, std::string, std::string>;
 	std::vector<DataPointT> dump() const;
 
+
+    void set_initial_search_time(double t) { _initial_search_time = t; }
+    double initial_search_time() const { return _initial_search_time; }
+
 protected:
 
 	static std::string _if_computed(unsigned val);
@@ -120,6 +124,8 @@ protected:
 	std::vector<unsigned> _search_wtables;
 	float   _initial_reward = 0.0f;
 	float   _max_reward = -std::numeric_limits<float>::max();
+
+    double _initial_search_time;
 };
 
 } } // namespaces

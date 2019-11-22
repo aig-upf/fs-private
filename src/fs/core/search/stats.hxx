@@ -8,7 +8,7 @@ namespace fs0 {
 
 class SearchStats {
 public:
-	SearchStats() : _expanded(0), _generated(0), _evaluated(0) {}
+	SearchStats() : _expanded(0), _generated(0), _evaluated(0), _initial_search_time(0) {}
 	
 	void expansion() { ++_expanded; }
 	void generation() { ++_generated; }
@@ -26,11 +26,15 @@ public:
 			std::make_tuple("evaluated", "Evaluations", std::to_string(evaluated()))
 		};
 	}
+
+    void set_initial_search_time(double t) { _initial_search_time = t; }
+	double initial_search_time() const { return _initial_search_time; }
 	
 protected:
 	unsigned long _expanded;
 	unsigned long _generated;
 	unsigned long _evaluated;
+	double _initial_search_time;
 };
 
 } // namespaces

@@ -45,7 +45,7 @@ NativeActionDriver<HeuristicT>::create(const Config& config, const GroundStateMo
 
 	_heuristic = std::unique_ptr<HeuristicT>(configure_heuristic(problem, config));
 
-	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
+	EventUtils::setup_stats_observer<NodeT>(stats, _handlers, config.getOption<bool>("verbose_stats", false));
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);
 
 	auto engine = new EngineT(model, gecode::build_monotonicity_csp(problem, config));

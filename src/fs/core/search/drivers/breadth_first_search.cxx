@@ -38,8 +38,8 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 	using EnginePT = std::unique_ptr<EngineT>;
 
 	auto model = setup(problem);
-	
-	EventUtils::setup_stats_observer<NodeT>(_stats, _handlers);
+
+    EventUtils::setup_stats_observer<NodeT>(_stats, _handlers, config.getOption<bool>("verbose_stats", false));
 	auto engine = EnginePT(new EngineT(model));
 	lapkt::events::subscribe(*engine, _handlers);
 	

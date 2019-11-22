@@ -3,6 +3,8 @@
 
 #include <iomanip>
 
+#include <lapkt/tools/resources_control.hxx>
+
 #include <fs/core/utils/printers/vector.hxx>
 #include <fs/core/search/nodes/heuristic_search_node.hxx>
 #include <fs/core/utils/config.hxx>
@@ -25,13 +27,15 @@ public:
 	using GoalEvent = lapkt::events::GoalFoundEvent<NodeT>;
 	using CreationEvent = lapkt::events::NodeCreationEvent<NodeT>;
 	using ExpansionEvent = lapkt::events::NodeExpansionEvent<NodeT>;
+    using GenerationEvent = lapkt::events::NodeGenerationEvent<NodeT>;
 
-	StatsObserver(StatsT& stats, bool verbose = true) :
+	explicit StatsObserver(StatsT& stats, bool verbose = false) :
 		_stats(stats), _verbose(verbose)
 	{
 		// Register a call to a member method
 		registerEventHandler<OpenEvent>(std::bind(&StatsObserver::open, this, std::placeholders::_1, std::placeholders::_2));
 		registerEventHandler<GoalEvent>(std::bind(&StatsObserver::goal, this, std::placeholders::_1, std::placeholders::_2));
+        registerEventHandler<GenerationEvent>(std::bind(&StatsObserver::generation, this, std::placeholders::_1, std::placeholders::_2));
 		registerEventHandler<CreationEvent>(std::bind(&StatsObserver::creation, this, std::placeholders::_1, std::placeholders::_2));
 		registerEventHandler<ExpansionEvent>(std::bind(&StatsObserver::expansion, this, std::placeholders::_1, std::placeholders::_2));
 	}
@@ -58,15 +62,24 @@ protected:
 	}
 
 	void creation(lapkt::events::Subject&, const lapkt::events::Event& event) {
-		_stats.generation();
-		if (_verbose) {
-            LPT_EDEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
-		}
 
-// 		if (_stats.generated() % 10 == 0) {
-// 			LPT_INFO("search", "Number of generated nodes: " << _stats.generated());
-// 		}
+	}
 
+    void generation(lapkt::events::Subject&, const lapkt::events::Event& event) {
+        _stats.generation();
+
+//        LPT_EDEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
+
+        if (_verbose) {
+            auto generated = _stats.generated();
+            if (generated % 10000 == 0) {
+                LPT_INFO("cout", "Node generation rate after " << generated / 1000 << "K generations (nodes/sec.): " << node_generation_rate());
+            }
+        }
+    }
+
+    float node_generation_rate() {
+	    return _stats.generated() * 1.0 / (aptk::time_used() - _stats.initial_search_time());
 	}
 
 	void expansion(lapkt::events::Subject&, const lapkt::events::Event& event) {

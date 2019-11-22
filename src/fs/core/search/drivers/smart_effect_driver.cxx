@@ -69,7 +69,7 @@ SmartEffectDriver::create(const Config& config, const GroundStateModel& model, S
 		ehc = new EHCSearch<HeuristicT>(model, std::move(ehc_heuristic), config.getOption("helpful_actions"), stats);
 	}
 
-	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
+	EventUtils::setup_stats_observer<NodeT>(stats, _handlers, config.getOption<bool>("verbose_stats", false));
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);
 	if (config.requiresHelpfulnessAssessment()) {
 		EventUtils::setup_HA_observer<NodeT>(_handlers);

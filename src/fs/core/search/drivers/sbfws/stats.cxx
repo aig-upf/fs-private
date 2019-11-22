@@ -13,7 +13,8 @@ BFWSStats::BFWSStats() : _expanded(0), _generated(0), _evaluated(0),
 	_sum_reachable_subgoals(0),
 	_initial_relevant_atoms(std::numeric_limits<unsigned>::max()),
 	_max_relevant_atoms(0),
-	_sum_relevant_atoms(0)
+	_sum_relevant_atoms(0),
+    _initial_search_time(0)
 {}
 
 std::string

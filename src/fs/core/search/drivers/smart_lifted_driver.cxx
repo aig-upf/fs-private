@@ -41,7 +41,7 @@ SmartLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchS
 	
 	auto engine = EnginePT(new EngineT(model));
 	
-	EventUtils::setup_stats_observer<NodeT>(stats, _handlers);
+	EventUtils::setup_stats_observer<NodeT>(stats, _handlers, config.getOption<bool>("verbose_stats", false));
 	EventUtils::setup_evaluation_observer<NodeT, HeuristicT>(config, *_heuristic, stats, _handlers);
 	lapkt::events::subscribe(*engine, _handlers);
 	
