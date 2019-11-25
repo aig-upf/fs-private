@@ -57,7 +57,7 @@ def main():
 
         extra_compile_args=['-std=c++17'],
 
-        libraries=['boost_python35',
+        libraries=['boost_python-py36',
                    'boost_program_options', 'boost_serialization', 'boost_system', 'boost_timer', 'boost_chrono',
                    'boost_filesystem', 'rt', 'm',
                    fs_libname
