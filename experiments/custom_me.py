@@ -11,17 +11,18 @@ TIME_LIMIT = 3600
 MEMORY_LIMIT = 16000
 
 SUITE = [
-    'blocks:probBLOCKS-4-0.pddl',
-    'blocks:probBLOCKS-6-0.pddl',
-    'blocks:probBLOCKS-8-0.pddl',
-    'blocks:probBLOCKS-10-0.pddl',
-    'blocks:probBLOCKS-14-0.pddl',
-    'blocks:probBLOCKS-17-0.pddl',
+    # 'blocks:probBLOCKS-4-0.pddl',
+    # 'blocks:probBLOCKS-6-0.pddl',
+    # 'blocks:probBLOCKS-8-0.pddl',
+    # 'blocks:probBLOCKS-10-0.pddl',
+    # 'blocks:probBLOCKS-14-0.pddl',
+    # 'blocks:probBLOCKS-17-0.pddl',
 
-    # 'organic-synthesis-opt18-strips:p01.pddl',
-    # 'organic-synthesis-opt18-strips:p02.pddl',
-    # 'blocks',
-    # 'sokoban-opt08-strips',
+    'organic-synthesis-opt18-strips:p01.pddl',
+    'organic-synthesis-opt18-strips:p02.pddl',
+    'blocks',
+    'sokoban-opt08-strips',
+    'visitall-opt11-strips'
 
     # 'blocks:probBLOCKS-10-0.pddl',
     # 'pipesworld-tankage',
