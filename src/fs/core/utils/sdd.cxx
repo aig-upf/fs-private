@@ -154,7 +154,7 @@ std::size_t ActionSchemaSDD::minimize_sdd(SddManager* manager, SddNode* node, un
 
     double total_time = aptk::time_used() - t0;
     std::size_t sz1 = sdd_size(node);
-    LPT_INFO("cout", "Minimization: " << sz0 << " -> " << sz1 << " nodes (" << std::fixed << std::setprecision(2) << (sz0-sz1) * 100 / sz1
+    LPT_INFO("cout", "SDD minimization: " << sz0 << " -> " << sz1 << " nodes (" << std::fixed << std::setprecision(2) << (sz0-sz1) * 100 / sz1
                       << "% reduction). Actual minimization time: " << total_time << " sec.");
 
     // Minimization internally already triggers garbage collection (documented, and I've also tested it)

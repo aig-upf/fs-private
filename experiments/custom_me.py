@@ -11,11 +11,17 @@ TIME_LIMIT = 3600
 MEMORY_LIMIT = 16000
 
 SUITE = [
-    # 'blocks:probBLOCKS-4-0.pddl',
-    'organic-synthesis-opt18-strips:p01.pddl',
-    'organic-synthesis-opt18-strips:p02.pddl',
-    'blocks',
-    'sokoban-opt08-strips',
+    'blocks:probBLOCKS-4-0.pddl',
+    'blocks:probBLOCKS-6-0.pddl',
+    'blocks:probBLOCKS-8-0.pddl',
+    'blocks:probBLOCKS-10-0.pddl',
+    'blocks:probBLOCKS-14-0.pddl',
+    'blocks:probBLOCKS-17-0.pddl',
+
+    # 'organic-synthesis-opt18-strips:p01.pddl',
+    # 'organic-synthesis-opt18-strips:p02.pddl',
+    # 'blocks',
+    # 'sokoban-opt08-strips',
 
     # 'blocks:probBLOCKS-10-0.pddl',
     # 'pipesworld-tankage',
@@ -29,18 +35,22 @@ BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 def algorithms():
     # We use Lab's data directory as workspace.
     lifted = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
-              '--output', '.', "--options", "verbose_stats=true,successor_generation=match_tree,sdd.custom_me=true"]
+              '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=true"]
 
     # We don't use the ASP reachability analysis at the moment to be as close as possible as the above experiment
     grounded = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
-                '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600"]
+                '--output', '.', "--options", "verbose_stats=true,successor_generation=naive"]
+
+    match_tree = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
+                  '--output', '.', "--options", "verbose_stats=true,successor_generation=match_tree"]
 
     # configs = dict()
     # for min_time, custom_me in itertools.product(['0', '100'], [True, False]):
     #     name = f'brfs-sdd-{min_time}' + ('-custom_me' if custom_me else '')
     #     configs[name] = lifted + ['--options']
 
-    return {'brfs-sdd': lifted, 'brfs-ground': grounded}
+    # return {'brfs-sdd': lifted}  # For testing purposes
+    return {'brfs-sdd': lifted, 'brfs-ground-enum': grounded, 'brfs-ground-mt': match_tree}
 
 
 def main():
