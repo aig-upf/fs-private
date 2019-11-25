@@ -77,70 +77,6 @@ bool NaiveApplicabilityManager::checkStateConstraints(const State& state) const 
 }
 
 
-SmartActionManager::SmartActionManager( const std::vector<const GroundAction*>& actions,
-                                        const std::vector<const fs::Formula*>& state_constraints,
-                                        const AtomIndex& tuple_idx,
-                                        const BasicApplicabilityAnalyzer& analyzer) :
-	Base(actions, state_constraints),
-	_tuple_idx(tuple_idx),
-	_vars_affected_by_actions(),
-	_vars_relevant_to_constraints(),
-	_sc_index(),
-	_app_index(analyzer.getApplicable()),
-	_total_applicable_actions(analyzer.total_actions())
-{
-	index_variables(actions, fs::check_all_atomic_formulas(_state_constraints));
-
-	/*
-	// DEBUG
-	for (unsigned j = 0; j < _app_index.size(); ++j) {
-		const Atom& atom = _tuple_idx.to_atom(j);
-		const std::vector<ActionIdx>& tup_actions = _app_index[j];
-		LPT_DEBUG("cout", "Actions potentially applicable for tuple " << atom << ":" << tup_actions.size());
-		LPT_DEBUG("cout", fs0::print::container(tup_actions));
-	}
-	*/
-	LPT_INFO("main", "A total of " << _total_applicable_actions << " actions were determined to be applicable to at least one atom");
-}
-
-
-
-void
-SmartActionManager::index_variables(const std::vector<const GroundAction*>& actions, const std::vector<const fs::AtomicFormula*>& constraints) {
-
-	// Index the variables affected by each action
-	_vars_affected_by_actions.reserve(actions.size());
-	for (const GroundAction* action:actions) {
-		std::set<VariableIdx> affected;
-		fs::ScopeUtils::compute_affected(*action, affected);
-		_vars_affected_by_actions.push_back(std::move(affected));
-	}
-
-	// Index the variables relevant to each state constraint
-	_vars_relevant_to_constraints.reserve(constraints.size());
-	for (const fs::AtomicFormula* atom:constraints) {
-		std::set<VariableIdx> relevant;
-		fs::ScopeUtils::computeFullScope(atom, relevant);
-		_vars_relevant_to_constraints.push_back(std::move(relevant));
-	}
-
-	// Now create a map A->[C1, C2, ..., Ck] that maps each action index to the state constraints
-	// potentially affected by it
-	_sc_index.resize(_vars_affected_by_actions.size());
-	for (unsigned action = 0; action < _vars_affected_by_actions.size(); ++action) {
-		assert(action == actions[action]->getId()); // Just in case
-		const std::set<VariableIdx>& affected = _vars_affected_by_actions[action];
-
-		for (unsigned j = 0; j < constraints.size(); ++j) {
-			const std::set<VariableIdx>& relevant = _vars_relevant_to_constraints[j];
-			if (!Utils::empty_intersection(affected.begin(), affected.end(), relevant.begin(), relevant.end())) {
-				// The state constraint is affected by some effect of the action
-				_sc_index[action].push_back(constraints[j]);
-			}
-		}
-	}
-}
-
 //! A small helper
 object_id _extract_constant_val(const fs::Term* lhs, const fs::Term* rhs) {
 	const fs::Constant* _lhs = dynamic_cast<const fs::Constant*>(lhs);
@@ -267,68 +203,6 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 
 	_total_actions =  _actions.size();
 	LPT_DEBUG("cout", "Mem. usage in BasicApplicabilityAnalyzer::build() [END]: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
-}
-
-
-std::vector<ActionIdx> SmartActionManager::compute_whitelist(const State& state) const {
-	std::size_t num_vars = state.numAtoms(); // The number of state variables, i.e. of atoms in a state
-	assert(num_vars >= 1); // We have at least one state variable
-
-	// We'll store here the indexes of the atoms that cannot prune any action (because all actions are applicable wrt atoms)
-	// We want this because if an atom cannot prune any action, then there's no need to intersect anything.
-	std::vector<bool> tuples_with_all_actions(num_vars, false);
-
-	// We find the atom in the state that has associated to it the smallest potentially-applicable action set (we'll start intersecting with that one)
-	// At the same time, we precompute the indexes of all atoms in the state
-	unsigned var_with_min_app_set = 0, min_size = std::numeric_limits<unsigned>::max();
-	std::vector<AtomIdx> tuples(num_vars);
-	for (unsigned i = 0; i < num_vars; ++i) {
-		AtomIdx tup = _tuple_idx.to_index(i, state.getValue(i));
-		tuples[i] = tup;
-		unsigned s = _app_index[tup].size();
-
-		if (s < min_size) {
-			min_size = s;
-			var_with_min_app_set = i;
-		}
-
-		if (s == _total_applicable_actions) {
-			tuples_with_all_actions[i] = true;
-		}
-	}
-
-
-	// Partially based on http://stackoverflow.com/a/12882072
-	std::vector<ActionIdx> result = _app_index[tuples[var_with_min_app_set]]; // Copy the vector // only return this one, for NRVO to kick in!
-
-	if (num_vars == 1) { // We simply return a copy of the potentially-applicable actions for the only atom
-		return result;
-	}
-
-	// Otherwise, the state has at least two atoms, so we'll intersect the "whitelists" of all
-	// atom states to obtain a final list of action indexes
-
-	std::vector<ActionIdx> buffer; // outside the loop so that we reuse its memory
-	for (unsigned i = 0; i < num_vars; ++i) {
-		if (i != var_with_min_app_set && !tuples_with_all_actions[i]) {
-			AtomIdx tup = tuples[i];
-			const auto& candidates = _app_index[tup];
-			buffer.clear();
-			std::set_intersection(result.begin(), result.end(), candidates.begin(), candidates.end(), std::back_inserter(buffer));
-			std::swap(result, buffer);
-		}
-	}
-
-	return result;
-}
-
-bool
-SmartActionManager::check_constraints(unsigned applied_action_id, const State& state) const {
-	// Check only those constraints that can be affected by the action last applied
-	for (const fs::AtomicFormula* constraint:_sc_index[applied_action_id]) {
-		if (!constraint->interpret(state)) return false;
-	}
-	return true;
 }
 
 

@@ -2,7 +2,7 @@
 #include <utility>
 
 
-#include <fs/core/lambda/search/search_model.hxx>
+#include <fs/core/lambda/search/models.hxx>
 
 
 namespace lambda::search {

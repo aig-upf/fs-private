@@ -121,45 +121,6 @@ protected:
 	virtual std::vector<ActionIdx> compute_whitelist(const State& state) const { return _all_actions_whitelist; }
 };
 
-//!
-class SmartActionManager : public NaiveActionManager {
-public:
-	using Base = NaiveActionManager;
-	using ApplicableSet = typename Base::ApplicableSet;
-
-	SmartActionManager(const std::vector<const GroundAction*>& actions, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer);
-	~SmartActionManager() = default;
-	SmartActionManager(const SmartActionManager&) = default;
-
-protected:
-
-	//! The tuple index of the problem
-	const AtomIndex& _tuple_idx;
-
-	//! An index mapping (the index of) each action to the set of state variables affected by that action
-	std::vector<std::set<VariableIdx>> _vars_affected_by_actions;
-
-	//! An index mapping (the index of) each state constraint action to the set of state variables relevant to that constraint
-	std::vector<std::set<VariableIdx>> _vars_relevant_to_constraints;
-
-	//! An index mapping (the index of) each ground action to the state constraints that can be potentially affected by it
-	std::vector<std::vector<const fs::AtomicFormula*>> _sc_index;
-
-	//! An applicability index that maps each (index of) a tuple (i.e. atom) to the sets of (indexes of) all actions
-	//! which are _potentially_ applicable when that atom holds in a state
-	const std::vector<std::vector<ActionIdx>>& _app_index;
-
-	void index_variables(const std::vector<const GroundAction*>& actions, const std::vector<const fs::AtomicFormula*>& constraints);
-
-	bool check_constraints(unsigned action_id, const State& state) const override;
-
-	//! Computes the list of indexes of those actions that are potentially applicable in the given state
-	std::vector<ActionIdx> compute_whitelist(const State& state) const override;
-
-	unsigned _total_applicable_actions;
-};
-
-
 
 //! A simple iterator strategy to iterate over the actions applicable in a given state.
 class GroundApplicableSet {

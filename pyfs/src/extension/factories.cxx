@@ -8,7 +8,7 @@
 #include <fs/core/fstrips/problem.hxx>
 #include <fs/core/fstrips/interpretation.hxx>
 #include <fs/core/fstrips/grounding.hxx>
-#include <fs/core/lambda/search/search_model.hxx>
+#include <fs/core/lambda/search/models.hxx>
 #include <fs/core/lambda/search/factory.hxx>
 
 namespace bp = boost::python;

@@ -7,7 +7,7 @@
 #include <fs/core/fstrips/problem.hxx>
 #include <fs/core/base.hxx>
 //#include <fs/core/lambda/states.hxx>
-#include <fs/core/lambda/search/search_model.hxx>
+#include <fs/core/lambda/search/models.hxx>
 #include <fs/core/lambda/search/factory.hxx>
 //#include <fs/core/lambda/search/breadth_first_search.hxx>
 

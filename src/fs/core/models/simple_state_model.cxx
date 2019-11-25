@@ -140,14 +140,7 @@ SimpleStateModel::build_action_manager(const Problem& problem) {
 		return new NaiveActionManager(actions, constraints);
 	}
 
-	if (strategy == StrategyT::functional_aware) {
-		LPT_INFO( "main", "Successor Generator: Functional Aware");
-		BasicApplicabilityAnalyzer analyzer(actions, tuple_idx);
-		analyzer.build();
-		return new SmartActionManager(actions, constraints, tuple_idx, analyzer);
-
-
-	} else if (strategy == StrategyT::match_tree) {
+	if (strategy == StrategyT::match_tree) {
 		const StateAtomIndexer& indexer = problem.getStateAtomIndexer();
 		if (!indexer.is_fully_binary()) {
 			throw std::runtime_error("Successor Generation Strategy: Match Tree: Variable domains not binary.");
