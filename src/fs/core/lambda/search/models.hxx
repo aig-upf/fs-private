@@ -13,6 +13,7 @@ namespace fs = fs0::fstrips;
 namespace lambda::search {
 
 class State;
+class ApplicableActionSet;
 
 /*
 class SimpleAction {
@@ -38,16 +39,6 @@ states::BinaryState next(states::BinaryState s, SimpleAction a) {
 class ActionId {
 public:
     virtual ~ActionId() = default;
-};
-
-class ApplicableActionSet {
-public:
-    virtual ~ApplicableActionSet() = default;
-};
-
-class GroundApplicableActionSet {
-public:
-    ~GroundApplicableActionSet() = default;
 };
 
 class Plan {

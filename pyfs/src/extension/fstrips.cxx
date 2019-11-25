@@ -190,12 +190,12 @@ void define_fstrips() {
     bp::class_<fs::Problem, std::shared_ptr<fs::Problem>>("Problem", bp::init<const std::string&, const std::string&, const std::vector<const fs::ActionSchema*>&, const fs::Interpretation&, const fs::Formula*>())
             .add_property("name", bp::make_function(&fs::Problem::name, bp::return_value_policy<bp::reference_existing_object>()))
             .add_property("domain_name", bp::make_function(&fs::Problem::domain_name, bp::return_value_policy<bp::reference_existing_object>()))
-//            .add_property("schemas", bp::make_function(&fs::Problem::schemas, bp::return_value_policy<bp::reference_existing_object>()))
+            .add_property("schemas", bp::make_function(&fs::Problem::schemas, bp::return_value_policy<bp::reference_existing_object>()))
             .add_property("init", bp::make_function(&fs::Problem::init, bp::return_value_policy<bp::reference_existing_object>()))
             .add_property("goal", bp::make_function(&fs::Problem::goal, bp::return_value_policy<bp::reference_existing_object>()))
     ;
 
-    bp::class_<fs::Grounding, std::shared_ptr<fs::Grounding>>("Grounding", bp::init<std::shared_ptr<fs::LanguageInfo>>())
+    bp::class_<fs::Grounding, std::shared_ptr<fs::Grounding>>("Grounding", bp::init<std::shared_ptr<fs::LanguageInfo>, const fs::Problem&>())
         .def("add_state_variable", &add_state_variable)
         .def(bp::self_ns::str(bp::self))
     ;

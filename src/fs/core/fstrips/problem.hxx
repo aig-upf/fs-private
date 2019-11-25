@@ -41,7 +41,7 @@ public:
 	//! Accessors
 	const std::string& name() const { return name_; }
 	const std::string& domain_name() const { return domain_name_; }
-	const std::vector<const ActionSchema*> schemas() const { return schemas_; }
+	const std::vector<const ActionSchema*>& schemas() const { return schemas_; }
 	const Interpretation& init() const { return init_; }
 	const Formula* goal() const { return goal_; }
 	

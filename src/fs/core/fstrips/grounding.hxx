@@ -12,11 +12,18 @@
 
 namespace fs0::fstrips {
 
+class Problem;
+class GroundAction;
+
 class Grounding {
 public:
-    Grounding(std::shared_ptr<LanguageInfo> language) : language_(std::move(language)) {}
+    Grounding(std::shared_ptr<LanguageInfo> language, const Problem& problem) :
+        language_(std::move(language)), problem_(problem)
+    {}
 
     VariableIdx add_state_variable(const symbol_id& symbol, const std::vector<object_id>& point);
+
+    unsigned add_schema_grounding(unsigned schema_id, const std::vector<object_id>& point);
 
     std::string compute_state_variable_name(const symbol_id& symbol, const std::vector<object_id>& point);
 
@@ -26,6 +33,8 @@ public:
 
 protected:
     std::shared_ptr<LanguageInfo> language_;
+
+    const Problem& problem_;
 
     /// Ground state variables ///
     //! A map from state variable ID to state variable name
@@ -45,6 +54,7 @@ protected:
     std::vector<TypeIdx> variableTypes;
 
     /// Ground actions ///
+    std::vector<const GroundAction*> ground_actions_;
 };
 
 } // namespaces

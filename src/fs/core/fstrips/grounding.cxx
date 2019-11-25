@@ -2,6 +2,7 @@
 
 #include <fs/core/fstrips/grounding.hxx>
 #include <fs/core/fstrips/fol.hxx>
+#include <fs/core/fstrips/problem.hxx>
 
 namespace fs0::fstrips {
 
@@ -46,6 +47,13 @@ std::ostream& Grounding::print(std::ostream& os) const {
         os << "\t\t" << i << ": " << variableNames[i] << std::endl;
     }
     return os;
+}
+
+
+unsigned Grounding::add_schema_grounding(unsigned schema_id, const std::vector<object_id>& point) {
+    const ActionSchema* schema = problem_.schemas().at(schema_id);
+    throw std::runtime_error("TO BE IMPLEMENTED");
+    return ground_actions_.size()-1;
 }
 
 } // namespaces

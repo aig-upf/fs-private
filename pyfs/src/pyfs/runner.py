@@ -30,7 +30,7 @@ def run(instance, domain=None):
 
     problem, language_info = translations.tarski.translate_problem(tarski_problem)
 
-    grounding = lpgrounding(tarski_problem, language_info)
+    grounding = lpgrounding(tarski_problem, problem, language_info)
     print(grounding)
 
     model = search.create_model(problem, language_info, grounding=grounding, use_match_tree=True)

@@ -148,7 +148,8 @@ set(SOURCE_FILES
 
         src/fs/core/lambda/states
         src/fs/core/lambda/search/factory
-        src/fs/core/lambda/search/search_model
+        src/fs/core/lambda/search/models
+        src/fs/core/lambda/search/action_enumeration
         src/fs/core/lambda/search/breadth_first_search
 
 
