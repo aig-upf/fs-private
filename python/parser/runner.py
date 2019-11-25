@@ -18,10 +18,13 @@ from .pddl import tasks, pddl_file
 from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
 from .representation import ProblemRepresentation
 from .templates import tplManager
+from .tarski_serialization import serialize_tarski_problem
 
 from tarski.sdd.sdd import process_problem
-from tarski.io import FstripsReader
+from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
+from tarski.grounding import LPGroundingStrategy, NaiveGroundingStrategy
+
 
 def parse_arguments(args):
     parser = argparse.ArgumentParser(description='Bootstrap and run the FS planner on a given instance.'
@@ -52,7 +55,8 @@ def parse_arguments(args):
     parser.add_argument('-o', '--output', default=None, help="(Optional) Path to the working directory. If provided,"
                                                              "overrides the \"-t\" option.")
     parser.add_argument('-w', '--workspace', default=None, help="(Optional) Path to the workspace directory.")
-    parser.add_argument('--planfile', default=None, help="(Optional) Path to the file where the solution plan will be left.")
+    parser.add_argument('--planfile', default=None, help="(Optional) Path to the file where the solution plan "
+                                                         "will be left.")
     parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
     parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
 
@@ -137,6 +141,7 @@ def generate_debug_scripts(target_dir, planner_arguments):
     make_script(os.path.join(target_dir, 'debug.sh'), debug_script)
     make_script(os.path.join(target_dir, 'memleaks.sh'), memleaks)
     make_script(os.path.join(target_dir, 'memprofile.sh'), memprofile)
+
 
 def make_script(filename, code):
     with open(filename, 'w') as f:
@@ -245,71 +250,93 @@ def solver_name(args):
     return "solver.edebug.bin" if args.edebug else ("solver.debug.bin" if args.debug else "solver.bin")
 
 
-def create_output_dir(args, domain_name, instance_name):
+def create_working_dir(args, domain_name, instance_name):
     """ Determine what the output dir should be and create it. Return the output dir path. """
-    translation_dir = args.output
-    if not translation_dir:
+    working_dir = args.output
+    if not working_dir:
         if args.tag is None:
             import time
             args.tag = time.strftime("%y%m%d")
         workspace = FS_WORKSPACE if args.workspace is None else args.workspace
-        translation_dir = os.path.abspath(os.path.join(*[workspace, args.tag, domain_name, instance_name]))
-    utils.mkdirp(translation_dir)
-    return translation_dir
+        working_dir = os.path.abspath(os.path.join(*[workspace, args.tag, domain_name, instance_name]))
+    utils.mkdirp(working_dir)
+    return working_dir
 
 
 def run(args):
     # Determine the proper domain and instance filenames
     if args.domain is None:
-        args.domain = pddl_file.extract_domain_name(args.instance)
+        args.domain = find_domain_filename(args.instance)
 
     domain_name, instance_name = extract_names(args.domain, args.instance)
 
     # Determine the appropriate output directory for the problem solver, and create it, if necessary
-    out_dir = create_output_dir(args, domain_name, instance_name)
+    workdir = create_working_dir(args, domain_name, instance_name)
 
     print("{0:<30}{1}".format("Problem domain:", domain_name))
     print("{0:<30}{1}".format("Problem instance:", instance_name))
-    print("{0:<30}{1}".format("Working directory:", out_dir))
+    print("{0:<30}{1}".format("Working directory:", workdir))
 
-    # Parse the task with FD's parser and transform it to our format
-    if not args.asp:
-        if args.hybrid:
-            from . import f_pddl_plus
-            hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
-            fs_task = create_fs_plus_task(hybrid_task, domain_name, instance_name, args.disable_static_analysis)
+    if args.hybrid:
+        from . import f_pddl_plus
+        hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
+        fs_task = create_fs_plus_task(hybrid_task, domain_name, instance_name, args.disable_static_analysis)
+
+    else:
+        with resources.timing(f"Parsing problem", newline=True):
+            problem = parse_problem_with_tarski(args.domain, args.instance)
+
+        if args.asp and args.sdd:
+            raise RuntimeError("SDD and ASP preprocessing are not compatible")
+
+        if args.asp:
+            from .asp import processor
+            adl_task = processor.parse_and_ground(args.domain, args.instance, workdir, not args.debug)
+            fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
+
         else:
             fd_task = parse_pddl_task(args.domain, args.instance)
             fs_task = create_fs_task(fd_task, domain_name, instance_name)
-    else:
-        from .asp import processor
-        adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir, not args.debug)
-        fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
+
+        if args.asp:
+            grounding = LPGroundingStrategy(problem)
+            ground_variables = grounding.ground_state_variables()
+            ground_actions = grounding.ground_actions()
+        else:
+            grounding = NaiveGroundingStrategy(problem)
+            ground_variables = grounding.ground_state_variables()
+            ground_actions = []  # Schemas will be ground in the backend
+
+        if args.sdd:
+            sdddir = os.path.join(workdir, 'data', 'sdd')
+            utils.mkdirp(sdddir)
+            process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
+                            sdd_minimization_time=None)
+
+        serialize_tarski_problem(problem, variables=ground_variables, ground_actions=ground_actions,
+                                 directory=workdir, debug=args.edebug or args.debug)
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance
-    representation = ProblemRepresentation(fs_task, out_dir, args.edebug or args.debug)
+    representation = ProblemRepresentation(fs_task, workdir, args.edebug or args.debug)
     representation.generate()
     use_vanilla = not representation.requires_compilation()
 
-    move_files(args, out_dir, use_vanilla)
+    move_files(args, workdir, use_vanilla)
     if not args.parse_only:
-        compile_translation(out_dir, use_vanilla, args)
+        compile_translation(workdir, use_vanilla, args)
 
     if args.debug:  # If debugging, we perform a dry-run to get the call arguments and generate debugging scripts
-        planner_arguments = run_solver(out_dir, args, True)
-        generate_debug_scripts(out_dir, planner_arguments)
+        planner_arguments = run_solver(workdir, args, True)
+        generate_debug_scripts(workdir, planner_arguments)
 
-    if args.sdd:
-        with resources.timing(f"Parsing problem with Tarski", newline=True):
-            problem = parse_problem_with_tarski(args.domain, args.instance)
-        sdddir = os.path.join(out_dir, 'data', 'sdd')
-        utils.mkdirp(sdddir)
-        process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False, sdd_minimization_time=None)
+    # Invoke the planner:
+    translation_dir = run_solver(workdir, args, args.parse_only)
 
-    translation_dir = run_solver(out_dir, args, args.parse_only)
+    # Validate the resulting plan:
+    is_plan_valid = validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
 
-    return validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
+    return is_plan_valid
 
 
 def validate(domain_name, instance_name, planfile):
@@ -323,7 +350,7 @@ def validate(domain_name, instance_name, planfile):
         validate_inputs = ["validate", domain_name, instance_name, planfile]
 
         try:
-            output = subprocess.call(' '.join(validate_inputs), shell=True)
+            _ = subprocess.call(' '.join(validate_inputs), shell=True)
         except OSError as err:
             if err.errno == errno.ENOENT:
                 logging.error("Error: 'validate' binary not found. Is it on the PATH?")
