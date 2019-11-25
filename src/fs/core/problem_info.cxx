@@ -129,7 +129,7 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
  		std::vector<VariableIdx> variables;
  		const auto& list = data[i][5];
  		for (unsigned j = 0; j < list.Size(); ++j) {
- 			variables.push_back(list[j][0].GetInt());
+ 			variables.push_back(list[j].GetInt());
  		}
 
 		bool is_static = data[i][6].GetBool();

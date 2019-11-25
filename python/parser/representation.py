@@ -121,7 +121,7 @@ class ProblemRepresentation(object):
             type_ = "predicate" if isinstance(symbol, fstrips.Predicate) else "function"
 
             # Collect the list of variables that arise from this particular symbol
-            f_variables = [(i, str(v)) for i, v in enumerate(self.index.state_variables) if v.symbol == name]
+            f_variables = [i for i, v in enumerate(self.index.state_variables) if v.symbol == name]
 
             static = name in self.index.static_symbols
             unbounded = util.has_unbounded_arity(name)

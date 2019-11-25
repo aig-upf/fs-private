@@ -307,13 +307,15 @@ def run(args):
             ground_variables = grounding.ground_state_variables()
             ground_actions = []  # Schemas will be ground in the backend
 
+        statics = grounding.static_symbols
+
         if args.sdd:
             sdddir = os.path.join(workdir, 'data', 'sdd')
             utils.mkdirp(sdddir)
             process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
                             sdd_minimization_time=None)
 
-        serialize_tarski_problem(problem, variables=ground_variables, ground_actions=ground_actions,
+        serialize_tarski_problem(problem, variables=ground_variables, statics=statics, ground_actions=ground_actions,
                                  directory=workdir, debug=args.edebug or args.debug)
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
