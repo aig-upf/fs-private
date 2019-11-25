@@ -156,12 +156,6 @@ class Constant(Term):
                         value=float(self.symbol),
                         type_id="float_t",
                         fstype="number")
-        elif self.symbol in ("true", "false"):  # We have a bool constant
-            return dict(type='constant',
-                symbol=self.symbol,
-                value= 1 if self.symbol == "true" else 0,
-                type_id="bool_t",
-                fstype="bool")
 
         elif self.symbol in ("true", "false"):  # We have a bool constant
             return dict(type='constant',
