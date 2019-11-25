@@ -6,7 +6,7 @@ import logging
 import tarski
 import tarski.syntax as tsk
 from tarski.fstrips import DelEffect, AddEffect
-from tarski.syntax import util
+from tarski.syntax import util, symref
 from tarski.syntax.sorts import ancestors, inclusion_closure
 
 from .. import extension as cext
@@ -48,7 +48,7 @@ def create_language_info(language):
     # Declare language objects
     for o in language.constants():
         oid = info.add_object(o.symbol, type_idxs[o.sort])
-        obj_idxs[o] = oid
+        obj_idxs[symref(o)] = oid
         info.bind_object_to_fs_type(type_idxs[o.sort], oid)
         for s in ancestors(o.sort):
             info.bind_object_to_fs_type(type_idxs[s], oid)
@@ -97,7 +97,7 @@ class FSTRIPSTranslator:
         return self.language_info_wrapper.type_idxs[sort]
 
     def get_object_id(self, obj):
-        return self.language_info_wrapper.obj_idxs[obj]
+        return self.language_info_wrapper.obj_idxs[symref(obj)]
         # return cext.make_object(True)
 
     def translate_term(self, term, binding):

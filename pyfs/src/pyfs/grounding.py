@@ -5,6 +5,7 @@ import logging
 import shutil
 
 from tarski.grounding import LPGroundingStrategy
+from tarski.syntax import symref
 
 from . import extension as cext
 
@@ -22,6 +23,6 @@ def lpgrounding(problem, language_info):
     for i, variable in variables.enumerate():  # note that 'i' will be the "official" index of the variable
         cgrounding.add_state_variable(
             language_info.symbol_idxs[variable.symbol],
-            [language_info.obj_idxs[o] for o in variable.binding]
+            [language_info.obj_idxs[symref(o)] for o in variable.binding]
         )
     return cgrounding
