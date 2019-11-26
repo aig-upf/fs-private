@@ -19,7 +19,6 @@ from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_tas
 from .representation import ProblemRepresentation
 from .templates import tplManager
 
-from tarski.sdd.sdd import process_problem
 from tarski.io import FstripsReader
 from tarski.utils import resources
 
@@ -305,6 +304,7 @@ def run(args):
             problem = parse_problem_with_tarski(args.domain, args.instance)
         sdddir = os.path.join(out_dir, 'data', 'sdd')
         utils.mkdirp(sdddir)
+        from tarski.sdd.sdd import process_problem
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False, sdd_minimization_time=None)
 
     translation_dir = run_solver(out_dir, args, args.parse_only)
