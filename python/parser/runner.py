@@ -20,7 +20,6 @@ from .representation import ProblemRepresentation
 from .templates import tplManager
 from .tarski_serialization import serialize_tarski_problem
 
-from tarski.sdd.sdd import process_problem
 from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
 from tarski.grounding import LPGroundingStrategy, NaiveGroundingStrategy
@@ -310,6 +309,7 @@ def run(args):
         statics = grounding.static_symbols
 
         if args.sdd:
+            from tarski.sdd.sdd import process_problem
             sdddir = os.path.join(workdir, 'data', 'sdd')
             utils.mkdirp(sdddir)
             process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
