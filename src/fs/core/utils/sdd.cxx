@@ -180,7 +180,7 @@ ActionSchemaSDD::~ActionSchemaSDD() {
 SddNode* ActionSchemaSDD::conjoin_with(const State &state) const {
     SddNode* current = sddnode_;
     SddNode* literal = nullptr;
-    auto t0 = aptk::time_used();
+//    auto t0 = aptk::time_used();
 
 //    LPT_DEBUG("cout", "\tConjoining with " << relevant_.size() << " relevant literals for given state.");
     for (const auto& elem:relevant_) {
