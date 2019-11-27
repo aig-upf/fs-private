@@ -5,10 +5,44 @@ from tarski.fstrips import AddEffect, DelEffect, FunctionalEffect, LiteralEffect
 from tarski.grounding.common import StateVariableLite
 from tarski.syntax import Interval, Sort, util, Atom, Contradiction, Tautology, CompoundFormula, QuantifiedFormula, \
     Connective, CompoundTerm, Predicate, Constant, Variable
-from tarski.syntax.sorts import ancestors
+from tarski.syntax.sorts import ancestors, inclusion_closure
 
 from .. import utils
 from . import static
+
+
+def tarski_sort_to_typeid(t: Sort):
+    if not isinstance(t, Interval):
+        return 'object_t'
+
+    parenthood = set(inclusion_closure(t))  # This includes t itself
+    if t.language.Integer in parenthood:
+        return 'int_t'
+    if t.language.Real in parenthood:
+        return 'float_t'
+    raise RuntimeError(f'Unknown Tarski sort "{t}"')
+
+
+def tarski_sort_to_domain_type(t: Sort, type_id):
+    if type_id == 'object_t':
+        return 'set'
+    if not isinstance(t, Interval):
+        raise RuntimeError(f'Unknown domain type for Tarski sort "{t}"')
+    return 'unbounded' if t.lower_bound is None else 'interval'
+
+
+def tarski_sort_to_domain(t: Sort, type_objects):
+    if isinstance(t, Interval):
+        setobj = []
+        intobj = [] if t.lower_bound is None else [t.lower_bound, t.upper_bound]
+
+    elif isinstance(t, Sort):
+        # Not sure why the backend requires the object ID as a string here, but so it seems to be
+        setobj = [str(oid) for oid in type_objects[t.name]]
+        intobj = []
+    else:
+        raise RuntimeError(f'Unknown domain for Tarski sort "{t}"')
+    return setobj, intobj
 
 
 def serialize_type_info(language, type_objects):
@@ -21,19 +55,16 @@ def serialize_type_info(language, type_objects):
 
     # Each typename is 1-indexed, since index 0 is reserved for the bool type
     # TODO We should check if this bool type is still necessary
-    for typeid, sort in enumerate(language.sorts, start=1):
-        if isinstance(sort, Interval):
-            if sort.name in ('Real', 'Integer', 'Natural'):
-                continue  # Numeric types are primitive types, not FSTRIPS types
-            raise RuntimeError("TODO: Don't ignore interval types.")  # TODO
+    for id_, sort in enumerate(language.sorts, start=1):
+        if isinstance(sort, Interval) and sort.name in ('Real', 'Integer', 'Natural'):
+            continue  # Numeric types are primitive types, not FSTRIPS types
 
-        elif isinstance(sort, Sort):
-            type_idxs[sort] = typeid
-            # Not sure why the backend requires the object ID as a string here, but so it seems to be
-            sort_objects = [str(oid) for oid in type_objects[sort.name]]
-            data.append(dict(id=typeid, fstype=sort.name, type_id='object_t', domain_type='set', interval=[], set=sort_objects))
-        else:
-            raise RuntimeError("Unknown sort type: {}".format(sort))
+        type_idxs[sort] = id_
+        typeid = tarski_sort_to_typeid(sort)
+        domain_type = tarski_sort_to_domain_type(sort, typeid)
+        setobj, intobj = tarski_sort_to_domain(sort, type_objects)
+        data.append(dict(
+            id=id_, fstype=sort.name, type_id=typeid, domain_type=domain_type, interval=intobj, set=setobj))
 
     return type_idxs, data
 
