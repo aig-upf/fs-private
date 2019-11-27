@@ -4,11 +4,24 @@ from collections import defaultdict
 from tarski.fstrips import AddEffect, DelEffect, FunctionalEffect, LiteralEffect, UniversalEffect
 from tarski.grounding.common import StateVariableLite
 from tarski.syntax import Interval, Sort, util, Atom, Contradiction, Tautology, CompoundFormula, QuantifiedFormula, \
-    Connective, CompoundTerm, Predicate, Constant, Variable
-from tarski.syntax.sorts import ancestors, inclusion_closure
+    Connective, CompoundTerm, Predicate, Constant, Variable, BuiltinPredicateSymbol
+from tarski.syntax.sorts import inclusion_closure
 
 from .. import utils
 from . import static
+
+
+def object_id(name, obj_idx):
+    """ Return the numeric ID corresponding to the given object name, taking into account
+    that it might be an string representing an integer or float literal. """
+    try:
+        return obj_idx[name]
+    except KeyError:
+        if utils.is_int(name):
+            return int(name)
+        elif utils.is_float(name):
+            return float(name)
+        raise
 
 
 def tarski_sort_to_typeid(t: Sort):
@@ -28,13 +41,13 @@ def tarski_sort_to_domain_type(t: Sort, type_id):
         return 'set'
     if not isinstance(t, Interval):
         raise RuntimeError(f'Unknown domain type for Tarski sort "{t}"')
-    return 'unbounded' if t.lower_bound is None else 'interval'
+    return 'unbounded' if t in (t.language.Integer, t.language.Real) else 'interval'
 
 
 def tarski_sort_to_domain(t: Sort, type_objects):
     if isinstance(t, Interval):
         setobj = []
-        intobj = [] if t.lower_bound is None else [t.lower_bound, t.upper_bound]
+        intobj = [] if t in (t.language.Integer, t.language.Real) else [t.lower_bound, t.upper_bound]
 
     elif isinstance(t, Sort):
         # Not sure why the backend requires the object ID as a string here, but so it seems to be
@@ -43,6 +56,10 @@ def tarski_sort_to_domain(t: Sort, type_objects):
     else:
         raise RuntimeError(f'Unknown domain for Tarski sort "{t}"')
     return setobj, intobj
+
+
+def tarski_sort_to_typename(t: Sort):
+    return {'Real': 'number', 'Integer': 'int'}.get(t.name, t.name)
 
 
 def serialize_type_info(language, type_objects):
@@ -55,16 +72,18 @@ def serialize_type_info(language, type_objects):
 
     # Each typename is 1-indexed, since index 0 is reserved for the bool type
     # TODO We should check if this bool type is still necessary
-    for id_, sort in enumerate(language.sorts, start=1):
-        if isinstance(sort, Interval) and sort.name in ('Real', 'Integer', 'Natural'):
-            continue  # Numeric types are primitive types, not FSTRIPS types
+    id_ = 1
+    for sort in language.sorts:
+        if isinstance(sort, Interval) and sort.name == 'Natural':
+            continue  # Natural type not natively handled by backend
 
         type_idxs[sort] = id_
         typeid = tarski_sort_to_typeid(sort)
         domain_type = tarski_sort_to_domain_type(sort, typeid)
         setobj, intobj = tarski_sort_to_domain(sort, type_objects)
-        data.append(dict(
-            id=id_, fstype=sort.name, type_id=typeid, domain_type=domain_type, interval=intobj, set=setobj))
+        fstype = tarski_sort_to_typename(sort)
+        data.append(dict(id=id_, fstype=fstype, type_id=typeid, domain_type=domain_type, interval=intobj, set=setobj))
+        id_ += 1
 
     return type_idxs, data
 
@@ -75,11 +94,10 @@ def serialize_object_info(language):
     # Indexes 0 and 1 are reserved for two special boolean objects true and false
     # TODO Check if we still need these or can get rid of them
     for oid, o in enumerate(language.constants(), start=2):
-        data.append(dict(id=oid, name=o.symbol, type=o.sort.name))
+        data.append(dict(id=oid, name=o.symbol, type=tarski_sort_to_typename(o.sort)))
         index[o.symbol] = oid
-        type_objects[o.sort.name].append(oid)
-        for s in ancestors(o.sort):
-            type_objects[s.name].append(o.symbol)
+        for s in inclusion_closure(o.sort):
+            type_objects[s.name].append(oid)
     return index, data, type_objects
 
 
@@ -118,7 +136,7 @@ def serialize_symbol_info(language, obj_idx, variables, statics):
     for varid, v in variables.enumerate():
         sym = v.symbol
         fstype = 'bool' if isinstance(sym, Predicate) else sym.codomain.name
-        point = [obj_idx[c.symbol] for c in v.binding]
+        point = [object_id(c.symbol, obj_idx) for c in v.binding]
         vardata.append(dict(id=varid, name=str(v), fstype=fstype, symbol_id=smb_idx[sym.symbol], point=point))
         var_idx[v] = varid
 
@@ -135,7 +153,13 @@ def serialize_tarski_formula(exp, obj_idx, binding, negated=False):
 
     elif isinstance(exp, Atom):
         children = [serialize_tarski_term(sub, obj_idx, binding) for sub in exp.subterms]
-        return dict(type='atom', symbol=exp.symbol.name, children=children, negated=negated)
+        sym = exp.symbol.name
+        if isinstance(sym, BuiltinPredicateSymbol):
+            if negated:  # We just negate by complementing the arithmetic symbol, e.g. from <= to >
+                sym = sym.complement()
+                negated = False
+            sym = str(sym)
+        return dict(type='atom', symbol=sym, children=children, negated=negated)
 
     elif isinstance(exp, CompoundFormula):
         if exp.connective == Connective.Not:
@@ -153,15 +177,16 @@ def serialize_tarski_formula(exp, obj_idx, binding, negated=False):
 
 def serialize_tarski_term(exp, obj_idx, binding):
     if isinstance(exp, Constant):
-        return dict(type='constant', symbol=exp.symbol, type_id="object_t", fstype=exp.sort.name, 
-                    value=obj_idx[exp.symbol])
+        return dict(type='constant', symbol=exp.symbol, type_id=tarski_sort_to_typeid(exp.sort), fstype=tarski_sort_to_typename(exp.sort),
+                    value=object_id(exp.symbol, obj_idx))
 
     elif isinstance(exp, CompoundTerm):
         children = [serialize_tarski_term(sub, obj_idx, binding) for sub in exp.subterms]
-        return dict(type='functional', symbol=exp.symbol, children=children)
+        # The str(·) cares for the case where we have a builtin symbols such as "+"
+        return dict(type='functional', symbol=str(exp.symbol.name), children=children)
 
     elif isinstance(exp, Variable):
-        return dict(type='variable', symbol=exp.symbol, fstype=exp.sort.name, position=binding[exp.symbol])
+        return dict(type='variable', symbol=exp.symbol, fstype=tarski_sort_to_typename(exp.sort), position=binding[exp.symbol])
 
     raise RuntimeError(f'Unknown Tarski expression type {type(exp)} for expression {exp}')
 
@@ -193,7 +218,7 @@ def serialize_tarski_model(model, var_idx, obj_idx, fluents, statics):
                 value = 1
             else:
                 varidx = var_idx[StateVariableLite(symbol, point[:-1])]
-                value = obj_idx[point[-1]]
+                value = object_id(point[-1].name, obj_idx)
             init_atoms.append([varidx, value])
 
     # For some reason it seems the backend expects the atoms to be sorted
@@ -202,6 +227,8 @@ def serialize_tarski_model(model, var_idx, obj_idx, fluents, statics):
 
 
 def serialize_tarski_effect(effect, obj_idx, binding):
+    cond = serialize_tarski_formula(effect.condition, obj_idx, binding)
+
     if isinstance(effect, (AddEffect, DelEffect)):
         if isinstance(effect, DelEffect):
             t = 'del'
@@ -214,17 +241,17 @@ def serialize_tarski_effect(effect, obj_idx, binding):
         #      visited(c) := true
         children = [serialize_tarski_term(sub, obj_idx, binding) for sub in effect.atom.subterms]
         lhs = dict(type='functional', symbol=effect.atom.symbol.name, children=children)
-
-        return dict(type=t, condition=serialize_tarski_formula(effect.condition, obj_idx, binding), lhs=lhs, rhs=rhs)
+        return dict(type=t, condition=cond, lhs=lhs, rhs=rhs)
 
     elif isinstance(effect, LiteralEffect):
         pass
     elif isinstance(effect, FunctionalEffect):
-        pass
+        lhs = serialize_tarski_term(effect.lhs, obj_idx, binding)
+        rhs = serialize_tarski_term(effect.rhs, obj_idx, binding)
+        return dict(type='functional', condition=cond, lhs=lhs, rhs=rhs)
     elif isinstance(effect, UniversalEffect):
         pass
-    else:
-        raise RuntimeError(f'Unexpected type "{type(effect)}" for expression "{effect}"')
+    raise RuntimeError(f'Unexpected type "{type(effect)}" for expression "{effect}"')
 
 
 def serialize_tarski_action_schema(action, type_idx, obj_idx):
@@ -233,7 +260,7 @@ def serialize_tarski_action_schema(action, type_idx, obj_idx):
     binding = {p.symbol: i for i, p in enumerate(action.parameters)}
     # TODO This binding unit information is not complete, and will not work for problems with conditional effects,
     #      quantified vars, etc. Check classes BindingUnit and FSActionSchema for the previous working implementation
-    unit = [[i, p.symbol, p.sort.name] for i, p in enumerate(action.parameters)]
+    unit = [[i, p.symbol, tarski_sort_to_typename(p.sort)] for i, p in enumerate(action.parameters)]
     return dict(name=action.name, signature=signature, type='control',
                 parameters=paramnames,
                 conditions=serialize_tarski_formula(action.precondition, obj_idx, binding, False),
@@ -370,7 +397,7 @@ def print_groundings(schemas, groundings, obj_idx, serializer: Serializer):
 
         action_groundings = []  # A list with the (integer index of) each grounding
         for grounding in groundings[action_name]:
-            action_groundings.append(tuple(obj_idx[obj_name] for obj_name in grounding))
+            action_groundings.append(tuple(object_id(obj_name, obj_idx) for obj_name in grounding))
 
         for grounding in sorted(action_groundings):  # IMPORTANT to output the groundings in lexicographical order
             data.append(','.join(map(str, grounding)))
@@ -394,7 +421,7 @@ def serialize_representation(data, static_atoms, serializer: Serializer, debug):
         serializer.dump(symbol.name, static_data, extension='data')
 
     if debug:
-        print_debug_data(data, Serializer(os.path.join(serializer.basedir, 'data', 'debug')))
+        print_debug_data(data, Serializer(os.path.join(serializer.basedir, 'debug')))
 
     # TODO Reactivate this again if necessary
     # if self.requires_compilation():

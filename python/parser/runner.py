@@ -314,6 +314,7 @@ def run(args):
 
     # TODO Old parsing code
     # from .fs_task import create_fs_task, create_fs_task_from_adl
+    # from .representation import ProblemRepresentation
     # if args.asp:
     #     from .asp import processor
     #     adl_task = processor.parse_and_ground(args.domain, args.instance, workdir, not args.debug)
@@ -322,9 +323,6 @@ def run(args):
     # else:
     #     fd_task = parse_pddl_task(args.domain, args.instance)
     #     fs_task = create_fs_task(fd_task, domain_name, instance_name)
-    # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
-    # the C++ generated code to obtain a binary tailored to the particular instance
-    # from .representation import ProblemRepresentation
     # representation = ProblemRepresentation(fs_task, workdir, args.edebug or args.debug)
     # representation.generate()
     # use_vanilla = not representation.requires_compilation()
