@@ -10,12 +10,9 @@ import argparse
 import glob
 import shutil
 import subprocess
-
 from pathlib import Path
 
 from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
-from .pddl import tasks, pddl_file
-from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
 from .templates import tplManager
 from .tarski_serialization import generate_tarski_problem, serialize_representation, Serializer, print_groundings
 
@@ -70,6 +67,7 @@ def parse_arguments(args):
 
 def parse_pddl_task(domain, instance):
     """ Parse the given domain and instance filenames by resorting to the FD PDDL parser """
+    from .pddl import tasks, pddl_file
     domain_pddl = pddl_file.parse_pddl_file("domain", domain)
     task_pddl = pddl_file.parse_pddl_file("task", instance)
     task = tasks.Task.parse(domain_pddl, task_pddl)
@@ -277,6 +275,7 @@ def run(args):
 
     if args.hybrid:
         raise RuntimeError("Implementation has not yet been ported to Tarski")
+        from .fs_task import create_fs_plus_task
         from . import f_pddl_plus
         hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
         fs_task = create_fs_plus_task(hybrid_task, domain_name, instance_name, args.disable_static_analysis)
@@ -314,6 +313,7 @@ def run(args):
     use_vanilla = True
 
     # TODO Old parsing code
+    # from .fs_task import create_fs_task, create_fs_task_from_adl
     # if args.asp:
     #     from .asp import processor
     #     adl_task = processor.parse_and_ground(args.domain, args.instance, workdir, not args.debug)
