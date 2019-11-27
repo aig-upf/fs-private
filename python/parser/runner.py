@@ -16,9 +16,8 @@ from pathlib import Path
 from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .pddl import tasks, pddl_file
 from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
-from .representation import ProblemRepresentation
 from .templates import tplManager
-from .tarski_serialization import serialize_tarski_problem
+from .tarski_serialization import generate_tarski_problem, serialize_representation
 
 from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
@@ -277,52 +276,55 @@ def run(args):
     print("{0:<30}{1}".format("Working directory:", workdir))
 
     if args.hybrid:
+        raise RuntimeError("Implementation has not yet been ported to Tarski")
         from . import f_pddl_plus
         hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
         fs_task = create_fs_plus_task(hybrid_task, domain_name, instance_name, args.disable_static_analysis)
 
+    with resources.timing(f"Parsing problem", newline=True):
+        problem = parse_problem_with_tarski(args.domain, args.instance)
+
+    if args.asp and args.sdd:
+        raise RuntimeError("SDD and ASP preprocessing are not compatible")
+
+    if args.asp:
+        # TODO Port to Tarski
+        grounding = LPGroundingStrategy(problem)
+        ground_variables = grounding.ground_state_variables()
+        ground_actions = grounding.ground_actions()
     else:
-        with resources.timing(f"Parsing problem", newline=True):
-            problem = parse_problem_with_tarski(args.domain, args.instance)
+        grounding = NaiveGroundingStrategy(problem)
+        ground_variables = grounding.ground_state_variables()
+        ground_actions = []  # Schemas will be ground in the backend
 
-        if args.asp and args.sdd:
-            raise RuntimeError("SDD and ASP preprocessing are not compatible")
+    statics, fluents = grounding.static_symbols, grounding.fluent_symbols
 
-        if args.asp:
-            from .asp import processor
-            adl_task = processor.parse_and_ground(args.domain, args.instance, workdir, not args.debug)
-            fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
+    if args.sdd:
+        from tarski.sdd.sdd import process_problem
+        sdddir = os.path.join(workdir, 'data', 'sdd')
+        utils.mkdirp(sdddir)
+        process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
+                        sdd_minimization_time=None)
 
-        else:
-            fd_task = parse_pddl_task(args.domain, args.instance)
-            fs_task = create_fs_task(fd_task, domain_name, instance_name)
+    data, static_atoms = generate_tarski_problem(problem, fluents, statics, variables=ground_variables, ground_actions=ground_actions)
+    serialize_representation(data, static_atoms, workdir, debug=args.edebug or args.debug)
+    use_vanilla = True
 
-        if args.asp:
-            grounding = LPGroundingStrategy(problem)
-            ground_variables = grounding.ground_state_variables()
-            ground_actions = grounding.ground_actions()
-        else:
-            grounding = NaiveGroundingStrategy(problem)
-            ground_variables = grounding.ground_state_variables()
-            ground_actions = []  # Schemas will be ground in the backend
-
-        statics = grounding.static_symbols
-
-        if args.sdd:
-            from tarski.sdd.sdd import process_problem
-            sdddir = os.path.join(workdir, 'data', 'sdd')
-            utils.mkdirp(sdddir)
-            process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
-                            sdd_minimization_time=None)
-
-        serialize_tarski_problem(problem, variables=ground_variables, statics=statics, ground_actions=ground_actions,
-                                 directory=workdir, debug=args.edebug or args.debug)
-
+    # TODO Old parsing code
+    # if args.asp:
+    #     from .asp import processor
+    #     adl_task = processor.parse_and_ground(args.domain, args.instance, workdir, not args.debug)
+    #     fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
+    #
+    # else:
+    #     fd_task = parse_pddl_task(args.domain, args.instance)
+    #     fs_task = create_fs_task(fd_task, domain_name, instance_name)
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile
     # the C++ generated code to obtain a binary tailored to the particular instance
-    representation = ProblemRepresentation(fs_task, workdir, args.edebug or args.debug)
-    representation.generate()
-    use_vanilla = not representation.requires_compilation()
+    # from .representation import ProblemRepresentation
+    # representation = ProblemRepresentation(fs_task, workdir, args.edebug or args.debug)
+    # representation.generate()
+    # use_vanilla = not representation.requires_compilation()
 
     move_files(args, workdir, use_vanilla)
     if not args.parse_only:
