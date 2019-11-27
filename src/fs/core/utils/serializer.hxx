@@ -74,7 +74,18 @@ public:
 
 	static BinaryMap bDeserializeBinaryMap(const std::string& filename);
 
-	static std::vector<object_id> deserialize_line(const std::string& line, const std::vector<type_id>& sym_signature_types, const std::string& separators = ",");
+	//! Deserialize a line of (typed) objects through a given object indexer, e.g. "a b c d" gets mapped into the
+	//! object IDs corresponding to objects a, b, c, and d
+	static std::vector<object_id>
+	deserialize_line(const std::string& line,
+	        const std::vector<type_id>& sym_signature_types,
+	        const std::string& separators,
+	        const std::function<unsigned(const std::string&)>& object_indexer);
+
+    static std::vector<object_id>
+    deserialize_line(const std::string& line,
+                     const std::vector<type_id>& sym_signature_types,
+                     const std::string& separators);
 };
 
 

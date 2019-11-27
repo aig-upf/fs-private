@@ -210,21 +210,17 @@ def serialize_tarski_action_schema(action, type_idx, obj_idx):
                 unit=unit)
 
 
-def generate_tarski_problem(problem, fluents, statics, variables, ground_actions):
+def generate_tarski_problem(problem, fluents, statics, variables):
     """ Collect all the data relevant to the given tarski problem, and return a serialization-friendly
     dict-based representation """
     data = {'problem': {'domain': problem.domain_name, 'instance': problem.name}}
 
     obj_idx, data['objects'], type_objects = serialize_object_info(problem.language)
-    data['symbols'], data['variables'], smb_idx, var_idx = serialize_symbol_info(problem.language, obj_idx, variables, statics)
-    type_idx, data['types'] = serialize_type_info(problem.language, type_objects)
 
-    data['transitions'] = []  # TODO self.dump_transition_data()
-    data['axioms'] = []  # TODO [axiom.dump() for axiom in self.index.axioms]
-    data['process_schemata'] = []
-    data['event_schemata'] = []
-    data['state_constraints'] = []
-    data['metric'] = dict()
+    data['symbols'], data['variables'], smb_idx, var_idx = serialize_symbol_info(
+        problem.language, obj_idx, variables, statics)
+
+    type_idx, data['types'] = serialize_type_info(problem.language, type_objects)
 
     data['init'], static_atoms = serialize_tarski_model(problem.init, var_idx, obj_idx, fluents, statics)
 
@@ -233,22 +229,30 @@ def generate_tarski_problem(problem, fluents, statics, variables, ground_actions
 
     data['action_schemata'] = [serialize_tarski_action_schema(a, type_idx, obj_idx) for a in problem.actions.values()]
 
-    return data, static_atoms
+    # Some other data that we currently don't support or haven't ported from the old codebase yet
+    data['transitions'] = []  # TODO self.dump_transition_data()
+    data['axioms'] = []  # TODO [axiom.dump() for axiom in self.index.axioms]
+    data['process_schemata'] = []
+    data['event_schemata'] = []
+    data['state_constraints'] = []
+    data['metric'] = dict()
+
+    return data, static_atoms, obj_idx
 
 
 class Serializer:
     def __init__(self, basedir):
         self.basedir = basedir
 
-    def _compute_filenames(self, name, ext):
-        return self.basedir, os.path.join(self.basedir, name + '.' + ext)
+    def compute_filenames(self, name, extension):
+        return self.basedir, os.path.join(self.basedir, name + '.' + extension)
 
     def dump(self, name, data, extension):
         if extension == 'json' and not isinstance(data, str):
             import json
             data = json.dumps(data)
         data = data if isinstance(data, list) else [data]
-        basedir, filename = self._compute_filenames(name, extension)
+        basedir, filename = self.compute_filenames(name, extension)
         utils.mkdirp(basedir)
         with open(filename, "w") as f:
             for l in data:
@@ -317,8 +321,33 @@ def print_debug_data(data, serializer: Serializer):
     serializer.dump("transitions", lines, extension='txt')
 
 
-def serialize_representation(data, static_atoms, workdir, debug):
-    serializer = Serializer(os.path.join(workdir, 'data'))
+def print_groundings(schemas, groundings, obj_idx, serializer: Serializer):
+    groundings_filename = "groundings"
+
+    # If no groundings computed, remove the file from possible previous runs
+    if groundings is None:
+        _, filename = serializer.compute_filenames(groundings_filename, 'data')
+        utils.silentremove(filename)
+        return
+
+    data = []
+
+    # Order matters! The groundings of each action schema are provided in consecutive blocks, one grounding per line
+    for i, action in enumerate(schemas, 0):
+        action_name = action['name']
+        data.append("# {} # {}".format(i, action_name))  # A comment line
+
+        action_groundings = []  # A list with the (integer index of) each grounding
+        for grounding in groundings[action_name]:
+            action_groundings.append(tuple(obj_idx[obj_name] for obj_name in grounding))
+
+        for grounding in sorted(action_groundings):  # IMPORTANT to output the groundings in lexicographical order
+            data.append(','.join(map(str, grounding)))
+
+    serializer.dump(groundings_filename, data, extension='data')
+
+
+def serialize_representation(data, static_atoms, serializer: Serializer, debug):
     serializer.dump('problem', data, extension='json')
 
     # For historical reasons, we used to serialize the list of static atoms separately and in a custom format
@@ -333,10 +362,8 @@ def serialize_representation(data, static_atoms, workdir, debug):
             continue
         serializer.dump(symbol.name, static_data, extension='data')
 
-    # Optionally, we'll want to print out the precomputed action groundings
-    # print_groundings_if_available(data['action_schemata'], self.index.groundings, self.index.objects)
     if debug:
-        print_debug_data(data, Serializer(os.path.join(workdir, 'data', 'debug')))
+        print_debug_data(data, Serializer(os.path.join(serializer.basedir, 'data', 'debug')))
 
     # TODO Reactivate this again if necessary
     # if self.requires_compilation():

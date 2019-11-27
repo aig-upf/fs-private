@@ -45,6 +45,7 @@ def mkdirp(directory):
 
 
 def silentremove(filename):
+    """ Try to remove the given filename, but don't complain if it does not exist. """
     try:
         os.remove(filename)
     except OSError as e:

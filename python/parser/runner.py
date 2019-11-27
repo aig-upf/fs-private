@@ -17,7 +17,7 @@ from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .pddl import tasks, pddl_file
 from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
 from .templates import tplManager
-from .tarski_serialization import generate_tarski_problem, serialize_representation
+from .tarski_serialization import generate_tarski_problem, serialize_representation, Serializer, print_groundings
 
 from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
@@ -288,14 +288,13 @@ def run(args):
         raise RuntimeError("SDD and ASP preprocessing are not compatible")
 
     if args.asp:
-        # TODO Port to Tarski
         grounding = LPGroundingStrategy(problem)
         ground_variables = grounding.ground_state_variables()
-        ground_actions = grounding.ground_actions()
+        action_groundings = grounding.ground_actions()
     else:
         grounding = NaiveGroundingStrategy(problem)
         ground_variables = grounding.ground_state_variables()
-        ground_actions = []  # Schemas will be ground in the backend
+        action_groundings = None  # Schemas will be ground in the backend
 
     statics, fluents = grounding.static_symbols, grounding.fluent_symbols
 
@@ -306,8 +305,12 @@ def run(args):
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
                         sdd_minimization_time=None)
 
-    data, static_atoms = generate_tarski_problem(problem, fluents, statics, variables=ground_variables, ground_actions=ground_actions)
-    serialize_representation(data, static_atoms, workdir, debug=args.edebug or args.debug)
+    data, static_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
+    serializer = Serializer(os.path.join(workdir, 'data'))
+    serialize_representation(data, static_atoms, serializer, debug=args.edebug or args.debug)
+    # Print the reachable action groundings if available;
+    # if not, erase grounding files that might exist from previous runs.
+    print_groundings(data['action_schemata'], action_groundings, obj_idx, serializer)
     use_vanilla = True
 
     # TODO Old parsing code
