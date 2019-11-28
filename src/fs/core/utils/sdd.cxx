@@ -257,7 +257,7 @@ void ActionSchemaSDD::collect_sdd_garbage(SddNode* node) const {
 //    printf("Live / dead sdd nodes after garbage collection: %zu / %zu\n", sdd_manager_live_size(sddmanager_), sdd_manager_dead_size(sddmanager_));
 }
 
-std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
+std::vector<SDDModel> RecursiveModelEnumerator::models(SddNode* node, Vtree* vtree) {
     // This is a direct translation of the `models()` method of the Python PySDD API:
     // <https://github.com/wannesm/PySDD/blob/5a301a9/pysdd/sdd.pyx#L247>
 
@@ -360,7 +360,7 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
     return {};
 }
 
-void SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output) {
+void RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output) {
     auto left_models = models(leftnode, leftvt);
     auto right_models = models(rightnode, rightvt);
 
@@ -374,18 +374,18 @@ void SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightno
     }
 }
 
-std::vector<SDDModel> SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt) {
+std::vector<SDDModel> RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt) {
     std::vector<SDDModel> result;
     model_cross_product(leftnode, rightnode, leftvt, rightvt, result);
     return result;
 }
 
-SDDModelEnumerator::SDDModelEnumerator(SddManager* manager, SDDModel&& fixed)
+RecursiveModelEnumerator::RecursiveModelEnumerator(SddManager* manager, SDDModel&& fixed)
     : sddmanager_(manager), nvars_(sdd_manager_var_count(manager)), fixed_(std::move(fixed)) {
     assert(fixed_.size()==nvars_+1); // vars are 1-indexed
 }
 
-bool SDDModelEnumerator::node_is_false_in_fixed(SddNode* node) {
+bool RecursiveModelEnumerator::node_is_false_in_fixed(SddNode* node) {
     if (!sdd_node_is_literal(node)) return false;
     const auto var = varid(sdd_node_literal(node));
     return fixed_[var] != SDDModel::value_t::Undefined && fixed_[var] != truth_value(node);

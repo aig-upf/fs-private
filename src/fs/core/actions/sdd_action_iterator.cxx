@@ -63,12 +63,12 @@ namespace fs0 {
 
 
                 if (custom_me_) {
-                    SDDModelEnumerator enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
+                    RecursiveModelEnumerator enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
                     current_resultset_ = enumerator.models(schema_sdd.node());
 
                 } else {
                     SDDModel state_literals(schema_sdd.var_count()+1);
-                    SDDModelEnumerator enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
+                    RecursiveModelEnumerator enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
                     current_resultset_ = enumerator.models(current_sdd_);
                 }
 

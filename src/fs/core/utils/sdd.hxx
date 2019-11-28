@@ -96,9 +96,9 @@ protected:
 };
 
 
-class SDDModelEnumerator {
+class RecursiveModelEnumerator {
 public:
-    SDDModelEnumerator(SddManager* manager, SDDModel&& fixed);
+    RecursiveModelEnumerator(SddManager* manager, SDDModel&& fixed);
 
     std::vector<SDDModel> models(SddNode* node, Vtree* vtree=nullptr);
 
