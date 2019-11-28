@@ -67,8 +67,8 @@ namespace fs0 {
                     current_resultset_ = enumerator.models(schema_sdd.node());
 
                 } else {
-                    SDDModel state_literals(schema_sdd.var_count()+1);
-                    RecursiveModelEnumerator enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
+                    // Just pass an empty SDDModel, i.e. with no value fixed
+                    RecursiveModelEnumerator enumerator(schema_sdd.manager(), SDDModel(schema_sdd.var_count()+1));
                     current_resultset_ = enumerator.models(current_sdd_);
                 }
 
