@@ -257,7 +257,7 @@ void ActionSchemaSDD::collect_sdd_garbage(SddNode* node) const {
 //    printf("Live / dead sdd nodes after garbage collection: %zu / %zu\n", sdd_manager_live_size(sddmanager_), sdd_manager_dead_size(sddmanager_));
 }
 
-std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& fixed, Vtree* vtree) {
+std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, Vtree* vtree) {
     // This is a direct translation of the `models()` method of the Python PySDD API:
     // <https://github.com/wannesm/PySDD/blob/5a301a9/pysdd/sdd.pyx#L247>
 
@@ -278,7 +278,7 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
         if (sdd_node_is_true(node)) {
             std::vector<SDDModel> result;
 
-            const auto& fixed_val = fixed[var];
+            const auto& fixed_val = fixed_[var];
             if (fixed_val != SDDModel::value_t::Undefined) {
                 result.emplace_back(nvars_+1);
                 result.back()[var] = fixed_val;
@@ -295,7 +295,7 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
 
         } else if (sdd_node_is_literal(node)) {
             std::vector<SDDModel> result;
-            const auto& fixed_val = fixed[var];
+            const auto& fixed_val = fixed_[var];
             if (fixed_val != SDDModel::value_t::Undefined) {
                 result.emplace_back(nvars_+1);
                 result.back()[var] = fixed_val;
@@ -312,7 +312,7 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
 
     } else {
         if (sdd_node_is_true(node)) {
-            return model_cross_product(node, node, vtree_left, vtree_right, fixed);
+            return model_cross_product(node, node, vtree_left, vtree_right);
 
         } else if (sdd_vtree_of(node) == vtree) {
             assert(sdd_node_is_decision(node)); // Required by the documentation of `sdd_node_elements`
@@ -330,7 +330,7 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
 
                 if (sdd_node_is_false(sub)) continue;
 
-                if (node_is_false_in_fixed(sub, fixed) || node_is_false_in_fixed(prime, fixed)) continue;
+                if (node_is_false_in_fixed(sub) || node_is_false_in_fixed(prime)) continue;
 
                 // For debugging purposes:
 //                if (sdd_node_is_literal(prime) && sdd_node_literal(prime) == -7 &&
@@ -339,7 +339,7 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
 //                }
 
 
-                model_cross_product(prime, sub, vtree_left, vtree_right, result, fixed);
+                model_cross_product(prime, sub, vtree_left, vtree_right, result);
             }
 
             return result;
@@ -350,9 +350,9 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
 
             // if Vtree.is_sub(node.vtree(), vtree.left()): [Python]
             if (sdd_vtree_is_sub(sdd_vtree_of(node), vtree_left)) {
-                return model_cross_product(node, truenode, vtree_left, vtree_right, fixed);
+                return model_cross_product(node, truenode, vtree_left, vtree_right);
             } else {
-                return model_cross_product(truenode, node, vtree_left, vtree_right, fixed);
+                return model_cross_product(truenode, node, vtree_left, vtree_right);
             }
         }
     }
@@ -360,9 +360,9 @@ std::vector<SDDModel> SDDModelEnumerator::models(SddNode* node, const SDDModel& 
     return {};
 }
 
-void SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output, const SDDModel& fixed) {
-    auto left_models = models(leftnode, fixed, leftvt);
-    auto right_models = models(rightnode, fixed, rightvt);
+void SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output) {
+    auto left_models = models(leftnode, leftvt);
+    auto right_models = models(rightnode, rightvt);
 
     // increase vector capacity by expected number of models of the cross product
     output.reserve(output.size() + left_models.size() * right_models.size());
@@ -374,19 +374,21 @@ void SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightno
     }
 }
 
-std::vector<SDDModel> SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, const SDDModel& fixed) {
+std::vector<SDDModel> SDDModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt) {
     std::vector<SDDModel> result;
-    model_cross_product(leftnode, rightnode, leftvt, rightvt, result, fixed);
+    model_cross_product(leftnode, rightnode, leftvt, rightvt, result);
     return result;
 }
 
-SDDModelEnumerator::SDDModelEnumerator(SddManager* manager)
-    : sddmanager_(manager), nvars_(sdd_manager_var_count(manager)) {}
+SDDModelEnumerator::SDDModelEnumerator(SddManager* manager, SDDModel&& fixed)
+    : sddmanager_(manager), nvars_(sdd_manager_var_count(manager)), fixed_(std::move(fixed)) {
+    assert(fixed_.size()==nvars_+1); // vars are 1-indexed
+}
 
-bool SDDModelEnumerator::node_is_false_in_fixed(SddNode* node, const SDDModel& fixed) {
+bool SDDModelEnumerator::node_is_false_in_fixed(SddNode* node) {
     if (!sdd_node_is_literal(node)) return false;
     const auto var = varid(sdd_node_literal(node));
-     return fixed[var] != SDDModel::value_t::Undefined && fixed[var] != truth_value(node);
+    return fixed_[var] != SDDModel::value_t::Undefined && fixed_[var] != truth_value(node);
 }
 
 SDDModel SDDModel::merge_disjoint_models(const SDDModel& left, const SDDModel& right) {

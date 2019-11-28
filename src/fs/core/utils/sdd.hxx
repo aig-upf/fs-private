@@ -98,21 +98,23 @@ protected:
 
 class SDDModelEnumerator {
 public:
-    explicit SDDModelEnumerator(SddManager* manager);
+    SDDModelEnumerator(SddManager* manager, SDDModel&& fixed);
 
-    std::vector<SDDModel> models(SddNode* node, const SDDModel& fixed, Vtree* vtree=nullptr);
+    std::vector<SDDModel> models(SddNode* node, Vtree* vtree=nullptr);
 
     unsigned nvars() const { return nvars_; }
 
 protected:
     SddManager* sddmanager_;
     unsigned nvars_;
+    const SDDModel fixed_;
 
-    std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, const SDDModel& fixed);
-    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output, const SDDModel& fixed);
+    std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
+    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output);
 
-    static bool node_is_false_in_fixed(SddNode* node, const SDDModel& fixed);
+    bool node_is_false_in_fixed(SddNode* node);
 };
+
 
 //! Loads from disk all SDDs in the given directory (one per action schema)
 std::vector<std::shared_ptr<ActionSchemaSDD>> load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, const std::string& dir);
