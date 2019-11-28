@@ -52,50 +52,11 @@ def create_fs_task(fd_task, domain_name, instance_name):
     task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
     task.process_initial_state(filter_out_action_cost_atoms(fd_task.init, task.action_cost_symbols))
     task.process_actions(fd_task.actions, type_map)
-    task.process_processes([])
-    task.process_events([])
     task.process_goal(fd_task.goal)
     task.process_state_constraints(fd_task.constraints)
     task.process_axioms(fd_task.axioms)
     task.process_metric(None)
     task.process_transitions(fd_task.transitions)
-    return task
-
-
-def create_fs_plus_task(fsp_task, domain_name, instance_name, disable_static_analysis):
-    """ Create a problem domain and instance and perform the appropiate validty checks """
-    types, type_map, supertypes = process_problem_types(fsp_task.types, fsp_task.objects, fsp_task.bounds)
-    task = FSTaskIndex(domain_name, instance_name)
-    print("Creating FS+ task: Processing objects...")
-    task.process_objects(fsp_task.objects)
-    print("Creating FS+ task: Processing types...")
-    task.process_types(types, type_map, supertypes)
-    # print("Types:", types)
-    # print("Type -> Domain Map:", type_map)
-    # MRJ: takes into account actions, events and processes
-    print("Creating FS+ task: Processing symbols...")
-    task.process_symbols(actions=fsp_task.actions, events=fsp_task.events,
-                         processes=fsp_task.processes, constraints=fsp_task.constraint_schemata,
-                         predicates=fsp_task.predicates, functions=fsp_task.functions, no_static_symbols=disable_static_analysis)
-    print("Creating FS+ task: Processing state variables...")
-    task.process_state_variables(create_all_possible_state_variables(task.symbols, task.static_symbols, type_map))
-    print("Creating FS+ task: Processing initial state...")
-    task.process_initial_state(filter_out_action_cost_atoms(fsp_task.init, task.action_cost_symbols))
-    print("Creating FS+ task: Processing actions...")
-    task.process_actions(fsp_task.actions, type_map)
-    print("Creating FS+ task: Processing processes...")
-    task.process_processes(fsp_task.processes)
-    print("Creating FS+ task: Processing events...")
-    task.process_events(fsp_task.events)
-    print("Creating FS+ task: Processing the goal...")
-    task.process_goal(fsp_task.goal)
-    print("Creating FS+ task: Processing state constraints...")
-    task.process_state_constraints(fsp_task.constraints)
-    task.process_lifted_state_constraints(fsp_task.constraint_schemata)
-    print("Creating FS+ task: Processing axioms...")
-    task.process_axioms(fsp_task.axioms)
-    print("Creating FS+ task: Processing metric...")
-    task.process_metric(fsp_task.metric)
     return task
 
 
@@ -124,8 +85,6 @@ def create_fs_task_from_adl(adl_task, domain_name, instance_name):
     task.process_state_variables(reach_pruned_varlist)
 
     task.process_adl_initial_state(adl_task)
-    task.process_processes([])
-    task.process_events([])
     task.process_adl_actions(adl_task.actions, adl_task.sorted_action_names)
     task.process_adl_goal(adl_task)
     task.process_state_constraints([])  # No state constr. possible in ADL, but this needs to be invoked nevertheless
@@ -379,12 +338,6 @@ class FSTaskIndex(object):
         print('\tAction schema "{}" has arity {} and {} potential groundings'.format(action.name, arity, num_groundings))
         return num_groundings
 
-    def process_processes(self, processes):
-        self.process_schemas = [FSActionSchema(self, proc, "natural") for proc in processes]
-
-    def process_events(self, events):
-        self.event_schemas = [FSActionSchema(self, evt, "exogenous") for evt in events]
-
     def process_metric(self, metric):
         if metric is None:
             self.metric = FSMetric(self, None, None)
@@ -404,9 +357,6 @@ class FSTaskIndex(object):
 
     def process_state_constraints(self, constraints):
         self.state_constraints = [FSFormula(self, constraints)]
-
-    def process_lifted_state_constraints(self, constraint_schemas):
-        self.state_constraints += [FSNamedFormula(self, c.name, c.args, c.condition) for c in constraint_schemas]
 
     def process_axioms(self, axioms):
         """ An axiom is just a (possibly lifted) named formula. """

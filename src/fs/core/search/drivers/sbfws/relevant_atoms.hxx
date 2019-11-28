@@ -2,14 +2,11 @@
 #pragma once
 
 #include <fs/core/search/drivers/sbfws/iw_run.hxx>
-#include <fs/hybrid/base.hxx>
 
 
 namespace fs0 { class Problem; class L0Heuristic; }
 namespace fs0 { namespace bfws { struct SBFWSConfig; class RelevantAtomSet; class BFWSStats; } }
-namespace fs0 { namespace hybrid { class L2Norm; }}
 
-    
 	
 namespace fs0 { namespace bfws {
 
@@ -27,20 +24,6 @@ template <typename NodeT>
 class NullRelevantAtomsCounter : public RelevantAtomsCounterI<NodeT> {
 public:
 	unsigned count(NodeT& node, BFWSStats& stats) const override { return 0; }
-};
-
-
-//!
-template <typename NodeT>
-class L2NormRelevantAtomsCounter : public RelevantAtomsCounterI<NodeT> {
-public:
-    FS_LP_METHOD(L2NormRelevantAtomsCounter(const Problem& problem))
-	~L2NormRelevantAtomsCounter();
-
-	FS_LP_METHOD(unsigned count(NodeT& node, BFWSStats& stats) const override)
-	
-protected:
-	FS_LP_ATTRIB(hybrid::L2Norm* _l2_norm)
 };
 
 
@@ -177,11 +160,6 @@ public:
 		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::L0) {
 			return new L0RelevantAtomsCounter<NodeT>(model.getTask());
 		}
-
-		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::G0) {
-			return new L2NormRelevantAtomsCounter<NodeT>(model.getTask());
-		}
-
 
 		return new SimulationBasedRelevantAtomsCounter<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model, config, features);
 	}

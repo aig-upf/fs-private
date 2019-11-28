@@ -52,7 +52,6 @@ def parse_arguments(args):
     parser.add_argument('-w', '--workspace', default=None, help="(Optional) Path to the workspace directory.")
     parser.add_argument('--planfile', default=None, help="(Optional) Path to the file where the solution plan "
                                                          "will be left.")
-    parser.add_argument("--hybrid", action='store_true', help='Use f-PDDL+ parser and front-end')
     parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
 
     parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator')
@@ -272,13 +271,6 @@ def run(args):
     print("{0:<30}{1}".format("Problem domain:", domain_name))
     print("{0:<30}{1}".format("Problem instance:", instance_name))
     print("{0:<30}{1}".format("Working directory:", workdir))
-
-    if args.hybrid:
-        raise RuntimeError("Implementation has not yet been ported to Tarski")
-        from .fs_task import create_fs_plus_task
-        from . import f_pddl_plus
-        hybrid_task = f_pddl_plus.parse_f_pddl_plus_task(args.domain, args.instance)
-        fs_task = create_fs_plus_task(hybrid_task, domain_name, instance_name, args.disable_static_analysis)
 
     with resources.timing(f"Parsing problem", newline=True):
         problem = parse_problem_with_tarski(args.domain, args.instance)

@@ -50,9 +50,6 @@ public:
 	void setGroundActions(std::vector<const GroundAction*>&& ground) { _ground = std::move(ground); }
     void addGroundAction( const GroundAction* a ) { _ground.push_back(a); }
 
-	void add_wait_action( const GroundAction* a ) { _wait_action = a; _ground.push_back(a); }
-	const GroundAction*	get_wait_action() const { return _wait_action; }
-
 	const std::vector<const PartiallyGroundedAction*>& getPartiallyGroundedActions() const { return _partials; }
 	void setPartiallyGroundedActions(std::vector<const PartiallyGroundedAction*>&& actions) { _partials = std::move(actions); }
 
@@ -100,8 +97,6 @@ public:
 	//! Return true if all the symbols of the problem are predicates
 	bool is_predicative() const { return _is_predicative; }
 
-    bool requires_handling_continuous_change() const;
-
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
@@ -138,8 +133,6 @@ protected:
 	const fs::Formula* _goal_formula;
 
     const fs::Metric*   _metric;
-
-	const GroundAction*	_wait_action;
 
 	std::unique_ptr<FormulaInterpreter> _goal_sat_manager;
 

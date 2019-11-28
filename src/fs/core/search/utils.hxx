@@ -16,9 +16,6 @@
 #include <fs/core/actions/checker.hxx>
 #include <fs/core/utils/printers/printers.hxx>
 #include <fs/core/utils/system.hxx>
-#ifdef FS_HYBRID
-#include <fs/hybrid/dynamics/hybrid_plan.hxx>
-#endif
 
 namespace fs0 { namespace drivers {
 
@@ -174,14 +171,6 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 		// Extra actions when a plan is found
 		virtual void on_plan_found(const PlanT& plan) {
-			#ifdef FS_HYBRID
-			if ( _problem.requires_handling_continuous_change()) {
-				dynamics::HybridPlan controller;
-				controller.interpret_plan(plan);
-				controller.simulate(Config::instance().getDiscretizationStep());
-				controller.save_simulation_trace("plan.simulation.json");
-			}
-			#endif
 		}
 
 	};
