@@ -360,9 +360,10 @@ std::vector<SDDModel> RecursiveModelEnumerator::models(SddNode* node, Vtree* vtr
     return {};
 }
 
-void RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output) {
-    auto left_models = models(leftnode, leftvt);
-    auto right_models = models(rightnode, rightvt);
+void RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt,
+                                                   std::vector<SDDModel>& output) {
+    auto left_models = models_with_cache(leftnode, leftvt);
+    auto right_models = models_with_cache(rightnode, rightvt);
 
     // increase vector capacity by expected number of models of the cross product
     output.reserve(output.size() + left_models.size() * right_models.size());
@@ -374,15 +375,16 @@ void RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* r
     }
 }
 
-std::vector<SDDModel> RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt) {
+std::vector<SDDModel>
+RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt) {
     std::vector<SDDModel> result;
     model_cross_product(leftnode, rightnode, leftvt, rightvt, result);
     return result;
 }
 
 RecursiveModelEnumerator::RecursiveModelEnumerator(SddManager* manager, SDDModel&& fixed)
-    : sddmanager_(manager), nvars_(sdd_manager_var_count(manager)), fixed_(std::move(fixed)) {
-    assert(fixed_.size()==nvars_+1); // vars are 1-indexed
+        : sddmanager_(manager), nvars_(sdd_manager_var_count(manager)), fixed_(std::move(fixed)), cache_hits_(0), computed_nodes_(0) {
+    assert(fixed_.size() == nvars_ + 1); // vars are 1-indexed
 }
 
 bool RecursiveModelEnumerator::node_is_false_in_fixed(SddNode* node) {
@@ -398,7 +400,8 @@ SDDModel SDDModel::merge_disjoint_models(const SDDModel& left, const SDDModel& r
     // Copy the left model and update the values from the right, checking for no overlap
     std::vector<value_t> res;
     res.reserve(size);
-    for (std::size_t i = 0; i < size; ++i) {
+    res.push_back(value_t::Undefined); // variables are 1-indexed
+    for (std::size_t i = 1; i < size; ++i) {
         const auto& lv = left[i];
         const auto& rv = right[i];
 
@@ -412,5 +415,218 @@ SDDModel SDDModel::merge_disjoint_models(const SDDModel& left, const SDDModel& r
 
     return SDDModel(std::move(res));
 }
+
+DFSModelEnumerator::DFSModelEnumerator(SddManager* manager, SddNode* root, SDDModel&& fixed)
+        : sddmanager_(manager), nvars_(sdd_manager_var_count(manager)), fixed_(std::move(fixed)), state_() {
+    state_.reserve(nvars_);
+    assert(fixed_.size() == nvars_ + 1); // vars are 1-indexed
+    // auto vtree = sdd_node_is_true(root) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(root);
+    // state_.emplace_back(case_t::case0, (std::vector<SddNode*>){root}, vtree);
+}
+
+
+SDDModel DFSModelEnumerator::next() {
+
+    std::vector<SDDModel::value_t> values;
+
+    while (!state_.empty()) {
+        const auto&[subcase, nodes, vtree] = state_.back();
+        assert(vtree);
+
+//        auto vtree_left = sdd_vtree_left(vtree);
+//        auto vtree_right = sdd_vtree_right(vtree);
+
+        if (subcase == case_t::case0) { // Starting the ME algorithm
+            assert(nodes.size() == 1);
+            const auto& node = nodes[0];
+
+            if (sdd_node_is_false(node)) throw std::runtime_error("False SDD has no models");
+
+
+        }
+    }
+
+    // SDDModel(std::move(values))
+    // We reached the end of the stack, all models have been explored, return the empty model to signal so
+    return SDDModel(0);
+}
+
+
+RecursiveModelEnumerator2::resultset_t RecursiveModelEnumerator2::models_p_with_cache(SddNode* node, Vtree* vtree) {
+    computed_nodes_++;
+    auto key = std::make_pair(sdd_id(node), vtree);
+
+//    auto res = computed_.emplace(key, vtree);
+//    if (res.second) cache_hits_++;
+//    return models_p(node, vtree);
+
+    auto it = cache_.find(key);
+    if (it != cache_.end()) {
+        cache_hits_++;
+        return it->second;
+    } else {
+        auto res = cache_.emplace(key, models_p(node, vtree));
+        return res.first->second;
+    }
+}
+
+std::vector<SDDModel> RecursiveModelEnumerator::models_with_cache(SddNode* node, Vtree* vtree) {
+    computed_nodes_++;
+    auto key = std::make_pair(sdd_id(node), vtree);
+
+    auto it = cache2_.find(key);
+    if (it != cache2_.end()) {
+        cache_hits_++;
+        return it->second;
+    } else {
+        auto res = cache2_.emplace(key, models(node, vtree));
+        return res.first->second;
+    }
+}
+
+RecursiveModelEnumerator2::resultset_t RecursiveModelEnumerator2::models_p(SddNode* node, Vtree* vtree) {
+    auto vtree_left = sdd_vtree_left(vtree);
+    auto vtree_right = sdd_vtree_right(vtree);
+
+    if (sdd_vtree_is_leaf(vtree)) {
+        unsigned var = sdd_vtree_var(vtree);
+        assert (var > 0 && var <= nvars_);  // Variables in the SDD library range from 1 to numvars
+
+        if (sdd_node_is_true(node)) {
+            const auto& fixed_val = fixed_[var];
+            if (fixed_val != SDDModel::value_t::Undefined) {
+                return {register_model(var, fixed_val)};
+
+            } else {
+                return {register_model(var, SDDModel::value_t::True),
+                        register_model(var, SDDModel::value_t::False)};
+            }
+
+        } else if (sdd_node_is_literal(node)) {
+            const auto& fixed_val = fixed_[var];
+            if (fixed_val != SDDModel::value_t::Undefined) {
+                return {register_model(var, fixed_val)};
+
+            } else {
+                SDDModel::value_t value = truth_value(node);
+                //            assert(fixed[var] == SDDModel::value_t::Undefined || fixed[var] == value); // Just in case
+                return {register_model(var, value)};
+            }
+        }
+
+    } else {
+        if (sdd_node_is_true(node)) {
+            return model_cross_product_p(node, node, vtree_left, vtree_right);
+
+        } else if (sdd_vtree_of(node) == vtree) {
+            assert(sdd_node_is_decision(node)); // Required by the documentation of `sdd_node_elements`
+
+            // nodes is a C-style array of nodes containing (flat) pairs of (prime, sub), as described in the docs
+            SddNode** nodes = sdd_node_elements(node);
+            std::vector<index_t> result;
+            // TODO Might be worth doing two passes to precompute the final size of result
+            // TODO and reserve the appropriate space?
+
+            auto nsize = 2*sdd_node_size(node);
+            for (unsigned i=0; i < nsize; i += 2) {
+                SddNode* prime = nodes[i];
+                SddNode* sub = nodes[i+1];
+
+                if (sdd_node_is_false(sub)) continue;
+
+                if (node_is_false_in_fixed(sub) || node_is_false_in_fixed(prime)) continue;
+
+                // For debugging purposes:
+//                if (sdd_node_is_literal(prime) && sdd_node_literal(prime) == -7 &&
+//                    sdd_node_is_literal(sub) && sdd_node_literal(sub) == -8) {
+//                    std::cout << "Breakpoint" << std::endl;
+//                }
+
+
+                model_cross_product_p(prime, sub, vtree_left, vtree_right, result);
+            }
+
+            return result;
+
+
+        } else {  // fill in gap in vtree
+            auto truenode = sdd_manager_true(sddmanager_);
+
+            // if Vtree.is_sub(node.vtree(), vtree.left()): [Python]
+            if (sdd_vtree_is_sub(sdd_vtree_of(node), vtree_left)) {
+                return model_cross_product_p(node, truenode, vtree_left, vtree_right);
+            } else {
+                return model_cross_product_p(truenode, node, vtree_left, vtree_right);
+            }
+        }
+    }
+
+    return {};
+}
+
+
+void RecursiveModelEnumerator2::model_cross_product_p(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, resultset_t& output) {
+    auto left_models = models_p_with_cache(leftnode, leftvt);
+    auto right_models = models_p_with_cache(rightnode, rightvt);
+
+    // increase vector capacity by expected number of models of the cross product
+    output.reserve(output.size() + left_models.size() * right_models.size());
+
+    for (const auto& l:left_models) {
+        for (const auto& r:right_models) {
+            output.emplace_back(register_model(SDDModel::merge_disjoint_models(result_[l], result_[r])));
+        }
+    }
+}
+
+std::vector<RecursiveModelEnumerator2::index_t>
+RecursiveModelEnumerator2::model_cross_product_p(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt) {
+    resultset_t result;
+    model_cross_product_p(leftnode, rightnode, leftvt, rightvt, result);
+    return result;
+}
+
+/*
+index_t RecursiveModelEnumerator2::register_model() {
+    result_.emplace_back(nvars_+1);
+    return &result_.back();
+}
+*/
+
+RecursiveModelEnumerator2::index_t RecursiveModelEnumerator2::register_model(SDDModel&& model) {
+    result_.push_back(std::move(model));
+    return result_.size()-1;
+}
+
+RecursiveModelEnumerator2::index_t RecursiveModelEnumerator2::register_model(unsigned var, const SDDModel::value_t& val) {
+    result_.emplace_back(nvars_+1);
+    result_.back()[var] = val;
+//    return &result_.back();
+    return result_.size()-1;
+}
+
+std::vector<SDDModel> RecursiveModelEnumerator2::models(SddNode* node, Vtree* vtree) {
+    auto selected = models_p(node, vtree);
+//    std::cout << "A total of " << result_.size() << " models were computed, of which " << selected.size()
+//              << " correspond to final total models" << std::endl;
+
+    std::vector<SDDModel> totals;
+    totals.reserve(selected.size());
+    for (const auto& i:selected) {
+        totals.push_back(result_[i]);
+    }
+    return totals;  // TODO Once this class is final, we should avoid this duplicate iteration and
+                    //      simply return indexes to models
+}
+
+std::vector<SDDModel> RecursiveModelEnumerator::models(SddNode* node) {
+    if (sdd_node_is_false(node)) throw std::runtime_error("False SDD has no models");
+    auto vtree = sdd_node_is_true(node) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(node);
+    auto result = models(node, vtree);
+//    std::cout << "Cache hits: " << cache_hits_ << "/" << computed_nodes_ << std::endl;
+    return result;
+}
+
+
 
 } // namespace

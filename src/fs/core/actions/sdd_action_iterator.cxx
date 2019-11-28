@@ -39,6 +39,7 @@ namespace fs0 {
             if (!current_models_computed_) {
                 assert (current_resultset_.empty());
 
+                /*
                 if (!custom_me_) {
                     // LPT_DEBUG("cout", "Conjoining SDD " << schema_sdd.get_schema().getName() << " with state...");
                     // Create the SDD corresponding to the current action schema index conjoined with the current state.
@@ -60,16 +61,20 @@ namespace fs0 {
 //                std::cout << "Action schema " << schema_sdd.get_schema().getName() << " has " << wmc << " models... " << std::flush;
 //                LPT_DEBUG("cout", "Conjoined SDD has " <<  sdd_size(current_sdd_) << " nodes");
                 }
+                */
 
 
+                // TODO custom_me no longer means custom me - fix this :-)
                 if (custom_me_) {
                     RecursiveModelEnumerator enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
                     current_resultset_ = enumerator.models(schema_sdd.node());
 
                 } else {
                     // Just pass an empty SDDModel, i.e. with no value fixed
-                    RecursiveModelEnumerator enumerator(schema_sdd.manager(), SDDModel(schema_sdd.var_count()+1));
-                    current_resultset_ = enumerator.models(current_sdd_);
+//                    RecursiveModelEnumerator enumerator(schema_sdd.manager(), SDDModel(schema_sdd.var_count()+1));
+//                    current_resultset_ = enumerator.models(current_sdd_);
+                    RecursiveModelEnumerator2 enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
+                    current_resultset_ = enumerator.models(schema_sdd.node());
                 }
 
                 current_models_computed_ = true;
