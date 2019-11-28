@@ -132,10 +132,13 @@ def generate_debug_scripts(target_dir, planner_arguments):
         .format(shebang, ld_string, args)
 
     memprofile = "{}\n\n{} valgrind --tool=massif ./solver.debug.bin {}".format(shebang, ld_string, args)
+    callgrind = f"{shebang}\n\n{ld_string} valgrind --tool=callgrind ./solver.debug.bin {args}"
 
     make_script(os.path.join(target_dir, 'debug.sh'), debug_script)
     make_script(os.path.join(target_dir, 'memleaks.sh'), memleaks)
     make_script(os.path.join(target_dir, 'memprofile.sh'), memprofile)
+    make_script(os.path.join(target_dir, 'callgrind.sh'), callgrind)
+
 
 def make_script(filename, code):
     with open(filename, 'w') as f:
@@ -305,7 +308,8 @@ def run(args):
         sdddir = os.path.join(out_dir, 'data', 'sdd')
         utils.mkdirp(sdddir)
         from tarski.sdd.sdd import process_problem
-        process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False, sdd_minimization_time=None)
+        process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
+                        sdd_minimization_time=None, graphs_directory=None)
 
     translation_dir = run_solver(out_dir, args, args.parse_only)
 

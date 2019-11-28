@@ -127,6 +127,7 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
         if (minimization_time > 0) {
             ActionSchemaSDD::minimize_sdd(manager, node, minimization_time);
             // For debugging purposes:
+            // std::cout << "Printing SDD to " << str(format("/home/gfrances/tmp/vtrees/%1%.sdd.dot") % schema_name) << std::endl;
             // sdd_save_as_dot(str(format("/home/gfrances/tmp/vtrees/%1%.sdd.dot") % schema_name).c_str(), node);
             // sdd_vtree_save_as_dot(str(format("/home/gfrances/tmp/vtrees/%1%.vtree.dot") % schema_name).c_str(), sdd_manager_vtree(manager));
         }
