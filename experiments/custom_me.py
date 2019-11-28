@@ -38,6 +38,10 @@ def algorithms():
     lifted = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
               '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=true"]
 
+    lifted_nocustom = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
+          '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false"]
+
+
     # We don't use the ASP reachability analysis at the moment to be as close as possible as the above experiment
     grounded = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
                 '--output', '.', "--options", "verbose_stats=true,successor_generation=naive"]
@@ -50,8 +54,9 @@ def algorithms():
     #     name = f'brfs-sdd-{min_time}' + ('-custom_me' if custom_me else '')
     #     configs[name] = lifted + ['--options']
 
+    return {'brfs-sdd-custom': lifted, 'brfs-sdd-nocustom': lifted_nocustom}
     # return {'brfs-sdd': lifted}  # For testing purposes
-    return {'brfs-sdd': lifted, 'brfs-ground-enum': grounded, 'brfs-ground-mt': match_tree}
+    # return {'brfs-sdd': lifted, 'brfs-ground-enum': grounded, 'brfs-ground-mt': match_tree}
 
 
 def main():
