@@ -424,13 +424,13 @@ DFSModelEnumerator::DFSModelEnumerator(SddManager* manager, SddNode* root, SDDMo
     // state_.emplace_back(case_t::case0, (std::vector<SddNode*>){root}, vtree);
 }
 
-
+/*
 SDDModel DFSModelEnumerator::next() {
 
     std::vector<SDDModel::value_t> values;
 
     while (!state_.empty()) {
-        const auto&[subcase, nodes, vtree] = state_.back();
+        const auto& [subcase, nodes, vtree] = state_.back();
         assert(vtree);
 
 //        auto vtree_left = sdd_vtree_left(vtree);
@@ -450,7 +450,7 @@ SDDModel DFSModelEnumerator::next() {
     // We reached the end of the stack, all models have been explored, return the empty model to signal so
     return SDDModel(0);
 }
-
+*/
 
 RecursiveModelEnumerator2::resultset_t RecursiveModelEnumerator2::models_p_with_cache(SddNode* node, Vtree* vtree) {
     computed_nodes_++;
