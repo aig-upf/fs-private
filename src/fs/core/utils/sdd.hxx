@@ -115,7 +115,7 @@ protected:
     std::unordered_map<node_id_t, std::vector<SDDModel> , boost::hash<node_id_t>> cache2_;
 
     virtual std::vector<SDDModel> models(SddNode* node, Vtree* vtree);
-    std::vector<SDDModel> models_with_cache(SddNode* node, Vtree* vtree);
+    const std::vector<SDDModel>& models_with_cache(SddNode* node, Vtree* vtree);
 
     std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
     void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output);
@@ -134,7 +134,7 @@ public:
     ~RecursiveModelEnumerator2() override = default;
 
     using RecursiveModelEnumerator::models;
-    std::vector<index_t> models_p_with_cache(SddNode* node, Vtree* vtree);
+    const std::vector<index_t>& models_p_with_cache(SddNode* node, Vtree* vtree);
     std::vector<index_t> models_p(SddNode* node, Vtree* vtree);
 
 protected:

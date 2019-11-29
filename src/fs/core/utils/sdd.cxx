@@ -14,7 +14,6 @@
 #include <sdd/sddapi.hxx>
 
 #include <boost/filesystem.hpp>   // includes all needed Boost.Filesystem declarations
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
@@ -362,8 +361,8 @@ std::vector<SDDModel> RecursiveModelEnumerator::models(SddNode* node, Vtree* vtr
 
 void RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt,
                                                    std::vector<SDDModel>& output) {
-    auto left_models = models_with_cache(leftnode, leftvt);
-    auto right_models = models_with_cache(rightnode, rightvt);
+    const std::vector<SDDModel>& left_models = models_with_cache(leftnode, leftvt);
+    const std::vector<SDDModel>& right_models = models_with_cache(rightnode, rightvt);
 
     // increase vector capacity by expected number of models of the cross product
     output.reserve(output.size() + left_models.size() * right_models.size());
@@ -452,7 +451,8 @@ SDDModel DFSModelEnumerator::next() {
 }
 */
 
-RecursiveModelEnumerator2::resultset_t RecursiveModelEnumerator2::models_p_with_cache(SddNode* node, Vtree* vtree) {
+const RecursiveModelEnumerator2::resultset_t&
+RecursiveModelEnumerator2::models_p_with_cache(SddNode* node, Vtree* vtree) {
     computed_nodes_++;
     auto key = std::make_pair(sdd_id(node), vtree);
 
@@ -470,7 +470,8 @@ RecursiveModelEnumerator2::resultset_t RecursiveModelEnumerator2::models_p_with_
     }
 }
 
-std::vector<SDDModel> RecursiveModelEnumerator::models_with_cache(SddNode* node, Vtree* vtree) {
+const std::vector<SDDModel>&
+RecursiveModelEnumerator::models_with_cache(SddNode* node, Vtree* vtree) {
     computed_nodes_++;
     auto key = std::make_pair(sdd_id(node), vtree);
 
@@ -566,8 +567,8 @@ RecursiveModelEnumerator2::resultset_t RecursiveModelEnumerator2::models_p(SddNo
 
 
 void RecursiveModelEnumerator2::model_cross_product_p(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, resultset_t& output) {
-    auto left_models = models_p_with_cache(leftnode, leftvt);
-    auto right_models = models_p_with_cache(rightnode, rightvt);
+    const resultset_t& left_models = models_p_with_cache(leftnode, leftvt);
+    const resultset_t& right_models = models_p_with_cache(rightnode, rightvt);
 
     // increase vector capacity by expected number of models of the cross product
     output.reserve(output.size() + left_models.size() * right_models.size());
