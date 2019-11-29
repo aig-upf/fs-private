@@ -82,7 +82,7 @@ namespace fs0 {
                 current_resultset_idx_ = 0;
                 // This should collect the garbage from current_sdd_ (i.e. closest thing to deleting the pointer),
                 // as it will garbage-collect without referencing the current_sdd node
-                schema_sdd.collect_sdd_garbage();
+//                schema_sdd.collect_sdd_garbage(); // This doesnt make sense if we don't modify the SDD with data from the current state
             }
 
             if (current_resultset_idx_ < current_resultset_.size()) {
