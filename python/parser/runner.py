@@ -56,6 +56,7 @@ def parse_arguments(args):
     parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
 
     parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator')
+    parser.add_argument("--var_ordering", default=None, help='Variable ordering for SDD construction')
 
     args = parser.parse_args(args)
 
@@ -309,7 +310,7 @@ def run(args):
         utils.mkdirp(sdddir)
         from tarski.sdd.sdd import process_problem
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
-                        sdd_minimization_time=None, graphs_directory=None)
+                        sdd_minimization_time=None, graphs_directory=None, var_ordering=args.var_ordering)
 
     translation_dir = run_solver(out_dir, args, args.parse_only)
 
