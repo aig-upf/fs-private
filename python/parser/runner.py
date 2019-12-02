@@ -13,6 +13,8 @@ import subprocess
 
 from pathlib import Path
 
+from tarski.grounding import LPGroundingStrategy
+
 from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .pddl import tasks, pddl_file
 from .fs_task import create_fs_task, create_fs_task_from_adl, create_fs_plus_task
@@ -306,11 +308,21 @@ def run(args):
     if args.sdd:
         with resources.timing(f"Parsing problem with Tarski", newline=True):
             problem = parse_problem_with_tarski(args.domain, args.instance)
+
+        if args.asp:
+            grounding = LPGroundingStrategy(problem)
+            reachable_vars = grounding.ground_state_variables()
+        else:
+            reachable_vars = None
+
         sdddir = os.path.join(out_dir, 'data', 'sdd')
         utils.mkdirp(sdddir)
         from tarski.sdd.sdd import process_problem
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
-                        sdd_minimization_time=None, graphs_directory=None, var_ordering=args.var_ordering)
+                        sdd_minimization_time=None, graphs_directory=None,
+                        var_ordering=args.var_ordering, reachable_vars=reachable_vars)
+
+    # return True  # Just to debug the preprocessing
 
     translation_dir = run_solver(out_dir, args, args.parse_only)
 

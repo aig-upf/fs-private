@@ -10,6 +10,7 @@ from fslab.environments import UPFSlurmEnvironment
 from downward import suites
 from downward.reports.absolute import AbsoluteReport
 import common_setup
+from lab.reports import Attribute
 
 here = path.abspath(path.dirname(__file__))
 
@@ -46,7 +47,12 @@ class BaseReport(AbsoluteReport):
 
 
 DEFAULT_ATTRIBUTES = [
-    'coverage', 'error', 'generations', 'plan', 'total_time', 'memory', 'node_generation_rate', 'sdd_sizes']
+    'coverage', 'error', 'generations', 'plan', 'total_time', 'memory',
+    Attribute('node_generation_rate', min_wins=False),
+    Attribute('sdd_sizes', min_wins=True),
+    Attribute('sdd_theory_vars', min_wins=True),
+    Attribute('sdd_theory_constraints', min_wins=True)
+]
 
 
 def add_standard_experiment_steps(exp, attributes=DEFAULT_ATTRIBUTES):
