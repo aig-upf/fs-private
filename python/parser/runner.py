@@ -273,9 +273,9 @@ def run(args):
     # Determine the appropriate output directory for the problem solver, and create it, if necessary
     out_dir = create_output_dir(args, domain_name, instance_name)
 
-    print("{0:<30}{1}".format("Problem domain:", domain_name))
-    print("{0:<30}{1}".format("Problem instance:", instance_name))
-    print("{0:<30}{1}".format("Working directory:", out_dir))
+    print(f'Problem domain: "{domain_name}" ({args.domain})')
+    print(f'Problem instance: "{instance_name}" ({args.instance})')
+    print(f'Workspace: {out_dir}')
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
