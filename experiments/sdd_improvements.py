@@ -20,14 +20,14 @@ SUITE = [
 
     'organic-synthesis-opt18-strips:p01.pddl',
     'organic-synthesis-opt18-strips:p02.pddl',
-    'blocks',
+    # 'blocks',
     'sokoban-opt08-strips',
-    'visitall-opt11-strips',
+    # 'visitall-opt11-strips',
 
     # 'blocks:probBLOCKS-10-0.pddl',
     # 'pipesworld-tankage',
-    'pipesworld-tankage:p02-net1-b6-g4-t50.pddl',
-    'pipesworld-tankage:p03-net1-b8-g3-t80.pddl',
+    # 'pipesworld-tankage:p02-net1-b6-g4-t50.pddl',
+    # 'pipesworld-tankage:p03-net1-b8-g3-t80.pddl',
 ]
 
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
@@ -45,10 +45,10 @@ def algorithms():
                        '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false", "--var_ordering", "arity"]
 
     lifted_nocustom_asp = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
-                              '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false", "--asp"]
+                              '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false", "--sdd_with_reachability"]
 
     lifted_nocustom_vo_asp = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
-                           '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false",  "--var_ordering", "arity", "--asp"]
+                           '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false",  "--var_ordering", "arity", "--sdd_with_reachability"]
 
     # We don't use the ASP reachability analysis at the moment to be as close as possible as the above experiment
     grounded = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',

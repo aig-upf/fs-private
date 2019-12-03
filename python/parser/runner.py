@@ -24,6 +24,7 @@ from .templates import tplManager
 from tarski.io import FstripsReader
 from tarski.utils import resources
 
+
 def parse_arguments(args):
     parser = argparse.ArgumentParser(description='Bootstrap and run the FS planner on a given instance.'
                                                  'The process might involve generating, compiling and linking'
@@ -59,6 +60,7 @@ def parse_arguments(args):
 
     parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator')
     parser.add_argument("--var_ordering", default=None, help='Variable ordering for SDD construction')
+    parser.add_argument("--sdd_with_reachability", action='store_true', help='Use reachability analysis to improve SDD')
 
     args = parser.parse_args(args)
 
@@ -309,7 +311,7 @@ def run(args):
         with resources.timing(f"Parsing problem with Tarski", newline=True):
             problem = parse_problem_with_tarski(args.domain, args.instance)
 
-        if args.asp:
+        if args.sdd_with_reachability:
             grounding = LPGroundingStrategy(problem)
             reachable_vars = grounding.ground_state_variables()
         else:
