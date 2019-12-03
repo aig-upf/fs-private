@@ -314,6 +314,10 @@ def run(args):
         if args.sdd_with_reachability:
             grounding = LPGroundingStrategy(problem)
             reachable_vars = grounding.ground_state_variables()
+            reachable_actions = grounding.ground_actions()
+            num_groundings = {k: len(gr) for k, gr in reachable_actions.items()}
+            print(f'Number of reachable groundings for action schema: {num_groundings}')
+
         else:
             reachable_vars = None
 

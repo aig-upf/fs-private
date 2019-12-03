@@ -12,6 +12,7 @@ MEMORY_LIMIT = 16000
 
 SUITE = [
     'organic-synthesis-opt18-strips',
+    'organic-synthesis-sat18-strips',
 ]
 
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
@@ -32,8 +33,9 @@ def algorithms():
     match_tree = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
                   '--output', '.', "--options", "verbose_stats=true,successor_generation=match_tree"]
 
-    return {'brfs-naive': grounded,
-            'brfs-mt': match_tree,
+    return {
+        # 'brfs-naive': grounded,
+        #     'brfs-mt': match_tree,
             'brfs-sdd-asp': lifted_nocustom_asp,
             'brfs-sdd-vo-asp': lifted_nocustom_vo_asp}
 
