@@ -358,7 +358,7 @@ def validate(domain_name, instance_name, planfile):
 
 
 def parse_problem_with_tarski(domain_file, inst_file):
-    reader = FstripsReader(raise_on_error=True, theories=None)
+    reader = FstripsReader(raise_on_error=True, theories=None, strict_with_requirements=False)
     return reader.read_problem(domain_file, inst_file)
 
 
