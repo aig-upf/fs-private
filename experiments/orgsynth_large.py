@@ -32,10 +32,12 @@ def algorithms():
     lifted_nocustom_vo_asp = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
                            '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false",  "--var_ordering", "arity", "--sdd_with_reachability"]
 
-    return {'brfs-sdd-old': lifted_nocustom,
-            'brfs-sdd-vo': lifted_nocustom_vo,
+    return {
+        # 'brfs-sdd-old': lifted_nocustom,
+        #     'brfs-sdd-vo': lifted_nocustom_vo,
             'brfs-sdd-asp': lifted_nocustom_asp,
-            'brfs-sdd-vo-asp': lifted_nocustom_vo_asp}
+            # 'brfs-sdd-vo-asp': lifted_nocustom_vo_asp
+    }
 
 
 def main():

@@ -312,11 +312,11 @@ def run(args):
             problem = parse_problem_with_tarski(args.domain, args.instance)
 
         if args.sdd_with_reachability:
-            grounding = LPGroundingStrategy(problem)
+            grounding = LPGroundingStrategy(problem, ground_actions=False)
             reachable_vars = grounding.ground_state_variables()
-            reachable_actions = grounding.ground_actions()
-            num_groundings = {k: len(gr) for k, gr in reachable_actions.items()}
-            print(f'Number of reachable groundings for action schema: {num_groundings}')
+            # reachable_actions = grounding.ground_actions()
+            # num_groundings = {k: len(gr) for k, gr in reachable_actions.items()}
+            # print(f'Number of reachable groundings for action schema: {num_groundings}')
 
         else:
             reachable_vars = None
