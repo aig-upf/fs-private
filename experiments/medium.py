@@ -35,14 +35,18 @@ def algorithms():
     grounded = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
                 '--output', '.', "--options", "verbose_stats=true,successor_generation=naive"]
 
-    match_tree = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
-                  '--output', '.', "--options", "verbose_stats=true,successor_generation=match_tree"]
+    grounded_asp = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
+                '--output', '.', "--options", "verbose_stats=true,successor_generation=naive"]
+
+    # match_tree = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
+    #               '--output', '.', "--options", "verbose_stats=true,successor_generation=match_tree"]
 
     return {
-        # 'brfs-naive': grounded,
-        #     'brfs-mt': match_tree,
-            'brfs-sdd-asp': lifted_nocustom_asp,
-            'brfs-sdd-vo-asp': lifted_nocustom_vo_asp}
+        'brfs-naive': grounded,
+        'brfs-naive-asp': grounded_asp,
+        # 'brfs-mt': match_tree,
+        'brfs-sdd-asp': lifted_nocustom_asp,
+        'brfs-sdd-vo-asp': lifted_nocustom_vo_asp}
 
 
 def main():
