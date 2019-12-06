@@ -624,7 +624,7 @@ std::vector<SDDModel> RecursiveModelEnumerator::models(SddNode* node) {
     if (sdd_node_is_false(node)) throw std::runtime_error("False SDD has no models");
     auto vtree = sdd_node_is_true(node) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(node);
     auto result = models(node, vtree);
-//    std::cout << "Cache hits: " << cache_hits_ << "/" << computed_nodes_ << std::endl;
+//    std::cout << "SDD (" << sdd_size(node) << " nodes) has " << result.size() << " models. Cache hits: " << cache_hits_ << "/" << computed_nodes_ << std::endl;
     return result;
 }
 
