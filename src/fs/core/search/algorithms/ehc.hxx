@@ -31,7 +31,7 @@ public:
 
 
 	EHCSearchNode(StateT&& state_, typename ActionT::IdType action_, std::shared_ptr<EHCSearchNode<StateT, ActionT>> parent_, unsigned long gen_order = 0) :
-		state(std::move(state_)), action(action_), parent(parent_), h(0)
+		state(std::move(state_)), action(action_), parent(parent_), h(0), g(0)
 	{}
 
 	EHCSearchNode(const StateT& state, unsigned long gen_order = 0) :
@@ -79,7 +79,9 @@ public:
 
 	long h;
 
-	bool is_helpful() const { return _helpful; }
+    unsigned g;
+
+    bool is_helpful() const { return _helpful; }
 	void mark_as_helpful() { _helpful = true; }
 
 protected:
