@@ -507,12 +507,15 @@ RecursiveModelEnumerator::models(SddNode* node, Vtree* vtree) {
 
         } else if (sdd_node_is_literal(node)) {
             const auto& fixed_val = fixed_[var];
+            SDDModel::value_t value = truth_value(node);
+            //            assert(fixed[var] == SDDModel::value_t::Undefined || fixed[var] == value); // Just in case
+
             if (fixed_val != SDDModel::value_t::Undefined) {
-                return {register_model(var, fixed_val)};
+//                return {register_model(var, fixed_val)};
+                if (fixed_val==value) return {register_model(var, fixed_val)};
+                else return {};
 
             } else {
-                SDDModel::value_t value = truth_value(node);
-                //            assert(fixed[var] == SDDModel::value_t::Undefined || fixed[var] == value); // Just in case
                 return {register_model(var, value)};
             }
         }
