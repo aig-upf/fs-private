@@ -15,9 +15,9 @@ SUITE = [
     'sokoban-opt08-strips',
     'visitall-opt11-strips',
     'pipesworld-tankage',
-    'floortile-opt11-strips',
-    'hiking-opt14-strips',
-    'organic-synthesis-opt18-strips',
+    # 'floortile-opt11-strips',
+    # 'hiking-opt14-strips',
+    # 'organic-synthesis-opt18-strips',
 ]
 
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
