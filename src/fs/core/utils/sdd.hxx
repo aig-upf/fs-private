@@ -116,7 +116,7 @@ protected:
     const SDDModel fixed_;
     unsigned long cache_hits_;
     unsigned long computed_nodes_;
-    std::vector<SDDModel> result_;
+    std::vector<SDDModel> model_register_;
 
     std::unordered_set<node_id_t, boost::hash<node_id_t>> computed_;
 

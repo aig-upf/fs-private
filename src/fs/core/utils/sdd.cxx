@@ -331,10 +331,6 @@ RecursiveModelEnumerator::models_with_cache(SddNode* node, Vtree* vtree) {
     computed_nodes_++;
     auto key = std::make_pair(sdd_id(node), vtree);
 
-//    auto res = computed_.emplace(key, vtree);
-//    if (res.second) cache_hits_++;
-//    return models_p(node, vtree);
-
     auto it = cache_.find(key);
     if (it != cache_.end()) {
         cache_hits_++;
@@ -349,14 +345,14 @@ std::vector<SDDModel> RecursiveModelEnumerator::models(SddNode* node) {
     if (sdd_node_is_false(node)) throw std::runtime_error("False SDD has no models");
     auto vtree = sdd_node_is_true(node) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(node);
     auto selected = models(node, vtree);
-    // std::cout << "SDD (" << sdd_size(node) << " nodes) has " << result.size() << " models. Cache hits: " << cache_hits_ << "/" << computed_nodes_ << std::endl;
-//    std::cout << "A total of " << result_.size() << " models were computed, of which " << selected.size()
+    std::cout << "SDD (" << sdd_size(node) << " nodes) has " << selected.size() << " models. Cache hits: " << cache_hits_ << "/" << computed_nodes_ << std::endl;
+//    std::cout << "A total of " << model_register_.size() << " models were computed, of which " << selected.size()
 //              << " correspond to final total models" << std::endl;
 
     std::vector<SDDModel> totals;
     totals.reserve(selected.size());
     for (const auto& i:selected) {
-        totals.push_back(result_[i]);
+        totals.push_back(model_register_[i]);
     }
     return totals;  // TODO Once this class is final, we should avoid this duplicate iteration and
                     //      simply return indexes to models
@@ -403,9 +399,7 @@ RecursiveModelEnumerator::models(SddNode* node, Vtree* vtree) {
 
             // nodes is a C-style array of nodes containing (flat) pairs of (prime, sub), as described in the docs
             SddNode** nodes = sdd_node_elements(node);
-            std::vector<index_t> result;
-            // TODO Might be worth doing two passes to precompute the final size of result
-            // TODO and reserve the appropriate space?
+            resultset_t result;
 
             auto nsize = 2*sdd_node_size(node);
             for (unsigned i=0; i < nsize; i += 2) {
@@ -447,14 +441,17 @@ RecursiveModelEnumerator::models(SddNode* node, Vtree* vtree) {
 
 void RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, resultset_t& output) {
     const resultset_t& left_models = models_with_cache(leftnode, leftvt);
+    if (left_models.empty()) return;
+
     const resultset_t& right_models = models_with_cache(rightnode, rightvt);
+    if (right_models.empty()) return;
 
     // increase vector capacity by expected number of models of the cross product
     output.reserve(output.size() + left_models.size() * right_models.size());
 
     for (const auto& l:left_models) {
         for (const auto& r:right_models) {
-            output.emplace_back(register_model(SDDModel::merge_disjoint_models(result_[l], result_[r])));
+            output.emplace_back(register_model(SDDModel::merge_disjoint_models(model_register_[l], model_register_[r])));
         }
     }
 }
@@ -468,15 +465,14 @@ RecursiveModelEnumerator::model_cross_product(SddNode* leftnode, SddNode* rightn
 
 
 RecursiveModelEnumerator::index_t RecursiveModelEnumerator::register_model(SDDModel&& model) {
-    result_.push_back(std::move(model));
-    return result_.size()-1;
+    model_register_.push_back(std::move(model));
+    return model_register_.size()-1;
 }
 
 RecursiveModelEnumerator::index_t RecursiveModelEnumerator::register_model(unsigned var, const SDDModel::value_t& val) {
-    result_.emplace_back(nvars_+1);
-    result_.back()[var] = val;
-//    return &result_.back();
-    return result_.size()-1;
+    model_register_.emplace_back(nvars_+1);
+    model_register_.back()[var] = val;
+    return model_register_.size()-1;
 }
 
 
