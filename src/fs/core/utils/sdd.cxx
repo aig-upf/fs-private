@@ -1,12 +1,12 @@
 
 #include <fs/core/problem_info.hxx>
 #include <fs/core/actions/actions.hxx>
+#include <fs/core/actions/propositional_actions.hxx>
 #include <fs/core/utils/sdd.hxx>
 #include <fs/core/utils/lexical_cast.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/utils/system.hxx>
 #include <lapkt/tools/logging.hxx>
-
 #include <lapkt/tools/resources_control.hxx>
 
 
@@ -38,7 +38,7 @@ SDDModel::value_t truth_value(SddNode* node) {
 
 //! Loads from disk all SDDs in the given directory (one per action schema)
 std::vector<std::shared_ptr<ActionSchemaSDD>>
-load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, const std::string& dir) {
+load_sdds_from_disk(const std::vector<const ActionData*>& schemas, const std::string& dir) {
     const ProblemInfo& info = ProblemInfo::getInstance();
     const Config& config = Config::instance();
 
@@ -47,7 +47,7 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
     fsys::path path(dir);
     if (!fsys::exists(path)) throw std::runtime_error("Non-existing base SDD directory: " + dir);
 
-    for (const auto& schema:schemas) {
+    for (const ActionData* schema:schemas) {
         // Each action schema has a number of filenames starting with the name of the schema
         const std::string& schema_name = schema->getName();
         std::string mng_fname = str(format("%1%.manager.sdd") % schema_name);
@@ -131,7 +131,8 @@ load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, 
             // sdd_vtree_save_as_dot(str(format("/home/gfrances/tmp/vtrees/%1%.vtree.dot") % schema_name).c_str(), sdd_manager_vtree(manager));
         }
 
-        sdds.push_back(std::make_shared<ActionSchemaSDD>(*schema, relevant, bindings, manager, vtree, node));
+        auto schematic_action = std::make_shared<PropositionalSchematicAction>(schema);
+        sdds.push_back(std::make_shared<ActionSchemaSDD>(schematic_action, relevant, bindings, manager, vtree, node));
     }
 
 
@@ -163,7 +164,7 @@ std::size_t ActionSchemaSDD::minimize_sdd(SddManager* manager, SddNode* node, un
     return sz1;
 }
 
-ActionSchemaSDD::ActionSchemaSDD(const PartiallyGroundedAction& schema,
+ActionSchemaSDD::ActionSchemaSDD(const std::shared_ptr<PropositionalSchematicAction>& schema,
         std::vector<std::pair<VariableIdx, unsigned>> relevant,
         std::vector<std::vector<std::pair<object_id, unsigned>>> bindings,
         SddManager *manager, Vtree *vtree, SddNode *sddnode)

@@ -55,8 +55,8 @@ _partial_binding(const ActionData& action_data, const Binding& binding, const Pr
 
 //! Process the action schema with a given parameter binding and return the corresponding GroundAction
 //! A nullptr is returned if the action is detected to be statically non-applicable
-GroundAction*
-_full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info, bool bind_effects) {
+GroundAction* ActionGrounder::
+full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info, bool bind_effects) {
 	assert(binding.is_complete()); // Grounding only possible for full bindings
 	const fs::Formula* precondition = fs::bind(*action_data.getPrecondition(), binding, info);
 	if (precondition->is_contradiction()) {
@@ -85,7 +85,7 @@ unsigned
 _ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded, bool bind_effects) {
 // 	LPT_DEBUG("grounding", "Binding: " << print::binding(binding, data->getSignature()));
 
-	if (GroundAction* ground = _full_binding(id, *data, binding, info, bind_effects)) {
+	if (GroundAction* ground = ActionGrounder::full_binding(id, *data, binding, info, bind_effects)) {
 		LPT_EDEBUG("groundings", "\t" << *ground);
 		grounded.push_back(ground);
 		return id + 1;
@@ -439,7 +439,7 @@ GroundAction*
 ActionGrounder::bind(const PartiallyGroundedAction& action, const Binding& binding, const ProblemInfo& info) {
 	Binding full(action.getBinding());
 	full.merge_with(binding); // TODO We should bind not from the action data but from the partially bound action itself.
-	return _full_binding(GroundAction::invalid_action_id, action.getActionData(), full, info, true);
+	return full_binding(GroundAction::invalid_action_id, action.getActionData(), full, info, true);
 }
 
 

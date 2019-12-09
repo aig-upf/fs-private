@@ -2,8 +2,8 @@
 #pragma once
 
 #include <fs/core/atom.hxx>
-#include <fs/core/actions/action_id.hxx>
 #include <fs/core/actions/sdd_action_iterator.hxx>
+#include <fs/core/actions/propositional_actions.hxx>
 #include <fs/core/utils/sdd.hxx>
 
 
@@ -21,7 +21,7 @@ class SDDLiftedStateModel
 {
 public:
 	using StateT = State;
-	using ActionType = LiftedActionID;
+	using ActionType = SchematicActionID;
 
 protected:
 	SDDLiftedStateModel(const Problem& problem, std::vector<std::shared_ptr<ActionSchemaSDD>> sdds, std::vector<const fs::Formula*> subgoals);
@@ -48,18 +48,10 @@ public:
 	SDDActionIterator applicable_actions(const State& state) const;
     SDDActionIterator applicable_actions(const State& state, bool enforce_state_constraints) const;
 
-
-	bool is_applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const;
-	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;
-
 	//! Returns the state resulting from applying the given action action on the given state
-	State next(const State& state, const ActionType& action) const;
-	State next(const State& state, const GroundAction& a) const;
-
+	State next(const State& state, const SchematicActionID& action) const;
 
 	const Problem& getTask() const { return _task; }
-
-	unsigned get_action_idx(const LiftedActionID& action) const { return 0; }
 
 	//! Returns the number of subgoals into which the goal can be decomposed
 	unsigned num_subgoals() const { return _subgoals.size(); }

@@ -15,7 +15,8 @@ struct sdd_manager_t; typedef struct sdd_manager_t SddManager;
 namespace fs0 {
 
 class State;
-class PartiallyGroundedAction;
+class ActionData;
+class PropositionalSchematicAction;
 
 
 //! A (possibly partial) SDD model, that is, a mapping between the atoms in the SDD and a truth
@@ -49,7 +50,7 @@ protected:
 
 class ActionSchemaSDD {
 public:
-    ActionSchemaSDD(const PartiallyGroundedAction& schema,
+    ActionSchemaSDD(const std::shared_ptr<PropositionalSchematicAction>& schema,
             std::vector<std::pair<VariableIdx, unsigned>> relevant,
             std::vector<std::vector<std::pair<object_id, unsigned>>> bindings,
             SddManager* manager, Vtree* vtree, SddNode* sddnode);
@@ -64,7 +65,9 @@ public:
 
     SddNode* node() { return sddnode_; }
 
-    const PartiallyGroundedAction& get_schema() const { return schema_; }
+    const PropositionalSchematicAction& schematic_action() const {
+        return *schema_;
+    }
 
     std::vector<object_id> get_binding_from_model(const SDDModel& model);
 
@@ -76,7 +79,7 @@ public:
 
 
 protected:
-    const PartiallyGroundedAction& schema_;
+    const std::shared_ptr<PropositionalSchematicAction>& schema_;
 
     //! The actual SDD objects
     SddManager* sddmanager_;
@@ -168,6 +171,6 @@ protected:
 
 
 //! Loads from disk all SDDs in the given directory (one per action schema)
-std::vector<std::shared_ptr<ActionSchemaSDD>> load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, const std::string& dir);
+std::vector<std::shared_ptr<ActionSchemaSDD>> load_sdds_from_disk(const std::vector<const ActionData*>& schemas, const std::string& dir);
 
 } // namespaces
