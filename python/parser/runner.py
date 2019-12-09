@@ -60,9 +60,12 @@ def parse_arguments(args):
 
     parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator')
     parser.add_argument("--var_ordering", default=None, help='Variable ordering for SDD construction')
+    parser.add_argument("--sdd_incr_minimization_time", default=0, type=int, help='Incremental minimization time for SDD construction')
     parser.add_argument("--sdd_with_reachability", action='store_true', help='Use reachability analysis to improve SDD')
 
     args = parser.parse_args(args)
+
+    args.sdd_incr_minimization_time = args.sdd_incr_minimization_time if args.sdd_incr_minimization_time != 0 else None
 
     if not args.parse_only and args.driver is None:
         parser.error('The "--driver" option is required to run the solver')
@@ -326,7 +329,8 @@ def run(args):
         from tarski.sdd.sdd import process_problem
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
                         sdd_minimization_time=None, graphs_directory=None,
-                        var_ordering=args.var_ordering, reachable_vars=reachable_vars)
+                        var_ordering=args.var_ordering, reachable_vars=reachable_vars,
+                        sdd_incr_minimization_time=args.sdd_incr_minimization_time)
 
     # return True  # Just to debug the preprocessing
 
