@@ -326,6 +326,7 @@ SDDModel DFSModelEnumerator::next() {
 }
 */
 
+/*
 SDDModel DFSModelEnumerator::next() {
     if (sdd_node_is_false(root_)) throw std::runtime_error("False SDD has no models");
     auto vtree = sdd_node_is_true(root_) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(root_);
@@ -335,7 +336,7 @@ SDDModel DFSModelEnumerator::next() {
     return SDDModel(std::move(values));
 }
 
-/*
+
 
 void DFSModelEnumerator::next_(SddNode* node, Vtree* vtree, std::vector<SDDModel::value_t>& current) {
     auto vtree_left = sdd_vtree_left(vtree);

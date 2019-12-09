@@ -4,7 +4,7 @@
 #include <fs/core/fs_types.hxx>
 #include <fs/core/utils/binding.hxx>
 
-namespace fs0 { namespace gecode { class LiftedActionIterator; }}
+namespace fs0::gecode { class LiftedActionIterator; }
 
 namespace fs0 {
 
@@ -14,7 +14,7 @@ class GroundAction;
 class ActionID {
 public:
 	ActionID() = default;
-	virtual ~ActionID() {}
+	virtual ~ActionID() = default;
 	
 	virtual bool operator==(const ActionID& rhs) const = 0;
 	inline bool operator!=(const ActionID& rhs) const { return !this->operator==(rhs); }
@@ -64,17 +64,17 @@ public:
 	LiftedActionID& operator=(const LiftedActionID& other) = default;
 	LiftedActionID& operator=(LiftedActionID&& other) = default;
 	
-	bool operator==(const ActionID& rhs) const;
+	bool operator==(const ActionID& rhs) const override;
 	
 	//! Hash-related operations
 	std::size_t generate_hash() const;
-	std::size_t hash() const;
+	std::size_t hash() const override;
 	
 	//! Generates the ground action actually represented by this lifted ID
 	GroundAction* generate() const;
 	
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const override;
 
 protected:
 	Binding get_full_binding() const;
@@ -85,16 +85,16 @@ class PlainActionID : public ActionID {
 protected:
 	const GroundAction* _action;
 public:
-	PlainActionID(const GroundAction* action) : _action(action) {}
+	explicit PlainActionID(const GroundAction* action) : _action(action) {}
 
 	unsigned id() const;
 	
-	bool operator==(const ActionID& rhs) const;
+	bool operator==(const ActionID& rhs) const override;
 	
-	std::size_t hash() const;
+	std::size_t hash() const override;
 	
 	//! Prints a representation of the object to the given stream.
-	std::ostream& print(std::ostream& os) const;
+	std::ostream& print(std::ostream& os) const override;
 };
 
 typedef std::vector<const ActionID*> plan_t;

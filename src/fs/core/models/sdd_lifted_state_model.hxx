@@ -7,8 +7,7 @@
 #include <fs/core/utils/sdd.hxx>
 
 
-
-namespace fs0 { namespace gecode { class LiftedActionCSP; }}
+namespace fs0::gecode { class LiftedActionCSP; }
 
 namespace fs0 {
 
