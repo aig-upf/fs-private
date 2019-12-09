@@ -148,13 +148,14 @@ public:
 
 protected:
     SddManager* sddmanager_;
+    SddNode* root_;
     unsigned nvars_;
     const SDDModel fixed_;
 
-    std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
-    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output);
-
     bool node_is_false_in_fixed(SddNode* node);
+
+    void next_(SddNode* node, Vtree* vtree, std::vector<SDDModel::value_t>& current);
+
 
     enum class case_t {
         case0

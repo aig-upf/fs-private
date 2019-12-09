@@ -291,7 +291,7 @@ SDDModel SDDModel::merge_disjoint_models(const SDDModel& left, const SDDModel& r
 }
 
 DFSModelEnumerator::DFSModelEnumerator(SddManager* manager, SddNode* root, SDDModel&& fixed)
-        : sddmanager_(manager), nvars_(sdd_manager_var_count(manager)), fixed_(std::move(fixed)), state_() {
+        : sddmanager_(manager), root_(root), nvars_(sdd_manager_var_count(manager)), fixed_(std::move(fixed)), state_() {
     state_.reserve(nvars_);
     assert(fixed_.size() == nvars_ + 1); // vars are 1-indexed
     // auto vtree = sdd_node_is_true(root) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(root);
@@ -326,6 +326,131 @@ SDDModel DFSModelEnumerator::next() {
 }
 */
 
+SDDModel DFSModelEnumerator::next() {
+    if (sdd_node_is_false(root_)) throw std::runtime_error("False SDD has no models");
+    auto vtree = sdd_node_is_true(root_) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(root_);
+
+    std::vector<SDDModel::value_t> values;
+    next_(root_, vtree, values);
+    return SDDModel(std::move(values));
+}
+
+/*
+
+void DFSModelEnumerator::next_(SddNode* node, Vtree* vtree, std::vector<SDDModel::value_t>& current) {
+    auto vtree_left = sdd_vtree_left(vtree);
+    auto vtree_right = sdd_vtree_right(vtree);
+
+    if (sdd_vtree_is_leaf(vtree)) {
+        unsigned var = sdd_vtree_var(vtree);
+        assert (var > 0 && var <= nvars_);  // Variables in the SDD library range from 1 to numvars
+
+        if (sdd_node_is_true(node)) {
+            const auto& fixed_val = fixed_[var];
+            if (fixed_val != SDDModel::value_t::Undefined) {
+                return {register_model(var, fixed_val)};
+
+            } else {
+                return {register_model(var, SDDModel::value_t::True),
+                        register_model(var, SDDModel::value_t::False)};
+            }
+
+        } else if (sdd_node_is_literal(node)) {
+            const auto& fixed_val = fixed_[var];
+            if (fixed_val != SDDModel::value_t::Undefined) {
+                return {register_model(var, fixed_val)};
+
+            } else {
+                SDDModel::value_t value = truth_value(node);
+                //            assert(fixed[var] == SDDModel::value_t::Undefined || fixed[var] == value); // Just in case
+                return {register_model(var, value)};
+            }
+        }
+
+    } else {
+        if (sdd_node_is_true(node)) {
+            return model_cross_product(node, node, vtree_left, vtree_right);
+
+        } else if (sdd_vtree_of(node) == vtree) {
+            next_or_node(node, vtree)
+
+
+            assert(sdd_node_is_decision(node)); // Required by the documentation of `sdd_node_elements`
+
+            // nodes is a C-style array of nodes containing (flat) pairs of (prime, sub), as described in the docs
+            SddNode** nodes = sdd_node_elements(node);
+
+            auto nsize = 2*sdd_node_size(node);
+            for (unsigned i=0; i < nsize; i += 2) {
+                SddNode* prime = nodes[i];
+                SddNode* sub = nodes[i+1];
+
+                if (sdd_node_is_false(sub)) continue;
+
+                if (node_is_false_in_fixed(sub) || node_is_false_in_fixed(prime)) continue;
+
+                // For debugging purposes:
+//                if (sdd_node_is_literal(prime) && sdd_node_literal(prime) == -7 &&
+//                    sdd_node_is_literal(sub) && sdd_node_literal(sub) == -8) {
+//                    std::cout << "Breakpoint" << std::endl;
+//                }
+
+
+                model_cross_product(prime, sub, vtree_left, vtree_right, result);
+            }
+
+            return result;
+
+
+        } else {  // fill in gap in vtree
+            auto truenode = sdd_manager_true(sddmanager_);
+
+            // if Vtree.is_sub(node.vtree(), vtree.left()): [Python]
+            if (sdd_vtree_is_sub(sdd_vtree_of(node), vtree_left)) {
+                return model_cross_product(node, truenode, vtree_left, vtree_right);
+            } else {
+                return model_cross_product(truenode, node, vtree_left, vtree_right);
+            }
+        }
+    }
+
+    return {};
+}
+
+void DFSModelEnumerator::next_or_node(SddNode* node, Vtree* vtree,
+        unsigned i,
+        std::vector<SDDModel::value_t>& current) {
+
+    assert(sdd_node_is_decision(node)); // Required by the documentation of `sdd_node_elements`
+
+    // nodes is a C-style array of nodes containing (flat) pairs of (prime, sub), as described in the docs
+    SddNode** nodes = sdd_node_elements(node);
+
+    auto nsize = 2*sdd_node_size(node);
+    for (unsigned i=0; i < nsize; i += 2) {
+        SddNode* prime = nodes[i];
+        SddNode* sub = nodes[i+1];
+
+        if (sdd_node_is_false(sub)) continue;
+
+        if (node_is_false_in_fixed(sub) || node_is_false_in_fixed(prime)) continue;
+
+        // For debugging purposes:
+//                if (sdd_node_is_literal(prime) && sdd_node_literal(prime) == -7 &&
+//                    sdd_node_is_literal(sub) && sdd_node_literal(sub) == -8) {
+//                    std::cout << "Breakpoint" << std::endl;
+//                }
+
+
+        model_cross_product(prime, sub, vtree_left, vtree_right, result);
+    }
+
+    return result;
+
+}
+
+*/
+
 const RecursiveModelEnumerator::resultset_t&
 RecursiveModelEnumerator::models_with_cache(SddNode* node, Vtree* vtree) {
     computed_nodes_++;
@@ -345,7 +470,7 @@ std::vector<SDDModel> RecursiveModelEnumerator::models(SddNode* node) {
     if (sdd_node_is_false(node)) throw std::runtime_error("False SDD has no models");
     auto vtree = sdd_node_is_true(node) ? sdd_manager_vtree(sddmanager_) : sdd_vtree_of(node);
     auto selected = models(node, vtree);
-    std::cout << "SDD (" << sdd_size(node) << " nodes) has " << selected.size() << " models. Cache hits: " << cache_hits_ << "/" << computed_nodes_ << std::endl;
+//    std::cout << "SDD (" << sdd_size(node) << " nodes) has " << selected.size() << " models. Cache hits: " << cache_hits_ << "/" << computed_nodes_ << std::endl;
 //    std::cout << "A total of " << model_register_.size() << " models were computed, of which " << selected.size()
 //              << " correspond to final total models" << std::endl;
 
