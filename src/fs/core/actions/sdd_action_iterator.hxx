@@ -12,7 +12,7 @@ namespace fs0 {
 	class LiftedActionID;
 }
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; }}}
+namespace fs0::language::fstrips { class Formula; }
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -28,10 +28,8 @@ namespace fs0 {
 
         const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds_;
 
-        bool custom_me_;
-
     public:
-        SDDActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, const AtomIndex& tuple_index, bool custom_me);
+        SDDActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, const AtomIndex& tuple_index);
 
         class Iterator {
             friend class SDDActionIterator;
@@ -41,7 +39,7 @@ namespace fs0 {
             ~Iterator();
 
         protected:
-            Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, unsigned currentIdx, bool custom_me);
+            Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, unsigned currentIdx);
 
             const State& state_;
 
@@ -57,8 +55,6 @@ namespace fs0 {
 
             std::vector<SDDModel> current_resultset_;
             unsigned current_resultset_idx_;
-
-            bool custom_me_;
 
             //! Advance into the next SDD model
             void advance();
@@ -77,8 +73,8 @@ namespace fs0 {
             bool operator!=(const Iterator &other) const { return !(this->operator==(other)); }
         };
 
-        Iterator begin() const { return {state_, sdds_, 0, custom_me_}; }
-        Iterator end() const { return {state_, sdds_, (unsigned int) sdds_.size(), custom_me_}; }
+        Iterator begin() const { return {state_, sdds_, 0}; }
+        Iterator end() const { return {state_, sdds_, (unsigned int) sdds_.size()}; }
     };
 
 

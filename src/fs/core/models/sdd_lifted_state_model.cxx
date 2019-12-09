@@ -54,7 +54,7 @@ namespace fs0 {
 
 
     SDDActionIterator SDDLiftedStateModel::applicable_actions(const State& state) const {
-        return {state, sdds_, _task.get_tuple_index(), custom_me_};
+        return {state, sdds_, _task.get_tuple_index()};
     }
 
     SDDActionIterator SDDLiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
@@ -75,21 +75,15 @@ namespace fs0 {
     SDDLiftedStateModel
     SDDLiftedStateModel::build(const Problem& problem) {
         const ProblemInfo& info = ProblemInfo::getInstance();
-        const Config& config = Config::instance();
-
         auto sdds = load_sdds_from_disk(problem.getPartiallyGroundedActions(), info.getDataDir() + "/sdd");
-        auto use_custom_model_enumeration = config.getOption<bool>("sdd.custom_me", true);
-        LPT_INFO("cout", "Using custom SDD model enumerator? " << (use_custom_model_enumeration? "yes" : "no"));
-
-        auto model = SDDLiftedStateModel(problem, sdds, obtain_goal_atoms(problem.getGoalConditions()), use_custom_model_enumeration);
+        auto model = SDDLiftedStateModel(problem, sdds, obtain_goal_atoms(problem.getGoalConditions()));
         return model;
     }
 
-    SDDLiftedStateModel::SDDLiftedStateModel(const Problem& problem, std::vector<std::shared_ptr<ActionSchemaSDD>> sdds, std::vector<const fs::Formula*> subgoals, bool custom_me) :
+    SDDLiftedStateModel::SDDLiftedStateModel(const Problem& problem, std::vector<std::shared_ptr<ActionSchemaSDD>> sdds, std::vector<const fs::Formula*> subgoals) :
             _task(problem),
             sdds_(std::move(sdds)),
-            _subgoals(std::move(subgoals)),
-            custom_me_(custom_me)
+            _subgoals(std::move(subgoals))
     {
         // At the moment we just ignore the state constraints. TODO We should do better error handling,
         // but all of this state constraint code is bound to be refactored soon.

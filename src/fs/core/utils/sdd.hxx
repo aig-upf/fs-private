@@ -98,10 +98,15 @@ protected:
 
 class RecursiveModelEnumerator {
 public:
+    using index_t = unsigned;
+    using resultset_t = std::vector<index_t>;
+
     RecursiveModelEnumerator(SddManager* manager, SDDModel&& fixed);
     virtual ~RecursiveModelEnumerator() = default;
 
     std::vector<SDDModel> models(SddNode* node);
+    resultset_t models(SddNode* node, Vtree* vtree);
+
 
 protected:
     using node_id_t = std::pair<std::size_t, Vtree*>;
@@ -111,35 +116,6 @@ protected:
     const SDDModel fixed_;
     unsigned long cache_hits_;
     unsigned long computed_nodes_;
-
-    std::unordered_map<node_id_t, std::vector<SDDModel> , boost::hash<node_id_t>> cache2_;
-
-    virtual std::vector<SDDModel> models(SddNode* node, Vtree* vtree);
-    const std::vector<SDDModel>& models_with_cache(SddNode* node, Vtree* vtree);
-
-    std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
-    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output);
-
-    bool node_is_false_in_fixed(SddNode* node);
-};
-
-class RecursiveModelEnumerator2 : public RecursiveModelEnumerator {
-public:
-    using index_t = unsigned;
-    using resultset_t = std::vector<index_t>;
-
-    RecursiveModelEnumerator2(SddManager* manager, SDDModel&& fixed) :
-        RecursiveModelEnumerator(manager, std::move(fixed)) {}
-
-    ~RecursiveModelEnumerator2() override = default;
-
-    using RecursiveModelEnumerator::models;
-    const std::vector<index_t>& models_p_with_cache(SddNode* node, Vtree* vtree);
-    std::vector<index_t> models_p(SddNode* node, Vtree* vtree);
-
-protected:
-    std::vector<SDDModel> models(SddNode* node, Vtree* vtree) override;
-
     std::vector<SDDModel> result_;
 
     std::unordered_set<node_id_t, boost::hash<node_id_t>> computed_;
@@ -147,12 +123,17 @@ protected:
     //! A map between node id and resulting models
     std::unordered_map<node_id_t, resultset_t, boost::hash<node_id_t>> cache_;
 
-//    index_t register_model();
+    const resultset_t& models_with_cache(SddNode* node, Vtree* vtree);
+
+    //    index_t register_model();
     index_t register_model(unsigned var, const SDDModel::value_t& val);
     index_t register_model(SDDModel&& model);
 
-    std::vector<index_t> model_cross_product_p(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
-    void model_cross_product_p(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<index_t>& output);
+    resultset_t model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
+    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<index_t>& output);
+
+
+    bool node_is_false_in_fixed(SddNode* node);
 };
 
 class DFSModelEnumerator {

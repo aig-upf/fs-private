@@ -11,19 +11,18 @@
 
 namespace fs0 {
 
-    SDDActionIterator::SDDActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, const AtomIndex& tuple_index, bool custom_me) :
-            state_(state), sdds_(sdds), custom_me_(custom_me)
+    SDDActionIterator::SDDActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, const AtomIndex& tuple_index) :
+            state_(state), sdds_(sdds)
     {}
 
-    SDDActionIterator::Iterator::Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, unsigned currentIdx, bool custom_me) :
+    SDDActionIterator::Iterator::Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, unsigned currentIdx) :
             state_(state),
             sdds_(sdds),
             current_sdd_idx_(currentIdx),
             current_sdd_(nullptr),
             current_models_computed_(false),
             _action(nullptr),
-            current_resultset_(),
-            custom_me_(custom_me)
+            current_resultset_()
     {
         advance();
     }
@@ -39,15 +38,9 @@ namespace fs0 {
             if (!current_models_computed_) {
                 assert (current_resultset_.empty());
 
-                // TODO custom_me no longer means custom me - fix this :-)
-                if (custom_me_) {
-                    RecursiveModelEnumerator enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
-                    current_resultset_ = enumerator.models(schema_sdd.node());
+                RecursiveModelEnumerator enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
+                current_resultset_ = enumerator.models(schema_sdd.node());
 
-                } else {
-                    RecursiveModelEnumerator2 enumerator(schema_sdd.manager(), schema_sdd.collect_state_literals(state_));
-                    current_resultset_ = enumerator.models(schema_sdd.node());
-                }
 //              std::cout << current_resultset_.size() << " models were actually retrieved" << std::endl;
 
                 current_models_computed_ = true;
