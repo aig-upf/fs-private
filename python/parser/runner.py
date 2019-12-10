@@ -278,9 +278,9 @@ def run(args):
     # Determine the appropriate output directory for the problem solver, and create it, if necessary
     out_dir = create_output_dir(args, domain_name, instance_name)
 
-    print(f'Problem domain: "{domain_name}" ({args.domain})')
-    print(f'Problem instance: "{instance_name}" ({args.instance})')
-    print(f'Workspace: {out_dir}')
+    print(f'Problem domain: "{domain_name}" ({os.path.realpath(args.domain)})')
+    print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
+    print(f'Workspace: {os.path.realpath(out_dir)}')
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
@@ -367,6 +367,7 @@ def parse_problem_with_tarski(domain_file, inst_file):
 
 
 def main(args):
+    args = parse_arguments(args)
     import logging
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    return run(parse_arguments(args))
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG if args.debug else logging.INFO)
+    return run(args)

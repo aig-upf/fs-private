@@ -2,9 +2,10 @@
 import os
 import sys
 import errno
+import logging
 
 
-def fix_seed_and_possibly_rerun():
+def fix_seed_and_possibly_rerun(verbose=False):
     """
     Make sure the environment variable `PYTHONHASHSEED` is set to 1 so that the order of some of the problem's
     components, which is determined by iterating a Python dictionary, is always consistently the same.
@@ -20,9 +21,8 @@ def fix_seed_and_possibly_rerun():
         return False
 
     # Otherwise we print a warning and re-run the process with a fixed hash seed envvar.
-    print('\n' + "*" * 80)
-    print("WARNING! Fixing PYTHONHASHSEED to 1 to obtain more reliable results")
-    print("*" * 80 + '\n', flush=True)
+    if verbose:
+        print("Fixing PYTHONHASHSEED to 1 for reproducibility", flush=True)
     # We simply set the environment variable and re-call ourselves.
     import subprocess
     env = dict(os.environ)
