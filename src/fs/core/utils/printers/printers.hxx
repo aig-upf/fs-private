@@ -12,17 +12,28 @@ namespace fs0 {
 
 class Problem;
 class SupportedAction;
-class GroundAction;
 
 //! Print a plan
 class PlanPrinter {
+protected:
+	const ActionPlan& _plan;
 public:
-	//! static helpers
-    static void print(const std::vector<const GroundAction*>& plan, std::ostream& out);
+	PlanPrinter(const ActionPlan& plan) : _plan(plan) {}
 
-    static void print_json(const std::vector<const GroundAction*>& plan, std::ostream& out);
+	//! Prints a representation of the state to the given stream.
+	friend std::ostream& operator<<(std::ostream &os, const PlanPrinter& o) { return o.print(os); }
+	std::ostream& print(std::ostream& os) const;
+
+	static void printSupportedPlan(const std::set<SupportedAction>& plan, std::ostream& out);
+
+	//! static helpers
+	static void print(const std::vector<GroundAction::IdType>& plan, std::ostream& out);
+	static void print(const std::vector<LiftedActionID>& plan, std::ostream& out);
+	static void print_json(const std::vector<GroundAction::IdType>& plan, std::ostream& out);
+	static void print_json(const std::vector<LiftedActionID>& plan, std::ostream& out);
 	static void print_json(const std::vector<std::string>& plan, std::ostream& out);
 };
+
 
 
 
@@ -33,7 +44,7 @@ class plan {
 		const plan_t& _plan;
 
 	public:
-		explicit plan(const plan_t& plan_) : _plan(plan_) {}
+		plan(const plan_t& plan_) : _plan(plan_) {}
 
 		friend std::ostream& operator<<(std::ostream &os, const plan& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
@@ -43,7 +54,7 @@ class supported_plan {
 protected:
 	const std::set<SupportedAction>& _plan;
 public:
-	explicit supported_plan(const std::set<SupportedAction>& plan) : _plan(plan) {}
+	supported_plan(const std::set<SupportedAction>& plan) : _plan(plan) {}
 
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const supported_plan& o) { return o.print(os); }
@@ -60,7 +71,7 @@ class support {
 		const Support& _support;
 
 	public:
-		explicit support(const Support& sup) : _support(sup) {}
+		support(const Support& sup) : _support(sup) {}
 
 		friend std::ostream& operator<<(std::ostream &os, const support& o) { return o.print(os); }
 		std::ostream& print(std::ostream& os) const;
@@ -71,7 +82,7 @@ protected:
 	const std::vector<Atom>& _changeset;
 
 public:
-	explicit changeset(const std::vector<Atom>& c) : _changeset(c) {}
+	changeset(const std::vector<Atom>& c) : _changeset(c) {}
 
 	friend std::ostream& operator<<(std::ostream &os, const changeset& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;

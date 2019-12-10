@@ -50,9 +50,7 @@ L2NormRelevantAtomsCounter<NodeT>::~L2NormRelevantAtomsCounter() {}
 // explicit template instantiation
 template class L0RelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::GroundAction>>;
 template class L0RelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::LiftedActionID>>;
-template class L0RelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::SchematicActionID>>;
 template class L2NormRelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::GroundAction>>;
 template class L2NormRelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::LiftedActionID>>;
-template class L2NormRelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::SchematicActionID>>;
 
 } } // namespaces

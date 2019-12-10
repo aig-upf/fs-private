@@ -5,16 +5,14 @@
 #include <fs/core/actions/checker.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/actions/action_id.hxx>
-#include <fs/core/actions/propositional_actions.hxx>
-#include <fs/core/actions/grounding.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/problem_info.hxx>
 #include <fs/core/utils/config.hxx>
 #include <lapkt/tools/logging.hxx>
 
 namespace fs0 {
+
 
 
 bool Checker::check_correctness(const Problem& problem, const std::vector<const GroundAction*>& plan, const State& s0) {
@@ -38,23 +36,14 @@ bool Checker::check_correctness(const Problem& problem, const std::vector<const 
 
 
 std::vector<const GroundAction*> Checker::transform(const Problem& problem, const std::vector<LiftedActionID>& plan) {
-    std::vector<const GroundAction*> transformed;
-    for (const auto& action_id:plan) {
-        const GroundAction* action = action_id.generate();
-        transformed.push_back(action);
-    }
-    return transformed;
-}
+	std::vector<const GroundAction*> transformed;
 
-std::vector<const GroundAction*> Checker::transform(const Problem& problem, const std::vector<SchematicActionID>& plan) {
-    const auto& info = ProblemInfo::getInstance();
-    std::vector<const GroundAction*> transformed;
-    for (const auto& action_id:plan) {
-        const ActionData& data = action_id.data();
-        const GroundAction* action = ActionGrounder::full_binding(0, data, action_id.get_binding(), info, true);
-        transformed.push_back(action);
-    }
-    return transformed;
+	// First we make sure that the whole plan is applicable
+	for (const LiftedActionID& action_id:plan) {
+		const GroundAction* action = action_id.generate();
+		transformed.push_back(action);
+	}
+	return transformed;
 }
 
 std::vector<const GroundAction*> Checker::transform(const Problem& problem, const ActionPlan& plan) {
@@ -96,5 +85,32 @@ void Checker::print_plan_execution(const Problem& problem, const std::vector<con
 		std::cout << "ERROR! The state that results from aplying the whole plan is NOT a goal state" << std::endl;
 	}
 }
+
+void Checker::print_plan_execution(const Problem& problem, const ActionPlan& plan, const State& s0) {
+    auto transformed = transform(problem, plan);
+    print_plan_execution(problem, transformed, s0);
+    for (auto x:transformed) delete x;
+}
+
+void Checker::print_plan_execution(const Problem& problem, const std::vector<LiftedActionID>& plan, const State& s0) {
+    auto transformed = transform(problem, plan);
+    print_plan_execution(problem, transformed, s0);
+    for (auto x:transformed) delete x;
+}
+
+bool Checker::check_correctness(const Problem& problem, const ActionPlan& plan, const State& s0) {
+    auto transformed = transform(problem, plan);
+    auto res = check_correctness(problem, transformed, s0);
+    for (auto x:transformed) delete x;
+    return res;
+}
+
+bool Checker::check_correctness(const Problem& problem, const std::vector<LiftedActionID>& plan, const State& s0) {
+    auto transformed = transform(problem, plan);
+    auto res = check_correctness(problem, transformed, s0);
+    for (auto x:transformed) delete x;
+    return res;
+}
+
 
 } // namespaces

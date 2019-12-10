@@ -9,11 +9,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(SOURCE_FILES
-        src/fs/core/actions/action_id
-        src/fs/core/actions/actions
-        src/fs/core/actions/propositional_actions
-        src/fs/core/actions/checker
-        src/fs/core/actions/grounding
+        src/fs/core/actions/action_id.cxx
+        src/fs/core/actions/action_id.hxx
+        src/fs/core/actions/actions.cxx
+        src/fs/core/actions/actions.hxx
+        src/fs/core/actions/checker.cxx
+        src/fs/core/actions/checker.hxx
+        src/fs/core/actions/grounding.cxx
+        src/fs/core/actions/grounding.hxx
         src/fs/core/actions/lifted_action_iterator
         src/fs/core/actions/sdd_action_iterator
         src/fs/core/applicability/action_managers.cxx

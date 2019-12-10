@@ -1,7 +1,9 @@
 
 #include <fs/core/state.hxx>
 #include <fs/core/actions/sdd_action_iterator.hxx>
-#include <fs/core/actions/propositional_actions.hxx>
+#include <fs/core/actions/action_id.hxx>
+#include <fs/core/actions/actions.hxx>
+#include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/utils/atom_index.hxx>
 #include <sdd/sddapi.hxx>
 
@@ -19,10 +21,14 @@ namespace fs0 {
             current_sdd_idx_(currentIdx),
             current_sdd_(nullptr),
             current_models_computed_(false),
-            current_model_(nullptr),
+            _action(nullptr),
             current_resultset_()
     {
         advance();
+    }
+
+    SDDActionIterator::Iterator::~Iterator() {
+        delete _action;
     }
 
     void SDDActionIterator::Iterator::advance() {
@@ -42,25 +48,26 @@ namespace fs0 {
             }
 
             if (current_resultset_idx_ < current_resultset_.size()) {
-                current_model_ = &current_resultset_[current_resultset_idx_];  // Store the model to generate the action if necessary
+                const auto& model = current_resultset_[current_resultset_idx_];
+
+                delete _action;
+                auto grounding = schema_sdd.get_binding_from_model(model);
+                auto gr_size = grounding.size();
+
+                _action = new LiftedActionID(&schema_sdd.get_schema(),
+                        Binding(std::move(grounding), std::vector<bool>(gr_size, true)));
+
                 ++current_resultset_idx_;
                 return;
             }
 
             // At this point we have explored all solutions to the current action-schema SDD
             current_sdd_ = nullptr;
-            current_model_ = nullptr;
             current_models_computed_ = false;
             current_resultset_.clear();
             current_resultset_idx_ = 0;
         }
     }
-
-SchematicActionID
-SDDActionIterator::Iterator::operator*() const {
-    ActionSchemaSDD& schema_sdd = *sdds_[current_sdd_idx_];
-    return SchematicActionID(&schema_sdd.schematic_action(), schema_sdd.get_binding_from_model(*current_model_));
-}
 
 
 } // namespaces

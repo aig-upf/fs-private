@@ -9,7 +9,7 @@
 
 namespace fs0 {
 	class State;
-	class SchematicActionID;
+	class LiftedActionID;
 }
 
 namespace fs0::language::fstrips { class Formula; }
@@ -36,7 +36,7 @@ namespace fs0 {
 
         public:
 
-            ~Iterator() = default;
+            ~Iterator();
 
         protected:
             Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, unsigned currentIdx);
@@ -51,7 +51,7 @@ namespace fs0 {
 
             bool current_models_computed_;
 
-            SDDModel* current_model_;
+            LiftedActionID* _action;
 
             std::vector<SDDModel> current_resultset_;
             unsigned current_resultset_idx_;
@@ -66,7 +66,7 @@ namespace fs0 {
             }
             const Iterator operator++(int) {Iterator tmp(*this); operator++(); return tmp;}
 
-            SchematicActionID operator*() const;
+            const LiftedActionID& operator*() const { return *_action; }
 
             //! This is not really true... but will work for the purpose of comparing with the end iterator.
             bool operator==(const Iterator &other) const { return current_sdd_idx_ == other.current_sdd_idx_; }

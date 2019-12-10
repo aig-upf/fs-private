@@ -11,6 +11,7 @@ namespace fs0 {
 
 class ProblemInfo;
 class ActionData;
+class ActionBase;
 class GroundAction;
 class Binding;
 class PartiallyGroundedAction;
@@ -45,9 +46,6 @@ public:
 	//! ID that was received, if the grounding was unsuccessful, or a consecutive one, otherwise.
 // 	static unsigned ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded);
 	void partial_binding(ActionData getActionData, Binding binding, ProblemInfo info);
-
-    static GroundAction*
-    full_binding(unsigned id, const ActionData& action_data, const Binding& binding, const ProblemInfo& info, bool bind_effects);
 	
 protected:
 	//! Return the non-constant terms that are present as first-level subterms of the head, i.e.

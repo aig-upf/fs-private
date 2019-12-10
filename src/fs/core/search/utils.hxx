@@ -20,7 +20,7 @@
 #include <fs/hybrid/dynamics/hybrid_plan.hxx>
 #endif
 
-namespace fs0::drivers {
+namespace fs0 { namespace drivers {
 
 class Utils {
 public:
@@ -96,14 +96,14 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 			double search_time = aptk::time_used() - t0;
 			double total_planning_time = aptk::time_used() - start_time;
-            auto linear_plan = Checker::transform(_problem, plan);
+
 
 
 			if (solved) {
 				std::ofstream plan_out(plan_filename);
-				PlanPrinter::print(linear_plan, plan_out);
+				PlanPrinter::print(plan, plan_out);
 				if (!valid_plan) {
-                    valid_plan = Checker::check_correctness(_problem, linear_plan, _problem.getInitialState());
+                    valid_plan = Checker::check_correctness(_problem, plan, _problem.getInitialState());
 				}
 				plan_out.close();
 			}
@@ -125,7 +125,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			json_out << "\t\"out_of_memory\": " << ( oom ? "true" : "false" ) << "," << std::endl;
 			json_out << "\t\"plan_length\": " << plan.size() << "," << std::endl;
 			json_out << "\t\"plan\": ";
-			PlanPrinter::print_json(linear_plan, json_out);
+			PlanPrinter::print_json( plan, json_out);
 			json_out << std::endl;
 			json_out << "}" << std::endl;
 			json_out.close();
@@ -141,7 +141,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			ExitCode result;
 			if (solved) {
 				if (!valid_plan) {
-					Checker::print_plan_execution(_problem, linear_plan, _problem.getInitialState());
+					Checker::print_plan_execution(_problem, plan, _problem.getInitialState());
 #ifdef DEBUG
 					LPT_INFO("cout", "WARNING: The plan output by the planner is not correct!");
 #else
@@ -168,8 +168,6 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 				result = ExitCode::UNSOLVABLE;
 			}
 
-			for (auto x:linear_plan) delete x;
-
 			return result;
 		}
 
@@ -191,4 +189,4 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 };
 
-} // namespaces
+} } // namespaces
