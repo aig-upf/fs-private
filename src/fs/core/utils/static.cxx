@@ -30,10 +30,8 @@ StaticExtension::load_static_extension(const std::string& name, const ProblemInf
 			std::ifstream is(filename);
 			if (is.fail()) { // If file does not exist, we assume the atom is a false nullary atom
                 extension = new ZeroaryFunction(make_object(false));
-                std::cout << name << ": False" << std::endl;
             } else {
                 extension = new ZeroaryFunction( make_object(true) );
-                std::cout << name << ": True" << std::endl;
 			}
 		}
 		else {
