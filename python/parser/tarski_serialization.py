@@ -163,7 +163,7 @@ def serialize_tarski_formula(exp, obj_idx, binding, negated=False):
 
     elif isinstance(exp, CompoundFormula):
         if exp.connective == Connective.Not:
-            return serialize_tarski_formula(exp, obj_idx, binding, not negated)
+            return serialize_tarski_formula(exp.subformulas[0], obj_idx, binding, not negated)
         elif exp.connective in (Connective.And, Connective.Or):
             children = [serialize_tarski_formula(sub, obj_idx, binding, negated) for sub in exp.subformulas]
             t = 'and' if exp.connective == Connective.And else 'or'
