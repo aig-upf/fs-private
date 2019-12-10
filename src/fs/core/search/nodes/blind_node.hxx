@@ -39,9 +39,11 @@ public:
 
 	std::shared_ptr<BlindSearchNode<StateT, ActionT>> parent;
 
+	unsigned g;
+
 public:
 	BlindSearchNode() = delete;
-	~BlindSearchNode() {}
+	~BlindSearchNode() = default;
 	
 	BlindSearchNode(const BlindSearchNode&) = delete;
 	BlindSearchNode(BlindSearchNode&&) = delete;
@@ -49,13 +51,13 @@ public:
 	BlindSearchNode& operator=(BlindSearchNode&&) = delete;
 	
 	//! Constructor with full copying of the state (expensive)
-	BlindSearchNode( const StateT& s, unsigned long gen_order = 0)
-		: state( s ), action( ActionT::invalid_action_id ), parent( nullptr )
+	explicit BlindSearchNode( const StateT& s, unsigned long gen_order = 0)
+		: state( s ), action( ActionT::invalid_action_id ), parent( nullptr ), g(0)
 	{}
 
 	//! Constructor with move of the state (cheaper)
 	BlindSearchNode( StateT&& _state, ActionIdT _action, std::shared_ptr< BlindSearchNode<StateT, ActionT> > _parent, unsigned long gen_order = 0) :
-		state(std::move(_state)), action(_action), parent(_parent)
+		state(std::move(_state)), action(_action), parent(_parent), g(parent->g+1)
 	{}
 
 	bool has_parent() const { return parent != nullptr; }

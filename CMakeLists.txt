@@ -4,7 +4,7 @@ project(fs_private)
 project(fslib VERSION 0.1)
 
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -276,8 +276,9 @@ set(FS_VENDOR ${FS_ROOT}/vendor)
 include_directories($ENV{HOME}/local/include)  # Gecode, etc.
 include_directories(${FS_SRC})
 include_directories(${FS_VENDOR}/rapidjson/include)
-include_directories(${FS_VENDOR}/lapkt-base/src)
-include_directories(${FS_VENDOR}/lapkt-novelty/src)
+# MRJ: is this necessary?
+#include_directories(${FS_VENDOR}/lapkt-base/src)
+#include_directories(${FS_VENDOR}/lapkt-novelty/src)
 include_directories(${FS_VENDOR}/sdd)
 
 #set(CMAKE_VERBOSE_MAKEFILE ON)

@@ -21,6 +21,7 @@ from tarski.utils import resources
 from tarski.grounding import LPGroundingStrategy, NaiveGroundingStrategy
 
 
+
 def parse_arguments(args):
     parser = argparse.ArgumentParser(description='Bootstrap and run the FS planner on a given instance.'
                                                  'The process might involve generating, compiling and linking'
@@ -55,8 +56,13 @@ def parse_arguments(args):
     parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
 
     parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator')
+    parser.add_argument("--var_ordering", default=None, help='Variable ordering for SDD construction')
+    parser.add_argument("--sdd_incr_minimization_time", default=0, type=int, help='Incremental minimization time for SDD construction')
+    parser.add_argument("--sdd_with_reachability", action='store_true', help='Use reachability analysis to improve SDD')
 
     args = parser.parse_args(args)
+
+    args.sdd_incr_minimization_time = args.sdd_incr_minimization_time if args.sdd_incr_minimization_time != 0 else None
 
     if not args.parse_only and args.driver is None:
         parser.error('The "--driver" option is required to run the solver')
@@ -132,10 +138,13 @@ def generate_debug_scripts(target_dir, planner_arguments):
         .format(shebang, ld_string, args)
 
     memprofile = "{}\n\n{} valgrind --tool=massif ./solver.debug.bin {}".format(shebang, ld_string, args)
+    callgrind = f"{shebang}\n\n{ld_string} valgrind --tool=callgrind ./solver.debug.bin {args}"
 
     make_script(os.path.join(target_dir, 'debug.sh'), debug_script)
     make_script(os.path.join(target_dir, 'memleaks.sh'), memleaks)
     make_script(os.path.join(target_dir, 'memprofile.sh'), memprofile)
+    make_script(os.path.join(target_dir, 'callgrind.sh'), callgrind)
+
 
 
 def make_script(filename, code):
@@ -268,9 +277,9 @@ def run(args):
     # Determine the appropriate output directory for the problem solver, and create it, if necessary
     workdir = create_working_dir(args, domain_name, instance_name)
 
-    print("{0:<30}{1}".format("Problem domain:", domain_name))
-    print("{0:<30}{1}".format("Problem instance:", instance_name))
-    print("{0:<30}{1}".format("Working directory:", workdir))
+    print(f'Problem domain: "{domain_name}" ({os.path.realpath(args.domain)})')
+    print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
+    print(f'Working directory: {os.path.realpath(workdir)}')
 
     with resources.timing(f"Parsing problem", newline=True):
         problem = parse_problem_with_tarski(args.domain, args.instance)
@@ -294,7 +303,11 @@ def run(args):
         sdddir = os.path.join(workdir, 'data', 'sdd')
         utils.mkdirp(sdddir)
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
-                        sdd_minimization_time=None)
+                        sdd_minimization_time=None, graphs_directory=None,
+                        var_ordering=args.var_ordering, reachable_vars=reachable_vars,
+                        sdd_incr_minimization_time=args.sdd_incr_minimization_time)
+
+    # return True  # Just to debug the preprocessing
 
     data, static_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
     serializer = Serializer(os.path.join(workdir, 'data'))
@@ -359,11 +372,12 @@ def validate(domain_name, instance_name, planfile):
 
 
 def parse_problem_with_tarski(domain_file, inst_file):
-    reader = FstripsReader(raise_on_error=True, theories=None)
+    reader = FstripsReader(raise_on_error=True, theories=None, strict_with_requirements=False)
     return reader.read_problem(domain_file, inst_file)
 
 
 def main(args):
+    args = parse_arguments(args)
     import logging
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    return run(parse_arguments(args))
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG if args.debug else logging.INFO)
+    return run(args)

@@ -20,9 +20,9 @@ SUITE = [
 
     'organic-synthesis-opt18-strips:p01.pddl',
     'organic-synthesis-opt18-strips:p02.pddl',
-    'blocks',
+    # 'blocks',
     'sokoban-opt08-strips',
-    'visitall-opt11-strips'
+    # 'visitall-opt11-strips',
 
     # 'blocks:probBLOCKS-10-0.pddl',
     # 'pipesworld-tankage',
@@ -35,12 +35,20 @@ BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 def algorithms():
     # We use Lab's data directory as workspace.
-    lifted = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
-              '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=true"]
+    # lifted = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
+    #           '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=true"]
 
     lifted_nocustom = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
           '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false"]
 
+    lifted_nocustom_vo = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
+                       '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false", "--var_ordering", "arity"]
+
+    lifted_nocustom_asp = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
+                              '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false", "--sdd_with_reachability"]
+
+    lifted_nocustom_vo_asp = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--sdd', '--driver', 'bfs-sdd',
+                           '--output', '.', "--options", "verbose_stats=true,sdd.minimization_time=600,sdd.custom_me=false",  "--var_ordering", "arity", "--sdd_with_reachability"]
 
     # We don't use the ASP reachability analysis at the moment to be as close as possible as the above experiment
     grounded = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--driver', 'bfs',
@@ -54,7 +62,11 @@ def algorithms():
     #     name = f'brfs-sdd-{min_time}' + ('-custom_me' if custom_me else '')
     #     configs[name] = lifted + ['--options']
 
-    return {'brfs-sdd-custom': lifted, 'brfs-sdd-nocustom': lifted_nocustom}
+    return {'brfs-sdd-old': lifted_nocustom,
+            'brfs-sdd-vo': lifted_nocustom_vo,
+            'brfs-sdd-asp': lifted_nocustom_asp,
+            'brfs-sdd-vo-asp': lifted_nocustom_vo_asp}
+    # return {'brfs-sdd-custom': lifted, 'brfs-sdd-nocustom': lifted_nocustom}
     # return {'brfs-sdd': lifted}  # For testing purposes
     # return {'brfs-sdd': lifted, 'brfs-ground-enum': grounded, 'brfs-ground-mt': match_tree}
 

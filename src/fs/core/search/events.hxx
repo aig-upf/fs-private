@@ -66,7 +66,8 @@ protected:
 	}
 
     void generation(lapkt::events::Subject&, const lapkt::events::Event& event) {
-        _stats.generation();
+        const auto& downcasted = dynamic_cast<const GenerationEvent&>(event);
+        _stats.generation(downcasted.node.g);
 
 //        LPT_EDEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
 

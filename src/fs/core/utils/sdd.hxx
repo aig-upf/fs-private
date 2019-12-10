@@ -96,23 +96,76 @@ protected:
 };
 
 
-class SDDModelEnumerator {
+class RecursiveModelEnumerator {
 public:
-    explicit SDDModelEnumerator(SddManager* manager);
+    using index_t = unsigned;
+    using resultset_t = std::vector<index_t>;
 
-    std::vector<SDDModel> models(SddNode* node, const SDDModel& fixed, Vtree* vtree=nullptr);
+    RecursiveModelEnumerator(SddManager* manager, SDDModel&& fixed);
+    virtual ~RecursiveModelEnumerator() = default;
+
+    std::vector<SDDModel> models(SddNode* node);
+    resultset_t models(SddNode* node, Vtree* vtree);
+
+
+protected:
+    using node_id_t = std::pair<std::size_t, Vtree*>;
+
+    SddManager* sddmanager_;
+    unsigned nvars_;
+    const SDDModel fixed_;
+    unsigned long cache_hits_;
+    unsigned long computed_nodes_;
+    std::vector<SDDModel> model_register_;
+
+    std::unordered_set<node_id_t, boost::hash<node_id_t>> computed_;
+
+    //! A map between node id and resulting models
+    std::unordered_map<node_id_t, resultset_t, boost::hash<node_id_t>> cache_;
+
+    const resultset_t& models_with_cache(SddNode* node, Vtree* vtree);
+
+    //    index_t register_model();
+    index_t register_model(unsigned var, const SDDModel::value_t& val);
+    index_t register_model(SDDModel&& model);
+
+    resultset_t model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt);
+    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<index_t>& output);
+
+
+    bool node_is_false_in_fixed(SddNode* node);
+};
+
+class DFSModelEnumerator {
+public:
+    DFSModelEnumerator(SddManager* manager, SddNode* root, SDDModel&& fixed);
+
+    std::vector<SDDModel> models(SddNode* node, Vtree* vtree=nullptr);
+
+    SDDModel next();
 
     unsigned nvars() const { return nvars_; }
 
 protected:
     SddManager* sddmanager_;
+    SddNode* root_;
     unsigned nvars_;
+    const SDDModel fixed_;
 
-    std::vector<SDDModel> model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, const SDDModel& fixed);
-    void model_cross_product(SddNode* leftnode, SddNode* rightnode, Vtree* leftvt, Vtree* rightvt, std::vector<SDDModel>& output, const SDDModel& fixed);
+    bool node_is_false_in_fixed(SddNode* node);
 
-    static bool node_is_false_in_fixed(SddNode* node, const SDDModel& fixed);
+    void next_(SddNode* node, Vtree* vtree, std::vector<SDDModel::value_t>& current);
+
+
+    enum class case_t {
+        case0
+    };
+
+    using decision_t = std::tuple<case_t, std::vector<SddNode*>, Vtree*>;
+    using state_t = std::vector<decision_t>;
+    state_t state_;
 };
+
 
 //! Loads from disk all SDDs in the given directory (one per action schema)
 std::vector<std::shared_ptr<ActionSchemaSDD>> load_sdds_from_disk(const std::vector<const PartiallyGroundedAction*>& schemas, const std::string& dir);

@@ -6,14 +6,17 @@ from downward import suites
 from common import generate_environment, get_fsplanner_binary, add_all_runs, \
     filter_benchmarks_if_test_run
 
-TIME_LIMIT = 1800
-MEMORY_LIMIT = 64000
+TIME_LIMIT = 3600
+MEMORY_LIMIT = 16000
 
 SUITE = [
     'blocks',
-    'organic-synthesis-opt18-strips',
+    'sokoban-opt08-strips',
+    'visitall-opt11-strips',
     'pipesworld-tankage',
-    'pipesworld-notankage',
+    'floortile-opt11-strips',
+    'hiking-opt14-strips',
+    'organic-synthesis-opt18-strips',
 ]
 
 ORGSYNTH_SUITE = [
@@ -24,11 +27,15 @@ ORGSYNTH_SUITE = [
 def algorithms():
     # We use Lab's data directory as workspace.
     base = [get_fsplanner_binary(), '--domain', '{domain}', '-i', '{problem}', '--output', '.']
-    lifted = base + ['--sdd', '--driver', 'sbfws-sdd', '--options', '"evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
+    lifted = base + ['--sdd', '--driver', 'sbfws-sdd', '--options', '"sdd.minimization_time=100,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"',
+                     "--var_ordering", "arity", "--sdd_with_reachability"]
     grounded = base + ['--driver', 'sbfws',
                        '--options', '"successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
 
-    return {'bfws-r_all-sdd': lifted, 'bfws-r_all-ground': grounded}
+    # --options="verbose_stats=true,sdd.minimization_time=100,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true" --var_ordering=arity
+
+
+    return {'bfws-r_all-sdd-asp-vo': lifted, 'bfws-r_all-ground': grounded}
 
 
 def main():
@@ -36,10 +43,10 @@ def main():
     exp = Experiment(environment=environment)
 
     benchmarks = suites.build_suite(os.environ["DOWNWARD_BENCHMARKS"], SUITE)
-
-    benchmarks += suites.build_suite(
-        os.path.join(os.environ["HOME"], "projects", "code", "organic-synthesis-benchmarks"),
-        ORGSYNTH_SUITE)
+    #
+    # benchmarks += suites.build_suite(
+    #     os.path.join(os.environ["HOME"], "projects", "code", "organic-synthesis-benchmarks"),
+    #     ORGSYNTH_SUITE)
 
     benchmarks = filter_benchmarks_if_test_run(benchmarks)
 
