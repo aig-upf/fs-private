@@ -257,7 +257,7 @@ set(SOURCE_FILES
         src/fs/core/state.hxx
         src/fs/core/monotonicity
         src/fs/core/validator.cxx
-        src/fs/core/validator.hxx)
+        src/fs/core/validator.hxx src/fs/core/search/drivers/iterative_deepening_driver.cxx src/fs/core/search/drivers/iterative_deepening_driver.hxx src/fs/core/search/algorithms/iterative_deepening.hxx src/fs/core/search/nodes/id_node.hxx)
 
 #add_executable(fs_private ${SOURCE_FILES})
 add_library(fs SHARED ${SOURCE_FILES})
@@ -278,9 +278,8 @@ set(FS_VENDOR ${FS_ROOT}/vendor)
 include_directories($ENV{HOME}/local/include)  # Gecode, etc.
 include_directories(${FS_SRC})
 include_directories(${FS_VENDOR}/rapidjson/include)
-# MRJ: is this necessary?
-#include_directories(${FS_VENDOR}/lapkt-base/src)
-#include_directories(${FS_VENDOR}/lapkt-novelty/src)
+include_directories(${FS_VENDOR}/lapkt-base/src)
+include_directories(${FS_VENDOR}/lapkt-novelty/src)
 include_directories(${FS_VENDOR}/sdd)
 
 #set(CMAKE_VERBOSE_MAKEFILE ON)
