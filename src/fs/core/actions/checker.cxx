@@ -51,7 +51,7 @@ std::vector<const GroundAction*> Checker::transform(const Problem& problem, cons
     std::vector<const GroundAction*> transformed;
     for (const auto& action_id:plan) {
         const ActionData& data = action_id.data();
-        const GroundAction* action = ActionGrounder::full_binding(0, data, action_id.get_binding(), info, true);
+        const GroundAction* action = ActionGrounder::full_binding(0, data, action_id.binding(), info, true);
         transformed.push_back(action);
     }
     return transformed;

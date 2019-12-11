@@ -52,15 +52,15 @@ NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction
 
 void
 NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction& action, std::vector<Atom>& atoms) {
-	const ProblemInfo& info = ProblemInfo::getInstance();
 	const auto& effects = action.getEffects();
 	atoms.clear();
 	atoms.reserve(effects.size());
 	for (const fs::ActionEffect* effect:effects) {
 		if (effect->applicable(state)) {
 			Atom atom = effect->apply(state);
-			// A safety check - perhaps introduces some overhead
-			info.checkValueIsValid(atom.getVariable(), atom.getValue());
+#ifdef DEBUG
+            ProblemInfo::getInstance().checkValueIsValid(atom.getVariable(), atom.getValue()); // safety check
+#endif
 			atoms.push_back(std::move(atom));
 		}
 	}

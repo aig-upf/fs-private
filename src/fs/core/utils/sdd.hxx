@@ -16,7 +16,7 @@ namespace fs0 {
 
 class State;
 class ActionData;
-class PropositionalSchematicAction;
+class SimpleSchematicOperator;
 
 
 //! A (possibly partial) SDD model, that is, a mapping between the atoms in the SDD and a truth
@@ -50,7 +50,7 @@ protected:
 
 class ActionSchemaSDD {
 public:
-    ActionSchemaSDD(const std::shared_ptr<PropositionalSchematicAction>& schema,
+    ActionSchemaSDD(const std::shared_ptr<SimpleSchematicOperator>& schema,
             std::vector<std::pair<VariableIdx, unsigned>> relevant,
             std::vector<std::vector<std::pair<object_id, unsigned>>> bindings,
             SddManager* manager, Vtree* vtree, SddNode* sddnode);
@@ -65,7 +65,7 @@ public:
 
     SddNode* node() { return sddnode_; }
 
-    const PropositionalSchematicAction& schematic_action() const {
+    const SimpleSchematicOperator& schematic_action() const {
         return *schema_;
     }
 
@@ -79,7 +79,7 @@ public:
 
 
 protected:
-    const std::shared_ptr<PropositionalSchematicAction>& schema_;
+    const std::shared_ptr<SimpleSchematicOperator>& schema_;
 
     //! The actual SDD objects
     SddManager* sddmanager_;

@@ -13,8 +13,8 @@ namespace fs0 {
 
 
 const object_id object_id::INVALID = object_id();
-// const object_id object_id::FALSE = object_id(type_id::bool_t, false);
-// const object_id object_id::TRUE = object_id(type_id::bool_t, true);
+const object_id object_id::FALSE = object_id(type_id::bool_t, false);
+const object_id object_id::TRUE = object_id(type_id::bool_t, true);
 
 const ObjectTable ObjectTable::EMPTY_TABLE = ObjectTable();
 

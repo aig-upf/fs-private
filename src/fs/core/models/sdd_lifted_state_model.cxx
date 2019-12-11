@@ -24,13 +24,10 @@ namespace fs0 {
 
 
     State SDDLiftedStateModel::next(const State& state, const SchematicActionID& action) const {
-        return state;
-//        auto ground_action = action.generate();
-//        auto s1 = next(state, *ground_action);
-//        delete ground_action;
-//        return s1;
+        SimpleGroundOperator gr = action.ground();
+        compute_effects(gr, _effects_cache);
+        return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
     }
-
 
 
     SDDActionIterator SDDLiftedStateModel::applicable_actions(const State& state) const {

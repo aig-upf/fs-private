@@ -6,6 +6,9 @@
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
+#include <utility>
+
+#include <boost/functional/hash.hpp>
 
 
 namespace fs0 {
@@ -14,9 +17,9 @@ class ProblemInfo;
 class Atom;
 class State;
 
-class PropositionalGroundAction {
+class GroundOperator {
 public:
-    PropositionalGroundAction() {}
+    GroundOperator() {}
 
     const ActionData& base() const {
         return *base_;
@@ -29,9 +32,26 @@ protected:
     std::vector<VariableIdx> effects_;
 };
 
-class PropositionalSchematicAction {
+class SimpleGroundOperator : public GroundOperator {
 public:
-    explicit PropositionalSchematicAction(const ActionData* data) {}
+    SimpleGroundOperator(std::vector<VariableIdx> add_effects, std::vector<VariableIdx> delete_effects)
+        : add_effects_(std::move(add_effects)), del_effects_(std::move(delete_effects))
+    {}
+
+
+    const std::vector<VariableIdx>& add_effects() const { return add_effects_; }
+    const std::vector<VariableIdx>& del_effects() const { return del_effects_; }
+
+protected:
+    std::vector<VariableIdx> add_effects_;
+    std::vector<VariableIdx> del_effects_;
+};
+
+void compute_effects(const SimpleGroundOperator& op, std::vector<Atom>& effects);
+
+class SchematicOperator {
+public:
+    explicit SchematicOperator(const ActionData* data) {}
 
 
     const ActionData& data() const {
@@ -39,21 +59,35 @@ public:
     }
 
 protected:
-    const ActionData* data_{};
+    const ActionData* data_;
 };
 
-
-/*
-class SimpleGroundAction {
+class SimpleSchematicEffect {
 public:
-    using effect_t = std::pair<VariableIdx, object_id>;
-    SimpleGroundAction() {}
+    SimpleSchematicEffect() = default;
 
+    const std::vector<VariableIdx>& inputs() const { return inputs_; }
+
+    std::pair<VariableIdx, object_id> ground(std::vector<object_id>& values) const;
 
 protected:
-    std::vector<effect_t> effects_;
+    std::vector<VariableIdx> inputs_;
+
+    using key_t = std::vector<object_id>;
+    std::unordered_map<key_t, std::pair<VariableIdx, object_id>, boost::hash<key_t>> mapping_;
 };
-*/
+
+class SimpleSchematicOperator : public SchematicOperator {
+public:
+    SimpleSchematicOperator(const ActionData* data) :
+            SchematicOperator(data)
+    {}
+
+
+    SimpleGroundOperator ground(const Binding& binding) const;
+protected:
+    std::vector<SimpleSchematicEffect> effects;
+};
 
 
 //! An action is fully identified by the ID of the action schema and the values of its parameters,
@@ -61,7 +95,7 @@ protected:
 class SchematicActionID {
 protected:
     //!
-    const PropositionalSchematicAction* action_;
+    const SimpleSchematicOperator* action_;
 
     //! The indexes of the action binding.
     Binding binding_; // This could be const, but then we cannot have assignment operator
@@ -70,24 +104,22 @@ public:
     using IdType = SchematicActionID;
     static const SchematicActionID invalid_action_id;
 
-    SchematicActionID(const PropositionalSchematicAction* action, Binding&& binding) :
+    SchematicActionID(const SimpleSchematicOperator* action, Binding&& binding) :
         action_(action), binding_(binding)
     {}
 
     ~SchematicActionID() = default;
-
-    //! Default copy constructors and assignment operators
     SchematicActionID(const SchematicActionID& other) = default;
     SchematicActionID(SchematicActionID&& other) = default;
     SchematicActionID& operator=(const SchematicActionID& other) = default;
     SchematicActionID& operator=(SchematicActionID&& other) = default;
 
-//    bool operator==(const PropositionalSchematicAction& rhs) const;
+//    bool operator==(const SchematicOperator& rhs) const;
 
     //! Prints a representation of the object to the given stream.
 //    std::ostream& print(std::ostream& os) const;
 
-    const Binding& get_binding() const {
+    const Binding& binding() const {
         return binding_;
     }
 
@@ -95,7 +127,7 @@ public:
         return action_->data();
     }
 
-//    generate_effect() const;
+    SimpleGroundOperator ground() const;
 };
 
 

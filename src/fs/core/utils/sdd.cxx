@@ -131,7 +131,7 @@ load_sdds_from_disk(const std::vector<const ActionData*>& schemas, const std::st
             // sdd_vtree_save_as_dot(str(format("/home/gfrances/tmp/vtrees/%1%.vtree.dot") % schema_name).c_str(), sdd_manager_vtree(manager));
         }
 
-        auto schematic_action = std::make_shared<PropositionalSchematicAction>(schema);
+        auto schematic_action = std::make_shared<SimpleSchematicOperator>(schema);
         sdds.push_back(std::make_shared<ActionSchemaSDD>(schematic_action, relevant, bindings, manager, vtree, node));
     }
 
@@ -164,7 +164,7 @@ std::size_t ActionSchemaSDD::minimize_sdd(SddManager* manager, SddNode* node, un
     return sz1;
 }
 
-ActionSchemaSDD::ActionSchemaSDD(const std::shared_ptr<PropositionalSchematicAction>& schema,
+ActionSchemaSDD::ActionSchemaSDD(const std::shared_ptr<SimpleSchematicOperator>& schema,
         std::vector<std::pair<VariableIdx, unsigned>> relevant,
         std::vector<std::vector<std::pair<object_id, unsigned>>> bindings,
         SddManager *manager, Vtree *vtree, SddNode *sddnode)
