@@ -121,7 +121,8 @@ void report_num_ground_actions(std::size_t total, std::vector<std::pair<std::str
     for (const auto& elem:action_counts) {
         elems.emplace_back(elem.first + ": " + std::to_string(elem.second));
     }
-    LPT_INFO("cout", "Total ground actions: " << total << ", of which: " << boost::algorithm::join(elems, ", "));
+
+    LPT_INFO("cout", "Loaded a total of " << total << " reachable ground actions, of which: " << boost::algorithm::join(elems, ", "));
 }
 
 //! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector

@@ -27,21 +27,26 @@ def parse_pddl_file(type, filename):
 
 
 def extract_domain_name(task_filename):
-    """ Tries to find the domain filename from the task filename """
+    """ Find domain filename for the given task using the standard automatic naming rules used in the IPCs.
+    Return None if no domain filename could be found according to those rules.
+    The code here is taken quasi-verbatim from Fast Downward's preprocessor
+    <http://hg.fast-downward.org/file/ea4f6e86af18/driver/util.py#l27>
+    """
     dirname, basename = os.path.split(task_filename)
-    domain_filename = os.path.join(dirname, "domain.pddl")
-    if not os.path.exists(domain_filename) and re.match(r"p[0-9][0-9]\b", basename):
-        domain_filename = os.path.join(dirname, basename[:4] + "domain.pddl")
-    if not os.path.exists(domain_filename) and re.match(r"p[0-9][0-9]\b", basename):
-        domain_filename = os.path.join(dirname, basename[:3] + "-domain.pddl")
-    if not os.path.exists(domain_filename) and re.match(r"p[0-9][0-9]\b", basename):
-        domain_filename = os.path.join(dirname, "domain_" + basename)
-    if not os.path.exists(domain_filename) and basename.endswith("-problem.pddl"):
-        domain_filename = os.path.join(dirname, basename[:-13] + "-domain.pddl")
-    if not os.path.exists(domain_filename):
-        raise SystemExit("Error: Could not find domain file using "
-                         "automatic naming rules.")
-    return domain_filename
+
+    domain_basenames = [
+        "domain.pddl",
+        basename[:3] + "-domain.pddl",
+        "domain_" + basename,
+        "domain-" + basename,
+        ]
+
+    for domain_basename in domain_basenames:
+        domain_filename = os.path.join(dirname, domain_basename)
+        if os.path.exists(domain_filename):
+            return domain_filename
+
+    raise SystemExit("Error: Could not find domain file using automatic naming rules.")
 
 
 def parse_args(task_filename=None, domain_filename=None):
