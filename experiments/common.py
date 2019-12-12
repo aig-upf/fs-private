@@ -64,6 +64,7 @@ ALL_ATTRIBUTES = {
     'asp_prep_mem': 'asp_prep_mem',
     'mem_before_mt': 'mem_before_mt',
     'mem_before_search': 'mem_before_search',
+    'last_recorded_time': 'last_recorded_time',
 }
 
 DEFAULT_ATTRIBUTES = [
