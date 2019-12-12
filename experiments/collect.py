@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 from lab.experiment import Experiment
-from common import DEFAULT_ATTRIBUTES, BaseReport
+from common import ALL_ATTRIBUTES, BaseReport
 
 
 def main():
@@ -13,7 +13,7 @@ def main():
     exp.add_fetcher('/homedtic/gfrances/projects/code/fs-sdd/experiments/data/hard-eval', filter_algorithm=algos)
 
     exp.add_report(
-        BaseReport(attributes=DEFAULT_ATTRIBUTES),
+        BaseReport(attributes=ALL_ATTRIBUTES),
         outfile='report.html')
 
     # Parse the commandline and run the specified steps.
