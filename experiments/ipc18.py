@@ -66,9 +66,8 @@ def main():
         time_limit=TIME_LIMIT,
         memory_limit=MEMORY_LIMIT,
         attributes=attributes,
+        add_parse_step=True
     )
-
-    # exp.add_parse_again_step()
 
     # Parse the commandline and run the specified steps.
     exp.run_steps()

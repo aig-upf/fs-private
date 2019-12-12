@@ -76,7 +76,7 @@ DEFAULT_ATTRIBUTES = [
 ]
 
 
-def add_standard_experiment_steps(exp, attributes=None):
+def add_standard_experiment_steps(exp, attributes=None, add_parse_step=False):
 
     attributes = attributes or DEFAULT_ATTRIBUTES
     attributes = [ALL_ATTRIBUTES[x] for x in attributes]
@@ -91,6 +91,9 @@ def add_standard_experiment_steps(exp, attributes=None):
     # Add step that executes all runs.
     exp.add_step('start', exp.start_runs)
 
+    if add_parse_step:
+        exp.add_parse_again_step()
+
     # Add step that collects properties from run directories and
     # writes them to *-eval/properties.
     exp.add_fetcher(name='fetch')
@@ -101,8 +104,8 @@ def add_standard_experiment_steps(exp, attributes=None):
         outfile='report.html')
 
 
-def add_all_runs(experiment, suites, algorithms, time_limit, memory_limit, attributes=None):
-    add_standard_experiment_steps(experiment, attributes)
+def add_all_runs(experiment, suites, algorithms, time_limit, memory_limit, attributes=None, add_parse_step=False):
+    add_standard_experiment_steps(experiment, attributes, add_parse_step)
 
     for task, algo in itertools.product(suites, algorithms.keys()):
         add_experiment_run(algorithm=algo, exp=experiment,
