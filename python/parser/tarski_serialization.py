@@ -74,8 +74,9 @@ def serialize_type_info(language, type_objects):
     # TODO We should check if this bool type is still necessary
     id_ = 1
     for sort in language.sorts:
-        if isinstance(sort, Interval) and sort.name == 'Natural':
-            continue  # Natural type not natively handled by backend
+        if (isinstance(sort, Interval) and sort.name == 'Natural') or\
+                (isinstance(sort, Interval) and sort.name == 'number'):
+            continue  # Natural and number types are not necessary for the backend
 
         type_idxs[sort] = id_
         typeid = tarski_sort_to_typeid(sort)
