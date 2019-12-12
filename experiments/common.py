@@ -119,7 +119,9 @@ def add_experiment_run(algorithm, exp, invocator, task, time_limit, memory_limit
     run.add_command('run-planner',
                     invocator(),
                     time_limit=time_limit,
-                    memory_limit=memory_limit)
+                    memory_limit=memory_limit,
+                    soft_stdout_limit=None, hard_stdout_limit=None,
+                    soft_stderr_limit=None, hard_stderr_limit=None,)
 
     # AbsoluteReport needs the following properties: 'domain', 'problem', 'algorithm', 'coverage'.
     run.set_property('domain', task.domain)
