@@ -288,13 +288,15 @@ def run(args):
         raise RuntimeError("SDD and ASP preprocessing are not compatible")
 
     if args.asp:
-        grounding = LPGroundingStrategy(problem)
-        ground_variables = grounding.ground_state_variables()
-        action_groundings = grounding.ground_actions()
+        with resources.timing(f"Computing reachable groundings", newline=True):
+            grounding = LPGroundingStrategy(problem)
+            ground_variables = grounding.ground_state_variables()
+            action_groundings = grounding.ground_actions()
     else:
-        grounding = NaiveGroundingStrategy(problem)
-        ground_variables = grounding.ground_state_variables()
-        action_groundings = None  # Schemas will be ground in the backend
+        with resources.timing(f"Computing naive groundings", newline=True):
+            grounding = NaiveGroundingStrategy(problem)
+            ground_variables = grounding.ground_state_variables()
+            action_groundings = None  # Schemas will be ground in the backend
 
     statics, fluents = grounding.static_symbols, grounding.fluent_symbols
 
