@@ -65,6 +65,7 @@ ALL_ATTRIBUTES = {
     'mem_before_mt': 'mem_before_mt',
     'mem_before_search': 'mem_before_search',
     'last_recorded_time': 'last_recorded_time',
+    'last_recorded_generations': 'last_recorded_generations',
 }
 
 DEFAULT_ATTRIBUTES = [
