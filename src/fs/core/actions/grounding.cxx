@@ -166,10 +166,8 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 		}
 		++current_schema_groundings;
 	}
-	LPT_INFO("grounding", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
-	LPT_INFO("grounding", "Grounding process stats:\t" << grounded.size() << " grounded actions");
 	LPT_DEBUG("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
-	LPT_DEBUG("cout", "Grounding process stats:\t" << grounded.size() << " grounded actions");
+    LPT_INFO("cout", "Loaded a total of " << grounded.size() << " reachable ground actions");
 	return grounded;
 }
 

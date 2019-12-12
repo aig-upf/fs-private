@@ -293,7 +293,8 @@ def run(args):
             fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:
         from .asp import processor
-        adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir, not args.debug)
+        with resources.timing(f"Parsing and simplifying the problem with the ASP-based parser", newline=True):
+            adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir, not args.debug)
         fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
 
     # Generate the appropriate problem representation from our task, store it, and (if necessary) compile

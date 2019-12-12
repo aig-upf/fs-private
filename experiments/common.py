@@ -46,16 +46,41 @@ class BaseReport(AbsoluteReport):
         'domain', 'problem', 'algorithm', 'unexplained_errors', 'error', 'node']
 
 
+ALL_ATTRIBUTES = {
+    'coverage': 'coverage',
+    'run_dir': 'run_dir',
+    'error': 'error',
+    'generations': 'generations',
+    'plan': 'plan',
+    'total_time': 'total_time',
+    'memory': 'memory',
+    'node_generation_rate': Attribute('node_generation_rate', min_wins=False),
+    'sdd_sizes': Attribute('sdd_sizes', min_wins=True),
+    'sdd_theory_vars': Attribute('sdd_theory_vars', min_wins=True),
+    'sdd_theory_constraints': Attribute('sdd_theory_constraints', min_wins=True),
+    'successor_generator': 'successor_generator',
+    'num_reach_actions': 'num_reach_actions',
+    'asp_prep_time': 'asp_prep_time',
+    'asp_prep_mem': 'asp_prep_mem',
+    'mem_before_mt': 'mem_before_mt',
+    'mem_before_search': 'mem_before_search',
+}
+
 DEFAULT_ATTRIBUTES = [
-    'coverage', 'error', 'generations', 'plan', 'total_time', 'memory',
-    Attribute('node_generation_rate', min_wins=False),
-    Attribute('sdd_sizes', min_wins=True),
-    Attribute('sdd_theory_vars', min_wins=True),
-    Attribute('sdd_theory_constraints', min_wins=True)
+    "coverage",
+    "error",
+    "generated",
+    "memory",
+    "run_dir",
+    "total_time",
 ]
 
 
-def add_standard_experiment_steps(exp, attributes=DEFAULT_ATTRIBUTES):
+def add_standard_experiment_steps(exp, attributes=None):
+
+    attributes = attributes or DEFAULT_ATTRIBUTES
+    attributes = [ALL_ATTRIBUTES[x] for x in attributes]
+
     # Add custom parser
     fsparser_path = os.path.abspath(os.path.join(os.path.dirname(fslab.__file__), 'fsparser.py'))
     exp.add_parser(fsparser_path)
@@ -76,8 +101,8 @@ def add_standard_experiment_steps(exp, attributes=DEFAULT_ATTRIBUTES):
         outfile='report.html')
 
 
-def add_all_runs(experiment, suites, algorithms, time_limit, memory_limit):
-    add_standard_experiment_steps(experiment)
+def add_all_runs(experiment, suites, algorithms, time_limit, memory_limit, attributes=None):
+    add_standard_experiment_steps(experiment, attributes)
 
     for task, algo in itertools.product(suites, algorithms.keys()):
         add_experiment_run(algorithm=algo, exp=experiment,
