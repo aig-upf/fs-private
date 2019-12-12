@@ -142,8 +142,6 @@ class FSTaskIndex(object):
         self.goal = util.UninitializedAttribute('goal')
         self.state_constraints = util.UninitializedAttribute('state_constraints')
         self.action_schemas = util.UninitializedAttribute('action_schemas')
-        self.event_schemas = util.UninitializedAttribute('event_schemas')
-        self.process_schemas = util.UninitializedAttribute('process_schemas')
         self.constraint_schemas = util.UninitializedAttribute('constraint_schemas')
         self.metric = util.UninitializedAttribute('metric')
         self.groundings = None

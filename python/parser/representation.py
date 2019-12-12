@@ -27,8 +27,6 @@ class ProblemRepresentation(object):
                 'objects': self.dump_object_data(),
                 'types': self.dump_type_data(),
                 'action_schemata': [action.dump() for action in self.index.action_schemas],
-                'process_schemata': [process.dump() for process in self.index.process_schemas],
-                'event_schemata': [event.dump() for event in self.index.event_schemas],
                 'metric': self.index.metric.dump(),
                 'state_constraints': [constraint.dump() for constraint in self.index.state_constraints],
                 'goal': self.index.goal.dump(),
@@ -240,8 +238,6 @@ class ProblemRepresentation(object):
         for s in self.index.all_symbols :
             if util.is_external(s) : return True
         for a in self.index.action_schemas :
-            if util.is_external(a.action.name) : return True
-        for a in self.index.event_schemas :
             if util.is_external(a.action.name) : return True
         return False
 
