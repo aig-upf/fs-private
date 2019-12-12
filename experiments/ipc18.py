@@ -43,8 +43,10 @@ def algorithms():
     # We don't use the ASP reachability analysis at the moment to be as close as possible as the above experiment
     simu = common + ['--driver', 'sbfws', "--options", "verbose_stats=true,successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2,sim.act_cutoff=40000"]
 
-    return {'raycharles': raycharles,
-            'simu': simu}
+    return {
+        # 'raycharles': raycharles,
+        'simu': simu
+    }
 
 
 def main():
