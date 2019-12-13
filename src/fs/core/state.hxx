@@ -60,7 +60,7 @@ public:
 	using BitsetT = std::vector<bool>;
 
 protected:
-	const StateAtomIndexer& _indexer;
+	std::reference_wrapper<const StateAtomIndexer> _indexer;
 
 	//! A vector mapping state variable (implicit) ids to their value in the current state.
 	BitsetT _bool_values;

@@ -111,7 +111,7 @@ void State::set(const Atom& atom) {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	assert( info.sv_type(atom.getVariable()) == o_type(atom.getValue()) );
 #endif
-	_indexer.set(*this, atom);
+	_indexer.get().set(*this, atom);
 }
 
 bool State::contains(const Atom& atom) const {
@@ -120,7 +120,7 @@ bool State::contains(const Atom& atom) const {
 
 object_id
 State::getValue(const VariableIdx& variable) const {
-	return _indexer.get(*this, variable);
+	return _indexer.get().get(*this, variable);
 }
 
 //! Applies the given changeset into the current state.
@@ -173,14 +173,14 @@ std::size_t State::computeHash() const {
 template <>
 const std::vector<bool>&
 State::dump() const {
-	assert(_indexer.is_fully_binary());
+	assert(_indexer.get().is_fully_binary());
 	return _bool_values;
 }
 
 template <>
 const std::vector<object_id>&
 State::dump() const {
-	assert(_indexer.is_fully_multivalued());
+	assert(_indexer.get().is_fully_multivalued());
 	return _int_values;
 }
 

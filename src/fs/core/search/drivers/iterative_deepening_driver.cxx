@@ -39,7 +39,7 @@ namespace fs0::drivers {
                                                   float start_time) {
         //! The Breadth-First Search engine uses a simple blind-search node
         using ActionT = typename StateModelT::ActionType;
-        using NodeT = lapkt::IterativeDeepeningNode<State, ActionT, SDDActionIterator::Iterator>;
+        using NodeT = lapkt::IterativeDeepeningNode<State, ActionT, SDDActionIterator>;
         using EngineT = lapkt::IterativeDeepening<NodeT, StateModelT>;
         using EnginePT = std::unique_ptr<EngineT>;
 

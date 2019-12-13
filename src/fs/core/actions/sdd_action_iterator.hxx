@@ -24,12 +24,16 @@ namespace fs0 {
     //! returns, chainedly, each of the lifted-action IDs that are applicable.
     class SDDActionIterator {
     protected:
-        const State& state_;
+        std::reference_wrapper<const State> state_;
 
-        const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds_;
+        std::reference_wrapper<const std::vector<std::shared_ptr<ActionSchemaSDD>>> sdds_;
 
     public:
+        SDDActionIterator() {}
         SDDActionIterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, const AtomIndex& tuple_index);
+
+        constexpr SDDActionIterator& operator=(const SDDActionIterator&) = default;
+        SDDActionIterator& operator=(SDDActionIterator&&) noexcept = default;
 
         class Iterator {
             friend class SDDActionIterator;
@@ -41,9 +45,9 @@ namespace fs0 {
         protected:
             Iterator(const State& state, const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds, unsigned currentIdx);
 
-            const State& state_;
+            std::reference_wrapper<const State> state_;
 
-            const std::vector<std::shared_ptr<ActionSchemaSDD>>& sdds_;
+            std::reference_wrapper<const std::vector<std::shared_ptr<ActionSchemaSDD>>> sdds_;
 
             unsigned current_sdd_idx_;
 
@@ -74,7 +78,7 @@ namespace fs0 {
         };
 
         Iterator begin() const { return {state_, sdds_, 0}; }
-        Iterator end() const { return {state_, sdds_, (unsigned int) sdds_.size()}; }
+        Iterator end() const { return {state_, sdds_, (unsigned int) sdds_.get().size()}; }
     };
 
 

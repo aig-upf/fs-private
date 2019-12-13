@@ -32,8 +32,8 @@ namespace fs0 {
     }
 
     void SDDActionIterator::Iterator::advance() {
-        for (; current_sdd_idx_ < sdds_.size(); ++current_sdd_idx_) {
-            ActionSchemaSDD& schema_sdd = *sdds_[current_sdd_idx_];
+        for (; current_sdd_idx_ < sdds_.get().size(); ++current_sdd_idx_) {
+            ActionSchemaSDD& schema_sdd = *(sdds_.get()[current_sdd_idx_]);
 
             if (!current_models_computed_) {
                 assert (current_resultset_.empty());

@@ -62,16 +62,18 @@ namespace lapkt {
 
         bool
         search(const StateT& s0, PlanT& solution) {
-            _open.resize(_max_depth);
+            auto root = NodeT(s0);
+            root.g = 0;
+            root.parent = nullptr;
 
-            _open[0].state = std::move(StateT(s0));
-            _open[0].g = 0;
-            _open[0].parent = nullptr;
-            this->notify(NodeCreationEvent(_open[0]));
+            _open.resize(_max_depth, root);
+            this->notify(NodeCreationEvent(root));
+
             _open[0].app = _model.applicable_actions(_open[0].state);
             _open[0].act_iter = _open[0].app.begin();
 
-            set_node(0, StateT(s0), 0);
+
+
             if (check_goal(_open[0], solution)) return true;
             unsigned max_g  = 0;
 
@@ -97,7 +99,7 @@ namespace lapkt {
                     _open[depth+1].g = n.g + 1;
                     _open[depth+1].parent = depth == 0 ? nullptr : &_open[depth];
                     this->notify(NodeCreationEvent(_open[depth+1]));
-                    _open[depth+1].app = _model.applicable_action(_open[depth+1].state);
+                    _open[depth+1].app = _model.applicable_actions(_open[depth+1].state);
                     _open[depth+1].act_iter = _open[depth+1].app.begin();
                     depth++;
 
@@ -116,10 +118,11 @@ namespace lapkt {
         }
 
         //! Backward chaining procedure to recover a plan from a given node
-        virtual void retrieve_solution(NodePT node, PlanT& solution) {
-            while (node->has_parent()) {
-                solution.push_back(node->action);
-                node = node->parent;
+        virtual void retrieve_solution(NodeT& node, PlanT& solution) {
+            NodeT* n = &node;
+            while (n->has_parent()) {
+                solution.push_back(n->action);
+                n = n->parent;
             }
             std::reverse( solution.begin(), solution.end() );
         }
@@ -129,8 +132,8 @@ namespace lapkt {
 
         }
 
-        virtual bool check_goal(const NodeT& node, PlanT& solution) {
-            if ( _model.goal(node.state)) { // Solution found, we're done
+        virtual bool check_goal(NodeT& node, PlanT& solution) {
+            if (_model.goal(node.state)) { // Solution found, we're done
                 this->notify(GoalFoundEvent(node));
                 retrieve_solution(node, solution);
                 return true;

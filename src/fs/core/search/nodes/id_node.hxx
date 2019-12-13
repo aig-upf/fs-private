@@ -20,17 +20,17 @@ namespace lapkt {
 
         unsigned g{0};
 
-        ActionIterator                      app;
-        typename ActionIterator::Iterator   act_iter;
+        ActionIterator      app;
+        typename ActionIterator::Iterator           act_iter;
 
     public:
         IterativeDeepeningNode() = default;
         ~IterativeDeepeningNode() = default;
 
-        IterativeDeepeningNode(const IterativeDeepeningNode&) = delete;
-        IterativeDeepeningNode(IterativeDeepeningNode&&) = delete;
-        IterativeDeepeningNode& operator=(const IterativeDeepeningNode&) = delete;
-        IterativeDeepeningNode& operator=(IterativeDeepeningNode&&) = delete;
+        IterativeDeepeningNode(const IterativeDeepeningNode&) = default;
+        IterativeDeepeningNode(IterativeDeepeningNode&&) noexcept = default;
+        IterativeDeepeningNode& operator=(const IterativeDeepeningNode&) = default;
+        IterativeDeepeningNode& operator=(IterativeDeepeningNode&&) noexcept = default;
 
         //! Constructor with full copying of the state (expensive)
         explicit IterativeDeepeningNode( const StateT& s, unsigned long gen_order = 0)
