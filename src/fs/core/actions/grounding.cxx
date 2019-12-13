@@ -14,6 +14,7 @@
 #include <fs/core/utils/loader.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
+#include <boost/algorithm/string/join.hpp>
 
 
 namespace fs0 {
@@ -115,6 +116,14 @@ deserialize_typed_objects(const ProblemInfo& info, const std::string& line, cons
 	return Serializer::deserialize_line( line, sym_signature_types, ",");
 }
 
+void report_num_ground_actions(std::size_t total, std::vector<std::pair<std::string, unsigned>>& action_counts) {
+    std::vector<std::string> elems;
+    for (const auto& elem:action_counts) {
+        elems.emplace_back(elem.first + ": " + std::to_string(elem.second));
+    }
+    LPT_INFO("cout", "Total ground actions: " << total << ", of which: " << boost::algorithm::join(elems, ", "));
+}
+
 //! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector
 std::vector<const GroundAction*>
 _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const ActionData*>& action_data) {
@@ -128,14 +137,14 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 		return grounded;
 	}
 
-	LPT_INFO("grounding", "Loading the list of reachable ground actions from \"" << filename << "\"");
-	LPT_DEBUG("cout", "Loading the list of reachable ground actions from \"" << filename << "\"");
+    LPT_INFO("cout", "Loading the list of reachable ground actions from \"" << filename << "\"");
 
 	unsigned current_schema_groundings = 0;
 	unsigned id = 0;
 	unsigned schema_id = -1;
 	const ActionData* current = action_data[0];
 	std::string line;
+    std::vector<std::pair<std::string, unsigned>> action_counts; // just for informative purposes
 
 	while (std::getline(is, line)) {
 		if (line.length() > 0 && line[0] == '#') { // We switch to the next action schema
@@ -146,8 +155,7 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 			}
 
 			if (schema_id > 0) {
-				LPT_INFO("grounding", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
-				LPT_DEBUG("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
+                action_counts.emplace_back(current->getName(), current_schema_groundings);
 			}
 
 			current = action_data[schema_id];
@@ -157,8 +165,7 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 
 		std::vector<object_id> deserialized = deserialize_typed_objects(info, line, current->getSignature());
 		if (deserialized.empty()) {
-			LPT_INFO("grounding", "Grounding action schema '" << current->getName() << "' with no binding");
-			LPT_DEBUG("cout", "Grounding action schema '" << current->getName() << "' with no binding");
+            action_counts.emplace_back(current->getName(), 1);
 			id = _ground(id, current, Binding::EMPTY_BINDING, info, grounded, true);
 		} else {
 			Binding binding(std::move(deserialized));
@@ -166,10 +173,9 @@ _loadGroundActionsIfAvailable(const ProblemInfo& info, const std::vector<const A
 		}
 		++current_schema_groundings;
 	}
-	LPT_INFO("grounding", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
-	LPT_INFO("grounding", "Grounding process stats:\t" << grounded.size() << " grounded actions");
-	LPT_DEBUG("cout", "Action schema \"" << current->getName() << "\" results in " << current_schema_groundings << " grounded actions");
-	LPT_DEBUG("cout", "Grounding process stats:\t" << grounded.size() << " grounded actions");
+
+    action_counts.emplace_back(current->getName(), current_schema_groundings);
+    report_num_ground_actions(grounded.size(), action_counts);
 	return grounded;
 }
 

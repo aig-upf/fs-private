@@ -4,7 +4,6 @@
 #include <fs/core/search/drivers/sbfws/base.hxx>
 #include <fs/core/search/drivers/sbfws/features/features.hxx>
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
-#include <fs/core/search/drivers/sbfws/mv_iw_run.hxx>
 #include <fs/core/search/utils.hxx>
 
 namespace fs0 { namespace bfws {
@@ -91,15 +90,8 @@ SBFWSDriver<StateModelT>::do_search1(const StateModelT& model, FeatureEvaluatorT
     bool actionless = model.getTask().getPartiallyGroundedActions().empty() &&
             model.getTask().getGroundActions().empty();
 
-//    if ( bfws_config.using_feature_set) {
-//		auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, MultiValuedIWRun, MultiValuedIWRunNode>(std::move(featureset), bfws_config, model, _stats);
-//		return drivers::Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats, actionless);
-//	}
-
 	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, IWRun, IWRunNode>(std::move(featureset), bfws_config, model, _stats);
 	return drivers::Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats, actionless);
-
-
 }
 
 } } // namespaces

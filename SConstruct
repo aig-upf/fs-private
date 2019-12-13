@@ -8,9 +8,7 @@ vars.Add(BoolVariable('debug', 'Debug build', 'no'))
 vars.Add(BoolVariable('edebug', 'Extreme debug', 'no'))
 
 # Planner modules:
-vars.Add(BoolVariable('ompl_support', 'Include OMPL driver support in library', 'yes'))
 vars.Add(BoolVariable('gecode_support', 'Include Gecode solver dependencies', 'yes'))
-vars.Add(BoolVariable('hybrid_support', 'Include Soplex LP solver adapter and dependencies', 'yes'))
 
 vars.Add(EnumVariable('default_compiler', 'Preferred compiler', 'clang++', allowed_values=('g++', 'clang++')))
 vars.Add(PathVariable('fs', 'Path to FS sources', os.getcwd(), PathVariable.PathIsDir))
@@ -48,8 +46,6 @@ modules = [
     ("core",           "core"),
     ("lapkt2",         "lapkt2"),
     ("gecode_support", "gecode"),
-    ("hybrid_support", "hybrid"),
-    ("ompl_support",   "ompl")
 ]
 
 # include local by default # MRJ: This probably should be acquired from an environment variable

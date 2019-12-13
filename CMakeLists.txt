@@ -156,8 +156,6 @@ set(SOURCE_FILES
         src/fs/core/search/drivers/sbfws/iw_run_config.cxx
         src/fs/core/search/drivers/sbfws/iw_run.cxx
         src/fs/core/search/drivers/sbfws/iw_run.hxx
-        src/fs/core/search/drivers/sbfws/mv_iw_run.cxx
-        src/fs/core/search/drivers/sbfws/mv_iw_run.hxx
         src/fs/core/search/drivers/sbfws/relevant_atomset.hxx
         src/fs/core/search/drivers/sbfws/relevant_atoms.hxx
         src/fs/core/search/drivers/sbfws/relevant_atoms.cxx

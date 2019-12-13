@@ -4,7 +4,6 @@
 #include <fs/core/search/drivers/sbfws/features/features.hxx>
 #include <fs/core/problem_info.hxx>
 #include <fs/core/heuristics/novelty/features.hxx>
-#include <fs/core/heuristics/novelty/squared_error.hxx>
 #include <fs/core/utils/loader.hxx>
 #include <fs/core/utils/printers/binding.hxx>
 #include <fs/core/utils/binding_iterator.hxx>
@@ -12,8 +11,9 @@
 #include <fs/core/languages/fstrips/operations/basic.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/heuristics/l0.hxx>
-
-#include <fs/hybrid/novelty_features.hxx>
+#include <fs/core/utils/config.hxx>
+#include <fs/core/problem.hxx>
+#include <fs/core/languages/fstrips/language.hxx>
 
 
 namespace fs = fs0::language::fstrips;
@@ -74,25 +74,7 @@ template <typename StateT>
 void
 FeatureSelector<StateT>::add_state_variables(const ProblemInfo& info, std::vector<FeatureT*>& features) {
 
-    std::set<VariableIdx> projected_away;
-    if ( Config::instance().getOption<bool>("features.project_away_time",false) ) {
-        VariableIdx clock = info.getVariableId("clock_time()");
-        projected_away.insert( clock );
-        LPT_INFO("main", "Projecting away variable: " << info.getVariableName(clock)  );
-    }
-
-    if ( Config::instance().getOption<bool>("features.project_away_numeric",false) ) {
-        for ( VariableIdx var = 0; var < info.getNumVariables(); ++var ) {
-            if ( info.sv_type(var) ==  type_id::float_t ) {
-                projected_away.insert(var);
-                LPT_INFO("main", "Projecting away variable: " << info.getVariableName(var)  );
-            }
-        }
-    }
-
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
-        if ( projected_away.find(var) != projected_away.end() )
-            continue;
 		features.push_back(new StateVariableFeature(var));
 	}
 }
@@ -176,17 +158,6 @@ FeatureSelector<StateT>::add_extra_features(const ProblemInfo& info, std::vector
 		}
 	}
 
-	if (Config::instance().getOption<bool>("features.joint_goal_error", false)) {
-		SquaredErrorFeature* feature = new SquaredErrorFeature;
-		for ( auto formula : fs::all_formulae( *Problem::getInstance().getGoalConditions())) {
-			feature->addCondition(formula);
-		}
-		LPT_INFO("features", "Added 'joint_goal_error': phi(s0) = " << feature->error_signal().measure(Problem::getInstance().getInitialState()));
-		features.push_back( feature );
-	}
-
-	
-	fs0::HybridNoveltyFeaturesWrapper::register_features(features);
 
 	try {
 		auto data = Loader::loadJSONObject(info.getDataDir() + "/extra.json");

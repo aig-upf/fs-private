@@ -1,40 +1,3 @@
-hybrid commands:
-
-baseline with discrete change
-
-./run.py --hybrid --t hybrid_test --instance $FS_BENCHMARKS/benchmarks/robot-navigation-num-fn/sample.pddl --driver sbfws --options bfws.rs=sim,bfws.force_generic_evaluator=true,bfws.extra_features=true
-
-baseline with continuous change
-
-./run.py --hybrid --t hybrid_test --instance $FS_BENCHMARKS/benchmarks/agile-robot-world-hybrid/instance_001.pddl --driver sbfws --options bfws.rs=sim,ignore_neg_literals=false,bfws.force_generic_evaluator=true,dt=0.1,project_away_time=true
-
---driver sbfws --options bfws.rs=sim,bfws.force_generic_evaluator=true,dt=0.1,project_away_time=true,bfws.using_feature_set=true
-
-hybrid with R_{0}, projecting away time, using generic evaluator:
-
---driver sbfws --options "bfws.rs=none,dt=0.1,project_away_time=true,bfws.force_generic_evaluator=true"
-
-hybrid with R_{L0}, projecting away time, using generic evaluator:
-
---driver sbfws --options "bfws.rs=l0,dt=0.1,project_away_time=true,bfws.force_generic_evaluator=true"
-
-hybrid with R^{*}_{G}, projecting away time, using generic evaluator:
-
---driver sbfws --options bfws.rs=sim,dt=0.1,project_away_time=true,bfws.force_generic_evaluator=true,sim.r_g_prime=true,width.simulation=1
---driver sbfws --options "bfws.rs=sim,dt=0.1,project_away_time=true,bfws.force_generic_evaluator=true,sim.r_g_prime=true,width.simulation=2"
-
-hybrid with R^{*}_{G}, projecting away numerics, using generic evaluator, L_0 as features:
-
---driver sbfws --options bfws.rs=sim,dt=0.1,project_away_numeric=true,bfws.force_generic_evaluator=true,sim.r_g_prime=true,use_l0_sets=true
-
-hybrid with R_{L0}, projecting away time, using generic evaluator:
-
---driver sbfws --options "bfws.rs=l0,dt=0.1,project_away_time=true,bfws.force_generic_evaluator=true"
-
-
-hybrid with R_G, L0 Sets, projecting away numeric variables:
-
---driver sbfws --options "bfws.rs=sim,dt=0.1,project_away_numeric=true,bfws.extra_features=true,use_l0_sets=true,sim.r_g_prime=true"
 
 R[1]:
 
@@ -58,18 +21,4 @@ BrFS:
 
 --driver bfs
 
-R[2] over elliptical features, numeric state variables projected away:
 
-./run.py --hybrid --instance ~/Sandboxes/mpc-planning-experiments/benchmarks/agile-robot-world-hybrid/instance_018.pddl --driver sbfws --options bfws.rs=sim,bfws.force_generic_evaluator=true,dt=0.5,integrator="runge_kutta_2",project_away_time=true,project_away_numeric=true,bfws.using_feature_set=true,features.elliptical_2d=true,sim.log=true,width.simulation=2
-
-Elliptical Parameters:
---driver sbfws --options bfws.rs=sim,width.force_generic_evaluator=true,dt=0.5,integrator=runge_kutta_2,features.project_away_time=true,features.project_away_numeric=true,evaluator_t=generic,bfws.using_feature_set=true,reward.goal_error=true,features.elliptical_2d=true,sim.log=true,width.search=2,width.simulation=2
-
-G0 Parameters:
---options bfws.rs=g0,width.force_generic_evaluator=true,dt=1.0,integrator=explicit_euler,features.project_away_time=true,features.project_away_numeric=false,evaluator_t=generic,bfws.using_feature_set=true,horizon=100
-
-R[1] Parameters:
-
---driver sbfws --options bfws.rs=sim,width.force_generic_evaluator=true,dt=10.0,integrator=explicit_euler,features.project_away_time=true,features.project_away_numeric=false,evaluator_t=generic,bfws.using_feature_set=true,horizon=100
-
-./run.py --hybrid -i ~/Sandboxes/mpc-planning-experiments/benchmarks/automated_guided_vehicle/test.pddl --driver sbfws --options bfws.rs=sim,width.force_generic_evaluator=true,dt=1.0,integrator=explicit_euler,features.project_away_time=true,features.project_away_numeric=false,evaluator_t=generic,bfws.using_feature_set=true,horizon=100 --debug

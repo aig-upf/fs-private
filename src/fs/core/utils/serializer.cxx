@@ -48,7 +48,7 @@ void Serializer::deserialize(const std::string& filename, DataInserter& inserter
 	std::ifstream is(filename);
 	std::string line;
 	while (std::getline(is, line)) {
-		inserter(deserialize_line(line, sym_signature_types));
+		inserter(deserialize_line(line, sym_signature_types, ","));
 	}
 }
 
@@ -143,15 +143,15 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::BinarySe
 }
 
 std::vector<object_id> Serializer::
-deserialize_line(const std::string& line, const std::vector<type_id>& sym_signature_types, const std::string& separators) {
-	if (line.size() == 0) return {};
+deserialize_line(const std::string& line, const std::vector<type_id>& sym_signature_types, const std::string& separators, const std::function<unsigned(const std::string&)>& object_indexer) {
+	if (line.empty()) return {};
 	std::vector<std::string> strings;
 	boost::split(strings, line, boost::is_any_of(separators));
 	assert(strings.size() == sym_signature_types.size() );
 	std::vector<object_id> result;
 	result.reserve(strings.size());
 
-	for ( unsigned i = 0; i < strings.size(); i++ ) {
+	for ( std::size_t i = 0; i < strings.size(); i++ ) {
 		if ( sym_signature_types[i] == type_id::int_t ) {
 			result.push_back( make_object(type_id::int_t, boost::lexical_cast<int>(strings[i])));
 		}
@@ -161,7 +161,7 @@ deserialize_line(const std::string& line, const std::vector<type_id>& sym_signat
 			result.push_back( make_object( boost::lexical_cast<float>(strings[i])));
 		}
 		else if ( sym_signature_types[i] == type_id::object_t ) {
-			result.push_back( make_object(type_id::object_t, boost::lexical_cast<int>(strings[i])));
+            result.push_back(make_object(type_id::object_t, object_indexer(strings[i])));
 		}
 		else {
 			throw std::runtime_error("Could not interpret types of constants in line \n" + line );
@@ -170,5 +170,14 @@ deserialize_line(const std::string& line, const std::vector<type_id>& sym_signat
 
 	return result;
 }
+
+std::vector<object_id> Serializer::
+deserialize_line(const std::string& line, const std::vector<type_id>& sym_signature_types, const std::string& separators) {
+    // If no object mapping is provided, simply use the deserializer casting the string into an unsigned, i.e. assuming
+    // that the strings are already object IDs
+    return deserialize_line(line, sym_signature_types, separators,
+            [](const std::string& s) { return boost::lexical_cast<unsigned>(s); });
+}
+
 
 } // namespaces

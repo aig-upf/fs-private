@@ -9,7 +9,6 @@
 #include <fs/core/languages/fstrips/loader.hxx>
 #include <fs/core/languages/fstrips/metrics.hxx>
 #include <lapkt/tools/logging.hxx>
-#include <fs/core/constraints/gecode/helper.hxx>
 #include <fs/core/constraints/registry.hxx>
 #include <fs/core/utils/utils.hxx>
 #include <fs/core/utils/printers/registry.hxx>
@@ -71,22 +70,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	if (!data.HasMember("action_schemata")) {
 	       throw std::runtime_error("Could not find action schemas in data/problem.json!");
 	}
-	auto control_data = loadAllActionData(data["action_schemata"], info, true);
-
-	LPT_INFO("main", "Loading process data...");
-	if (!data.HasMember("process_schemata")) {
-	       throw std::runtime_error("Could not find process schemas in data/problem.json!");
-	}
-	auto process_data = loadAllActionData(data["process_schemata"], info, true);
-
-	LPT_INFO("main", "Loading event data...");
-	if (!data.HasMember("event_schemata")) {
-	       throw std::runtime_error("Could not find events schemas in data/problem.json!");
-	}
-	auto events_data = loadAllActionData(data["event_schemata"], info, true);
-
-	auto tmp = Utils::merge( control_data, process_data );
-	auto action_data = Utils::merge( tmp, events_data );
+	auto action_data = loadAllActionData(data["action_schemata"], info, true);
 
 	LPT_INFO("main", "Loading axiom data...");
 	// Axiom schemas are simply action schemas but without effects
@@ -140,13 +124,6 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 		if ( named_sc == nullptr ) continue;
 	   	named_sc_schemata.push_back( named_sc );
 	}
-	//MRJ: We ground the state constraints here and now
-	std::vector< const fs::Axiom* > named_sc_grounded = AxiomGrounder::fully_ground( named_sc_schemata, info );
-	for ( auto sc : named_sc_schemata )
-		delete sc;
-	for ( auto sc : named_sc_grounded )
-		sc_set.push_back(sc);
-
 	auto sc_idx = _index_axioms(sc_set);
 
 	LPT_INFO("main", "Loading Problem Metric...");
