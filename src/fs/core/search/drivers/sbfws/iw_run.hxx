@@ -378,12 +378,12 @@ public:
 	std::vector<bool> compute_R(const StateT& seed) {
 
 		if (_config._force_R_all) {
-			if (_verbose) LPT_INFO("search", "Simulation - R=R[All] is the user-preferred option");
+			if (_verbose) LPT_INFO("cout", "Simulation - R=R[All] is the user-preferred option");
 			return compute_R_all();
 		}
 
 		if (_config._r_g_prime) {
-			if (_verbose) LPT_INFO("search", "Simulation - R=R'_G is the user-preferred option");
+			if (_verbose) LPT_INFO("cout", "Simulation - R=R'_G is the user-preferred option");
 			return compute_R_g_prime(seed);
 		}
 
@@ -542,15 +542,15 @@ public:
 			unsigned num_subgoals = _model.num_subgoals();
 			unsigned initially_reached = std::count(_in_seed.begin(), _in_seed.end(), true);
 			unsigned reached_by_simulation = num_subgoals - _unreached.size() - initially_reached;
-			if (_verbose) LPT_INFO("search", "Simulation - " << reached_by_simulation << " subgoals were newly reached by the simulation.");
+			if (_verbose) LPT_INFO("cout", "Simulation - " << reached_by_simulation << " subgoals were newly reached by the simulation.");
 			bool decide_r_all = (reached_by_simulation < (0.5*num_subgoals));
 			decide_r_all = _unreached.size() != 0; // XXX Use R_All is any non-reached
 			if (decide_r_all) {
-				if (_verbose) LPT_INFO("search", "Simulation - Falling back to R=R[All]");
+				if (_verbose) LPT_INFO("cout", "Simulation - Falling back to R=R[All]");
 				_stats.r_type(1);
 				return compute_R_all();
 			} else {
-				if (_verbose) LPT_INFO("search", "Simulation - Computing R_G");
+				if (_verbose) LPT_INFO("cout", "Simulation - Computing R_G");
 			}
 		}
 
@@ -561,9 +561,9 @@ public:
 
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
-			LPT_INFO("search", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			if (R_G_size) {
-				LPT_INFO("search", "Simulation - R_G:");
+				LPT_INFO("cout", "Simulation - R_G:");
 				std::cout << "\t\t";
 				for (unsigned i = 0; i < R_G.size(); ++i) {
 					if (R_G[i]) std::cout << index.to_atom(i) << ", ";
@@ -651,7 +651,7 @@ public:
 // 	}
 
 	bool run(const StateT& seed, unsigned max_width) {
-		if (_verbose) LPT_INFO("search", "Simulation - Starting IW Simulation");
+		if (_verbose) LPT_INFO("cout", "Simulation - Starting IW(" << max_width << ") Simulation");
 
 		NodePT root = std::make_shared<NodeT>(seed, _generated++);
 		mark_seed_subgoals(root);
@@ -719,13 +719,13 @@ public:
 
 	void report(const std::string& result) const {
 		if (!_verbose) return;
-		LPT_INFO("search", "Simulation - Result: " << result);
-		LPT_INFO("search", "Simulation - Num reached subgoals: " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals());
-		LPT_INFO("search", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
-		LPT_INFO("search", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
-		LPT_INFO("search", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
-		LPT_INFO("search", "Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
-		LPT_INFO("search", "Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
+		LPT_INFO("cout", "Simulation - Result: " << result);
+		LPT_INFO("cout", "Simulation - Num reached subgoals: " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals());
+		LPT_INFO("cout", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
+		LPT_INFO("cout", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
+		LPT_INFO("cout", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
+		LPT_INFO("cout", "Simulation - Generated nodes with w=2 " << _w2_nodes_generated);
+		LPT_INFO("cout", "Simulation - Generated nodes with w>2 " << _w_gt2_nodes_generated);
 	}
 
 protected:
