@@ -67,6 +67,8 @@ ALL_ATTRIBUTES = {
     'last_recorded_time': 'last_recorded_time',
     'last_recorded_generations': Attribute('last_recorded_generations', min_wins=True),
     'num_state_vars': 'num_state_vars',
+    'iw1_run': 'iw1_run',
+    'iw2_run': 'iw2_run',
 }
 
 DEFAULT_ATTRIBUTES = [
