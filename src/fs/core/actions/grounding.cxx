@@ -23,6 +23,7 @@ std::vector<const fs::ActionEffect*>
 _bind_effects(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
 	std::vector<const fs::ActionEffect*> effects;
 	for (const fs::ActionEffect* effect:action_data.getEffects()) {
+	    // std::cout << "Binding effect: " << *effect << std::endl;
 		if (const fs::ActionEffect* bound = effect->bind(binding, info)) {
 			effects.push_back(bound);
 		}
