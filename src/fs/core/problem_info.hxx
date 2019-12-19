@@ -7,8 +7,9 @@
 #include <rapidjson/document.h>
 #include <fs/core/utils/static.hxx>
 #include <fs/core/utils/external.hxx>
+#include <utility>
 
-namespace fs0 { namespace fstrips { class LanguageInfo; }}
+namespace fs0::fstrips { class LanguageInfo; }
 
 namespace fs0 {
 
@@ -20,10 +21,10 @@ public:
 
 	enum class Type {PREDICATE, FUNCTION};
 
-	SymbolData(Type type, const Signature& signature, TypeIdx codomain,
-			   const std::vector<VariableIdx>& variables,
+	SymbolData(Type type, Signature signature, TypeIdx codomain,
+			   std::vector<VariableIdx> variables,
 			   bool stat, bool unbounded):
-		_type(type), _signature(signature), _codomain(codomain), _variables(variables), _static(stat), _unbounded_arity(unbounded) {}
+		_type(type), _signature(std::move(signature)), _codomain(codomain), _variables(std::move(variables)), _static(stat), _unbounded_arity(unbounded) {}
 
 	Type getType() const { return _type; }
 	const Signature& getSignature() const { return _signature; }
@@ -37,7 +38,6 @@ public:
 
 	//! Sets/Gets the actual implementation of the function
 	void setFunction(const Function& function) {
-		assert(_static);
 		_function = function;
 	}
 	const Function& getFunction() const {
@@ -192,6 +192,10 @@ public:
 	//! Resolves a pair of function ID + an assignment of values to their parameters to the corresponding state variable.
 	VariableIdx resolveStateVariable(unsigned symbol_id, std::vector<object_id>&& constants) const { return variableDataToId.at(std::make_pair(symbol_id, std::move(constants))); }
 	VariableIdx resolveStateVariable(unsigned symbol_id, const std::vector<object_id>& constants) const { return variableDataToId.at(std::make_pair(symbol_id, constants)); }
+
+    bool is_fluent(unsigned symbol_id, const std::vector<object_id>& constants) const {
+	    return variableDataToId.find(std::make_pair(symbol_id, constants)) != variableDataToId.end();
+	}
 
 	//! Return the data that originated a state variable
 	const std::pair<unsigned, std::vector<object_id>>& getVariableData(VariableIdx variable) const { return variableIdToData.at(variable); }

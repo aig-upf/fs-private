@@ -8,11 +8,11 @@
 #include <fs/core/state.hxx>
 
 
-namespace fs0 { namespace language { namespace fstrips {
+namespace fs0::language::fstrips {
 
 ActionEffect::ActionEffect(const Term* lhs, const Term* rhs, const Formula* condition)
 	: _lhs(lhs), _rhs(rhs), _condition(condition) {
-	if (!isWellFormed()) throw std::runtime_error("Ill-formed effect");
+	if (!is_acceptable_lhs(lhs)) throw std::runtime_error("Ill-formed effect");
 }
 
 ActionEffect::~ActionEffect() {
@@ -32,9 +32,9 @@ std::vector<const Term*> ActionEffect::all_terms() const {
 	return res;
 }
 
-bool ActionEffect::isWellFormed() const {
-	auto lhs_var = dynamic_cast<const StateVariable*>(_lhs);
-	auto lhs_fluent = dynamic_cast<const FluentHeadedNestedTerm*>(_lhs);
+bool ActionEffect::is_acceptable_lhs(const Term* lhs) {
+	auto lhs_var = dynamic_cast<const StateVariable*>(lhs);
+	auto lhs_fluent = dynamic_cast<const FluentHeadedNestedTerm*>(lhs);
 	return lhs_var || lhs_fluent; // The LHS of the effect must be either a state variable or a fluent function.
 }
 
@@ -74,7 +74,17 @@ const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo
 	// As of now, the rationale is: if the effect LHS provokes an exception, it must involve
 	// a static state variable, and thus we can ignore it and prune it. It is clearly a flawed
 	// reasoning if the expression is complex and involves nested terms, etc., but works for now.
-	return new ActionEffect(bound_lhs, bound_rhs, condition);
+
+	if (ActionEffect::is_acceptable_lhs(bound_lhs)) {
+        return new ActionEffect(bound_lhs, bound_rhs, condition);
+	} else {  // The effect is attempting to assign a truth value to a static atom
+        const auto* c = dynamic_cast<const Constant*>(bound_lhs);
+	    assert(c);
+	    // We can only assume that the effect will try to assign the same value to the constant than the one it has
+	    // initially, otherwise it would have been flagged as fluent
+	    return nullptr;
+	}
+
 }
 
 // TODO - Refactor this into a hierarchy of effects, a delete effect should be an object of a particular type, or at least effect should have a method is_delete()
@@ -111,4 +121,4 @@ std::ostream& ProceduralEffect::print(std::ostream& os, const fs0::ProblemInfo& 
 	return os << "unnamed_procedural_effect";
 }
 
-} } } // namespaces
+} // namespaces

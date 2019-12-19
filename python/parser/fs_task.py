@@ -184,7 +184,7 @@ class FSTaskIndex(object):
         self.static_symbols = util.UninitializedAttribute('static_symbols')
         self.fluent_symbols = util.UninitializedAttribute('fluent_symbols')
         self.initial_fluent_atoms = util.UninitializedAttribute('initial_fluent_atoms')
-        self.initial_static_data = util.UninitializedAttribute('initial_static_data')
+        self.initial_data = util.UninitializedAttribute('initial_data')
         self.state_variables = util.UninitializedAttribute('state_variables')
         self.goal = util.UninitializedAttribute('goal')
         self.state_constraints = util.UninitializedAttribute('state_constraints')
@@ -297,7 +297,7 @@ class FSTaskIndex(object):
         fd_initial_static_atoms = [elem for elem in fd_initial_atoms if not self.is_fluent(elem[0])]
 
         self.initial_fluent_atoms = _process_fluent_atoms(fd_initial_fluent_atoms)
-        self.initial_static_data = self._process_static_atoms(fd_initial_static_atoms)
+        self.initial_data = self._process_static_atoms(fd_initial_static_atoms + fd_initial_fluent_atoms)
 
     def process_adl_initial_state(self, adl_task):
         initial_fluents = []
@@ -311,17 +311,17 @@ class FSTaskIndex(object):
 
         static_atoms = [(pred.name, args, None) for pred, args in adl_task.static_preds]
         self.initial_fluent_atoms = _process_fluent_atoms(adl_initial_fluent_atoms)
-        self.initial_static_data = self._process_static_atoms(static_atoms)
+        self.initial_data = self._process_static_atoms(static_atoms + initial_fluents)
 
     def _process_static_atoms(self, fd_initial_static_atoms):
-        initial_static_data = {}
+        initial_data = {}
         for name, args, value in fd_initial_static_atoms:
             # In case the extension for this particular symbol has not yet been initialized
-            if name not in initial_static_data:
-                initial_static_data[name] = static.instantiate_extension(self.symbols[name])
-            initial_static_data[name].add(args, value)
+            if name not in initial_data:
+                initial_data[name] = static.instantiate_extension(self.symbols[name])
+            initial_data[name].add(args, value)
 
-        return initial_static_data
+        return initial_data
 
     def _extract_initial_atom_names_and_arguments(self, fd_initial_state):
         names = []

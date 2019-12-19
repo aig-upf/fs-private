@@ -98,10 +98,10 @@ const ValueTuple& AtomIndex::to_tuple(VariableIdx variable, const object_id& val
 	return to_tuple(to_index(variable, value)); // TODO This could be optimized to a single lookup if need be
 }
 
-// TODO - We should be applying some reachability analysis here to prune out tuples that will never be reachable at all.
 std::vector<std::vector<std::pair<ValueTuple, object_id>>> AtomIndex::compute_all_reachable_tuples(const ProblemInfo& info) {
 	std::vector<std::vector<std::pair<ValueTuple, object_id>>> tuples_by_symbol(info.getNumLogicalSymbols());
 
+	// Note that this will return only those tuples that are reachable, since otherwise they wouldn't be a state var.
 	for (VariableIdx var = 0; var < info.getNumVariables(); ++var) {
 		const auto& data = info.getVariableData(var);
 		auto& symbol_tuples = tuples_by_symbol.at(data.first); // The tupleset corresponding to the symbol index
