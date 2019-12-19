@@ -278,9 +278,9 @@ set(FS_VENDOR ${FS_ROOT}/vendor)
 include_directories($ENV{HOME}/local/include)  # Gecode, etc.
 include_directories(${FS_SRC})
 include_directories(${FS_VENDOR}/rapidjson/include)
-# MRJ: is this necessary?
-#include_directories(${FS_VENDOR}/lapkt-base/src)
-#include_directories(${FS_VENDOR}/lapkt-novelty/src)
+# MRJ: is this necessary? GFM: Yes, for the includes to <lapkt/*> to work
+include_directories(${FS_VENDOR}/lapkt-base/src)
+include_directories(${FS_VENDOR}/lapkt-novelty/src)
 include_directories(${FS_VENDOR}/sdd)
 
 #set(CMAKE_VERBOSE_MAKEFILE ON)
