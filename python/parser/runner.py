@@ -146,7 +146,6 @@ def generate_debug_scripts(target_dir, planner_arguments):
     make_script(os.path.join(target_dir, 'callgrind.sh'), callgrind)
 
 
-
 def make_script(filename, code):
     with open(filename, 'w') as f:
         print(code, file=f)
@@ -311,9 +310,9 @@ def run(args):
 
     # return True  # Just to debug the preprocessing
 
-    data, static_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
+    data, init_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
     serializer = Serializer(os.path.join(workdir, 'data'))
-    serialize_representation(data, static_atoms, serializer, debug=args.edebug or args.debug)
+    serialize_representation(data, init_atoms, serializer, debug=args.edebug or args.debug)
     # Print the reachable action groundings if available;
     # if not, erase grounding files that might exist from previous runs.
     print_groundings(data['action_schemata'], action_groundings, obj_idx, serializer)

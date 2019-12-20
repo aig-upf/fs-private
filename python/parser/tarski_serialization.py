@@ -192,11 +192,11 @@ def serialize_tarski_term(exp, obj_idx, binding):
     raise RuntimeError(f'Unknown Tarski expression type {type(exp)} for expression {exp}')
 
 
-def serialize_tarski_model(model, var_idx, obj_idx, fluents, statics):
+def serialize_tarski_model(init_model, var_idx, obj_idx, fluents, statics):
     init_atoms = []
     static_data = dict()
 
-    extensions = model.list_all_extensions()
+    extensions = init_model.list_all_extensions()
 
     # First process the data that is static in the model, and create the old "FS" data structures
     # that will take care of the serialization.
@@ -217,7 +217,7 @@ def serialize_tarski_model(model, var_idx, obj_idx, fluents, statics):
             if isinstance(symbol, Predicate):
                 varidx = var_idx[StateVariableLite(symbol, point)]
                 value = 1
-            else:
+            else:  # A function
                 varidx = var_idx[StateVariableLite(symbol, point[:-1])]
                 value = object_id(point[-1].name, obj_idx)
             init_atoms.append([varidx, value])
@@ -281,7 +281,7 @@ def generate_tarski_problem(problem, fluents, statics, variables):
 
     type_idx, data['types'] = serialize_type_info(problem.language, type_objects)
 
-    data['init'], static_atoms = serialize_tarski_model(problem.init, var_idx, obj_idx, fluents, statics)
+    data['init'], init_atoms = serialize_tarski_model(problem.init, var_idx, obj_idx, fluents, statics)
 
     # No binding unit for the goal, which must be a sentence
     data['goal'] = dict(conditions=serialize_tarski_formula(problem.goal, obj_idx, {}, negated=False), unit=[])
@@ -296,7 +296,7 @@ def generate_tarski_problem(problem, fluents, statics, variables):
     data['state_constraints'] = []
     data['metric'] = dict()
 
-    return data, static_atoms, obj_idx
+    return data, init_atoms, obj_idx
 
 
 class Serializer:
@@ -406,7 +406,7 @@ def print_groundings(schemas, groundings, obj_idx, serializer: Serializer):
     serializer.dump(groundings_filename, data, extension='data')
 
 
-def serialize_representation(data, static_atoms, serializer: Serializer, debug):
+def serialize_representation(data, init_atoms, serializer: Serializer, debug):
     serializer.dump('problem', data, extension='json')
 
     # For historical reasons, we used to serialize the list of static atoms separately and in a custom format
@@ -414,12 +414,12 @@ def serialize_representation(data, static_atoms, serializer: Serializer, debug):
     # off to deal with it separately.
     # This is nowadays a terrible PITA though, but hopefully we'll get rid of it soon once we transition
     # to a Python-module based architecture
-    for symbol, static_data in static_atoms.items():
+    for symbol, symbol_data in init_atoms.items():
         if isinstance(symbol, Predicate) and symbol.arity == 0:
             # For nullary atoms p, the hacky way the backend has to distinguish between the case where p holds and that
             # where it doesn't is to either have an empty serialized file or to have no file at all
             continue
-        serializer.dump(symbol.name, static_data, extension='data')
+        serializer.dump(symbol.name, symbol_data, extension='data')
 
     if debug:
         print_debug_data(data, Serializer(os.path.join(serializer.basedir, 'debug')))
