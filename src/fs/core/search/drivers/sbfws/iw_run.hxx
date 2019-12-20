@@ -447,7 +447,7 @@ public:
 		_config._complete = false;
 
 
-		float simt0 = aptk::time_used();
+		auto simt0 = aptk::time_used();
   		run(seed, 1);
 		report_simulation_stats(simt0);
 
@@ -455,13 +455,13 @@ public:
 			std::vector<NodePT> seed_nodes = extract_seed_nodes();
 			std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
 			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
-			LPT_INFO("search", "Simulation - IW(1) run reached all goals");
-			LPT_INFO("search", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			LPT_INFO("cout", "Simulation - IW(1) run reached all goals");
+			LPT_INFO("cout", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			_stats.relevant_atoms(R_G_size);
 			return R_G;
 		}
 
-		LPT_INFO("search", "Simulation - IW(1) run did not reach all goals");
+		LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals");
 
 		if (_config._max_width == 1) {
 			LPT_INFO("cout", "Simulation - Max. simulation width set to 1, falling back to R=R_all");
@@ -471,10 +471,10 @@ public:
 		if (_config._gr_actions_cutoff < std::numeric_limits<unsigned>::max()) {
 			unsigned num_actions = Problem::getInstance().getGroundActions().size();
 			if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(º2)
-				LPT_INFO("search", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
+				LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
 				return compute_R_all();
 			} else {
-					LPT_INFO("search", "Simulation - Number of actions (" << num_actions << " <= " << _config._gr_actions_cutoff << ") considered low enough to run IW(2).");
+					LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " <= " << _config._gr_actions_cutoff << ") considered low enough to run IW(2).");
 			}
 		}
         LPT_INFO("cout", "Simulation - Throwing IW(2) simulation");
@@ -487,13 +487,13 @@ public:
 			std::vector<NodePT> seed_nodes = extract_seed_nodes();
 			std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
 			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
-			LPT_INFO("search", "Simulation - IW(2) run reached all goals");
-			LPT_INFO("search", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			LPT_INFO("cout", "Simulation - IW(2) run reached all goals");
+			LPT_INFO("cout", "Simulation - |R_G'[2]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 			_stats.relevant_atoms(R_G_size);
 			return R_G;
 		}
 
-		LPT_INFO("search", "Simulation - IW(2) run did not reach all goals, falling back to R=R_all");
+		LPT_INFO("cout", "Simulation - IW(2) run did not reach all goals, falling back to R=R_all");
 		return compute_R_all();
 	}
 
@@ -510,11 +510,11 @@ public:
 
 		if (_unreached.size() == 0) {
 			// If a single IW[1] run reaches all subgoals, we return R=emptyset
-			LPT_INFO("search", "Simulation - IW(1) run reached all goals, thus R={}");
+			LPT_INFO("cout", "Simulation - IW(1) run reached all goals, thus R={}");
 			_stats.r_type(0);
 			return std::vector<bool>(index.size(), false);
 		} else {
-			LPT_INFO("search", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
+			LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
 		}
 
 		// Otherwise, run IW(2)
@@ -593,7 +593,7 @@ public:
 
 		unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
 		if (_verbose) {
-			LPT_INFO("search", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
+			LPT_INFO("cout", "Simulation - |R_G[" << _config._max_width << "]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
 		}
 		_stats.relevant_atoms(R_G_size);
 		_stats.r_type(2);
@@ -621,26 +621,26 @@ public:
 
 
 		/*
-		LPT_INFO("search", "Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
-		LPT_INFO("search", "Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
-		LPT_INFO("search", "Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
-		LPT_INFO("search", "Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
-		LPT_INFO("search", "Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
-		LPT_INFO("search", "Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
-		LPT_INFO("search", "Simulation - Total number of generated nodes (incl. pruned): " << _generated);
-		LPT_INFO("search", "Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
+		LPT_INFO("cout", "Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
+		LPT_INFO("cout", "Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
+		LPT_INFO("cout", "Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
+		LPT_INFO("cout", "Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
+		LPT_INFO("cout", "Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
+		LPT_INFO("cout", "Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
+		LPT_INFO("cout", "Simulation - Total number of generated nodes (incl. pruned): " << _generated);
+		LPT_INFO("cout", "Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
 		*/
 
 // 		auto relevant_w2_nodes = compute_relevant_w2_nodes();
-// 		LPT_INFO("search", "Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
+// 		LPT_INFO("cout", "Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
 
 // 		auto su = compute_union(relevant_w2_nodes); // Order matters!
 // 		auto hs = compute_hitting_set(relevant_w2_nodes);
 
-// 		LPT_INFO("search", "Simulation - union-based R (|R|=" << su.size() << ")");
+// 		LPT_INFO("cout", "Simulation - union-based R (|R|=" << su.size() << ")");
 // 		_print_atomset(su);
 
-// 		LPT_INFO("search", "Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
+// 		LPT_INFO("cout", "Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
 // 		_print_atomset(hs);
 
 		//std::vector<AtomIdx> relevant(hs.begin(), hs.end());
@@ -683,7 +683,7 @@ public:
 					unsigned char novelty = _evaluator.evaluate(*successor);
 					update_novelty_counters_on_generation(novelty);
 
-					// LPT_INFO("search", "Simulation - Node generated: " << *successor);
+					// LPT_INFO("cout", "Simulation - Node generated: " << *successor);
 
 					if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
 						report("All subgoals reached");
