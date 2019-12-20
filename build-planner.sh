@@ -34,4 +34,4 @@ export LIBRARY_PATH=$LIBRARY_PATH:${HOME}/local/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/local/lib
 
 cd "/homedtic/gfrances/projects/code/fs-sdd"
-"/homedtic/gfrances/lib/virtualenvs/fs-sdd/bin/python" "./build.py" "-pd"
+"/homedtic/gfrances/lib/virtualenvs/fs-sdd/bin/python" "./build.py" "-p"
