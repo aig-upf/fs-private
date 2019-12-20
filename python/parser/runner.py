@@ -306,7 +306,7 @@ def run(args):
         utils.mkdirp(sdddir)
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
                         sdd_minimization_time=None, graphs_directory=None,
-                        var_ordering=args.var_ordering, reachable_vars=reachable_vars,
+                        var_ordering=args.var_ordering, reachable_vars=ground_variables,
                         sdd_incr_minimization_time=args.sdd_incr_minimization_time)
 
     # return True  # Just to debug the preprocessing
@@ -319,7 +319,7 @@ def run(args):
     print_groundings(data['action_schemata'], action_groundings, obj_idx, serializer)
     use_vanilla = True
 
-    # TODO Old parsing code
+    # TODO Old parsing code. Remove this once port to tarski is complete
     # from .fs_task import create_fs_task, create_fs_task_from_adl
     # from .representation import ProblemRepresentation
     # if args.asp:
